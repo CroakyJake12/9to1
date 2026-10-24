@@ -756,6 +756,13 @@ def execution_record(record, candidate, *, publication=False):
         raise Refusal("Execution source kind must be git-worktree or source-export")
     expected = {"kind", "path", "git", "files" if source["kind"] == "git-worktree" else "manifest"}
     if set(source) != expected: raise Refusal("Execution source fields differ from its kind")
+    if publication and source["kind"] == "source-export":
+        # Match the authoritative field consumed by execution_admission before
+        # publishing either half of a touched candidate/custody pair.
+        if candidate.get("manifest") != source["manifest"]:
+            raise Refusal("Source-export candidate.manifest must match custody.source.manifest")
+        if "source_manifest" in candidate:
+            raise Refusal("Source-export candidate uses manifest, not a source_manifest publication alias")
     root = absolute_path(source["path"], "Execution source")
     if candidate.get("worktree") is not None and candidate["worktree"] != str(root):
         raise Refusal("Execution source path differs from named candidate worktree")
@@ -782,6 +789,9 @@ def execution_record(record, candidate, *, publication=False):
             if git(repository, "cat-file", "-t", required_revision).decode().strip() != "commit": raise Refusal("Execution revision is not a commit")
             closure = git_closure(repository, required_revision)
             if closure["result"] != "PASS": raise Refusal("; ".join(closure["problems"]))
+        if publication and source["kind"] == "source-export" and "tree" in candidate:
+            if revision_id(candidate["tree"]) != git(repository, "rev-parse", revision + "^{tree}").decode().strip():
+                raise Refusal("Source-export candidate.tree differs from its actual committed revision")
         files = source["files"] if source["kind"] == "git-worktree" else export_files(source, revision)
         execution_files(root, files)
     except (OSError, subprocess.CalledProcessError, Refusal, ValueError, TypeError, KeyError) as error:

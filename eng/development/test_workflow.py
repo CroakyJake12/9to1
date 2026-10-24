@@ -232,6 +232,131 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(self.state["observed_revision"], result["actual_revision"])
         self.assertTrue(any("HEAD changed" in p for p in result["discrepancies"]))
 
+    def export_publication_fixture(self):
+        active, store, build, record, incoming = self.execution_fixture()
+        exported = self.root / "publication-export"; (exported / "src").mkdir(parents=True)
+        for name in record["source"]["files"]:
+            (exported / name).write_bytes((active / name).read_bytes())
+        origin = record["source"]["git"]
+        path = self.root / "publication-manifest.json"
+        path.write_bytes(w.encoded({"schema": "9to1.exact-source-export/v1", "root": str(exported),
+            "origin_git": origin["path"], "source_revision": record["revision"],
+            "files": [{"path": name, **{k: v for k, v in identity.items() if k != "kind"}}
+                      for name, identity in record["source"]["files"].items()]}))
+        asset = {"path": str(path), **w.file_identity(path)}
+        record["source"] = {"kind": "source-export", "path": str(exported), "git": origin, "manifest": asset}
+        incoming["development_candidates"]["active"].update(
+            worktree=str(exported), manifest=asset, tree=w.git(active, "rev-parse", "HEAD^{tree}").decode().strip())
+        return exported, record, incoming
+
+    def alternate_export_manifest(self, record):
+        old = Path(record["source"]["manifest"]["path"])
+        path = self.root / "successor-publication-manifest.json"
+        # A new immutable receipt, still bound to the same real source and commit.
+        path.write_bytes(b"\n" + old.read_bytes())
+        return {"path": str(path), **w.file_identity(path)}
+
+    def publish_export_fixture(self, incoming):
+        with w.transaction(self.state_path, self.state["generation"]) as state:
+            w.apply_checkpoint(state, incoming)
+        self.state = w.read(self.state_path)
+
+    def test_export_publication_requires_actual_manifest_not_a_shadow_alias(self):
+        _, record, incoming = self.export_publication_fixture()
+        stale = self.alternate_export_manifest(record)
+        for change in ("missing", "stale", "shadow-only", "shadow-also"):
+            proposed = copy.deepcopy(incoming)
+            candidate = proposed["development_candidates"]["active"]
+            if change == "missing": del candidate["manifest"]
+            elif change == "stale": candidate["manifest"] = stale
+            elif change == "shadow-only":
+                del candidate["manifest"]; candidate["source_manifest"] = record["source"]["manifest"]
+            else: candidate["source_manifest"] = record["source"]["manifest"]
+            proposed["next_actions"] = ["must not leak"]
+            with self.subTest(change=change): self.assert_checkpoint_refused_unchanged(proposed)
+
+    def test_export_candidate_only_update_cannot_keep_a_stale_manifest(self):
+        _, record, incoming = self.export_publication_fixture()
+        self.publish_export_fixture(incoming)
+        candidate = copy.deepcopy(self.state["development_candidates"]["active"])
+        candidate["manifest"] = self.alternate_export_manifest(record)
+        self.assert_checkpoint_refused_unchanged({"development_candidates": {"active": candidate},
+                                                "next_actions": ["must not leak"]}, expected_generation=1)
+
+    def test_export_custody_only_update_cannot_change_the_candidate_manifest(self):
+        _, record, incoming = self.export_publication_fixture()
+        self.publish_export_fixture(incoming)
+        successor = copy.deepcopy(record); successor["source"]["manifest"] = self.alternate_export_manifest(record)
+        self.assert_checkpoint_refused_unchanged({"execution_custody": {"active": successor},
+                                                "next_actions": ["must not leak"]}, expected_generation=1)
+
+    def test_export_owner_typo_does_not_publish_new_custody_with_old_manifest(self):
+        _, record, incoming = self.export_publication_fixture()
+        self.publish_export_fixture(incoming)
+        asset = self.alternate_export_manifest(record)
+        candidate = copy.deepcopy(self.state["development_candidates"]["active"])
+        candidate["source_manifest"] = asset  # The mistaken update must not shadow authoritative manifest.
+        successor = copy.deepcopy(record); successor["source"]["manifest"] = asset
+        self.assert_checkpoint_refused_unchanged({"development_candidates": {"active": candidate},
+            "execution_custody": {"active": successor}, "next_actions": ["must not leak"]}, expected_generation=1)
+
+    def test_export_exact_manifest_rebinding_publishes_once_without_losing_other_state(self):
+        exported, record, incoming = self.export_publication_fixture()
+        self.publish_export_fixture(incoming)
+        asset = self.alternate_export_manifest(record)
+        candidate = copy.deepcopy(self.state["development_candidates"]["active"]); candidate["manifest"] = asset
+        successor = copy.deepcopy(record); successor["source"]["manifest"] = asset
+        before = copy.deepcopy(self.state)
+        self.publish_export_fixture({"development_candidates": {"active": candidate},
+            "execution_custody": {"active": successor}, "next_actions": ["continue actual work"]})
+        self.assertEqual(2, self.state["generation"])
+        self.assertEqual(asset, self.state["development_candidates"]["active"]["manifest"])
+        self.assertEqual(asset, self.state["execution_custody"]["active"]["source"]["manifest"])
+        for key in ("workers", "tasks", "pending_changes", "recovery_assets", "repository", "observed_revision"):
+            self.assertEqual(before[key], self.state[key], key)
+        recovered = w.recovery(self.state, exported, "active")
+        self.assertEqual("CHECKPOINT", recovered["recovery_status"])
+        self.assertTrue(recovered["execution_custody"]["declared_inputs_available"])
+        self.assertEqual("NOT RUN", recovered["execution_custody"]["native_acceptance"])
+
+    def test_export_optional_tree_if_present_must_match_the_actual_commit(self):
+        _, record, incoming = self.export_publication_fixture()
+        for value in ("0" * 40, record["revision"], None, [], True):
+            proposed = copy.deepcopy(incoming); proposed["development_candidates"]["active"]["tree"] = value
+            proposed["next_actions"] = ["must not leak"]
+            with self.subTest(tree=value): self.assert_checkpoint_refused_unchanged(proposed)
+
+    def test_export_tree_can_be_omitted_without_weakening_manifest_binding(self):
+        _, _, incoming = self.export_publication_fixture()
+        del incoming["development_candidates"]["active"]["tree"]
+        self.publish_export_fixture(incoming)
+        self.assertEqual(1, self.state["generation"])
+        self.assertTrue(w.execution_checks(self.state, "active")["declared_inputs_available"])
+
+    def test_historical_candidate_without_custody_keeps_legacy_metadata_readable(self):
+        with w.transaction(self.state_path, 0) as state:
+            w.apply_checkpoint(state, {"development_candidates": {"history": {
+                "revision": "historical", "status": "READY", "tree": "old metadata", "source_manifest": "old metadata"}}})
+        self.state = w.read(self.state_path)
+        self.assertEqual(1, self.state["generation"])
+        observed = w.execution_checks(self.state, "history")
+        self.assertEqual("UNRECORDED", observed["result"])
+        self.assertFalse(observed["declared_inputs_available"])
+        self.assertEqual("CHECKPOINT", w.recovery(self.state, self.repo)["recovery_status"])
+
+    def test_legacy_export_without_candidate_manifest_reads_but_must_reconcile_before_publication(self):
+        _, record, incoming = self.export_publication_fixture()
+        legacy = copy.deepcopy(incoming); del legacy["development_candidates"]["active"]["manifest"]
+        # Preserve a historical record, without passing it through new publication.
+        self.state["development_candidates"].update(legacy["development_candidates"])
+        self.state["execution_custody"].update(legacy["execution_custody"])
+        w.atomic(self.state_path, self.state)
+        self.assertTrue(w.execution_checks(self.state, "active")["declared_inputs_available"])
+        self.assert_checkpoint_refused_unchanged(legacy)
+        self.publish_export_fixture(incoming)
+        self.assertEqual(1, self.state["generation"])
+        self.assertEqual(record["source"]["manifest"], self.state["development_candidates"]["active"]["manifest"])
+
     def test_execution_export_has_no_invented_git_head_and_detects_changed_files(self):
         active, _, _, record, patch = self.execution_fixture()
         exported = self.root / "source-export"; (exported / "src").mkdir(parents=True)
@@ -243,7 +368,7 @@ class WorkflowTests(unittest.TestCase):
                         for name, identity in record["source"]["files"].items()]}
         path = self.root / "export-manifest.json"; path.write_bytes(w.encoded(manifest))
         record["source"] = {"kind": "source-export", "path": str(exported), "git": origin, "manifest": {"path": str(path), **w.file_identity(path)}}
-        patch["development_candidates"]["active"]["worktree"] = str(exported)
+        patch["development_candidates"]["active"].update(worktree=str(exported), manifest=record["source"]["manifest"])
         w.apply_checkpoint(self.state, patch)
         self.assertFalse((exported / ".git").exists())
         result = w.recovery(self.state, exported, "active")
@@ -300,6 +425,7 @@ class WorkflowTests(unittest.TestCase):
             incoming = copy.deepcopy(patch)
             source = incoming["execution_custody"]["active"]["source"]
             del source["files"]; source.update(kind="source-export", manifest={"path": str(manifest_path), **w.file_identity(manifest_path)})
+            incoming["development_candidates"]["active"]["manifest"] = source["manifest"]
             with self.subTest(value=value):
                 self.assert_checkpoint_refused_unchanged(incoming)
                 state = copy.deepcopy(self.state)
@@ -314,6 +440,7 @@ class WorkflowTests(unittest.TestCase):
         source = patch["execution_custody"]["active"]["source"]
         del source["files"]; source.update(kind="source-export", manifest={"path": str(manifest_path), **w.file_identity(manifest_path)})
         source["manifest"]["bytes"] = 2 ** 100
+        patch["development_candidates"]["active"]["manifest"] = copy.deepcopy(source["manifest"])
         self.assert_checkpoint_refused_unchanged(patch)
         state = copy.deepcopy(self.state)
         state["development_candidates"].update(patch["development_candidates"])
@@ -332,6 +459,7 @@ class WorkflowTests(unittest.TestCase):
         asset = {"path": str(path), **w.file_identity(path)}
         self.assertEqual(0, path.stat().st_atime_ns)
         record["source"] = {"kind": "source-export", "path": str(active), "git": origin, "manifest": asset}
+        patch["development_candidates"]["active"]["manifest"] = asset
         w.apply_checkpoint(self.state, patch)
         self.assertTrue(w.execution_checks(self.state, "active")["declared_inputs_available"])
         self.assertEqual(asset, {"path": str(path), **w.file_identity(path)})
@@ -383,15 +511,15 @@ class WorkflowTests(unittest.TestCase):
         return {"last_root_checkpoint_observed": {"path": str(path), "sha256": asset["sha256"]},
                 "recovery_assets": {"latest-root-checkpoint": asset}}
 
-    def assert_checkpoint_refused_unchanged(self, patch):
+    def assert_checkpoint_refused_unchanged(self, patch, expected_generation=0):
         before = self.state_path.read_bytes()
         memory = copy.deepcopy(self.state)
         with self.assertRaises(w.Refusal): w.apply_checkpoint(memory, patch)
         self.assertEqual(self.state, memory)
         with self.assertRaises(w.Refusal):
-            with w.transaction(self.state_path, 0) as state: w.apply_checkpoint(state, patch)
+            with w.transaction(self.state_path, expected_generation) as state: w.apply_checkpoint(state, patch)
         self.assertEqual(before, self.state_path.read_bytes())
-        self.assertEqual(0, w.read(self.state_path)["generation"])
+        self.assertEqual(expected_generation, w.read(self.state_path)["generation"])
 
     def test_checkpoint_rejects_writer24_string_locator_and_pathless_assets(self):
         patch = self.recovery_update()
