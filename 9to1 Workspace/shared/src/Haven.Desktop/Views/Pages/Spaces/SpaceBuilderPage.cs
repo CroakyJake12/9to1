@@ -17,6 +17,11 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 {
     private readonly object _gate = new();
     private readonly SpaceBuilderController _controller;
+    private readonly SpaceRegistry _originalRegistry;
+    private OriginalSpaceRequestPolicySource? _boardsSource;
+    private IReadOnlyList<SpaceBuilderBoardsSourceOption> _boardsChoices = [];
+    private long? _boardsChoicesRevision;
+    private bool _sourcePickerBusy;
     private readonly ExtensionManager? _extensions;
     private readonly SpaceBuilderCuiBindings _bindings;
     private readonly ICuiSceneReadiness _readiness;
@@ -46,6 +51,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     public SpaceBuilderPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness, Func<Task, bool>? queueBack, ExtensionManager? extensions)
     {
         Dispatcher.UIThread.VerifyAccess();
+        _originalRegistry = registry;
         _controller = new(registry, spaceId);
         _extensions = extensions;
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
@@ -59,7 +65,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             (kind, id) => TryDetachCapability(kind, id),
             () => _installedSkills,
             () => _installedPlugins,
-            DispatchAsync, CanMutate, () => _queueBack is not null);
+            DispatchAsync, CanMutate, () => _queueBack is not null,
+            () => _boardsChoices, () => _boardsSource is not null && !_sourcePickerBusy);
         _controller.StateChanged += OnStateChanged;
         Document = document;
         Content = _host;
@@ -77,7 +84,72 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     private bool IsPresentationCurrent() => Volatile.Read(ref _live);
     private bool CanMutate()
     {
-        lock (_gate) return _live && _activated && !_work.IsRetiring && _lease is null;
+        lock (_gate) return _live && _activated && !_work.IsRetiring && _lease is null && !_sourcePickerBusy;
+    }
+
+    internal void BindOriginalBoardsContextSource(OriginalSpaceRequestPolicySource source)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_gate)
+        {
+            if (_activation is not null || _boardsSource is not null || !source.HasOriginalContextRegistry(_originalRegistry))
+                throw new InvalidOperationException("Bind the SAME original Space/Notes source once, before page activation.");
+            _boardsSource = source;
+        }
+    }
+
+    private Task RunSourceChoiceAsync(ISpaceBuilderOriginalBoardsSourceChoice? choice, CancellationToken caller)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate() || _controller.State.IsBusy || _boardsSource is not { } source)
+                throw new InvalidOperationException("The original canonical source chooser is unavailable.");
+            if (choice is not null && !_boardsChoices.Any(option => ReferenceEquals(option.Input, choice)))
+                throw new InvalidOperationException("Choose an item from this page's current original source list.");
+            var state = _controller.State;
+            var revision = state.DraftRevision ?? throw new InvalidOperationException("Load the actual Space revision first.");
+            _controllerOperations++; _sourcePickerBusy = true;
+            try { return _work.RunAsync(async original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, original.Token);
+                try
+                {
+                    RefreshBindings();
+                    void Own(Action body) => Source(() => { body(); return true; });
+                    if (choice is null)
+                    {
+                        var options = await original.AwaitAsync(Source(() => source.GetOriginalBoardsContextChoicesAsync(
+                            _originalRegistry, state.SpaceId, revision, Own, linked.Token))).ConfigureAwait(false);
+                        original.DemandPublication();
+                        if (_controller.State.DraftRevision != revision)
+                            throw new InvalidOperationException("The Space changed while the source chooser was open. Refresh it.");
+                        _boardsChoices = options; _boardsChoicesRevision = revision;
+                        _controller.ReportSourceStatus(options.Count == 0 ? "No canonical Boards notebooks were found in the reviewed library."
+                            : "Choose a reviewed Boards notebook to add its reference. Source bodies still require Home approval when used.");
+                    }
+                    else
+                    {
+                        var reference = await original.AwaitAsync(Source(() => source.ResolveOriginalBoardsContextChoiceAsync(
+                            choice, _originalRegistry, state.SpaceId, revision, Own, linked.Token))).ConfigureAwait(false);
+                        original.DemandPublication();
+                        if (!_controller.AttachContextReference(reference, revision))
+                            throw new InvalidOperationException("The Space draft changed before the source reference could be added. Refresh it.");
+                    }
+                }
+                catch (Exception error)
+                {
+                    if (original.IsPublicationCurrent) _controller.ReportSourceStatus("Could not select the original source; the draft is preserved: " + error.Message);
+                    throw;
+                }
+                finally
+                {
+                    lock (_gate) { _controllerOperations--; _sourcePickerBusy = false; }
+                    RefreshBindings();
+                }
+            }); }
+            catch { _controllerOperations--; _sourcePickerBusy = false; throw; }
+        }
     }
 
     public Task ActivateAsync(CancellationToken token = default)
@@ -212,6 +284,24 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private async ValueTask DispatchAsync(string command, object? parameter, CancellationToken token)
     {
+        if (command == "space-builder.source.browse") { await RunSourceChoiceAsync(null, token).ConfigureAwait(false); return; }
+        if (command == "space-builder.source.attach" && parameter is ISpaceBuilderOriginalBoardsSourceChoice sourceChoice)
+        { await RunSourceChoiceAsync(sourceChoice, token).ConfigureAwait(false); return; }
+        if (command is "space-builder.source.remove" or "space-builder.legacy-file.remove")
+        {
+            lock (_gate)
+            {
+                if (!CanMutate()) throw new InvalidOperationException("This Space draft cannot be edited now.");
+                _work.RunSynchronous(original =>
+                {
+                    original.BindPublicationGuard(IsPresentationCurrent); original.DemandPublication();
+                    Source(() => command == "space-builder.source.remove" && parameter is string id && Guid.TryParseExact(id, "D", out var contextId)
+                        ? _controller.DetachContextReference(contextId)
+                        : command == "space-builder.legacy-file.remove" && parameter is string path && _controller.DetachLegacyFileReference(path));
+                });
+            }
+            return;
+        }
         if (command == "space-builder.capability.remove" && parameter is string compositeKey)
         {
             var parts = compositeKey.Split(':', 2);
@@ -276,7 +366,12 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         await actual.ConfigureAwait(false);
     }
 
-    private void OnStateChanged(SpaceBuilderState state) => RefreshBindings();
+    private void OnStateChanged(SpaceBuilderState state)
+    {
+        if (_boardsChoicesRevision is { } revision && state.DraftRevision != revision)
+        { _boardsChoices = []; _boardsChoicesRevision = null; }
+        RefreshBindings();
+    }
 
     private void RefreshBindings() => _ = RefreshBindingsAsync();
 

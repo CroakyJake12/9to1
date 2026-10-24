@@ -13,8 +13,22 @@ public interface ITaskRunOriginalProjectMetadataInputSuccessor
     Task OriginalAfterClose { get; }
 }
 
+public interface ITaskRunOriginalProjectMetadataInputMutation
+{
+    ITaskRunColdOriginalProjectInput OriginalInput { get; }
+    IDeveloperOriginalProjectMetadataRebindPreparation OriginalPreparation { get; }
+    Task OriginalSettlement { get; }
+}
+
 public interface ITaskRunOriginalProjectMetadataInputSource
 {
+    ITaskRunColdOriginalProjectInput GetOriginalInitialInputForMetadataRebindPreparation(
+        IDeveloperOriginalProjectMetadataRebindPreparation sameBeforePreparation);
+    ITaskRunOriginalProjectMetadataInputMutation BeginOriginalInitialInputMetadataMutation(
+        ITaskRunColdOriginalProjectInput sameInput, IDeveloperOriginalProjectMetadataRebindPreparation sameBeforePreparation);
+    void CompleteOriginalInitialInputMetadataMutation(ITaskRunOriginalProjectMetadataInputMutation sameMutation,
+        ITaskRunOriginalProjectMetadataInputSuccessor sameSuccessfulSuccessor);
+    void FailOriginalInitialInputMetadataMutation(ITaskRunOriginalProjectMetadataInputMutation sameMutation, Exception originalFailure);
     // Private original marker only, unambiguous exact context/project/actor/before identity.
     // Does not infer authority from a TaskID or select among conflicting preparations.
     ITaskRunColdOriginalProjectInput GetOriginalInitialInputForMetadataRebind(

@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Application.Compatibility;
+using Haven.Desktop.Services;
 using HavenOS.Files.NativeHost;
 using HavenOS.Files.NativeUI;
 using HavenOS.Home;
@@ -85,21 +86,18 @@ internal sealed partial class HomeApp
     {
         public Task<HomeFeatureNavigationResult> OpenAsync(HomeDeepLink link, CancellationToken token = default)
         {
-            if (link.OwnerApp == "files" && link.TargetRouteId == "files.folder" && link.Action == "open")
-                return owner.OpenOriginalLibraryFilesFolderAsync(link, token);
+            if (link.OwnerApp == "files" && (link.TargetRouteId is "files.folder" or "files.preview") && link.Action == "open")
+                return owner.OpenOriginalLibraryFilesTargetAsync(link, token);
             return borrowed?.OpenAsync(link, token) ?? Task.FromResult(new HomeFeatureNavigationResult(false,
                 "OwningAppUnavailable", "This standalone host has no real connection to the selected owning app.",
                 new(link.TargetRouteId!, link.OwnerApp, link.ObjectId, link.Action)));
         }
     }
 
-    private async Task<HomeFeatureNavigationResult> OpenOriginalLibraryFilesFolderAsync(HomeDeepLink link, CancellationToken token)
+    private async Task<HomeFeatureNavigationResult> OpenOriginalLibraryFilesTargetAsync(HomeDeepLink link, CancellationToken token)
     {
-        var ids = link.ObjectId.Split('/');
-        if (ids.Length != 2 || !Guid.TryParseExact(ids[0], "D", out var store) || store == Guid.Empty ||
-            !Guid.TryParseExact(ids[1], "D", out var folder) || folder == Guid.Empty ||
-            _originalLibraryFilesBrowser is null || _originalLibraryActor is null)
-            throw new UnauthorizedAccessException("Retain the current original Files Library folder target.");
+        if (_originalLibraryFilesBrowser is null || _originalLibraryActor is null || _originalFilesLibraryIndex is null)
+            throw new UnauthorizedAccessException("Retain the current original Files Library owner.");
         var original = new CloudflareOriginalTaskLedger(); original.BindOriginalOwner(this);
         OriginalLibraryFilesWindow? acquired = null;
         try
@@ -109,10 +107,15 @@ internal sealed partial class HomeApp
                 token.ThrowIfCancellationRequested();
                 if (!await original.AwaitAsync(original.Invoke(() => ObserveOriginalLibraryOwnerAsync(token))).ConfigureAwait(false))
                     throw new UnauthorizedAccessException("The original Home profile cannot open this Files folder.");
-                // Shared Library has fresh source Get/CanRead/CanOpen. The destination independently
-                // lists/revalidates its own original Files page; no stale index grants access.
+                // The stable Library ID never encodes a guessed parent/revision. Resolve those
+                // from the exact current source-issued link; the destination separately reads again.
+                var target = await original.AwaitAsync(original.Invoke(() =>
+                    _originalFilesLibraryIndex.ResolveOriginalOpenTargetAsync(link, token))).ConfigureAwait(false);
+                if (target is null) return new HomeFeatureNavigationResult(false, "ArtifactUnavailable",
+                    "Refresh Library to open the current original Files item.",
+                    new(link.TargetRouteId!, link.OwnerApp, link.ObjectId, link.Action));
                 var dispatch = original.Invoke(() => Dispatcher.UIThread.InvokeAsync<OriginalLibraryFilesWindow>(() =>
-                    acquired = BeginOriginalLibraryFilesWindow(store, folder, token)).GetTask());
+                    acquired = BeginOriginalLibraryFilesWindow(target, token)).GetTask());
                 var window = await original.AwaitAsync(dispatch).ConfigureAwait(false);
                 await original.AwaitAsync(window.Open!).ConfigureAwait(false);
                 if (!await original.AwaitAsync(original.Invoke(() => ObserveOriginalLibraryOwnerAsync(token))).ConfigureAwait(false))
@@ -126,7 +129,8 @@ internal sealed partial class HomeApp
                 }).GetTask());
                 var finalOwner = await original.AwaitAsync(finalPublication).ConfigureAwait(false);
                 await original.AwaitAsync(finalOwner).ConfigureAwait(false);
-                return new HomeFeatureNavigationResult(true, "Opened", "Opened the original folder in Files.",
+                return new HomeFeatureNavigationResult(true, "Opened", target.FileId is null
+                    ? "Opened the original folder in Files." : "Opened the original text/code preview in Files.",
                     new(link.TargetRouteId!, link.OwnerApp, link.ObjectId, link.Action));
             }).ConfigureAwait(false);
         }
@@ -147,8 +151,9 @@ internal sealed partial class HomeApp
         }
     }
 
-    private OriginalLibraryFilesWindow BeginOriginalLibraryFilesWindow(Guid store, Guid folder, CancellationToken caller)
+    private OriginalLibraryFilesWindow BeginOriginalLibraryFilesWindow(NativeHomeFilesLibrarySource.OriginalOpenTarget target, CancellationToken caller)
     {
+        var store = target.StoreId; var folder = target.FolderId;
         Dispatcher.UIThread.VerifyAccess(); caller.ThrowIfCancellationRequested();
         if (!OriginalLibraryHomeIsAlive()) throw new ObjectDisposedException("The original Home Library is closing.");
         var record = new OriginalLibraryFilesWindow(this, store, folder);
@@ -174,7 +179,9 @@ internal sealed partial class HomeApp
                 record.View = originals.Invoke(() => new FilesNativeBrowserSurface(_originalLibraryFilesBrowser!,
                     _originalLibraryFilesPackages, _originalLibraryActor!, new OriginalLibraryFilesReadiness(record), record.Lifetime.Token));
                 await originals.AwaitAsync(originals.Invoke(() => record.View.InitializeAsync(linked.Token)));
-                await originals.AwaitAsync(originals.Invoke(() => record.View.OpenOriginalLocationAsync(store, folder, linked.Token)));
+                await originals.AwaitAsync(originals.Invoke(() => target.FileId is { } file && target.RevisionId is { } revision
+                    ? record.View.OpenOriginalTextPreviewLocationAsync(store, folder, file, revision, linked.Token)
+                    : record.View.OpenOriginalLocationAsync(store, folder, linked.Token)));
                 await originals.AwaitAsync(originals.Invoke(() => record.View.RevalidateOriginalOwnerAsync(linked.Token)));
                 if (!await originals.AwaitAsync(originals.Invoke(() => ObserveOriginalLibraryOwnerAsync(linked.Token))))
                     throw new UnauthorizedAccessException("The original Home profile changed before Files publication.");
@@ -185,6 +192,13 @@ internal sealed partial class HomeApp
                     if (!record.View.TryGetOriginalLocation(out var actualStore, out var actualFolder, out var title) ||
                         actualStore != store || actualFolder != folder)
                         throw new UnauthorizedAccessException("The original Files destination changed before publication.");
+                    if (target.FileId is { } expectedFile && target.RevisionId is { } expectedRevision)
+                    {
+                        if (!record.View.TryGetOriginalTextPreviewLocation(out var actualFile, out var actualRevision, out var name) ||
+                            actualFile != expectedFile || actualRevision != expectedRevision)
+                            throw new UnauthorizedAccessException("The original Files preview changed before publication.");
+                        title = name;
+                    }
                     record.Window = new Window { Title = "Files — " + title, Width = 1100, Height = 760, Content = record.View };
                     record.Window.Closing += (_, args) =>
                     {

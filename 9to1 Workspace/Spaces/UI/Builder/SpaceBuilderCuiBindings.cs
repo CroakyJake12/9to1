@@ -18,6 +18,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Func<string, object?, CancellationToken, ValueTask> _dispatch;
     private readonly Func<bool> _isCurrent;
     private readonly Func<bool> _canGoBack;
+    private readonly Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>> _sourceOptions;
+    private readonly Func<bool> _canBrowseSources;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
 
@@ -34,7 +36,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Action<SpaceCapabilityKind, string> detachCapability,
         Func<IReadOnlyList<Haven.Core.ExtensionSkillCatalogEntry>> installedSkills,
         Func<IReadOnlyList<Haven.Core.InstalledExtensionPackage>> installedPlugins,
-        Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent, Func<bool>? canGoBack)
+        Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent, Func<bool>? canGoBack,
+        Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>>? sourceOptions = null, Func<bool>? canBrowseSources = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -45,6 +48,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _isCurrent = isCurrent ?? (() => true);
         _canGoBack = canGoBack ?? (() => false);
+        _sourceOptions = sourceOptions ?? (() => []);
+        _canBrowseSources = canBrowseSources ?? (() => false);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -73,6 +78,20 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.context.includeSelection" => state.Draft.ContextPolicy.IncludeCurrentSelection,
             "builder.context.webAccess" => (int)state.Draft.ContextPolicy.WebAccess,
             "builder.context.webAccessOptions" => WebAccessOptions,
+            "builder.context.maximumRetrievedItems" => state.Draft.ContextPolicy.MaximumRetrievedItems?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
+            "builder.boardOptions" => _sourceOptions(),
+            "builder.canBrowseSources" => _isCurrent() && state.CanEdit && !state.IsBusy && _canBrowseSources(),
+            "builder.contextReferences" => state.Draft.ContextReferences.Select(reference => new
+            {
+                id = reference.ContextId.ToString("D"),
+                label = _sourceOptions().FirstOrDefault(option => option.Id == reference.CanonicalEntityId)?.Label ??
+                    (reference.OwnerAppId + " / " + reference.CanonicalEntityId),
+                revision = reference.RevisionToken ?? "Current version at read",
+                policy = reference.Permission + (reference.IncludedAutomatically ? "; included automatically" : "; not included automatically")
+            }).ToArray(),
+            "builder.hasContextReferences" => state.Draft.ContextReferences.Count != 0,
+            "builder.legacyFiles" => state.Draft.LegacyFiles.Select(reference => new { path = reference.Path, label = reference.DisplayName }).ToArray(),
+            "builder.hasLegacyFiles" => state.Draft.LegacyFiles.Count != 0,
             "builder.inherit.sources" => state.Draft.Inheritance.Sources,
             "builder.inherit.apps" => state.Draft.Inheritance.ConnectedApps,
             "builder.inherit.models" => state.Draft.Inheritance.ModelPolicy,
@@ -130,6 +149,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.description" => SpaceBuilderField.Description,
             "builder.icon" => SpaceBuilderField.IconKey,
             "builder.instructions" => SpaceBuilderField.Instructions,
+            "builder.context.maximumRetrievedItems" => SpaceBuilderField.MaximumRetrievedItems,
             _ => null
         };
         if (field is not null && value is string text)
@@ -199,6 +219,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         "space-builder.discard" => _isCurrent() && _state().CanDiscard,
         "space-builder.reload" => _isCurrent() && _state().CanReload,
         "space-builder.back" => _isCurrent() && _canGoBack(),
+        "space-builder.source.browse" or "space-builder.source.attach" => _isCurrent() && _state().CanEdit && !_state().IsBusy && _canBrowseSources(),
+        "space-builder.source.remove" or "space-builder.legacy-file.remove" => _isCurrent() && _state().CanEdit,
         "space-builder.capability.remove" => _isCurrent() && _state().CanEdit,
         "space-builder.skill.attach" or "space-builder.plugin.attach" => _isCurrent() && _state().CanEdit,
         _ => null

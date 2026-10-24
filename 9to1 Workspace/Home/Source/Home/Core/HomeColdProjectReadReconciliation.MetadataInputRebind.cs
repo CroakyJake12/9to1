@@ -57,7 +57,17 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunOriginal
         IDeveloperOriginalProjectMetadataRebindResult sameRebind)
     {
         var rebind = RequireOriginalInputMetadataRebind(sameRebind, true);
-        var context = rebind.OriginalPreparation.OriginalCommandRead.OriginalDescriptor.OriginalConversation.Id;
+        return FindOriginalInitialInput((MetadataRebindPreparation)rebind.OriginalPreparation);
+    }
+    public ITaskRunColdOriginalProjectInput GetOriginalInitialInputForMetadataRebindPreparation(
+        IDeveloperOriginalProjectMetadataRebindPreparation sameBeforePreparation)
+    {
+        var before = RequireMetadataRebindPreparation(sameBeforePreparation);
+        return FindOriginalInitialInput(before);
+    }
+    private ITaskRunColdOriginalProjectInput FindOriginalInitialInput(MetadataRebindPreparation before)
+    {
+        var context = before.OriginalCommandRead.OriginalDescriptor.OriginalConversation.Id;
         Work[] candidates;
         lock (_gate)
         {
@@ -71,8 +81,8 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunOriginal
         {
             if (!candidate.IsLive && candidate.ObserveSuccessfullySettledOriginalInputClose() is null) continue;
             var basis = ObserveMetadataInputBasis(candidate);
-            if (SameMetadataInputResource(basis.Identity, rebind.OriginalPreparation.BeforeIdentity) &&
-                StringComparer.Ordinal.Equals(basis.Identity.SavedWorkspaceDocumentSha256, rebind.OriginalPreparation.BeforeIdentity.SavedWorkspaceDocumentSha256))
+            if (SameMetadataInputResource(basis.Identity, before.BeforeIdentity) &&
+                StringComparer.Ordinal.Equals(basis.Identity.SavedWorkspaceDocumentSha256, before.BeforeIdentity.SavedWorkspaceDocumentSha256))
                 selected.Add(candidate);
         }
         return selected.Count == 1 ? selected[0]
@@ -212,10 +222,124 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunOriginal
         operation.Driver = driver; return driver;
     }
 
+    // The actual terminal identity capture is an irreversible source boundary. A later
+    // metadata write must not race an in-flight or already returned capsule observation.
+    private sealed class MetadataMutationState
+    {
+        internal MetadataInputMutation? Mutation;
+        internal int Captures;
+        internal bool Sealed;
+    }
+    private sealed class MetadataInputMutation(HomeColdProjectReadReconciliation owner, Work input,
+        MetadataRebindPreparation preparation) : ITaskRunOriginalProjectMetadataInputMutation
+    {
+        internal HomeColdProjectReadReconciliation Owner => owner;
+        internal Work Input => input;
+        internal readonly TaskCompletionSource Settlement = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public ITaskRunColdOriginalProjectInput OriginalInput => input;
+        public IDeveloperOriginalProjectMetadataRebindPreparation OriginalPreparation => preparation;
+        public Task OriginalSettlement => Settlement.Task;
+    }
+    private sealed class MetadataInputCapture(HomeColdProjectReadReconciliation owner, Work original) : IDisposable
+    {
+        private bool _closed;
+        internal void Seal()
+        {
+            lock (owner._gate)
+            {
+                if (_closed || !owner._metadataMutationStates.TryGetValue(original, out var state) || state.Captures < 1 || state.Mutation is not null)
+                    throw new UnauthorizedAccessException("The original terminal identity capture reservation changed.");
+                state.Sealed = true;
+            }
+        }
+        public void Dispose()
+        {
+            lock (owner._gate)
+            {
+                if (_closed) return;
+                var state = owner._metadataMutationStates.GetValue(original, _ => new());
+                if (state.Captures < 1) throw new InvalidOperationException("The original terminal identity capture lost custody.");
+                state.Captures--; _closed = true;
+            }
+        }
+    }
+    private readonly ConditionalWeakTable<Work, MetadataMutationState> _metadataMutationStates = new();
+    public ITaskRunOriginalProjectMetadataInputMutation BeginOriginalInitialInputMetadataMutation(
+        ITaskRunColdOriginalProjectInput sameInput, IDeveloperOriginalProjectMetadataRebindPreparation sameBeforePreparation)
+    {
+        var input = RequireInput(sameInput, false); var before = RequireMetadataRebindPreparation(sameBeforePreparation);
+        var basis = ObserveMetadataInputBasis(input);
+        if (input.Conversation.Id != before.OriginalCommandRead.OriginalDescriptor.OriginalConversation.Id ||
+            !SameMetadataInputResource(basis.Identity, before.BeforeIdentity) ||
+            basis.Identity.SavedWorkspaceDocumentSha256 != before.BeforeIdentity.SavedWorkspaceDocumentSha256)
+            throw new UnauthorizedAccessException("The SAME original initial input and actual before-native identity are required.");
+        lock (_gate)
+        {
+            var state = _metadataMutationStates.GetValue(input, _ => new());
+            if (_retiring || state.Mutation is not null || state.Captures != 0 || state.Sealed)
+                throw new InvalidOperationException("The original project input is already being captured or updated; no metadata write was admitted.");
+            return state.Mutation = new(this, input, before);
+        }
+    }
+    private MetadataInputMutation RequireMetadataInputMutation(ITaskRunOriginalProjectMetadataInputMutation value)
+    {
+        lock (_gate)
+            return value is MetadataInputMutation actual && ReferenceEquals(actual.Owner, this) &&
+                _metadataMutationStates.TryGetValue(actual.Input, out var state) && ReferenceEquals(state.Mutation, actual)
+                ? actual : throw new UnauthorizedAccessException("The SAME source-owned pending input mutation is required.");
+    }
+    public void CompleteOriginalInitialInputMetadataMutation(ITaskRunOriginalProjectMetadataInputMutation sameMutation,
+        ITaskRunOriginalProjectMetadataInputSuccessor sameSuccessfulSuccessor)
+    {
+        var actual = RequireMetadataInputMutation(sameMutation);
+        if (sameSuccessfulSuccessor is not MetadataInputSuccessor successor ||
+            !ReferenceEquals(successor.OriginalInput, actual.OriginalInput) ||
+            !ReferenceEquals(successor.OriginalMetadataRebind.OriginalPreparation, actual.OriginalPreparation))
+            throw new UnauthorizedAccessException("A copied or different metadata successor cannot settle this original mutation.");
+        DemandHealthyMetadataInputSuccessor(successor);
+        _ = ObserveMetadataInputBasis(actual.Input); // Promote only the real successful whole driver.
+        lock (_gate)
+        {
+            _ = RequireMetadataInputMutation(actual);
+            if (actual.OriginalSettlement.IsCompleted) throw new InvalidOperationException("The original mutation already failed or settled.");
+            _metadataMutationStates.GetValue(actual.Input, _ => new()).Mutation = null;
+            actual.Settlement.TrySetResult();
+        }
+    }
+    public void FailOriginalInitialInputMetadataMutation(ITaskRunOriginalProjectMetadataInputMutation sameMutation, Exception originalFailure)
+    {
+        ArgumentNullException.ThrowIfNull(originalFailure);
+        var actual = RequireMetadataInputMutation(sameMutation);
+        // Keep the failed reservation as a durable in-process refusal. No unknown key/write/
+        // native result is replayed and a terminal capture cannot publish the old identity.
+        actual.Settlement.TrySetException(originalFailure);
+    }
+    private async Task WaitOriginalMetadataMutationAsync(Work original, Context sources)
+    {
+        Task? actual;
+        lock (_gate) actual = _metadataMutationStates.TryGetValue(original, out var state) ? state.Mutation?.OriginalSettlement : null;
+        if (actual is not null) await sources.Await(actual).ConfigureAwait(false);
+    }
+    private async Task<MetadataInputCapture> AcquireOriginalMetadataInputCaptureAsync(Work original, Context sources)
+    {
+        while (true)
+        {
+            await WaitOriginalMetadataMutationAsync(original, sources).ConfigureAwait(false);
+            lock (_gate)
+            {
+                var state = _metadataMutationStates.GetValue(original, _ => new());
+                if (state.Mutation is not null) continue;
+                if (_retiring) throw new ObjectDisposedException(nameof(HomeColdProjectReadReconciliation));
+                state.Captures++; return new(this, original);
+            }
+        }
+    }
+
     private async Task ValidateEffectiveOriginalProjectInputAsync(Work original, TaskRunColdChatInput exact,
         Context sources, CancellationToken token)
     {
         original.DemandExactInput(exact);
+        await WaitOriginalMetadataMutationAsync(original, sources).ConfigureAwait(false);
         var basis = ObserveMetadataInputBasis(original);
         if (basis.Successor is null) await original.ValidateFreshShortReadAsync(sources, token).ConfigureAwait(false);
         else await ValidateClosedInputThroughFreshOriginalReadAsync(original, sources, token, basis.Identity).ConfigureAwait(false);

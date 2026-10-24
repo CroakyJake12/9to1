@@ -1,5 +1,8 @@
 <Cui id="spaces.builder" version="1">
   <Actions>
+    <Action name="AttachBoardsSource" command="space-builder.source.attach" parameter="{Binding source.input}" />
+    <Action name="RemoveContextSource" command="space-builder.source.remove" parameter="{Binding context.id}" />
+    <Action name="RemoveLegacyFile" command="space-builder.legacy-file.remove" parameter="{Binding legacy.path}" />
     <Action name="RemoveCapability" command="space-builder.capability.remove" parameter="{Binding cap.key}" />
     <Action name="AttachSkill" command="space-builder.skill.attach" parameter="{Binding skill.id}" />
     <Action name="AttachPlugin" command="space-builder.plugin.attach" parameter="{Binding plugin.id}" />
@@ -21,7 +24,7 @@
         </Container>
         <Container Type="Vertical Stack" CellGap="8" Interactive="{Binding builder.canEdit}">
           <Text text="Sources and privacy" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-          <Text text="Saved policy preferences; request activation is not available yet. Changing a setting does not grant permission, retrieve sources or enable outside web access." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="Policies are checked before request dispatch; unavailable original owners block the request. Saving does not grant permission, retrieve source bodies or enable outside web access." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Text text="Outside web access" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-web-access" Type="Select" ItemsSource="{Binding builder.context.webAccessOptions}" SelectedIndex="{Binding builder.context.webAccess, mode=TwoWay}" accessible-name="Outside web access policy" />
           <Container Type="Horizontal Stack" CellGap="8">
@@ -78,6 +81,39 @@
           <Input id="space-builder-category-models" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.models, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Models category state" />
           <Text text="Memory" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-memory" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.memory, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Memory category state" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="8">
+          <Text text="Canonical context sources" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Choose a real Boards notebook through Home. Adding a read reference does not grant body access; using it requires a new original Home review and local inference. Current selection is not captured on this route. Up to 128 current notebooks are shown, newest first." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Button id="space-builder-browse-boards" content="Choose or refresh Boards sources" action="space-builder.source.browse" Interactive="{Binding builder.canBrowseSources}" accessible-name="Choose canonical Boards sources" />
+          <Repeat id="space-builder-boards-options" Source="{Binding builder.boardOptions}" As="source" Key="{Binding source.id}">
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Text text="{Binding source.label}" foreground="{Resource CuiTextBrush}" />
+              <Text text="{Binding source.revision}" foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-builder-attach-boards-source" content="Add source" action="AttachBoardsSource" Interactive="{Binding builder.canBrowseSources}" accessible-name="Add this canonical Boards source" />
+            </Container>
+          </Repeat>
+          <Repeat id="space-builder-context-references" Source="{Binding builder.contextReferences}" As="context" Key="{Binding context.id}">
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Text text="{Binding context.label}" foreground="{Resource CuiTextBrush}" />
+              <Text text="{Binding context.revision}" foreground="{Resource CuiTextSoftBrush}" />
+              <Text text="{Binding context.policy}" foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-builder-remove-context-source" content="Remove reference" action="RemoveContextSource" Interactive="{Binding builder.canEdit}" accessible-name="Remove this source reference without deleting its notebook" />
+            </Container>
+          </Repeat>
+          <Text text="Maximum retrieved items (empty for no policy limit; 0 includes no source bodies)" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-context-limit" Type="Text" Value="{Binding builder.context.maximumRetrievedItems, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Maximum retrieved context items" />
+          <Text text="The original source currently supports up to 32 selected items, subject to text bounds. Strict policies exclude unqualified page attachments and tool retrieval." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container Type="Vertical Stack" Visible="{Binding builder.hasLegacyFiles}" CellGap="4">
+            <Text text="Legacy file references" font-size="16" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+            <Text text="These paths remain saved but cannot be used as reviewed source bodies under strict policies. Remove the reference to migrate this Space; the original file is not deleted." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Repeat id="space-builder-legacy-files" Source="{Binding builder.legacyFiles}" As="legacy" Key="{Binding legacy.path}">
+              <Container Type="Horizontal Stack" CellGap="8">
+                <Text text="{Binding legacy.label}" foreground="{Resource CuiTextBrush}" />
+                <Button id="space-builder-remove-legacy-file" content="Remove reference" action="RemoveLegacyFile" Interactive="{Binding builder.canEdit}" accessible-name="Remove this legacy reference without deleting the file" />
+              </Container>
+            </Repeat>
+          </Container>
         </Container>
         <Container Type="Vertical Stack" CellGap="4">
           <Text text="Installed Skills" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />

@@ -20,7 +20,7 @@ public sealed partial class DeveloperManualSourceReadOwner
 {
     /// <summary>Only the actual existing platform credential owner is usable. A substitute
     /// IProviderSecretStore, passphrase or settings-encryption fallback is never accepted.</summary>
-    private static void DemandOriginalRecoveryKeys(IProviderSecretStore keys, IAppPaths actualPaths)
+    internal static void DemandOriginalRecoveryKeys(IProviderSecretStore keys, IAppPaths actualPaths)
     {
         ArgumentNullException.ThrowIfNull(keys); ArgumentNullException.ThrowIfNull(actualPaths);
         if (OperatingSystem.IsLinux() && keys is LinuxProviderSecretStore linux && linux.HasOriginalComposition(actualPaths)) return;
@@ -150,7 +150,7 @@ public sealed partial class DeveloperManualSourceReadOwner
         finally { reservation?.Dispose(); }
     }
 
-    private static async Task<byte[]> ReadRecoveryKeyAsync(IProviderSecretStore keys, Guid profile,
+    internal static async Task<byte[]> ReadRecoveryKeyAsync(IProviderSecretStore keys, Guid profile,
         Guid workspace, bool required, CancellationToken token)
     {
         var provider = "9to1.build.recovery." + profile.ToString("N");

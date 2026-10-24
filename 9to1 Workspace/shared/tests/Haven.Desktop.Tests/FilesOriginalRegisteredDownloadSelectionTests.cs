@@ -213,6 +213,46 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             Assert.True(healthy.Succeeded); Assert.Equal("unchanged", healthy.Text);
         });
 
+    [Fact]
+    public Task Home_Library_finds_nested_text_by_shared_search_and_resolves_stable_identity_to_fresh_original_preview_target()
+        => Run(async rig =>
+        {
+            var uploaded = await rig.UploadAsync("revision-notes.md", Encoding.UTF8.GetBytes("# Revision\nActual original text."));
+            var before = await rig.BytesAsync();
+            var profiles = rig.Graph!.GetRequiredService<IAuthenticatedResourceActorSource>();
+            async Task<bool> Current(CancellationToken token) => await profiles.GetCurrentAsync(token) == rig.Workspace.Actor;
+            var source = new NativeHomeFilesLibrarySource(rig.Browser, rig.Workspace.Actor,
+                rig.Graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true);
+            try
+            {
+                var library = source.CreateService(new UnusedLibraryRouter());
+                var page = await rig.Keep(library.SearchAsync(new HomeLibraryQuery(Text: "revision-notes"), rig.Token));
+                Assert.True(page.Succeeded);
+                var row = Assert.Single(page.Items);
+                var stableId = rig.Workspace.Configuration.StoreId.ToString("D") + "/" + uploaded.FileId.Value.ToString("D");
+                Assert.Equal(stableId, row.ArtifactId); Assert.Equal("files", row.OwnerApp); Assert.Equal("files.preview", row.OpenLink.TargetRouteId);
+                Assert.Equal("revision-notes.md", row.DisplayName); Assert.Equal("Text/code file", row.ArtifactType);
+                Assert.True(await rig.Keep(source.CanOpenAsync(row.OpenLink, rig.Token)));
+                var target = await rig.Keep(source.ResolveOriginalOpenTargetAsync(row.OpenLink, rig.Token));
+                Assert.NotNull(target); Assert.Equal(rig.Workspace.Configuration.StoreId, target.StoreId);
+                Assert.Equal(rig.Folder.Value, target.FolderId); Assert.Equal(uploaded.FileId.Value, target.FileId);
+                Assert.Equal(uploaded.RevisionId.Value, target.RevisionId);
+                Assert.Null(await rig.Keep(source.ResolveOriginalOpenTargetAsync(row.OpenLink with { }, rig.Token)));
+                var selected = await rig.Keep(rig.Browser.ReadOriginalTextPreviewSelectionWithinSourceAsync(rig.Workspace.Actor,
+                    target.StoreId, new(target.FolderId), new(target.FileId!.Value), new(target.RevisionId!.Value),
+                    () => true, body => body(), rig.Retain, rig.Token));
+                Assert.Equal(uploaded.FileId, selected.Row.Id); Assert.Equal(uploaded.RevisionId, selected.Row.CurrentRevisionId);
+                Assert.Same(selected.Row, Assert.Single(selected.Page.Items, item => item.Id == uploaded.FileId));
+                Assert.Equal(before.Home, (await rig.BytesAsync()).Home); Assert.Equal(before.Drive, (await rig.BytesAsync()).Drive);
+            }
+            finally { await rig.Keep(source.DisposeAsync().AsTask()); }
+        });
+    private sealed class UnusedLibraryRouter : IHomeDeepLinkRouter
+    {
+        public Task<HomeFeatureNavigationResult> OpenAsync(HomeDeepLink link, CancellationToken token = default) =>
+            throw new InvalidOperationException("This metadata/search case must not simulate native navigation success.");
+    }
+
     private sealed class Rig
     {
         internal readonly string Root = Path.Combine(Path.GetTempPath(), "astra-files-registered-selection-" + Guid.NewGuid().ToString("N"));

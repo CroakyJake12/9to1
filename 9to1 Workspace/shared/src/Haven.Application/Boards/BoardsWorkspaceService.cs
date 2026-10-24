@@ -27,6 +27,10 @@ public interface IBoardsWorkspaceService
     NotesPage AddPage(NotesDocument notebook, Guid sectionId, string? title = null);
     void MoveSection(NotesDocument notebook, Guid sectionId, int targetIndex);
     void MovePage(NotesDocument notebook, Guid pageId, Guid targetSectionId, int targetIndex);
+    IReadOnlyList<BoardsPageHierarchyItem> ListPageHierarchy(NotesDocument notebook, bool includeDeleted = false);
+    NotesPage AddChildPage(NotesDocument notebook, Guid parentPageId, string? title = null);
+    void SetPageParent(NotesDocument notebook, Guid pageId, Guid? parentPageId);
+    void MovePageWithinParent(NotesDocument notebook, Guid pageId, int direction);
     void MoveBlock(NotesDocument notebook, Guid pageId, Guid blockId, int targetIndex);
     NotesBlock AddBlock(NotesDocument notebook, Guid pageId, NotesBlockKind kind, string? text = null);
     bool RenamePage(NotesDocument notebook, Guid pageId, string? title);
@@ -139,7 +143,9 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
     public async Task<NotesDocument?> OpenNotebookAsync(Guid notebookId, CancellationToken cancellationToken)
     {
         var document = await repository.LoadAsync(notebookId, cancellationToken).ConfigureAwait(false);
-        return document is not null && IsBoardsNotebook(document) && !IsDeleted(document) ? document : null;
+        if (document is null || !IsBoardsNotebook(document) || IsDeleted(document)) return null;
+        _ = ReadPageParents(document); // Refuse malformed known hierarchy before publishing a new active board.
+        return document;
     }
 
     public async Task<bool> DeleteNotebookAsync(Guid notebookId, CancellationToken cancellationToken)
@@ -213,6 +219,7 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
     public async Task SaveAsync(NotesDocument notebook, string reason, CancellationToken cancellationToken)
     {
         EnsureBoards(notebook);
+        _ = ReadPageParents(notebook);
         await repository.SaveAsync(notebook, reason, cancellationToken).ConfigureAwait(false);
     }
 

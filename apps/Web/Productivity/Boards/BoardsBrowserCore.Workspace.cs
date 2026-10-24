@@ -14,6 +14,7 @@ public sealed partial class BoardsBrowserCore
     internal void ConfigurePageInkCanvas(bool active)
     { if (_pageInkCanvasActive == active) return; _pageInkCanvasActive = active; Notify(); }
     private string _boardSearch = string.Empty;
+    private readonly HashSet<Guid> _collapsedPages = [];
     public Guid? ActivePageId { get; private set; }
     private IEnumerable<NotesPage> VisiblePages => _document?.Sections.SelectMany(section =>
         section.Pages.OrderBy(page => page.Order)).Where(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id)) ?? [];
@@ -57,7 +58,7 @@ public sealed partial class BoardsBrowserCore
             "NoBoards" => _notebooks.Count == 0,
             "BoardTitle" => _document?.Title ?? "Your boards",
             "PageTitle" => ActivePage?.Title ?? string.Empty,
-            "Breadcrumb" => ActiveSection?.Title ?? "Boards",
+            "Breadcrumb" => HierarchyBreadcrumb(),
             "BoardSearch" => _boardSearch,
             "ShowBoardPicker" => _showPicker || _document is null,
             "ShowPageTree" => _document is not null && !_showPicker,
@@ -68,9 +69,7 @@ public sealed partial class BoardsBrowserCore
             "IsEditMode" => _document is not null && ActivePageId is { } editId && _boards.GetEditMode(_document, editId) == BoardsPageEditMode.Edit,
             "LayoutUnlocked" => _document is not null && ActivePageId is { } layoutId && _boards.GetLayoutMode(_document, layoutId) == BoardsPageLayoutMode.Unlocked,
             "EditModeLabel" => IsReadOnly ? "Read-only access" : RichEditingPermitted ? "Editing" : "Viewing · content protected",
-            "PageRows" => _document?.Sections.SelectMany(section => section.Pages.OrderBy(page => page.Order)
-                .Where(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id))
-                .Select(page => new BoardsPageRow(page.Id, page.Title, section.Title, page.Id == ActivePageId))).ToArray() ?? [],
+            "PageRows" => HierarchyPageRows(),
             "DeletedPages" => _document is null ? Array.Empty<BoardsPageRow>() : _boards.ListDeletedPages(_document)
                 .Select(page => new BoardsPageRow(page.Id, page.Title, "Trash", false)).ToArray(),
             "HasDeletedPages" => _document is not null && _boards.ListDeletedPages(_document).Count > 0,
@@ -91,11 +90,13 @@ public sealed partial class BoardsBrowserCore
                     list.Kind == NotesListKind.Numbered ? $"{index + 1}." : "•")).ToArray() : [],
             "CanMovePageUp" => CanMovePage(-1),
             "CanMovePageDown" => CanMovePage(1),
+            "CanIndentPage" => CanIndentPage(),
+            "CanOutdentPage" => CanOutdentPage(),
             "CanDeletePage" => AllowRetainedRichInput && ActiveSection?.Pages.Count(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id)) > 1,
             "DetailsLabel" => _showDetails ? "Hide details" : "Storage and capabilities",
             "StorageLabel" => "Saved in this browser",
             "StorageDetail" => "Boards on this device use local storage. Account sign-in does not sync them. Keep browser data to retain these copies.",
-            "CapabilitiesDetail" => "Native text, headings, tables, checklists and page recovery use the shared editor. Compatible native hosts also support shared inline and page drawing with whole-stroke erasing. Split erasing, nested pages, shared Data views and Chat pages are not connected here yet. Existing unsupported content is preserved.",
+            "CapabilitiesDetail" => "Native text, headings, tables, lists, nested topic pages and page recovery use the shared owner and editor. Compatible native hosts also support shared inline and page drawing with whole-stroke erasing. Split erasing, shared Data views and Chat pages are not connected here yet. Existing unsupported content is preserved.",
             "CanRestorePage" => CanChangeBoard,
             "IsViewMode" => ActivePageId is { } viewId && _document is not null && (IsReadOnly || _boards.GetEditMode(_document, viewId) == BoardsPageEditMode.View),
             _ => null
@@ -103,7 +104,7 @@ public sealed partial class BoardsBrowserCore
         return path is "WorkspaceColumns" or "EditorColumn" or "IsCompact" or "ShowSidebar" or "DrawerWidth" or "HasBoard" or "HasNoBoard" or "HasBoards" or "NoBoards" or "BoardTitle" or "PageTitle" or "Breadcrumb"
             or "BoardSearch" or "ShowBoardPicker" or "ShowPageTree" or "ShowTrash" or "ShowDetails" or "CanChangeBoard"
             or "CanEditPage" or "IsEditMode" or "LayoutUnlocked" or "EditModeLabel" or "PageRows" or "DeletedPages"
-            or "HasDeletedPages" or "PagePosition" or "SelectionLabel" or "IsChecklistSelected" or "HasUnsupportedPageContent" or "ChecklistItems" or "CanMovePageUp" or "CanMovePageDown" or "CanDeletePage"
+            or "HasDeletedPages" or "PagePosition" or "SelectionLabel" or "IsChecklistSelected" or "HasUnsupportedPageContent" or "ChecklistItems" or "CanMovePageUp" or "CanMovePageDown" or "CanIndentPage" or "CanOutdentPage" or "CanDeletePage"
             or "PageInkCanvas" or "SharedInkAvailable" or "SharedInkUnavailable" or "HasSharedDrawings" or "HasSelectedSharedDrawing" or "SharedDrawingRows"
             or "DetailsLabel" or "StorageLabel" or "StorageDetail" or "CapabilitiesDetail" or "CanRestorePage" or "IsViewMode";
     }
@@ -160,7 +161,7 @@ public sealed partial class BoardsBrowserCore
         if (_presentationPending || IsHistoryPreview || _pending is not null) return Task.FromResult(Failure<bool>("OperationDenied", "Return to the current board and finish recovery before changing pages."));
         if (!VisiblePages.Any(page => page.Id == pageId)) return Task.FromResult(Failure<bool>("PageNotFound", "This page is not available in the current board."));
         if (pageId != ActivePageId) { ActivePageId = pageId; RebindActiveEditor(); }
-        _drawerOpen = false;
+        RevealHierarchyPage(pageId); _drawerOpen = false;
         return Task.FromResult(Success(true));
     }, token);
 
@@ -173,22 +174,83 @@ public sealed partial class BoardsBrowserCore
     public Task<HomeCoreOperationResult<bool>> MovePageAsync(Guid pageId, Guid sectionId, int index, CancellationToken token = default) =>
         Edit((owner, document) => { owner.MovePage(document, pageId, sectionId, index); return true; }, token);
 
+    public Task<HomeCoreOperationResult<Guid>> AddChildPageAsync(Guid parentPageId, string? title = null, CancellationToken token = default) =>
+        Edit((owner, document) => owner.AddChildPage(document, parentPageId, title).Id, token);
+    public Task<HomeCoreOperationResult<bool>> ReparentPageAsync(Guid pageId, Guid? parentPageId, CancellationToken token = default) =>
+        Edit((owner, document) => { owner.SetPageParent(document, pageId, parentPageId); return true; }, token);
+    public Task<HomeCoreOperationResult<bool>> MoveSiblingPageAsync(Guid pageId, int direction, CancellationToken token = default) =>
+        Edit((owner, document) => { owner.MovePageWithinParent(document, pageId, direction); return true; }, token);
+
+    private BoardsPageRow[] HierarchyPageRows()
+    {
+        if (_document is null) return [];
+        var rows = new List<BoardsPageRow>(); var hidden = new HashSet<Guid>();
+        foreach (var item in _boards.ListPageHierarchy(_document))
+        {
+            if (item.VisibleParentPageId is { } parent && hidden.Contains(parent)) { hidden.Add(item.Page.Id); continue; }
+            rows.Add(new(item.Page.Id, item.Page.Title, _document.Sections.Single(section => section.Id == item.SectionId).Title,
+                item.Page.Id == ActivePageId, _document.Id, item.ParentPageId, item.VisibleParentPageId, item.Depth, item.HasChildren,
+                !_collapsedPages.Contains(item.Page.Id)));
+            if (item.HasChildren && _collapsedPages.Contains(item.Page.Id)) hidden.Add(item.Page.Id);
+        }
+        return rows.ToArray();
+    }
+    private void RevealHierarchyPage(Guid pageId)
+    {
+        if (_document is null) return;
+        var tree = _boards.ListPageHierarchy(_document).ToDictionary(item => item.Page.Id);
+        while (tree.TryGetValue(pageId, out var page) && page.VisibleParentPageId is { } parent)
+        { _collapsedPages.Remove(parent); pageId = parent; }
+    }
+    private string HierarchyBreadcrumb()
+    {
+        if (_document is null) return "Boards";
+        if (ActivePageId is not { } selected) return _document.Title;
+        var tree = _boards.ListPageHierarchy(_document, includeDeleted: true).ToDictionary(item => item.Page.Id);
+        var names = new List<string>();
+        while (tree.TryGetValue(selected, out var page))
+        {
+            names.Add(page.Page.Title + (BoardsWorkspaceService.IsPageDeleted(_document, selected) ? " (in Trash)" : string.Empty));
+            if (page.ParentPageId is not { } parent) break;
+            selected = parent;
+        }
+        names.Reverse();
+        return _document.Title + " / " + (names.Count > 3 ? "… / " : string.Empty) + string.Join(" / ", names.TakeLast(3));
+    }
+    private BoardsPageHierarchyItem[] ActivePageSiblings(bool visibleParent = false)
+    {
+        if (_document is null || ActivePageId is not { } pageId) return [];
+        var tree = _boards.ListPageHierarchy(_document);
+        var current = tree.FirstOrDefault(item => item.Page.Id == pageId);
+        return current is null ? [] : tree.Where(item => item.SectionId == current.SectionId &&
+            (visibleParent ? item.VisibleParentPageId == current.VisibleParentPageId : item.ParentPageId == current.ParentPageId)).ToArray();
+    }
     private bool CanMovePage(int delta)
     {
-        if (!AllowRetainedRichInput || ActiveSection is not { } section || ActivePageId is not { } pageId) return false;
-        var pages = section.Pages.Where(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id)).OrderBy(page => page.Order).ToArray();
-        var target = Array.FindIndex(pages, page => page.Id == pageId) + delta;
-        return target >= 0 && target < pages.Length;
+        if (!AllowRetainedRichInput || ActivePageId is not { } pageId) return false;
+        var siblings = ActivePageSiblings(); var index = Array.FindIndex(siblings, item => item.Page.Id == pageId);
+        var target = index + delta;
+        return index >= 0 && target >= 0 && target < siblings.Length &&
+            _boards.GetEditMode(_document!, siblings[target].Page.Id) == BoardsPageEditMode.Edit;
     }
+    private bool CanIndentPage()
+    {
+        if (!AllowRetainedRichInput || ActivePageId is not { } pageId) return false;
+        var siblings = ActivePageSiblings(visibleParent: true); var index = Array.FindIndex(siblings, item => item.Page.Id == pageId);
+        return index > 0 && _boards.GetEditMode(_document!, siblings[index - 1].Page.Id) == BoardsPageEditMode.Edit;
+    }
+    private bool CanOutdentPage() => AllowRetainedRichInput && ActivePageId is { } pageId && _document is not null &&
+        _boards.ListPageHierarchy(_document).Any(item => item.Page.Id == pageId && item.VisibleParentPageId is not null);
 
     private bool IsWorkspaceActionAvailable(string command) => command switch
     {
         "ToggleBoardPicker" or "ToggleDetails" or "ToggleSidebar" => true,
-        "SelectPage" or "ToggleTrash" => _document is not null,
-        "AddPage" or "AddSection" => CanChangeBoard && RichEditingPermitted,
+        "SelectPage" or "ToggleTrash" or "TogglePageBranch" => _document is not null,
+        "AddPage" or "AddSection" or "AddChildPage" => CanChangeBoard && RichEditingPermitted,
         "DeletePage" => CanChangeBoard && RichEditingPermitted && ActiveSection?.Pages.Count(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id)) > 1,
         "RestorePage" => CanChangeBoard,
         "MovePageUp" => CanMovePage(-1), "MovePageDown" => CanMovePage(1),
+        "IndentPage" => CanIndentPage(), "OutdentPage" => CanOutdentPage(),
         "Italic" or "Underline" or "Strikethrough" => RichEditingPermitted,
         "AddChecklistItem" => RichEditingPermitted && _richEditor?.SelectedBlock?.List is not null,
         "InsertSharedDrawing" => SharedInkAvailable && RichEditingPermitted,
@@ -207,6 +269,25 @@ public sealed partial class BoardsBrowserCore
             case "ToggleTrash": _showTrash = !_showTrash; Notify(); return true;
             case "ToggleDetails": _showDetails = !_showDetails; Notify(); return true;
             case "SelectPage" when parameter is BoardsPageRow row: await SelectPageAsync(row.Id, token); return true;
+            case "TogglePageBranch" when parameter is BoardsPageRow branch && branch.BoardId == DocumentId:
+                if (_document is not null && _boards.ListPageHierarchy(_document).Any(item => item.Page.Id == branch.Id && item.HasChildren))
+                { if (!_collapsedPages.Add(branch.Id)) _collapsedPages.Remove(branch.Id); Notify(); }
+                return true;
+            case "AddChildPage" when ActivePageId is { } parentId:
+                var child = await AddChildPageAsync(parentId, token: token);
+                if (child.Succeeded) { _collapsedPages.Remove(parentId); await SelectPageAsync(child.Value, token); } return true;
+            case "IndentPage" when ActivePageId is { } indentId:
+                var siblings = ActivePageSiblings(visibleParent: true); var siblingIndex = Array.FindIndex(siblings, item => item.Page.Id == indentId);
+                if (siblingIndex > 0) { await ReparentPageAsync(indentId, siblings[siblingIndex - 1].Page.Id, token); RevealHierarchyPage(indentId); } return true;
+            case "OutdentPage" when ActivePageId is { } outdentId && _document is not null:
+                var hierarchy = _boards.ListPageHierarchy(_document);
+                var visibleParent = hierarchy.First(item => item.Page.Id == outdentId).VisibleParentPageId;
+                if (visibleParent is { } currentParent)
+                {
+                    var nextParent = hierarchy.First(item => item.Page.Id == currentParent).VisibleParentPageId;
+                    await ReparentPageAsync(outdentId, nextParent, token); RevealHierarchyPage(outdentId);
+                }
+                return true;
             case "RestorePage" when parameter is BoardsPageRow row:
                 if ((await RestorePageAsync(row.Id, token)).Value) { await SelectPageAsync(row.Id, token); _showTrash = false; Notify(); } return true;
             case "DeletePage" when ActivePageId is { } pageId: await DeletePageAsync(pageId, token); return true;
@@ -218,12 +299,7 @@ public sealed partial class BoardsBrowserCore
                 if (group.Succeeded && _document!.Sections.First(item => item.Id == group.Value).Pages.FirstOrDefault() is { } first)
                     await SelectPageAsync(first.Id, token); return true;
             case "MovePageUp": case "MovePageDown":
-                if (ActivePageId is { } moveId && ActiveSection is { } target)
-                {
-                    var visible = target.Pages.Where(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id)).OrderBy(page => page.Order).ToArray();
-                    var index = Array.FindIndex(visible, page => page.Id == moveId) + (command == "MovePageUp" ? -1 : 1);
-                    if (index >= 0 && index < visible.Length) await MovePageAsync(moveId, target.Id, target.Pages.IndexOf(visible[index]), token);
-                }
+                if (ActivePageId is { } moveId) await MoveSiblingPageAsync(moveId, command == "MovePageUp" ? -1 : 1, token);
                 return true;
             case "Italic": await RichOperation(editor => { editor.ToggleSelectionCharacter(WriteCharacterFormat.Italic); return true; }, token); return true;
             case "Underline": await RichOperation(editor => { editor.ToggleSelectionCharacter(WriteCharacterFormat.Underline); return true; }, token); return true;
@@ -618,13 +694,18 @@ public sealed record BoardsChecklistRow(BoardsBrowserCore Owner, Guid PageId, Gu
     });
 }
 
-public sealed record BoardsPageRow(Guid Id, string Title, string Section, bool Selected) : ICuiBindingContext
+public sealed record BoardsPageRow(Guid Id, string Title, string Section, bool Selected, Guid BoardId = default,
+    Guid? ParentPageId = null, Guid? VisibleParentPageId = null, int Depth = 0, bool HasChildren = false, bool Expanded = true) : ICuiBindingContext
 {
     public bool TryGetValue(string path, out object? value)
     {
         value = path switch { "Id" => Id, "Title" => Title, "Section" => Section, "Selected" => Selected,
-            "Label" => (Selected ? "●  " : "▤  ") + Title, _ => null };
-        return path is "Id" or "Title" or "Section" or "Selected" or "Label";
+            "Label" => Title, "HasChildren" => HasChildren,
+            "Indent" => $"{Math.Min(Depth, 6) * 14},0,0,4",
+            "DisclosureIcon" => Expanded ? "icon:chevron-down" : "icon:chevron-right",
+            "DisclosureName" => (Expanded ? "Collapse " : "Expand ") + Title,
+            "AccessibleName" => Title + (Selected ? ", selected" : string.Empty) + $", level {Depth + 1}", _ => null };
+        return path is "Id" or "Title" or "Section" or "Selected" or "Label" or "HasChildren" or "Indent" or "DisclosureIcon" or "DisclosureName" or "AccessibleName";
     }
 }
 

@@ -26,6 +26,12 @@ public sealed class SpaceBuilderController
 
     public bool SetField(SpaceBuilderField field, string? value)
     {
+        if (field == SpaceBuilderField.MaximumRetrievedItems && !string.IsNullOrWhiteSpace(value) &&
+            (!int.TryParse(value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var limit) || limit is < 0 or > 1000))
+        {
+            Change(state => state with { StatusMessage = "Enter a retrieval limit from 0 to 1000, or leave it empty. The original source currently supports at most 32 selected items per request." });
+            return false;
+        }
         SpaceBuilderState next;
         lock (_gate)
         {
@@ -37,6 +43,8 @@ public sealed class SpaceBuilderController
                 SpaceBuilderField.Description => _state.Draft with { Description = value },
                 SpaceBuilderField.IconKey => _state.Draft with { IconKey = value },
                 SpaceBuilderField.Instructions => _state.Draft with { Instructions = value },
+                SpaceBuilderField.MaximumRetrievedItems => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with
+                    { MaximumRetrievedItems = string.IsNullOrWhiteSpace(value) ? null : int.Parse(value, System.Globalization.CultureInfo.InvariantCulture) } },
                 SpaceBuilderField.SourceOnly => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with { SourceOnly = ReadBoolean(value) } },
                 SpaceBuilderField.IncludeCurrentSelection => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with { IncludeCurrentSelection = ReadBoolean(value) } },
                 SpaceBuilderField.WebAccess => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with { WebAccess = ReadWebAccess(value) } },
@@ -165,7 +173,9 @@ public sealed class SpaceBuilderController
                 CapabilityCategoryPolicy = saving.Draft.CategoryPolicy,
                 CapabilityBindings = saving.Draft.CapabilityBindings,
                 ContextPolicy = saving.Draft.ContextPolicy,
-                Inheritance = saving.Draft.Inheritance
+                Inheritance = saving.Draft.Inheritance,
+                ContextReferences = saving.Draft.ContextReferences.ToArray(),
+                Files = saving.Draft.LegacyFiles.ToArray()
             }, saving.DraftRevision, cancellationToken).ConfigureAwait(false);
             Change(state =>
             {
@@ -249,6 +259,65 @@ public sealed class SpaceBuilderController
         return true;
     }
 
+    /// <summary>Store a canonical read reference selected by the host's genuine owning-app
+    /// source. This metadata grants no body read; the request source needs new Home admission.</summary>
+    public bool AttachContextReference(SpaceContextReference reference, long expectedRevision)
+    {
+        ArgumentNullException.ThrowIfNull(reference);
+        if (reference.ContextId == Guid.Empty || reference.Kind != SpaceContextReferenceKind.BoardPage ||
+            reference.OwnerAppId != "boards" || reference.Permission != SpaceContextPermission.Read ||
+            !Guid.TryParseExact(reference.CanonicalEntityId, "D", out var id) || id == Guid.Empty ||
+            reference.CanonicalEntityId != id.ToString("D") ||
+            !long.TryParse(reference.RevisionToken, System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out var version) || version < 1)
+            throw new ArgumentException("Choose an original canonical Boards notebook/version.", nameof(reference));
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit || _state.DraftRevision != expectedRevision) return false;
+            var existing = _state.Draft.ContextReferences.SingleOrDefault(value => value.Kind == reference.Kind &&
+                value.OwnerAppId == reference.OwnerAppId && value.CanonicalEntityId == reference.CanonicalEntityId);
+            if (existing is not null) reference = reference with { ContextId = existing.ContextId };
+            var rows = _state.Draft.ContextReferences.Where(value => value.ContextId != reference.ContextId).Append(reference).ToArray();
+            var draft = _state.Draft with { ContextReferences = Array.AsReadOnly(rows) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+                StatusMessage = "Canonical Boards source selected. Save to persist; its body still requires original Home approval when used." };
+        }
+        StateChanged?.Invoke(next); return true;
+    }
+    public bool DetachContextReference(Guid contextId)
+    {
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var rows = _state.Draft.ContextReferences.Where(value => value.ContextId != contextId).ToArray();
+            if (rows.Length == _state.Draft.ContextReferences.Count) return false;
+            var draft = _state.Draft with { ContextReferences = Array.AsReadOnly(rows) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+                StatusMessage = "Source reference removed from the draft. The notebook remains unchanged. Save to persist." };
+        }
+        StateChanged?.Invoke(next); return true;
+    }
+    public bool DetachLegacyFileReference(string path)
+    {
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var rows = _state.Draft.LegacyFiles.Where(value => !StringComparer.Ordinal.Equals(value.Path, path)).ToArray();
+            if (rows.Length == _state.Draft.LegacyFiles.Count) return false;
+            var draft = _state.Draft with { LegacyFiles = Array.AsReadOnly(rows) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+                StatusMessage = "Legacy reference removed from the draft. The original file is not deleted. Save to persist." };
+        }
+        StateChanged?.Invoke(next); return true;
+    }
+    public void ReportSourceStatus(string message) => Change(state => state with { StatusMessage = message });
+
     private static bool ReadBoolean(string value) => bool.TryParse(value, out var parsed)
         ? parsed : throw new ArgumentException("A Space policy switch requires a boolean value.", nameof(value));
 
@@ -267,7 +336,7 @@ public sealed class SpaceBuilderController
 public enum SpaceBuilderField
 {
     Name, Description, IconKey, Instructions,
-    SourceOnly, IncludeCurrentSelection, WebAccess,
+    SourceOnly, IncludeCurrentSelection, WebAccess, MaximumRetrievedItems,
     InheritSources, InheritConnectedApps, InheritModelPolicy, InheritMemoryPolicy,
     InheritPlugins, InheritSkills, InheritAgents
 }

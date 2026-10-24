@@ -53,6 +53,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                         settlement => QueueHomeReturnForBuilder(page!, settlement), extensions);
                     lock (_gate) _ownedBuilders.Add(page);
                     acquired = true;
+                    page.BindOriginalBoardsContextSource(_services.GetRequiredService<OriginalSpaceRequestPolicySource>());
                     await page.ActivateAsync(token);
                 }
                 if (page.Show is not { IsCompletedSuccessfully: true } shown ||

@@ -18,6 +18,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     private readonly IHomeOriginalLibrarySource? _source;
     private readonly Func<CancellationToken, Task> _admit;
     private readonly Func<HomeDeepLink, Task, bool> _queue;
+    private readonly Func<HomeDeepLink, CancellationToken, Task>? _prepareNavigation;
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
     private readonly TextBox _search = new();
@@ -33,9 +34,11 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
 
     internal HomeLibraryDestinationPage(Func<IHomeDeepLinkRouter, HomeLibraryService> create,
         Func<CancellationToken, Task> admit, Func<HomeDeepLink, Task, bool> queue,
-        IHomeOriginalLibrarySource? ownedSource = null, CuiThemePreferenceContext? theme = null)
+        IHomeOriginalLibrarySource? ownedSource = null, CuiThemePreferenceContext? theme = null,
+        Func<HomeDeepLink, CancellationToken, Task>? prepareNavigation = null)
     {
         Dispatcher.UIThread.VerifyAccess(); _admit = admit; _queue = queue; _source = ownedSource;
+        _prepareNavigation = prepareNavigation;
         _work = new(StopAsync, CleanupAsync); _library = create(new Router(this));
         var document = HomeCuiSurface.LoadDefault().Document;
         var scope = document.Components.Single(component => component.IsThemeScope);
@@ -101,7 +104,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
                     {
                         if (!opened.Succeeded) _page = null;
                         _status = opened.Succeeded ? selected.OwnerApp == "files"
-                            ? "Opening the canonical folder in Files." : "Opening the canonical notebook in Boards." : opened.Message;
+                            ? selected.OpenLink.TargetRouteId == "files.preview" ? "Opening the original text/code preview in Files."
+                                : "Opening the canonical folder in Files."
+                            : "Opening the canonical notebook in Boards." : opened.Message;
                     });
             }
             catch (Exception cause) when (_source?.IsExpectedRefusal(cause) == true)
@@ -158,9 +163,13 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     {
         public async Task<HomeFeatureNavigationResult> OpenAsync(HomeDeepLink link, CancellationToken cancellationToken = default)
         {
-            return await Dispatcher.UIThread.InvokeAsync(() =>
+            var dispatch = Dispatcher.UIThread.InvokeAsync<Task<HomeFeatureNavigationResult>>(async () =>
             {
                 var original = owner._opening ?? throw new InvalidOperationException("Retain the original Library open action.");
+                cancellationToken.ThrowIfCancellationRequested(); original.DemandPublication();
+                if (owner._prepareNavigation is { } prepare)
+                    await original.AwaitAsync(prepare(link, cancellationToken)); // Actual async source resolution belongs to this open.
+                await original.AwaitAsync(owner._admit(original.Token));
                 cancellationToken.ThrowIfCancellationRequested(); original.DemandPublication();
                 var accepted = false;
                 original.RunAcceptedPublicationCallback(() => accepted = owner._queue(link,
@@ -168,7 +177,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
                 var request = new HomeFeatureNavigationRequest(link.TargetRouteId!, link.OwnerApp, link.ObjectId, link.Action);
                 return new HomeFeatureNavigationResult(accepted, accepted ? "Queued" : "NavigationRefused",
                     accepted ? "Opening in the owning app." : "The original browser no longer accepts this item.", request);
-            }).GetTask().ConfigureAwait(false);
+            }).GetTask();
+            var actual = await dispatch.ConfigureAwait(false);
+            return await actual.ConfigureAwait(false);
         }
     }
     internal Task<bool> TryPrepareToCloseAsync(CancellationToken token)

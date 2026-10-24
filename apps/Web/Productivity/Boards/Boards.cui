@@ -21,6 +21,7 @@
     </Action>
     <Action name="OpenSavedNotebook" command="Open" parameter="{Binding savedNotebook}" />
     <Action name="ChoosePage" command="SelectPage" parameter="{Binding page}" />
+    <Action name="TogglePageChildren" command="TogglePageBranch" parameter="{Binding page}" />
     <Action name="RecoverPage" command="RestorePage" parameter="{Binding deletedPage}" />
     <Action name="FindInBoard" command="FindBoard" parameter="{Binding BoardsFindQuery}" />
     <Action name="OpenBoardFindMatch" command="OpenFindMatch" parameter="{Binding findMatch}" />
@@ -391,14 +392,41 @@
                     <Container Type="Vertical Stack" CellGap="6">
                       <Input accessible-name="Board name" margin="0,2,0,12" Type="Text" Value="{Binding BoardTitle, mode=TwoWay}" Interactive="{Binding CanEditPage}" />
                       <Text text="Pages" foreground="{Resource CuiTextSoftBrush}" margin="4,0,0,8" />
-                      <Repeat Source="{Binding PageRows}" As="page" Key="{Binding page.Id}">
-                        <Button content="{Binding page.Label}" action="ChoosePage" horizontal-content-alignment="Left" margin="0,0,0,4" />
-                      </Repeat>
-                      <Button content="＋ Add page" action="AddPage" horizontal-content-alignment="Left" margin="0,10,0,0" />
+                      <Container id="boards-page-tree" Type="Vertical Stack" CellGap="2" accessible-name="Pages and subpages">
+                        <Repeat Source="{Binding PageRows}" As="page" Key="{Binding page.Id}">
+                          <Container Type="Grid" ColumnSizes="24 1fr" margin="{Binding page.Indent}">
+                            <If condition="{Binding page.HasChildren}">
+                              <Button action="TogglePageChildren" accessible-name="{Binding page.DisclosureName}" width="24" padding="4" vertical-content-alignment="Center">
+                                <Image Source="{Binding page.DisclosureIcon}" Width="12" Height="12" />
+                              </Button>
+                            </If>
+                            <Button action="ChoosePage" accessible-name="{Binding page.AccessibleName}" Column="1" padding="6" horizontal-content-alignment="Left">
+                              <Container Type="Horizontal Stack" CellGap="6" VerticalAlignment="Center">
+                                <Image Source="icon:file" Width="14" Height="14" />
+                                <If condition="{Binding page.Selected}">
+                                  <Text text="{Binding page.Title}" font-weight="SemiBold" />
+                                </If>
+                                <Else>
+                                  <Text text="{Binding page.Title}" />
+                                </Else>
+                              </Container>
+                            </Button>
+                          </Container>
+                        </Repeat>
+                      </Container>
+                      <Button action="AddPage" accessible-name="Add a root page" horizontal-content-alignment="Left" margin="0,10,0,0">
+                        <Container Type="Horizontal Stack" CellGap="6" VerticalAlignment="Center">
+                          <Image Source="icon:add" Width="14" Height="14" />
+                          <Text text="Add page" />
+                        </Container>
+                      </Button>
                       <Container Type="Menu">
                         <Button Type="Menu Item" Content="Page options">
-                          <Button action="MovePageUp" Type="Menu Item" Content="Move page up" Interactive="{Binding CanMovePageUp}" />
-                          <Button action="MovePageDown" Type="Menu Item" Content="Move page down" Interactive="{Binding CanMovePageDown}" />
+                          <Button action="AddChildPage" Type="Menu Item" Content="Add subpage" />
+                          <Button action="IndentPage" Type="Menu Item" Content="Nest under previous page" Interactive="{Binding CanIndentPage}" />
+                          <Button action="OutdentPage" Type="Menu Item" Content="Move to parent level" Interactive="{Binding CanOutdentPage}" />
+                          <Button action="MovePageUp" Type="Menu Item" Content="Move up among siblings" Interactive="{Binding CanMovePageUp}" />
+                          <Button action="MovePageDown" Type="Menu Item" Content="Move down among siblings" Interactive="{Binding CanMovePageDown}" />
                           <Button action="DeletePage" Type="Menu Item" Content="Move page to Trash" Interactive="{Binding CanDeletePage}" />
                           <Button action="AddSection" Type="Menu Item" Content="New section" />
                         </Button>
@@ -406,7 +434,7 @@
                       <Button content="Trash" action="ToggleTrash" horizontal-content-alignment="Left" margin="0,16,0,0" />
                       <If condition="{Binding ShowTrash}">
                         <Container Type="Vertical Stack" CellGap="6">
-                          <Text text="Deleted pages can be recovered here." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                          <Text text="Deleted pages can be recovered here. Their subpages stay available and return beneath the parent when it is restored." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
                           <Repeat Source="{Binding DeletedPages}" As="deletedPage" Key="{Binding deletedPage.Id}">
                             <Container Type="Vertical Stack" CellGap="4">
                               <Text text="{Binding deletedPage.Title}" />

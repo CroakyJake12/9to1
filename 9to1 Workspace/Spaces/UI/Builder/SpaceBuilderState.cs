@@ -9,6 +9,12 @@ using SpaceCapabilityCategoryState = Haven.Application.SpaceCapabilityCategorySt
 /// validation failure, never a bypass.</summary>
 /// <summary>Draft configuration for one canonical Space. Draft and Active are separate revisions
 /// of the SAME SpaceID; an invalid draft never displaces the last known-good active revision.</summary>
+/// <summary>Opaque in-process choice issued by the actual Home/Notes source. Metadata
+/// alone never authorises reading a notebook body or writing its content.</summary>
+public interface ISpaceBuilderOriginalBoardsSourceChoice { }
+public sealed record SpaceBuilderBoardsSourceOption(string Id, string Label, string Revision,
+    [property: System.Text.Json.Serialization.JsonIgnore] ISpaceBuilderOriginalBoardsSourceChoice Input);
+
 public sealed record SpaceBuilderDraft(
     string Name,
     string Description,
@@ -21,6 +27,8 @@ public sealed record SpaceBuilderDraft(
     // clones sources/capabilities or grants access merely by editing these policies.
     public SpaceContextPolicy ContextPolicy { get; init; } = new();
     public SpaceInheritancePolicy Inheritance { get; init; } = new();
+    public IReadOnlyList<SpaceContextReference> ContextReferences { get; init; } = [];
+    public IReadOnlyList<SpaceFileReference> LegacyFiles { get; init; } = [];
 
     public static SpaceBuilderDraft Empty { get; } = new("", "", "", "",
         new Haven.Application.SpaceCapabilityCategoryPolicy(), []);
@@ -31,7 +39,9 @@ public sealed record SpaceBuilderDraft(
             space.CapabilityBindings?.ToArray() ?? [])
         {
             ContextPolicy = space.ContextPolicy ?? new SpaceContextPolicy(),
-            Inheritance = space.Inheritance ?? new SpaceInheritancePolicy()
+            Inheritance = space.Inheritance ?? new SpaceInheritancePolicy(),
+            ContextReferences = Array.AsReadOnly((space.ContextReferences ?? []).ToArray()),
+            LegacyFiles = Array.AsReadOnly(space.Files.ToArray())
         };
 }
 

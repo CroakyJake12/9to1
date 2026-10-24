@@ -59,22 +59,8 @@ public sealed partial class BoardsWorkspaceService
         TouchRecovery(notebook);
     }
 
-    public void MovePage(NotesDocument notebook, Guid pageId, Guid targetSectionId, int targetIndex)
-    {
-        EnsureBoards(notebook);
-        EnsureEditablePage(notebook, pageId);
-        var source = notebook.Sections.FirstOrDefault(section => section.Pages.Any(page => page.Id == pageId))
-            ?? throw new KeyNotFoundException("The requested Boards page was not found.");
-        var target = RequireRecoverySection(notebook, targetSectionId);
-        var page = source.Pages.Single(value => value.Id == pageId);
-
-        source.Pages.Remove(page);
-        target.Pages.Insert(Math.Clamp(targetIndex, 0, target.Pages.Count), page);
-        NormalizePages(source);
-        if (!ReferenceEquals(source, target))
-            NormalizePages(target);
-        TouchRecovery(notebook);
-    }
+    public void MovePage(NotesDocument notebook, Guid pageId, Guid targetSectionId, int targetIndex) =>
+        MovePageTree(notebook, pageId, targetSectionId, targetIndex);
 
     public void MoveBlock(NotesDocument notebook, Guid pageId, Guid blockId, int targetIndex)
     {
@@ -127,6 +113,7 @@ public sealed partial class BoardsWorkspaceService
     public bool DeletePage(NotesDocument notebook, Guid pageId)
     {
         EnsureBoards(notebook);
+        _ = ReadPageParents(notebook);
         EnsureEditablePage(notebook, pageId);
         var section = notebook.Sections.FirstOrDefault(value => value.Pages.Any(page => page.Id == pageId));
         if (section is null) return false;
@@ -141,6 +128,7 @@ public sealed partial class BoardsWorkspaceService
     public bool RestorePage(NotesDocument notebook, Guid pageId)
     {
         EnsureBoards(notebook);
+        _ = ReadPageParents(notebook);
         if (!notebook.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId)) return false;
         EnsureEditablePage(notebook, pageId);
         var deleted = GetDeletedPageIds(notebook);

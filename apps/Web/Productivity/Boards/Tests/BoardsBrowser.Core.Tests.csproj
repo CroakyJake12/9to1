@@ -17,5 +17,6 @@
     <Compile Include="BoardsHistoryRegression.cs;../BoardsBrowserCore.History.cs" Link="Production/%(Filename)%(Extension)" />
       <Compile Include="BoardsTableEditingRegression.cs" Link="ImplementationSmoke/BoardsTableEditingRegression.cs" />
       <Compile Include="BoardsBlockEditingRegression.cs" Link="ImplementationSmoke/BoardsBlockEditingRegression.cs" />
+      <Compile Include="BoardsPageHierarchyRegression.cs" Link="ImplementationSmoke/BoardsPageHierarchyRegression.cs" />
   </ItemGroup>
 </Project>

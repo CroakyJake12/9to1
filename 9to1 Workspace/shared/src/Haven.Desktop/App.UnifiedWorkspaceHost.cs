@@ -703,23 +703,36 @@ public sealed partial class App
             var filesSource = new NativeHomeFilesLibrarySource(browser, actor, _home.StateStore,
                 ObserveAppearanceAuthorityAsync, Parent, Alive);
             source = new(_home.StateStore, new("boards", "Boards", boardsSource), new("files", "Files", filesSource));
+            var preparedFiles = new System.Runtime.CompilerServices.ConditionalWeakTable<HomeDeepLink, AppContentAddress>();
+            async Task PrepareFilesNavigation(HomeDeepLink link, CancellationToken token)
+            {
+                if (link.OwnerApp != "files" || link.TargetRouteId is not ("files.folder" or "files.preview")) return;
+                lock (preparedFiles) preparedFiles.Remove(link);
+                var target = await filesSource.ResolveOriginalOpenTargetAsync(link, token).ConfigureAwait(false);
+                token.ThrowIfCancellationRequested();
+                if (target is null) return;
+                var address = target.FileId is { } file && target.RevisionId is { } revision
+                    ? FilesBrowseAppContentAddress.ForTextPreview(target.StoreId, target.FolderId, file, revision)
+                    : FilesBrowseAppContentAddress.For(target.StoreId, target.FolderId);
+                lock (preparedFiles) { preparedFiles.Remove(link); preparedFiles.Add(link, address); }
+            }
             page = new(source.CreateService, source.RevalidateAsync, (link, settlement) =>
             {
                 AppContentAddress address;
                 if (link.OwnerApp == "boards" && link.TargetRouteId == "boards.notebook" &&
                     Guid.TryParseExact(link.ObjectId, "D", out var id) && id != Guid.Empty && link.ObjectId == id.ToString("D"))
                     address = AppContentAddress.Parse("9to1://boards/notebooks/" + id.ToString("D"));
-                else if (link.OwnerApp == "files" && link.TargetRouteId == "files.folder")
+                else if (link.OwnerApp == "files" && (link.TargetRouteId is "files.folder" or "files.preview"))
                 {
-                    var ids = link.ObjectId.Split('/');
-                    if (ids.Length != 2 || !Guid.TryParseExact(ids[0], "D", out var store) || store == Guid.Empty || ids[0] != store.ToString("D") ||
-                        !Guid.TryParseExact(ids[1], "D", out var folder) || folder == Guid.Empty || ids[1] != folder.ToString("D")) return false;
-                    address = FilesBrowseAppContentAddress.For(store, folder);
+                    // Issued-link resolution already rechecked this exact row through the actual
+                    // source. The queued destination still independently obtains its fresh row/READ.
+                    if (!preparedFiles.TryGetValue(link, out var issuedAddress)) return false;
+                    address = issuedAddress;
                 }
                 else return false;
                 return IsCurrent && _workspace is { } workspace && workspace.QueueNavigation(
                     new(request.TabId, address, true), settlement);
-            }, source, theme);
+            }, source, theme, PrepareFilesNavigation);
             return page;
         }
         private async Task PresentHomeLibraryReviewAsync(HomeNativeApprovalWindowOwner approvals,

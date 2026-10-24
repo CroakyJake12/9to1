@@ -8,9 +8,11 @@ using HavenOS.Home.Core;
 namespace Haven.Desktop.Services;
 
 /// <summary>Typed original Files metadata publication into the existing Home Library index.
-/// Only actual top-level folder references are supported; file-item launch is not guessed.</summary>
+/// References retain actual privately issued metadata. File preview targets are freshly resolved, never guessed.</summary>
 internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
 {
+    // Native target metadata only, not a page, content read, permission or navigation grant.
+    internal sealed record OriginalOpenTarget(Guid StoreId, Guid FolderId, Guid? FileId = null, Guid? RevisionId = null);
     private sealed record Entry(HomeArtifactReference View, FilesNativeBrowserPage Page, HostedItemMetadata Row);
     private sealed record Operation(Task Task, CancellationToken Token);
     private readonly FilesNativeBrowserService _browser;
@@ -32,7 +34,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         IHomeCoreStateStore home, Func<CancellationToken, Task<bool>> ownerCurrent,
         Action<Action> parent, Func<bool> alive)
     { _browser = browser; _actor = actor; _home = home; _ownerCurrent = ownerCurrent; _parent = parent; _alive = alive; }
-    public string? AvailabilityNotice => "Files currently shows your top-level folder references.";
+    public string? AvailabilityNotice => "Files shows folder and supported raw text/code references from its current metadata. Text preview requires an existing local content anchor.";
     public HomeLibraryService CreateService(IHomeDeepLinkRouter router) => new(this, this, router, new HomeCoreLibraryPreferences(_home));
     public Task RevalidateAsync(CancellationToken token) => RunAsync(async (source, caller) =>
     { await RequireOwnerAsync(source, caller).ConfigureAwait(false); return true; }, token);
@@ -60,40 +62,60 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 throw new InvalidDataException("The Files availability observation has a different original issuer.");
             if (!available.IsAvailable || available.StoreId is not { } store || store == Guid.Empty)
                 throw Refuse(available.Code, available.Message);
-            FilesNativeBrowserCursor? cursor = null;
-            var offsets = new HashSet<string>(StringComparer.Ordinal);
+            // Traverse only original canonical metadata pages. The existing shared Library
+            // service owns text/app/type filtering, sorting, pins and final pagination.
+            var folders = new Queue<(Guid? Id, string Label)>(); folders.Enqueue((null, "Files"));
+            var seenFolders = new HashSet<Guid>();
+            var pages = new List<FilesNativeBrowserPage>();
             string? revision = null;
             var rowsObserved = 0;
-            do
+            while (folders.TryDequeue(out var folder))
             {
-                var page = await source.AwaitAsync(source.Invoke(() =>
-                    _browser.ListOriginalHomeLibraryPageWithinSourceAsync(_actor, store, query.Text ?? "", cursor,
-                        _alive, Own, Retain, caller))).ConfigureAwait(false);
-                if (page.StoreID != store || page.ParentID is not null || page.IsTrash ||
-                    revision is not null && revision != page.StoreRevision)
-                    throw new InvalidDataException("The original Files Library page changed its store, parent or revision.");
-                revision ??= page.StoreRevision;
-                rowsObserved = checked(rowsObserved + page.Items.Count);
-                if (rowsObserved > 4096) throw Refuse("LibraryQueryTooLarge", "Narrow the search to browse these Files folder references.");
-                foreach (var row in page.Items.Where(item => item.Kind == HostedItemKind.Folder))
+                FilesNativeBrowserCursor? cursor = null;
+                var offsets = new HashSet<string>(StringComparer.Ordinal);
+                do
                 {
-                    if (row.Id.Value == Guid.Empty || string.IsNullOrWhiteSpace(row.Name) || row.ParentId is not null)
-                        throw new InvalidDataException("The original Files owner returned invalid top-level folder metadata.");
-                    var id = store.ToString("D") + "/" + row.Id.Value.ToString("D");
-                    var view = new HomeArtifactReference("files", id, row.Name, "Files folder", page.FolderTitle,
-                        row.OwnerPrincipalId, null, row.ModifiedAt, false, false, row.IsShared, false, [],
-                        new(HomeRoute.Library, "files", id, "open", "files.folder"));
-                    if (!_entries.TryAdd(id, new(view, page, row)))
-                        throw new InvalidDataException("The original Files cursor returned duplicate folder identities.");
-                }
-                cursor = page.Next;
-                if (cursor is not null && (cursor.StoreID != store || cursor.StoreRevision != revision ||
-                    cursor.ParentID is not null || cursor.OriginalActor != _actor || cursor.IsTrash ||
-                    cursor.Search != (query.Text ?? "") || !offsets.Add(cursor.Offset)))
-                    throw new InvalidDataException("The original Files Library cursor changed or repeated.");
-            } while (cursor is not null);
-            // All cursor values came from the original issuer; no offset is incremented or guessed.
-            foreach (var page in _entries.Values.Select(entry => entry.Page).Distinct<FilesNativeBrowserPage>(ReferenceEqualityComparer.Instance))
+                    var page = await source.AwaitAsync(source.Invoke(() =>
+                        _browser.ListOriginalHomeLibraryFolderPageWithinSourceAsync(_actor, store, folder.Id,
+                            "", cursor, _alive, Own, Retain, caller))).ConfigureAwait(false);
+                    if (page.StoreID != store || page.ParentID != folder.Id || page.IsTrash ||
+                        revision is not null && revision != page.StoreRevision)
+                        throw new InvalidDataException("The original Files Library page changed its store, parent or revision.");
+                    revision ??= page.StoreRevision; pages.Add(page);
+                    rowsObserved = checked(rowsObserved + page.Items.Count);
+                    if (rowsObserved > 4096)
+                        throw Refuse("LibraryQueryTooLarge", "This Files Library view exceeds its current 4,096-item metadata limit. Browse the original Files app for this store.");
+                    foreach (var row in page.Items)
+                    {
+                        if (row.Id.Value == Guid.Empty || string.IsNullOrWhiteSpace(row.Name) || row.ParentId?.Value != folder.Id)
+                            throw new InvalidDataException("The original Files owner returned invalid folder/item metadata.");
+                        var isFolder = row.Kind == HostedItemKind.Folder;
+                        if (isFolder)
+                        {
+                            if (!seenFolders.Add(row.Id.Value))
+                                throw new InvalidDataException("The original Files folder hierarchy repeats a canonical identity.");
+                            folders.Enqueue((row.Id.Value, row.Name));
+                        }
+                        var isText = row.Kind == HostedItemKind.File && folder.Id is not null &&
+                            row.CurrentRevisionId is not null && _browser.HasOriginalTextPreviewOwner &&
+                            FilesNativeBrowserService.IsTextPreviewCandidate(row);
+                        if (!isFolder && !isText) continue; // Other owning artifacts/binary viewers are not guessed.
+                        var id = store.ToString("D") + "/" + row.Id.Value.ToString("D");
+                        var view = new HomeArtifactReference("files", id, row.Name, isFolder ? "Files folder" : "Text/code file",
+                            folder.Label, row.OwnerPrincipalId, null, row.ModifiedAt, false, false, row.IsShared, false, [],
+                            new(HomeRoute.Library, "files", id, "open", isFolder ? "files.folder" : "files.preview"));
+                        if (!_entries.TryAdd(id, new(view, page, row)))
+                            throw new InvalidDataException("The original Files cursor returned duplicate item identities.");
+                    }
+                    cursor = page.Next;
+                    if (cursor is not null && (cursor.StoreID != store || cursor.StoreRevision != revision ||
+                        cursor.ParentID != folder.Id || cursor.OriginalActor != _actor || cursor.IsTrash ||
+                        cursor.Search != "" || !offsets.Add(cursor.Offset)))
+                        throw new InvalidDataException("The original Files Library cursor changed or repeated.");
+                } while (cursor is not null);
+            }
+            // Validate every actually traversed page, including pages without supported rows.
+            foreach (var page in pages)
                 await source.AwaitAsync(source.Invoke(() => ValidatePageAsync(page, caller))).ConfigureAwait(false);
             await RequireOwnerAsync(source, caller).ConfigureAwait(false);
             _query = identity;
@@ -106,16 +128,32 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         RunAsync(async (source, caller) => app == "files" && _entries.TryGetValue(id, out var entry) &&
             await IsCurrentAsync(entry, source, caller).ConfigureAwait(false), token);
     public Task<bool> CanOpenAsync(HomeDeepLink link, CancellationToken token) =>
-        RunAsync(async (source, caller) => link.OwnerApp == "files" && link.TargetRouteId == "files.folder" &&
+        RunAsync(async (source, caller) => link.OwnerApp == "files" && (link.TargetRouteId is "files.folder" or "files.preview") &&
             _entries.TryGetValue(link.ObjectId, out var entry) && ReferenceEquals(entry.View.OpenLink, link) &&
             await IsCurrentAsync(entry, source, caller).ConfigureAwait(false), token);
     private async Task<bool> IsCurrentAsync(Entry entry, CloudflareOriginalTaskLedger source, CancellationToken token)
     {
-        if (entry.Row.Kind != HostedItemKind.Folder || !entry.Page.Items.Any(row => ReferenceEquals(row, entry.Row))) return false;
+        if (!entry.Page.Items.Any(row => ReferenceEquals(row, entry.Row)) ||
+            entry.Row.Kind != HostedItemKind.Folder && (entry.Row.Kind != HostedItemKind.File || entry.Page.ParentID is null ||
+                entry.Row.CurrentRevisionId is null || !FilesNativeBrowserService.IsTextPreviewCandidate(entry.Row))) return false;
         await source.AwaitAsync(source.Invoke(() => ValidatePageAsync(entry.Page, token))).ConfigureAwait(false);
         await RequireOwnerAsync(source, token).ConfigureAwait(false);
         return true;
     }
+    internal Task<OriginalOpenTarget?> ResolveOriginalOpenTargetAsync(HomeDeepLink link, CancellationToken token) =>
+        RunAsync<OriginalOpenTarget?>(async (source, caller) =>
+        {
+            if (link.OwnerApp != "files" || link.Action != "open" || !_entries.TryGetValue(link.ObjectId, out var entry) ||
+                !ReferenceEquals(entry.View.OpenLink, link) || !await IsCurrentAsync(entry, source, caller).ConfigureAwait(false)) return null;
+            var store = entry.Page.StoreID;
+            if (entry.Row.Kind == HostedItemKind.Folder && link.TargetRouteId == "files.folder")
+                return new(store, entry.Row.Id.Value);
+            if (entry.Row.Kind == HostedItemKind.File && link.TargetRouteId == "files.preview" &&
+                entry.Page.ParentID is { } parent && entry.Row.CurrentRevisionId is { } revision)
+                return new(store, parent, entry.Row.Id.Value, revision.Value);
+            return null;
+        }, token);
+
     private Task ValidatePageAsync(FilesNativeBrowserPage page, CancellationToken token) =>
         _browser.RevalidateOriginalHomeLibraryPageWithinSourceAsync(page, _actor, _alive, Own, Retain, token);
     private void DemandOwner() { if (!_alive()) throw new ObjectDisposedException(nameof(NativeHomeFilesLibrarySource)); }

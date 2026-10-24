@@ -1,6 +1,8 @@
 #nullable enable
 using System;
 using System.IO;
+using System.Text;
+using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
@@ -18,6 +20,7 @@ using Haven.CUI.DevTools;
 using HavenOS.Home;
 using HavenOS.Home.Core;
 using Haven.Application;
+using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Files.NativeUI;
 using Xunit;
@@ -317,6 +320,51 @@ public sealed class HomeHostRenderTests
                 Assert.Null(originalComposition.OriginalCloseTask); // A Files window borrows Home; it cannot stop it.
                 Assert.Contains(originalComposition.Runtime.Current.Services, service => service.ServiceId == "home.core" &&
                     service.IsAvailable && service.State == HomeServiceLifecycleState.Ready);
+
+                // Real raw-file reference in the same Library opens the existing Files preview,
+                // with fresh parent/revision resolution instead of manufacturing a separate app item.
+                var actualFilesAuthority = Assert.IsType<NativeFilesWorkspaceAuthority>(
+                    originalComposition.Services.GetService(typeof(NativeFilesWorkspaceAuthority)));
+                var currentFilesTask = actualFilesAuthority.GetCurrentAsync(configured.Configuration.StoreId, CancellationToken.None);
+                WaitFor(() => currentFilesTask.IsCompleted, "The actual original Files workspace did not settle.");
+                var currentFiles = Assert.IsType<NativeFilesWorkspace>(currentFilesTask.GetAwaiter().GetResult());
+                var materialisationTask = currentFiles.Directories.ResolveProfileAsync(Guid.Parse(actor.ProfileId), "picture", CancellationToken.None);
+                WaitFor(() => materialisationTask.IsCompleted, "The original Files content anchor did not settle.");
+                var materialisation = materialisationTask.GetAwaiter().GetResult(); Assert.True(materialisation.IsSuccess);
+                var text = "# Computer science revision\nprint('same original file')";
+                var bytes = Encoding.UTF8.GetBytes(text);
+                File.WriteAllBytes(Path.Combine(materialisation.Value!.DirectoryPath, "revision.py"), bytes);
+                var parentTask = currentFiles.Provider.GetAsync(new(folderId), CancellationToken.None);
+                WaitFor(() => parentTask.IsCompleted, "The original Files parent metadata did not settle.");
+                var originalParent = parentTask.GetAwaiter().GetResult(); Assert.True(originalParent.IsSuccess);
+                var uploaded = new FilesUploadedContent(HostedItemId.New(), new(folderId), "revision.py", "text/plain", new(Guid.NewGuid()),
+                    null, actor.ActorId, DateTimeOffset.UtcNow, bytes.Length, Convert.ToHexString(SHA256.HashData(bytes)), "revision.py");
+                var authorityTask = actualFilesAuthority.CaptureCommitAuthorityAsync(actor, currentFiles.Provider, () => true, CancellationToken.None).AsTask();
+                WaitFor(() => authorityTask.IsCompleted, "The actual original fixture commit authority did not settle.");
+                var commitTask = currentFiles.Provider.CommitUploadedContentAsync(uploaded,
+                    [new(new(folderId), originalParent.Value!.CurrentRevisionId)], authorityTask.GetAwaiter().GetResult(), CancellationToken.None);
+                WaitFor(() => commitTask.IsCompleted, "The actual fixture content commit did not settle.");
+                Assert.True(commitTask.GetAwaiter().GetResult().IsSuccess);
+                Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control => control.Name == "library-refresh")
+                    .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => reopened.GetVisualDescendants().OfType<Button>().Any(control => control.Name == "home-library-item" &&
+                    control.GetVisualDescendants().OfType<TextBlock>().Any(textBlock => textBlock.Text == "revision.py")),
+                    "The canonical Library did not publish its original raw text file.");
+                var originalFileButton = Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control => control.Name == "home-library-item" &&
+                    control.GetVisualDescendants().OfType<TextBlock>().Any(textBlock => textBlock.Text == "revision.py"));
+                originalFileButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => originalApp.OriginalLibraryFilesWindows.Any(actual => actual.IsVisible && actual.Content is FilesNativeBrowserSurface surface &&
+                    surface.TryGetOriginalTextPreviewLocation(out var file, out var revision, out _) && file == uploaded.FileId.Value && revision == uploaded.RevisionId.Value),
+                    "The real Library file did not open the same Files text preview.");
+                var previewWindow = Assert.Single(originalApp.OriginalLibraryFilesWindows, actual => actual.IsVisible);
+                var previewSurface = Assert.IsType<FilesNativeBrowserSurface>(previewWindow.Content);
+                Assert.True(previewSurface.TryGetValue("TextPreviewContent", out var actualText)); Assert.Equal(text, actualText);
+                Assert.Equal(text, Assert.Single(previewWindow.GetVisualDescendants().OfType<TextBlock>(),
+                    control => control.Name == "files-preview-content").Text);
+                previewWindow.Close();
+                WaitFor(() => !previewWindow.IsVisible && !previewSurface.OriginalPublicationIsAlive,
+                    "The Library text preview did not retire its actual Files surface.");
+                Assert.Null(originalComposition.OriginalCloseTask);
             }
             finally
             {

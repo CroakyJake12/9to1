@@ -50,20 +50,28 @@ public sealed partial class FilesNativeBrowserService
 
     /// <summary>The SAME maintained page issuer and protected original read path. The owner
     /// checks each real row; this bridge adds no query engine, persistence or read authority.</summary>
-    public async Task<FilesNativeBrowserPage> ListOriginalHomeLibraryPageWithinSourceAsync(
+    public Task<FilesNativeBrowserPage> ListOriginalHomeLibraryPageWithinSourceAsync(
         AuthenticatedResourceActor originalActor, Guid expectedStoreId, string search, FilesNativeBrowserCursor? cursor,
-        Func<bool> originalLifetime, Action<Action> scope, Action<Task> retain, CancellationToken token)
+        Func<bool> originalLifetime, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        ListOriginalHomeLibraryFolderPageWithinSourceAsync(originalActor, expectedStoreId, null,
+            search, cursor, originalLifetime, scope, retain, token);
+
+    /// <summary>Same original issuer for an actual canonical folder; no guessed offsets or filesystem scan.</summary>
+    public async Task<FilesNativeBrowserPage> ListOriginalHomeLibraryFolderPageWithinSourceAsync(
+        AuthenticatedResourceActor originalActor, Guid expectedStoreId, Guid? originalParent,
+        string search, FilesNativeBrowserCursor? cursor, Func<bool> originalLifetime,
+        Action<Action> scope, Action<Task> retain, CancellationToken token)
     {
         var source = FilesOriginalParentSourceCallbacks.Create(scope, retain);
         source.Invoke(() => { Demand(); return true; });
         var page = await source.Observe(() => ListOriginalDeveloperAsync(originalActor, source,
-            search: search, cursor: cursor, token: token, expectedStoreId: expectedStoreId)).ConfigureAwait(false);
+            parentID: originalParent, search: search, cursor: cursor, token: token, expectedStoreId: expectedStoreId)).ConfigureAwait(false);
         await source.ObserveVoid(() => RevalidateOriginalHomeLibraryPageWithinSourceAsync(page, originalActor,
             originalLifetime, scope, retain, token)).ConfigureAwait(false);
         return page;
         void Demand()
         {
-            if (expectedStoreId == Guid.Empty || !originalLifetime())
+            if (expectedStoreId == Guid.Empty || originalParent == Guid.Empty || !originalLifetime())
                 throw new UnauthorizedAccessException("The original Files Library observation retired.");
         }
     }

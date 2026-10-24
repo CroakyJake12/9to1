@@ -122,6 +122,7 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
             var original = RequireInput(input, false);
             if (terminal.TaskId == Guid.Empty || terminal.ExecutionId == Guid.Empty || terminal.OwnerBinding is null)
                 throw new UnauthorizedAccessException("Actual owned settled Task identity required; fields alone grant nothing.");
+            using var capture = await AcquireOriginalMetadataInputCaptureAsync(original, sources).ConfigureAwait(false);
             var effective = ObserveMetadataInputBasis(original);
             if (original.IsLive)
             {
@@ -143,6 +144,7 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
             }
             original.DemandExactHealthyClosedInput(exact);
             DemandMetadataInputBasis(original, effective);
+            capture.Seal();
             return effective.Identity;
         });
     public Task ValidateOriginalProjectRestorationWithinSourceAsync(ITaskRunColdProjectRestorationLease lease,

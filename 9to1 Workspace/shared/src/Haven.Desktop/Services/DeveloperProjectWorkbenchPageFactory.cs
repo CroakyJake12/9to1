@@ -5,6 +5,7 @@ using Haven.Core;
 using Haven.Desktop.Views.Pages.Development;
 using HavenOS.Apps.Dev;
 using HavenOS.Files.NativeHost;
+using HavenOS.Home.Core;
 
 namespace Haven.Desktop.Services;
 
@@ -42,7 +43,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
                 retainOriginalChild(originalPage);
             }, sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>(),
             editorSessionStore: services.GetService<FileDeveloperWorkspaceStore>(),
-            editorSessionExecution: services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>());
+            editorSessionExecution: services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>(),
+            taskRecoveryOwner: CreateTaskRecoveryOwner(actualTask));
     }
     /// <summary>Creates the SAME compiled-CUI workbench in manual (no-AI) mode for a resolved saved
     /// project. No Task/Run/context/model or generation is involved: the real saved project identity
@@ -96,7 +98,23 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             originalPage => { page = originalPage; retainOriginalChild(originalPage); }, createOriginalReadinessChild,
             sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>(),
             editorSessionStore: services.GetService<FileDeveloperWorkspaceStore>(),
-            editorSessionExecution: services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>());
+            editorSessionExecution: services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>(),
+            taskRecoveryOwner: CreateTaskRecoveryOwner(actualTask));
     }
 
+    private DeveloperTaskDraftRecoveryOwner? CreateTaskRecoveryOwner(TaskExecutionSnapshot actualTask)
+    {
+        var source = services.GetService<HomeColdProjectReadReconciliation>();
+        var execution = services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>();
+        var store = services.GetService<FileDeveloperWorkspaceStore>();
+        var keys = services.GetService<IProviderSecretStore>(); var paths = services.GetService<IAppPaths>();
+        var conversations = services.GetService<IConversationRepository>(); var containers = services.GetService<IContainerRepository>();
+        var reader = services.GetService<DeveloperManualSourceReadOwner>();
+        if (source is null || execution is null || store is null || keys is null || paths is null || conversations is null || containers is null || reader is null)
+            return null; // No fake source/key fallback. Existing dirty-close veto remains effective.
+        if (!ReferenceEquals(source, services.GetService<IDeveloperOriginalProjectCommandReadSource>()))
+            throw new InvalidOperationException("The original task recovery READ source differs from its configured Home owner.");
+        return new(source, execution, store, keys, paths, canonical, conversations, containers, reader,
+            actualTask.TaskId, actualTask.ExecutionId, actualTask.ContextId);
+    }
 }

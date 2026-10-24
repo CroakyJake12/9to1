@@ -114,10 +114,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         Action<DeveloperProjectWorkbenchPage>? retainOriginalAcquisition,
         DeveloperManualSourceReadOwner? sourceExplorerReader = null,
         FileDeveloperWorkspaceStore? editorSessionStore = null,
-        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null)
+        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
+        DeveloperTaskDraftRecoveryOwner? taskRecoveryOwner = null)
         : this(development, canonical, actualProject, actualTaskId, actualExecutionId, actualContextId, readiness,
             resolveOriginalDocument, demandOriginalDocumentSourceExternalJoin, explicitBusinessCancellationToken,
-            retainOriginalAcquisition, null, sourceExplorerReader, editorSessionStore, editorSessionExecution) { }
+            retainOriginalAcquisition, null, sourceExplorerReader, editorSessionStore, editorSessionExecution, taskRecoveryOwner) { }
 
     internal DeveloperProjectWorkbenchPage(DeveloperTaskWorkspaceService development, TaskExecutionCoordinator canonical,
         DeveloperResolvedProject actualProject, Guid actualTaskId, Guid actualExecutionId, Guid actualContextId,
@@ -128,7 +129,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         Func<DeveloperProjectWorkbenchPage, ICuiSceneReadiness>? createOriginalReadinessChild,
         DeveloperManualSourceReadOwner? sourceExplorerReader = null,
         FileDeveloperWorkspaceStore? editorSessionStore = null,
-        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null)
+        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
+        DeveloperTaskDraftRecoveryOwner? taskRecoveryOwner = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
@@ -136,6 +138,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _manualReader = sourceExplorerReader; // Optional genuine user-navigation reader; no new source authority.
         _editorSessionStore = editorSessionStore;
         _editorSessionExecution = editorSessionExecution;
+        _taskRecoveryOwner = taskRecoveryOwner;
         if (actualTaskId == Guid.Empty || actualExecutionId == Guid.Empty || actualContextId == Guid.Empty)
             throw new ArgumentException("The existing canonical Task/Run/context must be supplied together.");
         _taskId = actualTaskId; _runId = actualExecutionId; _contextId = actualContextId;
@@ -259,7 +262,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     internal bool HasUnsavedWork { get { lock (_gate) return _pending ||
         (_sourceTabs.Any(IsTabDirty) || _editor is { IsDirty: true } ||
             (_manual && !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline))) &&
-        !HasExactProtectedManualRecovery(); } }
+        !HasExactProtectedManualRecovery() && !HasExactProtectedTaskRecovery(); } }
     public new event PropertyChangedEventHandler? PropertyChanged;
     public DeveloperActionObservation? OriginalDeveloperObservation { get; private set; }
     public DeveloperSourceChangePass? OriginalSourcePass { get; private set; }
@@ -288,8 +291,16 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
             var project = await ResolveProjectAsync(original, scope.Token).ConfigureAwait(false);
             await PublishAsync(original, () => { _project = project; _status = "Existing project opened. Source reads use its current Home permissions."; }).ConfigureAwait(false);
-            await RestoreCleanSessionAsync(original, project, scope.Token).ConfigureAwait(false);
-            await RestoreManualRecoveryAsync(original, project, scope.Token).ConfigureAwait(false);
+            if (_manual)
+            {
+                await RestoreCleanSessionAsync(original, project, scope.Token).ConfigureAwait(false);
+                await RestoreManualRecoveryAsync(original, project, scope.Token).ConfigureAwait(false);
+            }
+            else
+            {
+                await RestoreTaskRecoveryAsync(original, project, scope.Token).ConfigureAwait(false);
+                if (!_taskRecoveryHasSavedSnapshot) await RestoreCleanSessionAsync(original, project, scope.Token).ConfigureAwait(false);
+            }
             Task? show = null;
             var dispatcher = Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -428,7 +439,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             });
             NotifyOriginal(original);
         });
-        if (path == "DraftText") ScheduleManualRecoverySave();
+        if (path == "DraftText") { ScheduleManualRecoverySave(); ScheduleTaskRecoverySave(); }
         return true;
     }
     public bool? IsActionAvailable(string command)
@@ -582,8 +593,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                         var document = await original.AwaitAsync(InvokeOriginalSource(() => _resolveDocument(project, path, cancellationToken))).ConfigureAwait(false);
                         if (!document.Succeeded || document.Value is null) throw new InvalidOperationException(document.Error?.Message ?? "No current registered document identity was resolved.");
                         original.DemandPublication();
-                        var preparedReply = await original.AwaitAsync(InvokeOriginalSource(() => _review!.PrepareOpenAsync(
-                            project.Reference, context, document.Value, _businessToken))).ConfigureAwait(false);
+                        var preparedReply = await RunTaskSourceAsync(original, project, context,
+                            () => _review!.PrepareOpenAsync(project.Reference, context, document.Value, _businessToken), _businessToken).ConfigureAwait(false);
                         var prepared = DemandValue(preparedReply); Exception? openFailure = null;
                         try
                         {
@@ -628,9 +639,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                     }
                     if (command is "dev.preview-edit" or "dev.apply-edit")
                     {
-                        var actual = InvokeOriginalSource(() => command == "dev.preview-edit"
+                        var actual = RunTaskSourceAsync(original, project, context, () => command == "dev.preview-edit"
                             ? _review!.PreviewAsync(editor!.EditorId, editor.DraftRevision, context, _businessToken)
-                            : _review!.ApplyAsync(editor!.EditorId, pass!.ChangeSetId, editor.DraftRevision, context, _businessToken));
+                            : _review!.ApplyAsync(editor!.EditorId, pass!.ChangeSetId, editor.DraftRevision, context, _businessToken), _businessToken);
                         var reply = await original.AwaitAsync(actual).ConfigureAwait(false);
                         var value = DemandValue(reply); OriginalSourcePass = value; OriginalDeveloperObservation = value.OriginalObservation;
                         await PublishAsync(original, () => { _pass = value; _editor = _review!.GetSnapshot(editor!.EditorId); StoreSelectedTab(); _status = value.State == DeveloperSourceChangeState.Applied ? "This exact pass was acknowledged. Later repository changes were preserved." : "Exact before/after reviewed. Apply requires this current draft revision."; }).ConfigureAwait(false);
@@ -638,7 +649,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false);
                         return;
                     }
-                    Task<DeveloperOperationResult<DeveloperActionObservation>> operation = InvokeOriginalSource(() => command switch
+                    Task<DeveloperOperationResult<DeveloperActionObservation>> operation = RunTaskSourceAsync(original, project, context, () => command switch
                     {
                         "dev.tree" => _development.ListFilesAsync(project.Reference, context, cancellationToken: _businessToken),
                         "dev.search" => _development.SearchFilesAsync(project.Reference, context, query, cancellationToken: _businessToken),
@@ -652,7 +663,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                         "dev.create-branch" => _development.GitAsync(project.Reference, context, DeveloperGitOperation.CreateBranch, branch, _businessToken),
                         "dev.switch-branch" => _development.GitAsync(project.Reference, context, DeveloperGitOperation.SwitchBranch, branch, _businessToken),
                         _ => throw new InvalidOperationException("Unknown maintained Dev action.")
-                    });
+                    }, _businessToken);
                     var observed = DemandValue(await original.AwaitAsync(operation).ConfigureAwait(false));
                     OriginalDeveloperObservation = observed;
                     await PublishAsync(original, () =>
@@ -1024,10 +1035,10 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         var prepared = new List<SourceTab>();
         string? refused = null;
         DeveloperCanonicalActionContext? context = null;
-        if (!_manual && restored.Tabs.Count > 0) context = await CaptureContextAsync(original, token).ConfigureAwait(false);
         foreach (var item in restored.Tabs)
         {
             original.DemandPublication();
+            if (!_manual) context = await CaptureContextAsync(original, token).ConfigureAwait(false);
             if (_manual)
             {
                 prepared.Add(new(Guid.NewGuid(), item.Observation.RelativePath, null,
@@ -1040,8 +1051,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             var document = await original.AwaitAsync(InvokeOriginalSource(() =>
                 _resolveDocument(project, item.Observation.RelativePath, token))).ConfigureAwait(false);
             if (!document.Succeeded || document.Value is null) { refused = document.Error?.Message ?? "A restored canonical document is unavailable."; break; }
-            var opened = await original.AwaitAsync(InvokeOriginalSource(() =>
-                _review!.OpenAsync(project.Reference, context!, document.Value, _businessToken))).ConfigureAwait(false);
+            var opened = await RunTaskSourceAsync(original, project, context!,
+                () => _review!.OpenAsync(project.Reference, context!, document.Value, _businessToken), _businessToken).ConfigureAwait(false);
             if (!opened.Succeeded || opened.Value is null) { refused = opened.Error?.Message ?? "A restored canonical source read was refused."; break; }
             var editor = opened.Value;
             prepared.Add(new(editor.EditorId, editor.Document.RelativePath, editor, null) { IsPinned = item.Observation.IsPinned });
@@ -1076,7 +1087,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     {
         // Coalesce the same current tab payload after open/pin/close/apply. Its driver
         // waits for this command fence, so the two canonical metadata writes cannot race.
-        ScheduleManualRecoverySave();
+        ScheduleManualRecoverySave(); ScheduleTaskRecoverySave();
         IReadOnlyList<DeveloperCleanEditorTab>? tabs = null;
         string? selected = null; long expected = 0;
         await PublishAsync(original, () =>
@@ -1179,6 +1190,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _work.DemandExternalClose(); _review?.DemandExternalOriginalRetirementJoin(); _development.DemandExternalOriginalRetirementJoin();
         _demandOriginalDocumentSourceJoin(); // Pure actual Files resolver guard; never global source retirement.
         _readinessChildGuard?.DemandExternalOriginalRetirementJoin();
+        _taskRecoveryOwner?.DemandExternalOriginalJoin();
     }
     public void RequestRetirement() => _work.RequestRetirement();
     public Task CloseAndDrainAsync() { DemandExternalOriginalRetirementJoin(); return _work.CloseAndDrainAsync(); }
@@ -1205,6 +1217,12 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         foreach (var actual in new[] { _reviewClose, _readinessChildClose }.Where(value => value is not null))
             try { await actual!.ConfigureAwait(false); }
             catch (Exception error) { foreach (var cause in actual!.Exception?.InnerExceptions ?? new[] { error }.AsEnumerable()) if (!errors.Any(value => ReferenceEquals(value, cause))) errors.Add(cause); }
+        if (_taskRecoveryOwner is not null)
+        {
+            Task? close = null;
+            try { close = _taskRecoveryOwner.CloseAndDrainAsync(); } catch (Exception error) { errors.Add(error); }
+            if (close is not null) try { await close.ConfigureAwait(false); } catch (Exception error) { errors.Add(close.Exception ?? error); }
+        }
         if (_unresolvedReadinessChild is not null) errors.Add(new InvalidOperationException("The original readiness child cannot certify its own terminal cleanup."));
         if (errors.Count != 0) throw new AggregateException("Dev child originals did not drain cleanly; the actual host is retained.", errors);
         try { _hostClose ??= _host.CloseOriginalAsync(); } catch (Exception error) { errors.Add(error); }

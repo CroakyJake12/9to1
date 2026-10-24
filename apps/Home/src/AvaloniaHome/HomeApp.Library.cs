@@ -18,6 +18,7 @@ internal sealed partial class HomeApp
     private sealed record StandaloneLibraryComposition(HomeNativeWindowsComposition Home, ProductionDiagnostics Diagnostics);
     private ProductionDiagnostics? _ownedLibraryDiagnostics;
     private IHomeOriginalLibrarySource? _originalLibrarySource;
+    private NativeHomeFilesLibrarySource? _originalFilesLibraryIndex;
     private HomeLibraryService? _homeLibrary;
     private HomeNativeApprovalWindowOwner? _libraryApprovals;
     private IHomeDeepLinkRouter? _originalLibraryRouter;
@@ -129,10 +130,13 @@ internal sealed partial class HomeApp
                 OriginalLibraryHomeIsAlive)));
         }
         if (BindOriginalLibraryFiles())
-            members.Add(new("files", "Files", new NativeHomeFilesLibrarySource(_originalLibraryFilesBrowser!, actor,
+        {
+            _originalFilesLibraryIndex = new NativeHomeFilesLibrarySource(_originalLibraryFilesBrowser!, actor,
                 _nativeComposition.StateStore, ObserveOriginalLibraryOwnerAsync,
                 body => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { body(); return true; }),
-                OriginalLibraryHomeIsAlive)));
+                OriginalLibraryHomeIsAlive);
+            members.Add(new("files", "Files", _originalFilesLibraryIndex));
+        }
         if (members.Count == 0)
         {
             _libraryStatus = "The original local Library owners are unavailable in this Home composition.";
