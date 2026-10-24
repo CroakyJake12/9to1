@@ -17,7 +17,7 @@ public static class CuiSceneVisualResources
     {
         if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearance));
         var resources = new ResourceDictionary();
-        var accent = resolution?.EffectiveAccent.ResolveColour(appId ?? string.Empty);
+        var accent = resolution?.ResolveAccentColour(appId ?? string.Empty);
         var theme = resolution?.Theme.BaseTheme ?? CuiSurfacePaletteCatalog.ActiveTheme;
         CuiThemeResourceApplier.ApplyToResources(resources,
             CuiSurfacePaletteCatalog.For(surface, appearance, theme, accent, appId), resolution?.Accessibility);

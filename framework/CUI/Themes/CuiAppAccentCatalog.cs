@@ -3,6 +3,7 @@ namespace CakeOS.Cui.Themes;
 /// <summary>Visible app accents keyed by existing, stable application identities.</summary>
 public static class CuiAppAccentCatalog
 {
+    public const string ProfessionalUnassignedAppColour = "#2563EB";
     public sealed record AppAccent(string AppId, string Surface, string Colour);
 
     public static IReadOnlyList<AppAccent> Defaults { get; } = Array.AsReadOnly<AppAccent>(

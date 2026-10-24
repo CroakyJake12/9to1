@@ -38,10 +38,26 @@ public sealed class CuiAccentPreference : IEquatable<CuiAccentPreference>
         if (colour is null) next.Remove(appId); else next[appId] = CanonicalColour(colour);
         return new(Mode, AllAppsColour, next);
     }
+    /// <summary>Resolve only the stored override without a theme fallback. Palette/rendering callers
+    /// must use the theme-aware overload.</summary>
     public string? ResolveColour(string appId) => Mode switch
     {
         CuiAccentOverrideMode.AllApps => AllAppsColour ?? InitialAllAppsColour,
         CuiAccentOverrideMode.IndividualApps => IndividualApps.GetValueOrDefault(appId),
+        _ => null
+    };
+
+    /// <summary>Resolve an app choice with its effective theme. Individual-app mode treats an
+    /// absent Professional override as canonical blue; None continues to use the owning app's
+    /// catalog default, while custom themes retain their authored accent when no choice exists.</summary>
+    public string? ResolveColour(string appId, CuiTheme theme, bool hasCustomTheme = false) => Mode switch
+    {
+        CuiAccentOverrideMode.AllApps => AllAppsColour ?? InitialAllAppsColour,
+        CuiAccentOverrideMode.IndividualApps => IndividualApps.TryGetValue(appId, out var colour)
+            ? colour
+            : theme == CuiTheme.Professional && !hasCustomTheme
+                ? CuiAppAccentCatalog.ProfessionalUnassignedAppColour
+                : null,
         _ => null
     };
     public static string CanonicalColour(string colour)

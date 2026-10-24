@@ -31,6 +31,26 @@ public sealed class CuiCompilerTests
     }
 
     [Fact]
+    public void Compile_accepts_checked_menu_item_state_only_on_the_menu_item_button_type()
+    {
+        var accepted = new CuiCompiler().Compile(
+            "<Page><Button Type=\"Menu Item\" Content=\"Grid\" ToggleType=\"CheckBox\" Checked=\"True\" StaysOpenOnClick=\"True\" /></Page>",
+            "checked-menu.cui", Options());
+        Assert.True(accepted.Succeeded, string.Join(Environment.NewLine, accepted.Diagnostics));
+
+        var canonicalChecked = new CuiCompiler().Compile(
+            "<Page><Button Type=\"Menu Item\" Content=\"Grid\" ToggleType=\"CheckBox\" IsChecked=\"True\" /></Page>",
+            "checked-menu-canonical.cui", Options());
+        Assert.True(canonicalChecked.Succeeded, string.Join(Environment.NewLine, canonicalChecked.Diagnostics));
+
+        var rejected = new CuiCompiler().Compile(
+            "<Page><Button Type=\"Action\" Content=\"Run\" ToggleType=\"CheckBox\" /></Page>",
+            "invalid-checked-button.cui", Options());
+        Assert.False(rejected.Succeeded);
+        Assert.Contains(rejected.Diagnostics, diagnostic => diagnostic.Code == "CUIC013");
+    }
+
+    [Fact]
     public void Compile_rejects_axaml_source_names()
     {
         var result = new CuiCompiler().Compile("<Page />", "legacy.axaml", Options());

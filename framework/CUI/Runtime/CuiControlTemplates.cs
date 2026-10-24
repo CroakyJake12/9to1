@@ -455,6 +455,16 @@ public static class CuiControlTemplates
         var header = Presenter(owner, scope, "PART_HeaderPresenter", "Header");
         header.Padding = new Thickness(0);
         Grid.SetColumn(header, owner.IsTopLevel ? 0 : 1); row.Children.Add(header);
+        var check = new TextBlock
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false,
+            Focusable = false,
+        };
+        Resource(check, TextBlock.ForegroundProperty, "CuiTextBrush");
+        Resource(check, TextBlock.FontSizeProperty, "CuiFontSizeBody");
+        row.Children.Add(check);
         var iconImage = new Image { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
         Bind(iconImage, Image.SourceProperty, owner, "Icon"); row.Children.Add(iconImage);
         var iconContent = new ContentPresenter(); Bind(iconContent, ContentPresenter.ContentProperty, owner, "Icon"); row.Children.Add(iconContent);
@@ -468,24 +478,46 @@ public static class CuiControlTemplates
             arrow = new TextBlock { Text = "›", IsVisible = owner.Items.Count > 0, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(arrow, 3); row.Children.Add(arrow);
         }
-        void UpdateIcon()
+        void UpdateRow()
         {
             var iconOnly = owner is CuiMenuItem { IconOnly: true };
             var hasImage = owner.Icon is Avalonia.Media.IImage;
-            row.ColumnDefinitions = new(owner.IsTopLevel || iconOnly ? "*" : "24,*,Auto,12");
+            var hasToggle = !owner.IsTopLevel && owner.ToggleType != MenuItemToggleType.None;
+            var checkOverIcon = iconOnly || owner.Icon is not null;
+            row.ColumnDefinitions = new(owner.IsTopLevel ? "*" : "24,*,Auto,12");
             Grid.SetColumn(header, owner.IsTopLevel || iconOnly ? 0 : 1);
+            Grid.SetColumn(check, 0);
+            Grid.SetColumn(iconImage, 0);
+            Grid.SetColumn(iconContent, 0);
+            check.HorizontalAlignment = checkOverIcon ? HorizontalAlignment.Right : HorizontalAlignment.Center;
+            check.VerticalAlignment = checkOverIcon ? VerticalAlignment.Top : VerticalAlignment.Center;
+            check.Margin = checkOverIcon ? new Thickness(2) : new Thickness(0);
             iconImage.Width = iconImage.Height = iconOnly ? 36 : 20;
             iconImage.IsVisible = hasImage;
             iconContent.IsVisible = !hasImage && owner.Icon is not null;
+            check.IsVisible = hasToggle;
+            check.Text = owner.IsChecked
+                ? owner.ToggleType == MenuItemToggleType.Radio ? "●" : "✓"
+                : string.Empty;
             header.IsVisible = !(hasImage && (owner.IsTopLevel || iconOnly));
-            if (shortcut is not null) shortcut.IsVisible = !iconOnly;
-            if (arrow is not null) arrow.IsVisible = !iconOnly && owner.Items.Count > 0;
+            if (shortcut is not null)
+            {
+                Grid.SetColumn(shortcut, 2);
+                shortcut.IsVisible = !iconOnly;
+            }
+            if (arrow is not null)
+            {
+                Grid.SetColumn(arrow, 3);
+                arrow.IsVisible = !iconOnly && owner.Items.Count > 0;
+            }
         }
         owner.PropertyChanged += (_, change) =>
         {
-            if (change.Property == Avalonia.Controls.MenuItem.IconProperty || change.Property == CuiMenuItem.IconOnlyProperty) UpdateIcon();
+            if (change.Property == Avalonia.Controls.MenuItem.IconProperty || change.Property == CuiMenuItem.IconOnlyProperty
+                || change.Property == Avalonia.Controls.MenuItem.ToggleTypeProperty
+                || change.Property == Avalonia.Controls.MenuItem.IsCheckedProperty) UpdateRow();
         };
-        UpdateIcon();
+        UpdateRow();
         var popup = Name(new Popup { PlacementTarget = owner, Placement = owner.IsTopLevel ? PlacementMode.Bottom : PlacementMode.RightEdgeAlignedTop, IsLightDismissEnabled = false }, "PART_Popup", scope);
         CuiPopupPresentation.RequestTransparency(popup);
         popup.Bind(Popup.HorizontalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupHorizontalOffset" : "CuiSubmenuHorizontalOffset"));

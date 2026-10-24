@@ -19,6 +19,8 @@ public sealed record CuiThemeResolution(CuiResolvedTheme Theme, string Requested
     CuiAppearance? Appearance = null, CuiAccentPreference? Accent = null)
 {
     public CuiAccentPreference EffectiveAccent => Accent ?? CuiAccentPreference.Default;
+    public string? ResolveAccentColour(string appId) =>
+        EffectiveAccent.ResolveColour(appId, Theme.BaseTheme, Theme.CustomTheme is not null);
 }
 
 /// <summary>Per-host, nonpersistent interpretation of one authorised Home preference source.</summary>

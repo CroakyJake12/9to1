@@ -166,7 +166,7 @@ public static class CuiSurfacePaletteCatalog
         // accent overrides and persisted preference modes remain untouched.
         var anchors = accentOverride
             ?? (appColour is null
-                ? (theme == CuiTheme.Professional ? ColourAnchors("#2563EB") : null)
+                ? (theme == CuiTheme.Professional ? ColourAnchors(CuiAppAccentCatalog.ProfessionalUnassignedAppColour) : null)
                 : ColourAnchors(appColour));
         var accent = anchors?.Primary ?? Color.Parse(hue.Accent);
         var secondary = anchors?.Secondary ?? Color.Parse(hue.Secondary);

@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Frozen;
 using System.Reflection;
+using System.Windows.Input;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Themes;
 
@@ -60,6 +61,18 @@ public sealed partial class CuiControlLoader : IDisposable
     private readonly Dictionary<Control, ContextMenu> _ownedContextMenus = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, (EventHandler<AvaloniaPropertyChangedEventArgs> Opening, EventHandler<RoutedEventArgs> Closed)> _contextMenuFocusHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
+    private CuiKeyboardTooltipHost? _keyboardTooltipHost;
+    private readonly record struct MenuShortcutSubscriptions(
+        EventHandler<AvaloniaPropertyChangedEventArgs> PropertyChanged,
+        EventHandler<VisualTreeAttachmentEventArgs> Attached,
+        EventHandler<VisualTreeAttachmentEventArgs> Detached);
+    private readonly Dictionary<CuiMenuItem, List<(TopLevel Root, KeyBinding Binding)>> _menuShortcutBindings = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<CuiMenuItem, MenuShortcutSubscriptions> _menuShortcutHandlers = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<CuiMenuItem, Control> _menuShortcutContextOwners = new(ReferenceEqualityComparer.Instance);
+    private Control? _menuShortcutRoot;
+    private TopLevel? _menuShortcutTopLevel;
+    private EventHandler<VisualTreeAttachmentEventArgs>? _menuShortcutAttached;
+    private EventHandler<VisualTreeAttachmentEventArgs>? _menuShortcutDetached;
     private readonly Dictionary<string, CuiComponent> _typeDefinitions = new(StringComparer.Ordinal);
     private const string LocalToggleCommand = "cui.local-toggle";
     private const string LocalSetCommand = "cui.local-set";
@@ -168,7 +181,7 @@ public sealed partial class CuiControlLoader : IDisposable
         // Populate off-tree, then publish once. Mutating an attached dictionary
         // broadcasts every individual token to this control and its descendants,
         // repeatedly projecting interaction states against incomplete palettes.
-        var explicitAccent = resolution.EffectiveAccent.ResolveColour(_accentAppId ?? string.Empty);
+        var explicitAccent = resolution.ResolveAccentColour(_accentAppId ?? string.Empty);
         var palette = CuiSurfacePaletteCatalog.For(_currentSurface,
             _appearance ?? resolution.Appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme,
             explicitAccent, _accentAppId);
@@ -360,6 +373,10 @@ public sealed partial class CuiControlLoader : IDisposable
             ClearFloatingCloseGestures();
             _wiredActions.Clear();
             _actionInvocations.Clear();
+            Attempt(DetachMenuShortcutRoot);
+            var keyboardTooltipHost = _keyboardTooltipHost;
+            _keyboardTooltipHost = null;
+            if (keyboardTooltipHost is not null) Attempt(keyboardTooltipHost.Dispose);
             foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
             foreach (var control in _authoredControls.Keys.ToArray()) Attempt(() => DetachPresentation(control));
             _inputPresentation.Clear();
@@ -570,6 +587,10 @@ public sealed partial class CuiControlLoader : IDisposable
         var mountingFrame = _committedActionFrame;
         _effectsReady = false; // a rejected preflight leaves prior effects operational
         _effectRoot = null; // a failed replacement must not reactivate the retired root
+        DetachMenuShortcutRoot();
+        var retiredKeyboardTooltipHost = _keyboardTooltipHost;
+        _keyboardTooltipHost = null;
+        retiredKeyboardTooltipHost?.Dispose();
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
@@ -656,6 +677,11 @@ public sealed partial class CuiControlLoader : IDisposable
         _effects = document.Effects ?? Array.Empty<CuiEffectDefinition>();
         _effectFired = new bool[_effects.Count];
         _effectRoot = root;
+        // Keyboard-visible authored tooltips are a shared CUI capability, so every loaded
+        // standalone or embedded root owns the same focus/placement lifecycle.
+        _keyboardTooltipHost = CuiKeyboardTooltipHost.Attach(root);
+        foreach (var control in _authoredControls.Keys) _keyboardTooltipHost.ObserveControl(control);
+        AttachMenuShortcutRoot(root);
 
         return root;
 
@@ -739,6 +765,170 @@ public sealed partial class CuiControlLoader : IDisposable
         if (_effectsReady || !IsActionOriginCurrent(frame, root, frameOwned: true)) return;
         _effectsReady = true;
         EvaluateEffects();
+    }
+
+    private void AttachMenuShortcutRoot(Control root)
+    {
+        DetachMenuShortcutRoot();
+        _menuShortcutRoot = root;
+        var attached = new EventHandler<VisualTreeAttachmentEventArgs>((sender, _) =>
+        {
+            if (ReferenceEquals(sender, _menuShortcutRoot)) RegisterMenuShortcutBindings();
+        });
+        var detached = new EventHandler<VisualTreeAttachmentEventArgs>((sender, _) =>
+        {
+            if (ReferenceEquals(sender, _menuShortcutRoot)) UnregisterMenuShortcutBindings();
+        });
+        _menuShortcutAttached = attached;
+        _menuShortcutDetached = detached;
+        root.AttachedToVisualTree += attached;
+        root.DetachedFromVisualTree += detached;
+        foreach (var item in _authoredControls.Keys.OfType<CuiMenuItem>()) TrackMenuShortcut(item);
+        if (root.IsAttachedToVisualTree()) RegisterMenuShortcutBindings();
+    }
+
+    private void DetachMenuShortcutRoot()
+    {
+        if (_menuShortcutRoot is { } root)
+        {
+            if (_menuShortcutAttached is not null) root.AttachedToVisualTree -= _menuShortcutAttached;
+            if (_menuShortcutDetached is not null) root.DetachedFromVisualTree -= _menuShortcutDetached;
+        }
+        UnregisterMenuShortcutBindings();
+        foreach (var (item, handler) in _menuShortcutHandlers)
+        {
+            item.PropertyChanged -= handler;
+            item.AttachedToVisualTree -= handler.Attached;
+            item.DetachedFromVisualTree -= handler.Detached;
+        }
+        _menuShortcutHandlers.Clear();
+        _menuShortcutContextOwners.Clear();
+        _menuShortcutAttached = null;
+        _menuShortcutDetached = null;
+        _menuShortcutRoot = null;
+    }
+
+    private void TrackMenuShortcut(CuiMenuItem item, Control? contextMenuOwner = null)
+    {
+        if (contextMenuOwner is not null) _menuShortcutContextOwners[item] = contextMenuOwner;
+        if (!_menuShortcutHandlers.ContainsKey(item))
+        {
+            EventHandler<AvaloniaPropertyChangedEventArgs> propertyChanged = (_, change) =>
+            {
+                if (change.Property == MenuItem.InputGestureProperty) UpdateMenuShortcut(item);
+            };
+            EventHandler<VisualTreeAttachmentEventArgs> attached = (_, _) => UpdateMenuShortcut(item);
+            EventHandler<VisualTreeAttachmentEventArgs> detached = (_, _) => UpdateMenuShortcut(item);
+            _menuShortcutHandlers[item] = new MenuShortcutSubscriptions(propertyChanged, attached, detached);
+            item.PropertyChanged += propertyChanged;
+            item.AttachedToVisualTree += attached;
+            item.DetachedFromVisualTree += detached;
+        }
+        UpdateMenuShortcut(item);
+    }
+
+    private void RemoveMenuShortcut(CuiMenuItem item)
+    {
+        RemoveMenuShortcutBindings(item);
+        if (_menuShortcutHandlers.Remove(item, out var handler))
+        {
+            item.PropertyChanged -= handler.PropertyChanged;
+            item.AttachedToVisualTree -= handler.Attached;
+            item.DetachedFromVisualTree -= handler.Detached;
+        }
+        _menuShortcutContextOwners.Remove(item);
+    }
+
+    private void UpdateMenuShortcut(CuiMenuItem item)
+    {
+        var gesture = item.InputGesture;
+        var roots = new List<TopLevel>();
+        var menuRootActive = _menuShortcutRoot is { } shortcutRoot && shortcutRoot.IsAttachedToVisualTree();
+        if (menuRootActive && _menuShortcutTopLevel is { } menuRoot) roots.Add(menuRoot);
+        if (menuRootActive && item.IsAttachedToVisualTree() && TopLevel.GetTopLevel(item) is { } itemRoot
+            && !roots.Any(root => ReferenceEquals(root, itemRoot)))
+            roots.Add(itemRoot);
+
+        if (_menuShortcutBindings.TryGetValue(item, out var existing))
+        {
+            foreach (var binding in existing.ToArray())
+            {
+                if (gesture is null || !Equals(binding.Binding.Gesture, gesture)
+                    || !roots.Any(root => ReferenceEquals(root, binding.Root)))
+                {
+                    binding.Root.KeyBindings.Remove(binding.Binding);
+                    existing.Remove(binding);
+                }
+            }
+            if (existing.Count == 0) _menuShortcutBindings.Remove(item);
+        }
+        if (gesture is null || !_authoredControls.ContainsKey(item)) return;
+        if (!_menuShortcutBindings.TryGetValue(item, out var bindings))
+            _menuShortcutBindings[item] = bindings = new();
+        foreach (var root in roots)
+        {
+            if (bindings.Any(binding => ReferenceEquals(binding.Root, root))) continue;
+            var keyBinding = new KeyBinding { Gesture = gesture, Command = new MenuShortcutCommand(this, item) };
+            root.KeyBindings.Add(keyBinding);
+            bindings.Add((root, keyBinding));
+        }
+    }
+
+    private void RegisterMenuShortcutBindings()
+    {
+        UnregisterMenuShortcutBindings();
+        if (_disposed || _menuShortcutRoot is not { } root || !root.IsAttachedToVisualTree()) return;
+        _menuShortcutTopLevel = TopLevel.GetTopLevel(root);
+        if (_menuShortcutTopLevel is null) return;
+        foreach (var item in _menuShortcutHandlers.Keys.ToArray()) UpdateMenuShortcut(item);
+    }
+
+    private void UnregisterMenuShortcutBindings()
+    {
+        foreach (var binding in _menuShortcutBindings.Values.SelectMany(bindings => bindings))
+            binding.Root.KeyBindings.Remove(binding.Binding);
+        _menuShortcutBindings.Clear();
+        _menuShortcutTopLevel = null;
+    }
+
+    private void RemoveMenuShortcutBindings(CuiMenuItem item)
+    {
+        if (!_menuShortcutBindings.Remove(item, out var bindings)) return;
+        foreach (var binding in bindings) binding.Root.KeyBindings.Remove(binding.Binding);
+    }
+
+    private bool CanInvokeMenuShortcut(CuiMenuItem item)
+    {
+        var shortcutRoot = _menuShortcutRoot;
+        if (_disposed || !_authoredControls.ContainsKey(item) || !item.IsEffectivelyEnabled || !item.IsVisible
+            || shortcutRoot is null || !shortcutRoot.IsEffectivelyVisible || !shortcutRoot.IsEffectivelyEnabled
+            || !shortcutRoot.IsAttachedToVisualTree()) return false;
+        var menuParents = item.GetLogicalAncestors().OfType<MenuItem>().ToArray();
+        if (_menuShortcutContextOwners.TryGetValue(item, out var contextOwner))
+        {
+            return _ownedContextMenus.TryGetValue(contextOwner, out var ownedMenu)
+                && ReferenceEquals(contextOwner.ContextMenu, ownedMenu) && ownedMenu.IsOpen
+                && contextOwner.IsEffectivelyEnabled && contextOwner.IsEffectivelyVisible
+                && menuParents.All(parent => parent.IsEffectivelyEnabled && parent.IsVisible && parent.IsSubMenuOpen);
+        }
+        if (item.GetLogicalAncestors().OfType<ContextMenu>().FirstOrDefault() is { } contextMenu)
+            return contextMenu.IsOpen
+                && menuParents.All(parent => parent.IsEffectivelyEnabled && parent.IsVisible && parent.IsSubMenuOpen);
+        // Main-menu shortcuts represent application commands, not popup-only commands;
+        // nested menu presentation must not disable Save/Export/etc. when that menu is closed.
+        if (menuParents.Any(parent => !parent.IsEffectivelyEnabled || !parent.IsVisible)) return false;
+        return item.GetLogicalAncestors().OfType<CuiMenu>()
+            .FirstOrDefault() is { IsEffectivelyVisible: true, IsEffectivelyEnabled: true };
+    }
+
+    private sealed class MenuShortcutCommand(CuiControlLoader loader, CuiMenuItem item) : ICommand
+    {
+        public bool CanExecute(object? parameter) => loader.CanInvokeMenuShortcut(item);
+        public void Execute(object? parameter)
+        {
+            if (CanExecute(parameter)) item.ActivateFromCui();
+        }
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
     }
 
     private async Task DispatchActionAsync(Task start, Control control, ICuiActionDispatcher dispatcher,
@@ -1145,6 +1335,8 @@ public sealed partial class CuiControlLoader : IDisposable
 
     private void WireBindingsRecursive(Control control, Control? contextMenuOwner = null)
     {
+        _keyboardTooltipHost?.ObserveControl(control);
+        if (control is CuiMenuItem shortcutItem) TrackMenuShortcut(shortcutItem, contextMenuOwner);
         // Native menu items use the same retained pipeline as native buttons. Pure-local toggles
         // and pure-local Set transitions are wired even without an external dispatcher; external
         // commands require a dispatcher, either the scene/app one, the recorded owning query scope
@@ -1806,7 +1998,9 @@ public sealed partial class CuiControlLoader : IDisposable
             _observedBindings.Remove(control);
             _controlThemeNames.Remove(control); _controlThemeResources.Remove(control); _appliedThemeKeys.Remove(control);
             _authoredControls.Remove(control);
+            if (control is CuiMenuItem menuShortcut) RemoveMenuShortcut(menuShortcut);
         }
+        foreach (var control in removed) _keyboardTooltipHost?.UnobserveControl(control);
 
         // Phase 2 — live binding/bookkeeping that does not invoke authored callbacks.
         _liveBindings.RemoveAll(binding => removed.Contains(binding.Control));
@@ -3320,10 +3514,28 @@ public sealed partial class CuiControlLoader : IDisposable
                         "ItemsSource requires an explicit collection binding.", sourceSpan));
                 case "checked":
                 case "ischecked":
-                    if (control is CheckBox checkBox && bool.TryParse(resolved, out var isChecked))
+                    if (!bool.TryParse(resolved, out var isChecked))
+                        throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                            "Checked requires a boolean value.", sourceSpan));
+                    if (control is CuiMenuItem menuToggleItem)
+                        menuToggleItem.IsChecked = isChecked;
+                    else if (control is CheckBox checkBox)
                         checkBox.IsChecked = isChecked;
-                    else if (control is ToggleSwitch toggleSwitch && bool.TryParse(resolved, out var switchChecked))
-                        toggleSwitch.IsChecked = switchChecked;
+                    else if (control is ToggleSwitch toggleSwitch)
+                        toggleSwitch.IsChecked = isChecked;
+                    break;
+                case "toggletype":
+                    if (control is not CuiMenuItem typedMenuItem
+                        || !Enum.TryParse<MenuItemToggleType>(resolved, true, out var toggleType))
+                        throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                            "ToggleType requires a registered menu item and CheckBox, Radio, or None.", sourceSpan));
+                    typedMenuItem.ToggleType = toggleType;
+                    break;
+                case "staysopenonclick":
+                    if (control is not CuiMenuItem stayOpenMenuItem || !bool.TryParse(resolved, out var staysOpen))
+                        throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                            "StaysOpenOnClick requires a menu item and boolean value.", sourceSpan));
+                    stayOpenMenuItem.StaysOpenOnClick = staysOpen;
                     break;
                 case "content":
                     if (control is ContentControl cc)
@@ -4528,4 +4740,3 @@ public sealed partial class CuiControlLoader : IDisposable
         return true;
     }
 }
-

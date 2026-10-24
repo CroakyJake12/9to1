@@ -45,6 +45,8 @@ public sealed class CuiAppAccentTests
         public event EventHandler? Changed;
         public void Set(CuiAccentPreference accent)
         { Current = Current with { Revision = Current.Revision + 1, Accent = accent }; Changed?.Invoke(this, EventArgs.Empty); }
+        public void SetTheme(string theme)
+        { Current = Current with { Revision = Current.Revision + 1, Name = theme }; Changed?.Invoke(this, EventArgs.Empty); }
     }
 
     [Fact]
@@ -193,6 +195,88 @@ public sealed class CuiAppAccentTests
             var glow = CuiSurfacePaletteCatalog.For("Present", appearance, CuiTheme.Glow, null, "app.unknown-owner");
             Assert.Equal(CuiSurfacePaletteCatalog.For("Present", appearance, CuiTheme.Glow, null).Accent, glow.Accent);
         }
+    }
+
+    [Fact]
+    public async Task Professional_missing_individual_override_uses_blue_at_full_capacity_and_preserves_explicit_choices()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var source = new Preferences("Professional");
+            var initialChoices = FullChoices("app.present", ("app.write", "#A04470"));
+            var preference = new CuiAccentPreference(CuiAccentOverrideMode.IndividualApps, individualApps: initialChoices);
+            Assert.Equal(32, preference.IndividualApps.Count);
+            Assert.Equal("#2563EB", preference.ResolveColour("app.present", CuiTheme.Professional));
+            Assert.Equal("#2563EB", preference.ResolveColour("app.future", CuiTheme.Professional));
+            Assert.Null(preference.ResolveColour("app.present", CuiTheme.Glow));
+            Assert.Null(preference.ResolveColour("app.present", CuiTheme.Professional, hasCustomTheme: true));
+            Assert.Equal("#A04470", preference.ResolveColour("app.write", CuiTheme.Professional));
+            Assert.Null(CuiAccentPreference.Default.ResolveColour("app.present", CuiTheme.Professional));
+            Assert.Equal("#123456", new CuiAccentPreference(CuiAccentOverrideMode.AllApps, "#123456")
+                .ResolveColour("app.present", CuiTheme.Professional));
+            Assert.Throws<ArgumentException>(() => preference.WithAppColour("app.future", "#DB3545"));
+            source.Set(preference);
+
+            using var context = new CuiThemePreferenceContext(source);
+            using var present = new CuiControlLoader();
+            using var future = new CuiControlLoader();
+            using var write = new CuiControlLoader();
+            present.SetSurface("Present", "app.present");
+            future.SetSurface("Present", "app.future");
+            write.SetSurface("Write", "app.write");
+            present.SetThemePreferenceContext(context);
+            future.SetThemePreferenceContext(context);
+            write.SetThemePreferenceContext(context);
+            const string markup = "<Button Content='Primary' Background='{Resource CuiAccentBrush}'/>";
+            var presentLoaded = present.LoadMarkup(markup);
+            var futureLoaded = future.LoadMarkup(markup);
+            var writeLoaded = write.LoadMarkup(markup);
+            Assert.Empty(presentLoaded.Diagnostics);
+            Assert.Empty(futureLoaded.Diagnostics);
+            Assert.Empty(writeLoaded.Diagnostics);
+            var presentButton = Assert.IsAssignableFrom<Button>(presentLoaded.Root);
+            var futureButton = Assert.IsAssignableFrom<Button>(futureLoaded.Root);
+            var writeButton = Assert.IsAssignableFrom<Button>(writeLoaded.Root);
+            static Color Accent(Button button)
+            {
+                Assert.True(button.TryFindResource("CuiAccentPrimaryColor", out var value));
+                return Assert.IsType<Color>(value);
+            }
+            static Color Expected(string surface, string appId, string accent) =>
+                CuiSurfacePaletteCatalog.For(surface, CuiAppearance.Bright, CuiTheme.Professional, accent, appId)
+                    .AccentPalette.Primary.Middle;
+            Assert.Equal(Expected("Present", "app.present", "#2563EB"), Accent(presentButton));
+            Assert.Equal(Expected("Present", "app.future", "#2563EB"), Accent(futureButton));
+            Assert.Equal(Expected("Write", "app.write", "#A04470"), Accent(writeButton));
+
+            source.SetTheme("Glow");
+            Assert.Equal(CuiSurfacePaletteCatalog.For("Present", CuiAppearance.Bright, CuiTheme.Glow, null, "app.present")
+                .AccentPalette.Primary.Middle, Accent(presentButton));
+            source.SetTheme("Professional");
+            Assert.Equal(Expected("Present", "app.present", "#2563EB"), Accent(presentButton));
+
+            var updatedChoices = FullChoices("app.present", ("app.write", "#A04470"), ("app.present", "#DB3545"));
+            source.Set(new(CuiAccentOverrideMode.IndividualApps, individualApps: updatedChoices));
+            Assert.Equal(Expected("Present", "app.present", "#DB3545"), Accent(presentButton));
+            Assert.Equal(Expected("Present", "app.future", "#2563EB"), Accent(futureButton));
+            Assert.Equal(Expected("Write", "app.write", "#A04470"), Accent(writeButton));
+            Assert.Equal(32, source.Current.Accent!.IndividualApps.Count);
+            Assert.Equal("#A04470", source.Current.Accent.IndividualApps["app.write"]);
+        }, CancellationToken.None);
+    }
+
+    private static Dictionary<string, string> FullChoices(string excludedAppId,
+        params (string AppId, string Colour)[] explicitChoices)
+    {
+        var choices = explicitChoices.ToDictionary(choice => choice.AppId, choice => choice.Colour, StringComparer.Ordinal);
+        for (var index = 0; choices.Count < 32; index++)
+        {
+            var appId = $"app.choice{index:D2}";
+            if (appId == excludedAppId || choices.ContainsKey(appId)) continue;
+            choices.Add(appId, "#607D8B");
+        }
+        return choices;
     }
 
     [Fact]

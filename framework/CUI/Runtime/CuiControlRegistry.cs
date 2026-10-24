@@ -114,10 +114,17 @@ public sealed class CuiControlRegistry
     }
 
     /// <summary>Specialised Object capabilities extend only their registered type's property contract.</summary>
-    public bool SupportsProperty(CuiRuntimeElementDescriptor element, string? objectType, CuiRuntimePropertyDescriptor property) =>
-        property.IsAttached || element.AllowedProperties.Contains(property.Name)
-        || element.Name == "Object" && objectType is not null
-        && _objectProperties.TryGetValue(objectType, out var properties) && properties.Contains(property.Name);
+    public bool SupportsProperty(CuiRuntimeElementDescriptor element, string? objectType, CuiRuntimePropertyDescriptor property)
+    {
+        // Menu toggle/stay-open semantics are meaningful only for Button Type="Menu Item";
+        // Action buttons keep the same compact Button vocabulary without acquiring menu behavior.
+        if (element.Name.Equals("Button", StringComparison.OrdinalIgnoreCase)
+            && (property.Name is "ToggleType" or "StaysOpenOnClick" or "Checked" or "IsChecked"))
+            return string.Equals(objectType, "Menu Item", StringComparison.OrdinalIgnoreCase);
+        return property.IsAttached || element.AllowedProperties.Contains(property.Name)
+            || element.Name == "Object" && objectType is not null
+            && _objectProperties.TryGetValue(objectType, out var properties) && properties.Contains(property.Name);
+    }
 
     /// <summary>Resolve canonical metadata for a registered runtime property.</summary>
     public bool TryGetProperty(string name, out CuiRuntimePropertyDescriptor descriptor)
@@ -413,7 +420,7 @@ public sealed class CuiControlRegistry
                 "Text" => text,
                 "Input" => input,
                 "Image" => common.Concat(new[] { "Source", "Stretch", "Opacity", "Background" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
-                "Button" => content.Concat(new[] { "Action", "Shortcut", "Selected", "IconSource", "MenuColumns", "IconOnly", "DefaultAction", "CancelAction", "Chromeless" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
+                "Button" => content.Concat(new[] { "Action", "Shortcut", "Selected", "IconSource", "MenuColumns", "IconOnly", "DefaultAction", "CancelAction", "Chromeless", "ToggleType", "Checked", "IsChecked", "StaysOpenOnClick" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Layer" => common.Concat(new[] { "Background", "Padding", "ZIndex", "Interactive", "ActiveIndependently" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Anchor" => common.Concat(new[] { "Target", "Placement" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Audio" or "Video" => common.Concat(new[] { "Type", "Source" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
@@ -458,6 +465,7 @@ public sealed class CuiControlRegistry
             ("Tooltip", "text", typeof(string), true), ("Shortcut", "text", typeof(string), true),
             ("IconSource", "uri", typeof(string), true),
             ("MenuColumns", "integer", typeof(int), true), ("IconOnly", "boolean", typeof(bool), true),
+            ("ToggleType", "symbol", typeof(MenuItemToggleType), true), ("StaysOpenOnClick", "boolean", typeof(bool), true),
             ("Selected", "boolean", typeof(bool), true), ("ResizeEdge", "symbol", typeof(string), true),
             ("Chromeless", "boolean", typeof(bool), true),
             ("Header", "text", typeof(string), true), ("Text", "text", typeof(string), true), ("Content", "content", typeof(object), true),
@@ -541,6 +549,7 @@ public sealed class CuiControlRegistry
             "TextWrapping" => new[] { "NoWrap", "Wrap", "WrapWithOverflow" },
             "FontStyle" => new[] { "Normal", "Italic", "Oblique" },
             "FontRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiFontRole>(),
+            "ToggleType" => Enum.GetNames<MenuItemToggleType>(),
             "AccentRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiAccentRole>(),
             "Stretch" => new[] { "None", "Fill", "Uniform", "UniformToFill" },
             "Cursor" => new[] { "Arrow", "Hand", "IBeam", "Wait", "Cross", "SizeAll" },
@@ -588,7 +597,4 @@ public sealed class CuiControlRegistry
             or "Rotate" or "Scale" or "ScaleX" or "ScaleY" or "Skew" or "SkewX" or "SkewY"
             or "Translate" or "TranslateX" or "TranslateY";
 }
-
-
-
 

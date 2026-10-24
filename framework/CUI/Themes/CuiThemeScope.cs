@@ -176,7 +176,8 @@ public static class CuiThemeScopeApplier
         if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearanceOverride));
         var palette = accentPreference is null ? CuiSurfacePaletteCatalog.For(surface, appearance, theme)
             : CuiSurfacePaletteCatalog.For(surface, appearance, theme,
-                accentPreference.ResolveColour(CuiAppAccentCatalog.Find(surface)?.AppId ?? string.Empty));
+                accentPreference.ResolveColour(CuiAppAccentCatalog.Find(surface)?.AppId ?? string.Empty,
+                    theme, customTheme is not null));
         // Publish the exact four-mode choice with the complete palette, before
         // notifying observers. Brightness must not collapse to light/dark.
         CuiThemeResourceApplier.Apply(palette, accessibility, localization, appearance, customTheme);

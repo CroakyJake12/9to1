@@ -266,8 +266,10 @@ public sealed class CuiSceneThemePreferenceTests
                 new Dictionary<string, string> { [owner.AppId] = "#654321", ["app.other"] = "#FF0000" }));
             AssertAccent(surface, "#654321");
             ChangeAccent(new(CuiAccentOverrideMode.IndividualApps, individualApps:
-                new Dictionary<string, string> { ["app.other"] = "#FF0000" }));
-            AssertAccent(owner.Surface, null);
+                FullChoices(owner.AppId, ("app.other", "#FF0000"))));
+            AssertAccent(surface, CuiAppAccentCatalog.ProfessionalUnassignedAppColour);
+            Assert.Equal(32, source.Current.Accent!.IndividualApps.Count);
+            Assert.Equal("#FF0000", source.Current.Accent.IndividualApps["app.other"]);
 
             // Default app anchors are not a user override of an authored custom fill.
             var custom = CuiCustomThemeContract.CreateDefault("Authored accent roles");
@@ -316,6 +318,49 @@ public sealed class CuiSceneThemePreferenceTests
         }, CancellationToken.None);
     }
 
+    [Fact]
+    public async Task Professional_missing_override_uses_blue_for_new_scene_app_without_consuming_a_choice()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(async () =>
+        {
+            var source = new Source("Professional", "app-accent-future");
+            source.SetAccent(new(CuiAccentOverrideMode.IndividualApps,
+                FullChoices("app.future", ("app.write", "#A04470"))));
+            using var context = new CuiThemePreferenceContext(source);
+            using var host = new CuiSceneHost();
+            try
+            {
+                await host.ShowAsync(Scene(context, false) with { AppId = "app.future", Surface = "Present" }).WaitAsync(Bound);
+                var expectedBlue = CuiSurfacePaletteCatalog.For("Present", CuiAppearance.Dark, CuiTheme.Professional,
+                    CuiAppAccentCatalog.ProfessionalUnassignedAppColour, "app.future");
+                Assert.Equal(expectedBlue.AccentPalette.Primary.Middle, Resource<Color>(host, "CuiAccentPrimaryColor"));
+                Assert.Equal(32, source.Current.Accent!.IndividualApps.Count);
+
+                source.SetAccent(new(CuiAccentOverrideMode.IndividualApps,
+                    FullChoices("app.future", ("app.future", "#E12345"), ("app.write", "#A04470"))));
+                var expectedOverride = CuiSurfacePaletteCatalog.For("Present", CuiAppearance.Dark, CuiTheme.Professional,
+                    "#E12345", "app.future");
+                Assert.Equal(expectedOverride.AccentPalette.Primary.Middle, Resource<Color>(host, "CuiAccentPrimaryColor"));
+                Assert.Equal("#A04470", source.Current.Accent!.IndividualApps["app.write"]);
+            }
+            finally { await host.CloseOriginalAsync().WaitAsync(Bound); }
+        }, CancellationToken.None);
+    }
+
+    private static Dictionary<string, string> FullChoices(string excludedAppId,
+        params (string AppId, string Colour)[] explicitChoices)
+    {
+        var choices = explicitChoices.ToDictionary(choice => choice.AppId, choice => choice.Colour, StringComparer.Ordinal);
+        for (var index = 0; choices.Count < 32; index++)
+        {
+            var appId = $"app.choice{index:D2}";
+            if (appId == excludedAppId || choices.ContainsKey(appId)) continue;
+            choices.Add(appId, "#607D8B");
+        }
+        return choices;
+    }
+
     private static CuiNativeScene Scene(CuiThemePreferenceContext context, bool guarded)
     {
         var bindings = new CuiViewModel();
@@ -349,6 +394,11 @@ public sealed class CuiSceneThemePreferenceTests
         public void Change(string theme, CuiAppearance appearance)
         {
             Current = Current with { Name = theme, Appearance = appearance, Revision = Current.Revision + 1 };
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+        public void SetAccent(CuiAccentPreference accent)
+        {
+            Current = Current with { Accent = accent, Revision = Current.Revision + 1 };
             Changed?.Invoke(this, EventArgs.Empty);
         }
     }

@@ -11,6 +11,63 @@ namespace CakeOS.Cui.Runtime.Tests;
 public sealed class CuiMenuFocusTests
 {
     [Fact]
+    public async Task CUI_cascading_menu_uses_down_right_left_and_escape_with_level_focus_return()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader();
+            var (root, diagnostics) = loader.LoadMarkup("""
+                <Container Type="Menu">
+                  <Button Type="Menu Item" Content="File">
+                    <Button Type="Menu Item" Content="Open" />
+                    <Button Type="Menu Item" Content="Export">
+                      <Button Type="Menu Item" Content="PNG" />
+                    </Button>
+                  </Button>
+                </Container>
+                """);
+            Assert.Empty(diagnostics);
+            loader.WireBindings(root!);
+            var window = new Window { Content = root, Width = 500, Height = 280 };
+            window.Show();
+            try
+            {
+                window.UpdateLayout();
+                var file = Assert.Single(root!.GetVisualDescendants().OfType<CuiMenuItem>());
+                file.IsSubMenuOpen = true;
+                Dispatcher.UIThread.RunJobs();
+                window.UpdateLayout();
+                var fileCommands = file.Items.OfType<CuiMenuItem>().ToArray();
+                Assert.Equal(2, fileCommands.Length);
+                Assert.True(fileCommands[0].Focus());
+                var filePopup = TopLevel.GetTopLevel(fileCommands[0])!;
+
+                PressKey(filePopup, Key.Down);
+                Assert.True(fileCommands[1].IsFocused);
+                PressKey(filePopup, Key.Right);
+                Dispatcher.UIThread.RunJobs();
+                window.UpdateLayout();
+                Assert.True(fileCommands[1].IsSubMenuOpen);
+                var nestedCommand = Assert.IsType<CuiMenuItem>(Assert.Single(fileCommands[1].Items));
+                Assert.True(nestedCommand.IsFocused);
+                var nestedPopup = TopLevel.GetTopLevel(nestedCommand)!;
+
+                PressKey(nestedPopup, Key.Left);
+                Dispatcher.UIThread.RunJobs();
+                Assert.False(fileCommands[1].IsSubMenuOpen);
+                Assert.True(fileCommands[1].IsFocused);
+
+                PressKey(filePopup, Key.Escape);
+                Dispatcher.UIThread.RunJobs();
+                Assert.False(file.IsSubMenuOpen);
+                Assert.True(file.IsFocused);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Actual_menu_escape_returns_typing_without_resetting_caret_or_dispatching_an_action()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
@@ -72,6 +129,8 @@ public sealed class CuiMenuFocusTests
     }
     private static void PressKey(Window window, Key key)
     { window.KeyPress(key, RawInputModifiers.None, PhysicalKey.None, null); window.KeyRelease(key, RawInputModifiers.None, PhysicalKey.None, null); }
+    private static void PressKey(TopLevel root, Key key)
+    { root.KeyPress(key, RawInputModifiers.None, PhysicalKey.None, null); root.KeyRelease(key, RawInputModifiers.None, PhysicalKey.None, null); }
     private static void Pump(Window window)
     { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
 

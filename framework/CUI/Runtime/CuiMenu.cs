@@ -14,6 +14,9 @@ public sealed class CuiMenu : Menu
     private TopLevel? _root;
     private WeakReference<Control>? _outsideFocus;
     private long _generation;
+    private long _spaceOpenGeneration;
+
+    public CuiMenu() => AddHandler(KeyDownEvent, ActivateWithSpace, RoutingStrategies.Tunnel);
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -26,8 +29,47 @@ public sealed class CuiMenu : Menu
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _generation++; _root?.RemoveHandler(GotFocusEvent, RootFocused);
+        _spaceOpenGeneration++;
         _root = null; _outsideFocus = null;
         base.OnDetachedFromVisualTree(e);
+    }
+
+    private void ActivateWithSpace(object? sender, KeyEventArgs args)
+    {
+        if (args.Handled || args.Key != Key.Space || args.KeyModifiers != KeyModifiers.None
+            || args.Source is not CuiMenuItem item
+            || !Items.OfType<CuiMenuItem>().Any(child => ReferenceEquals(child, item))) return;
+        args.Handled = true;
+        if (!item.IsEffectivelyEnabled || !item.IsEffectivelyVisible) return;
+        if (item.ItemCount == 0)
+        {
+            item.ActivateFromCui();
+            return;
+        }
+
+        var root = TopLevel.GetTopLevel(item);
+        var focusBefore = root?.FocusManager?.GetFocusedElement();
+        var generation = ++_spaceOpenGeneration;
+        long openTransition = 0;
+        EventHandler<AvaloniaPropertyChangedEventArgs> submenuChanged = (_, change) =>
+        {
+            if (change.Property == MenuItem.IsSubMenuOpenProperty) ++openTransition;
+        };
+        item.PropertyChanged += submenuChanged;
+        item.IsSubMenuOpen = true;
+        var openedTransition = openTransition;
+        Dispatcher.UIThread.Post(() =>
+        {
+            try
+            {
+                if (generation != _spaceOpenGeneration || root is null || !item.IsSubMenuOpen
+                    || openTransition != openedTransition || !ReferenceEquals(TopLevel.GetTopLevel(item), root)
+                    || !ReferenceEquals(root.FocusManager?.GetFocusedElement(), focusBefore)) return;
+                item.Items.OfType<CuiMenuItem>().FirstOrDefault(child =>
+                    child.Focusable && child.IsEffectivelyEnabled && child.IsEffectivelyVisible)?.Focus();
+            }
+            finally { item.PropertyChanged -= submenuChanged; }
+        }, DispatcherPriority.Input);
     }
 
     private void RootFocused(object? sender, FocusChangedEventArgs e) => RememberOutsideFocus();
