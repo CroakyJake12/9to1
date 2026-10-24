@@ -19,7 +19,10 @@ ANCHOR = '4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522'
 PRODUCT = os.environ.get('EXPECTED_PRODUCT_COMMIT', '')
 PROJECT = 'framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj'
 NOTES_PROJECT = 'apps/Web/Write/Storage/Tests/BrowserNotes.Storage.Tests.csproj'
-CHECK_SCOPES = ('cui', 'cui-and-notes')
+CHECK_SCOPES = ('cui', 'cui-and-notes', 'cui-notes-desktop')
+DESKTOP_PROJECT = '9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj'
+INFRA_TESTS = '9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj'
+DESKTOP_TESTS = '9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj'
 FILTER = 'FullyQualifiedName~CakeOS.Cui.Runtime.Tests.CuiIconMenuTests|FullyQualifiedName~CakeOS.Cui.Runtime.Tests.CuiKeyboardTooltipHostTests'
 WORKFLOW = '.github/workflows/haven-chat-model-ci.yml'
 HARNESS = 'eng/development/ci_cui_owned.py'
@@ -248,7 +251,7 @@ def actual_test_classes(path):
 
 
 def check_scope(value):
-    need(type(value) is str and value in CHECK_SCOPES, 'Unknown owning check scope; only cui or cui-and-notes is delegated')
+    need(type(value) is str and value in CHECK_SCOPES, 'Unknown owning check scope; only cui, cui-and-notes or cui-notes-desktop is delegated')
     return value
 
 
@@ -273,6 +276,57 @@ def actual_notes_tests(path):
         'Notes owning executable omitted, failed, skipped or duplicated required cases')
     return {'result':'PASS','discovered':discovered,'executed':executed,'passed':success,'failed':failed,'skipped':skipped,
         'scope':'Actual canonical repository and scripted browser-transport owning executable; actual browser NOT_RUN'}
+
+
+
+def desktop_commands(scope, sdk, package):
+    check_scope(scope)
+    if scope != 'cui-notes-desktop': return {}
+    return {
+        'strata-infrastructure-test':[str(sdk),'test',INFRA_TESTS,'-c','Release','--disable-build-servers','-m:1','-p:UseSharedCompilation=false','--filter','FullyQualifiedName~StrataLoopbackModelProviderTests','--logger','trx;LogFileName=strata-infrastructure.trx','--results-directory',str(package/'test-results')],
+        'strata-desktop-test':[str(sdk),'test',DESKTOP_TESTS,'-c','Release','-f','net10.0','--disable-build-servers','-m:1','-p:UseSharedCompilation=false','--filter','FullyQualifiedName~StrataLoopbackProviderSettingsTests|FullyQualifiedName~TaskRunCoordinatorRecoveryTests|FullyQualifiedName~TaskRunOriginalRunControlTests|FullyQualifiedName~SpaceTaskCheckpointResumeAffordanceTests','--logger','trx;LogFileName=strata-desktop.trx','--results-directory',str(package/'test-results')],
+        'desktop-restore':[str(sdk),'restore',DESKTOP_PROJECT,'--configfile','NuGet.Config','-r','linux-x64','-p:SelfContained=false','--disable-build-servers','--disable-parallel','-p:Configuration=Release','-p:UseSharedCompilation=false','-p:BuildInParallel=false'],
+        'desktop-build':[str(sdk),'build',DESKTOP_PROJECT,'-c','Release','-f','net10.0','-r','linux-x64','-p:SelfContained=false','--no-restore','--disable-build-servers','-m:1','-nodeReuse:false','-p:UseSharedCompilation=false'],
+        'desktop-publish':[str(sdk),'publish',DESKTOP_PROJECT,'-c','Release','-f','net10.0','-r','linux-x64','--self-contained','false','--no-build','--no-restore','-o',str(package/'publish'),'-p:UseSharedCompilation=false','-p:BuildInParallel=false']
+    }
+
+
+def package_desktop(package, ci_commit, deadline):
+    publish=package/'publish';need(publish.is_dir(),'Normal Desktop publish directory unavailable')
+    for required in ('Haven.dll','Haven.deps.json','Haven.runtimeconfig.json'):
+        need((publish/required).is_file(),'Normal Desktop publish omitted '+required)
+    files=[];total=0
+    for path in sorted(publish.rglob('*')):
+        need(not path.is_symlink(),'Published Desktop symlink requires explicit source review')
+        if path.is_dir():continue
+        need(path.is_file() and path.stat().st_nlink==1,'Published Desktop contains special or shared-link output')
+        need(time.monotonic()<deadline,'Original SDK run deadline reached before package completion')
+        relative=path.relative_to(publish).as_posix();w.safe_relative(relative)
+        identity=w.file_identity(path);total+=identity['bytes']
+        need(total<=4*GIB,'Normal Desktop package exceeds retained4GiB output allowance')
+        files.append({'path':'app/'+relative,'sha256':identity['sha256'],'bytes':identity['bytes'],
+            'mode':0o755 if path.stat().st_mode&0o111 else 0o644})
+    manifest={'schema':'9to1.linux-desktop-package/v1','source_revision':PRODUCT,'ci_commit':ci_commit,
+        'rid':'linux-x64','target_framework':'net10.0','self_contained':False,'entrypoint':'app/Haven.dll',
+        'project':DESKTOP_PROJECT,'files':files,'publish_result':'PROCESS_SUCCEEDED','native_smoke':'NOT_RUN',
+        'profile_data_included':False,'acceptance':'PAUSED'}
+    manifest_path=package/'Haven-linux-x64.manifest.json'
+    pending_manifest=package/'Haven-linux-x64.manifest.pending.json';w.atomic(pending_manifest,manifest)
+    archive=package/'Haven-linux-x64.tar.gz';pending_archive=package/'Haven-linux-x64.tar.gz.partial'
+    need(not archive.exists() and not manifest_path.exists(),'Preserve existing immutable Desktop package')
+    with tarfile.open(pending_archive,'w:gz',compresslevel=1) as output:
+        output.add(pending_manifest,arcname=manifest_path.name,recursive=False)
+        for row in files:
+            need(time.monotonic()<deadline,'Original SDK run deadline reached while archiving Desktop')
+            path=publish/row['path'][4:]
+            before=w.file_identity(path);need(before['sha256']==row['sha256'],'Published Desktop changed before archive')
+            info=output.gettarinfo(str(path),arcname=row['path']);info.uid=info.gid=0;info.uname=info.gname='';info.mode=row['mode']
+            with path.open('rb') as stream:output.addfile(info,stream)
+            need(w.file_identity(path)==before,'Published Desktop changed during archive')
+    need(time.monotonic()<deadline,'Original SDK run deadline reached before package publication')
+    os.replace(pending_manifest,manifest_path);os.replace(pending_archive,archive)
+    return {'archive':pin(archive),'manifest':pin(manifest_path),'files':len(files),'uncompressed_bytes':total,
+        'source_revision':PRODUCT,'rid':'linux-x64','native_smoke':'NOT_RUN','profile_data_included':False}
 
 
 def main():
@@ -336,8 +390,12 @@ def main():
         project_commands['regression']=[str(sdk),'test',PROJECT,'-c','Release','--no-build','--no-restore',
             '--disable-build-servers','--logger','trx;LogFileName=cui-runtime-all.trx','--results-directory',str(evidence/'test-results')]
         project_commands.update(notes_commands(scope,sdk,source))
+        desktop_package=Path(os.environ['RUNNER_TEMP'])/'9to1-linux-desktop'
+        if scope=='cui-notes-desktop':desktop_package.mkdir(mode=0o700)
+        project_commands.update(desktop_commands(scope,sdk,desktop_package))
         stages=[('version',30),('restore',300),('build',900),('test',180),('regression',300)]
-        if scope=='cui-and-notes': stages.extend([('notes-restore',300),('notes-build',900),('notes-test',180)])
+        if scope in ('cui-and-notes','cui-notes-desktop'): stages.extend([('notes-restore',300),('notes-build',900),('notes-test',180)])
+        if scope=='cui-notes-desktop': stages.extend([('desktop-restore',300),('desktop-build',900),('strata-infrastructure-test',300),('strata-desktop-test',300),('desktop-publish',180)])
         state_path=temporary/'sdk-execution-projection.json';execution='github-cui-'+os.environ['GITHUB_RUN_ID']
         initial=w.initial_state(CHECKOUT,str(instruction_path))
         initial['authority']='Existing native Root remains programme authority. This is its delegated compiler-only host projection; no workers/models/milestones are created.'
@@ -384,9 +442,18 @@ def main():
                     item['tests']=actual_notes_tests(evidence/'notes-test.log')
                     item['built_executable']=notes_build_output
                     item['status']=item['tests']['result']
+                if stage in ('strata-infrastructure-test','strata-desktop-test') and item['status']=='PROCESS_SUCCEEDED':
+                    trx_name='strata-infrastructure.trx' if stage=='strata-infrastructure-test' else 'strata-desktop.trx'
+                    result_path=desktop_package/'test-results'/trx_name
+                    item['tests']=w.trx(result_path);item['test_artifact']=pin(result_path)
+                    item['status']=item['tests']['result']
+                    evidence.joinpath(trx_name).write_bytes(result_path.read_bytes())
                 w.atomic(evidence/'receipt.json',receipt)
                 need(item['status'] in ('PROCESS_SUCCEEDED','PASS'),'Actual owning '+stage+' failed; raw diagnostic retained')
-            receipt.update(result='PASS_PARTIAL_NOT_REUSABLE',classification='OWNING_CUI_AND_NOTES_DEVELOPMENT_CHECK' if scope=='cui-and-notes' else 'OWNING_CUI_DEVELOPMENT_CHECK')
+            if scope=='cui-notes-desktop':
+                receipt['desktop_package']=package_desktop(desktop_package,ci_commit,deadline)
+                w.atomic(evidence/'desktop-package.json',receipt['desktop_package'])
+            receipt.update(result='PASS_PARTIAL_NOT_REUSABLE',classification='OWNING_CUI_NOTES_DESKTOP_DEVELOPMENT_CHECK' if scope=='cui-notes-desktop' else 'OWNING_CUI_AND_NOTES_DEVELOPMENT_CHECK' if scope=='cui-and-notes' else 'OWNING_CUI_DEVELOPMENT_CHECK')
     except Exception as error:
         receipt.update(result='BLOCKED',reason=str(error),classification='INFRASTRUCTURE_OR_ACTUAL_CHECK_FAILURE')
     finally:

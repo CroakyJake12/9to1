@@ -367,3 +367,14 @@ jobs:
             ${{ runner.temp }}/9to1-cui-context/sdk-execution-projection.json
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Retain exact Linux Desktop package when selected and successfully published
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: haven-linux-x64-${{ inputs.cui_product_revision }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/9to1-linux-desktop/Haven-linux-x64.tar.gz
+            ${{ runner.temp }}/9to1-linux-desktop/Haven-linux-x64.manifest.json
+          if-no-files-found: ignore
+          retention-days: 7
