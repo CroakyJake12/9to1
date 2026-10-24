@@ -1,0 +1,322 @@
+--- a/src/qwen35/q36_engine.cu
++++ b/src/qwen35/q36_engine.cu
+@@ -27,6 +27,7 @@
+ #include "strata/prefill/moe_mmq.hpp"
+ #include "strata/qwen35/engine.hpp"
+ #include "q36_kernels.cuh"
++#include "thunder_host_expert_cache.h"
+ #if defined(STRATA_Q36_CPU_POOL)
+ #include "strata/kernels/cpu/native_expert.hpp"
+ #include "strata/kernels/cpu/pool.hpp"
+@@ -63,6 +64,7 @@
+ 
+ namespace K = strata::kernels;
+ namespace MMQ = strata::prefill::mmq;
++namespace TH = strata::qwen35::thunder;
+ 
+ #define CK(x)                                                                                                          \
+     do {                                                                                                               \
+@@ -1258,6 +1260,50 @@
+     float *h_h = nullptr, *cpu_out = nullptr, *ecpu = nullptr;
+     int32_t *h_ids = nullptr, *h_miss = nullptr, *d_miss = nullptr, *h_cnt = nullptr;
+     uint8_t* acts = nullptr;   // per token: its quantized activation (kNativeActBytes)
++    // Opt-in bounded packed host storage; the mapped GGUF remains the cold backing.
++    std::unique_ptr<TH::HostExpertCache> host_cache;
++    std::vector<TH::HostExpertCache::Lease> cpu_blob_leases, rebalance_blob_leases;
++    std::vector<TH::HostExpertCache::Lease> copy_blob_leases[2];
++    bool host_copy_pending[2] = {};
++
++    ~Engine() { retire_host_cache(); }
++
++    void retire_host_cache() noexcept {
++        if (!host_cache) return;   // the original unbounded path is unchanged
++        // A cache failure retires this engine; never release an in-flight DMA source.
++        bool drained = cudaStreamSynchronize(st) == cudaSuccess;
++        if (cst) drained = (cudaStreamSynchronize(cst) == cudaSuccess) && drained;
++#if defined(STRATA_Q36_CPU_POOL)
++        pool.reset();   // same pool ownership; retire workers before CPU blob leases
++#endif
++        if (!drained) host_cache->abandon_allocation();
++        cpu_blob_leases.clear();
++        rebalance_blob_leases.clear();
++        for (auto& leases : copy_blob_leases) leases.clear();
++        host_cache.reset();
++    }
++
++    void retire_host_copies() {
++        for (int b = 0; b < 2; ++b) {
++            if (!host_copy_pending[b]) continue;
++            const cudaError_t ready = cudaEventQuery(ev_copy[b]);
++            if (ready == cudaErrorNotReady) continue;
++            if (ready != cudaSuccess)
++                throw TH::HostExpertCacheError("host expert copy completion query failed");
++            copy_blob_leases[b].clear();
++            host_copy_pending[b] = false;
++        }
++    }
++
++    TH::HostExpertCache::Lease host_expert(size_t li, size_t expert) {
++        retire_host_copies();
++        if (!host_cache || li >= hy.size() || expert >= (size_t) m->g.n_expert)
++            throw TH::HostExpertCacheError("invalid bounded host expert request");
++        const Layer& L = layer_at((int) li);
++        return host_cache->acquire({li, expert}, L.stride, [&](uint8_t* dst) {
++            expert_blob(L, (int64_t) expert, dst);   // identical quantized bytes/layout
++        });
++    }
+     cudaEvent_t ev_route = nullptr;
+     uint8_t* stage[2] = {};
+     cudaStream_t cst = nullptr;
+@@ -2173,6 +2219,11 @@
+     void stream_kick(int i) {   // the i-th layer of the sequence into staging buffer i % 2, after its last reader
+         const int b = i % 2;
+         const Layer& L = layer_at(stream_seq[(size_t) i]);
++        if (host_cache && host_copy_pending[b]) {
++            CK(cudaEventSynchronize(ev_copy[b]));
++            copy_blob_leases[b].clear();
++            host_copy_pending[b] = false;
++        }
+         CK(cudaStreamWaitEvent(cst, ev_used[b], 0));
+         // the experts with a VRAM slot come from it (device to device, at VRAM speed), only the others over PCIe; runs
+         // of consecutive experts from the same source in one copy each.  STRATA_Q36_STREAM_ALL=1: the whole layer from
+@@ -2182,7 +2233,24 @@
+         const Hy& H = hy[(size_t) stream_seq[(size_t) i]];
+         // fewer than half the experts resident (a 12 GB card): the one whole-layer copy is faster than many small ones
+         // (RTX 3060, UD-Q4_K_XL at 37 of 256: pp2048 1970 whole vs 1540 in runs)
+-        if (all || 2 * L.n_slots < ne) {
++        if (host_cache) {
++            // Keep the existing source-selection policy; only the cold host storage changes.
++            // Lease ownership is installed before each async enqueue, including failure paths.
++            const bool whole_host = all || 2 * L.n_slots < ne;
++            for (int x = 0; x < ne; ++x) {
++                const int slot = H.slot_of[(size_t) x];
++                if (!whole_host && slot >= 0) {
++                    CK(cudaMemcpyAsync(stage[b] + (size_t) x * L.stride,
++                                       L.blobs + (size_t) slot * L.stride,
++                                       L.stride, cudaMemcpyDeviceToDevice, cst));
++                } else {
++                    copy_blob_leases[b].push_back(host_expert((size_t) stream_seq[(size_t) i], (size_t) x));
++                    CK(cudaMemcpyAsync(stage[b] + (size_t) x * L.stride,
++                                       copy_blob_leases[b].back().data(), L.stride,
++                                       cudaMemcpyHostToDevice, cst));
++                }
++            }
++        } else if (all || 2 * L.n_slots < ne) {
+             CK(cudaMemcpyAsync(stage[b], L.hblobs, L.stride * (size_t) ne, cudaMemcpyHostToDevice, cst));
+         } else {
+             for (int x = 0; x < ne;) {
+@@ -2203,6 +2271,7 @@
+             }
+         }
+         CK(cudaEventRecord(ev_copy[b], cst));
++        if (host_cache) host_copy_pending[b] = true;
+     }
+     const uint8_t* stream_take(int li) {
+         if (stream_pos >= (int) stream_seq.size() || stream_seq[(size_t) stream_pos] != li) {
+@@ -2248,6 +2317,7 @@
+         const auto t0 = Clock::now();
+         // the missed entries per expert (up to MAXT tokens per job)
+         jobs.clear();
++        cpu_blob_leases.clear();   // the previous synchronous pool run has returned
+         std::vector<char> quantized((size_t) T, 0);
+         int n_miss = 0;
+         std::map<int, size_t> open;   // expert -> its job with room
+@@ -2270,7 +2340,12 @@
+             auto it = open.find(x);
+             if (it == open.end() || jobs[it->second].nt == C::MAXT) {
+                 C::ExpertJobMulti j;
+-                j.blob = L.hblobs + (size_t) x * L.stride;
++                if (host_cache) {
++                    cpu_blob_leases.push_back(host_expert(li, (size_t) x));
++                    j.blob = cpu_blob_leases.back().data();
++                } else {
++                    j.blob = L.hblobs + (size_t) x * L.stride;
++                }
+                 jobs.push_back(j);
+                 it = open.insert_or_assign(x, jobs.size() - 1).first;
+             }
+@@ -2283,6 +2358,7 @@
+         hy_gpu += n_ent - n_miss;
+         if (n_miss == 0) return;
+         pool->run_split_multi_native(H.fmt, jobs.data(), (int) jobs.size());
++        cpu_blob_leases.clear();   // workers have finished reading every immutable blob
+         hy_cpu_ms += ms_since(t0);
+         CK(cudaMemcpyAsync(ecpu, cpu_out, (size_t) n_ent * N * 4, cudaMemcpyHostToDevice, st));
+         CK(cudaMemcpyAsync(d_miss, h_miss, (size_t) n_ent * 4, cudaMemcpyHostToDevice, st));
+@@ -2328,7 +2404,14 @@
+                     H.slot_of[(size_t) y] = -1;
+                     H.slot_of[(size_t) x] = s;
+                     H.exp_in_slot[(size_t) s] = x;
+-                    CK(cudaMemcpyAsync(L.blobs + (size_t) s * L.stride, L.hblobs + (size_t) x * L.stride, L.L.bytes,
++                    const uint8_t* source = nullptr;
++                    if (host_cache) {
++                        rebalance_blob_leases.push_back(host_expert(li, (size_t) x));
++                        source = rebalance_blob_leases.back().data();
++                    } else {
++                        source = L.hblobs + (size_t) x * L.stride;
++                    }
++                    CK(cudaMemcpyAsync(L.blobs + (size_t) s * L.stride, source, L.L.bytes,
+                                        cudaMemcpyHostToDevice, st));
+                     --left;
+                     ++hy_swaps;
+@@ -2342,6 +2425,7 @@
+             for (double& v : H.score) v *= 0.5;
+         }
+         CK(cudaStreamSynchronize(st));   // slot_of's host copy is pageable: the upload is done before it changes
++        rebalance_blob_leases.clear();   // all associated H2D copies completed on st
+     }
+ 
+     void shrink_att(size_t floats) {
+@@ -2793,7 +2877,8 @@
+ /// The routed experts after the engine's buffers: all in VRAM when they fit in `vram_gib` (< 0: the free VRAM less a
+ /// reserve), else the hybrid mode - every expert in host memory, the same number of VRAM slots per layer, a decode
+ /// batch's other experts on the CPU pool and a prompt chunk's streamed through two staging buffers.
+-bool place_experts(Model& m, Engine& E, double vram_gib, int threads, int hybrid_t, int slots, std::string& err) {
++bool place_experts(Model& m, Engine& E, double vram_gib, int threads, int hybrid_t, int slots,
++                   size_t host_cache_bytes, std::string& err) {
+     const auto t0 = Clock::now();
+     const auto& g = m.g;
+     const int64_t ne = g.n_expert;
+@@ -2922,8 +3007,30 @@
+     for (Layer* L : all)
+         if (!mtp_only || L == &m.mtp) host += L->stride * (size_t) ne + kMmqTail;
+     uint8_t* arena = nullptr;
+-    bool pinned = cudaHostAlloc((void**) &arena, host, cudaHostAllocDefault) == cudaSuccess;
+-    if (!pinned) {
++    bool pinned = false;
++    if (host_cache_bytes) {
++        size_t slot_width = 0;
++        for (const Layer* L : all) {
++            if (L->stride > std::numeric_limits<size_t>::max() - kMmqTail)
++                throw TH::HostExpertCacheError("host expert slot size overflow");
++            slot_width = std::max(slot_width, L->stride + kMmqTail);
++        }
++        E.host_cache = std::make_unique<TH::HostExpertCache>(host_cache_bytes, slot_width,
++            [](size_t n) -> void* {
++                void* p = nullptr;
++                if (cudaHostAlloc(&p, n, cudaHostAllocDefault) != cudaSuccess) {
++                    (void) cudaGetLastError();
++                    throw TH::HostExpertCacheError("bounded pinned host expert allocation refused");
++                }
++                return p;
++            },
++            [](void* p) { (void) cudaFreeHost(p); });
++        std::fprintf(stderr, "strata-q36: bounded host expert cache: %zu bytes charged, %zu slots; GGUF cold backing\n",
++                     E.host_cache->charged_bytes(), E.host_cache->slot_count());
++    } else {
++        pinned = cudaHostAlloc((void**) &arena, host, cudaHostAllocDefault) == cudaSuccess;
++    }
++    if (!host_cache_bytes && !pinned) {
+         (void) cudaGetLastError();
+         arena = (uint8_t*) std::malloc(host);
+         if (!arena) {
+@@ -2946,15 +3053,25 @@
+             L.n_slots = (int) ne;
+             continue;
+         }
+-        L.hblobs = arena + off;
+-        off += L.stride * (size_t) ne + kMmqTail;
+-        std::memset(L.hblobs, 0, L.stride * (size_t) ne + kMmqTail);
+-        for (int64_t e = 0; e < ne; ++e) expert_blob(L, e, L.hblobs + (size_t) e * L.stride);
++        if (!E.host_cache) {
++            L.hblobs = arena + off;
++            off += L.stride * (size_t) ne + kMmqTail;
++            std::memset(L.hblobs, 0, L.stride * (size_t) ne + kMmqTail);
++            for (int64_t e = 0; e < ne; ++e) expert_blob(L, e, L.hblobs + (size_t) e * L.stride);
++        }
+         L.n_slots = S;
+         if (S > 0) {
+             CK(cudaMalloc(&L.blobs, L.stride * (size_t) S + kMmqTail));
+             CK(cudaMemset(L.blobs, 0, L.stride * (size_t) S + kMmqTail));
+-            CK(cudaMemcpy(L.blobs, L.hblobs, L.stride * (size_t) S, cudaMemcpyHostToDevice));
++            if (E.host_cache) {
++                for (int s = 0; s < S; ++s) {
++                    auto lease = E.host_expert(li, (size_t) s);
++                    CK(cudaMemcpy(L.blobs + (size_t) s * L.stride, lease.data(), L.stride,
++                                  cudaMemcpyHostToDevice));   // synchronous: local lease is sufficient
++                }
++            } else {
++                CK(cudaMemcpy(L.blobs, L.hblobs, L.stride * (size_t) S, cudaMemcpyHostToDevice));
++            }
+         }
+         Engine::Hy& H = E.hy[li];
+         H.slot_of.assign((size_t) ne, -1);
+@@ -2998,6 +3115,9 @@
+         std::fprintf(stderr, "strata-q36: every main layer's routed experts in VRAM (%.2f GiB); the MTP block's: %d of "
+                      "%lld in VRAM, the rest on the CPU pool (its drafts only)\n", (double) total_main / (1 << 30), S,
+                      (long long) ne);
++    else if (E.host_cache)
++        std::fprintf(stderr, "strata-q36: hybrid experts: %d of %lld per layer in VRAM; bounded host cache with GGUF backing\n",
++                     S, (long long) ne);
+     else
+     std::fprintf(stderr, "strata-q36: hybrid experts: %d of %lld per layer in VRAM (%.2f GiB), all %.2f GiB in %s host "
+                  "memory, the rest of a batch of <= %d rows on %d CPU threads, bigger prompt chunks streamed (%.2f GiB "
+@@ -3727,15 +3847,27 @@
+ 
+ int serve(Engine& E) {
+     Serve sv(E);
+-    return sv.run();
++    try {
++        return sv.run();
++    } catch (const TH::HostExpertCacheError& failure) {
++        // The unchanged upstream stdin reader is detached and captures sv. Do not
++        // unwind/destroy sv while that reader may still be blocked on stdin.
++        // Retire the dedicated engine process, matching its existing fatal-error boundary.
++        std::fprintf(stderr, "strata-q36: bounded host expert storage refused: %s\n", failure.what());
++        std::printf("ERR bounded host expert storage refused\n");
++        std::fflush(stdout);
++        E.retire_host_cache();
++        std::exit(1);
++    }
+ }
+ 
+ }  // namespace
+ 
+-int strata::qwen35::run(int argc, char** argv) {
++int strata::qwen35::run(int argc, char** argv) try {
+     std::string model, tokens, force, dump_full, emb_file;
+     int ctx = 32768, chunk = 0, n_gen = 64, bench_pp = 0, bench_tg = 0, mtp_d = 0, cpu_threads = 0, hybrid_rows = 128;
+     double expert_vram = -1.0;
++    size_t host_cache_bytes = 0;   // explicit opt-in; no production reserve policy implied
+     bool warm = true;
+     int expert_slots = 0, batch = 0, draft_vocab = -1;
+     bool serve_mode = false, graph = true, vision = false, batch_mtp = false;
+@@ -3778,6 +3910,19 @@
+         else if (a == "--expert-vram") expert_vram = std::atof(next().c_str());   // GiB for the routed experts
+         else if (a == "--cpu-threads") cpu_threads = std::atoi(next().c_str());
+         else if (a == "--expert-slots") expert_slots = std::atoi(next().c_str());
++        else if (a == "--host-expert-cache-bytes") {
++            const std::string value = next();
++            if (value.empty() || value.find_first_not_of("0123456789") != std::string::npos)
++                throw TH::HostExpertCacheError("--host-expert-cache-bytes requires unsigned decimal bytes");
++            try {
++                const auto parsed = std::stoull(value);
++                if (parsed > std::numeric_limits<size_t>::max())
++                    throw TH::HostExpertCacheError("host expert cache byte budget overflow");
++                host_cache_bytes = (size_t) parsed;
++            } catch (const std::out_of_range&) {
++                throw TH::HostExpertCacheError("host expert cache byte budget overflow");
++            }
++        }
+         else if (a == "--hybrid-rows") hybrid_rows = std::atoi(next().c_str());
+         else if (serve_mode && a.rfind("--", 0) == 0) {
+             // serve passes the config's args plus a few of its own: one this engine does not have is said and skipped
+@@ -3861,7 +4006,7 @@
+                          fr / 1073741824.0, fr_raw / 1073741824.0, packed / 1073741824.0, experts / 1073741824.0, chunk);
+     }
+     E.init(m, ctx, chunk, batch, vision);
+-    if (!place_experts(m, E, expert_vram, cpu_threads, hybrid_rows, expert_slots, err)) {
++    if (!place_experts(m, E, expert_vram, cpu_threads, hybrid_rows, expert_slots, host_cache_bytes, err)) {
+         std::fprintf(stderr, "strata-q36: %s\n", err.c_str());
+         return 1;
+     }
+@@ -3976,4 +4121,8 @@
+                  prompt.size(), pp_ms, prompt.size() / (pp_ms / 1000.0), gen.size(), ms_since(t1),
+                  gen.size() / (ms_since(t1) / 1000.0));
+     return 0;
+-}
++} catch (const TH::HostExpertCacheError& failure) {
++    // Stack unwinding retires the bounded cache's CPU/CUDA leases before return.
++    std::fprintf(stderr, "strata-q36: bounded host expert storage refused: %s\n", failure.what());
++    return 1;
++}

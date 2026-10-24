@@ -23,7 +23,7 @@ public sealed class UsageTrackingConversationRepository(
     IModelUsageRepository usageRepository,
     IProviderConfigurationStore configurations,
     IProviderPricingService pricingService,
-    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository
+    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository, ISpaceConversationSearch
 {
     /// <summary>
     /// Stores turn started locally so this component can preserve the dependency, cache, or state between member calls.
@@ -46,6 +46,8 @@ public sealed class UsageTrackingConversationRepository(
         inner.GetRecentInScopeAsync(scope, limit, cancellationToken);
     public Task<IReadOnlyList<Conversation>> GetBySpaceAsync(Guid spaceId, int limit, CancellationToken cancellationToken) =>
         inner.GetBySpaceAsync(spaceId, limit, cancellationToken);
+    public Task<IReadOnlyList<Conversation>> FindSavedTitlesBySpaceAsync(Guid spaceId, string query, int limit, CancellationToken cancellationToken) =>
+        inner.FindSavedTitlesBySpaceAsync(spaceId, query, limit, cancellationToken);
     public Task<IReadOnlyList<Conversation>> GetUnassignedGeneralChatsAsync(int limit, CancellationToken cancellationToken) =>
         inner.GetUnassignedGeneralChatsAsync(limit, cancellationToken);
     public Task DetachSpaceAsync(Guid spaceId, CancellationToken cancellationToken) =>

@@ -24,7 +24,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details",
         "spaces.new-chat", "spaces.open-conversation", "spaces.open-sidebar-item",
         "spaces.toggle-sidebar", "spaces.toggle-space-switcher", "spaces.toggle-space-overflow",
-        "spaces.manage"
+        "spaces.manage", "spaces.set-conversation-query", "spaces.search-conversations", "spaces.clear-conversation-search"
     };
 
     private readonly CuiViewModel _values = new();
@@ -75,6 +75,12 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             // truthfully reports none rather than inventing rows.
             "spaces.conversations" => Array.Empty<SpacesHomeConversationRow>(),
             "spaces.hasConversations" => false,
+            "spaces.canSearchConversations" => false,
+            "spaces.conversationQuery" => string.Empty,
+            "spaces.conversationSearchIntent" => null,
+            "spaces.conversationHistoryHeading" => "Recent chats",
+            "spaces.conversationHistoryNotice" => "Chat title search is unavailable in this host.",
+            "spaces.conversationHistoryEmpty" => "No chats yet",
             // Custom sidebar elements come from the extensions actually attached to the selected Space.
             // The domain surface has no extension authority, so it truthfully reports none rather than
             // inventing rows; the owning native surface serves the real projection.
@@ -132,6 +138,9 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         {
             case "spaces.query":
                 _ = _dispatch("spaces.set-query", value, CancellationToken.None);
+                return true;
+            case "spaces.conversationQuery":
+                _ = _dispatch("spaces.set-conversation-query", value, CancellationToken.None);
                 return true;
             case "spaces.selectedMoveParentIndex":
                 if (value is int index)

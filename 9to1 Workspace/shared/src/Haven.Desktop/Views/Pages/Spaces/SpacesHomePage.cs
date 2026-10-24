@@ -56,6 +56,17 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     private IReadOnlyList<SpacesHomeSidebarRow> _sidebarItems = [];
     private readonly Func<string, object?, CancellationToken, Task?, Task>? _workspaceCommandHost;
     private IReadOnlyList<SpacesHomeConversationRow> _conversations = [];
+    private readonly Func<Guid, string, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? _conversationSearchProvider;
+    private Guid? _conversationScopeId;
+    private string _conversationQuery = string.Empty;
+    private string _appliedConversationQuery = string.Empty;
+    private string _conversationHistoryNotice = string.Empty;
+    private string _conversationHistoryEmpty = "No chats yet";
+    private long _conversationQueryRevision;
+    private long _conversationReadSequence;
+
+    /// <summary>Issued presentation target, never a conversation or store authority.</summary>
+    public sealed record ConversationSearchIntent(Guid SpaceId, string Query, long Revision);
 
     public SpacesHomePage(
         SpaceRegistry registry,
@@ -66,12 +77,14 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         Func<SpacesAction, Task, bool>? queueNavigation = null,
         Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationsProvider = null,
         Func<string, object?, CancellationToken, Task?, Task>? workspaceCommandHost = null,
-        Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? sidebarItemsProvider = null)
+        Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? sidebarItemsProvider = null,
+        Func<Guid, string, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationSearchProvider = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         if (navigationHost is null) throw new ArgumentNullException(nameof(navigationHost));
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         _conversationsProvider = conversationsProvider;
+        _conversationSearchProvider = conversationSearchProvider;
         _sidebarItemsProvider = sidebarItemsProvider;
         _workspaceCommandHost = workspaceCommandHost;
 
@@ -182,6 +195,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         lock (_gate)
         {
             if (!_active || _work.IsRetiring) return;
+            SynchronizeConversationScope();
             generation = _generation;
             _ = RunHomeOriginal(async original =>
             {
@@ -212,8 +226,28 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         { lock (_gate) value = _spaceWorkspace?.Content is not null && !_controller.State.IsManaging; return true; }
         if (path == "spaces.showSummary")
         { lock (_gate) value = _spaceWorkspace?.Content is null || _controller.State.IsManaging; return true; }
-        if (path == "spaces.conversations") { lock (_gate) value = _conversations; return true; }
-        if (path == "spaces.hasConversations") { lock (_gate) value = _conversations.Count > 0; return true; }
+        if (path.StartsWith("spaces.conversation", StringComparison.Ordinal) || path is "spaces.hasConversations" or "spaces.canSearchConversations")
+        {
+            lock (_gate)
+            {
+                SynchronizeConversationScope();
+                value = path switch
+                {
+                    "spaces.conversations" => _conversations,
+                    "spaces.hasConversations" => _conversations.Count > 0,
+                    "spaces.canSearchConversations" => _conversationSearchProvider is not null && _conversationScopeId.HasValue,
+                    "spaces.conversationQuery" => _conversationQuery,
+                    "spaces.conversationSearchIntent" => _conversationScopeId is { } selected
+                        ? new ConversationSearchIntent(selected, _conversationQuery, _conversationQueryRevision) : null,
+                    "spaces.conversationHistoryHeading" => _appliedConversationQuery.Length == 0 ? "Recent chats" : "Title matches",
+                    "spaces.conversationHistoryNotice" => _conversationSearchProvider is null
+                        ? "Chat title search is unavailable in this host." : _conversationHistoryNotice,
+                    "spaces.conversationHistoryEmpty" => _conversationHistoryEmpty,
+                    _ => null
+                };
+                if (value is not null || path == "spaces.conversationSearchIntent") return true;
+            }
+        }
         if (path == "spaces.sidebarItems") { lock (_gate) value = _sidebarItems; return true; }
         if (path == "spaces.hasSidebarItems") { lock (_gate) value = _sidebarItems.Count > 0; return true; }
         return _bindings.TryGetValue(path, out value);
@@ -225,7 +259,12 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     { lock (_gate) return CanAdmitHomeMutation() && _bindings.TrySetItemValue(item, path, value); }
 
     public bool? IsActionAvailable(string command)
-    { lock (_gate) return CanAdmitHomeMutation() && _bindings.IsActionAvailable(command) == true; }
+    {
+        lock (_gate)
+            return CanAdmitHomeMutation() && _bindings.IsActionAvailable(command) == true &&
+                (command is not ("spaces.search-conversations" or "spaces.clear-conversation-search") ||
+                 (_conversationSearchProvider is not null && _controller.State.Selection is not null));
+    }
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
@@ -234,7 +273,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             // A loader action queued before the reversible boundary may arrive later.
             // It acquires no mutation original while paused, and does not poison that loader.
             if (_homeCloseLease is not null) return ValueTask.CompletedTask;
-            if (!CanAdmitHomeMutation() || _bindings.IsActionAvailable(command) != true)
+            if (IsActionAvailable(command) != true)
                 throw new InvalidOperationException($"Spaces Home command '{command}' is unavailable.");
             var generation = _generation;
             var actual = RunHomeOriginal(async original =>
@@ -351,6 +390,51 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             case "spaces.set-query":
                 InvokeOriginalSource(() => _controller.SetQuery(parameter?.ToString()));
                 break;
+            case "spaces.set-conversation-query":
+                lock (_gate)
+                {
+                    SynchronizeConversationScope();
+                    var nextQuery = parameter?.ToString() ?? string.Empty;
+                    if (string.Equals(nextQuery, _conversationQuery, StringComparison.Ordinal)) break;
+                    _conversationQuery = nextQuery;
+                    _conversationQueryRevision++;
+                    _conversationReadSequence++; // A late read for earlier text cannot publish.
+                    _conversations = [];
+                    _conversationHistoryNotice = "Press Search to find saved chat titles in this Space.";
+                    _conversationHistoryEmpty = "Search has not run for this text.";
+                }
+                await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    original.RunAcceptedPublicationCallback(_bindings.Refresh)).GetTask()).ConfigureAwait(false);
+                break;
+            case "spaces.search-conversations":
+            case "spaces.clear-conversation-search":
+                lock (_gate)
+                {
+                    SynchronizeConversationScope();
+                    if (parameter is not ConversationSearchIntent intent || intent.SpaceId != _conversationScopeId ||
+                        intent.Revision != _conversationQueryRevision ||
+                        !string.Equals(intent.Query, _conversationQuery, StringComparison.Ordinal))
+                        throw new InvalidOperationException("The Space or chat search text changed before this action was admitted.");
+                    if (command == "spaces.clear-conversation-search")
+                    {
+                        _conversationQuery = string.Empty;
+                        _conversationQueryRevision++;
+                    }
+                    _appliedConversationQuery = _conversationQuery.Trim();
+                    _conversationReadSequence++;
+                    if (_appliedConversationQuery.Length > 256)
+                    {
+                        _conversations = [];
+                        _conversationHistoryNotice = "Use at most 256 characters to search chat titles.";
+                        _conversationHistoryEmpty = "Search has not run for this text.";
+                    }
+                }
+                if (_appliedConversationQuery.Length <= 256)
+                    await original.AwaitAsync(InvokeOriginalSource(() => RefreshConversationsAsync(token))).ConfigureAwait(false);
+                else
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                        original.RunAcceptedPublicationCallback(_bindings.Refresh)).GetTask()).ConfigureAwait(false);
+                break;
             case "spaces.confirm-rename":
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.ConfirmRenameAsync(token))).ConfigureAwait(false);
                 break;
@@ -439,34 +523,104 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         return true;
     }
 
-    /// <summary>Re-reads the selected Space's recent conversations from the owning store and
-    /// republishes the contextual sidebar. A stale or retiring presentation discards the result
-    /// instead of overwriting a newer selection.</summary>
+    // Only this view's read projection and search text are reset. The mounted conversation,
+    // composer draft, provider original and repository are never changed by history search.
+    private void SynchronizeConversationScope()
+    {
+        var selectedId = _controller.State.Selection?.Id;
+        if (selectedId == _conversationScopeId) return;
+        _conversationScopeId = selectedId;
+        _conversationQuery = _appliedConversationQuery = string.Empty;
+        _conversationQueryRevision++;
+        _conversationReadSequence++;
+        _conversations = [];
+        _conversationHistoryNotice = string.Empty;
+        _conversationHistoryEmpty = "No chats yet";
+    }
+
+    private bool IsConversationReadCurrent(long generation, long sequence,
+        SpacesHomeSelection selection, long queryRevision, string query) =>
+        !_work.IsRetiring && _active && _generation == generation &&
+        sequence == _conversationReadSequence && queryRevision == _conversationQueryRevision &&
+        ReferenceEquals(_controller.State.Selection, selection) &&
+        selection.Id == _conversationScopeId &&
+        string.Equals(query, _appliedConversationQuery, StringComparison.Ordinal) &&
+        string.Equals(query, _conversationQuery.Trim(), StringComparison.Ordinal);
+
+    /// <summary>Reads recent chats or explicitly requested saved-title matches from the same
+    /// owning store. Selection, query and read-sequence checks precede both cache and UI publication.</summary>
     public async Task RefreshConversationsAsync(CancellationToken cancellationToken = default)
     {
-        long generation;
-        Guid? selected;
-        Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? provider;
+        long generation, sequence, queryRevision;
+        string query;
+        SpacesHomeSelection selection;
+        Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? recent;
+        Func<Guid, string, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? search;
         lock (_gate)
         {
             if (_work.IsRetiring || !_active) return;
-            provider = _conversationsProvider;
-            if (provider is null) return;
+            SynchronizeConversationScope();
+            if (_controller.State.Selection is not { } selected) return;
+            if (!string.Equals(_conversationQuery.Trim(), _appliedConversationQuery, StringComparison.Ordinal)) return;
+            selection = selected;
             generation = _generation;
-            selected = _controller.State.Selection?.Id;
+            sequence = ++_conversationReadSequence;
+            queryRevision = _conversationQueryRevision;
+            query = _appliedConversationQuery;
+            recent = _conversationsProvider;
+            search = _conversationSearchProvider;
+            if (query.Length == 0 && recent is null) return;
+            _conversations = [];
+            _conversationHistoryNotice = query.Length == 0 ? "Loading recent chats…" : "Searching saved chat titles…";
+            _conversationHistoryEmpty = "Loading chat history…";
         }
-        if (selected is not { } spaceId)
+        async Task PublishAsync()
         {
-            lock (_gate) if (!_work.IsRetiring && _generation == generation) _conversations = [];
-            return;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                lock (_gate)
+                {
+                    if (!IsConversationReadCurrent(generation, sequence, selection, queryRevision, query)) return;
+                    _bindings.Refresh();
+                }
+            }).GetTask().ConfigureAwait(false);
         }
-        var rows = await provider(spaceId, cancellationToken).ConfigureAwait(false);
-        lock (_gate)
+        await PublishAsync().ConfigureAwait(false);
+        try
         {
-            if (_work.IsRetiring || !_active || _generation != generation) return;
-            _conversations = rows;
+            cancellationToken.ThrowIfCancellationRequested();
+            var rows = query.Length == 0
+                ? await recent!(selection.Id, cancellationToken).ConfigureAwait(false)
+                : await (search ?? throw new NotSupportedException("This conversation store does not support saved-title search."))
+                    (selection.Id, query, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (_gate)
+            {
+                if (!IsConversationReadCurrent(generation, sequence, selection, queryRevision, query)) return;
+                _conversations = rows;
+                _conversationHistoryNotice = query.Length == 0
+                    ? "Showing the 20 most recent saved chats."
+                    : "Showing up to 50 newest saved-title matches in this Space.";
+                _conversationHistoryEmpty = query.Length == 0 ? "No chats yet" : "No saved chat titles match this search.";
+            }
+            await PublishAsync().ConfigureAwait(false);
         }
-        await Dispatcher.UIThread.InvokeAsync(() => _bindings.Refresh()).GetTask().ConfigureAwait(false);
+        catch (Exception failure)
+        {
+            lock (_gate)
+            {
+                if (IsConversationReadCurrent(generation, sequence, selection, queryRevision, query))
+                {
+                    _conversations = [];
+                    _conversationHistoryNotice = failure is OperationCanceledException
+                        ? "Chat history read was canceled."
+                        : "Chat history could not be read. Try again.";
+                    _conversationHistoryEmpty = "History results are unavailable for this read.";
+                }
+            }
+            await PublishAsync().ConfigureAwait(false);
+            throw; // Preserve the actual read/cancellation cause in its original caller.
+        }
     }
 
     /// <summary>Re-reads the custom sidebar elements the extensions attached to the selected Space

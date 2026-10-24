@@ -1,3 +1,4 @@
+using HistoryRow = HavenOS.Apps.Spaces.Home.SpacesHomeConversationRow;
 using Avalonia.VisualTree;
 using Avalonia.Automation;
 using System.Reflection;
@@ -1037,5 +1038,231 @@ public sealed class SpacesConversationRouteTests
     {
         public Func<string, object?[]?, object?> Call { get; set; } = null!;
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) => Call(targetMethod!.Name, args);
+    }
+}
+
+
+/// <summary>Exercises the actual shared CUI history surface with controlled store reads.
+/// These fixtures make no Home/provider/native-runtime acceptance claim.</summary>
+public sealed class SpacesSavedTitleSearchTests
+{
+    private static readonly TimeSpan SearchBound = TimeSpan.FromSeconds(10);
+
+    [AvaloniaFact]
+    public async Task Explicit_CUI_search_and_clear_keep_the_same_mounted_owner_and_unsent_draft()
+    {
+        var calls = new List<(Guid Space, string Query)>();
+        var match = new HistoryRow(Guid.NewGuid(), "Older saved revision plan", "1 Jan", false);
+        await using var rig = await SearchRig.CreateAsync((space, query, _) =>
+        {
+            calls.Add((space, query));
+            return Task.FromResult<IReadOnlyList<HistoryRow>>([match]);
+        });
+        var owner = new TextBox { Text = "Unsent owner draft" };
+        Assert.True(rig.Page.TryMountSpaceWorkspace(owner));
+        rig.Window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+        var queryInput = rig.Page.GetVisualDescendants().OfType<TextBox>()
+            .Single(box => AutomationProperties.GetAutomationId(box) == "space-history-query");
+        queryInput.Text = "revision"; // Exercise the actual CUI two-way input binding.
+        Dispatcher.UIThread.RunJobs();
+        await (rig.Page.LatestOriginalMutation ?? throw new InvalidOperationException("CUI did not issue a typed query update.")).WaitAsync(SearchBound);
+        Assert.Equal("revision", Value(rig.Page, "spaces.conversationQuery"));
+        Assert.Empty(calls); // Typing does not perform an implicit history request.
+        var searchButton = rig.Page.GetVisualDescendants().OfType<Button>()
+            .Single(button => AutomationProperties.GetAutomationId(button) == "space-history-search-button");
+        Assert.Equal("Search saved chat titles in this Space", AutomationProperties.GetName(searchButton));
+        await SearchAsync(rig.Page);
+        Assert.Equal((rig.SpaceA.Id, "revision"), Assert.Single(calls));
+        Assert.Equal(match, Assert.Single(Rows(rig.Page)));
+        Assert.Same(owner, rig.Page.SpaceWorkspaceContent);
+        Assert.Equal("Unsent owner draft", owner.Text);
+        await rig.Page.DispatchAsync("spaces.clear-conversation-search", Intent(rig.Page));
+        Assert.Equal(string.Empty, Value(rig.Page, "spaces.conversationQuery"));
+        Assert.Equal(rig.Recent, Assert.Single(Rows(rig.Page)));
+        Assert.Single(calls);
+        Assert.Same(owner, rig.Page.SpaceWorkspaceContent);
+        Assert.Equal("Unsent owner draft", owner.Text);
+    }
+
+    [AvaloniaFact]
+    public async Task Older_query_finishing_last_cannot_replace_newer_query_results()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<IReadOnlyList<HistoryRow>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var latest = new HistoryRow(Guid.NewGuid(), "Latest title", "2 Jan", false);
+        await using var rig = await SearchRig.CreateAsync((_, query, _) =>
+        {
+            if (query == "old") { entered.TrySetResult(); return release.Task; }
+            return Task.FromResult<IReadOnlyList<HistoryRow>>([latest]);
+        });
+        Task? first = null;
+        try
+        {
+            await SetQueryAsync(rig.Page, "old");
+            first = SearchAsync(rig.Page);
+            await entered.Task.WaitAsync(SearchBound);
+            await SetQueryAsync(rig.Page, "latest");
+            await SearchAsync(rig.Page);
+            release.SetResult([new HistoryRow(Guid.NewGuid(), "Old title", "1 Jan", false)]);
+            await first.WaitAsync(SearchBound);
+            Assert.Equal(latest, Assert.Single(Rows(rig.Page)));
+            Assert.Equal("latest", Value(rig.Page, "spaces.conversationQuery"));
+        }
+        finally
+        {
+            release.TrySetResult([]);
+            if (first is not null) await first.WaitAsync(SearchBound);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Switching_Spaces_retires_old_title_results_and_resets_only_history_text()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<IReadOnlyList<HistoryRow>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var rig = await SearchRig.CreateAsync((_, _, _) => { entered.TrySetResult(); return release.Task; });
+        var owner = new TextBox { Text = "Keep this draft" };
+        Assert.True(rig.Page.TryMountSpaceWorkspace(owner));
+        Task? first = null;
+        try
+        {
+            await SetQueryAsync(rig.Page, "private A title");
+            first = SearchAsync(rig.Page);
+            await entered.Task.WaitAsync(SearchBound);
+            await rig.Page.Controller.SelectSpaceAsync(rig.SpaceB.Id);
+            await rig.Page.RefreshConversationsAsync();
+            release.SetResult([new HistoryRow(Guid.NewGuid(), "A must not leak", "1 Jan", false)]);
+            await first.WaitAsync(SearchBound);
+            Assert.Equal(string.Empty, Value(rig.Page, "spaces.conversationQuery"));
+            Assert.Equal(rig.Recent, Assert.Single(Rows(rig.Page)));
+            Assert.Equal(rig.SpaceB.Id, rig.Page.Controller.State.Selection!.Id);
+            Assert.Same(owner, rig.Page.SpaceWorkspaceContent);
+            Assert.Equal("Keep this draft", owner.Text);
+        }
+        finally { release.TrySetResult([]); if (first is not null) await first.WaitAsync(SearchBound); }
+    }
+
+    [AvaloniaFact]
+    public async Task Clear_while_search_is_pending_keeps_recent_rows_when_old_read_settles()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<IReadOnlyList<HistoryRow>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var rig = await SearchRig.CreateAsync((_, _, _) => { entered.TrySetResult(); return release.Task; });
+        Task? first = null;
+        try
+        {
+            await SetQueryAsync(rig.Page, "old"); first = SearchAsync(rig.Page);
+            await entered.Task.WaitAsync(SearchBound);
+            await rig.Page.DispatchAsync("spaces.clear-conversation-search", Intent(rig.Page));
+            release.SetResult([new HistoryRow(Guid.NewGuid(), "Old result", "1 Jan", false)]);
+            await first.WaitAsync(SearchBound);
+            Assert.Equal(rig.Recent, Assert.Single(Rows(rig.Page)));
+            Assert.Equal("Recent chats", Value(rig.Page, "spaces.conversationHistoryHeading"));
+        }
+        finally { release.TrySetResult([]); if (first is not null) await first.WaitAsync(SearchBound); }
+    }
+
+    [AvaloniaFact]
+    public async Task Original_cancellation_is_observed_and_is_never_reported_as_no_matches()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<IReadOnlyList<HistoryRow>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var rig = await SearchRig.CreateAsync((_, _, token) => { entered.TrySetResult(); return release.Task.WaitAsync(token); });
+        rig.AllowExpectedReadFailure = true;
+        using var cancellation = new CancellationTokenSource();
+        await SetQueryAsync(rig.Page, "cancel");
+        var read = rig.Page.DispatchAsync("spaces.search-conversations", Intent(rig.Page), cancellation.Token).AsTask();
+        await entered.Task.WaitAsync(SearchBound);
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => read.WaitAsync(SearchBound));
+        Assert.Empty(Rows(rig.Page));
+        Assert.Equal("Chat history read was canceled.", Value(rig.Page, "spaces.conversationHistoryNotice"));
+        Assert.DoesNotContain("No saved chat", Assert.IsType<string>(Value(rig.Page, "spaces.conversationHistoryEmpty")));
+    }
+
+    [AvaloniaFact]
+    public async Task Unsupported_capability_is_unavailable_and_stale_issued_intent_cannot_search()
+    {
+        await using (var unsupported = await SearchRig.CreateAsync(null))
+        {
+            Assert.Equal(false, Value(unsupported.Page, "spaces.canSearchConversations"));
+            Assert.False(unsupported.Page.IsActionAvailable("spaces.search-conversations"));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => SearchAsync(unsupported.Page));
+            Assert.Contains("unavailable", Assert.IsType<string>(Value(unsupported.Page, "spaces.conversationHistoryNotice")));
+        }
+        var calls = 0;
+        await using var rig = await SearchRig.CreateAsync((_, _, _) => { calls++; return Task.FromResult<IReadOnlyList<HistoryRow>>([]); });
+        await SetQueryAsync(rig.Page, "first");
+        var stale = Intent(rig.Page);
+        await SetQueryAsync(rig.Page, "second");
+        rig.AllowExpectedReadFailure = true;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Page.DispatchAsync("spaces.search-conversations", stale).AsTask());
+        Assert.Equal(0, calls);
+        Assert.Equal("second", Value(rig.Page, "spaces.conversationQuery"));
+    }
+
+    [AvaloniaFact]
+    public async Task Store_failure_retains_its_actual_cause_and_does_not_display_an_empty_success()
+    {
+        var cause = new IOException("Controlled original store failure");
+        await using var rig = await SearchRig.CreateAsync((_, _, _) => Task.FromException<IReadOnlyList<HistoryRow>>(cause));
+        rig.AllowExpectedReadFailure = true;
+        await SetQueryAsync(rig.Page, "title");
+        var actual = await Assert.ThrowsAsync<IOException>(() => SearchAsync(rig.Page));
+        Assert.Same(cause, actual);
+        Assert.Equal("Chat history could not be read. Try again.", Value(rig.Page, "spaces.conversationHistoryNotice"));
+        Assert.DoesNotContain("No saved chat", Assert.IsType<string>(Value(rig.Page, "spaces.conversationHistoryEmpty")));
+    }
+
+    private static object? Value(SpacesHomePage page, string path)
+    { Assert.True(page.TryGetValue(path, out var value)); return value; }
+    private static IReadOnlyList<HistoryRow> Rows(SpacesHomePage page) => Assert.IsAssignableFrom<IReadOnlyList<HistoryRow>>(Value(page, "spaces.conversations"));
+    private static SpacesHomePage.ConversationSearchIntent Intent(SpacesHomePage page) => Assert.IsType<SpacesHomePage.ConversationSearchIntent>(Value(page, "spaces.conversationSearchIntent"));
+    private static Task SetQueryAsync(SpacesHomePage page, string query) => page.DispatchAsync("spaces.set-conversation-query", query).AsTask();
+    private static Task SearchAsync(SpacesHomePage page) => page.DispatchAsync("spaces.search-conversations", Intent(page)).AsTask();
+
+    private sealed class SearchRig : IAsyncDisposable
+    {
+        private SearchRig(SpacesHomePage page, Window window, SpaceDefinition a, SpaceDefinition b, HistoryRow recent)
+        { Page = page; Window = window; SpaceA = a; SpaceB = b; Recent = recent; }
+        public SpacesHomePage Page { get; }
+        public Window Window { get; }
+        public SpaceDefinition SpaceA { get; }
+        public SpaceDefinition SpaceB { get; }
+        public HistoryRow Recent { get; }
+        public bool AllowExpectedReadFailure { get; set; }
+        public static async Task<SearchRig> CreateAsync(Func<Guid, string, CancellationToken, Task<IReadOnlyList<HistoryRow>>>? search)
+        {
+            var registry = new SpaceRegistry(new SearchSettings());
+            var a = await registry.CreateAsync("Search fixture A");
+            var b = await registry.CreateAsync("Search fixture B");
+            var recent = new HistoryRow(Guid.NewGuid(), "Recent fixture", "3 Jan", false);
+            var page = new SpacesHomePage(registry, new SearchActionHost(), SpacesHomePage.ImmediateReadinessInstance,
+                conversationsProvider: (_, _) => Task.FromResult<IReadOnlyList<HistoryRow>>([recent]), conversationSearchProvider: search);
+            var window = new Window { Width = 1100, Height = 800, Content = page };
+            window.Show();
+            await page.ActivateAsync(CancellationToken.None).WaitAsync(SearchBound);
+            await page.Controller.SelectSpaceAsync(a.Id);
+            await page.RefreshConversationsAsync().WaitAsync(SearchBound);
+            return new(page, window, a, b, recent);
+        }
+        public async ValueTask DisposeAsync()
+        {
+            var cause = await Record.ExceptionAsync(() => Page.CloseAndDrainAsync().WaitAsync(SearchBound));
+            Window.Close();
+            if (!AllowExpectedReadFailure) Assert.Null(cause);
+        }
+    }
+
+    private sealed class SearchActionHost : ISpacesActionHost
+    { public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default) => Task.CompletedTask; }
+    private sealed class SearchSettings : IVersionedSettingsStore
+    {
+        private readonly Dictionary<string, object> _values = [];
+        public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken) where T : class => Task.FromResult(_values.GetValueOrDefault(key) as T);
+        public Task SetAsync<T>(string key, T value, CancellationToken cancellationToken) where T : class { _values[key] = value; return Task.CompletedTask; }
+        public Task RemoveAsync(string key, CancellationToken cancellationToken) { _values.Remove(key); return Task.CompletedTask; }
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }

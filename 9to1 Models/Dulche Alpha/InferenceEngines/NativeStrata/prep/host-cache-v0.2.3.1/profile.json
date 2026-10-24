@@ -1,0 +1,141 @@
+{
+  "schema": "strata-host-cache-preparation/v1",
+  "scope": "SELECTED_SOURCE_FILES_ONLY_NOT_FULL_ARCHIVE_LOCK",
+  "origin": "https://github.com/Niko1221/Strata",
+  "release": "v0.2.3.1",
+  "commit": "7ddc17a38fe7f31637e895ecfba58c2cd43d65ec",
+  "gitCommitTree": "ead28543fa3f3d02fb595754c3c0603a10b3580c",
+  "annotatedTag": "9bc5216413cefc7d1e4dd5f3f9d2f31aef6228f1",
+  "observedAt": "2026-10-24T00:19:31.296599+00:00",
+  "releaseUrl": "https://github.com/Niko1221/Strata/releases/tag/v0.2.3.1",
+  "versions": {
+    "exact_source_CMake_project": "0.1.48.1",
+    "release_distributed_engine_packages": "0.1.48",
+    "AGENTS_engine": "0.1.48",
+    "Control": "0.1.48.1",
+    "CMakeLists": {
+      "bytes": 157008,
+      "git_blob": "0cde7e53bdc12e42264f6f2d80bc0f8f30a06366",
+      "sha256": "b90d6672f12904cfbff74d8c93cd178fabceb48052de9984b1e905b13fb3105d",
+      "retained": "identity only; body read in memory then removed"
+    }
+  },
+  "blobCount": 10,
+  "rows": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 5685,
+      "gitBlobSha": "486a86cae98cd6776c676be1ed12b7a1a0851132",
+      "sha256": "685edaa9061b14b9373913fc44d8cbb3f878b7d93680424d84a776b732303bb5",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/AGENTS.md"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1093,
+      "gitBlobSha": "6687a423dde6b7aff1b748c07f5ee93ff788089c",
+      "sha256": "949b9b0aada7476006469e58ee4ffb0e0f68c2d9137e90a356757b61a09d37f0",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/LICENSE"
+    },
+    {
+      "path": "include/strata/artifact/gguf_reader.hpp",
+      "bytes": 35326,
+      "gitBlobSha": "5b67f54ba7f0948929379f3ea13f1052ba14bf22",
+      "sha256": "7ffde4a815202cdf5408687c9fc6b08a799e48a9d040314414eefb8211611b35",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/include/strata/artifact/gguf_reader.hpp"
+    },
+    {
+      "path": "include/strata/kernels/cpu/native_expert.hpp",
+      "bytes": 3951,
+      "gitBlobSha": "fbac350522a17cecabb50e2777e7602efcfae8c7",
+      "sha256": "f9b2cf827485af6f1fd5024563075ae9a009072a805c2b3fb8812827772a6bc0",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/include/strata/kernels/cpu/native_expert.hpp"
+    },
+    {
+      "path": "include/strata/kernels/cpu/pool.hpp",
+      "bytes": 26643,
+      "gitBlobSha": "6c21d2d210a39760369f7adbf1522ef037910e25",
+      "sha256": "509c692d0ec304a2bab28531d6c7bd5a970d3b64dd3813a52d2b1ae637d46579",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/include/strata/kernels/cpu/pool.hpp"
+    },
+    {
+      "path": "include/strata/qwen35/engine.hpp",
+      "bytes": 736,
+      "gitBlobSha": "89368e10afdaf66fe92db770842244a8fcacb411",
+      "sha256": "9192851996153792c07515d3ccacb7792acbf5611cf1beb4dbf3f0b4c9317c24",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/include/strata/qwen35/engine.hpp"
+    },
+    {
+      "path": "src/artifact/gguf_reader.cpp",
+      "bytes": 3605,
+      "gitBlobSha": "5498ecd703714f3aab994df887d648e856d883d6",
+      "sha256": "90e6a1a664645075d4a946a84a498cf05cd9947ab11c4036aee577a3b8632431",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/src/artifact/gguf_reader.cpp"
+    },
+    {
+      "path": "src/kernels/cpu/pool.cpp",
+      "bytes": 72580,
+      "gitBlobSha": "cdcc8d79249e5af774112383942228453331e7fe",
+      "sha256": "320a2b47e7da97aa05702fb3d63f28d3ff55f0d80c456d653d9394da8dbfdae3",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/src/kernels/cpu/pool.cpp"
+    },
+    {
+      "path": "src/qwen35/q36_engine.cu",
+      "bytes": 213557,
+      "gitBlobSha": "03660de40aefcbab150cd8f0e50a92d973e3ab3f",
+      "sha256": "d0401ecb4b52d4a4a9abac1112d4fef9164b692b1bd808dea51a9e07baa23e05",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/src/qwen35/q36_engine.cu"
+    },
+    {
+      "path": "src/qwen35/q36_main.cpp",
+      "bytes": 259,
+      "gitBlobSha": "63d009f88368e77240028cb39f09f57115502441",
+      "sha256": "ac5464d29bade017445f2722cbf68104610757d2d1410a5e0ce2fb97628f67df",
+      "sourceUrl": "https://raw.githubusercontent.com/Niko1221/Strata/7ddc17a38fe7f31637e895ecfba58c2cd43d65ec/src/qwen35/q36_main.cpp"
+    }
+  ],
+  "enginePath": "src/qwen35/q36_engine.cu",
+  "postimageSha256": "991caec2b613372ed4a7c34a16b808250982c691c5f066c7d4702edbf565b820",
+  "payload": [
+    {
+      "asset": "thunder_host_expert_cache.h",
+      "path": "src/qwen35/thunder_host_expert_cache.h",
+      "bytes": 8126,
+      "sha256": "6813edf0dfa4fb5b7c75cbc74647b37d167ae4655bf8e33f4a0bb4fde91031f0"
+    },
+    {
+      "asset": "q36_engine.integration.patch",
+      "path": "q36_engine.integration.patch",
+      "bytes": 16699,
+      "sha256": "b756fbc5fbbfc1c83e5988d6d511be6eaaa4321830f7db37d64f9f834f2c297d"
+    },
+    {
+      "asset": "host_expert_cache_smoke.cpp",
+      "path": "smoke/host_expert_cache_smoke.cpp",
+      "bytes": 3402,
+      "sha256": "51f00026cf1f80c6cf1d61d919ae586ca6484334894bc2106ba770e66118f825"
+    },
+    {
+      "asset": "LICENSE.strata",
+      "path": "LICENSE.strata",
+      "bytes": 1093,
+      "sha256": "949b9b0aada7476006469e58ee4ffb0e0f68c2d9137e90a356757b61a09d37f0"
+    },
+    {
+      "asset": "LICENSE.ggml",
+      "path": "notices/ggml/LICENSE",
+      "bytes": 1078,
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+    },
+    {
+      "asset": "ggml-VERSION.txt",
+      "path": "notices/ggml/VERSION.txt",
+      "bytes": 72,
+      "sha256": "c6ee69e9acdf5b4a2f5b8e64191bd380baeaf00b1984de721d67d4698c96b5fb"
+    }
+  ],
+  "limits": [
+    "opt-in source preparation only; current candidate pin unchanged",
+    "no complete archive/dependency/build/runtime acceptance",
+    "no owner desktop patch compatibility, CUDA fit or speed claim"
+  ]
+}

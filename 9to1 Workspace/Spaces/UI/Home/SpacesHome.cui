@@ -25,6 +25,8 @@
         (CuiNativeHost maps it to the bundled assets), not a per-document override.
   -->
   <Actions>
+    <Action name="SearchConversationTitles" command="spaces.search-conversations" parameter="{Binding spaces.conversationSearchIntent}" />
+    <Action name="ClearConversationSearch" command="spaces.clear-conversation-search" parameter="{Binding spaces.conversationSearchIntent}" />
     <Action name="SelectRow" command="spaces.select" parameter="{Binding space.id}" />
     <Action name="RenameRow" command="spaces.rename" parameter="{Binding space.id}" />
     <Action name="MoveRow" command="spaces.move" parameter="{Binding space.id}" />
@@ -151,7 +153,17 @@
               </Button>
             </Repeat>
             <Container id="space-recent-chats-heading-row" Type="Vertical Stack" Padding="8">
-              <Text id="space-recent-chats-heading" text="Recent chats" font-size="12" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="space-recent-chats-heading" text="{Binding spaces.conversationHistoryHeading}" font-size="12" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+              <If Condition="{Binding spaces.canSearchConversations}">
+                <Container id="space-history-search" Type="Vertical Stack" CellGap="6" accessible-name="Find saved chats in this Space">
+                  <Input id="space-history-query" Type="Text" Value="{Binding spaces.conversationQuery, mode=TwoWay}" placeholdertext="Find chat titles in this Space" accessible-name="Find saved chat titles in this Space" />
+                  <Container Type="Horizontal Stack" CellGap="6">
+                    <Button id="space-history-search-button" action="SearchConversationTitles" content="Search" accessible-name="Search saved chat titles in this Space" />
+                    <Button id="space-history-clear-button" action="ClearConversationSearch" content="Clear" accessible-name="Clear chat search and show recent chats" />
+                  </Container>
+                </Container>
+              </If>
+              <Text id="space-history-notice" text="{Binding spaces.conversationHistoryNotice}" font-size="12" foreground="{Resource CuiTextSoftBrush}" accessible-name="Chat history search status" />
             </Container>
             <Container id="space-recent-chats-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
             <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">
@@ -166,7 +178,7 @@
             </Repeat>
             <If Condition="!{Binding spaces.hasConversations}">
               <Container id="space-empty-history-row" Type="Vertical Stack" Padding="8" CellGap="8">
-                <Text id="space-conversations-empty" text="No chats yet" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="space-conversations-empty" text="{Binding spaces.conversationHistoryEmpty}" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
               </Container>
             </If>
           </Container>

@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents conversation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository
+public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository, ISpaceConversationSearch
 {
     /// <summary>
     /// Retrieves recent async for the current operation.
@@ -68,6 +68,30 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
         command.CommandText = "SELECT * FROM conversations WHERE space_id=$spaceId AND is_temporary=0 AND is_archived=0 ORDER BY updated_at DESC LIMIT $limit;";
         command.Parameters.AddWithValue("$spaceId", spaceId.ToString());
         command.Parameters.AddWithValue("$limit", Math.Max(0, limit));
+        return await ReadConversationsAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Matches literal saved titles in the owning Space, including older history.
+    /// The deterministic predicate uses the same ordinal case-insensitive semantics as the
+    /// UI; %, _ and backslash are ordinary characters, never SQL wildcard instructions.</summary>
+    public async Task<IReadOnlyList<Conversation>> FindSavedTitlesBySpaceAsync(
+        Guid spaceId, string query, int limit, CancellationToken cancellationToken)
+    {
+        if (spaceId == Guid.Empty) throw new ArgumentException("A stable Space ID is required.", nameof(spaceId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+        query = query.Trim();
+        if (query.Length > 256) throw new ArgumentOutOfRangeException(nameof(query), "Use at most 256 characters.");
+        if (limit is < 1 or > 50) throw new ArgumentOutOfRangeException(nameof(limit), "The limit must be from 1 to 50.");
+        cancellationToken.ThrowIfCancellationRequested();
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        connection.CreateFunction<string?, string?, bool>("haven_space_title_contains",
+            static (title, needle) => title is not null && needle is not null &&
+                title.Contains(needle, StringComparison.OrdinalIgnoreCase), isDeterministic: true);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM conversations WHERE space_id=$spaceId AND is_temporary=0 AND is_archived=0 AND haven_space_title_contains(title,$query) ORDER BY updated_at DESC, id ASC LIMIT $limit;";
+        command.Parameters.AddWithValue("$spaceId", spaceId.ToString());
+        command.Parameters.AddWithValue("$query", query);
+        command.Parameters.AddWithValue("$limit", limit);
         return await ReadConversationsAsync(command, cancellationToken).ConfigureAwait(false);
     }
 

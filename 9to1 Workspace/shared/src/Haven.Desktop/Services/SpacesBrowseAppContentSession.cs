@@ -146,7 +146,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 queueNavigation: QueueSpaceAction,
                 conversationsProvider: ReadSpaceConversationsAsync,
                 sidebarItemsProvider: ReadSpaceSidebarItemsAsync,
-                workspaceCommandHost: ExecuteWorkspaceCommandAsync);
+                workspaceCommandHost: ExecuteWorkspaceCommandAsync,
+                conversationSearchProvider: _services.GetRequiredService<IConversationRepository>() is ISpaceConversationSearch
+                    ? FindSpaceConversationTitlesAsync : null);
             _spacesPage = page;
             try
             {
@@ -595,6 +597,47 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 row.UpdatedAt.LocalDateTime.ToString("d MMM yyyy HH:mm"),
                 row.Id == current))
             .ToArray();
+    }
+
+    /// <summary>Searches the SAME current Space's canonical saved titles. No recent-list filtering,
+    /// cross-Space search, conversation transition or provider invocation is performed.</summary>
+    private async Task<IReadOnlyList<SpacesHomeConversationRow>> FindSpaceConversationTitlesAsync(
+        Guid spaceId, string query, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        var selection = _spacesPage?.Controller.State.Selection;
+        if (!IsPublicationCurrent || selection?.Id != spaceId)
+            throw new InvalidOperationException("The selected Space changed before chat history search.");
+        var registry = _services.GetRequiredService<SpaceRegistry>();
+        var originalSpace = await registry.ReadExistingAsync(spaceId, token).ConfigureAwait(false);
+        if (originalSpace is null || originalSpace.IsArchived)
+            throw new InvalidOperationException("The selected Space is unavailable.");
+        var repository = _services.GetRequiredService<IConversationRepository>();
+        if (repository is not ISpaceConversationSearch search)
+            throw new NotSupportedException("This conversation store does not support saved-title search.");
+        var matches = await search.FindSavedTitlesBySpaceAsync(spaceId, query, 50, token).ConfigureAwait(false);
+        var currentRows = new List<Conversation>();
+        foreach (var match in matches.Take(50).DistinctBy(row => row.Id))
+        {
+            // Membership/title may have changed during the query. Read the maintained row again
+            // before exposing its metadata; opening still uses the existing typed route validation.
+            var current = await repository.GetAsync(match.Id, token).ConfigureAwait(false);
+            if (current is { IsArchived: false, IsTemporary: false } && current.SpaceId == spaceId &&
+                current.Title.Contains(query, StringComparison.OrdinalIgnoreCase))
+                currentRows.Add(current);
+        }
+        var finalSpace = await registry.ReadExistingAsync(spaceId, token).ConfigureAwait(false);
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        if (!IsPublicationCurrent || !ReferenceEquals(_spacesPage?.Controller.State.Selection, selection) ||
+            finalSpace is null || finalSpace.IsArchived || finalSpace.Revision != originalSpace.Revision)
+            throw new InvalidOperationException("The selected Space changed during chat history search.");
+        Guid? activeConversation;
+        lock (_gate) activeConversation = _publishedChatRoute?.Page.CurrentConversation.Id;
+        return currentRows.Select(row => new SpacesHomeConversationRow(row.Id,
+            string.IsNullOrWhiteSpace(row.Title) ? "Untitled conversation" : row.Title,
+            row.UpdatedAt.LocalDateTime.ToString("d MMM yyyy HH:mm"), row.Id == activeConversation)).ToArray();
     }
 
     /// <summary>Reads the custom sidebar elements declared by the extensions actually attached to the
