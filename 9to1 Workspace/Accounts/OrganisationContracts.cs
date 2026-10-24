@@ -24,10 +24,11 @@ public sealed record OrganisationMembership(Guid MembershipID,Guid AccountID,IRe
 public sealed record OrganisationPolicy(Guid PolicyID,long Revision,IReadOnlySet<string> BlockedCapabilities,
     IReadOnlyDictionary<string,string> ForcedSettings,IReadOnlyDictionary<string,string> Defaults,string State);
 public sealed record Organisation(Guid OrgID,string Name,OrganisationAddOn AddOn,IReadOnlyList<OrganisationMembership> Members,
-    IReadOnlyList<OrganisationRole> Roles,OrganisationPolicy Policy,long Revision,int SchemaVersion=2,OrganisationLifecycleState Lifecycle=OrganisationLifecycleState.Active);
+    IReadOnlyList<OrganisationRole> Roles,OrganisationPolicy Policy,long Revision,int SchemaVersion=2,OrganisationLifecycleState Lifecycle=OrganisationLifecycleState.Active,long InvitationRevision=1);
 public sealed record OrganisationAudit(Guid AuditEventID,Guid OrgID,Guid ActorID,string Action,Guid? TargetID,
     long BeforeRevision,long AfterRevision,DateTimeOffset At,string? ApprovalReference);
-public sealed record OrganisationInvitation(Guid InvitationID,Guid OrgID,Guid InviterID,Guid? IntendedAccountID,IReadOnlyList<Guid> RoleIDs,string TokenHash,DateTimeOffset ExpiresAt,bool Accepted);
+public sealed record OrganisationInvitation(Guid InvitationID,Guid OrgID,Guid InviterID,Guid? IntendedAccountID,IReadOnlyList<Guid> RoleIDs,string TokenHash,DateTimeOffset ExpiresAt,bool Accepted,
+    bool Revoked=false,Guid? RevokedByAccountID=null,string? RevocationIdempotencyKey=null,long? RevocationExpectedOrganisationRevision=null,DateTimeOffset? RevokedAt=null,int SchemaVersion=1);
 public sealed record IssuedOrganisationInvitation(Guid InvitationID,string Token);
 public sealed record OrganisationState(IReadOnlyList<Organisation> Organisations,IReadOnlyList<OrganisationAudit> Audit,
     IReadOnlyDictionary<string,long> Idempotency,IReadOnlyList<OrganisationInvitation>? Invitations=null,IReadOnlyList<VerifiedBusinessBillingTransition>? BillingTransitions=null,IReadOnlyList<OrganisationOwnershipTransfer>? OwnershipTransfers=null,IReadOnlyList<OrganisationLifecycleReceipt>? LifecycleReceipts=null,IReadOnlyList<OrganisationRoleMutationReceipt>? RoleMutationReceipts=null,IReadOnlyList<AdminJob>? AdminJobs=null);

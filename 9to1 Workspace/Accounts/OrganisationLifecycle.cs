@@ -144,13 +144,20 @@ public sealed partial class OrganisationService
         EnsureOwner(next);
         var accepted = transfer with { State = OrganisationOwnershipTransferState.Accepted, Revision = checked(transfer.Revision + 1),
             AcceptedOrganisationRevision = next.Revision, AcceptedIdempotencyKey = idempotencyKey };
+        var supersededTransfers=(state.OwnershipTransfers??[]).Where(item=>item.OrgID==orgID&&
+            item.TransferID!=transferID&&item.State==OrganisationOwnershipTransferState.Pending).ToArray();
+        var supersededTransferIDs=supersededTransfers.Select(item=>item.TransferID).ToHashSet();
         cancellationToken.ThrowIfCancellationRequested();
         Save(state with
         {
             Organisations = state.Organisations.Select(o => o.OrgID == orgID ? next : o).ToArray(),
-            OwnershipTransfers = (state.OwnershipTransfers ?? []).Select(t => t.TransferID == transferID ? accepted : t).ToArray(),
+            OwnershipTransfers = (state.OwnershipTransfers ?? []).Select(t => t.TransferID == transferID ? accepted :
+                supersededTransferIDs.Contains(t.TransferID)
+                    ? t with { State=OrganisationOwnershipTransferState.Cancelled, Revision=checked(t.Revision+1) } : t).ToArray(),
             Audit = state.Audit.Append(new(Guid.NewGuid(), orgID, authenticatedRecipientID, "Admin.Organisations.TransferOwnership.Accepted",
-                transferID, org.Revision, next.Revision, LifecycleNow, null)).ToArray()
+                transferID, org.Revision, next.Revision, LifecycleNow, null)).Concat(supersededTransfers.Select(stale=>
+                new OrganisationAudit(Guid.NewGuid(), orgID, authenticatedRecipientID, "Admin.Organisations.TransferOwnership.Superseded",
+                    stale.TransferID, org.Revision, next.Revision, LifecycleNow, null))).ToArray()
         });
         return new(next, accepted);
     }

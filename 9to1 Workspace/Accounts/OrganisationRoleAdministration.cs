@@ -16,9 +16,8 @@ public sealed partial class OrganisationService
         var capturedDenials = CaptureRoleCapabilities(denials);
         var fingerprint = RoleRequestFingerprint(roleID, name.Trim(), capturedGrants, capturedDenials);
         return MutateAdministrationRole(actorID, orgID, roleID, expectedRevision, idempotencyKey,
-            "Admin.Roles.Update", fingerprint, (org, original) =>
+            "Admin.Roles.Update", fingerprint, (org, original, _) =>
             {
-                DemandRoleDelegation(org, actorID, original.Grants);
                 DemandRoleDelegation(org, actorID, capturedGrants);
                 if (capturedGrants.Contains("*")) throw new UnauthorizedAccessException("custom_role_cannot_grant_owner_wildcard");
                 return original with { Name = name.Trim(), Grants = capturedGrants, Denials = capturedDenials,
@@ -29,10 +28,11 @@ public sealed partial class OrganisationService
     public OrganisationRoleMutationResult DeleteRole(Guid actorID, Guid orgID, Guid roleID,
         long expectedRevision, string idempotencyKey, CancellationToken cancellationToken = default) =>
         MutateAdministrationRole(actorID, orgID, roleID, expectedRevision, idempotencyKey,
-            "Admin.Roles.Delete", RoleRequestFingerprint(roleID, null, [], []), (org, original) =>
+            "Admin.Roles.Delete", RoleRequestFingerprint(roleID, null, [], []), (org, original, state) =>
             {
-                DemandRoleDelegation(org, actorID, original.Grants);
-                if (org.Members.Any(member => member.RoleIDs.Contains(roleID)))
+                var pendingInvitationUsesRole=(state.Invitations??[]).Any(invitation=>invitation.OrgID==orgID&&
+                    !invitation.Accepted&&!invitation.Revoked&&invitation.ExpiresAt>LifecycleNow&&invitation.RoleIDs.Contains(roleID));
+                if (org.Members.Any(member => member.RoleIDs.Contains(roleID))||pendingInvitationUsesRole)
                     throw new AdministrationConflictException(AdministrationConflictCode.RoleInUse);
                 return null;
             }, cancellationToken);
@@ -60,7 +60,7 @@ public sealed partial class OrganisationService
 
     private OrganisationRoleMutationResult MutateAdministrationRole(Guid actorID, Guid orgID,
         Guid roleID, long expectedRevision, string key, string action, string fingerprint,
-        Func<Organisation, OrganisationRole, OrganisationRole?> mutation, CancellationToken ct)
+        Func<Organisation, OrganisationRole, OrganisationState, OrganisationRole?> mutation, CancellationToken ct)
     {
         ValidateLifecycleKey(key); ValidateLifecycleRevision(expectedRevision);
         if (roleID == Guid.Empty) throw new ArgumentException("canonical_role_id_required");
@@ -82,7 +82,7 @@ public sealed partial class OrganisationService
         var original = org.Roles.SingleOrDefault(role => role.RoleID == roleID)
             ?? throw new KeyNotFoundException("role_not_found");
         if (original.IsOwner) throw new UnauthorizedAccessException("protected_owner_role_requires_ownership_workflow");
-        var replacement = mutation(org, original);
+        var replacement = mutation(org, original, state);
         var roles = replacement is null ? org.Roles.Where(role => role.RoleID != roleID).ToArray() :
             org.Roles.Select(role => role.RoleID == roleID ? replacement : role).ToArray();
         var next = org with { Roles = roles, Revision = checked(org.Revision + 1) };

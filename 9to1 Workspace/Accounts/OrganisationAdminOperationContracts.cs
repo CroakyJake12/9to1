@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 namespace NineToOne.Accounts;
 
 public enum AdministrationConflictCode
-{ RevisionConflict, IdempotencyConflict, RoleInUse, JobNotCancellable, OriginalOutcomeRequiresReconciliation, QuotaExceeded, ExportLimitExceeded, OriginalClaimChanged }
+{ RevisionConflict, IdempotencyConflict, RoleInUse, JobNotCancellable, OriginalOutcomeRequiresReconciliation, QuotaExceeded, ExportLimitExceeded, OriginalClaimChanged, InvitationResolved, InvitationFilterStale }
 public sealed class AdministrationConflictException(AdministrationConflictCode code) : InvalidOperationException(code.ToString())
 {
     public string Code { get; } = code.ToString();
@@ -17,6 +17,8 @@ public sealed record OrganisationRoleMutationReceipt(Guid OrgID, Guid ActorID, s
     string RequestFingerprint, long RoleRevision, int SchemaVersion = 1);
 public sealed record OrganisationRoleMutationResult(Guid OrgID, long OrganisationRevision,
     OrganisationRole? Role, OrganisationRoleMutationReceipt Receipt, bool Replayed);
+public sealed record OrganisationInvitationRevocationResult(Guid OrgID, Guid InvitationID,
+    long OrganisationRevision, DateTimeOffset RevokedAt, bool Replayed);
 public sealed record OrganisationEffectiveRolePermissions(Guid OrgID, Guid AccountID,
     long OrganisationRevision, long PolicyRevision, IReadOnlySet<string> CandidateCapabilities,
     IReadOnlySet<string> DeniedCapabilities, bool HasWildcardCandidate,

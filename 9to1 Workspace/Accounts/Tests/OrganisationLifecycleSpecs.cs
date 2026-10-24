@@ -12,6 +12,13 @@ public static class OrganisationLifecycleSpecs
         TransferRequiresRecipientAndPreservesPersonalIdentity();
         TransferRaceRestartAndLastOwner();
         TransferExpiryAndCurrentOwnerRevocation();
+        StaleOwnerCannotCompleteEarlierPendingTransfer();
+        InvitationsRequireAnIntendedIdentity();
+        InvitationRevocationIsCurrentRevisionedAndReplaySafe();
+        InvitationListingHasStableRevisionedPages();
+        LegacyInvitationWithMissingRoleIsNotShownAsPending();
+        ReinvitingRemovedMemberPreservesCanonicalMembership();
+        InvitationExpiresWhileActualDurableLeaseIsHeld();
         RequestExpiresWhileActualDurableLeaseIsHeld();
         ArchiveRestoreAndExactRequestReplay();
         DelegatedCapabilityDoesNotConferOwnership();
@@ -20,7 +27,7 @@ public static class OrganisationLifecycleSpecs
         RegisteredOwningCallerUsesActualSessionAndSerialisesSignOut();
         CancellationAndLegacyDomainSchema();
         CorruptTransferAndReceiptFailWithoutOverwrite();
-        Console.WriteLine("PASS: organisation lifecycle, recipient transfer, durable replay, current owner, archive, admission and personal identity");
+        Console.WriteLine("PASS: organisation lifecycle, ownership transfers, listed/intended/revoked invitations, member restoration, archive, admission and personal identity");
     }
 
     private static void TransferRequiresRecipientAndPreservesPersonalIdentity()
@@ -91,6 +98,338 @@ public static class OrganisationLifecycleSpecs
         before = revoked.StateBytes;
         Throws<OrganisationAccessException>(() => revoked.Service.AcceptOwnershipTransfer(revoked.Recipient, current.OrgID, pending.TransferID, revision, "after-owner-policy-revocation"));
         Check(revoked.StateBytes.SequenceEqual(before), "current owner policy must still authorise acceptance");
+    }
+
+    private static void StaleOwnerCannotCompleteEarlierPendingTransfer()
+    {
+        using var f = new Fixture();
+        var org = f.Current;
+        var expiry = f.Clock.GetUtcNow().AddHours(1);
+        var earlier = f.Service.RequestOwnershipTransfer(f.Owner, org.OrgID, org.Revision,
+            "earlier-owner-transfer", f.Recipient, expiry);
+        org = f.Current;
+        var current = f.Service.RequestOwnershipTransfer(f.Owner, org.OrgID, org.Revision,
+            "superseding-owner-transfer", f.Stranger, expiry);
+        var newOwner = f.Service.AcceptOwnershipTransfer(f.Stranger, org.OrgID,
+            current.TransferID, f.Current.Revision, "accept-current-owner-transfer");
+        Check(IsOwner(newOwner.Organisation, f.Stranger) && !IsOwner(newOwner.Organisation, f.Owner),
+            "later accepted transfer changes the canonical current owner");
+        var persistedTransfers=JsonNode.Parse(f.StateText)!["State"]!["OwnershipTransfers"]!.AsArray();
+        Check(persistedTransfers.Single(item=>item!["TransferID"]!.GetValue<Guid>()==earlier.TransferID)!["State"]!.GetValue<int>()==
+            (int)OrganisationOwnershipTransferState.Cancelled,
+            "ownership acceptance atomically cancels and audits earlier pending transfers from the superseded owner");
+        Check(f.Service.ListAudit(f.Stranger, org.OrgID).Any(entry=>
+            entry.Action=="Admin.Organisations.TransferOwnership.Superseded"&&entry.TargetID==earlier.TransferID),
+            "superseded transfer cancellation has an actor- and target-bound audit event");
+        var before = f.StateBytes;
+        Throws<OrganisationAccessException>(() => f.Service.AcceptOwnershipTransfer(f.Recipient,
+            org.OrgID, earlier.TransferID, earlier.OrganisationRevision, "stale-former-owner-acceptance"));
+        Check(f.StateBytes.SequenceEqual(before) && !IsOwner(f.Service.Get(f.Stranger, org.OrgID), f.Recipient),
+            "pending ownership transfer from former owner cannot change ownership or mutate durable state");
+    }
+
+    private static void InvitationsRequireAnIntendedIdentity()
+    {
+        using var f = new Fixture();
+        var org = f.Current;
+        var before = f.StateBytes;
+        Throws<ArgumentException>(() => f.Service.Invite(f.Owner, org.OrgID, null, [], f.Clock.GetUtcNow().AddHours(1)));
+        Throws<ArgumentException>(() => f.Service.Invite(f.Owner, org.OrgID, Guid.Empty, [], f.Clock.GetUtcNow().AddHours(1)));
+        var memberRole = org.Roles.Single(role => !role.IsOwner);
+        Throws<ArgumentException>(() => f.Service.Invite(f.Owner, org.OrgID, f.Stranger,
+            [memberRole.RoleID, memberRole.RoleID], f.Clock.GetUtcNow().AddHours(1)));
+        Check(f.StateBytes.SequenceEqual(before), "unbound identities and duplicate role assignments are refused before persistence");
+
+        var invite = f.Service.Invite(f.Owner, org.OrgID, f.Stranger, [], f.Clock.GetUtcNow().AddHours(1));
+        var validInvitationState = f.StateBytes;
+        var legacyVersionless = JsonNode.Parse(File.ReadAllText(f.StatePath))!;
+        legacyVersionless["State"]!["Invitations"]!.AsArray().Single()!.AsObject().Remove("SchemaVersion");
+        File.WriteAllText(f.StatePath, legacyVersionless.ToJsonString());
+        Check(f.Restart().Get(f.Owner, org.OrgID).OrgID == org.OrgID,
+            "legacy invitation records without an explicit schema version remain readable");
+        File.WriteAllBytes(f.StatePath, validInvitationState);
+        var unbound = JsonNode.Parse(File.ReadAllText(f.StatePath))!;
+        unbound["State"]!["Invitations"]!.AsArray().Single()!["IntendedAccountID"] = null;
+        File.WriteAllText(f.StatePath, unbound.ToJsonString());
+        before = f.StateBytes;
+        var legacyList=f.Restart().ListInvitations(f.Owner,org.OrgID);
+        Check(legacyList.Items.Single(item=>item.InvitationID==invite.InvitationID).Status==OrganisationInvitationStatus.InvalidIdentity,
+            "persisted unbound invitation is surfaced as non-redeemable rather than pending");
+        Throws<UnauthorizedAccessException>(() => f.Restart().AcceptInvitation(f.Stranger, invite.Token));
+        Check(f.StateBytes.SequenceEqual(before), "persisted legacy/unbound invitation cannot be claimed by any account");
+        File.WriteAllBytes(f.StatePath, validInvitationState);
+        before = f.StateBytes;
+        Throws<UnauthorizedAccessException>(() => f.Service.AcceptInvitation(f.Recipient, invite.Token));
+        Check(f.StateBytes.SequenceEqual(before), "a bearer of the invitation token cannot claim another account's membership");
+        var accepted = f.Service.AcceptInvitation(f.Stranger, invite.Token);
+        Check(accepted.Members.Any(member => member.AccountID == f.Stranger && member.State == OrganisationMemberState.Active),
+            "the exact intended account can redeem the invitation");
+    }
+
+    private static void InvitationRevocationIsCurrentRevisionedAndReplaySafe()
+    {
+        using var f = new Fixture();
+        var org = f.Current;
+        org = f.Service.CreateRole(f.Owner, org.OrgID, org.Revision, "revocable-invitation-role",
+            "Revocable invitation role", new HashSet<string> { "Admin.Organisations.Get" }, new HashSet<string>());
+        var invitationRole = org.Roles.Single(role => role.Name == "Revocable invitation role");
+        var invitation = f.Service.Invite(f.Owner, org.OrgID, f.Stranger, [invitationRole.RoleID], f.Clock.GetUtcNow().AddHours(1));
+        var before = f.StateBytes;
+        Throws<OrganisationAccessException>(() => f.Service.RevokeInvitation(f.Recipient, org.OrgID,
+            invitation.InvitationID, org.Revision, "unauthorised-invitation-revocation"));
+        Check(f.StateBytes.SequenceEqual(before), "member without invite-management authority cannot revoke another invitation");
+        Throws<AdministrationConflictException>(() => f.Service.RevokeInvitation(f.Owner, org.OrgID,
+            invitation.InvitationID, org.Revision - 1, "stale-invitation-revocation"));
+        Check(f.StateBytes.SequenceEqual(before), "stale invitation-revocation revision cannot write state or audit");
+
+        var revoked = f.Service.RevokeInvitation(f.Owner, org.OrgID, invitation.InvitationID,
+            org.Revision, "revoke-original-invitation");
+        Check(!revoked.Replayed && revoked.OrganisationRevision == org.Revision + 1,
+            "authorised revocation commits one canonical organisation revision");
+        var persistedInvitation=JsonNode.Parse(f.StateText)!["State"]!["Invitations"]!.AsArray()
+            .Single(item=>item!["InvitationID"]!.GetValue<Guid>()==invitation.InvitationID)!;
+        Check(persistedInvitation["SchemaVersion"]!.GetValue<int>()==2&&persistedInvitation["Revoked"]!.GetValue<bool>(),
+            "revocation persists a versioned invitation lifecycle state");
+        var validRevokedState=f.StateBytes;
+        var missingReceipt=JsonNode.Parse(f.StateText)!;
+        var revocationScopeKey=org.OrgID.ToString("N")+":"+f.Owner.ToString("N")+
+            ":Admin.Members.Invitation.Revoke:revoke-original-invitation";
+        missingReceipt["State"]!["Idempotency"]!.AsObject().Remove(revocationScopeKey);
+        File.WriteAllText(f.StatePath,missingReceipt.ToJsonString());
+        var invalidRevocationState=f.StateBytes;
+        Throws<InvalidDataException>(()=>f.Restart().Get(f.Owner,org.OrgID));
+        Check(f.StateBytes.SequenceEqual(invalidRevocationState),"revocation without its canonical idempotency row fails closed without repairing or overwriting state");
+        File.WriteAllBytes(f.StatePath,validRevokedState);
+        f.Service.UpdateIdentity(f.Owner, org.OrgID, revoked.OrganisationRevision,
+            "intervening-organisation-edit", "Organisation after invitation revoke");
+        var committed = f.StateBytes;
+        var replay = f.Restart().RevokeInvitation(f.Owner, org.OrgID, invitation.InvitationID,
+            org.Revision, "revoke-original-invitation");
+        Check(replay.Replayed && replay.RevokedAt == revoked.RevokedAt &&
+            replay.OrganisationRevision == revoked.OrganisationRevision && f.StateBytes.SequenceEqual(committed),
+            "revocation replay survives restart without duplicate audit or revision");
+        Throws<AdministrationConflictException>(() => f.Service.RevokeInvitation(f.Owner, org.OrgID,
+            invitation.InvitationID, org.Revision, "second-invitation-revocation"));
+        Check(f.StateBytes.SequenceEqual(committed), "a resolved invitation cannot be revoked again under a different operation key");
+        var afterReplay = f.Current;
+        f.Service.PublishPolicy(f.Owner, org.OrgID, afterReplay.Revision, "revoke-invitation-management",
+            new HashSet<string> { "Admin.Members.Invite" }, new Dictionary<string,string>(), new Dictionary<string,string>());
+        var afterPolicyRevocation = f.StateBytes;
+        Throws<OrganisationAccessException>(() => f.Restart().RevokeInvitation(f.Owner, org.OrgID,
+            invitation.InvitationID, org.Revision, "revoke-original-invitation"));
+        Check(f.StateBytes.SequenceEqual(afterPolicyRevocation), "idempotent revocation replay still requires current invite-management permission");
+        Throws<UnauthorizedAccessException>(() => f.Restart().AcceptInvitation(f.Stranger, invitation.Token));
+        Check(f.StateBytes.SequenceEqual(afterPolicyRevocation) && f.Service.ListAudit(f.Owner, org.OrgID).Any(entry=>
+            entry.Action=="Admin.Members.Invitation.Revoke"&&entry.TargetID==invitation.InvitationID),
+            "revoked invitation token cannot create membership and revocation remains auditable");
+        var current=f.Current;
+        var deleted=f.Service.DeleteRole(f.Owner,org.OrgID,invitationRole.RoleID,current.Revision,
+            "delete-role-after-invitation-revocation");
+        Check(deleted.Role is null,"revoked invitation no longer pins its formerly assigned role");
+    }
+
+    private static void InvitationListingHasStableRevisionedPages()
+    {
+        using var f = new Fixture();
+        var org=f.Current;
+        f.Service.UpdateRole(f.Owner,org.OrgID,f.RoleID,org.Revision,"grant-member-invitation-list",
+            "Member",new HashSet<string>{"Admin.Organisations.Get","Connect.Directory.Get","Admin.Members.List"},new HashSet<string>());
+        org=f.Current;
+        var beforeUnfilteredRead=f.StateBytes;
+        var positional=f.Service.ListInvitations(f.Owner,org.OrgID,null,50,CancellationToken.None);
+        var named=f.Service.ListInvitations(f.Owner,org.OrgID,cursor:null,limit:50,cancellationToken:CancellationToken.None);
+        Check(positional.TotalCount==1&&named.TotalCount==1&&
+            positional.Items.Single().InvitationID==named.Items.Single().InvitationID&&
+            f.StateBytes.SequenceEqual(beforeUnfilteredRead),
+            "original positional and named cancellation-token invitation-list calls remain unfiltered and read-only");
+        var acceptedInvitationID=JsonNode.Parse(f.StateText)!["State"]!["Invitations"]!.AsArray()
+            .Single(item=>item!["Accepted"]!.GetValue<bool>())!["InvitationID"]!.GetValue<Guid>();
+        var revoked=f.Service.Invite(f.Owner,org.OrgID,f.Stranger,[],f.Clock.GetUtcNow().AddHours(1));
+        var pendingExpiry=f.Clock.GetUtcNow().AddMinutes(1);
+        var pending=f.Service.Invite(f.Owner,org.OrgID,f.Jacob,[],pendingExpiry);
+        var pendingSecond=f.Service.Invite(f.Owner,org.OrgID,f.Stranger,[],f.Clock.GetUtcNow().AddHours(1));
+        org=f.Current;
+        f.Service.RevokeInvitation(f.Owner,org.OrgID,revoked.InvitationID,org.Revision,"list-revocation");
+        var other=f.Service.CreateTrustedOrganisation(f.Owner,"Other invitation-list organisation",
+            BusinessAddOnKind.Business,"synthetic-existing-funded-addon");
+        f.Service.Invite(f.Owner,other.OrgID,f.Jacob,[],f.Clock.GetUtcNow().AddHours(1));
+        var before=f.StateBytes;var current=f.Current;
+        var first=f.Service.ListInvitations(f.Owner,org.OrgID,limit:2);
+        Check(first.Items.Count==2&&first.TotalCount==4&&first.NextCursor is not null&&
+            first.OrganisationRevision==current.Revision,"invitation listing returns a bounded canonical first page");
+        Throws<ArgumentException>(()=>f.Service.ListInvitations(f.Member,org.OrgID,first.NextCursor,2));
+        Throws<ArgumentException>(()=>f.Service.ListInvitations(f.Owner,other.OrgID,first.NextCursor,2));
+        Check(f.StateBytes.SequenceEqual(before),"invitation cursors cannot be transplanted across actors or organisations");
+        var second=f.Restart().ListInvitations(f.Owner,org.OrgID,first.NextCursor,2);
+        var listed=first.Items.Concat(second.Items).ToArray();
+        Check(second.Items.Count==2&&second.NextCursor is null&&
+            listed.Select(item=>item.InvitationID).ToHashSet().SetEquals(new[]{acceptedInvitationID,revoked.InvitationID,pending.InvitationID,pendingSecond.InvitationID})&&
+            listed.Single(item=>item.InvitationID==revoked.InvitationID).Status==OrganisationInvitationStatus.Revoked&&
+            listed.Single(item=>item.InvitationID==pending.InvitationID).Status==OrganisationInvitationStatus.Pending&&
+            listed.Single(item=>item.InvitationID==acceptedInvitationID).Status==OrganisationInvitationStatus.Accepted&&
+            first.InvitationCollectionRevision==second.InvitationCollectionRevision,
+            "pages survive restart and identify pending, accepted and revoked intended-account records");
+        var serialized=JsonSerializer.Serialize(first);
+        Check(!serialized.Contains("TokenHash",StringComparison.Ordinal)&&
+            !serialized.Contains(revoked.Token,StringComparison.Ordinal)&&!serialized.Contains(pending.Token,StringComparison.Ordinal),
+            "invitation list exposes no bearer token or persisted token hash");
+        var intendedSearch=f.Service.ListInvitations(f.Owner,org.OrgID,search:f.Jacob.ToString("N"));
+        Check(intendedSearch.TotalCount==1&&intendedSearch.Items.Single().InvitationID==pending.InvitationID,
+            "bounded search matches only the intended member's stable identity");
+        var intendedFilter=f.Service.ListInvitations(f.Owner,org.OrgID,intendedAccountIDFilter:f.Jacob);
+        Check(intendedFilter.TotalCount==1&&intendedFilter.Items.Single().InvitationID==pending.InvitationID,
+            "intended-account filtering uses the canonical verified account identity");
+        var strangerFilter=f.Service.ListInvitations(f.Owner,org.OrgID,limit:1,intendedAccountIDFilter:f.Stranger);
+        Check(strangerFilter.TotalCount==2&&strangerFilter.NextCursor is not null,
+            "intended-account filter returns a bounded continuation for that stable identity");
+        var strangerFilterNext=f.Restart().ListInvitations(f.Owner,org.OrgID,strangerFilter.NextCursor,1,
+            intendedAccountIDFilter:f.Stranger);
+        Check(strangerFilterNext.Items.Count==1&&strangerFilterNext.TotalCount==strangerFilter.TotalCount,
+            "intended-account filter remains bound across restart");
+        Throws<ArgumentException>(()=>f.Service.ListInvitations(f.Owner,org.OrgID,strangerFilter.NextCursor,1,
+            intendedAccountIDFilter:f.Jacob));
+        var ownerSearch=f.Owner.ToString("N");
+        var ownerSearchPage=f.Service.ListInvitations(f.Owner,org.OrgID,limit:1,search:ownerSearch);
+        Check(ownerSearchPage.TotalCount==4&&ownerSearchPage.NextCursor is not null,
+            "bounded search supports a revision-bound continuation page");
+        var ownerSearchNext=f.Restart().ListInvitations(f.Owner,org.OrgID,ownerSearchPage.NextCursor,1,search:ownerSearch);
+        Check(ownerSearchNext.Items.Count==1&&ownerSearchNext.TotalCount==ownerSearchPage.TotalCount,
+            "search continuation preserves the exact stable-ID query across restart");
+        Throws<ArgumentException>(()=>f.Service.ListInvitations(f.Owner,org.OrgID,ownerSearchPage.NextCursor,1,search:f.Jacob.ToString("N")));
+        Throws<ArgumentException>(()=>f.Service.ListInvitations(f.Owner,org.OrgID,limit:50,search:new string('x',37)));
+        Check(f.StateBytes.SequenceEqual(before),"invitation listing is read-only");
+        Throws<ArgumentOutOfRangeException>(()=>f.Service.ListInvitations(f.Owner,org.OrgID,limit:0));
+        Throws<ArgumentException>(()=>f.Service.ListInvitations(f.Owner,org.OrgID,first.NextCursor,limit:3));
+        Check(f.StateBytes.SequenceEqual(before),"invalid invitation list bounds and cursor shape remain read-only");
+
+        var pendingStatusPage=f.Service.ListInvitations(f.Owner,org.OrgID,limit:1,search:ownerSearch,
+            statusFilter:OrganisationInvitationStatus.Pending);
+        Check(pendingStatusPage.TotalCount==2&&pendingStatusPage.NextCursor is not null,
+            "status-filtered invitation page retains a time-bound snapshot cursor");
+        var encodedCursor=pendingStatusPage.NextCursor!.Replace('-','+').Replace('_','/');
+        encodedCursor=encodedCursor.PadRight(encodedCursor.Length+(4-encodedCursor.Length%4)%4,'=');
+        var futureCursor=JsonNode.Parse(Convert.FromBase64String(encodedCursor))!;
+        futureCursor["ObservedAt"]=f.Clock.GetUtcNow().AddDays(1);
+        var forgedFutureCursor=Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(futureCursor))
+            .TrimEnd('=').Replace('+','-').Replace('/','_');
+        var beforeFutureCursor=f.StateBytes;
+        Throws<ArgumentException>(()=>f.Service.ListInvitations(f.Owner,org.OrgID,forgedFutureCursor,1,
+            search:ownerSearch,statusFilter:OrganisationInvitationStatus.Pending));
+        Check(f.StateBytes.SequenceEqual(beforeFutureCursor),"future invitation cursor time cannot rewrite status membership or state");
+        Throws<ArgumentException>(()=>f.Service.ListInvitations(f.Owner,org.OrgID,pendingStatusPage.NextCursor,1,
+            search:ownerSearch,statusFilter:OrganisationInvitationStatus.Expired));
+
+        f.Clock.Advance(pendingExpiry);
+        var afterExpiryBoundary=f.StateBytes;
+        try
+        {
+            f.Restart().ListInvitations(f.Owner,org.OrgID,pendingStatusPage.NextCursor,1,
+                search:ownerSearch,statusFilter:OrganisationInvitationStatus.Pending);
+            throw new Exception("expiry crossing silently advanced a pending-status continuation");
+        }
+        catch(AdministrationConflictException error) when(error.Code==AdministrationConflictCode.InvitationFilterStale.ToString()) { }
+        Check(f.StateBytes.SequenceEqual(afterExpiryBoundary),"time-sensitive status filter reports staleness without state mutation");
+        var expiredPage=f.Service.ListInvitations(f.Owner,org.OrgID,limit:200);
+        Check(expiredPage.Items.Single(item=>item.InvitationID==pending.InvitationID).Status==OrganisationInvitationStatus.Expired&&
+            expiredPage.Items.Single(item=>item.InvitationID==pendingSecond.InvitationID).Status==OrganisationInvitationStatus.Pending&&
+            expiredPage.Items.Single(item=>item.InvitationID==revoked.InvitationID).Status==OrganisationInvitationStatus.Revoked&&
+            expiredPage.Items.Single(item=>item.InvitationID==acceptedInvitationID).Status==OrganisationInvitationStatus.Accepted&&
+            f.StateBytes.SequenceEqual(before),"expired state is derived from the current clock without a listing mutation");
+
+        var invitationRevision=first.InvitationCollectionRevision;
+        var third=f.Service.Invite(f.Owner,org.OrgID,Guid.NewGuid(),[],f.Clock.GetUtcNow().AddHours(1));
+        Check(f.Current.Revision==current.Revision,"new invitation changes only the invitation collection revision");
+        var afterNewInvitation=f.StateBytes;
+        Throws<InvalidOperationException>(()=>f.Service.ListInvitations(f.Owner,org.OrgID,first.NextCursor,1));
+        Check(f.StateBytes.SequenceEqual(afterNewInvitation)&&f.Current.Revision==current.Revision&&
+            f.Service.ListInvitations(f.Owner,org.OrgID).InvitationCollectionRevision==invitationRevision+1&&
+            third.InvitationID!=Guid.Empty,"stale invitation cursor is refused without changing canonical state");
+        Throws<OrganisationAccessException>(()=>f.Service.ListInvitations(f.Stranger,org.OrgID));
+        Check(f.StateBytes.SequenceEqual(afterNewInvitation),"unauthorised invitation listing does not disclose or mutate state");
+        var currentPage=f.Service.ListInvitations(f.Owner,org.OrgID,limit:1);
+        Check(currentPage.NextCursor is not null,"authorized invitation list exposes a real continuation page");
+        var currentOrg=f.Current;
+        f.Service.PublishPolicy(f.Owner,org.OrgID,currentOrg.Revision,"revoke-invitation-list",new HashSet<string>{"Admin.Members.List"},
+            new Dictionary<string,string>(),new Dictionary<string,string>());
+        var deniedBytes=f.StateBytes;
+        Throws<OrganisationAccessException>(()=>f.Restart().ListInvitations(f.Owner,org.OrgID,currentPage.NextCursor,1));
+        Check(f.StateBytes.SequenceEqual(deniedBytes),"invitation continuation rechecks current policy before returning another page");
+    }
+
+    private static void LegacyInvitationWithMissingRoleIsNotShownAsPending()
+    {
+        using var f=new Fixture();
+        var org=f.Current;
+        org=f.Service.CreateRole(f.Owner,org.OrgID,org.Revision,"legacy-invitation-role","Legacy invitation role",
+            new HashSet<string>{"Admin.Organisations.Get"},new HashSet<string>());
+        var role=org.Roles.Single(item=>item.Name=="Legacy invitation role");
+        var invitation=f.Service.Invite(f.Owner,org.OrgID,f.Stranger,[role.RoleID],f.Clock.GetUtcNow().AddHours(1));
+        var corrupted=JsonNode.Parse(f.StateText)!;
+        var row=corrupted["State"]!["Invitations"]!.AsArray()
+            .Single(item=>item!["InvitationID"]!.GetValue<Guid>()==invitation.InvitationID)!;
+        row["RoleIDs"]=JsonSerializer.SerializeToNode(new[]{Guid.NewGuid()});
+        File.WriteAllText(f.StatePath,corrupted.ToJsonString());
+        var before=f.StateBytes;
+        var listed=f.Restart().ListInvitations(f.Owner,org.OrgID).Items.Single(item=>item.InvitationID==invitation.InvitationID);
+        Check(listed.Status==OrganisationInvitationStatus.InvalidRole&&listed.IntendedAccountID==f.Stranger,
+            "legacy invitation whose canonical role disappeared is not represented as redeemable pending work");
+        Check(f.StateBytes.SequenceEqual(before),"invalid invitation role observation remains read-only");
+    }
+
+    private static void ReinvitingRemovedMemberPreservesCanonicalMembership()
+    {
+        using var f = new Fixture();
+        var org = f.Current;
+        var original = org.Members.Single(member => member.AccountID == f.Recipient);
+        var profiles = File.ReadAllBytes(f.ProfilePath);
+        org = f.Service.SetMemberState(f.Owner, org.OrgID, org.Revision,
+            "remove-before-reinvite", f.Recipient, OrganisationMemberState.Removed);
+        var invitation = f.Service.Invite(f.Owner, org.OrgID, f.Recipient, [], f.Clock.GetUtcNow().AddHours(1));
+        var accepted = f.Service.AcceptInvitation(f.Recipient, invitation.Token);
+        var restored = accepted.Members.Single(member => member.AccountID == f.Recipient);
+        Check(restored.MembershipID == original.MembershipID && restored.Revision == original.Revision + 2 &&
+            restored.State == OrganisationMemberState.Active && restored.RoleIDs.Count == 0,
+            "reinvitation reactivates the existing stable membership identity with invitation roles");
+        Check(accepted.Members.Count(member => member.AccountID == f.Recipient) == 1 &&
+            f.Restart().Get(f.Owner, org.OrgID).Members.Single(member => member.AccountID == f.Recipient).MembershipID == original.MembershipID,
+            "reinvite does not append a duplicate account or corrupt durable organisation state");
+        Check(File.ReadAllBytes(f.ProfilePath).SequenceEqual(profiles), "membership reactivation preserves personal profile data");
+    }
+
+    private static void InvitationExpiresWhileActualDurableLeaseIsHeld()
+    {
+        using var f = new Fixture();
+        var org = f.Current;
+        var before = f.StateBytes;
+        var expiry = f.Clock.GetUtcNow().AddMinutes(1);
+        f.Clock.ReadStarted.Reset();
+        var canonical = Path.GetFullPath(f.StatePath);
+        if (OperatingSystem.IsWindows()) canonical = canonical.ToUpperInvariant();
+        using var lease = new Mutex(false, "9to1-state-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical))));
+        lease.WaitOne();
+        Task<IssuedOrganisationInvitation>? original = null;
+        Exception? primary = null;
+        try
+        {
+            original = Task.Run(() => f.Service.Invite(f.Owner, org.OrgID, f.Recipient, [], expiry));
+            Check(f.Clock.ReadStarted.Wait(TimeSpan.FromSeconds(5)) && !original.IsCompleted,
+                "invitation passed its initial expiry check and waits for the actual durable state lease");
+            f.Clock.Advance(expiry.AddSeconds(1));
+        }
+        catch (Exception error) { primary = error; }
+        finally { lease.ReleaseMutex(); }
+        Exception? outcome = null;
+        try { original?.GetAwaiter().GetResult(); }
+        catch (Exception error) { outcome = error; }
+        if (primary is not null)
+        {
+            if (outcome is not null && !ReferenceEquals(primary, outcome)) throw new AggregateException(primary, outcome);
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
+        }
+        Check(original is not null && outcome is UnauthorizedAccessException error &&
+            error.Message == "invitation_expired_before_admission", "lease-delayed expired invitation cannot be persisted");
+        Check(f.StateBytes.SequenceEqual(before) && f.Current.Revision == org.Revision,
+            "expired invitation leaves canonical membership, invitation, audit and revision bytes unchanged");
     }
 
     private static void RequestExpiresWhileActualDurableLeaseIsHeld()

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,20 +11,24 @@ public static class OrganisationRoleAndJobSpecs
     public static void Run()
     {
         RunCase(RoleMutationReplayRestartAndDelegation);
+        RunCase(RoleAssignmentUsesCapturedRoleIDs);
+        RunCase(DelegatedAdministratorCanReduceUnheldCapabilities);
         RunCase(ProtectedOwnerAndRoleInUse);
         RunCase(EffectiveCandidatesAreCurrentDetachedMetadata);
+        RunCase(WithdrawnMemberRoleIsNotCurrentAuthority);
         RunCase(ActualExportPagesAndRestart);
         RunCase(HistoricalExportOutputRetiresWithCurrentAuthority);
         RunCase(SignOutAfterClaimRetainsOriginalTerminalFailure);
         RunCase(ExpiryAfterClaimRetainsOriginalTerminalFailure);
         RunCase(ConcurrentOrganisationRevisionRefusesOutput);
+        RunCase(SuspendedMemberCannotAccessPendingExport);
         RunCase(PendingCancellationAndOriginalCancellation);
         RunCase(ConcurrentRoleMutationHasOneCanonicalWinner);
         RunCase(CompletedSaveRetiresPayloadWithoutReplayingOriginal);
         RunCase(ActualSerializationRetiresPayloadAfterKnownCommit);
         RunCase(ControlCharacterKeysRefusedBeforePersistence);
         Console.WriteLine("PASS: Admin control-character request keys rejected before persistence and restart");
-        Console.WriteLine("PASS: canonical Admin roles, bounded original export jobs, current sessions and terminal custody (12 scenarios)");
+        Console.WriteLine("PASS: canonical Admin roles, bounded original export jobs, current sessions and terminal custody (17 scenarios)");
     }
 
     private static void ControlCharacterKeysRefusedBeforePersistence(Fixture f)
@@ -58,6 +63,17 @@ public static class OrganisationRoleAndJobSpecs
     private static void RoleMutationReplayRestartAndDelegation(Fixture f)
     {
         var before = f.Current;
+        var invalidRoleBytes = f.StateBytes;
+        Throws<ArgumentException>(() => f.Service.CreateRole(f.Owner, f.OrgID, before.Revision,
+            "blank-role-name", "   ", Set(), Set()));
+        Throws<ArgumentException>(() => f.Service.CreateRole(f.Owner, f.OrgID, before.Revision,
+            "control-role-name", "Bad\nrole", Set(), Set()));
+        Throws<ArgumentException>(() => f.Service.CreateRole(f.Owner, f.OrgID, before.Revision,
+            "oversized-role-capability", "Oversized", Set(new string('x', 257)), Set()));
+        Check(f.StateBytes.SequenceEqual(invalidRoleBytes), "invalid role creation inputs cannot change organisation, idempotency or audit bytes");
+        Throws<UnauthorizedAccessException>(() => f.Service.CreateRole(f.Owner, f.OrgID, before.Revision,
+            "custom-owner-wildcard", "Custom wildcard", Set("*"), Set()));
+        Check(f.StateBytes.SequenceEqual(invalidRoleBytes), "custom roles cannot persist an owner wildcard grant");
         var result = f.Service.UpdateRole(f.Owner, f.OrgID, f.RoleID, before.Revision, "role-update", "Edited member",
             Set("Admin.Organisations.Get", "Admin.Members.List"), Set("Files.Delete"));
         Check(!result.Replayed && result.Role?.RoleID == f.RoleID && result.OrganisationRevision == before.Revision + 1,
@@ -84,6 +100,72 @@ public static class OrganisationRoleAndJobSpecs
         Check(File.ReadAllBytes(f.ProfilePath).SequenceEqual(f.OriginalProfiles), "role edits preserve personal profiles");
     }
 
+    private static void DelegatedAdministratorCanReduceUnheldCapabilities(Fixture f)
+    {
+        var org = f.Current;
+        org = f.Service.CreateRole(f.Owner, f.OrgID, org.Revision, "unheld-capability", "Unheld capability",
+            Set("Files.Delete"), Set());
+        var reducible = org.Roles.Single(role => role.Name == "Unheld capability");
+        org = f.Service.CreateRole(f.Owner, f.OrgID, org.Revision, "role-reducer", "Role reducer",
+            Set("Admin.Roles.Update", "Admin.Roles.Delete"), Set());
+        var reducer = org.Roles.Single(role => role.Name == "Role reducer");
+        org = f.Service.SetRoles(f.Owner, f.OrgID, org.Revision, "assign-role-reducer", f.Member, [reducer.RoleID]);
+
+        var reduced = f.Service.UpdateRole(f.Member, f.OrgID, reducible.RoleID, org.Revision,
+            "remove-unheld-capability", reducible.Name, Set(), Set());
+        Check(reduced.Role is not null && reduced.Role.Grants.Count == 0 && reduced.OrganisationRevision == org.Revision + 1,
+            "delegated updater may remove a grant it is no longer authorised to grant");
+        org = f.Current;
+        var afterReduction = f.StateBytes;
+        Throws<OrganisationAccessException>(() => f.Service.UpdateRole(f.Member, f.OrgID, reducible.RoleID,
+            org.Revision, "cannot-restore-unheld-capability", reducible.Name, Set("Files.Delete"), Set()));
+        Check(f.StateBytes.SequenceEqual(afterReduction), "monotonic reduction does not let the delegated actor regain an unheld capability");
+
+        org = f.Service.CreateRole(f.Owner, f.OrgID, org.Revision, "delete-unheld-role", "Delete unheld role",
+            Set("Files.Delete"), Set());
+        var deletable = org.Roles.Single(role => role.Name == "Delete unheld role");
+        var deleted = f.Service.DeleteRole(f.Member, f.OrgID, deletable.RoleID, org.Revision,
+            "delete-role-with-unheld-capability");
+        Check(deleted.Role is null && !f.Current.Roles.Any(role => role.RoleID == deletable.RoleID),
+            "delegated deleter may remove an unused role without retaining all of its grants");
+    }
+
+    private static void RoleAssignmentUsesCapturedRoleIDs(Fixture f)
+    {
+        var org = f.Current;
+        var initialRoleID = f.RoleID;
+        var protectedOwnerRoleID = org.Roles.Single(role => role.IsOwner).RoleID;
+        using var callerList = new GatedRoleList(initialRoleID);
+        Task<Organisation>? pending = null;
+        Exception? primary = null;
+        try
+        {
+            pending = Task.Run(() => f.Service.SetRoles(f.Owner, f.OrgID, org.Revision,
+                "captured-role-identities", f.Member, callerList));
+            Check(callerList.CapturePaused.Wait(TimeSpan.FromSeconds(5)),
+                "role IDs are captured before mutation validation and durable admission");
+            callerList.Replace(protectedOwnerRoleID);
+        }
+        catch (Exception error) { primary = error; }
+        finally { callerList.ReleaseCapture.TrySetResult(); }
+
+        Organisation? result = null;
+        Exception? outcome = null;
+        try { result = pending?.GetAwaiter().GetResult(); }
+        catch (Exception error) { outcome = error; }
+        if (primary is not null)
+        {
+            if (outcome is not null && !ReferenceEquals(primary, outcome)) throw new AggregateException(primary, outcome);
+            ExceptionDispatchInfo.Capture(primary).Throw();
+        }
+        Check(outcome is null && result is not null &&
+            result.Members.Single(member => member.AccountID == f.Member).RoleIDs.SequenceEqual(new[] { initialRoleID }),
+            "concurrent caller-list mutation cannot substitute a protected owner role after snapshot capture");
+        Check(f.Restart().Get(f.Owner, f.OrgID).Members.Single(member => member.AccountID == f.Member)
+            .RoleIDs.SequenceEqual(new[] { initialRoleID }),
+            "the same captured role identity survives durable restart");
+    }
+
     private static void ProtectedOwnerAndRoleInUse(Fixture f)
     {
         var org = f.Current;
@@ -91,6 +173,21 @@ public static class OrganisationRoleAndJobSpecs
         Throws<UnauthorizedAccessException>(() => f.Service.DeleteRole(f.Owner, f.OrgID, ownerRole.RoleID, org.Revision, "delete-owner"));
         Throws<UnauthorizedAccessException>(() => f.Service.UpdateRole(f.Owner, f.OrgID, ownerRole.RoleID, org.Revision,
             "edit-owner", "Changed owner", Set(), Set()));
+        org = f.Service.CreateRole(f.Owner, f.OrgID, org.Revision, "pending-invitation-role", "Pending invitation role",
+            Set("Admin.Organisations.Get"), Set());
+        var invitationRole = org.Roles.Single(role => role.Name == "Pending invitation role");
+        f.Service.Invite(f.Owner, f.OrgID, f.Stranger, [invitationRole.RoleID], DateTimeOffset.UtcNow.AddHours(1));
+        var invitationBytes = f.StateBytes;
+        try
+        {
+            f.Service.DeleteRole(f.Owner, f.OrgID, invitationRole.RoleID, org.Revision,
+                "delete-role-used-by-pending-invitation");
+            throw new Exception("role referenced by a pending invitation was deleted");
+        }
+        catch (AdministrationConflictException error) when (error.Code == AdministrationConflictCode.RoleInUse.ToString()) { }
+        Check(f.StateBytes.SequenceEqual(invitationBytes),
+            "role deletion preserves roles referenced by an unexpired pending invitation");
+        org = f.Current;
         Throws<InvalidOperationException>(() => f.Service.DeleteRole(f.Owner, f.OrgID, f.RoleID, org.Revision, "delete-in-use"));
         org = f.Service.CreateRole(f.Owner, f.OrgID, org.Revision, "unused", "Unused", Set("Admin.Organisations.Get"), Set());
         var unused = org.Roles.Single(r => r.Name == "Unused");
@@ -114,6 +211,80 @@ public static class OrganisationRoleAndJobSpecs
         Check(changed.CandidateCapabilities.Count == 0 && changed.DeniedCapabilities.Contains("Admin.Organisations.Get") &&
             observed.CandidateCapabilities.Contains("Admin.Organisations.Get"), "current policy intersects detached former observation");
         Throws<OrganisationAccessException>(() => f.Service.GetEffectiveRolePermissions(f.Stranger, f.OrgID, f.Owner));
+    }
+
+    private static void WithdrawnMemberRoleIsNotCurrentAuthority(Fixture f)
+    {
+        var before = f.Current;
+        var bytes = f.StateBytes;
+        void Refused<T>(Action action, string reason) where T : Exception
+        {
+            Throws<T>(action);
+            Check(f.StateBytes.SequenceEqual(bytes), reason + " preserves exact organisation, audit and idempotency bytes");
+        }
+        Refused<ArgumentNullException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "null-member-roles", f.Member, null!), "null role assignments are refused");
+        Refused<ArgumentException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "empty-member-id", Guid.Empty, [f.RoleID]), "empty member identity is refused");
+        Refused<ArgumentException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "too-many-member-roles", f.Member, Enumerable.Range(0, 129).Select(_ => Guid.NewGuid()).ToArray()),
+            "129 role assignments exceed the bounded request limit");
+        Refused<KeyNotFoundException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "roles-for-missing-member", Guid.NewGuid(), [f.RoleID]), "missing member assignment is rejected");
+        Refused<ArgumentException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "duplicate-member-roles", f.Member, [f.RoleID, f.RoleID]), "duplicate role identities are rejected");
+        Refused<InvalidOperationException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "unknown-member-role", f.Member, [Guid.NewGuid()]), "unknown role identity is rejected");
+        var ownerRoleID = before.Roles.Single(role => role.IsOwner).RoleID;
+        Refused<UnauthorizedAccessException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "assign-protected-owner-role", f.Member, [ownerRoleID]), "protected owner role cannot be assigned as a custom role");
+        Refused<InvalidOperationException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "withdraw-last-owner", f.Owner, []), "last active owner cannot lose the owner role");
+        Refused<InvalidOperationException>(() => f.Service.SetRoles(f.Owner, f.OrgID, before.Revision - 1,
+            "stale-member-role-revision", f.Member, []), "stale organisation revision is rejected");
+        Throws<ArgumentException>(() => f.Service.SetMemberState(f.Owner, f.OrgID, before.Revision,
+            "undefined-member-state", f.Member, (OrganisationMemberState)int.MaxValue));
+        Check(f.StateBytes.SequenceEqual(bytes) && f.Restart().Get(f.Owner, f.OrgID).Revision == before.Revision,
+            "undefined membership lifecycle values cannot corrupt durable organisation state");
+        Throws<KeyNotFoundException>(() => f.Service.SetMemberState(f.Owner, f.OrgID, before.Revision,
+            "state-for-missing-member", Guid.NewGuid(), OrganisationMemberState.Suspended));
+        Check(f.StateBytes.SequenceEqual(bytes), "missing membership state target is rejected without a no-op revision write");
+        var observed = f.Service.GetEffectiveRolePermissions(f.Owner, f.OrgID, f.Member);
+        Check(observed.CandidateCapabilities.Contains("Admin.Organisations.Get"),
+            "member initially receives the assigned role candidate");
+
+        var withdrawn = f.Service.SetRoles(f.Owner, f.OrgID, before.Revision,
+            "withdraw-member-role", f.Member, []);
+        Check(withdrawn.Revision == before.Revision + 1 &&
+            withdrawn.Members.Single(member => member.AccountID == f.Member).RoleIDs.Count == 0,
+            "role withdrawal persists against the current organisation revision");
+        var current = f.Restart().EvaluateCurrent(f.Member, f.OrgID,
+            "Admin.Organisations.Get", [], withdrawn.Policy.Revision, CancellationToken.None);
+        Check(!current.Allowed && current.Code == "PermissionDenied",
+            "after restart a formerly granted member action is denied by current roles");
+        Check(observed.CandidateCapabilities.Contains("Admin.Organisations.Get") &&
+            !f.Service.GetEffectiveRolePermissions(f.Owner, f.OrgID, f.Member)
+                .CandidateCapabilities.Contains("Admin.Organisations.Get"),
+            "detached pre-withdrawal candidates do not become current authority");
+
+        var originalBytes = f.StateBytes;
+        var memberOverflow = JsonNode.Parse(File.ReadAllText(f.StatePath))!;
+        memberOverflow["State"]!["Organisations"]!.AsArray().Single()!["Members"]!.AsArray()
+            .Single(member => member!["AccountID"]!.GetValue<Guid>() == f.Member)!["Revision"] = long.MaxValue;
+        File.WriteAllText(f.StatePath, memberOverflow.ToJsonString());
+        var overflowBytes = f.StateBytes;
+        Throws<OverflowException>(() => f.Restart().SetRoles(f.Owner, f.OrgID, withdrawn.Revision,
+            "overflow-member-revision", f.Member, []));
+        Check(f.StateBytes.SequenceEqual(overflowBytes), "member revision overflow refuses without overwriting durable state");
+        File.WriteAllBytes(f.StatePath, originalBytes);
+
+        var organisationOverflow = JsonNode.Parse(File.ReadAllText(f.StatePath))!;
+        organisationOverflow["State"]!["Organisations"]!.AsArray().Single()!["Revision"] = long.MaxValue;
+        File.WriteAllText(f.StatePath, organisationOverflow.ToJsonString());
+        overflowBytes = f.StateBytes;
+        Throws<OverflowException>(() => f.Restart().SetMemberState(f.Owner, f.OrgID, long.MaxValue,
+            "overflow-organisation-revision", f.Member, OrganisationMemberState.Suspended));
+        Check(f.StateBytes.SequenceEqual(overflowBytes), "organisation revision overflow refuses without overwriting durable state");
     }
 
     private static void ActualExportPagesAndRestart(Fixture f)
@@ -177,6 +348,30 @@ public static class OrganisationRoleAndJobSpecs
             var current = f.Current;
             f.Service.UpdateIdentity(f.Owner, f.OrgID, current.Revision, "intervening-owner-edit", "Intervening organisation");
         }, typeof(InvalidOperationException), "RevisionOrOutputConflict");
+
+    private static void SuspendedMemberCannotAccessPendingExport(Fixture f)
+    {
+        var org=f.Current;
+        org=f.Service.CreateRole(f.Owner,f.OrgID,org.Revision,"exporter","Export operator",Set(
+            "Admin.Organisations.Export","Admin.Roles.List","Admin.Members.List","Admin.Policies.Get",
+            "Admin.Jobs.ExecuteExport","Admin.Jobs.Get","Admin.Jobs.Cancel"),Set());
+        var exporter=org.Roles.Single(role=>role.Name=="Export operator");
+        org=f.Service.SetRoles(f.Owner,f.OrgID,org.Revision,"assign-exporter",f.Member,[exporter.RoleID]);
+        var memberSession=f.IssueAdminSession(f.Member);
+        var pending=f.Service.RequestOrganisationExport(f.Member,f.OrgID,org.Revision,"member-pending-export");
+        org=f.Service.SetMemberState(f.Owner,f.OrgID,org.Revision,"suspend-exporter",f.Member,OrganisationMemberState.Suspended);
+        var bytes=f.StateBytes;
+        Throws<OrganisationAccessException>(()=>f.Service.GetAdminJob(f.Member,f.OrgID,pending.JobID));
+        Throws<OrganisationAccessException>(()=>f.Service.ExecuteOrganisationExportAsync(memberSession,f.OrgID,
+            pending.JobID,pending.Revision).GetAwaiter().GetResult());
+        Check(f.StateBytes.SequenceEqual(bytes),"suspended member's stale job reads/execution cannot change job, audit or organisation state");
+        var ownerView=f.Service.GetAdminJob(f.Owner,f.OrgID,pending.JobID);
+        Check(ownerView.State==AdminJobState.Pending&&pending.RequestedOrganisationRevision!=org.Revision,
+            "authorised owner can inspect the pending export and its now-stale organisation revision");
+        var cancelled=f.Service.CancelAdminJob(f.Owner,f.OrgID,pending.JobID,pending.Revision,"reconcile-suspended-export");
+        Check(cancelled.State==AdminJobState.Cancelled&&cancelled.Targets[0].State==AdminJobTargetState.Skipped,
+            "current administrator can durably reconcile a pending export after membership suspension");
+    }
 
     private static void PendingCancellationAndOriginalCancellation(Fixture f)
     {
@@ -312,6 +507,14 @@ public static class OrganisationRoleAndJobSpecs
         public Organisation Current => Service.Get(Owner,OrgID);
         public OrganisationService Restart(Func<CancellationToken,Task>? checkpoint=null) => new(StatePath,Profiles,adminJobCheckpoint:checkpoint);
         public T Admit<T>(Func<Guid,T> action) => Service.WithCurrentAdministrationSession(Session,action);
+        public CurrentAdminSession IssueAdminSession(Guid accountID)
+        {
+            var verifier=new string('m',43);
+            var code=Identity.AuthorizeAuthenticatedAccount(new(accountID,"Synthetic authenticated member"),
+                "admin-synthetic","http://127.0.0.1/admin-callback",CakeIdentityService.Challenge(verifier));
+            var issued=Identity.Exchange(code,"admin-synthetic","http://127.0.0.1/admin-callback",verifier,"member-admin-fixture");
+            return new AuthenticatedAdminManagementOperations(Identity).Open(issued.AccessToken);
+        }
         public void Initialize()
         {
             Profiles = new(ProfilePath,null);
@@ -332,5 +535,22 @@ public static class OrganisationRoleAndJobSpecs
             OriginalProfiles=File.ReadAllBytes(ProfilePath);
         }
         public void Dispose() { if(Directory.Exists(Root)) Directory.Delete(Root,true); }
+    }
+    private sealed class GatedRoleList(Guid initialRoleID) : IReadOnlyList<Guid>, IDisposable
+    {
+        private Guid roleID = initialRoleID;
+        public ManualResetEventSlim CapturePaused { get; } = new(false);
+        public TaskCompletionSource ReleaseCapture { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public int Count => 1;
+        public Guid this[int index] => index == 0 ? roleID : throw new ArgumentOutOfRangeException(nameof(index));
+        public void Replace(Guid replacement) => roleID = replacement;
+        public IEnumerator<Guid> GetEnumerator()
+        {
+            yield return roleID;
+            CapturePaused.Set();
+            ReleaseCapture.Task.GetAwaiter().GetResult();
+        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public void Dispose() => CapturePaused.Dispose();
     }
 }

@@ -6,6 +6,8 @@ namespace NineToOne.Accounts;
 /// <summary>Server authority for Business membership, roles and capability intersections; public clients supply no role assertions.</summary>
 public sealed partial class OrganisationService(string statePath,ProfileService profiles,IOrganisationObjectScopeResolver? objectScopesAuthority=null,TimeProvider? lifecycleTimeProvider=null,Func<CancellationToken,Task>? adminJobCheckpoint=null) : IOrganisationPolicyAuthority,IOrganisationOwningOperationAuthority
 {
+    private const int MaximumMemberRoleAssignments=128;
+    private const string InvitationRevocationAction="Admin.Members.Invitation.Revoke";
     public Organisation CreateTrustedOrganisation(Guid verifiedOwnerID,string name,BusinessAddOnKind kind,string trustedBillingReference)
     {
         if(verifiedOwnerID==Guid.Empty||!Enum.IsDefined(kind)||string.IsNullOrWhiteSpace(trustedBillingReference)||string.IsNullOrWhiteSpace(name))throw new ArgumentException("trusted_billing_or_provisioning_required");
@@ -35,20 +37,78 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
     {using var lease=DurableState.Acquire(statePath);var org=Read().Organisations.Single(o=>o.OrgID==orgID);Demand(org,accountID,"Admin.Organisations.Get");return org;}
     public IssuedOrganisationInvitation Invite(Guid actorID,Guid orgID,Guid? intendedAccountID,IReadOnlyList<Guid> roles,DateTimeOffset expiresAt)
     {
-        if(expiresAt<=DateTimeOffset.UtcNow)throw new ArgumentException("invitation_expiry_required");
-        using var lease=DurableState.Acquire(statePath);var state=Read();var org=state.Organisations.Single(o=>o.OrgID==orgID);Demand(org,actorID,"Admin.Members.Invite");ValidateRoles(org,actorID,roles);
-        var token=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));var invite=new OrganisationInvitation(Guid.NewGuid(),orgID,actorID,intendedAccountID,roles.ToArray(),Hash(token),expiresAt,false);
-        Save(state with {Invitations=(state.Invitations??[]).Append(invite).ToArray()});return new(invite.InvitationID,token);
+        if(intendedAccountID is not { } intended||intended==Guid.Empty)throw new ArgumentException("verified_invitation_identity_required");
+        var capturedRoles=CaptureRoleIDs(roles);
+        if(expiresAt<=LifecycleNow)throw new ArgumentException("invitation_expiry_required");
+        using var lease=DurableState.Acquire(statePath);
+        if(expiresAt<=LifecycleNow)throw new UnauthorizedAccessException("invitation_expired_before_admission");
+        var state=Read();var org=state.Organisations.Single(o=>o.OrgID==orgID);Demand(org,actorID,"Admin.Members.Invite");ValidateRoles(org,actorID,capturedRoles);
+        var token=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));var invite=new OrganisationInvitation(Guid.NewGuid(),orgID,actorID,intendedAccountID,capturedRoles,Hash(token),expiresAt,false,SchemaVersion:2);
+        var invitationRevision=checked(org.InvitationRevision+1);
+        var nextOrg=org with {InvitationRevision=invitationRevision};
+        Save(state with {Organisations=state.Organisations.Select(item=>item.OrgID==orgID?nextOrg:item).ToArray(),
+            Invitations=(state.Invitations??[]).Append(invite).ToArray()});return new(invite.InvitationID,token);
+    }
+    public OrganisationInvitationRevocationResult RevokeInvitation(Guid actorID,Guid orgID,Guid invitationID,
+        long expectedOrganisationRevision,string idempotencyKey,CancellationToken cancellationToken=default)
+    {
+        ValidateLifecycleRevision(expectedOrganisationRevision);ValidateLifecycleKey(idempotencyKey);
+        if(invitationID==Guid.Empty)throw new ArgumentException("canonical_invitation_id_required");
+        cancellationToken.ThrowIfCancellationRequested();
+        using var lease=DurableState.Acquire(statePath);
+        cancellationToken.ThrowIfCancellationRequested();
+        var state=Read();var org=state.Organisations.Single(o=>o.OrgID==orgID);
+        Demand(org,actorID,"Admin.Members.Invite");
+        var invitation=(state.Invitations??[]).SingleOrDefault(item=>item.OrgID==orgID&&item.InvitationID==invitationID)
+            ??throw new KeyNotFoundException("organisation_invitation_not_found");
+        var scopedKey=orgID.ToString("N")+":"+actorID.ToString("N")+":"+InvitationRevocationAction+":"+idempotencyKey;
+        if(state.Idempotency.ContainsKey(scopedKey))
+        {
+            if(invitation.Revoked&&invitation.RevokedByAccountID==actorID&&
+                invitation.RevocationIdempotencyKey==idempotencyKey&&
+                invitation.RevocationExpectedOrganisationRevision==expectedOrganisationRevision)
+                return new(orgID,invitationID,state.Idempotency[scopedKey],invitation.RevokedAt!.Value,true);
+            throw new AdministrationConflictException(AdministrationConflictCode.IdempotencyConflict);
+        }
+        if(invitation.Revoked||invitation.Accepted)
+            throw new AdministrationConflictException(AdministrationConflictCode.InvitationResolved);
+        if(org.Revision!=expectedOrganisationRevision)
+            throw new AdministrationConflictException(AdministrationConflictCode.RevisionConflict);
+        var now=LifecycleNow;var nextRevision=checked(org.Revision+1);
+        var nextInvitationRevision=checked(org.InvitationRevision+1);
+        var nextOrg=org with {Revision=nextRevision,InvitationRevision=nextInvitationRevision};
+        var revoked=invitation with {Revoked=true,RevokedByAccountID=actorID,
+            RevocationIdempotencyKey=idempotencyKey,RevocationExpectedOrganisationRevision=expectedOrganisationRevision,RevokedAt=now,SchemaVersion=2};
+        var idempotency=new Dictionary<string,long>(state.Idempotency){[scopedKey]=nextRevision};
+        cancellationToken.ThrowIfCancellationRequested();
+        Save(state with
+        {
+            Organisations=state.Organisations.Select(item=>item.OrgID==orgID?nextOrg:item).ToArray(),
+            Invitations=(state.Invitations??[]).Select(item=>item.InvitationID==invitationID?revoked:item).ToArray(),
+            Idempotency=idempotency,
+            Audit=state.Audit.Append(new(Guid.NewGuid(),orgID,actorID,InvitationRevocationAction,invitationID,
+                org.Revision,nextRevision,now,null)).ToArray()
+        });
+        return new(orgID,invitationID,nextRevision,now,false);
     }
     public Organisation AcceptInvitation(Guid authenticatedAccountID,string token)
     {
         using var lease=DurableState.Acquire(statePath);var state=Read();var hashed=Hash(token);
         var invite=(state.Invitations??[]).SingleOrDefault(i=>CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(i.TokenHash),Encoding.ASCII.GetBytes(hashed)));
-        if(invite is null||invite.Accepted||invite.ExpiresAt<=DateTimeOffset.UtcNow||invite.IntendedAccountID is {} intended&&intended!=authenticatedAccountID)throw new UnauthorizedAccessException("invalid_invitation");
+        if(invite is null||invite.Accepted||invite.Revoked||invite.ExpiresAt<=LifecycleNow||
+            invite.IntendedAccountID is not { } intended||intended==Guid.Empty||intended!=authenticatedAccountID)
+            throw new UnauthorizedAccessException("invalid_invitation");
         var org=state.Organisations.Single(o=>o.OrgID==invite.OrgID);Demand(org,invite.InviterID,"Admin.Members.Invite");ValidateRoles(org,invite.InviterID,invite.RoleIDs);
-        if(org.Members.Any(m=>m.AccountID==authenticatedAccountID&&m.State!=OrganisationMemberState.Removed))throw new InvalidOperationException("member_exists");
+        var existingMember=org.Members.SingleOrDefault(m=>m.AccountID==authenticatedAccountID);
+        if(existingMember is not null&&existingMember.State!=OrganisationMemberState.Removed)throw new InvalidOperationException("member_exists");
         if(org.AddOn.SeatLimit is {} limit&&org.Members.Count(m=>m.State==OrganisationMemberState.Active)>=limit)throw new InvalidOperationException("seat_limit_reached");
-        var next=org with {Members=org.Members.Append(new(Guid.NewGuid(),authenticatedAccountID,invite.RoleIDs,OrganisationMemberState.Active,1)).ToArray(),Revision=org.Revision+1};
+        var restoredMember=existingMember is null
+            ? new OrganisationMembership(Guid.NewGuid(),authenticatedAccountID,invite.RoleIDs.ToArray(),OrganisationMemberState.Active,1)
+            : existingMember with {RoleIDs=invite.RoleIDs.ToArray(),State=OrganisationMemberState.Active,Revision=checked(existingMember.Revision+1)};
+        var members=existingMember is null?org.Members.Append(restoredMember).ToArray():org.Members.Select(member=>
+            member.MembershipID==existingMember.MembershipID?restoredMember:member).ToArray();
+        var invitationRevision=checked(org.InvitationRevision+1);
+        var next=org with {Members=members,Revision=checked(org.Revision+1),InvitationRevision=invitationRevision};
         Save(state with {Organisations=state.Organisations.Select(o=>o.OrgID==org.OrgID?next:o).ToArray(),Invitations=(state.Invitations??[]).Select(i=>i.InvitationID==invite.InvitationID?i with {Accepted=true}:i).ToArray(),
             Audit=state.Audit.Append(new(Guid.NewGuid(),org.OrgID,authenticatedAccountID,"InvitationAccepted",authenticatedAccountID,org.Revision,next.Revision,DateTimeOffset.UtcNow,null)).ToArray()});return next;
     }
@@ -56,24 +116,42 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
     public Organisation SetMemberState(Guid actorID,Guid orgID,long expectedRevision,string key,Guid memberID,OrganisationMemberState state)
         =>Mutate(actorID,orgID,expectedRevision,key,"Admin.Members.Update",memberID,org=>
         {
-            var member=org.Members.Single(m=>m.AccountID==memberID);
+            if(memberID==Guid.Empty||!Enum.IsDefined(state))throw new ArgumentException("valid_member_state_and_identity_required");
+            var member=org.Members.SingleOrDefault(m=>m.AccountID==memberID)
+                ??throw new KeyNotFoundException("organisation_member_not_found");
             if(state==OrganisationMemberState.Active&&member.State!=state&&org.AddOn.SeatLimit is {} limit&&org.Members.Count(m=>m.State==OrganisationMemberState.Active)>=limit)throw new InvalidOperationException("seat_limit_reached");
-            var next=org with {Members=org.Members.Select(m=>m.AccountID==memberID?m with {State=state,Revision=m.Revision+1}:m).ToArray()};EnsureOwner(next);return next;
+            var next=org with {Members=org.Members.Select(m=>m.AccountID==memberID?m with {State=state,Revision=checked(m.Revision+1)}:m).ToArray()};EnsureOwner(next);return next;
         });
     public Organisation CreateRole(Guid actorID,Guid orgID,long expectedRevision,string key,string name,IReadOnlySet<string> grants,IReadOnlySet<string> denials)
-        =>Mutate(actorID,orgID,expectedRevision,key,"Admin.Roles.Create",null,org=>
+    {
+        if(string.IsNullOrWhiteSpace(name)||name.Length>256||name.Any(char.IsControl))throw new ArgumentException("bounded_role_name_required");
+        var capturedGrants=CaptureRoleCapabilities(grants);
+        var capturedDenials=CaptureRoleCapabilities(denials);
+        return Mutate(actorID,orgID,expectedRevision,key,"Admin.Roles.Create",null,org=>
         {
-            foreach(var grant in grants)Demand(org,actorID,grant);
-            if(grants.Contains("*"))throw new UnauthorizedAccessException("custom_role_cannot_grant_owner_wildcard");
-            return org with {Roles=org.Roles.Append(new(Guid.NewGuid(),name,grants.ToHashSet(StringComparer.Ordinal),denials.ToHashSet(StringComparer.Ordinal),false,1)).ToArray()};
+            DemandRoleDelegation(org,actorID,capturedGrants);
+            if(capturedGrants.Contains("*"))throw new UnauthorizedAccessException("custom_role_cannot_grant_owner_wildcard");
+            return org with {Roles=org.Roles.Append(new(Guid.NewGuid(),name.Trim(),capturedGrants,capturedDenials,false,1)).ToArray()};
         });
+    }
     public Organisation SetRoles(Guid actorID,Guid orgID,long expectedRevision,string key,Guid memberID,IReadOnlyList<Guid> roles)
-        =>Mutate(actorID,orgID,expectedRevision,key,"Admin.Members.SetRoles",memberID,org=>
-        {ValidateRoles(org,actorID,roles);var next=org with {Members=org.Members.Select(m=>m.AccountID==memberID?m with {RoleIDs=roles.ToArray(),Revision=m.Revision+1}:m).ToArray()};EnsureOwner(next);return next;});
+    {
+        var capturedRoles=CaptureRoleIDs(roles);
+        return Mutate(actorID,orgID,expectedRevision,key,"Admin.Members.SetRoles",memberID,org=>
+        {
+            if(memberID==Guid.Empty||capturedRoles.Length>MaximumMemberRoleAssignments||capturedRoles.Distinct().Count()!=capturedRoles.Length)
+                throw new ArgumentException("bounded_unique_member_role_assignment_required");
+            var member=org.Members.SingleOrDefault(m=>m.AccountID==memberID)
+                ?? throw new KeyNotFoundException("organisation_member_not_found");
+            ValidateRoles(org,actorID,capturedRoles);
+            var next=org with {Members=org.Members.Select(m=>m.AccountID==member.AccountID?m with {RoleIDs=capturedRoles,Revision=checked(m.Revision+1)}:m).ToArray()};
+            EnsureOwner(next);return next;
+        });
+    }
     public Organisation PublishPolicy(Guid actorID,Guid orgID,long expectedRevision,string key,IReadOnlySet<string> blocked,
         IReadOnlyDictionary<string,string> forced,IReadOnlyDictionary<string,string> defaults)
         =>Mutate(actorID,orgID,expectedRevision,key,"Admin.Policies.Publish",null,org=>
-            org with {Policy=new(org.Policy.PolicyID,org.Policy.Revision+1,blocked.ToHashSet(StringComparer.Ordinal),new Dictionary<string,string>(forced),new Dictionary<string,string>(defaults),"Published")});
+            org with {Policy=new(org.Policy.PolicyID,checked(org.Policy.Revision+1),blocked.ToHashSet(StringComparer.Ordinal),new Dictionary<string,string>(forced),new Dictionary<string,string>(defaults),"Published")});
     public Organisation PreviewDowngrade(Guid actorID,Guid orgID)
     {using var lease=DurableState.Acquire(statePath);var org=Read().Organisations.Single(o=>o.OrgID==orgID);Demand(org,actorID,"Admin.Billing.GetConfiguration");return org with {AddOn=org.AddOn with {AddOnID="business",MonthlyPrice=5,SeatLimit=50,State=org.Members.Count(m=>m.State==OrganisationMemberState.Active)>50?BusinessBillingState.PendingDowngrade:org.AddOn.State}};}
     public ValueTask<OrganisationPolicyDecision> EvaluateAsync(Guid accountID,Guid orgID,string action,IReadOnlyList<string> objectScopes,long? expectedPolicyRevision,CancellationToken ct) =>
@@ -120,7 +198,20 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
     {if(!org.Members.Any(m=>m.State==OrganisationMemberState.Active&&org.Roles.Any(r=>r.IsOwner&&m.RoleIDs.Contains(r.RoleID))))throw new InvalidOperationException("last_owner_protected");}
     private static void ValidateRoles(Organisation org,Guid actorID,IReadOnlyList<Guid> roleIDs)
     {
+        ArgumentNullException.ThrowIfNull(roleIDs);
+        if(roleIDs.Distinct().Count()!=roleIDs.Count)throw new ArgumentException("unique_role_assignments_required");
         foreach(var id in roleIDs){var role=org.Roles.Single(r=>r.RoleID==id);if(role.IsOwner)throw new UnauthorizedAccessException("use_explicit_ownership_transfer");foreach(var grant in role.Grants)Demand(org,actorID,grant);}
+    }
+    private static Guid[] CaptureRoleIDs(IReadOnlyList<Guid> roles)
+    {
+        ArgumentNullException.ThrowIfNull(roles);
+        var captured=new List<Guid>(Math.Min(roles.Count,MaximumMemberRoleAssignments));
+        foreach(var roleID in roles)
+        {
+            if(captured.Count==MaximumMemberRoleAssignments)throw new ArgumentException("bounded_role_id_list_required");
+            captured.Add(roleID);
+        }
+        return captured.ToArray();
     }
     private Organisation Mutate(Guid actorID,Guid orgID,long expected,string key,string action,Guid? target,Func<Organisation,Organisation> mutation)
     {
@@ -129,7 +220,7 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
         var scopedKey=orgID.ToString("N")+":"+actorID.ToString("N")+":"+action+":"+key;
         if(state.Idempotency.ContainsKey(scopedKey))throw new InvalidOperationException("operation_already_applied");
         if(org.Revision!=expected)throw new InvalidOperationException("revision_conflict");
-        var next=mutation(org) with {Revision=org.Revision+1};EnsureOwner(next);
+        var next=mutation(org) with {Revision=checked(org.Revision+1)};EnsureOwner(next);
         var keys=new Dictionary<string,long>(state.Idempotency){[scopedKey]=next.Revision};
         Save(state with {Organisations=state.Organisations.Select(o=>o.OrgID==orgID?next:o).ToArray(),Idempotency=keys,
             Audit=state.Audit.Append(new(Guid.NewGuid(),orgID,actorID,action,target,org.Revision,next.Revision,DateTimeOffset.UtcNow,null)).ToArray()});return next;
@@ -140,7 +231,7 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
         if(state.Organisations is null||state.Audit is null||state.Idempotency is null||state.Organisations.Any(o=>o is null)||state.Audit.Any(a=>a is null)||state.Organisations.Select(o=>o.OrgID).Distinct().Count()!=state.Organisations.Count)throw new InvalidDataException("corrupt_organisation_state");
         foreach(var org in state.Organisations)
         {
-            if(org.SchemaVersion is not (1 or 2)||!Enum.IsDefined(org.Lifecycle)||org.SchemaVersion==1&&org.Lifecycle!=OrganisationLifecycleState.Active||org.OrgID==Guid.Empty||org.Revision<1||org.Members is null||org.Roles is null||org.Members.Any(m=>m is null)||org.Roles.Any(r=>r is null)||org.Policy is null||org.AddOn is null||!Enum.IsDefined(org.AddOn.State))throw new InvalidDataException("corrupt_organisation");
+            if(org.SchemaVersion is not (1 or 2)||!Enum.IsDefined(org.Lifecycle)||org.SchemaVersion==1&&org.Lifecycle!=OrganisationLifecycleState.Active||org.OrgID==Guid.Empty||org.Revision<1||org.InvitationRevision<0||org.Members is null||org.Roles is null||org.Members.Any(m=>m is null)||org.Roles.Any(r=>r is null)||org.Policy is null||org.AddOn is null||!Enum.IsDefined(org.AddOn.State))throw new InvalidDataException("corrupt_organisation");
             if(org.AddOn.DefinitionVersion!=1||org.AddOn.Currency!="USD"||org.AddOn.AddOnID is not ("business" or "business-plus")||
                 (org.AddOn.AddOnID=="business"?org.AddOn.SeatLimit!=50:org.AddOn.SeatLimit is not null)||
                 org.AddOn.EffectiveFrom==default||org.AddOn.EffectiveUntil is {} end&&end<=org.AddOn.EffectiveFrom||
@@ -155,9 +246,43 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
             !Enum.IsDefined(t.State)||t.EffectiveFrom==default||t.EffectiveUntil is {} end&&end<=t.EffectiveFrom||string.IsNullOrWhiteSpace(t.PolicyVersion)||
             !state.Organisations.Any(o=>o.OrgID==t.OrgID)||t.DefinitionVersion!=1||t.AddOnID is not ("business" or "business-plus"))||
             transitions.Select(t=>t.EventID).Distinct(StringComparer.Ordinal).Count()!=transitions.Count))throw new InvalidDataException("corrupt_business_billing_history");
-        if(state.Invitations is {} invitations && invitations.Any(i=>i is null||i.InvitationID==Guid.Empty||i.InviterID==Guid.Empty||i.RoleIDs is null||string.IsNullOrWhiteSpace(i.TokenHash)||!state.Organisations.Any(o=>o.OrgID==i.OrgID)))throw new InvalidDataException("corrupt_organisation_invitation");
+        ValidateInvitations(state);
         ValidateOwnershipTransfers(state);ValidateLifecycleReceipts(state);ValidateAdministrationState(state);
         return state;
+    }
+    private static void ValidateInvitations(OrganisationState state)
+    {
+        var invitations=state.Invitations??[];
+        if(invitations.Any(invitation=>invitation is null)||
+            invitations.Select(invitation=>invitation.InvitationID).Distinct().Count()!=invitations.Count)
+            throw new InvalidDataException("corrupt_organisation_invitation_identity");
+        foreach(var invitation in invitations)
+        {
+            var org=state.Organisations.SingleOrDefault(item=>item.OrgID==invitation.OrgID);
+            var noRevocationData=invitation.RevokedByAccountID is null&&invitation.RevocationIdempotencyKey is null&&
+                invitation.RevocationExpectedOrganisationRevision is null&&invitation.RevokedAt is null;
+            var revocationValid=false;
+            if(invitation.SchemaVersion is 0 or 1)
+                revocationValid=!invitation.Revoked&&noRevocationData;
+            else if(invitation.SchemaVersion==2)
+            {
+                if(!invitation.Revoked)revocationValid=noRevocationData;
+                else if(!invitation.Accepted&&invitation.RevokedByAccountID is { } actor&&actor!=Guid.Empty&&
+                    !string.IsNullOrWhiteSpace(invitation.RevocationIdempotencyKey)&&invitation.RevocationIdempotencyKey.Length<=256&&
+                    !invitation.RevocationIdempotencyKey.Any(char.IsControl)&&
+                    invitation.RevocationExpectedOrganisationRevision is { } expected&&expected>=1&&expected<long.MaxValue&&
+                    org is not null&&expected<org.Revision&&invitation.RevokedAt is { } revokedAt&&revokedAt!=default&&
+                    org.Members.Any(member=>member.AccountID==actor))
+                {
+                    var scopedKey=org!.OrgID.ToString("N")+":"+actor.ToString("N")+":"+
+                        InvitationRevocationAction+":"+invitation.RevocationIdempotencyKey;
+                    revocationValid=state.Idempotency.TryGetValue(scopedKey,out var recordedRevision)&&recordedRevision==expected+1;
+                }
+            }
+            if(org is null||invitation.InvitationID==Guid.Empty||invitation.InviterID==Guid.Empty||
+                invitation.RoleIDs is null||string.IsNullOrWhiteSpace(invitation.TokenHash)||!revocationValid)
+                throw new InvalidDataException("corrupt_organisation_invitation_binding");
+        }
     }
     private void Save(OrganisationState state){var admission=administrationAdmission.Value;admission?.Recheck();Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(statePath))!);admission?.Recheck();DurableState.Write(statePath,state);if(admission is not null)admission.Committed=true;}
 }
