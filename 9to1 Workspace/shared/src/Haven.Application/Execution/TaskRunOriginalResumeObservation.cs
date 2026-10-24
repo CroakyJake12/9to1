@@ -7,7 +7,12 @@ public enum TaskRunOriginalResumeObservationDisposition { ProducerTerminal = 0, 
 /// <summary>Presentation outcome only. Detached never means the producer completed or was cancelled.</summary>
 public sealed record TaskRunOriginalResumeObservationResult(
     TaskRunOriginalResumeObservationDisposition Disposition, ProviderExecutionContext? CanonicalTaskContext,
-    TaskExecutionLifecycle? State, bool RequiresInspection);
+    TaskExecutionLifecycle? State, bool RequiresInspection)
+{
+    /// <summary>True only when this same-run continuation was reconstructed through
+    /// the configured protected cold journal; this reports origin, not acceptance.</summary>
+    public bool WasColdRecovery { get; init; }
+}
 
 /// <summary>Issued only by the same coordinator retaining the actual resumed business producer.
 /// No raw producer Task, permission, private input or effect authority is exposed.</summary>

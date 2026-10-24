@@ -45,6 +45,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             var actualAvailability = await rig.Tasks.GetOriginalRunControlAvailabilityAsync(before.TaskId, before.ExecutionId, token);
             Assert.False(actualAvailability.CanResumeUnstartedOriginal);
             Assert.False(actualAvailability.CanResumeOriginalToolCheckpoint);
+            Assert.False(actualAvailability.CanResumeColdOriginal);
             var user = Assert.Single(rig.Conversations.Messages, message => message.Role == MessageRole.User);
             var dispatches = rig.Client.Dispatches;
             var readiness = new CheckpointAffordanceUnavailableReadiness();
@@ -56,6 +57,8 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.True(activation.IsCompleted);
             Assert.Equal(1, readiness.Calls);
             Assert.False(widget.IsActionAvailable("task.resume-original") == true);
+            Assert.True(widget.TryGetValue("Continuation", out var continuation));
+            Assert.Contains("protected cold-journal resume False", Assert.IsType<string>(continuation));
 
             typeof(SpaceTaskWidgetPage).GetField("_runControlAvailability", BindingFlags.Instance | BindingFlags.NonPublic)!
                 .SetValue(widget, actualAvailability with { CanResumeUnstartedOriginal = true });
@@ -90,6 +93,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.True(rawProvider.Task.IsFaulted);
             Assert.Same(providerCause, rawProvider.Task.Exception!.InnerExceptions[0]);
             Assert.DoesNotContain(rig.Stream, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
+
             widget.RequestRetirement();
             close = widget.CloseAndDrainAsync();
             var closeFailure = await Record.ExceptionAsync(() => close.WaitAsync(token));

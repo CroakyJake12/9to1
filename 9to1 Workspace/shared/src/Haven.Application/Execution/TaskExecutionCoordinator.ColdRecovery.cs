@@ -34,12 +34,26 @@ public sealed partial class TaskExecutionCoordinator
 {
     private ITaskRunColdRecoveryJournal? _coldRecoveryJournal;
     private ITaskRunColdContextAuthority? _coldRecoveryContext;
+    private Func<ChatSessionService>? _coldRecoveryChatSource;
     private readonly ConditionalWeakTable<TaskRunInvocationCustody, TaskRunColdContinuationBinding> _coldContinuationBindings = new();
     internal ITaskRunColdRecoveryJournal? OriginalColdRecoveryJournal => _coldRecoveryJournal;
 
     /// <summary>Host composition only, before any producer admission. Neither configuration nor
     /// these interfaces establish recovered authority without their private issuer validators.</summary>
     public void ConfigureOriginalColdRecovery(ITaskRunColdRecoveryJournal journal, ITaskRunColdContextAuthority context)
+        => ConfigureOriginalColdRecoveryCore(journal, context, null);
+
+    /// <summary>Host composition may bind the SAME lazily resolved canonical Chat owner
+    /// used by normal Tasks. The factory is retained, never invoked during composition.</summary>
+    public void ConfigureOriginalColdRecovery(ITaskRunColdRecoveryJournal journal,
+        ITaskRunColdContextAuthority context, Func<ChatSessionService> sameConfiguredChatSource)
+    {
+        ArgumentNullException.ThrowIfNull(sameConfiguredChatSource);
+        ConfigureOriginalColdRecoveryCore(journal, context, sameConfiguredChatSource);
+    }
+
+    private void ConfigureOriginalColdRecoveryCore(ITaskRunColdRecoveryJournal journal,
+        ITaskRunColdContextAuthority context, Func<ChatSessionService>? sameConfiguredChatSource)
     {
         ArgumentNullException.ThrowIfNull(journal); ArgumentNullException.ThrowIfNull(context);
         lock (_processProducerGate)
@@ -48,7 +62,26 @@ public sealed partial class TaskExecutionCoordinator
                 || _originalInvocations.Count != 0 || _coldRecoveryJournal is not null)
                 throw new InvalidOperationException("Cold recovery composition must be fixed before original source admission.");
             _coldRecoveryJournal = journal; _coldRecoveryContext = context;
+            _coldRecoveryChatSource = sameConfiguredChatSource;
         }
+    }
+
+    private ChatSessionService? GetOriginalColdRecoveryChatSource(TaskRunProcessStageCustody stage)
+    {
+        Func<ChatSessionService>? source;
+        lock (_processProducerGate)
+        {
+            if (_processProducerAdmissionSealed) return null;
+            source = _coldRecoveryChatSource;
+        }
+        if (source is null) return null;
+        var actual = stage.Invoke(source)
+            ?? throw new InvalidOperationException("The configured cold Chat owner source returned no actual service.");
+        actual.DemandOriginalCanonicalProcessCoordinator(this);
+        lock (_processProducerGate)
+            if (_processProducerAdmissionSealed || !ReferenceEquals(_coldRecoveryChatSource, source))
+                throw new InvalidOperationException("The configured cold Chat owner changed during observation.");
+        return actual;
     }
 
     /// <summary>Exact configured-instance identity only. No source read, claim, current
@@ -282,18 +315,34 @@ public sealed partial class TaskExecutionCoordinator
         ArgumentNullException.ThrowIfNull(actualChat);
         actualChat.DemandOriginalCanonicalProcessCoordinator(this);
         DemandExternalOriginalProcessJoin();
-        return StartOriginalProcessStage("start-observed-cold-original-run", commandToken, async token =>
-        {
-            var stage = RequireOriginalProcessStage();
-            if (_coldRecoveryJournal is null || _coldRecoveryContext is null || _admissionAuthority is not ITaskRunColdOwnerAuthority authority
-                || !stage.Invoke(() => authority.HasOriginalColdRecoveryComposition(_coldRecoveryJournal, _coldRecoveryContext)))
-                throw new InvalidOperationException("Genuine paired cold journal/domain/owner producers are required before any claim.");
-            var current = await RequireOriginalProcessSnapshotAsync(taskId, token).ConfigureAwait(false);
-            RequireRun(current, expectedRunId);
-            var source = stage.Invoke(() => ContinueColdOriginalAsync(actualChat, taskId, expectedRunId, CancellationToken.None))
-                as CanonicalChatProcessProducer ?? throw new InvalidOperationException("No actual cold business source was registered.");
-            var hosted = RegisterHostedOriginalRunResume(source, OriginalRunControlContext(current), stage);
-            return hosted.Lease;
-        });
+        return StartOriginalProcessStage("start-observed-cold-original-run", commandToken,
+            token => StartObservedColdOriginalRunResumeBodyAsync(actualChat, taskId, expectedRunId, token));
+    }
+
+    private async Task<TaskRunOriginalResumeObservationLease> StartObservedColdOriginalRunResumeBodyAsync(
+        ChatSessionService actualChat, Guid taskId, Guid expectedRunId, CancellationToken token)
+    {
+        var stage = RequireOriginalProcessStage();
+        if (_coldRecoveryJournal is null || _coldRecoveryContext is null
+            || _admissionAuthority is not ITaskRunColdOwnerAuthority authority
+            || !stage.Invoke(() => authority.HasOriginalColdRecoveryComposition(_coldRecoveryJournal, _coldRecoveryContext)))
+            throw new InvalidOperationException("Genuine paired cold journal/domain/owner producers are required before any claim.");
+        var current = await RequireOriginalProcessSnapshotAsync(taskId, token).ConfigureAwait(false);
+        RequireRun(current, expectedRunId);
+        if (!await HasOriginalColdRunResumeBoundaryAsync(stage, current, token, actualChat).ConfigureAwait(false))
+            throw new InvalidOperationException("No source-authenticated cold original Task/Run continuation is available.");
+        lock (_processProducerGate)
+            if (_originalInvocations.ContainsKey(taskId))
+                throw new InvalidOperationException("A live or uncertain original still owns this Task.");
+        var source = stage.Invoke(() => ContinueColdOriginalAsync(actualChat, taskId, expectedRunId, CancellationToken.None))
+            as CanonicalChatProcessProducer ?? throw new InvalidOperationException("No actual cold business source was registered.");
+        var latest = await RequireOriginalProcessSnapshotAsync(taskId, token).ConfigureAwait(false);
+        RequireRun(latest, expectedRunId);
+        if (System.Text.Json.JsonSerializer.Serialize(current) != System.Text.Json.JsonSerializer.Serialize(latest))
+            throw new InvalidOperationException("The cold Task/Run changed before hosted continuation publication.");
+        if (!await HasOriginalColdRunResumeBoundaryAsync(stage, latest, token, actualChat).ConfigureAwait(false))
+            throw new InvalidOperationException("The privately authenticated cold boundary changed before host publication.");
+        var hosted = RegisterHostedOriginalRunResume(source, OriginalRunControlContext(latest), stage, coldRecovery: true);
+        return hosted.Lease;
     }
 }

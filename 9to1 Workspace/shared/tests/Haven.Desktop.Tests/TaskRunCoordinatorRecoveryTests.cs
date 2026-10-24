@@ -126,6 +126,171 @@ public sealed class TaskRunCoordinatorRecoveryTests
     }
 
     [Fact]
+    public async Task Checkpoint_callback_cannot_overwrite_a_newer_task_recovery_revision()
+    {
+        var h = await Harness.CreateAsync();
+        var checkpoint = new CheckpointInfo(Guid.NewGuid(), h.Task.ContextId, null, "synthetic-workspace", "current",
+            CheckpointMode.BeforeFileChanges, 0, DateTimeOffset.UtcNow);
+        h.Checkpoints.Records.Add(checkpoint.Id, checkpoint);
+        h.Checkpoints.Originals.Add(h.Task.ExecutionId, checkpoint.Id);
+        var newer = h.Task with
+        {
+            State = TaskExecutionLifecycle.Suspended,
+            Attempts = h.Task.Attempts.Select(attempt => attempt with
+            { State = TaskRunAttemptState.Suspended, UpdatedAt = DateTimeOffset.UtcNow }).ToArray(),
+            UpdatedAt = DateTimeOffset.UtcNow.AddSeconds(1)
+        };
+        h.Checkpoints.BeforeOriginalRead = _ => h.Repository.UpsertAsync(newer with
+        { PersistenceRevision = h.Task.PersistenceRevision + 1 }, TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<TaskExecutionRevisionConflictException>(() => h.Coordinator.RecordCheckpointAsync(
+            h.Task.TaskId, h.Task.ExecutionId, checkpoint.Id, TestContext.Current.CancellationToken));
+
+        var saved = await h.Repository.GetAsync(h.Task.TaskId, TestContext.Current.CancellationToken);
+        Assert.Equal(TaskExecutionLifecycle.Suspended, saved!.State);
+        Assert.Null(saved.CheckpointId);
+        Assert.Equal(h.Task.PersistenceRevision + 1, saved.PersistenceRevision);
+    }
+
+    [Fact]
+    public async Task Cancelled_checkpoint_observation_leaves_canonical_state_retryable_without_replaying_work()
+    {
+        var h = await Harness.CreateAsync();
+        var acceptedAction = await h.AcceptSyntheticOwnerActionAsync();
+        var before = await h.Repository.GetAsync(h.Task.TaskId, TestContext.Current.CancellationToken)
+            ?? throw new InvalidOperationException("The seeded canonical Task disappeared.");
+        var checkpoint = new CheckpointInfo(Guid.NewGuid(), h.Task.ContextId, null, "synthetic-workspace", "same original",
+            CheckpointMode.BeforeFileChanges, 0, DateTimeOffset.UtcNow);
+        h.Checkpoints.Records.Add(checkpoint.Id, checkpoint);
+        h.Checkpoints.Originals.Add(h.Task.ExecutionId, checkpoint.Id);
+        var attemptsBefore = before.Attempts.Select(attempt => attempt.Id).ToArray();
+        var actionsBefore = before.Plan.Select(action => action.ActionId).ToArray();
+        Assert.Equal(acceptedAction, Assert.Single(actionsBefore));
+        var acceptedMetadataBefore = Assert.Single(before.Plan).Acceptance;
+        Assert.NotNull(acceptedMetadataBefore);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        h.Checkpoints.BeforeOriginalRead = async token =>
+        {
+            entered.TrySetResult();
+            await release.Task.WaitAsync(token).ConfigureAwait(false);
+        };
+        using var cancellation = new CancellationTokenSource();
+        var cancelledObservation = h.Coordinator.RecordCheckpointAsync(h.Task.TaskId, h.Task.ExecutionId,
+            checkpoint.Id, cancellation.Token);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelledObservation);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            release.TrySetResult();
+            _ = await Record.ExceptionAsync(() => cancelledObservation);
+        }
+
+        var unchanged = await h.Repository.GetAsync(h.Task.TaskId, TestContext.Current.CancellationToken);
+        Assert.Equal(before.PersistenceRevision, unchanged!.PersistenceRevision);
+        Assert.Null(unchanged.CheckpointId);
+        Assert.Equal(attemptsBefore, unchanged.Attempts.Select(attempt => attempt.Id));
+        Assert.Equal(actionsBefore, unchanged.Plan.Select(action => action.ActionId));
+        Assert.Equal(before.LastCheckpointActionId, unchanged.LastCheckpointActionId);
+        Assert.Equal(acceptedMetadataBefore, Assert.Single(unchanged.Plan).Acceptance);
+        Assert.Equal(0, ((SyntheticLease)h.Admission.Lease).DisposeCount);
+        Assert.Equal(0, h.Checkpoints.CheckpointReads);
+
+        h.Checkpoints.BeforeOriginalRead = null;
+        var retried = await h.Coordinator.RecordCheckpointAsync(h.Task.TaskId, h.Task.ExecutionId,
+            checkpoint.Id, TestContext.Current.CancellationToken);
+        Assert.Equal(checkpoint.Id, retried.CheckpointId);
+        Assert.Equal(before.PersistenceRevision + 1, retried.PersistenceRevision);
+        Assert.Equal(attemptsBefore, retried.Attempts.Select(attempt => attempt.Id));
+        Assert.Equal(actionsBefore, retried.Plan.Select(action => action.ActionId));
+        Assert.Equal(before.LastCheckpointActionId, retried.LastCheckpointActionId);
+        Assert.Equal(acceptedMetadataBefore, Assert.Single(retried.Plan).Acceptance);
+        Assert.Equal(0, ((SyntheticLease)h.Admission.Lease).DisposeCount);
+        Assert.Equal(1, h.Checkpoints.CheckpointReads);
+    }
+
+    [Fact]
+    public async Task Late_original_checkpoint_result_after_cancellation_cannot_mutate_task_and_same_checkpoint_retries()
+    {
+        var h = await Harness.CreateAsync();
+        var acceptedAction = await h.AcceptSyntheticOwnerActionAsync();
+        var before = await h.Repository.GetAsync(h.Task.TaskId, TestContext.Current.CancellationToken)
+            ?? throw new InvalidOperationException("The seeded canonical Task disappeared.");
+        var checkpoint = new CheckpointInfo(Guid.NewGuid(), h.Task.ContextId, null, "synthetic-workspace", "late same original",
+            CheckpointMode.BeforeFileChanges, 0, DateTimeOffset.UtcNow);
+        h.Checkpoints.Records.Add(checkpoint.Id, checkpoint);
+        h.Checkpoints.Originals.Add(h.Task.ExecutionId, checkpoint.Id);
+        var attemptsBefore = before.Attempts.Select(attempt => attempt.Id).ToArray();
+        var actionsBefore = before.Plan.Select(action => action.ActionId).ToArray();
+        Assert.Equal(acceptedAction, Assert.Single(actionsBefore));
+        var acceptedMetadataBefore = Assert.Single(before.Plan).Acceptance;
+        Assert.NotNull(acceptedMetadataBefore);
+
+        var observationEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseObservation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var lookupEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseLookup = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        h.Checkpoints.BeforeOriginalRead = async _ =>
+        {
+            observationEntered.TrySetResult();
+            await releaseObservation.Task.ConfigureAwait(false); // Deliberately ignores caller cancellation.
+        };
+        h.Checkpoints.BeforeCheckpointRead = async () =>
+        {
+            lookupEntered.TrySetResult();
+            await releaseLookup.Task.ConfigureAwait(false); // Deliberately returns the late durable lookup too.
+        };
+        using var cancellation = new CancellationTokenSource();
+        var lateWrite = h.Coordinator.RecordCheckpointAsync(h.Task.TaskId, h.Task.ExecutionId,
+            checkpoint.Id, cancellation.Token);
+        try
+        {
+            await observationEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            cancellation.Cancel();
+            Assert.False(lateWrite.IsCompleted);
+            releaseObservation.TrySetResult();
+            await lookupEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            releaseLookup.TrySetResult();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => lateWrite);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            releaseObservation.TrySetResult();
+            releaseLookup.TrySetResult();
+            _ = await Record.ExceptionAsync(() => lateWrite);
+        }
+
+        var unchanged = await h.Repository.GetAsync(h.Task.TaskId, TestContext.Current.CancellationToken);
+        Assert.Equal(before.PersistenceRevision, unchanged!.PersistenceRevision);
+        Assert.Null(unchanged.CheckpointId);
+        Assert.Equal(attemptsBefore, unchanged.Attempts.Select(attempt => attempt.Id));
+        Assert.Equal(actionsBefore, unchanged.Plan.Select(action => action.ActionId));
+        Assert.Equal(before.LastCheckpointActionId, unchanged.LastCheckpointActionId);
+        Assert.Equal(acceptedMetadataBefore, Assert.Single(unchanged.Plan).Acceptance);
+        Assert.Equal(0, ((SyntheticLease)h.Admission.Lease).DisposeCount);
+        Assert.Equal(1, h.Checkpoints.CheckpointReads); // A lookup may return late; durable mutation may not.
+
+        h.Checkpoints.BeforeOriginalRead = null;
+        h.Checkpoints.BeforeCheckpointRead = null;
+        var retried = await h.Coordinator.RecordCheckpointAsync(h.Task.TaskId, h.Task.ExecutionId,
+            checkpoint.Id, TestContext.Current.CancellationToken);
+        Assert.Equal(checkpoint.Id, retried.CheckpointId);
+        Assert.Equal(before.PersistenceRevision + 1, retried.PersistenceRevision);
+        Assert.Equal(attemptsBefore, retried.Attempts.Select(attempt => attempt.Id));
+        Assert.Equal(actionsBefore, retried.Plan.Select(action => action.ActionId));
+        Assert.Equal(before.LastCheckpointActionId, retried.LastCheckpointActionId);
+        Assert.Equal(acceptedMetadataBefore, Assert.Single(retried.Plan).Acceptance);
+        Assert.Equal(0, ((SyntheticLease)h.Admission.Lease).DisposeCount);
+        Assert.Equal(2, h.Checkpoints.CheckpointReads);
+    }
+
+    [Fact]
     public async Task Runtime_return_or_legacy_completion_is_not_a_mutation_acceptance_projection()
     {
         var repository = new SyntheticRepository();
@@ -137,6 +302,28 @@ public sealed class TaskRunCoordinatorRecoveryTests
         var projection = TaskExecutionProjection.From(task);
         Assert.Empty(projection.AcceptedActions);
         Assert.Null(projection.LastAcceptedActionId);
+    }
+
+    [Fact]
+    public async Task Task_projection_conserves_cold_recovery_history_without_issuing_resume_authority()
+    {
+        var h = await Harness.CreateAsync();
+        var observation = new TaskRunRecoveryObservation(Guid.NewGuid(), "synthetic-cold-resume", DateTimeOffset.UtcNow,
+            TaskRunIteratorTerminalOutcome.ClosedBeforeEnd, TaskRunOriginalSettlementOutcome.Joined,
+            Array.AsReadOnly(new[] { new ExecutionFailure("SYNTHETIC", "Synthetic", "Retained cold boundary") }));
+        var snapshot = (await h.Repository.GetAsync(h.Task.TaskId, TestContext.Current.CancellationToken))!
+            with { State = TaskExecutionLifecycle.Suspended, RecoveryObservation = null, RecoveryHistory = [observation] };
+
+        var projection = TaskExecutionProjection.From(snapshot);
+
+        Assert.Equal(snapshot.TaskId, projection.TaskId);
+        Assert.Equal(snapshot.ExecutionId, projection.ExecutionId);
+        Assert.Null(projection.RecoveryObservation);
+        var retained = Assert.Single(projection.RecoveryHistory);
+        Assert.Equal(observation.ObservationId, retained.ObservationId);
+        Assert.Equal(observation.SettlementOutcome, retained.SettlementOutcome);
+        Assert.Equal(observation.Causes, retained.Causes);
+        Assert.NotSame(observation.Causes, retained.Causes);
     }
 
     private static IEnumerable<Exception> Causes(Exception cause) => cause is AggregateException aggregate
@@ -254,10 +441,20 @@ public sealed class TaskRunCoordinatorRecoveryTests
     {
         public Dictionary<Guid, CheckpointInfo> Records { get; } = [];
         public Dictionary<Guid, Guid> Originals { get; } = [];
-        public Task<CheckpointInfo?> GetOriginalCheckpointAsync(Guid executionId, Guid checkpointId, CancellationToken cancellationToken)
-            => System.Threading.Tasks.Task.FromResult(Originals.TryGetValue(executionId, out var original) && original == checkpointId ? Records[checkpointId] : null);
-        public Task<CheckpointInfo?> GetAsync(Guid checkpointId, CancellationToken cancellationToken)
-            => System.Threading.Tasks.Task.FromResult(Records.GetValueOrDefault(checkpointId));
+        public Func<CancellationToken, Task>? BeforeOriginalRead { get; set; }
+        public Func<Task>? BeforeCheckpointRead { get; set; }
+        public int CheckpointReads { get; private set; }
+        public async Task<CheckpointInfo?> GetOriginalCheckpointAsync(Guid executionId, Guid checkpointId, CancellationToken cancellationToken)
+        {
+            if (BeforeOriginalRead is { } before) await before(cancellationToken).ConfigureAwait(false);
+            return Originals.TryGetValue(executionId, out var original) && original == checkpointId ? Records[checkpointId] : null;
+        }
+        public async Task<CheckpointInfo?> GetAsync(Guid checkpointId, CancellationToken cancellationToken)
+        {
+            CheckpointReads++;
+            if (BeforeCheckpointRead is { } before) await before().ConfigureAwait(false);
+            return Records.GetValueOrDefault(checkpointId);
+        }
         public Task SaveAsync(CheckpointInfo checkpoint, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<CheckpointInfo?> GetLatestAsync(Guid? conversationId, string workspaceRoot, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<long> GetLatestVersionSequenceAsync(string workspaceRoot, CancellationToken cancellationToken) => throw new NotSupportedException();

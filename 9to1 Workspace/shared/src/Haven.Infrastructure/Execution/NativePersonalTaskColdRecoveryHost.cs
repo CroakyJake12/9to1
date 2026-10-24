@@ -86,13 +86,16 @@ public sealed class NativePersonalTaskColdRecoveryHost(NativePersonalTaskColdRec
                 throw new InvalidOperationException("Configure the SAME original authority before its actual coordinator is exposed.");
         if (!actualAuthority.HasOriginalColdRecoveryComposition(actualJournal, actualJournal))
             throw new InvalidOperationException("Actual private cold authority/source configuration is absent.");
-        actualCoordinator.ConfigureOriginalColdRecovery(actualJournal, actualJournal);
+        // Retain the same lazy DI Chat source used by this host. It is resolved only
+        // when a current Tasks surface observes or starts a cold continuation.
+        Func<ChatSessionService> actualChat = () => actualProvider.GetRequiredService<ChatSessionService>();
+        actualCoordinator.ConfigureOriginalColdRecovery(actualJournal, actualJournal, actualChat);
         if (!actualCoordinator.HasOriginalColdRecoveryComposition(actualJournal, actualJournal))
             throw new InvalidOperationException("The SAME actual coordinator sources were not retained.");
         lock (_gate)
         {
             _coordinator = actualCoordinator;
-            _actualChat = () => actualProvider.GetRequiredService<ChatSessionService>();
+            _actualChat = actualChat;
         }
     }
     public bool HasOriginalComposition(SqliteTaskRunColdRecoveryJournal sameJournal,
