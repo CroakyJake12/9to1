@@ -195,8 +195,7 @@ internal sealed partial class PresentHavenScene
         var selected = selectedElementIds.ToHashSet();
         SlideCanvas.SetSlide(document, slide, selected);
 
-        UndoButton.SetValue(HavenProperties.Enabled, canUndo);
-        RedoButton.SetValue(HavenProperties.Enabled, canRedo);
+        SetHistoryAvailability(canUndo, canRedo);
         MoveSlideEarlierButton.SetValue(HavenProperties.Enabled, slideIndex > 0);
         MoveSlideLaterButton.SetValue(HavenProperties.Enabled, slideIndex < document.Slides.Count - 1);
 
@@ -232,6 +231,12 @@ internal sealed partial class PresentHavenScene
                 : $"{selectedElements.Length} objects selected";
         InspectorText.Content =
             $"{document.SlideSize.WidthInches:0.##} Ã— {document.SlideSize.HeightInches:0.##} in Â· {document.Theme.Name} Â· {selectedDescription} Â· transition {slide.Transition.Kind} Â· {slide.Animations.Count} animation cue(s)";
+    }
+
+    public void SetHistoryAvailability(bool canUndo, bool canRedo)
+    {
+        UndoButton.SetValue(HavenProperties.Enabled, canUndo);
+        RedoButton.SetValue(HavenProperties.Enabled, canRedo);
     }
 
     public void SetPhase2Busy(bool busy)

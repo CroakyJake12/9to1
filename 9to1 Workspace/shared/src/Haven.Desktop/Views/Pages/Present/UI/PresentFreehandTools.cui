@@ -4,8 +4,9 @@
       <Button id="present-draw-toggle" content="{Binding DrawLabel}" action="present.ink.toggle" Interactive="{Binding CanToggle}" Width="64" Height="36" Tooltip="{Binding Status}" accessible-name="Start or finish drawing on this slide" />
       <Container Type="Menu">
         <Button id="present-draw-tool" Type="Menu Item" Content="{Binding ToolLabel}" Interactive="{Binding CanOpenTools}" Width="78" Height="36" Tooltip="{Binding ColorTargetHint}" accessible-name="Ink tools and selected drawing colour">
-          <Button Type="Menu Item" Content="Pen" action="present.ink.pen" Interactive="{Binding CanConfigureStroke}" />
-          <Button Type="Menu Item" Content="Highlighter" action="present.ink.highlighter" Interactive="{Binding CanConfigureStroke}" />
+          <Button Type="Menu Item" Content="Pen" action="present.ink.pen" Interactive="{Binding CanConfigurePenTool}" />
+          <Button Type="Menu Item" Content="Highlighter" action="present.ink.highlighter" Interactive="{Binding CanConfigurePenTool}" />
+          <Button Type="Menu Item" Content="Whole-stroke eraser" action="present.ink.eraser" Interactive="{Binding CanConfigureEraser}" AccessibleDescription="{Binding EraserDescription}" />
           <Button Type="Menu Item" Content="{Binding ColorLabel}" Interactive="{Binding CanChooseColor}" AccessibleDescription="{Binding ColorTargetHint}">
             <Button Type="Menu Item" Content="Black" action="present.ink.color.black" />
             <Button Type="Menu Item" Content="White" action="present.ink.color.white" />
@@ -14,7 +15,7 @@
             <Button Type="Menu Item" Content="Green" action="present.ink.color.green" />
             <Button Type="Menu Item" Content="Yellow" action="present.ink.color.yellow" />
           </Button>
-          <Button Type="Menu Item" Content="{Binding WidthLabel}" Interactive="{Binding CanConfigureStroke}" AccessibleDescription="Thickness applies to new strokes.">
+          <Button Type="Menu Item" Content="{Binding WidthLabel}" Interactive="{Binding CanConfigureStroke}" AccessibleDescription="Thickness applies to new pen/highlighter strokes; eraser width controls the whole-stroke hit radius.">
             <Button Type="Menu Item" Content="Fine" action="present.ink.width.fine" />
             <Button Type="Menu Item" Content="Normal" action="present.ink.width.normal" />
             <Button Type="Menu Item" Content="Broad" action="present.ink.width.broad" />

@@ -37,8 +37,9 @@ public sealed partial class PresentEditor
 {
     private const int HistoryLimit = 100;
     private static readonly JsonSerializerOptions SnapshotOptions = new(JsonSerializerDefaults.Web);
-    private readonly List<string> _undo = [];
-    private readonly List<string> _redo = [];
+    private sealed record HistorySnapshot(string Document, Guid SlideId, IReadOnlyList<Guid> ElementIds);
+    private readonly List<HistorySnapshot> _undo = [];
+    private readonly List<HistorySnapshot> _redo = [];
     private readonly TimeProvider _timeProvider;
     private Guid _selectedSlideId;
     private readonly List<Guid> _selectedElementIds = [];
@@ -53,8 +54,8 @@ public sealed partial class PresentEditor
 
     public event EventHandler? Changed;
     public PresentDocument Document { get; private set; }
-    public bool CanUndo => _undo.Count > 0;
-    public bool CanRedo => _redo.Count > 0;
+    public bool CanUndo => _undo.Count > 0 || _liveTextEditDirty;
+    public bool CanRedo => _redo.Count > 0 && !_liveTextEditDirty;
     public PresentSelection Selection => new(_selectedSlideId, _selectedElementIds.ToArray());
 
     public PresentSlide SelectedSlide =>
@@ -633,8 +634,15 @@ public sealed partial class PresentEditor
 
     public bool Undo()
     {
-        if (_undo.Count == 0) return false;
-        var current = Snapshot(Document);
+        // A live text preview is one edit boundary: commit it exactly once so Undo
+        // can move it to Redo rather than restoring an older snapshot underneath it.
+        var committedLiveEdit = _liveTextEditBefore is not null && CommitLiveTextEdit(notifyChanged: false);
+        if (_undo.Count == 0)
+        {
+            if (committedLiveEdit) Changed?.Invoke(this, EventArgs.Empty);
+            return false;
+        }
+        var current = CaptureHistory();
         var previous = Pop(_undo);
         Push(_redo, current);
         Restore(previous);
@@ -644,8 +652,14 @@ public sealed partial class PresentEditor
 
     public bool Redo()
     {
-        if (_redo.Count == 0) return false;
-        var current = Snapshot(Document);
+        // A new pending edit invalidates the redo branch before Redo is evaluated.
+        var committedLiveEdit = _liveTextEditBefore is not null && CommitLiveTextEdit(notifyChanged: false);
+        if (_redo.Count == 0)
+        {
+            if (committedLiveEdit) Changed?.Invoke(this, EventArgs.Empty);
+            return false;
+        }
+        var current = CaptureHistory();
         var next = Pop(_redo);
         Push(_undo, current);
         Restore(next);
@@ -721,11 +735,11 @@ public sealed partial class PresentEditor
     private void Mutate(Action mutation)
     {
         if (_liveTextEditBefore is not null) CommitLiveTextEdit();
-        var before = Snapshot(Document);
+        var before = CaptureHistory();
         mutation();
         Document.Normalize();
         var structuralAfter = Snapshot(Document);
-        if (string.Equals(before, structuralAfter, StringComparison.Ordinal)) return;
+        if (string.Equals(before.Document, structuralAfter, StringComparison.Ordinal)) return;
         Push(_undo, before);
         _redo.Clear();
         Document.UpdatedAt = _timeProvider.GetUtcNow();
@@ -733,12 +747,29 @@ public sealed partial class PresentEditor
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void Restore(string snapshot)
+    private HistorySnapshot CaptureHistory() => new(Snapshot(Document), _selectedSlideId, _selectedElementIds.ToArray());
+
+    private void Restore(HistorySnapshot snapshot)
     {
-        Document = JsonSerializer.Deserialize<PresentDocument>(snapshot, SnapshotOptions)
+        // Version is the repository's compare-and-swap base, not authored undoable
+        // content. Keep the latest durable revision across undo/redo restoration so
+        // an edit after Undo does not attempt to save against an older revision.
+        var currentVersion = Document.Version;
+        var currentRecovery = new PresentRecoveryState
+        {
+            RecoveredFromBackup = Document.Recovery.RecoveredFromBackup,
+            Message = Document.Recovery.Message,
+            RecoveredAt = Document.Recovery.RecoveredAt
+        };
+        Document = JsonSerializer.Deserialize<PresentDocument>(snapshot.Document, SnapshotOptions)
             ?? throw new InvalidDataException("The presentation history snapshot could not be restored.");
         Document.Normalize();
+        Document.Version = currentVersion;
+        Document.Recovery = currentRecovery;
         Document.UpdatedAt = _timeProvider.GetUtcNow();
+        _selectedSlideId = snapshot.SlideId;
+        _selectedElementIds.Clear();
+        _selectedElementIds.AddRange(snapshot.ElementIds);
         EnsureSelectionIsValid();
     }
 
@@ -776,7 +807,7 @@ public sealed partial class PresentEditor
 
     private static string Snapshot(PresentDocument document) => JsonSerializer.Serialize(document, SnapshotOptions);
 
-    private static string Pop(List<string> stack)
+    private static HistorySnapshot Pop(List<HistorySnapshot> stack)
     {
         var index = stack.Count - 1;
         var value = stack[index];
@@ -784,7 +815,7 @@ public sealed partial class PresentEditor
         return value;
     }
 
-    private static void Push(List<string> stack, string snapshot)
+    private static void Push(List<HistorySnapshot> stack, HistorySnapshot snapshot)
     {
         stack.Add(snapshot);
         if (stack.Count > HistoryLimit) stack.RemoveAt(0);

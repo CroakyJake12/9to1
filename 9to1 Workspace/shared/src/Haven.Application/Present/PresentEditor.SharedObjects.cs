@@ -8,6 +8,7 @@ public sealed record PresentSharedObjectCapture(Guid ObjectId, string ObjectType
 public sealed record PresentSharedObjectSupport(bool Compatible, bool CanRender, string Code, string Message);
 public sealed record PresentSharedObjectInsertionResult(bool Inserted, string Code, string Message, Guid? ElementId = null);
 public sealed record PresentSharedObjectUpdateResult(bool Changed, string Code, string Message, Guid? ElementId = null);
+public sealed record PresentSharedObjectEraseResult(bool Changed, string Code, string Message, IReadOnlyList<Guid> ChangedElementIds);
 
 /// <summary>No app-private schema or ink renderer: implementations delegate to Home's real registry.</summary>
 public interface IPresentSharedObjectBridge
@@ -124,6 +125,101 @@ public sealed partial class PresentEditor
         var detached = after.Bundle.Clone();
         Mutate(() => target.SharedProductivityBundle = detached);
         return new(true, "PreparedInDocument", "The canonical drawing changed in the existing undo history; save is still required.", elementId);
+    }
+
+    /// <summary>Apply one owner-verified whole-stroke erase across the shared ink objects on one slide.
+    /// All changed bundles/removals form one document history entry; persistence remains the owning surface's job.</summary>
+    public PresentSharedObjectEraseResult TryApplySharedInkErase(Guid expectedDocumentId, int expectedDocumentVersion,
+        Guid selectedSlideId, IReadOnlyList<JsonElement> expectedBundles, IReadOnlyList<JsonElement> replacementBundles,
+        IPresentSharedObjectBridge bridge, Func<bool>? finalOwnerValidation = null)
+    {
+        ArgumentNullException.ThrowIfNull(expectedBundles);
+        ArgumentNullException.ThrowIfNull(replacementBundles);
+        ArgumentNullException.ThrowIfNull(bridge);
+        var document = Document;
+        if (IsLiveTextEditActive) return new(false, "TextEditInProgress", "Finish the current text edit before erasing ink.", []);
+        if (document.Id != expectedDocumentId || document.Version != expectedDocumentVersion || Selection.SlideId != selectedSlideId)
+            return new(false, "RevisionConflict", "The presentation or selected slide changed before erasing ink.", []);
+        var slide = document.Slides.SingleOrDefault(value => value.Id == selectedSlideId);
+        if (slide is null) return new(false, "SlideNotFound", "The original slide no longer exists.", []);
+
+        var original = new Dictionary<Guid, (PresentElement Element, JsonElement Payload)>();
+        var replacements = new Dictionary<Guid, JsonElement>();
+        try
+        {
+            foreach (var bundle in expectedBundles)
+            {
+                var capture = bridge.Capture(bundle);
+                if (capture.ObjectId == Guid.Empty || capture.ObjectType != "drawing.ink" || capture.SchemaVersion != 1)
+                    return new(false, "ObjectIdentityMismatch", "The original drawing has invalid ink identity or schema.", []);
+                var element = slide.Elements.SingleOrDefault(value => value.Id == capture.ObjectId &&
+                    value.Kind == PresentElementKind.SharedObject && value.SharedProductivityBundle is not null);
+                if (element is null)
+                    return new(false, "SharedObjectUnavailable", "An original ink object no longer belongs to the selected slide.", []);
+                if (!JsonElement.DeepEquals(element.SharedProductivityBundle!.Value, bundle))
+                    return new(false, "PayloadConflict", "An original ink object changed before erasure.", []);
+                if (!original.TryAdd(capture.ObjectId, (element, bundle.Clone())))
+                    return new(false, "ObjectIdentityMismatch", "The original drawing repeats an ink identity.", []);
+            }
+            foreach (var bundle in replacementBundles)
+            {
+                var capture = bridge.Capture(bundle);
+                if (capture.ObjectId == Guid.Empty || capture.ObjectType != "drawing.ink" || capture.SchemaVersion != 1 ||
+                    !original.ContainsKey(capture.ObjectId) || !replacements.TryAdd(capture.ObjectId, capture.Bundle.Clone()))
+                    return new(false, "ObjectIdentityMismatch", "The erase result changed or duplicated a drawing identity.", []);
+            }
+        }
+        catch (PresentSharedObjectCapabilityException error) { return new(false, error.Code, error.Message, []); }
+        catch (Exception error) when (error is InvalidDataException or JsonException or ArgumentException or NotSupportedException)
+        { return new(false, "InvalidOrUnsupportedObject", error.Message, []); }
+
+        var changed = original.Where(pair => !replacements.TryGetValue(pair.Key, out var next) ||
+            !JsonElement.DeepEquals(pair.Value.Payload, next)).ToArray();
+        if (changed.Any(pair => pair.Value.Element.Locked))
+            return new(false, "ObjectLocked", "Unlock every crossed drawing before erasing.", []);
+        if (changed.Length == 0) return new(false, "NoChanges", "No ink strokes intersected the eraser gesture.", []);
+
+        if (IsLiveTextEditActive || !ReferenceEquals(Document, document) || document.Id != expectedDocumentId ||
+            document.Version != expectedDocumentVersion || Selection.SlideId != selectedSlideId ||
+            !document.Slides.Any(currentSlide => ReferenceEquals(currentSlide, slide)) ||
+            original.Any(pair => !slide.Elements.Any(value => ReferenceEquals(value, pair.Value.Element) &&
+                value.SharedProductivityBundle is { } payload && JsonElement.DeepEquals(payload, pair.Value.Payload))) ||
+            changed.Any(pair => pair.Value.Element.Locked))
+            return new(false, "RevisionConflict", "The original drawing changed while the erase was prepared.", []);
+
+        var changedIds = changed.Select(pair => pair.Key).ToArray();
+        // The owning surface may need to revalidate host placement or other state that is
+        // deliberately outside this application model. Invoke it after all bridge calls,
+        // immediately before this single history mutation.
+        if (finalOwnerValidation is not null)
+        {
+            bool isCurrent;
+            try { isCurrent = finalOwnerValidation(); }
+            catch (Exception error) when (error is InvalidDataException or JsonException or ArgumentException or
+                NotSupportedException or InvalidOperationException or OverflowException)
+            { return new(false, "RevisionConflict", "The original owner could not revalidate the erase before commit: " + error.Message, []); }
+            if (!isCurrent || changed.Any(pair => pair.Value.Element.Locked))
+                return new(false, "RevisionConflict", "The original owner or ink placement changed before the erase commit.", []);
+        }
+        // A validator may synchronously publish or reenter application state. Repeat
+        // the editor-side CAS/payload checks after it returns; no callback sits between
+        // this last check and the single Mutate below.
+        if (IsLiveTextEditActive || !ReferenceEquals(Document, document) || document.Id != expectedDocumentId ||
+            document.Version != expectedDocumentVersion || Selection.SlideId != selectedSlideId ||
+            !document.Slides.Any(currentSlide => ReferenceEquals(currentSlide, slide)) ||
+            original.Any(pair => !slide.Elements.Any(value => ReferenceEquals(value, pair.Value.Element) &&
+                value.SharedProductivityBundle is { } payload && JsonElement.DeepEquals(payload, pair.Value.Payload))) ||
+            changed.Any(pair => pair.Value.Element.Locked))
+            return new(false, "RevisionConflict", "The presentation changed during final erase validation.", []);
+        Mutate(() =>
+        {
+            foreach (var pair in changed)
+            {
+                if (replacements.TryGetValue(pair.Key, out var replacement)) pair.Value.Element.SharedProductivityBundle = replacement.Clone();
+                else slide.Elements.Remove(pair.Value.Element);
+            }
+        });
+        return new(true, "PreparedInDocument", "The canonical ink erase is in one undo transaction; save is still required.", changedIds);
     }
 
     private static void DemandLegacySharedObjectCloneSupported(IEnumerable<PresentElement> elements)

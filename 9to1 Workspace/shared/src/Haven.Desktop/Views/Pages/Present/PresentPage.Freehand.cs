@@ -28,6 +28,12 @@ public sealed partial class PresentPage
     private Rect? _freehandPaperBounds;
     private string? _freehandClipSignature, _freehandSelectionSignature;
     private bool _freehandEnabled, _refreshingFreehand;
+    private PresentEditor? _freehandEraseCheckEditor;
+    private Guid _freehandEraseCheckSlideId;
+    private int _freehandEraseCheckVersion = -1;
+    private long _freehandEraseCheckGeneration = -1;
+    private bool _freehandEraseCheckResolved;
+    private string? _freehandEraseBlocker;
     internal CanvasSharedInkInput? FreehandInput => _freehandInput;
     internal ICuiActionDispatcher? FreehandCommands => _freehandBindings;
 
@@ -41,7 +47,7 @@ public sealed partial class PresentPage
                 throw new InvalidDataException("Present freehand input must bind exactly once.");
             if (_sharedInkEngine is null) return new Control();
             _freehandInput = new(_sharedInkEngine, CaptureFreehandOwner, CommitFreehandStrokeAsync)
-            { PaintPreparedScene = false, IsEnabled = false };
+            { PaintPreparedScene = false, IsEnabled = false, EraserEnabled = false };
             _freehandInput.Changed += OnFreehandChanged;
             return _freehandInput;
         });
@@ -76,13 +82,27 @@ public sealed partial class PresentPage
             !ReferenceEquals(_freehandEditor, _editor) || !ReferenceEquals(_freehandDocument, Document) || Document is not { } document)
             return null;
         var slide = document.Slides.SingleOrDefault(value => value.Id == _editor.Selection.SlideId);
-        if (slide is null || slide.Elements.Count(value => value.Kind == PresentElementKind.SharedObject) >= MaximumSharedInkViews) return null;
-        // Existing objects keep their original source LayerId/placement and are painted by the
-        // existing ordered slide renderer. This transparent input owns only the new stroke; the
-        // original document/editor references and mutation epoch bind all current slide content.
-        JsonElement[] bundles = [];
+        if (slide is null) return null;
+        // Existing objects remain painted by the ordered slide renderer with source LayerId/placement
+        // intact. The pointer owner captures only same-slide-layer ink; the explicit eraser capability
+        // guard keeps foreign-layer payloads visible and unmodified rather than rebinding them silently.
+        var inkElements = slide.Elements.Where(value => value.Kind == PresentElementKind.SharedObject &&
+            value.SharedProductivityBundle is not null && _sharedInkEngine is not null).Where(value =>
+            {
+                try
+                {
+                    var objects = _sharedInkEngine!.ParseBundle(value.SharedProductivityBundle!.Value.GetRawText()).Objects;
+                    return objects.Count == 1 && objects[0].ObjectId == value.Id && objects[0].ObjectType == "drawing.ink" &&
+                        objects[0].Content.TryGetProperty("LayerId", out var sourceLayer) &&
+                        sourceLayer.TryGetGuid(out var layerId) && layerId == slide.Id;
+                }
+                catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or ArgumentException or
+                    NotSupportedException or OverflowException or InvalidOperationException)
+                { return false; }
+            }).ToArray();
+        var bundles = inkElements.Select(value => value.SharedProductivityBundle!.Value.Clone()).ToArray();
         var context = new HomeProductivityContext("present", document.Id.ToString("D"), document.Version,
-            slide.Elements.Where(value => value.Kind == PresentElementKind.SharedObject).Select(value => value.Id).ToArray(),
+            inkElements.Select(value => value.Id).ToArray(),
             new HashSet<string>(StringComparer.Ordinal) { "drawing.ink" });
         var height = Math.Max(540, 960 * document.SlideSize.HeightInches / document.SlideSize.WidthInches);
         var width = height * document.SlideSize.WidthInches / document.SlideSize.HeightInches;
@@ -100,6 +120,10 @@ public sealed partial class PresentPage
         if (!_freehandEnabled || _sharedInkEngine is null || current is null || !CanvasSharedInkStrokeFactory.SameOwner(request.Expected, current))
             return new CanvasSharedInkCommitResult(false, "RevisionConflict", "The original presentation, slide or drawing view changed; no stroke was added.");
         var owner = _editor!; var document = owner.Document;
+        if (request.Erasure is { } erasure)
+            return await CommitFreehandErasureAsync(owner, document, current, request, erasure, token);
+        if (FreehandSharedObjectViewCount(owner.SelectedSlide) >= MaximumSharedInkViews)
+            return new CanvasSharedInkCommitResult(false, "DrawingLimitReached", "This slide has reached the 32 shared-object view limit; remove a shared object before adding another.");
         var bundle = CanvasSharedInkStrokeFactory.CaptureBundle(_sharedInkEngine, current.Context, request.Bundle);
         var parsed = _sharedInkEngine.ParseBundle(bundle.GetRawText());
         if (parsed.Objects.Count != 1 || !parsed.Objects[0].Content.TryGetProperty("LayerId", out var layer) ||
@@ -128,8 +152,129 @@ public sealed partial class PresentPage
         finally { SetBusy(false); }
     }));
 
+    private async Task<CanvasSharedInkCommitResult> CommitFreehandErasureAsync(PresentEditor owner, PresentDocument document,
+        CanvasSharedInkOwnerSnapshot current, CanvasSharedInkStrokeRequest request, CanvasSharedInkEraseGesture erasure,
+        CancellationToken token)
+    {
+        if (request.Bundle.ValueKind != JsonValueKind.Undefined || request.ReplacementBundles is not { } proposed)
+            return new(false, "InvalidErasure", "The shared eraser requires a validated whole-stroke replacement set.");
+        IReadOnlyList<JsonElement> verified;
+        try { verified = CanvasSharedInkStrokeFactory.CaptureWholeErase(_sharedInkEngine!, current, erasure.Samples, erasure.Width).ReplacementBundles!; }
+        catch (Exception error) when (error is InvalidDataException or NotSupportedException or ArgumentException)
+        { return new(false, "InvalidErasure", error.Message); }
+        if (verified.Count != proposed.Count || !verified.Zip(proposed).All(pair => JsonElement.DeepEquals(pair.First, pair.Second)))
+            return new(false, "InvalidErasure", "The proposed erase no longer matches the original Rnote whole-stroke result.");
+        _ = CanvasSharedInkStrokeFactory.RenderScene(_sharedInkEngine!, current.Context, current.LayerId, verified);
+        token.ThrowIfCancellationRequested();
+        var observed = CaptureFreehandOwner();
+        if (!ReferenceEquals(_editor, owner) || !ReferenceEquals(Document, document) || observed is null ||
+            !CanvasSharedInkStrokeFactory.SameOwner(current, observed))
+            return new(false, "RevisionConflict", "The selected slide or drawing changed while preparing the erase.");
+
+        SetBusy(true);
+        try
+        {
+            InvalidateFreehandEraseCheck();
+            if (FreehandErasePlacementBlocker() is { } placementBlocker)
+                return new CanvasSharedInkCommitResult(false, "ErasePlacementUnsupported", placementBlocker);
+            token.ThrowIfCancellationRequested();
+            var result = owner.TryApplySharedInkErase(document.Id, document.Version, current.LayerId,
+                current.Bundles, verified, new CanvasPresentInkBridge(_sharedInkEngine!, document.Id, document.Version));
+            if (!result.Changed) return new CanvasSharedInkCommitResult(false, result.Code, result.Message);
+            var saved = await SaveAsync("Freehand erase", token);
+            PublishOriginalPresentSource(() => _bus.Fire("Present.Drawing.Changed"));
+            return new CanvasSharedInkCommitResult(true, saved ? "Saved" : "PreparedUnsaved", saved
+                ? "The erased strokes were saved by the original presentation repository; Undo restores them."
+                : result.Message);
+        }
+        finally { SetBusy(false); }
+    }
+
     private string FreehandSelectionSignature() => _editor is null ? "" : _editor.Selection.SlideId.ToString("D") + ":" +
         string.Join(",", _editor.Selection.ElementIds.Order().Select(value => value.ToString("D")));
+
+    private void InvalidateFreehandEraseCheck() => _freehandEraseCheckResolved = false;
+
+    private string? FreehandErasePlacementBlocker()
+    {
+        if (_editor is not { } editor || _sharedInkEngine is not { } engine || Document is not { } document ||
+            !ReferenceEquals(editor.Document, document))
+            return "The original Present ink owner is unavailable; no existing drawing was changed.";
+        var slide = editor.SelectedSlide;
+        if (_freehandEraseCheckResolved && ReferenceEquals(_freehandEraseCheckEditor, editor) &&
+            _freehandEraseCheckSlideId == slide.Id && _freehandEraseCheckVersion == document.Version &&
+            _freehandEraseCheckGeneration == _editGeneration)
+            return _freehandEraseBlocker;
+
+        var height = Math.Max(540, 960 * document.SlideSize.HeightInches / document.SlideSize.WidthInches);
+        var width = height * document.SlideSize.WidthInches / document.SlideSize.HeightInches;
+        var context = new HomeProductivityContext("present", document.Id.ToString("D"), document.Version, [],
+            new HashSet<string>(StringComparer.Ordinal) { "drawing.ink" });
+        string? blocker = null;
+        foreach (var element in slide.Elements.Where(value => value.Kind == PresentElementKind.SharedObject &&
+            value.SharedProductivityBundle is not null))
+        {
+            try
+            {
+                var payload = element.SharedProductivityBundle!.Value;
+                var objects = engine.ParseBundle(payload.GetRawText()).Objects;
+                if (objects.Count == 0 || objects.All(value => value.ObjectType != "drawing.ink")) continue;
+                if (objects.Count != 1 || objects[0].ObjectId != element.Id || objects[0].ObjectType != "drawing.ink" ||
+                    !objects[0].Content.TryGetProperty("LayerId", out var layer) || !layer.TryGetGuid(out var layerId))
+                {
+                    blocker = "Whole-stroke erasing is unavailable for this shared ink bundle shape; its original payload is retained.";
+                    break;
+                }
+                var scene = CanvasSharedInkStrokeFactory.RenderScene(engine,
+                    context with { SelectedObjectIds = [objects[0].ObjectId] }, layerId, [payload]);
+                blocker = ResolveFreehandErasePlacementBlocker(element, slide.Id, layerId, scene, width, height);
+                if (blocker is not null) break;
+            }
+            catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or
+                ArgumentException or NotSupportedException or OverflowException or InvalidOperationException)
+            {
+                blocker = "Whole-stroke erasing is unavailable because a shared drawing cannot be mapped by the existing Home/Rnote renderer; its original payload is retained.";
+                break;
+            }
+        }
+        _freehandEraseCheckEditor = editor;
+        _freehandEraseCheckSlideId = slide.Id;
+        _freehandEraseCheckVersion = document.Version;
+        _freehandEraseCheckGeneration = _editGeneration;
+        _freehandEraseBlocker = blocker;
+        _freehandEraseCheckResolved = true;
+        return blocker;
+    }
+
+    /// <summary>WholeStrokeInput only supplies page-space samples and one source layer. Confirm that
+    /// the visible Present element is still the identity placement of this exact Home/Rnote scene;
+    /// until its owner contract carries per-object inverse transforms, do not erase from guessed coordinates.</summary>
+    internal static string? ResolveFreehandErasePlacementBlocker(PresentElement element, Guid slideId,
+        Guid sourceLayerId, CanvasSharedInkScene sourceScene, double logicalWidth, double logicalHeight)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        ArgumentNullException.ThrowIfNull(sourceScene);
+        if (sourceLayerId != slideId)
+            return "Whole-stroke erasing is unavailable because this canonical drawing retains a different source LayerId; its payload and identity are preserved.";
+        if (!double.IsFinite(logicalWidth) || !double.IsFinite(logicalHeight) || logicalWidth <= 0 || logicalHeight <= 0 ||
+            !double.IsFinite(sourceScene.X) || !double.IsFinite(sourceScene.Y) || !double.IsFinite(sourceScene.Width) ||
+            !double.IsFinite(sourceScene.Height) || sourceScene.Width <= 0 || sourceScene.Height <= 0)
+            return "Whole-stroke erasing is unavailable because the original drawing bounds are invalid; its payload is retained.";
+        if (element.RotationDegrees != 0)
+            return "Whole-stroke erasing is unavailable after this drawing was rotated; the shared input owner has no inverse placement transform.";
+        var expectedX = sourceScene.X / logicalWidth;
+        var expectedY = sourceScene.Y / logicalHeight;
+        var expectedWidth = sourceScene.Width / logicalWidth;
+        var expectedHeight = sourceScene.Height / logicalHeight;
+        const double tolerance = 0.000001;
+        if (Math.Abs(element.X - expectedX) > tolerance || Math.Abs(element.Y - expectedY) > tolerance ||
+            Math.Abs(element.Width - expectedWidth) > tolerance || Math.Abs(element.Height - expectedHeight) > tolerance)
+            return "Whole-stroke erasing is unavailable after this drawing was moved or resized; the shared input owner has no inverse placement transform.";
+        return null;
+    }
+
+    private int FreehandSharedObjectViewCount(PresentSlide? slide = null) =>
+        (slide ?? _editor?.SelectedSlide)?.Elements.Count(value => value.Kind == PresentElementKind.SharedObject) ?? 0;
 
     private void RefreshFreehandMount()
     {
@@ -143,6 +288,12 @@ public sealed partial class PresentPage
             if (_freehandSelectionSignature != selection) { _freehandSelectionSignature = selection; ++_freehandOwnerEpoch; }
             if (_freehandInput is not null)
             {
+                if (_freehandEnabled)
+                {
+                    var eraseBlocker = FreehandErasePlacementBlocker();
+                    _freehandInput.EraserEnabled = eraseBlocker is null;
+                    if (eraseBlocker is not null && _freehandInput.EraseMode) _freehandInput.EraseMode = false;
+                }
                 _freehandInput.IsEnabled = _freehandEnabled && _playback is null && !_busy && !_closePreparing;
                 _freehandInput.Refresh();
             }
@@ -243,7 +394,11 @@ public sealed partial class PresentPage
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         internal void Notify() => PropertyChanged?.Invoke(this, new(null));
-        private bool CanConfigureStroke => owner._freehandEnabled && owner._freehandInput?.CanDraw == true;
+        private bool CanDrawInk => owner._freehandEnabled && owner._freehandInput?.CanDraw == true;
+        private bool CanConfigureEraser => owner._freehandEnabled && owner._freehandInput?.CanDraw == true &&
+            owner.FreehandErasePlacementBlocker() is null;
+        private bool CanConfigurePenTool => CanDrawInk && owner.FreehandSharedObjectViewCount() < MaximumSharedInkViews;
+        private bool CanConfigureStroke => owner._freehandInput?.EraseMode == true ? CanConfigureEraser : CanConfigurePenTool;
         private bool CanRecolor => !owner._freehandEnabled && owner.EditableSelectedSharedInk() is not null;
         public bool TryGetValue(string path, out object? value)
         {
@@ -253,20 +408,32 @@ public sealed partial class PresentPage
                 "Drawing" => owner._freehandEnabled,
                 "CanToggle" => IsActionAvailable("present.ink.toggle") == true,
                 "CanDraw" => owner._freehandInput?.CanDraw == true,
-                "CanOpenTools" => CanConfigureStroke || CanRecolor,
+                "CanOpenTools" => CanConfigureStroke || CanConfigureEraser || CanRecolor,
                 "CanConfigureStroke" => CanConfigureStroke,
-                "CanChooseColor" => CanConfigureStroke || CanRecolor,
-                "ToolLabel" => owner._freehandEnabled ? owner._freehandInput?.Style.Kind == CanvasRnoteInkKind.Marker ? "Marker" : "Pen" : "Ink",
+                "CanConfigurePenTool" => CanConfigurePenTool,
+                "CanConfigureEraser" => CanConfigureEraser,
+                "EraserDescription" => owner._freehandEnabled
+                    ? owner.FreehandErasePlacementBlocker() ?? "Erases complete shared Rnote strokes intersected by the gesture; Undo restores erased strokes."
+                    : "Start drawing mode to erase whole shared Rnote strokes.",
+                "CanChooseColor" => CanConfigurePenTool || CanRecolor,
+                "ToolLabel" => owner._freehandEnabled ? owner._freehandInput?.EraseMode == true ? "Eraser" :
+                    owner._freehandInput?.Style.Kind == CanvasRnoteInkKind.Marker ? "Marker" : "Pen" : "Ink",
                 "ColorLabel" => "Colour · " + FreehandColorName(owner._freehandEnabled ? owner._freehandInput?.Style.Color : owner.SelectedSharedInkColor()),
-                "WidthLabel" => "Thickness · " + (owner._freehandInput?.Style.BaseWidth.ToString("0.#", CultureInfo.InvariantCulture) ?? "—"),
-                "ColorTargetHint" => owner._freehandEnabled ? "Choose the colour for new strokes." : "Change the selected drawing's colour.",
-                "Status" => owner._editor?.SelectedSlide.Elements.Count(value => value.Kind == PresentElementKind.SharedObject) >= MaximumSharedInkViews
-                    ? "This slide has reached this view's 32 shared drawing-object limit; its original content is retained."
+                "WidthLabel" => owner._freehandInput?.EraseMode == true
+                    ? "Eraser width · " + (owner._freehandInput?.EraserWidth.ToString("0.#", CultureInfo.InvariantCulture) ?? "—")
+                    : "Thickness · " + (owner._freehandInput?.Style.BaseWidth.ToString("0.#", CultureInfo.InvariantCulture) ?? "—"),
+                "ColorTargetHint" => owner._freehandEnabled ? owner._freehandInput?.EraseMode == true
+                    ? "Erase complete strokes from this slide's shared Rnote drawing."
+                    : owner.FreehandErasePlacementBlocker() ?? "Choose the colour for new strokes."
+                    : "Change the selected drawing's colour.",
+                "Status" => owner._freehandEnabled && owner.FreehandErasePlacementBlocker() is { } eraseBlocker ? eraseBlocker :
+                    owner.FreehandSharedObjectViewCount() >= MaximumSharedInkViews
+                    ? "This slide has reached the 32 shared-object view limit. Remove a shared object before adding another ink object."
                     : owner._freehandInput?.Status ?? "Drawing is unavailable because the original Home ink owner is not connected.",
                 _ => null
             };
             return path is "DrawLabel" or "Drawing" or "CanToggle" or "CanDraw" or "CanOpenTools" or "CanConfigureStroke" or
-                "CanChooseColor" or "ToolLabel" or "ColorLabel" or "WidthLabel" or "ColorTargetHint" or "Status";
+                "CanConfigurePenTool" or "CanConfigureEraser" or "EraserDescription" or "CanChooseColor" or "ToolLabel" or "ColorLabel" or "WidthLabel" or "ColorTargetHint" or "Status";
         }
         public bool? IsActionAvailable(string command) => !owner._disposed && !owner._originalPresentWork.IsRetiring &&
             owner.CanAdmitOriginalPresentation && !owner._busy && !owner._closePreparing && Volatile.Read(ref owner._saveRunning) == 0 &&
@@ -274,9 +441,10 @@ public sealed partial class PresentPage
             {
                 "present.ink.toggle" => owner._freehandEnabled || owner._freehandInput?.CanDraw == true ||
                     (owner.Document is not null && owner._freehandInput?.LastError is not null),
-                "present.ink.tool" or "present.ink.pen" or "present.ink.highlighter" or
+                "present.ink.tool" or "present.ink.pen" or "present.ink.highlighter" => CanConfigurePenTool,
+                "present.ink.eraser" => CanConfigureEraser,
                 "present.ink.width.fine" or "present.ink.width.normal" or "present.ink.width.broad" => CanConfigureStroke,
-                _ => FreehandColorForCommand(command) is not null && (CanConfigureStroke || CanRecolor)
+                _ => FreehandColorForCommand(command) is not null && (CanConfigurePenTool || CanRecolor)
             });
         public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
         {
@@ -302,9 +470,16 @@ public sealed partial class PresentPage
                 }
                 else if (owner._freehandInput is { } input)
                 {
+                    if (command == "present.ink.eraser") input.EraseMode = true;
+                    else if (command is "present.ink.pen" or "present.ink.highlighter" or "present.ink.tool") input.EraseMode = false;
                     var styleCommand = command == "present.ink.tool"
                         ? input.Style.Kind == CanvasRnoteInkKind.Marker ? "present.ink.pen" : "present.ink.highlighter" : command;
-                    if (ResolveFreehandStyleCommand(input.Style, styleCommand) is { } style) input.Style = style;
+                    if (ResolveFreehandStyleCommand(input.Style, styleCommand) is { } style)
+                    {
+                        input.Style = style;
+                        if (command.StartsWith("present.ink.width.", StringComparison.Ordinal))
+                            input.EraserWidth = Math.Clamp(style.BaseWidth * 4, 1, 500);
+                    }
                     else if (FreehandColorForCommand(command) is { } strokeColor) input.Style = input.Style with { Color = strokeColor };
                 }
                 owner.RefreshFreehandMount();

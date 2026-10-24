@@ -1,0 +1,129 @@
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentPage.Freehand.cs b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentPage.Freehand.cs
+--- a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentPage.Freehand.cs
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentPage.Freehand.cs
+@@ -171,16 +171,29 @@
+             !CanvasSharedInkStrokeFactory.SameOwner(current, observed))
+             return new(false, "RevisionConflict", "The selected slide or drawing changed while preparing the erase.");
+ 
++        InvalidateFreehandEraseCheck();
++        if (FreehandErasePlacementBlocker() is { } placementBlocker)
++            return new CanvasSharedInkCommitResult(false, "ErasePlacementUnsupported", placementBlocker);
++        token.ThrowIfCancellationRequested();
++        var result = owner.TryApplySharedInkErase(document.Id, document.Version, current.LayerId,
++            current.Bundles, verified, new CanvasPresentInkBridge(_sharedInkEngine!, document.Id, document.Version),
++            () =>
++            {
++                // Reacquire after every bridge capture/possible synchronous notification.
++                // This is the last owner/placement check before Present's one history mutation.
++                InvalidateFreehandEraseCheck();
++                var latest = CaptureFreehandOwner();
++                return ReferenceEquals(_editor, owner) && ReferenceEquals(Document, document) && latest is not null &&
++                    CanvasSharedInkStrokeFactory.SameOwner(current, latest) && FreehandErasePlacementBlocker() is null &&
++                    CanvasSharedInkStrokeFactory.IsCurrentEraseRequest(_sharedInkEngine!, request, latest);
++            });
++        if (!result.Changed) return new CanvasSharedInkCommitResult(false, result.Code, result.Message);
++
++        // The exact-current handshake has authorized the synchronous mutation. Do not
++        // invalidate its captured owner by refreshing busy/input state before that check.
+         SetBusy(true);
+         try
+         {
+-            InvalidateFreehandEraseCheck();
+-            if (FreehandErasePlacementBlocker() is { } placementBlocker)
+-                return new CanvasSharedInkCommitResult(false, "ErasePlacementUnsupported", placementBlocker);
+-            token.ThrowIfCancellationRequested();
+-            var result = owner.TryApplySharedInkErase(document.Id, document.Version, current.LayerId,
+-                current.Bundles, verified, new CanvasPresentInkBridge(_sharedInkEngine!, document.Id, document.Version));
+-            if (!result.Changed) return new CanvasSharedInkCommitResult(false, result.Code, result.Message);
+             var saved = await SaveAsync("Freehand erase", token);
+             PublishOriginalPresentSource(() => _bus.Fire("Present.Drawing.Changed"));
+             return new CanvasSharedInkCommitResult(true, saved ? "Saved" : "PreparedUnsaved", saved
+diff --git a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentFreehandTests.cs b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentFreehandTests.cs
+--- a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentFreehandTests.cs
++++ b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentFreehandTests.cs
+@@ -202,6 +202,85 @@
+         Assert.Contains(reopened.Slides.Single(value => value.Id == slide).Elements, value => value.Id == secondId);
+     }
+ 
++    [AvaloniaFact]
++    public async Task Translated_shared_ink_erase_uses_current_producer_placement_and_the_existing_Present_owner_transaction()
++    {
++        using var paths = new PhysicalPaths(); using var bus = new HavenEventBus();
++        var repository = new PresentRepository(paths); var engine = Engine();
++        var document = PresentDocument.Create("Translated revision ink"); var slideId = document.Slides[0].Id;
++        var source = Bundle(document, slideId);
++        var node = JsonNode.Parse(source.GetRawText())!.AsObject();
++        node["objects"]![0]!["content"]!["Transform"]!["TranslateX"] = 100;
++        node["objects"]![0]!["content"]!["Transform"]!["TranslateY"] = 40;
++        using var translatedJson = JsonDocument.Parse(node.ToJsonString());
++        var translatedBundle = translatedJson.RootElement.Clone();
++        var objectId = engine.ParseBundle(translatedBundle.GetRawText()).Objects.Single().ObjectId;
++        var context = Context(document) with { SelectedObjectIds = [objectId] };
++        var owner = new CanvasSharedInkOwnerSnapshot(context, slideId, "translated-present-test", [translatedBundle]);
++
++        var hit = CanvasSharedInkStrokeFactory.CaptureWholeErase(engine, owner,
++            [new(120, 73.333333, .5), new(125, 80, .5)], 20);
++        Assert.Equal(new[] { objectId }, hit.Erasure!.ErasedObjectIds);
++        Assert.True(CanvasSharedInkStrokeFactory.IsCurrentEraseRequest(engine, hit, owner));
++        var miss = CanvasSharedInkStrokeFactory.CaptureWholeErase(engine, owner,
++            [new(20, 20, .5), new(25, 25, .5)], 12);
++        Assert.Empty(miss.Erasure!.ErasedObjectIds);
++        Assert.True(JsonElement.DeepEquals(translatedBundle, Assert.Single(miss.ReplacementBundles!)));
++        var staleNode = JsonNode.Parse(translatedBundle.GetRawText())!.AsObject();
++        staleNode["objects"]![0]!["content"]!["Transform"]!["TranslateX"] = 101;
++        using var staleJson = JsonDocument.Parse(staleNode.ToJsonString());
++        Assert.False(CanvasSharedInkStrokeFactory.IsCurrentEraseRequest(engine, hit,
++            owner with { Bundles = [staleJson.RootElement.Clone()] }));
++
++        var scene = CanvasSharedInkStrokeFactory.RenderScene(engine, context, slideId, [translatedBundle]);
++        var editor = new PresentEditor(document);
++        Assert.True(editor.TryInsertPreparedSharedObject(document.Id, document.Version, slideId, translatedBundle,
++            new CanvasPresentInkBridge(engine, document.Id, document.Version), scene.X / 960, scene.Y / 540,
++            scene.Width / 960, scene.Height / 540).Inserted);
++        await repository.SaveAsync(editor.Document, "Translated ink consumer source regression", TestContext.Current.CancellationToken);
++
++        var page = new PresentPage(bus, repository, new PresentPptxExportService(), null, null, engine);
++        await page.InitializeAsync(TestContext.Current.CancellationToken);
++        var window = new Avalonia.Controls.Window { Width = 1280, Height = 800, Content = page };
++        try
++        {
++            window.Show(); window.UpdateLayout();
++            var input = Assert.IsType<CanvasSharedInkInput>(page.FreehandInput);
++            var commands = Assert.IsAssignableFrom<ICuiActionDispatcher>(page.FreehandCommands);
++            var availability = Assert.IsAssignableFrom<ICuiActionAvailability>(page.FreehandCommands);
++            await commands.DispatchAsync("present.ink.toggle", null, TestContext.Current.CancellationToken);
++            Assert.True(input.EraserEnabled);
++            Assert.True(availability.IsActionAvailable("present.ink.eraser"));
++            await commands.DispatchAsync("present.ink.eraser", null, TestContext.Current.CancellationToken);
++            Avalonia.Point AtDocument(double x, double y) => input.TranslatePoint(
++                new(x / 960 * input.Bounds.Width, y / 540 * input.Bounds.Height), window)!.Value;
++
++            var missStart = AtDocument(20, 20); var missEnd = AtDocument(25, 25);
++            window.MouseDown(missStart, Avalonia.Input.MouseButton.Left);
++            window.MouseMove(missEnd, Avalonia.Input.RawInputModifiers.LeftMouseButton);
++            window.MouseUp(missEnd, Avalonia.Input.MouseButton.Left);
++            await input.PendingSubmission!.WaitAsync(TimeSpan.FromSeconds(10));
++            Assert.False(page.Editor!.CanUndo);
++            Assert.True(JsonElement.DeepEquals(translatedBundle,
++                page.Document!.Slides.Single(value => value.Id == slideId).Elements.Single(value => value.Id == objectId).SharedProductivityBundle!.Value));
++
++            var hitStart = AtDocument(120, 73.333333); var hitEnd = AtDocument(125, 80);
++            window.MouseDown(hitStart, Avalonia.Input.MouseButton.Left);
++            window.MouseMove(hitEnd, Avalonia.Input.RawInputModifiers.LeftMouseButton);
++            window.MouseUp(hitEnd, Avalonia.Input.MouseButton.Left);
++            await input.PendingSubmission!.WaitAsync(TimeSpan.FromSeconds(10));
++            Assert.DoesNotContain(page.Document!.Slides.Single(value => value.Id == slideId).Elements, value => value.Id == objectId);
++            Assert.True(page.Editor!.CanUndo);
++            var reopened = Assert.IsType<PresentDocument>(await repository.LoadAsync(document.Id, TestContext.Current.CancellationToken));
++            Assert.DoesNotContain(reopened.Slides.Single(value => value.Id == slideId).Elements, value => value.Id == objectId);
++        }
++        finally
++        {
++            Assert.True(await page.PrepareToCloseAsync(cancellationToken: TestContext.Current.CancellationToken));
++            window.Content = null; window.Close(); await page.CloseAndDrainAsync();
++        }
++    }
++
+     [Fact]
+     public void Invalid_geometry_and_a_bridge_selection_change_are_rejected_before_editor_mutation()
+     {

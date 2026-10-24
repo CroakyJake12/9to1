@@ -104,6 +104,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         if (Interlocked.Exchange(ref _saveRunning, 1) != 0) return false;
         try
         {
+            _editor?.CommitLiveTextEdit();
             if (string.IsNullOrWhiteSpace(document.Title)) document.Title = "Untitled presentation";
             var generation = _editGeneration;
             var snapshot = JsonSerializer.Deserialize<PresentDocument>(
@@ -390,7 +391,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         if (_route is null) return;
         _route.PreviousDeckRequested -= OnPreviousDeckRequested; _route.NextDeckRequested -= OnNextDeckRequested; _route.NewDeckRequested -= OnNewDeckRequested; _route.SaveRequested -= OnSaveRequested; _route.ExportRequested -= OnExportRequested;
         _route.PreviousSlideRequested -= OnPreviousSlideRequested; _route.NextSlideRequested -= OnNextSlideRequested; _route.AddSlideRequested -= OnAddSlideRequested; _route.DeleteSlideRequested -= OnDeleteSlideRequested;
-        _route.DeckTitleChanged -= OnDeckTitleChanged; _route.SlideTitleChanged -= OnSlideTitleChanged; _route.BodyChanged -= OnBodyChanged; _route.NotesChanged -= OnNotesChanged;
+            _route.DeckTitleChanged -= OnDeckTitleChanged; _route.SlideTitleChanged -= OnSlideTitleChanged; _route.BodyChanged -= OnBodyChanged; _route.NotesChanged -= OnNotesChanged;
         DisposeFreehandMount(); DisposeSharedInkMount(); DisposeWorkspace(); DisposePhase2(); _route.Dispose();
         if (Scene is not null) Scene.Root = null;
     }

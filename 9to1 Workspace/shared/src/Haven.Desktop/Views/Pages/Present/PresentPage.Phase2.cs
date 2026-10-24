@@ -96,7 +96,13 @@ public sealed partial class PresentPage
 
     private void EditDeckTitle(string value)
     {
-        if (_editor is not null) _editor.SetDocumentTitle(value);
+        if (_editor is not null)
+        {
+            if (!_editor.PreviewDocumentTitle(value)) return;
+            ++_editGeneration; _dirty = true;
+            _route.SetHistoryAvailability(_editor.CanUndo, _editor.CanRedo);
+            PublishOriginalPresentSource(() => _route.SetStatus("Editing presentation title · changes commit on navigation or before save"));
+        }
         else if (Document is not null && Document.Title != value) { Document.Title = value; MarkDirty(); RenderCurrent(); }
     }
 
@@ -121,13 +127,20 @@ public sealed partial class PresentPage
     {
         var slide = CurrentSlide;
         if (slide is null) return;
-        if (_editor is not null) _editor.SetSpeakerNotes(slide.Id, value);
+        if (_editor is not null)
+        {
+            if (!_editor.PreviewSpeakerNotes(slide.Id, value)) return;
+            ++_editGeneration; _dirty = true;
+            _route.SetHistoryAvailability(_editor.CanUndo, _editor.CanRedo);
+            PublishOriginalPresentSource(() => _route.SetStatus("Editing speaker notes · changes commit on slide navigation or before save"));
+        }
         else if (slide.SpeakerNotes != value) { slide.SpeakerNotes = value; MarkDirty(); RenderCurrent(); }
     }
 
     private void MoveSlideSelection(int offset)
     {
         if (Document is null || Document.Slides.Count <= 1) return;
+        _editor?.CommitLiveTextEdit();
         _slideIndex = (_slideIndex + offset + Document.Slides.Count) % Document.Slides.Count;
         _editor?.SelectSlide(Document.Slides[_slideIndex].Id);
         RenderCurrent();
@@ -348,6 +361,7 @@ public sealed partial class PresentPage
     private void OnSlideSelected(int index) => RunOriginalPresentEvent(() =>
     {
         if (Document is null || _editor is null) return;
+        _editor.CommitLiveTextEdit();
         _slideIndex = Math.Clamp(index, 0, Document.Slides.Count - 1);
         _editor.SelectSlide(Document.Slides[_slideIndex].Id);
         RenderCurrent();
@@ -366,9 +380,11 @@ public sealed partial class PresentPage
     private void OnObjectSelectionToggled(Guid elementId) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
-        var selected = _editor.Selection.ElementIds.ToHashSet();
-        if (!selected.Add(elementId)) selected.Remove(elementId);
-        _editor.SelectElements(selected);
+        var selected = _editor.Selection.ElementIds.ToList();
+        var existingIndex = selected.IndexOf(elementId);
+        if (existingIndex >= 0) selected.RemoveAt(existingIndex);
+        else selected.Add(elementId);
+        _editor.SelectElements(NormalizeCanvasSelectionOrder(_editor.SelectedSlide, selected));
         RenderCurrent();
     });
 
@@ -380,9 +396,19 @@ public sealed partial class PresentPage
     private void OnCanvasSelectionSetRequested(IReadOnlyCollection<Guid> elementIds) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
-        _editor.SelectElements(elementIds);
+        _editor.SelectElements(NormalizeCanvasSelectionOrder(_editor.SelectedSlide, elementIds));
         RenderCurrent();
     });
+
+    internal static IReadOnlyList<Guid> NormalizeCanvasSelectionOrder(PresentSlide slide, IEnumerable<Guid> elementIds)
+    {
+        ArgumentNullException.ThrowIfNull(slide);
+        ArgumentNullException.ThrowIfNull(elementIds);
+        // Pointer/marquee adapters report set-like IDs. Persist a stable slide order
+        // before the editor snapshots the selection into undo/redo history.
+        var requested = elementIds.ToHashSet();
+        return slide.Elements.Where(element => requested.Remove(element.Id)).Select(element => element.Id).ToArray();
+    }
 
     private void OnCanvasMoveSelectionRequested(double deltaX, double deltaY) => RunOriginalPresentEvent(() =>
     {
@@ -410,6 +436,7 @@ public sealed partial class PresentPage
     {
         if (_editor is null || !_editor.PreviewSlideTitle(_editor.Selection.SlideId, value)) return;
         _dirty = true;
+        _route.SetHistoryAvailability(_editor.CanUndo, _editor.CanRedo);
         PublishOriginalPresentSource(() => _route.SetStatus("Editing slide title · Ctrl+Enter to commit · Esc to cancel"));
     });
 
@@ -417,6 +444,7 @@ public sealed partial class PresentPage
     {
         if (_editor is null || !_editor.PreviewElementText(_editor.Selection.SlideId, elementId, value)) return;
         _dirty = true;
+        _route.SetHistoryAvailability(_editor.CanUndo, _editor.CanRedo);
         PublishOriginalPresentSource(() => _route.SetStatus("Editing text on slide · Ctrl+Enter to commit · Esc to cancel"));
     });
 

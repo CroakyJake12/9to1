@@ -20,7 +20,7 @@ public sealed partial class PresentPage
     private readonly PresentSharedInkResources _sharedInkResources = new();
     private readonly ContentControl _sharedInkPreview = new() { IsHitTestVisible = false,
         HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
-    private readonly List<(CanvasPresentInkObjectSession Session, Exception Cause)> _retainedSharedInkRetirements = [];
+    private readonly List<(IDisposable Session, Exception Cause)> _retainedSharedInkRetirements = [];
     private readonly HomeProductivityEngine? _sharedInkEngine;
     private Dictionary<Guid, SharedInkEntry> _sharedInkEntries = [];
     private PresentEditor? _sharedInkOwner;
@@ -111,7 +111,7 @@ public sealed partial class PresentPage
                     }
                     if (entry.Session.RasterByteCount > MaximumSharedInkRasterBytes - rasterBytes)
                     {
-                        RetireSharedInkView(entry.Session); ++unavailable; budgetLimited = true; continue;
+                        RetireSharedInkEntry(entry); ++unavailable; budgetLimited = true; continue;
                     }
                     next.Add(element.Id, entry);
                     rasterBytes += entry.Session.RasterByteCount;
@@ -122,18 +122,18 @@ public sealed partial class PresentPage
                 {
                     LastSharedInkError = error; ++unavailable;
                     if (entry is not null && !_sharedInkEntries.Values.Any(old => ReferenceEquals(old.Session, entry.Session)))
-                        RetireSharedInkView(entry.Session);
+                        RetireSharedInkEntry(entry);
                 }
             }
             if (!IsSharedInkOwnerCurrent(owner) || !ReferenceEquals(sourceDocument, owner.Document) || generation != _editGeneration)
             {
                 foreach (var abandoned in next.Values.Where(candidate => !_sharedInkEntries.Values.Any(old => ReferenceEquals(old.Session, candidate.Session))))
-                    RetireSharedInkView(abandoned.Session);
+                    RetireSharedInkEntry(abandoned);
                 _sharedInkRefreshRequested = true;
                 return;
             }
             foreach (var retired in _sharedInkEntries.Values.Where(old => !next.Values.Any(current => ReferenceEquals(old.Session, current.Session))))
-                RetireSharedInkView(retired.Session);
+                RetireSharedInkEntry(retired);
             _sharedInkEntries = next;
             _sharedInkResources.Bind(owner, next);
             if (owner.Selection.ElementIds.Count == 1 && next.TryGetValue(owner.Selection.ElementIds[0], out var selected) &&
@@ -244,10 +244,15 @@ public sealed partial class PresentPage
             PublishOriginalPresentSource(() => _route.SetStatus(SharedInkRenderState.Message));
     }
 
-    private void RetireSharedInkView(CanvasPresentInkObjectSession session)
+    private void RetireSharedInkView(IDisposable session)
     {
         try { session.Dispose(); }
         catch (Exception error) { LastSharedInkError = error; _retainedSharedInkRetirements.Add((session, error)); }
+    }
+
+    private void RetireSharedInkEntry(SharedInkEntry entry)
+    {
+        RetireSharedInkView(entry.Session);
     }
 
     private void DetachSharedInkOwner()
@@ -255,7 +260,7 @@ public sealed partial class PresentPage
         _sharedInkPreview.Content = null;
         _sharedInkResources.Bind(null, new Dictionary<Guid, SharedInkEntry>());
         _sharedInkLifetime?.Cancel();
-        foreach (var entry in _sharedInkEntries.Values) RetireSharedInkView(entry.Session);
+        foreach (var entry in _sharedInkEntries.Values) RetireSharedInkEntry(entry);
         _sharedInkEntries.Clear();
         _sharedInkLifetime?.Dispose(); _sharedInkLifetime = null; _sharedInkOwner = null;
         if (_route is not null) _route.SharedInkPreviewHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
