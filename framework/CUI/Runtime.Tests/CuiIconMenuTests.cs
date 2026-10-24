@@ -171,7 +171,7 @@ public sealed class CuiIconMenuTests
     public async Task Checkable_menu_items_show_cui_owned_checked_and_radio_state()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             using var loader = new CuiControlLoader();
             var dispatcher = new RecordingMenuActionDispatcher();
@@ -282,6 +282,7 @@ public sealed class CuiIconMenuTests
                 Assert.True(owner.IsSubMenuOpen);
             }
             finally { window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 
@@ -319,7 +320,7 @@ public sealed class CuiIconMenuTests
     public async Task Space_activates_top_level_CUI_menu_command_through_typed_action()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             using var loader = new CuiControlLoader();
             var dispatcher = new RecordingMenuActionDispatcher();
@@ -344,6 +345,7 @@ public sealed class CuiIconMenuTests
                 Assert.Equal(new[] { "RefreshWorkspace" }, dispatcher.Commands);
             }
             finally { window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 
@@ -504,8 +506,10 @@ public sealed class CuiIconMenuTests
         }, CancellationToken.None);
     }
 
-    [Fact]
-    public async Task Context_popup_focus_clear_recovers_within_its_actual_popup_root()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Context_popup_focus_clear_recovers_within_its_actual_popup_root(bool moveAndClearFocus)
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
@@ -539,9 +543,19 @@ public sealed class CuiIconMenuTests
                 CuiLifecycleProperties.SetLiteral(items[0], "Interactive", "false", CuiPropertyLevel.Instance, "focused context command disabled");
                 var focusAfterDisable = popupRoot.FocusManager!.GetFocusedElement();
                 Assert.NotSame(items[0], focusAfterDisable);
+                if (moveAndClearFocus)
+                {
+                    Assert.True(editor.Focus());
+                    // The first clear may restore the scope's remembered control;
+                    // a second clear then leaves focus intentionally empty.
+                    window.FocusManager!.Focus(null);
+                    window.FocusManager.Focus(null);
+                    Assert.Null(window.FocusManager.GetFocusedElement());
+                }
                 Dispatcher.UIThread.RunJobs();
                 var focusAfterRecovery = popupRoot.FocusManager.GetFocusedElement();
-                if (focusAfterDisable is null) Assert.Same(items[1], focusAfterRecovery);
+                if (moveAndClearFocus) Assert.Null(focusAfterRecovery);
+                else if (focusAfterDisable is null) Assert.Same(items[1], focusAfterRecovery);
                 else Assert.Same(focusAfterDisable, focusAfterRecovery);
             }
             finally { window.Close(); }
@@ -552,7 +566,7 @@ public sealed class CuiIconMenuTests
     public async Task Keyboard_context_menu_key_opens_authored_menu_and_escape_returns_to_editor()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             using var loader = new CuiControlLoader();
             var (root, diagnostics) = loader.LoadMarkup("""
@@ -590,6 +604,7 @@ public sealed class CuiIconMenuTests
                 Assert.Equal(editor.Text!.Length, editor.CaretIndex);
             }
             finally { window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 
@@ -597,7 +612,7 @@ public sealed class CuiIconMenuTests
     public async Task Space_activates_context_menu_item_through_canonical_click_action()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             using var loader = new CuiControlLoader();
             var dispatcher = new RecordingMenuActionDispatcher();
@@ -638,6 +653,7 @@ public sealed class CuiIconMenuTests
                 Assert.Equal(new[] { "MarkDocument" }, dispatcher.Commands);
             }
             finally { window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 

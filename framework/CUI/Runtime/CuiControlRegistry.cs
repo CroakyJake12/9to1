@@ -413,7 +413,7 @@ public sealed class CuiControlRegistry
                 "Text" => text,
                 "Input" => input,
                 "Image" => common.Concat(new[] { "Source", "Stretch", "Opacity", "Background" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
-                "Button" => content.Concat(new[] { "Action", "Shortcut", "Selected", "IconSource", "MenuColumns", "IconOnly", "DefaultAction", "CancelAction", "Chromeless" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
+                "Button" => content.Concat(new[] { "Action", "Shortcut", "Selected", "IconSource", "MenuColumns", "IconOnly", "ToggleType", "Checked", "IsChecked", "DefaultAction", "CancelAction", "Chromeless" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Layer" => common.Concat(new[] { "Background", "Padding", "ZIndex", "Interactive", "ActiveIndependently" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Anchor" => common.Concat(new[] { "Target", "Placement" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Audio" or "Video" => common.Concat(new[] { "Type", "Source" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
@@ -458,6 +458,7 @@ public sealed class CuiControlRegistry
             ("Tooltip", "text", typeof(string), true), ("Shortcut", "text", typeof(string), true),
             ("IconSource", "uri", typeof(string), true),
             ("MenuColumns", "integer", typeof(int), true), ("IconOnly", "boolean", typeof(bool), true),
+            ("ToggleType", "symbol", typeof(MenuItemToggleType), true),
             ("Selected", "boolean", typeof(bool), true), ("ResizeEdge", "symbol", typeof(string), true),
             ("Chromeless", "boolean", typeof(bool), true),
             ("Header", "text", typeof(string), true), ("Text", "text", typeof(string), true), ("Content", "content", typeof(object), true),
@@ -534,6 +535,7 @@ public sealed class CuiControlRegistry
         {
             "Type" => Array.Empty<string>(), // Type values are resolved per element, not against another element's type family.
             "Orientation" => new[] { "Horizontal", "Vertical" },
+            "ToggleType" => Enum.GetNames<MenuItemToggleType>(),
             "HorizontalAlignment" => new[] { "Left", "Center", "Right", "Stretch" },
             "VerticalAlignment" => new[] { "Top", "Center", "Bottom", "Stretch" },
             "VerticalTextAlignment" => new[] { "Top", "Center", "Bottom" },
