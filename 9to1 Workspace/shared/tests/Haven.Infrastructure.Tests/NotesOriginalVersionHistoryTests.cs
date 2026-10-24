@@ -64,6 +64,7 @@ public sealed partial class NotesOriginalStoreTests
         var history = await rig.Notes.Owner.PrepareOriginalVersionReadAsync(document.Id, cancellationToken: rig.Token);
         var saved = await rig.Notes.Owner.PrepareOriginalVersionReadAsync(document.Id, firstId, rig.Token);
         var (review, admitted) = await rig.AcceptReadAsync(history);
+        Assert.True(admitted.IsBoundToOriginalNotes(rig.Notes.Owner, history));
         var before = await rig.CaptureNotesFilesAsync();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(saved, admitted, rig.Verified, rig.Token));
         var foreignVerified = new VerifiedNotesRepository(foreign.Owner, foreign, foreign.Diagnostics);
@@ -71,7 +72,12 @@ public sealed partial class NotesOriginalStoreTests
         var snapshot = await rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(history, admitted, rig.Verified, rig.Token);
         Assert.Equal(2, snapshot.Versions.Count); Assert.Null(snapshot.SelectedDocument); Assert.Empty(snapshot.Documents);
         Assert.Throws<UnauthorizedAccessException>(() => rig.Notes.Owner.CreateOriginalBoardsSummarySource(history, snapshot, admitted));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(history, admitted, rig.Verified, rig.Token));
+        // Successful Home completion retires the claimed attestation. Reuse is refused
+        // by that original authority boundary before the repository's execution counter.
+        Assert.Equal(HomePermissionRequestState.Succeeded,
+            (await rig.Admission.GetLibrarySnapshotAuthorizationAsync(review, rig.Token)).State);
+        Assert.False(admitted.IsBoundToOriginalNotes(rig.Notes.Owner, history));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(history, admitted, rig.Verified, rig.Token));
         Assert.Equal(1, await rig.CompletionCountAsync(review.Authorization.RequestId));
         await rig.AssertNotesFilesUnchangedAsync(before);
     }
