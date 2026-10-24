@@ -103,6 +103,10 @@ public sealed class CuiMenuItem : MenuItem
         };
         root.AddHandler(InputElement.GotFocusEvent, focusChanged, RoutingStrategies.Bubble, handledEventsToo: true);
         root.AddHandler(InputElement.LostFocusEvent, focusChanged, RoutingStrategies.Bubble, handledEventsToo: true);
+        // Overlay context popups route through their logical popup owner, which can
+        // bypass the visual TopLevel. Observe that route and focus moves outside it.
+        owner.AddHandler(InputElement.GotFocusEvent, focusChanged, RoutingStrategies.Bubble, handledEventsToo: true);
+        owner.AddHandler(InputElement.LostFocusEvent, focusChanged, RoutingStrategies.Bubble, handledEventsToo: true);
         Dispatcher.UIThread.Post(() =>
         {
             try
@@ -142,6 +146,8 @@ public sealed class CuiMenuItem : MenuItem
             {
                 root.RemoveHandler(InputElement.GotFocusEvent, focusChanged);
                 root.RemoveHandler(InputElement.LostFocusEvent, focusChanged);
+                owner.RemoveHandler(InputElement.GotFocusEvent, focusChanged);
+                owner.RemoveHandler(InputElement.LostFocusEvent, focusChanged);
                 if (ownerChanged is not null) owner.PropertyChanged -= ownerChanged;
                 if (_pendingDisableGeneration == generation) _pendingDisableGeneration = 0;
             }
