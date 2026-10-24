@@ -164,6 +164,14 @@ public class CanvasNativeViewport : UserControl, IDisposable
         _zoom = 1; _pan = default; ApplyView();
     }
 
+    /// <summary>Restore transient editor framing from the same canonical artifact only.</summary>
+    internal bool RestoreViewState(double zoom, Vector pan)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (_disposed || _bitmap is null || !double.IsFinite(zoom) || zoom is < 0.25 or > 8 || !ValidPan(pan)) return false;
+        _zoom=zoom;_pan=pan;ApplyView();return true;
+    }
+
     /// <summary>Transient accelerated-surface feedback from the authoritative donor path.
     /// No guessed paint bounds, artifact mutation or resource authority is supplied here.</summary>
     public bool SetSelectionFeedback(CanvasSelectionPath? path, double deltaX = 0, double deltaY = 0, bool visible = true)
@@ -207,11 +215,14 @@ public class CanvasNativeViewport : UserControl, IDisposable
     {
         if (_disposed || _bitmap is null || _panPointer is not null) return;
         var point = args.GetCurrentPoint(this);
-        if (!(PanWithPrimaryButton && point.Properties.IsLeftButtonPressed) &&
-            !(args.Pointer.Type == PointerType.Mouse && point.Properties.IsMiddleButtonPressed)) return;
+        if (!ShouldBeginPan(args.Pointer.Type, PanWithPrimaryButton, point.Properties.IsLeftButtonPressed,
+                point.Properties.IsMiddleButtonPressed)) return;
         _panPointer = args.Pointer; _panStart = point.Position;
         args.Pointer.Capture(this); args.PreventGestureRecognition(); args.Handled = true;
     }
+    internal static bool ShouldBeginPan(PointerType type, bool panWithPrimaryButton, bool primaryPressed, bool middlePressed)
+        => (panWithPrimaryButton && (primaryPressed || type == PointerType.Touch)) ||
+           (type == PointerType.Mouse && middlePressed);
     private void ContinuePan(object? sender, PointerEventArgs args)
     {
         if (_panPointer != args.Pointer) return;
@@ -220,7 +231,10 @@ public class CanvasNativeViewport : UserControl, IDisposable
     }
     private void EndPan(object? sender, PointerReleasedEventArgs args)
     { if (_panPointer == args.Pointer) { ReleasePan(); args.Handled = true; } }
-    private void LostPan(object? sender, PointerCaptureLostEventArgs args) => _panPointer = null;
+    private void LostPan(object? sender, PointerCaptureLostEventArgs args)
+    { if (IsCurrentPanPointer(_panPointer,args.Pointer)) _panPointer = null; }
+    internal static bool IsCurrentPanPointer(object? capturedPointer,object lostPointer)
+        => capturedPointer is not null && ReferenceEquals(capturedPointer,lostPointer);
     private void ReleasePan()
     { var pointer = _panPointer; _panPointer = null; pointer?.Capture(null); }
 

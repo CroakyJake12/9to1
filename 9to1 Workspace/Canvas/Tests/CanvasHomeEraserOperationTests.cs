@@ -48,6 +48,55 @@ public sealed class CanvasHomeEraserOperationTests
         using var restoredDonor=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(restored.Artifact));
         using var engine=RnoteCanvasEngine.Open(restoredDonor.ExportRnote()); Assert.Equal(3,engine.ReadStrokeKeys().Length);
     }
+
+    [Fact]
+    public async Task Whole_stroke_erase_Undo_and_Redo_preserve_exact_native_entities_across_reopen()
+    {
+        await using var fixture=await Fixture.Create();
+        await Add(fixture,[new(20,30,.2,.1,.2),new(80,90,.8,.3,.4)]);
+        await Add(fixture,[new(500,600,.4),new(540,660,.6)]);
+        var source=await fixture.Files.OpenAsync(fixture.FileId);
+        using var original=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(source.Artifact));
+        var originalIds=original.Snapshot.Pages[0].StrokeOrder.ToArray();
+        var before=originalIds.ToDictionary(id=>id,id=>original.ExportCanonicalStrokeSelection([id],source.Artifact.RevisionId));
+
+        var erase=CanvasEraserIntent.Capture(fixture.FileId,source,[new(49,59,.5),new(51,61,.5)],20);
+        Assert.Equal(new[]{originalIds[0]},erase.StrokeIds);
+        var eraseCapability=await fixture.Approve(erase);
+        await new CanvasHomeEraserOperation(fixture.Files,fixture.Home,fixture.Actors).ExecuteAsync(erase,eraseCapability);
+        Assert.True((await fixture.Home.CompleteExecutionAsync(eraseCapability,new(HomePermissionRequestState.Succeeded,
+            "CANVAS_ERASE_COMMITTED","Whole stroke erase committed.",[new("files.item",fixture.FileId.ToString())]))).Succeeded);
+        var afterErase=await fixture.Files.OpenAsync(fixture.FileId);
+        using(var reopenedErase=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(afterErase.Artifact)))
+            Assert.Equal(new[]{originalIds[1]},reopenedErase.Snapshot.Pages[0].StrokeOrder);
+
+        var undo=CanvasHistoryIntent.Capture(fixture.FileId,afterErase.CasRevisionId,afterErase.Artifact.ArtifactId,
+            afterErase.Artifact.RevisionId,Guid.NewGuid(),CanvasHistoryKind.Undo,afterErase.StoreId);
+        var undoCapability=await fixture.Approve(undo);
+        await new CanvasHomeHistoryOperation(fixture.Files,fixture.Home,fixture.Actors).ExecuteAsync(undo,undoCapability);
+        Assert.True((await fixture.Home.CompleteExecutionAsync(undoCapability,new(HomePermissionRequestState.Succeeded,
+            "CANVAS_UNDO_COMMITTED","Whole stroke restored.",[new("files.item",fixture.FileId.ToString())]))).Succeeded);
+        var afterUndo=await fixture.Files.OpenAsync(fixture.FileId);
+        using(var reopenedUndo=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(afterUndo.Artifact)))
+        {
+            Assert.Equal(originalIds,reopenedUndo.Snapshot.Pages[0].StrokeOrder);
+            foreach(var id in originalIds)
+                Assert.True(SameNative(before[id],reopenedUndo.ExportCanonicalStrokeSelection([id],afterUndo.Artifact.RevisionId)),
+                    $"Undo/reopen must restore the exact native entity for stroke {id}.");
+        }
+
+        var redo=CanvasHistoryIntent.Capture(fixture.FileId,afterUndo.CasRevisionId,afterUndo.Artifact.ArtifactId,
+            afterUndo.Artifact.RevisionId,Guid.NewGuid(),CanvasHistoryKind.Redo,afterUndo.StoreId);
+        var redoCapability=await fixture.Approve(redo);
+        await new CanvasHomeHistoryOperation(fixture.Files,fixture.Home,fixture.Actors).ExecuteAsync(redo,redoCapability);
+        Assert.True((await fixture.Home.CompleteExecutionAsync(redoCapability,new(HomePermissionRequestState.Succeeded,
+            "CANVAS_REDO_COMMITTED","Whole stroke erase replayed.",[new("files.item",fixture.FileId.ToString())]))).Succeeded);
+        var afterRedo=await fixture.Files.OpenAsync(fixture.FileId);
+        using var reopenedRedo=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(afterRedo.Artifact));
+        Assert.Equal(new[]{originalIds[1]},reopenedRedo.Snapshot.Pages[0].StrokeOrder);
+        Assert.True(SameNative(before[originalIds[1]],reopenedRedo.ExportCanonicalStrokeSelection([originalIds[1]],afterRedo.Artifact.RevisionId)));
+    }
+
     [Fact]
     public async Task Stale_eraser_target_denies_publication_without_replaying_a_consumed_owner()
     {

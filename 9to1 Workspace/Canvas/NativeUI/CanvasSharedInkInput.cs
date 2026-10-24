@@ -29,6 +29,11 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
     private sealed record ViewStamp(Size Bounds, Point? Origin, Point? BasisX, Point? BasisY, double Scale, Size? Viewport, IReadOnlyList<ClipStamp> Clips);
     private sealed record ClipStamp(Size Bounds, Point? Origin, Point? BasisX, Point? BasisY, bool ClipsBounds, Rect? GeometryBounds);
     private ViewStamp? _capturedView;
+    private sealed record QueuedRelease(long Generation, object Pointer, CanvasSharedInkOwnerSnapshot Owner,
+        CanvasRnoteInkStyle Style, bool Erase, double EraserWidth, IReadOnlyList<RnotePointerSample> Samples, ViewStamp? View);
+    private long _gestureGeneration;
+    private QueuedRelease? _activeRelease;
+    private bool _releaseQueued;
     /// <summary>Explicit page transform: one saved document unit is one local DIP.
     /// Bounds/scroll/DPI changes cancel capture, never rescale canonical coordinates.</summary>
     public bool DocumentCoordinates
@@ -170,9 +175,10 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         double.IsFinite(availableSize.Width) ? availableSize.Width : CanvasSharedInkStrokeFactory.LogicalWidth,
         double.IsFinite(availableSize.Height) ? availableSize.Height : CanvasSharedInkStrokeFactory.LogicalHeight);
 
-    private bool Current(CanvasSharedInkOwnerSnapshot expected)
+    private bool Current(CanvasSharedInkOwnerSnapshot expected) => Current(expected, _capturedView);
+    private bool Current(CanvasSharedInkOwnerSnapshot expected, ViewStamp? view)
     {
-        if (_disposed || _retiring || _lifetime.IsCancellationRequested || _capturedView is { } view && !SameView(view, CurrentView())) return false;
+        if (_disposed || _retiring || _lifetime.IsCancellationRequested || view is not null && !SameView(view, CurrentView())) return false;
         var current = _captureOwner();
         return current is not null && CanvasSharedInkStrokeFactory.SameOwner(expected, current);
     }
@@ -203,12 +209,13 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
 
     private void Pressed(object? sender, PointerPressedEventArgs args)
     {
-        if (!CanDraw || _disposed || _retiring || _submitting || _pointer is not null || _shown is null || !IsEffectivelyEnabled) return;
+        if (!CanDraw || _disposed || _retiring || _submitting || _releaseQueued || _pointer is not null || _shown is null || !IsEffectivelyEnabled) return;
         try
         {
             if (!Current(_shown)) { Refresh(); return; }
             var point = args.GetCurrentPoint(this);
-            if ((!point.Properties.IsLeftButtonPressed && !point.Properties.IsEraser) || point.Properties.IsEraser && !EraserEnabled) return;
+            if (!CanBeginGesture(args.Pointer.Type, point.Properties.IsLeftButtonPressed, point.Properties.IsEraser, EraserEnabled)) return;
+            _gestureGeneration=checked(_gestureGeneration+1);_activeRelease=null;_releaseQueued=false;
             _captured = _shown; _capturedStyle = _style; _capturedErase = EraserEnabled && (EraseMode || point.Properties.IsEraser);
             _capturedView = CurrentView(); _pointer = args.Pointer; _samples.Clear();
             if (!Add(point.Position, point.Properties, args.Pointer.Type)) return;
@@ -217,9 +224,13 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         catch (Exception error) { LastError = error; CancelCapture(); Clear("Drawing input is unavailable: " + error.Message); }
     }
 
+    internal static bool CanBeginGesture(PointerType type, bool primaryPressed, bool eraserEnd, bool eraserEnabled)
+        => (primaryPressed || eraserEnd || type == PointerType.Touch) && (!eraserEnd || eraserEnabled);
+
     private void Moved(object? sender, PointerEventArgs args)
     {
         if (_pointer != args.Pointer) return;
+        if (_releaseQueued) { args.Handled=true; return; }
         try
         {
             if (_captured is null || !Current(_captured) || !IsEffectivelyEnabled) { CancelCapture(); return; }
@@ -232,45 +243,68 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
 
     private void Released(object? sender, PointerReleasedEventArgs args)
     {
-        if (_pointer != args.Pointer || _disposed || _retiring || _submitting) return;
+        if (_pointer != args.Pointer || _disposed || _retiring || _submitting || _releaseQueued) return;
+        QueuedRelease? release;
+        try { release=CaptureRelease(args); }
+        catch(Exception error) { LastError=error;CancelCapture();Status="The shared stroke release could not be captured. "+error.Message;Changed?.Invoke(this,EventArgs.Empty);return; }
+        if(release is null)
+        { if(_pointer==args.Pointer)CancelCapture(); return; }
+        _activeRelease=release;_releaseQueued=true;args.Handled=true;
+        ReleasePointer();_samples.Clear();_captured=null;_capturedStyle=null;_capturedView=null;_capturedErase=false;
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _submission = SubmitAfterPublicationAsync(start.Task, args);
+        _submission = SubmitAfterPublicationAsync(start.Task, release);
         _originalSubmissions.Observe(_submission); start.SetResult();
         _ = ObserveSubmissionAsync(_submission);
     }
 
-    private async Task SubmitAfterPublicationAsync(Task start, PointerReleasedEventArgs args)
+    private QueuedRelease? CaptureRelease(PointerReleasedEventArgs args)
+    {
+        var expected=_captured;var style=_capturedStyle;var view=_capturedView;
+        if(expected is null||style is null||!Current(expected,view)||!IsEffectivelyEnabled)return null;
+        var point=args.GetCurrentPoint(this);
+        if(!Add(point.Position,point.Properties,args.Pointer.Type))return null;
+        return new(_gestureGeneration,args.Pointer,expected,style,_capturedErase,_eraserWidth,
+            Array.AsReadOnly(_samples.ToArray()),view);
+    }
+
+    private bool Owns(QueuedRelease release)=>release.Generation==_gestureGeneration&&ReferenceEquals(_activeRelease,release);
+
+    private async Task SubmitAfterPublicationAsync(Task start, QueuedRelease release)
     {
         await start;
         Exception? submissionFailure = null;
         string? submissionNotice = null;
         var ownerInvoked = false;
+        var submissionOwned = false;
         try
         {
-            var expected = _captured; var style = _capturedStyle;
-            if (expected is null || style is null || !Current(expected) || !IsEffectivelyEnabled) return;
-            var point = args.GetCurrentPoint(this);
-            if (!Add(point.Position, point.Properties, args.Pointer.Type)) return;
+            if (!Owns(release)||!Current(release.Owner,release.View)||!IsEffectivelyEnabled) return;
+            var expected=release.Owner;var style=release.Style;
             CanvasSharedInkStrokeRequest request;
             IReadOnlyList<System.Text.Json.JsonElement> proposed;
-            if (_capturedErase)
+            if (release.Erase)
             {
-                request = CanvasSharedInkStrokeFactory.CaptureWholeErase(_engine, expected, _samples, EraserWidth);
+                request = CanvasSharedInkStrokeFactory.CaptureWholeErase(_engine, expected, release.Samples, release.EraserWidth);
                 proposed = request.ReplacementBundles!;
                 if (proposed.Count == expected.Bundles.Count && proposed.Zip(expected.Bundles).All(pair => System.Text.Json.JsonElement.DeepEquals(pair.First, pair.Second)))
                 { submissionNotice = "No stroke intersects this eraser gesture."; return; }
             }
             else
             {
-                var bundle = CanvasSharedInkStrokeFactory.Capture(_engine, expected.Context, expected.LayerId, _samples, style, expected.LogicalWidth, expected.LogicalHeight);
+                var bundle = CanvasSharedInkStrokeFactory.Capture(_engine, expected.Context, expected.LayerId, release.Samples, style, expected.LogicalWidth, expected.LogicalHeight);
                 request = new(expected, bundle); proposed = [.. expected.Bundles, bundle];
             }
             // Actual donor render/raster validation precedes owner insertion. Failure leaves canonical state intact.
             _ = CanvasSharedInkStrokeFactory.RenderScene(_engine, expected.Context, expected.LayerId, proposed);
-            if (!Current(expected)) { submissionNotice = "The owning drawing changed; this stroke was not added."; return; }
-            ReleasePointer(); _samples.Clear(); _captured = null; _capturedStyle = null;
-            _submitting = true; CanDraw = false; Changed?.Invoke(this, EventArgs.Empty);
+            if (!Owns(release)||!Current(expected,release.View)) { submissionNotice = "The owning drawing changed; this stroke was not added."; return; }
+            _submitting = true; submissionOwned=true;CanDraw = false; Changed?.Invoke(this, EventArgs.Empty);
             _lifetime.Token.ThrowIfCancellationRequested();
+            // Changed is synchronous and may reenter the owner. Revalidate both the
+            // exact bundle/revision and its typed inverse-placement map at the final
+            // boundary before invoking the app's single owning history commit.
+            if (!Owns(release)||!Current(expected,release.View) || request.Erasure is not null &&
+                !CanvasSharedInkStrokeFactory.IsCurrentEraseRequest(_engine, request, _captureOwner()))
+            { submissionNotice = "The owning drawing placement changed; this erase was not submitted."; return; }
             ownerInvoked = true;
             var result = await _commitOwner(request, _lifetime.Token);
             // An owner result is not reclassified as rollback if disposal follows the actual mutation.
@@ -287,15 +321,25 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         }
         finally
         {
-            CancelCapture(); _submitting = false;
-            if (!_disposed && !_retiring && !_lifetime.IsCancellationRequested)
+            // A retired release may finish after a later gesture has begun. Only
+            // the release/submission that still owns these mutable buffers may clear them.
+            var ownsRelease=Owns(release);
+            if(submissionOwned)_submitting=false;
+            if(ownsRelease)
+            {
+                _activeRelease=null;_releaseQueued=false;_gestureGeneration=checked(_gestureGeneration+1);
+            }
+            if(submissionOwned||ownsRelease)
+            {
+                _samples.Clear();_captured=null;_capturedStyle=null;_capturedView=null;_capturedErase=false;
+            }
+            if ((submissionOwned||ownsRelease)&&!_disposed && !_retiring && !_lifetime.IsCancellationRequested)
             {
                 Refresh();
                 if (submissionFailure is not null) LastError = submissionFailure;
                 if (submissionNotice is not null) Status = submissionNotice;
                 Changed?.Invoke(this, EventArgs.Empty);
             }
-            args.Handled = true;
         }
     }
 
@@ -305,8 +349,15 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         var pointer = _pointer; _pointer = null; _releasing = true;
         try { pointer?.Capture(null); } finally { _releasing = false; }
     }
-    private void CancelCapture() { ReleasePointer(); _samples.Clear(); _captured = null; _capturedStyle = null; _capturedView = null; _capturedErase = false; }
-    private void CaptureLost(object? sender, PointerCaptureLostEventArgs args) { if (!_releasing) CancelCapture(); }
+    private void CancelCapture()
+    {
+        _gestureGeneration=checked(_gestureGeneration+1);_activeRelease=null;_releaseQueued=false;
+        ReleasePointer();_samples.Clear();_captured=null;_capturedStyle=null;_capturedView=null;_capturedErase=false;
+    }
+    internal static bool IsRelevantCaptureLoss(object? capturedPointer, object lostPointer, bool releasing)
+        => !releasing && capturedPointer is not null && ReferenceEquals(capturedPointer, lostPointer);
+    private void CaptureLost(object? sender, PointerCaptureLostEventArgs args)
+    { if (IsRelevantCaptureLoss(_pointer, args.Pointer, _releasing)) CancelCapture(); }
     private void Detached(object? sender, VisualTreeAttachmentEventArgs args) { CancelCapture(); }
     private void Clear(string status)
     {

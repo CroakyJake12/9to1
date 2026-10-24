@@ -38,6 +38,8 @@
             <Container Type="Wrap" CellGap="10">
               <Input id="canvas-host-new-name" accessible-name="New canvas name" Type="Text" Value="{Binding NewName, Mode=TwoWay}" min-width="240" Interactive="{Binding CanWrite}" />
               <Button id="canvas-create" content="Create canvas" action="canvas.host.create" padding="18,10" Interactive="{Binding CanWrite}" />
+              <Button id="canvas-import" content="Import Rnote/Xournal++" accessible-name="Import a drawing as a new Canvas without changing its source" action="canvas.host.import" padding="18,10" Interactive="{Binding CanWrite}" />
+              <Button id="canvas-cancel-import" content="Cancel import preparation" accessible-name="Cancel local import preparation before Home review; does not cancel a published Home request" action="canvas.host.cancelImportPreparation" Active="{Binding ImportPreparationActive}" Interactive="{Binding CanCancelImport}" />
             </Container>
           </Container>
           <Container Type="Vertical Stack" CellGap="12">

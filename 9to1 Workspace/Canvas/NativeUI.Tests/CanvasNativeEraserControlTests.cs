@@ -17,6 +17,174 @@ namespace HavenOS.Apps.Canvas.NativeUI.Tests;
 [Collection("Canvas native UI")]
 public sealed class CanvasNativeEraserControlTests
 {
+    [Theory]
+    [InlineData(PointerType.Pen, false, true, true)]
+    [InlineData(PointerType.Pen, true, false, true)]
+    [InlineData(PointerType.Pen, false, false, false)]
+    [InlineData(PointerType.Touch, false, false, true)]
+    public void Native_eraser_accepts_pen_inversion_or_primary_press_but_not_non_pen_eraser_flag(
+        PointerType type, bool primary, bool eraserEnd, bool expected)
+        => Assert.Equal(expected, CanvasNativeEraserInput.BeginsEraserGesture(type, primary, eraserEnd));
+
+    [Fact]
+    public void Release_adapter_claims_only_the_matching_live_pointer_once()
+    {
+        var pointer=new object();
+        Assert.True(CanvasNativeEraserInput.CanQueueRelease(pointer,pointer,false,false,false));
+        Assert.False(CanvasNativeEraserInput.CanQueueRelease(null,pointer,false,false,false));
+        Assert.False(CanvasNativeEraserInput.CanQueueRelease(pointer,new object(),false,false,false));
+        Assert.False(CanvasNativeEraserInput.CanQueueRelease(pointer,pointer,true,false,false));
+        Assert.False(CanvasNativeEraserInput.CanQueueRelease(pointer,pointer,false,true,false));
+        Assert.False(CanvasNativeEraserInput.CanQueueRelease(pointer,pointer,false,false,true));
+        Assert.True(CanvasNativeEraserInput.IsRelevantCaptureLoss(pointer,pointer,false));
+        Assert.False(CanvasNativeEraserInput.IsRelevantCaptureLoss(pointer,new object(),false));
+        Assert.False(CanvasNativeEraserInput.IsRelevantCaptureLoss(null,pointer,false));
+        Assert.False(CanvasNativeEraserInput.IsRelevantCaptureLoss(pointer,pointer,true));
+        Assert.False(CanvasNativeEraserInput.CanBeginPointerGesture(true,false,true,PointerType.Pen,false,true));
+        Assert.False(CanvasNativeEraserInput.CanBeginPointerGesture(false,false,false,PointerType.Pen,false,true));
+        Assert.False(CanvasNativeEraserInput.CanBeginPointerGesture(true,true,false,PointerType.Pen,false,true));
+    }
+
+    [Fact]
+    public async Task Delayed_release_cannot_consume_same_pointer_repress_or_survive_close_invalidation()
+    {
+        var state=new CanvasNativeEraserInput.ReleaseGeneration();
+        var pointer=new object();var oldIntent=new object();var newIntent=new object();
+        var oldGeneration=state.Begin(pointer);
+        var oldRelease=new CanvasNativeEraserInput.QueuedRelease(oldGeneration,pointer,
+            (Guid.NewGuid(),Guid.NewGuid()),new(),oldIntent,_=>Task.CompletedTask);
+        Assert.True(state.Queue(oldRelease));
+        var blocked=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var delayed=ObserveWhenReleasedAsync(blocked.Task,state,oldRelease);
+
+        // Capture loss/cancel followed by a new gesture reuses the exact same
+        // mouse pointer object, but receives a distinct generation and intent.
+        state.Invalidate();
+        var newGeneration=state.Begin(pointer);
+        var newRelease=new CanvasNativeEraserInput.QueuedRelease(newGeneration,pointer,
+            (Guid.NewGuid(),Guid.NewGuid()),new(),newIntent,_=>Task.CompletedTask);
+        Assert.True(state.Queue(newRelease));
+        Assert.False(state.Queue(new CanvasNativeEraserInput.QueuedRelease(newGeneration,pointer,
+            newRelease.Identity,newRelease.Options,new object(),_=>Task.CompletedTask)));
+        blocked.SetResult();
+        Assert.False(await delayed);
+        Assert.True(state.Owns(newRelease));
+        Assert.Same(newIntent,newRelease.Intent);
+
+        // CloseAndDrain invalidates an unsubmitted queued callback before its
+        // original task is joined; it cannot act on the retired release.
+        state.Invalidate();
+        Assert.False(state.Owns(newRelease));
+    }
+
+    private static async Task<bool> ObserveWhenReleasedAsync(Task blocker,
+        CanvasNativeEraserInput.ReleaseGeneration state,CanvasNativeEraserInput.QueuedRelease release)
+    { await blocker; return state.Owns(release); }
+
+    [Fact]
+    public async Task Owning_pointer_adapter_admits_inverted_pen_only_for_available_explicit_Eraser()
+    {
+        await using var native=HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
+        await native.Dispatch(async()=>
+        {
+            await using var fixture=await Fixture.Create(CancellationToken.None);
+            var writable=true;var eraserAvailable=true;var requests=0;
+            var context=new CanvasNativeEraserContext(fixture.FileId,fixture.Opened,()=>writable,
+                (_,_)=>{requests++;return Task.CompletedTask;},(_,_)=>{requests++;return Task.CompletedTask;},
+                (_,_)=>{requests++;return Task.CompletedTask;},(_,_)=>{requests++;return Task.CompletedTask;},
+                (_,_)=>{requests++;return Task.CompletedTask;});
+            using var document=await fixture.OpenDocument(CancellationToken.None);
+            using var viewport=new CanvasNativeViewport(document,fixture.Readiness);
+            using var tools=new CanvasToolState(tool=>tool==CanvasPrimaryTool.Eraser && !eraserAvailable
+                ? CanvasToolCapability.Unavailable("Synthetic unavailable capability") : new(true,"Synthetic test capability"),_=>{});
+            var input=new CanvasNativeEraserInput(viewport,document,tools,context);
+            var window=new Window{Width=900,Height=700,Content=viewport};window.Show();
+            try
+            {
+                Assert.True(await viewport.RefreshAsync(CancellationToken.None));window.UpdateLayout();
+                tools.Select(CanvasPrimaryTool.Eraser);
+                Assert.True(input.CanHistory(CanvasHistoryKind.Undo));
+                Assert.True(input.CanBeginPointerGesture(PointerType.Pen,false,true));
+                Assert.True(input.CanBeginPointerGesture(PointerType.Mouse,true,false));
+                Assert.True(input.CanBeginPointerGesture(PointerType.Touch,false,false));
+                Assert.Equal(CanvasPrimaryTool.Eraser,tools.Selected); // Classification never switches tools or creates ink.
+
+                tools.Select(CanvasPrimaryTool.Pen);
+                Assert.False(input.CanBeginPointerGesture(PointerType.Pen,false,true));
+                tools.Select(CanvasPrimaryTool.Pan);
+                Assert.False(input.CanBeginPointerGesture(PointerType.Pen,false,true));
+                tools.Select(CanvasPrimaryTool.Eraser);
+
+                var center=new Point(viewport.Bounds.Width/2,viewport.Bounds.Height/2);
+                var point=viewport.TranslatePoint(center,window)!.Value;
+                window.MouseDown(point,MouseButton.Left);
+                Assert.False(input.CanHistory(CanvasHistoryKind.Undo));
+                Assert.True(viewport.ZoomAt(1.1,center)); // View changes cancel the incomplete gesture.
+                window.MouseUp(point,MouseButton.Left);
+                await Dispatcher.UIThread.InvokeAsync(()=>{},DispatcherPriority.Background);
+                Assert.True(input.CanHistory(CanvasHistoryKind.Undo));
+                Assert.Equal(0,requests);
+
+                eraserAvailable=false;
+                Assert.False(input.CanBeginPointerGesture(PointerType.Pen,false,true));
+                eraserAvailable=true;writable=false;
+                Assert.False(input.CanBeginPointerGesture(PointerType.Pen,false,true));
+                writable=true;tools.Select(CanvasPrimaryTool.Eraser);
+                window.MouseDown(point,MouseButton.Left);window.MouseUp(point,MouseButton.Left);
+                var close=input.CloseAndDrainAsync(); // Retire before the published callback resumes.
+                await close;
+                await Dispatcher.UIThread.InvokeAsync(()=>{},DispatcherPriority.Background);
+                Assert.Equal(0,requests);
+            }
+            finally { window.Close(); await input.CloseAndDrainAsync(); await viewport.CloseAndDrainAsync(); }
+        },CancellationToken.None);
+    }
+
+    [Theory]
+    [InlineData("close")]
+    [InlineData("tool")]
+    [InlineData("access")]
+    public async Task Reentrant_review_notification_revalidates_before_issuing_the_Home_eraser_request(string change)
+    {
+        await using var native=HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
+        await native.Dispatch(async()=>
+        {
+            var ct=CancellationToken.None;await using var fixture=await Fixture.Create(ct);
+            var writable=true;var requests=0;var notified=false;Task? close=null;
+            var context=new CanvasNativeEraserContext(fixture.FileId,fixture.Opened,()=>writable,
+                (_,_)=>{requests++;return Task.CompletedTask;},(_,_)=>{requests++;return Task.CompletedTask;},
+                (_,_)=>{requests++;return Task.CompletedTask;},(_,_)=>{requests++;return Task.CompletedTask;});
+            using var document=await fixture.OpenDocument(ct);
+            using var viewport=new CanvasNativeViewport(document,fixture.Readiness);
+            using var tools=new CanvasToolState(_=>new(true,"Synthetic tool capability"),_=>{},
+                eraserCapability:options=>context.Capability(document,options));
+            var input=new CanvasNativeEraserInput(viewport,document,tools,context);
+            var window=new Window{Width=900,Height=700,Content=viewport};window.Show();
+            input.Changed+=(_,_)=>
+            {
+                if(notified||input.Status!="Review this exact eraser change in Home.")return;
+                notified=true;
+                if(change=="close")close=input.CloseAndDrainAsync();
+                else if(change=="tool")tools.Select(CanvasPrimaryTool.Pan);
+                else writable=false;
+            };
+            try
+            {
+                Assert.True(await viewport.RefreshAsync(ct));window.UpdateLayout();tools.Select(CanvasPrimaryTool.Eraser);
+                var localStart=LocalPointForDocument(viewport,new(190,100));
+                var localEnd=LocalPointForDocument(viewport,new(220,100));
+                var start=viewport.TranslatePoint(localStart,window)!.Value;
+                var end=viewport.TranslatePoint(localEnd,window)!.Value;
+                window.MouseDown(start,MouseButton.Left);window.MouseMove(end,RawInputModifiers.LeftMouseButton);window.MouseUp(end,MouseButton.Left);
+                await Until(()=>notified);
+                if(close is not null)await close;else await input.CloseAndDrainAsync();
+                Assert.Equal(0,requests);
+                Assert.Contains("retired before Home submission",input.Status);
+            }
+            finally{window.Close();await input.CloseAndDrainAsync();await viewport.CloseAndDrainAsync();}
+        },CancellationToken.None);
+    }
+
     [Fact]
     public async Task Accessible_chosen_stroke_requires_actual_Home_approval_and_commits_one_canonical_delete()
     {
@@ -86,6 +254,7 @@ public sealed class CanvasNativeEraserControlTests
                 Assert.InRange(local.X,0,viewport.Bounds.Width);Assert.InRange(local.Y,0,viewport.Bounds.Height);
                 var point=viewport.TranslatePoint(local,window)!.Value;
                 window.MouseDown(point,MouseButton.Left);window.MouseUp(point,MouseButton.Left);
+                window.MouseUp(point,MouseButton.Left); // Duplicate release event for the same pointer capture.
                 await Until(()=>pending is not null);
                 Assert.Equal(f.Opened.CasRevisionId,(await f.Bridge.OpenAsync(f.FileId,f.Opened.StoreId,ct)).CasRevisionId);
                 Assert.Equal(partial,split is not null);Assert.Equal(!partial,whole is not null);
@@ -121,11 +290,11 @@ public sealed class CanvasNativeEraserControlTests
         Assert.True(await native.Dispatch<bool>(async()=>
         {
             var ct=CancellationToken.None;await using var f=await Fixture.Create(ct);
-            CanvasQuickEraseIntent? captured=null;HomePermissionAuthorization? pending=null;
+            CanvasQuickEraseIntent? captured=null;HomePermissionAuthorization? pending=null;var requestCount=0;
             var context=new CanvasNativeEraserContext(f.FileId,f.Opened,()=>true,
                 (_,_)=>throw new InvalidOperationException("Wrong whole route"),
                 (_,_)=>throw new InvalidOperationException("Wrong partial route"),
-                async(intent,token)=>{captured=intent;pending=await f.Broker.AuthorizeAsync("canvas",CanvasStrokeWriteIntent.ActionId,intent.Scopes,intent.Arguments,"Erase actual Quick target",null,"native-quick-pointer-test",token);},
+                async(intent,token)=>{requestCount++;captured=intent;pending=await f.Broker.AuthorizeAsync("canvas",CanvasStrokeWriteIntent.ActionId,intent.Scopes,intent.Arguments,"Erase actual Quick target",null,"native-quick-pointer-test",token);},
                 (_,_)=>throw new InvalidOperationException("Wrong chosen-target route"));
             using var surface=new CanvasNativeCuiSurface(f.OpenDocument,f.Readiness,eraser:context);
             using var approvals=new HomeApprovalCuiSurface(f.Runtime,f.Profiles,f.Permissions);
@@ -140,7 +309,13 @@ public sealed class CanvasNativeEraserControlTests
                 Assert.InRange(local.X,0,viewport.Bounds.Width);Assert.InRange(local.Y,0,viewport.Bounds.Height);
                 var point=viewport.TranslatePoint(local,window)!.Value;
                 window.MouseDown(point,MouseButton.Left);window.MouseUp(point,MouseButton.Left);
+                window.MouseUp(point,MouseButton.Left); // Actual duplicate release, not a second gesture.
                 await Until(()=>pending is not null);
+                // A distinct later gesture is gated after submission; the
+                // separate MouseUp above exercises duplicate release delivery.
+                window.MouseDown(point,MouseButton.Left);window.MouseUp(point,MouseButton.Left);
+                await Dispatcher.UIThread.InvokeAsync(()=>{},DispatcherPriority.Background);
+                Assert.Equal(1,requestCount);
                 Assert.NotNull(captured);Assert.Equal(f.Opened.StoreId,captured!.StoreId);
                 Assert.Equal(Assert.Single(f.Opened.Artifact.Pages[0].Strokes).StrokeId,captured.StrokeId);
                 Assert.Equal(HomePermissionRequestState.PendingApproval,pending!.State);
@@ -181,6 +356,14 @@ public sealed class CanvasNativeEraserControlTests
                 var local=new Point(viewport.Bounds.Width/2,viewport.Bounds.Height/2);var point=viewport.TranslatePoint(local,window)!.Value;
                 window.MouseDown(point,MouseButton.Left);Assert.True(viewport.ZoomAt(1.2,local));window.MouseUp(point,MouseButton.Left);
                 await Dispatcher.UIThread.InvokeAsync(()=>{},DispatcherPriority.Background);Assert.Equal(0,requests);
+                IPointer? capturedPointer=null;
+                viewport.PointerPressed+=(_,args)=>capturedPointer=args.Pointer;
+                window.MouseDown(point,MouseButton.Left);
+                Assert.NotNull(capturedPointer);
+                capturedPointer!.Capture(null); // Deliver an actual synthetic capture-lost transition.
+                window.MouseUp(point,MouseButton.Left);
+                await Dispatcher.UIThread.InvokeAsync(()=>{},DispatcherPriority.Background);
+                Assert.Equal(0,requests);
                 Assert.Equal(f.Opened.CasRevisionId,(await f.Bridge.OpenAsync(f.FileId,f.Opened.StoreId,ct)).CasRevisionId);
                 var now=DateTimeOffset.UtcNow;
                 Assert.True((await f.Workspace.Provider.MutateAsync(new(new(Guid.NewGuid()),f.Workspace.Actor.ActorId,

@@ -10,6 +10,7 @@ namespace HavenOS.Apps.Canvas;
 public sealed record CanvasFilesOpenResult(CanvasArtifact Artifact, FilesRevision Revision, FilesRevisionId CasRevisionId)
 {
     public Guid StoreId { get; init; }
+    public CanvasDocumentLocationInfo? DocumentLocation { get; init; }
 }
 
 /// <summary>
@@ -149,7 +150,12 @@ public sealed partial class CanvasFilesArtifactBridge(
             throw new UnauthorizedAccessException("The canonical Canvas source changed during materialization.");
         retained?.DemandUnchanged(bytes.LongLength);
         return new(artifact, revision, resolved.Metadata.CurrentRevisionId
-            ?? throw new InvalidDataException("Canvas current Files item has no structural revision.")) { StoreId = resolved.StoreId };
+            ?? throw new InvalidDataException("Canvas current Files item has no structural revision."))
+        {
+            StoreId = resolved.StoreId,
+            DocumentLocation = new(resolved.Provider.Location.Name,
+                resolved.Metadata.ParentId?.ToString() ?? "Files root or shared item")
+        };
     }
 
     public Task<FilesRevision> SaveAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,

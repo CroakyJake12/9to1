@@ -34,6 +34,10 @@ public sealed class CanvasHostLaunchTests
             Assert.False(Find(window, "canvas-active-workspace").IsEffectivelyVisible);
             Assert.Empty(Cards(window));
             Assert.True(Find(window, "canvas-create").IsEffectivelyVisible);
+            var import = Assert.IsType<Button>(Find(window, "canvas-import"));
+            Assert.True(import.IsEffectivelyVisible);
+            Assert.True(import.IsEffectivelyEnabled);
+            Assert.False(Find(window, "canvas-cancel-import").IsEffectivelyVisible);
             Assert.True(Find(window, "canvas-search-query").IsEffectivelyVisible);
             Assert.DoesNotContain(window.GetVisualDescendants().OfType<CanvasNativeViewport>(), control => control.IsEffectivelyVisible);
             Assert.DoesNotContain(window.GetVisualDescendants().OfType<Button>(), control =>
@@ -41,6 +45,46 @@ public sealed class CanvasHostLaunchTests
             Assert.Empty((await fixture.Workspace.Provider.ListAsync(fixture.Folder, new("", Limit: 100), null, default)).Items);
             return true;
         }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Import_cancel_before_Home_publication_joins_and_discards_a_late_native_result()
+    {
+        using var preparation = new CanvasHostSurface.ImportPreparation(CancellationToken.None, CancellationToken.None);
+        var lateNativeResult = new TaskCompletionSource<DisposableImportResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var homePublicationCount = 0;
+        var continuation = preparation.RunAfterPreparationAsync(lateNativeResult.Task, (_, _) =>
+        {
+            if (!preparation.TryBeginHomePublication()) throw new InvalidOperationException("Canceled import crossed the Home boundary.");
+            homePublicationCount++;
+            return Task.CompletedTask;
+        }, result => result.Dispose());
+
+        Assert.Same(lateNativeResult.Task, preparation.OriginalPreparationTask);
+        Assert.True(preparation.TryRequestCancel());
+        Assert.True(preparation.Token.IsCancellationRequested);
+        Assert.False(preparation.TryBeginHomePublication());
+        Assert.False(continuation.IsCompleted); // Cancellation does not release the exact native task early.
+        Assert.Throws<InvalidOperationException>(preparation.Complete); // Custody cannot be released before that task settles.
+
+        var result = new DisposableImportResult();
+        lateNativeResult.SetResult(result);
+        Assert.False(await continuation);
+        Assert.True(result.Disposed);
+        Assert.Equal(0, homePublicationCount);
+        preparation.Complete();
+
+        using var published = new CanvasHostSurface.ImportPreparation(CancellationToken.None, CancellationToken.None);
+        Assert.True(published.TryBeginHomePublication());
+        Assert.False(published.TryRequestCancel());
+        Assert.False(published.CancellationRequested);
+        published.Complete();
+    }
+
+    private sealed class DisposableImportResult : IDisposable
+    {
+        public bool Disposed { get; private set; }
+        public void Dispose() => Disposed = true;
     }
 
     [Fact]

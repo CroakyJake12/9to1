@@ -69,6 +69,8 @@ public sealed class CanvasNativeHostTests
                     await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
                     window.UpdateLayout();
                     var viewport = Assert.Single(surface.GetVisualDescendants().OfType<CanvasNativeViewport>());
+                    Assert.True(viewport.ZoomAt(1.25, new Point(viewport.Bounds.Width / 2, viewport.Bounds.Height / 2)));
+                    Assert.True(viewport.PanBy(new Vector(7, -4)));
                     var start = viewport.TranslatePoint(new Point(viewport.Bounds.Width / 2, viewport.Bounds.Height / 2), window)!.Value;
                     window.MouseDown(start, MouseButton.Left);
                     window.MouseMove(start + new Vector(15, 15), RawInputModifiers.LeftMouseButton);
@@ -84,6 +86,52 @@ public sealed class CanvasNativeHostTests
                     Assert.Equal(initial.Artifact.ArtifactId, committed.Artifact.ArtifactId);
                     Assert.NotEqual(initial.CasRevisionId, committed.CasRevisionId);
                     await Until(() => Task.FromResult(window.GetVisualDescendants().OfType<CanvasNativeCuiSurface>().Any(value => !ReferenceEquals(value, surface))));
+                    var reopenedSurface = Assert.Single(window.GetVisualDescendants().OfType<CanvasNativeCuiSurface>(), value => !ReferenceEquals(value, surface));
+                    var restored = Assert.IsType<CanvasNativeEditorState>(reopenedSurface.CaptureEditorState());
+                    Assert.Equal(committed.Artifact.ArtifactId, restored.ArtifactId);
+                    Assert.Equal(CanvasPrimaryTool.Pen, restored.Tool);
+                    Assert.Equal("#FFFF0000", restored.InkStyle.Color);
+                    Assert.Equal(viewport.ViewZoom, restored.Zoom, 8);
+                    Assert.Equal(viewport.ViewPan, restored.Pan);
+
+                    // Continue the same host journey through a genuine Natural
+                    // whole-stroke erase, then owner-backed Undo and Files reopen.
+                    Click(reopenedSurface, "⌫ Eraser");
+                    Click(reopenedSurface, "Whole stroke");
+                    reopenedSurface.UpdateLayout(); window.UpdateLayout();
+                    var eraseViewport = Assert.Single(reopenedSurface.GetVisualDescendants().OfType<CanvasNativeViewport>());
+                    var firstSample = stroke.Samples[0]; var lastSample = stroke.Samples[^1];
+                    var eraseStart = eraseViewport.TranslatePoint(LocalPointForDocument(eraseViewport,
+                        new(firstSample.X, firstSample.Y)), window)!.Value;
+                    var eraseEnd = eraseViewport.TranslatePoint(LocalPointForDocument(eraseViewport,
+                        new(lastSample.X, lastSample.Y)), window)!.Value;
+                    window.MouseDown(eraseStart, MouseButton.Left);
+                    window.MouseMove(eraseEnd, RawInputModifiers.LeftMouseButton);
+                    window.MouseUp(eraseEnd, MouseButton.Left);
+                    await Until(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1);
+                    Assert.Equal(committed.CasRevisionId, (await bridge.OpenAsync(item.Id, ct)).CasRevisionId);
+                    await AcceptAndFinish(window, permissions, ct);
+                    await Until(async () => (await bridge.OpenAsync(item.Id, ct)).Artifact.Pages[0].Strokes.Count == 0);
+                    var erased = await bridge.OpenAsync(item.Id, ct);
+                    Assert.Equal(committed.Artifact.ArtifactId, erased.Artifact.ArtifactId);
+                    Assert.NotEqual(committed.CasRevisionId, erased.CasRevisionId);
+                    Assert.NotEmpty(erased.Artifact.SemanticHistory!.Undo);
+                    await Until(() => Task.FromResult(window.GetVisualDescendants().OfType<CanvasNativeCuiSurface>()
+                        .Any(value => !ReferenceEquals(value, reopenedSurface))));
+                    var erasedSurface = Assert.Single(window.GetVisualDescendants().OfType<CanvasNativeCuiSurface>(),
+                        value => !ReferenceEquals(value, reopenedSurface));
+                    Click(erasedSurface, "Undo");
+                    await Until(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1);
+                    Assert.Equal(erased.CasRevisionId, (await bridge.OpenAsync(item.Id, ct)).CasRevisionId);
+                    await AcceptAndFinish(window, permissions, ct);
+                    await Until(async () => (await bridge.OpenAsync(item.Id, ct)).Artifact.Pages[0].Strokes.Count == 1);
+                    var afterUndo = await bridge.OpenAsync(item.Id, ct);
+                    var restoredStroke = Assert.Single(afterUndo.Artifact.Pages[0].Strokes);
+                    Assert.Equal(stroke.StrokeId, restoredStroke.StrokeId);
+                    Assert.Equal(stroke.Samples, restoredStroke.Samples);
+                    Assert.Equal(stroke.ResolvedBrushProperties, restoredStroke.ResolvedBrushProperties);
+                    Assert.Equal(committed.Artifact.ArtifactId, afterUndo.Artifact.ArtifactId);
+                    Assert.NotEqual(erased.CasRevisionId, afterUndo.CasRevisionId);
                     Assert.Contains((await permissions.GetSnapshotAsync(cancellationToken: ct)).RecentAuditEvents,
                         audit => audit.ResultCode == "CANVAS_COMMITTED" && audit.AffectedObjects.Any(value => value.ObjectId == item.Id.ToString()));
                 }
@@ -206,5 +254,20 @@ public sealed class CanvasNativeHostTests
         await Until(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 0);
         await Until(() => Task.FromResult(Button(root, "Finish approved request").IsEnabled));
         Click(root, "Finish approved request");
+    }
+
+    private static Point LocalPointForDocument(CanvasNativeViewport viewport, Point documentPoint)
+    {
+        var center = new Point(viewport.Bounds.Width / 2, viewport.Bounds.Height / 2);
+        var origin = viewport.ToDocumentPoint(center)!.Value;
+        var dx = viewport.ToDocumentPoint(center + new Vector(1, 0))!.Value.X - origin.X;
+        var dy = viewport.ToDocumentPoint(center + new Vector(0, 1))!.Value.Y - origin.Y;
+        Assert.True(double.IsFinite(dx) && dx > 0 && double.IsFinite(dy) && dy > 0);
+        var local = center + new Vector((documentPoint.X - origin.X) / dx, (documentPoint.Y - origin.Y) / dy);
+        var mapped = viewport.ToDocumentPoint(local);
+        Assert.NotNull(mapped);
+        Assert.Equal(documentPoint.X, mapped.Value.X, precision: 6);
+        Assert.Equal(documentPoint.Y, mapped.Value.Y, precision: 6);
+        return local;
     }
 }

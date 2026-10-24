@@ -22,6 +22,7 @@ namespace HavenOS.Apps.Canvas;
 /// <summary>ONE canonical Canvas CUI content owner, borrowed by native window and Haven tab adapters.</summary>
 public sealed partial class CanvasHostSurface : ContentControl
 {
+    private const int MaximumImportFileBytes = 256 * 1024 * 1024;
     private readonly IServiceProvider _services;
     private readonly CancellationTokenSource _lifetime;
     private readonly CanvasOriginalWorkOwner _originalWork = new();
@@ -57,6 +58,7 @@ public sealed partial class CanvasHostSurface : ContentControl
     private sealed record PendingAudit(HomeResourceExecutionCapability Capability, HomeExecutionOutcome Outcome);
     private PendingAudit? _pendingAudit;
     private CanvasOriginalFilesCommit? _retainedOriginalCommit;
+    private ImportPreparation? _importPreparation;
     public CanvasOriginalFilesCommit? OriginalFilesAcknowledgement => _retainedOriginalCommit is { } original
         ? new(original.FileId, CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(original.Artifact)), original.Revision) : null;
     private volatile bool _busy, _ready, _closed;
@@ -71,6 +73,89 @@ public sealed partial class CanvasHostSurface : ContentControl
     private bool _preparing;
     public Task Initialization => _initialization ?? Task.CompletedTask;
     public bool IsAlive => !_closed && !_lifetime.IsCancellationRequested && OriginalCloseTask is null;
+
+    internal sealed class ImportPreparation : IDisposable
+    {
+        private readonly object _gate = new();
+        private readonly CancellationTokenSource _cancellation;
+        private bool _cancelRequested, _homePublicationStarted, _completed, _disposed;
+        private string _stage = "file picker";
+        internal ImportPreparation(CancellationToken operation, CancellationToken lifetime) =>
+            _cancellation = CancellationTokenSource.CreateLinkedTokenSource(operation, lifetime);
+        internal CancellationToken Token => _cancellation.Token;
+        internal bool CancellationRequested { get { lock (_gate) return _cancelRequested; } }
+        internal bool IsCancelable { get { lock (_gate) return !_cancelRequested && !_homePublicationStarted && !_completed && !_disposed; } }
+        internal string Stage { get { lock (_gate) return _stage; } }
+        internal Task? OriginalPreparationTask { get; private set; }
+        internal void SetStage(string stage) { lock (_gate) _stage = stage; }
+        internal void RetainOriginalPreparation(Task original)
+        {
+            ArgumentNullException.ThrowIfNull(original);
+            lock (_gate)
+            {
+                if (_completed || _disposed || OriginalPreparationTask is { IsCompleted: false })
+                    throw new InvalidOperationException("Canvas import must settle its exact source task before advancing preparation custody.");
+                OriginalPreparationTask = original;
+            }
+        }
+        internal bool TryRequestCancel()
+        {
+            lock (_gate)
+            {
+                if (_cancelRequested || _homePublicationStarted || _completed || _disposed) return false;
+                _cancelRequested = true;
+            }
+            try { _cancellation.Cancel(); } catch (ObjectDisposedException) { }
+            return true;
+        }
+        internal bool TryBeginHomePublication()
+        {
+            lock (_gate)
+            {
+                if (_cancelRequested || _homePublicationStarted || _completed || _disposed) return false;
+                _homePublicationStarted = true;
+                return true;
+            }
+        }
+        internal void Complete()
+        {
+            lock (_gate)
+            {
+                if (_disposed) throw new ObjectDisposedException(nameof(ImportPreparation));
+                if (OriginalPreparationTask is { IsCompleted: false })
+                    throw new InvalidOperationException("Canvas import cannot complete or release preparation custody while its exact source task is running.");
+                _completed = true;
+            }
+        }
+
+        /// <summary>Join the exact native preparation. A canceled late result is disposed before return
+        /// and cannot reach Home publication.</summary>
+        internal async Task<bool> RunAfterPreparationAsync<T>(Task<T> original, Func<T, CancellationToken, Task> continuePreparation,
+            Action<T> disposeResult) where T : class
+        {
+            ArgumentNullException.ThrowIfNull(original); ArgumentNullException.ThrowIfNull(continuePreparation);
+            ArgumentNullException.ThrowIfNull(disposeResult); RetainOriginalPreparation(original);
+            var result = await original.ConfigureAwait(true);
+            try
+            {
+                if (CancellationRequested) return false;
+                await continuePreparation(result, Token).ConfigureAwait(true);
+                return true;
+            }
+            finally { disposeResult(result); }
+        }
+
+        public void Dispose()
+        {
+            lock (_gate)
+            {
+                if (_disposed) return;
+                if (!_completed) throw new InvalidOperationException("Canvas import preparation cannot release cancellation state before its original operation settles.");
+                _disposed = true;
+            }
+            _cancellation.Dispose();
+        }
+    }
 
     internal CanvasHostSurface(IServiceProvider services, CancellationToken originalProcess,
         Func<NativeFilesWorkspace, HomeResourceExecutionCapability, Func<bool>, CancellationToken, ValueTask<HomeClaimedResourceCommitFence>>? captureHomeFence,
@@ -342,6 +427,8 @@ public sealed partial class CanvasHostSurface : ContentControl
         _model.Set("CanPrevious", idle && _selected > 0); _model.Set("CanNext", idle && _selected + 1 < _documents.Length);
         _model.Set("CanOpen", idle && _documents.Length > 0 && noPending);
         _model.Set("CanPage", idle && _nextPage is not null && noPending);
+        _model.Set("ImportPreparationActive", _importPreparation is not null);
+        _model.Set("CanCancelImport", !idle && _busy && _importPreparation?.IsCancelable == true);
         _model.Set("SelectedName", _documents.Length == 0 ? "No document selected" : _documents[_selected].Name);
     }
     private void SetStatus(string message) => Original(() => { _model.Set("Status", message); return true; });
@@ -358,6 +445,9 @@ public sealed partial class CanvasHostSurface : ContentControl
     private async Task OpenAsync(HostedItemId fileId, CanvasFilesOpenResult opened, CancellationToken ct, NoEffectReadProof? proof = null)
     {
         var files = _files!; var captured = opened with { Artifact=CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(opened.Artifact)) };
+        var restoreState = (_view as CanvasNativeCuiSurface)?.CaptureEditorState();
+        if (restoreState is not { } prior || prior.ArtifactId != captured.Artifact.ArtifactId ||
+            prior.StoreId != captured.StoreId || prior.FileId != fileId.Value) restoreState = null;
         var original=_workspace ?? throw new UnauthorizedAccessException("The original Files workspace is unavailable.");
         if(captured.StoreId!=original.Configuration.StoreId)throw new UnauthorizedAccessException("Canvas store identity differs from its original workspace.");
         // Reject this unsupported payload before constructing/acquiring any native owner.
@@ -406,7 +496,7 @@ public sealed partial class CanvasHostSurface : ContentControl
                         }, null, token));
                 }
                 finally { _busy = false; RefreshBindings(); }
-            },captured.StoreId),CreateEraserContext(fileId,captured,files,original));
+            },captured.StoreId),CreateEraserContext(fileId,captured,files,original),restoreState,captured.DocumentLocation);
         await InitializeOwnedSurfaceAsync(surface, ct);
         Task? publication = null;
         try
@@ -569,10 +659,25 @@ public sealed partial class CanvasHostSurface : ContentControl
     private async Task DispatchOriginalAsync(string action, object? parameter, CancellationToken ct, NoEffectReadProof? proof)
     {
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        if (action == "canvas.host.cancelImportPreparation")
+        {
+            if (parameter is not null || _closed || _launchSurface?.IsEffectivelyVisible != true)
+                throw new InvalidOperationException("Import preparation cancellation is unavailable in this Canvas view.");
+            var preparation = _importPreparation;
+            if (preparation is null) throw new InvalidOperationException("There is no local Canvas import preparation to cancel.");
+            if (preparation.TryRequestCancel())
+                SetStatus($"Cancellation requested during {preparation.Stage}. Waiting for the original source task to settle; the selected source is unchanged and no Home request will be published.");
+            else if (preparation.CancellationRequested)
+                SetStatus($"Cancellation is already requested during {preparation.Stage}. Waiting for the original source task to settle.");
+            else
+                SetStatus("This import has crossed into Home request publication or has already settled. Use the existing Home request status; Canvas will not cancel or replay it.");
+            RefreshBindings();
+            return; // Deliberately bypass the busy guard; do not clear the import owner's _busy state.
+        }
         if (_busy || _closed || parameter is not null && action != "canvas.host.openItem")
             throw new InvalidOperationException("This Canvas action is unavailable.");
         var startOnly = action is "canvas.host.openItem" or "canvas.host.open" or "canvas.host.create" or
-            "canvas.host.search" or "canvas.host.page" or "canvas.host.previous" or "canvas.host.next" or
+            "canvas.host.import" or "canvas.host.cancelImportPreparation" or "canvas.host.search" or "canvas.host.page" or "canvas.host.previous" or "canvas.host.next" or
             "canvas.host.setup" or "canvas.host.reviewOwnership";
         if (startOnly && _launchSurface?.IsEffectivelyVisible != true ||
             action == "canvas.host.resume" && _launchSurface?.IsEffectivelyVisible != true ||
@@ -699,6 +804,114 @@ public sealed partial class CanvasHostSurface : ContentControl
                             throw new InvalidOperationException("The new Canvas changed after its commit. Reopen its current revision.");
                         return new(opened, committed.FileId);
                     }, null, ct));
+            }
+            else if (action == "canvas.host.import" && WriteAvailable())
+            {
+                if (_importPreparation is not null) throw new InvalidOperationException("A Canvas import preparation is already active.");
+                var preparation = new ImportPreparation(ct, _lifetime.Token);
+                _importPreparation = preparation;
+                RefreshBindings();
+                try
+                {
+                    preparation.SetStage("file picker");
+                    // Avalonia's picker has no cancellation-token overload. Mark cancellation
+                    // immediately, retain this exact task, and discard any late selected file.
+                    var picker = Original(() => NativePicker.OpenFilePickerAsync(new FilePickerOpenOptions
+                    {
+                        Title = "Import Rnote or Xournal++ drawing",
+                        AllowMultiple = false,
+                        FileTypeFilter = [new FilePickerFileType("Rnote and Xournal++ drawings") { Patterns = ["*.rnote", "*.xopp"] }]
+                    }));
+                    preparation.RetainOriginalPreparation(picker);
+                    var selected = await _originalWork.ObserveOriginalAsync(picker);
+                    preparation.Token.ThrowIfCancellationRequested();
+                    var source = selected.FirstOrDefault();
+                    if (source is null)
+                    {
+                        SetStatus("The import picker closed without selecting a source. No Home request was published.");
+                        return;
+                    }
+                    var format = Path.GetExtension(source.Name).ToLowerInvariant() switch
+                    {
+                        ".rnote" => "rnote",
+                        ".xopp" => "xopp",
+                        _ => throw new NotSupportedException("Canvas import accepts only Rnote or Xournal++ files.")
+                    };
+                    var name = Path.GetFileNameWithoutExtension(source.Name)?.Trim();
+                    if (string.IsNullOrWhiteSpace(name)) name = "Imported Canvas";
+                    if (name.Length > 256) throw new ArgumentException("Imported Canvas names must be at most 256 characters.");
+
+                    preparation.SetStage("source read");
+                    // OpenReadAsync has no token overload. Join it, then check cancellation before
+                    // consuming the stream; the bounded stream reads themselves accept the token.
+                    var openRead = Original(() => source.OpenReadAsync());
+                    preparation.RetainOriginalPreparation(openRead);
+                    await using var sourceStream = await _originalWork.ObserveOriginalAsync(openRead);
+                    preparation.Token.ThrowIfCancellationRequested();
+                    using var payload = new MemoryStream();
+                    var chunk = new byte[81920];
+                    while (true)
+                    {
+                        var read = await sourceStream.ReadAsync(chunk.AsMemory(), preparation.Token);
+                        if (read == 0) break;
+                        if (payload.Length + read > MaximumImportFileBytes)
+                            throw new InvalidDataException("The selected drawing exceeds Canvas's bounded import size.");
+                        await payload.WriteAsync(chunk.AsMemory(0, read), preparation.Token);
+                    }
+                    if (payload.Length == 0) throw new InvalidDataException("The selected drawing is empty.");
+                    preparation.Token.ThrowIfCancellationRequested();
+                    var importedBytes = payload.ToArray();
+                    preparation.SetStage("native import");
+                    _nativeOwnerAcquired = true; // Native custody is monotonic even if the result is canceled late.
+                    var importTask = Original(() => Task.Run(() => CanvasRnoteDocument.Import(importedBytes, format, name), preparation.Token));
+                    var completed = await preparation.RunAfterPreparationAsync(importTask, async (imported, token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        var report = imported.CompatibilityReport;
+                        var reportSummary = report.Issues.Count == 0 ? "No compatibility issues reported." :
+                            string.Join(" ", report.Issues.Select(issue => $"{issue.Feature}: {issue.Disposition}. {issue.Reason}"));
+                        var workspace = _workspace ?? throw new UnauthorizedAccessException("The original Files workspace is unavailable.");
+                        var originalStoreId = workspace.Configuration.StoreId;
+                        var folderId = workspace.Configuration.AppFolders["canvas"];
+                        await RequireOriginalOwnerAsync(workspace, originalStoreId, token);
+                        await Original(() => workspace.Provider.GetStoreEvidenceAsync(originalStoreId, token));
+                        var folder = await Original(() => workspace.Provider.GetAsync(folderId, token));
+                        if (!folder.IsSuccess) throw new InvalidOperationException(folder.Error!.Message);
+                        var intent = CanvasCreateIntent.Capture(imported.Snapshot,
+                            new(folderId, folder.Value!.CurrentRevisionId) { ExpectedStoreId = originalStoreId });
+                        token.ThrowIfCancellationRequested();
+                        if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null ||
+                            _pendingBeginAudit is not null || _requestUncertain)
+                            throw new InvalidOperationException("Finish the existing Home request before importing another Canvas.");
+                        if (!preparation.TryBeginHomePublication()) throw new OperationCanceledException(token);
+                        var create = _create!; var files = _files!;
+                        SetStatus("Submitting this prepared import to Home; local cancellation is no longer available.");
+                        SetStatus(await RequestAsync(CanvasCreateIntent.ActionId, intent.Scopes, intent.Arguments,
+                            $"Import this {format.ToUpperInvariant()} drawing as a new Canvas. The selected source will not be changed. {reportSummary}",
+                            async (cap, cancel) =>
+                            {
+                                await RequireOriginalOwnerAsync(workspace, originalStoreId, cancel);
+                                var committed = await Original(() => create.ExecuteAsync(intent, cap, cancel));
+                                await RequireOriginalOwnerAsync(workspace, originalStoreId, cancel);
+                                var opened = await Original(() => files.OpenAsync(committed.FileId, originalStoreId, cancel));
+                                if (opened.Artifact.ArtifactId != committed.Artifact.ArtifactId || opened.Artifact.RevisionId != committed.Artifact.RevisionId)
+                                    throw new InvalidOperationException("The imported Canvas changed after creation. Reopen its current revision.");
+                                return new(opened, committed.FileId);
+                            }, null, token));
+                    }, imported => imported.Dispose());
+                    if (!completed) SetStatus("Import preparation canceled before Home review. The selected source is unchanged; no Canvas artifact was created.");
+                }
+                catch (OperationCanceledException) when (preparation.CancellationRequested)
+                {
+                    SetStatus($"Import preparation canceled during {preparation.Stage}. The selected source is unchanged; no Home request was published.");
+                }
+                finally
+                {
+                    preparation.Complete();
+                    if (ReferenceEquals(_importPreparation, preparation)) _importPreparation = null;
+                    preparation.Dispose();
+                    RefreshBindings();
+                }
             }
             else if (action == "canvas.host.reviewOwnership" && _workspace is null && _configuration is { } configuration)
             {

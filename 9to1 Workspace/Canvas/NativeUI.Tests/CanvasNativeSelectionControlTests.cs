@@ -23,6 +23,103 @@ namespace HavenOS.Apps.Canvas.NativeUI.Tests;
 [Collection("Canvas native UI")]
 public sealed class CanvasNativeSelectionControlTests
 {
+    [Theory]
+    [InlineData(PointerType.Touch,false,true)]
+    [InlineData(PointerType.Touch,true,true)]
+    [InlineData(PointerType.Pen,false,false)]
+    [InlineData(PointerType.Mouse,false,false)]
+    [InlineData(PointerType.Mouse,true,true)]
+    public void Select_treats_touch_as_a_primary_selection_gesture_without_admitting_unpressed_pen_or_mouse(
+        PointerType type,bool primary,bool expected)
+        => Assert.Equal(expected,CanvasNativeSelectionInput.BeginsSelectionGesture(type,primary));
+
+    [Fact]
+    public void Selection_capture_loss_only_cancels_the_pointer_that_owns_the_move()
+    {
+        var captured=new object();
+        Assert.True(CanvasNativeSelectionInput.IsRelevantCaptureLoss(captured,captured,false));
+        Assert.False(CanvasNativeSelectionInput.IsRelevantCaptureLoss(captured,new object(),false));
+        Assert.False(CanvasNativeSelectionInput.IsRelevantCaptureLoss(null,captured,false));
+        Assert.False(CanvasNativeSelectionInput.IsRelevantCaptureLoss(captured,captured,true));
+    }
+
+    [Fact]
+    public async Task Reopening_the_same_artifact_restores_only_its_still_present_selection_and_tool_state()
+    {
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var ct = CancellationToken.None; await using var f = await Fixture.Create(ct);
+            CanvasNativeEraserContext Context() => SelectionContext(f, () => true, (_, _) => Task.CompletedTask);
+            var first = new CanvasNativeCuiSurface(f.OpenDocument, f.Readiness, eraser: Context());
+            var window = new Window { Width = 1100, Height = 800, Content = first }; window.Show();
+            try
+            {
+                await first.InitializeAsync(ct); window.UpdateLayout(); await Click(first, "Select");
+                await KeyboardClick(window, first, "Next selection");
+                var expectedStroke = f.Opened.Artifact.Pages[0].StrokeOrder[0];
+                var session = Assert.IsType<CanvasNativeEditorState>(first.CaptureEditorState());
+                Assert.Equal(expectedStroke, session.SelectedStrokeId);
+                Assert.Equal(f.Opened.Artifact.ArtifactId, session.ArtifactId);
+                await first.CloseAndDrainAsync();
+
+                var reopened = new CanvasNativeCuiSurface(f.OpenDocument, f.Readiness, eraser: Context(), restoreState: session);
+                window.Content = reopened;
+                try
+                {
+                    await reopened.InitializeAsync(ct); window.UpdateLayout();
+                    var restored = Assert.IsType<CanvasNativeEditorState>(reopened.CaptureEditorState());
+                    Assert.Equal(CanvasPrimaryTool.Select, restored.Tool);
+                    Assert.Equal(expectedStroke, restored.SelectedStrokeId);
+                    Assert.Equal(session.ArtifactId, restored.ArtifactId);
+                }
+                finally { await reopened.CloseAndDrainAsync(); }
+            }
+            finally { window.Close(); await first.CloseAndDrainAsync(); }
+            return true;
+        }, CancellationToken.None));
+    }
+
+    [Theory]
+    [InlineData("close")]
+    [InlineData("tool")]
+    [InlineData("access")]
+    public async Task Reentrant_selection_review_notification_revalidates_before_issuing_Home_edit(string change)
+    {
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var ct=CancellationToken.None;await using var f=await Fixture.Create(ct);
+            var available=true;var requests=0;var notified=false;Task? close=null;
+            var context=SelectionContext(f,()=>available,(_,_)=>{requests++;return Task.CompletedTask;});
+            using var document=await f.OpenDocument(ct);
+            using var viewport=new CanvasNativeViewport(document,f.Readiness);
+            using var tools=new CanvasToolState(_=>new(true,"Synthetic selection capability"),_=>{});
+            var input=new CanvasNativeSelectionInput(viewport,document,tools,context,()=>available);
+            var window=new Window{Width=1100,Height=800,Content=viewport};window.Show();
+            input.Changed+=(_,_)=>
+            {
+                if(notified||input.Status!="Review this exact selected-stroke edit in Home.")return;
+                notified=true;
+                if(change=="close")close=input.CloseAndDrainAsync();
+                else if(change=="tool")tools.Select(CanvasPrimaryTool.Pan);
+                else available=false;
+            };
+            try
+            {
+                Assert.True(await viewport.RefreshAsync(ct));window.UpdateLayout();tools.Select(CanvasPrimaryTool.Select);
+                input.ChooseTarget(1);input.AdjustMove(10,0);
+                await input.RequestMoveAsync();
+                Assert.True(notified);
+                if(close is not null)await close;else await input.CloseAndDrainAsync();
+                Assert.Equal(0,requests);
+                Assert.Contains("retired before Home submission",input.Status);
+            }
+            finally{window.Close();await input.CloseAndDrainAsync();await viewport.CloseAndDrainAsync();}
+            return true;
+        }, CancellationToken.None));
+    }
+
     [Fact]
     public async Task Accessible_selected_move_is_only_a_preview_until_real_Home_approval_and_preserves_other_stroke_identity()
     {

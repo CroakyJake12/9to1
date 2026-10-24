@@ -31,6 +31,7 @@ public sealed class CanvasNativeSelectionInput : ICanvasSelectionInput, IDisposa
     public string FeedbackStatus { get; private set; } = "Select a stroke to show its retained donor path.";
     public bool HasSubmittedOperation => _submitted;
     public bool HasTarget => _target is { } id && _entries.ContainsKey(id);
+    internal Guid? TargetStrokeId => HasTarget ? _target : null;
     public string TargetSummary => _target is { } id && _entries.TryGetValue(id, out var entry) ? entry.Summary : "No stroke selected";
     public string MoveSummary => HasMovePreview ? $"Move preview: X {_deltaX:0.##}, Y {_deltaY:0.##}. The document is unchanged until Home commits." : "No move preview";
     public bool IsAvailable => !_retiring && !_disposed && !_submitted && _unavailable is null && _snapshot is not null &&
@@ -74,6 +75,13 @@ public sealed class CanvasNativeSelectionInput : ICanvasSelectionInput, IDisposa
         SetTarget(strokes[index].StrokeId);
     }
     public void ClearTarget() { RequireCapture(); CancelGesture(); ClearSelection("Selection cleared. The document is unchanged."); }
+    internal bool TryRestoreTarget(Guid strokeId)
+    {
+        if (_disposed || _retiring || _snapshot is null || !_entries.ContainsKey(strokeId) ||
+            _document.Identity != (_snapshot.ArtifactId, _snapshot.RevisionId)) return false;
+        SetTarget(strokeId);
+        return true;
+    }
     public void AdjustMove(double deltaX, double deltaY)
     {
         if (!double.IsFinite(deltaX) || !double.IsFinite(deltaY)) throw new ArgumentException("Move offsets must be finite.");
@@ -98,10 +106,22 @@ public sealed class CanvasNativeSelectionInput : ICanvasSelectionInput, IDisposa
         // focus/selection can neither retarget nor duplicate an uncertain original request.
         if (!CanEdit) throw new UnauthorizedAccessException("The original selection edit owner is no longer current.");
         _submitted = true; CancelGesture(); Status = "Review this exact selected-stroke edit in Home."; Notify();
+        // Notification is synchronous and may re-enter close, tool selection or the
+        // original access gate before original work is published.
+        if (!CanSubmitCapturedIntent(intent, cancellationToken))
+        {
+            _submitted = false; Status = "The selected-stroke edit was retired before Home submission."; Notify();
+            return Task.CompletedTask;
+        }
         return _originalWork.RunOriginalAsync(async token =>
         {
             try
             {
+                if (!CanSubmitCapturedIntent(intent, token))
+                {
+                    _submitted = false; Status = "The selected-stroke edit was retired before Home submission.";
+                    return;
+                }
                 await _originalWork.ObserveOriginalAsync(_context!.RequestTarget(intent, token));
                 Status = "The selected-stroke edit was submitted. Home determines the committed revision.";
             }
@@ -109,12 +129,20 @@ public sealed class CanvasNativeSelectionInput : ICanvasSelectionInput, IDisposa
             finally { Notify(); }
         }, cancellationToken);
     }
+    private bool CanSubmitCapturedIntent(CanvasStrokeEditIntent intent, CancellationToken token)
+        => !_retiring && !_disposed && !token.IsCancellationRequested && _tools.Selected == CanvasPrimaryTool.Select &&
+            _isAvailable() && _context is not null && _context.IsAvailable() &&
+            _document.Identity == (intent.ArtifactId, intent.ExpectedArtifactRevision) &&
+            _document.Identity == _context.Identity && intent.FileId == _context.FileId &&
+            intent.StoreId == _context.StoreId && intent.ExpectedFilesRevision == _context.FilesRevision && _snapshot is not null &&
+            _snapshot.RevisionId == intent.ExpectedArtifactRevision && _entries.ContainsKey(intent.StrokeId);
 
     private void Pressed(object? sender, PointerPressedEventArgs args)
     {
         if (args.Handled || !CanCapture || _pointer is not null) return;
         var point = args.GetCurrentPoint(_viewport);
-        if (!point.Properties.IsLeftButtonPressed || _viewport.ToDocumentPoint(point.Position) is not { } documentPoint) return;
+        if (!BeginsSelectionGesture(args.Pointer.Type,point.Properties.IsLeftButtonPressed) ||
+            _viewport.ToDocumentPoint(point.Position) is not { } documentPoint) return;
         try
         {
             var id = _document.PreviewSelectionTarget(documentPoint.X, documentPoint.Y, _snapshot!.RevisionId);
@@ -186,7 +214,12 @@ public sealed class CanvasNativeSelectionInput : ICanvasSelectionInput, IDisposa
                 "The selection contour is unavailable in this view; the retained selected target is unchanged.";
     }
     private void Notify() { RefreshFeedback(); Changed?.Invoke(this, EventArgs.Empty); }
-    private void CaptureLost(object? sender, PointerCaptureLostEventArgs args) { if (!_releasing && _pointer is not null) CancelMove("Pointer capture ended. No move was submitted."); }
+    internal static bool BeginsSelectionGesture(PointerType type,bool primaryPressed)
+        => primaryPressed || type==PointerType.Touch;
+    internal static bool IsRelevantCaptureLoss(object? capturedPointer,object lostPointer,bool releasing)
+        => !releasing && capturedPointer is not null && ReferenceEquals(capturedPointer,lostPointer);
+    private void CaptureLost(object? sender, PointerCaptureLostEventArgs args)
+    { if (IsRelevantCaptureLoss(_pointer,args.Pointer,_releasing)) CancelMove("Pointer capture ended. No move was submitted."); }
     private void ViewChanged(object? sender, EventArgs args) { if (_pointer is not null) CancelMove("The view changed during dragging. No move was submitted."); }
     private void ToolChanged(object? sender, EventArgs args)
     {

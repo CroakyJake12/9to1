@@ -10,7 +10,27 @@ public sealed record CanvasSharedInkOwnerSnapshot(HomeProductivityContext Contex
     public double LogicalWidth { get; init; } = CanvasSharedInkStrokeFactory.LogicalWidth;
     public double LogicalHeight { get; init; } = CanvasSharedInkStrokeFactory.LogicalHeight;
 }
-public sealed record CanvasSharedInkEraseGesture(IReadOnlyList<RnotePointerSample> Samples, double Width);
+/// <summary>Typed Canvas-page placement for one canonical shared ink object. Supported here only for translation.</summary>
+public sealed record CanvasSharedInkErasePlacement(Guid ObjectId, Guid StrokeId, Guid LayerId,
+    double TranslateX, double TranslateY)
+{
+    public RnotePointerSample ToStrokeCoordinates(RnotePointerSample pageSample)
+    {
+        if (!IsValid) throw new InvalidDataException("The captured shared ink placement is no longer supported.");
+        var local = pageSample with { X = pageSample.X - TranslateX, Y = pageSample.Y - TranslateY };
+        if (!local.IsValid) throw new InvalidDataException("The inverse shared ink placement produced invalid pointer data.");
+        return local;
+    }
+    public bool IsValid => ObjectId != Guid.Empty && StrokeId == ObjectId && LayerId != Guid.Empty &&
+        double.IsFinite(TranslateX) && double.IsFinite(TranslateY) &&
+        Math.Abs(TranslateX) <= 100_000 && Math.Abs(TranslateY) <= 100_000;
+}
+public sealed record CanvasSharedInkEraseGesture(IReadOnlyList<RnotePointerSample> Samples, double Width)
+{
+    /// <summary>Exact stable targets and inverse placements from the same owner snapshot used for hit-testing.</summary>
+    public IReadOnlyList<CanvasSharedInkErasePlacement> Placements { get; init; } = [];
+    public IReadOnlyList<Guid> ErasedObjectIds { get; init; } = [];
+}
 public sealed record CanvasSharedInkStrokeRequest(CanvasSharedInkOwnerSnapshot Expected, JsonElement Bundle)
 {
     public CanvasSharedInkEraseGesture? Erasure { get; init; }
@@ -73,10 +93,14 @@ public static class CanvasSharedInkStrokeFactory
         foreach (var value in bundle.Objects)
         {
             var stroke = Handler.ReadStroke(value);
-            if (!ids.Add(value.ObjectId) || stroke.Transform != new CanvasTransform() || stroke.PathGeometry is not null)
-                throw new NotSupportedException("This shared viewport cannot render duplicate identities, transformed or split-path strokes; their original bundles are retained.");
+            if (!ids.Add(value.ObjectId) || !TryCaptureTranslation(value, stroke, out _) || stroke.PathGeometry is not null)
+                throw new NotSupportedException("This shared viewport supports only identity/translation single-path strokes; other original bundles are retained.");
             if (stroke.Samples.Any(sample => Math.Abs(sample.X) > 100_000 || Math.Abs(sample.Y) > 100_000))
                 throw new InvalidDataException("The shared drawing geometry exceeds the supported coordinate bounds.");
+            var placement = CaptureTranslation(value, stroke);
+            if (stroke.Samples.Any(sample => Math.Abs(sample.X + placement.TranslateX) > 100_000 ||
+                Math.Abs(sample.Y + placement.TranslateY) > 100_000))
+                throw new InvalidDataException("Translated shared drawing geometry exceeds the supported page coordinate bounds.");
             samples = checked(samples + stroke.Samples.Count);
             if (samples > MaximumSamples) throw new InvalidDataException("The shared drawing exceeds the supported sample count.");
         }
@@ -125,10 +149,12 @@ public static class CanvasSharedInkStrokeFactory
         foreach (var value in objects)
         {
             var stroke = Handler.ReadStroke(value);
+            var placement = CaptureTranslation(value, stroke);
             unsupported.AddRange(CanvasInkObjectHandler.RetainedUnsupportedProperties(value, stroke).Select(path => value.ObjectId.ToString("D") + ":" + path));
             sampleCount = checked(sampleCount + stroke.Samples.Count);
             if (sampleCount > MaximumSamples) throw new InvalidDataException("The shared scene exceeds its sample bound.");
-            native.DrawStroke(stroke.Samples.Select(sample => new RnotePointerSample(sample.X, sample.Y, sample.Pressure, sample.TiltX, sample.TiltY)).ToArray(),
+            native.DrawStroke(stroke.Samples.Select(sample => new RnotePointerSample(sample.X + placement.TranslateX,
+                sample.Y + placement.TranslateY, sample.Pressure, sample.TiltX, sample.TiltY)).ToArray(),
                 CanvasInkObjectHandler.ResolveStyle(stroke));
         }
         // Real transient capability probe for an empty canvas. It is not published, inserted or saved
@@ -161,33 +187,28 @@ public static class CanvasSharedInkStrokeFactory
         var objects = captured.Bundles.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects).ToArray();
         if (objects.Length > MaximumObjects || objects.Select(value => value.ObjectId).Distinct().Count() != objects.Length)
             throw new InvalidDataException("The original drawing repeats an identity or exceeds its supported bound.");
-        using var native = RnoteCanvasEngine.Create();
-        var keys = new Dictionary<ulong, Guid>();
+        var placements = new List<CanvasSharedInkErasePlacement>(objects.Length);
+        var removed = new HashSet<Guid>();
         var totalSamples = 0;
         foreach (var value in objects)
         {
-            var prior = native.ReadStrokeKeys().ToHashSet();
             var stroke = Handler.ReadStroke(value);
+            var placement = CaptureTranslation(value, stroke); placements.Add(placement);
             totalSamples = checked(totalSamples + stroke.Samples.Count);
             if (totalSamples > MaximumSamples) throw new InvalidDataException("The eraser scene exceeds its supported sample bound.");
+            using var native = RnoteCanvasEngine.Create();
             native.DrawStroke(stroke.Samples.Select(point => new RnotePointerSample(point.X, point.Y, point.Pressure, point.TiltX, point.TiltY)).ToArray(),
                 CanvasInkObjectHandler.ResolveStyle(stroke));
-            var after = native.ReadStrokeKeys().ToHashSet();
-            var added = after.Except(prior).ToArray();
-            if (added.Length != 1 || prior.Except(after).Any() || !keys.TryAdd(added[0], value.ObjectId))
+            using var durable = RnoteCanvasEngine.Open(native.Save());
+            var beforeErase = durable.ReadStrokeKeys().ToHashSet();
+            if (beforeErase.Count != 1)
                 throw new NotSupportedException("The donor cannot map this shared stroke to one exact eraser identity.");
+            durable.EraseWholeStrokes(gesture.Select(placement.ToStrokeCoordinates).ToArray(), width);
+            var survivors = durable.ReadStrokeKeys().ToHashSet();
+            if (survivors.Count > 1 || survivors.Count == 1 && !survivors.SetEquals(beforeErase))
+                throw new NotSupportedException("Partial/split erasure requires exact shared path support; original ink is retained.");
+            if (beforeErase.Except(survivors).Any()) removed.Add(value.ObjectId);
         }
-        // Match the same save/reopened donor geometry used by RenderScene, so
-        // edge hits agree with the actual displayed/reopened precision.
-        using var durable = RnoteCanvasEngine.Open(native.Save());
-        var beforeErase = durable.ReadStrokeKeys().ToHashSet();
-        if (!beforeErase.SetEquals(keys.Keys)) throw new InvalidDataException("The donor changed canonical key mapping during reopen.");
-        durable.EraseWholeStrokes(gesture, width);
-        var surviving = durable.ReadStrokeKeys().ToHashSet();
-        if (surviving.Except(beforeErase).Any())
-            throw new NotSupportedException("Partial/split erasure requires exact shared path support; original ink is retained.");
-        var removed = beforeErase.Except(surviving).Select(key => keys.TryGetValue(key, out var id) ? id
-            : throw new InvalidDataException("The donor erased an unmapped shared stroke.")).ToHashSet();
         var retained = new List<JsonElement>();
         foreach (var source in captured.Bundles)
         {
@@ -203,10 +224,67 @@ public static class CanvasSharedInkStrokeFactory
         }
         return new(captured, default)
         {
-            Erasure = new(Array.AsReadOnly(gesture.ToArray()), width),
+            Erasure = new(Array.AsReadOnly(gesture.ToArray()), width)
+            {
+                Placements = Array.AsReadOnly(placements.ToArray()),
+                ErasedObjectIds = Array.AsReadOnly(objects.Where(value => removed.Contains(value.ObjectId)).Select(value => value.ObjectId).ToArray())
+            },
             ReplacementBundles = Array.AsReadOnly(retained.ToArray())
         };
     }
+
+    /// <summary>Owner-side last-moment check: canonical revision/payload and the prepared placement map must still match.</summary>
+    public static bool IsCurrentEraseRequest(HomeProductivityEngine engine, CanvasSharedInkStrokeRequest request,
+        CanvasSharedInkOwnerSnapshot? current)
+    {
+        ArgumentNullException.ThrowIfNull(engine); ArgumentNullException.ThrowIfNull(request);
+        if (request.Erasure is not { } erase || current is null) return false;
+        try
+        {
+            if (!SameOwner(request.Expected, current)) return false;
+            var prepared = Snapshot(engine, request.Expected);
+            var currentObjects = prepared.Bundles.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects).ToArray();
+            var placements = currentObjects.Select(value => CaptureTranslation(value, Handler.ReadStroke(value))).ToArray();
+            if (!placements.SequenceEqual(erase.Placements) || erase.ErasedObjectIds.Count == 0 ||
+                erase.ErasedObjectIds.Any(id => id == Guid.Empty) || erase.ErasedObjectIds.Distinct().Count() != erase.ErasedObjectIds.Count ||
+                erase.ErasedObjectIds.Any(id => !placements.Any(item => item.ObjectId == id)) || request.ReplacementBundles is null)
+                return false;
+            var remainingObjects = request.ReplacementBundles.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects).ToArray();
+            var currentById = currentObjects.ToDictionary(value => value.ObjectId);
+            if (remainingObjects.Select(value => value.ObjectId).Distinct().Count() != remainingObjects.Length ||
+                remainingObjects.Any(value => !currentById.TryGetValue(value.ObjectId, out var source) || !SameObjectPayload(source, value)))
+                return false;
+            var remainingIds = remainingObjects.Select(value => value.ObjectId).ToHashSet();
+            return currentById.Keys.Except(remainingIds).ToHashSet().SetEquals(erase.ErasedObjectIds);
+        }
+        catch (Exception error) when (error is InvalidDataException or NotSupportedException or ArgumentException or InvalidOperationException or JsonException)
+        { return false; }
+    }
+
+    private static bool TryCaptureTranslation(HomeProductivityObject value, CanvasInkStroke stroke, out CanvasSharedInkErasePlacement placement)
+    {
+        placement = new(value.ObjectId, stroke.StrokeId, stroke.LayerId,
+            stroke.Transform.TranslateX, stroke.Transform.TranslateY);
+        return placement.IsValid && stroke.Transform.ScaleX == 1 && stroke.Transform.ScaleY == 1 &&
+            stroke.Transform.RotationDegrees == 0;
+    }
+
+    private static CanvasSharedInkErasePlacement CaptureTranslation(HomeProductivityObject value, CanvasInkStroke stroke)
+    {
+        if (!TryCaptureTranslation(value, stroke, out var placement))
+            throw new NotSupportedException("Shared ink placement supports translation only; scale and rotation remain unavailable.");
+        return placement;
+    }
+
+    private static bool SameObjectPayload(HomeProductivityObject left, HomeProductivityObject right) =>
+        left.ObjectId == right.ObjectId && left.ObjectType == right.ObjectType && left.SchemaVersion == right.SchemaVersion &&
+        JsonElement.DeepEquals(left.Content, right.Content) && JsonElement.DeepEquals(left.Formatting, right.Formatting) &&
+        JsonElement.DeepEquals(left.Accessibility, right.Accessibility) && JsonElement.DeepEquals(left.Layout, right.Layout) &&
+        left.AssetReferences.SequenceEqual(right.AssetReferences) && SameExtensions(left.Extensions, right.Extensions);
+
+    private static bool SameExtensions(IDictionary<string, JsonElement>? left, IDictionary<string, JsonElement>? right) =>
+        left is null ? right is null : right is not null && left.Count == right.Count &&
+        left.All(pair => right.TryGetValue(pair.Key, out var value) && JsonElement.DeepEquals(pair.Value, value));
 
     private static void DemandDimensions(double width, double height)
     {

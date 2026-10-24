@@ -1,14 +1,20 @@
 using Avalonia.Controls;
+using Avalonia;
 using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using HavenOS.Files;
 
 namespace HavenOS.Apps.Canvas;
 
+/// <summary>Transient native editor state, scoped to one stable Canvas artifact. It grants no access.</summary>
+public sealed record CanvasNativeEditorState(Guid ArtifactId, Guid? StoreId, Guid? FileId, CanvasPrimaryTool Tool,
+    CanvasRnoteInkStyle InkStyle, CanvasEraserOptions EraserOptions, double Zoom, Vector Pan, Guid? SelectedStrokeId);
+
 /// <summary>Owning Canvas CUI over a document opened by the host's exact canonical Files proof.
 /// The supplied document transfers ownership to this surface; readiness remains the shared Home policy.</summary>
 public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRnoteDocument>> open,
-    ICuiSceneReadiness readiness, CanvasNativeInkContext? ink = null,CanvasNativeEraserContext? eraser = null) : UserControl, IDisposable
+    ICuiSceneReadiness readiness, CanvasNativeInkContext? ink = null,CanvasNativeEraserContext? eraser = null,
+    CanvasNativeEditorState? restoreState = null, CanvasDocumentLocationInfo? documentLocation = null) : UserControl, IDisposable
 {
     private readonly CancellationTokenSource _lifetime = new();
     private readonly CanvasOriginalWorkOwner _originalWork = new();
@@ -80,7 +86,8 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
             _bindings = new CanvasCuiWorkspace(DispatchView,
                 kind => _available && (kind is CanvasWorkspaceCommandKind.FitView or CanvasWorkspaceCommandKind.ZoomIn or CanvasWorkspaceCommandKind.ZoomOut ||
                     _ink?.HasSubmittedStroke!=true && _selection.HasSubmittedOperation!=true && (kind==CanvasWorkspaceCommandKind.Undo ? _eraser?.CanHistory(CanvasHistoryKind.Undo)==true : kind==CanvasWorkspaceCommandKind.Redo && _eraser?.CanHistory(CanvasHistoryKind.Redo)==true)), _tools,_eraser,_selection);
-            _bindings.Refresh(_document.Snapshot, ink is null ? "Opened canonical Files revision · read-only view" : "Opened canonical Files revision · native pen input requires Home approval");
+            _bindings.Refresh(_document.Snapshot, ink is null ? "Opened canonical Files revision · read-only view" : "Opened canonical Files revision · native pen input requires Home approval",
+                _document.CompatibilityReport, documentLocation: documentLocation);
             var availability = await _originalWork.ObserveOriginalAsync(_scene.ShowAsync(new("canvas", "Canvas", "Canvas", CanvasCuiWorkspace.LoadDocument(),
                 _bindings, _bindings, readiness)
             { IsPublicationCurrent = () => !_disposed && !_lifetime.IsCancellationRequested }, token));
@@ -102,6 +109,7 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
                 _ink.Changed += InkChanged;
             }
             else _tools.Select(CanvasPrimaryTool.Pan);
+            RestoreEditorState(restoreState);
             _bindings.RefreshAvailability();
         }
         catch
@@ -110,6 +118,32 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
             throw;
         }
         finally { EndOperation(); }
+    }
+
+    internal CanvasNativeEditorState? CaptureEditorState()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (_disposed || _document is null || _tools is null || _viewport is null || !_available) return null;
+        var storeId = ink?.ExpectedStoreId ?? eraser?.StoreId;
+        var fileId = ink?.FileId.Value ?? eraser?.FileId.Value;
+        return new(_document.Identity.ArtifactId, storeId, fileId, _tools.Selected, _tools.InkStyle, _tools.EraserOptions,
+            _viewport.ViewZoom, _viewport.ViewPan, _selection is { HasTarget: true } ? _selection.TargetStrokeId : null);
+    }
+
+    private void RestoreEditorState(CanvasNativeEditorState? state)
+    {
+        if (state is null || _document is null || _tools is null || _viewport is null || _selection is null ||
+            state.ArtifactId != _document.Identity.ArtifactId) return;
+        // Only transient preferences whose current native capability still exists are restored.
+        try { _tools.SetInkStyle(state.InkStyle); } catch (ArgumentException) { }
+        try { _tools.SetEraserOptions(state.EraserOptions); } catch (Exception error) when (error is ArgumentException or NotSupportedException) { }
+        if (double.IsFinite(state.Zoom) && state.Zoom is >= 0.25 and <= 8)
+            _viewport.RestoreViewState(state.Zoom, state.Pan);
+        if (Enum.IsDefined(state.Tool))
+        {
+            try { _tools.Select(state.Tool); } catch (NotSupportedException) { }
+        }
+        if (state.SelectedStrokeId is { } target) _selection.TryRestoreTarget(target);
     }
 
     /// <summary>Revalidates the captured source; stale or revoked access removes the displayed raster.</summary>

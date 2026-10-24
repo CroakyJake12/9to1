@@ -1,18 +1,61 @@
 <Cui id="9to1.Canvas.Workspace" version="1">
+  <Actions>
+    <Action name="InspectCanvasObject" command="9to1.Canvas.Accessibility.Inspect" parameter="{Binding item.Id}" />
+    <Action name="ToggleCanvasCommandSurface" command="9to1.Canvas.DocumentMenu.Toggle" />
+    <Action name="ToggleCanvasDocumentInfo" command="9to1.Canvas.DocumentInfo.Toggle" />
+  </Actions>
   <Page>
     <Container id="canvas-shell" accessible-name="Canvas workspace" Type="Grid" RowSizes="Auto 1fr Auto">
-      <Container id="canvas-document-controls" orientation="Horizontal" Type="Wrap">
-        <Button id="canvas-open" action="9to1.Canvas.Artifact.Open" content="Open" accessible-name="Open Canvas artifact through Files" Interactive="{Binding CanOpen}" />
-        <Button id="canvas-import" action="9to1.Canvas.Import" content="Import" accessible-name="Import Rnote or Xournal++ document" Interactive="{Binding CanImport}" />
-        <Text id="canvas-title" text="{Binding DisplayName}" accessible-name="Canvas document name" />
-        <Button id="canvas-save" action="9to1.Canvas.Artifact.Save" content="Flush" accessible-name="Flush Canvas revision to Files" Interactive="{Binding CanFlush}" />
-        <Button id="canvas-undo" action="9to1.Canvas.History.Undo" content="Undo" accessible-name="Undo Canvas document operation" Interactive="{Binding CanUndo}" />
-        <Button id="canvas-redo" action="9to1.Canvas.History.Redo" content="Redo" accessible-name="Redo Canvas document operation" Interactive="{Binding CanRedo}" />
-        <Button id="canvas-fit" action="9to1.Canvas.View.Fit" content="Fit" accessible-name="Fit the canvas in this view" Interactive="{Binding CanFitView}" />
-        <Button id="canvas-zoom-out" action="9to1.Canvas.View.ZoomOut" content="−" accessible-name="Zoom out the canvas view" Interactive="{Binding CanZoomOut}" />
-        <Button id="canvas-zoom-in" action="9to1.Canvas.View.ZoomIn" content="+" accessible-name="Zoom in the canvas view" Interactive="{Binding CanZoomIn}" />
+      <Container id="canvas-document-controls" Type="Vertical Stack" Row="0" CellGap="6" padding="12,8">
+        <Container orientation="Horizontal" Type="Wrap" CellGap="8">
+          <Button id="canvas-command-toggle" action="ToggleCanvasCommandSurface" content="≡" accessible-name="Open Canvas document commands" Interactive="{Binding CanToggleCommandSurface}" />
+          <Button id="canvas-title" action="ToggleCanvasDocumentInfo" content="{Binding DisplayName}" accessible-name="{Binding DocumentInfoAccessibleName}" Interactive="{Binding CanToggleDocumentInfo}" />
+        </Container>
+        <Container id="canvas-document-info" Type="Wrap" CellGap="8" padding="8" Active="{Binding DocumentInfoVisible}" accessible-name="Canvas document information">
+          <Text text="Mode" />
+          <Text text="{Binding CanvasMode}" accessible-name="Canvas document mode" />
+          <Text text="Pages" />
+          <Text text="{Binding PageCount}" accessible-name="Canvas page count" />
+          <Text text="Artifact ID" />
+          <Text text="{Binding ArtifactId}" accessible-name="Canonical Canvas artifact identifier" />
+          <Text text="Files location" />
+          <Text text="{Binding FilesLocationName}" accessible-name="Canvas Files location" />
+          <Text text="Containing folder ID" />
+          <Text text="{Binding ParentFolderId}" accessible-name="Canonical Canvas Files parent folder identifier" />
+          <Text text="Content revision ID" />
+          <Text text="{Binding RevisionId}" accessible-name="Canonical Canvas content revision identifier" />
+        </Container>
+        <Container id="canvas-command-surface" orientation="Horizontal" Type="Wrap" CellGap="8" Active="{Binding CommandSurfaceVisible}" accessible-name="Canvas document commands">
+          <Button id="canvas-open" action="9to1.Canvas.Artifact.Open" content="Open" accessible-name="Open Canvas artifact through Files" Interactive="{Binding CanOpen}" />
+          <Button id="canvas-import" action="9to1.Canvas.Import" content="Import" accessible-name="Import Rnote or Xournal++ document" Interactive="{Binding CanImport}" />
+          <Button id="canvas-save" action="9to1.Canvas.Artifact.Save" content="Flush" accessible-name="Flush Canvas revision to Files" Interactive="{Binding CanFlush}" />
+          <Button id="canvas-undo" action="9to1.Canvas.History.Undo" content="Undo" accessible-name="Undo Canvas document operation" Interactive="{Binding CanUndo}" />
+          <Button id="canvas-redo" action="9to1.Canvas.History.Redo" content="Redo" accessible-name="Redo Canvas document operation" Interactive="{Binding CanRedo}" />
+          <Button id="canvas-fit" action="9to1.Canvas.View.Fit" content="Fit" accessible-name="Fit the canvas in this view" Interactive="{Binding CanFitView}" />
+          <Button id="canvas-zoom-out" action="9to1.Canvas.View.ZoomOut" content="−" accessible-name="Zoom out the canvas view" Interactive="{Binding CanZoomOut}" />
+          <Button id="canvas-zoom-in" action="9to1.Canvas.View.ZoomIn" content="+" accessible-name="Zoom in the canvas view" Interactive="{Binding CanZoomIn}" />
+        </Container>
       </Container>
       <Object id="canvas-surface" accessible-name="Editable Canvas drawing surface" Type="CanvasSpatialSurface" Row="1" />
+      <Container id="canvas-accessible-objects" accessible-name="Accessible Canvas object list" Type="Vertical Stack" Row="1" horizontal-alignment="Left" vertical-alignment="Top" margin="12" max-width="360" background="{Resource CuiPanelBrush}" padding="12" corner-radius="12" Active="{Binding AccessibleListVisible}">
+        <Text text="Objects on this canvas" font-weight="SemiBold" />
+        <Text text="{Binding AccessiblePageSummary}" accessible-name="Accessible object list position" />
+        <Text text="{Binding AccessibleInspectionSummary}" accessible-name="Canvas object inspection details" text-wrapping="Wrap" />
+        <Repeat Source="{Binding AccessibleObjects}" As="item" Key="{Binding item.Id}">
+          <Button action="InspectCanvasObject" padding="6" horizontal-content-alignment="Left" accessible-name="{Binding item.InspectAccessibleName}">
+            <Container Type="Vertical Stack" CellGap="2">
+              <Text text="{Binding item.AccessibleName}" font-weight="SemiBold" />
+              <Text text="{Binding item.Type}" />
+              <Text text="{Binding item.Details}" text-wrapping="Wrap" />
+            </Container>
+          </Button>
+        </Repeat>
+        <Container Type="Horizontal Stack" CellGap="6">
+          <Button action="9to1.Canvas.Accessibility.PreviousPage" content="Previous objects" Interactive="{Binding CanPreviousAccessiblePage}" />
+          <Button action="9to1.Canvas.Accessibility.NextPage" content="More objects" Interactive="{Binding CanNextAccessiblePage}" />
+        </Container>
+      </Container>
+      <Button id="canvas-accessible-objects-toggle" action="9to1.Canvas.Accessibility.ToggleObjects" content="Accessible objects" accessible-name="Show or hide the read-only accessible Canvas object list" Row="1" horizontal-alignment="Left" vertical-alignment="Bottom" margin="12" Interactive="{Binding CanToggleAccessibleList}" />
       <Button id="canvas-ai-indicator" horizontal-alignment="Right" vertical-alignment="Top" margin="12" action="9to1.Canvas.Tool.ai" content="{Binding AiIndicatorLabel}" accessible-name="Restore existing Canvas AI session" Row="1" Interactive="{Binding CanAITool}" Active="{Binding AiIndicatorVisible}" />
       <Container id="canvas-floating-tools" horizontal-alignment="Center" vertical-alignment="Bottom" margin="12" Type="Vertical Stack" Row="1" CellGap="8">
         <Container id="canvas-tool-options" background="{Resource CuiPanelBrush}" padding="12" corner-radius="12" accessible-name="Canvas contextual tool options" Type="Overlay" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" Active="{Binding ToolOptionsVisible}">

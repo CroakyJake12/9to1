@@ -35,6 +35,7 @@ public sealed class CanvasFilesArtifactBridgeTests
             var initial = await bridge.OpenAsync(created.FileId);
             Assert.Equal(artifact.ArtifactId, initial.Artifact.ArtifactId);
             Assert.Equal(created.Revision.Id, initial.Revision.Id);
+            Assert.Equal(new CanvasDocumentLocationInfo("9to1 Drive", folder.ItemId.ToString()), initial.DocumentLocation);
             var foreignId = HostedItemId.New();
             Assert.True((await provider.RegisterArtifactAsync(new("write", Guid.NewGuid().ToString(), foreignId,
                 folder.ItemId, nameof(FilesArtifactType.WriteDocument), "Foreign Write artifact"), owner)).IsSuccess);
@@ -87,6 +88,7 @@ public sealed class CanvasFilesArtifactBridgeTests
             directories = new FilesWorkspaceDirectoryResolver(bindingsPath, _ => null, id => id == profile ? provider : null);
             bridge = new(actor, _ => provider, directories, authorization, () => writesAllowed);
             var moved = await bridge.OpenAsync(created.FileId);
+            Assert.Equal(new CanvasDocumentLocationInfo("9to1 Drive", destinationId.ToString()), moved.DocumentLocation);
             Assert.Equal(destinationId, (await provider.GetArtifactAsync(created.FileId)).Value!.ParentFolderId);
             Assert.Equal(destinationId, (await provider.GetAsync(created.FileId, default)).Value!.ParentId);
             Assert.Equal(artifact.ArtifactId, moved.Artifact.ArtifactId);
