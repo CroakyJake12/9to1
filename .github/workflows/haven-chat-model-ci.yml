@@ -315,6 +315,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: cui-owning-81c75b7e-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/9to1-cui-evidence/
+          path: |
+            ${{ runner.temp }}/9to1-cui-evidence/
+            ${{ runner.temp }}/9to1-cui-context/source-manifest.json
+            ${{ runner.temp }}/9to1-cui-context/sdk-execution-projection.json
           if-no-files-found: warn
           retention-days: 7
