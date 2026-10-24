@@ -12,7 +12,7 @@ internal static class BoardsHistoryRegression
         { if (!condition) throw new InvalidOperationException(name); assertions++; Console.WriteLine("ASSERT " + name); }
         var source = new ObservedHistory(actualRepository);
         var owner = new BoardsWorkspaceService(source);
-        var board = await owner.CreateNotebookAsync("Revision history");
+        var board = await owner.CreateNotebookAsync("Revision history", CancellationToken.None);
         var page = board.Sections[0].Pages[0];
         var paragraph = owner.AddBlock(board, page.Id, NotesBlockKind.Paragraph, "Historical mechanics notes");
         paragraph.Runs = [new NotesTextRun { Text = "Historical ", Bold = true }, new NotesTextRun { Text = "mechanics notes", Italic = true }];

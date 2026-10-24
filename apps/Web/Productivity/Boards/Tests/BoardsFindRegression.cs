@@ -12,7 +12,7 @@ internal static class BoardsFindRegression
         { if (!ok) throw new InvalidOperationException(name); assertions++; Console.WriteLine("ASSERT " + name); }
         var repository = new CountedNotes(actualRepository);
         var owner = new BoardsWorkspaceService(repository);
-        var document = await owner.CreateNotebookAsync("Revision search");
+        var document = await owner.CreateNotebookAsync("Revision search", CancellationToken.None);
         var first = document.Sections[0].Pages[0];
         var paragraph = owner.AddBlock(document, first.Id, NotesBlockKind.Paragraph, "Alpha mechanics ALPHA revision");
         paragraph.Runs = [new NotesTextRun { Text = "Alpha ", Bold = true }, new NotesTextRun { Text = "mechanics ALPHA revision", Italic = true }];
@@ -95,7 +95,7 @@ internal static class BoardsFindRegression
         var compatibility = JsonSerializer.Deserialize<NotesDocument>(original)!;
         _ = new WriteDocumentEditor(compatibility);
         Check(compatibility.Sections[0].Pages[0].Blocks[0].Runs.Count > 0, "Existing default constructor selection/normalization behavior is preserved");
-        var crowded = await owner.CreateNotebookAsync("Many actual search matches");
+        var crowded = await owner.CreateNotebookAsync("Many actual search matches", CancellationToken.None);
         owner.AddBlock(crowded, crowded.Sections[0].Pages[0].Id, NotesBlockKind.Paragraph, string.Join(' ', Enumerable.Repeat("needle", 250)));
         await owner.SaveAsync(crowded, "Actual bounded search source", default);
         var limited = new BoardsBrowserCore(repository); await limited.OpenAsync(crowded.Id);
