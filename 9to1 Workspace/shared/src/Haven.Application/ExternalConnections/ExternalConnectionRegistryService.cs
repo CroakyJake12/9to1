@@ -1,5 +1,6 @@
-﻿using System.Text.Json;
-using System.Net;
+﻿using System.Net;
+using System.Runtime.ExceptionServices;
+using System.Text.Json;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -49,14 +50,22 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
         var previousState = current.State;
         var checking = current with
         {
-            State = previousState is ExternalConnectionState.Ready or ExternalConnectionState.Offline or ExternalConnectionState.NeedsAttention or ExternalConnectionState.Degraded
-                ? ExternalConnectionState.Reconnecting
-                : ExternalConnectionState.Connecting,
+            State = previousState == ExternalConnectionState.Connecting
+                ? ExternalConnectionState.Connecting
+                : ExternalConnectionState.Reconnecting,
             Status = "Checking MCP connection...",
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        if (!await PublishAsync(current, checking, cancellationToken).ConfigureAwait(false))
-            return await CurrentOrRemovedAsync(checking, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (!await PublishAsync(current, checking, cancellationToken).ConfigureAwait(false))
+                return await CurrentOrRemovedAsync(checking, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            await PublishCancelledAsync(checking).ConfigureAwait(false);
+            throw;
+        }
         ExternalConnection updated;
         try
         {
@@ -66,6 +75,7 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
                 throw new InvalidOperationException("The endpoint responded, but it is not the UEFN Unreal MCP server (expected server identity 'unreal-mcp').");
             if (string.IsNullOrWhiteSpace(discovery.SnapshotVersion))
                 throw new InvalidOperationException("The MCP provider returned an invalid capability snapshot.");
+            var capabilitySnapshot = McpCapabilitySnapshotSerializer.Serialize(discovery, cancellationToken);
             updated = checking with
             {
                 State = ExternalConnectionState.Ready,
@@ -73,14 +83,14 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
                 ServerName = discovery.Identity.Name,
                 ServerVersion = discovery.Identity.Version,
                 ProtocolVersion = discovery.Identity.ProtocolVersion,
+                CapabilitySnapshotJson = capabilitySnapshot,
+                CapabilitySnapshotVersion = discovery.SnapshotVersion,
                 UpdatedAt = DateTimeOffset.UtcNow
             };
         }
         catch (OperationCanceledException)
         {
-            updated = checking with { State = ExternalConnectionState.Offline, Status = "The connection check was cancelled. Retry when ready.", UpdatedAt = DateTimeOffset.UtcNow };
-            try { await PublishAsync(checking, updated, CancellationToken.None).ConfigureAwait(false); }
-            catch { /* Preserve the original cancellation; a failed health publication is not success. */ }
+            await PublishCancelledAsync(checking).ConfigureAwait(false);
             throw;
         }
         catch (Exception ex)
@@ -89,8 +99,28 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
             updated = checking with { State = FailureState(ex), Status = message, UpdatedAt = DateTimeOffset.UtcNow };
         }
 
-        return await PublishAsync(checking, updated, cancellationToken).ConfigureAwait(false)
-            ? updated : await CurrentOrRemovedAsync(checking, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await PublishAsync(checking, updated, cancellationToken).ConfigureAwait(false)
+                ? updated : await CurrentOrRemovedAsync(checking, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            await PublishCancelledAsync(checking).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private async Task PublishCancelledAsync(ExternalConnection checking)
+    {
+        var cancelled = checking with
+        {
+            State = ExternalConnectionState.Offline,
+            Status = "The connection check was cancelled. Retry when ready.",
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        try { await PublishAsync(checking, cancelled, CancellationToken.None).ConfigureAwait(false); }
+        catch { /* Preserve cancellation; best-effort health publication must not mask it. */ }
     }
 
     private async Task<bool> PublishAsync(ExternalConnection? expected, ExternalConnection replacement, CancellationToken cancellationToken)
@@ -117,9 +147,36 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
     public async Task RemoveAsync(Guid id, CancellationToken cancellationToken)
     {
         // Remove canonical eligibility before credential cleanup. Cleanup failure must not leave a usable saved connection.
-        await repository.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        OperationCanceledException? deletionCancellation = null;
+        try { await repository.DeleteAsync(id, cancellationToken).ConfigureAwait(false); }
+        catch (OperationCanceledException cancellation)
+        {
+            ExternalConnection? remaining;
+            try { remaining = await repository.GetAsync(id, CancellationToken.None).ConfigureAwait(false); }
+            catch (Exception probeFailure)
+            {
+                throw new AggregateException("Connection removal was cancelled and canonical state could not be checked.", cancellation, probeFailure);
+            }
+            if (remaining is not null) throw;
+            deletionCancellation = cancellation;
+        }
+
         if (secrets is not null)
-            await secrets.DeleteAsync(ExternalConnectionNaming.SecretProviderId(id), ExternalConnectionNaming.OAuthTokenSecretName, cancellationToken).ConfigureAwait(false);
+        {
+            var providerId = ExternalConnectionNaming.SecretProviderId(id);
+            ExternalConnectionCredentialLifecycle.Revoke(secrets, providerId);
+            // Once the canonical connection is gone, finish local credential cleanup even if the caller cancels.
+            using var lease = await ExternalConnectionCredentialLifecycle.AcquireAsync(secrets, providerId, CancellationToken.None).ConfigureAwait(false);
+            try { await secrets.DeleteAsync(providerId, ExternalConnectionNaming.OAuthTokenSecretName, CancellationToken.None).ConfigureAwait(false); }
+            catch (Exception cleanupFailure)
+            {
+                if (deletionCancellation is not null)
+                    throw new AggregateException("Connection removal was cancelled after deletion; credential cleanup also failed.", deletionCancellation, cleanupFailure);
+                throw;
+            }
+        }
+
+        if (deletionCancellation is not null) ExceptionDispatchInfo.Capture(deletionCancellation).Throw();
     }
 
     public static void ValidateMcpConfiguration(McpConnectionConfiguration configuration, bool requireLoopback)
@@ -155,6 +212,8 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
             return "MCP provider scope is insufficient. Review the granted scopes for this connection.";
         if (exception is HttpRequestException { StatusCode: HttpStatusCode.TooManyRequests })
             return "MCP provider rate limit reached. Retry after the provider's cooldown.";
+        if (exception is InvalidOperationException invalidSnapshot && invalidSnapshot.Message.Contains("invalid capability snapshot", StringComparison.OrdinalIgnoreCase))
+            return "MCP provider returned an invalid capability snapshot. Review the connection and retry.";
         if (!connection.PresetKey.Equals("uefn", StringComparison.OrdinalIgnoreCase))
             return "MCP connection unavailable. Check the endpoint and authentication, then retry.";
         if (text.Contains("refused", StringComparison.OrdinalIgnoreCase) || text.Contains("actively refused", StringComparison.OrdinalIgnoreCase))
@@ -182,7 +241,5 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
             : $"{values.Count} {itemName}{(values.Count == 1 ? string.Empty : "s")}";
         return $"Connected - {Describe(discovery.Tools, "tool")}, {Describe(discovery.Resources, "resource")}, {Describe(discovery.Prompts, "prompt")}.";
     }
+
 }
-
-
-
