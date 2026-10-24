@@ -169,10 +169,11 @@ public sealed partial class FilesNativeBrowserSurface
                 _originalPageCurrent = current;
                 _query = "";
                 _search.Text = "";
+                _searchScope.SelectedIndex = 0;
                 RequireOriginalAlive(token);
                 _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
                 if (_history.Count >= 128) { _history.RemoveAt(0); _historyIndex--; }
-                _history.Add((page.ParentID, "Files folder", false));
+                _history.Add(new(page.ParentID, "Files folder", false, "", false, false));
                 _historyIndex = _history.Count - 1;
                 ApplyDisplayedNameSort();
                 RequireOriginalAlive(token);
@@ -265,6 +266,7 @@ public sealed partial class FilesNativeBrowserSurface
         var registry = new CuiControlRegistry();
         registry.BindAuthoredControl("files-canonical-list", _ => _items);
         registry.BindAuthoredControl("files-search-input", _ => _search);
+        registry.BindAuthoredControl("files-search-scope", _ => _searchScope);
         registry.BindAuthoredControl("files-displayed-sort", _ => _sort);
         registry.BindAuthoredControl("files-name-input", _ => _editName);
         BindOriginalShareScopeControls(registry);

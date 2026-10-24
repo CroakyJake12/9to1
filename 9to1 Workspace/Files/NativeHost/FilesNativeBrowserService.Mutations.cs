@@ -85,21 +85,41 @@ public sealed partial class FilesNativeBrowserService
         internal readonly IReadOnlyList<FilesItemRevisionPrecondition> Parents;
         internal readonly JsonElement Arguments;
         internal readonly Func<bool> Lifetime;
+        internal readonly string? FolderColorHex;
+        internal readonly bool HasFolderColorChange;
         internal readonly object Gate = new();
         internal Task<FilesNativeBrowserMutationOutcome>? ActualApply;
         internal HomeResourceExecutionCapability? Capability;
         internal HomeExecutionOutcome? OriginalOutcome;
+        private bool _folderColorWriteReturned;
+        private FilesFolderPresentation? _folderColorWriteObservation;
         internal int ReviewAttempts;
         internal bool Retired;
         internal PreparedMutation(FilesNativeBrowserService issuer, NativeFilesWorkspace workspace,
             FilesNativeBrowserPage page, AuthenticatedResourceActor actor, FilesOperation operation,
             string name, IReadOnlyList<ResourceScope> scopes, IReadOnlyList<FilesItemRevisionPrecondition> parents,
             JsonElement arguments, Func<bool> lifetime, HomePermissionAuthorization approval,
-            FilesNativeBrowserPage? destinationPage = null, string? destinationName = null)
+            FilesNativeBrowserPage? destinationPage = null, string? destinationName = null,
+            string? folderColorHex = null, bool hasFolderColorChange = false)
         { Issuer = issuer; Workspace = workspace; Page = page; Actor = actor; OriginalOperation = operation;
             Name = name; Scopes = scopes; Parents = parents; Arguments = arguments; Lifetime = lifetime; Approval = approval;
-            DestinationPage = destinationPage; DestinationName = destinationName; }
+            DestinationPage = destinationPage; DestinationName = destinationName;
+            FolderColorHex = folderColorHex; HasFolderColorChange = hasFolderColorChange; }
         public HomePermissionAuthorization Approval { get; }
+        public bool IsFolderColorMutation => HasFolderColorChange;
+        public HostedItemId? FolderColorItemId => HasFolderColorChange ? OriginalOperation.ItemId : null;
+        public bool HasObservedFolderColorWrite { get { lock (Gate) return _folderColorWriteReturned; } }
+        public FilesFolderPresentation? ObservedFolderColorWrite { get { lock (Gate) return _folderColorWriteObservation; } }
+        internal void CaptureFolderColorWrite(FilesFolderPresentation? returned)
+        {
+            lock (Gate)
+            {
+                if (_folderColorWriteReturned)
+                    throw new InvalidOperationException("The original Files folder-colour write return cannot be replaced.");
+                _folderColorWriteObservation = returned;
+                _folderColorWriteReturned = true;
+            }
+        }
         /// <summary>SAME actual provider return, retained before cleanup/audit. Observation grants no effect replay.</summary>
         public FilesResult<FilesOperation>? ObservedOperation => Issuer.ReadObservedOperation(this);
         public string Description => OriginalOperation.Operation switch
@@ -108,6 +128,8 @@ public sealed partial class FilesNativeBrowserService
             "Delete" => $"Move to Trash: {Name}. Contents remain recoverable.",
             "Restore" => $"Restore to original folder: {Name}",
             "Move" => $"Move ‘{Name}’ to ‘{DestinationName}’",
+            "SetFolderColor" => FolderColorHex is null ? $"Reset colour for folder ‘{Name}’."
+                : $"Set folder ‘{Name}’ colour to {FolderColorHex}.",
             "Share.Revoke" or "Share.Grant" => Issuer.DescribeNativeShareMutation(this),
             _ => $"Rename to: {Name}"
         };
@@ -131,18 +153,32 @@ public sealed partial class FilesNativeBrowserService
     {
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var actual = PrepareAfterPublicationAsync(start.Task, samePage, sameRow, sameActor, operation,
-            name, originalLifetime, sessionId, token);
+            name, originalLifetime, sessionId, token, null, false);
+        start.SetResult(); return actual;
+    }
+
+    public Task<PreparedMutation> PrepareNativeFolderColorAsync(FilesNativeBrowserPage samePage,
+        HostedItemMetadata sameFolder, string? colorHex, AuthenticatedResourceActor sameActor,
+        Func<bool> originalLifetime, string sessionId, CancellationToken token = default)
+    {
+        string? normalized = colorHex is null ? null : FilesFolderPresentation.ValidateColor(colorHex);
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var actual = PrepareAfterPublicationAsync(start.Task, samePage, sameFolder, sameActor,
+            "SetFolderColor", sameFolder.Name, originalLifetime, sessionId, token, normalized, true);
         start.SetResult(); return actual;
     }
 
     private async Task<PreparedMutation> PrepareAfterPublicationAsync(Task start,
         FilesNativeBrowserPage page, HostedItemMetadata? row, AuthenticatedResourceActor actor,
-        string operation, string name, Func<bool> lifetime, string sessionId, CancellationToken token)
+        string operation, string name, Func<bool> lifetime, string sessionId, CancellationToken token,
+        string? folderColorHex, bool hasFolderColorChange)
     {
         await start.ConfigureAwait(false);
         ArgumentNullException.ThrowIfNull(lifetime);
         var broker = _mutationBroker ?? throw new NotSupportedException("Home-reviewed Files editing is not configured.");
-        if (operation is not ("CreateFolder" or "Rename" or "Delete" or "Restore") || string.IsNullOrWhiteSpace(name)
+        bool isFolderColor = operation == "SetFolderColor";
+        if (operation is not ("CreateFolder" or "Rename" or "Delete" or "Restore" or "SetFolderColor")
+            || hasFolderColorChange != isFolderColor || !isFolderColor && string.IsNullOrWhiteSpace(name)
             || operation is "CreateFolder" or "Rename" && (name.Length > 255 || name is "." or ".."
                 || name.Any(character => char.IsControl(character) || "/\\<>:\"|?*".Contains(character)))
             || string.IsNullOrWhiteSpace(sessionId) || sessionId.Length > 256)
@@ -167,7 +203,8 @@ public sealed partial class FilesNativeBrowserService
         else
         {
             if (row is null || !page.Items.Any(item => ReferenceEquals(item, row)) || row.CurrentRevisionId is null
-                || workspace.Configuration.AppFolders.Values.Contains(row.Id))
+                || !isFolderColor && workspace.Configuration.AppFolders.Values.Contains(row.Id)
+                || isFolderColor && row.Kind != HostedItemKind.Folder)
                 throw new InvalidOperationException("Select an original item; configured App folders keep their registered names.");
             if (operation is "Delete" or "Restore" && name != row.Name)
                 throw new InvalidOperationException("Retain the original selected item name for this review.");
@@ -190,13 +227,16 @@ public sealed partial class FilesNativeBrowserService
             scopeItem.CurrentRevisionId!.Value.ToString(), ResourceAccess.Write) });
         var arguments = JsonSerializer.SerializeToElement(new { operationID = intent.Id.Value, storeID = page.StoreID,
             expectedStoreRevision = page.StoreRevision, itemID = itemId.Value,
-            parentID = operation == "Restore" ? scopeItem.ParentId?.Value : page.ParentID,
-            expectedRevision = intent.BaseRevisionId?.ToString(), operation, name });
+            parentID = operation is "Restore" or "SetFolderColor" ? scopeItem.ParentId?.Value : page.ParentID,
+            expectedRevision = intent.BaseRevisionId?.ToString(), operation, name,
+            colorHex = isFolderColor ? folderColorHex : null });
         var description = operation switch
         {
             "CreateFolder" => $"Create folder ‘{name}’ in ‘{scopeItem.Name}’.",
             "Delete" => $"Move ‘{scopeItem.Name}’ to Trash. Its contents are retained for recovery; no files are permanently removed.",
             "Restore" => $"Restore ‘{scopeItem.Name}’ to its original parent folder.",
+            "SetFolderColor" => folderColorHex is null ? $"Reset the Files colour presentation for ‘{scopeItem.Name}’."
+                : $"Set the Files colour presentation for ‘{scopeItem.Name}’ to {folderColorHex}.",
             _ => $"Rename ‘{scopeItem.Name}’ to ‘{name}’."
         };
         var approval = await ObserveOriginalAsync(broker.AuthorizeForActorAsync(actor, "files", "9to1.Files." + operation,
@@ -204,7 +244,8 @@ public sealed partial class FilesNativeBrowserService
         await RevalidateAsync(page, actor, token).ConfigureAwait(false);
         if (!lifetime()) throw new ObjectDisposedException("Original Files view");
         var prepared = new PreparedMutation(this, workspace, page, actor, intent, name, scopes,
-            Array.AsReadOnly(parents.ToArray()), arguments, lifetime, approval);
+            Array.AsReadOnly(parents.ToArray()), arguments, lifetime, approval,
+            folderColorHex: folderColorHex, hasFolderColorChange: hasFolderColorChange);
         _issuedNativeMutations.Add(prepared, new ActualOperationObservation());
         return prepared;
     }
@@ -228,6 +269,8 @@ public sealed partial class FilesNativeBrowserService
         PreparedMutation original, CancellationToken token)
     {
         await start.ConfigureAwait(false);
+        if (original.IsFolderColorMutation)
+            return await ApplyNativeFolderColorAfterPublicationAsync(original, token).ConfigureAwait(false);
         var broker = _mutationBroker!;
         bool Alive() => !original.Retired && original.Lifetime();
         if (!Alive()) throw new ObjectDisposedException("Original Files view");
@@ -300,6 +343,84 @@ public sealed partial class FilesNativeBrowserService
         return new(result, false, recorded?.Succeeded == true,
             committed ? recorded?.Succeeded == true ? "Files updated." : "Files updated; Home audit needs Retry audit."
                 : result?.Error?.Message ?? "Inspect the original Files operation.");
+    }
+
+    private async Task<FilesNativeBrowserMutationOutcome> ApplyNativeFolderColorAfterPublicationAsync(
+        PreparedMutation original, CancellationToken token)
+    {
+        var broker = _mutationBroker ?? throw new NotSupportedException("Home-reviewed Files editing is not configured.");
+        bool Alive() => !original.Retired && original.Lifetime();
+        if (!Alive()) throw new ObjectDisposedException("Original Files view");
+        await RevalidateMutationPagesAsync(original, token).ConfigureAwait(false);
+        var capability = await ObserveOriginalAsync(broker.BeginExecutionCapabilityAsync(
+            original.Approval.RequestId, original.Arguments, token)).ConfigureAwait(false);
+        if (capability is null)
+            return new(null, true, false, "Home has not admitted execution. Check its current decision before choosing Apply.");
+        lock (original.Gate) original.Capability = capability;
+
+        HomeClaimedResourceCommitFence? fence = null;
+        bool claimed = false;
+        bool metadataWriteReturned = false;
+        bool verifiedReadback = false;
+        List<Exception> failures = [];
+        try
+        {
+            if (!Alive()) throw new ObjectDisposedException("Original Files view");
+            await RevalidateMutationPagesAsync(original, token).ConfigureAwait(false);
+            var claim = await ObserveOriginalAsync(broker.ClaimExecutionObservedAsync(capability, "files",
+                "9to1.Files.SetFolderColor", original.Scopes, original.Arguments, token)).ConfigureAwait(false);
+            if (claim.Disposition != HomeResourceClaimDisposition.Claimed || claim.Actor != original.Actor)
+                throw new UnauthorizedAccessException("Home did not claim the SAME original folder-colour operation.");
+            claimed = true;
+            fence = await ObserveOriginalAsync(workspaces.CaptureBrowserCommitFenceAsync(original.Workspace, broker,
+                capability, Alive, token).AsTask()).ConfigureAwait(false);
+            var guard = new FilesCommitAuthorityGuard(original.Actor.ActorId, fence.ValidateAsync);
+            var saved = await original.Workspace.FolderPresentations.SetAsync(original.OriginalOperation.ItemId,
+                original.FolderColorHex, DateTimeOffset.UtcNow, original.Actor.ActorId,
+                ct => guard.ValidateAsync(ct), token).ConfigureAwait(false);
+            original.CaptureFolderColorWrite(saved);
+            metadataWriteReturned = true;
+            var readback = await original.Workspace.FolderPresentations.GetAsync(original.OriginalOperation.ItemId, token).ConfigureAwait(false);
+            if (readback != saved || readback?.ColorHex != original.FolderColorHex)
+                throw new InvalidOperationException("The original folder-colour write did not match its persisted readback.");
+            verifiedReadback = true;
+        }
+        catch (Exception error) { failures.Add(error); }
+        finally
+        {
+            if (fence is not null)
+                try { await ObserveOriginalAsync(fence.DisposeAsync().AsTask()).ConfigureAwait(false); }
+                catch (Exception error) { failures.Add(error); }
+        }
+
+        if (!claimed)
+        {
+            try
+            {
+                var audit = await ObserveOriginalAsync(broker.AbortUnclaimedExecutionAsync(capability, CancellationToken.None)).ConfigureAwait(false);
+                if (!audit.Succeeded && audit.Code != "HOME_EXECUTION_ABORT_NOT_OWNED")
+                    failures.Add(new InvalidOperationException(audit.Message));
+            }
+            catch (Exception error) { failures.Add(error); }
+            throw new AggregateException("Original Files folder-colour admission refused; no replacement effect is available.", failures);
+        }
+
+        var state = verifiedReadback ? HomePermissionRequestState.Succeeded
+            : metadataWriteReturned ? HomePermissionRequestState.PartiallyCompleted : HomePermissionRequestState.Failed;
+        var outcome = new HomeExecutionOutcome(state,
+            verifiedReadback ? "FILES_FOLDER_COLOR_COMMITTED" : "FILES_FOLDER_COLOR_OUTCOME_UNVERIFIED",
+            verifiedReadback ? "The exact Files folder-colour presentation committed and was read back."
+                : "The original Files folder-colour outcome is not verified; inspect the presentation before any new change.",
+            metadataWriteReturned ? [new("files.item", original.OriginalOperation.ItemId.ToString())] : []);
+        lock (original.Gate) original.OriginalOutcome = outcome;
+        HomePermissionOperationResult? recorded = null;
+        try { recorded = await ObserveOriginalAsync(broker.CompleteExecutionAsync(capability, outcome, CancellationToken.None)).ConfigureAwait(false); }
+        catch (Exception error) { failures.Add(error); }
+        if (failures.Count != 0)
+            throw new AggregateException("Original folder-colour commit/audit/cleanup failed; the original cannot replay.", failures);
+        return new(null, false, recorded?.Succeeded == true,
+            verifiedReadback ? recorded?.Succeeded == true ? "Folder colour updated." : "Folder colour updated; Home audit needs Retry audit."
+                : "Folder colour outcome was not verified; Home audit records the unresolved result.");
     }
 
     /// <summary>Retries only the SAME detached terminal outcome. Never prepares, claims or mutates Files again.</summary>

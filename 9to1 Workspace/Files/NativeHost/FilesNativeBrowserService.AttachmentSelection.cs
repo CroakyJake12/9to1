@@ -46,7 +46,8 @@ public sealed partial class FilesNativeBrowserService : ICanonicalAttachmentOrig
             // This privately issued page is a current canonical metadata observation.
             // It has one selected row; it grants neither byte READ nor import WRITE.
             var page = new FilesNativeBrowserPage(workspace.Configuration.StoreId,
-                observed.StoreRevision, row.ParentId?.Value, Array.AsReadOnly(new[] { row }), null);
+                observed.StoreRevision, row.ParentId?.Value, Array.AsReadOnly(new[] { row }), null,
+                ChangeCursor: observed.OriginalStore.ChangeCursor, ProviderLocation: workspace.Provider.Location);
             source.Invoke(() => { _originalPages.Add(page, new(workspace, workspace.Actor)); return true; });
             var selected = new AttachmentSelection(this, workspace, page, row, materialization);
             await DemandAttachmentSelection(selected, source, token).ConfigureAwait(false);

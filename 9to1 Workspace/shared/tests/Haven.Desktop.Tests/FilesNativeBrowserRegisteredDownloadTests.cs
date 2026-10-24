@@ -31,6 +31,10 @@ public sealed class FilesNativeBrowserRegisteredDownloadTests
             var list = Assert.Single(surface.GetVisualDescendants().OfType<ListBox>());
             Assert.Same(rig.Row, list.SelectedItem);
             Assert.Contains(list.Items.Cast<HostedItemMetadata>(), row => ReferenceEquals(row, rig.Row));
+            Assert.True(surface.TryGetOriginalLocation(out var storeId, out var folderId, out _));
+            Assert.Equal(rig.Page.StoreID, storeId); Assert.Equal(rig.Page.ParentID, folderId);
+            var selected = Assert.IsType<HostedItemMetadata>(list.SelectedItem);
+            Assert.Equal(rig.Row.Id, selected.Id); Assert.Equal(rig.Row.CurrentRevisionId, selected.CurrentRevisionId);
             Assert.True(surface.TryGetValue("SelectedDetails", out var detail));
             Assert.Contains(rig.Row.Name, Assert.IsType<string>(detail));
             Assert.True(readiness.ScopedReads > 0);
@@ -39,7 +43,8 @@ public sealed class FilesNativeBrowserRegisteredDownloadTests
             await surface.RefreshAsync(rig.Token);
             Assert.Equal(originalCalls, scope.Calls);
             Assert.True(readiness.NormalReads > 0);
-            Assert.Contains(list.Items.Cast<HostedItemMetadata>(), row => row.Id == rig.Row.Id);
+            var returned = Assert.Single(list.Items.Cast<HostedItemMetadata>(), row => row.Id == rig.Row.Id);
+            Assert.Equal(rig.Row.CurrentRevisionId, returned.CurrentRevisionId);
             Assert.Equal(rig.HomeBytes, await File.ReadAllBytesAsync(rig.HomePath, rig.Token));
             Assert.Equal(rig.DriveBytes, await File.ReadAllBytesAsync(rig.DrivePath, rig.Token));
             var close = surface.CloseAndDrainAsync(); await close;

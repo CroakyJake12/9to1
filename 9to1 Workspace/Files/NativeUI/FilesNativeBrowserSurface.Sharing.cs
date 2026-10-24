@@ -12,6 +12,10 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
 {
     private FilesNativeBrowserSharePage? _sharingPage;
     private long _sharingSelectionVersion;
+    private CancellationTokenSource? _sharingFeedCancellation;
+    private bool _sharingStale, _sharingReviewInvalidated, _sharingFeedFailed, _applyingSharingRefresh;
+    private HostedItemId? _sharingInvalidatedItem;
+    private long _sharingRefreshGeneration;
     private FilesEmailShare? _shareScopeGrant;
     private readonly ComboBox _shareScopeRole = new() { ItemsSource = new[] { "Viewer", "Editor" } };
     private readonly TextBox _shareScopeExpiry = new() { MaxLength = 64 };
@@ -25,7 +29,14 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
         (grant.Share.ExpiresAt is null || grant.Share.ExpiresAt > DateTimeOffset.UtcNow);
     private bool IsPendingShareReview => _pendingMutation is { } pending && _browser.IsNativeShareMutation(pending);
     private bool SharingVisible => _sharingPage is { } shares && ReferenceEquals(_page, shares.Page)
-        && ReferenceEquals(_items.SelectedItem, shares.Item) && OriginalAlive();
+        && ReferenceEquals(_items.SelectedItem, shares.Item) && OriginalAlive() && !_sharingStale;
+    private bool SharingStaleVisible => _sharingStale && _sharingPage is { } shares &&
+        ReferenceEquals(_page, shares.Page) && ReferenceEquals(_items.SelectedItem, shares.Item) && OriginalAlive();
+    private string SharingStaleMessage() => !SharingStaleVisible ? "" : _pendingMutation is not null
+        ? "Access changed during a Home review. Stale grant rows remain hidden until the review is resolved; Files reloads them afterward."
+        : _sharingFeedFailed
+            ? "Live access updates are unavailable. Grant rows remain hidden; choose Manage access to reload them."
+            : "Access changed. Grant rows are hidden while Files reloads the current access list.";
     private static bool IsSharingCommand(string command) => command is "9to1.Files.Share.Get"
         or "9to1.Files.Share.More" or "9to1.Files.Share.Close" or "9to1.Files.Share.Revoke" or "9to1.Files.Share.ChangeRole"
         or "9to1.Files.Share.EditScope" or "9to1.Files.Share.ReviewScope" or "9to1.Files.Share.CancelScope";
@@ -36,7 +47,10 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
         {
             "CanReviewAccess" => SharingActionAvailable("9to1.Files.Share.Get"),
             "SharingVisible" => SharingVisible,
-            "SharingTitle" => SharingVisible ? $"Direct access to ‘{_sharingPage!.Item.Name}’" : "",
+            "SharingStale" => SharingStaleVisible,
+            "SharingStaleMessage" => SharingStaleMessage(),
+            "SharingTitle" => SharingVisible ? $"Access to ‘{_sharingPage!.Item.Name}’" : "",
+            "SharingOwner" => SharingVisible ? _sharingPage!.Item.OwnerPrincipalId : "",
             "SharingGrants" => SharingVisible ? _sharingPage!.Grants : Array.Empty<FilesEmailShare>(),
             "SharingEmpty" => SharingVisible && _sharingPage!.Grants.Count == 0,
             "CanReadMoreGrants" => SharingActionAvailable("9to1.Files.Share.More"),
@@ -51,7 +65,7 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             "PendingChange" when IsPendingShareReview => _browser.DescribeNativeShareMutation(_pendingMutation!),
             _ => null
         };
-        return path is "CanReviewAccess" or "SharingVisible" or "SharingTitle" or "SharingGrants"
+        return path is "CanReviewAccess" or "SharingVisible" or "SharingStale" or "SharingStaleMessage" or "SharingTitle" or "SharingOwner" or "SharingGrants"
             or "SharingEmpty" or "CanReadMoreGrants" or "CanCloseAccess" or "ShareScopeVisible" or "ShareScopeRecipient"
             or "ShareScopeExpiryEnabled" or "CanEditShareScopeDraft" or "CanReviewShareScope" or "CanCancelShareScope" or "ShareScopeHint" || path == "PendingChange" && IsPendingShareReview;
     }
@@ -59,6 +73,7 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         if (TryGetFolderTabItemValue(item, path, out value)) return true;
+        if (TryGetVersionHistoryItemValue(item, path, out value)) return true;
         value = null;
         if (!SharingVisible || item is not FilesEmailShare grant
             || !_sharingPage!.Grants.Any(row => ReferenceEquals(row, grant))) return false;
@@ -68,18 +83,19 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             "email" => grant.RecipientEmail,
             "role" => grant.Share.Role.ToString(),
             "expiry" => grant.Share.ExpiresAt is { } expiry ? $"Expires {expiry.ToLocalTime():g}" : "No expiry",
+            "origin" => grant.Origin == FilesGrantOrigin.Inherited ? $"Inherited from {grant.InheritedFrom}" : "Direct",
             "state" => grant.Share.IsRevoked ? "Revoked" : grant.Share.ExpiresAt is { } expires && expires <= DateTimeOffset.UtcNow
                 ? "Expired" : "Active",
-            "CanRevoke" => SharingActionAvailable("9to1.Files.Share.Revoke") && !grant.Share.IsRevoked
+            "CanRevoke" => grant.Origin == FilesGrantOrigin.Direct && SharingActionAvailable("9to1.Files.Share.Revoke") && !grant.Share.IsRevoked
                 && grant.Share.Role is FilesAccessRole.Viewer or FilesAccessRole.Editor,
-            "CanChangeRole" => SharingActionAvailable("9to1.Files.Share.ChangeRole") && !grant.Share.IsRevoked
+            "CanChangeRole" => grant.Origin == FilesGrantOrigin.Direct && SharingActionAvailable("9to1.Files.Share.ChangeRole") && !grant.Share.IsRevoked
                 && grant.Share.Role is FilesAccessRole.Viewer or FilesAccessRole.Editor
                 && (grant.Share.ExpiresAt is null || grant.Share.ExpiresAt.Value > DateTimeOffset.UtcNow),
-            "CanEditScope" => SharingActionAvailable("9to1.Files.Share.EditScope") && CanChangeExistingScope(grant),
+            "CanEditScope" => grant.Origin == FilesGrantOrigin.Direct && SharingActionAvailable("9to1.Files.Share.EditScope") && CanChangeExistingScope(grant),
             "changeRoleLabel" => grant.Share.Role == FilesAccessRole.Viewer ? "Make editor…" : "Make viewer…",
             _ => null
         };
-        return path is "id" or "email" or "role" or "expiry" or "state" or "CanRevoke" or "CanChangeRole" or "CanEditScope" or "changeRoleLabel";
+        return path is "id" or "email" or "role" or "expiry" or "origin" or "state" or "CanRevoke" or "CanChangeRole" or "CanEditScope" or "changeRoleLabel";
     }
     public bool TrySetItemValue(object item, string path, object? value) => false;
 
@@ -99,6 +115,15 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
     private void SharingSelectionChanged()
     {
         Interlocked.Increment(ref _sharingSelectionVersion);
+        ClearOriginalProperties();
+        ClearOriginalVersionHistory();
+        StopOriginalSharingFeed();
+        if (_sharingInvalidatedItem is { } invalidated && _items.SelectedItem is HostedItemMetadata selected
+            && selected.Id != invalidated)
+        {
+            Interlocked.Increment(ref _sharingRefreshGeneration);
+            _sharingInvalidatedItem = null; _sharingReviewInvalidated = false; _sharingStale = false; _sharingFeedFailed = false;
+        }
         ClearOriginalShareScopeEditor();
         if (_sharingPage is { } shares && (!ReferenceEquals(_page, shares.Page) || !ReferenceEquals(_items.SelectedItem, shares.Item)))
             _sharingPage = null;
@@ -138,7 +163,13 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             _busy = true; Changed(); RequireOriginalAlive(linked.Token);
             await RequireReadyAsync(linked.Token);
             RequireOriginalSelection();
-            if (command == "9to1.Files.Share.Close") { ClearOriginalShareScopeEditor(); _sharingPage = null; return; }
+            if (command == "9to1.Files.Share.Close")
+            {
+                Interlocked.Increment(ref _sharingRefreshGeneration);
+                StopOriginalSharingFeed(); ClearOriginalShareScopeEditor(); _sharingPage = null;
+                _sharingStale = false; _sharingReviewInvalidated = false; _sharingFeedFailed = false; _sharingInvalidatedItem = null;
+                return;
+            }
             if (command == "9to1.Files.Share.CancelScope") { ClearOriginalShareScopeEditor(); return; }
             if (command == "9to1.Files.Share.EditScope")
             {
@@ -186,6 +217,7 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             if (command == "9to1.Files.Apply")
             {
                 var outcome = await _browser.ApplyNativeShareMutationAsync(originalReview!, linked.Token);
+                var shareCommitted = _browser.WasNativeShareMutationCommitted(originalReview!);
                 // A provider ACK is not permission to publish into a replaced Home/profile.
                 // This retained callback checks Home/configuration only, not the now-advanced Files revision.
                 await RequireReadyAsync(linked.Token);
@@ -195,12 +227,19 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
                 _status = outcome.Message;
                 if (outcome.AwaitingHomeReview) return;
                 if (outcome.AuditRecorded) _pendingMutation = null;
+                if (shareCommitted)
+                {
+                    _sharingStale = true; _sharingReviewInvalidated = true;
+                    _sharingFeedFailed = false;
+                    _sharingInvalidatedItem = originalItem?.Id;
+                }
                 // Permission publication advances the item revision. Withdraw the old grant rows,
                 // then reload canonical metadata; never keep stale permission-change buttons enabled.
                 _sharingPage = null;
                 var destination = _history[_historyIndex];
-                var page = await _browser.ListAsync(_originalActor, destination.ID, _query, token: linked.Token,
-                    expectedStoreId: _boundStoreId, isTrash: destination.IsTrash);
+                var searchParent = destination.IsSearch && destination.IsProviderWideSearch ? null : destination.ID;
+                var page = await _browser.ListAsync(_originalActor, searchParent, destination.Query, token: linked.Token,
+                    expectedStoreId: _boundStoreId, isTrash: destination.IsTrash, isSearch: destination.IsSearch);
                 await _browser.RevalidateAsync(page, _originalActor, linked.Token);
                 var current = await _browser.CaptureOriginalPageReadCheckAsync(page, _originalActor, OriginalAlive, linked.Token);
                 await RequireReadyAsync(linked.Token);
@@ -210,6 +249,8 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
                 _page = page; _originalPageCurrent = current; _items.SelectedItem = null;
                 ApplyDisplayedNameSort();
                 _status = outcome.Message;
+                if (_pendingMutation is null && _sharingReviewInvalidated)
+                    await ResumeStaleSharingReviewAsync(page, linked.Token);
                 return;
             }
             var shares = await _browser.ReadNativeSharesAsync(originalPage!, originalItem!, _originalActor,
@@ -219,8 +260,10 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             await RequireOriginalOwnerAsync(owner, linked.Token);
             RequireOriginalSelection();
             _sharingPage = shares;
-            _status = shares.Grants.Count == 0 ? "No direct grants on this item. Parent folder access may still apply."
-                : $"{shares.Grants.Count} direct grants on this access page. Parent folder access may also apply.";
+            _sharingStale = false; _sharingReviewInvalidated = false; _sharingFeedFailed = false; _sharingInvalidatedItem = null;
+            _status = shares.Grants.Count == 0 ? "No direct or inherited grants were found for this item."
+                : $"{shares.Grants.Count} direct and inherited access grants on this page.";
+            StartOriginalSharingFeed(shares, originalSelectionVersion);
         }
         catch (Exception error)
         {
@@ -308,5 +351,151 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
         return true;
     }
     private string ShareScopeDraftHint() { _ = TryReadShareScopeDraft(out _, out _, out var hint); return hint; }
+
+    private void StartOriginalSharingFeed(FilesNativeBrowserSharePage page, long selectionVersion)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        StopOriginalSharingFeed();
+        var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _sharingFeedCancellation = cancellation;
+        try
+        {
+            TrackOriginalAsync(() => WatchOriginalSharingFeedAsync(page, selectionVersion, cancellation));
+        }
+        catch
+        {
+            if (ReferenceEquals(Interlocked.CompareExchange(ref _sharingFeedCancellation, null, cancellation), cancellation))
+                cancellation.Dispose();
+            throw;
+        }
+    }
+
+    private void StopOriginalSharingFeed()
+    {
+        var current = Interlocked.Exchange(ref _sharingFeedCancellation, null);
+        if (current is null) return;
+        try { current.Cancel(); } catch (ObjectDisposedException) { }
+    }
+
+    private async Task WatchOriginalSharingFeedAsync(FilesNativeBrowserSharePage page, long selectionVersion,
+        CancellationTokenSource cancellation)
+    {
+        var token = cancellation.Token;
+        try
+        {
+            await foreach (var change in _browser.SubscribeOriginalChangesAsync(page.Page, _originalActor,
+                () => !_lifetime.IsCancellationRequested && selectionVersion == Volatile.Read(ref _sharingSelectionVersion), token)
+                .WithCancellation(token).ConfigureAwait(false))
+            {
+                var scopeChange = change.Kind is "Share.Grant" or "Share.Revoke" or "Move" or "Delete" or "Restore";
+                var selectedItemChange = change.ItemId == page.Item.Id &&
+                    change.Kind is "Rename" or "FileContentCommitted" or "OwningAppRevisionCommitted";
+                if (!scopeChange && !selectedItemChange) continue;
+                if (selectionVersion != Volatile.Read(ref _sharingSelectionVersion)) return;
+                Task? refresh = null;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (selectionVersion != Volatile.Read(ref _sharingSelectionVersion) || !ReferenceEquals(_sharingPage, page)) return;
+                    if (_pendingMutation is not null)
+                    {
+                        _sharingStale = true; _sharingReviewInvalidated = true; _sharingFeedFailed = false; _sharingInvalidatedItem = page.Item.Id;
+                        ClearOriginalShareScopeEditor();
+                        _status = "Access changed elsewhere. Resolve the current Home review, then reopen Manage access.";
+                        Changed();
+                        return;
+                    }
+                    _sharingStale = true; _sharingReviewInvalidated = true; _sharingFeedFailed = false; _sharingInvalidatedItem = page.Item.Id;
+                    var refreshGeneration = Interlocked.Increment(ref _sharingRefreshGeneration);
+                    refresh = TrackOriginalAsync(() => RefreshSharingAfterExternalChangeAsync(page, selectionVersion, refreshGeneration));
+                });
+                if (refresh is not null) await refresh.ConfigureAwait(false);
+                return; // Refresh captures a new durable cursor and installs the next watcher.
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested || _lifetime.IsCancellationRequested) { }
+        catch (Exception)
+        {
+            try
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (selectionVersion == Volatile.Read(ref _sharingSelectionVersion) && ReferenceEquals(_sharingPage, page))
+                    {
+                        _sharingStale = true; _sharingReviewInvalidated = false; _sharingFeedFailed = true; _sharingInvalidatedItem = page.Item.Id;
+                        _status = "Live access updates are unavailable. Reopen Manage access to review current grants.";
+                        Changed();
+                    }
+                });
+            }
+            catch (Exception) { /* The original view's close path retains its own failures. */ }
+        }
+        finally
+        {
+            Interlocked.CompareExchange(ref _sharingFeedCancellation, null, cancellation);
+            try { cancellation.Dispose(); } catch (ObjectDisposedException) { }
+        }
+    }
+
+    private async Task RefreshSharingAfterExternalChangeAsync(FilesNativeBrowserSharePage originalShares,
+        long selectionVersion, long refreshGeneration)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (refreshGeneration != Volatile.Read(ref _sharingRefreshGeneration)
+            || selectionVersion != Volatile.Read(ref _sharingSelectionVersion)
+            || !ReferenceEquals(_sharingPage, originalShares)) return;
+        _applyingSharingRefresh = true;
+        try { await InvokeOriginalAsync("9to1.Files.Refresh", _lifetime.Token).ConfigureAwait(true); }
+        finally { _applyingSharingRefresh = false; }
+        if (_lifetime.IsCancellationRequested || _closing
+            || refreshGeneration != Volatile.Read(ref _sharingRefreshGeneration)) return;
+        if (_page is not { } refreshedPage || refreshedPage.ParentID != originalShares.Page.ParentID
+            || refreshedPage.IsTrash != originalShares.Page.IsTrash) return;
+        if (refreshedPage.StoreRevision == originalShares.Page.StoreRevision)
+        {
+            _status = "Access changed elsewhere; finish the current Files operation, then reopen Manage access.";
+            Changed();
+            return;
+        }
+        if (_items.SelectedItem is HostedItemMetadata anotherSelection && anotherSelection.Id != originalShares.Item.Id) return;
+        var currentItem = refreshedPage.Items.FirstOrDefault(item => item.Id == originalShares.Item.Id);
+        if (currentItem is null)
+        {
+            StopOriginalSharingFeed();
+            _sharingPage = null;
+            _status = "The selected item moved out of this folder. Navigate to it again to review access.";
+            Changed();
+            return;
+        }
+        _items.SelectedItem = currentItem;
+        await InvokeSharingOriginalAsync("9to1.Files.Share.Get", null, _lifetime.Token).ConfigureAwait(true);
+    }
+
+    private async Task ResumeStaleSharingReviewAsync(FilesNativeBrowserPage page, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (!_sharingReviewInvalidated || _pendingMutation is not null || _sharingInvalidatedItem is not { } itemId
+            || !ReferenceEquals(_page, page)) return;
+        var row = page.Items.FirstOrDefault(item => item.Id == itemId);
+        if (row is null)
+        {
+            _sharingPage = null; _sharingStale = false; _sharingReviewInvalidated = false; _sharingFeedFailed = false; _sharingInvalidatedItem = null;
+            _status = "The selected item is no longer in this folder. Navigate to it again to review access.";
+            Changed();
+            return;
+        }
+        _items.SelectedItem = row;
+        var selectionVersion = Volatile.Read(ref _sharingSelectionVersion);
+        var shares = await _browser.ReadNativeSharesAsync(page, row, _originalActor, OriginalAlive, token).ConfigureAwait(true);
+        await RequireReadyAsync(token).ConfigureAwait(true);
+        var owner = _originalPageCurrent ?? throw new UnauthorizedAccessException("The original Files owner observation retired.");
+        await RequireOriginalOwnerAsync(owner, token).ConfigureAwait(true);
+        if (selectionVersion != Volatile.Read(ref _sharingSelectionVersion) || !ReferenceEquals(_page, page)
+            || !ReferenceEquals(_items.SelectedItem, row)) return;
+        _sharingPage = shares; _sharingStale = false; _sharingReviewInvalidated = false; _sharingFeedFailed = false; _sharingInvalidatedItem = null;
+        _status = shares.Grants.Count == 0 ? "No direct or inherited grants were found for this item."
+            : $"{shares.Grants.Count} direct and inherited access grants on this page.";
+        StartOriginalSharingFeed(shares, selectionVersion);
+        Changed();
+    }
 
 }

@@ -14,7 +14,20 @@ public sealed partial class FilesNativeBrowserSurface
         Dispatcher.UIThread.VerifyAccess();
         storeId = Guid.Empty; folderId = null; title = "Files";
         if (!OriginalAlive() || _page is not { } page || _boundStoreId != page.StoreID) return false;
-        storeId = page.StoreID; folderId = page.ParentID; title = page.FolderTitle;
+        storeId = page.StoreID;
+        folderId = page.ParentID;
+        title = page.FolderTitle;
+        if (page.IsSearch)
+        {
+            if (_textPreviewPage is { } previewPage && ReferenceEquals(_page, previewPage)
+                && _textPreviewRow is { } previewRow && ReferenceEquals(_items.SelectedItem, previewRow))
+                folderId = previewRow.ParentId?.Value;
+            else if (_historyIndex >= 0 && _historyIndex < _history.Count)
+            {
+                folderId = _history[_historyIndex].ID;
+                title = _history[_historyIndex].Title;
+            }
+        }
         return true;
     }
 
@@ -53,8 +66,9 @@ public sealed partial class FilesNativeBrowserSurface
             await RequireOriginalOwnerAsync(current, linked.Token);
             RequireOriginalAlive(linked.Token);
             _page = page; _originalPageCurrent = current; _query = ""; _search.Text = "";
-            _history.Clear(); _history.Add((null, "Files", false));
-            if (folderId is not null) _history.Add((folderId, page.FolderTitle, false));
+            _searchScope.SelectedIndex = 0;
+            _history.Clear(); _history.Add(new(null, "Files", false, "", false, false));
+            if (folderId is not null) _history.Add(new(folderId, page.FolderTitle, false, "", false, false));
             _historyIndex = _history.Count - 1;
             _items.SelectedItem = null; ApplyDisplayedNameSort();
             _status = $"{page.Items.Count} items";

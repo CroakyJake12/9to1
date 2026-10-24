@@ -322,6 +322,8 @@ public interface IFilesProvider
 {
 	FilesLocation Location { get; }
 	Task<FilesPage<HostedItemMetadata>> ListAsync(HostedItemId? parentId, FilesSearchQuery? query, string? pageToken, CancellationToken cancellationToken);
+	Task<FilesPage<HostedItemMetadata>> SearchAsync(FilesSearchQuery query, string? pageToken, CancellationToken cancellationToken);
+	Task<FilesPage<FilesRevision>> GetVersionsAsync(HostedItemId itemId, string? pageToken, CancellationToken cancellationToken);
 	Task<FilesResult<HostedItemMetadata>> GetAsync(HostedItemId itemId, CancellationToken cancellationToken);
 	Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? newName, CancellationToken cancellationToken);
 	IAsyncEnumerable<FilesChangeEvent> SubscribeAsync(FilesChangeCursor? after, CancellationToken cancellationToken);

@@ -9,6 +9,11 @@ internal static class ScopedEmailSharingTests
     public static async Task RunAllAsync()
     {
         await ViewerScopeSurvivesRestart();
+        await AncestorShareListingDistinguishesInheritedGrants();
+        await InheritedGrantExpiryAndRevocationSurviveRestart();
+        await CorruptAncestorChainFailsClosedForAccessReview();
+        await UnknownAncestorAclDoesNotReturnPartialKnownGrants();
+        await SharePagesKeepOrderAndRejectChangedAclSnapshots();
         await EditorScopeRevocationAndReplay();
         await ExistingRecipientRoleReplacementSurvivesRestart();
         await ExistingRecipientExpiryReplacementSurvivesRestart();
@@ -17,6 +22,239 @@ internal static class ScopedEmailSharingTests
         await MissingOrReplacedStoreCannotBeRecreated();
         await InheritedSharingCannotQualifyAsPersonalProject();
         Console.WriteLine("Files scoped-sharing domain checks passed; real recipient resolution, email delivery and native/CUI acceptance are NOT RUN.");
+    }
+
+    private static async Task AncestorShareListingDistinguishesInheritedGrants()
+    {
+        using var f = new Fixture(); await f.Initialize();
+        var parent = (await f.Provider.GrantEmailAccessAsync(await f.Request(FilesAccessRole.Viewer), f.OwnerGuard)).Value!;
+        var inherited = (await f.Provider.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items;
+        var row = inherited.Single();
+        Require(row.Share.Id == parent.Share.Id && row.Share.ItemId == f.Root.Id
+            && row.Origin == FilesGrantOrigin.Inherited && row.InheritedFrom == f.Root.Id,
+            "child access review identifies the original active ancestor grant without cloning or retargeting it");
+        var directRequest = (await f.Request(FilesAccessRole.Editor)) with { ItemId = f.Child.Id,
+            ExpectedRevision = (await f.Provider.GetAsync(f.Child.Id, default)).Value!.CurrentRevisionId!.Value };
+        var direct = (await f.Provider.GrantEmailAccessAsync(directRequest, f.OwnerGuard)).Value!;
+        var rows = (await f.Restart().GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items;
+        Require(rows.Single(entry => entry.Share.Id == parent.Share.Id).Origin == FilesGrantOrigin.Inherited
+            && rows.Single(entry => entry.Share.Id == direct.Share.Id).Origin == FilesGrantOrigin.Direct,
+            "direct and inherited grants remain distinguishable after persisted provider restart");
+        var deepRows = (await f.Provider.GetEmailSharesAsync(f.Grandchild.Id, null, f.OwnerGuard)).Value!.Items;
+        Require(deepRows.Count == 2 && deepRows.All(entry => entry.Origin == FilesGrantOrigin.Inherited)
+            && deepRows.Select(entry => entry.InheritedFrom).ToHashSet().SetEquals(new HostedItemId?[] { f.Root.Id, f.Child.Id })
+            && deepRows.Select(entry => entry.Share.Id).ToHashSet().SetEquals(new[] { parent.Share.Id, direct.Share.Id }),
+            "deep descendants retain each original ancestor ShareID and provenance without collapsing roles");
+        var childRevision = (await f.Provider.GetAsync(f.Child.Id, default)).Value!.CurrentRevisionId!.Value;
+        var revoked = await f.Provider.RevokeEmailAccessAsync(direct.Share.Id, childRevision, new(Guid.NewGuid()), f.OwnerGuard);
+        Require(revoked.IsSuccess, "revoking a child direct grant leaves the parent ACL decision independent");
+        var afterRevoke = (await f.Restart().GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items;
+        Require(afterRevoke.Single(row => row.Share.Id == parent.Share.Id).Origin == FilesGrantOrigin.Inherited
+            && afterRevoke.Single(row => row.Share.Id == direct.Share.Id).Origin == FilesGrantOrigin.Direct
+            && afterRevoke.Single(row => row.Share.Id == direct.Share.Id).Share.IsRevoked,
+            "direct revocation preserves inherited access and direct revocation history after restart");
+        var inheritedView = (await f.Restart().OpenSharedViewAsync(parent.Share.Id, f.RecipientGuard)).Value!;
+        Require((await inheritedView.GetAsync(f.Grandchild.Id, default)).IsSuccess,
+            "parent grant remains independently usable for descendants after child direct revocation");
+        var stored = JsonNode.Parse(await File.ReadAllTextAsync(f.Path))!["state"]!;
+        Require(stored["shares"]!.AsArray().All(entry => !entry!.AsObject().ContainsKey("origin")
+                && !entry!.AsObject().ContainsKey("inheritedFrom"))
+            && stored["shareJournal"]!.AsArray().All(entry => !entry!["result"]!.AsObject().ContainsKey("origin")
+                && !entry!["result"]!.AsObject().ContainsKey("inheritedFrom")),
+            "read-time provenance never changes the persisted ACL or journal schema");
+    }
+
+    private static async Task InheritedGrantExpiryAndRevocationSurviveRestart()
+    {
+        using (var f = new Fixture())
+        {
+            await f.Initialize();
+            var expires = f.Clock.Now.AddMinutes(5);
+            var grant = (await f.Provider.GrantEmailAccessAsync(
+                (await f.Request(FilesAccessRole.Viewer)) with { ExpiresAt = expires }, f.OwnerGuard)).Value!;
+            var rows = (await f.Provider.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items;
+            Require(rows.Single().Origin == FilesGrantOrigin.Inherited, "active parent grant appears on child access review");
+            var open = (await f.Provider.OpenSharedViewAsync(grant.Share.Id, f.RecipientGuard)).Value!;
+            Require((await open.GetAsync(f.Child.Id, default)).IsSuccess, "inherited recipient can open the canonical child before expiry");
+            var persisted = await File.ReadAllBytesAsync(f.Path);
+            f.Clock.Now = expires;
+            Denied(await open.GetAsync(f.Child.Id, default), "an already-open inherited view stops at exact grant expiry");
+            var restarted = f.Restart();
+            Require((await restarted.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items.Count == 0,
+                "expired ancestor grant is omitted from inherited access after restart");
+            var expiredOwnerHistory = (await restarted.GetEmailSharesAsync(f.Root.Id, null, f.OwnerGuard)).Value!.Items;
+            Require(expiredOwnerHistory.Count == 1 && expiredOwnerHistory[0].Share.Id == grant.Share.Id
+                && expiredOwnerHistory[0].Share.ExpiresAt == expires && !expiredOwnerHistory[0].Share.IsRevoked,
+                "expired tracked direct grant remains distinguishable from missing/untracked ACL data");
+            Denied(await restarted.OpenSharedViewAsync(grant.Share.Id, f.RecipientGuard), "expired persisted grant cannot reopen after restart");
+            Require(persisted.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "expiry projection and reopen refusal do not rewrite persisted grant state");
+        }
+
+        using (var f = new Fixture())
+        {
+            await f.Initialize();
+            var grant = (await f.Provider.GrantEmailAccessAsync(await f.Request(FilesAccessRole.Editor), f.OwnerGuard)).Value!;
+            var open = (await f.Provider.OpenSharedViewAsync(grant.Share.Id, f.RecipientGuard)).Value!;
+            Require((await open.GetAsync(f.Child.Id, default)).IsSuccess, "active inherited Editor opens the same canonical child");
+            var folder = (await f.Provider.GetAsync(f.Root.Id, default)).Value!;
+            var revoked = await f.Restart().RevokeEmailAccessAsync(grant.Share.Id, folder.CurrentRevisionId!.Value,
+                new(Guid.NewGuid()), f.OwnerGuard);
+            Require(revoked.IsSuccess && revoked.Value!.Share.IsRevoked, "owner revocation persists the exact ancestor ShareID");
+            Denied(await open.GetAsync(f.Child.Id, default), "revocation immediately removes future access from an already-open inherited view");
+            var restarted = f.Restart();
+            Require((await restarted.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items.Count == 0,
+                "revoked ancestor grant is absent from inherited listing after restart");
+            Denied(await restarted.OpenSharedViewAsync(grant.Share.Id, f.RecipientGuard), "revoked persisted grant cannot reopen after restart");
+            var ownerHistory = (await restarted.GetEmailSharesAsync(f.Root.Id, null, f.OwnerGuard)).Value!.Items.Single();
+            Require(ownerHistory.Share.Id == grant.Share.Id && ownerHistory.Share.IsRevoked
+                && ownerHistory.Origin == FilesGrantOrigin.Direct, "owner retains direct revocation history without an inherited duplicate");
+        }
+    }
+
+    private static async Task CorruptAncestorChainFailsClosedForAccessReview()
+    {
+        using var f = new Fixture(); await f.Initialize();
+        await f.Provider.GrantEmailAccessAsync(await f.Request(FilesAccessRole.Viewer), f.OwnerGuard);
+        var document = JsonNode.Parse(await File.ReadAllTextAsync(f.Path))!;
+        var state = document["state"]!;
+        var child = state["items"]!.AsArray().Single(entry =>
+            entry!["metadata"]!["id"]!.GetValue<string>() == f.Child.Id.Value.ToString("D"));
+        child!["metadata"]!["parentId"] = f.Child.Id.Value.ToString("D");
+        await File.WriteAllTextAsync(f.Path, document.ToJsonString());
+        var before = await File.ReadAllBytesAsync(f.Path);
+        var result = await f.Restart().GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard);
+        Require(result.Error?.Code == FilesErrorCode.InvalidState && result.Value is null,
+            "a cyclic folder chain returns a structured refusal instead of partial inherited ACL data");
+        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "corrupt ancestry refusal preserves the original persisted state bytes");
+    }
+
+    private static async Task UnknownAncestorAclDoesNotReturnPartialKnownGrants()
+    {
+        using var f = new Fixture(); await f.Initialize();
+        var child = await f.Provider.GetAsync(f.Child.Id, default);
+        var request = (await f.Request(FilesAccessRole.Viewer)) with
+        {
+            ItemId = f.Child.Id,
+            ExpectedRevision = child.Value!.CurrentRevisionId!.Value
+        };
+        var knownChildGrant = (await f.Provider.GrantEmailAccessAsync(request, f.OwnerGuard)).Value!;
+        var document = JsonNode.Parse(await File.ReadAllTextAsync(f.Path))!;
+        var state = document["state"]!;
+        var root = state["items"]!.AsArray().Single(entry =>
+            entry!["metadata"]!["id"]!.GetValue<string>() == f.Root.Id.Value.ToString("D"));
+        root!["metadata"]!["isShared"] = true; // Legacy/untracked ancestor ACL, alongside a known child grant.
+        await File.WriteAllTextAsync(f.Path, document.ToJsonString());
+        var before = await File.ReadAllBytesAsync(f.Path);
+        var restarted = f.Restart();
+        var result = await restarted.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard);
+        Require(result.Error?.Code == FilesErrorCode.InvalidState && result.Value is null,
+            "unknown ancestor ACL refuses enumeration instead of returning only the known child grant");
+        Require(knownChildGrant.Share.ItemId == f.Child.Id && before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)),
+            "unknown-ancestor refusal preserves known grants and exact stored bytes");
+    }
+
+    private static async Task SharePagesKeepOrderAndRejectChangedAclSnapshots()
+    {
+        using var f = new Fixture(); await f.Initialize();
+        var expires = f.Clock.Now.AddMinutes(1);
+        var direct = new List<FilesEmailShare>();
+        var inherited = new List<FilesEmailShare>();
+        for (var i = 0; i < 51; i++)
+            direct.Add(await Grant(f.Child.Id, "direct", i, i == 0 ? expires : null));
+        for (var i = 0; i < 52; i++)
+            inherited.Add(await Grant(f.Root.Id, "parent", i, i == 0 ? expires : null));
+
+        await Revoke(direct[1]);
+        await Revoke(inherited[1]);
+        var first = (await f.Provider.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!;
+        Require(first.Items.Count == 100 && first.NextPageToken is not null,
+            "the stable access list produces a continuation after its first hundred rows");
+        var malformed = await f.Provider.GetEmailSharesAsync(f.Child.Id, "not-a-share-cursor", f.OwnerGuard);
+        var oversized = await f.Provider.GetEmailSharesAsync(f.Child.Id, new string('x', 4096), f.OwnerGuard);
+        Require(malformed.Error?.Code == FilesErrorCode.InvalidCursor && malformed.Value is null
+            && oversized.Error?.Code == FilesErrorCode.InvalidCursor && oversized.Value is null,
+            "malformed and oversized cursors fail structurally before enumeration");
+        var wrongTarget = await f.Provider.GetEmailSharesAsync(f.Grandchild.Id, first.NextPageToken, f.OwnerGuard);
+        Require(wrongTarget.Error?.Code == FilesErrorCode.InvalidCursor && wrongTarget.Value is null,
+            "a cursor cannot be reused for another target even when its inherited source grants overlap");
+        var second = (await f.Provider.GetEmailSharesAsync(f.Child.Id, first.NextPageToken, f.OwnerGuard)).Value!;
+        var complete = first.Items.Concat(second.Items).ToArray();
+        Require(second.NextPageToken is null && complete.Length == 102
+            && complete.Select(entry => entry.Share.Id).Distinct().Count() == complete.Length,
+            "unchanged two-page enumeration includes every direct/history and active inherited grant exactly once");
+        var expectedIds = direct.Select(entry => entry.Share.Id)
+            .Concat(inherited.Where(entry => entry.Share.Id != inherited[1].Share.Id).Select(entry => entry.Share.Id)).ToHashSet();
+        Require(complete.Select(entry => entry.Share.Id).ToHashSet().SetEquals(expectedIds),
+            "pagination preserves each original direct ShareID and every active inherited ShareID");
+        Require(complete.Take(51).All(entry => entry.Origin == FilesGrantOrigin.Direct)
+            && complete.Skip(51).All(entry => entry.Origin == FilesGrantOrigin.Inherited)
+            && complete.SequenceEqual(complete.OrderBy(entry => entry.Origin).ThenBy(entry => entry.Share.CreatedAt)
+                .ThenBy(entry => entry.Share.Id.Value)),
+            "multi-page results retain complete deterministic direct-then-inherited ordering");
+        Require(complete.Any(entry => entry.Share.Id == direct[1].Share.Id && entry.Share.IsRevoked)
+            && !complete.Any(entry => entry.Share.Id == inherited[1].Share.Id),
+            "direct revoked history remains visible while revoked ancestor grants are not inherited");
+
+        var bytesBeforeExpiryRead = await File.ReadAllBytesAsync(f.Path);
+        var expiryPage = (await f.Provider.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!;
+        Require(expiryPage.NextPageToken is not null, "the expiry-race fixture spans multiple pages");
+        f.Clock.Now = expires;
+        var afterExpiry = await f.Provider.GetEmailSharesAsync(f.Child.Id, expiryPage.NextPageToken, f.OwnerGuard);
+        Require(afterExpiry.Error?.Code == FilesErrorCode.InvalidCursor && afterExpiry.Value is null,
+            "expiry between pages invalidates the old cursor instead of silently skipping rows");
+        var afterExpiryPage = (await f.Provider.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!;
+        Require(afterExpiryPage.NextPageToken is not null, "post-expiry access history still spans two pages");
+        var afterExpiryRows = afterExpiryPage.Items.Concat(
+            (await f.Provider.GetEmailSharesAsync(f.Child.Id, afterExpiryPage.NextPageToken, f.OwnerGuard)).Value!.Items).ToList();
+        Require(afterExpiryRows.Count == 101
+            && afterExpiryRows.Any(entry => entry.Share.Id == direct[0].Share.Id
+                && entry.Origin == FilesGrantOrigin.Direct && entry.Share.ExpiresAt == expires)
+            && !afterExpiryRows.Any(entry => entry.Share.Id == inherited[0].Share.Id),
+            "direct expired history is retained while the expired ancestor grant is no longer inherited");
+        Require(bytesBeforeExpiryRead.SequenceEqual(await File.ReadAllBytesAsync(f.Path)),
+            "expiry and pagination reads do not rewrite canonical sharing state");
+
+        var revokePage = (await f.Provider.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!;
+        Require(revokePage.NextPageToken is not null, "the revocation-race fixture spans multiple pages");
+        var activeAncestor = inherited.Skip(2).First();
+        await Revoke(activeAncestor);
+        var afterRevoke = await f.Provider.GetEmailSharesAsync(f.Child.Id, revokePage.NextPageToken, f.OwnerGuard);
+        Require(afterRevoke.Error?.Code == FilesErrorCode.InvalidCursor && afterRevoke.Value is null,
+            "revocation between pages invalidates the old cursor rather than skipping the changed row");
+        var finalBytes = await File.ReadAllBytesAsync(f.Path);
+        var finalRows = (await f.Provider.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items;
+        Require(finalRows.Count == 100 && finalRows.Count(entry => entry.Origin == FilesGrantOrigin.Direct) == 51
+            && finalRows.Count(entry => entry.Origin == FilesGrantOrigin.Inherited) == 49
+            && finalRows.All(entry => entry.Origin != FilesGrantOrigin.Inherited || !entry.Share.IsRevoked
+                && (entry.Share.ExpiresAt is null || entry.Share.ExpiresAt > f.Clock.Now)),
+            "fresh post-revocation enumeration contains all direct history and only active inherited grants");
+        Require(finalBytes.SequenceEqual(await File.ReadAllBytesAsync(f.Path)),
+            "all pagination and stale-cursor reads preserve the final persisted ACL bytes");
+
+        async Task<FilesEmailShare> Grant(HostedItemId itemId, string prefix, int index, DateTimeOffset? expiry)
+        {
+            var item = (await f.Provider.GetAsync(itemId, default)).Value!;
+            var request = (await f.Request(FilesAccessRole.Viewer)) with
+            {
+                ItemId = itemId,
+                ExpectedRevision = item.CurrentRevisionId!.Value,
+                RecipientPrincipalId = $"account:page-{prefix}-{index:D2}",
+                RecipientEmail = $"page-{prefix}-{index:D2}@example.test",
+                ExpiresAt = expiry,
+                OperationId = new(Guid.NewGuid())
+            };
+            var result = await f.Provider.GrantEmailAccessAsync(request, f.OwnerGuard);
+            Require(result.IsSuccess, $"persisted page fixture grant {prefix}-{index:D2}");
+            return result.Value!;
+        }
+
+        async Task Revoke(FilesEmailShare grant)
+        {
+            var item = (await f.Provider.GetAsync(grant.Share.ItemId, default)).Value!;
+            var result = await f.Provider.RevokeEmailAccessAsync(grant.Share.Id, item.CurrentRevisionId!.Value,
+                new(Guid.NewGuid()), f.OwnerGuard);
+            Require(result.IsSuccess, $"persisted page fixture revoke {grant.Share.Id}");
+        }
     }
 
     private static async Task ViewerScopeSurvivesRestart()
@@ -29,10 +267,14 @@ internal static class ScopedEmailSharingTests
         Require(share.Share.PrincipalId == f.Recipient && share.RecipientEmail == "recipient@example.test", "email is address metadata, stable account principal is retained");
         Require(share.Share.ItemId == f.Root.Id && share.Share.Role == FilesAccessRole.Viewer, "canonical FileID and requested Viewer role persist");
         var restarted = f.Restart();
+        var store = await restarted.GetStoreEvidenceAsync();
+        var feedTail = await restarted.GetChangesAsync(null, 500, default);
+        Require(feedTail.NextPageToken is null && store.ChangeCursor.Revision == feedTail.Items.Last().Cursor.Revision,
+            "durable Files evidence carries the same current cursor as the retained ordered event feed");
         var opened = await restarted.OpenSharedViewAsync(share.Share.Id, f.RecipientGuard);
         Require(opened.IsSuccess, "the same authenticated principal reopens the grant after provider restart");
         var view = opened.Value!;
-        Require(view.Location.Id == f.Location && view.Location.Capabilities.Supports(FilesProviderCapabilities.Read), "shared view uses canonical location");
+        Require(view.Location.Id == f.Location && view.Location.Capabilities.Supports(FilesProviderCapabilities.Read | FilesProviderCapabilities.Search), "shared view uses canonical location and supports scoped search");
         Require(!view.Location.Capabilities.Supports(FilesProviderCapabilities.Write) &&
             !view.Location.Capabilities.Supports(FilesProviderCapabilities.Rename) &&
             !view.Location.Capabilities.Supports(FilesProviderCapabilities.ChangeFeed), "Viewer exposes no mutation or unfiltered owner history capabilities");
@@ -42,6 +284,11 @@ internal static class ScopedEmailSharingTests
         Require(children.Items.Count == 1 && children.Items[0].Id == f.Child.Id, "folder descendants refer to the same canonical items");
         Require((await view.GetAsync(f.Child.Id, default)).Value!.Id == f.Child.Id, "child is accessible by canonical identity");
         Require((await view.GetAsync(f.Grandchild.Id, default)).IsSuccess, "folder inheritance reaches deeper descendants");
+        var sharedSearch = await view.SearchAsync(new("Grandchild"), null, default);
+        Require(sharedSearch.Items.Single().Id == f.Grandchild.Id,
+            "shared-view search returns the same canonical descendant only inside the authenticated grant scope");
+        Require((await view.SearchAsync(new("Sibling"), null, default)).Items.Count == 0,
+            "shared-view search does not disclose a known item outside the grant scope");
         Denied(await view.GetAsync(f.Sibling.Id, default), "known sibling ID remains inaccessible");
         await Throws<UnauthorizedAccessException>(() => view.ListAsync(f.Sibling.Id, null, null, default));
         await Throws<UnauthorizedAccessException>(() => view.ListAsync(f.Root.Id, new("", ParentId: f.Sibling.Id), null, default));
@@ -222,6 +469,8 @@ internal static class ScopedEmailSharingTests
         var legacy = f.Restart();
         Require((await legacy.GetAsync(f.Root.Id, default)).IsSuccess, "legacy canonical items remain readable");
         Require((await legacy.GetEmailSharesAsync(f.Root.Id, null, f.OwnerGuard)).Value!.Items.Count == 0, "legacy state adds no implicit grants");
+        Require((await legacy.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items.Count == 0,
+            "clean legacy descendants enumerate empty when no item or ancestor is marked shared");
         byte[] afterLegacyRead = await File.ReadAllBytesAsync(f.Path);
         Require(before.SequenceEqual(afterLegacyRead), "shared read does not adopt, migrate or rewrite legacy state");
         var request = await f.Request(FilesAccessRole.Viewer);
@@ -229,6 +478,13 @@ internal static class ScopedEmailSharingTests
         await File.WriteAllTextAsync(f.Path, document.ToJsonString());
         before = await File.ReadAllBytesAsync(f.Path);
         Require((await f.Provider.GetAsync(f.Child.Id, default)).Value!.IsShared, "untracked ancestor sharing remains effective");
+        var unknownTargetShares = await f.Restart().GetEmailSharesAsync(f.Root.Id, null, f.OwnerGuard);
+        Require(unknownTargetShares.Error?.Code == FilesErrorCode.InvalidState && unknownTargetShares.Value is null,
+            "an item marked shared without tracked direct grants is unavailable, not an empty ACL");
+        var unknownAncestorShares = await f.Restart().GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard);
+        Require(unknownAncestorShares.Error?.Code == FilesErrorCode.InvalidState && unknownAncestorShares.Value is null,
+            "a child access review fails closed when its ancestor ACL is untracked");
+        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "unknown target/ancestor ACL reads and restart preserve exact stored bytes");
         Require((await f.Provider.GrantEmailAccessAsync(request, f.OwnerGuard)).Error?.Code == FilesErrorCode.PermissionDenied, "unknown prior sharing cannot be overwritten");
         byte[] afterUnknownSharing = await File.ReadAllBytesAsync(f.Path);
         Require(before.SequenceEqual(afterUnknownSharing), "unknown sharing remains intact");

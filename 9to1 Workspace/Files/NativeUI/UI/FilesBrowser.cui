@@ -44,15 +44,17 @@
         <Text text="{Binding FolderTitle}" accessible-name="Current folder" />
       </Container>
       <Container Type="Horizontal Stack" Row="2">
-        <Input id="files-search-input" accessible-name="Search this folder" Type="Text" />
+        <Input id="files-search-input" accessible-name="Search canonical file or folder names" Type="Text" />
+        <If Condition="{Binding CanChooseSearchScope}"><Input id="files-search-scope" accessible-name="Search scope" Type="Select" /></If>
         <Input id="files-displayed-sort" accessible-name="Sort names on this displayed page" Type="Select" />
-        <Button id="files-search" content="Search" action="9to1.Files.Search" accessible-name="Search canonical names in this folder" Interactive="{Binding CanNavigate}" />
+        <Button id="files-search" content="Search" action="9to1.Files.Search" accessible-name="Search canonical names in the selected scope" Interactive="{Binding CanNavigate}" />
       </Container>
       <Container orientation="Horizontal" accessible-name="Folder and item changes" Type="Wrap" Row="3">
         <Input id="files-name-input" accessible-name="Folder or item name" Type="Text" />
         <Button id="files-create-folder" content="New folder" action="9to1.Files.CreateFolder" accessible-name="Review creating a folder in Home" Interactive="{Binding CanCreateFolder}" />
         <Button id="files-rename" content="Rename" action="9to1.Files.Rename" accessible-name="Review renaming the selected item in Home" Interactive="{Binding CanRename}" />
         <Button id="files-delete" content="Move to Trash" action="9to1.Files.Delete" accessible-name="Review moving the selected item to recoverable Trash in Home" Interactive="{Binding CanDelete}" />
+        <Button id="files-folder-color-open" content="Folder colour…" action="9to1.Files.FolderColor.Open" accessible-name="Choose a Files presentation colour for the selected folder" Interactive="{Binding CanOpenFolderColor}" />
         <Button id="files-restore" content="Restore" action="9to1.Files.Restore" accessible-name="Review restoring the selected deleted item to its original folder in Home" Interactive="{Binding CanRestore}" />
         <Button id="files-choose-move" content="Move…" action="9to1.Files.ChooseMove" accessible-name="Choose a destination folder for the selected item" Interactive="{Binding CanChooseMove}" />
         <Button id="files-move" content="Move here" action="9to1.Files.Move" accessible-name="Review moving the original selected item into this folder in Home" Interactive="{Binding CanMove}" />
@@ -65,7 +67,31 @@
       </Container>
       <Input id="files-canonical-list" accessible-name="Canonical Files items" Type="List" Row="4" />
       <Container Type="Vertical Stack" Row="5">
-        <Button id="files-technical-details" content="{Binding TechnicalDetailsLabel}" action="9to1.Files.TechnicalDetails" accessible-name="Show or hide stable identity and technical details for the selected item" Interactive="{Binding CanShowDetails}" />
+        <If Condition="{Binding FolderColorVisible}">
+          <Container id="files-folder-color" Type="Vertical Stack" CellGap="6" accessible-name="Files folder colour presentation">
+            <Text text="Folder colour" FontWeight="SemiBold" />
+            <Text text="{Binding FolderColorSelection}" accessible-name="Selected folder for colour presentation" />
+            <Text text="Current Files folder colour" />
+            <Text text="{Binding FolderColorCurrent}" accessible-name="Current folder colour readback" />
+            <Text text="Presets use the same Files folder-colour operation as the custom RGB value." TextWrapping="Wrap" />
+            <Container Type="Wrap" CellGap="6">
+              <Button content="Blue" action="9to1.Files.FolderColor.Preset.Blue" Interactive="{Binding CanSetFolderColor}" accessible-name="Apply blue folder-colour preset" />
+              <Button content="Teal" action="9to1.Files.FolderColor.Preset.Teal" Interactive="{Binding CanSetFolderColor}" accessible-name="Apply teal folder-colour preset" />
+              <Button content="Green" action="9to1.Files.FolderColor.Preset.Green" Interactive="{Binding CanSetFolderColor}" accessible-name="Apply green folder-colour preset" />
+              <Button content="Amber" action="9to1.Files.FolderColor.Preset.Amber" Interactive="{Binding CanSetFolderColor}" accessible-name="Apply amber folder-colour preset" />
+              <Button content="Rose" action="9to1.Files.FolderColor.Preset.Rose" Interactive="{Binding CanSetFolderColor}" accessible-name="Apply rose folder-colour preset" />
+            </Container>
+            <Container Type="Wrap" CellGap="6">
+              <Input id="files-folder-color-rgb" Type="Text" Value="{Binding FolderColorDraft, Mode=TwoWay}" PlaceholderText="#4477AA" accessible-name="Custom six-digit RGB folder colour" Interactive="{Binding CanSetFolderColor}" />
+              <Button content="Apply custom colour" action="9to1.Files.FolderColor.Apply" Interactive="{Binding CanSetFolderColor}" accessible-name="Validate and apply the custom RGB folder colour" />
+              <Button content="Reset to default" action="9to1.Files.FolderColor.Reset" Interactive="{Binding CanResetFolderColor}" accessible-name="Reset the selected folder to default appearance" />
+              <Button content="Close" action="9to1.Files.FolderColor.Close" accessible-name="Close folder-colour controls" />
+            </Container>
+            <Text text="{Binding FolderColorStatus}" accessible-name="Folder colour operation status" TextWrapping="Wrap" />
+            <Text text="A full colour wheel/picker is not yet available; this RGB field does not replace that required control." TextWrapping="Wrap" />
+          </Container>
+        </If>
+        <Button id="files-technical-details" content="{Binding TechnicalDetailsLabel}" action="9to1.Files.TechnicalDetails" accessible-name="Show canonical path, provider and stable technical details for the selected item" Interactive="{Binding CanShowDetails}" />
         <If Condition="{Binding TextPreviewVisible}">
           <Container id="files-text-preview" Type="Vertical Stack" CellGap="6" MaxHeight="280" VerticalScrolling="True" HorizontalScrolling="False" accessible-name="Read-only plain text preview">
             <Container Type="Wrap" CellGap="8">
@@ -77,16 +103,41 @@
           </Container>
         </If>
         <Text id="files-selected-details" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
-        <Button id="files-review-access" content="Manage access" action="9to1.Files.Share.Get" accessible-name="Review direct access grants on the selected owned item" Interactive="{Binding CanReviewAccess}" />
+        <Button id="files-version-history" content="Version history" action="9to1.Files.GetVersions" accessible-name="Read immutable version history for the selected canonical item" Interactive="{Binding CanGetVersionHistory}" />
+        <If Condition="{Binding VersionHistoryVisible}">
+          <Container id="files-version-history-panel" Type="Vertical Stack" CellGap="6" MaxHeight="240" VerticalScrolling="True" HorizontalScrolling="False" accessible-name="Immutable item version history">
+            <Text text="{Binding VersionHistoryTitle}" />
+            <Text text="{Binding VersionHistoryStatus}" TextWrapping="Wrap" />
+            <Repeat Source="{Binding VersionHistory}" As="version" Key="{Binding version.id}" Type="Vertical Stack">
+              <Container Type="Wrap" CellGap="8">
+                <Text text="{Binding version.current}" accessible-name="Revision current status" />
+                <Text text="{Binding version.created}" accessible-name="Revision timestamp" />
+                <Text text="{Binding version.source}" accessible-name="Revision source" />
+                <Text text="{Binding version.size}" accessible-name="Revision size" />
+                <Text text="{Binding version.app}" accessible-name="Owning app revision" />
+                <Text text="{Binding version.hash}" accessible-name="Revision content hash" />
+              </Container>
+            </Repeat>
+            <Container Type="Wrap" CellGap="8">
+              <Button id="files-more-versions" content="More versions" action="9to1.Files.GetVersions" Interactive="{Binding CanReadMoreVersions}" accessible-name="Load more immutable file revisions" />
+              <Button id="files-close-versions" content="Close history" action="9to1.Files.VersionHistory.Close" Interactive="{Binding CanCloseVersionHistory}" accessible-name="Close version history" />
+            </Container>
+          </Container>
+        </If>
+        <Button id="files-review-access" content="Manage access" action="9to1.Files.Share.Get" accessible-name="Review direct and inherited access grants on the selected owned item" Interactive="{Binding CanReviewAccess}" />
+        <If Condition="{Binding SharingStale}"><Text id="files-access-stale" text="{Binding SharingStaleMessage}" accessible-name="Files access review is stale" TextWrapping="Wrap" /></If>
         <If Condition="{Binding SharingVisible}">
-          <Container id="files-sharing" Type="Vertical Stack" CellGap="6" MaxHeight="260" VerticalScrolling="True" HorizontalScrolling="False" accessible-name="Direct access grants">
+          <Container id="files-sharing" Type="Vertical Stack" CellGap="6" MaxHeight="260" VerticalScrolling="True" HorizontalScrolling="False" accessible-name="Direct and inherited access grants">
             <Text text="{Binding SharingTitle}" />
-            <Text text="These are direct grants. Parent folder access may also apply. Revocation stops future access through this grant; copies already made cannot be recalled." />
-            <If Condition="{Binding SharingEmpty}"><Text text="No direct grants on this item." /></If>
+            <Text text="Owner principal" />
+            <Text text="{Binding SharingOwner}" accessible-name="Stable item owner principal" />
+            <Text text="Direct grants and active grants inherited from parent folders are shown separately. This lists grant provenance; it does not calculate a combined effective role where scopes overlap. Revocation stops future access through that grant; copies already made cannot be recalled." />
+            <If Condition="{Binding SharingEmpty}"><Text text="No direct or inherited grants were found for this item." /></If>
             <Repeat Source="{Binding SharingGrants}" As="share" Key="{Binding share.id}" Type="Vertical Stack">
               <Container Type="Wrap" CellGap="8">
                 <Text text="{Binding share.email}" accessible-name="Recipient email recorded with the grant" />
                 <Text text="{Binding share.role}" accessible-name="Granted role" />
+                <Text text="{Binding share.origin}" accessible-name="Grant origin" />
                 <Text text="{Binding share.expiry}" accessible-name="Grant expiry" />
                 <Text text="{Binding share.state}" accessible-name="Grant status" />
                 <Button id="files-edit-share-scope" content="Edit permissions…" action="EditDisplayedGrantScope" Interactive="{Binding share.CanEditScope}" accessible-name="Edit this existing recipient’s direct role and expiry" />
@@ -116,9 +167,9 @@
             <Container Type="Wrap" CellGap="8">
               <Button id="files-more-access" content="More grants" action="9to1.Files.Share.More" Interactive="{Binding CanReadMoreGrants}" />
               <Button id="files-close-access" content="Close access" action="9to1.Files.Share.Close" Interactive="{Binding CanCloseAccess}" />
-              <Button id="files-add-recipient" content="Add recipient" Interactive="False" accessible-name="Adding recipients is not available with this profile yet" />
+              <Button id="files-add-recipient" content="Add recipient" Interactive="False" accessible-name="Add recipient unavailable: a verified account recipient resolver is not connected" />
             </Container>
-            <Text text="Adding recipients is not available with this profile yet. Existing recipients’ direct access can be reviewed, changed or revoked here. Permission edits replace that recipient’s previous direct grants on this item. Quick role changes keep the current expiry; Edit permissions can change or remove it. Inherited access may still apply. Viewer permits metadata browsing; Editor also permits scoped renaming. Document and content edits require their separate app permissions. No invitation will be sent." />
+            <Text text="Adding recipients is unavailable because Files has no connected verified account recipient resolver; an email address alone cannot establish a principal or grant access. Existing recipients’ direct access can be reviewed, changed or revoked here. Permission edits replace that recipient’s previous direct grants on this item. Quick role changes keep the current expiry; Edit permissions can change or remove it. Inherited access may still apply. Viewer permits metadata browsing; Editor also permits scoped renaming. Document and content edits require their separate app permissions. No invitation will be sent." />
           </Container>
         </If>
       </Container>

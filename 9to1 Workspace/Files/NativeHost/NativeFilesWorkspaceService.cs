@@ -11,7 +11,11 @@ public sealed record NativeFilesWorkspaceConfiguration(string ProfileId, Guid St
     string RootDirectory, IReadOnlyDictionary<string, HostedItemId> AppFolders);
 
 public sealed record NativeFilesWorkspace(AuthenticatedResourceActor Actor, NativeFilesWorkspaceConfiguration Configuration,
-    DurableDriveProvider Provider, FilesWorkspaceDirectoryResolver Directories, FilesMaterializationRegistry Materializations);
+    DurableDriveProvider Provider, FilesWorkspaceDirectoryResolver Directories, FilesMaterializationRegistry Materializations)
+{
+    /// <summary>Files-owned presentation metadata bound beside the configured canonical drive state.</summary>
+    public FilesFolderPresentationStore FolderPresentations { get; init; } = null!;
+}
 
 /// <summary>Files owns this explicit native configuration. Apps cannot choose another profile or invent a fallback directory.</summary>
 public sealed partial class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLocalProfileIdentity profiles) : IHomeLocalStoreEvidenceProvider
@@ -103,6 +107,10 @@ public sealed partial class NativeFilesWorkspaceService(IHomeCoreStateStore home
         var statePath = Path.Combine(MetadataDirectory(configuration.RootDirectory), "drive.json");
         if (!File.Exists(statePath) || (File.GetAttributes(statePath) & FileAttributes.ReparsePoint) != 0)
             throw new InvalidDataException("The configured Files state is unavailable or redirected.");
+        var presentationPath = Path.Combine(MetadataDirectory(configuration.RootDirectory), "folder-presentations.json");
+        if (Directory.Exists(presentationPath) || File.Exists(presentationPath) &&
+            (File.GetAttributes(presentationPath) & FileAttributes.ReparsePoint) != 0)
+            throw new UnauthorizedAccessException("The Files folder presentation state is redirected or has an invalid shape.");
         var workspace = _cache.GetOrAdd((actor.ProfileId, record.Revision), _ => Create(actor, configuration));
         var evidence = await workspace.Provider.GetStoreEvidenceAsync(configuration.StoreId, cancellationToken).ConfigureAwait(false);
         if (evidence.StoreId != configuration.StoreId || await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor)
@@ -205,8 +213,11 @@ public sealed partial class NativeFilesWorkspaceService(IHomeCoreStateStore home
         var profile = Guid.Parse(actor.ProfileId);
         var directories = new FilesWorkspaceDirectoryResolver(Path.Combine(metadata, "bindings.json"), _ => null,
             requested => requested == profile ? provider : null);
-        return new(actor, configuration, provider, directories,
-            new FilesMaterializationRegistry(configuration.RootDirectory, Path.Combine(metadata, "materializations.json")));
+        return new NativeFilesWorkspace(actor, configuration, provider, directories,
+            new FilesMaterializationRegistry(configuration.RootDirectory, Path.Combine(metadata, "materializations.json")))
+        {
+            FolderPresentations = new FilesFolderPresentationStore(Path.Combine(metadata, "folder-presentations.json")),
+        };
     }
 
     private static void RequireDirectDirectory(string directory)

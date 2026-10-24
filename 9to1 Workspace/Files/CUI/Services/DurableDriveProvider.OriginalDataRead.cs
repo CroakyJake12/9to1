@@ -35,7 +35,7 @@ public sealed partial class DurableDriveProvider
                 state.CreationSessionId == _creationSessionId,
                 state.Items.Count == 0 && state.Operations.Count == 0 && state.Events.Count == 0 && state.Artifacts.Count == 0 &&
                     state.Revisions.Count == 0 && state.RevisionContentReferences.Count == 0 && state.UploadedContents.Count == 0,
-                revision, _owner, Location.Id);
+                revision, _owner, Location.Id, new(state.Events.Count));
             result = FilesResult<FilesOriginalDataMetadata>.Success(new(item.Metadata, evidence));
         }, scope);
         return result ?? throw new InvalidOperationException("The original Data metadata source produced no result.");

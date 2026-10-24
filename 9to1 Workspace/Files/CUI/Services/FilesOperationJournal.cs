@@ -78,6 +78,7 @@ public sealed class FilesOperationJournal
 			return new FilesOperationJournalState
 			{
 				Operations = new Dictionary<string, FilesOperation>(state.Operations, StringComparer.Ordinal) { [key] = updated },
+				NextSequence = state.NextSequence,
 			};
 		}, cancellationToken).ConfigureAwait(false);
 		return updated!;
@@ -85,7 +86,9 @@ public sealed class FilesOperationJournal
 
 	public async Task<IReadOnlyList<FilesOperation>> ListPendingAsync(CancellationToken cancellationToken = default)
 	{
-		FilesOperationJournalState state = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);
+		// A missing journal is unavailable evidence, not an empty queue. Diagnostics and
+		// recovery reads must never create a replacement journal as a side effect.
+		FilesOperationJournalState state = await _store.ReadExistingAsync(cancellationToken).ConfigureAwait(false);
 		return state.Operations.Values
 			.Where(static operation => operation.State is FilesOperationState.Pending or FilesOperationState.Running)
 			.OrderBy(static operation => operation.Sequence)

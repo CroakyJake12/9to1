@@ -10,7 +10,9 @@ internal static class Program
 			await OriginalExistingStateStoreTests.RunAllAsync().ConfigureAwait(false);
             await OriginalAttachmentStateReadTests.RunAllAsync().ConfigureAwait(false);
             await BrowserDownloadRegistrationProviderTests.RunAllAsync().ConfigureAwait(false);
-            await TrashProviderTests.RunAllAsync().ConfigureAwait(false);
+			await TrashProviderTests.RunAllAsync().ConfigureAwait(false);
+			await FilesSearchProviderTests.RunAllAsync().ConfigureAwait(false);
+			await FilesVersionProviderTests.RunAllAsync().ConfigureAwait(false);
             await MoveProviderTests.RunAllAsync().ConfigureAwait(false);
             await ScopedEmailSharingTests.RunAllAsync().ConfigureAwait(false);
 			Console.WriteLine("Files CUI domain contract checks passed.");

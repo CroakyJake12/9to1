@@ -1,9 +1,14 @@
 using System.Net.Mail;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace HavenOS.Files;
 
 public sealed partial class DurableDriveProvider
 {
+    private const int SharePageSize = 100;
+    private const int MaximumSharePageTokenLength = 96;
+
     /// <summary>Trusted typed infrastructure entry point, after Home's security-sensitive approval.
     /// The same held Home/Files guard must cover this exact store, item, recipient, role and expiry.
     /// Recipient resolution is the authenticated account service's responsibility; an address is not authority.</summary>
@@ -134,13 +139,63 @@ public sealed partial class DurableDriveProvider
             await using var lease = await _store.AcquireExistingReadLeaseAsync(cancellationToken).ConfigureAwait(false);
             await ownerAuthority.ValidateAsync(cancellationToken).ConfigureAwait(false);
             var state = lease.Snapshot; ValidateSharingState(state);
-            var offset = ParseOffset(pageToken);
-            var grants = state.Shares.Where(entry => entry.Share.ItemId == itemId).OrderBy(entry => entry.Share.CreatedAt).ThenBy(entry => entry.Share.Id.Value).ToArray();
-            if (offset > grants.Length) throw new ArgumentException("Invalid share page token.", nameof(pageToken));
-            var page = grants.Skip(offset).Take(100).ToArray();
+            var target = state.Items.SingleOrDefault(entry => entry.Metadata.Id == itemId);
+            if (target is null) return ShareDenied<FilesPage<FilesEmailShare>>(itemId);
+            var ancestorIds = new HashSet<HostedItemId>();
+            var seen = new HashSet<HostedItemId> { itemId };
+            var parentId = target.Metadata.ParentId;
+            while (parentId is { } parent)
+            {
+                if (!seen.Add(parent)) return Fail<FilesPage<FilesEmailShare>>(FilesErrorCode.InvalidState,
+                    "The Files folder hierarchy contains a cycle; access was not partially enumerated.", "Share.Get", itemId);
+                var ancestor = state.Items.SingleOrDefault(entry => entry.Metadata.Id == parent);
+                if (ancestor is null || ancestor.Deleted || ancestor.Metadata.Kind != HostedItemKind.Folder)
+                    return Fail<FilesPage<FilesEmailShare>>(FilesErrorCode.InvalidState,
+                        "The Files parent-folder chain is incomplete; access was not partially enumerated.", "Share.Get", itemId);
+                ancestorIds.Add(parent);
+                parentId = ancestor.Metadata.ParentId;
+            }
+            if (!IsVisible(state, target)) return ShareDenied<FilesPage<FilesEmailShare>>(itemId);
+            // Metadata can outlive an older or damaged ACL store. An empty tracked list is not
+            // proof of no access when this item or an ancestor still says it is shared.
+            var trackedGrantItems = state.Shares.Select(entry => entry.Share.ItemId).ToHashSet();
+            if (new[] { itemId }.Concat(ancestorIds).Any(id =>
+                    state.Items.Single(entry => entry.Metadata.Id == id).Metadata.IsShared && !trackedGrantItems.Contains(id)))
+                return Fail<FilesPage<FilesEmailShare>>(FilesErrorCode.InvalidState,
+                    "Sharing state is unavailable: this item or an ancestor is marked shared but has no retained grant records. Restore the original ACL data before reviewing access.",
+                    "Share.Get", itemId);
+            var now = _shareClock.GetUtcNow();
+            var grants = state.Shares.Where(entry => entry.Share.ItemId == itemId
+                    || ancestorIds.Contains(entry.Share.ItemId) && IsActiveShare(entry, now))
+                .Select(entry => entry.Share.ItemId == itemId ? entry
+                    : entry with { Origin = FilesGrantOrigin.Inherited, InheritedFrom = entry.Share.ItemId })
+                .OrderBy(entry => entry.Origin).ThenBy(entry => entry.Share.CreatedAt).ThenBy(entry => entry.Share.Id.Value).ToArray();
+            // An offset-only token can skip an inherited row when expiry/revocation changes the
+            // list between requests. Bind continuations to this ordered grant set and refuse stale pages.
+            var snapshot = SharePageFingerprint(itemId, grants);
+            var offset = 0;
+            if (pageToken is not null)
+            {
+                if (pageToken.Length > MaximumSharePageTokenLength)
+                    return Fail<FilesPage<FilesEmailShare>>(FilesErrorCode.InvalidCursor,
+                        "The access page cursor is invalid or obsolete. Restart the access review.", "Share.Get", itemId);
+                var parts = pageToken.Split(':');
+                if (parts.Length != 3 || parts[0] != "files-share-v1"
+                    || !int.TryParse(parts[1], System.Globalization.NumberStyles.None,
+                        System.Globalization.CultureInfo.InvariantCulture, out offset)
+                    || offset < 0 || offset >= grants.Length || offset % SharePageSize != 0)
+                    return Fail<FilesPage<FilesEmailShare>>(FilesErrorCode.InvalidCursor,
+                        "The access page cursor is invalid or obsolete. Restart the access review.", "Share.Get", itemId);
+                if (!string.Equals(parts[2], snapshot, StringComparison.Ordinal))
+                    return Fail<FilesPage<FilesEmailShare>>(FilesErrorCode.InvalidCursor,
+                        "The access list changed after this page was read. Restart the access review to avoid skipped grants.",
+                        "Share.Get", itemId);
+            }
+            var page = grants.Skip(offset).Take(SharePageSize).ToArray();
             await ownerAuthority.ValidateAsync(cancellationToken).ConfigureAwait(false);
             return FilesResult<FilesPage<FilesEmailShare>>.Success(new(page,
-                offset + page.Length < grants.Length ? (offset + page.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) : null));
+                offset + page.Length < grants.Length
+                    ? $"files-share-v1:{offset + page.Length}:{snapshot}" : null));
         }
         catch (FilesCommitAuthorityChangedException) { return ShareDenied<FilesPage<FilesEmailShare>>(itemId); }
         catch (FileNotFoundException) { return ShareUnavailable<FilesPage<FilesEmailShare>>(itemId); }
@@ -215,12 +270,14 @@ public sealed partial class DurableDriveProvider
     private void ValidateSharingRecords(State state)
     {
         if (state.Shares is null || state.ShareJournal is null ||
-            state.Shares.Any(entry => entry is null || entry.Share is null || entry.Share.Id.Value == Guid.Empty ||
+            state.Shares.Any(entry => entry is null || entry.Share is null ||
+                entry.Origin != FilesGrantOrigin.Direct || entry.InheritedFrom is not null || entry.Share.Id.Value == Guid.Empty ||
                 entry.Share.ItemId.Value == Guid.Empty || entry.Share.Role is not (FilesAccessRole.Viewer or FilesAccessRole.Editor) ||
                 string.IsNullOrWhiteSpace(entry.Share.PrincipalId) || entry.GrantedByPrincipalId != _owner || !IsShareAddress(entry.RecipientEmail)) ||
             state.Shares.Select(entry => entry.Share.Id).Distinct().Count() != state.Shares.Count ||
             state.ShareJournal.Any(entry => entry is null || entry.OperationId.Value == Guid.Empty || entry.ActorId != _owner ||
-                entry.Action is not ("Share.Grant" or "Share.Revoke") || entry.Result is null) ||
+                entry.Action is not ("Share.Grant" or "Share.Revoke") || entry.Result is null ||
+                entry.Result.Origin != FilesGrantOrigin.Direct || entry.Result.InheritedFrom is not null) ||
             state.ShareJournal.Select(entry => entry.OperationId).Distinct().Count() != state.ShareJournal.Count)
             throw new InvalidDataException("Files sharing metadata is invalid; preserve it for recovery.");
     }
@@ -249,6 +306,25 @@ public sealed partial class DurableDriveProvider
 
     private static bool IsShareAddress(string? address) => address is { Length: > 3 and <= 320 } &&
         !address.Any(char.IsControl) && MailAddress.TryCreate(address, out var parsed) && parsed.Address == address && parsed.DisplayName.Length == 0;
+    private static string SharePageFingerprint(HostedItemId itemId, IReadOnlyList<FilesEmailShare> grants)
+    {
+        var canonical = new
+        {
+            TargetItemId = itemId.Value,
+            Grants = grants.Select(entry => new
+            {
+                ShareId = entry.Share.Id.Value,
+                ItemId = entry.Share.ItemId.Value,
+                entry.Share.Role,
+                entry.Share.CreatedAt,
+                entry.Share.ExpiresAt,
+                entry.Share.IsRevoked,
+                entry.Origin,
+                InheritedFrom = entry.InheritedFrom?.Value
+            }).ToArray()
+        };
+        return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(canonical)));
+    }
     private static bool IsActiveShare(FilesEmailShare grant, DateTimeOffset now) => !grant.Share.IsRevoked &&
         (grant.Share.ExpiresAt is null || grant.Share.ExpiresAt.Value > now);
     private static FilesResult<T> ShareDenied<T>(HostedItemId itemId) => Fail<T>(FilesErrorCode.PermissionDenied,
@@ -261,7 +337,7 @@ public sealed partial class DurableDriveProvider
         FilesCommitAuthorityGuard authority, Guid storeId) : IFilesProvider
     {
         public FilesLocation Location { get; } = owner.Location with { Name = name,
-            Capabilities = FilesProviderCapabilities.Read | FilesProviderCapabilities.Search |
+            Capabilities = FilesProviderCapabilities.Read | FilesProviderCapabilities.Search | FilesProviderCapabilities.Versions |
                 (grant.Share.Role == FilesAccessRole.Editor ? FilesProviderCapabilities.Rename : FilesProviderCapabilities.None) };
         private HostedItemMetadata Project(HostedItemMetadata metadata) => metadata with {
             ParentId = metadata.Id == grant.Share.ItemId ? null : metadata.ParentId, IsShared = true };
@@ -291,6 +367,61 @@ public sealed partial class DurableDriveProvider
                 var page = items.Skip(offset).Take(limit).ToArray();
                 return FilesResult<FilesPage<HostedItemMetadata>>.Success(new(page,
                     offset + page.Length < items.Length ? (offset + page.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) : null));
+            }, cancellationToken, storeId).ConfigureAwait(false);
+            return result.IsSuccess ? result.Value! : throw new UnauthorizedAccessException(result.Error!.Message);
+        }
+
+        public async Task<FilesPage<HostedItemMetadata>> SearchAsync(FilesSearchQuery query, string? pageToken,
+            CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(query);
+            if (query.Text is null || query.Text.Length > 256 || query.Limit is < 1 or > 500)
+                throw new ArgumentException("Search requires text up to 256 characters and a page size from 1 to 500.", nameof(query));
+            if (query.LocationId is { } location && location != Location.Id)
+                throw new ArgumentException("Search location does not belong to this Files provider.", nameof(query));
+            var result = await owner.ReadSharedAsync(grant.Share.Id, authority, (state, _) =>
+            {
+                if (query.ParentId is { } parent && (!owner.CanUseShare(state, grant.Share.Id, authority.ActorId, parent, write: false)
+                    || state.Items.Single(entry => entry.Metadata.Id == parent).Metadata.Kind != HostedItemKind.Folder))
+                    return ShareDenied<FilesPage<HostedItemMetadata>>(parent);
+                bool InScope(Entry entry)
+                {
+                    if (query.ParentId is not { } scope) return true;
+                    var seen = new HashSet<HostedItemId>(); var current = entry;
+                    while (current.Metadata.ParentId is { } parent)
+                    {
+                        if (parent == scope) return true;
+                        if (!seen.Add(current.Metadata.Id)) return false;
+                        var ancestor = state.Items.SingleOrDefault(row => row.Metadata.Id == parent);
+                        if (ancestor is null || ancestor.Deleted || ancestor.Metadata.Kind != HostedItemKind.Folder) return false;
+                        current = ancestor;
+                    }
+                    return false;
+                }
+                var matches = state.Items.Where(entry => IsVisible(state, entry)
+                        && owner.CanUseShare(state, grant.Share.Id, authority.ActorId, entry.Metadata.Id, write: false)
+                        && InScope(entry) && entry.Metadata.Name.Contains(query.Text, StringComparison.OrdinalIgnoreCase))
+                    .Select(entry => Project(entry.Metadata)).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(item => item.Id.Value).ToArray();
+                return FilesResult<FilesPage<HostedItemMetadata>>.Success(
+                    CreateSearchPage(query, pageToken, matches));
+            }, cancellationToken, storeId).ConfigureAwait(false);
+            return result.IsSuccess ? result.Value! : throw new UnauthorizedAccessException(result.Error!.Message);
+        }
+
+        public async Task<FilesPage<FilesRevision>> GetVersionsAsync(HostedItemId itemId, string? pageToken,
+            CancellationToken cancellationToken)
+        {
+            if (itemId.Value == Guid.Empty) throw new ArgumentException("Select a canonical Files item.", nameof(itemId));
+            var result = await owner.ReadSharedAsync(grant.Share.Id, authority, (state, _) =>
+            {
+                var item = state.Items.SingleOrDefault(entry => entry.Metadata.Id == itemId);
+                if (item is null || !owner.CanUseShare(state, grant.Share.Id, authority.ActorId, itemId, write: false))
+                    return ShareDenied<FilesPage<FilesRevision>>(itemId);
+                var revisions = state.Revisions.Where(revision => revision.ItemId == itemId)
+                    .OrderByDescending(revision => revision.IsCurrent).ThenByDescending(revision => revision.CreatedAt)
+                    .ThenByDescending(revision => revision.Id.Value).ToArray();
+                return FilesResult<FilesPage<FilesRevision>>.Success(CreateVersionPage(storeId, item, revisions, pageToken));
             }, cancellationToken, storeId).ConfigureAwait(false);
             return result.IsSuccess ? result.Value! : throw new UnauthorizedAccessException(result.Error!.Message);
         }

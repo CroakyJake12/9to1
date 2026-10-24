@@ -43,8 +43,8 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         _subscribers = Subscriptions.GetOrAdd(Path.GetFullPath(statePath), static _ => new());
         Location = new(locationId, "9to1 Drive", FilesLocationKind.Drive,
             FilesProviderCapabilities.Read | FilesProviderCapabilities.Write | FilesProviderCapabilities.Rename |
-            FilesProviderCapabilities.Move | FilesProviderCapabilities.Trash | FilesProviderCapabilities.Search |
-            FilesProviderCapabilities.ChangeFeed | FilesProviderCapabilities.Sharing, "9to1.drive");
+             FilesProviderCapabilities.Move | FilesProviderCapabilities.Trash | FilesProviderCapabilities.Search |
+             FilesProviderCapabilities.ChangeFeed | FilesProviderCapabilities.Sharing | FilesProviderCapabilities.Versions, "9to1.drive");
         _store = new(statePath, 1, () => new State([], [], [])
         {
             StoreId = Guid.NewGuid(), StoreCreatedAtUtc = DateTimeOffset.UtcNow,

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace HavenOS.Files;
 
 /// <summary>The trusted Home/account adapter resolves RecipientPrincipalId before calling Files.
@@ -13,8 +15,13 @@ public sealed record FilesEmailShareRequest(
     DateTimeOffset? ExpiresAt,
     FilesOperationId OperationId);
 
-/// <summary>A direct canonical-item grant. Creating it records no successful email delivery.</summary>
-public sealed record FilesEmailShare(FilesShare Share, string RecipientEmail, string GrantedByPrincipalId);
+/// <summary>A canonical grant as it applies to the selected item. Inherited rows retain the source grant
+/// and identify its ancestor; they are informational and cannot be changed from the child item.</summary>
+public sealed record FilesEmailShare(FilesShare Share, string RecipientEmail, string GrantedByPrincipalId)
+{
+    [JsonIgnore] public FilesGrantOrigin Origin { get; init; } = FilesGrantOrigin.Direct;
+    [JsonIgnore] public HostedItemId? InheritedFrom { get; init; }
+}
 
 /// <summary>Exact request/result custody for idempotent permission mutations in the owning Files state.</summary>
 public sealed record FilesShareJournalEntry(FilesOperationId OperationId, string ActorId, string Action,

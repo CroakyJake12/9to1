@@ -10,8 +10,8 @@ public sealed partial class FilesNativeBrowserSurface
     // View state only. A remembered identity, revision or selection grants no access.
     // Every activation obtains a fresh privately issued page from the SAME native owner.
     private sealed record FolderTabState(Guid StoreId,
-        IReadOnlyList<(Guid? ID, string Title, bool IsTrash)> History, int HistoryIndex,
-        string Query, string SearchText, int SortIndex, HostedItemId? Selection);
+        IReadOnlyList<NavigationEntry> History, int HistoryIndex,
+        string Query, string SearchText, bool IsSearch, int SearchScopeIndex, int SortIndex, HostedItemId? Selection);
     private sealed class FolderTab(long id, FolderTabState state)
     {
         internal readonly long Id = id;
@@ -81,14 +81,16 @@ public sealed partial class FilesNativeBrowserSurface
 
     private string CurrentFolderTitle() => _historyIndex >= 0 && _historyIndex < _history.Count
         ? _history[_historyIndex].Title : "Files";
-    private static (Guid? ID, string Title, bool IsTrash) TabLocation(FolderTabState state)
+    private static NavigationEntry TabLocation(FolderTabState state)
     {
         if (state.History.Count is < 1 or > 128 || state.HistoryIndex < 0 || state.HistoryIndex >= state.History.Count)
             throw new InvalidOperationException("The original tab location is unavailable.");
         return state.History[state.HistoryIndex];
     }
     private bool HasUnappliedTabSearch(FolderTab tab) => ReferenceEquals(tab, _activeFolderTab)
-        ? (_search.Text ?? "") != _query : tab.State.SearchText != tab.State.Query;
+        ? (_search.Text ?? "") != _query || _searchScope.SelectedIndex != (_history[_historyIndex].IsProviderWideSearch ? 1 : 0)
+        : tab.State.SearchText != tab.State.Query
+            || tab.State.SearchScopeIndex != (TabLocation(tab.State).IsProviderWideSearch ? 1 : 0);
 
     private FolderTabState CaptureFolderTabState()
     {
@@ -99,7 +101,7 @@ public sealed partial class FilesNativeBrowserSurface
         var selected = _page is { } page && _items.SelectedItem is HostedItemMetadata item
             && page.Items.Any(row => ReferenceEquals(row, item)) ? item.Id : (HostedItemId?)null;
         return new(store, Array.AsReadOnly(_history.ToArray()), _historyIndex, _query, _search.Text ?? "",
-            _sort.SelectedIndex == 1 ? 1 : 0, selected);
+            _page?.IsSearch == true, _searchScope.SelectedIndex == 1 ? 1 : 0, _sort.SelectedIndex == 1 ? 1 : 0, selected);
     }
 
     private void InitializeFolderTabs()
@@ -121,7 +123,8 @@ public sealed partial class FilesNativeBrowserSurface
         if (state.StoreId != _boundStoreId) throw new UnauthorizedAccessException("The original tab store changed.");
         _ = TabLocation(state);
         _history.Clear(); _history.AddRange(state.History); _historyIndex = state.HistoryIndex;
-        _query = state.Query; _search.Text = state.SearchText; _sort.SelectedIndex = state.SortIndex;
+        _query = state.Query; _search.Text = state.SearchText; _searchScope.SelectedIndex = state.SearchScopeIndex;
+        _sort.SelectedIndex = state.SortIndex;
     }
 
     // Deliberately local to the focused Files item list. Editors and the embedded
@@ -186,6 +189,7 @@ public sealed partial class FilesNativeBrowserSurface
                 || !string.IsNullOrWhiteSpace(_editName.Text) || _folderTabs.Count != originalRows.Length
                 || !_folderTabs.SequenceEqual(originalRows) || _query != originalState.Query
                 || (_search.Text ?? "") != originalState.SearchText || _sort.SelectedIndex != originalState.SortIndex
+                || _searchScope.SelectedIndex != originalState.SearchScopeIndex
                 || _historyIndex != originalState.HistoryIndex || !_history.SequenceEqual(originalState.History)
                 || !ReferenceEquals(_moveSource, originalMove))
                 throw new InvalidOperationException("The original Files tab changed before navigation.");
@@ -211,7 +215,7 @@ public sealed partial class FilesNativeBrowserSurface
             FolderTabState targetState;
             if (adding)
             {
-                var history = new List<(Guid? ID, string Title, bool IsTrash)> { (null, "Files", false) };
+                var history = new List<NavigationEntry> { new(null, "Files", false, "", false, false) };
                 if (command == "9to1.Files.Tab.OpenFolder")
                 {
                     if (originalPage is not { IsTrash: false } || originalSelection is not { Kind: HostedItemKind.Folder }
@@ -219,9 +223,10 @@ public sealed partial class FilesNativeBrowserSurface
                         throw new InvalidOperationException("Select an original folder to open in a new tab.");
                     await _browser.RevalidateAsync(originalPage, _originalActor, linked.Token);
                     RequireOriginalTab();
-                    history.Add((originalSelection.Id.Value, originalSelection.Name, false));
+                    history.Add(new(originalSelection.Id.Value, originalSelection.Name, false, "", false, false));
                 }
-                targetState = new(originalState.StoreId, Array.AsReadOnly(history.ToArray()), history.Count - 1, "", "", originalState.SortIndex, null);
+                targetState = new(originalState.StoreId, Array.AsReadOnly(history.ToArray()), history.Count - 1,
+                    "", "", false, 0, originalState.SortIndex, null);
             }
             else
             {
@@ -241,8 +246,9 @@ public sealed partial class FilesNativeBrowserSurface
                 throw new UnauthorizedAccessException("This tab belongs to a different original Files store.");
             attemptedTab = target;
             var destination = TabLocation(targetState);
-            var page = await _browser.ListAsync(_originalActor, destination.ID, targetState.Query, token: linked.Token,
-                expectedStoreId: targetState.StoreId, isTrash: destination.IsTrash);
+            var searchParent = destination.IsProviderWideSearch ? null : destination.ID;
+            var page = await _browser.ListAsync(_originalActor, searchParent, destination.Query, token: linked.Token,
+                expectedStoreId: targetState.StoreId, isTrash: destination.IsTrash, isSearch: destination.IsSearch);
             await _browser.RevalidateAsync(page, _originalActor, linked.Token);
             var current = await _browser.CaptureOriginalPageReadCheckAsync(page, _originalActor, OriginalAlive, linked.Token);
             await RequireReadyAsync(linked.Token);
@@ -263,8 +269,11 @@ public sealed partial class FilesNativeBrowserSurface
             Interlocked.Increment(ref _sharingSelectionVersion);
             _page = page; _originalPageCurrent = current;
             _history.Clear(); _history.AddRange(targetState.History); _historyIndex = targetState.HistoryIndex;
-            _history[_historyIndex] = (destination.ID, page.FolderTitle, destination.IsTrash);
-            _query = targetState.Query; _search.Text = targetState.SearchText; _sort.SelectedIndex = targetState.SortIndex;
+            _history[_historyIndex] = destination with
+            { Title = destination.IsProviderWideSearch ? destination.Title : page.FolderTitle };
+            _query = destination.Query; _search.Text = targetState.SearchText;
+            _searchScope.SelectedIndex = targetState.SearchScopeIndex;
+            _sort.SelectedIndex = targetState.SortIndex;
             _items.SelectedItem = null; ApplyDisplayedNameSort();
             _items.SelectedItem = targetState.Selection is { } selection
                 ? page.Items.SingleOrDefault(row => row.Id == selection) : null;

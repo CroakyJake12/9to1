@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Security.Cryptography;
+using System.Text.Json.Nodes;
 using Avalonia.Controls;
 using Avalonia.Input;
 using System.Globalization;
@@ -25,6 +27,232 @@ namespace Haven.Desktop.Tests;
 /// These controls do not certify installed bootstrap, production rendering or cloud connectivity.</summary>
 public sealed class FilesNativeBrowserMutationTests
 {
+    [Fact]
+    public void Folder_colour_is_declared_in_the_Home_action_policy()
+    {
+        var policy = new FilesNativeBrowserActionPolicySource().TryGet("files", "9to1.Files.SetFolderColor");
+        Assert.NotNull(policy);
+        Assert.Equal(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.Routine, policy.Risk);
+        Assert.True(policy.IsReversible);
+        Assert.True(policy.HasExternalSideEffects);
+        Assert.True(policy.RequiresPerActionApproval);
+        Assert.Null(new FilesNativeBrowserActionPolicySource().TryGet("files", "9to1.Files.Unknown"));
+    }
+
+    [Fact]
+    public async Task Folder_colour_does_not_persist_before_Home_approval_and_retains_its_write_ack()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var page = await h.Browser.ListAsync(h.Workspace.Actor, token: token);
+        var folder = Assert.Single(page.Items, item => item.Id == h.Parent);
+        string presentationPath = Path.Combine(h.Workspace.Configuration.RootDirectory,
+            ".9to1-files", "folder-presentations.json");
+
+        var declined = await h.Browser.PrepareNativeFolderColorAsync(page, folder, "#336699",
+            h.Workspace.Actor, () => true, "files-color-declined", token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, declined.Approval.State);
+        var waiting = await h.Browser.ApplyNativeMutationAsync(declined, token);
+        Assert.True(waiting.AwaitingHomeReview);
+        Assert.False(File.Exists(presentationPath));
+        Assert.False(File.Exists(presentationPath + ".lock"));
+        Assert.True((await h.Permissions.DecideAsync(declined.Approval.RequestId, HomeApprovalChoice.Decline,
+            cancellationToken: token)).Succeeded);
+        Assert.True((await h.Browser.ApplyNativeMutationAsync(declined, token)).AwaitingHomeReview);
+        Assert.False(File.Exists(presentationPath));
+
+        var approved = await h.Browser.PrepareNativeFolderColorAsync(page, folder, "#336699",
+            h.Workspace.Actor, () => true, "files-color-approved", token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, approved.Approval.State);
+        Assert.True((await h.Permissions.DecideAsync(approved.Approval.RequestId, HomeApprovalChoice.Accept,
+            cancellationToken: token)).Succeeded);
+
+        var changedPayload = JsonNode.Parse(approved.Arguments.GetRawText())!.AsObject();
+        changedPayload["colorHex"] = "#663399";
+        using (var changedDocument = JsonDocument.Parse(changedPayload.ToJsonString()))
+        {
+            var broker = h.Graph.GetRequiredService<HomeResourceOperationBroker>();
+            Assert.Null(await broker.BeginExecutionCapabilityAsync(approved.Approval.RequestId,
+                changedDocument.RootElement.Clone(), token));
+        }
+        Assert.False(File.Exists(presentationPath));
+        var committed = await h.Browser.ApplyNativeMutationAsync(approved, token);
+        Assert.False(committed.AwaitingHomeReview);
+        Assert.Null(committed.Operation);
+        Assert.True(committed.AuditRecorded);
+        Assert.True(approved.HasObservedFolderColorWrite);
+        Assert.Equal("#336699", approved.ObservedFolderColorWrite?.ColorHex);
+        Assert.Equal(approved.ObservedFolderColorWrite,
+            await h.Browser.ReadNativeFolderPresentationAsync(page, folder, h.Workspace.Actor, () => true, token));
+    }
+
+    [Fact]
+    public async Task Folder_colour_write_ack_survives_terminal_Home_audit_failure_without_reapplying()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var observer = new PersistedObserver();
+        await using var h = await Harness.CreateAsync(token, observer);
+        var page = await h.Browser.ListAsync(h.Workspace.Actor, token: token);
+        var folder = Assert.Single(page.Items, item => item.Id == h.Parent);
+        var prepared = await h.Browser.PrepareNativeFolderColorAsync(page, folder, "#7855AA",
+            h.Workspace.Actor, () => true, "files-color-audit-fault", token);
+        Assert.True((await h.Permissions.DecideAsync(prepared.Approval.RequestId, HomeApprovalChoice.Accept,
+            cancellationToken: token)).Succeeded);
+
+        var first = new IOException("Folder colour terminal audit ACK lost.");
+        var faultCount = 0;
+        observer.BeforeAcknowledgement = async (id, revision, ct) =>
+        {
+            if (id != "home.permissions-trust") return;
+            var state = await h.Home.ReadAsync(ct);
+            Assert.True(state.IsSuccess);
+            var record = state.State!.Records.Single(row => row.RecordId == id);
+            Assert.Equal(revision, record.Revision);
+            var request = record.Payload.GetProperty("Requests").EnumerateArray()
+                .Single(row => row.GetProperty("RequestId").GetString() == prepared.Approval.RequestId);
+            if (request.GetProperty("State").GetInt32() == (int)HomePermissionRequestState.Succeeded
+                && Interlocked.Increment(ref faultCount) == 1)
+            {
+                Assert.True(prepared.HasObservedFolderColorWrite);
+                Assert.Equal("#7855AA", prepared.ObservedFolderColorWrite?.ColorHex);
+                throw first;
+            }
+        };
+
+        var actual = h.Browser.ApplyNativeMutationAsync(prepared, token);
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => actual);
+        Assert.Contains(failure.Flatten().InnerExceptions, error => ReferenceEquals(error, first));
+        Assert.True(prepared.HasObservedFolderColorWrite);
+        Assert.True(prepared.HasObservedOutcome);
+        Assert.Same(actual, h.Browser.ApplyNativeMutationAsync(prepared, token));
+        observer.BeforeAcknowledgement = null;
+        Assert.True((await h.Browser.RetryNativeMutationAuditAsync(prepared, token)).Succeeded);
+        Assert.Same(actual, h.Browser.ApplyNativeMutationAsync(prepared, token));
+        Assert.Equal("#7855AA", (await h.Workspace.FolderPresentations.GetAsync(folder.Id, token))?.ColorHex);
+        Assert.Equal(1, faultCount);
+    }
+
+    [AvaloniaFact]
+    public async Task Selected_item_version_history_shows_immutable_canonical_revisions_in_CUI()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var store = await h.Workspace.Provider.GetStoreEvidenceAsync(token);
+        var folder = (await h.Workspace.Provider.GetAsync(h.Parent, token)).Value!;
+        var fileId = HostedItemId.New();
+        var artifact = new FilesArtifactReference("write", "version-history-fixture", fileId,
+            h.Parent, "document", "Version history fixture");
+        var registered = await h.Workspace.Provider.RegisterArtifactAsync(artifact, h.Workspace.Actor.ActorId, token);
+        Assert.True(registered.IsSuccess);
+        var authority = new FilesCommitAuthorityGuard(h.Workspace.Actor.ActorId, _ => ValueTask.FromResult(true));
+        var first = new FilesOwningAppRevisionCommit(fileId, "write", "fixture-revision-1", h.Workspace.Actor.ActorId,
+            DateTimeOffset.UtcNow, 10, new string('a', 64), "version-history/one", null);
+        var created = await h.Workspace.Provider.CommitCreatedArtifactAsync(registered.Value!, first,
+            [new FilesItemRevisionPrecondition(folder.Id, folder.CurrentRevisionId)], store.StoreId, authority, token);
+        Assert.True(created.IsSuccess);
+        var second = new FilesOwningAppRevisionCommit(fileId, "write", "fixture-revision-2", h.Workspace.Actor.ActorId,
+            DateTimeOffset.UtcNow.AddMinutes(1), 20, new string('b', 64), "version-history/two", created.Value!.Id);
+        var committed = await h.Workspace.Provider.CommitDurableRevisionAsync(second,
+            Array.Empty<FilesItemRevisionPrecondition>(), store.StoreId, authority, token);
+        Assert.True(committed.IsSuccess);
+
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view, Width = 920, Height = 760 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(store.StoreId, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == fileId);
+            await view.DispatchAsync("9to1.Files.TechnicalDetails", null, token);
+            var details = Assert.IsType<string>(ReadNativeValue(view, "SelectedDetails"));
+            Assert.Contains($"/{folder.Name}/{artifact.DisplayName}", details);
+            Assert.Contains("Provider: 9to1 Drive (9to1.drive)", details);
+            Assert.Contains("Owning app: write · document · version-history-fixture", details);
+            Assert.Contains("Local materialization: unknown (no persisted registry)", details);
+            await view.DispatchAsync("9to1.Files.TechnicalDetails", null, token);
+            await view.DispatchAsync("9to1.Files.GetVersions", null, token);
+            window.UpdateLayout();
+            Assert.True(Equals(ReadNativeValue(view, "VersionHistoryVisible"), true));
+            var versions = Assert.IsAssignableFrom<IEnumerable<FilesRevision>>(ReadNativeValue(view, "VersionHistory")).ToArray();
+            Assert.Equal(2, versions.Length);
+            Assert.Equal(committed.Value!.Id, versions[0].Id);
+            Assert.True(versions[0].IsCurrent);
+            Assert.Equal(created.Value!.Id, versions[1].Id);
+            Assert.False(versions[1].IsCurrent);
+            Assert.True(Assert.Single(view.GetVisualDescendants().OfType<Button>(), button =>
+                Equals(button.Content, "Close history")).IsEnabled);
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task CUI_search_recurses_under_the_current_folder_and_refresh_keeps_the_search_route()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var branch = await CreateReviewedFolder(h, h.Parent.Value, "Search branch", token);
+        var nested = await CreateReviewedFolder(h, branch.Value, "Canonical recursive match", token);
+        var outside = await CreateReviewedFolder(h, h.Workspace.Configuration.AppFolders["picture"].Value,
+            "Provider-wide target", token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view, Width = 920, Height = 760 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync((await h.Workspace.Provider.GetStoreEvidenceAsync(token)).StoreId,
+                h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            var query = Assert.Single(view.GetVisualDescendants().OfType<TextBox>(), box => box.PlaceholderText == "Search file or folder names");
+            var scope = Assert.Single(view.GetVisualDescendants().OfType<ComboBox>(), box =>
+                box.ItemsSource is IEnumerable<string> choices && choices.Contains("Whole provider"));
+            query.Text = "recursive match";
+            await view.DispatchAsync("9to1.Files.Search", null, token);
+            window.UpdateLayout();
+            Assert.Equal(nested, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id);
+            Assert.True(view.IsActionAvailable("9to1.Files.Refresh"));
+
+            await view.DispatchAsync("9to1.Files.Refresh", null, token);
+            window.UpdateLayout();
+            Assert.Equal(nested, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id);
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single();
+            await view.DispatchAsync("9to1.Files.Open", null, token);
+            Assert.Empty(list.Items);
+            await view.DispatchAsync("9to1.Files.Back", null, token);
+            window.UpdateLayout();
+            Assert.Equal(nested, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id);
+            Assert.Equal("recursive match", query.Text);
+            Assert.Equal(0, scope.SelectedIndex);
+            await view.DispatchAsync("9to1.Files.Forward", null, token);
+            Assert.Empty(list.Items);
+            await view.DispatchAsync("9to1.Files.Back", null, token);
+            window.UpdateLayout();
+
+            scope.SelectedIndex = 1;
+            query.Text = "Provider-wide target";
+            await view.DispatchAsync("9to1.Files.Search", null, token);
+            window.UpdateLayout();
+            Assert.Equal(outside, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id);
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single();
+            await view.DispatchAsync("9to1.Files.Open", null, token);
+            Assert.Empty(list.Items);
+            await view.DispatchAsync("9to1.Files.Back", null, token);
+            window.UpdateLayout();
+            Assert.Equal(outside, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id);
+            Assert.Equal("Provider-wide target", query.Text);
+            Assert.Equal(1, scope.SelectedIndex);
+            await view.DispatchAsync("9to1.Files.Forward", null, token);
+            Assert.Empty(list.Items);
+            Assert.True(view.TryGetValue("FolderTitle", out var title));
+            Assert.Equal("Provider-wide target", title);
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
     [Fact]
     public async Task Create_and_rename_require_original_Home_review_and_commit_each_operation_once()
     {
@@ -679,6 +907,9 @@ public sealed class FilesNativeBrowserMutationTests
             window.UpdateLayout();
             var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
             list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            var manageAccess = Assert.Single(view.GetVisualDescendants().OfType<Button>(), button =>
+                Equals(button.Content, "Manage access"));
+            Assert.Equal("Review direct and inherited access grants on the selected owned item", AutomationProperties.GetName(manageAccess));
             await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
             var change = NativeRoleButton(view); Assert.Equal("Make editor…", change.Content);
             var add = Assert.Single(view.GetVisualDescendants().OfType<Button>(),
@@ -707,10 +938,8 @@ public sealed class FilesNativeBrowserMutationTests
                 button => AutomationProperties.GetName(button) == "Apply the original Home-reviewed Files change");
             apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Apply") == false
-                && view.IsActionAvailable("9to1.Files.Refresh") == true, token);
-            Assert.True(view.TryGetValue("SharingVisible", out var visible)); Assert.False(Assert.IsType<bool>(visible));
-            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
-            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+                && view.IsActionAvailable("9to1.Files.Refresh") == true
+                && Equals(ReadNativeValue(view, "SharingVisible"), true), token);
             Assert.Equal("Make viewer…", NativeRoleButton(view).Content);
             var grants = Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")).ToArray();
             Assert.Equal(2, grants.Length);
@@ -726,6 +955,193 @@ public sealed class FilesNativeBrowserMutationTests
     }
 
     [AvaloniaFact]
+    public async Task Access_review_truthfully_labels_inherited_grants_and_keeps_them_read_only()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedInheritedNativeShareAsync(h, token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view, Width = 920, Height = 760 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(seed.Page.StoreID, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            Assert.Equal($"Access to ‘{seed.Item.Name}’", ReadNativeValue(view, "SharingTitle"));
+            Assert.Equal(seed.Item.OwnerPrincipalId, ReadNativeValue(view, "SharingOwner"));
+            var grants = Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")).ToArray();
+            var inherited = Assert.Single(grants);
+            Assert.Equal(FilesGrantOrigin.Inherited, inherited.Origin);
+            Assert.Equal(h.Parent.Value, inherited.InheritedFrom);
+            Assert.False(inherited.Share.IsRevoked);
+            var revoke = Assert.Single(view.GetVisualDescendants().OfType<Button>(), button =>
+                AutomationProperties.GetName(button) == "Review revoking this direct access grant in Home");
+            Assert.False(revoke.IsEnabled);
+            Assert.False(Assert.Single(view.GetVisualDescendants().OfType<Button>(), button =>
+                AutomationProperties.GetName(button) == "Review changing this existing recipient’s access role in Home").IsEnabled);
+            Assert.False(Assert.Single(view.GetVisualDescendants().OfType<Button>(), button =>
+                AutomationProperties.GetName(button) == "Edit this existing recipient’s direct role and expiry").IsEnabled);
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Open_access_review_resumes_from_its_durable_cursor_and_refreshes_after_ancestor_share_change()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedInheritedNativeShareAsync(h, token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view, Width = 920, Height = 760 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(seed.Page.StoreID, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            Assert.Single(Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")));
+            await view.DispatchAsync("9to1.Files.Share.Close", null, token);
+            Assert.False(Assert.IsType<bool>(ReadNativeValue(view, "SharingVisible")));
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            Assert.Single(Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")));
+
+            var parent = (await h.Workspace.Provider.GetAsync(h.Parent.Value, token)).Value!;
+            var request = new FilesEmailShareRequest(seed.Page.StoreID, h.Parent.Value,
+                parent.CurrentRevisionId!.Value, "fixture-recipient-live-update", "live-update@example.test",
+                FilesAccessRole.Editor, DateTimeOffset.UtcNow.AddDays(1), new(Guid.NewGuid()));
+            // This fixture-seeded provider commit models another connected writer; it does not certify
+            // account recipient resolution or replace Home review in the shipping mutation path.
+            var grant = await h.Workspace.Provider.GrantEmailAccessAsync(request,
+                new FilesCommitAuthorityGuard(h.Workspace.Actor.ActorId, _ => ValueTask.FromResult(true)), token);
+            Assert.True(grant.IsSuccess);
+            parent = (await h.Workspace.Provider.GetAsync(h.Parent.Value, token)).Value!;
+            var burstRequest = request with
+            {
+                ExpectedRevision = parent.CurrentRevisionId!.Value,
+                RecipientPrincipalId = "fixture-recipient-live-update-burst",
+                RecipientEmail = "live-update-burst@example.test",
+                OperationId = new(Guid.NewGuid())
+            };
+            var burstGrant = await h.Workspace.Provider.GrantEmailAccessAsync(burstRequest,
+                new FilesCommitAuthorityGuard(h.Workspace.Actor.ActorId, _ => ValueTask.FromResult(true)), token);
+            Assert.True(burstGrant.IsSuccess);
+
+            await AwaitNativeRoleStateAsync(window, () => ReadNativeValue(view, "SharingGrants")
+                is IEnumerable<FilesEmailShare> current && current.Count() == 3
+                && current.All(row => row.Origin == FilesGrantOrigin.Inherited), token);
+            var refreshed = Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")).ToArray();
+            Assert.Contains(refreshed, row => row.Share.Id == seed.Grant.Share.Id && row.InheritedFrom == h.Parent.Value);
+            Assert.Contains(refreshed, row => row.Share.Id == grant.Value!.Share.Id && row.InheritedFrom == h.Parent.Value);
+            Assert.Contains(refreshed, row => row.Share.Id == burstGrant.Value!.Share.Id && row.InheritedFrom == h.Parent.Value);
+
+            parent = (await h.Workspace.Provider.GetAsync(h.Parent.Value, token)).Value!;
+            var revoked = await h.Workspace.Provider.RevokeEmailAccessAsync(grant.Value!.Share.Id,
+                parent.CurrentRevisionId!.Value, new(Guid.NewGuid()),
+                new FilesCommitAuthorityGuard(h.Workspace.Actor.ActorId, _ => ValueTask.FromResult(true)), token);
+            Assert.True(revoked.IsSuccess);
+            await AwaitNativeRoleStateAsync(window, () => ReadNativeValue(view, "SharingGrants")
+                is IEnumerable<FilesEmailShare> current && current.Count() == 2
+                && current.All(row => row.Origin == FilesGrantOrigin.Inherited), token);
+            var afterRevoke = Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")).ToArray();
+            Assert.DoesNotContain(afterRevoke, row => row.Share.Id == grant.Value.Share.Id);
+            Assert.Contains(afterRevoke, row => row.Share.Id == seed.Grant.Share.Id);
+            Assert.Contains(afterRevoke, row => row.Share.Id == burstGrant.Value!.Share.Id);
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Pending_access_review_hides_stale_rows_and_reloads_after_Home_decline_and_cancel()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedOriginalNativeShareAsync(h, FilesAccessRole.Viewer, token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view, Width = 920, Height = 760 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(seed.Page.StoreID, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            NativeRoleButton(view).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Apply") == true, token);
+            var review = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+
+            var parent = (await h.Workspace.Provider.GetAsync(h.Parent.Value, token)).Value!;
+            var external = new FilesEmailShareRequest(seed.Page.StoreID, h.Parent.Value,
+                parent.CurrentRevisionId!.Value, "fixture-recipient-pending-event", "pending-event@example.test",
+                FilesAccessRole.Viewer, DateTimeOffset.UtcNow.AddDays(1), new(Guid.NewGuid()));
+            // Simulate another already-committed writer only; this does not establish account resolution
+            // or bypass Home review in the native mutation path.
+            var grant = await h.Workspace.Provider.GrantEmailAccessAsync(external,
+                new FilesCommitAuthorityGuard(h.Workspace.Actor.ActorId, _ => ValueTask.FromResult(true)), token);
+            Assert.True(grant.IsSuccess);
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "SharingStale"), true)
+                && Equals(ReadNativeValue(view, "SharingVisible"), false), token);
+
+            Assert.True((await h.Permissions.DecideAsync(review.RequestId, HomeApprovalChoice.Decline,
+                cancellationToken: token)).Succeeded);
+            await view.DispatchAsync("9to1.Files.CancelReview", null, token);
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "SharingVisible"), true)
+                && ReadNativeValue(view, "SharingGrants") is IEnumerable<FilesEmailShare> rows && rows.Count() == 2, token);
+            var refreshed = Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")).ToArray();
+            Assert.Contains(refreshed, row => row.Share.Id == seed.Grant.Share.Id
+                && row.Origin == FilesGrantOrigin.Direct && row.Share.Role == FilesAccessRole.Viewer);
+            Assert.Contains(refreshed, row => row.Share.Id == grant.Value!.Share.Id
+                && row.Origin == FilesGrantOrigin.Inherited);
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_access_refresh_cannot_reselect_the_old_item_after_selection_changes()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var sibling = await CreateReviewedFolder(h, h.Parent.Value, "Different selection", token);
+        var seed = await SeedInheritedNativeShareAsync(h, token);
+        var readiness = new HeldReadiness();
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            readiness, CancellationToken.None);
+        var window = new Window { Content = view, Width = 920, Height = 760 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(seed.Page.StoreID, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            readiness.HoldNextCheck();
+            var parent = (await h.Workspace.Provider.GetAsync(h.Parent.Value, token)).Value!;
+            var external = new FilesEmailShareRequest(seed.Page.StoreID, h.Parent.Value,
+                parent.CurrentRevisionId!.Value, "fixture-recipient-selection-race", "selection-race@example.test",
+                FilesAccessRole.Viewer, DateTimeOffset.UtcNow.AddDays(1), new(Guid.NewGuid()));
+            Assert.True((await h.Workspace.Provider.GrantEmailAccessAsync(external,
+                new FilesCommitAuthorityGuard(h.Workspace.Actor.ActorId, _ => ValueTask.FromResult(true)), token)).IsSuccess);
+            await readiness.WaitUntilHeldAsync(token);
+
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == sibling);
+            readiness.Release();
+            await AwaitNativeRoleStateAsync(window, () => list.Items.Count == 0, token);
+            Assert.False(Assert.IsType<bool>(ReadNativeValue(view, "SharingVisible")));
+            Assert.Empty(Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")));
+        }
+        finally { readiness.Release(); await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
     public async Task Original_text_preview_location_uses_fresh_issued_rows_and_named_close_with_clean_component_retirement()
     {
         var token = TestContext.Current.CancellationToken;
@@ -735,7 +1151,7 @@ public sealed class FilesNativeBrowserMutationTests
         var text = "// Revision note\nconst answer = 42;\n<script>plain text, never executed</script>";
         var bytes = Encoding.UTF8.GetBytes(text);
         await File.WriteAllBytesAsync(Path.Combine(folder.DirectoryPath, "revision.cs"), bytes, token);
-        var parent = (await h.Workspace.Provider.GetAsync(h.Parent, token)).Value!;
+        var parent = (await h.Workspace.Provider.GetAsync(h.Parent.Value, token)).Value!;
         var upload = new FilesUploadedContent(HostedItemId.New(), h.Parent, "revision.cs", "text/plain", new(Guid.NewGuid()),
             null, actor.ActorId, DateTimeOffset.UtcNow, bytes.Length, Convert.ToHexString(SHA256.HashData(bytes)), "revision.cs");
         var authority = h.Graph.GetRequiredService<NativeFilesWorkspaceAuthority>();
@@ -774,6 +1190,55 @@ public sealed class FilesNativeBrowserMutationTests
             Assert.Equal(actor, await h.Graph.GetRequiredService<IAuthenticatedResourceActorSource>().GetCurrentAsync(token));
         }
         finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Failed_live_feed_hides_stale_access_and_manage_access_reloads_after_recovery()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedInheritedNativeShareAsync(h, token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view, Width = 920, Height = 760 }; window.Show();
+        var storePath = Path.Combine(h.Workspace.Configuration.RootDirectory, ".9to1-files", "drive.json");
+        byte[] originalBytes = [];
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(seed.Page.StoreID, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            Assert.Single(Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")));
+            await AwaitNativeRoleStateAsync(window, () => OriginalSubscriberCount(h.Workspace.Provider) > 0, token);
+
+            originalBytes = await File.ReadAllBytesAsync(storePath, token);
+            var document = JsonNode.Parse(originalBytes)!;
+            document["state"]!["events"] = null;
+            await File.WriteAllTextAsync(storePath, document.ToJsonString(), token);
+            typeof(DurableDriveProvider).GetMethod("WakeShareObservers", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(h.Workspace.Provider, null);
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "SharingStale"), true), token);
+            Assert.Empty(Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")));
+            await File.WriteAllBytesAsync(storePath, originalBytes, token);
+            originalBytes = [];
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token);
+            Assert.True(Equals(ReadNativeValue(view, "SharingStale"), false));
+            Assert.Single(Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")));
+        }
+        finally
+        {
+            if (originalBytes.Length > 0) await File.WriteAllBytesAsync(storePath, originalBytes, token);
+            await view.CloseAndDrainAsync(); window.Close();
+        }
+
+        static int OriginalSubscriberCount(DurableDriveProvider provider)
+        {
+            var field = typeof(DurableDriveProvider).GetField("_subscribers", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            return (int)field.GetValue(provider)!.GetType().GetProperty("Count")!.GetValue(field.GetValue(provider))!;
+        }
     }
 
     // Real component dependencies; this is not an installed-peer, full Home-runtime or platform
@@ -932,6 +1397,26 @@ public sealed class FilesNativeBrowserMutationTests
         return (page, item, shares, Assert.Single(shares.Grants));
     }
 
+    private static async Task<(FilesNativeBrowserPage Page, HostedItemMetadata Item,
+        FilesNativeBrowserSharePage Shares, FilesEmailShare Grant)> SeedInheritedNativeShareAsync(
+        Harness h, CancellationToken token)
+    {
+        var id = await CreateReviewedFolder(h, h.Parent.Value, "Inherited access target", token);
+        var parent = (await h.Workspace.Provider.GetAsync(h.Parent.Value, token)).Value!;
+        var page = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        var check = await h.Browser.CaptureOriginalPageReadCheckAsync(page, h.Workspace.Actor, () => true, token);
+        var request = new FilesEmailShareRequest(page.StoreID, h.Parent.Value, parent.CurrentRevisionId!.Value,
+            "fixture-recipient-" + Guid.NewGuid().ToString("N"), "inherited-recipient@example.test", FilesAccessRole.Viewer,
+            DateTimeOffset.UtcNow.AddDays(1), new(Guid.NewGuid()));
+        var granted = await h.Workspace.Provider.GrantEmailAccessAsync(request,
+            new FilesCommitAuthorityGuard(h.Workspace.Actor.ActorId, check), token);
+        Assert.True(granted.IsSuccess);
+        page = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        var item = page.Items.Single(row => row.Id == id);
+        var shares = await h.Browser.ReadNativeSharesAsync(page, item, h.Workspace.Actor, () => true, token: token);
+        return (page, item, shares, Assert.Single(shares.Grants));
+    }
+
     private static async Task CaptureComponentSceneAsync(Window window, string name)
     {
         var directory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR");
@@ -959,6 +1444,26 @@ public sealed class FilesNativeBrowserMutationTests
     {
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token)
         { token.ThrowIfCancellationRequested(); return ValueTask.FromResult(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "CONTROL", "Source test host")); }
+    }
+
+    private sealed class HeldReadiness : ICuiSceneReadiness
+    {
+        private readonly TaskCompletionSource _entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _holdNext;
+        public void HoldNextCheck() => Interlocked.Exchange(ref _holdNext, 1);
+        public Task WaitUntilHeldAsync(CancellationToken token) => _entered.Task.WaitAsync(token);
+        public void Release() => _release.TrySetResult();
+        public async ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            if (Interlocked.Exchange(ref _holdNext, 0) != 0)
+            {
+                _entered.TrySetResult();
+                await _release.Task.WaitAsync(token);
+            }
+            return new(CuiSceneAvailabilityState.Ready, "HELD_CONTROL", "Held source test readiness");
+        }
     }
 
     private sealed class Harness : IAsyncDisposable

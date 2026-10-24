@@ -16,7 +16,9 @@ public sealed class FilesFolderPresentationStore
 	public async Task<FilesFolderPresentation?> GetAsync(HostedItemId folderId, CancellationToken cancellationToken = default)
 	{
 		ValidateFolderId(folderId);
-		FilesFolderPresentationState state = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);
+		FilesFolderPresentationState state;
+		try { state = await _store.ReadExistingAsync(cancellationToken).ConfigureAwait(false); }
+		catch (FileNotFoundException) { return null; }
 		return state.Presentations.TryGetValue(folderId.ToString(), out FilesFolderPresentation? presentation) ? presentation : null;
 	}
 
@@ -25,6 +27,7 @@ public sealed class FilesFolderPresentationStore
 		string? colorHex,
 		DateTimeOffset updatedAt,
 		string updatedByPrincipalId,
+		Func<CancellationToken, ValueTask>? validateCommitAuthority = null,
 		CancellationToken cancellationToken = default)
 	{
 		ValidateFolderId(folderId);
@@ -45,7 +48,7 @@ public sealed class FilesFolderPresentationStore
 				values[key] = result;
 			}
 			return new FilesFolderPresentationState { Presentations = values };
-		}, cancellationToken).ConfigureAwait(false);
+		}, validateCommitAuthority, cancellationToken).ConfigureAwait(false);
 		return result;
 	}
 

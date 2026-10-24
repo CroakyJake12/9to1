@@ -4,12 +4,14 @@ using System.Text.Json;
 namespace HavenOS.Files;
 
 public sealed record FilesStoreEvidence(int SchemaVersion, Guid StoreId, DateTimeOffset CreatedAtUtc,
-    bool NewlyCreated, bool IsEmpty, string Revision, string OwnerPrincipalId, FilesLocationId LocationId);
+    bool NewlyCreated, bool IsEmpty, string Revision, string OwnerPrincipalId, FilesLocationId LocationId,
+    FilesChangeCursor ChangeCursor = default);
 
 public sealed partial class DurableDriveProvider
 {
     /// <summary>Identity is persisted in the actual owning state, never derived from a path.
-    /// Legacy identity creation is not evidence of a newly created store. Snapshot and UUID share the state lock.</summary>
+    /// Legacy identity creation is not evidence of a newly created store. Identity, revision and change cursor
+    /// are captured from the same state snapshot under the store lock.</summary>
     public async Task<FilesStoreEvidence> GetStoreEvidenceAsync(CancellationToken cancellationToken = default)
     {
         FilesStoreEvidence? evidence = null;
@@ -31,7 +33,7 @@ public sealed partial class DurableDriveProvider
             evidence = new(1, state.StoreId.Value, createdAt, state.CreationSessionId == _creationSessionId,
                 state.Items.Count == 0 && state.Operations.Count == 0 && state.Events.Count == 0 &&
                 state.Artifacts.Count == 0 && state.Revisions.Count == 0 && state.RevisionContentReferences.Count == 0 && state.UploadedContents.Count == 0,
-                revision, _owner, Location.Id);
+                revision, _owner, Location.Id, new(state.Events.Count));
             return state;
         }, cancellationToken);
         return evidence!;
@@ -57,7 +59,7 @@ public sealed partial class DurableDriveProvider
         return new(1, expectedStoreId, createdAt, state.CreationSessionId == _creationSessionId,
             state.Items.Count == 0 && state.Operations.Count == 0 && state.Events.Count == 0 &&
             state.Artifacts.Count == 0 && state.Revisions.Count == 0 && state.RevisionContentReferences.Count == 0 && state.UploadedContents.Count == 0,
-            revision, _owner, Location.Id);
+            revision, _owner, Location.Id, new(state.Events.Count));
     }
 
 }

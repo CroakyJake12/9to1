@@ -6,11 +6,12 @@ using HavenOS.Files;
 namespace HavenOS.Files.NativeHost;
 
 public sealed record FilesNativeBrowserCursor(Guid StoreID, string StoreRevision, Guid? ParentID,
-    string Search, string Offset, AuthenticatedResourceActor OriginalActor, bool IsTrash = false);
+    string Search, string Offset, AuthenticatedResourceActor OriginalActor, bool IsTrash = false, bool IsSearch = false);
 
 public sealed record FilesNativeBrowserPage(Guid StoreID, string StoreRevision, Guid? ParentID,
     IReadOnlyList<HostedItemMetadata> Items, FilesNativeBrowserCursor? Next, bool IsTrash = false,
-    string FolderTitle = "Files");
+    string FolderTitle = "Files", FilesChangeCursor ChangeCursor = default, bool IsSearch = false,
+    FilesLocation? ProviderLocation = null);
 
 /// <summary>Canonical metadata navigation bound to the actor captured at the original host click.
 /// Cursor revisions pin the real Files state, rather than inferring stability from names or timestamps.</summary>
@@ -69,17 +70,18 @@ public sealed partial class FilesNativeBrowserService(NativeFilesWorkspaceAuthor
 
     public async Task<FilesNativeBrowserPage> ListAsync(AuthenticatedResourceActor originalActor,
         Guid? parentID = null, string search = "", FilesNativeBrowserCursor? cursor = null,
-        CancellationToken token = default, Guid? expectedStoreId = null, bool isTrash = false)
+        CancellationToken token = default, Guid? expectedStoreId = null, bool isTrash = false, bool isSearch = false)
     {
         ArgumentNullException.ThrowIfNull(originalActor);
         expectedStoreId ??= cursor?.StoreID;
         if (expectedStoreId == Guid.Empty) throw new ArgumentException("Retain the original Files store UUID.");
-        if (search.Length > 256 || parentID == Guid.Empty || isTrash && parentID is not null)
+        if (search.Length > 256 || parentID == Guid.Empty || isTrash && (parentID is not null || isSearch))
             throw new ArgumentException("Select a canonical folder and a bounded search.");
         var workspace = await RequireWorkspaceAsync(originalActor, expectedStoreId, token).ConfigureAwait(false);
         var before = await workspace.Provider.GetStoreEvidenceAsync(workspace.Configuration.StoreId, token).ConfigureAwait(false);
         if (cursor is not null && (cursor.OriginalActor != originalActor || cursor.StoreID != before.StoreId ||
-            cursor.StoreRevision != before.Revision || cursor.ParentID != parentID || cursor.Search != search || cursor.IsTrash != isTrash))
+            cursor.StoreRevision != before.Revision || cursor.ParentID != parentID || cursor.Search != search
+            || cursor.IsTrash != isTrash || cursor.IsSearch != isSearch))
             throw new InvalidOperationException("This Files page changed. Refresh before continuing.");
         var folderTitle = isTrash ? "Trash" : "Files";
         if (parentID is { } parent)
@@ -97,6 +99,9 @@ public sealed partial class FilesNativeBrowserService(NativeFilesWorkspaceAuthor
                 search, cursor?.Offset, 100, token).ConfigureAwait(false);
             page = new(trash.Items.Select(entry => entry.Metadata).ToArray(), trash.NextPageToken);
         }
+        else if (isSearch)
+            page = await workspace.Provider.SearchAsync(new FilesSearchQuery(search, workspace.Provider.Location.Id,
+                parentID is { } searchParent ? new HostedItemId(searchParent) : null, Limit: 100), cursor?.Offset, token).ConfigureAwait(false);
         else page = await workspace.Provider.ListAsync(parentID is { } id ? new HostedItemId(id) : null,
             new FilesSearchQuery(search, Limit: 100), cursor?.Offset, token).ConfigureAwait(false);
         foreach (var item in page.Items)
@@ -106,7 +111,8 @@ public sealed partial class FilesNativeBrowserService(NativeFilesWorkspaceAuthor
             !ReferenceEquals((await RequireWorkspaceAsync(originalActor, expectedStoreId, token).ConfigureAwait(false)).Provider, workspace.Provider))
             throw new InvalidOperationException("Files changed during navigation. Refresh this folder.");
         var issued = new FilesNativeBrowserPage(before.StoreId, before.Revision, parentID, Array.AsReadOnly(page.Items.ToArray()),
-            page.NextPageToken is { } next ? new(before.StoreId, before.Revision, parentID, search, next, originalActor, isTrash) : null, isTrash, folderTitle);
+            page.NextPageToken is { } next ? new(before.StoreId, before.Revision, parentID, search, next, originalActor, isTrash, isSearch) : null,
+            isTrash, folderTitle, before.ChangeCursor, isSearch, workspace.Provider.Location);
         _originalPages.Add(issued, new(workspace, originalActor));
         return issued;
     }

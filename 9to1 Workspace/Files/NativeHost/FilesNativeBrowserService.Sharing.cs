@@ -6,16 +6,17 @@ using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace HavenOS.Files.NativeHost;
 
-/// <summary>A privately issued page of persisted direct grants, never an invitation or an identity resolver.</summary>
+/// <summary>A privately issued page of direct and inherited access grants, never an invitation or identity resolver.</summary>
 public sealed class FilesNativeBrowserSharePage
 {
     internal FilesNativeBrowserSharePage(FilesNativeBrowserPage page, HostedItemMetadata item,
-        IReadOnlyList<FilesEmailShare> grants, string? next)
-    { Page = page; Item = item; Grants = grants; Next = next; }
+        IReadOnlyList<FilesEmailShare> grants, string? next, FilesChangeCursor changeCursor)
+    { Page = page; Item = item; Grants = grants; Next = next; ChangeCursor = changeCursor; }
     public FilesNativeBrowserPage Page { get; }
     public HostedItemMetadata Item { get; }
     public IReadOnlyList<FilesEmailShare> Grants { get; }
     public string? Next { get; }
+    public FilesChangeCursor ChangeCursor { get; }
 }
 
 public sealed partial class FilesNativeBrowserService
@@ -74,12 +75,32 @@ public sealed partial class FilesNativeBrowserService
         await RevalidateAsync(page, actor, token).ConfigureAwait(false);
         if (!lifetime() || !await current(token).ConfigureAwait(false))
             throw new UnauthorizedAccessException("The original access review retired.");
-        if (result.Value.Items.Any(grant => grant.Share.ItemId != item.Id))
-            throw new UnauthorizedAccessException("Access details do not belong to the selected item.");
+        if (result.Value.Items.Any(grant => grant.Origin == FilesGrantOrigin.Direct
+                ? grant.Share.ItemId != item.Id || grant.InheritedFrom is not null
+                : grant.Origin != FilesGrantOrigin.Inherited || grant.InheritedFrom != grant.Share.ItemId))
+            throw new UnauthorizedAccessException("Access details contain a malformed direct or inherited grant.");
         var issued = new FilesNativeBrowserSharePage(page, item,
-            Array.AsReadOnly(result.Value.Items.ToArray()), result.Value.NextPageToken);
+            Array.AsReadOnly(result.Value.Items.ToArray()), result.Value.NextPageToken, page.ChangeCursor);
         _issuedSharePages.Add(issued, new(original.Workspace, actor, lifetime));
         return issued;
+    }
+
+    /// <summary>Streams only from the selected original owner's durable cursor. The bound Home check is
+    /// revalidated for each event; no historical full-feed scan is performed.</summary>
+    public async IAsyncEnumerable<FilesChangeEvent> SubscribeOriginalChangesAsync(
+        FilesNativeBrowserPage page, AuthenticatedResourceActor actor, Func<bool> lifetime,
+        [EnumeratorCancellation] CancellationToken token = default)
+    {
+        if (!_originalPages.TryGetValue(page, out var retained) || retained.Actor != actor || !lifetime())
+            throw new UnauthorizedAccessException("Retain the same live original Files page to subscribe to changes.");
+        var current = await CaptureOriginalPageReadCheckAsync(page, actor, lifetime, token).ConfigureAwait(false);
+        var guard = new FilesCommitAuthorityGuard(actor.ActorId, current);
+        await foreach (var change in retained.Workspace.Provider.SubscribeAsync(page.ChangeCursor, token)
+            .WithCancellation(token).ConfigureAwait(false))
+        {
+            await guard.ValidateAsync(token).ConfigureAwait(false);
+            yield return change;
+        }
     }
 
     private OriginalShares DemandSharePage(FilesNativeBrowserSharePage page, AuthenticatedResourceActor actor)
@@ -118,7 +139,7 @@ public sealed partial class FilesNativeBrowserService
         var original = DemandSharePage(page, actor);
         var broker = _mutationBroker ?? throw new NotSupportedException("Home-reviewed access changes are unavailable.");
         if (!lifetime() || string.IsNullOrWhiteSpace(sessionId) || sessionId.Length > 256
-            || !page.Grants.Any(row => ReferenceEquals(row, grant)) || grant.Share.IsRevoked
+            || !page.Grants.Any(row => ReferenceEquals(row, grant)) || grant.Origin != FilesGrantOrigin.Direct || grant.Share.IsRevoked
             || grant.Share.ItemId != page.Item.Id || grant.Share.Role is not (FilesAccessRole.Viewer or FilesAccessRole.Editor))
             throw new InvalidOperationException("Choose an existing direct viewer or editor grant from this access page.");
         if (requestedRole is { } role && (role is not (FilesAccessRole.Viewer or FilesAccessRole.Editor)

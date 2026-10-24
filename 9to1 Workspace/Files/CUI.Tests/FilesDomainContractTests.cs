@@ -96,6 +96,11 @@ internal static class FilesDomainContractTests
 		string directory = CreateTempDirectory();
 		try
 		{
+			string missingJournalPath = Path.Combine(directory, "missing-journal.json");
+			await Check.ThrowsAsync<FileNotFoundException>(() => new FilesOperationJournal(missingJournalPath).ListPendingAsync());
+			Check.False(File.Exists(missingJournalPath));
+			Check.False(File.Exists(missingJournalPath + ".lock"));
+
 			string path = Path.Combine(directory, "journal.json");
 			var operation = NewOperation("rename");
 			var firstJournal = new FilesOperationJournal(path);
@@ -127,6 +132,9 @@ internal static class FilesDomainContractTests
 			Check.Equal(FilesOperationState.Committed, committed.State);
 			await Check.ThrowsAsync<InvalidOperationException>(() => firstJournal.TransitionAsync(operation.Id, FilesOperationState.Pending, DateTimeOffset.UtcNow));
 			Check.Equal(11, (await new FilesOperationJournal(path).ListPendingAsync()).Count);
+			FilesOperation afterTransition = await new FilesOperationJournal(path).EnqueueAsync(NewOperation("after-transition"));
+			Check.Equal(13L, afterTransition.Sequence);
+			Check.Equal(12, (await new FilesOperationJournal(path).ListPendingAsync()).Count);
 		}
 		finally
 		{
@@ -175,6 +183,19 @@ internal static class FilesDomainContractTests
 			string path = Path.Combine(directory, "presentation.json");
 			var folderId = HostedItemId.New();
 			var store = new FilesFolderPresentationStore(path);
+			Check.Equal<FilesFolderPresentation?>(null, await store.GetAsync(folderId));
+			Check.False(File.Exists(path));
+			Check.False(File.Exists(path + ".lock"));
+			int authorityChecks = 0;
+			await Check.ThrowsAsync<ArgumentException>(() => store.SetAsync(folderId, "not-a-colour",
+				DateTimeOffset.UtcNow, "principal-1", _ => { authorityChecks++; return ValueTask.CompletedTask; }));
+			Check.Equal(0, authorityChecks);
+			Check.False(File.Exists(path));
+			string revokedPath = Path.Combine(directory, "revoked-presentation.json");
+			var revokedStore = new FilesFolderPresentationStore(revokedPath);
+			await Check.ThrowsAsync<UnauthorizedAccessException>(() => revokedStore.SetAsync(folderId, "#336699",
+				DateTimeOffset.UtcNow, "principal-1", _ => ValueTask.FromException(new UnauthorizedAccessException("Captured Home fence retired."))));
+			Check.False(File.Exists(revokedPath));
 			FilesFolderPresentation? saved = await store.SetAsync(folderId, "#f0c033", DateTimeOffset.UtcNow, "principal-1");
 			Check.Equal("#F0C033", saved?.ColorHex);
 			Check.Equal("#F0C033", (await new FilesFolderPresentationStore(path).GetAsync(folderId))?.ColorHex);
@@ -278,6 +299,10 @@ internal static class FilesDomainContractTests
 		public FilesLocation Location { get; } = location;
 		public Task<FilesPage<HostedItemMetadata>> ListAsync(HostedItemId? parentId, FilesSearchQuery? query, string? pageToken, CancellationToken cancellationToken) =>
 			Task.FromResult(new FilesPage<HostedItemMetadata>(Array.Empty<HostedItemMetadata>(), null));
+		public Task<FilesPage<HostedItemMetadata>> SearchAsync(FilesSearchQuery query, string? pageToken, CancellationToken cancellationToken) =>
+			throw new NotSupportedException();
+		public Task<FilesPage<FilesRevision>> GetVersionsAsync(HostedItemId itemId, string? pageToken, CancellationToken cancellationToken) =>
+			throw new NotSupportedException();
 		public Task<FilesResult<HostedItemMetadata>> GetAsync(HostedItemId itemId, CancellationToken cancellationToken) =>
 			Task.FromResult(FilesResult<HostedItemMetadata>.Failure(new FilesError(FilesErrorCode.ItemNotFound, "Missing", "Files.Get", itemId.ToString(), false, false)));
 		public Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? newName, CancellationToken cancellationToken) =>

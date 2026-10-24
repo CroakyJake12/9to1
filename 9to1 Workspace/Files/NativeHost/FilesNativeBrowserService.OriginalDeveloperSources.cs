@@ -74,7 +74,8 @@ public sealed partial class FilesNativeBrowserService
             !ReferenceEquals((await original.Observe(() => RequireOriginalDeveloperWorkspaceAsync(originalActor, expectedStoreId, original, token)).ConfigureAwait(false)).Provider, workspace.Provider))
             throw new InvalidOperationException("Files changed during navigation. Refresh this folder.");
         var issued = new FilesNativeBrowserPage(before.StoreId, before.Revision, parentID, Array.AsReadOnly(page.Items.ToArray()),
-            page.NextPageToken is { } next ? new(before.StoreId, before.Revision, parentID, search, next, originalActor) : null);
+            page.NextPageToken is { } next ? new(before.StoreId, before.Revision, parentID, search, next, originalActor) : null,
+            ChangeCursor: before.ChangeCursor, ProviderLocation: workspace.Provider.Location);
         original.Invoke(() => { _originalPages.Add(issued, new(workspace, originalActor)); return true; });
         return issued;
     }

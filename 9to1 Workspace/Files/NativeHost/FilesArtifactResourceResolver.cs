@@ -173,7 +173,7 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         var browserRead = actionId == "files.browser.read" && scope.Access == ResourceAccess.Read;
         var trashRead = actionId == "files.browser.trash.read" && scope.Access == ResourceAccess.Read;
         var trashRestore = actionId == "9to1.Files.Restore" && scope.Access == ResourceAccess.Write;
-        var browserWrite = (actionId is "9to1.Files.CreateFolder" or "9to1.Files.Rename" or "9to1.Files.Move" or "9to1.Files.Delete" or "9to1.Files.RegisterBrowserDownload")
+        var browserWrite = (actionId is "9to1.Files.CreateFolder" or "9to1.Files.Rename" or "9to1.Files.Move" or "9to1.Files.Delete" or "9to1.Files.RegisterBrowserDownload" or "9to1.Files.SetFolderColor")
             && scope.Access == ResourceAccess.Write;
         var packageRead = actionId == "os.compatibility.package.read" && scope.Access == ResourceAccess.Read;
         var textPreviewRead = actionId == "files.preview.read" && scope.Access == ResourceAccess.Read
