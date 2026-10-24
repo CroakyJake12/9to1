@@ -101,7 +101,7 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         foreach (var child in chain.Skip(1))
             effective = Merge(effective, child);
 
-        return effective with { SpaceId = selected.Id };
+        return effective with { SpaceId = spaceId };
     }
 
     private static EffectiveSpacePolicy Merge(EffectiveSpacePolicy parent, SpaceDefinition child)
