@@ -119,7 +119,10 @@ internal sealed class FilesBrowseAppContentSession : IBrowseNativeAppContentSess
         _view = view;
         if (_location.StoreId is { } store)
         {
-            _actualLocation = view.OpenOriginalLocationAsync(store, _location.FolderId, token);
+            _actualLocation = _location.PreviewFileId is { } file && _location.PreviewRevisionId is { } revision &&
+                _location.FolderId is { } parent
+                    ? view.OpenOriginalTextPreviewLocationAsync(store, parent, file, revision, token)
+                    : view.OpenOriginalLocationAsync(store, _location.FolderId, token);
             await _actualLocation;
         }
         await _route.RevalidateBeforePublicationAsync(view, token);
@@ -205,8 +208,16 @@ internal sealed class FilesBrowseAppContentSession : IBrowseNativeAppContentSess
     private void UpdateLocation(FilesNativeBrowserSurface view)
     {
         if (!view.TryGetOriginalLocation(out var store, out var folder, out var title)) return;
-        _address = FilesBrowseAppContentAddress.For(store, folder);
-        _title = title == "Files" ? "Files" : $"{title} — Files";
+        if (folder is { } parent && view.TryGetOriginalTextPreviewLocation(out var file, out var revision, out var name))
+        {
+            _address = FilesBrowseAppContentAddress.ForTextPreview(store, parent, file, revision);
+            _title = $"{name} — Files";
+        }
+        else
+        {
+            _address = FilesBrowseAppContentAddress.For(store, folder);
+            _title = title == "Files" ? "Files" : $"{title} — Files";
+        }
     }
 
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)

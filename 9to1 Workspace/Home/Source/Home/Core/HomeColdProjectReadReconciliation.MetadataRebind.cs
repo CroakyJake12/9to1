@@ -25,7 +25,8 @@ public sealed partial class HomeColdProjectReadReconciliation : IDeveloperOrigin
     }
     private sealed class MetadataRebindResult(HomeColdProjectReadReconciliation owner,
         MetadataRebindOperation operation, MetadataRebindPreparation preparation,
-        IDeveloperProjectOriginalMetadataTransition transition, CommandRead newRead)
+        IDeveloperProjectOriginalMetadataTransition transition, IDeveloperProjectOriginalMetadataCommitValue committedValue,
+        CommandRead newRead)
         : IDeveloperOriginalProjectMetadataRebindResult
     {
         internal HomeColdProjectReadReconciliation Owner => owner;
@@ -33,6 +34,7 @@ public sealed partial class HomeColdProjectReadReconciliation : IDeveloperOrigin
         internal CommandRead NewRead => newRead;
         public IDeveloperOriginalProjectMetadataRebindPreparation OriginalPreparation => preparation;
         public IDeveloperProjectOriginalMetadataTransition OriginalTransition => transition;
+        public IDeveloperProjectOriginalMetadataCommitValue OriginalCommittedValue => committedValue;
         public IDeveloperOriginalProjectCommandRead NewOriginalCommandRead => newRead;
         public TaskRunColdProjectIdentity AfterIdentity => newRead.OriginalIdentity;
     }
@@ -203,7 +205,7 @@ public sealed partial class HomeColdProjectReadReconciliation : IDeveloperOrigin
                 var result = sources.Invoke(() =>
                 {
                     _ = RequireMetadataRebindPreparation(preparation); _ = RequireCommandRead(actualFresh, true);
-                    var product = new MetadataRebindResult(this, operation, preparation, sameTransition, actualFresh);
+                    var product = new MetadataRebindResult(this, operation, preparation, sameTransition, sameCommittedValue, actualFresh);
                     lock (_gate) _metadataRebindResults.Add(product, operation);
                     return (IDeveloperOriginalProjectMetadataRebindResult)product;
                 });

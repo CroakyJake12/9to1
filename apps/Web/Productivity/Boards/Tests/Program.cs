@@ -6,8 +6,8 @@ using Haven.Core;
 using Haven.Infrastructure;
 using NineToOne.Web.Productivity.Boards;
 
-if (args.Length != 1 || args[0] is not ("seed" or "verify" or "unknown" or "workspace" or "warnings" or "find" or "history" or "tables") || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_DATA_DIR")))
-    throw new ArgumentException("Choose seed/verify/unknown/workspace/warnings/find/history/tables in an explicitly isolated actual repository fixture.");
+if (args.Length != 1 || args[0] is not ("seed" or "verify" or "unknown" or "workspace" or "warnings" or "find" or "history" or "tables" or "blocks") || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_DATA_DIR")))
+    throw new ArgumentException("Choose seed/verify/unknown/workspace/warnings/find/history/tables/blocks in an explicitly isolated actual repository fixture.");
 var paths = new AppPaths();
 var repository = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
 var core = new BoardsBrowserCore(repository);
@@ -15,6 +15,7 @@ if (args[0] == "workspace") { await BoardsWorkspaceRegression.Run(repository); r
 if (args[0] == "find") { await BoardsFindRegression.Run(repository); return; }
 if (args[0] == "history") { await BoardsHistoryRegression.Run(repository); return; }
 if (args[0] == "tables") { await BoardsTableEditingRegression.Run(repository); return; }
+if (args[0] == "blocks") { await BoardsBlockEditingRegression.Run(repository); return; }
 var statePath = Path.Combine(paths.DataDirectory, "browser-boards-fixture.json");
 var assertions = 0;
 void Check(bool ok, string name)

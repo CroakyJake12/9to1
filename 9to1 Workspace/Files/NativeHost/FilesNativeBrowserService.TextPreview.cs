@@ -13,6 +13,14 @@ public sealed partial class FilesNativeBrowserService
     public const int MaximumTextPreviewCharacters = 65536;
     public bool HasOriginalTextPreviewOwner => _originalFolders is not null;
 
+    /// <summary>Fresh canonical metadata only. The returned original page/row are privately
+    /// issued by the maintained selector; preview bytes still require their separate Home READ.</summary>
+    public Task<(FilesNativeBrowserPage Page, HostedItemMetadata Row)> ReadOriginalTextPreviewSelectionWithinSourceAsync(
+        AuthenticatedResourceActor actor, Guid store, HostedItemId parent, HostedItemId file, FilesRevisionId revision,
+        Func<bool> lifetime, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        ReadOriginalRegisteredDownloadSelectionWithinSourceAsync(actor, store, parent, file, revision,
+            lifetime, scope, retain, token);
+
     // Descriptive eligibility only, never an authority check or content-type guarantee.
     public static bool IsTextPreviewCandidate(HostedItemMetadata item) => item.Kind == HostedItemKind.File &&
         (item.ContentType?.StartsWith("text/", StringComparison.OrdinalIgnoreCase) == true ||

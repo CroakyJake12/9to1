@@ -172,8 +172,12 @@ public sealed partial class ChatSessionService
         var continuedSpacePolicy = await CaptureOriginalSpacePolicyAsync(conversation, continuedSpaceOptions,
             null, original, token).ConfigureAwait(false);
         if (continuedSpacePolicy is not null)
+        {
+            if (continuedSpacePolicy.Snapshot.CapturedContext is not null && continuedSpaceOptions?.RequestedSpaceContextSha256 is null)
+                throw new SpaceRequestPolicyBlockedException("SPACE_CHECKPOINT_CONTEXT_UNQUALIFIED", "This older checkpoint has no original captured-context digest. Start a new request after reviewing its sources.");
             continuedSpaceOptions = SpaceRequestPolicyConstraints.BindContext(continuedSpaceOptions, continuedSpacePolicy.Snapshot)
                 with { OriginalSpacePolicy = continuedSpacePolicy.DispatchGuard };
+        }
         var tracker = new ChatExecutionTracker(ChatExecutionStage.Recovering, null, current.ExecutionId);
         original.OriginalTracker = tracker;
         void Publish(ChatExecutionSnapshot value)

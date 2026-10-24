@@ -287,6 +287,10 @@ public sealed record GenerationOptions(double Temperature = 0.7, int ContextLimi
     public bool RequireOriginalSpacePolicy { get; init; }
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public OriginalSpacePolicyLineage? RequestedSpacePolicyLineage { get; init; }
+    /// <summary>Restrictive digest only. A cold request still needs the SAME current original
+    /// source to read/revalidate its actual data; this value is never a resource grant.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? RequestedSpaceContextSha256 { get; init; }
 
     [System.Text.Json.Serialization.JsonIgnore]
     public IOriginalPrivateContextDispatchGuard? OriginalPrivateContext { get; init; }

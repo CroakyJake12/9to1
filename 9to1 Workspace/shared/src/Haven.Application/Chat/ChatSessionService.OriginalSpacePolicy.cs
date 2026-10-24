@@ -53,6 +53,8 @@ public sealed partial class ChatSessionService
             public async Task ValidateAsync(IModelProvider? actualProvider, CancellationToken token)
             {
                 await binding.ValidateAsync(token).ConfigureAwait(false);
+                if (binding.Snapshot.CapturedContext is not null && actualProvider is not IOriginalPrivateContextModelProvider { IsLocal: true })
+                    throw new SpaceRequestPolicyBlockedException("SPACE_CONTEXT_LOCAL_PROVIDER_REQUIRED", "Reviewed Space content has no cloud disclosure grant and requires an actual maintained local provider.");
                 var required = binding.Snapshot.Policy.Model.ProviderConstraint;
                 if (!string.IsNullOrWhiteSpace(required) && (actualProvider is null ||
                     !string.Equals(actualProvider.Id, required, StringComparison.OrdinalIgnoreCase)))
@@ -66,7 +68,7 @@ public sealed partial class ChatSessionService
     {
         if (conversation.SpaceId is not { } id)
         {
-            if (OriginalSpacePolicyDispatch.RequiresGuard(options) || options?.RequestedSpacePolicyLineage is not null)
+            if (OriginalSpacePolicyDispatch.RequiresGuard(options) || options?.RequestedSpacePolicyLineage is not null || options?.RequestedSpaceContextSha256 is not null)
                 throw new SpaceRequestPolicyBlockedException("SPACE_POLICY_IDENTITY_CHANGED", "The continued request no longer identifies its original Space.");
             return null; // Existing non-Space workflows keep their own original owners.
         }

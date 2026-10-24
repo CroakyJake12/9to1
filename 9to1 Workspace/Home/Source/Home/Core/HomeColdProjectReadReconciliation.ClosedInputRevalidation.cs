@@ -6,8 +6,9 @@ namespace HavenOS.Home.Core;
 public sealed partial class HomeColdProjectReadReconciliation
 {
     private async Task ValidateClosedInputThroughFreshOriginalReadAsync(Work original, Context sources,
-        CancellationToken token)
+        CancellationToken token, TaskRunColdProjectIdentity? expectedIdentity = null)
     {
+        var expected = expectedIdentity ?? original.Identity;
         // Retain the newly reserved SAME issuer Work before its first source start.
         // Its existing StartInput performs the real Home/Files/native current READ,
         // manual permission and short borrower protocol; metadata issues no grant.
@@ -15,17 +16,22 @@ public sealed partial class HomeColdProjectReadReconciliation
         Exception? primary = null; var cleanup = new List<Exception>();
         try
         {
-            _ = sources.Invoke(() => { fresh = ReserveAdmitted(null); return fresh; });
+            _ = sources.Invoke(() =>
+            {
+                fresh = ReserveAdmitted(null);
+                lock (_gate) _metadataVerificationInputs.Add(fresh, new object());
+                return fresh;
+            });
             var actualFresh = fresh ?? throw new InvalidOperationException("The actual fresh READ owner was not captured.");
             _ = sources.Invoke(() =>
             {
                 preparation = actualFresh.StartInput(original.Conversation, original.Container,
-                    original.Identity.OriginalProjectContextJson, sources.Scope, sources.Retain, token,
-                    original.Identity.SavedWorkspaceDocumentSha256, original.Identity.RegisteredRootFingerprint);
+                    expected.OriginalProjectContextJson, sources.Scope, sources.Retain, token,
+                    expected.SavedWorkspaceDocumentSha256, expected.RegisteredRootFingerprint);
                 sources.Retain(preparation); return preparation;
             });
             await sources.Await(preparation ?? throw new InvalidOperationException("The actual fresh READ was not acquired.")).ConfigureAwait(false);
-            DemandSameResourceIdentity(original.Identity, actualFresh.Identity);
+            DemandSameResourceIdentity(expected, actualFresh.Identity);
         }
         catch (Exception cause) { primary = cause; }
         finally

@@ -523,6 +523,18 @@ public sealed partial class ChatSessionService(
         {
             generationOptions = SpaceRequestPolicyConstraints.BindContext(generationOptions, originalSpacePolicy.Snapshot)
                 with { OriginalSpacePolicy = originalSpacePolicy.DispatchGuard };
+            if (originalSpacePolicy.Snapshot.CapturedContext is { } capturedContext)
+            {
+                if (images is { Count: > 0 } || generationOptions.OriginalAttachmentInput is not null ||
+                    generationOptions.RequestedOriginalAttachmentLineage is not null)
+                    throw new SpaceRequestPolicyBlockedException("SPACE_CONTEXT_ATTACHMENT_SCOPE_UNAVAILABLE",
+                        "This restricted Space cannot include an attachment outside its reviewed configured sources. Your files remain saved.");
+                // Do not pretend opaque page/project strings are source-qualified data. The
+                // source supplies canonical Space configuration plus exact reviewed bodies.
+                registeredContext = capturedContext.BuildRegisteredContext(originalSpacePolicy.Snapshot.Policy.Context.SourceOnly);
+                projectContext = null; projectInstructions = null; workspaceRoot = null;
+                if (originalSpacePolicy.Snapshot.Policy.Context.SourceOnly) agentInstructions = "";
+            }
         }
         ModelDescriptor etaModel = model;
 
@@ -1037,7 +1049,8 @@ public sealed partial class ChatSessionService(
         if (ordinaryOriginal is not null && canUseTools)
             throw new InvalidOperationException("This plain ordinary source does not issue canonical tool authority.");
 
-        execution.Update(ChatExecutionStage.LoadingContext, "Loading Context");
+        execution.Update(ChatExecutionStage.LoadingContext,
+            originalSpacePolicy?.Snapshot.CapturedContext?.Notice ?? "Loading Context");
         var history = await (ordinaryOriginal is null ? ReadOriginalHistoryAsync()
             : ordinaryOriginal.Read(ReadOriginalHistoryAsync, cancellationToken)).ConfigureAwait(false);
 
@@ -1045,7 +1058,11 @@ public sealed partial class ChatSessionService(
             (long)(generationOptions?.ContextLimit ?? 32768) * 4L,
             8_000L,
             131_072L);
-        var contextMessages = ChatContextWindow.Build(history, contextBudget);
+        // Old unqualified conversation material is retained in persistence but is not promoted
+        // into a newly closed corpus. The explicit current user prompt is still included below.
+        var selectedHistory = originalSpacePolicy?.Snapshot.Policy.Context.SourceOnly == true
+            ? Array.Empty<ChatMessage>() : history;
+        var contextMessages = ChatContextWindow.Build(selectedHistory, contextBudget);
         var requestMessages = contextMessages
             .Where(message => message.Role is MessageRole.User or MessageRole.Assistant)
             .Select(message => new OllamaMessage(

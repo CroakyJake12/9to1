@@ -16,6 +16,24 @@ public sealed class FilesBrowseAddressTests
         Assert.Equal(new FilesBrowseAppContentAddress(store, null), FilesBrowseAppContentAddress.Parse(FilesBrowseAppContentAddress.For(store, null)));
     }
 
+    [Fact]
+    public void Text_preview_addresses_preserve_all_four_original_identities_and_round_trip()
+    {
+        var store = Guid.NewGuid(); var folder = Guid.NewGuid(); var file = Guid.NewGuid(); var revision = Guid.NewGuid();
+        var address = FilesBrowseAppContentAddress.ForTextPreview(store, folder, file, revision);
+        Assert.Equal($"9to1://files/store/{store:D}/folder/{folder:D}/file/{file:D}/revision/{revision:D}", address.Value);
+        Assert.Equal(new FilesBrowseAppContentAddress(store, folder, file, revision), FilesBrowseAppContentAddress.Parse(address));
+        Assert.NotEqual(FilesBrowseAppContentAddress.For(store, folder), address);
+        Assert.Throws<ArgumentException>(() => FilesBrowseAppContentAddress.ForTextPreview(store, folder, file, Guid.Empty));
+    }
+
+    [Theory]
+    [InlineData("9to1://files/store/01900000-0000-0000-0000-000000000001/folder/01900000-0000-0000-0000-000000000002/file/01900000-0000-0000-0000-000000000003/revision/00000000-0000-0000-0000-000000000000")]
+    [InlineData("9to1://files/store/01900000-0000-0000-0000-000000000001/folder/01900000-0000-0000-0000-000000000002/file/01900000-0000-0000-0000-000000000003/revision/not-a-revision")]
+    [InlineData("9to1://files/store/01900000-0000-0000-0000-000000000001/file/01900000-0000-0000-0000-000000000003/revision/01900000-0000-0000-0000-000000000004")]
+    public void Text_preview_requires_a_real_parent_and_complete_revision_target(string value) =>
+        Assert.Throws<FormatException>(() => FilesBrowseAppContentAddress.Parse(AppContentAddress.Parse(value)));
+
     [Theory]
     [InlineData("9to1://files/folder/01900000-0000-0000-0000-000000000001")]
     [InlineData("9to1://files/store/00000000-0000-0000-0000-000000000000")]

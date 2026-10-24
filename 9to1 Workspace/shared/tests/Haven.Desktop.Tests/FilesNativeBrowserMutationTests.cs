@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Text;
+using System.Security.Cryptography;
 using Avalonia.Controls;
 using Avalonia.Automation;
 using Avalonia.Interactivity;
@@ -719,6 +721,80 @@ public sealed class FilesNativeBrowserMutationTests
             await CaptureComponentSceneAsync(window, "files-existing-recipient-role-applied");
         }
         finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Original_text_preview_location_uses_fresh_issued_rows_and_named_close_with_clean_component_retirement()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var actor = h.Workspace.Actor;
+        var folder = (await h.Workspace.Directories.ResolveProfileAsync(Guid.Parse(actor.ProfileId), "write", token)).Value!;
+        var text = "// Revision note\nconst answer = 42;\n<script>plain text, never executed</script>";
+        var bytes = Encoding.UTF8.GetBytes(text);
+        await File.WriteAllBytesAsync(Path.Combine(folder.DirectoryPath, "revision.cs"), bytes, token);
+        var parent = (await h.Workspace.Provider.GetAsync(h.Parent, token)).Value!;
+        var upload = new FilesUploadedContent(HostedItemId.New(), h.Parent, "revision.cs", "text/plain", new(Guid.NewGuid()),
+            null, actor.ActorId, DateTimeOffset.UtcNow, bytes.Length, Convert.ToHexString(SHA256.HashData(bytes)), "revision.cs");
+        var authority = h.Graph.GetRequiredService<NativeFilesWorkspaceAuthority>();
+        var commit = await authority.CaptureCommitAuthorityAsync(actor, h.Workspace.Provider, () => true, token);
+        Assert.True((await h.Workspace.Provider.CommitUploadedContentAsync(upload,
+            [new(h.Parent, parent.CurrentRevisionId)], commit, token)).IsSuccess);
+        var before = await h.Workspace.Provider.GetStoreEvidenceAsync(h.Workspace.Configuration.StoreId, token);
+        var originalHome = await File.ReadAllBytesAsync(Path.Combine(h.Root, "home.json"), token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, actor,
+            new OriginalPreviewFixtureReadiness(h), CancellationToken.None);
+        var window = new Window { Content = view, Width = 1060, Height = 800 }; window.Show();
+        try
+        {
+            // No copied item/page or initial guessed selection: the exact target is freshly resolved
+            // by the maintained original metadata issuer, then its separate Home READ previews bytes.
+            await view.OpenOriginalTextPreviewLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value,
+                upload.FileId.Value, upload.RevisionId.Value, token);
+            window.UpdateLayout();
+            Assert.True(view.TryGetOriginalTextPreviewLocation(out var file, out var revision, out var name));
+            Assert.Equal(upload.FileId.Value, file); Assert.Equal(upload.RevisionId.Value, revision); Assert.Equal("revision.cs", name);
+            Assert.Equal(text, Assert.IsType<string>(ReadNativeValue(view, "TextPreviewContent")));
+            Assert.Equal(text, Assert.Single(view.GetVisualDescendants().OfType<TextBlock>(),
+                control => control.Name == "files-preview-content").Text);
+            await CaptureComponentSceneAsync(window, "files-current-text-preview");
+            await Assert.ThrowsAsync<ArgumentException>(() => view.DispatchAsync("9to1.Files.Preview", new object(), token).AsTask());
+            var closePreview = Assert.Single(view.GetVisualDescendants().OfType<Button>(), control => control.Name == "files-preview-close");
+            Assert.True(closePreview.IsEnabled);
+            closePreview.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); // The actual named CUI action, no direct helper clear.
+            await AwaitNativeRoleStateAsync(window, () => !view.TryGetOriginalTextPreviewLocation(out _, out _, out _)
+                && view.CanPrepareOriginalClose(), token);
+            Assert.Equal("", Assert.IsType<string>(ReadNativeValue(view, "TextPreviewContent")));
+            Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(h.Workspace.Configuration.StoreId, token));
+            Assert.Equal(originalHome, await File.ReadAllBytesAsync(Path.Combine(h.Root, "home.json"), token));
+            var close = view.CloseAndDrainAsync(); Assert.Same(close, view.CloseAndDrainAsync()); await close;
+            Assert.False(view.OriginalPublicationIsAlive);
+            Assert.Equal(actor, await h.Graph.GetRequiredService<IAuthenticatedResourceActorSource>().GetCurrentAsync(token));
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    // Real component dependencies; this is not an installed-peer, full Home-runtime or platform
+    // qualification. Ready is derived from the same actual state/profile/Files/receipt graph.
+    private sealed class OriginalPreviewFixtureReadiness(Harness h) : ICuiSceneReadiness
+    {
+        public async ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            var profiles = h.Graph.GetRequiredService<HomeLocalProfileIdentity>();
+            var read = await h.Home.ReadAsync(token);
+            var actor = await profiles.GetCurrentAsync(token);
+            var workspace = await h.Graph.GetRequiredService<NativeFilesWorkspaceAuthority>()
+                .GetCurrentAsync(h.Workspace.Configuration.StoreId, token);
+            var owner = h.Graph.GetRequiredService<IResourceStoreOwnershipAuthority>() as IResourceStoreOwnershipReceiptAuthority;
+            var receipt = owner is null ? null : await owner.GetVerifiedAsync("files", h.Workspace.Configuration.StoreId.ToString("D"), token);
+            var current = read.IsSuccess && read.State is not null && actor == h.Workspace.Actor && workspace?.Actor == actor &&
+                ReferenceEquals(workspace.Provider, h.Workspace.Provider) && receipt is not null &&
+                await owner!.IsCurrentAsync(receipt, h.Workspace.Actor, token) &&
+                await profiles.CheckAsync(read.State, h.Workspace.Actor, HomeStateCommitPhase.Publication, token);
+            return current ? new(CuiSceneAvailabilityState.Ready, "ORIGINAL_COMPONENT", "Actual Home/Files component owners are current.")
+                : new(CuiSceneAvailabilityState.Unavailable, "COMPONENT_CHANGED", "The original component profile/store ownership changed.");
+        }
     }
 
     private static object? ReadNativeValue(FilesNativeBrowserSurface view, string name)

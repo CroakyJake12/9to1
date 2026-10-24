@@ -157,7 +157,8 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         internal async Task SendAsync(GenerationOptions? options)
         {
             var original = _chat.CreateOriginalOrdinaryConversation(_conversation, "Hello", _model, EffortLevel.Medium,
-                "Fixture", "", options ?? new(), TestContext.Current.CancellationToken, body => body());
+                "Fixture", "", (options ?? new()) with { RequestedRoutingConstraints = options?.RequestedRoutingConstraints ?? new(AllowCloud: true) },
+                TestContext.Current.CancellationToken, body => body());
             var failures = new List<Exception>();
             try { await foreach (var _ in original.ConsumeOriginal()) { } }
             catch (Exception cause) { failures.Add(cause); }

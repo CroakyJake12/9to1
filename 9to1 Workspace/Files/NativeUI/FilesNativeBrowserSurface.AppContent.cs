@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Haven.Application;
 
 namespace HavenOS.Files.NativeUI;
 
@@ -61,4 +62,53 @@ public sealed partial class FilesNativeBrowserSurface
         }
         finally { _busy = false; _operations.Release(); Changed(); }
     }
+
+    /// <summary>Descriptive current successful preview identity, not a resource or readiness grant.</summary>
+    public bool TryGetOriginalTextPreviewLocation(out Guid fileId, out Guid revisionId, out string name)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        fileId = revisionId = Guid.Empty; name = "";
+        if (!OriginalAlive() || _textPreview is not { Succeeded: true } preview ||
+            _textPreviewPage is not { } page || !ReferenceEquals(_page, page) ||
+            _textPreviewRow is not { } row || !ReferenceEquals(_items.SelectedItem, row) ||
+            !page.Items.Any(item => ReferenceEquals(item, row)) || preview.FileId != row.Id.Value ||
+            !Guid.TryParseExact(preview.Revision, "D", out var revision) || revision == Guid.Empty ||
+            row.CurrentRevisionId?.Value != revision) return false;
+        fileId = row.Id.Value; revisionId = revision; name = row.Name; return true;
+    }
+
+    /// <summary>Restores an explicit immutable text preview through a fresh privately issued Files
+    /// selection. Saved address fields are targets only; they never recreate a page or read grant.</summary>
+    public Task OpenOriginalTextPreviewLocationAsync(Guid store, Guid parent, Guid file, Guid revision,
+        CancellationToken token = default) => TrackOriginalAsync(() => OpenTextPreviewLocationCoreAsync(store, parent, file, revision, token));
+
+    private async Task OpenTextPreviewLocationCoreAsync(Guid store, Guid parent, Guid file, Guid revision, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (store == Guid.Empty || parent == Guid.Empty || file == Guid.Empty || revision == Guid.Empty)
+            throw new ArgumentException("Retain the actual Files store, parent, file and immutable revision.");
+        RequireOriginalAlive(token);
+        if (_busy || _pendingMutation is not null || _moveSource is not null || !string.IsNullOrWhiteSpace(_editName.Text))
+            throw new InvalidOperationException("Finish the current Files change before restoring a preview.");
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
+        var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+        await originals.RunToOriginalSettlementAsync(async () =>
+        {
+            Action<Action> Own = body => originals.Invoke(() => { body(); return true; });
+            Action<Task> Retain = actual => originals.Track(actual);
+            await originals.AwaitAsync(originals.Invoke(() => RequireReadyAsync(linked.Token)));
+            var selected = await originals.AwaitAsync(originals.Invoke(() => _browser.ReadOriginalTextPreviewSelectionWithinSourceAsync(
+                _originalActor, store, new(parent), new(file), new(revision), OriginalAlive, Own, Retain, linked.Token)));
+            await originals.AwaitAsync(originals.Invoke(() => RevealOriginalRegisteredPageWithinSourceAsync(_browser,
+                selected.Page, selected.Row, _originalActor, Own, Retain, linked.Token)));
+            await originals.AwaitAsync(originals.Invoke(() => DispatchAsync("9to1.Files.Preview", null, linked.Token).AsTask()));
+            await originals.AwaitAsync(originals.Invoke(() => RevalidateOriginalOwnerAsync(linked.Token)));
+            await originals.AwaitAsync(originals.Invoke(() => RequireReadyAsync(linked.Token)));
+            RequireOriginalAlive(linked.Token);
+            if (!TryGetOriginalLocation(out var actualStore, out var actualFolder, out _) || actualStore != store || actualFolder != parent ||
+                !TryGetOriginalTextPreviewLocation(out var actualFile, out var actualRevision, out _) || actualFile != file || actualRevision != revision)
+                throw new NotSupportedException(_textPreview?.Message ?? "This file has no current supported text preview.");
+        });
+    }
+
 }

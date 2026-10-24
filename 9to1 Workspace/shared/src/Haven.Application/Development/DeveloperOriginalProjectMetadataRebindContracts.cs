@@ -16,6 +16,7 @@ public interface IDeveloperOriginalProjectMetadataRebindResult
 {
     IDeveloperOriginalProjectMetadataRebindPreparation OriginalPreparation { get; }
     IDeveloperProjectOriginalMetadataTransition OriginalTransition { get; }
+    IDeveloperProjectOriginalMetadataCommitValue OriginalCommittedValue { get; }
     IDeveloperOriginalProjectCommandRead NewOriginalCommandRead { get; }
     TaskRunColdProjectIdentity AfterIdentity { get; }
 }

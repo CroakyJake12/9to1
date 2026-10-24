@@ -111,8 +111,8 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
         Action<Action> scope, Action<Task> retain, CancellationToken token)
         => RequireInput(input, true).StartValidation(scope, retain, async sources =>
         {
-            var original = RequireInput(input, true); original.DemandExactInput(exact);
-            await original.ValidateFreshShortReadAsync(sources, token).ConfigureAwait(false); original.DemandExactInput(exact);
+            var original = RequireInput(input, true);
+            await ValidateEffectiveOriginalProjectInputAsync(original, exact, sources, token).ConfigureAwait(false);
         });
     public Task<TaskRunColdProjectIdentity> CaptureOriginalClosedProjectIdentityWithinSourceAsync(
         ITaskRunColdOriginalProjectInput input, TaskExecutionSnapshot terminal, TaskRunColdChatInput exact,
@@ -122,11 +122,12 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
             var original = RequireInput(input, false);
             if (terminal.TaskId == Guid.Empty || terminal.ExecutionId == Guid.Empty || terminal.OwnerBinding is null)
                 throw new UnauthorizedAccessException("Actual owned settled Task identity required; fields alone grant nothing.");
+            var effective = ObserveMetadataInputBasis(original);
             if (original.IsLive)
             {
                 original.DemandExactInput(exact);
                 var validation = sources.Invoke(() => original.StartValidation(sources.Scope, sources.Retain,
-                    current => original.ValidateFreshShortReadAsync(current, token)));
+                    current => ValidateEffectiveOriginalProjectInputAsync(original, exact, current, token)));
                 await sources.Await(validation).ConfigureAwait(false);
                 Task? close = null; var closes = new List<Task>();
                 sources.AcquireClose(() => { close = original.CloseOwned(); return close; }, closes);
@@ -138,10 +139,11 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
                 // Historical identity is recognized only through this private issuer's
                 // healthy SAME original close. The old input/leases are never reopened.
                 original.DemandExactHealthyClosedInput(exact);
-                await ValidateClosedInputThroughFreshOriginalReadAsync(original, sources, token).ConfigureAwait(false);
+                await ValidateClosedInputThroughFreshOriginalReadAsync(original, sources, token, effective.Identity).ConfigureAwait(false);
             }
             original.DemandExactHealthyClosedInput(exact);
-            return original.Identity;
+            DemandMetadataInputBasis(original, effective);
+            return effective.Identity;
         });
     public Task ValidateOriginalProjectRestorationWithinSourceAsync(ITaskRunColdProjectRestorationLease lease,
         ITaskRunColdOriginalProjectMaterial material, Action<Action> scope, Action<Task> retain, CancellationToken token)

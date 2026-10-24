@@ -166,14 +166,28 @@
                         <Button Type="Menu Item" Content="Insert">
                           <Button action="InsertParagraph" Type="Menu Item" Content="Text" />
                           <Button action="InsertHeading" Type="Menu Item" Content="Heading" />
+                          <Button action="InsertBullets" Type="Menu Item" Content="Bulleted list" />
+                          <Button action="InsertNumbered" Type="Menu Item" Content="Numbered list" />
                           <Button action="InsertChecklist" Type="Menu Item" Content="Checklist" />
+                          <Button action="InsertQuote" Type="Menu Item" Content="Quote" />
+                          <Button action="InsertCode" Type="Menu Item" Content="Code" />
+                          <Button action="InsertEquation" Type="Menu Item" Content="Equation" />
+                          <Button action="InsertDivider" Type="Menu Item" Content="Divider" />
                           <Button action="InsertTable" Type="Menu Item" Content="Table" />
                           <Button action="InsertSharedDrawing" Type="Menu Item" Content="Drawing" AccessibleDescription="Shared drawing requires a compatible Home drawing engine in this host." />
                         </Button>
                       </Container>
-                      <If condition="!{Binding IsTableSelected}">
+                      <Container Type="Menu">
+                        <Button Type="Menu Item" Content="Block" AccessibleName="Actions for the selected block" AccessibleDescription="Move or remove the selected original block. Undo restores changes.">
+                          <Button Type="Menu Item" Content="Move up" action="MoveBlockUp" />
+                          <Button Type="Menu Item" Content="Move down" action="MoveBlockDown" />
+                          <Button Type="Menu Item" Content="Delete block" action="DeleteBlock" />
+                        </Button>
+                      </Container>
+                      <If condition="{Binding IsTextBlockSelected}">
                       <Button content="B" accessible-name="Bold selection" font-weight="Bold" action="Bold" margin="6,0,0,0" />
                       <Button content="I" accessible-name="Italic selection" font-style="Italic" action="Italic" />
+                      <Button content="S" accessible-name="Strikethrough selection" action="Strikethrough" />
                       <Button content="U" accessible-name="Underline selection" action="Underline" />
                       </If>
                       <Button content="Undo" action="Undo" margin="12,0,0,0" />
@@ -227,16 +241,43 @@
                     </Container>
                   </If>
                 </If>
-                <If condition="{Binding IsChecklistSelected}">
-                  <Container max-width="720" horizontal-alignment="Left" Type="Vertical Stack" CellGap="6">
-                    <Text text="Checklist" font-weight="SemiBold" />
+                <If condition="{Binding IsEquationSelected}">
+                  <If condition="{Binding IsEditMode}">
+                    <Container id="boards-equation-tools" Type="Vertical Stack" CellGap="6" accessible-name="Selected equation">
+                      <Repeat Source="{Binding SelectedEquationEditors}" As="equation" Key="{Binding equation.Id}">
+                        <Container Type="Vertical Stack" CellGap="6" max-width="600">
+                          <Text text="Equation source" foreground="{Resource CuiTextSoftBrush}" />
+                          <Input id="boards-equation-source" Type="Text" Value="{Binding equation.Source, mode=TwoWay}" Interactive="{Binding equation.CanEdit}" accessible-name="Equation source" />
+                          <Text text="Accessible description" foreground="{Resource CuiTextSoftBrush}" />
+                          <Input id="boards-equation-alternative" Type="Text" Value="{Binding equation.Alternative, mode=TwoWay}" Interactive="{Binding equation.CanEdit}" accessible-name="Equation accessible description" />
+                        </Container>
+                      </Repeat>
+                    </Container>
+                  </If>
+                </If>
+                <If condition="{Binding IsListSelected}">
+                  <Container max-width="720" horizontal-alignment="Left" Type="Vertical Stack" CellGap="6" accessible-name="Selected list">
+                    <If condition="{Binding IsEditMode}">
+                    <Container Type="Wrap" CellGap="6">
+                      <Button content="Bullets" action="ListBullets" accessible-name="Use bullets for the selected list" />
+                      <Button content="Numbered" action="ListNumbered" accessible-name="Use numbering for the selected list" />
+                      <Button content="Checklist" action="ListChecklist" accessible-name="Use checkboxes for the selected list" />
+                    </Container>
+                    </If>
                     <Repeat Source="{Binding ChecklistItems}" As="item" Key="{Binding item.Id}">
                       <Container margin="0,2" Type="Grid" ColumnSizes="Auto 1fr">
-                        <Input accessible-name="Task complete" Type="Checkbox" Checked="{Binding item.Checked, mode=TwoWay}" Interactive="{Binding CanEditPage}" />
-                        <Input accessible-name="Task text" min-width="200" Type="Text" Column="1" Value="{Binding item.Text, mode=TwoWay}" Interactive="{Binding CanEditPage}" />
+                        <If condition="{Binding IsChecklistSelected}">
+                          <Input accessible-name="Task complete" Type="Checkbox" Checked="{Binding item.Checked, mode=TwoWay}" Interactive="{Binding item.CanEdit}" />
+                        </If>
+                        <Else>
+                          <Text text="{Binding item.Marker}" vertical-alignment="Center" />
+                        </Else>
+                        <Input accessible-name="List item text" min-width="200" Type="Text" Column="1" Value="{Binding item.Text, mode=TwoWay}" Interactive="{Binding item.CanEdit}" />
                       </Container>
                     </Repeat>
+                    <If condition="{Binding IsEditMode}">
                     <Button content="Add item" action="AddChecklistItem" horizontal-alignment="Left" />
+                    </If>
                   </Container>
                 </If>
                 <If condition="{Binding SharedInkAvailable}">

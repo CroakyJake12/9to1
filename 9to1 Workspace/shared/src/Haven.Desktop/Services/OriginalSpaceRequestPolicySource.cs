@@ -8,19 +8,20 @@ namespace Haven.Desktop.Services;
 
 /// <summary>Read-only original request source over the existing Home actor, verified local
 /// settings owner and SAME Space registry. It creates no store identity, ownership or permission.</summary>
-internal sealed class OriginalSpaceRequestPolicySource(IServiceProvider services) : IOriginalSpaceRequestPolicySource
+internal sealed partial class OriginalSpaceRequestPolicySource(IServiceProvider services) : IOriginalSpaceRequestPolicySource
 {
+    private readonly IServiceProvider _services = services;
     private sealed record Owners(HomeNativeWindowsComposition Home, SpaceRegistry Spaces, IVersionedSettingsStore Settings);
     private sealed record Authority(AuthenticatedResourceActor Actor, SettingsStoreIdentity Store,
         VerifiedResourceStoreOwnership Ownership, long ServicesRevision);
     private sealed record Input(OriginalSpaceRequestPolicySource Owner, Owners Owners, Authority Authority,
-        Guid ConversationId, Guid SpaceId, OriginalSpacePolicySnapshot Snapshot) : IOriginalSpaceRequestPolicyInput;
+        Guid ConversationId, Guid SpaceId, OriginalSpacePolicySnapshot Snapshot, ContextCustody? Context) : IOriginalSpaceRequestPolicyInput;
 
     private Owners CurrentOwners()
     {
-        var home = services.GetRequiredService<HomeNativeWindowsComposition>();
-        var spaces = services.GetRequiredService<SpaceRegistry>();
-        var settings = services.GetRequiredService<IVersionedSettingsStore>();
+        var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+        var spaces = _services.GetRequiredService<SpaceRegistry>();
+        var settings = _services.GetRequiredService<IVersionedSettingsStore>();
         if (!spaces.HasOriginalSettingsStore(settings)) throw Block("SPACE_POLICY_STORE_MISMATCH", "The original Space registry and settings store do not match.");
         return new(home, spaces, settings);
     }
@@ -35,7 +36,9 @@ internal sealed class OriginalSpaceRequestPolicySource(IServiceProvider services
             var snapshot = await ReadPolicyAsync(owners, id, originals, token).ConfigureAwait(false);
             await DemandAuthorityAsync(owners, authority, originals, token).ConfigureAwait(false);
             await DemandVersionPinsAsync(snapshot, originals, token).ConfigureAwait(false);
-            return (IOriginalSpaceRequestPolicyInput)new Input(this, owners, authority, conversation.Id, id, snapshot);
+            var context = await CaptureContextAsync(owners, authority, conversation, snapshot, originals, token).ConfigureAwait(false);
+            await DemandAuthorityAsync(owners, authority, originals, token).ConfigureAwait(false);
+            return (IOriginalSpaceRequestPolicyInput)new Input(this, owners, authority, conversation.Id, id, context.Snapshot, context.Custody);
         });
 
     public Task<OriginalSpacePolicySnapshot> ReadAsync(IOriginalSpaceRequestPolicyInput input, Conversation conversation,
@@ -58,6 +61,8 @@ internal sealed class OriginalSpaceRequestPolicySource(IServiceProvider services
         var current = await ReadPolicyAsync(input.Owners, input.SpaceId, originals, token).ConfigureAwait(false);
         if (!current.Lineage.Equals(input.Snapshot.Lineage)) throw Block("SPACE_POLICY_CHANGED", "The Space or an ancestor changed before dispatch.");
         await DemandVersionPinsAsync(current, originals, token).ConfigureAwait(false);
+        if (input.Context is { } context)
+            await context.RevalidateAsync(originals, token).ConfigureAwait(false);
         await DemandAuthorityAsync(input.Owners, input.Authority, originals, token).ConfigureAwait(false);
     }
     private Task<OriginalSpacePolicySnapshot> ReadPolicyAsync(Owners owners, Guid id, CloudflareOriginalTaskLedger originals, CancellationToken token) =>
@@ -104,7 +109,7 @@ internal sealed class OriginalSpaceRequestPolicySource(IServiceProvider services
         if (pins.Length > 128) throw Block("SPACE_POLICY_PIN_BOUND", "The pinned capability set exceeds this request's explicit verification bound.");
         foreach (var pin in pins)
         {
-            var extensions = originals.Invoke(() => services.GetRequiredService<ExtensionManager>());
+            var extensions = originals.Invoke(() => _services.GetRequiredService<ExtensionManager>());
             if (pin.Kind == SpaceCapabilityKind.Plugin)
             {
                 var package = await originals.AwaitAsync(originals.Invoke(() => extensions.GetPackageAsync(pin.CapabilityId, token))).ConfigureAwait(false);

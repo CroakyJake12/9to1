@@ -41,6 +41,7 @@ public sealed partial class BoardsBrowserCore
     private bool TryGetWorkspaceValue(string path, out object? value)
     {
         if (TryGetTableValue(path, out value)) return true;
+        if (TryGetNoteBlockValue(path, out value)) return true;
         var mountedPageLayer = (path is "PageInkCanvas" or "HasUnsupportedPageContent") && SharedInkAvailable
             ? CapturePageSharedDrawing()?.Content.Layer : null;
         value = path switch
@@ -86,7 +87,8 @@ public sealed partial class BoardsBrowserCore
             "HasUnsupportedPageContent" => ActivePage is { } current && (current.CanvasObjects.Any(item => !SharedInkAvailable || !ReferenceEquals(item, mountedPageLayer)) || current.Blocks.Any(block =>
                 block.Kind == NotesBlockKind.HtmlWidget || block.Kind == NotesBlockKind.Canvas && block.SharedProductivityBundles is null)),
             "ChecklistItems" => _richEditor?.SelectedBlock is { List: { } list } checklist && ActivePageId is { } checklistPage
-                ? list.Items.Select(item => new BoardsChecklistRow(this, checklistPage, checklist.Id, item.Id, item.Text, item.Checked)).ToArray() : [],
+                ? list.Items.Select((item, index) => new BoardsChecklistRow(this, checklistPage, checklist.Id, item.Id, item.Text, item.Checked,
+                    list.Kind == NotesListKind.Numbered ? $"{index + 1}." : "•")).ToArray() : [],
             "CanMovePageUp" => CanMovePage(-1),
             "CanMovePageDown" => CanMovePage(1),
             "CanDeletePage" => AllowRetainedRichInput && ActiveSection?.Pages.Count(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id)) > 1,
@@ -187,16 +189,17 @@ public sealed partial class BoardsBrowserCore
         "DeletePage" => CanChangeBoard && RichEditingPermitted && ActiveSection?.Pages.Count(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id)) > 1,
         "RestorePage" => CanChangeBoard,
         "MovePageUp" => CanMovePage(-1), "MovePageDown" => CanMovePage(1),
-        "Italic" or "Underline" or "InsertParagraph" or "InsertHeading" or "InsertChecklist" or "InsertTable" => RichEditingPermitted,
+        "Italic" or "Underline" or "Strikethrough" => RichEditingPermitted,
         "AddChecklistItem" => RichEditingPermitted && _richEditor?.SelectedBlock?.List is not null,
         "InsertSharedDrawing" => SharedInkAvailable && RichEditingPermitted,
         "SelectSharedDrawing" => _document is not null && !IsHistoryPreview,
-        _ => IsTableActionAvailable(command)
+        _ => IsTableActionAvailable(command) || IsNoteBlockActionAvailable(command)
     };
 
     private async Task<bool> DispatchWorkspaceAsync(string command, object? parameter, CancellationToken token)
     {
         if (await DispatchTableAsync(command, token)) return true;
+        if (await DispatchNoteBlockAsync(command, token)) return true;
         switch (command)
         {
             case "ToggleSidebar": _drawerOpen = !_drawerOpen; Notify(); return true;
@@ -224,26 +227,160 @@ public sealed partial class BoardsBrowserCore
                 return true;
             case "Italic": await RichOperation(editor => { editor.ToggleSelectionCharacter(WriteCharacterFormat.Italic); return true; }, token); return true;
             case "Underline": await RichOperation(editor => { editor.ToggleSelectionCharacter(WriteCharacterFormat.Underline); return true; }, token); return true;
+            case "Strikethrough": await RichOperation(editor => { editor.ToggleSelectionCharacter(WriteCharacterFormat.StrikeThrough); return true; }, token); return true;
             case "AddChecklistItem": await RichOperation(editor => { editor.AddListItem(); return true; }, token); return true;
             case "InsertSharedDrawing": await InsertSharedDrawingAsync(token); return true;
             case "SelectSharedDrawing" when parameter is BoardsDrawingRow drawing:
                 await SelectSharedDrawingAsync(drawing.Id, token); return true;
-            case "InsertParagraph": case "InsertHeading": case "InsertChecklist": case "InsertTable":
-                if (ActivePageId is not { } insertPage) return true;
-                var kind = command switch { "InsertHeading" => NotesBlockKind.Heading, "InsertChecklist" => NotesBlockKind.List,
-                    "InsertTable" => NotesBlockKind.Table, _ => NotesBlockKind.Paragraph };
-                var inserted = await Edit((owner, document) => owner.AddBlock(document, insertPage, kind).Id, token);
-                if (inserted.Succeeded)
-                {
-                    _richEditor?.SelectBlock(inserted.Value);
-                    if (kind == NotesBlockKind.Table && _richEditor?.SelectedBlock?.Table?.Rows.SelectMany(row => row.Cells).FirstOrDefault() is { } firstCell)
-                        _richEditor.SelectTableCell(inserted.Value, firstCell.Id);
-                    Notify();
-                }
-                return true;
             default: return false;
         }
     }
+    private static bool IsSupportedNoteBlock(NotesBlockKind kind) => kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading
+        or NotesBlockKind.Quote or NotesBlockKind.Code or NotesBlockKind.List or NotesBlockKind.Table or NotesBlockKind.Equation or NotesBlockKind.Divider;
+
+    /// <summary>Insert through the existing shared editor after the intended
+    /// selected original block. No app-local block model or history is created.</summary>
+    public Task<HomeCoreOperationResult<Guid>> InsertNoteBlockAsync(Guid pageId, Guid? afterBlockId, NotesBlockKind kind,
+        NotesListKind listKind = NotesListKind.Bulleted, CancellationToken token = default) => Operate(ct =>
+    {
+        ct.ThrowIfCancellationRequested();
+        if (!RichEditingPermitted) return Task.FromResult(Failure<Guid>("OperationDenied", "This page cannot be edited in its current state."));
+        var editor = _richEditor!;
+        if (ActivePageId != pageId || editor.SelectedBlockId != afterBlockId ||
+            afterBlockId is { } blockId && editor.Blocks().All(block => block.Id != blockId))
+            return Task.FromResult(Failure<Guid>("StaleBlockSelection", "Select the intended insertion block again."));
+        if (!IsSupportedNoteBlock(kind) || !Enum.IsDefined(listKind))
+            return Task.FromResult(Failure<Guid>("UnsupportedBlockType", "This shared block type is not supported by this insert action."));
+        var added = editor.InsertBlock(kind, listKind);
+        // InsertBlock owns mutation/history; selection belongs to the same editor.
+        // Retire previous text ranges and select a real cell when inserting tables.
+        editor.SelectBlock(added.Id);
+        if (added.Table?.Rows.SelectMany(row => row.Cells).FirstOrDefault() is { } firstCell)
+            editor.SelectTableCell(added.Id, firstCell.Id);
+        return Task.FromResult(Success(added.Id));
+    }, token);
+
+    private bool CanChangeSelectedBlock(BoardsBlockEdit edit)
+    {
+        if (!RichEditingPermitted || _richEditor?.SelectedBlock is not { } block || ActivePage is not { } page) return false;
+        var index = page.Blocks.IndexOf(block);
+        return edit switch
+        {
+            BoardsBlockEdit.MoveUp => index > 0,
+            BoardsBlockEdit.MoveDown => index >= 0 && index + 1 < page.Blocks.Count,
+            BoardsBlockEdit.Delete => index >= 0 && page.Blocks.Count > 1,
+            BoardsBlockEdit.BulletedList or BoardsBlockEdit.NumberedList or BoardsBlockEdit.Checklist => block.List is not null,
+            _ => false
+        };
+    }
+    public Task<HomeCoreOperationResult<bool>> ChangeNoteBlockAsync(Guid pageId, Guid blockId, BoardsBlockEdit edit,
+        CancellationToken token = default) => Operate(ct =>
+    {
+        ct.ThrowIfCancellationRequested();
+        if (!RichEditingPermitted) return Task.FromResult(Failure<bool>("OperationDenied", "This page cannot be edited in its current state."));
+        if (ActivePageId != pageId || _richEditor!.SelectedBlockId != blockId)
+            return Task.FromResult(Failure<bool>("StaleBlockSelection", "Select this block again before changing it."));
+        if (!CanChangeSelectedBlock(edit))
+            return Task.FromResult(Failure<bool>("InvalidBlockOperation", "This block action is unavailable at the current position or for this block type."));
+        var editor = _richEditor!;
+        switch (edit)
+        {
+            case BoardsBlockEdit.MoveUp: return Task.FromResult(Success(editor.MoveSelected(-1)));
+            case BoardsBlockEdit.MoveDown: return Task.FromResult(Success(editor.MoveSelected(1)));
+            case BoardsBlockEdit.Delete: return Task.FromResult(Success(editor.DeleteSelected()));
+            case BoardsBlockEdit.BulletedList:
+                if (editor.SelectedBlock!.List!.Kind == NotesListKind.Bulleted) return Task.FromResult(Success(false));
+                editor.SetListKind(NotesListKind.Bulleted); break;
+            case BoardsBlockEdit.NumberedList:
+                if (editor.SelectedBlock!.List!.Kind == NotesListKind.Numbered) return Task.FromResult(Success(false));
+                editor.SetListKind(NotesListKind.Numbered); break;
+            case BoardsBlockEdit.Checklist:
+                if (editor.SelectedBlock!.List!.Kind == NotesListKind.Checklist) return Task.FromResult(Success(false));
+                editor.SetListKind(NotesListKind.Checklist); break;
+        }
+        return Task.FromResult(Success(true));
+    }, token);
+
+    private bool TryGetNoteBlockValue(string path, out object? value)
+    {
+        if (path is not ("IsListSelected" or "IsTextBlockSelected" or "IsEquationSelected" or "SelectedBlockCaption" or "SelectedEquationEditors"))
+        { value = null; return false; }
+        var block = _richEditor?.SelectedBlock;
+        value = path switch
+        {
+            "IsListSelected" => block?.List is not null,
+            "IsTextBlockSelected" => block?.Kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code,
+            "IsEquationSelected" => block?.Equation is not null,
+            "SelectedBlockCaption" => block is null ? "Page" : $"{block.Kind} · block {(ActivePage?.Blocks.IndexOf(block) ?? -1) + 1} of {ActivePage?.Blocks.Count ?? 0}",
+            "SelectedEquationEditors" => block?.Equation is { } equation && _document is not null && ActivePageId is { } page
+                ? new[] { new BoardsEquationBinding(this, _document, _richEditor!, page, block.Id, equation) }
+                : Array.Empty<BoardsEquationBinding>(),
+            _ => null
+        };
+        return true;
+    }
+
+    private static BoardsBlockEdit? BlockEditForCommand(string command) => command switch
+    {
+        "MoveBlockUp" => BoardsBlockEdit.MoveUp, "MoveBlockDown" => BoardsBlockEdit.MoveDown, "DeleteBlock" => BoardsBlockEdit.Delete,
+        "ListBullets" => BoardsBlockEdit.BulletedList, "ListNumbered" => BoardsBlockEdit.NumberedList, "ListChecklist" => BoardsBlockEdit.Checklist,
+        _ => null
+    };
+    private static NotesBlockKind? BlockKindForCommand(string command) => command switch
+    {
+        "InsertParagraph" => NotesBlockKind.Paragraph, "InsertHeading" => NotesBlockKind.Heading,
+        "InsertQuote" => NotesBlockKind.Quote, "InsertCode" => NotesBlockKind.Code,
+        "InsertBullets" or "InsertNumbered" or "InsertChecklist" => NotesBlockKind.List,
+        "InsertTable" => NotesBlockKind.Table, "InsertEquation" => NotesBlockKind.Equation, "InsertDivider" => NotesBlockKind.Divider,
+        _ => null
+    };
+    private bool IsNoteBlockActionAvailable(string command) => BlockKindForCommand(command) is not null ? RichEditingPermitted
+        : BlockEditForCommand(command) is { } edit && CanChangeSelectedBlock(edit);
+
+    private async Task<bool> DispatchNoteBlockAsync(string command, CancellationToken token)
+    {
+        if (BlockKindForCommand(command) is { } kind)
+        {
+            if (ActivePageId is { } page)
+            {
+                var listKind = command switch { "InsertChecklist" => NotesListKind.Checklist, "InsertNumbered" => NotesListKind.Numbered, _ => NotesListKind.Bulleted };
+                await InsertNoteBlockAsync(page, _richEditor?.SelectedBlockId, kind, listKind, token);
+            }
+            return true;
+        }
+        if (BlockEditForCommand(command) is not { } edit) return false;
+        if (ActivePageId is { } pageId && _richEditor?.SelectedBlockId is { } blockId)
+            await ChangeNoteBlockAsync(pageId, blockId, edit, token);
+        return true;
+    }
+
+    private bool IsCurrentEquationBinding(BoardsEquationBinding binding) =>
+        ReferenceEquals(binding.Owner, this) && ReferenceEquals(binding.Document, _document) &&
+        ReferenceEquals(binding.Editor, _richEditor) && ActivePageId == binding.PageId &&
+        _richEditor?.SelectedBlockId == binding.BlockId && ReferenceEquals(_richEditor?.SelectedBlock?.Equation, binding.Equation);
+    internal bool CanEditEquationBinding(BoardsEquationBinding binding) => AllowRetainedRichInput && IsCurrentEquationBinding(binding);
+    internal bool UpdateEquationBinding(BoardsEquationBinding binding, string? source = null, string? alternative = null)
+    {
+        if (!CanEditEquationBinding(binding)) return false;
+        _richEditor!.UpdateEquation(source ?? binding.Equation.Source, alternative ?? binding.Equation.AccessibleAlternative);
+        return true;
+    }
+
+    public Task<HomeCoreOperationResult<bool>> UpdateNoteEquationAsync(Guid pageId, Guid blockId, string source,
+        string alternative, CancellationToken token = default) => Operate(ct =>
+    {
+        ct.ThrowIfCancellationRequested();
+        if (!RichEditingPermitted) return Task.FromResult(Failure<bool>("OperationDenied", "This page cannot be edited in its current state."));
+        var editor = _richEditor!;
+        if (ActivePageId != pageId || editor.SelectedBlockId != blockId || editor.SelectedBlock?.Equation is null)
+            return Task.FromResult(Failure<bool>("StaleBlockSelection", "Select this equation again before editing it."));
+        if (source is null || alternative is null) return Task.FromResult(Failure<bool>("InvalidArgument", "Provide equation source and accessible text."));
+        var equation = editor.SelectedBlock!.Equation!;
+        if (equation.Source == source && equation.AccessibleAlternative == alternative)
+            return Task.FromResult(Success(false));
+        editor.UpdateEquation(source, alternative); return Task.FromResult(Success(true));
+    }, token);
+
     // These controls borrow the SAME Notes table and shared editor. They own no
     // grid, values, persistence counter or second history stack.
     private sealed record TableCellContext(NotesTableData Table, NotesTableRow Row,
@@ -460,17 +597,25 @@ public sealed partial class BoardsBrowserCore
 
 }
 
-public sealed record BoardsChecklistRow(BoardsBrowserCore Owner, Guid PageId, Guid BlockId, Guid Id, string Text, bool Checked) : ICuiWritableBindingContext
+public sealed record BoardsChecklistRow(BoardsBrowserCore Owner, Guid PageId, Guid BlockId, Guid Id, string Text, bool Checked, string Marker = "•") : ICuiWritableBindingContext
 {
+    private readonly WriteDocumentEditor? _editor = Owner.NativeRichEditor;
+    private readonly NotesListItem? _item = Owner.NativeRichEditor?.SelectedBlock?.List?.Items.FirstOrDefault(item => item.Id == Id);
+    private bool IsCurrent => _item is not null && ReferenceEquals(_editor, Owner.NativeRichEditor) && Owner.ActivePageId == PageId &&
+        Owner.NativeRichEditor?.SelectedBlockId == BlockId && ReferenceEquals(_item,
+            Owner.NativeRichEditor?.SelectedBlock?.List?.Items.FirstOrDefault(item => item.Id == Id));
     public bool TryGetValue(string path, out object? value)
-    { value = path switch { "Id" => Id, "Text" => Text, "Checked" => Checked, _ => null }; return path is "Id" or "Text" or "Checked"; }
-    public bool TrySetValue(string path, object? value) => path switch
+    {
+        value = path switch { "Id" => Id, "Text" => _item?.Text ?? Text, "Checked" => _item?.Checked ?? Checked,
+            "Marker" => Marker, "CanEdit" => Owner.AllowRetainedRichInput && IsCurrent, _ => null };
+        return path is "Id" or "Text" or "Checked" or "Marker" or "CanEdit";
+    }
+    public bool TrySetValue(string path, object? value) => IsCurrent && (path switch
     {
         "Text" when value is string text => Owner.UpdateChecklist(PageId, BlockId, Id, text: text),
         "Checked" when value is bool check => Owner.UpdateChecklist(PageId, BlockId, Id, check: check),
         _ => false
-    };
-
+    });
 }
 
 public sealed record BoardsPageRow(Guid Id, string Title, string Section, bool Selected) : ICuiBindingContext
@@ -519,4 +664,35 @@ public sealed class BoardsTableCellBinding : ICuiWritableBindingContext
         return path is "Id" or "Text" or "Label" or "CanEdit";
     }
     public bool TrySetValue(string path, object? value) => path == "Text" && value is string text && Owner.UpdateTableBinding(this, text);
+}
+
+public enum BoardsBlockEdit { MoveUp, MoveDown, Delete, BulletedList, NumberedList, Checklist }
+
+/// <summary>Live CUI fields over the selected original shared equation.</summary>
+public sealed class BoardsEquationBinding : ICuiWritableBindingContext
+{
+    internal BoardsBrowserCore Owner { get; }
+    internal NotesDocument Document { get; }
+    internal WriteDocumentEditor Editor { get; }
+    internal Guid PageId { get; }
+    internal Guid BlockId { get; }
+    internal NotesEquationData Equation { get; }
+    internal BoardsEquationBinding(BoardsBrowserCore owner, NotesDocument document, WriteDocumentEditor editor,
+        Guid pageId, Guid blockId, NotesEquationData equation)
+    { Owner = owner; Document = document; Editor = editor; PageId = pageId; BlockId = blockId; Equation = equation; }
+    public bool TryGetValue(string path, out object? value)
+    {
+        value = path switch
+        {
+            "Id" => BlockId, "Source" => Equation.Source, "Alternative" => Equation.AccessibleAlternative,
+            "CanEdit" => Owner.CanEditEquationBinding(this), _ => null
+        };
+        return path is "Id" or "Source" or "Alternative" or "CanEdit";
+    }
+    public bool TrySetValue(string path, object? value) => value is string text && (path switch
+    {
+        "Source" => Owner.UpdateEquationBinding(this, source: text),
+        "Alternative" => Owner.UpdateEquationBinding(this, alternative: text),
+        _ => false
+    });
 }
