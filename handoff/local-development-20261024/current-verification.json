@@ -1,0 +1,12 @@
+{
+  "source": "ecd1973d6f2694cc3e9a14f9931ef27d02d66b54",
+  "ci": "ad18fe97947819af69678cce8005db85e7494821",
+  "run": 40135874291,
+  "url": "https://github.com/CroakyJake12/9to1/actions/runs/40135874291",
+  "status_at_backup": "RUNNING",
+  "native_smoke": "NOT_RUN",
+  "remote_source_snapshots": 34,
+  "backup_prefix": "refs/heads/codex/source-backup-20261024T214557Z",
+  "original_clean_anchor": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522",
+  "no_acceptance_claim": true
+}
