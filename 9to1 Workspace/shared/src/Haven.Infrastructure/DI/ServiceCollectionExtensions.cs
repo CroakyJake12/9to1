@@ -357,6 +357,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IModelProvider, OpenAiModelProvider>();
         services.AddSingleton<IModelProvider, OpenRouterModelProvider>();
         services.AddSingleton<IModelProvider, CustomOpenAiCompatibleModelProvider>();
+        services.AddHttpClient("Haven.ModelProvider." + StrataLoopbackModelProvider.ProviderId)
+            .ConfigurePrimaryHttpMessageHandler(StrataLoopbackModelProvider.CreateTransportHandler);
+        services.AddSingleton<IModelProvider, StrataLoopbackModelProvider>();
         services.AddSingleton<IModelProvider, AnthropicModelProvider>();
         services.AddSingleton<IModelProvider, GeminiModelProvider>();
         services.AddHavenPreviewLocalLlamaCpp();

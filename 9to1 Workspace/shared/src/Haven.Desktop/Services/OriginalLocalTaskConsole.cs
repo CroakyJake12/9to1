@@ -69,6 +69,7 @@ public static partial class OriginalLocalTaskConsole
 
     private static readonly string[] Help = [
         "local-configure <explicit loopback logical HTTP/HTTPS URI> | models <provider-id> | probe | model <observed-provider:model-key> | engine Automatic|LlamaCpp|Strata",
+        "strata-configure <literal loopback /v1 URI> | strata-probe (explicit bounded read-only tool-call test; existing server only)",
         "files-configure <chosen empty absolute directory> | files-status | files-list [observed parent GUID]",
         "strata-select <explicit nonsecret developer artifact JSON> (configuration only; Task-scoped individual Home READ approval follows; protected Safetensors/CUDA remain required)",
         "project-register <write or observed destination folder GUID> <existing absolute project path> | container-create <saved workspace GUID> <saved project GUID> <saved root GUID> <name>",
@@ -312,6 +313,14 @@ public static partial class OriginalLocalTaskConsole
                     Write(models); break;
                 }
                 case "local-configure": await ConfigureOriginalLocalProviderAsync(original, argument, token).ConfigureAwait(false); break;
+                case "strata-configure": await ConfigureOriginalStrataProviderAsync(original, argument, token).ConfigureAwait(false); break;
+                case "strata-probe":
+                {
+                    if (Resolve<IModelProviderRegistry>(original).GetRequired(StrataLoopbackModelProvider.ProviderId) is not StrataLoopbackModelProvider source)
+                        throw new InvalidOperationException("The maintained loopback Strata provider is unavailable.");
+                    Write(await Acquire(original, () => source.ProbeCapabilitiesAsync(token)).ConfigureAwait(false));
+                    break;
+                }
                 case "probe":
                 {
                     var source = Resolve<LlamaCppModelProvider>(original);

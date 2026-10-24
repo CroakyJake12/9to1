@@ -8,6 +8,33 @@ public static partial class OriginalLocalTaskConsole
 {
     private sealed partial class Host
     {
+        private async Task ConfigureOriginalStrataProviderAsync(DesktopOriginalWorkLifetime.Original original,
+            string explicitTarget, CancellationToken token)
+        {
+            if (!StrataLoopbackModelProvider.IsAllowedEndpoint(explicitTarget))
+                throw new ArgumentException("Choose an explicit literal-loopback /v1 Strata endpoint without credentials, query or fragment.");
+            var registry = Resolve<IModelProviderRegistry>(original);
+            StrataLoopbackModelProvider? selected = null;
+            Scope(original, () => selected = registry.GetRequired(StrataLoopbackModelProvider.ProviderId) as StrataLoopbackModelProvider
+                ?? throw new InvalidOperationException("The maintained local Strata provider is unavailable."));
+            var source = selected ?? throw new InvalidOperationException("No original Strata provider was captured.");
+            var configurations = Resolve<IProviderConfigurationStore>(original);
+            var endpoint = new Uri(explicitTarget).GetLeftPart(UriPartial.Path).TrimEnd('/') + "/";
+            var requested = new ProviderConfiguration(source.Id, source.Kind, source.DisplayName, endpoint,
+                IsEnabled: true, IsLocal: true, AllowCloudFallback: false,
+                Metadata: new Dictionary<string, string>(), UpdatedAt: DateTimeOffset.UtcNow);
+            await Acquire(original, () => configurations.UpsertAsync(requested, token)).ConfigureAwait(false);
+            var actual = await Acquire(original, () => configurations.GetAsync(source.Id, token)).ConfigureAwait(false);
+            Scope(original, () =>
+            {
+                if (!ReferenceEquals(registry.GetRequired(source.Id), source) || actual is null || actual.Id != source.Id ||
+                    actual.Kind != source.Kind || actual.Endpoint != endpoint || !actual.IsEnabled || !actual.IsLocal || actual.AllowCloudFallback)
+                    throw new InvalidOperationException("The actual loopback configuration readback changed.");
+                Write(new { providerMetadataConfigured = true, configuration = actual,
+                    note = "Existing server connection configured only; no model loaded. Use strata-probe explicitly, then models strata-local and select its actual observed key. File/tool work still requires the canonical Task permissions." });
+            });
+        }
+
         private async Task ConfigureOriginalLocalProviderAsync(DesktopOriginalWorkLifetime.Original original,
             string explicitLogicalTarget, CancellationToken token)
         {

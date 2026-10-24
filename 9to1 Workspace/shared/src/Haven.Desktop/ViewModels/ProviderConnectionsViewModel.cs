@@ -10,6 +10,7 @@
 using System.Collections.ObjectModel;
 using Haven.Application;
 using Haven.Core;
+using Haven.Infrastructure;
 
 namespace Haven.Desktop.ViewModels;
 
@@ -92,13 +93,13 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
             var existing = Items.ToDictionary(item => item.Id, StringComparer.OrdinalIgnoreCase);
             var refreshed = new List<ProviderConnectionItemViewModel>();
 
-            foreach (var provider in _providers.Providers.Where(provider => !provider.IsLocal))
+            foreach (var provider in _providers.Providers.Where(provider => !provider.IsLocal || provider is StrataLoopbackModelProvider))
             {
                 var configuration = configurations.FirstOrDefault(item => item.Id.Equals(provider.Id, StringComparison.OrdinalIgnoreCase));
                 if (configuration is null)
                     continue;
 
-                var hasSecret = !string.IsNullOrWhiteSpace(await _secrets.GetAsync(provider.Id, "api-key", CancellationToken.None));
+                var hasSecret = provider is StrataLoopbackModelProvider || !string.IsNullOrWhiteSpace(await _secrets.GetAsync(provider.Id, "api-key", CancellationToken.None));
                 if (!existing.TryGetValue(provider.Id, out var item))
                 {
                     item = new ProviderConnectionItemViewModel(
@@ -128,7 +129,7 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
 
             await RefreshServicesAsync();
             await RefreshExternalConnectionsAsync();
-            Status = Items.Count == 0 ? "No cloud model providers are registered." : $"{Items.Count} cloud model providers available.";
+            Status = Items.Count == 0 ? "No model provider connections are registered." : $"{Items.Count} model provider connections available.";
         }
         catch (Exception ex)
         {
@@ -154,11 +155,14 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
             if (endpoint.Scheme == "http" && !endpoint.IsLoopback)
                 throw new InvalidOperationException("Remote provider endpoints must use HTTPS. HTTP is allowed only for loopback services on this device.");
 
-            var storedSecret = await _secrets.GetAsync(item.Id, "api-key", CancellationToken.None);
-            if (string.IsNullOrWhiteSpace(item.ApiKey) && string.IsNullOrWhiteSpace(storedSecret))
+            var localStrata = _providers.GetRequired(item.Id) is StrataLoopbackModelProvider;
+            if (localStrata && !StrataLoopbackModelProvider.IsAllowedEndpoint(endpoint.ToString()))
+                throw new InvalidOperationException("Strata requires literal 127.0.0.1 or ::1 and a /v1 endpoint without credentials, query or fragment.");
+            var storedSecret = localStrata ? null : await _secrets.GetAsync(item.Id, "api-key", CancellationToken.None);
+            if (!localStrata && string.IsNullOrWhiteSpace(item.ApiKey) && string.IsNullOrWhiteSpace(storedSecret))
                 throw new InvalidOperationException("Enter an API key before connecting.");
 
-            if (!string.IsNullOrWhiteSpace(item.ApiKey))
+            if (!localStrata && !string.IsNullOrWhiteSpace(item.ApiKey))
             {
                 await _secrets.SetAsync(item.Id, "api-key", item.ApiKey.Trim(), CancellationToken.None);
                 item.ApiKey = string.Empty;
@@ -171,8 +175,8 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
                 item.DisplayName,
                 endpoint.ToString(),
                 true,
-                false,
-                current?.AllowCloudFallback ?? false,
+                localStrata,
+                !localStrata && (current?.AllowCloudFallback ?? false),
                 current?.Metadata ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
                 DateTimeOffset.UtcNow);
 
@@ -205,7 +209,7 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
         try
         {
             item.IsBusy = true;
-            await TestCoreAsync(item);
+            await TestCoreAsync(item, probeLocalTools: true);
         }
         catch (Exception ex)
         {
@@ -222,7 +226,7 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
     /// <summary>
     /// Performs test core asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task TestCoreAsync(ProviderConnectionItemViewModel item)
+    private async Task TestCoreAsync(ProviderConnectionItemViewModel item, bool probeLocalTools = false)
     {
         var provider = _providers.GetRequired(item.Id);
         item.Status = "Testing connection…";
@@ -237,6 +241,12 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
             return;
         }
 
+        if (probeLocalTools && provider is StrataLoopbackModelProvider local)
+        {
+            var probe = await local.ProbeCapabilitiesAsync(CancellationToken.None);
+            item.IsHealthy = probe.IsHealthy;
+            item.Status = probe.Message;
+        }
         var models = await provider.GetModelsAsync(CancellationToken.None);
         item.ModelSummary = models.Count == 1 ? "1 model discovered" : $"{models.Count} models discovered";
         item.IsConnected = true;
@@ -254,7 +264,8 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
         try
         {
             item.IsBusy = true;
-            await _secrets.DeleteAsync(item.Id, "api-key", CancellationToken.None);
+            var localStrata = _providers.GetRequired(item.Id) is StrataLoopbackModelProvider;
+            if (!localStrata) await _secrets.DeleteAsync(item.Id, "api-key", CancellationToken.None);
             var current = await _configurations.GetAsync(item.Id, CancellationToken.None);
             if (current is not null)
                 await _configurations.UpsertAsync(current with { IsEnabled = false, UpdatedAt = DateTimeOffset.UtcNow }, CancellationToken.None);
@@ -263,7 +274,7 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
             item.IsConnected = false;
             item.IsHealthy = false;
             item.ModelSummary = "Models not checked yet";
-            item.Status = "Disconnected. The saved API key was removed from Windows Credential Manager.";
+            item.Status = localStrata ? "Strata connection disabled; existing local server and model were left running." : "Disconnected. The saved API key was removed from Windows Credential Manager.";
             Status = $"Disconnected {item.DisplayName}.";
         }
         catch (Exception ex)

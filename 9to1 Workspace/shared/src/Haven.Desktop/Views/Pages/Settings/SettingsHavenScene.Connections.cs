@@ -1,3 +1,4 @@
+using Haven.Infrastructure;
 using Haven.Application;
 using Haven.Core;
 using Haven.UI;
@@ -498,7 +499,7 @@ internal sealed partial class SettingsHavenScene
         if (providers.Count == 0)
         {
             _providersHost.Add(Muted("Settings.Integrations.ProvidersEmpty",
-                "No cloud model providers are currently configured."));
+                "No model provider connections are currently configured."));
             return;
         }
 
@@ -532,7 +533,10 @@ internal sealed partial class SettingsHavenScene
             secret.SetValue(HavenProperties.Width, HavenLength.Percent(100));
             secret.SetValue(HavenProperties.Enabled, !provider.IsBusy);
             secret.Accessibility.AccessibleName = $"{provider.DisplayName} API key";
-            card.Add(secret);
+            var localStrata = provider.Id == StrataLoopbackModelProvider.ProviderId;
+            if (localStrata)
+                card.Add(Muted(null, "Uses your existing local Strata service. No API key. The explicit model test runs a bounded read-only tool-call probe; it does not edit files."));
+            else card.Add(secret);
 
             var actions = ActionRow();
             var update = new HavenButton
@@ -552,7 +556,7 @@ internal sealed partial class SettingsHavenScene
             var test = new HavenButton
             {
                 Name = $"Settings.Integrations.Provider.{provider.Id}.Test",
-                Content = "Test connection",
+                Content = provider.Id == StrataLoopbackModelProvider.ProviderId ? "Test generation and tools" : "Test connection",
                 Variant = ButtonVariant.Secondary
             };
             test.SetValue(HavenProperties.Enabled, provider.IsConnected && !provider.IsBusy);
