@@ -174,6 +174,129 @@ public sealed class TaskExecutionRepositoryTests : IDisposable
         Assert.Null(await repository.GetAsync(original.TaskId, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task Cancelled_original_checkpoint_observation_preserves_SQLite_task_for_same_checkpoint_retry()
+    {
+        var database = await DatabaseAsync();
+        var repository = new TaskExecutionRepository(database);
+        var original = Snapshot();
+        await repository.UpsertAsync(original, CancellationToken.None);
+        var checkpoints = new CheckpointProbe(new CheckpointInfo(Guid.NewGuid(), original.ContextId, null,
+            "synthetic-workspace", "same original", CheckpointMode.BeforeFileChanges, 0, DateTimeOffset.UtcNow),
+            original.ExecutionId);
+        var coordinator = new TaskExecutionCoordinator(repository, new Sink(),
+            checkpointRepository: checkpoints, checkpointObservationSource: checkpoints);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        checkpoints.BeforeRead = async token =>
+        {
+            entered.TrySetResult();
+            await release.Task.WaitAsync(token).ConfigureAwait(false);
+        };
+        using var cancellation = new CancellationTokenSource();
+        var cancelled = coordinator.RecordCheckpointAsync(original.TaskId, original.ExecutionId,
+            checkpoints.Record.Id, cancellation.Token);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelled);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            release.TrySetResult();
+            _ = await Record.ExceptionAsync(() => cancelled);
+        }
+
+        var unchanged = Assert.IsType<TaskExecutionSnapshot>(await repository.GetAsync(original.TaskId, CancellationToken.None));
+        Assert.Equal(original.PersistenceRevision, unchanged.PersistenceRevision);
+        Assert.Null(unchanged.CheckpointId);
+        Assert.Equal(original.ExecutionId, unchanged.ExecutionId);
+        Assert.Equal(original.Plan.Select(action => action.ActionId), unchanged.Plan.Select(action => action.ActionId));
+        Assert.Equal(original.Queue.Select(task => task.TaskId), unchanged.Queue.Select(task => task.TaskId));
+
+        checkpoints.BeforeRead = null;
+        var retried = await coordinator.RecordCheckpointAsync(original.TaskId, original.ExecutionId,
+            checkpoints.Record.Id, CancellationToken.None);
+        Assert.Equal(checkpoints.Record.Id, retried.CheckpointId);
+        Assert.Equal(original.PersistenceRevision + 1, retried.PersistenceRevision);
+        var persisted = Assert.IsType<TaskExecutionSnapshot>(await repository.GetAsync(original.TaskId, CancellationToken.None));
+        Assert.Equal(checkpoints.Record.Id, persisted.CheckpointId);
+        Assert.Equal(retried.PersistenceRevision, persisted.PersistenceRevision);
+        Assert.Equal(original.Plan.Select(action => action.ActionId), persisted.Plan.Select(action => action.ActionId));
+        Assert.Equal(original.Queue.Select(task => task.TaskId), persisted.Queue.Select(task => task.TaskId));
+    }
+
+    [Fact]
+    public async Task Late_cancelled_checkpoint_callbacks_cannot_commit_SQLite_task_revision()
+    {
+        var database = await DatabaseAsync();
+        var repository = new TaskExecutionRepository(database);
+        var original = Snapshot();
+        await repository.UpsertAsync(original, CancellationToken.None);
+        var checkpoints = new CheckpointProbe(new CheckpointInfo(Guid.NewGuid(), original.ContextId, null,
+            "synthetic-workspace", "late same original", CheckpointMode.BeforeFileChanges, 0, DateTimeOffset.UtcNow),
+            original.ExecutionId);
+        var coordinator = new TaskExecutionCoordinator(repository, new Sink(),
+            checkpointRepository: checkpoints, checkpointObservationSource: checkpoints);
+        var observationEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseObservation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var lookupEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseLookup = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        checkpoints.BeforeRead = async _ =>
+        {
+            observationEntered.TrySetResult();
+            await releaseObservation.Task.ConfigureAwait(false);
+        };
+        checkpoints.BeforeCheckpointRead = async () =>
+        {
+            lookupEntered.TrySetResult();
+            await releaseLookup.Task.ConfigureAwait(false);
+        };
+        checkpoints.IgnoreGetCancellation = true;
+        using var cancellation = new CancellationTokenSource();
+        var lateWrite = coordinator.RecordCheckpointAsync(original.TaskId, original.ExecutionId,
+            checkpoints.Record.Id, cancellation.Token);
+        try
+        {
+            await observationEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            cancellation.Cancel();
+            Assert.False(lateWrite.IsCompleted);
+            releaseObservation.TrySetResult();
+            await lookupEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            releaseLookup.TrySetResult();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => lateWrite);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            releaseObservation.TrySetResult();
+            releaseLookup.TrySetResult();
+            _ = await Record.ExceptionAsync(() => lateWrite);
+        }
+
+        var unchanged = Assert.IsType<TaskExecutionSnapshot>(await repository.GetAsync(original.TaskId, CancellationToken.None));
+        Assert.Equal(original.PersistenceRevision, unchanged.PersistenceRevision);
+        Assert.Null(unchanged.CheckpointId);
+        Assert.Equal(original.ExecutionId, unchanged.ExecutionId);
+        Assert.Equal(original.Plan.Select(action => action.ActionId), unchanged.Plan.Select(action => action.ActionId));
+        Assert.Equal(original.Queue.Select(task => task.TaskId), unchanged.Queue.Select(task => task.TaskId));
+
+        checkpoints.BeforeRead = null;
+        checkpoints.BeforeCheckpointRead = null;
+        checkpoints.IgnoreGetCancellation = false;
+        var retried = await coordinator.RecordCheckpointAsync(original.TaskId, original.ExecutionId,
+            checkpoints.Record.Id, CancellationToken.None);
+        Assert.Equal(checkpoints.Record.Id, retried.CheckpointId);
+        Assert.Equal(original.PersistenceRevision + 1, retried.PersistenceRevision);
+        var persisted = Assert.IsType<TaskExecutionSnapshot>(await repository.GetAsync(original.TaskId, CancellationToken.None));
+        Assert.Equal(checkpoints.Record.Id, persisted.CheckpointId);
+        Assert.Equal(retried.PersistenceRevision, persisted.PersistenceRevision);
+        Assert.Equal(original.Plan.Select(action => action.ActionId), persisted.Plan.Select(action => action.ActionId));
+        Assert.Equal(original.Queue.Select(task => task.TaskId), persisted.Queue.Select(task => task.TaskId));
+    }
+
     [Theory]
     [InlineData("task")]
     [InlineData("context")]
@@ -234,6 +357,40 @@ public sealed class TaskExecutionRepositoryTests : IDisposable
     }
 
     public void Dispose() => paths.Dispose();
+
+    private sealed class Sink : IExecutionEventSink
+    {
+        public bool TryPublish(ExecutionEvent executionEvent) => true;
+    }
+
+    private sealed class CheckpointProbe(CheckpointInfo record, Guid executionId)
+        : ICheckpointRepository, ICheckpointExecutionObservationSource
+    {
+        public CheckpointInfo Record { get; } = record;
+        public Func<CancellationToken, Task>? BeforeRead { get; set; }
+        public Func<Task>? BeforeCheckpointRead { get; set; }
+        public bool IgnoreGetCancellation { get; set; }
+
+        public async Task<CheckpointInfo?> GetOriginalCheckpointAsync(Guid actualExecutionId, Guid checkpointId,
+            CancellationToken cancellationToken)
+        {
+            if (BeforeRead is { } before) await before(cancellationToken).ConfigureAwait(false);
+            return actualExecutionId == executionId && checkpointId == Record.Id ? Record : null;
+        }
+
+        public async Task<CheckpointInfo?> GetAsync(Guid checkpointId, CancellationToken cancellationToken)
+        {
+            if (BeforeCheckpointRead is { } before) await before().ConfigureAwait(false);
+            if (!IgnoreGetCancellation) cancellationToken.ThrowIfCancellationRequested();
+            return checkpointId == Record.Id ? Record : null;
+        }
+
+        public Task SaveAsync(CheckpointInfo checkpoint, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<CheckpointInfo?> GetLatestAsync(Guid? conversationId, string workspaceRoot, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<long> GetLatestVersionSequenceAsync(string workspaceRoot, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<IReadOnlyList<WorkspaceRestoreEntry>> GetVersionsSinceAsync(string workspaceRoot, long sequence, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<WorkspaceRestoreEntry?> GetLatestVersionAsync(string workspaceRoot, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
 
     private sealed class TestPaths : IAppPaths, IDisposable
     {

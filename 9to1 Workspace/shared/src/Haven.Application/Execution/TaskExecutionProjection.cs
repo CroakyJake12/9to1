@@ -10,6 +10,9 @@ public sealed record TaskExecutionProjection(
     IReadOnlyList<TaskPlanNode> UnfinishedActions)
 {
     public TaskRunRecoveryObservation? RecoveryObservation { get; init; }
+    /// <summary>Durable outcomes retained across pause/stop and cold continuation.
+    /// These observations describe history; they issue no resume authority.</summary>
+    public IReadOnlyList<TaskRunRecoveryObservation> RecoveryHistory { get; init; } = [];
     public IReadOnlyList<TaskRunDelegationIntent> ChildRuns { get; init; } = [];
     public TaskRunParentDelegation? ParentDelegation { get; init; }
 
@@ -26,6 +29,8 @@ public sealed record TaskExecutionProjection(
                 .Where(node => node.State is not (TaskPlanNodeState.Completed or TaskPlanNodeState.Superseded)).ToArray()))
         {
             RecoveryObservation = snapshot.RecoveryObservation,
+            RecoveryHistory = Array.AsReadOnly(snapshot.RecoveryHistory.Select(history => history with
+            { Causes = Array.AsReadOnly(history.Causes.ToArray()) }).ToArray()),
             ChildRuns = Array.AsReadOnly(snapshot.Delegations.Select(intent => intent with
             {
                 RequestedPermissionScopes = Array.AsReadOnly(intent.RequestedPermissionScopes.ToArray())

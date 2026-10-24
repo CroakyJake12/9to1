@@ -6,7 +6,7 @@ namespace Haven.Application;
 /// The process source cohort, not a view, retains and joins the business driver.</summary>
 internal sealed class HostedOriginalRunResume(TaskExecutionCoordinator issuer, object marker,
     CanonicalChatProcessProducer source, ProviderExecutionContext observedContext,
-    TaskRunToolCheckpointContinuationBinding? toolCheckpoint = null)
+    TaskRunToolCheckpointContinuationBinding? toolCheckpoint = null, bool coldRecovery = false)
 {
     internal readonly object Gate = new();
     internal readonly TaskExecutionCoordinator Issuer = issuer;
@@ -14,6 +14,7 @@ internal sealed class HostedOriginalRunResume(TaskExecutionCoordinator issuer, o
     internal readonly CanonicalChatProcessProducer Source = source;
     internal readonly ProviderExecutionContext ObservedContext = observedContext;
     internal readonly TaskRunToolCheckpointContinuationBinding? ToolCheckpoint = toolCheckpoint;
+    internal readonly bool ColdRecovery = coldRecovery;
     internal readonly AgentRuntimeOriginalCustody ProducerCustody = new();
     internal readonly AgentRuntimeOriginalCustody WaitCustody = new();
     internal readonly AgentRuntimeOriginalCustody DetachCustody = new();
@@ -48,9 +49,10 @@ public sealed partial class TaskExecutionCoordinator
     private readonly List<HostedOriginalRunResume> _hostedOriginalRunResumes = [];
     private HostedOriginalRunResume[]? _sealedHostedOriginalRunResumes;
 
-    /// <summary>Starts the retained same-input continuation under this durable process owner.
-    /// The command token withdraws preparation only; the resulting business iterator has its
-    /// own process lifetime. The returned lease observes, and cannot cancel, that producer.</summary>
+    /// <summary>Starts the retained same-input continuation or configured protected cold-journal
+    /// continuation under this durable process owner. The command token withdraws preparation
+    /// only; the resulting business iterator has its own process lifetime. The returned lease
+    /// observes, and cannot cancel, that producer.</summary>
     public Task<TaskRunOriginalResumeObservationLease> StartObservedOriginalRunResumeAsync(
         Guid taskId, Guid expectedExecutionId, CancellationToken cancellationToken)
     {
@@ -61,9 +63,19 @@ public sealed partial class TaskExecutionCoordinator
             var stage = RequireOriginalProcessStage();
             var before = await RequireOriginalProcessSnapshotAsync(taskId, token).ConfigureAwait(false);
             RequireRun(before, expectedExecutionId);
+            var previous = TryGetOriginalRunControlSource(before);
+            if (previous is null)
+            {
+                var coldChat = GetOriginalColdRecoveryChatSource(stage)
+                    ?? throw new InvalidOperationException("No live original or configured cold Tasks Chat owner is available.");
+                if (!await HasOriginalColdRunResumeBoundaryAsync(stage, before, token, coldChat).ConfigureAwait(false))
+                    throw new InvalidOperationException("No source-authenticated cold original Task/Run continuation is available.");
+                return await StartObservedColdOriginalRunResumeBodyAsync(coldChat, taskId, expectedExecutionId, token)
+                    .ConfigureAwait(false);
+            }
+            // Retained-live resumptions keep the ordinary saved-owner authentication
+            // invariant. Only the no-live cold branch uses fresh journal/domain renewal.
             await ValidateOriginalProcessCommandAsync(before, "task:start-observed-original-run-resume", token).ConfigureAwait(false);
-            var previous = TryGetOriginalRunControlSource(before)
-                ?? throw new InvalidOperationException("No genuine original task input remains available.");
             if (previous.OriginalToolCheckpoint is not null && previous.OriginalProviderInvocationInvoked)
             {
                 var chat = previous.OriginalChatOwner ?? throw new InvalidOperationException("The actual original Chat owner is unavailable.");
@@ -101,9 +113,10 @@ public sealed partial class TaskExecutionCoordinator
 
     private HostedOriginalRunResume RegisterHostedOriginalRunResume(CanonicalChatProcessProducer source,
         ProviderExecutionContext observedContext, TaskRunProcessStageCustody stage,
-        TaskRunToolCheckpointContinuationBinding? toolCheckpoint = null)
+        TaskRunToolCheckpointContinuationBinding? toolCheckpoint = null, bool coldRecovery = false)
     {
-        var original = new HostedOriginalRunResume(this, _originalRunObservationIssuer, source, observedContext, toolCheckpoint);
+        var original = new HostedOriginalRunResume(this, _originalRunObservationIssuer, source, observedContext,
+            toolCheckpoint, coldRecovery);
         original.ProducerCustody.OriginalProcessOwner = this;
         // Observation callbacks join only their own Wait/Detach cohort. Inherited business
         // ancestry cannot create a dependency on a producer that this detacher never joins.
@@ -222,7 +235,7 @@ public sealed partial class TaskExecutionCoordinator
             || !original.Source.HasHealthyClosedOriginal)
             throw new InvalidOperationException("The SAME hosted original has no fully closed acknowledged terminal observation.");
         return new(TaskRunOriginalResumeObservationDisposition.ProducerTerminal, OriginalRunControlContext(terminal),
-            terminal.State, terminal.RecoveryObservation is not null);
+            terminal.State, terminal.RecoveryObservation is not null) { WasColdRecovery = original.ColdRecovery };
     }
 
     private void DemandHostedOriginalSourceAdmission()

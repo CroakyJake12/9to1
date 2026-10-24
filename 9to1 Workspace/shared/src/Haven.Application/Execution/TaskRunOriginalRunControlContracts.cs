@@ -10,6 +10,10 @@ public sealed record TaskRunOriginalRunControlAvailability(
     ProviderExecutionContext CanonicalTaskContext, bool CanPause, bool CanStop, bool CanResumeUnstartedOriginal)
 {
     public bool CanResumeOriginalToolCheckpoint { get; init; }
+    /// <summary>A source-authenticated durable cold boundary is present. This is an
+    /// observation only; cold resume must still claim the same journal entry and
+    /// freshly validate current domain/actor authority.</summary>
+    public bool CanResumeColdOriginal { get; init; }
 }
 
 /// <summary>Observed result of the same original command and real terminal acknowledgment.

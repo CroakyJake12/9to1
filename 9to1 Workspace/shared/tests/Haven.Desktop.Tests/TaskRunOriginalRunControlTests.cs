@@ -163,6 +163,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.False(observed.CanPause);
         Assert.False(observed.CanStop);
         Assert.False(observed.CanResumeUnstartedOriginal);
+        Assert.False(observed.CanResumeColdOriginal);
         await Assert.ThrowsAsync<InvalidOperationException>(() => reconstructed.PauseOriginalRunAsync(saved.TaskId, saved.ExecutionId, token));
         await Assert.ThrowsAsync<InvalidOperationException>(() => reconstructed.ResumeOriginalRunAsync(saved.TaskId, saved.ExecutionId, token));
         Assert.Equal(disposals, rig.Client.StreamDisposals);
