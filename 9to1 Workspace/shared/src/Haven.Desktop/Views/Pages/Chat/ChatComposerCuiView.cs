@@ -30,6 +30,7 @@ public interface IChatComposerSource
     string Draft { get; set; }
     string Placeholder { get; }
     bool IsSending { get; }
+    bool CanStop => IsSending;
     bool IsSafetyLocked { get; }
     bool HasAdd { get; }
     bool CanSend { get; }
@@ -110,6 +111,12 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             case "Composer.CanSend":
                 value = _source.CanSend;
                 return true;
+            case "Composer.IsSending":
+                value = _source.IsSending;
+                return true;
+            case "Composer.CanStop":
+                value = _source.CanStop;
+                return true;
             case "Composer.IsEditing":
                 value = _source.IsEditing;
                 return true;
@@ -187,6 +194,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         return command switch
         {
             "composer.send" => _source.CanSend,
+            "composer.stop" => _source.CanStop,
             "composer.add" => _source.HasAdd,
             "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => true,
             "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => true,

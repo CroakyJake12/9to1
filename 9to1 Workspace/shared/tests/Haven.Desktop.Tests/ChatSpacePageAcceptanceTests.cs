@@ -86,6 +86,37 @@ public sealed class ChatSpacePageAcceptanceTests
     }
 
     [AvaloniaFact]
+    public async Task Authored_composer_Stop_cancels_the_active_chat_and_keeps_the_partial_message()
+    {
+        var backend = new Backend { WaitForCancellation = true, PersistAcceptedInputAtAdmission = true };
+        var conversationId = backend.Seed("Assistant Main");
+        var page = new ChatSpacePage(backend, ChatSpacePage.ImmediateReadinessInstance, conversationId);
+        var window = new Window { Content = page, Width = 1000, Height = 800 }; window.Show();
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            await page.DispatchAsync("chat.update-draft", "Keep this stopped partial");
+            var sending = page.DispatchAsync("chat.send", null).AsTask();
+            await backend.SendEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await UntilAsync(() => page.IsActionAvailable("chat.stop") == true);
+            Render(window);
+
+            Find<Button>(page, "stop-button").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await UntilAsync(() => !page.Controller.State.Composer.IsSending);
+            await sending;
+            Render(window);
+
+            Assert.Single(page.Controller.State.Conversation!.Messages,
+                message => message.Role == MessageRole.Assistant && message.ProgressLabel == "Stopped · partial response");
+            Assert.Contains(backend.Data[conversationId].Messages, message => message.Role == MessageRole.User && message.Content == "Keep this stopped partial");
+            Assert.Contains(backend.Data[conversationId].Messages, message => message.Role == MessageRole.Assistant && message.Content == "**Streamed response**");
+            Assert.False(page.Controller.State.Composer.IsSending);
+            Assert.False(page.IsActionAvailable("chat.stop"));
+        }
+        finally { backend.ReleaseSend.TrySetResult(); await page.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
     public async Task Actual_page_close_joins_held_send_before_detaching_its_scene()
     {
         var backend = new Backend(); var first = backend.Seed("First");
@@ -133,6 +164,8 @@ public sealed class ChatSpacePageAcceptanceTests
         internal readonly TaskCompletionSource SendEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource ReleaseSend = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal bool SendCompleted;
+        internal bool WaitForCancellation;
+        internal bool PersistAcceptedInputAtAdmission;
         internal Guid Seed(string title)
         {
             var now = DateTimeOffset.UtcNow; var id = Guid.NewGuid(); var branch = Guid.NewGuid();
@@ -156,13 +189,37 @@ public sealed class ChatSpacePageAcceptanceTests
             var user = new ChatMessage(Guid.NewGuid(), request.Conversation.Id, MessageRole.User, request.Prompt, null, null, null, now);
             var assistant = new ChatMessage(Guid.NewGuid(), request.Conversation.Id, MessageRole.Assistant, "**Streamed response**", "Haven", request.Model.Name, null, now);
             progress?.Report(ChatStreamEvent.User(user));
-            if (request.InputAccepted is { } accepted) await accepted(user, token);
+            var acceptedAndStored = false;
+            if (request.InputAccepted is { } accepted)
+            {
+                await accepted(user, token);
+                if (PersistAcceptedInputAtAdmission)
+                {
+                    Data[user.ConversationId] = Data[user.ConversationId] with { Messages = [.. Data[user.ConversationId].Messages, user] };
+                    acceptedAndStored = true;
+                }
+            }
             progress?.Report(ChatStreamEvent.AssistantStarted(assistant.Id, request.Model.Name, "Haven"));
             progress?.Report(ChatStreamEvent.AssistantDelta(assistant.Id, assistant.Content));
             SendEntered.TrySetResult();
-            await ReleaseSend.Task; // Deliberately held original source, independent of presentation cancellation.
-            Data[user.ConversationId] = Data[user.ConversationId] with { Messages = [.. Data[user.ConversationId].Messages, user, assistant] };
+            if (WaitForCancellation) await ReleaseSend.Task.WaitAsync(token);
+            else await ReleaseSend.Task; // Some owner-close tests deliberately hold the source independent of view cancellation.
+            Data[user.ConversationId] = Data[user.ConversationId] with
+                { Messages = acceptedAndStored ? [.. Data[user.ConversationId].Messages, assistant] : [.. Data[user.ConversationId].Messages, user, assistant] };
             SendCompleted = true;
+        }
+        public Task PersistStoppedPartialAsync(Guid id, Guid branchId, ChatMessage acceptedInput, ChatMessage message, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            var actual = Data[id];
+            if (acceptedInput.ConversationId != id || acceptedInput.Role != MessageRole.User ||
+                actual.Messages.LastOrDefault(item => item.Role == MessageRole.User) != acceptedInput ||
+                message.ConversationId != id || message.Role != MessageRole.Assistant || string.IsNullOrWhiteSpace(message.Content) ||
+                actual.Branches.All(branch => branch.Id != branchId || !branch.IsCurrent) ||
+                actual.Messages.Any(existing => existing.Id == message.Id))
+                throw new InvalidOperationException("Stopped partial does not match a unique current branch message.");
+            Data[id] = actual with { Messages = [.. actual.Messages, message] };
+            return Task.CompletedTask;
         }
         public Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid id, CancellationToken token) => Task.FromResult(new ConversationSafetySnapshot(id, 0, ConversationSafetyState.Active, null, 0));
         public Task<MessageAttachment> ImportAttachmentAsync(Guid id, Guid? branch, string path, CancellationToken token) => throw new NotSupportedException();

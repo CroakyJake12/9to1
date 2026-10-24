@@ -80,15 +80,74 @@ internal sealed class VisionWorkspaceStateStore
         Directory.CreateDirectory(_assetDirectory);
         var extension = Path.GetExtension(sourcePath).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(extension)) extension = ".img";
-        var target = Path.Combine(_assetDirectory, "current" + extension);
-        if (Path.GetFullPath(sourcePath).Equals(Path.GetFullPath(target), StringComparison.OrdinalIgnoreCase)) return target;
-        await using var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
-        await using var output = new FileStream(target + ".tmp", FileMode.Create, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous | FileOptions.WriteThrough);
-        await input.CopyToAsync(output, cancellationToken).ConfigureAwait(false);
-        await output.FlushAsync(cancellationToken).ConfigureAwait(false);
-        output.Close();
-        File.Move(target + ".tmp", target, true);
-        return target;
+        var temporaryPath = Path.Combine(_assetDirectory, ".vision-source-" + Guid.NewGuid().ToString("N") + ".tmp");
+        Exception? importFailure = null;
+        try
+        {
+            string digest;
+            await using (var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920,
+                             FileOptions.Asynchronous | FileOptions.SequentialScan))
+            await using (var output = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920,
+                             FileOptions.Asynchronous | FileOptions.WriteThrough))
+            using (var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
+            {
+                var buffer = new byte[81920];
+                int read;
+                while ((read = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+                {
+                    hash.AppendData(buffer, 0, read);
+                    await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                }
+                await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+                digest = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+            }
+
+            // Source files are immutable, content-addressed assets. A later import must
+            // never replace bytes still referenced by an earlier workspace/session.
+            var target = Path.Combine(_assetDirectory, digest + extension);
+            try { File.Move(temporaryPath, target, overwrite: false); }
+            catch (IOException) when (File.Exists(target))
+            {
+                // Concurrent imports of identical content converge on the same asset.
+                // Do not trust a pre-existing path without validating its content hash.
+                var existingDigest = await ComputeFileHashAsync(target, cancellationToken).ConfigureAwait(false);
+                if (!string.Equals(existingDigest, digest, StringComparison.Ordinal))
+                    throw new IOException("The Vision content-addressed source exists with unexpected contents.");
+            }
+            return target;
+        }
+        catch (Exception failure)
+        {
+            importFailure = failure;
+            throw;
+        }
+        finally
+        {
+            CompleteImportCleanup(() => File.Delete(temporaryPath), importFailure);
+        }
+    }
+
+    internal static void CompleteImportCleanup(Action cleanup, Exception? importFailure)
+    {
+        try { cleanup(); }
+        catch (FileNotFoundException) { }
+        catch (Exception cleanupFailure) when (importFailure is not null)
+        {
+            throw new AggregateException("Vision source import and temporary-file cleanup both failed.",
+                importFailure, cleanupFailure);
+        }
+    }
+
+    private static async Task<string> ComputeFileHashAsync(string path, CancellationToken cancellationToken)
+    {
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 81920,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var buffer = new byte[81920];
+        int read;
+        while ((read = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+            hash.AppendData(buffer, 0, read);
+        return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
     }
 
     internal static async Task<string> BuildAnalysisKeyAsync(string imagePath, string model, string prompt, CancellationToken cancellationToken = default)

@@ -104,8 +104,95 @@ public sealed class ConversationBranchInvocationTests
         Assert.Equal("edited", canonical.Content);
         await invocation.AdmitExistingUserInputAsync(canonical, CancellationToken.None);
         await invocation.AddMessageAsync(rig.Message(MessageRole.Assistant, "regenerated"), CancellationToken.None);
-        var messages = await rig.Repository.GetMessagesAsync(rig.Conversation.Id, CancellationToken.None);
+        var reopenedRepository = new ConversationRepository(rig.Factory);
+        var messages = await reopenedRepository.GetMessagesAsync(rig.Conversation.Id, CancellationToken.None);
         Assert.Single(messages, item => item.Role == MessageRole.User);
+        Assert.Equal(2, messages.Count);
+    }
+
+    [Fact]
+    public async Task Stopped_partial_requires_the_exact_committed_user_input_before_assistant_persistence()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var user = rig.Message(MessageRole.User, "accepted original input");
+        await rig.Repository.AddMessageAsync(user, CancellationToken.None);
+        await using var invocation = rig.Repository.BindInvocation(rig.Conversation.Id, rig.Root.Id);
+        var partial = rig.Message(MessageRole.Assistant, "partial answer") with
+        { MetadataJson = "{\"responseState\":\"Stopped\",\"isPartial\":true}" };
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => invocation.AddMessageAsync(partial, CancellationToken.None));
+        Assert.Equal([user.Id], (await rig.Repository.GetMessagesAsync(rig.Conversation.Id, CancellationToken.None)).Select(item => item.Id));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            invocation.AdmitExistingUserInputAsync(user with { Content = "different input" }, CancellationToken.None));
+        await invocation.AdmitExistingUserInputAsync(user, CancellationToken.None);
+        await invocation.AddMessageAsync(partial, CancellationToken.None);
+
+        var reopenedRepository = new ConversationRepository(rig.Factory);
+        var messages = await reopenedRepository.GetMessagesAsync(rig.Conversation.Id, CancellationToken.None);
+        Assert.Equal([user.Id, partial.Id], messages.Select(item => item.Id));
+        Assert.Equal("partial answer", Assert.Single(messages, item => item.Role == MessageRole.Assistant).Content);
+        var restoredPartial = Assert.Single(messages, item => item.Id == partial.Id);
+        Assert.Equal("Stopped", restoredPartial.Metadata["responseState"].GetString());
+        Assert.True(restoredPartial.Metadata["isPartial"].GetBoolean());
+    }
+
+    [Fact]
+    public async Task Stopped_partial_does_not_substitute_a_later_user_message_from_advanced_branch_history()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var accepted = rig.Message(MessageRole.User, "this send's accepted input");
+        await rig.Repository.AddMessageAsync(accepted, CancellationToken.None);
+        var later = rig.Message(MessageRole.User, "a separately accepted later input");
+        await rig.Repository.AddMessageAsync(later, CancellationToken.None);
+        await using var invocation = rig.Repository.BindInvocation(rig.Conversation.Id, rig.Root.Id);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            invocation.AdmitExistingUserInputAsync(accepted, CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            invocation.AddMessageAsync(rig.Message(MessageRole.Assistant, "must not attach to later input"), CancellationToken.None));
+        Assert.Equal([accepted.Id, later.Id], (await rig.Repository.GetMessagesAsync(rig.Conversation.Id, CancellationToken.None)).Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task Stopped_partial_refuses_rebinding_after_the_original_branch_is_no_longer_current()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var accepted = rig.Message(MessageRole.User, "accepted input on root");
+        await rig.Repository.AddMessageAsync(accepted, CancellationToken.None);
+        var other = await rig.Production.CreateBranchAsync(rig.Conversation.Id, rig.Root.Id, accepted.Id,
+            "Other branch", ConversationBranchReason.Manual, CancellationToken.None);
+        await rig.Production.SetCurrentBranchAsync(rig.Conversation.Id, other.Id, CancellationToken.None);
+        await using var invocation = rig.Repository.BindInvocation(rig.Conversation.Id, rig.Root.Id);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            invocation.AdmitExistingUserInputAsync(accepted, CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            invocation.AddMessageAsync(rig.Message(MessageRole.Assistant, "must not attach to stale branch"), CancellationToken.None));
+        Assert.Equal([accepted.Id], (await rig.Repository.GetMessagesAsync(rig.Conversation.Id, CancellationToken.None)).Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task Stopped_partial_duplicate_id_cannot_replace_completed_response_or_metadata()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var user = rig.Message(MessageRole.User, "accepted original input");
+        await rig.Repository.AddMessageAsync(user, CancellationToken.None);
+        var completed = rig.Message(MessageRole.Assistant, "completed answer") with
+        { Id = Guid.NewGuid(), MetadataJson = "{\"responseState\":\"Completed\"}" };
+        await rig.Repository.AddMessageAsync(completed, CancellationToken.None);
+        await using var invocation = rig.Repository.BindInvocation(rig.Conversation.Id, rig.Root.Id);
+        await invocation.AdmitExistingUserInputAsync(user, CancellationToken.None);
+        var partialReplacement = completed with
+        { Content = "partial replacement", MetadataJson = "{\"responseState\":\"Stopped\",\"isPartial\":true}" };
+
+        await Assert.ThrowsAsync<SqliteException>(() => invocation.AddMessageAsync(partialReplacement, CancellationToken.None));
+
+        var reopenedRepository = new ConversationRepository(rig.Factory);
+        var messages = await reopenedRepository.GetMessagesAsync(rig.Conversation.Id, CancellationToken.None);
+        var retained = Assert.Single(messages, item => item.Id == completed.Id);
+        Assert.Equal("completed answer", retained.Content);
+        Assert.Equal("Completed", retained.Metadata["responseState"].GetString());
         Assert.Equal(2, messages.Count);
     }
 

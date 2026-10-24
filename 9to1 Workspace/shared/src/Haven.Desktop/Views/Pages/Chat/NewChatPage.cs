@@ -87,6 +87,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private bool _pendingInstructionPreservesDraft;
     private ChatMentionQuery? _activeMention;
     private CancellationTokenSource? _sendCancellation;
+    private int _explicitStopRequested;
     private readonly DispatcherTimer _sendProgressTimer;
     private bool _isSending;
     private bool _safetyLocked;
@@ -276,6 +277,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         var cancellation = _sendCancellation;
         if (cancellation is null || cancellation.IsCancellationRequested) return false;
 
+        Volatile.Write(ref _explicitStopRequested, 1);
         SetProjectionStatus("Stopping response...");
         cancellation.Cancel();
         return true;
@@ -750,6 +752,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         RefreshAttachmentStatus();
         await AwaitChatOriginalAsync(RefreshSafetyStateAsync());
         RefreshMessages();
+        if (_messages.LastOrDefault(message => message.Role == MessageRole.Assistant) is { } lastAssistant &&
+            ReadRetainedPartialState(lastAssistant) is { } partialState)
+            SetProjectionStatus(partialState + " · partial response saved. Same-run Resume is unavailable for this response.");
+        else if (_projectionStatus is { } previousStatus &&
+                 (previousStatus.StartsWith("Stopped · partial response saved.", StringComparison.Ordinal) ||
+                  previousStatus.StartsWith("Interrupted · partial response saved.", StringComparison.Ordinal)))
+            SetProjectionStatus(null);
         await AwaitChatOriginalAsync(RefreshContextEntriesAsync());
         ConversationStateChanged?.Invoke(this, EventArgs.Empty);
         FocusComposer();
@@ -1339,6 +1348,12 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // this only after its actual conversation write and user-message write both succeeded;
         // the earlier UserMessage stream event is presentation-only and is never acceptance.
         Guid? committedUserMessageId = null;
+        ChatMessage? committedUserMessage = null;
+        Guid? originalSendBranchId = null;
+        var deltaBuffer = new StringBuilder();
+        Guid? bufferedMessageId = null;
+        var nextDeltaFlushAt = Environment.TickCount64 + 50;
+        var sendReportedFailure = false;
         var sendRevision = Volatile.Read(ref _originalComposerRevision);
         var draftOwner = OriginalDraftInputOwner;
         // The exact canonical draft identity this send consumes, captured BEFORE its own clear.
@@ -1368,6 +1383,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // The send's own programmatic clear is NOT a user edit: it must not queue an autosave
         // that deletes the canonical draft before the user message is actually accepted.
         _originalSendInFlight = true;
+        Volatile.Write(ref _explicitStopRequested, 0);
         PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
         DemandOriginalChatPublication();
         _bus.Fire("Chat.Composer.Send.Click");
@@ -1389,10 +1405,22 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             originalConversation = _conversation;
         }
 
-            var sendReportedFailure = false;
-            var deltaBuffer = new StringBuilder();
-            Guid? bufferedMessageId = null;
-            var nextDeltaFlushAt = Environment.TickCount64 + 50;
+            if (_conversationProduction is not null && !originalConversation.IsTemporary && originalConversation.Mode != HavenMode.Tasks)
+            {
+                var branch = await AwaitChatOriginalAsync(
+                    _conversationProduction.GetCurrentBranchAsync(originalConversation.Id, RequireChatOriginal().Token))
+                    ?? await AwaitChatOriginalAsync(_conversationProduction.EnsureRootBranchAsync(originalConversation.Id, RequireChatOriginal().Token));
+                if (branch.ConversationId != originalConversation.Id || !branch.IsCurrent)
+                    throw new InvalidOperationException("The original Chat branch changed before send admission.");
+                originalSendBranchId = branch.Id;
+            }
+
+            Task RetireAcceptedUserInputAsync(ChatMessage committedInput, CancellationToken _)
+            {
+                committedUserMessageId = committedInput.Id;
+                committedUserMessage = committedInput;
+                return RetireCommittedSendDraftAsync(acceptedSend);
+            }
 
             async Task FlushDeltasAsync()
             {
@@ -1464,36 +1492,31 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             }
             else
             {
-                await RequireChatOriginal().ReadStreamAsync(_sessions.SendWithCommittedInputAsync(
-                               originalConversation,
-                               instruction,
-                               admittedModel,
-                               _effortOverride ?? _preferences.DefaultEffort,
-                               [],
-                               _activeAgent?.Name ?? "Haven",
-                               _activeAgent?.Instructions ?? string.Empty,
-                               DuoMode.Solo,
-                               null,
-                               null,
-                               null,
-                               _attachedImages.Count == 0 ? null : _attachedImages.ToArray(),
-                               originalSendCancellation.Token,
-                               prompts: _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray(),
-                               registeredContext: BuildRegisteredContext(),
-                               generationOptions: _preferences.GenerationOptions,
-                               filePermission: _preferences.FilePermission,
-                               commandPermission: _preferences.CommandPermission,
-                               browserPermission: _preferences.BrowserPermission,
-                               availableCapabilities: ActiveCapabilitiesForCurrentChat(),
-                               taskExecutionIntent: originalConversation.Mode == HavenMode.Tasks
-                                   ? TaskRunExecutionIntent.CanonicalAgenticTask : TaskRunExecutionIntent.OrdinaryConversation,
-                               userInputCommitted: (committedInput, _) =>                               {
-                                   // Genuine acceptance from the real owner of the actual writes:
-                                   // retire exactly the consumed draft identity (a newer draft
-                                   // typed or attached since is preserved) and record the message.
-                                   committedUserMessageId = committedInput.Id;
-                                   return RetireCommittedSendDraftAsync(acceptedSend);
-                               }), PublishOriginalStreamEventAsync).ConfigureAwait(false);
+                var actualEffort = _effortOverride ?? _preferences.DefaultEffort;
+                var actualAgentName = _activeAgent?.Name ?? "Haven";
+                var actualAgentInstructions = _activeAgent?.Instructions ?? string.Empty;
+                var actualImages = _attachedImages.Count == 0 ? null : _attachedImages.ToArray();
+                var actualPrompts = _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray();
+                var actualRegisteredContext = BuildRegisteredContext();
+                var actualGenerationOptions = _preferences.GenerationOptions;
+                var actualFilePermission = _preferences.FilePermission;
+                var actualCommandPermission = _preferences.CommandPermission;
+                var actualBrowserPermission = _preferences.BrowserPermission;
+                var actualCapabilities = ActiveCapabilitiesForCurrentChat();
+                IAsyncEnumerable<ChatStreamEvent> originalStream = originalSendBranchId is { } branchId
+                    ? _sessions.SendOnBranchAsync(branchId, originalConversation, instruction, admittedModel, actualEffort,
+                        actualCapabilities, actualAgentName, actualAgentInstructions, DuoMode.Solo, null, null, null, actualImages,
+                        originalSendCancellation.Token, prompts: actualPrompts, registeredContext: actualRegisteredContext,
+                        generationOptions: actualGenerationOptions, filePermission: actualFilePermission,
+                        commandPermission: actualCommandPermission, browserPermission: actualBrowserPermission,
+                        inputAccepted: RetireAcceptedUserInputAsync)
+                    : _sessions.SendWithCommittedInputAsync(originalConversation, instruction, admittedModel, actualEffort,
+                        actualCapabilities, actualAgentName, actualAgentInstructions, DuoMode.Solo, null, null, null, actualImages,
+                        originalSendCancellation.Token, prompts: actualPrompts, registeredContext: actualRegisteredContext,
+                        generationOptions: actualGenerationOptions, filePermission: actualFilePermission,
+                        commandPermission: actualCommandPermission, browserPermission: actualBrowserPermission,
+                        userInputCommitted: RetireAcceptedUserInputAsync);
+                await RequireChatOriginal().ReadStreamAsync(originalStream, PublishOriginalStreamEventAsync).ConfigureAwait(false);
             }
             if (!_originalWork.IsRetiring)
                 await AwaitChatOriginalAsync(FlushDeltasAsync());
@@ -1513,7 +1536,66 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             RetainHandledOriginalChatCause(originalCaughtCause);
             if (committedUserMessageId is null) await RestoreUnsentOriginalInstructionIfUnchangedUiAsync();
             if (!_originalWork.IsRetiring)
-                await AwaitChatOriginalAsync(SetStatusAsync("Response stopped."));
+            {
+                var userRequestedStop = Interlocked.Exchange(ref _explicitStopRequested, 0) != 0;
+                var stopStatus = userRequestedStop ? "Response stopped." : "Response interrupted.";
+                Exception? attachmentAssociationFailure = null;
+                if (!sendReportedFailure && committedUserMessageId is { } acceptedId && acceptedSend.Consumed.AttachmentIds.Length != 0)
+                {
+                    try
+                    {
+                        await AwaitChatOriginalAsync(AssociatePendingAttachmentsWithUserMessageAsync(
+                            acceptedId, acceptedSend, RequireChatOriginal().Token));
+                    }
+                    catch (Exception associationFailure)
+                    {
+                        RetainHandledOriginalChatCause(associationFailure);
+                        attachmentAssociationFailure = associationFailure;
+                    }
+                }
+                ChatMessage? partial = null;
+                if (originalConversation.Mode != HavenMode.Tasks && bufferedMessageId is { } responseId)
+                {
+                    var responseState = userRequestedStop ? "Stopped" : "Interrupted";
+                    partial = await CaptureTerminatedOriginalPartialAsync(responseId, deltaBuffer.ToString(), responseState);
+                    deltaBuffer.Clear();
+                }
+                if (partial is not null)
+                {
+                    if (committedUserMessage is not { } acceptedInput)
+                        stopStatus = (userRequestedStop ? "Response stopped" : "Response interrupted") +
+                            " before the user input was accepted; its draft was recovered and the partial remains visible only in this session.";
+                    else if (originalSendBranchId is not { } branchId)
+                        stopStatus = (userRequestedStop ? "Response stopped." : "Response interrupted.") +
+                            " Partial text remains visible, but the original branch identity is unavailable; it was not saved.";
+                    else
+                    {
+                        try
+                        {
+                            await PersistStoppedOriginalPartialAsync(branchId, acceptedInput, partial);
+                            stopStatus = userRequestedStop
+                                ? "Response stopped. Partial text was saved in this conversation; same-run Resume is unavailable."
+                                : "Response interrupted. Partial text was saved in this conversation; same-run Resume is unavailable.";
+                        }
+                        catch (Exception persistenceFailure)
+                        {
+                            if (persistenceFailure is not ConversationSafetyLockException)
+                                RetainHandledOriginalChatCause(persistenceFailure);
+                            stopStatus = (userRequestedStop ? "Response stopped." : "Response interrupted.") +
+                                " Partial text remains visible but could not be saved: " + persistenceFailure.Message;
+                        }
+                    }
+                }
+                else if (committedUserMessageId is null)
+                    stopStatus = (userRequestedStop ? "Response stopped" : "Response interrupted") +
+                        " before the user input was accepted; its draft content was recovered.";
+                else if (committedUserMessageId is not null && bufferedMessageId is null)
+                    stopStatus = (userRequestedStop ? "Response stopped." : "Response interrupted.") +
+                        " The accepted user message remains saved; no partial reply was produced.";
+                if (attachmentAssociationFailure is not null)
+                    stopStatus += " Accepted attachments could not be associated with their committed input: " + attachmentAssociationFailure.Message;
+                await AwaitChatOriginalAsync(SetStatusAsync(stopStatus));
+            }
         }
         catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)
         {
@@ -1529,6 +1611,57 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 await RequireChatOriginal().AwaitAsync(FinishOriginalInitialTaskObservationAsync(initialTaskObservation));
             await RequireChatOriginal().AwaitAsync(FinishOriginalSendAsync(originalSendCancellation));
         }
+    }
+
+    private async Task<ChatMessage?> CaptureTerminatedOriginalPartialAsync(Guid messageId, string trailingDelta, string responseState)
+    {
+        ChatMessage? stopped = null;
+        await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+        {
+            if (!_streamingMessages.Contains(messageId)) return;
+            var current = _messages.FirstOrDefault(message => message.Id == messageId && message.Role == MessageRole.Assistant);
+            if (current is null) return;
+            var content = current.Content + trailingDelta;
+            if (string.IsNullOrWhiteSpace(content)) return;
+            var metadata = JsonSerializer.Serialize(new
+            {
+                responseState,
+                isPartial = true,
+                toolActivities = ReadToolActivities(current)
+            });
+            stopped = current with { Content = content, MetadataJson = metadata };
+            UpsertMessage(stopped);
+            _streamingMessages.Remove(messageId);
+            RefreshMessage(stopped);
+        }));
+        return stopped;
+    }
+
+    private async Task PersistStoppedOriginalPartialAsync(Guid branchId, ChatMessage acceptedInput, ChatMessage partial)
+    {
+        var conversationId = acceptedInput.ConversationId;
+        if (_conversation.Id != conversationId || partial.ConversationId != conversationId || partial.Role != MessageRole.Assistant)
+            throw new InvalidOperationException("The stopped partial no longer belongs to the same original conversation.");
+        if (_conversationProduction is null)
+            throw new InvalidOperationException("The canonical branch owner is unavailable; the stopped partial was not saved.");
+        if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.persist-stopped-partial")))
+            throw new ConversationSafetyLockException(conversationId, "chat.persist-stopped-partial");
+        var currentBranch = await AwaitChatOriginalAsync(
+            _conversationProduction.GetCurrentBranchAsync(conversationId, RequireChatOriginal().Token));
+        if (currentBranch is null || currentBranch.Id != branchId || !currentBranch.IsCurrent || currentBranch.ConversationId != conversationId)
+            throw new InvalidOperationException("The original Chat branch changed before the stopped partial could be saved.");
+        var history = await AwaitChatOriginalAsync(_conversations.GetMessagesAsync(conversationId, RequireChatOriginal().Token));
+        if (history.Any(message => message.Id == partial.Id))
+            throw new InvalidOperationException("The stopped partial message ID already exists; canonical response history was not overwritten.");
+        var repository = _conversations as IConversationBranchBoundRepository
+            ?? throw new InvalidOperationException("The original conversation store cannot bind a stopped partial to its branch.");
+        await using var invocation = repository.BindInvocation(conversationId, branchId);
+        if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.persist-stopped-partial")))
+            throw new ConversationSafetyLockException(conversationId, "chat.persist-stopped-partial");
+        await AwaitChatOriginalAsync(invocation.AdmitExistingUserInputAsync(acceptedInput, RequireChatOriginal().Token));
+        if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.persist-stopped-partial")))
+            throw new ConversationSafetyLockException(conversationId, "chat.persist-stopped-partial");
+        await AwaitChatOriginalAsync(invocation.AddMessageAsync(partial, RequireChatOriginal().Token));
     }
 
     private void OnDualToggleRequested(object? sender, EventArgs e) => RunOriginalChatNotification(() => OnDualToggleRequestedOriginalBody(sender, e));
@@ -1916,6 +2049,25 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         {
             return [];
         }
+    }
+
+    internal static string? ReadRetainedPartialState(ChatMessage message)
+    {
+        if (message.Role != MessageRole.Assistant) return null;
+        try
+        {
+            var metadata = message.Metadata;
+            if (!metadata.TryGetValue("responseState", out var state) || state.ValueKind != JsonValueKind.String ||
+                !metadata.TryGetValue("isPartial", out var partial) || partial.ValueKind != JsonValueKind.True)
+                return null;
+            return state.GetString() switch
+            {
+                "Stopped" => "Stopped",
+                "Interrupted" => "Interrupted",
+                _ => null
+            };
+        }
+        catch (JsonException) { return null; }
     }
 
     private static ChatMessage AppendToolActivity(ChatMessage message, ToolActivity activity)

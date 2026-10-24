@@ -67,6 +67,10 @@
           <Image Source="avares://Haven/Assets/composer-settings.svg" Width="24" Height="24" />
         </Button>
         <Button id="cancel-edit-button" action="composer.cancel-edit" content="Cancel" MinHeight="44" IsVisible="{Binding Composer.IsEditing}" accessible-name="Cancel editing" />
+        <If Condition="{Binding Composer.CanStop}">
+          <Button id="stop-button" action="composer.stop" content="Stop" MinHeight="44"
+                  accessible-name="Stop current response" tooltip="Stop the active response" />
+        </If>
         <Button id="send-button" action="composer.send" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="{Resource CuiAccentPrimaryBrush}" Interactive="{Binding Composer.CanSend}"
                 accessible-name="{Binding Composer.SendAccessibleName}" tooltip="{Binding Composer.SendTooltip}">

@@ -40,6 +40,7 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
 
     public string Placeholder => "Ask Haven anything";
     public bool IsSending => Snapshot.Composer.IsSending;
+    public bool CanStop => _controller.CanStopActiveResponse;
     public bool IsSafetyLocked => Snapshot.IsSafetyLocked;
     public bool HasAdd => !Snapshot.IsSafetyLocked;
     public bool CanSend => !Snapshot.IsLoading && !Snapshot.IsSafetyLocked && Snapshot.Composer.CanSend;

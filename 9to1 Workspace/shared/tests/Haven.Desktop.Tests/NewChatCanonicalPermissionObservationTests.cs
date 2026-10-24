@@ -9,6 +9,25 @@ namespace Haven.Desktop.Tests;
 // no actor, provider, source-issued Ask, response capability or continuation grant.
 public sealed class NewChatCanonicalPermissionObservationTests
 {
+    [Theory]
+    [InlineData("Stopped")]
+    [InlineData("Interrupted")]
+    public void Reopened_chat_projects_only_a_truthful_terminal_partial_state(string responseState)
+    {
+        var conversation = Conversation();
+        var partial = new ChatMessage(Guid.NewGuid(), conversation.Id, MessageRole.Assistant,
+            "Visible partial response", "Haven", "model-a",
+            "{\"responseState\":\"" + responseState + "\",\"isPartial\":true}", DateTimeOffset.UtcNow);
+        var nonPartial = partial with { MetadataJson = "{\"responseState\":\"" + responseState + "\",\"isPartial\":false}" };
+        var malformed = partial with { MetadataJson = "{" };
+        var user = partial with { Role = MessageRole.User };
+
+        Assert.Equal(responseState, NewChatPage.ReadRetainedPartialState(partial));
+        Assert.Null(NewChatPage.ReadRetainedPartialState(nonPartial));
+        Assert.Null(NewChatPage.ReadRetainedPartialState(malformed));
+        Assert.Null(NewChatPage.ReadRetainedPartialState(user));
+    }
+
     [Fact]
     public void Actual_returned_observation_keeps_same_request_context_and_all_canonical_ids()
     {

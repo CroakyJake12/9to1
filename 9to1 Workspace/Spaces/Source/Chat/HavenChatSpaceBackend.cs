@@ -216,6 +216,39 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
         await turns.ExecuteAsync(request with { Conversation = actual.Conversation, Model = model }, progress, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task PersistStoppedPartialAsync(Guid conversationId, Guid branchId, ChatMessage acceptedInput, ChatMessage message, CancellationToken cancellationToken)
+    {
+        // acceptedInput is the exact post-commit callback record from this send. Do not
+        // substitute a queried/latest user message; the bound store checks this record
+        // against current original-branch history before admitting the assistant insert.
+        ArgumentNullException.ThrowIfNull(acceptedInput);
+        ArgumentNullException.ThrowIfNull(message);
+        if (acceptedInput.ConversationId != conversationId || acceptedInput.Role != MessageRole.User ||
+            message.ConversationId != conversationId || message.Role != MessageRole.Assistant || string.IsNullOrWhiteSpace(message.Content))
+            throw new InvalidOperationException("A stopped partial requires its exact accepted user input and a non-empty assistant reply in the same conversation.");
+        var actual = await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        RequireCurrentBranch(actual, branchId);
+        if (actual.Messages.Any(existing => existing.Id == message.Id))
+            throw new InvalidOperationException("The stopped partial message ID already exists; refusing to overwrite canonical response history.");
+        await EnsureMayActAsync(conversationId, "chat.persist-stopped-partial", cancellationToken).ConfigureAwait(false);
+        // Safety/membership checks may await. Re-observe the exact branch afterward;
+        // the branch-bound repository then closes the final race transactionally.
+        actual = await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        RequireCurrentBranch(actual, branchId);
+        if (actual.Messages.Any(existing => existing.Id == message.Id))
+            throw new InvalidOperationException("The stopped partial message ID appeared during admission; refusing to overwrite canonical response history.");
+        var branchStore = conversations as IConversationBranchBoundRepository
+            ?? throw new InvalidOperationException("The canonical conversation store cannot bind the stopped reply to its original branch.");
+        await using var invocation = branchStore.BindInvocation(conversationId, branchId);
+        // A new branch-bound handle starts unadmitted. Admit only the exact input returned
+        // by this send's acceptance callback; the repository validates it against current
+        // canonical branch history before allowing the assistant response insert.
+        await EnsureMayActAsync(conversationId, "chat.persist-stopped-partial", cancellationToken).ConfigureAwait(false);
+        await invocation.AdmitExistingUserInputAsync(acceptedInput, cancellationToken).ConfigureAwait(false);
+        await EnsureMayActAsync(conversationId, "chat.persist-stopped-partial", cancellationToken).ConfigureAwait(false);
+        await invocation.AddMessageAsync(message, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<ConversationBranch> CreateBranchAsync(
         Guid conversationId,
         Guid messageId,
