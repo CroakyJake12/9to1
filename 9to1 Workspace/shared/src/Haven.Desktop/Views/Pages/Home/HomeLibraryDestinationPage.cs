@@ -4,6 +4,7 @@ using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
+using Haven.Application;
 using Haven.Desktop.Services;
 using HavenOS.Home;
 using HavenOS.Home.Core;
