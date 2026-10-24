@@ -16,5 +16,6 @@
     <ProjectReference Include="../../../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="../../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <Compile Include="../BoardsBrowserCore.Find.cs" Link="Production/BoardsBrowserCore.Find.cs" />
+    <Compile Include="../BoardsBrowserCore.History.cs" Link="Production/BoardsBrowserCore.History.cs" />
   </ItemGroup>
 </Project>

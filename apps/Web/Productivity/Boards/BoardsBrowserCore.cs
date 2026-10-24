@@ -100,7 +100,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     internal void AbandonUnadmittedPresentation()
     {
         if (!_presentationPending || IsBusy || _operations.CurrentCount != 1) throw new InvalidOperationException("An active core cannot be abandoned.");
-        InvalidateBoardFind();
+        InvalidateBoardFind(); InvalidateBoardHistory();
         UnbindRichEditor(); _document = null; _disposed = true;
     }
     public Task<HomeCoreOperationResult<Guid>> OpenAsync(Guid id, bool readOnly = false, CancellationToken token = default) => Operate(async ct =>
@@ -155,6 +155,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         ct.ThrowIfCancellationRequested();
         if (_presentationPending) return Task.FromResult(Failure<T>("PresentationNotAdmitted", "This prepared view is not active."));
         if (_document is null) return Task.FromResult(Failure<T>("NotFound", "Open a notebook first."));
+        if (IsHistoryPreview) return Task.FromResult(Failure<T>("HistoryPreview", "Return to the current board before editing."));
         if (IsReadOnly) return Task.FromResult(Failure<T>("PermissionDenied", "This notebook is read-only."));
         if (_pending is not null) return Task.FromResult(Failure<T>("CommitOutcomeUnknown", "Inspect saved state before changing this preserved draft."));
         var candidate = Clone(_document);
@@ -171,6 +172,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         if (_presentationPending) return Failure<bool>("PresentationNotAdmitted", "This prepared view is not active.");
         if (_pending is not null) return Failure<bool>("CommitOutcomeUnknown", "Save may already be committed; inspect saved state before retrying.");
         if (_document is null) return Failure<bool>("NotFound", "Open a notebook first.");
+        if (IsHistoryPreview) return Failure<bool>("HistoryPreview", "Return to the current board before saving.");
         if (IsReadOnly) return Failure<bool>("PermissionDenied", "This notebook is read-only.");
         if (!IsDirty) return Success(true);
         var candidate = Clone(_document); candidate.Version = DurableRevision;
@@ -205,7 +207,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     {
         if (_presentationPending) return Failure<bool>("PresentationNotAdmitted", "This prepared view is not active.");
         if (!await SaveBeforeLeaving(ct)) return Failed<bool>();
-        InvalidateBoardFind();
+        InvalidateBoardFind(); InvalidateBoardHistory();
         UnbindRichEditor(); _document = null; ActivePageId = null; DurableRevision = 0; IsDirty = false; IsReadOnly = false; Status = "Choose a board or create a new one"; return Success(true);
     }, token);
     private async Task<bool> SaveBeforeLeaving(CancellationToken ct)
@@ -216,13 +218,13 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         if (!IsDirty) return true;
         Failure<bool>("UnsavedChanges", "Newer changes remain unsaved; save before leaving."); return false;
     }
-    private void Attach(NotesDocument document, bool readOnly)
+    private void Attach(NotesDocument document, bool readOnly, bool initializeWithoutNormalization = false)
     {
-        InvalidateBoardFind();
+        InvalidateBoardFind(); InvalidateBoardHistory();
         var sameBoard = _document?.Id == document.Id;
         UnbindRichEditor(); _document = document; DurableRevision = document.Version; IsReadOnly = readOnly; IsDirty = false;
         if (!sameBoard || !VisiblePages.Any(page => page.Id == ActivePageId)) ActivePageId = VisiblePages.FirstOrDefault()?.Id;
-        BindRichEditor();
+        BindRichEditor(initializeWithoutNormalization);
     }
     private void Acknowledge(NotesSaveResult receipt)
     {
@@ -252,6 +254,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         // Browser callers retain their existing browser-data notice; native composition supplies
         // its genuine device-store description without forking the shared CUI workspace.
         if (path == "StorageDetail" && _storageDetail is not null) { value = _storageDetail; return true; }
+        if (TryGetHistoryValue(path, out value)) return true;
         if (TryGetFindValue(path, out value)) return true;
         if (TryGetWorkspaceValue(path, out value)) return true;
         value = path switch
@@ -269,18 +272,24 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         return path is "Title" or "Status" or "Notebooks" or "HasUnknownCommitOutcome" or "CanCreate" or "CanOpen" or "CanSave" or "CanClose" or "CanInspect" or "CanBold" or "CanUndo" or "CanRedo";
     }
     public bool? IsActionAvailable(string command) => !_disposed && !_presentationPending && !IsBusy &&
-        (_pending is null || command is "Inspect" or "Refresh") && (command switch
+        (_pending is null || command is "Inspect" or "Refresh") &&
+        (!IsHistoryPreview || IsHistoryPreviewAction(command)) && (command switch
         {
             "Create" or "Open" or "Refresh" => true, "Save" => _document is not null && !IsReadOnly,
             "Close" => _document is not null, "Inspect" => _pending is not null,
             "Bold" => RichEditingPermitted, "Undo" => RichEditingPermitted && _richEditor?.CanUndo == true,
             "Redo" => RichEditingPermitted && _richEditor?.CanRedo == true,
             "ToggleFind" or "FindBoard" or "OpenFindMatch" => _document is not null,
+            "ToggleHistory" or "LoadHistory" => _document is not null,
+            "PreviewHistory" => _historyRows.Length > 0,
+            "SelectHistoryPage" or "CloseHistoryPreview" => IsHistoryPreview,
+            "RestoreHistory" => CanRestoreHistoryPreview,
             _ => IsWorkspaceActionAvailable(command)
         });
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         if (IsActionAvailable(command) != true) { Failure<bool>("OperationDenied", "This notebook action is unavailable."); Notify(); return; }
+        if (await DispatchHistoryAsync(command, parameter, cancellationToken)) return;
         if (await DispatchFindAsync(command, parameter, cancellationToken)) return;
         if (await DispatchWorkspaceAsync(command, parameter, cancellationToken)) return;
         switch (command)
@@ -301,6 +310,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     private void Notify()
     {
         InvalidateChangedBoardFind();
+        InvalidateChangedBoardHistory();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
     private HomeCoreOperationResult<T> Success<T>(T value) => new(true, "Succeeded", Status, value, Revision: DurableRevision);
@@ -316,7 +326,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     public async ValueTask DisposeAsync()
     {
         await _operations.WaitAsync();
-        try { if (_disposed) return; if (IsDirty || _pending is not null) throw new InvalidOperationException("Save or resolve this notebook before disposal."); InvalidateBoardFind(); UnbindRichEditor(); _document = null; _disposed = true; }
+        try { if (_disposed) return; if (IsDirty || _pending is not null) throw new InvalidOperationException("Save or resolve this notebook before disposal."); InvalidateBoardFind(); InvalidateBoardHistory(); UnbindRichEditor(); _document = null; _disposed = true; }
         finally { _operations.Release(); }
     }
     private sealed record PendingCommit(NotesDocument Snapshot, long BaseRevision, long Generation);

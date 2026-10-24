@@ -17,7 +17,7 @@ public sealed partial class BoardsBrowserCore
         section.Pages.OrderBy(page => page.Order)).Where(page => !BoardsWorkspaceService.IsPageDeleted(_document!, page.Id)) ?? [];
     private NotesPage? ActivePage => VisiblePages.FirstOrDefault(page => page.Id == ActivePageId);
     private NotesSection? ActiveSection => _document?.Sections.FirstOrDefault(section => section.Pages.Any(page => page.Id == ActivePageId));
-    private bool CanChangeBoard => _document is not null && !_disposed && !_presentationPending && !IsBusy && !IsReadOnly && _pending is null;
+    private bool CanChangeBoard => _document is not null && !_disposed && !_presentationPending && !IsBusy && !IsReadOnly && !IsHistoryPreview && _pending is null;
 
     internal void NotifySelectionChanged() => Notify();
     internal void SetViewportWidth(double width)
@@ -142,7 +142,7 @@ public sealed partial class BoardsBrowserCore
     public Task<HomeCoreOperationResult<bool>> SelectPageAsync(Guid pageId, CancellationToken token = default) => Operate(ct =>
     {
         ct.ThrowIfCancellationRequested();
-        if (_presentationPending || _pending is not null) return Task.FromResult(Failure<bool>("OperationDenied", "Finish recovery before changing pages."));
+        if (_presentationPending || IsHistoryPreview || _pending is not null) return Task.FromResult(Failure<bool>("OperationDenied", "Return to the current board and finish recovery before changing pages."));
         if (!VisiblePages.Any(page => page.Id == pageId)) return Task.FromResult(Failure<bool>("PageNotFound", "This page is not available in the current board."));
         if (pageId != ActivePageId) { ActivePageId = pageId; RebindActiveEditor(); }
         _drawerOpen = false;

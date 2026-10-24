@@ -11,17 +11,17 @@ public sealed partial class BoardsBrowserCore
     private WriteDocumentEditor? _richEditor;
     internal WriteDocumentEditor? NativeRichEditor => _richEditor;
     internal bool RichEditingPermitted => _document is not null && _richEditor is not null &&
-        !_disposed && !_presentationPending && !IsReadOnly && _pending is null &&
+        !_disposed && !_presentationPending && !IsHistoryPreview && !IsReadOnly && _pending is null &&
         ActivePageId is { } pageId && VisiblePages.Any(page => page.Id == pageId) &&
         _boards.GetEditMode(_document, pageId) == BoardsPageEditMode.Edit;
     internal bool AllowRetainedRichInput => !IsBusy && RichEditingPermitted;
-    internal bool AllowRetainedSelection => !IsBusy && !_disposed && !_presentationPending && _pending is null && _richEditor is not null;
+    internal bool AllowRetainedSelection => !IsBusy && !_disposed && !_presentationPending && !IsHistoryPreview && _pending is null && _richEditor is not null;
 
-    private void BindRichEditor()
+    private void BindRichEditor(bool initializeWithoutNormalization = false)
     {
         if (_document is null || ActivePageId is not { } pageId) return;
         var before = System.Text.Json.JsonSerializer.Serialize(_document, Json);
-        _richEditor = new WriteDocumentEditor(_document, pageId);
+        _richEditor = new WriteDocumentEditor(_document, pageId, initializeWithoutNormalization);
         _richEditor.Changed += OnRichEditorChanged;
         // Owning initialization may create missing run IDs in a legacy document.
         // Such changes are unsaved, never attributed to an acknowledged revision.
@@ -46,7 +46,7 @@ public sealed partial class BoardsBrowserCore
         CancellationToken token = default) => Operate(ct =>
     {
         ct.ThrowIfCancellationRequested();
-        if (_presentationPending || _richEditor is null)
+        if (_presentationPending || IsHistoryPreview || _richEditor is null)
             return Task.FromResult(Failure<bool>("PresentationNotAdmitted", "Open a notebook first."));
         var block = _richEditor.Blocks().FirstOrDefault(item => item.Id == blockId);
         if (block is null) return Task.FromResult(Failure<bool>("NotFound", "Choose an existing notebook block."));

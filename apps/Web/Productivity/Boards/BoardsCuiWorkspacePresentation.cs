@@ -20,11 +20,13 @@ public sealed class BoardsCuiWorkspacePresentation : IDisposable
     private bool _disposed;
     private TopLevel? _topLevel;
     public WriteRetainedSceneControl Control { get; }
+    public WriteRetainedSceneControl HistoryControl { get; }
     public CuiControlRegistry ControlRegistry { get; }
     public BoardsCuiWorkspacePresentation(BoardsBrowserCore core, Func<bool> reduceMotion)
     {
         _core = core;
         Control = new(reduceMotion);
+        HistoryControl = AcquireHistoryControl(Control, reduceMotion);
         Control.SelectionChanged += SelectionChanged;
         Control.AttachedToVisualTree += Attached;
         CuiThemeResourceApplier.PaletteChanged += ThemeChanged;
@@ -35,11 +37,25 @@ public sealed class BoardsCuiWorkspacePresentation : IDisposable
             ControlRegistry = new CuiControlRegistry();
             BrowserCanonicalIcons.Register(ControlRegistry);
             ControlRegistry.RegisterObjectRenderer("BoardsNotebookSurface", _ => Control);
+            ControlRegistry.RegisterObjectRenderer("BoardsHistorySurface", _ => HistoryControl);
         }
         catch (Exception primary)
         {
             try { Dispose(); }
             catch (Exception cleanup) { throw new AggregateException("Boards editor acquisition and cleanup failed.", primary, cleanup); }
+            throw;
+        }
+    }
+    private static WriteRetainedSceneControl AcquireHistoryControl(WriteRetainedSceneControl live, Func<bool> reduceMotion)
+    {
+        WriteRetainedSceneControl? history = null;
+        try { history = new(reduceMotion); history.SetReadOnly(true); return history; }
+        catch (Exception primary)
+        {
+            var failures = new List<Exception> { primary };
+            try { history?.Dispose(); } catch (Exception cleanup) { failures.Add(cleanup); }
+            try { live.Dispose(); } catch (Exception cleanup) { failures.Add(cleanup); }
+            if (failures.Count > 1) throw new AggregateException("Boards history renderer acquisition and cleanup failed.", failures);
             throw;
         }
     }
@@ -77,12 +93,20 @@ public sealed class BoardsCuiWorkspacePresentation : IDisposable
         // Freeze input before replacing the exact editor. No document snapshot becomes a second model.
         Control.SetInputAllowed(_core.AllowRetainedSelection);
         Control.SetReadOnly(!_core.RichEditingPermitted);
+        HistoryControl.SetInputAllowed(_core.AllowHistorySelection);
+        HistoryControl.SetReadOnly(true);
+        HistoryControl.SetWorkspaceLayoutLocked(true);
         _core.TryGetValue("LayoutUnlocked", out var unlocked);
         Control.SetWorkspaceLayoutLocked(unlocked is not true);
         if (Application.Current?.FindResource("CuiTextBrush") is ISolidColorBrush foreground)
-            Control.SetWorkspaceAppearance(new HavenSolidBrush(foreground.Color.A, foreground.Color.R, foreground.Color.G, foreground.Color.B));
+        {
+            var appearance = new HavenSolidBrush(foreground.Color.A, foreground.Color.R, foreground.Color.G, foreground.Color.B);
+            Control.SetWorkspaceAppearance(appearance);
+            HistoryControl.SetWorkspaceAppearance(appearance);
+        }
         if (_disposed) return;
         Control.SetEditor(_core.NativeRichEditor);
+        HistoryControl.SetEditor(_core.NativeHistoryEditor);
     }
     public void Dispose()
     {
@@ -95,6 +119,6 @@ public sealed class BoardsCuiWorkspacePresentation : IDisposable
         Control.SelectionChanged -= SelectionChanged;
         Control.AttachedToVisualTree -= Attached;
         _topLevel = null;
-        Control.Dispose();
+        try { Control.Dispose(); } finally { HistoryControl.Dispose(); }
     }
 }

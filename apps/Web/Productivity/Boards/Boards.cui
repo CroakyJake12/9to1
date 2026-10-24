@@ -24,6 +24,8 @@
     <Action name="RecoverPage" command="RestorePage" parameter="{Binding deletedPage}" />
     <Action name="FindInBoard" command="FindBoard" parameter="{Binding BoardsFindQuery}" />
     <Action name="OpenBoardFindMatch" command="OpenFindMatch" parameter="{Binding findMatch}" />
+    <Action name="PreviewSavedBoardVersion" command="PreviewHistory" parameter="{Binding savedVersion}" />
+    <Action name="ChooseHistoryPage" command="SelectHistoryPage" parameter="{Binding historyPage}" />
   </Actions>
   <Effects>
     <Effect name="observe-owning-host" Condition="True" Action="ObserveBoardsHost" />
@@ -95,6 +97,7 @@
               </If>
               <If condition="{Binding HasBoard}">
                 <Button content="Find" action="ToggleFind" accessible-name="Find text in this board" />
+                <Button content="History" action="ToggleHistory" accessible-name="Browse this board’s saved versions" />
               </If>
               <Button content="Save" action="Save" Interactive="{Binding CanSave}" />
             </Container>
@@ -104,6 +107,39 @@
           <Container Type="Grid" Column="{Binding EditorColumn}" RowSizes="Auto 1fr Auto">
             <If condition="{Binding HasBoard}">
               <Container margin="24,18,24,8" Type="Vertical Stack" CellGap="12">
+                <If condition="{Binding ShowBoardHistory}">
+                  <Container id="boards-history" Type="Vertical Stack" CellGap="8" accessible-name="Saved board versions">
+                    <Container Type="Wrap" CellGap="8">
+                      <Text text="Saved versions" font-weight="SemiBold" />
+                      <Button content="Reload versions" action="LoadHistory" />
+                      <Button content="Close history" action="ToggleHistory" />
+                    </Container>
+                    <Text id="boards-history-status" text="{Binding BoardHistoryStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                    <Container Type="Vertical Stack" VerticalScrolling="True" max-height="180">
+                      <Repeat Source="{Binding BoardHistoryRows}" As="savedVersion" Key="{Binding savedVersion.Key}">
+                        <Button id="boards-history-version" action="PreviewSavedBoardVersion" accessible-name="{Binding savedVersion.AccessibleName}" Interactive="{Binding savedVersion.CanPreview}" horizontal-content-alignment="Left">
+                          <Text text="{Binding savedVersion.Label}" text-wrapping="Wrap" />
+                        </Button>
+                      </Repeat>
+                    </Container>
+                    <If condition="{Binding IsHistoryPreview}">
+                      <Text text="{Binding HistoryPreviewTitle}" font-size="22" font-weight="SemiBold" />
+                      <Text text="Read-only saved copy. The current board and its unsaved draft are preserved. Drawing or embedded content unsupported by the existing renderer remains in the original payload." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                      <Container Type="Wrap" CellGap="6">
+                        <Repeat Source="{Binding BoardHistoryPages}" As="historyPage" Key="{Binding historyPage.Key}">
+                          <Button content="{Binding historyPage.Label}" action="ChooseHistoryPage" Interactive="{Binding historyPage.CanSelect}" />
+                        </Repeat>
+                      </Container>
+                      <Text text="{Binding HistoryPreviewPageTitle}" font-size="20" font-weight="SemiBold" />
+                      <Container Type="Wrap" CellGap="8">
+                        <Button id="boards-history-return" content="Return to current board" action="CloseHistoryPreview" />
+                        <Button id="boards-history-restore" content="Restore as unsaved draft" action="RestoreHistory" Interactive="{Binding CanRestoreHistory}" />
+                      </Container>
+                      <Text text="Restore requires a clean current board in Edit mode. Save your current draft first. After restoring, use Save to create a new version." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                    </If>
+                  </Container>
+                </If>
+                <If condition="{Binding ShowCurrentBoard}">
                 <Input accessible-name="Page title" font-size="28" font-weight="Bold" Type="Text" Value="{Binding PageTitle, mode=TwoWay}" Interactive="{Binding CanEditPage}" />
                 <If condition="{Binding ShowBoardFind}">
                   <Container id="boards-find" Type="Vertical Stack" CellGap="6" accessible-name="Find in the current board">
@@ -160,6 +196,7 @@
                 <If condition="{Binding HasUnsupportedPageContent}">
                   <Text text="This page contains drawing or embedded objects that this browser preview cannot display. They are preserved when you save." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
                 </If>
+                </If>
               </Container>
             </If>
             <Container Type="Overlay" Row="1" HorizontalScrolling="False" VerticalScrolling="True">
@@ -188,7 +225,12 @@
                     </Repeat>
                   </Container>
                 </If>
-                <Object Type="BoardsNotebookSurface" />
+                <If condition="{Binding ShowCurrentBoard}">
+                  <Object Type="BoardsNotebookSurface" />
+                </If>
+                <If condition="{Binding IsHistoryPreview}">
+                  <Object Type="BoardsHistorySurface" />
+                </If>
               </Container>
             </Container>
             <If condition="{Binding HasUnknownCommitOutcome}" Row="2">
