@@ -399,7 +399,7 @@ def main():
             # Build/check the independent desktop before unrelated CUI assertions.
             # The full CUI suite still runs and its actual failure remains fatal.
             stages=[stage for stage in stages if stage[0] not in ('test','regression')]
-            stages.extend([('desktop-restore',300),('desktop-build',900),('strata-infrastructure-test',300),('strata-desktop-test',300),('desktop-publish',180),('test',180),('regression',300)])
+            stages.extend([('desktop-restore',300),('desktop-build',900),('desktop-publish',180),('strata-infrastructure-test',300),('strata-desktop-test',300),('test',180),('regression',300)])
         state_path=temporary/'sdk-execution-projection.json';execution='github-cui-'+os.environ['GITHUB_RUN_ID']
         initial=w.initial_state(CHECKOUT,str(instruction_path))
         initial['authority']='Existing native Root remains programme authority. This is its delegated compiler-only host projection; no workers/models/milestones are created.'
