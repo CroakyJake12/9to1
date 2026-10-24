@@ -118,7 +118,21 @@ public sealed partial class NotesDocumentValidator : INotesDocumentValidator
             foreach (var reply in comment.Replies) AddId(reply.Id, $"comments[{comment.Id}].replies[{reply.Id}]");
         }
 
-        foreach (var revision in document.Revisions) AddId(revision.Id, $"revisions[{revision.Id}].id");
+        var revisionOperationIds = new HashSet<Guid>();
+        foreach (var revision in document.Revisions)
+        {
+            AddId(revision.Id, $"revisions[{revision.Id}].id");
+            if (revision.OperationId is Guid operationId)
+            {
+                if (operationId == Guid.Empty || !revisionOperationIds.Add(operationId))
+                    Error($"revisions[{revision.Id}].operationId", "Typed operation IDs must be non-empty and unique in the Notes revision history.");
+                if (revision.OperationFingerprint is not { Length: 64 } fingerprint || !fingerprint.All(Uri.IsHexDigit)
+                    || string.IsNullOrWhiteSpace(revision.OperationResultJson))
+                    Error($"revisions[{revision.Id}].operationReceipt", "Typed operation receipts require a SHA-256 fingerprint and result.");
+            }
+            else if (revision.OperationFingerprint is not null || revision.OperationResultJson is not null)
+                Error($"revisions[{revision.Id}].operationReceipt", "Typed operation receipt fields require an operation ID.");
+        }
         foreach (var change in document.AiChanges)
         {
             AddId(change.Id, $"aiChanges[{change.Id}].id");

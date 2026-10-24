@@ -31,6 +31,8 @@ public interface IBoardsWorkspaceService
     NotesPage AddChildPage(NotesDocument notebook, Guid parentPageId, string? title = null);
     void SetPageParent(NotesDocument notebook, Guid pageId, Guid? parentPageId);
     void MovePageWithinParent(NotesDocument notebook, Guid pageId, int direction);
+    bool UndoPageStructure(NotesDocument notebook);
+    bool RedoPageStructure(NotesDocument notebook);
     void MoveBlock(NotesDocument notebook, Guid pageId, Guid blockId, int targetIndex);
     NotesBlock AddBlock(NotesDocument notebook, Guid pageId, NotesBlockKind kind, string? text = null);
     bool RenamePage(NotesDocument notebook, Guid pageId, string? title);

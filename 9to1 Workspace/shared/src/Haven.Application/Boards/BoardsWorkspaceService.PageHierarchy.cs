@@ -11,6 +11,233 @@ public sealed record BoardsPageHierarchyItem(NotesPage Page, Guid SectionId, Gui
 public sealed partial class BoardsWorkspaceService
 {
     public const string PageParentsKey = "boards.page-parents.v1";
+    public const string PageStructureHistoryKey = "boards.page-structure-history.v1";
+    private const int MaxPageStructureHistory = 64;
+    private sealed record PagePosition(Guid SectionId, int Order);
+    private sealed record PageStructureState(Guid[] SectionIds, Dictionary<Guid, Guid> Parents,
+        Dictionary<Guid, PagePosition> Positions, Guid[] Deleted);
+    private sealed record PageStructureHistory(List<PageStructureState> Undo, List<PageStructureState> Redo);
+    private sealed record PageStructureRestorePlan(Guid[] MutatedSectionIds, Dictionary<Guid, List<NotesPage>> Pages,
+        Dictionary<Guid, Guid> Parents, Guid[] Deleted, string? ParentJson, string? DeletedJson,
+        PageStructureState ResultState);
+
+    private static PageStructureState CapturePageStructure(NotesDocument notebook) => new(
+        notebook.Sections.Select(section => section.Id).ToArray(), ReadPageParents(notebook),
+        notebook.Sections.SelectMany(section => section.Pages.Select(page =>
+                (Page: page, SectionId: section.Id)))
+            .ToDictionary(item => item.Page.Id, item => new PagePosition(item.SectionId, item.Page.Order)),
+        GetDeletedPageIds(notebook).Order().ToArray());
+
+    private static PageStructureHistory ReadPageStructureHistory(NotesDocument notebook)
+    {
+        if (!notebook.Metadata.TryGetValue(PageStructureHistoryKey, out var json)) return new([], []);
+        try
+        {
+            var history = JsonSerializer.Deserialize<PageStructureHistory>(json, Json);
+            if (history is null || history.Undo is null || history.Redo is null
+                || history.Undo.Count > MaxPageStructureHistory || history.Redo.Count > MaxPageStructureHistory
+                || history.Undo.Concat(history.Redo).Any(state => state is null || state.SectionIds is null || state.Parents is null
+                    || state.Positions is null || state.Deleted is null
+                    || state.Positions.Values.Any(position => position is null)))
+                throw new InvalidDataException("Boards page structure history has an invalid shape or exceeds its retained history limit.");
+            return history;
+        }
+        catch (JsonException error) { throw new InvalidDataException("Boards page structure history is invalid; the original document is preserved.", error); }
+    }
+
+    private static void WritePageStructureHistory(NotesDocument notebook, PageStructureHistory history) =>
+        notebook.Metadata[PageStructureHistoryKey] = JsonSerializer.Serialize(history, Json);
+
+    private static void BeginPageStructureEdit(NotesDocument notebook)
+    {
+        var history = ReadPageStructureHistory(notebook);
+        history.Undo.Add(CapturePageStructure(notebook));
+        if (history.Undo.Count > MaxPageStructureHistory) history.Undo.RemoveAt(0);
+        history.Redo.Clear();
+        WritePageStructureHistory(notebook, history);
+    }
+
+    private static PageStructureRestorePlan PreparePageStructureRestore(NotesDocument notebook, PageStructureState state)
+    {
+        ValidatePageStructureState(notebook, state);
+        var capturedSections = state.SectionIds.ToHashSet();
+        var currentPositions = notebook.Sections.SelectMany(section => section.Pages.Select(page => (Page: page, SectionId: section.Id)))
+            .ToDictionary(item => item.Page.Id);
+        var current = CapturePageStructure(notebook);
+        if (current.Deleted.Any(id => !currentPositions.ContainsKey(id)))
+            throw new InvalidDataException("Boards page Trash metadata references a missing page; the original document is preserved.");
+        var pages = currentPositions.ToDictionary(pair => pair.Key, pair => pair.Value.Page);
+        var planned = notebook.Sections.ToDictionary(section => section.Id, section =>
+            capturedSections.Contains(section.Id) ? new List<NotesPage>() : section.Pages.ToList());
+        foreach (var pair in state.Positions.OrderBy(pair => pair.Value.SectionId).ThenBy(pair => pair.Value.Order))
+            planned[pair.Value.SectionId].Add(pages[pair.Key]);
+        var actual = pages.Keys.ToHashSet();
+        var unrecordedPagesInExistingSections = actual.Except(state.Positions.Keys)
+            .Where(id => capturedSections.Contains(currentPositions[id].SectionId)).ToHashSet();
+        foreach (var id in unrecordedPagesInExistingSections)
+            planned[currentPositions[id].SectionId].Add(pages[id]);
+        foreach (var section in notebook.Sections.Where(section => capturedSections.Contains(section.Id)))
+        {
+            planned[section.Id] = planned[section.Id]
+                .OrderBy(page => state.Positions.GetValueOrDefault(page.Id)?.Order ?? int.MaxValue)
+                .ThenBy(page => page.Id).ToList();
+        }
+
+        // History snapshots are scoped to sections that existed when the operation
+        // ran, but Notes metadata is notebook-global. Preserve current metadata for
+        // later sections and for pages created after the snapshot (which are trashed
+        // by undo but retain their parent edge for recovery).
+        var parents = current.Parents.Where(pair => !state.Positions.ContainsKey(pair.Key)
+                || !capturedSections.Contains(currentPositions[pair.Key].SectionId))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        foreach (var pair in state.Parents) parents[pair.Key] = pair.Value;
+        var deleted = current.Deleted.Where(id => !capturedSections.Contains(currentPositions[id].SectionId))
+            .Concat(state.Deleted).Concat(unrecordedPagesInExistingSections).ToHashSet();
+
+        var resultPositions = new Dictionary<Guid, PagePosition>();
+        foreach (var section in notebook.Sections)
+        {
+            var resultingPages = capturedSections.Contains(section.Id) ? planned[section.Id] : section.Pages;
+            for (var index = 0; index < resultingPages.Count; index++)
+                resultPositions[resultingPages[index].Id] = new PagePosition(section.Id, index);
+        }
+        var resultState = new PageStructureState(notebook.Sections.Select(section => section.Id).ToArray(),
+            parents, resultPositions, deleted.Order().ToArray());
+        ValidatePageStructureState(notebook, resultState);
+        foreach (var sectionId in state.SectionIds)
+            if (!planned[sectionId].Any(page => !deleted.Contains(page.Id)))
+                throw new InvalidDataException("Boards page structure history would leave a captured section without a visible page.");
+
+        var parentsUnchanged = parents.Count == current.Parents.Count
+            && parents.All(pair => current.Parents.TryGetValue(pair.Key, out var value) && value == pair.Value);
+        var parentJson = parentsUnchanged ? notebook.Metadata.GetValueOrDefault(PageParentsKey)
+            : parents.Count == 0 ? null : JsonSerializer.Serialize(parents.OrderBy(pair => pair.Key)
+                .ToDictionary(pair => pair.Key, pair => pair.Value), Json);
+        var deletedUnchanged = deleted.SetEquals(current.Deleted);
+        var deletedJson = deletedUnchanged ? notebook.Metadata.GetValueOrDefault(DeletedPagesKey)
+            : deleted.Count == 0 ? null : JsonSerializer.Serialize(deleted.Order().ToArray());
+        var changedSections = state.SectionIds.Where(sectionId =>
+        {
+            var before = notebook.Sections.Single(section => section.Id == sectionId).Pages.Select(page => page.Id);
+            var after = planned[sectionId].Select(page => page.Id);
+            return !before.SequenceEqual(after);
+        }).ToArray();
+        return new PageStructureRestorePlan(changedSections, planned, parents, deleted.Order().ToArray(),
+            parentJson, deletedJson, resultState);
+    }
+
+    private static void PublishPageStructureRestore(NotesDocument notebook, PageStructureRestorePlan plan)
+    {
+        // Publish only after every reference, cycle, ordering and replacement list
+        // has been validated and staged against the canonical Notes pages.
+        foreach (var section in notebook.Sections.Where(section => plan.MutatedSectionIds.Contains(section.Id)))
+        {
+            section.Pages = plan.Pages[section.Id];
+            NormalizePages(section);
+        }
+        if (plan.ParentJson is null) notebook.Metadata.Remove(PageParentsKey);
+        else notebook.Metadata[PageParentsKey] = plan.ParentJson;
+        if (plan.DeletedJson is null) notebook.Metadata.Remove(DeletedPagesKey);
+        else notebook.Metadata[DeletedPagesKey] = plan.DeletedJson;
+        TouchRecovery(notebook);
+    }
+
+    private static void ValidatePageStructureState(NotesDocument notebook, PageStructureState state)
+    {
+        var sections = notebook.Sections.ToDictionary(section => section.Id);
+        var actual = notebook.Sections.SelectMany(section => section.Pages).Select(page => page.Id).ToHashSet();
+        if (state.SectionIds.Length == 0 || state.SectionIds.Any(id => id == Guid.Empty || !sections.ContainsKey(id))
+            || state.SectionIds.Distinct().Count() != state.SectionIds.Length
+            || state.Positions.Any(pair => pair.Key == Guid.Empty || !actual.Contains(pair.Key)
+                || pair.Value is null || pair.Value.SectionId == Guid.Empty || !sections.ContainsKey(pair.Value.SectionId)
+                || !state.SectionIds.Contains(pair.Value.SectionId) || pair.Value.Order < 0)
+            || state.Positions.Values.GroupBy(position => position.SectionId)
+                .Any(group => group.GroupBy(position => position.Order).Any(orders => orders.Count() > 1))
+            || state.Deleted.Any(id => id == Guid.Empty || !state.Positions.ContainsKey(id)))
+            throw new InvalidDataException("Boards page structure history contains invalid page, section, order or trash references.");
+
+        foreach (var pair in state.Parents)
+            if (pair.Key == Guid.Empty || pair.Value == Guid.Empty || pair.Key == pair.Value
+                || !state.Positions.TryGetValue(pair.Key, out var child)
+                || !state.Positions.TryGetValue(pair.Value, out var parent)
+                || child.SectionId != parent.SectionId)
+                throw new InvalidDataException("Boards page structure history contains an invalid parent reference.");
+
+        var complete = new HashSet<Guid>();
+        foreach (var start in state.Parents.Keys)
+        {
+            var path = new HashSet<Guid>();
+            var cursor = start;
+            while (!complete.Contains(cursor) && state.Parents.TryGetValue(cursor, out var parent))
+            {
+                if (!path.Add(cursor)) throw new InvalidDataException("Boards page structure history contains a parent cycle.");
+                cursor = parent;
+            }
+            complete.UnionWith(path);
+        }
+    }
+
+    public bool UndoPageStructure(NotesDocument notebook) => ChangePageStructureHistory(notebook, undo: true);
+    public bool RedoPageStructure(NotesDocument notebook) => ChangePageStructureHistory(notebook, undo: false);
+
+    private static HashSet<Guid> ChangedPageStructureScope(PageStructureState current, PageStructureState target)
+    {
+        var affected = new HashSet<Guid>();
+        foreach (var id in current.Positions.Keys.Union(target.Positions.Keys))
+        {
+            if (!target.Positions.ContainsKey(id) && current.Positions.TryGetValue(id, out var currentOnly)
+                && !target.SectionIds.Contains(currentOnly.SectionId)) continue;
+            if (!current.Positions.TryGetValue(id, out var currentPosition)
+                || !target.Positions.TryGetValue(id, out var targetPosition)
+                || currentPosition != targetPosition)
+                affected.Add(id);
+        }
+
+        foreach (var id in current.Parents.Keys.Union(target.Parents.Keys))
+        {
+            var hasCurrent = current.Parents.TryGetValue(id, out var currentParent);
+            var hasTarget = target.Parents.TryGetValue(id, out var targetParent);
+            if (hasCurrent == hasTarget && currentParent == targetParent) continue;
+            affected.Add(id);
+            if (hasCurrent && currentParent != Guid.Empty) affected.Add(currentParent);
+            if (hasTarget && targetParent != Guid.Empty) affected.Add(targetParent);
+        }
+
+        var currentDeleted = current.Deleted.ToHashSet();
+        var targetDeleted = target.Deleted.ToHashSet();
+        foreach (var pageId in currentDeleted.Except(targetDeleted).Union(targetDeleted.Except(currentDeleted)))
+        {
+            // Hiding/restoring an ancestor changes every descendant's visible
+            // navigation parent/depth even though their canonical parent links
+            // remain stable. Include both historical and resulting subtrees.
+            affected.UnionWith(PageSubtree(current.Parents, pageId));
+            affected.UnionWith(PageSubtree(target.Parents, pageId));
+            var currentParent = current.Parents.GetValueOrDefault(pageId);
+            var targetParent = target.Parents.GetValueOrDefault(pageId);
+            if (currentParent != Guid.Empty) affected.Add(currentParent);
+            if (targetParent != Guid.Empty) affected.Add(targetParent);
+        }
+        return affected;
+    }
+
+    private static bool ChangePageStructureHistory(NotesDocument notebook, bool undo)
+    {
+        EnsureBoards(notebook);
+        var history = ReadPageStructureHistory(notebook);
+        var source = undo ? history.Undo : history.Redo;
+        if (source.Count == 0) return false;
+        var target = undo ? history.Redo : history.Undo;
+        var state = source[^1];
+        var current = CapturePageStructure(notebook);
+        var plan = PreparePageStructureRestore(notebook, state);
+        RequireEditableSubtree(notebook, ChangedPageStructureScope(current, plan.ResultState));
+        target.Add(current);
+        source.RemoveAt(source.Count - 1);
+        var historyJson = JsonSerializer.Serialize(history, Json);
+        PublishPageStructureRestore(notebook, plan);
+        notebook.Metadata[PageStructureHistoryKey] = historyJson;
+        return true;
+    }
 
     // Missing metadata is the original flat document. Invalid known metadata is
     // refused, never replaced with an empty map or silently normalized on read.
@@ -101,7 +328,8 @@ public sealed partial class BoardsWorkspaceService
         var parents = ReadPageParents(notebook);
         _ = RequireRecoveryPage(notebook, parentPageId);
         var section = notebook.Sections.Single(item => item.Pages.Any(page => page.Id == parentPageId));
-        var added = AddPage(notebook, section.Id, title);
+        BeginPageStructureEdit(notebook);
+        var added = AddPageWithoutHistory(notebook, section.Id, title);
         parents[added.Id] = parentPageId;
         WritePageParents(notebook, parents); ReorderSectionTree(section, parents);
         TouchRecovery(notebook); return added;
@@ -126,6 +354,7 @@ public sealed partial class BoardsWorkspaceService
         if (!ReferenceEquals(source, target) && source.Pages.All(page => subtree.Contains(page.Id)))
             throw new InvalidOperationException("Leave a page in the source section before moving its final branch.");
         if (priorParent != Guid.Empty) EnsureEditablePage(notebook, priorParent);
+        BeginPageStructureEdit(notebook);
         if (parentPageId is { } newParent) parents[pageId] = newParent;
         else parents.Remove(pageId);
         if (!ReferenceEquals(source, target))
@@ -160,6 +389,7 @@ public sealed partial class BoardsWorkspaceService
         RequireEditableSubtree(notebook, PageSubtree(parents, visible[target].Id));
         var order = all.Select(page => page.Id).ToArray();
         var first = Array.IndexOf(order, pageId); var second = Array.IndexOf(order, visible[target].Id);
+        BeginPageStructureEdit(notebook);
         (order[first], order[second]) = (order[second], order[first]);
         ReorderSectionTree(section, parents, parent, order); TouchRecovery(notebook);
     }
@@ -178,8 +408,15 @@ public sealed partial class BoardsWorkspaceService
         var parent = ParentKey(parents, pageId);
         if (parent != Guid.Empty) EnsureEditablePage(notebook, parent);
         var moved = source.Pages.Where(page => subtree.Contains(page.Id)).ToArray();
-        source.Pages.RemoveAll(page => subtree.Contains(page.Id));
-        target.Pages.InsertRange(Math.Clamp(targetIndex, 0, target.Pages.Count), moved);
+        var sourceRemaining = source.Pages.Where(page => !subtree.Contains(page.Id)).ToList();
+        var destination = ReferenceEquals(source, target) ? sourceRemaining : target.Pages.ToList();
+        destination.InsertRange(Math.Clamp(targetIndex, 0, destination.Count), moved);
+        if (ReferenceEquals(source, target)
+            && destination.Select(page => page.Id).SequenceEqual(source.Pages.Select(page => page.Id))) return;
+
+        BeginPageStructureEdit(notebook);
+        source.Pages = sourceRemaining;
+        target.Pages = destination;
         if (!ReferenceEquals(source, target)) parents.Remove(pageId);
         NormalizePages(source); if (!ReferenceEquals(source, target)) NormalizePages(target);
         WritePageParents(notebook, parents); TouchRecovery(notebook);

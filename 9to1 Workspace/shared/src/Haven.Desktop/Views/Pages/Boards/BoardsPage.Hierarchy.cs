@@ -33,16 +33,23 @@ public sealed partial class BoardsPage
                 });
             button.HorizontalContentAlignment = HorizontalAlignment.Left;
             _sections.Children.Add(button);
-            foreach (var page in section.Pages.Where(value => !BoardsWorkspaceService.IsPageDeleted(document, value.Id))
-                         .OrderBy(value => value.Order))
+            var hierarchy = _boards.ListPageHierarchy(document)
+                .Where(item => item.SectionId == section.Id).ToArray();
+            foreach (var item in hierarchy)
             {
-                var localPage = page;
+                var localPage = item.Page;
+                var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 3,
+                    Margin = new Avalonia.Thickness(8 + item.Depth * 14, 0, 0, 0) };
+                var marker = item.HasChildren ? "▾ " : (item.Depth > 0 ? "↳ " : "");
                 var pageButton = ActionButton(
-                    (page.Id == _page?.Id ? "• " : "") + "↳ " + page.Title,
+                    (item.Page.Id == _page?.Id ? "• " : "") + marker + item.Page.Title,
                     () => SelectHierarchyPageAsync(local, localPage));
                 pageButton.HorizontalContentAlignment = HorizontalAlignment.Left;
-                pageButton.Margin = new Avalonia.Thickness(16, 0, 0, 0);
-                _sections.Children.Add(pageButton);
+                pageButton.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+                pageButton.MinWidth = 0;
+                row.Children.Add(pageButton);
+                row.Children.Add(BuildPageHierarchyMenu(document, item, hierarchy));
+                _sections.Children.Add(row);
             }
         }
 
@@ -61,6 +68,80 @@ public sealed partial class BoardsPage
                 }
             }
         }
+    }
+
+    private Button BuildPageHierarchyMenu(NotesDocument document, BoardsPageHierarchyItem item,
+        IReadOnlyList<BoardsPageHierarchyItem> hierarchy)
+    {
+        var button = new Button { Content = "⋯", MinWidth = 28 };
+        Avalonia.Automation.AutomationProperties.SetName(button, $"Page actions: {item.Page.Title}");
+        button.Click += (_, _) =>
+        {
+            var menu = new MenuFlyout();
+            AddMenuAction(menu, "Add subpage", async () => await AddChildPageAsync(item.Page.Id));
+            AddMenuAction(menu, "Move up", async () => await MovePageWithinParentAsync(item.Page.Id, -1));
+            AddMenuAction(menu, "Move down", async () => await MovePageWithinParentAsync(item.Page.Id, 1));
+            AddMenuAction(menu, "Promote to section root", async () => await SetPageParentAsync(item.Page.Id, null), item.ParentPageId is null);
+
+            var descendants = hierarchy.Where(candidate => IsDescendantOf(candidate, item.Page.Id, hierarchy))
+                .Select(candidate => candidate.Page.Id).ToHashSet();
+            var nest = new MenuItem { Header = "Move under topic" };
+            foreach (var parent in hierarchy.Where(candidate => candidate.SectionId == item.SectionId
+                         && candidate.Page.Id != item.Page.Id && !descendants.Contains(candidate.Page.Id)))
+            {
+                var target = parent.Page;
+                var targetItem = new MenuItem { Header = target.Title };
+                targetItem.Click += async (_, _) => await SetPageParentAsync(item.Page.Id, target.Id);
+                nest.Items.Add(targetItem);
+            }
+            if (nest.Items.Count > 0) menu.Items.Add(nest);
+            menu.ShowAt(button);
+        };
+        return button;
+    }
+
+    private static bool IsDescendantOf(BoardsPageHierarchyItem candidate, Guid ancestor,
+        IReadOnlyList<BoardsPageHierarchyItem> hierarchy)
+    {
+        var parent = candidate.ParentPageId;
+        while (parent is Guid parentId)
+        {
+            if (parentId == ancestor) return true;
+            parent = hierarchy.FirstOrDefault(item => item.Page.Id == parentId)?.ParentPageId;
+        }
+        return false;
+    }
+
+    private static void AddMenuAction(MenuFlyout menu, string title, Func<Task> action, bool disabled = false)
+    {
+        var item = new MenuItem { Header = title, IsEnabled = !disabled };
+        item.Click += async (_, _) => await action();
+        menu.Items.Add(item);
+    }
+
+    private async Task AddChildPageAsync(Guid parentPageId)
+    {
+        if (_document is null) return;
+        _page = _boards.AddChildPage(_document, parentPageId, "New topic");
+        _section = _document.Sections.First(section => section.Pages.Contains(_page));
+        RebuildHierarchy(); RebuildPageTabs(); RebuildEditor();
+        await SaveAsync("Added nested Boards topic");
+    }
+
+    private async Task SetPageParentAsync(Guid pageId, Guid? parentPageId)
+    {
+        if (_document is null) return;
+        _boards.SetPageParent(_document, pageId, parentPageId);
+        RebuildHierarchy(); RebuildPageTabs();
+        await SaveAsync("Moved Boards topic in page hierarchy");
+    }
+
+    private async Task MovePageWithinParentAsync(Guid pageId, int direction)
+    {
+        if (_document is null) return;
+        _boards.MovePageWithinParent(_document, pageId, direction);
+        RebuildHierarchy(); RebuildPageTabs();
+        await SaveAsync("Reordered Boards topic");
     }
 
     private void RebuildPageTabs()
@@ -142,6 +223,20 @@ public sealed partial class BoardsPage
         RebuildPageTabs();
         RebuildEditor();
         await SaveAsync("Restored Boards page from Trash");
+    }
+
+    private async Task UndoPageStructureAsync()
+    {
+        if (_document is null || !_boards.UndoPageStructure(_document)) return;
+        RebuildHierarchy(); RebuildPageTabs(); RebuildEditor();
+        await SaveAsync("Undo Boards page structure");
+    }
+
+    private async Task RedoPageStructureAsync()
+    {
+        if (_document is null || !_boards.RedoPageStructure(_document)) return;
+        RebuildHierarchy(); RebuildPageTabs(); RebuildEditor();
+        await SaveAsync("Redo Boards page structure");
     }
 
     private async Task AddBlockAsync(NotesBlockKind kind)

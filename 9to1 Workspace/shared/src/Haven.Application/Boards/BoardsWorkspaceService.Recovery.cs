@@ -34,6 +34,13 @@ public sealed partial class BoardsWorkspaceService
 
     public NotesPage AddPage(NotesDocument notebook, Guid sectionId, string? title = null)
     {
+        _ = RequireRecoverySection(notebook, sectionId);
+        BeginPageStructureEdit(notebook);
+        return AddPageWithoutHistory(notebook, sectionId, title);
+    }
+
+    private NotesPage AddPageWithoutHistory(NotesDocument notebook, Guid sectionId, string? title)
+    {
         var section = RequireRecoverySection(notebook, sectionId);
         var page = NotesPage.CreateDefault();
         page.Title = string.IsNullOrWhiteSpace(title)
@@ -113,13 +120,17 @@ public sealed partial class BoardsWorkspaceService
     public bool DeletePage(NotesDocument notebook, Guid pageId)
     {
         EnsureBoards(notebook);
-        _ = ReadPageParents(notebook);
-        EnsureEditablePage(notebook, pageId);
+        var parents = ReadPageParents(notebook);
         var section = notebook.Sections.FirstOrDefault(value => value.Pages.Any(page => page.Id == pageId));
         if (section is null) return false;
+        var subtree = PageSubtree(parents, pageId);
+        RequireEditableSubtree(notebook, subtree);
+        var parent = ParentKey(parents, pageId);
+        if (parent != Guid.Empty) EnsureEditablePage(notebook, parent);
         if (section.Pages.Count(page => !IsPageDeleted(notebook, page.Id)) <= 1) return false;
         var deleted = GetDeletedPageIds(notebook);
         if (!deleted.Add(pageId)) return false;
+        BeginPageStructureEdit(notebook);
         SetDeletedPageIds(notebook, deleted);
         TouchRecovery(notebook);
         return true;
@@ -128,11 +139,15 @@ public sealed partial class BoardsWorkspaceService
     public bool RestorePage(NotesDocument notebook, Guid pageId)
     {
         EnsureBoards(notebook);
-        _ = ReadPageParents(notebook);
+        var parents = ReadPageParents(notebook);
         if (!notebook.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId)) return false;
-        EnsureEditablePage(notebook, pageId);
+        var subtree = PageSubtree(parents, pageId);
+        RequireEditableSubtree(notebook, subtree);
+        var parent = ParentKey(parents, pageId);
+        if (parent != Guid.Empty) EnsureEditablePage(notebook, parent);
         var deleted = GetDeletedPageIds(notebook);
         if (!deleted.Remove(pageId)) return false;
+        BeginPageStructureEdit(notebook);
         SetDeletedPageIds(notebook, deleted);
         TouchRecovery(notebook);
         return true;
@@ -152,8 +167,20 @@ public sealed partial class BoardsWorkspaceService
     private static HashSet<Guid> GetDeletedPageIds(NotesDocument notebook)
     {
         if (!notebook.Metadata.TryGetValue(DeletedPagesKey, out var json)) return [];
-        try { return System.Text.Json.JsonSerializer.Deserialize<HashSet<Guid>>(json) ?? []; }
-        catch (System.Text.Json.JsonException) { return []; }
+        HashSet<Guid> deleted;
+        try
+        {
+            deleted = System.Text.Json.JsonSerializer.Deserialize<HashSet<Guid>>(json)
+                ?? throw new InvalidDataException("Boards page Trash metadata is empty or invalid; the original document is preserved.");
+        }
+        catch (System.Text.Json.JsonException error)
+        {
+            throw new InvalidDataException("Boards page Trash metadata could not be read; the original document is preserved.", error);
+        }
+        var pageIds = notebook.Sections.SelectMany(section => section.Pages).Select(page => page.Id).ToHashSet();
+        if (deleted.Any(id => id == Guid.Empty || !pageIds.Contains(id)))
+            throw new InvalidDataException("Boards page Trash metadata references an unknown page; the original document is preserved.");
+        return deleted;
     }
 
     private static void SetDeletedPageIds(NotesDocument notebook, HashSet<Guid> deleted)

@@ -245,6 +245,16 @@ public sealed class NotesRevision
     /// Gets or sets the content hash after the change.
     /// </summary>
     public string AfterHash { get; set; } = string.Empty;
+    /// <summary>Stable caller identity for a typed mutation whose replay receipt is
+    /// retained with this owning Notes revision. Null preserves legacy revisions.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? OperationId { get; set; }
+    /// <summary>SHA-256 of the exact typed operation arguments, including its base revision.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? OperationFingerprint { get; set; }
+    /// <summary>Serialized owning-operation result returned for an exact replay.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? OperationResultJson { get; set; }
     /// <summary>
     /// Gets or sets the creation timestamp.
     /// </summary>

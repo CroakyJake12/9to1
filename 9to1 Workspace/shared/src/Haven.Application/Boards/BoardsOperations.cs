@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -16,7 +18,14 @@ public enum BoardsOperationKind
     DeletePage = 9,
     RestorePage = 10,
     SetEditMode = 11,
-    SetLayoutMode = 12
+    SetLayoutMode = 12,
+    UndoPageStructure = 13,
+    RedoPageStructure = 14,
+    AddChildPage = 15,
+    SetPageParent = 16,
+    MovePageWithinParent = 17,
+    RenamePage = 18,
+    MovePage = 19
 }
 
 public sealed record BoardsOperation(
@@ -31,7 +40,13 @@ public sealed record BoardsOperation(
     bool? Checked = null,
     int? Votes = null,
     string? Status = null,
-    bool? Pinned = null);
+    bool? Pinned = null,
+    Guid? ParentPageId = null,
+    int? Direction = null,
+    Guid? TargetSectionId = null,
+    int? TargetIndex = null,
+    Guid? OperationId = null,
+    long? ExpectedDocumentVersion = null);
 
 public sealed record BoardsOperationResult(
     Guid NotebookId,
@@ -75,6 +90,9 @@ public sealed class BoardsOperationExecutor(IBoardsWorkspaceService boards) : IB
         var notebook = await boards.OpenNotebookAsync(notebookId, cancellationToken).ConfigureAwait(false)
             ?? throw new KeyNotFoundException($"Boards notebook {notebookId:D} was not found.");
 
+        if (IsReplayableHierarchyOperation(operation.Kind))
+            return await ExecuteReplayableHierarchyOperationAsync(notebook, operation, cancellationToken).ConfigureAwait(false);
+
         if (operation.Kind == BoardsOperationKind.SetEditMode)
         {
             var modePageId = operation.PageId ?? throw new ArgumentException("SetEditMode requires PageId.", nameof(operation));
@@ -103,7 +121,11 @@ public sealed class BoardsOperationExecutor(IBoardsWorkspaceService boards) : IB
             boards.GetEditMode(notebook, requestedPageId) == BoardsPageEditMode.View)
             throw new InvalidOperationException("The Boards page is in View mode and cannot be modified.");
 
-        var section = ResolveSection(notebook, operation.SectionId);
+        var section = operation.SectionId is Guid sectionId
+            ? ResolveSection(notebook, sectionId)
+            : operation.PageId is Guid resolvedPageId
+                ? notebook.Sections.FirstOrDefault(item => item.Pages.Any(candidate => candidate.Id == resolvedPageId))
+                : ResolveSection(notebook, null);
         var page = ResolvePage(section, operation.PageId);
         Guid? blockId = null;
         Guid? componentId = operation.ComponentId;
@@ -202,6 +224,111 @@ public sealed class BoardsOperationExecutor(IBoardsWorkspaceService boards) : IB
             componentId,
             itemId,
             target);
+    }
+
+    private async Task<BoardsOperationResult> ExecuteReplayableHierarchyOperationAsync(
+        NotesDocument notebook, BoardsOperation operation, CancellationToken cancellationToken)
+    {
+        if (operation.OperationId is not Guid operationId || operationId == Guid.Empty
+            || operation.ExpectedDocumentVersion is not long expectedVersion || expectedVersion < 0)
+            throw new ArgumentException("Replayable Boards hierarchy actions require a non-empty OperationId and ExpectedDocumentVersion.", nameof(operation));
+
+        var fingerprint = Fingerprint(notebook.Id, operation);
+        var prior = notebook.Revisions.Where(revision => revision.OperationId == operationId).ToArray();
+        if (prior.Length > 1) throw new InvalidDataException("Notes history contains duplicate receipts for this Boards operation ID.");
+        if (prior.Length == 1)
+        {
+            var receipt = prior[0];
+            if (!string.Equals(receipt.OperationFingerprint, fingerprint, StringComparison.Ordinal))
+                throw new InvalidOperationException("OperationIdConflict: this operation ID was already used with different Boards hierarchy arguments.");
+            if (string.IsNullOrWhiteSpace(receipt.OperationResultJson))
+                throw new InvalidDataException("The retained Boards operation receipt has no result.");
+            return JsonSerializer.Deserialize<BoardsOperationResult>(receipt.OperationResultJson)
+                ?? throw new InvalidDataException("The retained Boards operation result could not be read.");
+        }
+        if (notebook.Version != expectedVersion)
+            throw new NotesRevisionConflictException(notebook.Id, expectedVersion, notebook.Version);
+
+        var pageId = operation.PageId ?? (operation.Kind is BoardsOperationKind.UndoPageStructure or BoardsOperationKind.RedoPageStructure
+            ? Guid.Empty : throw new ArgumentException($"{operation.Kind} requires PageId.", nameof(operation)));
+        if (operation.Kind == BoardsOperationKind.RenamePage
+            && !notebook.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId))
+            throw new KeyNotFoundException("The requested Boards page was not found.");
+
+        switch (operation.Kind)
+        {
+            case BoardsOperationKind.UndoPageStructure:
+                if (!boards.UndoPageStructure(notebook)) throw new InvalidOperationException("There is no Boards page structure change to undo.");
+                break;
+            case BoardsOperationKind.RedoPageStructure:
+                if (!boards.RedoPageStructure(notebook)) throw new InvalidOperationException("There is no Boards page structure change to redo.");
+                break;
+            case BoardsOperationKind.AddChildPage:
+                pageId = boards.AddChildPage(notebook, pageId, operation.Text).Id;
+                break;
+            case BoardsOperationKind.SetPageParent:
+                boards.SetPageParent(notebook, pageId, operation.ParentPageId);
+                break;
+            case BoardsOperationKind.MovePageWithinParent:
+                var direction = operation.Direction ?? throw new ArgumentException("MovePageWithinParent requires Direction.", nameof(operation));
+                boards.MovePageWithinParent(notebook, pageId, direction);
+                break;
+            case BoardsOperationKind.MovePage:
+                var targetSectionId = operation.TargetSectionId ?? throw new ArgumentException("MovePage requires TargetSectionId.", nameof(operation));
+                var targetIndex = operation.TargetIndex ?? throw new ArgumentException("MovePage requires TargetIndex.", nameof(operation));
+                boards.MovePage(notebook, pageId, targetSectionId, targetIndex);
+                break;
+            case BoardsOperationKind.RenamePage:
+                if (!boards.RenamePage(notebook, pageId, operation.Text)) throw new KeyNotFoundException("The requested Boards page was not found.");
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(operation), operation.Kind, "Not a replayable Boards hierarchy operation.");
+        }
+
+        var result = operation.Kind is BoardsOperationKind.UndoPageStructure or BoardsOperationKind.RedoPageStructure
+            ? new BoardsOperationResult(notebook.Id, null, null, null, null, null, new BoardsDeepLink(notebook.Id).ToString())
+            : CreatePageOperationResult(notebook, pageId);
+
+        notebook.Revisions.Add(new NotesRevision
+        {
+            Kind = NotesRevisionKind.Edited,
+            Summary = "Boards typed hierarchy operation: " + operation.Kind,
+            OperationId = operationId,
+            OperationFingerprint = fingerprint,
+            OperationResultJson = JsonSerializer.Serialize(result)
+        });
+        await boards.SaveAsync(notebook, $"Boards page hierarchy operation: {operation.Kind}", cancellationToken).ConfigureAwait(false);
+        return result;
+    }
+
+    private static BoardsOperationResult CreatePageOperationResult(NotesDocument notebook, Guid pageId)
+    {
+        var section = notebook.Sections.First(value => value.Pages.Any(candidate => candidate.Id == pageId));
+        return new BoardsOperationResult(notebook.Id, section.Id, pageId, null, null, null,
+            new BoardsDeepLink(notebook.Id, section.Id, pageId).ToString());
+    }
+
+    private static bool IsReplayableHierarchyOperation(BoardsOperationKind kind) => kind is
+        BoardsOperationKind.UndoPageStructure or BoardsOperationKind.RedoPageStructure or
+        BoardsOperationKind.AddChildPage or BoardsOperationKind.SetPageParent or
+        BoardsOperationKind.MovePageWithinParent or BoardsOperationKind.MovePage or BoardsOperationKind.RenamePage;
+
+    private static string Fingerprint(Guid notebookId, BoardsOperation operation)
+    {
+        var payload = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            SchemaVersion = 1,
+            NotebookId = notebookId,
+            operation.Kind,
+            operation.ExpectedDocumentVersion,
+            operation.PageId,
+            operation.ParentPageId,
+            operation.Direction,
+            operation.TargetSectionId,
+            operation.TargetIndex,
+            operation.Text
+        });
+        return Convert.ToHexString(SHA256.HashData(payload));
     }
 
     private static NotesSection? ResolveSection(NotesDocument notebook, Guid? id) =>

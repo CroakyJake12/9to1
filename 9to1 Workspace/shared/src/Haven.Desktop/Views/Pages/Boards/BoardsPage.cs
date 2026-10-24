@@ -119,6 +119,8 @@ public sealed partial class BoardsPage : UserControl, IDisposable
             ActionButton("Section ↓", async () => await MoveCurrentSectionAsync(1)),
             ActionButton("Page ↑", async () => await MoveCurrentPageAsync(-1)),
             ActionButton("Page ↓", async () => await MoveCurrentPageAsync(1)),
+            ActionButton("Undo structure", async () => await UndoPageStructureAsync()),
+            ActionButton("Redo structure", async () => await RedoPageStructureAsync()),
             ActionButton("Move page to Trash", async () => await DeleteCurrentPageAsync()),
             ActionButton("Text", async () => await AddBlockAsync(NotesBlockKind.Paragraph)),
             ActionButton("Checklist", async () => await AddBlockAsync(NotesBlockKind.List)),

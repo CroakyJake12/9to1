@@ -136,7 +136,7 @@ public sealed class BoardsRecoveryAcceptanceTests
         Assert.True(reopenedPage.CanvasWidth > 1800);
         Assert.True(reopenedPage.CanvasHeight > 1200);
     }
-    private sealed class CloningNotesRepository : INotesRepository
+    internal sealed class CloningNotesRepository : INotesRepository
     {
         private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
         private readonly Dictionary<Guid, string> _documents = [];
