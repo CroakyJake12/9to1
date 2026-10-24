@@ -290,6 +290,8 @@ public sealed class WriteSharedInkWorkflowTests
         var repository = new NotesRepository(paths, new NotesDocumentValidator(), diagnostics);
         var editor = new WriteDocumentEditor(NotesDocument.Create("Undo eraser")); var drawing = editor.InsertSharedInk(); var engine = Engine();
         var first = HorizontalBundle(engine, editor, drawing.Id, 40); var second = HorizontalBundle(engine, editor, drawing.Id, 220);
+        var firstStrokeId = engine.ParseBundle(first.GetRawText()).Objects.Single().ObjectId;
+        var secondStrokeId = engine.ParseBundle(second.GetRawText()).Objects.Single().ObjectId;
         foreach (var bundle in new[] { first, second })
             Assert.True(editor.AppendSharedInk(editor.CaptureSharedInk(drawing.Id)!, bundle, source => CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(editor), source)));
         await repository.SaveAsync(editor.Document, "Seed erasure", default);
@@ -300,8 +302,30 @@ public sealed class WriteSharedInkWorkflowTests
         Assert.True(editor.ReplaceSharedInk(expected, erased.ReplacementBundles!, values => values));
         Assert.True(JsonElement.DeepEquals(second, Assert.Single(editor.Blocks().Single(block => block.Id == drawing.Id).SharedProductivityBundles!)));
         Assert.True(editor.Undo()); Assert.Equal(2, editor.Blocks().Single(block => block.Id == drawing.Id).SharedProductivityBundles!.Count);
+        await repository.SaveAsync(editor.Document, "Save restored strokes after undo", default);
+        // A separately constructed repository over the same physical paths checks durable ordering,
+        // not merely a reload through the instance which performed the write.
+        var undoReader = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
+        var afterUndo = Assert.IsType<NotesDocument>(await undoReader.LoadAsync(editor.Document.Id, default));
+        var restored = afterUndo.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
+            .Single(block => block.Id == drawing.Id).SharedProductivityBundles!;
+        Assert.Equal(2, restored.Count);
+        Assert.Contains(restored, bundle => JsonElement.DeepEquals(first, bundle));
+        Assert.Contains(restored, bundle => JsonElement.DeepEquals(second, bundle));
+        Assert.Collection(restored,
+            bundle => Assert.True(JsonElement.DeepEquals(first, bundle)),
+            bundle => Assert.True(JsonElement.DeepEquals(second, bundle)));
+        Assert.Equal(new[] { firstStrokeId, secondStrokeId }, restored.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects)
+            .Select(stroke => stroke.ObjectId).ToArray());
         Assert.True(editor.Redo()); await repository.SaveAsync(editor.Document, "Save erasure after redo", default);
-        var reopened = Assert.IsType<NotesDocument>(await repository.LoadAsync(editor.Document.Id, default));
+        var redoReader = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
+        var reopened = Assert.IsType<NotesDocument>(await redoReader.LoadAsync(editor.Document.Id, default));
+        var erasedBundles = reopened.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
+            .Single(block => block.Id == drawing.Id).SharedProductivityBundles!;
+        Assert.Equal(1, erasedBundles.Count);
+        Assert.Collection(erasedBundles, bundle => Assert.True(JsonElement.DeepEquals(second, bundle)));
+        Assert.Equal(new[] { secondStrokeId }, erasedBundles.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects)
+            .Select(stroke => stroke.ObjectId).ToArray());
         Assert.True(JsonElement.DeepEquals(second, Assert.Single(reopened.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
             .Single(block => block.Id == drawing.Id).SharedProductivityBundles!)));
         var packages = new WriteNativeDocumentPackageStore(); var path = Path.Combine(paths.DataDirectory, "erased.9to1w");
@@ -310,6 +334,62 @@ public sealed class WriteSharedInkWorkflowTests
         Assert.Equal(editor.Document.Id, package.Value!.Id);
         Assert.True(JsonElement.DeepEquals(second, Assert.Single(package.Value.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
             .Single(block => block.Id == drawing.Id).SharedProductivityBundles!)));
+    }
+
+    [Fact]
+    public void Erasing_one_stroke_from_a_multi_object_bundle_retains_its_sibling_and_object_extensions()
+    {
+        var editor = new WriteDocumentEditor(NotesDocument.Create("Sibling stroke retention"));
+        var drawing = editor.InsertSharedInk(); var engine = Engine();
+        var first = HorizontalBundle(engine, editor, drawing.Id, 40);
+        var second = HorizontalBundle(engine, editor, drawing.Id, 220);
+        var firstBundle = engine.ParseBundle(first.GetRawText());
+        var secondObject = engine.ParseBundle(second.GetRawText()).Objects.Single();
+        var combinedJson = engine.SerializeBundle(firstBundle with { Objects = [.. firstBundle.Objects, secondObject] });
+        var combinedNode = JsonNode.Parse(combinedJson)!.AsObject();
+        combinedNode["objects"]![1]!["content"]!["ownerStrokeExtension"] =
+            JsonSerializer.SerializeToNode(new { origin = "retained", revision = 4 });
+        using var extendedCombinedDocument = JsonDocument.Parse(combinedNode.ToJsonString());
+        var combined = CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(editor), extendedCombinedDocument.RootElement);
+        Assert.True(editor.AppendSharedInk(editor.CaptureSharedInk(drawing.Id)!, combined,
+            value => CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(editor), value)));
+
+        var erased = CanvasSharedInkStrokeFactory.CaptureWholeErase(engine,
+            new(Context(editor), drawing.Id, "sibling retention", [combined]), [new(100, 20, .5), new(100, 60, .5)], 20);
+        var survivor = Assert.Single(erased.ReplacementBundles!);
+        var retained = engine.ParseBundle(survivor.GetRawText());
+        Assert.Single(retained.Objects);
+        Assert.Equal(secondObject.ObjectId, retained.Objects[0].ObjectId);
+        Assert.True(JsonElement.DeepEquals(firstBundle.Accessibility, retained.Accessibility));
+        Assert.False(JsonElement.DeepEquals(firstBundle.PortableFallback, retained.PortableFallback));
+        Assert.Contains("futureOptionalStroke", survivor.GetRawText(), StringComparison.Ordinal);
+        Assert.True(JsonElement.DeepEquals(
+            combined.GetProperty("objects")[1].GetProperty("content").GetProperty("ownerStrokeExtension"),
+            survivor.GetProperty("objects")[0].GetProperty("content").GetProperty("ownerStrokeExtension")));
+        Assert.True(editor.ReplaceSharedInk(editor.CaptureSharedInk(drawing.Id)!, erased.ReplacementBundles!, values => values));
+        Assert.True(editor.Undo());
+        Assert.Equal(2, engine.ParseBundle(Assert.Single(editor.Blocks().Single(block => block.Id == drawing.Id)
+            .SharedProductivityBundles!).GetRawText()).Objects.Count);
+        Assert.True(editor.Redo());
+        var redone = Assert.Single(editor.Blocks().Single(block => block.Id == drawing.Id).SharedProductivityBundles!);
+        Assert.True(JsonElement.DeepEquals(survivor, redone));
+    }
+
+    [Fact]
+    public void Unsupported_bundle_envelope_is_preserved_but_not_admitted_as_erasable_ink()
+    {
+        var editor = new WriteDocumentEditor(NotesDocument.Create("Envelope admission"));
+        var drawing = editor.InsertSharedInk(); var engine = Engine();
+        var source = HorizontalBundle(engine, editor, drawing.Id, 40);
+        var node = JsonNode.Parse(source.GetRawText())!.AsObject();
+        node["ownerBundleExtension"] = JsonSerializer.SerializeToNode(new { origin = "retained", revision = 4 });
+        var unsupported = JsonSerializer.SerializeToElement(node);
+        var original = unsupported.GetRawText();
+        var error = Assert.Throws<InvalidDataException>(() =>
+            CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(editor), unsupported));
+        Assert.Contains("BundleExtensionsUnsupported", error.Message);
+        Assert.Equal(original, unsupported.GetRawText());
+        Assert.Equal("retained", engine.ParseBundle(original).Extensions!["ownerBundleExtension"].GetProperty("origin").GetString());
     }
 
     [Fact]
@@ -332,6 +412,11 @@ public sealed class WriteSharedInkWorkflowTests
         var editor = new WriteDocumentEditor(NotesDocument.Create("No change eraser")); var drawing = editor.InsertSharedInk(); var engine = Engine();
         var bundle = Bundle(engine, editor, drawing.Id);
         Assert.True(editor.AppendSharedInk(editor.CaptureSharedInk(drawing.Id)!, bundle, source => CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(editor), source)));
+        var original = editor.CaptureSharedInk(drawing.Id)!;
+        var missed = CanvasSharedInkStrokeFactory.CaptureWholeErase(engine,
+            new(Context(editor), drawing.Id, "no intersection", original.Bundles), [new(700, 400, .5), new(760, 430, .5)], 20);
+        Assert.True(editor.ReplaceSharedInk(original, missed.ReplacementBundles!, values => values));
+        Assert.True(JsonElement.DeepEquals(bundle, Assert.Single(editor.Blocks().Single(block => block.Id == drawing.Id).SharedProductivityBundles!)));
         var before = JsonSerializer.Serialize(editor.Document); var failure = new IOException("Original donor preparation failed");
         var observed = Assert.Throws<IOException>(() => editor.ReplaceSharedInk(editor.CaptureSharedInk(drawing.Id)!, [], _ => throw failure));
         Assert.Same(failure, observed); Assert.Equal(before, JsonSerializer.Serialize(editor.Document));
@@ -350,6 +435,7 @@ public sealed class WriteSharedInkWorkflowTests
         var seed = new WriteDocumentEditor(NotesDocument.Create("CUI eraser")); var drawing = seed.InsertSharedInk();
         var first = HorizontalBundle(engine, seed, drawing.Id, 40); var second = HorizontalBundle(engine, seed, drawing.Id, 220);
         var firstId = engine.ParseBundle(first.GetRawText()).Objects[0].ObjectId;
+        var secondId = engine.ParseBundle(second.GetRawText()).Objects[0].ObjectId;
         foreach (var bundle in new[] { first, second })
             Assert.True(seed.AppendSharedInk(seed.CaptureSharedInk(drawing.Id)!, bundle, value => CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(seed), value)));
         await repository.SaveAsync(seed.Document, "Seed original UI drawing", default);
@@ -388,10 +474,28 @@ public sealed class WriteSharedInkWorkflowTests
             Assert.Equal(before - 1, surviving.Count);
             Assert.DoesNotContain(surviving.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects), value => value.ObjectId == firstId);
             Assert.Contains(surviving, bundle => JsonElement.DeepEquals(second, bundle)); Assert.False(page.IsDirty);
-            var reopened = Assert.IsType<NotesDocument>(await repository.LoadAsync(seed.Document.Id, default));
-            Assert.Equal(surviving.Count, reopened.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
-                .Single(block => block.Id == drawing.Id).SharedProductivityBundles!.Count);
             Assert.True(await page.PrepareToCloseAsync());
+            window.Content = null;
+            await page.DisposeAsync();
+
+            // Exercise the actual Write launch path and owning handler composition again from durable state.
+            // This is a fresh page/repository in-process, not a process-restart claim.
+            var reopenRepository = new NotesRepository(paths, validator, new ProductionDiagnostics(paths));
+            using var reopenBus = new HavenEventBus();
+            await using var reopenedPage = new WritePage(engine, reopenBus, reopenRepository,
+                new NotesImportExportService(validator, new ProductionDiagnostics(paths)), initialDocumentId: seed.Document.Id);
+            await reopenedPage.InitializeAsync();
+            Assert.Equal(seed.Document.Id, reopenedPage.Document!.Id);
+            Assert.False(reopenedPage.IsDirty);
+            Assert.True(reopenedPage.SharedDrawingCompatibility!.Compatible);
+            Assert.IsType<HavenSceneControl>(reopenedPage.Content);
+            window.Content = reopenedPage;
+            window.UpdateLayout();
+            Assert.Single(window.GetVisualDescendants().OfType<CanvasSharedInkInput>());
+            var reopenedBundles = reopenedPage.Document.Sections.SelectMany(section => section.Pages)
+                .SelectMany(value => value.Blocks).Single(block => block.Id == drawing.Id).SharedProductivityBundles!;
+            Assert.Collection(reopenedBundles, value => Assert.True(JsonElement.DeepEquals(second, value)));
+            Assert.Equal(secondId, engine.ParseBundle(Assert.Single(reopenedBundles).GetRawText()).Objects.Single().ObjectId);
         }
         finally { window.Content = null; window.Close(); }
     }
