@@ -42,10 +42,12 @@ public sealed class CuiInputVerticalContentAlignmentTests
             {
                 window.Show(); Pump(window);
 
-                // The centred field: the actual presenter is a compact band whose vertical centre
-                // coincides with the field's centre (Height 32 => centre 16).
+                // The actual presenter must be centred in the arranged field. A theme's
+                // minimum input height can legitimately enlarge the authored Height=32.
                 Assert.True(TextHeight(centered) < TextHeight(plain), "centre text must not be stretched full-height.");
-                Assert.InRange(CenterY(centered), 16 - 2.5, 16 + 2.5);
+                Assert.True(double.IsFinite(centered.Bounds.Height) && centered.Bounds.Height >= 32);
+                var fieldCenter = centered.Bounds.Height / 2;
+                Assert.InRange(CenterY(centered), fieldCenter - 2.5, fieldCenter + 2.5);
 
                 // Ordinary and multiline inputs keep their existing top-aligned fill behaviour.
                 Assert.InRange(TopY(plain), 0, 6);
