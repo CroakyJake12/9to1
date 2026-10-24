@@ -63,7 +63,8 @@ public sealed class CuiKeyboardTooltipHostTests
                 </Container>
                 """);
             Assert.Empty(diagnostics);
-            loader.WireBindings(root!);
+            Assert.NotNull(root);
+            loader.WireBindings(root);
             using var tooltips = CuiKeyboardTooltipHost.Attach(root);
             var window = new Window { Width = 320, Height = 180, Content = root };
             window.Show();

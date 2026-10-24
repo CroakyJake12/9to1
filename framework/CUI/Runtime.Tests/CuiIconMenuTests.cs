@@ -401,12 +401,13 @@ public sealed class CuiIconMenuTests
                 </Container>
                 """);
             Assert.Empty(diagnostics);
+            Assert.NotNull(root);
             var window = new Window { Width = 400, Height = 200, Content = root };
             window.Show();
             try
             {
                 window.UpdateLayout();
-                var item = Assert.Single(root!.GetVisualDescendants().OfType<CuiMenuItem>());
+                var item = Assert.Single(root.GetVisualDescendants().OfType<CuiMenuItem>());
                 var editor = Assert.Single(root.GetVisualDescendants().OfType<TextBox>());
                 Assert.True(item.Focus());
                 window.KeyPress(Avalonia.Input.Key.Space, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.None, null);
