@@ -1,3 +1,0 @@
-  Determining projects to restore...
-/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To build this project, the following workloads must be installed: wasm-tools [[SOURCE]/apps/Web/NineToOne.Web.csproj]
-/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To install these workloads, run the following command: dotnet workload restore [[SOURCE]/apps/Web/NineToOne.Web.csproj]

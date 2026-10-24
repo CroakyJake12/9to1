@@ -1,5 +1,0 @@
-<!-- Retained platform-host declaration. This file is excluded from accepted
-     application markup; the live editor is UI/PictureWorkspace.cui. -->
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        x:Class="HavenOS.Images.MainWindow" />

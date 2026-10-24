@@ -1,8 +1,0 @@
-node_modules/
-.wrangler/
-private/
-*.private.json
-*.pem
-*.db*
-logs/
-worktrees/

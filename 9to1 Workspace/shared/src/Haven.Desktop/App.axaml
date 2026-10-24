@@ -1,5 +1,0 @@
-<!-- Retained platform declaration, excluded from accepted app markup.
-     App.Initialize uses the shared canonical CUI primitive/theme bootstrap. -->
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Haven.Desktop.App" />

@@ -1,1 +1,0 @@
-PASS: 35 maintained schema objects and parsed foreign keys match actual D1 metadata; provider foreign_keys=1; no provider writes

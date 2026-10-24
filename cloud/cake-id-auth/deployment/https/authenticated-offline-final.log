@@ -1,2 +1,0 @@
-PASS: actual pinned SQLite schema seed/duplicate/rollback and reserved owner controls; local only
-PASS: offline real library password hashing, private custody and driver transport/authority refusal controls; no remote seeding/HTTPS acceptance

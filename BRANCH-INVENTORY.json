@@ -1,0 +1,1511 @@
+{
+  "branches": [
+    {
+      "ref": "refs/heads/codex/authenticated-arm-delivery-20261022",
+      "revision": "6410bda53d07d5da98469b2958cfe7554850d4e6"
+    },
+    {
+      "ref": "refs/heads/codex/automations-local-handoff-wip-20261024",
+      "revision": "be3a970f077608e4aa1992adaa078d8fda495e22"
+    },
+    {
+      "ref": "refs/heads/codex/boards-legacy-compat-codec-20261023",
+      "revision": "1dd7ef344ed638d5c4ba3172a2176a5479aa0d20"
+    },
+    {
+      "ref": "refs/heads/codex/boards-native-original-20261022",
+      "revision": "b4f397a5925ede31d860d3f144e96e3546d12c4e"
+    },
+    {
+      "ref": "refs/heads/codex/boards-persistent-recovery-20261022",
+      "revision": "9c90436be1bcf58827d444c901942956614fff5e"
+    },
+    {
+      "ref": "refs/heads/codex/browser-pass2-20261020",
+      "revision": "7b65d88af0c9e5615819d703c7c8f7ef908ba642"
+    },
+    {
+      "ref": "refs/heads/codex/build-actual-entry-pass2-20261020",
+      "revision": "93d914ef5812f59c24227fb287a862a6ec9ec7ee"
+    },
+    {
+      "ref": "refs/heads/codex/build-actual-entry-pass2-safe-20261020",
+      "revision": "b0ddefadeb0979b4d8220765749a75e3095521b8"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-app-startup-admission-20261023",
+      "revision": "513387e47ee8b496f710be2b2bdee84abc29a7af"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-app-startup-admission-final-20261023",
+      "revision": "3751739a5cab999e91dced6c9f4a8cecbf4219e3"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-app-startup-admission-first8-20261023",
+      "revision": "513387e47ee8b496f710be2b2bdee84abc29a7af"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-app-startup-admission-task-assert-20261023",
+      "revision": "9b9635e61c2ea829a115c90e12ded0bb10b7367b"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-app-startup-failure-publication-20261023",
+      "revision": "1fcf6609419a92cb0f3b90cb86407d3da73dc646"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-engine-ci-recovered-20261022",
+      "revision": "9750308c2b76c0ed732f87a43a487cde553f048e"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-launch-repairs-20261023",
+      "revision": "7b6690fa3c12bd228d7bd1521cbd56c0ac46fbe6"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-linux-host-20261022",
+      "revision": "839479f345a2a62902e3198064a3281fe64f7662"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-persistent-recovery-20261022",
+      "revision": "009a9d637cbf48289dcdfeb0c329d1ed7d75c0e2"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-rnote-bridge-20261022",
+      "revision": "0e2676af43ac92e7a98ce5fbac9fe3db23635c8b"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-system-deps-feature-reviewed-20261023",
+      "revision": "a9c73c124d1f49711422d1d6dc5a08ebf6281734"
+    },
+    {
+      "ref": "refs/heads/codex/canvas-system-deps-shapes-reviewed-20261023",
+      "revision": "e168e2315e82d6e7cef0b5ea21208f0dfc46574d"
+    },
+    {
+      "ref": "refs/heads/codex/cloud-automation-transitions-20261020",
+      "revision": "27303895acd9986fe70d3c409218bf7bd7bcf130"
+    },
+    {
+      "ref": "refs/heads/codex/cloud-continuation-20261020",
+      "revision": "d1f36ed64125a7db61750d5164ca3a1fc12e0ccf"
+    },
+    {
+      "ref": "refs/heads/codex/cloud-core-20261020",
+      "revision": "3e5d0815b70792da78e961a590b6e465fd40c40e"
+    },
+    {
+      "ref": "refs/heads/codex/cloud-native-chat-cui-20261020",
+      "revision": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d"
+    },
+    {
+      "ref": "refs/heads/codex/cloud-professional-icons-20261020",
+      "revision": "359d17fc7ff71d05f7a5c1f50654c4e6cb8512e5"
+    },
+    {
+      "ref": "refs/heads/codex/cloud-spaces-activation-20261020",
+      "revision": "d61e667524b169223cdfb66f76aeafe4c0b8c301"
+    },
+    {
+      "ref": "refs/heads/codex/cloud-spaces-layout-20261020",
+      "revision": "1272dead4eae48392cf06cb6938d172e7811fea5"
+    },
+    {
+      "ref": "refs/heads/codex/composer-coherence-return1-20261020",
+      "revision": "b463ba89f23a7d53c7bb1adc9e0e91ed9f0ec737"
+    },
+    {
+      "ref": "refs/heads/codex/cui-initial-effects-20261023",
+      "revision": "3ff93b8f7454cae998c8e517f5290376073695d0"
+    },
+    {
+      "ref": "refs/heads/codex/cui-initial-effects-red-v2-20261023",
+      "revision": "453648c74b5c8c8472859e799ced9786c147590a"
+    },
+    {
+      "ref": "refs/heads/codex/development-workflow-overhaul-20261022",
+      "revision": "f0f96e2cc9d91d412032914acb44a8d784b19a43"
+    },
+    {
+      "ref": "refs/heads/codex/files-scoped-canvas-20261023",
+      "revision": "0cfa6c8558b6cca416ba34193eb6182530fdd661"
+    },
+    {
+      "ref": "refs/heads/codex/floating10-owned-return-20261021",
+      "revision": "260b4a4ed66886b974e363e9b9ab62c2838d354b"
+    },
+    {
+      "ref": "refs/heads/codex/floating11-owned-return-20261021",
+      "revision": "ad31012fb692f750c98c6b5beb5b74f7a64d4dbe"
+    },
+    {
+      "ref": "refs/heads/codex/floating12-owned-return-20261021",
+      "revision": "576a360d7bf65da05652532e0a33ae6cdfe99940"
+    },
+    {
+      "ref": "refs/heads/codex/floating13-owned-return-20261021",
+      "revision": "0b78555b3d4f5ee32fe04c055171e228d6d8c877"
+    },
+    {
+      "ref": "refs/heads/codex/floating14-owned-return-20261021",
+      "revision": "d87f884586d53e1cb6703b483c848cab14bc9f5c"
+    },
+    {
+      "ref": "refs/heads/codex/floating15-owned-return-20261021",
+      "revision": "5159d03b02337dd29a22457f2a19e2ac3148c277"
+    },
+    {
+      "ref": "refs/heads/codex/floating16-compiler-QA-20261021",
+      "revision": "a70e342d3e3ed06d1eb29ecf70c768e1ee5414bb"
+    },
+    {
+      "ref": "refs/heads/codex/floating16-owned-return-20261021",
+      "revision": "f43b2236c7af5ab3d971615eaeea6982918f5df4"
+    },
+    {
+      "ref": "refs/heads/codex/floating17-narrow-diagnostic-QA-20261021",
+      "revision": "8d4f27ff99dc2db5d7f8f39e05a9e82087abaa49"
+    },
+    {
+      "ref": "refs/heads/codex/floating17-owned-return-20261021",
+      "revision": "e86edd6dbadc45f3f39cecdeaaa361c2253fde26"
+    },
+    {
+      "ref": "refs/heads/codex/floating18-acceptance-QA-20261021",
+      "revision": "56db7a7ef604fe5681bd930f0484960ce857663c"
+    },
+    {
+      "ref": "refs/heads/codex/floating18-nullability-QA-20261021",
+      "revision": "996c41ca394f5d5c993f67c38836cc95f6fe5295"
+    },
+    {
+      "ref": "refs/heads/codex/floating18-owned-return-20261021",
+      "revision": "ef7ddade263b423291f0e1155edcbee13afc07cf"
+    },
+    {
+      "ref": "refs/heads/codex/floating19-compiler-QA-20261021",
+      "revision": "3fb57a0abdba8fd37da01bfd71db36233e9386d7"
+    },
+    {
+      "ref": "refs/heads/codex/floating19-fr-literal-QA-20261021",
+      "revision": "016820238c94e456433c5f220cef681db5e7f0ac"
+    },
+    {
+      "ref": "refs/heads/codex/floating19-grid-literal-QA-20261021",
+      "revision": "bcefc148127b7268ecfc079c18d5950d843e53bc"
+    },
+    {
+      "ref": "refs/heads/codex/floating19-owned-return-20261021",
+      "revision": "e44b2f489faaf211972da08850f808d4112e8e4d"
+    },
+    {
+      "ref": "refs/heads/codex/floating19-reviewed-input-20261021",
+      "revision": "5fe869eeb926449671e830b4ed68607af4e53d63"
+    },
+    {
+      "ref": "refs/heads/codex/floating19-visual-typing-QA-20261021",
+      "revision": "598c927676b6a63068de2f29afc59c4370038dab"
+    },
+    {
+      "ref": "refs/heads/codex/floating20-owned-return-20261021",
+      "revision": "4ddc5d78a98546f981ca080f7fd83f035e5d4ef7"
+    },
+    {
+      "ref": "refs/heads/codex/floating20-reviewed-input-20261021",
+      "revision": "55525904eb42995f1c40dd4fa46f5faf392aef19"
+    },
+    {
+      "ref": "refs/heads/codex/floating9-owned-return-20261021",
+      "revision": "3e9dc634fbd415d42f544c3d21944330be4e27d0"
+    },
+    {
+      "ref": "refs/heads/codex/haven-browser-finish-spec-input-20261020",
+      "revision": "c7437be71195e2e86a0afdcfa6416a55f518f3c6"
+    },
+    {
+      "ref": "refs/heads/codex/haven-topbar-fixture-width-input-20261020",
+      "revision": "3af4d7b623ded9cacb32a435bab7f8c3c47bb4f9"
+    },
+    {
+      "ref": "refs/heads/codex/haven-topbar-fixture-width-return-221143",
+      "revision": "a6c22ae1902a877cc78d6908665d3eb416da715e"
+    },
+    {
+      "ref": "refs/heads/codex/haven-topbar-root-input-20261020",
+      "revision": "8688ef39252a95ef0011b94d51bded9d7e59c78b"
+    },
+    {
+      "ref": "refs/heads/codex/home-approval-continuation-20261022",
+      "revision": "05dbc773c9d68fc12c88a123b764135a1b2941d8"
+    },
+    {
+      "ref": "refs/heads/codex/home-decision-overlap-analyzer-fix-20261023",
+      "revision": "1bd6eae5e9ba5e686560ca6b57aed6297609e184"
+    },
+    {
+      "ref": "refs/heads/codex/home-decision-overlap-dispatcher-yield-20261023",
+      "revision": "14128d7df1bbd52dc204a58d69ba0f048e3a0bc2"
+    },
+    {
+      "ref": "refs/heads/codex/home-decision-overlap-predicate-fix-20261023",
+      "revision": "1ed589ddd5f0c327efe96930a03c59e916e18658"
+    },
+    {
+      "ref": "refs/heads/codex/home-icons-and-adaptive-rail-acceptance-20261023",
+      "revision": "03a1dc72bdb577a096d0a555aa4254d74ad0c1e5"
+    },
+    {
+      "ref": "refs/heads/codex/home3-acceptance-20261023",
+      "revision": "12f982d72afcf4c32947c1b39fd1394139155fd6"
+    },
+    {
+      "ref": "refs/heads/codex/homeapps-composed38-20261023-v1-RED",
+      "revision": "1370ebecb4061df856897d3bb430ad584f04090c"
+    },
+    {
+      "ref": "refs/heads/codex/homeapps-composed38-20261023-v1-candidate",
+      "revision": "18eabe4ae2234c9af16f15ecb03340e3b5438d53"
+    },
+    {
+      "ref": "refs/heads/codex/homeapps-composed41-routes-20261023-v1-candidate",
+      "revision": "b766e6e2fae795228d9cdf13e6714a27786fcef7"
+    },
+    {
+      "ref": "refs/heads/codex/implementation-window-20261023",
+      "revision": "ccd2cf9d6e330adfa0f4d247f32c1f66003da0b1"
+    },
+    {
+      "ref": "refs/heads/codex/local-team-handoff-recovery-20261024",
+      "revision": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522"
+    },
+    {
+      "ref": "refs/heads/codex/local-team-handoff78-20261024",
+      "revision": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522"
+    },
+    {
+      "ref": "refs/heads/codex/local-teams-bootstrap-control-20261024",
+      "revision": "08103ed96b420cc17e5fef193c0145917ef02c1d"
+    },
+    {
+      "ref": "refs/heads/codex/main-index-fixture-repair-20261024",
+      "revision": "348131d66e26aaa8fb30a2c9e7cf7f52ccb181fd"
+    },
+    {
+      "ref": "refs/heads/codex/main-tooling-consolidation-20261024",
+      "revision": "d9a3091b6962a49e44c3f42ba0b43620dd0180f9"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-automations-20261020",
+      "revision": "fb70840d561286ecd46bd62b3c0736bf7d24108b"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-automations-pass8-return-20261020",
+      "revision": "a66c7ee737dd0e8787d424b6e47e351c0182f03a"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-automations9-return-20261020",
+      "revision": "18987fc7f99eb16a5fa80b39d2cb1e21b8ff8f7d"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-build-shipping-recovery-20261020",
+      "revision": "6ca569201fcf69500b881406be89ec4493cab859"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-bundle15-pass4-return-20261020",
+      "revision": "516777d8050fd71a26af80e9a23341cc7d58eb44"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-composer-coherence-20261020",
+      "revision": "deaac7f399b229db91dbe820a589e0141e7fc3c6"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-dulche-20261020",
+      "revision": "fb70840d561286ecd46bd62b3c0736bf7d24108b"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-emoji-settlement-20261021",
+      "revision": "dec76824ab30938b26c28ed11c639b45f2ec5fb3"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra07-voice-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra08-richtext-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra09-permissions-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra10-icons-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra11-graph-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra12-build-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra13-spacebuilder-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra14-dashboard-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra15-bundle-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-extra16-packages-20261020",
+      "revision": "ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-haven-20261020",
+      "revision": "fb70840d561286ecd46bd62b3c0736bf7d24108b"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-haven-header-recovery-20261020",
+      "revision": "22d120786ff3beeda11241b25c3353931058fb57"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-haven-native-browser-finish-20261020",
+      "revision": "2544c568b193af44a6ea86fff364e1f19dff3224"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-haven-topbar-20261020",
+      "revision": "7d61ff46b8f062a731d3e563717f8fe6e636e9bd"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-native-fork-dependency-20261020",
+      "revision": "22d120786ff3beeda11241b25c3353931058fb57"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-popup-integration-recovery-20261020",
+      "revision": "acba6cd487f57d4981f12f7f43dc8e5da158acd9"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-query-action-recovery-20261020",
+      "revision": "31f33c8942eab5383c8afcf0105c67cbb87d4ab2"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-spaces-chrome-20261020",
+      "revision": "2544c568b193af44a6ea86fff364e1f19dff3224"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-thunder-models-b-20261021",
+      "revision": "873058283de8efaf90e70d7c7398686b3b1cafb4"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-thunder-package-a-20261021",
+      "revision": "873058283de8efaf90e70d7c7398686b3b1cafb4"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-thunder-upgrade-20261020",
+      "revision": "873058283de8efaf90e70d7c7398686b3b1cafb4"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-toolbar-20261020",
+      "revision": "fb70840d561286ecd46bd62b3c0736bf7d24108b"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-transport-20261020",
+      "revision": "fb70840d561286ecd46bd62b3c0736bf7d24108b"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-voice-shipping-20261020",
+      "revision": "e70927476e96cf82f8ffaac78f40dd4cd344c437"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-voice3-return-20261020",
+      "revision": "2062380d80dd10eebac88d8084e153e13e93bc5d"
+    },
+    {
+      "ref": "refs/heads/codex/mercury-voice4-return-20261020",
+      "revision": "2caf72796ea5ee1a1466b6cf59f77ce8c79bc8ba"
+    },
+    {
+      "ref": "refs/heads/codex/owning-home4-20261023",
+      "revision": "8db829bb442102ff8cdddfb10931bd26a2af6932"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-automations10-reconnect1-20261020",
+      "revision": "62238ab1f0ab9dac37338db890ac2d53bd0d3c51"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-automations11-shipping-owner-20261020",
+      "revision": "59ef5d322e80c1c369320eb0b637a6613824611b"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-automations12-real-home-owner-20261021",
+      "revision": "6b78cc00a3e40cfe84f017478434781ff2b37b62"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-automations13-shipping-causal-20261021",
+      "revision": "76f43d943c6b7dc94611a4b78fc79c1d586c1f7f"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-automations14-accepted-graph-20261021",
+      "revision": "9cb6d38e18cea9038661c824721e923fbf3200f1"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-dulche-pass7-20261020",
+      "revision": "896ae8f12d8ee7a4700d6c573829227472fefe40"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra07-voice-pass1-20261020",
+      "revision": "6635f8956c1a8ca2e85f5bdb8009ef6f146dda72"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra07-voice-pass2-partial429-20261020",
+      "revision": "7398c48bb5efe7e4f90a6ddc2608b89e6af5aded"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra08-richtext-resume3-20261020",
+      "revision": "5892c18104e3057ea31a7ee5248f842304782d06"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra09-permissions-20261020",
+      "revision": "1c080a7bbd1c6b40b09a7eb73f440de9cea7b81d"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra09-permissions-pass2-20261020",
+      "revision": "b69afadccbf1c86d26fafebf7f55debd10a282ba"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra09-permissions-pass3-20261020",
+      "revision": "f856560a0cf30b289bed236010105c11909242ef"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra12-build-20261020",
+      "revision": "167b4eb2a4f403f328a0a9361afc33141c7a0cfe"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra12-build-pass3-20261020",
+      "revision": "92a875aa3388671537d74bc0432db71ca4373e87"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra13-spacebuilder-resume1-20261020",
+      "revision": "6cb06657fbcd8da89e59b8221f24c288b6c125b0"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra14-dashboard-pass1-20261020",
+      "revision": "01081c452d0167fa5a7aa60dc3d5d4e36087a39d"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra14-dashboard-pass2-20261020",
+      "revision": "2d4ceadd57ea180a6bb0365a4a0a8629fa8d1db0"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra15-bundle-20261020",
+      "revision": "5c7bcc712332771830f1cea1435a95392e9fcd6e"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra15-bundle-pass2-20261020",
+      "revision": "1f6517357d14c2efad2431b267a5a08f36cfbb2c"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra15-bundle-pass3-20261020",
+      "revision": "b47f486d1d5202440ccc9d347822bb9571707bd7"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra16-packages-20261020",
+      "revision": "7d2a1c4e095a2a6e0168ccf95d5942e9460c370a"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra16-packages-fresh-closure-20261020",
+      "revision": "d847b504a30012c2ca49497e8ca98e3db8737cc9"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-extra16-packages-pass2-20261020",
+      "revision": "1d9ef5bdd37b9ee6c1780c1b7986d7c7cb9e3323"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-haven-header-shipping-frozen-20261020",
+      "revision": "ee7dec112c88349b81e55a3d6c21313e282c8ca2"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-haven-pass6-20261020",
+      "revision": "a372227dfdd3864ca99f99139bb40d8452c6a36a"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-haven-pass7-20261020",
+      "revision": "b7c68a6d8e15576ad7abc65acab685ec1a7c2b4c"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-spaces-chrome3-reconnect1-20261020",
+      "revision": "4d1121ced2e221420e28a8311799a52fdddb02cf"
+    },
+    {
+      "ref": "refs/heads/codex/parallel16-voice6-host-mode-custody-20261020",
+      "revision": "276b3ee0cdcbf49d5459becf259a60d5fdb1ea9f"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-automations-pass1-20261020",
+      "revision": "ff89d50473ed54ad7d0536d855471a695960d231"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-automations-pass2-20261020",
+      "revision": "519d0e6ac5ca4f3df75ebff54c4eb2132d2c99fc"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-automations-pass3-20261020",
+      "revision": "09307cbd103d7e2b66fbaedeb5675b07c2a04362"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-automations-pass3-qa-20261020",
+      "revision": "5b4006b340cda863a80db975dbe15b0ff6393b6a"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-automations-pass4-20261020",
+      "revision": "ac2c7736b57ae0ca7a33451a4a0c266512ba0fc9"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-automations-pass5-20261020",
+      "revision": "f25f77d1fc9b8e78fcf9085b94af9b16042e9002"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-automations-pass6-20261020",
+      "revision": "ad54145e858a60330a9692a37ec47ab1b6eaca68"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-automations-pass7-20261020",
+      "revision": "c524b7cf25ea541a1558c923a2ad4d79fc605e94"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-base-20261020",
+      "revision": "fb70840d561286ecd46bd62b3c0736bf7d24108b"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-compiler-buildfix-20261020",
+      "revision": "e4c6e0aebf79a9728bda5486ba9f07b0a97d351b"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-compiler-fixturefix-20261020",
+      "revision": "60289daa06395a1230146a5f3099cd5d99139e7a"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-composer-haven-dulche-icons-integrated-20261020",
+      "revision": "618c93c121f231a6f8b412f419883b76e1299832"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-composer-integrated-testqa2-20261020",
+      "revision": "a162ecf198cfc42b89953ebe27711c82b7905c73"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-composer-query-crash-return-20261020",
+      "revision": "e062301f65e0e8b32054fce622656f597186244b"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-dulche-pass1-20261020",
+      "revision": "dd9b6d1f80d9e4e17ac89b80613a2eb1341d8f79"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-dulche-pass2-20261020",
+      "revision": "40b6ccd6f292682db7575f0e854832767c7d558b"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-dulche-pass3-20261020",
+      "revision": "1becc52b292ba700a81ebb3d2a71a1e96d475d3b"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-dulche-pass4-20261020",
+      "revision": "9e44e8ebd62ffe8c3dd38a25ee98cd39a7c8f8d1"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-dulche-pass5-20261020",
+      "revision": "7accbc83435b11b748ad3e6298add62b59c26ca8"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-dulche-pass6-20261020",
+      "revision": "ff3d4447191e38ef477b534872f011ee6832df0a"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-extra08-richtext-resume1-20261020",
+      "revision": "8f77e26d9f8e20c9c206c6b796ba3ee468b060aa"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-extra08-richtext-resume2-20261020",
+      "revision": "8e7e61e370f87cc93a2f4a061d7fafcad913d366"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-extra10-icons-resume1-20261020",
+      "revision": "9e6b4b4724e17b7f24f3a47b351e7e92c4e690f2"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-extra11-graph-pass1-20261020",
+      "revision": "95f88f756214444873e97aecc7379b2eca123351"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-extra11-graph-pass2-20261020",
+      "revision": "d46dd7c18b7d3d27b94884aed479806314d276f2"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-extra11-graph-pass3-20261020",
+      "revision": "870051d36b3aca38c5580ad5e392296239c3d46f"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-extra12-build-pass2-20261020",
+      "revision": "7bf6d7c7a795cf6ab96f17d3d98f87d60ca94e9e"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-extra13-spacebuilder-pass1-20261020",
+      "revision": "a5cc18860f21c356314dcf67a5d13c7e2a27f1e2"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-haven-pass1-20261020",
+      "revision": "3383efdcb0194e7a163f08e2c103f980e47b1e78"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-haven-pass2-20261020",
+      "revision": "fbf137a6f3877b54611296f015a44c85fc76679c"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-haven-pass3-20261020",
+      "revision": "8631490897ce8dceac910df170aa28cee27375fb"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-haven-pass4-20261020",
+      "revision": "e76f11aef85e2d45ff5e603c0f977b38f9dccf6d"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-haven-pass5-20261020",
+      "revision": "53ae17bcdce306e35c82206c2dbe5b2db18cad35"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-haven-shared-header-current-20261020",
+      "revision": "22d120786ff3beeda11241b25c3353931058fb57"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-icons-pass1-20261020",
+      "revision": "fe7201d9a1887bc6fe41a959ac2026cca2488f54"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-icons-pass2-20261020",
+      "revision": "2f9906a4aa97676e00120b43d309fe0f313b993d"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-icons-pass3-20261020",
+      "revision": "dc787d0048f7be10fe2393f494d00aa73eb28f9c"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-icons-pass3-qa-20261020",
+      "revision": "8a66b730858a139da452932c5767270664fa02e1"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-icons-pass4-20261020",
+      "revision": "727f973a6ec5f0a771ede6b5f86086461abb7486"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-icons-pass4-qa-20261020",
+      "revision": "873058283de8efaf90e70d7c7398686b3b1cafb4"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-query-integration-recovery-current-20261020",
+      "revision": "31f33c8942eab5383c8afcf0105c67cbb87d4ab2"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-query-resume2-20261020",
+      "revision": "82a8d227cd4981183da2174baca67a372cdf3fcd"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-query-resume3-return-20261020",
+      "revision": "b4b20a72079247d7d9f5151cfb623591b96f13cb"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-query-toolbar-pre-repair-20261020",
+      "revision": "b2410afdd80e5adc69c753c7fd049ef8ecd2ee59"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-repeat-pass1-20261020",
+      "revision": "ca3e5e9ffcc97b474a739f54b30d9bf1f52ba2c7"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-repeat-pass2-interrupted-20261020",
+      "revision": "7f0f43c2264ec31491c315f101dbef290d6b6e3c"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-repeat-pass2-root-fixture-qa-20261020",
+      "revision": "815abe2fa425bfff58f1543639ff4ced37e0ce45"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-repeat-resume1-20261020",
+      "revision": "537f2cec28685b1d6f7b7b996e46c17c2831308c"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-repeat-root-self-qa-20261020",
+      "revision": "e2cf5571933cc4384f7209ad581f889edd5f2b9d"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-thunder-pass1-20261020",
+      "revision": "ace91d304e416b381b259df349b2c491ba9d9016"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-thunder-pass2-20261020",
+      "revision": "e9911c3b8934117fe516b60dc241985b706cfe08"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-thunder-pass3-20261020",
+      "revision": "6ae52a185c5dc01f0ed557b00af980fbe4b40136"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-thunder-pass4-20261020",
+      "revision": "ccb697763e3133f0d5cbbe45d9964189ec32bef1"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-thunder-pass5-20261020",
+      "revision": "5516bd2f2400d63ee76cbcbfba6b0a823a2d7a24"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-thunder-pass6-fresh-20261020",
+      "revision": "c7530ecd685daee8a08a2df781b06b4e16bc60d6"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-toolbar-pass1-20261020",
+      "revision": "d0622f24226697d3e41b20121e3f37215571e46d"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-toolbar-pass2-20261020",
+      "revision": "becd6be5961c7f55cfe5a525e3b7c36e5d97bf16"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-toolbar-pass3-20261020",
+      "revision": "c25eb54a70b0c8706bb3ae2c94f36e0af251fc1b"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-toolbar-pass5-20261020",
+      "revision": "3ddaffc659b9b2dc423e1ecd3240dd5a33353dfe"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-toolbar-pass5-resume1-20261020",
+      "revision": "ec74ea83753a80c35d32862c85992fb74a7691f1"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-transport-cuic039-20261020",
+      "revision": "734576fa30e7761be7dc518cfcf0f2f5951bf289"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-transport-pass1-20261020",
+      "revision": "4cc0dd023a2f6c0bf5809577caaa0e0a58591373"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-transport-pass2-20261020",
+      "revision": "88575ef0ddfa86b412dd5e2bdbf1cbb189eeb081"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-transport-pass3-20261020",
+      "revision": "a67a86948934d76084c54abc0df068dc15bc69e3"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-transport-pass4-20261020",
+      "revision": "f2b53674dfad0a28d235b7ac586574e1142fb1a4"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-transport-pass5-20261020",
+      "revision": "dc4811acd5cbc2a0130af7fa335c5e0312741f87"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-transport-trailing-path-fix-20261020",
+      "revision": "dee4d59b959ecd6823000bbb3c5fd0dfa849dae9"
+    },
+    {
+      "ref": "refs/heads/codex/parallel6-voice-actual-pill-pass2-20261020",
+      "revision": "bcdb0346126d50a45bca26e8f15da1eb0d91a558"
+    },
+    {
+      "ref": "refs/heads/codex/present-actual-cui-native-preview-pass2-20261021",
+      "revision": "52d46f567b8d8b0a35873ad5e35c80c21caab4e5"
+    },
+    {
+      "ref": "refs/heads/codex/product-batch42-reviewed-source-20261023",
+      "revision": "faeeb43917ce87631fb2118e4d0435b649a654cc"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation43-20261023",
+      "revision": "dfc44a0691cc8abc8cf3680d3052b8879a8fdf0e"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation44-20261023",
+      "revision": "06b138b1261769d14d229293167a8ce960656f8a"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation45-20261023",
+      "revision": "f538bb3cc7372f0bf5f5fa740bb99917975fe382"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation46-20261023",
+      "revision": "9a19f1f7039a5f08024f8833141f30e06da39e62"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation47-20261023",
+      "revision": "8cfa5573f43faea05bda35470addae8ee46a4a4c"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation48-20261023",
+      "revision": "aea17d22c7ce2f49384e3ac00327a0d6ca993c21"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation49-20261023",
+      "revision": "8074fe621c080730e2466d414f2ea9ce73c0c3b3"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation50-20261023",
+      "revision": "5f68a3eec739c5e7f7706cba9c3bcef71a796e92"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation51-20261023",
+      "revision": "a7332347ee4654e328d5400656f049d67f5db7e7"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation52-20261023",
+      "revision": "8719d0d6127317d8d91d0bb60357117f1fb3d4cb"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation53-20261023",
+      "revision": "7bdcb15de7412217fadf18c408b6011443d53378"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation54-20261023",
+      "revision": "209da8697b9b5a48c24714e09095f7c6223cc05c"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation55-20261023",
+      "revision": "b20d6fbe50c13faee6f5ac5ec1cc51a9cd7eee75"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation56-20261023",
+      "revision": "360fdb69d1e56feae75ca10988217ee3c7fea3fc"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation57-20261023",
+      "revision": "dabb2ada9b66cc4ecdffbf67a6e5b9175a3a8c3b"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation58-20261023",
+      "revision": "c20a3984e44895f0a0530d6913912a12b99f9e7e"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation59-20261023",
+      "revision": "27a51b71fc987233e4e76ed96500425d3ff729d1"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation60-20261023",
+      "revision": "79fd30783102abaa55e9312fe19fed9dd68e7030"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation61-20261023",
+      "revision": "a71d291db3177758a0e8a7ffc225ffae34603d77"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation62-20261023",
+      "revision": "d15c6cd85bad30bf35bf939611cb83117bec738b"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation63-20261023",
+      "revision": "b7ba2221669302eabdf83e45e80ca3c6743db47e"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation64-20261024",
+      "revision": "9c2a029609ca8d05a037fae44d9a477692af2da9"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation65-20261024",
+      "revision": "e84f133566844fd081b6179f5e56a7106c05c0e2"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation66-20261024",
+      "revision": "515ec076bb301757050e711acab3f3f66b1fbbb6"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation67-20261024",
+      "revision": "a0209efa133e9698d2369bacd5cbc8db2dcd4e35"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation68-20261024",
+      "revision": "615d14ef31a24ede7206a0f16aa5d242345c2627"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation69-20261024",
+      "revision": "5022170e8cb7c860437a648eb8953b05c8bb84c1"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation70-20261024",
+      "revision": "c790490295c902a6327e41762a716dd78899b6e6"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation71-20261024",
+      "revision": "d72eb1f40ac421f2d348063e95a5663e16b4b0ac"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation72-20261024",
+      "revision": "1d013484c085c07c60b6bc967d23b5562df9e761"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation73-20261024",
+      "revision": "beaa7341c6d633c0b320265fabaa4444ff46f13a"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation74-20261024",
+      "revision": "305d0c64d70b2746faf545c012f835af5ffe8ebd"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation75-20261024",
+      "revision": "af19c056a3c253fdfed0d8d6e4b8549aec46c72a"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation76-20261024",
+      "revision": "9db888cf3e89ea5593dc8edd3492461b62a91651"
+    },
+    {
+      "ref": "refs/heads/codex/product-implementation77-20261024",
+      "revision": "395a312170f9ae9900996b8dc82d050f7778c340"
+    },
+    {
+      "ref": "refs/heads/codex/progress-email-format-20261023",
+      "revision": "0c4eaf63269445279d8b82102e3e6d39ff5cb1b6"
+    },
+    {
+      "ref": "refs/heads/codex/progress-rough-estimates-policy-20261023",
+      "revision": "b3ee9b6b6c018a0b7bd3f92d627b5cb9783323d1"
+    },
+    {
+      "ref": "refs/heads/codex/query-fresh-runtime-ended-20261020",
+      "revision": "acba6cd487f57d4981f12f7f43dc8e5da158acd9"
+    },
+    {
+      "ref": "refs/heads/codex/rnote-build-preflight-20261023",
+      "revision": "82ec6d55f4369836e1d7d469dc82332ff936d0f9"
+    },
+    {
+      "ref": "refs/heads/codex/spaces-chrome-return1-20261020",
+      "revision": "89aa37c7e7a892fa4bc422bffacbe76654f9a46e"
+    },
+    {
+      "ref": "refs/heads/codex/spaces-chrome-return2-20261020",
+      "revision": "0330813ed35e4209000b5378d60d8d9cae58e03a"
+    },
+    {
+      "ref": "refs/heads/codex/sunday-product-reviewed-source-20261023",
+      "revision": "0b9b05f8976c5ad30de89ed82eff629c7c675de5"
+    },
+    {
+      "ref": "refs/heads/codex/thunder-cancellation-20261023",
+      "revision": "f567eb650e6ece2cf946d71f9911ac64460c6d0b"
+    },
+    {
+      "ref": "refs/heads/codex/thunder-effort-wire-checked-20261023",
+      "revision": "7be4d4156441524f86acfe0082407346f983a2e8"
+    },
+    {
+      "ref": "refs/heads/codex/thunder-line-reader-recovered-20261022",
+      "revision": "c8cb8f5dc47f77756de87234fd1c4b5624206f76"
+    },
+    {
+      "ref": "refs/heads/codex/thunder-native-tools-preflight-20261022",
+      "revision": "9276bbb60c90814d64c83bbc34e22c130797bed6"
+    },
+    {
+      "ref": "refs/heads/codex/thunder-tokenizer-wire-recovered-20261022",
+      "revision": "4c9c45a3849e51e3450972db8cfff5c338644bef"
+    },
+    {
+      "ref": "refs/heads/codex/thunder-window-recovery-20261022",
+      "revision": "080f6ba0ec3d3b7a7763a504fa152b3cb64b758a"
+    },
+    {
+      "ref": "refs/heads/codex/thunder-worker-readiness-20261022",
+      "revision": "1ca422ab8b6419cf5a83bf6bd40c7ace0942ae70"
+    },
+    {
+      "ref": "refs/heads/codex/verified-integration-recovered-20261022",
+      "revision": "3c834d0748cead097f1e8aa71accb32a1486e1e7"
+    },
+    {
+      "ref": "refs/heads/codex/voice-ended-integration-frozen-20261020",
+      "revision": "9c1753d0e9ca645a22a6e61e654f92b2f458f966"
+    },
+    {
+      "ref": "refs/heads/codex/voice-shipping-return-214540-20261020",
+      "revision": "09790ee18509b537cdf8fe85851a2e26119a8581"
+    },
+    {
+      "ref": "refs/heads/codex/voice-shipping-root-input-20261020",
+      "revision": "afbb64fe521d7ebc96b3e5c6bcc497671812ae43"
+    },
+    {
+      "ref": "refs/heads/codex/workflow-execution-custody-20261022",
+      "revision": "3c834d0748cead097f1e8aa71accb32a1486e1e7"
+    },
+    {
+      "ref": "refs/heads/codex/write-history-identity-private-20261023",
+      "revision": "e3df5ccbef9a4b1a8da8ca5476be8eeef8598d24"
+    },
+    {
+      "ref": "refs/heads/codex/write-semantic-selection-private-20261023",
+      "revision": "fba29eaa7767cbbdcb8e4c3679f3000fed5b5598"
+    },
+    {
+      "ref": "refs/heads/main",
+      "revision": "348131d66e26aaa8fb30a2c9e7cf7f52ccb181fd"
+    },
+    {
+      "ref": "refs/heads/mercury/address-tab-polish-20261020",
+      "revision": "594a4b622c4615265df6832e21a18d16d3704141"
+    },
+    {
+      "ref": "refs/heads/preview/arm64-engine-20261021",
+      "revision": "e3841dd89fc9be9d69882020d5ec8eb198606823"
+    },
+    {
+      "ref": "refs/heads/work",
+      "revision": "362a0053117fab69d3dd236478573ca288f88fca"
+    }
+  ],
+  "credential_shape_scan": {
+    "blobs": 2130,
+    "hits": [],
+    "objects": 6528,
+    "scanned_blob_bytes": 274719393,
+    "scope": "Credential-shape scan of all newly reachable historical blobs before a history-preservation ref is published. No credential values printed; no universal secret-free claim.",
+    "seconds": 4.702,
+    "status": "PASS_NO_MATCHING_API_KEY_SHAPES"
+  },
+  "instructions": [
+    "DO NOT MERGE THE ARCHIVE REF INTO MAIN. Its tree contains only this inventory, not application source.",
+    "Fetch this ref, then retrieve an individual original branch by the recorded SHA. Inspect its changes and current content lineage before merging.",
+    "Some history was already composed or cherry-picked into the product checkpoint. Lack of ancestry alone is not proof of a missing feature or of obsolescence.",
+    "Reconcile historical failures/negative tests/experimental runtime changes individually. Preserve useful features, licence files and all quality gates.",
+    "Cloud source export, original dirty worktrees and private failure evidence remain preserved outside this archive; they have not been reset or deleted."
+  ],
+  "maximal_heads": [
+    {
+      "refs": [
+        "refs/heads/codex/authenticated-arm-delivery-20261022"
+      ],
+      "revision": "6410bda53d07d5da98469b2958cfe7554850d4e6"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/automations-local-handoff-wip-20261024"
+      ],
+      "revision": "be3a970f077608e4aa1992adaa078d8fda495e22"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/boards-legacy-compat-codec-20261023"
+      ],
+      "revision": "1dd7ef344ed638d5c4ba3172a2176a5479aa0d20"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/boards-native-original-20261022"
+      ],
+      "revision": "b4f397a5925ede31d860d3f144e96e3546d12c4e"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/boards-persistent-recovery-20261022"
+      ],
+      "revision": "9c90436be1bcf58827d444c901942956614fff5e"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/browser-pass2-20261020"
+      ],
+      "revision": "7b65d88af0c9e5615819d703c7c8f7ef908ba642"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/build-actual-entry-pass2-20261020"
+      ],
+      "revision": "93d914ef5812f59c24227fb287a862a6ec9ec7ee"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/build-actual-entry-pass2-safe-20261020"
+      ],
+      "revision": "b0ddefadeb0979b4d8220765749a75e3095521b8"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/canvas-app-startup-admission-20261023",
+        "refs/heads/codex/canvas-app-startup-admission-first8-20261023"
+      ],
+      "revision": "513387e47ee8b496f710be2b2bdee84abc29a7af"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/canvas-app-startup-admission-final-20261023"
+      ],
+      "revision": "3751739a5cab999e91dced6c9f4a8cecbf4219e3"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/canvas-app-startup-failure-publication-20261023"
+      ],
+      "revision": "1fcf6609419a92cb0f3b90cb86407d3da73dc646"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/canvas-engine-ci-recovered-20261022"
+      ],
+      "revision": "9750308c2b76c0ed732f87a43a487cde553f048e"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/canvas-launch-repairs-20261023"
+      ],
+      "revision": "7b6690fa3c12bd228d7bd1521cbd56c0ac46fbe6"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/canvas-rnote-bridge-20261022"
+      ],
+      "revision": "0e2676af43ac92e7a98ce5fbac9fe3db23635c8b"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/cloud-continuation-20261020"
+      ],
+      "revision": "d1f36ed64125a7db61750d5164ca3a1fc12e0ccf"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/cloud-core-20261020"
+      ],
+      "revision": "3e5d0815b70792da78e961a590b6e465fd40c40e"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/cloud-professional-icons-20261020"
+      ],
+      "revision": "359d17fc7ff71d05f7a5c1f50654c4e6cb8512e5"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/cloud-spaces-activation-20261020"
+      ],
+      "revision": "d61e667524b169223cdfb66f76aeafe4c0b8c301"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/cloud-spaces-layout-20261020"
+      ],
+      "revision": "1272dead4eae48392cf06cb6938d172e7811fea5"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/composer-coherence-return1-20261020"
+      ],
+      "revision": "b463ba89f23a7d53c7bb1adc9e0e91ed9f0ec737"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/cui-initial-effects-20261023"
+      ],
+      "revision": "3ff93b8f7454cae998c8e517f5290376073695d0"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/cui-initial-effects-red-v2-20261023"
+      ],
+      "revision": "453648c74b5c8c8472859e799ced9786c147590a"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/files-scoped-canvas-20261023"
+      ],
+      "revision": "0cfa6c8558b6cca416ba34193eb6182530fdd661"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/floating16-compiler-QA-20261021"
+      ],
+      "revision": "a70e342d3e3ed06d1eb29ecf70c768e1ee5414bb"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/floating17-narrow-diagnostic-QA-20261021"
+      ],
+      "revision": "8d4f27ff99dc2db5d7f8f39e05a9e82087abaa49"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/floating20-owned-return-20261021"
+      ],
+      "revision": "4ddc5d78a98546f981ca080f7fd83f035e5d4ef7"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/haven-browser-finish-spec-input-20261020"
+      ],
+      "revision": "c7437be71195e2e86a0afdcfa6416a55f518f3c6"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/haven-topbar-fixture-width-return-221143"
+      ],
+      "revision": "a6c22ae1902a877cc78d6908665d3eb416da715e"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/home-approval-continuation-20261022"
+      ],
+      "revision": "05dbc773c9d68fc12c88a123b764135a1b2941d8"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/home-decision-overlap-analyzer-fix-20261023"
+      ],
+      "revision": "1bd6eae5e9ba5e686560ca6b57aed6297609e184"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/home-decision-overlap-predicate-fix-20261023"
+      ],
+      "revision": "1ed589ddd5f0c327efe96930a03c59e916e18658"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/homeapps-composed38-20261023-v1-RED"
+      ],
+      "revision": "1370ebecb4061df856897d3bb430ad584f04090c"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/local-teams-bootstrap-control-20261024"
+      ],
+      "revision": "08103ed96b420cc17e5fef193c0145917ef02c1d"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/mercury-automations9-return-20261020"
+      ],
+      "revision": "18987fc7f99eb16a5fa80b39d2cb1e21b8ff8f7d"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/mercury-bundle15-pass4-return-20261020"
+      ],
+      "revision": "516777d8050fd71a26af80e9a23341cc7d58eb44"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/mercury-emoji-settlement-20261021"
+      ],
+      "revision": "dec76824ab30938b26c28ed11c639b45f2ec5fb3"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/mercury-voice4-return-20261020"
+      ],
+      "revision": "2caf72796ea5ee1a1466b6cf59f77ce8c79bc8ba"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-automations10-reconnect1-20261020"
+      ],
+      "revision": "62238ab1f0ab9dac37338db890ac2d53bd0d3c51"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-automations11-shipping-owner-20261020"
+      ],
+      "revision": "59ef5d322e80c1c369320eb0b637a6613824611b"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-automations12-real-home-owner-20261021"
+      ],
+      "revision": "6b78cc00a3e40cfe84f017478434781ff2b37b62"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-automations14-accepted-graph-20261021"
+      ],
+      "revision": "9cb6d38e18cea9038661c824721e923fbf3200f1"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-dulche-pass7-20261020"
+      ],
+      "revision": "896ae8f12d8ee7a4700d6c573829227472fefe40"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-extra08-richtext-resume3-20261020"
+      ],
+      "revision": "5892c18104e3057ea31a7ee5248f842304782d06"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-extra09-permissions-pass3-20261020"
+      ],
+      "revision": "f856560a0cf30b289bed236010105c11909242ef"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-extra12-build-pass3-20261020"
+      ],
+      "revision": "92a875aa3388671537d74bc0432db71ca4373e87"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-extra13-spacebuilder-resume1-20261020"
+      ],
+      "revision": "6cb06657fbcd8da89e59b8221f24c288b6c125b0"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-extra14-dashboard-pass2-20261020"
+      ],
+      "revision": "2d4ceadd57ea180a6bb0365a4a0a8629fa8d1db0"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-extra16-packages-fresh-closure-20261020"
+      ],
+      "revision": "d847b504a30012c2ca49497e8ca98e3db8737cc9"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-haven-header-shipping-frozen-20261020"
+      ],
+      "revision": "ee7dec112c88349b81e55a3d6c21313e282c8ca2"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-haven-pass7-20261020"
+      ],
+      "revision": "b7c68a6d8e15576ad7abc65acab685ec1a7c2b4c"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-spaces-chrome3-reconnect1-20261020"
+      ],
+      "revision": "4d1121ced2e221420e28a8311799a52fdddb02cf"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel16-voice6-host-mode-custody-20261020"
+      ],
+      "revision": "276b3ee0cdcbf49d5459becf259a60d5fdb1ea9f"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel6-extra10-icons-resume1-20261020"
+      ],
+      "revision": "9e6b4b4724e17b7f24f3a47b351e7e92c4e690f2"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel6-extra11-graph-pass3-20261020"
+      ],
+      "revision": "870051d36b3aca38c5580ad5e392296239c3d46f"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel6-thunder-pass6-fresh-20261020"
+      ],
+      "revision": "c7530ecd685daee8a08a2df781b06b4e16bc60d6"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel6-toolbar-pass5-resume1-20261020"
+      ],
+      "revision": "ec74ea83753a80c35d32862c85992fb74a7691f1"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/parallel6-transport-trailing-path-fix-20261020"
+      ],
+      "revision": "dee4d59b959ecd6823000bbb3c5fd0dfa849dae9"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/present-actual-cui-native-preview-pass2-20261021"
+      ],
+      "revision": "52d46f567b8d8b0a35873ad5e35c80c21caab4e5"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/rnote-build-preflight-20261023"
+      ],
+      "revision": "82ec6d55f4369836e1d7d469dc82332ff936d0f9"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/spaces-chrome-return2-20261020"
+      ],
+      "revision": "0330813ed35e4209000b5378d60d8d9cae58e03a"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/sunday-product-reviewed-source-20261023"
+      ],
+      "revision": "0b9b05f8976c5ad30de89ed82eff629c7c675de5"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/thunder-effort-wire-checked-20261023"
+      ],
+      "revision": "7be4d4156441524f86acfe0082407346f983a2e8"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/thunder-native-tools-preflight-20261022"
+      ],
+      "revision": "9276bbb60c90814d64c83bbc34e22c130797bed6"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/thunder-window-recovery-20261022"
+      ],
+      "revision": "080f6ba0ec3d3b7a7763a504fa152b3cb64b758a"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/thunder-worker-readiness-20261022"
+      ],
+      "revision": "1ca422ab8b6419cf5a83bf6bd40c7ace0942ae70"
+    },
+    {
+      "refs": [
+        "refs/heads/codex/voice-shipping-return-214540-20261020"
+      ],
+      "revision": "09790ee18509b537cdf8fe85851a2e26119a8581"
+    },
+    {
+      "refs": [
+        "refs/heads/preview/arm64-engine-20261021"
+      ],
+      "revision": "e3841dd89fc9be9d69882020d5ec8eb198606823"
+    }
+  ],
+  "merge_probe": {
+    "conflicts": [
+      "CONFLICT (content): Merge conflict in .github/workflows/development-infrastructure.yml",
+      "CONFLICT (content): Merge conflict in 9to1 Models/Dulche Alpha/Tests/NativeStrataUpdateToolTests.py",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/Browse/Host.Tests/SpacesConversationRouteTests.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/Browse/NativeUI/BrowseNativeWorkspace.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/Canvas/CanvasInkObjectHandler.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/Dev/UI/DeveloperWorkbench.cui",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Development/DeveloperProjectWorkbenchPage.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/shared/tests/Haven.Desktop.Tests/UnifiedHomeContentTests.cs",
+      "CONFLICT (content): Merge conflict in AGENTS.md"
+    ],
+    "exit_code": 1,
+    "scope": "Read-only merge-tree compatibility probe; generated Git objects only, no source/index/ref modifications."
+  },
+  "prior_main": "348131d66e26aaa8fb30a2c9e7cf7f52ccb181fd",
+  "product_checkpoint": "be3a970f077608e4aa1992adaa078d8fda495e22",
+  "recorded_at": "2026-10-24T14:12:14.200149+00:00",
+  "schema": "9to1.cloud-branch-preservation/v1",
+  "scope": "266 local branch heads before owner-requested cloud stop. Inventory and retained ancestry only; NOT a product merge.",
+  "unresolved_ancestry_count": 196
+}
