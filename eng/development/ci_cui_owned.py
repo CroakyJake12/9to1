@@ -16,7 +16,7 @@ OWNER = 'native:local:01a16df8-1971-7d63-be3a-b8548a888274'
 REPOSITORY = 'CroakyJake12/9to1'
 BASE = '9505fcb85c640e8f444fb9bef842574d6df56a5c'
 ANCHOR = '4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522'
-PRODUCT = '81c75b7e9125a6931d905bbc7410593f14112ff4'
+PRODUCT = os.environ.get('EXPECTED_PRODUCT_COMMIT', '')
 PROJECT = 'framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj'
 FILTER = 'FullyQualifiedName~CakeOS.Cui.Runtime.Tests.CuiIconMenuTests|FullyQualifiedName~CakeOS.Cui.Runtime.Tests.CuiKeyboardTooltipHostTests'
 WORKFLOW = '.github/workflows/haven-chat-model-ci.yml'
@@ -36,6 +36,11 @@ import workflow as w
 
 def need(condition, message):
     if not condition: raise w.Refusal(message)
+
+
+def product_revision(value):
+    need(type(value) is str and re.fullmatch('[0-9a-f]{40}',value), 'Product source must be exact lowercase40hex')
+    return value
 
 
 def pin(path): return {'path':str(Path(path).resolve()), **w.file_identity(path)}
@@ -248,12 +253,13 @@ def main():
     try:
         need(os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch'
              and os.environ.get('GITHUB_REPOSITORY')==REPOSITORY,'Only the actual registered manual GitHub job is delegated')
+        product_revision(PRODUCT)
         ci_commit=w.git(CHECKOUT,'rev-parse','HEAD').decode().strip()
         need(ci_commit==os.environ.get('EXPECTED_CI_COMMIT')==os.environ.get('GITHUB_SHA'),'Actual CI commit differs from Root dispatch')
         instruction_path=CHECKOUT/INSTRUCTION;instruction=w.read(instruction_path)
         need(pin(instruction_path)['sha256']==os.environ.get('EXPECTED_DELEGATION_SHA256'),'Immutable Root delegation differs from exact dispatch pin')
         need(instruction.get('schema')=='9to1.root-live/v1' and instruction.get('issuer',{}).get('owner')==OWNER
-             and instruction.get('candidate')==PRODUCT and instruction.get('delegation',{}).get('sdk_host_observed_adoption') is True,
+             and product_revision(instruction.get('candidate'))==PRODUCT and instruction.get('delegation',{}).get('sdk_host_observed_adoption') is True,
              'Actual native Root SDK delegation is missing')
         native=instruction['native_sdk_reservation']
         need(native.get('id')==os.environ.get('EXPECTED_RESERVATION_ID') and re.fullmatch('[A-Za-z0-9._:-]{8,160}',native['id'])
