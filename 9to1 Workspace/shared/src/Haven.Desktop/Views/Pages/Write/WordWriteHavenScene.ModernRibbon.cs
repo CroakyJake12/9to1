@@ -23,59 +23,106 @@ internal sealed partial class WordWriteHavenScene
     {
         var editor = _editor!;
         var block = editor.SelectedBlock;
-        var run = editor.ActiveRun;
+        var selectedFamily = editor.SelectedFontFamily;
+        var selectedSize = editor.SelectedFontSize;
+        var selectedForeground = editor.SelectedForeground;
+        var selectedBackground = editor.SelectedBackground;
+        var selectedSpacing = editor.SelectedLineSpacing;
+        var selectedStyleId = editor.SelectedStyleId;
+        var familyMixed = editor.HasTextSelection && selectedFamily is null;
+        var sizeMixed = editor.HasTextSelection && selectedSize is null;
+        var foregroundMixed = editor.HasTextSelection && selectedForeground is null;
+        var backgroundMixed = editor.HasTextSelection && selectedBackground is null;
+        var spacingMixed = editor.HasTextSelection && selectedSpacing is null;
+        var styleMixed = editor.HasTextSelection && selectedStyleId is null;
         var styles = editor.Document.Styles;
-        var styleIndex = block is null ? -1 : styles.FindIndex(value => value.Id.Equals(block.StyleId, StringComparison.OrdinalIgnoreCase));
-        var style = Choice("Write.Home.Style", "Paragraph style", styles.Select(value => value.Name).ToArray(), Math.Max(0, styleIndex));
+        var styleNames = styles.Select(value => value.Name).ToArray();
+        string[] styleChoices = styleMixed ? ["Mixed", .. styleNames] : styleNames;
+        var styleIndex = selectedStyleId is null ? -1 : styles.FindIndex(value => value.Id.Equals(selectedStyleId, StringComparison.OrdinalIgnoreCase));
+        var style = Choice("Write.Home.Style", "Paragraph style", styleChoices, styleMixed ? 0 : Math.Max(0, styleIndex));
+        if (styleMixed) style.Accessibility.Description = "Selected paragraphs use more than one style.";
         style.SelectionChanged += (_, _) =>
         OwnOriginalCallback(() => {
-            if (style.SelectedIndex >= 0 && style.SelectedIndex < styles.Count) { editor.ApplyStyle(styles[style.SelectedIndex].Id); DocumentSurface.InvalidateDocument(); }
+            var selectedIndex = style.SelectedIndex - (styleMixed ? 1 : 0);
+            if (selectedIndex >= 0 && selectedIndex < styles.Count) { editor.ApplyStyle(styles[selectedIndex].Id); RebuildRibbon(); DocumentSurface.InvalidateDocument(); }
         });
         RibbonContent.Add(style);
 
-        var fontIndex = Array.FindIndex(CommonFonts, value => value.Equals(run?.FontFamily, StringComparison.OrdinalIgnoreCase));
-        var font = Choice("Write.Home.Font", "Font family", CommonFonts, Math.Max(0, fontIndex));
+        var currentFamily = familyMixed ? "Mixed" : selectedFamily;
+        if (string.IsNullOrWhiteSpace(currentFamily)) currentFamily = CommonFonts[0];
+        string[] fontChoices = familyMixed ? ["Mixed", .. CommonFonts]
+            : CommonFonts.Any(value => value.Equals(currentFamily, StringComparison.OrdinalIgnoreCase))
+                ? CommonFonts : [currentFamily, .. CommonFonts];
+        var fontIndex = Array.FindIndex(fontChoices, value => value.Equals(currentFamily, StringComparison.OrdinalIgnoreCase));
+        var font = Choice("Write.Home.Font", "Font family", fontChoices, fontIndex);
+        if (familyMixed) font.Accessibility.Description = "Selected text uses more than one font family.";
         font.SetValue(HavenProperties.MinWidth, HavenLength.Px(150));
-        font.SelectionChanged += (_, _) => OwnOriginalCallback(() => { if (font.SelectedItem is { } family) editor.SetFontFamily(family); });
+        font.SelectionChanged += (_, _) => OwnOriginalCallback(() => { if (font.SelectedItem is { } family && family != "Mixed") { editor.SetFontFamily(family); RebuildRibbon(); } });
         RibbonContent.Add(font);
 
-        var currentSize = Math.Round(run?.FontSize ?? 14).ToString(System.Globalization.CultureInfo.InvariantCulture);
-        var sizeIndex = Array.IndexOf(CommonSizes, currentSize);
-        var size = Choice("Write.Home.Size", "Font size", CommonSizes, Math.Max(0, sizeIndex));
+        var currentSize = sizeMixed ? "Mixed" : (selectedSize ?? 14).ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+        string[] sizeChoices = sizeMixed ? ["Mixed", .. CommonSizes]
+            : CommonSizes.Contains(currentSize, StringComparer.Ordinal) ? CommonSizes : [currentSize, .. CommonSizes];
+        var sizeIndex = Array.IndexOf(sizeChoices, currentSize);
+        var size = Choice("Write.Home.Size", "Font size", sizeChoices, sizeIndex);
+        if (sizeMixed) size.Accessibility.Description = "Selected text uses more than one font size.";
         size.SetValue(HavenProperties.MinWidth, HavenLength.Px(72));
-        size.SelectionChanged += (_, _) => OwnOriginalCallback(() => { if (double.TryParse(size.SelectedItem, out var points)) editor.SetFontSize(points); });
+        size.SelectionChanged += (_, _) => OwnOriginalCallback(() => { if (double.TryParse(size.SelectedItem, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var points)) { editor.SetFontSize(points); RebuildRibbon(); } });
         RibbonContent.Add(size);
 
-        RibbonContent.Add(Format("Write.Home.Bold", "B", run?.Bold == true, WriteCharacterFormat.Bold));
-        RibbonContent.Add(Format("Write.Home.Italic", "I", run?.Italic == true, WriteCharacterFormat.Italic));
-        RibbonContent.Add(Format("Write.Home.Underline", "U", run?.Underline == true, WriteCharacterFormat.Underline));
-        RibbonContent.Add(Format("Write.Home.Strike", "S", run?.StrikeThrough == true, WriteCharacterFormat.StrikeThrough));
+        var bold = editor.SelectedCharacterFormat(WriteCharacterFormat.Bold);
+        var italic = editor.SelectedCharacterFormat(WriteCharacterFormat.Italic);
+        var underline = editor.SelectedCharacterFormat(WriteCharacterFormat.Underline);
+        var strike = editor.SelectedCharacterFormat(WriteCharacterFormat.StrikeThrough);
+        var boldMixed = editor.HasTextSelection && bold is null;
+        var italicMixed = editor.HasTextSelection && italic is null;
+        var underlineMixed = editor.HasTextSelection && underline is null;
+        var strikeMixed = editor.HasTextSelection && strike is null;
+        RibbonContent.Add(Format("Write.Home.Bold", "B", bold == true && !boldMixed, WriteCharacterFormat.Bold, boldMixed));
+        RibbonContent.Add(Format("Write.Home.Italic", "I", italic == true && !italicMixed, WriteCharacterFormat.Italic, italicMixed));
+        RibbonContent.Add(Format("Write.Home.Underline", "U", underline == true && !underlineMixed, WriteCharacterFormat.Underline, underlineMixed));
+        RibbonContent.Add(Format("Write.Home.Strike", "S", strike == true && !strikeMixed, WriteCharacterFormat.StrikeThrough, strikeMixed));
 
         foreach (var colour in new[] { ("Black", "#FF1C222A"), ("Blue", "#FF246BCE"), ("Red", "#FFD64545"), ("Green", "#FF238B57") })
         {
-            var button = Btn("Write.Home.TextColour." + colour.Item1, colour.Item1);
+            var selected = string.Equals(selectedForeground, colour.Item2, StringComparison.OrdinalIgnoreCase);
+            var button = Btn("Write.Home.TextColour." + colour.Item1, colour.Item1,
+                foregroundMixed ? ButtonVariant.Secondary : selected ? ButtonVariant.Primary : ButtonVariant.Tertiary);
             button.Accessibility.Description = "Set selected text colour to " + colour.Item1;
-            button.Invoked += (_, _) => OwnOriginalCallback(() => { editor.SetForeground(colour.Item2); });
+            if (foregroundMixed) button.Accessibility.Description += ". The current selection contains mixed text colours.";
+            else if (selected) button.Accessibility.Description += ". This is the current selection colour.";
+            button.Invoked += (_, _) => OwnOriginalCallback(() => { editor.SetForeground(colour.Item2); RebuildRibbon(); });
             RibbonContent.Add(button);
         }
         foreach (var colour in new[] { ("No highlight", "#00000000"), ("Yellow", "#FFFFE66D"), ("Mint", "#FFBCEFD0"), ("Pink", "#FFFFC8DD") })
         {
-            var button = Btn("Write.Home.Highlight." + colour.Item1.Replace(" ", string.Empty), colour.Item1);
+            var selected = string.Equals(selectedBackground, colour.Item2, StringComparison.OrdinalIgnoreCase);
+            var button = Btn("Write.Home.Highlight." + colour.Item1.Replace(" ", string.Empty), colour.Item1,
+                backgroundMixed ? ButtonVariant.Secondary : selected ? ButtonVariant.Primary : ButtonVariant.Tertiary);
             button.Accessibility.Description = "Set selected text highlight to " + colour.Item1;
-            button.Invoked += (_, _) => OwnOriginalCallback(() => { editor.SetBackground(colour.Item2); });
+            if (backgroundMixed) button.Accessibility.Description += ". The current selection contains mixed highlight colours.";
+            else if (selected) button.Accessibility.Description += ". This is the current selection highlight.";
+            button.Invoked += (_, _) => OwnOriginalCallback(() => { editor.SetBackground(colour.Item2); RebuildRibbon(); });
             RibbonContent.Add(button);
         }
 
+        var selectedAlignment = editor.SelectedAlignment;
+        var alignmentMixed = editor.HasTextSelection && selectedAlignment is null;
         foreach (var alignment in new[] { NotesTextAlignment.Left, NotesTextAlignment.Center, NotesTextAlignment.Right, NotesTextAlignment.Justify })
         {
-            var button = Btn("Write.Align." + alignment, alignment.ToString(), block?.Paragraph.Alignment == alignment ? ButtonVariant.Primary : ButtonVariant.Tertiary);
-            button.Invoked += (_, _) => OwnOriginalCallback(() => { editor.SetAlignment(alignment); });
+            var button = Btn("Write.Align." + alignment, alignment.ToString(), alignmentMixed ? ButtonVariant.Secondary : selectedAlignment == alignment ? ButtonVariant.Primary : ButtonVariant.Tertiary);
+            if (alignmentMixed) button.Accessibility.Description = "Selected paragraphs use more than one alignment. Activating applies this alignment to all selected paragraphs.";
+            button.Invoked += (_, _) => OwnOriginalCallback(() => { editor.SetAlignment(alignment); RebuildRibbon(); });
             RibbonContent.Add(button);
         }
 
         var spacingValues = new[] { "1.0", "1.15", "1.5", "2.0" };
-        var spacing = Choice("Write.Home.LineSpacing", "Line spacing", spacingValues, 0);
-        spacing.SelectionChanged += (_, _) => OwnOriginalCallback(() => { if (double.TryParse(spacing.SelectedItem, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)) editor.SetLineSpacing(value); });
+        var currentSpacing = spacingMixed ? "Mixed" : (selectedSpacing ?? 1).ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+        string[] spacingChoices = spacingMixed ? ["Mixed", .. spacingValues]
+            : spacingValues.Contains(currentSpacing, StringComparer.Ordinal) ? spacingValues : [currentSpacing, .. spacingValues];
+        var spacing = Choice("Write.Home.LineSpacing", "Line spacing", spacingChoices, Array.IndexOf(spacingChoices, currentSpacing));
+        if (spacingMixed) spacing.Accessibility.Description = "Selected paragraphs use more than one line spacing value.";
+        spacing.SelectionChanged += (_, _) => OwnOriginalCallback(() => { if (double.TryParse(spacing.SelectedItem, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)) { editor.SetLineSpacing(value); RebuildRibbon(); } });
         RibbonContent.Add(spacing);
         var outdent = Btn("Write.Home.Outdent", "Outdent"); outdent.Invoked += (_, _) => OwnOriginalCallback(() => { editor.SetLeftIndent(Math.Max(0, (block?.Paragraph.IndentLeft ?? 0) - 24)); }); RibbonContent.Add(outdent);
         var indent = Btn("Write.Home.Indent", "Indent"); indent.Invoked += (_, _) => OwnOriginalCallback(() => { editor.SetLeftIndent((block?.Paragraph.IndentLeft ?? 0) + 24); }); RibbonContent.Add(indent);
@@ -110,7 +157,6 @@ internal sealed partial class WordWriteHavenScene
         OwnOriginalCallback(() => {
             if (_editor is null) return;
             var block = _editor.InsertBlock(NotesBlockKind.Table);
-            _editor.SelectBlock(block.Id);
             while (block.Table!.Rows.Count > rows) _editor.RemoveTableRow();
             while (block.Table.Rows.Count < rows) _editor.AddTableRow();
             while (block.Table.Rows[0].Cells.Count > columns) _editor.RemoveTableColumn();

@@ -104,6 +104,7 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
         _route.PreviousRequested += OnPreviousRequested;
         _route.NextRequested += OnNextRequested;
         _route.DocumentChanged += OnWordDocumentChanged;
+        _route.DocumentHistoryRequested += OnDocumentHistoryRequested;
         _route.ImageRequested += OnWordImageRequested;
         _route.ReadAloudRequested += OnReadAloudRequested;
         _route.ReadAloudStopRequested += OnReadAloudStopRequested;
@@ -362,6 +363,12 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
     private async Task ProposeAiAsync(string instruction, bool allowDocumentContext, string modelName, CancellationToken cancellationToken)
     {
         if (Document is null) return;
+        if (_route.SharedInkEditor is { HasDocumentSelection: true } selectedEditor
+            && selectedEditor.DocumentAnchor is { } anchor && selectedEditor.DocumentCaret.BlockId != anchor.BlockId)
+        {
+            Publish(() => _route.SetStatus("AI edits on selections spanning paragraphs are unavailable until range-aware review is supported. Nothing was sent."));
+            return;
+        }
         if (_ai is null) { Publish(() => _route.SetStatus("AI proposals are unavailable because the Notes AI service is not registered.")); return; }
         var selectedText = _route.SelectedText;
         if (!allowDocumentContext && string.IsNullOrWhiteSpace(selectedText)) { Publish(() => _route.SetStatus("Select text, or explicitly allow document context, before requesting an AI edit.")); return; }
@@ -1243,6 +1250,7 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
         _route.PreviousRequested -= OnPreviousRequested;
         _route.NextRequested -= OnNextRequested;
         _route.DocumentChanged -= OnWordDocumentChanged;
+        _route.DocumentHistoryRequested -= OnDocumentHistoryRequested;
         _route.ImageRequested -= OnWordImageRequested;
         _route.ReadAloudRequested -= OnReadAloudRequested;
         _route.ReadAloudStopRequested -= OnReadAloudStopRequested;

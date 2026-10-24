@@ -35,7 +35,9 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
 
     internal Func<Guid, bool>? SharedInkIsMounted { get; set; }
     public event EventHandler? SelectionChanged;
+    internal event Action<string>? DocumentHistoryRequested;
     public double Zoom => _zoom;
+    internal bool IsReadOnly => _readOnly;
     public string SelectedText => SelectedTableText ?? _editor?.SelectedDocumentText ?? string.Empty;
 
     /// <summary>Opt-in seamless shared-object presentation. This never changes stored page setup.</summary>
@@ -67,6 +69,16 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
 
     public void InvalidateDocument()
     {
+        // Keep the input surface's active cell aligned with canonical editor state
+        // after typed insert/history/structure actions, not only pointer clicks.
+        var previousCell = _activeTableCellId;
+        var selectedCell = _editor?.SelectedTableCellId;
+        Guid? currentCell = null;
+        if (selectedCell is { } selectedId && _editor?.SelectedBlock?.Table is { } table
+            && table.Rows.SelectMany(row => row.Cells).Any(cell => cell.Id == selectedId))
+            currentCell = selectedId;
+        if (previousCell != currentCell) { _tableCellCaret = 0; _tableCellSelection = null; }
+        _activeTableCellId = currentCell;
         BuildLayout();
         Invalidate();
     }
@@ -148,8 +160,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         if (modifiers.Control)
         {
             if (key == HavenKey.A) { _editor.SelectAllDocumentText(); SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true; }
-            if (key == HavenKey.Z) { if (_editor.Undo()) { InvalidateDocument(); return true; } return false; }
-            if (key == HavenKey.Y) { if (_editor.Redo()) { InvalidateDocument(); return true; } return false; }
+            if (key == HavenKey.Z) { if (!_editor.CanUndo) return false; DocumentHistoryRequested?.Invoke("write.document.undo"); return true; }
+            if (key == HavenKey.Y) { if (!_editor.CanRedo) return false; DocumentHistoryRequested?.Invoke("write.document.redo"); return true; }
         }
         switch (key)
         {

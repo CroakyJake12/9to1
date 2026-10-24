@@ -87,6 +87,24 @@ public sealed class WriteNativeDocumentPackageStoreTests
     }
 
     [Fact]
+    public async Task Cancelled_save_keeps_existing_destination_intact_and_removes_partial_package()
+    {
+        using var directory = new TemporaryDirectory();
+        var store = new WriteNativeDocumentPackageStore();
+        var path = Path.Combine(directory.Path, "existing.9to1w");
+        Assert.True((await store.SaveAsync(NotesDocument.Create("Original"), path)).IsSuccess);
+        var before = await File.ReadAllBytesAsync(path);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            store.SaveAsync(NotesDocument.Create("Cancelled replacement"), path, cancellation.Token));
+
+        Assert.Equal(before, await File.ReadAllBytesAsync(path));
+        Assert.Equal("existing.9to1w", Assert.Single(Directory.GetFiles(directory.Path).Select(Path.GetFileName)));
+    }
+
+    [Fact]
     public async Task Open_rejects_traversal_entries()
     {
         using var directory = new TemporaryDirectory();

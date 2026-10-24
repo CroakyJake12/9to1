@@ -11,6 +11,9 @@ public interface IWriteNativeDocumentPackageStore
         string sourcePath,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Atomically saves a native document package at the requested destination.</summary>
+    /// <remarks>Cancellation is propagated to the caller; an incomplete save must not replace
+    /// an existing destination or leave a partial package behind.</remarks>
     Task<WriteNativeDocumentPackageResult<string>> SaveAsync(
         NotesDocument document,
         string destinationPath,

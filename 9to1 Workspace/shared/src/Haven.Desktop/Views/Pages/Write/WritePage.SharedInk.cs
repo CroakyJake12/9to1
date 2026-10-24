@@ -79,8 +79,17 @@ public sealed partial class WritePage
         await SaveAsync("Inserted shared drawing");
     });
 
-    private bool CanEditSharedInk => CanPublishOriginal && !_busy && !_closePreparing && Document is not null
-        && Volatile.Read(ref _saveRunning) == 0;
+    private bool CanEditCurrentDocument(WriteDocumentEditor? editor) => CanPublishOriginal && !_busy && !_closePreparing
+        && Volatile.Read(ref _saveRunning) == 0 && !_route.DocumentSurface.IsReadOnly
+        && Document is { } document && editor is not null && ReferenceEquals(editor.Document, document);
+
+    private bool CanEditSharedInk => CanEditCurrentDocument(_route.SharedInkEditor);
+
+    private void OnDocumentHistoryRequested(string command) => RunOriginalEvent(async () =>
+    {
+        if (_sharedInkToolBindings is null) return;
+        await _sharedInkToolBindings.DispatchAsync(command, null);
+    });
 
     private static HomeProductivityContext InkContext(WriteDocumentEditor editor) =>
         new("write", editor.Document.Id.ToString("D"), editor.Document.Version, [],
@@ -272,7 +281,7 @@ public sealed partial class WritePage
         _sharedInkToolBindings?.Notify();
     }
 
-    private sealed class WriteSharedInkBindings(WritePage owner) : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
+    internal sealed class WriteSharedInkBindings(WritePage owner) : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         internal void Notify() => PropertyChanged?.Invoke(this, new(null));
@@ -281,8 +290,8 @@ public sealed partial class WritePage
             value = path switch
             {
                 "CanDraw" => IsActionAvailable("write.ink.pen") == true,
-                "CanUndo" => IsActionAvailable("write.ink.undo") == true,
-                "CanRedo" => IsActionAvailable("write.ink.redo") == true,
+                "CanUndo" => IsActionAvailable("write.document.undo") == true,
+                "CanRedo" => IsActionAvailable("write.document.redo") == true,
                 "DrawingTool" => (owner._sharedInkEraseMode ? "Eraser · whole strokes" : owner._sharedInkStyle.Kind == CanvasRnoteInkKind.Marker ? "Highlighter" : "Pen") +
                     " · " + owner._sharedInkStyle.Color + " · " + owner._sharedInkStyle.BaseWidth.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture),
                 _ => null
@@ -292,6 +301,13 @@ public sealed partial class WritePage
         public bool? IsActionAvailable(string command)
         {
             var editor = owner._route.SharedInkEditor;
+            // Document history is shared by text, table, and drawing edits. Keep its
+            // current-document/write-lifetime checks separate from ink-mount gating.
+            if (command is "write.document.undo" or "write.document.redo")
+            {
+                if (!owner.CanEditCurrentDocument(editor)) return false;
+                return command == "write.document.undo" ? editor!.CanUndo : editor!.CanRedo;
+            }
             if (!owner.CanEditSharedInk || editor?.SelectedBlockId is not { } id ||
                 !owner._sharedInkEntries.TryGetValue(id, out var entry) || !ReferenceEquals(entry.Owner, editor) || !entry.Input.CanDraw) return false;
             return command switch
@@ -307,9 +323,30 @@ public sealed partial class WritePage
         public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
         {
             Dispatcher.UIThread.VerifyAccess(); cancellationToken.ThrowIfCancellationRequested();
-            if (parameter is not null) throw new ArgumentException("Use the current Write drawing tool without an external target.");
+            if (parameter is not null) throw new ArgumentException("Write history and drawing actions do not accept an external target.");
             if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
-            var editor = owner._route.SharedInkEditor!; var selected = editor.SelectedBlockId;
+            var editor = owner._route.SharedInkEditor!;
+            if (command is "write.document.undo" or "write.document.redo")
+            {
+                // Capture the authoritative document/revision before queueing, then
+                // revalidate ownership and identity inside the serialized original.
+                var document = owner.Document!;
+                var documentId = document.Id;
+                var revision = document.Version;
+                return new(owner.RunOriginalAsync(async () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!owner.CanEditCurrentDocument(editor) || !ReferenceEquals(editor, owner._route.SharedInkEditor)
+                        || !ReferenceEquals(owner.Document, document) || document.Id != documentId || document.Version != revision) return;
+                    var changed = command == "write.document.undo" ? editor.Undo() : editor.Redo();
+                    if (!changed) return;
+                    owner._route.RefreshHistoryPresentation();
+                    await owner.SaveAsync(command == "write.document.undo" ? "Undid document edit" : "Redid document edit", CancellationToken.None);
+                    owner.RefreshSharedInkMount();
+                    Notify();
+                }));
+            }
+            var selected = editor.SelectedBlockId;
             return new(owner.RunOriginalAsync(async () =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -326,8 +363,8 @@ public sealed partial class WritePage
                     case "write.ink.width.thin": owner._sharedInkStyle = owner._sharedInkStyle with { BaseWidth = 1 }; break;
                     case "write.ink.width.medium": owner._sharedInkStyle = owner._sharedInkStyle with { BaseWidth = 2.5 }; break;
                     case "write.ink.width.thick": owner._sharedInkStyle = owner._sharedInkStyle with { BaseWidth = 6 }; break;
-                    case "write.ink.undo": if (editor.Undo()) await owner.SaveAsync("Undid drawing edit", CancellationToken.None); owner.RefreshSharedInkMount(); Notify(); return;
-                    case "write.ink.redo": if (editor.Redo()) await owner.SaveAsync("Redid drawing edit", CancellationToken.None); owner.RefreshSharedInkMount(); Notify(); return;
+                    case "write.ink.undo": if (editor.Undo()) { owner._route.RefreshHistoryPresentation(); await owner.SaveAsync("Undid drawing edit", CancellationToken.None); } owner.RefreshSharedInkMount(); Notify(); return;
+                    case "write.ink.redo": if (editor.Redo()) { owner._route.RefreshHistoryPresentation(); await owner.SaveAsync("Redid drawing edit", CancellationToken.None); } owner.RefreshSharedInkMount(); Notify(); return;
                 }
                 owner.PublishSharedInkStyle();
             }));

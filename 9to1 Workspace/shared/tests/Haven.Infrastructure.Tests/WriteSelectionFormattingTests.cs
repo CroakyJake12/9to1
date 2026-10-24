@@ -56,6 +56,29 @@ public sealed class WriteSelectionFormattingTests
     }
 
     [Fact]
+    public void Toolbar_state_comes_from_uniform_selected_runs_at_a_run_boundary()
+    {
+        var document = NotesDocument.Create("Boundary selection state");
+        var block = document.Sections[0].Pages[0].Blocks[0];
+        block.PlainText = "OffOn";
+        block.Runs =
+        [
+            new NotesTextRun { Text = "Off", FontFamily = "Aptos", FontSize = 12, Bold = false },
+            new NotesTextRun { Text = "On", FontFamily = "Georgia", FontSize = 16, Bold = true }
+        ];
+        var editor = new WriteDocumentEditor(document);
+        editor.SelectBlock(block.Id, caretIndex: 3, selectionStart: 3, selectionEnd: 5);
+
+        Assert.Equal("Aptos", editor.ActiveRun?.FontFamily);
+        Assert.Equal("Georgia", editor.SelectedFontFamily);
+        Assert.Equal(16d, editor.SelectedFontSize!.Value);
+        Assert.True(editor.SelectedCharacterFormat(WriteCharacterFormat.Bold) == true);
+        Assert.False(editor.IsFontFamilyMixed);
+        Assert.False(editor.IsFontSizeMixed);
+        Assert.False(editor.IsCharacterFormatMixed(WriteCharacterFormat.Bold));
+    }
+
+    [Fact]
     public void Comment_targets_selected_text_range()
     {
         var document = NotesDocument.Create();
@@ -71,6 +94,26 @@ public sealed class WriteSelectionFormattingTests
         Assert.Equal(6, comment.StartOffset);
         Assert.Equal(10, comment.EndOffset);
         Assert.Equal("Review", comment.Text);
+    }
+
+    [Fact]
+    public void Comment_uses_same_block_document_selection_instead_of_the_entire_block()
+    {
+        var document = NotesDocument.Create();
+        var block = document.Sections[0].Pages[0].Blocks[0];
+        block.PlainText = "Alpha beta gamma";
+        block.Runs = [new NotesTextRun { Text = block.PlainText }];
+        var editor = new WriteDocumentEditor(document);
+        editor.SetDocumentCaret(block.Id, 6);
+        editor.SetDocumentCaret(block.Id, 10, extendSelection: true);
+
+        editor.AddComment("Review this phrase");
+
+        var comment = Assert.Single(document.Comments);
+        Assert.Equal(block.Id, comment.BlockId);
+        Assert.Equal(6, comment.StartOffset);
+        Assert.Equal(10, comment.EndOffset);
+        Assert.Equal("Review this phrase", comment.Text);
     }
 
     [Theory]
@@ -93,6 +136,9 @@ public sealed class WriteSelectionFormattingTests
         var last = System.Text.Json.JsonSerializer.Serialize(block.Runs[^1]);
         var caret = backwards ? 4 : 9;
         editor.SelectBlock(block.Id, caret, backwards ? 9 : 4, backwards ? 4 : 9);
+        Assert.True(editor.IsCharacterFormatMixed(format));
+        Assert.True(editor.IsFontFamilyMixed);
+        Assert.True(editor.IsFontSizeMixed);
         var changes = 0;
         editor.Changed += (_, _) => changes++;
 
@@ -105,6 +151,9 @@ public sealed class WriteSelectionFormattingTests
         Assert.Equal(4, editor.SelectionStart);
         Assert.Equal(9, editor.SelectionEnd);
         Assert.Equal(1, changes);
+        Assert.False(editor.IsCharacterFormatMixed(format));
+        Assert.True(editor.IsFontFamilyMixed);
+        Assert.True(editor.IsFontSizeMixed);
         Assert.Equal(first, System.Text.Json.JsonSerializer.Serialize(block.Runs[0]));
         Assert.Equal(last, System.Text.Json.JsonSerializer.Serialize(block.Runs[^1]));
         Assert.All(originalIds, id => Assert.Single(block.Runs, run => run.Id == id));

@@ -74,6 +74,46 @@ public sealed class WriteReviewedAiAndPageBreakTests
     }
 
     [Fact]
+    public void Applying_shorter_ai_content_clamps_local_and_document_selection_state_and_history_restores_it()
+    {
+        var document = NotesDocument.Create("AI selection state");
+        var paragraph = document.Sections[0].Pages[0].Blocks[0];
+        paragraph.PlainText = "AlphaBeta";
+        paragraph.Runs = [new NotesTextRun { Text = "AlphaBeta", Italic = true }];
+        var change = new NotesAiChange
+        {
+            BlockId = paragraph.Id,
+            Instruction = "Shorten",
+            OriginalContent = "AlphaBeta",
+            ProposedContent = "Hi",
+            Status = NotesAiChangeStatus.Proposed
+        };
+        document.AiChanges.Add(change);
+        var editor = new WriteDocumentEditor(document);
+        editor.SelectBlock(paragraph.Id, caretIndex: 8, selectionStart: 5, selectionEnd: 8);
+        WriteDocumentPosition? caretAtChange = null;
+        editor.Changed += (_, _) => caretAtChange = editor.DocumentCaret;
+
+        Assert.True(editor.ApplyAiChange(change));
+        Assert.Equal(2, editor.CaretIndex);
+        Assert.Equal(2, editor.SelectionStart);
+        Assert.Equal(2, editor.SelectionEnd);
+        Assert.Equal(new WriteDocumentPosition(paragraph.Id, 2), editor.DocumentCaret);
+        Assert.Equal(new WriteDocumentPosition(paragraph.Id, 2), caretAtChange.GetValueOrDefault());
+        Assert.False(editor.HasSelection);
+
+        Assert.True(editor.Undo());
+        Assert.Equal(8, editor.CaretIndex);
+        Assert.Equal(5, editor.SelectionStart);
+        Assert.Equal(8, editor.SelectionEnd);
+        Assert.Equal(new WriteDocumentPosition(paragraph.Id, 8), editor.DocumentCaret);
+        Assert.True(editor.HasSelection);
+        Assert.True(editor.Redo());
+        Assert.Equal(2, editor.CaretIndex);
+        Assert.Equal(new WriteDocumentPosition(paragraph.Id, 2), editor.DocumentCaret);
+    }
+
+    [Fact]
     public void Rejecting_ai_change_leaves_document_content_unchanged()
     {
         var document = NotesDocument.Create("AI reject");

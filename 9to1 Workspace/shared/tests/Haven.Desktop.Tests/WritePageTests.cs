@@ -113,6 +113,67 @@ public sealed class WritePageTests
     }
 
     [AvaloniaFact]
+    public async Task Shared_document_history_actions_work_for_text_and_table_and_deny_read_only()
+    {
+        var document = NotesDocument.Create("History actions");
+        var repository = new FakeNotesRepository(document);
+        using var writePage = new WritePage(new HavenEventBus(), repository, new FakeNotesFormats(), initialDocumentId: document.Id);
+        await writePage.InitializeAsync();
+        var editor = Assert.IsType<WriteDocumentEditor>(writePage.Route.SharedInkEditor);
+        var actions = new WritePage.WriteSharedInkBindings(writePage);
+
+        editor.SetTitle("Text edit");
+        Assert.True(actions.IsActionAvailable("write.document.undo"));
+        Assert.False(actions.IsActionAvailable("write.ink.undo"));
+        var enter = new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None);
+        Assert.True(writePage.Route.UndoButton.KeyDown(enter));
+        Assert.True(writePage.Route.UndoButton.KeyUp(enter));
+        await writePage.LatestOriginalAction!;
+        Assert.Equal("History actions", writePage.Document?.Title);
+        Assert.True(actions.IsActionAvailable("write.document.redo"));
+        Assert.True(writePage.Route.RedoButton.KeyDown(enter));
+        Assert.True(writePage.Route.RedoButton.KeyUp(enter));
+        await writePage.LatestOriginalAction!;
+        Assert.Equal("Text edit", writePage.Document?.Title);
+
+        editor.SelectBlock(document.Sections[0].Pages[0].Blocks[0].Id);
+        editor.ToggleCharacter(WriteCharacterFormat.Bold);
+        Assert.True(actions.IsActionAvailable("write.document.undo"));
+        var control = new HavenInputModifiers(Control: true);
+        Assert.True(writePage.Route.DocumentSurface.KeyDown(HavenKey.Z, control));
+        await writePage.LatestOriginalAction!;
+        Assert.True(writePage.Route.DocumentSurface.KeyDown(HavenKey.Y, control));
+        await writePage.LatestOriginalAction!;
+        var boldButton = Assert.Single(writePage.Route.RibbonContent.DescendantsAndSelf().OfType<HavenButton>(),
+            button => button.Name == "Write.Home.Bold");
+        Assert.Equal(ButtonVariant.Primary, boldButton.Variant);
+
+        var table = editor.InsertTable(1, 1);
+        Assert.Equal(table.Id, editor.SelectedBlockId);
+        Assert.Equal(editor.SelectedTableCellId, writePage.Route.DocumentSurface.ActiveTableCellId);
+        Assert.True(actions.IsActionAvailable("write.document.undo"));
+        await actions.DispatchAsync("write.document.undo", null);
+        Assert.DoesNotContain(writePage.Document!.Sections[0].Pages[0].Blocks, block => block.Id == table.Id);
+        Assert.True(actions.IsActionAvailable("write.document.redo"));
+        await actions.DispatchAsync("write.document.redo", null);
+        Assert.Contains(writePage.Document!.Sections[0].Pages[0].Blocks, block => block.Id == table.Id);
+
+        editor.SetTitle("Unsaved edit while view-only");
+        Assert.True(editor.Undo());
+        var titleBeforeDeniedActions = writePage.Document?.Title;
+        Assert.True(editor.CanUndo);
+        Assert.True(editor.CanRedo);
+        writePage.Route.DocumentSurface.SetReadOnly(true);
+        var saveCalls = repository.SaveCalls;
+        Assert.False(actions.IsActionAvailable("write.document.undo"));
+        Assert.False(actions.IsActionAvailable("write.document.redo"));
+        await actions.DispatchAsync("write.document.undo", null);
+        await actions.DispatchAsync("write.document.redo", null);
+        Assert.Equal(titleBeforeDeniedActions, writePage.Document?.Title);
+        Assert.Equal(saveCalls, repository.SaveCalls);
+    }
+
+    [AvaloniaFact]
     public async Task Write_page_shows_library_when_repository_is_empty()
     {
         var repository = new FakeNotesRepository();

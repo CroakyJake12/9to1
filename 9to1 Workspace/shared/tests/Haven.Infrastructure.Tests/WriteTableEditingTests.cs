@@ -31,10 +31,19 @@ public sealed class WriteTableEditingTests
         Assert.Equal(4, table.Table.Rows.Count);
         Assert.Equal(editor.SelectedTableCellId, table.Table.Rows[2].Cells[0].Id);
 
-        editor.SelectTableCell(table.Id, table.Table.Rows[1].Cells[1].Id);
+        var previousCell = table.Table.Rows[1].Cells[1].Id;
+        editor.SelectTableCell(table.Id, previousCell);
         editor.AddTableColumn();
         Assert.All(table.Table.Rows, row => Assert.Equal(4, row.Cells.Count));
-        Assert.Equal(table.Table.Rows[0].Cells[2].Id, editor.SelectedTableCellId);
+        var insertedCell = table.Table.Rows[1].Cells[2].Id;
+        Assert.Equal(insertedCell, editor.SelectedTableCellId);
+
+        Assert.True(editor.Undo());
+        table = editor.SelectedBlock!;
+        Assert.Equal(previousCell, editor.SelectedTableCellId);
+        Assert.True(editor.Redo());
+        table = editor.SelectedBlock!;
+        Assert.Equal(insertedCell, editor.SelectedTableCellId);
 
         editor.SelectTableCell(table.Id, table.Table.Rows[1].Cells[1].Id);
         editor.RemoveTableRow();

@@ -87,6 +87,7 @@ internal sealed partial class WordWriteHavenScene : IDisposable
         DocumentHost.SetValue(HavenProperties.Gap, HavenLength.Px(0));
         DocumentSurface = new WriteDocumentSurface(OwnOriginalCallback);
         DocumentSurface.SelectionChanged += OnDocumentSelectionChanged;
+        DocumentSurface.DocumentHistoryRequested += OnDocumentHistoryRequested;
         DrawingHost.Add(DocumentSurface);
         DocumentHost.Add(DrawingHost);
         Scroller.Add(DocumentHost);
@@ -102,17 +103,28 @@ internal sealed partial class WordWriteHavenScene : IDisposable
         ZoomStatusText = Caption("100%"); ZoomStatusText.Name = "Write.Status.Zoom"; ZoomStatusText.SetValue(HavenProperties.Column, 2); ZoomStatusText.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         StatusZoomInButton = Btn("Write.Status.ZoomIn", "+"); StatusZoomInButton.Accessibility.AccessibleName = "Zoom in"; StatusZoomInButton.SetValue(HavenProperties.Column, 3);
         StatusBar.Add(StatusZoomOutButton); StatusBar.Add(ZoomStatusText); StatusBar.Add(StatusZoomInButton); Root.Add(StatusBar);
-        TitleInput.Invalidated += OnTitleInvalidated; PreviousButton.Invoked += (_, _) => OwnOriginalCallback(() => { PreviousRequested?.Invoke(this, EventArgs.Empty); }); NextButton.Invoked += (_, _) => OwnOriginalCallback(() => { NextRequested?.Invoke(this, EventArgs.Empty); }); NewButton.Invoked += (_, _) => OwnOriginalCallback(() => { NewRequested?.Invoke(this, EventArgs.Empty); }); ImportButton.Invoked += (_, _) => OwnOriginalCallback(() => { ImportRequested?.Invoke(this, EventArgs.Empty); }); ExportButton.Invoked += (_, _) => OwnOriginalCallback(() => { ExportRequested?.Invoke(this, EventArgs.Empty); }); SaveButton.Invoked += (_, _) => OwnOriginalCallback(() => { SaveRequested?.Invoke(this, EventArgs.Empty); }); UndoButton.Invoked += (_, _) => OwnOriginalCallback(() => { Apply(editor => editor.Undo()); }); RedoButton.Invoked += (_, _) => OwnOriginalCallback(() => { Apply(editor => editor.Redo()); }); HomeTab.Invoked += (_, _) => OwnOriginalCallback(() => { SetTab(WordWriteRibbonTab.Home); }); InsertTab.Invoked += (_, _) => OwnOriginalCallback(() => { SetTab(WordWriteRibbonTab.Insert); }); LayoutTab.Invoked += (_, _) => OwnOriginalCallback(() => { SetTab(WordWriteRibbonTab.Layout); }); ReviewTab.Invoked += (_, _) => OwnOriginalCallback(() => { SetTab(WordWriteRibbonTab.Review); }); StatusZoomOutButton.Invoked += (_, _) => OwnOriginalCallback(() => { SetDocumentZoom(DocumentSurface.Zoom - .1); }); StatusZoomInButton.Invoked += (_, _) => OwnOriginalCallback(() => { SetDocumentZoom(DocumentSurface.Zoom + .1); });
+        TitleInput.Invalidated += OnTitleInvalidated; PreviousButton.Invoked += (_, _) => OwnOriginalCallback(() => { PreviousRequested?.Invoke(this, EventArgs.Empty); }); NextButton.Invoked += (_, _) => OwnOriginalCallback(() => { NextRequested?.Invoke(this, EventArgs.Empty); }); NewButton.Invoked += (_, _) => OwnOriginalCallback(() => { NewRequested?.Invoke(this, EventArgs.Empty); }); ImportButton.Invoked += (_, _) => OwnOriginalCallback(() => { ImportRequested?.Invoke(this, EventArgs.Empty); }); ExportButton.Invoked += (_, _) => OwnOriginalCallback(() => { ExportRequested?.Invoke(this, EventArgs.Empty); }); SaveButton.Invoked += (_, _) => OwnOriginalCallback(() => { SaveRequested?.Invoke(this, EventArgs.Empty); }); UndoButton.Invoked += (_, _) => OwnOriginalCallback(() => { DocumentHistoryRequested?.Invoke("write.document.undo"); }); RedoButton.Invoked += (_, _) => OwnOriginalCallback(() => { DocumentHistoryRequested?.Invoke("write.document.redo"); }); HomeTab.Invoked += (_, _) => OwnOriginalCallback(() => { SetTab(WordWriteRibbonTab.Home); }); InsertTab.Invoked += (_, _) => OwnOriginalCallback(() => { SetTab(WordWriteRibbonTab.Insert); }); LayoutTab.Invoked += (_, _) => OwnOriginalCallback(() => { SetTab(WordWriteRibbonTab.Layout); }); ReviewTab.Invoked += (_, _) => OwnOriginalCallback(() => { SetTab(WordWriteRibbonTab.Review); }); StatusZoomOutButton.Invoked += (_, _) => OwnOriginalCallback(() => { SetDocumentZoom(DocumentSurface.Zoom - .1); }); StatusZoomInButton.Invoked += (_, _) => OwnOriginalCallback(() => { SetDocumentZoom(DocumentSurface.Zoom + .1); });
     }
 
-    public event EventHandler? LibraryRequested; public event Action<Guid>? DocumentOpenRequested; public event Action<string, bool, string>? AiProposalRequested; public event EventHandler? AiApplyRequested; public event EventHandler? AiRejectRequested; public event EventHandler? PreviousRequested; public event EventHandler? NextRequested; public event EventHandler? NewRequested; public event EventHandler? ImportRequested; public event EventHandler? ExportRequested; public event EventHandler? SaveRequested; public event EventHandler? ImageRequested; public event EventHandler? DocumentChanged;
+    public event EventHandler? LibraryRequested; public event Action<Guid>? DocumentOpenRequested; public event Action<string, bool, string>? AiProposalRequested; public event EventHandler? AiApplyRequested; public event EventHandler? AiRejectRequested; public event EventHandler? PreviousRequested; public event EventHandler? NextRequested; public event EventHandler? NewRequested; public event EventHandler? ImportRequested; public event EventHandler? ExportRequested; public event EventHandler? SaveRequested; public event EventHandler? ImageRequested; public event EventHandler? DocumentChanged; public event Action<string>? DocumentHistoryRequested;
+    private void OnDocumentHistoryRequested(string command) => DocumentHistoryRequested?.Invoke(command);
     public event Action<string>? TitleChanged { add { } remove { } }
     public event Action<WriteBlockTextChangedEventArgs>? BlockTextChanged { add { } remove { } }
     public Page Root { get; } public Container Chrome { get; } public Container Header { get; } public Container QuickBar { get; } public Container Ribbon { get; } public Container RibbonTabs { get; } public Container RibbonContent { get; } public Container Ruler { get; } public Container Scroller { get; } public Container DocumentHost { get; } public WriteDocumentSurface DocumentSurface { get; } public Container StatusBar { get; }
     public Input TitleInput { get; } public HavenText DocumentPositionText { get; } public HavenText StatusText { get; } public HavenText ZoomStatusText { get; }
     public HavenButton PreviousButton { get; } public HavenButton NextButton { get; } public HavenButton NewButton { get; } public HavenButton ImportButton { get; } public HavenButton ExportButton { get; } public HavenButton SaveButton { get; } public HavenButton UndoButton { get; } public HavenButton RedoButton { get; } public HavenButton HomeTab { get; } public HavenButton InsertTab { get; } public HavenButton LayoutTab { get; } public HavenButton ReviewTab { get; } public HavenButton StatusZoomOutButton { get; } public HavenButton StatusZoomInButton { get; }
     public IReadOnlyDictionary<Guid, Input> BlockInputs => _blockInputs; public NotesDocument? Document => _editor?.Document;
-    public Guid? SelectedBlockId => _editor?.SelectedBlockId; public string SelectedText => _editor?.SelectedText ?? string.Empty;
+    public Guid? SelectedBlockId => _editor?.SelectedBlockId;
+    public string SelectedText
+    {
+        get
+        {
+            if (_editor is not { } editor) return string.Empty;
+            if (!editor.HasDocumentSelection) return editor.SelectedText;
+            return editor.DocumentAnchor is { } anchor && anchor.BlockId == editor.DocumentCaret.BlockId
+                ? editor.SelectedDocumentText : string.Empty;
+        }
+    }
 
     public void SetDocument(NotesDocument document, int index, int count) { if (_editor is not null) _editor.Changed -= OnEditorChanged; _editor = new WriteDocumentEditor(document); _editor.InitializeSharedInkTracking(); _editor.Changed += OnEditorChanged; _pendingAiChange = document.AiChanges.LastOrDefault(change => change.Status == NotesAiChangeStatus.Proposed); _suppress = true; try { TitleInput.Text = document.Title; TitleInput.SetValue(HavenProperties.Enabled, true); } finally { _suppress = false; } DocumentPositionText.Content = $"{index + 1} of {Math.Max(1, count)} · v{document.Version}"; RebuildAll(); }
     public void SetLibrary(IReadOnlyList<NotesDocumentSummary> documents)
@@ -141,6 +153,7 @@ else _statsDebouncer.Schedule(() => OwnOriginalCallback(UpdateStats));
 RefreshCommands(); DocumentChanged?.Invoke(this, EventArgs.Empty); PresentationChanged?.Invoke(this, EventArgs.Empty); }
     private void SetTab(WordWriteRibbonTab tab) { _tab = tab; RebuildRibbon(); }
     private void RebuildAll() { RebuildRibbon(); RebuildDocument(); UpdateStats(); RefreshCommands(); PresentationChanged?.Invoke(this, EventArgs.Empty); }
+    internal void RefreshHistoryPresentation() { RebuildRibbon(); RefreshCommands(); }
     private void RefreshCommands() { if (_editor is null) return; UndoButton.SetValue(HavenProperties.Enabled, _editor.CanUndo); RedoButton.SetValue(HavenProperties.Enabled, _editor.CanRedo); StyleRibbonTab(HomeTab, _tab == WordWriteRibbonTab.Home); StyleRibbonTab(InsertTab, _tab == WordWriteRibbonTab.Insert); StyleRibbonTab(LayoutTab, _tab == WordWriteRibbonTab.Layout); StyleRibbonTab(ReviewTab, _tab == WordWriteRibbonTab.Review); }
     private void RebuildRibbon() { RibbonContent.Children.ToList().ForEach(child => child.Parent?.Remove(child)); if (_editor is null) return; switch (_tab) { case WordWriteRibbonTab.Home: HomeModern(); break; case WordWriteRibbonTab.Insert: InsertModern(); break; case WordWriteRibbonTab.Layout: LayoutModern(); break; case WordWriteRibbonTab.Review: Review(); AddReadAloudControls(); break; } AddSharedInkControls(); BuildRibbonGroups(); RefreshCommands(); }
 
@@ -318,7 +331,7 @@ RefreshCommands(); DocumentChanged?.Invoke(this, EventArgs.Empty); PresentationC
         return pill;
     }
 
-    private HavenButton Format(string name, string label, bool selected, WriteCharacterFormat format) { var button = Btn(name, label, selected ? ButtonVariant.Primary : ButtonVariant.Tertiary); button.SetValue(HavenProperties.FontWeight, 800); button.Invoked += (_, _) => OwnOriginalCallback(() => { Apply(editor => { editor.ToggleSelectionCharacter(format); return true; }); }); return button; }
+    private HavenButton Format(string name, string label, bool selected, WriteCharacterFormat format, bool mixed = false) { var button = Btn(name, label, mixed ? ButtonVariant.Secondary : selected ? ButtonVariant.Primary : ButtonVariant.Tertiary); if (mixed) button.Accessibility.Description = $"Mixed {format} formatting in the selection. Activating applies the command to the selected text."; button.SetValue(HavenProperties.FontWeight, 800); button.Invoked += (_, _) => OwnOriginalCallback(() => { Apply(editor => { editor.ToggleSelectionCharacter(format); return true; }); }); return button; }
     private Input NumberField(string name, string accessible, double value, Action<double> apply, double width) { var input = Field(name, accessible, value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)); input.Text = value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); input.SetValue(HavenProperties.Width, HavenLength.Px(width)); input.Invalidated += (_, _) => OwnOriginalCallback(() => { if (_suppress || !double.TryParse(input.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed)) return; apply(parsed); }); return input; }
     private void Apply(Func<WriteDocumentEditor, bool> action) { if (_editor is null || !action(_editor)) return; RebuildAll(); }
     private void UpdateStats() { if (_editor is null) return; var stats = _editor.Statistics; StatusText.Content = $"Page 1 · {stats.Words} words · {stats.Characters} characters · {stats.ReadingMinutes} min read · autosave on"; ZoomStatusText.Content = $"{Math.Round(DocumentSurface.Zoom * 100)}%"; }
@@ -338,6 +351,7 @@ RefreshCommands(); DocumentChanged?.Invoke(this, EventArgs.Empty); PresentationC
         DocumentSurface.RequestOriginalRetirement();
         TitleInput.Invalidated -= OnTitleInvalidated;
         DocumentSurface.SelectionChanged -= OnDocumentSelectionChanged;
+        DocumentSurface.DocumentHistoryRequested -= OnDocumentHistoryRequested;
         if (_editor is not null) _editor.Changed -= OnEditorChanged;
         Root.SetValue(HavenProperties.Enabled, false);
     }
@@ -349,5 +363,5 @@ RefreshCommands(); DocumentChanged?.Invoke(this, EventArgs.Empty); PresentationC
         else callback();
     }
 
-    public void Dispose() { if (_disposed) return; RequestRetirement(); _disposed = true; PreviousRequested = null; NextRequested = null; NewRequested = null; ImportRequested = null; ExportRequested = null; SaveRequested = null; ImageRequested = null; DocumentChanged = null; }
+    public void Dispose() { if (_disposed) return; RequestRetirement(); _disposed = true; PreviousRequested = null; NextRequested = null; NewRequested = null; ImportRequested = null; ExportRequested = null; SaveRequested = null; ImageRequested = null; DocumentChanged = null; DocumentHistoryRequested = null; }
 }

@@ -11,8 +11,8 @@ public sealed partial class WriteDocumentEditor
 {
     private const int HistoryLimit = 50;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private readonly List<NotesDocument> _undo = [];
-    private readonly List<NotesDocument> _redo = [];
+    private readonly List<EditorHistoryState> _undo = [];
+    private readonly List<EditorHistoryState> _redo = [];
 
     public WriteDocumentEditor(NotesDocument document) : this(document, null) { }
 
@@ -44,12 +44,46 @@ public sealed partial class WriteDocumentEditor
     public int SelectionStart { get; private set; }
     public int SelectionEnd { get; private set; }
     public bool HasSelection => SelectionEnd > SelectionStart;
+    public bool HasTextSelection => HasSelection || HasDocumentSelection;
+    public bool IsFontFamilyMixed => IsSelectedRunValueMixed(run => run.FontFamily, StringComparer.OrdinalIgnoreCase);
+    public bool IsFontSizeMixed => IsSelectedRunValueMixed(run => run.FontSize);
+    public bool IsForegroundMixed => IsSelectedRunValueMixed(run => run.Foreground, StringComparer.OrdinalIgnoreCase);
+    public bool IsBackgroundMixed => IsSelectedRunValueMixed(run => run.Background, StringComparer.OrdinalIgnoreCase);
+    public bool IsLineSpacingMixed => IsSelectedParagraphValueMixed(format => format.LineSpacing);
+    public bool IsAlignmentMixed => IsSelectedParagraphValueMixed(format => format.Alignment);
+    public bool IsStyleMixed => IsSelectedBlockValueMixed(block => block.StyleId, StringComparer.OrdinalIgnoreCase);
+    public string? SelectedStyleId => HasTextSelection
+        ? TryGetSelectedBlockValue(block => block.StyleId, out string? styleId, StringComparer.OrdinalIgnoreCase) ? styleId : null
+        : SelectedBlock?.StyleId;
+    public string? SelectedFontFamily => HasTextSelection
+        ? TryGetSelectedRunValue(run => run.FontFamily, out string? family, StringComparer.OrdinalIgnoreCase) ? family : null
+        : ActiveRun?.FontFamily;
+    public double? SelectedFontSize => HasTextSelection
+        ? TryGetSelectedRunValue(run => run.FontSize, out double size) ? size : null
+        : ActiveRun?.FontSize;
+    public string? SelectedForeground => HasTextSelection
+        ? TryGetSelectedRunValue(run => run.Foreground, out string? foreground, StringComparer.OrdinalIgnoreCase) ? foreground : null
+        : ActiveRun?.Foreground;
+    public string? SelectedBackground => HasTextSelection
+        ? TryGetSelectedRunValue(run => run.Background, out string? background, StringComparer.OrdinalIgnoreCase) ? background : null
+        : ActiveRun?.Background;
+    public double? SelectedLineSpacing => HasTextSelection
+        ? TryGetSelectedParagraphValue(format => format.LineSpacing, out double spacing) ? spacing : null
+        : SelectedBlock?.Paragraph.LineSpacing;
+    public NotesTextAlignment? SelectedAlignment => HasTextSelection
+        ? TryGetSelectedParagraphValue(format => format.Alignment, out NotesTextAlignment alignment) ? alignment : null
+        : SelectedBlock?.Paragraph.Alignment;
+    public bool? SelectedCharacterFormat(WriteCharacterFormat format) => HasTextSelection
+        ? TryGetSelectedRunValue(run => CharacterEnabled(run, format), out bool value) ? value : null
+        : ActiveRun is { } run ? CharacterEnabled(run, format) : null;
     public string SelectedText => SelectedBlock is { } block && HasSelection ? EditableText(block).Substring(SelectionStart, SelectionEnd - SelectionStart) : SelectedBlock is { } selected ? EditableText(selected) : string.Empty;
     public bool CanUndo => _undo.Count > 0;
     public bool CanRedo => _redo.Count > 0;
     public NotesBlock? SelectedBlock => SelectedBlockId is { } id ? Blocks().FirstOrDefault(block => block.Id == id) : null;
     public NotesTextRun? ActiveRun => SelectedBlock is { } block ? RunAt(block, ActiveRunIndex) : null;
     public NotesStatistics Statistics => NotesTextStatistics.Calculate(Document);
+    public bool IsCharacterFormatMixed(WriteCharacterFormat format) =>
+        IsSelectedRunValueMixed(run => CharacterEnabled(run, format));
     public IReadOnlyList<NotesBlock> Blocks() => Document.Sections.SelectMany(section => section.Pages)
         .Where(page => PageScopeId is null || page.Id == PageScopeId).SelectMany(page => page.Blocks).OrderBy(block => block.Order).ToArray();
 
@@ -58,7 +92,10 @@ public sealed partial class WriteDocumentEditor
         var block = Blocks().FirstOrDefault(candidate => candidate.Id == blockId);
         if (block is null) return;
         var length = EditableText(block).Length;
+        var selectedCell = SelectedBlockId == block.Id && SelectedTableCellId is { } cellId
+            && block.Table?.Rows.SelectMany(row => row.Cells).Any(cell => cell.Id == cellId) == true ? cellId : null;
         SelectedBlockId = block.Id;
+        SelectedTableCellId = selectedCell;
         CaretIndex = Math.Clamp(caretIndex, 0, length);
         var start = Math.Clamp(selectionStart ?? CaretIndex, 0, length);
         var end = Math.Clamp(selectionEnd ?? CaretIndex, 0, length);
@@ -89,17 +126,32 @@ public sealed partial class WriteDocumentEditor
     {
         if (SelectedBlock is not { } block || block.Kind is not (NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code)) return;
         var next = text ?? string.Empty;
-        if (EditableText(block) == next) { CaretIndex = Math.Max(0, caretIndex); ActiveRunIndex = RunIndexAtCaret(block, CaretIndex); return; }
-        Mutate(() => ReplaceTextPreservingRuns(block, next), "Edited text");
-        CaretIndex = Math.Clamp(caretIndex, 0, next.Length); SelectionStart = SelectionEnd = CaretIndex; ActiveRunIndex = RunIndexAtCaret(block, CaretIndex);
+        if (EditableText(block) == next)
+        {
+            CaretIndex = Math.Clamp(caretIndex, 0, next.Length);
+            ActiveRunIndex = RunIndexAtCaret(block, CaretIndex);
+            SelectedBlockId = block.Id;
+            _documentCaret = new WriteDocumentPosition(block.Id, CaretIndex);
+            _documentAnchor = null;
+            return;
+        }
+        Mutate(() =>
+        {
+            ReplaceTextPreservingRuns(block, next);
+            SetCaretState(new WriteDocumentPosition(block.Id, Math.Clamp(caretIndex, 0, next.Length)));
+        }, "Edited text");
     }
 
     public void ApplyStyle(string styleId)
     {
-        if (SelectedBlock is not { } block) return;
         var style = Document.Styles.FirstOrDefault(value => value.Id.Equals(styleId, StringComparison.OrdinalIgnoreCase));
         if (style is null) return;
-        Mutate(() => WriteNamedStyleOperations.Apply(block, style), "Applied style " + style.Name);
+        IReadOnlyList<NotesBlock> targets;
+        if (HasDocumentSelection) targets = SelectedParagraphBlocks();
+        else if (SelectedBlock is { } block) targets = new[] { block };
+        else targets = Array.Empty<NotesBlock>();
+        if (targets.Count == 0) return;
+        Mutate(() => { foreach (var block in targets) WriteNamedStyleOperations.Apply(block, style); }, "Applied style " + style.Name);
     }
 
     public void ToggleCharacter(WriteCharacterFormat format)
@@ -178,26 +230,52 @@ public sealed partial class WriteDocumentEditor
     {
         var page = PageForSelection(); var index = SelectedBlock is { } selected ? page.Blocks.IndexOf(selected) + 1 : page.Blocks.Count;
         var block = kind switch { NotesBlockKind.Heading => NotesBlock.Heading("Heading"), NotesBlockKind.Quote => new NotesBlock { Kind = NotesBlockKind.Quote, StyleId = "quote", PlainText = "Quote" }, NotesBlockKind.Code => new NotesBlock { Kind = NotesBlockKind.Code, StyleId = "code", PlainText = "Code" }, NotesBlockKind.List => new NotesBlock { Kind = NotesBlockKind.List, List = new NotesListData { Kind = listKind, Items = [new NotesListItem { Text = "List item" }] } }, NotesBlockKind.Table => NotesBlock.TableBlock(3, 3), NotesBlockKind.Equation => NotesBlock.EquationBlock(), NotesBlockKind.Divider => new NotesBlock { Kind = NotesBlockKind.Divider }, _ => NotesBlock.CreateParagraph() };
-        Mutate(() => { page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block); Renumber(page); SelectedBlockId = block.Id; ActiveRunIndex = 0; CaretIndex = 0; }, "Inserted " + kind); return block;
+        Mutate(() =>
+        {
+            page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block);
+            Renumber(page);
+            SelectedTableCellId = block.Table?.Rows.FirstOrDefault()?.Cells.FirstOrDefault()?.Id;
+            if (IsTextBlock(block)) { _documentAnchor = null; SetCaretState(new WriteDocumentPosition(block.Id, 0)); }
+            else { _documentAnchor = null; SelectedBlockId = block.Id; ActiveRunIndex = CaretIndex = 0; }
+            SelectionStart = SelectionEnd = 0;
+        }, "Inserted " + kind);
+        return block;
     }
 
     public NotesBlock InsertTable(int rows, int columns)
     {
         var safeRows = Math.Clamp(rows, 1, 100); var safeColumns = Math.Clamp(columns, 1, 50); var page = PageForSelection(); var index = SelectedBlock is { } selected ? page.Blocks.IndexOf(selected) + 1 : page.Blocks.Count; var block = NotesBlock.TableBlock(safeRows, safeColumns);
-        Mutate(() => { page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block); Renumber(page); SelectedBlockId = block.Id; SelectedTableCellId = block.Table?.Rows.FirstOrDefault()?.Cells.FirstOrDefault()?.Id; }, $"Inserted table {safeRows}x{safeColumns}"); return block;
+        Mutate(() =>
+        {
+            page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block);
+            Renumber(page);
+            _documentAnchor = null;
+            SelectionStart = SelectionEnd = CaretIndex = ActiveRunIndex = 0;
+            SelectedBlockId = block.Id;
+            SelectedTableCellId = block.Table?.Rows.FirstOrDefault()?.Cells.FirstOrDefault()?.Id;
+        }, $"Inserted table {safeRows}x{safeColumns}");
+        return block;
     }
 
     public NotesBlock InsertPageBreak()
     {
         var page = PageForSelection(); var index = SelectedBlock is { } selected ? page.Blocks.IndexOf(selected) + 1 : page.Blocks.Count;
         var block = NotesBlock.CreateParagraph(); block.Paragraph.PageBreakBefore = true;
-        Mutate(() => { page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block); Renumber(page); SelectedBlockId = block.Id; ActiveRunIndex = 0; CaretIndex = SelectionStart = SelectionEnd = 0; }, "Inserted page break");
+        Mutate(() =>
+        {
+            page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block);
+            Renumber(page);
+            SelectedTableCellId = null;
+            _documentAnchor = null;
+            SetCaretState(new WriteDocumentPosition(block.Id, 0));
+            SelectionStart = SelectionEnd = 0;
+        }, "Inserted page break");
         return block;
     }
 
     public NotesBlock InsertMedia(NotesMediaData media)
     {
-        ArgumentNullException.ThrowIfNull(media); var page = PageForSelection(); var index = SelectedBlock is { } selected ? page.Blocks.IndexOf(selected) + 1 : page.Blocks.Count; var block = new NotesBlock { Kind = NotesBlockKind.Image, Media = media }; Mutate(() => { page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block); Renumber(page); SelectedBlockId = block.Id; }, "Inserted image"); return block;
+        ArgumentNullException.ThrowIfNull(media); var page = PageForSelection(); var index = SelectedBlock is { } selected ? page.Blocks.IndexOf(selected) + 1 : page.Blocks.Count; var block = new NotesBlock { Kind = NotesBlockKind.Image, Media = media }; Mutate(() => { page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block); Renumber(page); _documentAnchor = null; SelectedTableCellId = null; SelectionStart = SelectionEnd = CaretIndex = ActiveRunIndex = 0; SelectedBlockId = block.Id; }, "Inserted image"); return block;
     }
 
     public NotesBlock InsertCustomShape(DocumentVectorShape shape, Guid? gallerySourceId = null)
@@ -206,7 +284,7 @@ public sealed partial class WriteDocumentEditor
         var page = PageForSelection();
         var index = SelectedBlock is { } selected ? page.Blocks.IndexOf(selected) + 1 : page.Blocks.Count;
         var block = new NotesBlock { Kind = NotesBlockKind.Shape, VectorShape = DocumentVectorShapes.CloneForInsertion(shape, gallerySourceId) };
-        Mutate(() => { page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block); Renumber(page); SelectedBlockId = block.Id; ActiveRunIndex = 0; CaretIndex = 0; }, "Inserted custom vector shape");
+        Mutate(() => { page.Blocks.Insert(Math.Clamp(index, 0, page.Blocks.Count), block); Renumber(page); _documentAnchor = null; SelectedTableCellId = null; SelectionStart = SelectionEnd = CaretIndex = ActiveRunIndex = 0; SelectedBlockId = block.Id; }, "Inserted custom vector shape");
         return block;
     }
 
@@ -220,7 +298,25 @@ public sealed partial class WriteDocumentEditor
         return true;
     }
 
-    public bool DeleteSelected() { if (SelectedBlock is not { } block) return false; var page = PageFor(block); if (page.Blocks.Count <= 1) return false; var index = page.Blocks.IndexOf(block); Mutate(() => { page.Blocks.Remove(block); Renumber(page); SelectedBlockId = page.Blocks[Math.Clamp(index - 1, 0, page.Blocks.Count - 1)].Id; }, "Deleted block"); return true; }
+    public bool DeleteSelected()
+    {
+        if (SelectedBlock is not { } block) return false;
+        var page = PageFor(block);
+        if (page.Blocks.Count <= 1) return false;
+        var index = page.Blocks.IndexOf(block);
+        Mutate(() =>
+        {
+            page.Blocks.Remove(block);
+            Renumber(page);
+            var replacement = page.Blocks[Math.Clamp(index - 1, 0, page.Blocks.Count - 1)];
+            _documentAnchor = null;
+            SelectedTableCellId = replacement.Table?.Rows.FirstOrDefault()?.Cells.FirstOrDefault()?.Id;
+            if (IsTextBlock(replacement)) SetCaretState(new WriteDocumentPosition(replacement.Id, EditableText(replacement).Length));
+            else SetCaretState(DocumentCaret);
+            SelectedBlockId = replacement.Id;
+        }, "Deleted block");
+        return true;
+    }
     public bool MoveSelected(int direction) { if (SelectedBlock is not { } block || direction == 0) return false; var page = PageFor(block); var index = page.Blocks.IndexOf(block); var target = Math.Clamp(index + Math.Sign(direction), 0, page.Blocks.Count - 1); if (target == index) return false; Mutate(() => { page.Blocks.RemoveAt(index); page.Blocks.Insert(target, block); Renumber(page); }, direction < 0 ? "Moved block up" : "Moved block down"); return true; }
 
     public void SetListKind(NotesListKind kind) { if (SelectedBlock?.List is not { } list) return; Mutate(() => list.Kind = kind, "Changed list type"); }
@@ -249,7 +345,7 @@ public sealed partial class WriteDocumentEditor
     public void AddTableColumn()
     {
         if (SelectedBlock?.Table is not { } table || table.Rows.Count == 0) return;
-        var (_, columnIndex) = TableCellPosition(table);
+        var (rowIndex, columnIndex) = TableCellPosition(table);
         Mutate(() =>
         {
             foreach (var row in table.Rows)
@@ -257,7 +353,8 @@ public sealed partial class WriteDocumentEditor
                 var insertion = Math.Clamp(columnIndex + 1, 0, row.Cells.Count);
                 row.Cells.Insert(insertion, new NotesTableCell());
             }
-            SelectedTableCellId = table.Rows[0].Cells[Math.Clamp(columnIndex + 1, 0, table.Rows[0].Cells.Count - 1)].Id;
+            var selectedRow = table.Rows[Math.Clamp(rowIndex, 0, table.Rows.Count - 1)];
+            SelectedTableCellId = selectedRow.Cells[Math.Clamp(columnIndex + 1, 0, selectedRow.Cells.Count - 1)].Id;
         }, "Added table column");
     }
 
@@ -469,30 +566,142 @@ public sealed partial class WriteDocumentEditor
 
     public int ReplaceAll(string query, string replacement)
     {
-        if (string.IsNullOrWhiteSpace(query)) return 0; var count = Find(query).Count; if (count == 0) return 0;
+        if (string.IsNullOrWhiteSpace(query)) return 0;
+        replacement ??= string.Empty;
+        var count = CountReplaceableMatches(query);
+        if (count == 0) return 0;
+        var oldText = TextBlocks().ToDictionary(block => block.Id, block => EditableText(block));
         Mutate(() =>
         {
             foreach (var block in Blocks())
             {
-                if (block.Kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code) ReplaceTextPreservingRuns(block, ReplaceIgnoreCase(EditableText(block), query, replacement ?? string.Empty));
-                if (block.List is not null) foreach (var item in block.List.Items) item.Text = ReplaceIgnoreCase(item.Text, query, replacement ?? string.Empty);
-                if (block.Table is not null) foreach (var cell in block.Table.Rows.SelectMany(row => row.Cells)) cell.Text = ReplaceIgnoreCase(cell.Text, query, replacement ?? string.Empty);
-                if (block.Equation is not null) block.Equation.Source = ReplaceIgnoreCase(block.Equation.Source, query, replacement ?? string.Empty);
+                var isTextBlock = block.Kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code;
+                var hasEditableRichText = block.Kind is NotesBlockKind.Image or NotesBlockKind.Audio or NotesBlockKind.Video or NotesBlockKind.Shape;
+                if (isTextBlock || (hasEditableRichText && (block.Runs.Count > 0 || !string.IsNullOrEmpty(block.PlainText))))
+                    ReplaceTextPreservingRuns(block, ReplaceIgnoreCase(EditableText(block), query, replacement));
+                if (block.List is not null) foreach (var item in block.List.Items) item.Text = ReplaceIgnoreCase(item.Text, query, replacement);
+                if (block.Table is not null) foreach (var cell in block.Table.Rows.SelectMany(row => row.Cells)) cell.Text = ReplaceIgnoreCase(cell.Text, query, replacement);
+                if (block.Equation is not null)
+                {
+                    block.Equation.Source = ReplaceIgnoreCase(block.Equation.Source, query, replacement);
+                    block.Equation.AccessibleAlternative = ReplaceIgnoreCase(block.Equation.AccessibleAlternative, query, replacement);
+                    block.Equation.RenderedText = block.Equation.Source;
+                    block.Equation.Error = string.Empty;
+                }
+                if (block.Media is { } media)
+                {
+                    media.AltText = ReplaceIgnoreCase(media.AltText, query, replacement);
+                    media.Caption = ReplaceIgnoreCase(media.Caption, query, replacement);
+                }
+                if (block.VectorShape is { } shape)
+                    shape.Name = ReplaceIgnoreCase(shape.Name, query, replacement);
+            }
+
+            if (_documentCaret is { } caret && oldText.TryGetValue(caret.BlockId, out var caretSource)
+                && Blocks().FirstOrDefault(block => block.Id == caret.BlockId) is { } caretBlock)
+                _documentCaret = caret with { Offset = MapReplacementOffset(caretSource, query, replacement, caret.Offset, EditableText(caretBlock).Length) };
+            if (_documentAnchor is { } anchor && oldText.TryGetValue(anchor.BlockId, out var anchorSource)
+                && Blocks().FirstOrDefault(block => block.Id == anchor.BlockId) is { } anchorBlock)
+                _documentAnchor = anchor with { Offset = MapReplacementOffset(anchorSource, query, replacement, anchor.Offset, EditableText(anchorBlock).Length) };
+            if (SelectedBlock is { } selected && oldText.TryGetValue(selected.Id, out var selectedSource))
+            {
+                var newTextLength = EditableText(selected).Length;
+                CaretIndex = MapReplacementOffset(selectedSource, query, replacement, CaretIndex, newTextLength);
+                SelectionStart = MapReplacementOffset(selectedSource, query, replacement, SelectionStart, newTextLength);
+                SelectionEnd = MapReplacementOffset(selectedSource, query, replacement, SelectionEnd, newTextLength);
+                if (SelectionStart > SelectionEnd) (SelectionStart, SelectionEnd) = (SelectionEnd, SelectionStart);
+                ActiveRunIndex = RunIndexAtCaret(selected, CaretIndex);
             }
         }, "Replaced text"); return count;
     }
 
-    public void AddComment(string text) { if (SelectedBlock is not { } block || string.IsNullOrWhiteSpace(text)) return; Mutate(() => Document.Comments.Add(new NotesComment { BlockId = block.Id, StartOffset = HasSelection ? SelectionStart : 0, EndOffset = HasSelection ? SelectionEnd : EditableText(block).Length, Text = text.Trim() }), "Added comment"); }
+    private int CountReplaceableMatches(string query)
+    {
+        var count = 0;
+        foreach (var block in Blocks())
+        {
+            var isTextBlock = block.Kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code;
+            var hasEditableRichText = block.Kind is NotesBlockKind.Image or NotesBlockKind.Audio or NotesBlockKind.Video or NotesBlockKind.Shape;
+            if (isTextBlock || (hasEditableRichText && (block.Runs.Count > 0 || !string.IsNullOrEmpty(block.PlainText))))
+                count += CountIgnoreCase(EditableText(block), query);
+            if (block.List is not null) foreach (var item in block.List.Items) count += CountIgnoreCase(item.Text, query);
+            if (block.Table is not null) foreach (var cell in block.Table.Rows.SelectMany(row => row.Cells)) count += CountIgnoreCase(cell.Text, query);
+            if (block.Equation is not null)
+            {
+                count += CountIgnoreCase(block.Equation.Source, query);
+                count += CountIgnoreCase(block.Equation.AccessibleAlternative, query);
+            }
+            if (block.Media is { } media)
+            {
+                // OriginalName is attachment identity, not user-editable document text.
+                count += CountIgnoreCase(media.AltText, query);
+                count += CountIgnoreCase(media.Caption, query);
+            }
+            if (block.VectorShape is { } shape) count += CountIgnoreCase(shape.Name, query);
+        }
+        return count;
+    }
+
+    private static int CountIgnoreCase(string source, string search)
+    {
+        var count = 0;
+        var start = 0;
+        while ((start = source.IndexOf(search, start, StringComparison.OrdinalIgnoreCase)) >= 0)
+        {
+            count++;
+            start += search.Length;
+        }
+        return count;
+    }
+
+    public void AddComment(string text)
+    {
+        if (SelectedBlock is not { } block || string.IsNullOrWhiteSpace(text)) return;
+        var range = HasDocumentSelection && _documentAnchor is { } anchor && DocumentCaret.BlockId == anchor.BlockId
+            ? SelectionForBlock(block.Id) : null;
+        var start = range?.Start ?? (HasSelection ? SelectionStart : 0);
+        var end = range?.End ?? (HasSelection ? SelectionEnd : EditableText(block).Length);
+        Mutate(() => Document.Comments.Add(new NotesComment { BlockId = block.Id, StartOffset = start, EndOffset = end, Text = text.Trim() }), "Added comment");
+    }
     public bool ApplyAiChange(NotesAiChange change)
     {
         ArgumentNullException.ThrowIfNull(change);
         if (change.Status != NotesAiChangeStatus.Proposed) return false;
         var block = change.BlockId is { } blockId ? Blocks().FirstOrDefault(value => value.Id == blockId) : SelectedBlock;
         if (block is null) return false;
+        var replacement = change.ProposedContent ?? string.Empty;
+        var replacementStart = 0;
+        var replacementText = string.Empty;
+        if (block.Kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code)
+        {
+            var current = EditableText(block);
+            var original = change.OriginalContent ?? string.Empty;
+            if (original.Equals(current, StringComparison.Ordinal)) replacementText = replacement;
+            else
+            {
+                if (original.Length == 0) return false;
+                replacementStart = current.IndexOf(original, StringComparison.Ordinal);
+                if (replacementStart < 0 || current.IndexOf(original, replacementStart + 1, StringComparison.Ordinal) >= 0) return false;
+                replacementText = current[..replacementStart] + replacement + current[(replacementStart + original.Length)..];
+            }
+        }
         Mutate(() =>
         {
             if (block.Equation is not null) { block.Equation.Source = change.ProposedContent; block.Equation.RenderedText = change.ProposedContent; block.Equation.Error = string.Empty; }
-            else if (block.Kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code) ReplaceTextPreservingRuns(block, change.ProposedContent);
+            else if (block.Kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code)
+            {
+                ReplaceTextPreservingRuns(block, replacementText);
+                var length = EditableText(block).Length;
+                if (SelectedBlockId == block.Id)
+                {
+                    _documentAnchor = null;
+                    SetCaretState(new WriteDocumentPosition(block.Id, Math.Clamp(replacementStart + replacement.Length, 0, length)));
+                }
+                if (_documentCaret is { } caret && caret.BlockId == block.Id)
+                    _documentCaret = caret with { Offset = Math.Clamp(caret.Offset, 0, length) };
+                if (_documentAnchor is { } anchor && anchor.BlockId == block.Id)
+                    _documentAnchor = anchor with { Offset = Math.Clamp(anchor.Offset, 0, length) };
+            }
             else return;
             change.Status = NotesAiChangeStatus.Applied; change.ReviewedAt = DateTimeOffset.UtcNow; change.ReviewedBy = Environment.UserName; change.UserConsentRecorded = true;
             Document.Revisions.Add(new NotesRevision { Kind = NotesRevisionKind.AiApplied, BlockId = block.Id, Summary = "Applied reviewed AI proposal: " + change.Instruction, Author = Environment.UserName });
@@ -508,8 +717,85 @@ public sealed partial class WriteDocumentEditor
 
     public void AddCitation(string title, string authors, string url) { if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(url)) return; Mutate(() => Document.Citations.Add(new NotesCitation { Key = "ref" + (Document.Citations.Count + 1), Title = title?.Trim() ?? string.Empty, Authors = authors?.Trim() ?? string.Empty, Url = url?.Trim() ?? string.Empty, AccessedAt = DateTimeOffset.UtcNow }), "Added citation"); }
 
-    public bool Undo() { if (_undo.Count == 0) return false; _redo.Add(Clone(Document)); var restored = _undo[^1]; _undo.RemoveAt(_undo.Count - 1); Restore(restored); Changed?.Invoke(this, EventArgs.Empty); return true; }
-    public bool Redo() { if (_redo.Count == 0) return false; _undo.Add(Clone(Document)); var restored = _redo[^1]; _redo.RemoveAt(_redo.Count - 1); Restore(restored); Changed?.Invoke(this, EventArgs.Empty); return true; }
+    public bool Undo() { if (_undo.Count == 0) return false; _redo.Add(CaptureHistoryState()); var restored = _undo[^1]; _undo.RemoveAt(_undo.Count - 1); RestoreHistoryState(restored); Changed?.Invoke(this, EventArgs.Empty); return true; }
+    public bool Redo() { if (_redo.Count == 0) return false; _undo.Add(CaptureHistoryState()); var restored = _redo[^1]; _redo.RemoveAt(_redo.Count - 1); RestoreHistoryState(restored); Changed?.Invoke(this, EventArgs.Empty); return true; }
+
+    private bool IsSelectedRunValueMixed<T>(Func<NotesTextRun, T> read, IEqualityComparer<T>? comparer = null)
+    {
+        if (!HasTextSelection) return false;
+        var runs = SelectedRunsForState();
+        if (runs.Length < 2) return false;
+        comparer ??= EqualityComparer<T>.Default;
+        var first = read(runs[0]);
+        return runs.Skip(1).Any(run => !comparer.Equals(first, read(run)));
+    }
+
+    private bool TryGetSelectedRunValue<T>(Func<NotesTextRun, T> read, out T value, IEqualityComparer<T>? comparer = null)
+    {
+        value = default!;
+        if (!HasTextSelection) return false;
+        var runs = SelectedRunsForState();
+        if (runs.Length == 0) return false;
+        comparer ??= EqualityComparer<T>.Default;
+        value = read(runs[0]);
+        return runs.Skip(1).All(run => comparer.Equals(value, read(run)));
+    }
+
+    private NotesTextRun[] SelectedRunsForState() => HasDocumentSelection
+        ? SelectedRuns().ToArray()
+        : SelectedBlock is { } block ? SelectedFormattingRuns(block, splitBoundaries: false).ToArray() : [];
+
+    private bool IsSelectedParagraphValueMixed<T>(Func<NotesParagraphFormat, T> read)
+    {
+        if (!HasTextSelection) return false;
+        var blocks = SelectedParagraphBlocks();
+        if (blocks.Count < 2) return false;
+        var first = read(blocks[0].Paragraph);
+        return blocks.Skip(1).Any(block => !EqualityComparer<T>.Default.Equals(first, read(block.Paragraph)));
+    }
+
+    private bool IsSelectedBlockValueMixed<T>(Func<NotesBlock, T> read, IEqualityComparer<T>? comparer = null)
+    {
+        if (!HasTextSelection) return false;
+        var blocks = SelectedParagraphBlocks();
+        if (blocks.Count < 2) return false;
+        comparer ??= EqualityComparer<T>.Default;
+        var first = read(blocks[0]);
+        return blocks.Skip(1).Any(block => !comparer.Equals(first, read(block)));
+    }
+
+    private bool TryGetSelectedBlockValue<T>(Func<NotesBlock, T> read, out T value, IEqualityComparer<T>? comparer = null)
+    {
+        value = default!;
+        if (!HasTextSelection) return false;
+        var blocks = SelectedParagraphBlocks();
+        if (blocks.Count == 0) return false;
+        comparer ??= EqualityComparer<T>.Default;
+        value = read(blocks[0]);
+        return blocks.Skip(1).All(block => comparer.Equals(value, read(block)));
+    }
+
+    private bool TryGetSelectedParagraphValue<T>(Func<NotesParagraphFormat, T> read, out T value)
+    {
+        value = default!;
+        if (!HasTextSelection) return false;
+        var blocks = SelectedParagraphBlocks();
+        if (blocks.Count == 0) return false;
+        value = read(blocks[0].Paragraph);
+        return blocks.Skip(1).All(block => EqualityComparer<T>.Default.Equals(value, read(block.Paragraph)));
+    }
+
+    private IReadOnlyList<NotesBlock> SelectedParagraphBlocks()
+    {
+        if (HasDocumentSelection)
+        {
+            var blocks = TextBlocks().ToList();
+            var first = blocks.FindIndex(block => block.Id == start.BlockId);
+            var last = blocks.FindIndex(block => block.Id == end.BlockId);
+            if (first >= 0 && last >= first) return blocks.Skip(first).Take(last - first + 1).ToArray();
+        }
+        return SelectedBlock is { } selected && IsTextBlock(selected) ? [selected] : [];
+    }
 
     private IReadOnlyList<NotesTextRun> SelectedFormattingRuns(NotesBlock block, bool splitBoundaries = true)
     {
@@ -548,9 +834,21 @@ public sealed partial class WriteDocumentEditor
         if (!TryActiveRun(out var run)) return;
         Mutate(() => apply(run), reason);
     }
-    private void SetParagraph(Action<NotesParagraphFormat> apply, string reason) { if (SelectedBlock is not { } block) return; Mutate(() => apply(block.Paragraph), reason); }
+    private void SetParagraph(Action<NotesParagraphFormat> apply, string reason)
+    {
+        if (HasDocumentSelection && TryOrderedSelection(out var start, out var end))
+        {
+            var selected = SelectedParagraphBlocks();
+            if (selected.Count > 0)
+            {
+                Mutate(() => { foreach (var block in selected) apply(block.Paragraph); }, reason);
+                return;
+            }
+        }
+        if (SelectedBlock is { } block) Mutate(() => apply(block.Paragraph), reason);
+    }
     private bool TryActiveRun(out NotesTextRun run) { run = null!; if (SelectedBlock is not { } block) return false; EnsureRuns(block); ActiveRunIndex = Math.Clamp(ActiveRunIndex, 0, block.Runs.Count - 1); run = block.Runs[ActiveRunIndex]; return true; }
-    private void Mutate(Action action, string reason) { _undo.Add(Clone(Document)); if (_undo.Count > HistoryLimit) _undo.RemoveAt(0); _redo.Clear(); action(); Document.UpdatedAt = DateTimeOffset.UtcNow; Changed?.Invoke(this, EventArgs.Empty); }
+    private void Mutate(Action action, string reason) { _undo.Add(CaptureHistoryState()); if (_undo.Count > HistoryLimit) _undo.RemoveAt(0); _redo.Clear(); action(); Document.UpdatedAt = DateTimeOffset.UtcNow; Changed?.Invoke(this, EventArgs.Empty); }
     private NotesPage PageForSelection() => SelectedBlock is { } block ? PageFor(block) :
         Document.Sections.SelectMany(section => section.Pages).First(page => PageScopeId is null || page.Id == PageScopeId);
     private NotesPage PageFor(NotesBlock block) => Document.Sections.SelectMany(section => section.Pages).First(page => page.Blocks.Contains(block));
@@ -575,10 +873,57 @@ public sealed partial class WriteDocumentEditor
     private static NotesTextRun CloneRun(NotesTextRun run) => new() { Id = run.Id, Text = run.Text, FontFamily = run.FontFamily, FontSize = run.FontSize, Bold = run.Bold, Italic = run.Italic, Underline = run.Underline, StrikeThrough = run.StrikeThrough, Foreground = run.Foreground, Background = run.Background, Link = run.Link, Language = run.Language };
 
 
+    private sealed record EditorHistoryState(NotesDocument Document, Guid? SelectedBlockId, Guid? SelectedTableCellId,
+        int ActiveRunIndex, int CaretIndex, int SelectionStart, int SelectionEnd,
+        WriteDocumentPosition? DocumentAnchor, WriteDocumentPosition? DocumentCaret);
+    private EditorHistoryState CaptureHistoryState() => new(Clone(Document), SelectedBlockId, SelectedTableCellId,
+        ActiveRunIndex, CaretIndex, SelectionStart, SelectionEnd, _documentAnchor, _documentCaret);
+    private void RestoreHistoryState(EditorHistoryState state)
+    {
+        Restore(state.Document);
+        SelectedBlockId = state.SelectedBlockId is { } blockId && Blocks().Any(block => block.Id == blockId)
+            ? blockId : Blocks().FirstOrDefault()?.Id;
+        var block = SelectedBlock;
+        SelectedTableCellId = state.SelectedTableCellId is { } cellId && block?.Table?.Rows.SelectMany(row => row.Cells).Any(cell => cell.Id == cellId) == true
+            ? cellId : null;
+        var length = block is null ? 0 : EditableText(block).Length;
+        CaretIndex = Math.Clamp(state.CaretIndex, 0, length);
+        SelectionStart = Math.Clamp(state.SelectionStart, 0, length);
+        SelectionEnd = Math.Clamp(state.SelectionEnd, SelectionStart, length);
+        ActiveRunIndex = block is null ? 0
+            : state.SelectedBlockId == block.Id && state.ActiveRunIndex >= 0 && state.ActiveRunIndex < block.Runs.Count
+                ? state.ActiveRunIndex
+                : RunIndexAtCaret(block, CaretIndex);
+        _documentCaret = state.DocumentCaret is { } caret && TextBlocks().Any(value => value.Id == caret.BlockId)
+            ? Normalise(caret) : block is not null && IsTextBlock(block) ? new WriteDocumentPosition(block.Id, CaretIndex) : null;
+        _documentAnchor = state.DocumentAnchor is { } anchor && TextBlocks().Any(value => value.Id == anchor.BlockId)
+            ? Normalise(anchor) : null;
+    }
     private static NotesDocument Clone(NotesDocument document) => JsonSerializer.Deserialize<NotesDocument>(JsonSerializer.Serialize(document, JsonOptions), JsonOptions) ?? throw new InvalidDataException("Write document state could not be cloned.");
     private void Restore(NotesDocument source) { if (source.Id != Document.Id) throw new InvalidOperationException("Write history belongs to a different document."); /* Content undo retains the current acknowledged repository version. */ Document.SchemaVersion = source.SchemaVersion; Document.Id = source.Id; Document.Title = source.Title; Document.Language = source.Language; Document.CreatedAt = source.CreatedAt; Document.UpdatedAt = source.UpdatedAt; Document.LayoutMode = source.LayoutMode; Document.PageSetup = source.PageSetup; Document.Sections = source.Sections; Document.Styles = source.Styles; Document.Fields = source.Fields; Document.Bookmarks = source.Bookmarks; Document.Citations = source.Citations; Document.Comments = source.Comments; Document.Revisions = source.Revisions; Document.AiChanges = source.AiChanges; Document.FlashcardReviews = source.FlashcardReviews; Document.Collaboration = source.Collaboration; Document.Recovery = source.Recovery; Document.Metadata = source.Metadata; if (SelectedBlockId is { } selected && Blocks().All(block => block.Id != selected)) SelectedBlockId = Blocks().FirstOrDefault()?.Id; }
     private void ApplyOrientation(string orientation) { var landscape = orientation.Equals("Landscape", StringComparison.OrdinalIgnoreCase); Document.PageSetup.Orientation = landscape ? "Landscape" : "Portrait"; var shortSide = Math.Min(Document.PageSetup.WidthPoints, Document.PageSetup.HeightPoints); var longSide = Math.Max(Document.PageSetup.WidthPoints, Document.PageSetup.HeightPoints); Document.PageSetup.WidthPoints = landscape ? longSide : shortSide; Document.PageSetup.HeightPoints = landscape ? shortSide : longSide; }
     private static string NormaliseColour(string value, string fallback) { if (string.IsNullOrWhiteSpace(value)) return fallback; var text = value.Trim(); return text.StartsWith('#') && (text.Length == 7 || text.Length == 9) ? text.ToUpperInvariant() : fallback; }
     private static double Finite(double value, double fallback) => double.IsNaN(value) || double.IsInfinity(value) ? fallback : value;
+    private static int MapReplacementOffset(string source, string search, string replacement, int offset, int newLength)
+    {
+        offset = Math.Clamp(offset, 0, source.Length);
+        var shift = 0;
+        var searchFrom = 0;
+        while (true)
+        {
+            var index = source.IndexOf(search, searchFrom, StringComparison.OrdinalIgnoreCase);
+            if (index < 0) break;
+            var end = index + search.Length;
+            if (end <= offset)
+            {
+                shift += replacement.Length - search.Length;
+                searchFrom = end;
+                continue;
+            }
+            if (index < offset) return Math.Clamp(index + shift + replacement.Length, 0, newLength);
+            break;
+        }
+        return Math.Clamp(offset + shift, 0, newLength);
+    }
     private static string ReplaceIgnoreCase(string source, string search, string replacement) { if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(search)) return source; var result = new System.Text.StringBuilder(); var start = 0; while (true) { var index = source.IndexOf(search, start, StringComparison.OrdinalIgnoreCase); if (index < 0) { result.Append(source, start, source.Length - start); break; } result.Append(source, start, index - start).Append(replacement); start = index + search.Length; } return result.ToString(); }
 }
