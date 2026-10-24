@@ -54,7 +54,10 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             Assert.Equal(savedRevision, selected.SelectedAssistant!.Revision);
             Assert.Equal("Persistent helper", selected.SelectedAssistant.Configuration.Name);
             Assert.Equal("Updated saved instructions", selected.SelectedAssistant.Configuration.Instructions);
-            Assert.Equal(new[] { firstId, secondId }.Order(), selected.Conversations.Select(row => row.ConversationId).Order());
+            Assert.Equal(new[] { firstId, secondId }.Order(), selected.Conversations.Where(row => !row.IsMain).Select(row => row.ConversationId).Order());
+            var main = Assert.Single(selected.Conversations.Where(row => row.IsMain));
+            Assert.Equal(main.ConversationId, selected.ConversationBinding!.Conversation.Id);
+            Assert.DoesNotContain(main.ConversationId, new[] { firstId, secondId });
             var first = await rig.Retain(reopened.OpenConversationAsync(firstId, Token));
             Assert.Equal("First saved draft", first.Conversation!.Draft!.Content);
             Assert.Null(first.Conversation.Conversation.SpaceId);
@@ -115,11 +118,15 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             Assert.True(controller.IsAcknowledgedOriginalCommandRefusal(foreignOpen));
             rig.Expect(foreignOpen, refusal);
             await rig.Retain(controller.OpenAssistantAsync(firstIdentity, Token));
-            Assert.Equal(firstConversation, Assert.Single(controller.Snapshot.Conversations).ConversationId);
+            Assert.Equal(firstConversation, Assert.Single(controller.Snapshot.Conversations.Where(row => !row.IsMain)).ConversationId);
+            Assert.Equal(Assert.Single(controller.Snapshot.Conversations.Where(row => row.IsMain)).ConversationId,
+                controller.Snapshot.ConversationBinding!.Conversation.Id);
             await rig.Retain(controller.OpenConversationAsync(firstConversation, Token));
             Assert.Equal(firstIdentity, controller.Snapshot.ConversationBinding!.Definition.Identity);
             await rig.Retain(controller.OpenAssistantAsync(secondIdentity, Token));
-            Assert.Equal(secondConversation, Assert.Single(controller.Snapshot.Conversations).ConversationId);
+            Assert.Equal(secondConversation, Assert.Single(controller.Snapshot.Conversations.Where(row => !row.IsMain)).ConversationId);
+            Assert.Equal(Assert.Single(controller.Snapshot.Conversations.Where(row => row.IsMain)).ConversationId,
+                controller.Snapshot.ConversationBinding!.Conversation.Id);
             Assert.NotNull(await rig.Retain(rig.Conversations.GetAsync(firstConversation, Token)));
             Assert.NotNull(await rig.Retain(rig.Conversations.GetAsync(secondConversation, Token)));
         });
@@ -144,7 +151,7 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
         });
 
     [Fact]
-    public Task Named_identity_survives_reopen_before_any_conversation_or_task_exists() =>
+    public Task Named_identity_survives_reopen_then_provisions_its_first_Main_without_a_Task() =>
         RunOriginalAsync(async rig =>
         {
             var first = rig.CreateController();
@@ -156,8 +163,9 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             var catalogue = await rig.Retain(reopened.InitializeAsync(Token));
             Assert.Equal(identity, Assert.Single(catalogue.Assistants).Identity);
             var selected = await rig.Retain(reopened.OpenAssistantAsync(identity, Token));
-            Assert.Empty(selected.Conversations);
-            Assert.Null(selected.ConversationBinding);
+            var main = Assert.Single(selected.Conversations);
+            Assert.True(main.IsMain); Assert.Equal(main.ConversationId, selected.ConversationBinding!.Conversation.Id);
+            Assert.Null(selected.Work!.CanonicalTask); Assert.Equal(0, rig.ProviderInvocations);
             Assert.Equal("Persistent configuration", selected.SelectedAssistant!.Configuration.Purpose);
         });
 
@@ -180,7 +188,9 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             var selected = await rig.Retain(reopened.OpenAssistantAsync(identity, Token));
             Assert.False(selected.SelectedAssistant!.Configuration.Enabled);
             Assert.True(selected.SelectedAssistant.Configuration.Archived);
-            Assert.Equal(conversationId, Assert.Single(selected.Conversations).ConversationId);
+            Assert.Equal(conversationId, Assert.Single(selected.Conversations.Where(row => !row.IsMain)).ConversationId);
+            Assert.True(Assert.Single(selected.Conversations.Where(row => row.IsMain)).IsMain);
+            Assert.Equal(2, selected.Conversations.Count);
             await rig.Retain(reopened.OpenConversationAsync(conversationId, Token));
             Assert.Equal("Retained unsent draft", reopened.Snapshot.Conversation!.Draft!.Content);
             Assert.Equal(0, rig.ProviderInvocations);

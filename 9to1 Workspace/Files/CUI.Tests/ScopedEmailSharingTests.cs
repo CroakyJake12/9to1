@@ -11,6 +11,7 @@ internal static class ScopedEmailSharingTests
         await ViewerScopeSurvivesRestart();
         await EditorScopeRevocationAndReplay();
         await ExistingRecipientRoleReplacementSurvivesRestart();
+        await ExistingRecipientExpiryReplacementSurvivesRestart();
         await ExpiryAndLastPublicationFence();
         await LegacyAndCorruptStateArePreserved();
         await MissingOrReplacedStoreCannotBeRecreated();
@@ -144,6 +145,32 @@ internal static class ScopedEmailSharingTests
         var active = (await restarted.GetEmailSharesAsync(f.Root.Id, null, f.OwnerGuard)).Value!.Items.Where(item => !item.Share.IsRevoked).ToArray();
         Require(active.Length == 1 && active[0].Share.Id == currentViewer.Share.Id,
             "only the latest explicit direct scope remains active, without union or cloned files");
+    }
+
+    private static async Task ExistingRecipientExpiryReplacementSurvivesRestart()
+    {
+        using var f = new Fixture(); await f.Initialize();
+        var initial = await f.Request(FilesAccessRole.Viewer);
+        var original = (await f.Provider.GrantEmailAccessAsync(initial, f.OwnerGuard)).Value!;
+        var oldView = (await f.Provider.OpenSharedViewAsync(original.Share.Id, f.RecipientGuard)).Value!;
+        var root = (await f.Provider.GetAsync(f.Root.Id, default)).Value!;
+        var expires = f.Clock.Now.AddMinutes(30);
+        var changed = initial with { ExpectedRevision = root.CurrentRevisionId!.Value, ExpiresAt = expires,
+            OperationId = new(Guid.NewGuid()) };
+        var result = await f.Restart().GrantEmailAccessAsync(changed, f.OwnerGuard);
+        Require(result.IsSuccess, "same-role expiry update commits against the actual current revision");
+        var current = result.Value!;
+        Require(current.Share.PrincipalId == original.Share.PrincipalId && current.RecipientEmail == original.RecipientEmail &&
+            current.Share.Role == original.Share.Role && current.Share.ExpiresAt == expires, "recipient/role preserved; reviewed expiry retained");
+        Denied(await oldView.GetAsync(f.Child.Id, default), "old grant does not survive a replacement expiry decision");
+        var restarted = f.Restart();
+        var view = (await restarted.OpenSharedViewAsync(current.Share.Id, f.RecipientGuard)).Value!;
+        Require((await view.GetAsync(f.Child.Id, default)).IsSuccess, "new direct expiry scope reaches its canonical descendants before expiry");
+        f.Clock.Now = expires;
+        Denied(await view.GetAsync(f.Child.Id, default), "already-open recipient view stops future reads at exact new expiry");
+        Denied(await f.Restart().OpenSharedViewAsync(current.Share.Id, f.RecipientGuard), "expiry remains enforced after restart");
+        var replay = await f.Provider.GrantEmailAccessAsync(changed, f.OwnerGuard);
+        Require(replay.IsSuccess && replay.Value!.Share.Id == current.Share.Id, "exact operation replay cannot create another grant");
     }
 
     private static async Task ExpiryAndLastPublicationFence()

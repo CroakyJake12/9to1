@@ -1,5 +1,6 @@
 <Cui id="assistants.conversation" version="1">
   <Actions>
+    <Action name="StopOriginalReply" command="assistants.conversation.stop" parameter="{Binding OriginalChatStopInput}" />
     <Action name="ShowSearchMessage" command="assistants.conversation.find.show" parameter="{Binding match}" />
     <Action name="ContinueBranch" command="assistants.branch.create" parameter="{Binding message}" />
     <Action name="OpenBranch" command="assistants.branch.switch" parameter="{Binding branch}" />
@@ -76,8 +77,10 @@
       <Input id="conversation-draft" Type="Text" MinHeight="72" TextWrapping="Wrap" AccessibleName="Message to your Assistant" PlaceholderText="What would you like to do?" Value="{Binding Prompt, Mode=TwoWay}" Multiline="True" Interactive="{Binding CanEditPrompt}" />
       <Container Orientation="Horizontal" AccessibleName="Assistant actions" Type="Wrap">
         <Button id="assistant-send" action="assistants.send" Text="{Binding SendLabel}" Margin="0,0,8,8" Interactive="{Binding CanSend}" Active="{Binding ShowChatComposer}" />
+        <Button id="assistant-stop-reply" action="StopOriginalReply" AccessibleName="Stop this reply" Margin="0,0,8,8" Interactive="{Binding CanStopReply}" Active="{Binding ShowStopReply}">Stop reply</Button>
         <Button id="assistant-save-draft" action="assistants.draft.save" Margin="0,0,8,8" Interactive="{Binding CanSaveDraft}">Save draft</Button>
       </Container>
+      <Text Text="{Binding ReplyStopStatus}" TextWrapping="Wrap" AccessibleName="Reply Stop status" Active="{Binding HasReplyStopStatus}" />
       <Text Text="{Binding ComposerAvailability}" TextWrapping="Wrap" AccessibleName="Message availability" />
       <Container Orientation="Horizontal" AccessibleName="Assistant actions" Type="Wrap">
         <Button id="assistant-new-task" action="assistants.task.new" Margin="0,0,8,8" Interactive="{Binding CanNewConversation}">New task</Button>

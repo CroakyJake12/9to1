@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using System.Runtime.CompilerServices;
 using Haven.Application;
 using Haven.Core;
 using HavenOS.Apps.Assistants.Contracts;
@@ -6,18 +7,26 @@ using HavenOS.Apps.Assistants.Contracts;
 namespace HavenOS.Apps.Assistants.Canonical;
 
 /// <summary>Application-owned hosting of the SAME ordinary Chat producer. A presentation borrows
-/// one observation and cannot cancel its business driver or dispose the shared Chat service.</summary>
+/// one observation; observer retirement never cancels the business driver. Explicit validated
+/// control can request cancellation of that SAME invocation, never the shared Chat service.</summary>
 public sealed class AssistantOriginalConversationHost(CancellationToken explicitBusinessLifetime = default)
 {
     private readonly object _gate = new();
     private readonly Dictionary<Guid, Task> _active = [];
     private readonly List<Task> _drivers = [];
+    private readonly List<Task> _controls = [];
+    private readonly ConditionalWeakTable<AssistantOriginalConversationObservation, Invocation> _issued = new();
     private readonly List<Invocation> _originalInvocations = [];
     private readonly AsyncLocal<Invocation?> _current = new();
     [ThreadStatic] private static AssistantOriginalConversationHost? _physicalSource;
     private sealed class Invocation
     {
         internal volatile bool Active = true;
+        internal bool BodyFinished;
+        internal CancellationTokenSource Business = null!;
+        internal bool BusinessDisposed;
+        internal Task<AssistantConversationStopRequest>? Stop;
+        internal Guid ConversationId;
         internal Task? Driver;
         internal ChatOrdinaryOriginalInvocation? Source;
         internal IAsyncEnumerator<ChatStreamEvent>? Iterator;
@@ -43,7 +52,12 @@ public sealed class AssistantOriginalConversationHost(CancellationToken explicit
                 var original = _originalInvocations[index];
                 if (original.Driver?.IsCompletedSuccessfully == true && original.ActualDispose?.IsCompletedSuccessfully == true &&
                     original.ActualSourceJoin?.IsCompletedSuccessfully == true)
-                { original.Driver.GetAwaiter().GetResult(); original.ActualDispose.GetAwaiter().GetResult(); original.ActualSourceJoin.GetAwaiter().GetResult(); _originalInvocations.RemoveAt(index); }
+                {
+                    original.Driver.GetAwaiter().GetResult(); original.ActualDispose.GetAwaiter().GetResult(); original.ActualSourceJoin.GetAwaiter().GetResult();
+                    if (original.Stop is { IsCompleted: false }) continue;
+                    if (!original.BusinessDisposed) { original.Business.Dispose(); original.BusinessDisposed = true; }
+                    _originalInvocations.RemoveAt(index);
+                }
             }
             foreach (var id in _active.Where(pair => pair.Value.IsCompletedSuccessfully).Select(pair => pair.Key).ToArray()) _active.Remove(id);
             if (_drivers.Count >= MaximumRetainedDrivers)
@@ -52,7 +66,9 @@ public sealed class AssistantOriginalConversationHost(CancellationToken explicit
                 throw new AssistantCommandRefusedException("This conversation already has an actual Chat producer; observe or wait for it before another Send.");
             var observer = new Observation(binding);
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var invocation = new Invocation();
+            var invocation = new Invocation { Business = CancellationTokenSource.CreateLinkedTokenSource(explicitBusinessLifetime),
+                ConversationId = actualConversation.Id };
+            _issued.Add(observer.Lease, invocation);
             _originalInvocations.Add(invocation); // Before any start gate, source factory or callback.
             var actual = DriveAsync(start.Task, invocation, observer, sameChat, actualConversation, prompt, model, effort, name, instructions, generationOptions);
             invocation.Driver = actual;
@@ -82,7 +98,7 @@ public sealed class AssistantOriginalConversationHost(CancellationToken explicit
             originalSource = InvokeOriginal(() =>
             {
                 var source = sameChat.CreateOriginalOrdinaryConversation(conversation, prompt, model, effort, name, instructions,
-                    generationOptions, explicitBusinessLifetime, callback => InvokeOriginal(() => { callback(); return true; }));
+                    generationOptions, invocation.Business.Token, callback => InvokeOriginal(() => { callback(); return true; }));
                 invocation.Source = source;
                 return source;
             });
@@ -90,7 +106,7 @@ public sealed class AssistantOriginalConversationHost(CancellationToken explicit
                 throw new InvalidOperationException("The actual Chat source issuer changed.");
             iterator = InvokeOriginal(() =>
             {
-                var actual = originalSource.ConsumeOriginal().GetAsyncEnumerator(explicitBusinessLifetime);
+                var actual = originalSource.ConsumeOriginal().GetAsyncEnumerator(invocation.Business.Token);
                 invocation.Iterator = actual;
                 return actual;
             });
@@ -109,6 +125,9 @@ public sealed class AssistantOriginalConversationHost(CancellationToken explicit
         catch (Exception cause) { bodyFailure = cause; }
         finally
         {
+            // Serialize this boundary with Stop admission. A later request observes finishing
+            // and cannot cancel a completed body or a writer/cleanup that remains outstanding.
+            lock (_gate) invocation.BodyFinished = true;
             if (originalSource is not null)
             {
                 if (iterator is null && originalSource.OriginalBodyIterator is IAsyncEnumerator<ChatStreamEvent> acquiredBody)
@@ -163,6 +182,15 @@ public sealed class AssistantOriginalConversationHost(CancellationToken explicit
                     else failures.Add(cause);
                 }
         }
+        // Stop callbacks are independently owned controls. They do not wait for this driver,
+        // so joining them cannot create a driver/control cycle or hide a callback failure.
+        if (invocation.Stop is { } stop)
+            try { await stop.ConfigureAwait(false); }
+            catch (Exception failure)
+            {
+                if (stop.Exception is { } aggregate) failures.AddRange(aggregate.InnerExceptions);
+                else failures.Add(failure);
+            }
         invocation.Active = false;
         _current.Value = null;
         if (failures.Count != 0)
@@ -181,6 +209,47 @@ public sealed class AssistantOriginalConversationHost(CancellationToken explicit
         lock (_gate) return _originalInvocations.Where(row => row.Source is not null && row.Iterator is not null)
             .Select(row => (row.Source!, row.Iterator!, row.ActualDispose, row.ActualSourceJoin)).ToArray();
     }
+    // Exact already-owned driver observation for custody/diagnostics; this starts no work
+    // and cannot replace the observer's separately owned close or issue any control grant.
+    internal Task ReadIssuedOriginalDriverTask(AssistantOriginalConversationObservation actual)
+    {
+        lock (_gate)
+            return _issued.TryGetValue(actual, out var invocation) && invocation.Driver is { } driver
+                ? driver : throw new AssistantCommandRefusedException("This host did not issue the original reply driver.");
+    }
+
+    internal bool IsIssuedOriginalObservation(AssistantOriginalConversationObservation actual) =>
+        actual is not null && _issued.TryGetValue(actual, out _);
+
+    internal Task<AssistantConversationStopRequest> RequestStopOriginalAsync(AssistantOriginalConversationObservation actual)
+    {
+        lock (_gate)
+        {
+            if (_retired) throw new ObjectDisposedException(nameof(AssistantOriginalConversationHost));
+            if (!_issued.TryGetValue(actual, out var invocation))
+                throw new AssistantCommandRefusedException("This ordinary Chat host did not issue the actual observation.");
+            if (invocation.Stop is { } retained) return retained; // SAME request; never repeat callbacks.
+            if (invocation.Driver?.IsCompleted == true)
+                return Task.FromResult(new AssistantConversationStopRequest(invocation.ConversationId, AssistantConversationStopRequestState.AlreadyTerminal));
+            if (invocation.BodyFinished)
+                return Task.FromResult(new AssistantConversationStopRequest(invocation.ConversationId, AssistantConversationStopRequestState.AlreadyFinishing));
+            _controls.RemoveAll(task => task.IsCompletedSuccessfully);
+            if (_controls.Count >= MaximumRetainedDrivers)
+                throw new AssistantCommandRefusedException("Retained original Chat control failures require inspection before another stop request.");
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var control = RequestStopCoreAsync(start.Task, invocation);
+            invocation.Stop = control; _controls.Add(control); // Before any cancellation callback.
+            start.SetResult();
+            return control;
+        }
+    }
+    private async Task<AssistantConversationStopRequest> RequestStopCoreAsync(Task start, Invocation actual)
+    {
+        await start.ConfigureAwait(false);
+        InvokeOriginal(() => { actual.Business.Cancel(); return true; });
+        return new(actual.ConversationId, AssistantConversationStopRequestState.Requested);
+    }
+
     public void RequestRetirement() { lock (_gate) _retired = true; }
     private T InvokeOriginal<T>(Func<T> source)
     {
@@ -200,8 +269,25 @@ public sealed class AssistantOriginalConversationHost(CancellationToken explicit
         lock (_gate)
         {
             _retired = true;
-            return _close ??= JoinOriginalsAsync(_drivers.ToArray());
+            return _close ??= JoinOwnedOriginalsAsync(_drivers.Concat(_controls).Distinct<Task>(ReferenceEqualityComparer.Instance).ToArray(),
+                _originalInvocations.ToArray());
         }
+    }
+    private async Task JoinOwnedOriginalsAsync(Task[] originals, Invocation[] invocations)
+    {
+        var failures = new List<Exception>();
+        try { await JoinOriginalsAsync(originals).ConfigureAwait(false); }
+        catch (Exception failure) { failures.Add(failure); }
+        // No cancellation on observer/host close. Dispose linked registrations only after
+        // the actual driver and all explicit controls have independently settled.
+        foreach (var invocation in invocations)
+            try
+            {
+                lock (_gate)
+                    if (!invocation.BusinessDisposed) { invocation.Business.Dispose(); invocation.BusinessDisposed = true; }
+            }
+            catch (Exception failure) { failures.Add(failure); }
+        if (failures.Count != 0) throw new AggregateException("Original Chat drivers, controls or business cleanup failed.", failures);
     }
     private static async Task JoinOriginalsAsync(Task[] originals)
     {

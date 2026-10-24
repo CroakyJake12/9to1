@@ -185,12 +185,58 @@ public sealed partial class PresentPage
                 new CanvasPresentInkBridge(_sharedInkEngine, request.DocumentId, request.ExpectedDocumentVersion));
             if (!result.Changed) return result;
             var saved = await SaveAsync("Shared drawing edit", token);
+            PublishOriginalPresentSource(() => _bus.Fire("Present.Drawing.Changed"));
             return result with { Code = saved ? "Saved" : "PreparedUnsaved",
                 Message = saved ? "The shared drawing was saved by the original Present repository."
                     : "The drawing changed in Present's undo history; durable save is still required." };
         }
         finally { SetBusy(false); }
     }));
+
+    // CUI recolouring uses the SAME live object session/registered Home action
+    // and the original owner transaction. It never edits raster previews.
+    private SharedInkEntry? EditableSelectedSharedInk()
+    {
+        if (_disposed || _originalPresentWork.IsRetiring || !CanAdmitOriginalPresentation || _busy || _closePreparing ||
+            Volatile.Read(ref _saveRunning) != 0 || _playback is not null || _editor is not { } editor || editor.IsLiveTextEditActive ||
+            !ReferenceEquals(_sharedInkOwner, editor) || editor.Selection.ElementIds.Count != 1) return null;
+        var selected = editor.SelectedElements;
+        if (selected.Count != 1 || selected[0].Locked || selected[0].Kind != PresentElementKind.SharedObject ||
+            selected[0].SharedProductivityBundle is not { } payload || !_sharedInkEntries.TryGetValue(selected[0].Id, out var entry) ||
+            !entry.Session.CanRequestEdit || !JsonElement.DeepEquals(payload, entry.Payload)) return null;
+        return entry;
+    }
+    private string? SelectedSharedInkColor()
+    {
+        var entry = EditableSelectedSharedInk();
+        if (entry?.Payload is not { ValueKind: JsonValueKind.Object } payload ||
+            !payload.TryGetProperty("objects", out var objects) || objects.ValueKind != JsonValueKind.Array || objects.GetArrayLength() != 1 ||
+            !objects[0].TryGetProperty("content", out var content) || content.ValueKind != JsonValueKind.Object ||
+            !content.TryGetProperty("ResolvedBrushProperties", out var brush) || brush.ValueKind != JsonValueKind.Object ||
+            !brush.TryGetProperty("Color", out var color) || color.ValueKind != JsonValueKind.String) return null;
+        return color.GetString();
+    }
+    internal Task<PresentSharedObjectUpdateResult> RecolorSelectedSharedInkAsync(string color, CancellationToken token = default) =>
+        RunOriginalPresentAsync(async () =>
+        {
+            token.ThrowIfCancellationRequested();
+            if (_freehandEnabled) return new PresentSharedObjectUpdateResult(false, "DrawingInProgress", "Finish drawing before changing an existing drawing.");
+            var entry = EditableSelectedSharedInk();
+            if (entry is null || _editor is not { } editor)
+                return new PresentSharedObjectUpdateResult(false, "SelectedDrawingUnavailable", "Select an unlocked drawing that is ready to edit.");
+            if (color is null || color.Length != 9 || color[0] != '#' || !color.Skip(1).All(Uri.IsHexDigit))
+                return new PresentSharedObjectUpdateResult(false, "InvalidArgument", "Choose a valid ink colour.");
+            var id = editor.Selection.ElementIds.Single();
+            var action = new HomeProductivityAction("ink.color", 1, "drawing.ink", [id],
+                JsonSerializer.SerializeToElement(new { color = color.ToUpperInvariant() }), editor.Document.Version);
+            var result = await entry.Session.RequestEditAsync(action, token);
+            if (!_disposed && !_originalPresentWork.IsRetiring)
+            {
+                PublishOriginalPresentSource(() => _route.SetStatus(result.Message));
+                RefreshFreehandMount();
+            }
+            return result;
+        });
 
     private void PublishSharedInkState()
     {

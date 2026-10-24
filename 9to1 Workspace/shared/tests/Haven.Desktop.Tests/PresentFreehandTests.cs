@@ -1,4 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using CakeOS.Cui;
+using CakeOS.Cui.Runtime;
 using Avalonia.Headless.XUnit;
 using Haven.Application;
 using Haven.Core;
@@ -105,10 +108,89 @@ public sealed class PresentFreehandTests
         await page.InitializeAsync(TestContext.Current.CancellationToken);
         var input = Assert.IsType<CanvasSharedInkInput>(page.FreehandInput); Assert.False(input.CanDraw);
         Assert.IsType<NotSupportedException>(input.LastError);
+        var commands = Assert.IsAssignableFrom<ICuiActionDispatcher>(page.FreehandCommands);
+        var availability = Assert.IsAssignableFrom<ICuiActionAvailability>(page.FreehandCommands);
+        var before = JsonSerializer.Serialize(page.Document);
+        foreach (var command in new[] { "present.ink.pen", "present.ink.highlighter", "present.ink.color.blue", "present.ink.width.broad" })
+        {
+            Assert.False(availability.IsActionAvailable(command));
+            await commands.DispatchAsync(command, null, TestContext.Current.CancellationToken);
+        }
+        Assert.Equal(before, JsonSerializer.Serialize(page.Document));
         Assert.DoesNotContain(page.Document!.Slides.SelectMany(value => value.Elements), value => value.Kind == PresentElementKind.SharedObject);
         Assert.True(await page.PrepareToCloseAsync(cancellationToken: TestContext.Current.CancellationToken));
         await page.CloseAndDrainAsync();
         Assert.Empty(input.OriginalSubmissions);
+    }
+
+    [Fact]
+    public async Task Ink_tool_choices_capture_real_shared_style_and_persist_without_restyling_earlier_strokes()
+    {
+        using var paths = new PhysicalPaths(); var repository = new PresentRepository(paths);
+        var document = PresentDocument.Create("Coloured revision annotations"); var editor = new PresentEditor(document);
+        var engine = Engine(); var slide = editor.Selection.SlideId; var context = Context(document);
+        var original = CanvasSharedInkStrokeFactory.Capture(engine, context, slide, [new(10, 20, .3), new(30, 40, .8)]);
+        var originalText = original.GetRawText();
+        var broad = Assert.IsType<CanvasRnoteInkStyle>(PresentPage.ResolveFreehandStyleCommand(CanvasRnoteInkStyle.Default, "present.ink.width.broad"));
+        var blue = Assert.IsType<string>(PresentPage.FreehandColorForCommand("present.ink.color.blue"));
+        broad = broad with { Color = blue };
+        var coloured = CanvasSharedInkStrokeFactory.Capture(engine, context, slide, [new(40, 40, .4), new(60, 60, .9)], broad);
+        var brush = engine.ParseBundle(coloured.GetRawText()).Objects.Single().Content.GetProperty("ResolvedBrushProperties");
+        Assert.Equal(6, brush.GetProperty("BaseWidth").GetDouble()); Assert.Equal(blue, brush.GetProperty("Color").GetString());
+        Assert.Equal(1, brush.GetProperty("Opacity").GetDouble()); Assert.Equal(originalText, original.GetRawText());
+        var marker = Assert.IsType<CanvasRnoteInkStyle>(PresentPage.ResolveFreehandStyleCommand(broad, "present.ink.highlighter"));
+        marker = Assert.IsType<CanvasRnoteInkStyle>(PresentPage.ResolveFreehandStyleCommand(marker, "present.ink.width.fine"));
+        var highlighted = CanvasSharedInkStrokeFactory.Capture(engine, context, slide, [new(70, 70, .5), new(100, 70, .5)], marker);
+        var highlightObject = engine.ParseBundle(highlighted.GetRawText()).Objects.Single();
+        Assert.Equal("highlighter", highlightObject.Content.GetProperty("ToolDefinitionId").GetString());
+        Assert.Equal(8, highlightObject.Content.GetProperty("ResolvedBrushProperties").GetProperty("BaseWidth").GetDouble());
+        Assert.Equal(.4, highlightObject.Content.GetProperty("ResolvedBrushProperties").GetProperty("Opacity").GetDouble());
+        foreach (var bundle in new[] { original, coloured, highlighted })
+            Assert.True(editor.TryInsertPreparedSharedObject(document.Id, document.Version, slide, bundle,
+                new CanvasPresentInkBridge(engine, document.Id, document.Version), .1, .2, .3, .2).Inserted);
+        await repository.SaveAsync(editor.Document, "Actual shared ink styles", TestContext.Current.CancellationToken);
+        var reopened = Assert.IsType<PresentDocument>(await repository.LoadAsync(document.Id, TestContext.Current.CancellationToken));
+        foreach (var bundle in new[] { original, coloured, highlighted })
+        {
+            var id = engine.ParseBundle(bundle.GetRawText()).Objects.Single().ObjectId;
+            Assert.True(JsonElement.DeepEquals(bundle, reopened.Slides.Single(sl => sl.Id == slide).Elements.Single(element => element.Id == id).SharedProductivityBundle!.Value));
+        }
+    }
+
+    [Fact]
+    public async Task Canonical_colour_action_preserves_geometry_identity_unknown_fields_and_original_undo_save()
+    {
+        using var paths = new PhysicalPaths(); var repository = new PresentRepository(paths);
+        var document = PresentDocument.Create("Recolour one annotation"); var editor = new PresentEditor(document);
+        var engine = Engine(); var slide = editor.Selection.SlideId;
+        var source = JsonNode.Parse(Bundle(document, slide).GetRawText())!.AsObject();
+        source["objects"]![0]!["futureOptionalObject"] = "keep";
+        source["objects"]![0]!["content"]!["futureOptionalStroke"] = new JsonObject { ["value"] = 42 };
+        using var extended = JsonDocument.Parse(source.ToJsonString()); var original = extended.RootElement.Clone();
+        var bridge = new CanvasPresentInkBridge(engine, document.Id, document.Version);
+        var id = engine.ParseBundle(original.GetRawText()).Objects.Single().ObjectId;
+        Assert.True(editor.TryInsertPreparedSharedObject(document.Id, document.Version, slide, original, bridge, .2, .3, .25, .15).Inserted);
+        var action = new HomeProductivityAction("ink.color", 1, "drawing.ink", [id], JsonSerializer.SerializeToElement(new { color = "#FFDC2626" }), document.Version);
+        var recoloured = bridge.PrepareAction(original, action);
+        Assert.True(editor.TryReplaceSharedObject(document.Id, document.Version, id, original, recoloured.Bundle, bridge).Changed);
+        var target = editor.SelectedSlide.Elements.Single(element => element.Id == id);
+        Assert.Equal((.2, .3, .25, .15), (target.X, target.Y, target.Width, target.Height));
+        Assert.Equal(id, editor.Selection.ElementIds.Single());
+        var current = engine.ParseBundle(target.SharedProductivityBundle!.Value.GetRawText()).Objects.Single();
+        Assert.Equal(id, current.ObjectId); Assert.Equal("#FFDC2626", current.Content.GetProperty("ResolvedBrushProperties").GetProperty("Color").GetString());
+        Assert.Equal(42, current.Content.GetProperty("futureOptionalStroke").GetProperty("value").GetInt32());
+        Assert.Equal("keep", target.SharedProductivityBundle!.Value.GetProperty("objects")[0].GetProperty("futureOptionalObject").GetString());
+        Assert.True(editor.Undo()); Assert.True(JsonElement.DeepEquals(original, editor.SelectedSlide.Elements.Single(element => element.Id == id).SharedProductivityBundle!.Value));
+        Assert.True(editor.Redo()); var finalBundle = editor.SelectedSlide.Elements.Single(element => element.Id == id).SharedProductivityBundle!.Value.Clone();
+        var undoBefore = editor.CanUndo;
+        var stale = editor.TryReplaceSharedObject(editor.Document.Id, editor.Document.Version, id, original, recoloured.Bundle,
+            new CanvasPresentInkBridge(engine, editor.Document.Id, editor.Document.Version));
+        Assert.False(stale.Changed); Assert.Equal("PayloadConflict", stale.Code); Assert.Equal(undoBefore, editor.CanUndo);
+        await repository.SaveAsync(editor.Document, "Actual recoloured shared annotation", TestContext.Current.CancellationToken);
+        var reopened = Assert.IsType<PresentDocument>(await repository.LoadAsync(document.Id, TestContext.Current.CancellationToken));
+        var restored = reopened.Slides.Single(sl => sl.Id == slide).Elements.Single(element => element.Id == id);
+        Assert.True(JsonElement.DeepEquals(finalBundle, restored.SharedProductivityBundle!.Value));
+        Assert.Equal((.2, .3, .25, .15), (restored.X, restored.Y, restored.Width, restored.Height));
     }
 
     private static HomeProductivityEngine Engine() => new(handlers: [new CanvasInkObjectHandler()]);

@@ -9,9 +9,9 @@ public sealed partial class App
     /// <summary>Starts the SAME original Desktop bootstrap and platform lifetime.</summary>
     public static void RunOriginalDesktop(string[] args) => Program.Main(args);
 
-    internal enum OriginalUnifiedProduct { None, Canvas, Boards }
+    internal enum OriginalUnifiedProduct { None, Canvas, Boards, Present }
 
-    // Both thin executables share one process-lifetime selection. Keeping this tiny
+    // Thin executables share one process-lifetime selection. Keeping this tiny
     // bootstrap owner separate lets tests exercise the production CAS without
     // resetting the actual process, constructing Home or launching a native app.
     internal sealed class OriginalUnifiedProductEntry
@@ -23,7 +23,7 @@ public sealed partial class App
             IEnumerable<AssemblyMetadataAttribute> metadata, bool applicationStarted)
         {
             ArgumentNullException.ThrowIfNull(metadata);
-            if (product is not (OriginalUnifiedProduct.Canvas or OriginalUnifiedProduct.Boards))
+            if (product is not (OriginalUnifiedProduct.Canvas or OriginalUnifiedProduct.Boards or OriginalUnifiedProduct.Present))
                 throw new ArgumentOutOfRangeException(nameof(product));
             if (applicationStarted || Interlocked.CompareExchange(ref _product, (int)product, 0) != 0)
                 throw new InvalidOperationException("Capture the native product entry once, before the original application starts.");
@@ -43,6 +43,15 @@ public sealed partial class App
     /// Existing .9to1board data and standalone capabilities require migration/parity
     /// acceptance before this entry can replace the current standalone package.</summary>
     public static void RunOriginalBoardsDesktop(string[] args) => RunOriginalUnifiedProductDesktop(args, OriginalUnifiedProduct.Boards);
+
+    /// <summary>Present uses its SAME Home-backed page and compiled product identity.
+    /// Linux selects the existing unified host; Windows retains its document shell.</summary>
+    public static void RunOriginalPresentDesktop(string[] args) => RunOriginalUnifiedProductDesktop(args, OriginalUnifiedProduct.Present);
+
+    // This chooses existing composition only. It never creates a Home provider,
+    // bypasses actual startup/lease/permission checks or proves native readiness.
+    internal static bool UsesOriginalUnifiedWorkspace(string? product, bool isLinux) =>
+        product is null or "canvas" or "boards" || isLinux && product == "present";
 
     private static void RunOriginalUnifiedProductDesktop(string[] args, OriginalUnifiedProduct product)
     {
@@ -88,6 +97,7 @@ public sealed partial class App
         {
             OriginalUnifiedProduct.Canvas => "canvas",
             OriginalUnifiedProduct.Boards => "boards",
+            OriginalUnifiedProduct.Present => "present",
             _ => throw new ArgumentOutOfRangeException(nameof(entry))
         };
         if (declared is not null && declared != selected)
@@ -99,6 +109,7 @@ public sealed partial class App
     {
         OriginalUnifiedProduct.Canvas => "9to1://canvas",
         OriginalUnifiedProduct.Boards => "9to1://boards",
+        OriginalUnifiedProduct.Present => "9to1://present",
         _ => throw new ArgumentOutOfRangeException(nameof(product))
     };
 
@@ -114,6 +125,7 @@ public sealed partial class App
         {
             "canvas" => OriginalUnifiedProduct.Canvas,
             "boards" => OriginalUnifiedProduct.Boards,
+            "present" => OriginalUnifiedProduct.Present,
             _ => throw new InvalidOperationException("This compiled product requires its original shell entry.")
         };
         // Null is the unified owner's explicit accepted-startup-retirement result.

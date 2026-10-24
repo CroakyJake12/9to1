@@ -1,0 +1,25 @@
+<Cui id="9to1.Write.SharedInk" version="1">
+  <Page>
+    <Container Type="Vertical Stack" CellGap="6" Padding="4" accessible-name="Shared drawing tools">
+      <Container Type="Wrap" CellGap="6" accessible-name="Drawing tool and history">
+        <Button id="write-ink-pen" content="Pen" action="write.ink.pen" Interactive="{Binding CanDraw}" />
+        <Button id="write-ink-marker" content="Highlighter" action="write.ink.marker" Interactive="{Binding CanDraw}" />
+        <Button id="write-ink-erase" content="Eraser" action="write.ink.erase" Interactive="{Binding CanDraw}" accessible-name="Erase whole strokes" />
+        <Button content="Undo" action="write.ink.undo" Interactive="{Binding CanUndo}" />
+        <Button content="Redo" action="write.ink.redo" Interactive="{Binding CanRedo}" />
+        <Text text="{Binding DrawingTool}" accessible-name="Active drawing tool, colour and width" />
+      </Container>
+      <Container Type="Wrap" CellGap="6" accessible-name="Drawing colour and width">
+        <Text text="Colour" />
+        <Button content="Black" action="write.ink.colour.black" Interactive="{Binding CanDraw}" />
+        <Button content="Blue" action="write.ink.colour.blue" Interactive="{Binding CanDraw}" />
+        <Button content="Red" action="write.ink.colour.red" Interactive="{Binding CanDraw}" />
+        <Button content="Green" action="write.ink.colour.green" Interactive="{Binding CanDraw}" />
+        <Text text="Width" />
+        <Button content="Thin" action="write.ink.width.thin" Interactive="{Binding CanDraw}" />
+        <Button content="Medium" action="write.ink.width.medium" Interactive="{Binding CanDraw}" />
+        <Button content="Thick" action="write.ink.width.thick" Interactive="{Binding CanDraw}" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

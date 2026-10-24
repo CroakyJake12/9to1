@@ -137,7 +137,9 @@ internal sealed partial class OriginalAutomationLibraryBindings
             throw new InvalidOperationException("Select the current saved automation before reviewing a change.");
         var target = DemandRow(_selectedTarget); var epoch = _epoch;
         var kind = action switch { "recover" => CanonicalAutomationOriginalChangeKind.RecoverLegacy,
-            "save-edits" => CanonicalAutomationOriginalChangeKind.EditDisabled, _ => CanonicalAutomationOriginalChangeKind.Disable };
+            "save-edits" => CanonicalAutomationOriginalChangeKind.EditDisabled,
+            "archive" => CanonicalAutomationOriginalChangeKind.ArchiveDisabled,
+            "restore" => CanonicalAutomationOriginalChangeKind.RestoreDisabled, _ => CanonicalAutomationOriginalChangeKind.Disable };
         CanonicalAutomationOriginalEdit? edit = null;
         if (kind == CanonicalAutomationOriginalChangeKind.EditDisabled)
             try { edit = BuildEdit(target.Row.Value); }
@@ -222,6 +224,8 @@ internal sealed partial class OriginalAutomationLibraryBindings
                             {
                                 CanonicalAutomationOriginalChangeKind.RecoverLegacy => "Saved settings are marked for attention and disabled. Refresh to see the updated list.",
                                 CanonicalAutomationOriginalChangeKind.EditDisabled => "Your reviewed edits were saved. The automation remains disabled. Refresh to see the updated settings.",
+                                CanonicalAutomationOriginalChangeKind.ArchiveDisabled => "The Automation was archived. Its identity, graph and run history were preserved. Refresh and choose Show archived to restore it.",
+                                CanonicalAutomationOriginalChangeKind.RestoreDisabled => "The Automation was restored and remains disabled with no scheduled next run. Its graph and run history were preserved. Refresh to see it.",
                                 _ => "The saved automation is disabled. Refresh to see the updated list."
                             },
                             CanonicalAutomationOriginalChangeCompletionKind.DeclinedBeforeEffect => "The change was declined. Saved settings were kept.",

@@ -267,6 +267,7 @@ public sealed partial class FilesNativeBrowserSurface
         registry.BindAuthoredControl("files-search-input", _ => _search);
         registry.BindAuthoredControl("files-displayed-sort", _ => _sort);
         registry.BindAuthoredControl("files-name-input", _ => _editName);
+        BindOriginalShareScopeControls(registry);
         return new CuiSceneHost(registry);
     }
 }

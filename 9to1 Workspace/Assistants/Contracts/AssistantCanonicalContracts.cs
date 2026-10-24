@@ -77,7 +77,11 @@ public sealed record AssistantLegacyMigrationCandidate(AssistantIdentity LegacyI
     string Name, string Reason, IReadOnlyList<ConfiguredIdentityKind> CompatibleKinds);
 
 public sealed record AssistantConversationSummary(Guid ConversationId, string Title,
-    DateTimeOffset UpdatedAt, bool IsArchived, ProviderExecutionContext? CanonicalTask);
+    DateTimeOffset UpdatedAt, bool IsArchived, ProviderExecutionContext? CanonicalTask)
+{
+    /// <summary>Observed from actual acknowledged Main membership, never a name/newest guess.</summary>
+    public bool IsMain { get; init; }
+}
 public sealed record AssistantConversationData(Conversation Conversation, IReadOnlyList<ChatMessage> Messages,
     IReadOnlyList<MessageAttachment> Attachments, IReadOnlyList<ConversationBranch> Branches,
     ConversationDraft? Draft, TaskExecutionSnapshot? CanonicalTask);
@@ -125,6 +129,15 @@ public interface IAssistantOriginalAttachmentOwner
 }
 
 public sealed record AssistantConversationSendResult(Guid ConversationId, bool ObservationDetached);
+public enum AssistantConversationStopRequestState { Requested, AlreadyFinishing, AlreadyTerminal }
+/// <summary>Explicit stop REQUEST receipt only. Actual source/driver/cleanup completion remains
+/// owned by the ordinary producer; this never claims that a reply has already stopped.</summary>
+public sealed record AssistantConversationStopRequest(Guid ConversationId, AssistantConversationStopRequestState State);
+public interface IAssistantOriginalConversationControlOwner
+{
+    Task<AssistantConversationStopRequest> RequestOriginalConversationStopAsync(
+        AssistantOriginalConversationObservation actualObservation, CancellationToken token = default);
+}
 
 /// <summary>Bridge-hosted observation of the SAME ordinary Chat producer, with independently retained close.</summary>
 public sealed class AssistantOriginalConversationObservation
@@ -235,6 +248,15 @@ public interface IAssistantOriginalDevelopmentOwner
 
 /// <summary>Assistant/Specialist product API over canonical Den and Chat/Task owners.
 /// It creates no Space, model router, tool engine, Task database or permission broker.</summary>
+/// <summary>Optional first-party canonical owner for one durable Main per real Assistant.
+/// A host without this owner cannot claim Main provisioning or protected-thread support.</summary>
+public interface IAssistantMainConversationOwner
+{
+    Task<AssistantConversationBinding> OpenMainConversationAsync(AssistantIdentity identity, CancellationToken token = default);
+    /// <summary>Read-only removal guard. This performs no deletion and grants no removal authority.</summary>
+    Task DemandConversationMayBeRemovedAsync(AssistantConversationBinding binding, CancellationToken token = default);
+}
+
 public interface IAssistantCanonicalBridge
 {
     Task<AssistantCatalogueObservation> ListAsync(CancellationToken token = default);

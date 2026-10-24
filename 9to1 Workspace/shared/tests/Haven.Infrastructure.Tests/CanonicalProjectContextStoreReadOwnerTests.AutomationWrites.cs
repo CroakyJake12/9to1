@@ -206,6 +206,118 @@ public sealed partial class CanonicalProjectContextStoreReadOwnerTests
             Assert.Equal("HOME_AUTOMATION_REVIEW_WITHDRAWN", terminal.ResultCode);
         });
     });
+    // New Archive/Restore controls are authored NOT RUN. They exercise the existing
+    // actual Linux Home/SQLite rig; seeded historical rows are fixtures, never claimed runs.
+    [LinuxOriginalStoreFact]
+    public Task Approved_archive_and_restore_preserve_identity_unknown_columns_graph_binding_and_run_history() => Run(async rig =>
+    {
+        var repository = new AutomationRepository(rig.Database); var rows = await SeedAutomationReadRows(rig, repository);
+        await SeedAutomationRunHistory(rig, rows[1].Id, upperAutomationId: false);
+        await AutomationFixtureSql(rig, "ALTER TABLE automations ADD COLUMN lifecycle_future BLOB;");
+        await AutomationFixtureSql(rig, "UPDATE automations SET lifecycle_future=x'00ff0102' WHERE id=$id;", rows[1].Id);
+        await rig.Import("canonical.sqlite");
+        await WithAutomationWriter(rig, repository, async graph =>
+        {
+            var selected = await graph.SelectAsync(rows[1].Id);
+            var recovery = await rig.Keep(graph.Writer.PrepareOriginalChangeWithinSourceAsync(selected.Page, selected.Row,
+                CanonicalAutomationOriginalChangeKind.RecoverLegacy, Guid.NewGuid(), rig.Scope, graph.Retain, rig.Token));
+            var recoveryTask = rig.Keep(graph.Writer.CommitOriginalChangeWithinSourceAsync(recovery, rig.Scope, graph.Retain, rig.Token));
+            await graph.DecideAsync(recoveryTask, HomeApprovalChoice.Accept); await recoveryTask;
+            var before = await graph.SelectAsync(rows[1].Id);
+            var history = await rig.Keep(repository.GetRunsAsync(rows[1].Id, 8, rig.Token)); Assert.NotEmpty(history);
+            var archive = await rig.Keep(graph.Writer.PrepareOriginalChangeWithinSourceAsync(before.Page, before.Row,
+                CanonicalAutomationOriginalChangeKind.ArchiveDisabled, Guid.NewGuid(), rig.Scope, graph.Retain, rig.Token));
+            Assert.Equal("automations.archive", archive.ActionId); Assert.NotNull(archive.ProposedDefinition.ArchivedAt);
+            var archiveTask = rig.Keep(graph.Writer.CommitOriginalChangeWithinSourceAsync(archive, rig.Scope, graph.Retain, rig.Token));
+            var review = await graph.WaitForApprovalAsync(archiveTask); Assert.Equal("automations.archive", review.Scope.ActionName);
+            Assert.True(review.Policy.RequiresPerActionApproval);
+            await graph.DecideRequestAsync(review.RequestId, HomeApprovalChoice.Accept); var archived = await archiveTask;
+            var archiveReview = await rig.Keep(graph.Permissions.ReadRequestObservationAsync(review.RequestId, rig.Token));
+            Assert.Equal(HomePermissionRequestState.Succeeded, archiveReview!.State);
+            Assert.Equal("HOME_AUTOMATION_DEFINITION_ARCHIVED", archiveReview.ResultCode);
+            Assert.Equal(rows[1].Id, archived.Definition.Id); Assert.NotNull(archived.Definition.ArchivedAt);
+            Assert.False(archived.Definition.IsEnabled); Assert.Null(archived.Definition.NextRunAt);
+            Assert.Equal(before.Row.Value.GraphBinding, archived.Definition.GraphBinding);
+            var ordinary = await rig.Keep(((ICanonicalAutomationLibraryOriginalReadSource)graph.Library).ReadOriginalLibraryWithinSourceAsync(
+                rig.Actor, new(Limit: 8), rig.Scope, graph.Retain, rig.Token));
+            Assert.DoesNotContain(ordinary.Definitions, row => row.Value.Id == rows[1].Id);
+            var hidden = await graph.SelectAsync(rows[1].Id, includeArchived: true);
+            foreach (var value in before.Row.RetainedProtectedDescriptors.Where(value => value.Key is not ("archived_at" or "updated_at" or "is_enabled" or "next_run_at")))
+                Assert.Equal(value.Value, hidden.Row.RetainedProtectedDescriptors[value.Key]);
+            var restore = await rig.Keep(graph.Writer.PrepareOriginalChangeWithinSourceAsync(hidden.Page, hidden.Row,
+                CanonicalAutomationOriginalChangeKind.RestoreDisabled, Guid.NewGuid(), rig.Scope, graph.Retain, rig.Token));
+            Assert.Equal("automations.restore", restore.ActionId); Assert.Null(restore.ProposedDefinition.ArchivedAt);
+            var restoreTask = rig.Keep(graph.Writer.CommitOriginalChangeWithinSourceAsync(restore, rig.Scope, graph.Retain, rig.Token));
+            var restoreReview = await graph.WaitForApprovalAsync(restoreTask);
+            Assert.Equal("automations.restore", restoreReview.Scope.ActionName); Assert.True(restoreReview.Policy.RequiresPerActionApproval);
+            await graph.DecideRequestAsync(restoreReview.RequestId, HomeApprovalChoice.Accept); var restored = await restoreTask;
+            var restoreOutcome = await rig.Keep(graph.Permissions.ReadRequestObservationAsync(restoreReview.RequestId, rig.Token));
+            Assert.Equal(HomePermissionRequestState.Succeeded, restoreOutcome!.State);
+            Assert.Equal("HOME_AUTOMATION_DEFINITION_RESTORED_DISABLED", restoreOutcome.ResultCode);
+            Assert.Equal(rows[1].Id, restored.Definition.Id); Assert.Null(restored.Definition.ArchivedAt);
+            Assert.False(restored.Definition.IsEnabled); Assert.Null(restored.Definition.NextRunAt);
+            Assert.Equal(AutomationOperationalState.Disabled, restored.Definition.OperationalState);
+            Assert.Equal(before.Row.Value.GraphBinding, restored.Definition.GraphBinding);
+            var visible = await graph.SelectAsync(rows[1].Id);
+            foreach (var value in before.Row.RetainedProtectedDescriptors.Where(value => value.Key is not ("archived_at" or "updated_at" or "is_enabled" or "next_run_at")))
+                Assert.Equal(value.Value, visible.Row.RetainedProtectedDescriptors[value.Key]);
+            Assert.Equal(history, await rig.Keep(repository.GetRunsAsync(rows[1].Id, 8, rig.Token)));
+        });
+    });
+    [LinuxOriginalStoreFact]
+    public Task Archive_receipt_reopen_observes_exact_original_operation_without_a_second_SQL_effect() => Run(async rig =>
+    {
+        var repository = new AutomationRepository(rig.Database); var rows = await SeedAutomationReadRows(rig, repository);
+        await rig.Import("canonical.sqlite"); var operation = Guid.NewGuid(); byte[]? durable = null;
+        await WithAutomationWriter(rig, repository, async graph =>
+        {
+            var selected = await graph.SelectAsync(rows[1].Id);
+            var recover = await rig.Keep(graph.Writer.PrepareOriginalChangeWithinSourceAsync(selected.Page, selected.Row,
+                CanonicalAutomationOriginalChangeKind.RecoverLegacy, Guid.NewGuid(), rig.Scope, graph.Retain, rig.Token));
+            var first = rig.Keep(graph.Writer.CommitOriginalChangeWithinSourceAsync(recover, rig.Scope, graph.Retain, rig.Token));
+            await graph.DecideAsync(first, HomeApprovalChoice.Accept); await first;
+            selected = await graph.SelectAsync(rows[1].Id);
+            var archive = await rig.Keep(graph.Writer.PrepareOriginalChangeWithinSourceAsync(selected.Page, selected.Row,
+                CanonicalAutomationOriginalChangeKind.ArchiveDisabled, operation, rig.Scope, graph.Retain, rig.Token));
+            var actual = rig.Keep(graph.Writer.CommitOriginalChangeWithinSourceAsync(archive, rig.Scope, graph.Retain, rig.Token));
+            await graph.DecideAsync(actual, HomeApprovalChoice.Accept); await actual; durable = await AutomationFixtureBytes(rig);
+        });
+        await WithAutomationWriter(rig, repository, async graph =>
+        {
+            var selected = await graph.SelectAsync(rows[1].Id, includeArchived: true);
+            var archive = await rig.Keep(graph.Writer.PrepareOriginalChangeWithinSourceAsync(selected.Page, selected.Row,
+                CanonicalAutomationOriginalChangeKind.ArchiveDisabled, operation, rig.Scope, graph.Retain, rig.Token));
+            Assert.True(archive.IsRecoveredOperation);
+            var actual = rig.Keep(graph.Writer.CommitOriginalChangeWithinSourceAsync(archive, rig.Scope, graph.Retain, rig.Token));
+            await graph.DecideAsync(actual, HomeApprovalChoice.Accept); var observed = await actual;
+            Assert.True(observed.IsRecoveredOperation); Assert.Equal(operation, observed.OperationId);
+            Assert.NotNull(observed.Definition.ArchivedAt); Assert.False(observed.Definition.IsEnabled);
+            Assert.Equal(durable, await AutomationFixtureBytes(rig));
+        });
+    });
+    [LinuxOriginalStoreFact]
+    public Task Declined_archive_preserves_exact_stored_rows_and_independently_acknowledges_its_Home_refusal() => Run(async rig =>
+    {
+        var repository = new AutomationRepository(rig.Database); var rows = await SeedAutomationReadRows(rig, repository);
+        await rig.Import("canonical.sqlite");
+        await WithAutomationWriter(rig, repository, async graph =>
+        {
+            var selected = await graph.SelectAsync(rows[1].Id);
+            var recovery = await rig.Keep(graph.Writer.PrepareOriginalChangeWithinSourceAsync(selected.Page, selected.Row,
+                CanonicalAutomationOriginalChangeKind.RecoverLegacy, Guid.NewGuid(), rig.Scope, graph.Retain, rig.Token));
+            var recoverTask = rig.Keep(graph.Writer.CommitOriginalChangeWithinSourceAsync(recovery, rig.Scope, graph.Retain, rig.Token));
+            await graph.DecideAsync(recoverTask, HomeApprovalChoice.Accept); await recoverTask;
+            selected = await graph.SelectAsync(rows[1].Id); var before = await AutomationFixtureBytes(rig);
+            var archive = await rig.Keep(graph.Writer.PrepareOriginalChangeWithinSourceAsync(selected.Page, selected.Row,
+                CanonicalAutomationOriginalChangeKind.ArchiveDisabled, Guid.NewGuid(), rig.Scope, graph.Retain, rig.Token));
+            var actual = rig.Keep(graph.Writer.CommitOriginalChangeWithinSourceAsync(archive, rig.Scope, graph.Retain, rig.Token));
+            await graph.DecideAsync(actual, HomeApprovalChoice.Decline); rig.Expect(await Assert.ThrowsAnyAsync<Exception>(() => actual));
+            Assert.True(graph.Writer.IsAcknowledgedOriginalChangeSourceRefusal(actual));
+            await graph.ObserveAcknowledgedOriginalHomeRefusalAsync();
+            Assert.Equal(before, await AutomationFixtureBytes(rig));
+        });
+    });
+
     private static async Task WithAutomationWriter(Rig rig, AutomationRepository repository, Func<AutomationWriteGraph, Task> body)
     {
         var graph = new AutomationWriteGraph(rig, repository); var failures = new List<Exception>();
@@ -261,10 +373,10 @@ public sealed partial class CanonicalProjectContextStoreReadOwnerTests
             var combined = Assert.IsType<AggregateException>(actual); Assert.NotEmpty(combined.InnerExceptions);
             foreach (var child in combined.InnerExceptions) AssertOriginalHomeRefusalGraph(child, sameCause);
         }
-        internal async Task<(ICanonicalAutomationLibraryOriginalObservation Page, AutomationOwnerRead<AutomationDefinition> Row)> SelectAsync(Guid id)
+        internal async Task<(ICanonicalAutomationLibraryOriginalObservation Page, AutomationOwnerRead<AutomationDefinition> Row)> SelectAsync(Guid id, bool includeArchived = false)
         {
             var page = await _rig.Keep(((ICanonicalAutomationLibraryOriginalReadSource)Library).ReadOriginalLibraryWithinSourceAsync(
-                _rig.Actor, new(Limit: 8), _rig.Scope, Retain, _rig.Token));
+                _rig.Actor, new(IncludeArchived: includeArchived, Limit: 8), _rig.Scope, Retain, _rig.Token));
             return (page, Assert.Single(page.Definitions, row => row.Value.Id == id));
         }
         internal async Task<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest> WaitForApprovalAsync(Task sameOperation)

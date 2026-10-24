@@ -447,8 +447,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
-            if (command == "dev.inspect-recovered-draft") return _manual && _manualReader is not null && _manualRecoveryCandidates.Count > 0;
-            if (command == "dev.reconcile-recovered-draft") return _manual && _manualReader is not null && SelectedManualRecoveryCandidate() is not null;
+            if (command == "dev.inspect-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && _manualRecoveryCandidates.Count > 0;
+            if (command == "dev.reconcile-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && SelectedManualRecoveryCandidate() is not null;
             if (command is "dev.select-source-tab" or "dev.close-source-tab") return _sourceTabs.Count > 0;
             if (command == "dev.toggle-source-tab-pin") return CurrentSourceTab() is not null;
             if (command == "dev.open-project-entry") return _manualReader is not null && _projectEntries is not null;

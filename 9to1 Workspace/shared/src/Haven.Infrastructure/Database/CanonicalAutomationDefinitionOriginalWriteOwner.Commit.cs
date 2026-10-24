@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Core;
@@ -158,12 +159,16 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         }
         else
         {
-            if (intent.Edit is not null)
+            if (IsArchiveRestore(intent.ChangeKind))
+                await ArchiveRestoreRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), intent.ChangeKind,
+                    intent.ProposedDefinition, Demand, token).ConfigureAwait(false);
+            else if (intent.Edit is not null)
                 await EditRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), intent.ProposedDefinition, Demand, token).ConfigureAwait(false);
             else
                 await DisableRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), Demand, token).ConfigureAwait(false);
             var after = await ReadRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), token).ConfigureAwait(false);
-            if (!(intent.Edit is null ? SameExceptDisabled(snapshot.Row, after) : SameExceptEdited(snapshot.Row, after, intent.ProposedDefinition)))
+            if (!(IsArchiveRestore(intent.ChangeKind) ? SameExceptArchiveRestored(snapshot.Row, after, intent.ProposedDefinition)
+                : intent.Edit is null ? SameExceptDisabled(snapshot.Row, after) : SameExceptEdited(snapshot.Row, after, intent.ProposedDefinition)))
                 throw new InvalidDataException("The atomic change did not preserve every other observed row value/storage class.");
             var beforeHash = snapshot.RowSha256;
             var afterHash = AutomationDefinitionChange.ComputeRawRowSHA256(after);
@@ -191,6 +196,35 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         source.Run(() => { Demand(); current.Acknowledgment = acknowledgment; _acknowledgments.Add(acknowledgment, acknowledgment); });
         return acknowledgment;
     }
+    private static Task ArchiveRestoreRowWithinLeaseAsync(CanonicalSqliteOriginalStoreLease lease, string rawId,
+        CanonicalAutomationOriginalChangeKind kind, AutomationDefinition proposed, Action demand, CancellationToken token) =>
+        Execute(lease, command =>
+        {
+            demand();
+            var predicate = kind == CanonicalAutomationOriginalChangeKind.ArchiveDisabled ? "IS NULL" : "IS NOT NULL";
+            command.CommandText = "UPDATE automations SET archived_at=$archive,updated_at=$updated,is_enabled=0,next_run_at=NULL " +
+                "WHERE id=$id COLLATE BINARY AND is_enabled=0 AND archived_at " + predicate + " AND lease_token IS NULL AND lease_until IS NULL;";
+            command.Parameters.AddWithValue("$id", rawId);
+            command.Parameters.AddWithValue("$archive", proposed.ArchivedAt is { } archived
+                ? archived.ToString("O", System.Globalization.CultureInfo.InvariantCulture) : (object)DBNull.Value);
+            command.Parameters.AddWithValue("$updated", proposed.UpdatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+        }, token);
+    private static bool SameExceptArchiveRestored(IReadOnlyDictionary<string, string?> before,
+        IReadOnlyDictionary<string, string?> after, AutomationDefinition proposed)
+    {
+        string Text(string value) => JsonSerializer.Serialize(new { storageClass = "text", value });
+        var changed = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["archived_at"] = proposed.ArchivedAt is { } archived ? Text(archived.ToString("O", System.Globalization.CultureInfo.InvariantCulture)) : null,
+            ["updated_at"] = Text(proposed.UpdatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture)),
+            ["is_enabled"] = JsonSerializer.Serialize(new { storageClass = "integer", value = 0L }),
+            ["next_run_at"] = null
+        };
+        return before.Count == after.Count && changed.All(pair => before.ContainsKey(pair.Key) &&
+            after.TryGetValue(pair.Key, out var value) && value == pair.Value) &&
+            before.All(pair => changed.ContainsKey(pair.Key) || after.TryGetValue(pair.Key, out var value) && value == pair.Value);
+    }
+
     private async Task<ICanonicalAutomationDefinitionOriginalChangeAcknowledgment> AtomicCreationAsync(Commit current,
         ICanonicalAutomationDefinitionOriginalHomeWriteSource writes, CancellationToken token)
     {

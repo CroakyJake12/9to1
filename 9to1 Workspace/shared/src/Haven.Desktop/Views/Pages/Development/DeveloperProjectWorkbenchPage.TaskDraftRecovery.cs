@@ -20,7 +20,8 @@ public sealed partial class DeveloperProjectWorkbenchPage
             return new DeveloperDraftRecoveryTab(tab.Path, editor.OriginalSha256, editor.DraftText, tab.IsPinned);
         }).ToArray()), CurrentSourceTab()?.Path);
     private bool HasExactProtectedTaskRecovery() => !_manual && _taskRecoveryReady && !_taskRecoveryBlocked &&
-        _taskRecoveryOwner is not null && SameManualRecoveryPayload(_taskRecoveryAcknowledged, CaptureTaskRecoveryPayload());
+        _taskRecoveryOwner is not null && _manualRecoveryCandidates.Count == 0 &&
+        SameManualRecoveryPayload(_taskRecoveryAcknowledged, CaptureTaskRecoveryPayload());
     private Action<Action> TaskRecoveryScopeCallback => body => InvokeOriginalSource(() => { body(); return true; });
 
     private Task<T> RunTaskSourceAsync<T>(DesktopOriginalWorkLifetime.Original original,
@@ -53,8 +54,8 @@ public sealed partial class DeveloperProjectWorkbenchPage
             {
                 await PublishAsync(original, () =>
                 {
-                    _taskRecoveryBlocked = true;
-                    _status = "Saved source changed while this task was closed. Protected task drafts were preserved; no saved text was applied. Open current source and reconcile explicitly.";
+                    StageTaskRecoveryConflicts(restored);
+                    _status = "Saved source changed while this task was closed. Your protected task drafts are preserved; inspect and explicitly reconcile each against current source.";
                 }).ConfigureAwait(false);
                 return;
             }
@@ -114,15 +115,15 @@ public sealed partial class DeveloperProjectWorkbenchPage
         }
     }
 
-    private void ScheduleTaskRecoverySave()
+    private void ScheduleTaskRecoverySave(bool forceCompleteSnapshot = false)
     {
         long generation;
         lock (_gate)
         {
-            if (_manual || !_taskRecoveryReady || _taskRecoveryBlocked || _taskRecoveryOwner is null ||
+            if (_manual || !_taskRecoveryReady || _taskRecoveryBlocked || _manualRecoveryCandidates.Count != 0 || _taskRecoveryOwner is null ||
                 _taskRecoveryScope is null || _work.IsRetiring) return;
             StoreSelectedTab();
-            if (_taskRecoveryAcknowledged is null && !_sourceTabs.Any(IsTabDirty)) return;
+            if (_taskRecoveryAcknowledged is null && !_sourceTabs.Any(IsTabDirty) && !forceCompleteSnapshot) return;
             var payload = CaptureTaskRecoveryPayload();
             if (SameManualRecoveryPayload(payload, _taskRecoveryRequested)) return;
             _taskRecoveryRequested = payload; _taskRecoverySerial++;
@@ -148,7 +149,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                     bool busy;
                     lock (_gate)
                     {
-                        if (_taskRecoveryBlocked || !_taskRecoveryReady) return;
+                        if (_taskRecoveryBlocked || !_taskRecoveryReady || _manualRecoveryCandidates.Count != 0) return;
                         if (serial != _taskRecoverySerial) break;
                         busy = _pending;
                         if (!busy)

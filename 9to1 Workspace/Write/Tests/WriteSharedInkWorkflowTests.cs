@@ -1,6 +1,9 @@
 using System.Text.Json;
+using Avalonia;
 using System.Text.Json.Nodes;
 using Avalonia.Headless.XUnit;
+using Avalonia.Headless;
+using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Events;
@@ -278,6 +281,126 @@ public sealed class WriteSharedInkWorkflowTests
             Assert.False(host.Page.IsDirty);
         }
         Assert.True(supplied.GetCompatibility("write", "development", ["drawing.ink"]).Compatible);
+    }
+
+    [Fact]
+    public async Task Shared_whole_stroke_erasure_uses_normal_undo_and_preserves_survivors_through_repository_and_native_package()
+    {
+        using var paths = new WriteInkPaths(); var diagnostics = new ProductionDiagnostics(paths);
+        var repository = new NotesRepository(paths, new NotesDocumentValidator(), diagnostics);
+        var editor = new WriteDocumentEditor(NotesDocument.Create("Undo eraser")); var drawing = editor.InsertSharedInk(); var engine = Engine();
+        var first = HorizontalBundle(engine, editor, drawing.Id, 40); var second = HorizontalBundle(engine, editor, drawing.Id, 220);
+        foreach (var bundle in new[] { first, second })
+            Assert.True(editor.AppendSharedInk(editor.CaptureSharedInk(drawing.Id)!, bundle, source => CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(editor), source)));
+        await repository.SaveAsync(editor.Document, "Seed erasure", default);
+        var expected = editor.CaptureSharedInk(drawing.Id)!;
+        var erased = CanvasSharedInkStrokeFactory.CaptureWholeErase(engine,
+            new(Context(editor), drawing.Id, "exact original", expected.Bundles), [new(100, 20, .5), new(100, 60, .5)], 20);
+        Assert.True(JsonElement.DeepEquals(second, Assert.Single(erased.ReplacementBundles!)));
+        Assert.True(editor.ReplaceSharedInk(expected, erased.ReplacementBundles!, values => values));
+        Assert.True(JsonElement.DeepEquals(second, Assert.Single(editor.Blocks().Single(block => block.Id == drawing.Id).SharedProductivityBundles!)));
+        Assert.True(editor.Undo()); Assert.Equal(2, editor.Blocks().Single(block => block.Id == drawing.Id).SharedProductivityBundles!.Count);
+        Assert.True(editor.Redo()); await repository.SaveAsync(editor.Document, "Save erasure after redo", default);
+        var reopened = Assert.IsType<NotesDocument>(await repository.LoadAsync(editor.Document.Id, default));
+        Assert.True(JsonElement.DeepEquals(second, Assert.Single(reopened.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
+            .Single(block => block.Id == drawing.Id).SharedProductivityBundles!)));
+        var packages = new WriteNativeDocumentPackageStore(); var path = Path.Combine(paths.DataDirectory, "erased.9to1w");
+        Assert.True((await packages.SaveAsync(reopened, path)).IsSuccess);
+        var package = await packages.OpenAsync(path); Assert.True(package.IsSuccess);
+        Assert.Equal(editor.Document.Id, package.Value!.Id);
+        Assert.True(JsonElement.DeepEquals(second, Assert.Single(package.Value.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
+            .Single(block => block.Id == drawing.Id).SharedProductivityBundles!)));
+    }
+
+    [Fact]
+    public void Shared_replacement_checks_owner_selection_and_epoch_again_after_preparation()
+    {
+        var editor = new WriteDocumentEditor(NotesDocument.Create("Current eraser")); var drawing = editor.InsertSharedInk();
+        var expected = editor.CaptureSharedInk(drawing.Id)!; var called = false;
+        editor.SelectBlock(editor.Blocks().First(block => block.Id != drawing.Id).Id);
+        Assert.False(editor.ReplaceSharedInk(expected, [], values => { called = true; return values; })); Assert.False(called);
+        editor.SelectBlock(drawing.Id); expected = editor.CaptureSharedInk(drawing.Id)!;
+        Assert.False(editor.ReplaceSharedInk(expected, [], values => { editor.SetTitle("Changed during eraser validation"); return values; }));
+        Assert.Equal("Changed during eraser validation", editor.Document.Title); Assert.Empty(drawing.SharedProductivityBundles!);
+        var other = new WriteDocumentEditor(editor.Document); other.SelectBlock(drawing.Id);
+        Assert.False(other.ReplaceSharedInk(editor.CaptureSharedInk(drawing.Id)!, [], values => values));
+    }
+
+    [Fact]
+    public void Missed_eraser_has_no_undo_entry_and_original_validation_failure_is_preserved()
+    {
+        var editor = new WriteDocumentEditor(NotesDocument.Create("No change eraser")); var drawing = editor.InsertSharedInk(); var engine = Engine();
+        var bundle = Bundle(engine, editor, drawing.Id);
+        Assert.True(editor.AppendSharedInk(editor.CaptureSharedInk(drawing.Id)!, bundle, source => CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(editor), source)));
+        var before = JsonSerializer.Serialize(editor.Document); var failure = new IOException("Original donor preparation failed");
+        var observed = Assert.Throws<IOException>(() => editor.ReplaceSharedInk(editor.CaptureSharedInk(drawing.Id)!, [], _ => throw failure));
+        Assert.Same(failure, observed); Assert.Equal(before, JsonSerializer.Serialize(editor.Document));
+        var current = editor.CaptureSharedInk(drawing.Id)!;
+        Assert.True(editor.ReplaceSharedInk(current, current.Bundles, values => values));
+        Assert.Equal(before, JsonSerializer.Serialize(editor.Document));
+        Assert.True(editor.Undo()); // The actual preceding append, not a no-op eraser entry.
+        Assert.Empty(editor.Blocks().Single(block => block.Id == drawing.Id).SharedProductivityBundles!);
+    }
+
+    [AvaloniaFact]
+    public async Task Actual_Write_CUI_tools_switch_pen_highlighter_and_eraser_then_save_a_real_pointer_erasure()
+    {
+        using var paths = new WriteInkPaths(); var diagnostics = new ProductionDiagnostics(paths); var validator = new NotesDocumentValidator();
+        var repository = new NotesRepository(paths, validator, diagnostics); var engine = Engine();
+        var seed = new WriteDocumentEditor(NotesDocument.Create("CUI eraser")); var drawing = seed.InsertSharedInk();
+        var first = HorizontalBundle(engine, seed, drawing.Id, 40); var second = HorizontalBundle(engine, seed, drawing.Id, 220);
+        var firstId = engine.ParseBundle(first.GetRawText()).Objects[0].ObjectId;
+        foreach (var bundle in new[] { first, second })
+            Assert.True(seed.AppendSharedInk(seed.CaptureSharedInk(drawing.Id)!, bundle, value => CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(seed), value)));
+        await repository.SaveAsync(seed.Document, "Seed original UI drawing", default);
+        using var bus = new HavenEventBus();
+        await using var page = new WritePage(engine, bus, repository, new NotesImportExportService(validator, diagnostics), initialDocumentId: seed.Document.Id);
+        await page.InitializeAsync();
+        var window = new Avalonia.Controls.Window { Content = page, Width = 1400, Height = 1200 };
+        try
+        {
+            window.Show(); window.UpdateLayout();
+            var input = Assert.Single(window.GetVisualDescendants().OfType<CanvasSharedInkInput>());
+            Assert.True(input.EraserEnabled); Assert.True(input.CanDraw);
+            Avalonia.Point At(double x, double y) => input.TranslatePoint(new(x / 960 * input.Bounds.Width, y / 540 * input.Bounds.Height), window)!.Value;
+            // Select the real drawing using its actual input; any authored selection-dot is retained.
+            window.MouseDown(At(800, 400), Avalonia.Input.MouseButton.Left); window.MouseUp(At(800, 400), Avalonia.Input.MouseButton.Left);
+            if (input.PendingSubmission is { } selection) await selection;
+            window.UpdateLayout();
+            async Task Click(string name)
+            {
+                var button = Assert.Single(window.GetVisualDescendants().OfType<Avalonia.Controls.Button>(), value => value.Name == name);
+                Assert.True(button.IsEnabled); var point = button.TranslatePoint(new(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value;
+                window.MouseDown(point, Avalonia.Input.MouseButton.Left); window.MouseUp(point, Avalonia.Input.MouseButton.Left);
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
+            }
+            await Click("write-ink-marker"); Assert.Equal(CanvasRnoteInkKind.Marker, input.Style.Kind); Assert.False(input.EraseMode);
+            await Click("write-ink-pen"); Assert.Equal(CanvasRnoteInkKind.Solid, input.Style.Kind); Assert.False(input.EraseMode);
+            await Click("write-ink-erase"); Assert.True(input.EraseMode);
+            var before = page.Document!.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
+                .Single(block => block.Id == drawing.Id).SharedProductivityBundles!.Count;
+            window.MouseDown(At(100, 20), Avalonia.Input.MouseButton.Left);
+            window.MouseMove(At(100, 60), Avalonia.Input.RawInputModifiers.LeftMouseButton);
+            window.MouseUp(At(100, 60), Avalonia.Input.MouseButton.Left);
+            Assert.NotNull(input.PendingSubmission); await input.PendingSubmission;
+            var surviving = page.Document.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
+                .Single(block => block.Id == drawing.Id).SharedProductivityBundles!;
+            Assert.Equal(before - 1, surviving.Count);
+            Assert.DoesNotContain(surviving.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects), value => value.ObjectId == firstId);
+            Assert.Contains(surviving, bundle => JsonElement.DeepEquals(second, bundle)); Assert.False(page.IsDirty);
+            var reopened = Assert.IsType<NotesDocument>(await repository.LoadAsync(seed.Document.Id, default));
+            Assert.Equal(surviving.Count, reopened.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
+                .Single(block => block.Id == drawing.Id).SharedProductivityBundles!.Count);
+            Assert.True(await page.PrepareToCloseAsync());
+        }
+        finally { window.Content = null; window.Close(); }
+    }
+
+    private static JsonElement HorizontalBundle(HomeProductivityEngine engine, WriteDocumentEditor editor, Guid layer, double y)
+    {
+        var source = CanvasSharedInkStrokeFactory.Capture(engine, Context(editor), layer, [new(40, y, .4), new(160, y, .8)]);
+        var extended = JsonNode.Parse(source.GetRawText())!.AsObject(); extended["objects"]![0]!["content"]!["futureOptionalStroke"] = "preserve";
+        return CanvasSharedInkStrokeFactory.CaptureBundle(engine, Context(editor), JsonSerializer.SerializeToElement(extended));
     }
 
     private static HomeProductivityEngine Engine() => new(handlers: [new CanvasInkObjectHandler()]);

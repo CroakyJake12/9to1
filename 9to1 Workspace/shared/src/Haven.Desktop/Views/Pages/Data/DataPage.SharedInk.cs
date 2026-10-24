@@ -48,7 +48,7 @@ public sealed partial class DataPage
                 if (component.Name != "data-shared-ink-input" || _sharedInkInput is not null)
                     throw new InvalidDataException("The Data shared ink slot must be bound once.");
                 if (engine is null) return new Control();
-                _sharedInkInput = new(engine, CaptureSharedInkOwner, CommitSharedInkStroke, _sharedInkLifetime.Token);
+                _sharedInkInput = new(engine, CaptureSharedInkOwner, CommitSharedInkStroke, _sharedInkLifetime.Token) { EraserEnabled = true };
                 _sharedInkInput.Changed += OnSharedInkChanged;
                 return _sharedInkInput;
             });
@@ -76,7 +76,7 @@ public sealed partial class DataPage
         }
     }
 
-    private CanvasSharedInkOwnerSnapshot? CaptureSharedInkOwner()
+    internal CanvasSharedInkOwnerSnapshot? CaptureSharedInkOwner()
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_disposed || _busy || _saveRunning != 0 || !IsEnabled || Workbook is not { } workbook || CurrentSheet is not { } sheet)
@@ -95,6 +95,10 @@ public sealed partial class DataPage
         var current = CaptureSharedInkOwner();
         if (_sharedInkEngine is null || current is null || !CanvasSharedInkStrokeFactory.SameOwner(request.Expected, current))
             return ValueTask.FromResult(new CanvasSharedInkCommitResult(false, "RevisionConflict", "The workbook or selected sheet changed; this stroke was not added."));
+        if (request.Erasure is not null)
+            return ValueTask.FromResult(CommitSharedInkErasure(request, current, token));
+        if (request.ReplacementBundles is not null)
+            return ValueTask.FromResult(new CanvasSharedInkCommitResult(false, "InvalidStroke", "A pen stroke cannot replace the worksheet drawing."));
         var canonical = CanvasSharedInkStrokeFactory.CaptureBundle(_sharedInkEngine, current.Context, request.Bundle);
         var bundle = _sharedInkEngine.ParseBundle(canonical.GetRawText());
         if (bundle.Objects.Count != 1)
@@ -116,6 +120,46 @@ public sealed partial class DataPage
         new DataSheetDrawingEditor(sheet).AddSharedInk(value.ObjectId, canonical);
         _drawingIndex = sheet.Drawings.Count - 1; MarkDirty(); RenderCurrent(); _bus.Fire("Data.Drawing.Added");
         return ValueTask.FromResult(new CanvasSharedInkCommitResult(true, "Inserted", "Stroke added to this worksheet. Autosave is on."));
+    }
+
+    private CanvasSharedInkCommitResult CommitSharedInkErasure(CanvasSharedInkStrokeRequest request,
+        CanvasSharedInkOwnerSnapshot current, CancellationToken token)
+    {
+        if (_sharedInkEngine is not { } engine || request.Erasure is not { } gesture ||
+            request.ReplacementBundles is not { } proposed || request.Bundle.ValueKind != JsonValueKind.Undefined)
+            return new(false, "InvalidErasure", "The eraser needs its original gesture and drawing.");
+        // Only the genuine shared donor determines hits. Never trust replacement IDs or
+        // approximate stroke distances supplied by a caller, even when the epoch is current.
+        var verified = CanvasSharedInkStrokeFactory.CaptureWholeErase(engine, current, gesture.Samples, gesture.Width).ReplacementBundles!;
+        if (verified.Count != proposed.Count || !verified.Zip(proposed).All(pair => JsonElement.DeepEquals(pair.First, pair.Second)))
+            return new(false, "InvalidErasure", "The eraser result no longer matches the original gesture.");
+        var sheet = CurrentSheet!;
+        var ink = sheet.Drawings.Where(drawing => drawing.Kind == DataDrawingKind.SharedInk).ToArray();
+        foreach (var drawing in ink)
+        {
+            var bundle = engine.ParseBundle(drawing.SharedProductivityBundle!.Value.GetRawText());
+            if (bundle.Objects.Count != 1 || bundle.Objects[0].ObjectId != drawing.Id)
+                throw new InvalidDataException("A worksheet stroke must retain its original drawing identity before erasing.");
+        }
+        var survivors = verified.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects).Select(value => value.ObjectId).ToHashSet();
+        var removed = ink.Where(drawing => !survivors.Contains(drawing.Id)).ToArray();
+        if (removed.Any(drawing => drawing.Locked))
+            return new(false, "LockedDrawing", "A crossed stroke is locked. Unlock it before erasing.");
+        if (removed.Length == 0)
+            return new(true, "NoChange", "No strokes were erased.");
+        // Prepare the same renderable canonical survivors before touching the owner/history.
+        _ = CanvasSharedInkStrokeFactory.RenderScene(engine, current.Context, current.LayerId, verified);
+        token.ThrowIfCancellationRequested();
+        var observed = CaptureSharedInkOwner();
+        if (observed is null || !ReferenceEquals(sheet, CurrentSheet) || !CanvasSharedInkStrokeFactory.SameOwner(current, observed))
+            return new(false, "RevisionConflict", "The selected sheet changed; nothing was erased.");
+        if (removed.Any(drawing => drawing.Locked))
+            return new(false, "LockedDrawing", "A crossed stroke is locked. Unlock it before erasing.");
+        CaptureSpreadsheetUndo();
+        foreach (var drawing in removed) sheet.Drawings.Remove(drawing);
+        _drawingIndex = Math.Clamp(_drawingIndex, 0, Math.Max(0, sheet.Drawings.Count - 1));
+        MarkDirty(); RenderCurrent(); _bus.Fire("Data.Drawing.Deleted");
+        return new(true, "Erased", removed.Length == 1 ? "Stroke erased. Undo restores it." : $"{removed.Length} strokes erased. Undo restores them.");
     }
 
     private void RefreshSharedInkMount()
@@ -176,7 +220,7 @@ public sealed partial class DataPage
                 "CanUndo" => IsActionAvailable("data.ink.undo") == true,
                 "CanRedo" => IsActionAvailable("data.ink.redo") == true,
                 "Status" => owner._sharedInkInput?.Status ?? "Drawing is unavailable because the Home shared ink owner is not connected.",
-                "DrawingContext" => owner.CurrentSheet is { } sheet ? sheet.Name + " · " + (owner._sharedInkInput?.Style.Kind == CanvasRnoteInkKind.Marker ? "Highlighter" : "Pen") : "Open a workbook to draw.",
+                "DrawingContext" => owner.CurrentSheet is { } sheet ? sheet.Name + " · " + (owner._sharedInkInput?.EraseMode == true ? "Eraser · whole strokes" : owner._sharedInkInput?.Style.Kind == CanvasRnoteInkKind.Marker ? "Highlighter" : "Pen") : "Open a workbook to draw.",
                 _ => null
             };
             return path is "CanDraw" or "CanDelete" or "CanUndo" or "CanRedo" or "Status" or "DrawingContext";
@@ -186,7 +230,7 @@ public sealed partial class DataPage
             var alive = !owner._disposed && !owner._busy && owner._saveRunning == 0 && owner.IsEnabled && owner.Workbook is not null;
             return alive && (command switch
             {
-                "data.ink.pen" or "data.ink.marker" => owner._sharedInkInput?.CanDraw == true,
+                "data.ink.pen" or "data.ink.marker" or "data.ink.erase" => owner._sharedInkInput?.CanDraw == true,
                 "data.ink.delete" => owner.DrawingEditorForCurrent()?.SelectedDrawing is { Kind: DataDrawingKind.SharedInk, Locked: false },
                 "data.ink.undo" => owner._spreadsheetUndo.Count > 0,
                 "data.ink.redo" => owner._spreadsheetRedo.Count > 0,
@@ -201,8 +245,9 @@ public sealed partial class DataPage
             if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
             switch (command)
             {
-                case "data.ink.pen": owner._sharedInkInput!.Style = CanvasRnoteInkStyle.Default; break;
-                case "data.ink.marker": owner._sharedInkInput!.Style = new(CanvasRnoteInkKind.Marker, "#FFFFFF00", 12, .4); break;
+                case "data.ink.pen": owner._sharedInkInput!.EraseMode = false; owner._sharedInkInput.Style = CanvasRnoteInkStyle.Default; break;
+                case "data.ink.marker": owner._sharedInkInput!.EraseMode = false; owner._sharedInkInput.Style = new(CanvasRnoteInkKind.Marker, "#FFFFFF00", 12, .4); break;
+                case "data.ink.erase": owner._sharedInkInput!.EraseMode = true; break;
                 case "data.ink.delete": owner.OnDeleteDrawingRequested(this, EventArgs.Empty); break;
                 case "data.ink.undo": owner.UndoSpreadsheetEdit(); break;
                 case "data.ink.redo": owner.RedoSpreadsheetEdit(); break;

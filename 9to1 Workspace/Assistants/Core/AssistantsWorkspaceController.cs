@@ -122,13 +122,31 @@ public sealed partial class AssistantsWorkspaceController : IAsyncDisposable
             var definition = await ObserveSourceAsync(() => _bridge.GetAsync(identity, token)).ConfigureAwait(false);
             if (definition.Kind != ConfiguredIdentityKind.Assistant)
                 throw IssueLocalRefusal("This product opens configured Assistants. Resolve an ambiguous legacy definition explicitly.");
-            var conversations = await ObserveSourceAsync(() => _bridge.ReadConversationsAsync(identity, token: token)).ConfigureAwait(false);
             UpsertDefinition(definition);
+            if (_bridge is IAssistantMainConversationOwner mainOwner)
+            {
+                var main = await ObserveSourceAsync(() => mainOwner.OpenMainConversationAsync(identity, token)).ConfigureAwait(false);
+                return await ReadAndPublishConversationAsync(main, generation, token).ConfigureAwait(false);
+            }
+            var conversations = await ObserveSourceAsync(() => _bridge.ReadConversationsAsync(identity, token: token)).ConfigureAwait(false);
             return IsCurrentNavigation(generation)
                 ? Publish(state => state with { SelectedAssistant = definition, Conversations = Freeze(conversations),
                     ConversationBinding = null, Conversation = null, Work = null, Error = null }) : Snapshot;
-        }, false, token);
+        }, _bridge is IAssistantMainConversationOwner, token);
     }
+
+    /// <summary>The canonical bridge refuses Main removal before any mutation. This guard
+    /// is not a delete implementation; supported effect owners still need their own admission.</summary>
+    public Task<AssistantsWorkspaceSnapshot> VerifyConversationRemovalAllowedAsync(Guid conversationId, CancellationToken token = default) =>
+        CommandAsync(async () =>
+        {
+            var identity = DemandSelected().Identity;
+            if (_bridge is not IAssistantMainConversationOwner owner)
+                throw IssueLocalRefusal("The original protected-thread owner is unavailable.");
+            var binding = await ObserveSourceAsync(() => _bridge.OpenConversationAsync(identity, conversationId, token)).ConfigureAwait(false);
+            await ObserveSourceAsync(() => owner.DemandConversationMayBeRemovedAsync(binding, token)).ConfigureAwait(false);
+            return Snapshot;
+        }, false, token);
 
     public Task<AssistantsWorkspaceSnapshot> ConfigureAsync(AssistantIdentity identity, long expectedRevision,
         AssistantConfiguration configuration, Guid operationId, CancellationToken token = default)
@@ -233,6 +251,22 @@ public sealed partial class AssistantsWorkspaceController : IAsyncDisposable
             return actual;
         }, false, token);
     }
+
+    public Task<AssistantConversationStopRequest> RequestOriginalConversationStopAsync(
+        AssistantOriginalConversationObservation actual, CancellationToken token = default) => CommandAsync(async () =>
+    {
+        ArgumentNullException.ThrowIfNull(actual);
+        lock (_gate)
+        {
+            if (!_observations.Any(value => ReferenceEquals(value.Original, actual) && !value.RetirementRequested) ||
+                _snapshot.ConversationBinding is not { } current || current.Conversation.Id != actual.Binding.Conversation.Id ||
+                current.Definition.Identity != actual.Binding.Definition.Identity)
+                throw IssueLocalRefusal("Select the SAME current retained ordinary reply before requesting Stop.");
+        }
+        if (_bridge is not IAssistantOriginalConversationControlOwner owner)
+            throw IssueLocalRefusal("The actual original ordinary Chat control owner is unavailable.");
+        return await ObserveSourceAsync(() => owner.RequestOriginalConversationStopAsync(actual, token)).ConfigureAwait(false);
+    }, true, token);
 
     public Task<AssistantsWorkspaceSnapshot> ListAvailableModelsAsync(CancellationToken token = default)
     {

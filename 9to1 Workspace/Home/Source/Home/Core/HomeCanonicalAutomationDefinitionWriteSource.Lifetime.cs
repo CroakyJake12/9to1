@@ -112,6 +112,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                                         CanonicalAutomationOriginalChangeKind.EditDisabled => "HOME_AUTOMATION_DEFINITION_EDITED_DISABLED",
                                         CanonicalAutomationOriginalChangeKind.CreateDisabled => "HOME_AUTOMATION_DEFINITION_CREATED_DISABLED",
                                         CanonicalAutomationOriginalChangeKind.RecoverCreated => "HOME_AUTOMATION_DEFINITION_CREATION_AUDIT_RECOVERED",
+                                        CanonicalAutomationOriginalChangeKind.ArchiveDisabled => "HOME_AUTOMATION_DEFINITION_ARCHIVED",
+                                        CanonicalAutomationOriginalChangeKind.RestoreDisabled => "HOME_AUTOMATION_DEFINITION_RESTORED_DISABLED",
                                         _ => "HOME_AUTOMATION_DEFINITION_DISABLED"
                                     }
                                     : sql is null ? "HOME_AUTOMATION_WRITE_NOT_DISPATCHED" : "HOME_AUTOMATION_WRITE_OUTCOME_UNCONFIRMED",

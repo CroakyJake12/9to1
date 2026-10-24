@@ -77,6 +77,25 @@ public sealed partial class WriteDocumentEditor
         Mutate(() => expected.Block.SharedProductivityBundles!.Add(retained), "Added shared drawing stroke");
         return true;
     }
+    /// <summary>Replace this exact original drawing through the same document undo history.
+    /// Home supplies canonical/gesture validation; stale owner/selection refuses before and after it.</summary>
+    public bool ReplaceSharedInk(WriteSharedInkSnapshot expected, IReadOnlyList<JsonElement> proposed,
+        Func<IReadOnlyList<JsonElement>, IReadOnlyList<JsonElement>> captureCanonical)
+    {
+        ArgumentNullException.ThrowIfNull(proposed); ArgumentNullException.ThrowIfNull(captureCanonical);
+        if (!IsSharedInkCurrent(expected)) return false;
+        var captured = captureCanonical(proposed);
+        if (captured is null || captured.Count > 256 || captured.Any(bundle => bundle.ValueKind != JsonValueKind.Object) ||
+            captured.Sum(bundle => (long)bundle.GetRawText().Length) > 16 * 1024 * 1024)
+            throw new InvalidDataException("The replacement drawing exceeds its supported payload bound.");
+        var retained = captured.Select(bundle => bundle.Clone()).ToList();
+        if (!IsSharedInkCurrent(expected)) return false;
+        if (retained.Count == expected.Bundles.Count && retained.Zip(expected.Bundles).All(pair => JsonElement.DeepEquals(pair.First, pair.Second)))
+            return true; // A missed eraser does not create a second undo entry or dirty publication.
+        Mutate(() => expected.Block.SharedProductivityBundles = retained, "Erased shared drawing strokes");
+        return true;
+    }
+
     private readonly Dictionary<Guid, Guid> _uncommittedPageInkIds = [];
     private Guid? _cachedPageInkPage;
     private string? _cachedPageInkRaw;

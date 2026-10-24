@@ -23,6 +23,9 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
     private string _route = "home";
     private bool _unavailable;
     private bool _streaming;
+    private AssistantOriginalConversationObservation? _originalChatStopObservation;
+    private bool _replyStopPending;
+    private string _replyStopStatus = "";
     private readonly bool _hasDevelopmentRoute;
     private bool _projectChooserVisible;
     private bool _projectBusy;
@@ -230,6 +233,14 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
     }
 
     public void SetStreaming(bool streaming) { _streaming = streaming; Refresh(); }
+    internal void SetOriginalChatStopObservation(AssistantOriginalConversationObservation? actual)
+    { _originalChatStopObservation = actual; _replyStopPending = false; _replyStopStatus = ""; Refresh(); }
+    internal void SetOriginalChatStopRequest(AssistantOriginalConversationObservation actual, bool pending, string status)
+    {
+        if (!ReferenceEquals(_originalChatStopObservation, actual))
+            throw new InvalidOperationException("The actual reply observation changed before Stop presentation.");
+        _replyStopPending = pending; _replyStopStatus = status; Refresh();
+    }
     public void SetMessages(IReadOnlyList<AssistantMessagePresentation> messages)
     {
         Set("Messages", messages);
@@ -315,6 +326,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         "assistants.conversation.find" => CanFindOriginalConversation && _conversationSearchQuery.Trim().Length != 0,
         "assistants.conversation.find.open" or "assistants.conversation.find.clear" or "assistants.conversation.find.show" => CanFindOriginalConversation,
         "assistants.branch.create" or "assistants.branch.switch" => CanChangeConversationBranch,
+        "assistants.conversation.stop" => CanStopOriginalReply,
         "assistants.send" => CanSend,
         "assistants.task.start" => CanStartTask,
         "assistants.task.stop" => _snapshot.Work?.Controls?.CanStop == true && !Busy,
@@ -348,6 +360,9 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
 
     private bool Busy => _conversationSearchBusy || _branchBusy || _attachmentBusy || _snapshot.IsLoading || _snapshot.IsSaving || _configurationInitializationBusy || _configurationModelsBusy;
     private bool CanNewConversation => _snapshot.SelectedAssistant is { Configuration.Enabled: true, Configuration.Archived: false } && !Busy && !_streaming;
+    private bool CanStopOriginalReply => _streaming && !_replyStopPending && !Busy &&
+        _originalChatStopObservation is { } actual && _snapshot.ConversationBinding is { } current &&
+        current.Conversation.Id == actual.Binding.Conversation.Id && current.Definition.Identity == actual.Binding.Definition.Identity;
     private bool CanSend => !Busy && !_streaming && _selectedModel is not null && _prompt.Trim().Length != 0 &&
         _snapshot.Conversation?.Conversation.Kind == ConversationKind.Chat && IsIdentityEnabled;
     private bool CanStartTask => IsIdentityEnabled && !Busy && !_streaming && _selectedModel is not null && _prompt.Trim().Length != 0 &&
@@ -378,13 +393,13 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
             $"{Uri.EscapeDataString(definition.Identity.DenId)}/{Uri.EscapeDataString(definition.Identity.NamespaceId)}/{Uri.EscapeDataString(definition.Identity.DefinitionId)}", definition.Configuration.Name, definition.Configuration.Description,
             definition.Configuration.Archived ? "Archived" : definition.Configuration.Enabled ? "Enabled" : "Disabled", usable && !Busy, definition.Configuration.IconResourceId)).ToArray());
         Set("HasAssistants", _snapshot.Assistants.Count != 0);
-        Set("RecentConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.UpdatedAt).Take(8).Select(conversation => new ConversationRow(
-            conversation.ConversationId, conversation.Title, selected?.Configuration.Name ?? "",
-            conversation.UpdatedAt.ToLocalTime().ToString("g"), usable && !Busy)).ToArray());
+        Set("RecentConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.IsMain).ThenByDescending(conversation => conversation.UpdatedAt).Take(8).Select(conversation => new ConversationRow(
+            conversation.ConversationId, conversation.IsMain ? "Main · protected" : conversation.Title, selected?.Configuration.Name ?? "",
+            conversation.UpdatedAt.ToLocalTime().ToString("g"), usable && !Busy, conversation.IsMain)).ToArray());
         Set("HasRecentConversations", _snapshot.Conversations.Count != 0);
-        Set("SelectedConversations", _snapshot.Conversations.Select(conversation => new ConversationRow(
-            conversation.ConversationId, conversation.Title, selected?.Configuration.Name ?? "",
-            conversation.UpdatedAt.ToLocalTime().ToString("g"), usable && !Busy)).ToArray());
+        Set("SelectedConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.IsMain).ThenByDescending(conversation => conversation.UpdatedAt).Select(conversation => new ConversationRow(
+            conversation.ConversationId, conversation.IsMain ? "Main · protected" : conversation.Title, selected?.Configuration.Name ?? "",
+            conversation.UpdatedAt.ToLocalTime().ToString("g"), usable && !Busy, conversation.IsMain)).ToArray());
         Set("HasSelectedConversations", _snapshot.Conversations.Count != 0);
         var work = _snapshot.Work?.CanonicalTask;
         var active = work?.State is TaskExecutionLifecycle.Running or TaskExecutionLifecycle.WaitingSafeBoundary or TaskExecutionLifecycle.Blocked or TaskExecutionLifecycle.Suspended;
@@ -482,6 +497,10 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
                 : "No authorized model is currently available."
             : $"Model: {_selectedModel.Model.Name} · {_selectedModel.ProviderId}");
         Set("Prompt", _prompt); Set("CanEditPrompt", usable && _snapshot.ConversationBinding is not null && !_branchBusy);
+        Set("OriginalChatStopInput", _originalChatStopObservation);
+        Set("CanStopReply", usable && CanStopOriginalReply);
+        Set("ShowStopReply", _streaming && _originalChatStopObservation is not null);
+        Set("ReplyStopStatus", _replyStopStatus); Set("HasReplyStopStatus", _replyStopStatus.Length != 0);
         Set("CanSend", usable && CanSend); Set("CanStartTask", usable && CanStartTask); Set("CanSteer", usable && CanSteer);
         Set("CanSaveDraft", usable && _snapshot.ConversationBinding is not null && !Busy);
         Set("SendLabel", _streaming ? "Responding…" : "Send");
@@ -526,7 +545,13 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         public string AvatarKey => AssistantAvatarCatalogue.DisplayKey(IconResourceId);
         public string AvatarLabel => "Assistant icon: " + AssistantAvatarCatalogue.Label(IconResourceId);
     }
-    public sealed record ConversationRow(Guid Id, string Title, string AssistantName, string UpdatedLabel, bool CanOpen);
+    public sealed record ConversationRow(Guid Id, string Title, string AssistantName, string UpdatedLabel, bool CanOpen, bool IsMain = false)
+    {
+        // No delete UI is currently composed. Main remains explicitly non-removable when
+        // a future supported thread command uses this observation and canonical guard.
+        public bool CanRemove => false; // No genuine deletion effect owner is composed for any row.
+        public bool IsProtected => IsMain;
+    }
     public sealed record WorkRow(Guid Id, string Title, string StatusLabel, bool CanOpen);
     public sealed record SettingRow(string Id, string Category, string ChoiceLabel, string AvailabilityLabel, bool CanChoose);
     public sealed record ResourceRow(string Id, string Name, string AvailabilityLabel, bool CanReview);

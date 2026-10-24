@@ -287,7 +287,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         if (IsSharingCommand(command) || command == "9to1.Files.Apply" && IsPendingShareReview)
         {
             ClearOriginalTextPreview();
-            if (command is not ("9to1.Files.Share.Revoke" or "9to1.Files.Share.ChangeRole") && parameter is not null)
+            if (command is not ("9to1.Files.Share.Revoke" or "9to1.Files.Share.ChangeRole" or "9to1.Files.Share.EditScope") && parameter is not null)
                 throw new ArgumentException("Access commands retain the original canonical selection.");
             return new(TrackOriginalAsync(() => InvokeSharingOriginalAsync(command, parameter, cancellationToken)));
         }
@@ -551,6 +551,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private void ClearSources()
     {
         ClearOriginalTextPreview();
+        ClearOriginalShareScopeEditor();
         Interlocked.Increment(ref _sharingSelectionVersion);
         _sharingPage = null;
         WithdrawFolderTabsOnRetirement();

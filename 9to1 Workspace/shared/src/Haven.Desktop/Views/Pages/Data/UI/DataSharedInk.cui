@@ -5,6 +5,7 @@
       <Container Type="Wrap" CellGap="6" accessible-name="Worksheet drawing tools">
         <Button content="Pen" action="data.ink.pen" Interactive="{Binding CanDraw}" />
         <Button content="Highlighter" action="data.ink.marker" Interactive="{Binding CanDraw}" />
+        <Button id="data-ink-erase" content="Eraser" action="data.ink.erase" Interactive="{Binding CanDraw}" accessible-name="Erase whole strokes" />
         <Button content="Delete selected stroke" action="data.ink.delete" Interactive="{Binding CanDelete}" />
         <Button content="Undo" action="data.ink.undo" Interactive="{Binding CanUndo}" />
         <Button content="Redo" action="data.ink.redo" Interactive="{Binding CanRedo}" />

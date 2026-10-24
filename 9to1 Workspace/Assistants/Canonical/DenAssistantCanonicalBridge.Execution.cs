@@ -5,7 +5,7 @@ using HavenOS.Apps.Dev;
 
 namespace HavenOS.Apps.Assistants.Canonical;
 
-public sealed partial class DenAssistantCanonicalBridge
+public sealed partial class DenAssistantCanonicalBridge : IAssistantOriginalConversationControlOwner
 {
     public Task<IReadOnlyList<AssistantModelChoice>> ListAvailableModelsAsync(AssistantConversationBinding binding,
         CancellationToken token = default) => _originals.Admit<IReadOnlyList<AssistantModelChoice>>(async () =>
@@ -76,6 +76,28 @@ public sealed partial class DenAssistantCanonicalBridge
             throw;
         }
         return true;
+    });
+
+    public Task<AssistantConversationStopRequest> RequestOriginalConversationStopAsync(
+        AssistantOriginalConversationObservation actualObservation, CancellationToken token = default) => _originals.Admit(async () =>
+    {
+        if (actualObservation is null || !_ordinary.IsIssuedOriginalObservation(actualObservation) ||
+            !IsIssuedOriginalBinding(actualObservation.Binding))
+            throw new AssistantCommandRefusedException("Stop requires the exact original ordinary Chat observation issued by this bridge and host.");
+        // Fresh membership permits the current owner to stop after a configuration update.
+        // The old definition revision is not an authority grant or an excuse to stop another
+        // user's producer. Home/profile/Den identity are freshly checked before cancellation.
+        var home = await OpenHomeAsync(token).ConfigureAwait(false);
+        var identity = actualObservation.Binding.Definition.Identity;
+        await DefinitionAsync(home, identity, token).ConfigureAwait(false);
+        var session = await _originals.Source(() => home.Den.GetAsync<NineToOne.Dulche.Den.SessionRecord>(identity.NamespaceId,
+            SessionId(actualObservation.Binding.Conversation.Id), token)).ConfigureAwait(false)
+            ?? throw new AssistantCommandRefusedException("The original conversation membership is unavailable.");
+        var current = await BindAsync(home, identity, session, token).ConfigureAwait(false);
+        if (current.Conversation.Id != actualObservation.Binding.Conversation.Id || current.Definition.Identity != identity)
+            throw new AssistantCommandRefusedException("The original conversation identity changed before Stop.");
+        await ValidateBindingAsync(current, token).ConfigureAwait(false); token.ThrowIfCancellationRequested();
+        return await _originals.Source(() => _ordinary.RequestStopOriginalAsync(actualObservation)).ConfigureAwait(false);
     });
 
     public Task<AssistantOriginalConversationObservation> SendConversationOriginalAsync(AssistantConversationBinding binding,

@@ -95,6 +95,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
         public string ActionId => ChangeKind switch
         { CanonicalAutomationOriginalChangeKind.RecoverLegacy => "automations.recover",
           CanonicalAutomationOriginalChangeKind.EditDisabled => "automations.update",
+          CanonicalAutomationOriginalChangeKind.ArchiveDisabled => "automations.archive",
+          CanonicalAutomationOriginalChangeKind.RestoreDisabled => "automations.restore",
           CanonicalAutomationOriginalChangeKind.CreateDisabled => "automations.create",
           CanonicalAutomationOriginalChangeKind.RecoverCreated => "automations.create.recover", _ => "automations.disable" };
         public Guid OperationId { get; } = operationId;
@@ -199,19 +201,50 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             creation.Reservation.OriginalSchemaSha256, Origin = creation.Graph.Origin,
             GraphFingerprint = creation.Graph.FingerprintSha256 });
         return ReviewDigest(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalDefinition.Id,
-            actual.OperationId, actual.ChangeKind, actual.Snapshot, actual.Edit);
+            actual.OperationId, actual.ChangeKind, actual.Snapshot, actual.Edit,
+            IsArchiveRestore(actual.ChangeKind) ? actual.ProposedDefinition : null);
     }
     private static string ReviewDigest(AuthenticatedResourceActor actor, ResourceStoreIdentity identity,
-        Guid entity, Guid operation, CanonicalAutomationOriginalChangeKind kind, Snapshot snapshot, CanonicalAutomationOriginalEdit? edit = null)
+        Guid entity, Guid operation, CanonicalAutomationOriginalChangeKind kind, Snapshot snapshot, CanonicalAutomationOriginalEdit? edit = null,
+        AutomationDefinition? lifecycle = null)
     {
         var original = Hash(new { actor, identity, entity, operation, kind, OriginalRow = snapshot.Operation?.BeforeRowSha256 ?? snapshot.RowSha256,
             ExpectedRevision = snapshot.Operation?.Descriptor.Receipt.ExpectedRevision ?? snapshot.Descriptor?.Revision ?? 0,
             PreviousDescriptorSha256 = snapshot.Operation is { } operationReceipt ? operationReceipt.Descriptor.PreviousDescriptorSha256 : (snapshot.DescriptorJson is null ? null : RawJsonDigest(snapshot.DescriptorJson)) });
         // Keep existing recovery/disable receipt digests byte-compatible. Edited
         // values become part of the new action's exact operation identity.
+        if (IsArchiveRestore(kind))
+        {
+            var proposed = lifecycle ?? throw new InvalidOperationException("The exact original archive/restore proposal is unavailable.");
+            return Hash(new { Original = original, proposed.ArchivedAt, proposed.UpdatedAt,
+                proposed.IsEnabled, proposed.NextRunAt });
+        }
         return edit is null ? original : Hash(new { Original = original, Edit = edit });
     }
     public bool SupportsOriginalDisabledEdit => true;
+    public bool SupportsOriginalArchiveRestore => true;
+    private static bool IsArchiveRestore(CanonicalAutomationOriginalChangeKind kind) =>
+        kind is CanonicalAutomationOriginalChangeKind.ArchiveDisabled or CanonicalAutomationOriginalChangeKind.RestoreDisabled;
+    private static AutomationDefinition PrepareArchiveRestoreProposal(Snapshot snapshot, AutomationDefinition original,
+        CanonicalAutomationOriginalChangeKind kind)
+    {
+        if (!IsArchiveRestore(kind) || snapshot.Descriptor is not { State: AutomationOperationalState.Disabled or AutomationOperationalState.NeedsAttention } ||
+            !snapshot.Row.TryGetValue("archived_at", out var storedArchive) ||
+            !snapshot.Row.TryGetValue("is_enabled", out var enabled) ||
+            enabled != JsonSerializer.Serialize(new { storageClass = "integer", value = 0L }) || original.IsEnabled)
+            throw new InvalidOperationException("Recover and disable this original Automation before archiving or restoring it; the actual archive schema must be available.");
+        // The exact original durable operation is observed, never re-applied. Its effect
+        // values come from the current raw row only after the private receipt is checked below.
+        var recovering = snapshot.Operation is not null;
+        if (!recovering && (kind == CanonicalAutomationOriginalChangeKind.ArchiveDisabled ? storedArchive is not null : storedArchive is null))
+            throw new InvalidOperationException("Archive requires an unarchived saved Automation; Restore requires an archived one.");
+        if (recovering && (kind == CanonicalAutomationOriginalChangeKind.ArchiveDisabled ? storedArchive is null : storedArchive is not null))
+            throw new InvalidOperationException("The actual original archive/restore effect no longer matches its stored outcome.");
+        var at = recovering ? DateTimeOffset.Parse(RawText(snapshot.Row, "updated_at"), System.Globalization.CultureInfo.InvariantCulture) : DateTimeOffset.UtcNow;
+        return original with { ArchivedAt = kind == CanonicalAutomationOriginalChangeKind.ArchiveDisabled
+                ? recovering ? original.ArchivedAt : at : null,
+            UpdatedAt = at, IsEnabled = false, NextRunAt = null, OperationalState = AutomationOperationalState.Disabled };
+    }
     public Task<ICanonicalAutomationDefinitionOriginalChangeIntent> PrepareOriginalChangeWithinSourceAsync(
         ICanonicalAutomationLibraryOriginalObservation sameObservation, AutomationOwnerRead<AutomationDefinition> sameRow,
         CanonicalAutomationOriginalChangeKind kind, Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
@@ -225,7 +258,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
         var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
         return Admit(source, () => _store.RetainOriginalReader<ICanonicalAutomationDefinitionOriginalChangeIntent>(source, async () =>
         {
-            if (operationId == Guid.Empty || kind is not (CanonicalAutomationOriginalChangeKind.RecoverLegacy or CanonicalAutomationOriginalChangeKind.Disable or CanonicalAutomationOriginalChangeKind.EditDisabled) ||
+            if (operationId == Guid.Empty || kind is not (CanonicalAutomationOriginalChangeKind.RecoverLegacy or CanonicalAutomationOriginalChangeKind.Disable or CanonicalAutomationOriginalChangeKind.EditDisabled or
+                CanonicalAutomationOriginalChangeKind.ArchiveDisabled or CanonicalAutomationOriginalChangeKind.RestoreDisabled) ||
                 (kind == CanonicalAutomationOriginalChangeKind.EditDisabled) != (edit is not null))
                 throw new ArgumentException("A supported exact change and stable original operation ID are required.");
             var selected = source.Invoke(() => _library.ObserveOriginalWriteSelection(sameObservation, sameRow));
@@ -262,9 +296,18 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
                     RawText(snapshot.Row, "updated_at"), System.Globalization.CultureInfo.InvariantCulture);
                 proposed = edit.PrepareDisabledProposal(selected.Row.Value, at);
             }
+            if (IsArchiveRestore(kind))
+            {
+                try { proposed = PrepareArchiveRestoreProposal(snapshot, selected.Row.Value, kind); }
+                catch (InvalidOperationException refusal)
+                {
+                    await source.JoinAllAsync().ConfigureAwait(false);
+                    source.RegisterOriginalPreEffectRefusal(refusal); throw;
+                }
+            }
             if (snapshot.Operation is { } old)
                 DemandDurableOperation(old, snapshot, selected.Observation.Actor, identity, selected.Row.Value.Id,
-                    operationId, kind, ReviewDigest(selected.Observation.Actor, identity, selected.Row.Value.Id, operationId, kind, snapshot, edit));
+                    operationId, kind, ReviewDigest(selected.Observation.Actor, identity, selected.Row.Value.Id, operationId, kind, snapshot, edit, IsArchiveRestore(kind) ? proposed : null));
             await DemandCurrentAsync(selected.Observation.Actor, identity, selected.Ownership, source, token).ConfigureAwait(false);
             await source.JoinAllAsync().ConfigureAwait(false);
             var intent = new Intent(this, selected, kind, operationId, snapshot, edit, proposed);

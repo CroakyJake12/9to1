@@ -136,6 +136,121 @@ public sealed class DataSharedInkTests
         Assert.Equal(0, calls); Assert.Null(input.PendingSubmission);
     }
 
+    [AvaloniaFact]
+    public async Task Whole_stroke_eraser_retains_cells_shapes_and_survivor_bundle_through_undo_save_and_reopen()
+    {
+        using var paths = new PhysicalPaths(); var repository = new DataWorkbookRepository(paths);
+        var original = EraserWorkbook(); var originalSheet = original.Sheets[0];
+        var shapeId = originalSheet.Drawings[0].Id; var erasedId = originalSheet.Drawings[1].Id;
+        var survivor = originalSheet.Drawings[2].SharedProductivityBundle!.Value.Clone(); var survivorId = originalSheet.Drawings[2].Id;
+        await repository.SaveAsync(original, "Seed eraser", TestContext.Current.CancellationToken);
+        using var bus = new HavenEventBus();
+        using var page = new DataPage(bus, repository, new DataXlsxFormatService(), new DataWorkbookQueryService(), null, null, Engine());
+        await page.InitializeAsync(TestContext.Current.CancellationToken);
+        Assert.True(page.SharedInkInput!.EraserEnabled);
+        var expected = Assert.IsType<CanvasSharedInkOwnerSnapshot>(page.CaptureSharedInkOwner());
+        var request = EraseFirst(expected);
+        var result = await page.CommitSharedInkStroke(request, TestContext.Current.CancellationToken);
+        Assert.True(result.Succeeded); Assert.Equal("Erased", result.Code); Assert.True(page.IsDirty);
+        var sheet = page.Workbook!.Sheets[0];
+        Assert.Equal(new[] { shapeId, survivorId }, sheet.Drawings.Select(drawing => drawing.Id));
+        Assert.Equal("Keep this cell", sheet.GetCell(0, 0)!.Value);
+        Assert.True(JsonElement.DeepEquals(survivor, sheet.Drawings[1].SharedProductivityBundle!.Value));
+        // One existing workbook history entry restores the erased canonical object; no ink-only store/history.
+        Invoke(page.SceneRoot.DescendantsAndSelf().OfType<HavenButton>().Single(value => value.Name == "Data.Grid.Undo"));
+        sheet = page.Workbook.Sheets[0]; Assert.Equal(new[] { shapeId, erasedId, survivorId }, sheet.Drawings.Select(drawing => drawing.Id));
+        Invoke(page.SceneRoot.DescendantsAndSelf().OfType<HavenButton>().Single(value => value.Name == "Data.Grid.Redo"));
+        Assert.Equal(new[] { shapeId, survivorId }, page.Workbook.Sheets[0].Drawings.Select(drawing => drawing.Id));
+        Assert.True(await page.SaveAsync("Erase worksheet stroke", TestContext.Current.CancellationToken));
+        var reopened = Assert.IsType<DataWorkbook>(await repository.LoadAsync(page.Workbook.Id, TestContext.Current.CancellationToken));
+        Assert.Equal(new[] { shapeId, survivorId }, reopened.Sheets[0].Drawings.Select(drawing => drawing.Id));
+        Assert.Equal("Keep this cell", reopened.Sheets[0].GetCell(0, 0)!.Value);
+        Assert.NotNull(reopened.Sheets[0].Drawings[0].VectorShape);
+        Assert.True(JsonElement.DeepEquals(survivor, reopened.Sheets[0].Drawings[1].SharedProductivityBundle!.Value));
+        var replay = await page.CommitSharedInkStroke(request, TestContext.Current.CancellationToken);
+        Assert.False(replay.Succeeded); Assert.Equal("RevisionConflict", replay.Code); Assert.False(page.IsDirty);
+    }
+
+    [AvaloniaFact]
+    public async Task Forged_replacement_or_replacement_without_an_eraser_gesture_cannot_remove_current_strokes()
+    {
+        using var paths = new PhysicalPaths(); var repository = new DataWorkbookRepository(paths); var original = EraserWorkbook();
+        await repository.SaveAsync(original, "Seed eraser", TestContext.Current.CancellationToken);
+        using var bus = new HavenEventBus();
+        using var page = new DataPage(bus, repository, new DataXlsxFormatService(), new DataWorkbookQueryService(), null, null, Engine());
+        await page.InitializeAsync(TestContext.Current.CancellationToken);
+        var expected = Assert.IsType<CanvasSharedInkOwnerSnapshot>(page.CaptureSharedInkOwner());
+        var actual = EraseFirst(expected); Assert.Single(actual.ReplacementBundles!);
+        var forged = actual with { ReplacementBundles = [] };
+        var refused = await page.CommitSharedInkStroke(forged, TestContext.Current.CancellationToken);
+        Assert.False(refused.Succeeded); Assert.Equal("InvalidErasure", refused.Code);
+        var absentGesture = actual with { Erasure = null };
+        refused = await page.CommitSharedInkStroke(absentGesture, TestContext.Current.CancellationToken);
+        Assert.False(refused.Succeeded); Assert.Equal("InvalidStroke", refused.Code);
+        Assert.False(page.IsDirty); Assert.Equal(original.Sheets[0].Drawings.Select(drawing => drawing.Id), page.Workbook!.Sheets[0].Drawings.Select(drawing => drawing.Id));
+        Invoke(page.SceneRoot.DescendantsAndSelf().OfType<HavenButton>().Single(value => value.Name == "Data.Grid.Undo"));
+        Assert.False(page.IsDirty); Assert.Equal(3, page.Workbook.Sheets[0].Drawings.Count);
+    }
+
+    [AvaloniaFact]
+    public async Task Eraser_cannot_remove_a_locked_stroke_and_a_miss_creates_no_history_or_dirty_write()
+    {
+        using var paths = new PhysicalPaths(); var repository = new DataWorkbookRepository(paths); var original = EraserWorkbook();
+        original.Sheets[0].Drawings[1].Locked = true;
+        await repository.SaveAsync(original, "Seed locked eraser", TestContext.Current.CancellationToken);
+        using var bus = new HavenEventBus();
+        using var page = new DataPage(bus, repository, new DataXlsxFormatService(), new DataWorkbookQueryService(), null, null, Engine());
+        await page.InitializeAsync(TestContext.Current.CancellationToken);
+        var expected = Assert.IsType<CanvasSharedInkOwnerSnapshot>(page.CaptureSharedInkOwner());
+        var refused = await page.CommitSharedInkStroke(EraseFirst(expected), TestContext.Current.CancellationToken);
+        Assert.False(refused.Succeeded); Assert.Equal("LockedDrawing", refused.Code);
+        var miss = CanvasSharedInkStrokeFactory.CaptureWholeErase(Engine(), expected, [new(800, 400, .5), new(820, 420, .5)], 20);
+        var unchanged = await page.CommitSharedInkStroke(miss, TestContext.Current.CancellationToken);
+        Assert.True(unchanged.Succeeded); Assert.Equal("NoChange", unchanged.Code);
+        Assert.False(page.IsDirty); Assert.Equal(3, page.Workbook!.Sheets[0].Drawings.Count);
+        Assert.True(page.Workbook.Sheets[0].Drawings[1].Locked);
+        Invoke(page.SceneRoot.DescendantsAndSelf().OfType<HavenButton>().Single(value => value.Name == "Data.Grid.Undo"));
+        Assert.False(page.IsDirty); Assert.Equal(3, page.Workbook.Sheets[0].Drawings.Count);
+    }
+
+    [AvaloniaFact]
+    public async Task Eraser_captured_on_another_selected_sheet_is_refused_before_any_owner_mutation()
+    {
+        using var paths = new PhysicalPaths(); var repository = new DataWorkbookRepository(paths); var original = EraserWorkbook();
+        await repository.SaveAsync(original, "Seed sheet switch", TestContext.Current.CancellationToken);
+        using var bus = new HavenEventBus();
+        using var page = new DataPage(bus, repository, new DataXlsxFormatService(), new DataWorkbookQueryService(), null, null, Engine());
+        await page.InitializeAsync(TestContext.Current.CancellationToken);
+        var firstSheet = page.Workbook!.Sheets[0];
+        var request = EraseFirst(Assert.IsType<CanvasSharedInkOwnerSnapshot>(page.CaptureSharedInkOwner()));
+        Invoke(page.Route.AddSheetButton);
+        var current = Assert.IsType<CanvasSharedInkOwnerSnapshot>(page.CaptureSharedInkOwner());
+        Assert.NotEqual(firstSheet.Id, current.LayerId);
+        var refused = await page.CommitSharedInkStroke(request, TestContext.Current.CancellationToken);
+        Assert.False(refused.Succeeded); Assert.Equal("RevisionConflict", refused.Code);
+        Assert.Equal(3, firstSheet.Drawings.Count); Assert.Empty(page.Workbook.Sheets.Single(sheet => sheet.Id == current.LayerId).Drawings);
+    }
+
+    private static DataWorkbook EraserWorkbook()
+    {
+        var workbook = DataWorkbook.Create("Worksheet eraser"); var sheet = workbook.Sheets[0];
+        sheet.SetCell(0, 0, "Keep this cell"); var editor = new DataSheetDrawingEditor(sheet);
+        editor.AddCustomShape(DocumentVectorShapes.CreateEditableStarter());
+        foreach (var y in new[] { 40d, 220d })
+        {
+            var bundle = CanvasSharedInkStrokeFactory.Capture(Engine(), Context(workbook.Id), sheet.Id,
+                [new(40, y, .4), new(160, y, .8)]);
+            // Retained optional stroke data must survive an unrelated erasure byte-for-byte.
+            var extended = JsonNode.Parse(bundle.GetRawText())!.AsObject();
+            extended["objects"]![0]!["content"]!["futureOptionalStroke"] = "keep";
+            bundle = CanvasSharedInkStrokeFactory.CaptureBundle(Engine(), Context(workbook.Id), JsonSerializer.SerializeToElement(extended));
+            editor.AddSharedInk(Engine().ParseBundle(bundle.GetRawText()).Objects[0].ObjectId, bundle);
+        }
+        return workbook;
+    }
+    private static CanvasSharedInkStrokeRequest EraseFirst(CanvasSharedInkOwnerSnapshot owner) =>
+        CanvasSharedInkStrokeFactory.CaptureWholeErase(Engine(), owner, [new(100, 20, .5), new(100, 60, .5)], 20);
+
     private static HomeProductivityEngine Engine() => new(handlers: [new CanvasInkObjectHandler()]);
     private static HomeProductivityContext Context(Guid workbook) => new("data", workbook.ToString("D"), 0, [], new HashSet<string>(StringComparer.Ordinal) { "drawing.ink" });
     private static JsonElement Bundle(Guid workbook, Guid layer) => CanvasSharedInkStrokeFactory.Capture(Engine(), Context(workbook), layer, [new(10, 20, .5), new(40, 60, .8)]);

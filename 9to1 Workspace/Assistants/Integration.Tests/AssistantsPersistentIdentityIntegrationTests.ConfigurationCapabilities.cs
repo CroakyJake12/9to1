@@ -38,7 +38,10 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             var reopened = rig.CreateController(); var current = await rig.Retain(reopened.OpenAssistantAsync(saved.Identity, Token));
             Assert.Equal(revision, current.SelectedAssistant!.Revision);
             Assert.Equal(choice.PreferenceId, Assert.Single(current.SelectedAssistant.Configuration.ToolIds));
-            Assert.Empty(current.Conversations); Assert.Null(current.ConversationBinding); Assert.Equal(0, rig.ProviderInvocations);
+            var main = Assert.Single(current.Conversations); Assert.True(main.IsMain);
+            Assert.Equal(main.ConversationId, current.ConversationBinding!.Conversation.Id);
+            Assert.Equal(saved.Identity, current.ConversationBinding.Definition.Identity);
+            Assert.Equal(0, rig.ProviderInvocations);
             var refreshed = await rig.Retain(reopened.ReadOriginalConfigurationCapabilitiesAsync(Token));
             Assert.Contains(refreshed.Definitions, value => value.Id == read.Id);
         }, withCapabilities: true);

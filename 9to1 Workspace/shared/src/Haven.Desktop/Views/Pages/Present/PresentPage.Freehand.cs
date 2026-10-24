@@ -29,6 +29,7 @@ public sealed partial class PresentPage
     private string? _freehandClipSignature, _freehandSelectionSignature;
     private bool _freehandEnabled, _refreshingFreehand;
     internal CanvasSharedInkInput? FreehandInput => _freehandInput;
+    internal ICuiActionDispatcher? FreehandCommands => _freehandBindings;
 
     private void InitializeFreehandMount()
     {
@@ -216,10 +217,34 @@ public sealed partial class PresentPage
         if (_freehandInputRoot is not null) _sharedInkResources.Unregister(_route.FreehandInputHost, _freehandInputRoot);
         _freehandToolsLoader?.Dispose(); _freehandInputLoader?.Dispose(); _freehandInput = null;
     }
+    internal static string? FreehandColorForCommand(string command) => command switch
+    {
+        "present.ink.color.black" => "#FF000000", "present.ink.color.white" => "#FFFFFFFF",
+        "present.ink.color.blue" => "#FF2563EB", "present.ink.color.red" => "#FFDC2626",
+        "present.ink.color.green" => "#FF16A34A", "present.ink.color.yellow" => "#FFFFFF00",
+        _ => null
+    };
+    internal static CanvasRnoteInkStyle? ResolveFreehandStyleCommand(CanvasRnoteInkStyle current, string command) => command switch
+    {
+        "present.ink.pen" => current.Kind == CanvasRnoteInkKind.Solid ? current : CanvasRnoteInkStyle.Default,
+        "present.ink.highlighter" => current.Kind == CanvasRnoteInkKind.Marker ? current : new(CanvasRnoteInkKind.Marker, "#FFFFFF00", 12, .4),
+        "present.ink.width.fine" => current with { BaseWidth = current.Kind == CanvasRnoteInkKind.Marker ? 8 : 1.5 },
+        "present.ink.width.normal" => current with { BaseWidth = current.Kind == CanvasRnoteInkKind.Marker ? 12 : 3 },
+        "present.ink.width.broad" => current with { BaseWidth = current.Kind == CanvasRnoteInkKind.Marker ? 20 : 6 },
+        _ => null
+    };
+    private static string FreehandColorName(string? color) => color?.ToUpperInvariant() switch
+    {
+        "#FF000000" => "Black", "#FFFFFFFF" => "White", "#FF2563EB" => "Blue",
+        "#FFDC2626" => "Red", "#FF16A34A" => "Green", "#FFFFFF00" => "Yellow",
+        null => "Colour", _ => color ?? "Colour"
+    };
     private sealed class FreehandBindings(PresentPage owner) : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         internal void Notify() => PropertyChanged?.Invoke(this, new(null));
+        private bool CanConfigureStroke => owner._freehandEnabled && owner._freehandInput?.CanDraw == true;
+        private bool CanRecolor => !owner._freehandEnabled && owner.EditableSelectedSharedInk() is not null;
         public bool TryGetValue(string path, out object? value)
         {
             value = path switch
@@ -228,27 +253,41 @@ public sealed partial class PresentPage
                 "Drawing" => owner._freehandEnabled,
                 "CanToggle" => IsActionAvailable("present.ink.toggle") == true,
                 "CanDraw" => owner._freehandInput?.CanDraw == true,
-                "ToolLabel" => owner._freehandInput?.Style.Kind == CanvasRnoteInkKind.Marker ? "Highlighter" : "Pen",
+                "CanOpenTools" => CanConfigureStroke || CanRecolor,
+                "CanConfigureStroke" => CanConfigureStroke,
+                "CanChooseColor" => CanConfigureStroke || CanRecolor,
+                "ToolLabel" => owner._freehandEnabled ? owner._freehandInput?.Style.Kind == CanvasRnoteInkKind.Marker ? "Marker" : "Pen" : "Ink",
+                "ColorLabel" => "Colour · " + FreehandColorName(owner._freehandEnabled ? owner._freehandInput?.Style.Color : owner.SelectedSharedInkColor()),
+                "WidthLabel" => "Thickness · " + (owner._freehandInput?.Style.BaseWidth.ToString("0.#", CultureInfo.InvariantCulture) ?? "—"),
+                "ColorTargetHint" => owner._freehandEnabled ? "Choose the colour for new strokes." : "Change the selected drawing's colour.",
                 "Status" => owner._editor?.SelectedSlide.Elements.Count(value => value.Kind == PresentElementKind.SharedObject) >= MaximumSharedInkViews
                     ? "This slide has reached this view's 32 shared drawing-object limit; its original content is retained."
                     : owner._freehandInput?.Status ?? "Drawing is unavailable because the original Home ink owner is not connected.",
                 _ => null
             };
-            return path is "DrawLabel" or "Drawing" or "CanToggle" or "CanDraw" or "ToolLabel" or "Status";
+            return path is "DrawLabel" or "Drawing" or "CanToggle" or "CanDraw" or "CanOpenTools" or "CanConfigureStroke" or
+                "CanChooseColor" or "ToolLabel" or "ColorLabel" or "WidthLabel" or "ColorTargetHint" or "Status";
         }
         public bool? IsActionAvailable(string command) => !owner._disposed && !owner._originalPresentWork.IsRetiring &&
-            !owner._busy && !owner._closePreparing && owner._playback is null && (command switch
+            owner.CanAdmitOriginalPresentation && !owner._busy && !owner._closePreparing && Volatile.Read(ref owner._saveRunning) == 0 &&
+            owner._playback is null && (command switch
             {
                 "present.ink.toggle" => owner._freehandEnabled || owner._freehandInput?.CanDraw == true ||
                     (owner.Document is not null && owner._freehandInput?.LastError is not null),
-                "present.ink.tool" => owner._freehandEnabled && owner._freehandInput?.CanDraw == true,
-                _ => false
+                "present.ink.tool" or "present.ink.pen" or "present.ink.highlighter" or
+                "present.ink.width.fine" or "present.ink.width.normal" or "present.ink.width.broad" => CanConfigureStroke,
+                _ => FreehandColorForCommand(command) is not null && (CanConfigureStroke || CanRecolor)
             });
-        public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+        public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
         {
             Dispatcher.UIThread.VerifyAccess(); cancellationToken.ThrowIfCancellationRequested();
             if (parameter is not null) throw new ArgumentException("Use the current Present drawing target.");
-            if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
+            if (IsActionAvailable(command) != true) return;
+            if (FreehandColorForCommand(command) is { } color && !owner._freehandEnabled)
+            {
+                await owner.RecolorSelectedSharedInkAsync(color, cancellationToken);
+                return;
+            }
             owner.RunOriginalPresentEvent(() =>
             {
                 if (command == "present.ink.toggle")
@@ -261,12 +300,17 @@ public sealed partial class PresentPage
                         if (!owner._freehandEnabled) owner.PublishOriginalPresentSource(() => owner._route.SetStatus(owner._freehandInput?.Status ?? "The original Home ink renderer is unavailable."));
                     }
                 }
-                else if (command == "present.ink.tool" && owner._freehandInput is { } input)
-                    input.Style = input.Style.Kind == CanvasRnoteInkKind.Marker ? CanvasRnoteInkStyle.Default : new(CanvasRnoteInkKind.Marker, "#FFFFFF00", 12, .4);
+                else if (owner._freehandInput is { } input)
+                {
+                    var styleCommand = command == "present.ink.tool"
+                        ? input.Style.Kind == CanvasRnoteInkKind.Marker ? "present.ink.pen" : "present.ink.highlighter" : command;
+                    if (ResolveFreehandStyleCommand(input.Style, styleCommand) is { } style) input.Style = style;
+                    else if (FreehandColorForCommand(command) is { } strokeColor) input.Style = input.Style with { Color = strokeColor };
+                }
                 owner.RefreshFreehandMount();
                 if (owner._freehandEnabled) owner._freehandInput?.Focus();
             });
-            return ValueTask.CompletedTask;
+            Notify();
         }
     }
 }

@@ -113,6 +113,7 @@
     <EmbeddedResource Include="Views/Pages/Chat/ChatRecovery.cui" LogicalName="Haven.Desktop.Chat.Recovery.cui" />
     <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />
     <Compile Update="Prefabs\**\*.hui.cs"><DependentUpon>%(Filename)</DependentUpon></Compile>
+    <EmbeddedResource Include="Views/Pages/Write/UI/WriteSharedInk.cui" LogicalName="Haven.Desktop.Write.SharedInk.cui" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../../Write/WriteAppSurface.cs" Link="9to1OS Apps/Write/WriteAppSurface.cs" />

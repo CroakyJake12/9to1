@@ -10,6 +10,7 @@ public sealed class UnifiedBoardsInitialRouteTests
     [Theory]
     [InlineData((int)Product.Boards, "boards", "9to1://boards")]
     [InlineData((int)Product.Canvas, "canvas", "9to1://canvas")]
+    [InlineData((int)Product.Present, "present", "9to1://present")]
     public void Each_compiled_entry_selects_only_its_canonical_shared_root(int selected, string declaration, string route)
     {
         var entry = (Product)selected;
@@ -44,6 +45,8 @@ public sealed class UnifiedBoardsInitialRouteTests
     [InlineData((int)Product.Boards, "write")]
     [InlineData((int)Product.Canvas, "boards")]
     [InlineData((int)Product.Canvas, "files")]
+    [InlineData((int)Product.Present, "canvas")]
+    [InlineData((int)Product.Present, "write")]
     public void Conflicting_compiled_metadata_cannot_retarget_a_selected_entry(int selected, string other)
     {
         var product = (Product)selected;
@@ -56,6 +59,7 @@ public sealed class UnifiedBoardsInitialRouteTests
     [Theory]
     [InlineData((int)Product.Boards, "boards")]
     [InlineData((int)Product.Canvas, "canvas")]
+    [InlineData((int)Product.Present, "present")]
     public void Duplicate_metadata_is_refused_even_when_both_rows_match_the_entry(int selected, string value)
     {
         var product = (Product)selected;
@@ -68,12 +72,13 @@ public sealed class UnifiedBoardsInitialRouteTests
     [Theory]
     [InlineData((int)Product.Boards)]
     [InlineData((int)Product.Canvas)]
-    public void Both_executables_share_one_immutable_process_selection(int selected)
+    [InlineData((int)Product.Present)]
+    public void Product_executables_share_one_immutable_process_selection(int selected)
     {
         var product = (Product)selected;
         var entry = new App.OriginalUnifiedProductEntry();
         entry.Capture(product, [], false);
-        foreach (var next in new[] { Product.Canvas, Product.Boards })
+        foreach (var next in new[] { Product.Canvas, Product.Boards, Product.Present })
             Assert.Throws<InvalidOperationException>(() => entry.Capture(next, [], false));
         Assert.Equal(product, entry.Product);
     }
@@ -90,7 +95,7 @@ public sealed class UnifiedBoardsInitialRouteTests
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(99)]
-    public void Only_the_closed_native_pair_can_select_or_resolve_a_route(int value)
+    public void Unsupported_native_values_cannot_select_or_resolve_a_route(int value)
     {
         var entry = new App.OriginalUnifiedProductEntry();
         Assert.Throws<ArgumentOutOfRangeException>(() => entry.Capture((Product)value, [], false));

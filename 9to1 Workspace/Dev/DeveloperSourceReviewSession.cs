@@ -253,6 +253,48 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
         }
     }
 
+    /// <summary>Explicit recovery adoption only. A fresh SAME issued preparation may refresh
+    /// the exact still-clean editor's source basis. Normal Open/AcceptPreparedOpen keep their
+    /// strict stale-baseline refusal. This enrolls clean source only, never saved draft text,
+    /// an old pass, write approval, Files identity or execution authority.</summary>
+    public DeveloperOperationResult<DeveloperEditorSnapshot> AcceptPreparedRecoveryOpen(
+        DeveloperPreparedSourceOpen prepared, DeveloperEditorSnapshot? sameOriginalCleanEditor)
+    {
+        ArgumentNullException.ThrowIfNull(prepared);
+        lock (_gate)
+        {
+            DemandAdmission();
+            if (!_preparedOpens.TryGetValue(prepared.PreparationId, out var issued) || !ReferenceEquals(issued, prepared))
+                throw new InvalidOperationException("Only the SAME genuinely prepared fresh source can be reconciled.");
+            var fresh = prepared.Snapshot;
+            if (fresh.IsDirty || fresh.PreparedChangeSetId is not null || fresh.LastAppliedChangeSetId is not null)
+                throw new UnauthorizedAccessException("Recovery requires a clean fresh source observation, not a copied draft/pass.");
+            var matching = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == fresh.Project && value.Snapshot.Document == fresh.Document);
+            if (sameOriginalCleanEditor is null)
+            {
+                if (matching is not null)
+                    throw new InvalidOperationException("An existing editor must be retained and explicitly compared before recovery can replace its basis.");
+                return AcceptPreparedOpen(prepared);
+            }
+            var existing = DemandEntry(sameOriginalCleanEditor.EditorId);
+            if (!ReferenceEquals(existing, matching) || !ReferenceEquals(existing.Snapshot, sameOriginalCleanEditor) ||
+                existing.Snapshot.IsDirty || existing.PendingApply is not null)
+                throw new InvalidOperationException("The exact original editor changed or has live work. Both drafts were preserved.");
+            DemandSameTask(existing.Snapshot.OriginalObservation.OriginalContext, fresh.OriginalObservation.OriginalContext);
+            if (_opening != 0 || _originals.Values.Any(value => !value.Task.IsCompletedSuccessfully))
+                throw new InvalidOperationException("Original source operations must settle before explicit recovery; unresolved outcomes were preserved.");
+            var adopted = fresh with { EditorId = existing.Snapshot.EditorId,
+                DraftRevision = checked(existing.Snapshot.DraftRevision + 1), PreparedChangeSetId = null,
+                LastAppliedChangeSetId = null };
+            // A new Entry takes the genuinely fresh original read action. Historical passes
+            // remain evidence but cannot become this new entry's prepared/revert authority.
+            _editors[adopted.EditorId] = new Entry(adopted);
+            _preparedOpens.Remove(prepared.PreparationId);
+            return DeveloperOperationResult<DeveloperEditorSnapshot>.Success(adopted,
+                fresh.OriginalObservation.OriginalContext.ActionId);
+        }
+    }
+
     /// <summary>Releases only an unaccepted issued observation, including after view retirement.
     /// It never removes an editor, dirty text, pass, source Task or original failure evidence.</summary>
     public void AbandonPreparedOpen(DeveloperPreparedSourceOpen prepared)

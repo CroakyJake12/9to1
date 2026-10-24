@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Text;
 using System.Security.Cryptography;
 using Avalonia.Controls;
+using Avalonia.Input;
+using System.Globalization;
 using Avalonia.Automation;
 using Avalonia.Interactivity;
 using Avalonia.Headless;
@@ -795,6 +797,99 @@ public sealed class FilesNativeBrowserMutationTests
             return current ? new(CuiSceneAvailabilityState.Ready, "ORIGINAL_COMPONENT", "Actual Home/Files component owners are current.")
                 : new(CuiSceneAvailabilityState.Unavailable, "COMPONENT_CHANGED", "The original component profile/store ownership changed.");
         }
+    }
+
+    [Fact]
+    public async Task Existing_recipient_expiry_only_change_requires_Home_and_preserves_principal_and_one_shot_ACK()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedOriginalNativeShareAsync(h, FilesAccessRole.Viewer, token);
+        var expiry = DateTimeOffset.UtcNow.AddHours(2);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.PrepareNativeShareScopeChangeAsync(seed.Shares,
+            seed.Grant with { }, FilesAccessRole.Viewer, expiry, h.Workspace.Actor, () => true, "copied-scope", token));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.PrepareNativeShareScopeChangeAsync(seed.Shares,
+            seed.Grant, FilesAccessRole.Viewer, DateTimeOffset.UtcNow.AddMinutes(-1), h.Workspace.Actor, () => true, "past-scope", token));
+        var prepared = await h.Browser.PrepareNativeShareScopeChangeAsync(seed.Shares, seed.Grant,
+            FilesAccessRole.Viewer, expiry, h.Workspace.Actor, () => true, "expiry-only-control", token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, prepared.Approval.State);
+        var before = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        Assert.True((await h.Browser.ApplyNativeShareMutationAsync(prepared, token)).AwaitingHomeReview);
+        Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+        Assert.True((await h.Permissions.DecideAsync(prepared.Approval.RequestId, HomeApprovalChoice.Accept,
+            cancellationToken: token)).Succeeded);
+        var actual = h.Browser.ApplyNativeShareMutationAsync(prepared, token);
+        Assert.Same(actual, h.Browser.ApplyNativeShareMutationAsync(prepared, token));
+        Assert.True((await actual).AuditRecorded);
+        var ack = h.Browser.ReadObservedNativeShareMutation(prepared)!;
+        Assert.True(ack.IsSuccess); Assert.True(h.Browser.WasNativeShareMutationCommitted(prepared));
+        Assert.Equal(seed.Grant.Share.PrincipalId, ack.Value!.Share.PrincipalId);
+        Assert.Equal(seed.Grant.RecipientEmail, ack.Value.RecipientEmail); Assert.Equal(FilesAccessRole.Viewer, ack.Value.Share.Role);
+        Assert.Equal(expiry, ack.Value.Share.ExpiresAt); Assert.NotEqual(seed.Grant.Share.Id, ack.Value.Share.Id);
+        var after = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        Assert.Same(actual, h.Browser.ApplyNativeShareMutationAsync(prepared, token));
+        Assert.True((await h.Browser.RetryNativeMutationAuditAsync(prepared, token)).Succeeded);
+        Assert.Equal(after, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+    }
+
+    [AvaloniaFact]
+    public async Task Canonical_existing_recipient_scope_editor_uses_real_expiry_switch_UTC_and_Home_review()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedOriginalNativeShareAsync(h, FilesAccessRole.Viewer, token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new OriginalPreviewFixtureReadiness(h), CancellationToken.None);
+        var window = new Window { Content = view, Width = 1120, Height = 1100 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token); await view.OpenOriginalLocationAsync(seed.Page.StoreID, h.Parent.Value, token);
+            var items = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            items.SelectedItem = items.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            var edit = Assert.Single(view.GetVisualDescendants().OfType<Button>(), control => control.Name == "files-edit-share-scope");
+            edit.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "ShareScopeVisible"), true), token);
+            Assert.False(view.IsActionAvailable("9to1.Files.Share.ReviewScope")); // No changed scope yet.
+            var toggle = Assert.Single(view.GetVisualDescendants().OfType<ToggleSwitch>(), control => control.Name == "files-share-scope-expiry-switch");
+            Assert.Equal(true, toggle.IsChecked);
+            void ClickExpirySwitch()
+            {
+                toggle.BringIntoView(); window.UpdateLayout();
+                var point = toggle.TranslatePoint(new Avalonia.Point(toggle.Bounds.Width / 2, toggle.Bounds.Height / 2), window);
+                Assert.NotNull(point); window.MouseMove(point.Value); window.MouseDown(point.Value, MouseButton.Left); window.MouseUp(point.Value, MouseButton.Left);
+            }
+            ClickExpirySwitch();
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "ShareScopeExpiryEnabled"), false), token);
+            Assert.Equal(false, toggle.IsChecked);
+            ClickExpirySwitch();
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "ShareScopeExpiryEnabled"), true), token);
+            Assert.Equal(true, toggle.IsChecked);
+            var input = Assert.Single(view.GetVisualDescendants().OfType<TextBox>(), control => control.Name == "files-share-scope-expiry");
+            input.Text = "invalid UTC date";
+            Assert.False(view.IsActionAvailable("9to1.Files.Share.ReviewScope"));
+            var utc = DateTimeOffset.UtcNow.AddHours(2).ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+            var expected = DateTimeOffset.ParseExact(utc, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+            input.Text = utc;
+            await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Share.ReviewScope") == true, token);
+            await CaptureComponentSceneAsync(window, "files-existing-recipient-scope-editor");
+            Assert.Single(view.GetVisualDescendants().OfType<Button>(), control => control.Name == "files-review-share-scope")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Apply") == true, token);
+            var review = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.Equal("9to1.Files.Share.Grant", review.Scope.ActionName);
+            Assert.True((await h.Permissions.DecideAsync(review.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            await view.DispatchAsync("9to1.Files.Apply", null, token);
+            var page = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+            var row = page.Items.Single(item => item.Id == seed.Item.Id);
+            var shares = await h.Browser.ReadNativeSharesAsync(page, row, h.Workspace.Actor, () => true, token: token);
+            var active = Assert.Single(shares.Grants, grant => !grant.Share.IsRevoked);
+            Assert.Equal(seed.Grant.Share.PrincipalId, active.Share.PrincipalId); Assert.Equal(seed.Grant.RecipientEmail, active.RecipientEmail);
+            Assert.Equal(FilesAccessRole.Viewer, active.Share.Role); Assert.Equal(expected, active.Share.ExpiresAt);
+            Assert.True(view.CanPrepareOriginalClose());
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
     }
 
     private static object? ReadNativeValue(FilesNativeBrowserSurface view, string name)

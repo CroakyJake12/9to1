@@ -28,12 +28,27 @@ public sealed partial class DeveloperProjectWorkbenchPage
         // candidates have been explicitly reconciled and a new complete payload can be saved.
     }
 
+    private void StageTaskRecoveryConflicts(DeveloperManualRecoveryState restored)
+    {
+        // The same CUI tray is used; the actual Task partition remains separate from manual.
+        _manualRecoveryCandidates.Clear();
+        _manualRecoveryCandidates.AddRange(restored.Tabs.Select(value => new ManualRecoveryCandidate(Guid.NewGuid(),
+            value.Draft, value.FreshBaselineText, value.FreshSourceSha256)));
+        _selectedManualRecoveryCandidate = _manualRecoveryCandidates.FirstOrDefault(value =>
+            !StringComparer.OrdinalIgnoreCase.Equals(value.SavedDraft.OriginalSha256, value.CurrentSourceSha256))?.ViewId
+            ?? _manualRecoveryCandidates.FirstOrDefault()?.ViewId;
+        _taskRecoveryScope = restored.Scope; _taskRecoveryGeneration = restored.Generation;
+        _taskRecoveryReady = true; _taskRecoveryBlocked = false;
+        _taskRecoveryRequested = null; _taskRecoveryAcknowledged = null;
+        // The original encrypted whole snapshot remains unchanged while any candidate is pending.
+    }
+
     private bool TryGetManualRecoveryConflictValue(string path, out object? value)
     {
         var selected = SelectedManualRecoveryCandidate();
         value = path switch
         {
-            "HasRecoveredConflicts" => _manual && _manualRecoveryCandidates.Count != 0,
+            "HasRecoveredConflicts" => _manualRecoveryCandidates.Count != 0,
             "RecoveredDraftCandidates" => _manualRecoveryCandidates.Select(candidate => new ManualRecoveryCandidateItem(
                 candidate.ViewId.ToString("D"), candidate.SavedDraft.RelativePath +
                     (StringComparer.OrdinalIgnoreCase.Equals(candidate.SavedDraft.OriginalSha256, candidate.CurrentSourceSha256)
@@ -52,6 +67,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
 
     private ValueTask DispatchManualRecoveryConflictAsync(string command, object? parameter, CancellationToken token)
     {
+        if (!_manual) return DispatchTaskRecoveryConflictAsync(command, parameter, token);
         ManualRecoveryCandidate candidate; long generation;
         lock (_gate)
         {

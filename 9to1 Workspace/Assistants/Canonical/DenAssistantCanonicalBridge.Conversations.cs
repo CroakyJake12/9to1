@@ -26,10 +26,11 @@ public sealed partial class DenAssistantCanonicalBridge
             var conversation = await _originals.Source(() => _conversations.GetAsync(id, token)).ConfigureAwait(false);
             if (conversation is null || !MatchesMembership(conversation, membership)) continue;
             var task = await _originals.Source(() => _tasks.GetByContextAsync(id, token)).ConfigureAwait(false);
-            result.Add(new(id, conversation.Title, conversation.UpdatedAt, conversation.IsArchived, task is null ? null : Context(task)));
+            result.Add(new(id, conversation.Title, conversation.UpdatedAt, conversation.IsArchived, task is null ? null : Context(task))
+                { IsMain = IsOriginalMainMembership(identity, session, membership, conversation) });
         }
         await OpenHomeAsync(token).ConfigureAwait(false);
-        return result.OrderByDescending(row => row.UpdatedAt).Take(maximum).ToArray();
+        return result.OrderByDescending(row => row.IsMain).ThenByDescending(row => row.UpdatedAt).Take(maximum).ToArray();
     });
 
     public Task<AssistantConversationBinding> CreateConversationAsync(AssistantIdentity identity, long expectedDefinitionRevision,
@@ -75,7 +76,7 @@ public sealed partial class DenAssistantCanonicalBridge
 
     private async Task<AssistantConversationBinding> CreateConversationOriginalAsync(AssistantIdentity identity,
         long expectedDefinitionRevision, Guid conversationId, string title, Guid operationId, CancellationToken token,
-        AssistantConversationKind kind, DenAssistantOriginalDevelopmentOwner.ProjectChoiceObservation? selected)
+        AssistantConversationKind kind, DenAssistantOriginalDevelopmentOwner.ProjectChoiceObservation? selected, bool originalMain = false)
     {
         if (conversationId == Guid.Empty || operationId == Guid.Empty || !Enum.IsDefined(kind))
             throw new AssistantCommandRefusedException("A conversation, operation identity and valid conversation kind are required.");
@@ -84,6 +85,11 @@ public sealed partial class DenAssistantCanonicalBridge
         var home = await OpenHomeAsync(token).ConfigureAwait(false);
         var definition = await DefinitionAsync(home, identity, token).ConfigureAwait(false);
         if (definition.Revision != expectedDefinitionRevision) throw new DenException(DenErrorCode.Conflict, "The definition changed before conversation creation.", recoverable: true);
+        if (conversationId == MainIdentity(identity, "conversation") && (!originalMain ||
+            operationId != MainIdentity(identity, "operation") || kind != AssistantConversationKind.Chat || selected is not null))
+            throw new AssistantCommandRefusedException("This identity is reserved for the Assistant's protected Main. Create a separate secondary thread instead.");
+        if (originalMain && conversationId != MainIdentity(identity, "conversation"))
+            throw new AssistantCommandRefusedException("The original Main request has another candidate identity.");
         var sessionId = SessionId(conversationId);
         var prior = await _originals.Source(() => home.Den.GetAsync<SessionRecord>(identity.NamespaceId, sessionId, token)).ConfigureAwait(false);
         if (prior is not null)

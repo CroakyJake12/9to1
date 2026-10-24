@@ -1,4 +1,8 @@
 using System.Text.Json;
+using System.ComponentModel;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
@@ -27,6 +31,10 @@ public sealed partial class WritePage
     private long _sharedInkSelectionEpoch;
     private bool _refreshingSharedInk, _sharedInkMountInitialized;
     private CanvasRnoteInkStyle _sharedInkStyle = CanvasRnoteInkStyle.Default;
+    private bool _sharedInkEraseMode;
+    private CuiControlLoader? _sharedInkToolsLoader;
+    private Control? _sharedInkToolsRoot;
+    private WriteSharedInkBindings? _sharedInkToolBindings;
     internal Exception? LastSharedInkError { get; private set; }
     /// <summary>Current Home schema/handler compatibility only; native pen availability still
     /// requires the real input probe. The borrowed engine itself is never exposed or replaced.</summary>
@@ -38,14 +46,14 @@ public sealed partial class WritePage
 
     private void InitializeSharedInkMount()
     {
+        _sharedInkMountInitialized = true;
         _route.ConfigureSharedInk(SharedDrawingCompatibility?.Compatible == true);
         _route.DrawingRequested += OnDrawingRequested;
         _route.PresentationChanged += OnInkPresentationChanged;
-        _route.DrawingStyleChanged += OnDrawingStyleChanged;
         _route.DocumentSurface.SharedInkIsMounted = id => _sharedInkEntries.TryGetValue(id, out var entry)
             && (entry.Input.CanDraw || entry.Input.PendingSubmission is { IsCompleted: false });
         Scene.LayoutUpdated += UpdateSharedInkGeometry;
-        _sharedInkMountInitialized = true;
+        InitializeSharedInkTools();
     }
 
     private void OnDrawingRequested(object? sender, EventArgs args) => RunOriginalEvent(async () =>
@@ -90,7 +98,7 @@ public sealed partial class WritePage
     private void OnInkPresentationChanged(object? sender, EventArgs args)
     {
         checked { ++_sharedInkSelectionEpoch; }
-        RefreshSharedInkMount();
+        RefreshSharedInkMount(); _sharedInkToolBindings?.Notify();
     }
 
     private void RefreshSharedInkMount()
@@ -119,8 +127,9 @@ public sealed partial class WritePage
                     host.Accessibility.AccessibleName = "Shared drawing";
                     host.SetValue(HavenProperties.Clip, true);
                     var input = new CanvasSharedInkInput(_sharedInkEngine, () => CaptureInkOwner(editor, id),
-                        (request, token) => new ValueTask<CanvasSharedInkCommitResult>(RunOriginalAsync<CanvasSharedInkCommitResult>(() => CommitInkAsync(editor, id, request, token))));
-                    AutomationProperties.SetName(input, "Shared drawing. Pen, mouse or touch; Undo removes the last stroke.");
+                        (request, token) => new ValueTask<CanvasSharedInkCommitResult>(RunOriginalAsync<CanvasSharedInkCommitResult>(() => CommitInkAsync(editor, id, request, token))))
+                        { EraserEnabled = true, EraseMode = _sharedInkEraseMode };
+                    AutomationProperties.SetName(input, "Shared drawing. Pen, highlighter or eraser with mouse, pen or touch. Undo restores the previous drawing.");
                     input.AddHandler(PointerPressedEvent, (_, _) => OwnOriginalSceneCallback(() =>
                     {
                         if (!CanEditSharedInk || !ReferenceEquals(editor, _route.SharedInkEditor)) return;
@@ -135,6 +144,7 @@ public sealed partial class WritePage
                             RunOriginalEvent(() => actual);
                         if (ReferenceEquals(editor, _route.SharedInkEditor) && editor.SelectedBlockId == id)
                             _route.SetStatus(input.Status);
+                        _sharedInkToolBindings?.Notify();
                     });
                     entry = new(editor, host, input);
                     _sharedInkEntries.Add(id, entry);
@@ -147,7 +157,7 @@ public sealed partial class WritePage
             }
             _route.DocumentSurface.InvalidateDocument();
         }
-        finally { _refreshingSharedInk = false; }
+        finally { _refreshingSharedInk = false; _sharedInkToolBindings?.Notify(); }
     }
 
     private async Task<CanvasSharedInkCommitResult> CommitInkAsync(WriteDocumentEditor editor, Guid id,
@@ -160,6 +170,10 @@ public sealed partial class WritePage
             || !CanvasSharedInkStrokeFactory.SameOwner(current, request.Expected)
             || editor.CaptureSharedInk(id) is not { } expected)
             return new(false, "StaleDrawing", "The drawing or selection changed; the stroke was not added.");
+        if (request.Erasure is not null)
+            return await CommitInkErasureAsync(editor, id, request, current, expected, cancellationToken);
+        if (request.ReplacementBundles is not null)
+            return new(false, "InvalidStroke", "A pen stroke cannot replace the drawing.");
         JsonElement CaptureCanonical(JsonElement proposed)
         {
             var captured = CanvasSharedInkStrokeFactory.CaptureBundle(_sharedInkEngine, current.Context, proposed);
@@ -198,10 +212,126 @@ public sealed partial class WritePage
     private static CanvasInkStroke ReadCapturedStroke(HomeProductivityObject value) =>
         value.Content.Deserialize<CanvasInkStroke>() ?? throw new InvalidDataException("The canonical drawing stroke is absent.");
 
-    private void OnDrawingStyleChanged(string colour, double width, bool marker)
+    private async Task<CanvasSharedInkCommitResult> CommitInkErasureAsync(WriteDocumentEditor editor, Guid id,
+        CanvasSharedInkStrokeRequest request, CanvasSharedInkOwnerSnapshot current,
+        WriteSharedInkSnapshot expected, CancellationToken cancellationToken)
     {
-        _sharedInkStyle = new(marker ? CanvasRnoteInkKind.Marker : CanvasRnoteInkKind.Solid, colour, width, marker ? .45 : 1);
-        foreach (var entry in _sharedInkEntries.Values) entry.Input.Style = _sharedInkStyle;
+        if (_sharedInkEngine is not { } engine || request.Erasure is not { } gesture ||
+            request.ReplacementBundles is not { } proposed || request.Bundle.ValueKind != JsonValueKind.Undefined)
+            return new(false, "InvalidErasure", "The eraser needs its original gesture and drawing.");
+        IReadOnlyList<JsonElement> CaptureCanonical(IReadOnlyList<JsonElement> source)
+        {
+            var verified = CanvasSharedInkStrokeFactory.CaptureWholeErase(engine, current, gesture.Samples, gesture.Width).ReplacementBundles!;
+            if (verified.Count != source.Count || !verified.Zip(source).All(pair => JsonElement.DeepEquals(pair.First, pair.Second)))
+                throw new InvalidDataException("The eraser result does not match the original shared drawing gesture.");
+            var scene = verified.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects).ToArray();
+            var other = editor.Blocks().Where(block => block.Id != id && block.SharedProductivityBundles is not null)
+                .SelectMany(block => block.SharedProductivityBundles!).SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects);
+            var all = other.Concat(scene).ToArray();
+            if (all.Select(value => value.ObjectId).Distinct().Count() != all.Length || scene.Any(value => ReadCapturedStroke(value).LayerId != id))
+                throw new InvalidDataException("The current drawing has an ambiguous identity or another layer; original data is retained.");
+            _ = CanvasSharedInkStrokeFactory.RenderScene(engine, current.Context, id, verified);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!CanEditSharedInk || editor.SelectedBlockId != id || CaptureInkOwner(editor, id) is not { } final ||
+                !CanvasSharedInkStrokeFactory.SameOwner(final, request.Expected))
+                throw new InvalidOperationException("The drawing or selection changed before erasing.");
+            return verified;
+        }
+        if (!editor.ReplaceSharedInk(expected, proposed, CaptureCanonical))
+            return new(false, "StaleDrawing", "The drawing changed; nothing was erased.");
+        if (expected.Bundles.Count == proposed.Count && expected.Bundles.Zip(proposed).All(pair => JsonElement.DeepEquals(pair.First, pair.Second)))
+            return new(true, "NoChange", "No strokes were erased.");
+        var saved = await SaveAsync("Erased shared drawing strokes", CancellationToken.None);
+        return saved ? new(true, "Saved", "Drawing strokes erased and saved. Undo restores them.")
+            : new(false, "UnsavedDrawing", "The erased drawing remains in this draft. Save it before closing.");
+    }
+
+    private void InitializeSharedInkTools()
+    {
+        _sharedInkToolBindings = new(this);
+        using var stream = typeof(WritePage).Assembly.GetManifestResourceStream("Haven.Desktop.Write.SharedInk.cui")
+            ?? throw new InvalidDataException("The Write drawing CUI resource is unavailable.");
+        using var reader = new StreamReader(stream);
+        var parser = new CuiRichParser(); var document = parser.Parse(reader.ReadToEnd(), "WriteSharedInk.cui");
+        if (parser.Diagnostics.Diagnostics.Any(value => value.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The Write drawing CUI resource is invalid.");
+        _sharedInkToolsLoader = new(new CuiControlRegistry());
+        _sharedInkToolsLoader.SetSurface("SharedInk", "write");
+        _sharedInkToolsLoader.SetBindingContext(_sharedInkToolBindings); _sharedInkToolsLoader.SetActionDispatcher(_sharedInkToolBindings);
+        var loaded = _sharedInkToolsLoader.TryLoad(document);
+        if (loaded.Root is null || loaded.Diagnostics.Any(value => value.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The Write drawing CUI tools could not be materialized.");
+        _sharedInkToolsLoader.WireBindings(loaded.Root); _sharedInkToolsRoot = loaded.Root;
+        _sharedInkControls.Register(_route.DrawingToolsHost, loaded.Root);
+    }
+
+    private void PublishSharedInkStyle()
+    {
+        foreach (var entry in _sharedInkEntries.Values)
+        { entry.Input.Style = _sharedInkStyle; entry.Input.EraseMode = _sharedInkEraseMode; }
+        _sharedInkToolBindings?.Notify();
+    }
+
+    private sealed class WriteSharedInkBindings(WritePage owner) : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler? PropertyChanged;
+        internal void Notify() => PropertyChanged?.Invoke(this, new(null));
+        public bool TryGetValue(string path, out object? value)
+        {
+            value = path switch
+            {
+                "CanDraw" => IsActionAvailable("write.ink.pen") == true,
+                "CanUndo" => IsActionAvailable("write.ink.undo") == true,
+                "CanRedo" => IsActionAvailable("write.ink.redo") == true,
+                "DrawingTool" => (owner._sharedInkEraseMode ? "Eraser · whole strokes" : owner._sharedInkStyle.Kind == CanvasRnoteInkKind.Marker ? "Highlighter" : "Pen") +
+                    " · " + owner._sharedInkStyle.Color + " · " + owner._sharedInkStyle.BaseWidth.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture),
+                _ => null
+            };
+            return path is "CanDraw" or "CanUndo" or "CanRedo" or "DrawingTool";
+        }
+        public bool? IsActionAvailable(string command)
+        {
+            var editor = owner._route.SharedInkEditor;
+            if (!owner.CanEditSharedInk || editor?.SelectedBlockId is not { } id ||
+                !owner._sharedInkEntries.TryGetValue(id, out var entry) || !ReferenceEquals(entry.Owner, editor) || !entry.Input.CanDraw) return false;
+            return command switch
+            {
+                "write.ink.undo" => editor.CanUndo,
+                "write.ink.redo" => editor.CanRedo,
+                "write.ink.pen" or "write.ink.marker" or "write.ink.erase" or
+                "write.ink.colour.black" or "write.ink.colour.blue" or "write.ink.colour.red" or "write.ink.colour.green" or
+                "write.ink.width.thin" or "write.ink.width.medium" or "write.ink.width.thick" => true,
+                _ => false
+            };
+        }
+        public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+        {
+            Dispatcher.UIThread.VerifyAccess(); cancellationToken.ThrowIfCancellationRequested();
+            if (parameter is not null) throw new ArgumentException("Use the current Write drawing tool without an external target.");
+            if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
+            var editor = owner._route.SharedInkEditor!; var selected = editor.SelectedBlockId;
+            return new(owner.RunOriginalAsync(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (IsActionAvailable(command) != true || !ReferenceEquals(editor, owner._route.SharedInkEditor) || editor.SelectedBlockId != selected) return;
+                switch (command)
+                {
+                    case "write.ink.pen": owner._sharedInkEraseMode = false; owner._sharedInkStyle = owner._sharedInkStyle with { Kind = CanvasRnoteInkKind.Solid, Opacity = 1 }; break;
+                    case "write.ink.marker": owner._sharedInkEraseMode = false; owner._sharedInkStyle = owner._sharedInkStyle with { Kind = CanvasRnoteInkKind.Marker, Opacity = .45 }; break;
+                    case "write.ink.erase": owner._sharedInkEraseMode = true; break;
+                    case "write.ink.colour.black": owner._sharedInkStyle = owner._sharedInkStyle with { Color = "#FF000000" }; break;
+                    case "write.ink.colour.blue": owner._sharedInkStyle = owner._sharedInkStyle with { Color = "#FF246BCE" }; break;
+                    case "write.ink.colour.red": owner._sharedInkStyle = owner._sharedInkStyle with { Color = "#FFD64545" }; break;
+                    case "write.ink.colour.green": owner._sharedInkStyle = owner._sharedInkStyle with { Color = "#FF238B57" }; break;
+                    case "write.ink.width.thin": owner._sharedInkStyle = owner._sharedInkStyle with { BaseWidth = 1 }; break;
+                    case "write.ink.width.medium": owner._sharedInkStyle = owner._sharedInkStyle with { BaseWidth = 2.5 }; break;
+                    case "write.ink.width.thick": owner._sharedInkStyle = owner._sharedInkStyle with { BaseWidth = 6 }; break;
+                    case "write.ink.undo": if (editor.Undo()) await owner.SaveAsync("Undid drawing edit", CancellationToken.None); owner.RefreshSharedInkMount(); Notify(); return;
+                    case "write.ink.redo": if (editor.Redo()) await owner.SaveAsync("Redid drawing edit", CancellationToken.None); owner.RefreshSharedInkMount(); Notify(); return;
+                }
+                owner.PublishSharedInkStyle();
+            }));
+        }
     }
 
     private void UpdateSharedInkGeometry(object? sender, EventArgs args) =>
@@ -210,6 +340,7 @@ public sealed partial class WritePage
     private void UpdateSharedInkGeometryCore()
     {
         if (!CanPublishOriginal) return;
+        UpdateSharedInkToolsGeometry();
         foreach (var (id, entry) in _sharedInkEntries)
         {
             if (!_route.DocumentSurface.TryGetBlockBounds(id, out var local)) continue;
@@ -233,6 +364,22 @@ public sealed partial class WritePage
         }
     }
 
+    private void UpdateSharedInkToolsGeometry()
+    {
+        if (_sharedInkToolsRoot is not { } tools) return;
+        var host = _route.DrawingToolsHost; var bounds = host.Bounds;
+        var clip = host.Parent is null ? default : new Rect(bounds.X, bounds.Y, Math.Max(0, bounds.Width), Math.Max(0, bounds.Height));
+        for (var parent = host.Parent; parent is not null; parent = parent.Parent)
+        {
+            if (!parent.IsIncluded || parent.GetValue(HavenProperties.Visibility) != HavenVisibility.Visible) { clip = default; break; }
+            if (parent.GetValue(HavenProperties.Clip) || parent.GetValue(HavenProperties.Overflow) is HavenOverflow.Clip or HavenOverflow.Scroll)
+                clip = clip.Intersect(new Rect(parent.Bounds.X, parent.Bounds.Y, Math.Max(0, parent.Bounds.Width), Math.Max(0, parent.Bounds.Height)));
+        }
+        clip = clip.Intersect(new Rect(0, 0, Math.Max(0, Scene.Bounds.Width), Math.Max(0, Scene.Bounds.Height)));
+        var local = clip.Width <= 0 || clip.Height <= 0 ? default : new Rect(clip.X - bounds.X, clip.Y - bounds.Y, clip.Width, clip.Height);
+        if (tools.Clip?.Bounds != local) tools.Clip = new RectangleGeometry(local);
+    }
+
     private void RetireInkEntry(WriteInkEntry entry)
     {
         _sharedInkControls.Unregister(entry.Host, entry.Input);
@@ -250,8 +397,8 @@ public sealed partial class WritePage
         _sharedInkMountInitialized = false;
         _route.DrawingRequested -= OnDrawingRequested;
         _route.PresentationChanged -= OnInkPresentationChanged;
-        _route.DrawingStyleChanged -= OnDrawingStyleChanged;
         Scene.LayoutUpdated -= UpdateSharedInkGeometry;
+        if (_sharedInkToolsRoot is not null) _sharedInkToolsRoot.IsEnabled = false;
         foreach (var entry in _sharedInkEntries.Values) RetireInkEntry(entry);
         _sharedInkEntries.Clear();
     }
@@ -269,6 +416,9 @@ public sealed partial class WritePage
     {
         if (_sharedInkEntries.Count != 0 || _sharedInkRetirements.Any(actual => !actual.IsCompletedSuccessfully))
             throw new InvalidOperationException("Original drawing callbacks have not retired; retain the document and scene.");
+        if (_sharedInkToolsRoot is { } tools) _sharedInkControls.Unregister(_route.DrawingToolsHost, tools);
+        _sharedInkToolsLoader?.Dispose(); _sharedInkToolsLoader = null;
+        _sharedInkToolsRoot = null; _sharedInkToolBindings = null;
     }
 
     private sealed class WriteInkControls : IHavenNativeControlRegistrar

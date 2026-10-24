@@ -129,6 +129,9 @@
         <Text Text="Recovering legacy settings marks them for attention and disables execution. Saving edits or disabling also requires individual Home approval. Running requires separate setup and approval." TextWrapping="Wrap" />
         <Button id="automation-library-recover" action="recover" Interactive="{Binding CanRecover}">Review saved settings</Button>
         <Button id="automation-library-disable" action="disable" Interactive="{Binding CanDisable}">Disable saved automation</Button>
+        <Button id="automation-library-archive" action="archive" Interactive="{Binding CanArchive}">Archive disabled automation</Button>
+        <Button id="automation-library-restore" action="restore" Interactive="{Binding CanRestore}">Restore as disabled</Button>
+        <Text Text="Archive and Restore each require individual Home review. They preserve the Automation identity, graph and run history. Restore keeps execution disabled and does not schedule a run." TextWrapping="Wrap" />
         <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasEditSelection}">
           <Text Text="Edit saved settings" FontSize="20" FontWeight="SemiBold" />
           <Text Text="Edit a recovered, disabled automation. Save sends these exact changes to Home for review and keeps execution disabled. Discard unsaved edits before switching rows or refreshing." TextWrapping="Wrap" />

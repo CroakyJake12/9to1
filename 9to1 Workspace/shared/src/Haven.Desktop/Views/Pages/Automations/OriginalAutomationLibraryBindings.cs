@@ -67,7 +67,9 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
             "SelectedName" => _selectedName, "Instruction" => _hasStoredGraph ? "Saved graph snapshot. Inspect its nodes and connections below." : _instruction,
             "SelectedSchedule" => _selectedSchedule, "SelectedState" => _selectedState,
             "Review" => _review, "CanRecover" => IsActionAvailable("recover") == true,
-            "CanDisable" => IsActionAvailable("disable") == true, "ChangeStatus" => _changeStatus,
+            "CanDisable" => IsActionAvailable("disable") == true,
+            "CanArchive" => IsActionAvailable("archive") == true,
+            "CanRestore" => IsActionAvailable("restore") == true, "ChangeStatus" => _changeStatus,
             "EditName" => _editName, "EditInstruction" => _editInstruction,
             "EditScheduleValue" => _editScheduleValue, "EditDay" => _editDay,
             "EditScheduleHint" => _editScheduleHint, "EditScheduleKind" => _editScheduleKind,
@@ -100,6 +102,10 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         "older" => !HasUnsubmittedEdits && _next is not null,
         "select" => !HasUnsubmittedEdits && _rows.Count != 0,
         "recover" or "disable" => !HasUnsubmittedEdits && _writer is not null && IsCurrentSelection,
+        "archive" => !HasUnsubmittedEdits && _writer?.SupportsOriginalArchiveRestore == true && IsCurrentSelection &&
+            _selectedTarget!.Row.RetainedProtectedDescriptors.ContainsKey("archived_at") && _selectedTarget!.Row is { RequiresRecovery: false, Value: { IsEnabled: false, ArchivedAt: null } },
+        "restore" => !HasUnsubmittedEdits && _writer?.SupportsOriginalArchiveRestore == true && IsCurrentSelection &&
+            _selectedTarget!.Row.RetainedProtectedDescriptors.ContainsKey("archived_at") && _selectedTarget!.Row is { RequiresRecovery: false, Value: { IsEnabled: false, ArchivedAt: not null } },
         "save-edits" => CanEditDraft && EditValuesChanged,
         "discard-edits" => HasUnsubmittedEdits,
         _ => CreationActionAvailable(command) || GraphActionAvailable(command) || RunsActionAvailable(command)
@@ -123,7 +129,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
             }));
             return ValueTask.CompletedTask;
         }
-        return new(command is "recover" or "disable" or "save-edits" ? StartChange(command, parameter) : Start(command, parameter));
+        return new(command is "recover" or "disable" or "save-edits" or "archive" or "restore" ? StartChange(command, parameter) : Start(command, parameter));
     }
     private Task Start(string action, object? parameter)
     {

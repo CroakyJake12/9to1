@@ -20,7 +20,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
         Assert.Equal(1, rig.Repository.ConversationWrites);
         Assert.Equal(1, rig.Repository.UserWrites);
         rig.Business.Cancel();
-        rig.Provider.Move.SetCanceled(rig.Business.Token);
+        rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken);
         await rig.Provider.DisposeStarted.Task.WaitAsync(TestToken);
         var close = rig.Host.CloseAndDrainAsync();
         Assert.Same(close, rig.Host.CloseAndDrainAsync());
@@ -39,7 +39,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
     {
         rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
         rig.Business.Cancel();
-        var actual = new OperationCanceledException("Faulted source, never TaskCanceled.", rig.Business.Token);
+        var actual = new OperationCanceledException("Faulted source, never TaskCanceled.", rig.Provider.OriginalToken);
         rig.Provider.Move.SetException(actual);
         rig.Provider.Dispose.SetResult();
         await rig.ExpectFailureAsync(actual);
@@ -52,7 +52,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
     {
         rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
         rig.Business.Cancel();
-        var cancellation = new OperationCanceledException("Actual faulted cancellation cause", rig.Business.Token);
+        var cancellation = new OperationCanceledException("Actual faulted cancellation cause", rig.Provider.OriginalToken);
         var io = new IOException("Actual independent provider sibling");
         rig.Provider.Move.SetException([cancellation, io]);
         rig.Provider.Dispose.SetResult();
@@ -74,7 +74,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
     {
         rig.Repository.HoldConversationWrite = true;
         rig.Start(); await rig.Repository.ConversationWriteStarted.Task.WaitAsync(TestToken);
-        rig.Business.Cancel(); rig.Repository.ConversationWrite.SetCanceled(rig.Business.Token);
+        rig.Business.Cancel(); rig.Repository.ConversationWrite.SetCanceled(rig.Repository.ConversationWriteToken);
         var failure = await rig.ExpectFailureAsync();
         Assert.True(ContainsCancellation(failure));
         Assert.True(rig.Repository.ConversationWrite.Task.IsCanceled);
@@ -88,7 +88,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
         rig.Repository.HoldAssistantWrite = true;
         rig.Provider.HealthyChunks = 1;
         rig.Start(); await rig.Repository.AssistantWriteStarted.Task.WaitAsync(TestToken);
-        rig.Business.Cancel(); rig.Repository.AssistantWrite.SetCanceled(rig.Business.Token);
+        rig.Business.Cancel(); rig.Repository.AssistantWrite.SetCanceled(rig.Repository.AssistantWriteToken);
         var failure = await rig.ExpectFailureAsync();
         Assert.True(ContainsCancellation(failure));
         Assert.True(rig.Repository.AssistantWrite.Task.IsCanceled);
@@ -115,7 +115,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
         Assert.Same(observationClose, rig.Observation.CloseAndDrainAsync());
         Assert.False(rig.Business.IsCancellationRequested);
         Assert.False(rig.Provider.Move.Task.IsCompleted);
-        rig.Business.Cancel(); rig.Provider.Move.SetCanceled(rig.Business.Token); rig.Provider.Dispose.SetResult();
+        rig.Business.Cancel(); rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken); rig.Provider.Dispose.SetResult();
         await rig.Host.CloseAndDrainAsync();
     });
 
@@ -131,7 +131,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
         };
         rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
         Assert.True(guarded);
-        rig.Business.Cancel(); rig.Provider.Move.SetCanceled(rig.Business.Token); rig.Provider.Dispose.SetResult();
+        rig.Business.Cancel(); rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken); rig.Provider.Dispose.SetResult();
         await rig.Host.CloseAndDrainAsync();
     });
 
@@ -150,10 +150,15 @@ public sealed class AssistantOrdinaryOriginalCloseTests
     public Task Same_exception_alias_on_actual_canceled_move_and_faulted_cleanup_stays_failed() => RunAsync(async rig =>
     {
         var trigger = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var sameCause = new TaskCanceledException("SAME original exception alias", null, rig.Business.Token);
-        var actualCanceledMove = ThrowOwnedCancellationAsync(trigger.Task, sameCause);
-        rig.Provider.IssuedMoveOverride = actualCanceledMove;
+        TaskCanceledException sameCause = null!; Task<bool> actualCanceledMove = null!;
+        rig.Provider.OnOriginalToken = originalToken =>
+        {
+            sameCause = new TaskCanceledException("SAME original exception alias", null, originalToken);
+            actualCanceledMove = ThrowOwnedCancellationAsync(trigger.Task, sameCause);
+            rig.Provider.IssuedMoveOverride = actualCanceledMove;
+        };
         rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
+        Assert.Equal(rig.Provider.OriginalToken, sameCause.CancellationToken);
         rig.Business.Cancel(); trigger.SetResult();
         await rig.Provider.DisposeStarted.Task.WaitAsync(TestToken);
         rig.Provider.Dispose.SetException(sameCause);
@@ -211,7 +216,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
     public Task Failed_provider_dispose_retains_same_issued_source_and_iterator_for_inspection() => RunAsync(async rig =>
     {
         rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
-        rig.Business.Cancel(); rig.Provider.Move.SetCanceled(rig.Business.Token);
+        rig.Business.Cancel(); rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken);
         var io = new IOException("Actual failed provider cleanup; owning objects must survive.");
         rig.Provider.Dispose.SetException(io);
         await rig.ExpectFailureAsync(io);
@@ -255,7 +260,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
                 throw new InvalidOperationException($"Original Chat returned {unexpectedNext} before the held provider move.");
             }
             await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
-            rig.Business.Cancel(); rig.Provider.Move.SetCanceled(rig.Business.Token);
+            rig.Business.Cancel(); rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken);
             var bodyFailure = await Assert.ThrowsAsync<IOException>(() => actualBodyMove);
             Assert.Same(scopeFault, bodyFailure);
             var actualDispose = iterator.DisposeAsync().AsTask(); await actualDispose;
@@ -269,12 +274,92 @@ public sealed class AssistantOrdinaryOriginalCloseTests
         }
         finally
         {
-            rig.Provider.Move.TrySetCanceled(rig.Business.Token); rig.Provider.Dispose.TrySetResult();
+            rig.Provider.Move.TrySetCanceled(rig.Provider.OriginalToken); rig.Provider.Dispose.TrySetResult();
             foreach (var actual in source.ReadOriginalBodyMoves())
                 try { await actual; } catch { /* Final ledger preserves these actual failures. */ }
             await iterator.DisposeAsync(); joined ??= source.JoinOriginalSourcesAsync();
             try { await joined; } catch when (expected) { }
         }
+    });
+
+    [Fact]
+    public Task Explicit_reply_Stop_requests_only_its_actual_business_token_and_joins_held_cleanup() => RunAsync(async rig =>
+    {
+        rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
+        var request = rig.Host.RequestStopOriginalAsync(rig.Observation!);
+        var receipt = await request;
+        Assert.Equal(AssistantConversationStopRequestState.Requested, receipt.State);
+        Assert.Equal(rig.Conversation.Id, receipt.ConversationId);
+        Assert.False(rig.Business.IsCancellationRequested);
+        Assert.True(rig.Provider.OriginalToken.IsCancellationRequested);
+        Assert.Same(request, rig.Host.RequestStopOriginalAsync(rig.Observation!)); // No callback replay.
+        rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken);
+        await rig.Provider.DisposeStarted.Task.WaitAsync(TestToken);
+        var close = rig.Host.CloseAndDrainAsync(); Assert.False(close.IsCompleted);
+        rig.Provider.Dispose.SetResult(); await close;
+        Assert.Equal(0, rig.Repository.AssistantWrites);
+        Assert.Equal(rig.Conversation.Id, (await rig.Observation!.WaitAsync(TestToken)).ConversationId);
+    });
+
+    [Fact]
+    public Task Late_Stop_of_completed_original_does_not_cancel_new_reply_in_the_same_conversation() => RunAsync(async rig =>
+    {
+        rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
+        var first = rig.Observation!;
+        var originalStop = rig.Host.RequestStopOriginalAsync(first); await originalStop;
+        rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken); rig.Provider.Dispose.SetResult();
+        await rig.Host.ReadIssuedOriginalDriverTask(first);
+        var peerProvider = new Provider(); AssistantOriginalConversationObservation? peer = null;
+        try
+        {
+            peer = rig.StartPeer(peerProvider); await peerProvider.MoveStarted.Task.WaitAsync(TestToken);
+            Assert.Same(originalStop, rig.Host.RequestStopOriginalAsync(first));
+            Assert.False(peerProvider.OriginalToken.IsCancellationRequested);
+            Assert.False(rig.Business.IsCancellationRequested);
+            Assert.NotEqual(rig.Provider.OriginalToken, peerProvider.OriginalToken);
+            peerProvider.Move.SetResult(false); peerProvider.Dispose.SetResult();
+            await rig.Host.ReadIssuedOriginalDriverTask(peer);
+            Assert.False(peerProvider.OriginalToken.IsCancellationRequested);
+        }
+        finally
+        {
+            rig.Business.Cancel();
+            peerProvider.Move.TrySetCanceled(peerProvider.OriginalToken); peerProvider.Dispose.TrySetResult();
+            if (peer is not null) await peer.CloseAndDrainAsync();
+        }
+    });
+
+    [Fact]
+    public Task Foreign_observation_cannot_request_Stop_even_with_the_same_display_conversation() => RunAsync(async rig =>
+    {
+        rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
+        var foreign = new AssistantOriginalConversationObservation(rig.Observation!.Binding,
+            _ => throw new InvalidOperationException("No foreign stream may be called."),
+            _ => throw new InvalidOperationException("No foreign wait may be called."),
+            () => throw new InvalidOperationException("No foreign retirement may be called."),
+            () => throw new InvalidOperationException("No foreign join may be called."),
+            () => throw new InvalidOperationException("No foreign close may be called."));
+        Assert.Throws<AssistantCommandRefusedException>(() => { _ = rig.Host.RequestStopOriginalAsync(foreign); });
+        Assert.False(rig.Provider.OriginalToken.IsCancellationRequested);
+        Assert.False(rig.Business.IsCancellationRequested);
+        await rig.Host.RequestStopOriginalAsync(rig.Observation);
+        rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken); rig.Provider.Dispose.SetResult();
+        await rig.Host.ReadIssuedOriginalDriverTask(rig.Observation);
+    });
+
+    [Fact]
+    public Task Stop_callback_fault_is_retained_even_when_the_actual_body_cancels_cleanly() => RunAsync(async rig =>
+    {
+        rig.Start(); await rig.Provider.MoveStarted.Task.WaitAsync(TestToken);
+        var callbackFailure = new IOException("Actual cancellation callback failed");
+        using var callback = rig.Provider.OriginalToken.Register(() => throw callbackFailure);
+        var request = rig.Host.RequestStopOriginalAsync(rig.Observation!);
+        var controlFailure = await Assert.ThrowsAsync<AggregateException>(() => request);
+        Assert.True(Contains(controlFailure, callbackFailure));
+        Assert.True(request.IsFaulted);
+        rig.Provider.Move.SetCanceled(rig.Provider.OriginalToken);
+        await rig.Provider.DisposeStarted.Task.WaitAsync(TestToken); rig.Provider.Dispose.SetResult();
+        await rig.ExpectFailureAsync(callbackFailure);
     });
 
     private static async Task<bool> ThrowOwnedCancellationAsync(Task trigger, OperationCanceledException sameCause)
@@ -291,7 +376,7 @@ public sealed class AssistantOrdinaryOriginalCloseTests
         finally
         {
             rig.Business.Cancel();
-            rig.Provider.Move.TrySetCanceled(rig.Business.Token);
+            rig.Provider.Move.TrySetCanceled(rig.Provider.OriginalToken);
             rig.Provider.Dispose.TrySetResult();
             rig.Repository.ConversationWrite.TrySetResult(); rig.Repository.AssistantWrite.TrySetResult();
             try { await rig.Host.CloseAndDrainAsync(); }
@@ -334,6 +419,16 @@ public sealed class AssistantOrdinaryOriginalCloseTests
             Observation = Host.StartOriginal(binding, _chat, Conversation, "Hello", _model, EffortLevel.Medium, "Controlled", "",
                 new GenerationOptions { RequestedRoutingConstraints = new(false, false), RequestedContextConstraints = new(false) });
         }
+        internal AssistantOriginalConversationObservation StartPeer(Provider provider)
+        {
+            var definition = new AssistantDefinitionSnapshot(new("controlled-not-an-authority-grant", "personal", "controlled"), 1,
+                ConfiguredIdentityKind.Assistant, new() { Name = "Controlled" }, []);
+            var binding = new AssistantConversationBinding(new object(), definition, "controlled", 1, Conversation);
+            var chat = new ChatSessionService(Repository, provider, new CapabilityPreflightService(), new Safety(),
+                new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()));
+            return Host.StartOriginal(binding, chat, Conversation, "Another actual input", _model, EffortLevel.Medium, "Controlled", "",
+                new GenerationOptions { RequestedRoutingConstraints = new(false, false), RequestedContextConstraints = new(false) });
+        }
         internal async Task<AggregateException> ExpectFailureAsync(params Exception[] actualCauses)
         {
             var rawClose = Host.CloseAndDrainAsync();
@@ -353,15 +448,17 @@ public sealed class AssistantOrdinaryOriginalCloseTests
         internal readonly TaskCompletionSource AssistantWriteStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly List<ChatMessage> Messages = [];
         internal bool HoldConversationWrite, HoldAssistantWrite;
+        internal CancellationToken ConversationWriteToken, AssistantWriteToken;
         internal int ConversationWrites, UserWrites, AssistantWrites;
         public Task<IReadOnlyList<Conversation>> GetRecentAsync(HavenMode? mode, int limit, CancellationToken token) => Task.FromResult<IReadOnlyList<Conversation>>([]);
         public Task<Conversation?> GetAsync(Guid id, CancellationToken token) => Task.FromResult<Conversation?>(null);
         public Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token) => Task.FromResult<IReadOnlyList<ChatMessage>>(Messages.ToArray());
         public Task UpsertConversationAsync(Conversation row, CancellationToken token)
-        { ConversationWrites++; ConversationWriteStarted.TrySetResult(); return HoldConversationWrite ? ConversationWrite.Task : Task.CompletedTask; }
+        { ConversationWriteToken = token; ConversationWrites++; ConversationWriteStarted.TrySetResult(); return HoldConversationWrite ? ConversationWrite.Task : Task.CompletedTask; }
         public Task AddMessageAsync(ChatMessage row, CancellationToken token)
         {
             if (row.Role == MessageRole.User) UserWrites++; else AssistantWrites++;
+            if (row.Role == MessageRole.Assistant) AssistantWriteToken = token;
             if (row.Role == MessageRole.Assistant && HoldAssistantWrite)
             { AssistantWriteStarted.TrySetResult(); return AssistantWrite.Task; }
             Messages.Add(row); return Task.CompletedTask;
@@ -376,13 +473,15 @@ public sealed class AssistantOrdinaryOriginalCloseTests
         internal readonly TaskCompletionSource Dispose = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource DisposeStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal Action? OnFactory;
+        internal Action<CancellationToken>? OnOriginalToken;
+        internal CancellationToken OriginalToken;
         internal Task<bool>? IssuedMoveOverride;
         internal int HealthyChunks, EmittedChunks, DisposeCalls;
         public string Current => "x";
         public Task<bool> IsAvailableAsync(CancellationToken token) => throw new InvalidOperationException("No unrestricted health preflight.");
         public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) => throw new InvalidOperationException("No unrestricted catalogue preflight.");
         public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken token)
-        { OnFactory?.Invoke(); return this; }
+        { OriginalToken = token; OnOriginalToken?.Invoke(token); OnFactory?.Invoke(); return this; }
         public IAsyncEnumerator<string> GetAsyncEnumerator(CancellationToken token = default) => this;
         public ValueTask<bool> MoveNextAsync()
         {

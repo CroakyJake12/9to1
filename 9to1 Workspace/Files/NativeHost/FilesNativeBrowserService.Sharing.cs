@@ -93,17 +93,25 @@ public sealed partial class FilesNativeBrowserService
     public Task<PreparedMutation> PrepareNativeShareRevocationAsync(FilesNativeBrowserSharePage page,
         FilesEmailShare grant, AuthenticatedResourceActor actor, Func<bool> lifetime,
         string sessionId, CancellationToken token = default) =>
-        PrepareNativeShareMutationAsync(page, grant, null, actor, lifetime, sessionId, token);
+        PrepareNativeShareMutationAsync(page, grant, null, null, actor, lifetime, sessionId, token);
 
     /// <summary>Changes only an existing source-issued recipient's Viewer/Editor role.
     /// Its canonical principal, address and expiry are retained; this never resolves a new recipient or sends mail.</summary>
     public Task<PreparedMutation> PrepareNativeShareRoleChangeAsync(FilesNativeBrowserSharePage page,
         FilesEmailShare grant, FilesAccessRole role, AuthenticatedResourceActor actor, Func<bool> lifetime,
         string sessionId, CancellationToken token = default) =>
-        PrepareNativeShareMutationAsync(page, grant, role, actor, lifetime, sessionId, token);
+        PrepareNativeShareMutationAsync(page, grant, role, grant.Share.ExpiresAt, actor, lifetime, sessionId, token);
+
+    /// <summary>Changes only the original existing recipient's direct Viewer/Editor scope and
+    /// expiry. Principal/email are source-owned and cannot be retargeted; no invitation is sent.</summary>
+    public Task<PreparedMutation> PrepareNativeShareScopeChangeAsync(FilesNativeBrowserSharePage page,
+        FilesEmailShare grant, FilesAccessRole role, DateTimeOffset? expiresAt, AuthenticatedResourceActor actor,
+        Func<bool> lifetime, string sessionId, CancellationToken token = default) =>
+        PrepareNativeShareMutationAsync(page, grant, role, expiresAt, actor, lifetime, sessionId, token);
 
     private async Task<PreparedMutation> PrepareNativeShareMutationAsync(FilesNativeBrowserSharePage page,
-        FilesEmailShare grant, FilesAccessRole? requestedRole, AuthenticatedResourceActor actor, Func<bool> lifetime,
+        FilesEmailShare grant, FilesAccessRole? requestedRole, DateTimeOffset? requestedExpiry,
+        AuthenticatedResourceActor actor, Func<bool> lifetime,
         string sessionId, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(lifetime);
@@ -114,8 +122,10 @@ public sealed partial class FilesNativeBrowserService
             || grant.Share.ItemId != page.Item.Id || grant.Share.Role is not (FilesAccessRole.Viewer or FilesAccessRole.Editor))
             throw new InvalidOperationException("Choose an existing direct viewer or editor grant from this access page.");
         if (requestedRole is { } role && (role is not (FilesAccessRole.Viewer or FilesAccessRole.Editor)
-            || role == grant.Share.Role || grant.Share.ExpiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow))
-            throw new InvalidOperationException("Choose a different Viewer or Editor role on an active direct grant.");
+            || role == grant.Share.Role && requestedExpiry == grant.Share.ExpiresAt
+            || grant.Share.ExpiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow
+            || requestedExpiry is { } selectedExpiry && selectedExpiry <= DateTimeOffset.UtcNow))
+            throw new InvalidOperationException("Choose a changed Viewer/Editor role or a future expiry on an active direct grant.");
         await RevalidateAsync(page.Page, actor, token).ConfigureAwait(false);
         bool Alive() => lifetime() && original.Lifetime();
         var now = DateTimeOffset.UtcNow;
@@ -124,7 +134,7 @@ public sealed partial class FilesNativeBrowserService
             null, operation, page.Item.CurrentRevisionId, null, FilesOperationState.Pending, now, now, null, null);
         var request = requestedRole is { } replacementRole ? new FilesEmailShareRequest(page.Page.StoreID,
             page.Item.Id, page.Item.CurrentRevisionId!.Value, grant.Share.PrincipalId, grant.RecipientEmail,
-            replacementRole, grant.Share.ExpiresAt, intent.Id) : null;
+            replacementRole, requestedExpiry, intent.Id) : null;
         var issued = new ShareMutation(page, grant, request);
         var scopes = Array.AsReadOnly(new[] { new ResourceScope("files.item", page.Item.Id.ToString(),
             page.Item.CurrentRevisionId!.Value.ToString(), ResourceAccess.Write) });
@@ -139,12 +149,15 @@ public sealed partial class FilesNativeBrowserService
                 expectedRevision = page.Item.CurrentRevisionId.Value.ToString(), shareID = grant.Share.Id.Value,
                 principalID = grant.Share.PrincipalId, recipientEmail = grant.RecipientEmail,
                 previousRole = grant.Share.Role.ToString(), role = request.Role.ToString(),
-                expiresAt = grant.Share.ExpiresAt, operation });
+                previousExpiresAt = grant.Share.ExpiresAt, expiresAt = request.ExpiresAt, operation });
         var description = issued.IsRevocation
             ? $"Revoke {grant.Share.Role.ToString().ToLowerInvariant()} access for {grant.RecipientEmail} on ‘{page.Item.Name}’. "
                 + "Future access through this grant will stop; previously copied content cannot be recalled."
             : $"Change {grant.RecipientEmail} from {grant.Share.Role} to {request!.Role} on ‘{page.Item.Name}’. "
-                + "This replaces this recipient’s previous direct grants on this item. The recorded recipient and selected expiry stay the same. "
+                + (request.ExpiresAt == grant.Share.ExpiresAt
+                    ? "The recorded recipient and selected expiry stay the same. "
+                    : $"Expiry changes from {DescribeShareExpiry(grant.Share.ExpiresAt)} to {DescribeShareExpiry(request.ExpiresAt)}. The recorded recipient stays the same. ")
+                + "This replaces this recipient’s previous direct grants on this item. "
                 + "Inherited folder access may still apply. Viewer permits metadata browsing; Editor also permits scoped renaming. "
                 + "Document and content edits require their separate owning-app permissions. No invitation will be sent.";
         var approval = await ObserveOriginalAsync(broker.AuthorizeForActorAsync(actor, "files", issued.ActionId,
@@ -185,7 +198,9 @@ public sealed partial class FilesNativeBrowserService
         var issued = DemandIssuedShareMutation(original);
         return issued.IsRevocation
             ? $"Revoke direct access for {issued.Grant.RecipientEmail} on ‘{issued.Page.Item.Name}’"
-            : $"Change {issued.Grant.RecipientEmail} from {issued.Grant.Share.Role} to {issued.Request!.Role} on ‘{issued.Page.Item.Name}’";
+            : $"Change {issued.Grant.RecipientEmail} from {issued.Grant.Share.Role} to {issued.Request!.Role} on ‘{issued.Page.Item.Name}’"
+                + (issued.Request.ExpiresAt == issued.Grant.Share.ExpiresAt ? ""
+                    : $" · expiry {DescribeShareExpiry(issued.Grant.Share.ExpiresAt)} → {DescribeShareExpiry(issued.Request.ExpiresAt)}");
     }
 
     public string DescribeNativeShareRevocation(PreparedMutation original)
@@ -297,8 +312,10 @@ public sealed partial class FilesNativeBrowserService
             throw new AggregateException("Original access admission refused; no replacement effect is available.", failures);
         }
         var committed = ShareMutationCommitted(issued, original.Actor.ActorId, result);
-        var completedCode = issued.IsRevocation ? "FILES_SHARE_REVOKED" : "FILES_SHARE_ROLE_CHANGED";
+        var expiryChanged = !issued.IsRevocation && issued.Request!.ExpiresAt != issued.Grant.Share.ExpiresAt;
+        var completedCode = issued.IsRevocation ? "FILES_SHARE_REVOKED" : expiryChanged ? "FILES_SHARE_SCOPE_CHANGED" : "FILES_SHARE_ROLE_CHANGED";
         var completedMessage = issued.IsRevocation ? "The original direct access grant was revoked."
+            : expiryChanged ? "The existing recipient's direct role/expiry scope changed; principal and address were retained."
             : "The existing recipient's role was changed; recipient and expiry were retained.";
         var outcome = new HomeExecutionOutcome(committed ? HomePermissionRequestState.Succeeded
             : result is { IsSuccess: false } ? HomePermissionRequestState.Failed : HomePermissionRequestState.PartiallyCompleted,
@@ -314,9 +331,14 @@ public sealed partial class FilesNativeBrowserService
         var message = issued.IsRevocation
             ? recorded?.Succeeded == true ? "Access revoked. Other direct or inherited grants may still allow access."
                 : "Access revoked; choose Retry audit to record the Home outcome without revoking again."
-            : recorded?.Succeeded == true ? "Direct access role changed. Recipient and selected expiry are unchanged; inherited access may still apply."
-                : "Access role changed; choose Retry audit to record the Home outcome without granting again.";
+            : recorded?.Succeeded == true ? expiryChanged
+                ? "Direct access role/expiry changed. Recipient is unchanged; inherited access may still apply."
+                : "Direct access role changed. Recipient and selected expiry are unchanged; inherited access may still apply."
+                : "Access scope changed; choose Retry audit to record the Home outcome without granting again.";
         return new(null, false, recorded?.Succeeded == true, committed ? message
             : result?.Error?.Message ?? "Inspect the original access outcome.");
     }
+    private static string DescribeShareExpiry(DateTimeOffset? expiry) => expiry is { } instant
+        ? instant.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture) : "no expiry";
+
 }

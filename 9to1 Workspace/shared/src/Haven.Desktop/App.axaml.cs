@@ -145,8 +145,9 @@ public sealed partial class App : Avalonia.Application
                 recoveryWindow.Show();
             }
             preferences.ApplyAppearance(preferences.Appearance, save: false);
-            // Linux uses the Browse-based unified host now that the Home composition runs.
-            if (OriginalInitialProduct is null or "canvas" or "boards")
+            // Linux Present borrows the already-registered Home/Browse route. Windows
+            // keeps its original document-product shell and all existing admission.
+            if (UsesOriginalUnifiedWorkspace(OriginalInitialProduct, OperatingSystem.IsLinux()))
             {
                 var window = new MainWindow(preferences) { Title = "9to1", PreserveWorkspaceSessionOnClose = true };
                 UnifiedWorkspaceHost? workspace = null;

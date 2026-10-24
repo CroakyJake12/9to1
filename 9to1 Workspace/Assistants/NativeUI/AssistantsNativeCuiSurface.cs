@@ -20,6 +20,8 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
     private readonly AssistantsWorkspaceController _controller;
     private readonly ICuiSceneReadiness _readiness;
     private readonly CancellationTokenSource _viewCancellation = new();
+    private AssistantOriginalConversationObservation? _activeOrdinaryReply;
+    private long _activeOrdinaryReplyGeneration;
     private readonly object _gate = new();
     private readonly List<Task> _originals = [];
     private readonly List<Task> _snapshotPublications = [];
@@ -368,7 +370,9 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
             case "assistants.open" when parameter is AssistantsCuiBindings.AssistantRow assistant:
                 if (!await PrepareNavigationAsync(token)) return;
                 await SourceAsync(() => _controller.OpenAssistantAsync(assistant.Identity, token));
-                PublishSynchronous(Bindings.ShowWork); break;
+                PublishSynchronous(Bindings.ShowWork);
+                if (_controller.Snapshot.ConversationBinding is not null) await RefreshOriginalConversationModelsAsync(token);
+                break;
             case "assistants.conversation.open" when parameter is AssistantsCuiBindings.ConversationRow conversation:
                 if (!await PrepareNavigationAsync(token)) return;
                 await SourceAsync(() => _controller.OpenConversationAsync(conversation.Id, token));
@@ -402,6 +406,8 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
             case "assistants.attachment.detach": await DetachOriginalAttachmentAsync(parameter, token); break;
             case "assistants.draft.save": await SaveDraftAsync(token); break;
             case "assistants.send": await SendAsync(false, token); break;
+            case "assistants.conversation.stop" when parameter is AssistantOriginalConversationObservation actualReply:
+                await RequestOriginalReplyStopAsync(actualReply, token); break;
             case "assistants.task.start": await SendAsync(true, token); break;
             case "assistants.task.steer":
             case "assistants.task.queue":
@@ -463,6 +469,10 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
             if (publication.Revision >= _appliedSnapshot) ApplySnapshot(publication);
             Bindings.ConfigurationSaved(submitted, definition);
         });
+        // The definition is already ACKNOWLEDGED and adopted by its form above. Provision
+        // Main after that boundary, so a failure cannot turn Retry into a second Assistant.
+        if (submitted.Identity is null && _controller.OriginalCanonicalBridge is IAssistantMainConversationOwner)
+            await SourceAsync(() => _controller.OpenAssistantAsync(definition.Identity, token));
         if (_controller.Snapshot.ConversationBinding is not null)
             await SourceAsync(() => _controller.ListAvailableModelsAsync(token));
         await ReadConfigurationModelsAsync(token);
@@ -512,6 +522,8 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
             else
             {
                 var original = conversationObservation = await SourceAsync(() => _controller.StartOriginalSendAsync(input, token));
+                _activeOrdinaryReply = original; _activeOrdinaryReplyGeneration = generation;
+                if (!IsRetiring) PublishSynchronous(() => Bindings.SetOriginalChatStopObservation(original));
                 if (attachmentIds.Count == 0) await AcknowledgeAcceptedPromptAsync(prompt, token);
                 ReleasePreparationBlock();
                 await ObserveEventsAsync(original.ObserveOriginalEventsAsync, binding, generation);
@@ -529,11 +541,48 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
                 if (taskObservation is { } actualTask)
                     await SourceAsync(() => _controller.CloseOriginalObservationAsync(actualTask));
                 if (conversationObservation is { } actualConversation)
+                {
+                    // Withdraw this control ticket before detaching the observer. Observer close
+                    // remains observation-only and does not call the explicit Stop owner.
+                    if (ReferenceEquals(_activeOrdinaryReply, actualConversation))
+                    {
+                        _activeOrdinaryReply = null;
+                        if (!IsRetiring) PublishSynchronous(() => Bindings.SetOriginalChatStopObservation(null));
+                    }
                     await SourceAsync(() => _controller.CloseOriginalObservationAsync(actualConversation));
+                }
             }
             finally { if (!IsRetiring) PublishSynchronous(() => Bindings.SetStreaming(false)); }
         }
         if (!IsRetiring) await SourceAsync(() => _controller.RefreshWorkAsync(token));
+    }
+
+    private async Task RequestOriginalReplyStopAsync(AssistantOriginalConversationObservation actual, CancellationToken token)
+    {
+        if (!ReferenceEquals(_activeOrdinaryReply, actual) || _activeOrdinaryReplyGeneration != PresentationGeneration ||
+            !IsPresentationCurrent(actual.Binding, _activeOrdinaryReplyGeneration))
+            throw new AssistantCommandRefusedException("This Stop button no longer identifies the current original reply.");
+        PublishSynchronous(() => Bindings.SetOriginalChatStopRequest(actual, true, "Requesting Stop for this reply…"));
+        try
+        {
+            var result = await SourceAsync(() => _controller.RequestOriginalConversationStopAsync(actual, token));
+            if (result.ConversationId != actual.Binding.Conversation.Id)
+                throw new InvalidOperationException("The original Stop receipt identifies another conversation.");
+            if (!IsRetiring && ReferenceEquals(_activeOrdinaryReply, actual) &&
+                IsPresentationCurrent(actual.Binding, _activeOrdinaryReplyGeneration))
+                PublishSynchronous(() => Bindings.SetOriginalChatStopRequest(actual, true, result.State switch
+                {
+                    AssistantConversationStopRequestState.Requested => "Stop requested. Waiting for the actual reply and cleanup to finish…",
+                    AssistantConversationStopRequestState.AlreadyFinishing => "This reply is already finishing; its outstanding writes and cleanup remain owned.",
+                    _ => "This reply is no longer active. Any prior failure remains retained."
+                }));
+        }
+        catch
+        {
+            if (!IsRetiring && ReferenceEquals(_activeOrdinaryReply, actual))
+                PublishSynchronous(() => Bindings.SetOriginalChatStopRequest(actual, false, "Stop could not be acknowledged. Existing reply work and failures are retained."));
+            throw;
+        }
     }
 
     private async Task AcknowledgeAcceptedPromptAsync(string prompt, CancellationToken token)
