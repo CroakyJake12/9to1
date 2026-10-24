@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Runtime.ExceptionServices;
 using Haven.Application;
 using Haven.Desktop.Services;
@@ -138,6 +139,80 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             var after = await rig.BytesAsync(); Assert.Equal(before.Home, after.Home); Assert.Equal(before.Drive, after.Drive);
         });
 
+    [Fact]
+    public Task Original_text_preview_reads_the_actual_committed_revision_with_explicit_character_limit_and_no_writes()
+        => Run(async rig =>
+        {
+            var text = "// revision notes\n" + new string('a', 70000) + "\n<script>plain text only</script>";
+            var uploaded = await rig.UploadAsync("revision-notes.cs", Encoding.UTF8.GetBytes(text));
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, rig.Folder.Value,
+                token: rig.Token, expectedStoreId: rig.Workspace.Configuration.StoreId));
+            var row = Assert.Single(page.Items, item => item.Id == uploaded.FileId);
+            var before = await rig.BytesAsync();
+            var preview = await rig.Keep(rig.Browser.ReadOriginalTextPreviewWithinSourceAsync(page, row,
+                rig.Workspace.Actor, () => true, body => body(), rig.Retain, rig.Token));
+            Assert.True(preview.Succeeded); Assert.Equal("PreviewReady", preview.Code); Assert.True(preview.IsTruncated);
+            Assert.Equal(text[..FilesNativeBrowserService.MaximumTextPreviewCharacters], preview.Text);
+            Assert.Equal(uploaded.FileId.Value, preview.FileId); Assert.Equal(uploaded.RevisionId.ToString(), preview.Revision);
+            Assert.Equal(Encoding.UTF8.GetByteCount(text), preview.TotalBytes);
+            Assert.Contains("Read-only", preview.Message, StringComparison.Ordinal);
+            Assert.Equal(before.Home, (await rig.BytesAsync()).Home); Assert.Equal(before.Drive, (await rig.BytesAsync()).Drive);
+        });
+
+    [Fact]
+    public Task Unsupported_binary_and_oversize_preview_are_truthful_nonfaulting_results_and_a_later_text_read_remains_healthy()
+        => Run(async rig =>
+        {
+            var binary = await rig.UploadAsync("binary.txt", [0, 1, 2, 3]);
+            var large = await rig.UploadAsync("too-large.txt", new byte[FilesNativeBrowserService.MaximumTextPreviewBytes + 1]);
+            var valid = await rig.UploadAsync("healthy.txt", Encoding.UTF8.GetBytes("still healthy"));
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, rig.Folder.Value,
+                token: rig.Token, expectedStoreId: rig.Workspace.Configuration.StoreId));
+            var before = await rig.BytesAsync();
+            var binaryResult = await rig.Keep(rig.Browser.ReadOriginalTextPreviewWithinSourceAsync(page,
+                Assert.Single(page.Items, row => row.Id == binary.FileId), rig.Workspace.Actor,
+                () => true, body => body(), rig.Retain, rig.Token));
+            Assert.False(binaryResult.Succeeded); Assert.Equal("UnsupportedBinary", binaryResult.Code); Assert.Empty(binaryResult.Text);
+            var largeResult = await rig.Keep(rig.Browser.ReadOriginalTextPreviewWithinSourceAsync(page,
+                Assert.Single(page.Items, row => row.Id == large.FileId), rig.Workspace.Actor,
+                () => true, body => body(), rig.Retain, rig.Token));
+            Assert.False(largeResult.Succeeded); Assert.Equal("PreviewTooLarge", largeResult.Code); Assert.Empty(largeResult.Text);
+            var current = await rig.Keep(rig.Browser.ReadOriginalTextPreviewWithinSourceAsync(page,
+                Assert.Single(page.Items, row => row.Id == valid.FileId), rig.Workspace.Actor,
+                () => true, body => body(), rig.Retain, rig.Token));
+            Assert.True(current.Succeeded); Assert.Equal("still healthy", current.Text); Assert.False(current.IsTruncated);
+            Assert.Equal(before.Home, (await rig.BytesAsync()).Home); Assert.Equal(before.Drive, (await rig.BytesAsync()).Drive);
+        });
+
+    [Fact]
+    public Task Text_preview_rejects_copied_pages_rows_and_changed_actor_and_preserves_a_real_post_callback_IO_failure()
+        => Run(async rig =>
+        {
+            var uploaded = await rig.UploadAsync("original.txt", Encoding.UTF8.GetBytes("unchanged"));
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, rig.Folder.Value,
+                token: rig.Token, expectedStoreId: rig.Workspace.Configuration.StoreId));
+            var row = Assert.Single(page.Items, item => item.Id == uploaded.FileId);
+            const string refusal = "Select the SAME current original Files row for preview.";
+            foreach (var pair in new[] { (Page: page with { }, Row: row), (Page: page, Row: row with { }) })
+                await rig.ObserveExpectedFailureAsync(rig.Keep(rig.Browser.ReadOriginalTextPreviewWithinSourceAsync(
+                    pair.Page, pair.Row, rig.Workspace.Actor, () => true, body => body(), rig.Retain, rig.Token)),
+                    typeof(UnauthorizedAccessException), refusal);
+            var stale = rig.Workspace.Actor with { AuthenticationRevision = rig.Workspace.Actor.AuthenticationRevision + ":stale" };
+            await rig.ObserveExpectedFailureAsync(rig.Keep(rig.Browser.ReadOriginalTextPreviewWithinSourceAsync(page, row,
+                stale, () => true, body => body(), rig.Retain, rig.Token)), typeof(UnauthorizedAccessException), refusal);
+            var originalIo = new UnauthorizedAccessException("genuine preview source IO failed");
+            var failed = rig.Keep(rig.Browser.ReadOriginalTextPreviewWithinSourceAsync(page, row,
+                rig.Workspace.Actor, () => true, body => { body(); throw originalIo; }, rig.Retain, rig.Token));
+            await rig.ObserveExpectedFailureAsync(failed, typeof(UnauthorizedAccessException), originalIo.Message);
+            Assert.True(ContainsOriginal(failed.Exception!, originalIo));
+            static bool ContainsOriginal(Exception cause, Exception original) => ReferenceEquals(cause, original) ||
+                cause is AggregateException group && group.InnerExceptions.Any(child => ContainsOriginal(child, original));
+            // Preview failures are operation-owned; they do not poison this shared metadata browser.
+            var healthy = await rig.Keep(rig.Browser.ReadOriginalTextPreviewWithinSourceAsync(page, row,
+                rig.Workspace.Actor, () => true, body => body(), rig.Retain, rig.Token));
+            Assert.True(healthy.Succeeded); Assert.Equal("unchanged", healthy.Text);
+        });
+
     private sealed class Rig
     {
         internal readonly string Root = Path.Combine(Path.GetTempPath(), "astra-files-registered-selection-" + Guid.NewGuid().ToString("N"));
@@ -188,12 +263,12 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             Browser = Graph.GetRequiredService<FilesNativeBrowserService>(); Folder = Workspace.Configuration.AppFolders["picture"];
             _directory = (await Keep(Workspace.Directories.ResolveProfileAsync(Guid.Parse(Workspace.Actor.ProfileId), "picture", Token))).Value!.DirectoryPath;
         }
-        internal async Task<FilesUploadedContent> UploadAsync(string name)
+        internal async Task<FilesUploadedContent> UploadAsync(string name, byte[]? suppliedBytes = null, string contentType = "text/plain")
         {
-            byte[] bytes = [1, 2, 3, 4];
+            byte[] bytes = suppliedBytes ?? [1, 2, 3, 4];
             await Keep(File.WriteAllBytesAsync(Path.Combine(_directory, name), bytes, Token));
             var parent = (await Keep(Workspace.Provider.GetAsync(Folder, Token))).Value!;
-            var upload = new FilesUploadedContent(HostedItemId.New(), Folder, name, "text/plain", new(Guid.NewGuid()),
+            var upload = new FilesUploadedContent(HostedItemId.New(), Folder, name, contentType, new(Guid.NewGuid()),
                 null, Workspace.Actor.ActorId, DateTimeOffset.UtcNow, bytes.Length,
                 Convert.ToHexString(SHA256.HashData(bytes)), name);
             var authority = await Keep(Authority.CaptureCommitAuthorityAsync(Workspace.Actor, Workspace.Provider, () => true, Token).AsTask());

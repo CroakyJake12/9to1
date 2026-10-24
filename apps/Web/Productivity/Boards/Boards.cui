@@ -171,9 +171,11 @@
                           <Button action="InsertSharedDrawing" Type="Menu Item" Content="Drawing" AccessibleDescription="Shared drawing requires a compatible Home drawing engine in this host." />
                         </Button>
                       </Container>
+                      <If condition="!{Binding IsTableSelected}">
                       <Button content="B" accessible-name="Bold selection" font-weight="Bold" action="Bold" margin="6,0,0,0" />
                       <Button content="I" accessible-name="Italic selection" font-style="Italic" action="Italic" />
                       <Button content="U" accessible-name="Underline selection" action="Underline" />
+                      </If>
                       <Button content="Undo" action="Undo" margin="12,0,0,0" />
                       <Button content="Redo" action="Redo" />
                       <If condition="{Binding SharedInkAvailable}">
@@ -187,6 +189,43 @@
                       <Input content="Unlock layout" margin="14,0,6,0" Type="Checkbox" Checked="{Binding LayoutUnlocked, mode=TwoWay}" Interactive="{Binding CanEditPage}" />
                     </Container>
                   </Container>
+                </If>
+                <If condition="{Binding IsTableSelected}">
+                  <If condition="{Binding IsEditMode}">
+                    <Container id="boards-table-tools" Type="Vertical Stack" CellGap="6" accessible-name="Selected table tools">
+                      <Container Type="Wrap" CellGap="6">
+                        <Text text="{Binding TableShapeLabel}" vertical-alignment="Center" foreground="{Resource CuiTextSoftBrush}" />
+                        <Button content="First cell" action="TableFirstCell" accessible-name="Select the first table cell" />
+                        <Button content="Previous cell" action="TablePreviousCell" />
+                        <Button content="Next cell" action="TableNextCell" />
+                        <Container Type="Menu">
+                          <Button Type="Menu Item" Content="Rows and columns">
+                            <Button Type="Menu Item" Content="Add row below" action="TableAddRow" />
+                            <Button Type="Menu Item" Content="Add column right" action="TableAddColumn" />
+                            <Button Type="Menu Item" Content="Remove selected row" action="TableRemoveRow" />
+                            <Button Type="Menu Item" Content="Remove selected column" action="TableRemoveColumn" />
+                          </Button>
+                        </Container>
+                        <Button content="Merge right" action="TableMergeRight" accessible-name="Merge the selected table cell with its right neighbour" />
+                        <Button content="Split cell" action="TableSplit" />
+                        <Container Type="Menu">
+                          <Button Type="Menu Item" Content="Cell fill">
+                            <Button Type="Menu Item" Content="No fill" action="TableFillNone" />
+                            <Button Type="Menu Item" Content="Blue" action="TableFillBlue" />
+                            <Button Type="Menu Item" Content="Amber" action="TableFillAmber" />
+                            <Button Type="Menu Item" Content="Green" action="TableFillGreen" />
+                          </Button>
+                        </Container>
+                      </Container>
+                      <Repeat Source="{Binding SelectedTableCellEditors}" As="tableCell" Key="{Binding tableCell.Id}">
+                        <Container Type="Horizontal Stack" CellGap="8">
+                          <Text text="{Binding tableCell.Label}" vertical-alignment="Center" foreground="{Resource CuiTextSoftBrush}" />
+                          <Input id="boards-table-cell-text" Type="Text" Value="{Binding tableCell.Text, mode=TwoWay}" Interactive="{Binding tableCell.CanEdit}" accessible-name="Selected table cell text" min-width="160" max-width="480" />
+                        </Container>
+                      </Repeat>
+                      <Text text="{Binding TableStructureHint}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                    </Container>
+                  </If>
                 </If>
                 <If condition="{Binding IsChecklistSelected}">
                   <Container max-width="720" horizontal-alignment="Left" Type="Vertical Stack" CellGap="6">

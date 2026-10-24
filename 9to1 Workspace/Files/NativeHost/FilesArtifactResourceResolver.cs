@@ -176,6 +176,8 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         var browserWrite = (actionId is "9to1.Files.CreateFolder" or "9to1.Files.Rename" or "9to1.Files.Move" or "9to1.Files.Delete" or "9to1.Files.RegisterBrowserDownload")
             && scope.Access == ResourceAccess.Write;
         var packageRead = actionId == "os.compatibility.package.read" && scope.Access == ResourceAccess.Read;
+        var textPreviewRead = actionId == "files.preview.read" && scope.Access == ResourceAccess.Read
+            && originalProvider is DurableDriveProvider && originalStoreId is not null;
         var mailAttachmentRead = actionId == "mail.attachment.read" && scope.Access == ResourceAccess.Read
             && originalProvider is DurableDriveProvider && originalStoreId is not null;
         var ownerApp = actionId switch
@@ -188,7 +190,7 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         };
         if ((sitesWrite || pictureImport) && scope.Access != ResourceAccess.Write) return Deny("FilesActionInvalid");
         if ((pictureExport || pictureCopy) && scope.Access is not (ResourceAccess.Read or ResourceAccess.Write)) return Deny("FilesActionInvalid");
-        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !folderRead && !browserRead && !browserWrite && !trashRead && !trashRestore && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
+        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !textPreviewRead && !folderRead && !browserRead && !browserWrite && !trashRead && !trashRestore && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
             return Deny("FilesActionInvalid");
         var provider = originalProvider ?? await _providers(actor, cancellationToken).ConfigureAwait(false);
         if (provider is null) return Deny("FilesProviderUnauthorised");
@@ -237,7 +239,7 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         if (browserRead || trashRead || trashRestore) return new(true, "Allowed", actor.ActorId, revision, null);
         if (browserWrite) return actionId is "9to1.Files.Rename" or "9to1.Files.Move" or "9to1.Files.Delete" || item.Kind == HostedItemKind.Folder
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesDestinationInvalid");
-        if (mediaRead || packageRead || mailAttachmentRead) return item.Kind == HostedItemKind.File
+        if (mediaRead || packageRead || mailAttachmentRead || textPreviewRead) return item.Kind == HostedItemKind.File
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesMediaSourceInvalid");
         var creating = actionId.EndsWith(".create", StringComparison.Ordinal);
         if (creating && item.Kind != HostedItemKind.Folder) return Deny("FilesDestinationInvalid");

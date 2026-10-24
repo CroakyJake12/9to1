@@ -7,6 +7,9 @@ namespace HavenOS.Files.NativeHost;
 /// Neither caller paths nor store/folder IDs can mint a physical mapping or project grant.</summary>
 public sealed class FilesOriginalChildFolderReadSource(FilesArtifactResourceResolver issuer, ResourceAuthorizationService resources)
 {
+    // Same-assembly native borrower identity only. The browser must separately capture and
+    // authorise its own item READ; this supplies neither a folder grant nor content bytes.
+    internal FilesArtifactResourceResolver BorrowOriginalItemReadIssuer() => issuer;
     /// <summary>Use only the root retained by the actual original Home Files configuration.
     /// Missing app setup is a refusal; this path never registers or substitutes another app root.</summary>
     public async Task<FilesNativeFolderReadLease> ReadConfiguredChildAsync(NativeFilesWorkspace original,

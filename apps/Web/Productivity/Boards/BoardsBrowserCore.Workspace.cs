@@ -40,6 +40,7 @@ public sealed partial class BoardsBrowserCore
 
     private bool TryGetWorkspaceValue(string path, out object? value)
     {
+        if (TryGetTableValue(path, out value)) return true;
         var mountedPageLayer = (path is "PageInkCanvas" or "HasUnsupportedPageContent") && SharedInkAvailable
             ? CapturePageSharedDrawing()?.Content.Layer : null;
         value = path switch
@@ -190,11 +191,12 @@ public sealed partial class BoardsBrowserCore
         "AddChecklistItem" => RichEditingPermitted && _richEditor?.SelectedBlock?.List is not null,
         "InsertSharedDrawing" => SharedInkAvailable && RichEditingPermitted,
         "SelectSharedDrawing" => _document is not null && !IsHistoryPreview,
-        _ => false
+        _ => IsTableActionAvailable(command)
     };
 
     private async Task<bool> DispatchWorkspaceAsync(string command, object? parameter, CancellationToken token)
     {
+        if (await DispatchTableAsync(command, token)) return true;
         switch (command)
         {
             case "ToggleSidebar": _drawerOpen = !_drawerOpen; Notify(); return true;
@@ -231,11 +233,185 @@ public sealed partial class BoardsBrowserCore
                 var kind = command switch { "InsertHeading" => NotesBlockKind.Heading, "InsertChecklist" => NotesBlockKind.List,
                     "InsertTable" => NotesBlockKind.Table, _ => NotesBlockKind.Paragraph };
                 var inserted = await Edit((owner, document) => owner.AddBlock(document, insertPage, kind).Id, token);
-                if (inserted.Succeeded) { _richEditor?.SelectBlock(inserted.Value); Notify(); }
+                if (inserted.Succeeded)
+                {
+                    _richEditor?.SelectBlock(inserted.Value);
+                    if (kind == NotesBlockKind.Table && _richEditor?.SelectedBlock?.Table?.Rows.SelectMany(row => row.Cells).FirstOrDefault() is { } firstCell)
+                        _richEditor.SelectTableCell(inserted.Value, firstCell.Id);
+                    Notify();
+                }
                 return true;
             default: return false;
         }
     }
+    // These controls borrow the SAME Notes table and shared editor. They own no
+    // grid, values, persistence counter or second history stack.
+    private sealed record TableCellContext(NotesTableData Table, NotesTableRow Row,
+        NotesTableCell Cell, int RowIndex, int ColumnIndex);
+
+    private TableCellContext? CurrentTableCell()
+    {
+        if (_richEditor?.SelectedBlock?.Table is not { } table || _richEditor.SelectedTableCellId is not { } id) return null;
+        for (var row = 0; row < table.Rows.Count; row++)
+            for (var column = 0; column < table.Rows[row].Cells.Count; column++)
+                if (table.Rows[row].Cells[column].Id == id)
+                    return new(table, table.Rows[row], table.Rows[row].Cells[column], row, column);
+        return null;
+    }
+
+    private bool TryGetTableValue(string path, out object? value)
+    {
+        if (path is not ("IsTableSelected" or "HasSelectedTableCell" or "TableShapeLabel" or "TableStructureHint" or "SelectedTableCellEditors"))
+        { value = null; return false; }
+        var table = _richEditor?.SelectedBlock?.Table;
+        var cell = CurrentTableCell();
+        value = path switch
+        {
+            "IsTableSelected" => table is not null,
+            "HasSelectedTableCell" => cell is not null,
+            "TableShapeLabel" => table is null ? string.Empty : $"Table · {table.Rows.Count} rows · {table.Rows.FirstOrDefault()?.Cells.Sum(item => (long)item.ColumnSpan) ?? 0} columns",
+            "TableStructureHint" => table is null ? string.Empty : IsRegularTable(table)
+                ? "Row and column changes apply beside the selected cell."
+                : "Row and column changes need regular, unmerged rows. Existing content is preserved.",
+            "SelectedTableCellEditors" => cell is not null && _document is not null && ActivePageId is { } page && _richEditor?.SelectedBlockId is { } block
+                ? new[] { new BoardsTableCellBinding(this, _document, _richEditor!, page, block, cell.Cell,
+                    $"Row {cell.RowIndex + 1}, column {cell.Row.Cells.Take(cell.ColumnIndex).Sum(item => item.ColumnSpan) + 1}") }
+                : Array.Empty<BoardsTableCellBinding>(),
+            _ => null
+        };
+        return path is "IsTableSelected" or "HasSelectedTableCell" or "TableShapeLabel" or "TableStructureHint" or "SelectedTableCellEditors";
+    }
+
+    private static bool IsHorizontalTable(NotesTableData table)
+    {
+        if (table.Rows.Count is 0 or > 10_000) return false;
+        var width = table.Rows[0].Cells.Sum(cell => (long)cell.ColumnSpan);
+        return width is > 0 and <= 500 && table.Rows.All(row => row.Cells.Count > 0 &&
+            row.Cells.All(cell => cell.RowSpan == 1 && cell.ColumnSpan is >= 1 and <= 500) &&
+            row.Cells.Sum(cell => (long)cell.ColumnSpan) == width);
+    }
+    private static bool IsRegularTable(NotesTableData table) => IsHorizontalTable(table) &&
+        table.Rows.All(row => row.Cells.All(cell => cell.ColumnSpan == 1));
+
+    private static bool CanEditTable(TableCellContext context, BoardsTableEdit edit) => edit switch
+    {
+        BoardsTableEdit.Text or BoardsTableEdit.Fill => true,
+        BoardsTableEdit.AddRowAfter => IsRegularTable(context.Table) && context.Table.Rows.Count < 10_000,
+        BoardsTableEdit.AddColumnAfter => IsRegularTable(context.Table) && context.Row.Cells.Count < 500,
+        BoardsTableEdit.RemoveRow => IsRegularTable(context.Table) && context.Table.Rows.Count > 1,
+        BoardsTableEdit.RemoveColumn => IsRegularTable(context.Table) && context.Row.Cells.Count > 1,
+        BoardsTableEdit.MergeRight => IsHorizontalTable(context.Table) && context.ColumnIndex + 1 < context.Row.Cells.Count,
+        BoardsTableEdit.Split => IsHorizontalTable(context.Table) && context.Cell.ColumnSpan > 1,
+        _ => false
+    };
+
+    /// <summary>Select an original shared cell without changing notebook content.</summary>
+    public Task<HomeCoreOperationResult<bool>> SelectTableCellAsync(Guid pageId, Guid blockId, Guid cellId,
+        CancellationToken token = default) => Operate(ct =>
+    {
+        ct.ThrowIfCancellationRequested();
+        if (_presentationPending || IsHistoryPreview || _pending is not null || _richEditor is null || ActivePageId != pageId)
+            return Task.FromResult(Failure<bool>("OperationDenied", "Return to the current page before selecting a table cell."));
+        var block = _richEditor.Blocks().FirstOrDefault(item => item.Id == blockId);
+        if (block?.Table?.Rows.SelectMany(row => row.Cells).Count(cell => cell.Id == cellId) != 1)
+            return Task.FromResult(Failure<bool>("BlockNotFound", "This table cell is not available on the current page."));
+        _richEditor.SelectTableCell(blockId, cellId); NotifySelectionChanged();
+        return Task.FromResult(Success(true));
+    }, token);
+
+    /// <summary>Typed table action over the existing page-scoped shared editor.
+    /// Stable target IDs must still name the selected cell when execution starts.</summary>
+    public Task<HomeCoreOperationResult<bool>> EditTableAsync(Guid pageId, Guid blockId, Guid cellId,
+        BoardsTableEdit edit, string? value = null, CancellationToken token = default) => Operate(ct =>
+    {
+        ct.ThrowIfCancellationRequested();
+        if (!RichEditingPermitted)
+            return Task.FromResult(Failure<bool>("OperationDenied", "This page cannot be edited in its current state."));
+        var editor = _richEditor!;
+        if (ActivePageId != pageId || editor.SelectedBlockId != blockId || CurrentTableCell() is not { } context || context.Cell.Id != cellId)
+            return Task.FromResult(Failure<bool>("StaleTableSelection", "Select this table cell again before editing it."));
+        if (!CanEditTable(context, edit))
+            return Task.FromResult(Failure<bool>("InvalidTableOperation", "This action is unavailable for the current table structure. Split merged cells before changing rows or columns."));
+        switch (edit)
+        {
+            case BoardsTableEdit.Text:
+                if (value is null) return Task.FromResult(Failure<bool>("InvalidArgument", "Provide the cell text."));
+                if (context.Cell.Text == value) return Task.FromResult(Success(false));
+                editor.UpdateTableCell(cellId, value); break;
+            case BoardsTableEdit.Fill:
+                if (value is null || value.Length is not (7 or 9) || value[0] != '#' || !value.Skip(1).All(Uri.IsHexDigit))
+                    return Task.FromResult(Failure<bool>("InvalidArgument", "Use a six- or eight-digit hexadecimal cell fill."));
+                return Task.FromResult(Success(editor.SetTableCellBackground(cellId, value)));
+            case BoardsTableEdit.AddRowAfter: editor.AddTableRow(); break;
+            case BoardsTableEdit.AddColumnAfter: editor.AddTableColumn(); break;
+            case BoardsTableEdit.RemoveRow: editor.RemoveTableRow(); break;
+            case BoardsTableEdit.RemoveColumn: editor.RemoveTableColumn(); break;
+            case BoardsTableEdit.MergeRight: return Task.FromResult(Success(editor.MergeTableCellRight()));
+            case BoardsTableEdit.Split: return Task.FromResult(Success(editor.SplitTableCell()));
+        }
+        return Task.FromResult(Success(true));
+    }, token);
+
+    private static BoardsTableEdit? TableEditForCommand(string command) => command switch
+    {
+        "TableAddRow" => BoardsTableEdit.AddRowAfter, "TableAddColumn" => BoardsTableEdit.AddColumnAfter,
+        "TableRemoveRow" => BoardsTableEdit.RemoveRow, "TableRemoveColumn" => BoardsTableEdit.RemoveColumn,
+        "TableMergeRight" => BoardsTableEdit.MergeRight, "TableSplit" => BoardsTableEdit.Split,
+        "TableFillNone" or "TableFillBlue" or "TableFillAmber" or "TableFillGreen" => BoardsTableEdit.Fill,
+        _ => null
+    };
+    private bool IsTableActionAvailable(string command)
+    {
+        if (command == "TableFirstCell") return AllowRetainedSelection && _richEditor?.SelectedBlock?.Table?.Rows.Any(row => row.Cells.Count > 0) == true;
+        if (command is "TablePreviousCell" or "TableNextCell")
+        {
+            if (!AllowRetainedSelection || CurrentTableCell() is not { } cell) return false;
+            return command == "TablePreviousCell" ? cell.RowIndex > 0 || cell.ColumnIndex > 0
+                : cell.ColumnIndex + 1 < cell.Row.Cells.Count || cell.RowIndex + 1 < cell.Table.Rows.Count;
+        }
+        return RichEditingPermitted && TableEditForCommand(command) is { } edit && CurrentTableCell() is { } context && CanEditTable(context, edit);
+    }
+    private async Task<bool> DispatchTableAsync(string command, CancellationToken token)
+    {
+        if (command is "TableFirstCell" or "TablePreviousCell" or "TableNextCell")
+        {
+            if (ActivePageId is not { } page || _richEditor?.SelectedBlock is not { Table: { } table } block) return true;
+            NotesTableCell? target;
+            if (command == "TableFirstCell") target = table.Rows.SelectMany(row => row.Cells).FirstOrDefault();
+            else if (CurrentTableCell() is { } context)
+            {
+                var next = command == "TableNextCell";
+                target = next ? context.ColumnIndex + 1 < context.Row.Cells.Count ? context.Row.Cells[context.ColumnIndex + 1]
+                        : context.Table.Rows.Skip(context.RowIndex + 1).SelectMany(row => row.Cells).FirstOrDefault()
+                    : context.ColumnIndex > 0 ? context.Row.Cells[context.ColumnIndex - 1]
+                        : context.Table.Rows.Take(context.RowIndex).SelectMany(row => row.Cells).LastOrDefault();
+            }
+            else target = null;
+            if (target is not null) await SelectTableCellAsync(page, block.Id, target.Id, token);
+            return true;
+        }
+        if (TableEditForCommand(command) is not { } edit) return false;
+        if (ActivePageId is { } pageId && _richEditor?.SelectedBlockId is { } blockId && CurrentTableCell() is { } cell)
+        {
+            var fill = command switch { "TableFillNone" => "#00000000", "TableFillBlue" => "#335C93", "TableFillAmber" => "#7B5B2A", "TableFillGreen" => "#315F4C", _ => null };
+            await EditTableAsync(pageId, blockId, cell.Cell.Id, edit, fill, token);
+        }
+        return true;
+    }
+
+    internal bool IsCurrentTableBinding(BoardsTableCellBinding binding) =>
+        ReferenceEquals(binding.Owner, this) && ReferenceEquals(binding.Document, _document) &&
+        ReferenceEquals(binding.Editor, _richEditor) && ActivePageId == binding.PageId &&
+        _richEditor?.SelectedBlockId == binding.BlockId && CurrentTableCell() is { } context && ReferenceEquals(context.Cell, binding.Cell);
+
+    internal bool UpdateTableBinding(BoardsTableCellBinding binding, string text)
+    {
+        // Synchronous CUI callbacks cannot race a save/owner operation, cannot
+        // follow an undo/rebind, and never redirect a stale field to a new cell.
+        if (!AllowRetainedRichInput || !IsCurrentTableBinding(binding)) return false;
+        _richEditor!.UpdateTableCell(binding.Cell.Id, text); return true;
+    }
+
     internal string? PageInkDiagnostic { get; private set; }
     public BoardsPageSharedInkSnapshot? CapturePageSharedDrawing()
     {
@@ -315,3 +491,32 @@ public sealed record BoardsDrawingRow(Guid Id, string Label) : ICuiBindingContex
 
 public sealed record BoardsPageSharedInkSnapshot(WritePageSharedInkSnapshot Content, long Generation,
     long BindingEpoch, long SelectionEpoch);
+
+public enum BoardsTableEdit { Text, AddRowAfter, AddColumnAfter, RemoveRow, RemoveColumn, MergeRight, Split, Fill }
+
+/// <summary>A live CUI field for one original selected cell, not a table copy.
+/// Editor/document/cell reference checks retire callbacks after rebind or undo.</summary>
+public sealed class BoardsTableCellBinding : ICuiWritableBindingContext
+{
+    internal BoardsBrowserCore Owner { get; }
+    internal NotesDocument Document { get; }
+    internal WriteDocumentEditor Editor { get; }
+    internal Guid PageId { get; }
+    internal Guid BlockId { get; }
+    internal NotesTableCell Cell { get; }
+    private readonly string _label;
+    internal BoardsTableCellBinding(BoardsBrowserCore owner, NotesDocument document, WriteDocumentEditor editor,
+        Guid pageId, Guid blockId, NotesTableCell cell, string label)
+    { Owner = owner; Document = document; Editor = editor; PageId = pageId; BlockId = blockId; Cell = cell; _label = label; }
+    public bool TryGetValue(string path, out object? value)
+    {
+        value = path switch
+        {
+            "Id" => Cell.Id, "Text" => Cell.Text, "Label" => _label,
+            "CanEdit" => Owner.AllowRetainedRichInput && Owner.IsCurrentTableBinding(this),
+            _ => null
+        };
+        return path is "Id" or "Text" or "Label" or "CanEdit";
+    }
+    public bool TrySetValue(string path, object? value) => path == "Text" && value is string text && Owner.UpdateTableBinding(this, text);
+}

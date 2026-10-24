@@ -4,6 +4,8 @@
     <Action name="CloseFolderTab" command="9to1.Files.Tab.Close" parameter="{Binding tab}" />
     <Action name="RevokeDisplayedGrant" command="9to1.Files.Share.Revoke" parameter="{Binding share}" />
     <Action name="ChangeDisplayedGrantRole" command="9to1.Files.Share.ChangeRole" parameter="{Binding share}" />
+    <Action name="PreviewSelectedText" command="9to1.Files.Preview" />
+    <Action name="CloseSelectedTextPreview" command="9to1.Files.Preview.Close" />
   </Actions>
   <Page>
     <Container id="files-browser-shell" accessible-name="Files browser" Type="Grid" RowSizes="Auto Auto Auto Auto 1fr Auto Auto">
@@ -33,6 +35,7 @@
         <Button id="files-back" content="Back" action="9to1.Files.Back" accessible-name="Previous folder" Interactive="{Binding CanBack}" />
         <Button id="files-forward" content="Forward" action="9to1.Files.Forward" accessible-name="Next folder in history" Interactive="{Binding CanForward}" />
         <Button id="files-refresh" content="Refresh" action="9to1.Files.Refresh" accessible-name="Refresh canonical Files metadata" Interactive="{Binding CanNavigate}" />
+        <Button id="files-preview" content="Preview text" action="PreviewSelectedText" accessible-name="Read-only preview of the selected text or code file" Interactive="{Binding CanPreviewText}" />
         <Button id="files-open" content="Open" action="9to1.Files.Open" accessible-name="Open selected canonical item" Interactive="{Binding CanOpen}" />
         <Button id="files-next" content="More" action="9to1.Files.More" accessible-name="Load next Files page" Interactive="{Binding CanMore}" />
         <Text text="{Binding FolderTitle}" accessible-name="Current folder" />
@@ -60,6 +63,16 @@
       <Input id="files-canonical-list" accessible-name="Canonical Files items" Type="List" Row="4" />
       <Container Type="Vertical Stack" Row="5">
         <Button id="files-technical-details" content="{Binding TechnicalDetailsLabel}" action="9to1.Files.TechnicalDetails" accessible-name="Show or hide stable identity and technical details for the selected item" Interactive="{Binding CanShowDetails}" />
+        <If Condition="{Binding TextPreviewVisible}">
+          <Container id="files-text-preview" Type="Vertical Stack" CellGap="6" MaxHeight="280" VerticalScrolling="True" HorizontalScrolling="False" accessible-name="Read-only plain text preview">
+            <Container Type="Wrap" CellGap="8">
+              <Text id="files-preview-title" text="{Binding TextPreviewTitle}" FontWeight="SemiBold" />
+              <Button id="files-preview-close" content="Close preview" action="CloseSelectedTextPreview" Interactive="{Binding CanCloseTextPreview}" accessible-name="Close and clear the text preview" />
+            </Container>
+            <Text id="files-preview-message" text="{Binding TextPreviewMessage}" TextWrapping="Wrap" />
+            <Text id="files-preview-content" text="{Binding TextPreviewContent}" TextWrapping="Wrap" accessible-name="Selected file plain text; read only" />
+          </Container>
+        </If>
         <Text id="files-selected-details" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
         <Button id="files-review-access" content="Manage access" action="9to1.Files.Share.Get" accessible-name="Review direct access grants on the selected owned item" Interactive="{Binding CanReviewAccess}" />
         <If Condition="{Binding SharingVisible}">
