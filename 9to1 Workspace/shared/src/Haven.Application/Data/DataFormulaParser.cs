@@ -74,8 +74,10 @@ public sealed class DataFormulaParser
 
     private DataFormulaExpression ParsePower()
     {
+        // Pinned Calc grammar runs unary/postfix parsing before PowLine, then
+        // consumes repeated carets left-to-right; preserve that donor ordering.
         var left = ParseUnary();
-        if (Match(TokenKind.Caret)) left = new DataFormulaBinaryExpression(DataFormulaSegmentOperator.Power, left, ParsePower());
+        while (Match(TokenKind.Caret)) left = new DataFormulaBinaryExpression(DataFormulaSegmentOperator.Power, left, ParseUnary());
         return left;
     }
 
@@ -103,6 +105,21 @@ public sealed class DataFormulaParser
             return new DataFormulaLiteralExpression(number);
         }
         if (Current.Kind == TokenKind.String) return new DataFormulaLiteralExpression(Consume().Text);
+        if (Current.Kind == TokenKind.Error)
+        {
+            var error = Consume();
+            return new DataFormulaErrorExpression(error.Text switch
+            {
+                "#DIV/0!" => DataFormulaErrorCode.DivideByZero,
+                "#REF!" => DataFormulaErrorCode.Reference,
+                "#VALUE!" => DataFormulaErrorCode.Value,
+                "#NAME?" => DataFormulaErrorCode.Name,
+                "#N/A" => DataFormulaErrorCode.NotAvailable,
+                "#CYCLE!" => DataFormulaErrorCode.Cycle,
+                "#NUM!" => DataFormulaErrorCode.Number,
+                _ => DataFormulaErrorCode.Parse
+            });
+        }
         if (Current.Kind != TokenKind.Identifier) throw Error("Expected a value, cell reference or function", Current.Position);
 
         var identifier = Consume();
@@ -124,7 +141,6 @@ public sealed class DataFormulaParser
             return ParseRangeTail(reference);
         }
 
-        if (identifier.Text.Equals("#REF", StringComparison.OrdinalIgnoreCase) && Match(TokenKind.Bang)) return new DataFormulaErrorExpression(DataFormulaErrorCode.Reference);
         if (identifier.Text.Equals("TRUE", StringComparison.OrdinalIgnoreCase)) return new DataFormulaLiteralExpression(true);
         if (identifier.Text.Equals("FALSE", StringComparison.OrdinalIgnoreCase)) return new DataFormulaLiteralExpression(false);
         if (DataFormulaReferenceUtility.TryParse(identifier.Text, out var localReference)) return ParseRangeTail(localReference);
@@ -159,6 +175,12 @@ public sealed class DataFormulaParser
             var c = source[index];
             if (char.IsWhiteSpace(c)) { index++; continue; }
             var start = index;
+            if (c == '#')
+            {
+                var errorLiterals = new[] { "#DIV/0!", "#REF!", "#VALUE!", "#NAME?", "#N/A", "#CYCLE!", "#NUM!" };
+                var error = errorLiterals.FirstOrDefault(literal => source.AsSpan(index).StartsWith(literal, StringComparison.OrdinalIgnoreCase));
+                if (error is not null) { tokens.Add(new(TokenKind.Error, error.ToUpperInvariant(), start)); index += error.Length; continue; }
+            }
             if (c == '"')
             {
                 index++; var builder = new StringBuilder(); var closed = false;
@@ -225,6 +247,6 @@ public sealed class DataFormulaParser
         return tokens;
     }
 
-    private enum TokenKind { End, Number, String, Identifier, Plus, Minus, Star, Slash, Caret, Ampersand, Percent, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, LeftParen, RightParen, Comma, Colon, Bang }
+    private enum TokenKind { End, Number, String, Error, Identifier, Plus, Minus, Star, Slash, Caret, Ampersand, Percent, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, LeftParen, RightParen, Comma, Colon, Bang }
     private sealed record Token(TokenKind Kind, string Text, int Position);
 }

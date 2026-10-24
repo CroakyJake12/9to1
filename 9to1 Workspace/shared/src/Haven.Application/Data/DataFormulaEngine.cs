@@ -195,7 +195,7 @@ public sealed class DataFormulaEngine(TimeProvider? timeProvider = null)
     {
         var sheet = ResolveReferenceSheet(context.Workbook, currentSheet, reference.SheetName);
         if (sheet is null || reference.Row < 0 || reference.Column < 0) return DataFormulaValue.Error(DataFormulaErrorCode.Reference, "Cell reference does not resolve to a workbook cell.");
-        return EvaluateCell(context, sheet, reference.Row, reference.Column);
+        return EvaluateCell(context, sheet, reference.Row, reference.Column) with { IsCellReference = true };
     }
 
     private static DataFormulaValue EvaluateRange(EvaluationContext context, DataSheet currentSheet, DataFormulaRangeReference range)
@@ -251,6 +251,15 @@ public sealed class DataFormulaEngine(TimeProvider? timeProvider = null)
 
     private static DataFormulaValue EvaluateFunction(EvaluationContext context, DataSheet sheet, DataFormulaFunctionExpression function)
     {
+        if (function.Name == "XLOOKUP")
+        {
+            if (function.Arguments.Count is < 3 or > 4) return DataFormulaValue.Error(DataFormulaErrorCode.Value, "XLOOKUP expects lookup value, lookup range, return range and optional if-not-found value.");
+            var arguments = function.Arguments.Take(3).Select(argument => EvaluateExpression(context, sheet, argument)).ToArray();
+            var result = DataFormulaFunctions.Evaluate(function.Name, arguments, context.Now);
+            return result.IsLookupNotFound && function.Arguments.Count == 4
+                ? EvaluateExpression(context, sheet, function.Arguments[3])
+                : result;
+        }
         if (function.Name == "IF")
         {
             if (function.Arguments.Count is < 2 or > 3) return DataFormulaValue.Error(DataFormulaErrorCode.Value, "IF expects condition, true value and optional false value.");

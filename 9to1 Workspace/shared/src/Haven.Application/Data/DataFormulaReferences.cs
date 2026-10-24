@@ -52,7 +52,13 @@ public static partial class DataFormulaReferenceUtility
             var match = TranslatableReferencePattern().Match(formula, index); if (match.Success && match.Index == index)
             {
                 var before = index > 0 ? formula[index - 1] : (char)0; var afterIndex = index + match.Length; var after = afterIndex < formula.Length ? formula[afterIndex] : (char)0;
-                if (!char.IsLetterOrDigit(before) && before != '_' && !char.IsLetterOrDigit(after) && after != '_')
+                // Function names may end in digits (for example LOG10). Do not
+                // reinterpret such an identifier as a cell reference when it is
+                // followed by the function-call parenthesis, including whitespace.
+                var callIndex = afterIndex;
+                while (callIndex < formula.Length && char.IsWhiteSpace(formula[callIndex])) callIndex++;
+                var isFunctionName = callIndex < formula.Length && formula[callIndex] == '(';
+                if (!isFunctionName && !char.IsLetterOrDigit(before) && before != '_' && !char.IsLetterOrDigit(after) && after != '_')
                 {
                     var columnAbsolute = match.Groups["columnAbs"].Value.Length > 0; var rowAbsolute = match.Groups["rowAbs"].Value.Length > 0; var column = ColumnIndex(match.Groups["column"].Value); var row = int.Parse(match.Groups["row"].Value, CultureInfo.InvariantCulture) - 1; if (!columnAbsolute) column += columnDelta; if (!rowAbsolute) row += rowDelta;
                     if (column < 0 || row < 0 || column > MaximumColumn || row > MaximumRow) builder.Append("#REF!"); else { builder.Append(match.Groups["sheet"].Value); if (columnAbsolute) builder.Append('$'); builder.Append(ColumnName(column)); if (rowAbsolute) builder.Append('$'); builder.Append(row + 1); } index += match.Length; continue;
