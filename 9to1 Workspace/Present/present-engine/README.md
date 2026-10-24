@@ -132,6 +132,39 @@ The event queue is bounded to 256 entries. If upstream event volume exceeds the 
 
 Responses and events share the framed stdout stream, so clients must demultiplex frames by request `id` versus `event`.
 
+## Snapshot-scoped element references
+
+When semantic snapshots are supported, `hello` advertises `snapshotGeneration`
+and `snapshotGenerationRequiredAfterTransition`.
+`listElements` returns that generation at the inventory and element levels while
+keeping the stable object reference text (`slide:<index>/object:<index>`)
+unchanged. It is a session-local monotonic generation. Generation-aware clients
+pass the returned integer as `snapshotGeneration` with `selectElement` and
+`replaceElementText`; a mismatched token is rejected even when the same file path
+is open again. References and tokens must be discarded when the worker session
+restarts.
+Successful open, close, incompatible document mutation, and the existing worker
+`saveAs` operation advance the generation. A failed open leaves the current
+document, selection, history, and generation intact. The worker's `saveAs` remains
+a save-as, not an export-only alias; export-only flows must not use it to replace
+the active source snapshot.
+
+For protocol-v1 migration, a tokenless request remains accepted while the worker
+is on generation 1, its first opened snapshot. Once a successful open/close/save-as
+or incompatible mutation advances beyond generation 1, tokenless `selectElement` and
+`replaceElementText` requests return the recoverable `snapshot_generation_required`
+reason with typed `INVALID_ARGUMENT`; stale supplied tokens return the
+`stale_snapshot_generation` reason with typed `REVISION_CONFLICT`. Invalid slide
+indexes and missing objects use `NOT_FOUND`; malformed requests use
+`INVALID_ARGUMENT`; unsupported operations use `UNSUPPORTED_FEATURE`; engine
+failures use `RUNTIME_ERROR`. Permission and cancellation errors are not emitted
+by this worker's current operation set. After an unsaved incompatible mutation,
+snapshot queries and semantic actions return `snapshot_not_fresh` with typed
+`REVISION_CONFLICT` until the document is saved and re-inventoried. Clients can
+refresh with `listElements` and retry using its generation. This preserves the v1
+wire shape while refusing ambiguous references instead of silently applying them
+to a newer snapshot.
+
 ## Linux dependencies
 
 Runtime:

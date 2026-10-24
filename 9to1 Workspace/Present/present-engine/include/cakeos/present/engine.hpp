@@ -101,7 +101,8 @@ public:
         std::string_view documentPathOrUrl,
         int slideIndex) const;
 
-    // Resolve a snapshot-scoped semantic object into the live Impress view.
+    // Resolve a snapshot-scoped semantic object into the matching open document
+    // and live Impress view. The snapshot path must identify the open document.
     // LibreOfficeKit reports the resulting selection geometry through the
     // normal engine event callback. The object index remains snapshot-only.
     void selectElement(
@@ -112,8 +113,8 @@ public:
 
     // Whole-object single-line plain-text replacement. The saved snapshot is
     // used to verify that objectIndex still identifies exactly one text value
-    // before the live document is mutated. Rich/multi-part/multiline text is
-    // deliberately not flattened by this first semantic write operation.
+    // before the matching open document is mutated. Rich/multi-part/multiline
+    // text is deliberately not flattened by this first semantic write operation.
     // Returns false when the requested text already matches the snapshot.
     bool replaceElementText(
         std::string_view snapshotPathOrUrl,
@@ -142,6 +143,7 @@ public:
     [[nodiscard]] static std::string pathToFileUrl(std::string_view pathOrUrl);
 
 private:
+    void requireSnapshotDocument(std::string_view snapshotPathOrUrl) const;
     void applySlideMove(int fromIndex, int toIndex);
     void applyElementText(int slideIndex, int objectIndex, std::string_view text);
     void recordNativeMutation();

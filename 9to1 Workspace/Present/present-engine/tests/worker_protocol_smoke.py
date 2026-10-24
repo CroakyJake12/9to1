@@ -173,9 +173,14 @@ def require_element_inventory(
     elements = result.get("elements")
     if not isinstance(elements, list) or not elements:
         raise RuntimeError(f"element inventory is empty: {result}")
+    generation = result.get("snapshotGeneration")
+    if not isinstance(generation, int) or generation < 1:
+        raise RuntimeError(f"element inventory has no valid generation: {result}")
     for element in elements:
         if element.get("referenceStability") != "snapshot-only":
             raise RuntimeError(f"element overstates identity stability: {element}")
+        if element.get("snapshotGeneration") != generation:
+            raise RuntimeError(f"element generation differs from its inventory: {element}")
         expected_ref = f"slide:{element['slideIndex']}/object:{element['objectIndex']}"
         if element.get("ref") != expected_ref:
             raise RuntimeError(f"element ref is not the normalized CakeOS form: {element}")
@@ -221,6 +226,8 @@ def main() -> int:
             "undo",
             "redo",
             "saveAs",
+            "snapshotGeneration",
+            "snapshotGenerationRequiredAfterTransition",
         }
         missing = required_capabilities.difference(result["capabilities"])
         if missing:
@@ -231,6 +238,14 @@ def main() -> int:
             raise RuntimeError(f"unexpected event transport: {result['eventTransport']}")
         if set(result["events"]) != ALLOWED_EVENTS:
             raise RuntimeError(f"unexpected event vocabulary: {result['events']}")
+
+        unsupported, unsupported_payload = client.request("unsupportedOperation")
+        if (
+            unsupported.get("ok")
+            or unsupported_payload
+            or unsupported.get("error", {}).get("code") != "UNSUPPORTED_FEATURE"
+        ):
+            raise RuntimeError(f"worker did not type an unsupported operation: {unsupported}")
 
         opened, _ = client.require_ok("open", path=str(source))
         if slide_count(opened) != 1:

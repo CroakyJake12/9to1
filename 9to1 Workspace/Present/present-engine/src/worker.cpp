@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -39,11 +40,41 @@ struct EventQueue {
 struct ElementSnapshotState {
     std::string path;
     bool fresh{false};
+    std::uint64_t generation{0};
 
-    void reset()
+    [[nodiscard]] std::uint64_t nextGeneration() const
     {
+        if (generation == std::numeric_limits<std::uint64_t>::max()) {
+            throw std::overflow_error("semantic snapshot generation is exhausted");
+        }
+        return generation + 1U;
+    }
+
+    void reset(std::uint64_t next)
+    {
+        generation = next;
         path.clear();
         fresh = false;
+    }
+
+    void open(std::string value, std::uint64_t next)
+    {
+        generation = next;
+        path = std::move(value);
+        fresh = true;
+    }
+
+    void markStale(std::uint64_t next)
+    {
+        generation = next;
+        fresh = false;
+    }
+
+    void saveAs(std::string value, std::uint64_t next)
+    {
+        path = std::move(value);
+        generation = next;
+        fresh = true;
     }
 };
 
@@ -56,6 +87,7 @@ struct ElementSelectionState {
     std::string ref;
     int slideIndex{};
     int objectIndex{};
+    std::uint64_t snapshotGeneration{};
     bool active{false};
 
     void reset()
@@ -63,8 +95,27 @@ struct ElementSelectionState {
         ref.clear();
         slideIndex = 0;
         objectIndex = 0;
+        snapshotGeneration = 0;
         active = false;
     }
+};
+
+class SnapshotGenerationError final : public std::runtime_error {
+public:
+    SnapshotGenerationError(const char* errorCode, const char* errorReason, const char* message)
+        : std::runtime_error(message),
+          code(errorCode),
+          reason(errorReason)
+    {
+    }
+
+    const char* code;
+    const char* reason;
+};
+
+class UnsupportedFeatureError final : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
 };
 
 std::uint32_t decodeU32Le(const std::array<std::uint8_t, 8>& header, std::size_t offset)
@@ -157,10 +208,18 @@ Json success(const Json& id, Json result = Json::object())
     return response;
 }
 
-Json failure(const Json& id, const std::string& message)
+Json failure(
+    const Json& id,
+    const char* code,
+    const std::string& message,
+    const char* reason = nullptr)
 {
     Json response = responseBase(id, false);
-    response["error"] = Json{{"code", "operation_failed"}, {"message", message}};
+    Json error{{"code", code}, {"message", message}};
+    if (reason != nullptr) {
+        error["reason"] = reason;
+    }
+    response["error"] = std::move(error);
     return response;
 }
 
@@ -245,12 +304,48 @@ void requireFreshElementSnapshot(
         throw std::logic_error("no presentation is open");
     }
     if (!engine.supportsElementSnapshots()) {
-        throw std::runtime_error(
+        throw UnsupportedFeatureError(
             "this LibreOfficeKit runtime does not support semantic element snapshots");
     }
     if (!snapshot.fresh || snapshot.path.empty()) {
-        throw std::runtime_error(
+        throw SnapshotGenerationError(
+            "REVISION_CONFLICT",
+            "snapshot_not_fresh",
             "element inventory is stale after unsaved mutations; save the presentation before using semantic element references");
+    }
+}
+
+void requireMatchingSnapshotGeneration(const Json& request, const ElementSnapshotState& snapshot)
+{
+    if (!request.contains("snapshotGeneration")) {
+        if (snapshot.generation > 1U) {
+            throw SnapshotGenerationError(
+                "INVALID_ARGUMENT",
+                "snapshot_generation_required",
+                "this snapshot requires snapshotGeneration; refresh the element inventory and retry");
+        }
+        return; // Initial protocol-v1 snapshot remains compatible during migration.
+    }
+
+    const Json& value = request.at("snapshotGeneration");
+    std::uint64_t requested = 0U;
+    if (value.is_number_unsigned()) {
+        requested = value.get<std::uint64_t>();
+    } else if (value.is_number_integer()) {
+        const auto signedValue = value.get<std::int64_t>();
+        if (signedValue < 0) {
+            throw std::invalid_argument("snapshotGeneration must not be negative");
+        }
+        requested = static_cast<std::uint64_t>(signedValue);
+    } else {
+        throw std::invalid_argument("snapshotGeneration must be an integer");
+    }
+
+    if (requested != snapshot.generation) {
+        throw SnapshotGenerationError(
+            "REVISION_CONFLICT",
+            "stale_snapshot_generation",
+            "element reference belongs to a stale snapshot generation; refresh the saved element inventory");
     }
 }
 
@@ -348,6 +443,7 @@ std::optional<Json> mapLibreOfficeEvent(
         return eventEnvelope("elementSelectionChanged", Json{
             {"selected", true},
             {"ref", selection.ref},
+            {"snapshotGeneration", selection.snapshotGeneration},
             {"referenceStability", "snapshot-only"},
             {"rectTwips", Json{
                 {"x", (*values)[0]},
@@ -410,10 +506,12 @@ void queueSelectionCleared(
         return;
     }
     const std::string ref = selection.ref;
+    const auto snapshotGeneration = selection.snapshotGeneration;
     selection.reset();
     queueEvent(queue, eventEnvelope("elementSelectionChanged", Json{
         {"selected", false},
         {"ref", ref},
+        {"snapshotGeneration", snapshotGeneration},
         {"referenceStability", "snapshot-only"},
         {"reason", reason}
     }));
@@ -485,6 +583,17 @@ void validateRenderSize(int width, int height)
     }
 }
 
+std::size_t requireWorkerSlideIndex(
+    const cakeos::present::PresentEngine& engine,
+    int slideIndex)
+{
+    const auto count = engine.slides().size();
+    if (slideIndex < 0 || static_cast<std::size_t>(slideIndex) >= count) {
+        throw std::out_of_range("slide index is outside the presentation");
+    }
+    return count;
+}
+
 Json slideListResult(const cakeos::present::PresentEngine& engine)
 {
     Json slides = Json::array();
@@ -511,6 +620,7 @@ Json elementListResult(
     for (const auto& element : engine.elementSnapshot(snapshot.path, slideIndex)) {
         elements.push_back(Json{
             {"ref", "slide:" + std::to_string(element.slideIndex) + "/object:" + std::to_string(element.objectIndex)},
+            {"snapshotGeneration", snapshot.generation},
             {"slideIndex", element.slideIndex},
             {"objectIndex", element.objectIndex},
             {"referenceStability", "snapshot-only"},
@@ -520,6 +630,7 @@ Json elementListResult(
 
     return Json{
         {"slideIndex", slideIndex},
+        {"snapshotGeneration", snapshot.generation},
         {"snapshotFresh", true},
         {"referenceStability", "snapshot-only"},
         {"elements", std::move(elements)}
@@ -543,6 +654,8 @@ Json helloResult(const cakeos::present::PresentEngine& engine)
         "saveAs"
     });
     if (engine.supportsElementSnapshots()) {
+        capabilities.push_back("snapshotGeneration");
+        capabilities.push_back("snapshotGenerationRequiredAfterTransition");
         capabilities.push_back("listElements");
         capabilities.push_back("selectElement");
         capabilities.push_back("clearElementSelection");
@@ -603,16 +716,21 @@ int main()
                 if (operation == "hello") {
                     writeFrame(std::cout, success(id, helloResult(engine)));
                 } else if (operation == "open") {
-                    clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentChanged");
                     const std::string path = request.at("path").get<std::string>();
+                    std::string snapshotPath = path;
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     engine.open(path);
-                    elementSnapshot.path = path;
-                    elementSnapshot.fresh = true;
+                    // Open is transactional: preserve the current selection if
+                    // loading fails. On success, the old document is already
+                    // gone, so do not send UnMarkObject to the newly opened one.
+                    queueSelectionCleared(eventQueue, elementSelection, "documentChanged");
+                    elementSnapshot.open(std::move(snapshotPath), nextSnapshotGeneration);
                     writeFrame(std::cout, success(id, slideListResult(engine)));
                 } else if (operation == "close") {
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentClosed");
                     engine.close();
-                    elementSnapshot.reset();
+                    elementSnapshot.reset(nextSnapshotGeneration);
                     writeFrame(std::cout, success(id));
                 } else if (operation == "listSlides") {
                     writeFrame(std::cout, success(id, slideListResult(engine)));
@@ -623,6 +741,7 @@ int main()
                         request.at("slideIndex").get<int>())));
                 } else if (operation == "selectElement") {
                     requireFreshElementSnapshot(engine, elementSnapshot);
+                    requireMatchingSnapshotGeneration(request, elementSnapshot);
                     const std::string ref = request.at("ref").get<std::string>();
                     const auto elementRef = parseElementRef(ref);
                     if (!elementRef.has_value()) {
@@ -638,6 +757,7 @@ int main()
                     elementSelection.ref = ref;
                     elementSelection.slideIndex = elementRef->slideIndex;
                     elementSelection.objectIndex = elementRef->objectIndex;
+                    elementSelection.snapshotGeneration = elementSnapshot.generation;
                     elementSelection.active = true;
                     try {
                         engine.selectElement(
@@ -651,6 +771,7 @@ int main()
                     writeFrame(std::cout, success(id, Json{
                         {"ref", ref},
                         {"selected", true},
+                        {"snapshotGeneration", elementSnapshot.generation},
                         {"referenceStability", "snapshot-only"}
                     }));
                 } else if (operation == "clearElementSelection") {
@@ -658,6 +779,7 @@ int main()
                         writeFrame(std::cout, success(id, Json{{"selected", false}}));
                     } else {
                         const std::string ref = elementSelection.ref;
+                        const auto snapshotGeneration = elementSelection.snapshotGeneration;
                         engine.clearElementSelection(
                             elementSelection.slideIndex,
                             elementSelection.objectIndex);
@@ -665,11 +787,13 @@ int main()
                         writeFrame(std::cout, success(id, Json{
                             {"ref", ref},
                             {"selected", false},
+                            {"snapshotGeneration", snapshotGeneration},
                             {"referenceStability", "snapshot-only"}
                         }));
                     }
                 } else if (operation == "replaceElementText") {
                     requireFreshElementSnapshot(engine, elementSnapshot);
+                    requireMatchingSnapshotGeneration(request, elementSnapshot);
                     const std::string ref = request.at("ref").get<std::string>();
                     const auto elementRef = parseElementRef(ref);
                     if (!elementRef.has_value()) {
@@ -680,6 +804,7 @@ int main()
                     if (text.size() > MaxSemanticTextBytes) {
                         throw std::invalid_argument("replacement text exceeds the semantic text size limit");
                     }
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     const bool changed = engine.replaceElementText(
                         elementSnapshot.path,
                         elementRef->slideIndex,
@@ -691,12 +816,13 @@ int main()
                             elementSelection,
                             eventQueue,
                             "documentMutation");
-                        elementSnapshot.fresh = false;
+                        elementSnapshot.markStale(nextSnapshotGeneration);
                         queueMutationEvents(eventQueue, engine, operation);
                     }
                     writeFrame(std::cout, success(id, Json{
                         {"ref", ref},
                         {"changed", changed},
+                        {"snapshotGeneration", elementSnapshot.generation},
                         {"snapshotFresh", elementSnapshot.fresh}
                     }));
                 } else if (operation == "slideExtent") {
@@ -732,61 +858,104 @@ int main()
                         {"bytesPerPixel", 4}
                     }), tile.pixels);
                 } else if (operation == "addSlideAfter") {
+                    const int slideIndex = request.at("slideIndex").get<int>();
+                    (void)requireWorkerSlideIndex(engine, slideIndex);
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentMutation");
-                    engine.addSlideAfter(request.at("slideIndex").get<int>());
-                    elementSnapshot.fresh = false;
+                    engine.addSlideAfter(slideIndex);
+                    elementSnapshot.markStale(nextSnapshotGeneration);
                     writeFrame(std::cout, success(id, slideListResult(engine)));
                     queueMutationEvents(eventQueue, engine, operation);
                 } else if (operation == "duplicateSlide") {
+                    const int slideIndex = request.at("slideIndex").get<int>();
+                    (void)requireWorkerSlideIndex(engine, slideIndex);
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentMutation");
-                    engine.duplicateSlide(request.at("slideIndex").get<int>());
-                    elementSnapshot.fresh = false;
+                    engine.duplicateSlide(slideIndex);
+                    elementSnapshot.markStale(nextSnapshotGeneration);
                     writeFrame(std::cout, success(id, slideListResult(engine)));
                     queueMutationEvents(eventQueue, engine, operation);
                 } else if (operation == "deleteSlide") {
+                    const int slideIndex = request.at("slideIndex").get<int>();
+                    const auto slideCount = requireWorkerSlideIndex(engine, slideIndex);
+                    if (slideCount <= 1U) {
+                        throw std::logic_error("a presentation must keep at least one slide");
+                    }
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentMutation");
-                    engine.deleteSlide(request.at("slideIndex").get<int>());
-                    elementSnapshot.fresh = false;
+                    engine.deleteSlide(slideIndex);
+                    elementSnapshot.markStale(nextSnapshotGeneration);
                     writeFrame(std::cout, success(id, slideListResult(engine)));
                     queueMutationEvents(eventQueue, engine, operation);
                 } else if (operation == "moveSlide") {
-                    clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentMutation");
-                    engine.moveSlide(
-                        request.at("fromIndex").get<int>(),
-                        request.at("toIndex").get<int>());
-                    elementSnapshot.fresh = false;
-                    writeFrame(std::cout, success(id, slideListResult(engine)));
-                    queueMutationEvents(eventQueue, engine, operation);
+                    const int fromIndex = request.at("fromIndex").get<int>();
+                    const int toIndex = request.at("toIndex").get<int>();
+                    (void)requireWorkerSlideIndex(engine, fromIndex);
+                    (void)requireWorkerSlideIndex(engine, toIndex);
+                    if (fromIndex == toIndex) {
+                        writeFrame(std::cout, success(id, slideListResult(engine)));
+                    } else {
+                        const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
+                        clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentMutation");
+                        engine.moveSlide(fromIndex, toIndex);
+                        elementSnapshot.markStale(nextSnapshotGeneration);
+                        writeFrame(std::cout, success(id, slideListResult(engine)));
+                        queueMutationEvents(eventQueue, engine, operation);
+                    }
                 } else if (operation == "undo") {
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentMutation");
                     engine.undo();
-                    elementSnapshot.fresh = false;
+                    elementSnapshot.markStale(nextSnapshotGeneration);
                     writeFrame(std::cout, success(id, slideListResult(engine)));
                     queueMutationEvents(eventQueue, engine, operation);
                 } else if (operation == "redo") {
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "documentMutation");
                     engine.redo();
-                    elementSnapshot.fresh = false;
+                    elementSnapshot.markStale(nextSnapshotGeneration);
                     writeFrame(std::cout, success(id, slideListResult(engine)));
                     queueMutationEvents(eventQueue, engine, operation);
                 } else if (operation == "saveAs") {
                     const std::string path = request.at("path").get<std::string>();
+                    std::string snapshotPath = path;
+                    const auto nextSnapshotGeneration = elementSnapshot.nextGeneration();
                     engine.saveAs(
                         path,
                         request.value("format", std::string{}),
                         request.value("filterOptions", std::string{}));
-                    elementSnapshot.path = path;
-                    elementSnapshot.fresh = true;
-                    writeFrame(std::cout, success(id));
+                    elementSnapshot.saveAs(std::move(snapshotPath), nextSnapshotGeneration);
+                    if (elementSelection.active) {
+                        elementSelection.snapshotGeneration = elementSnapshot.generation;
+                    }
+                    writeFrame(std::cout, success(id, Json{
+                        {"snapshotGeneration", elementSnapshot.generation},
+                        {"snapshotFresh", elementSnapshot.fresh}
+                    }));
                 } else if (operation == "quit") {
                     clearActiveSelectionBestEffort(engine, elementSelection, eventQueue, "workerClosing");
                     writeFrame(std::cout, success(id));
                     shouldQuit = true;
                 } else {
-                    throw std::invalid_argument("unknown Present worker operation: " + operation);
+                    throw UnsupportedFeatureError(
+                        "unknown Present worker operation: " + operation);
                 }
+            } catch (const SnapshotGenerationError& error) {
+                writeFrame(std::cout, failure(id, error.code, error.what(), error.reason));
+            } catch (const UnsupportedFeatureError& error) {
+                writeFrame(std::cout, failure(id, "UNSUPPORTED_FEATURE", error.what()));
+            } catch (const Json::exception& error) {
+                writeFrame(std::cout, failure(id, "INVALID_ARGUMENT", error.what()));
+            } catch (const std::out_of_range& error) {
+                writeFrame(std::cout, failure(id, "NOT_FOUND", error.what()));
+            } catch (const std::invalid_argument& error) {
+                writeFrame(std::cout, failure(id, "INVALID_ARGUMENT", error.what()));
+            } catch (const std::logic_error& error) {
+                writeFrame(std::cout, failure(id, "INVALID_ARGUMENT", error.what()));
+            } catch (const std::runtime_error& error) {
+                writeFrame(std::cout, failure(id, "RUNTIME_ERROR", error.what()));
             } catch (const std::exception& error) {
-                writeFrame(std::cout, failure(id, error.what()));
+                writeFrame(std::cout, failure(id, "RUNTIME_ERROR", error.what()));
             }
 
             flushEvents(std::cout, eventQueue);

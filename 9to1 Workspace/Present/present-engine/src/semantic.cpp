@@ -32,9 +32,7 @@ void PresentEngine::selectElement(
         throw std::runtime_error(
             "this LibreOfficeKit runtime does not support semantic element snapshots");
     }
-    if (snapshotPathOrUrl.empty()) {
-        throw std::invalid_argument("snapshot path must not be empty");
-    }
+    requireSnapshotDocument(snapshotPathOrUrl);
     if (objectIndex < 0) {
         throw std::out_of_range("object index must not be negative");
     }
@@ -76,6 +74,7 @@ bool PresentEngine::replaceElementText(
         throw std::runtime_error(
             "this LibreOfficeKit runtime does not support semantic element snapshots");
     }
+    requireSnapshotDocument(snapshotPathOrUrl);
     if (objectIndex < 0) {
         throw std::out_of_range("object index must not be negative");
     }
@@ -127,6 +126,9 @@ void PresentEngine::duplicateSlide(int slideIndex)
 void PresentEngine::deleteSlide(int slideIndex)
 {
     const auto slideList = slides();
+    if (slideIndex < 0 || static_cast<std::size_t>(slideIndex) >= slideList.size()) {
+        throw std::out_of_range("slide index is outside the presentation");
+    }
     if (slideList.size() <= 1U) {
         throw std::logic_error("a presentation must keep at least one slide");
     }

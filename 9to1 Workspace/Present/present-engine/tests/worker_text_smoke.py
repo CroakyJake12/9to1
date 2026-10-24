@@ -13,10 +13,15 @@ def element_ref_with_text(response: dict, expected_text: str) -> str:
     result = response.get("result", {})
     if result.get("referenceStability") != "snapshot-only":
         raise RuntimeError(f"element response overstates reference stability: {result}")
+    generation = result.get("snapshotGeneration")
+    if not isinstance(generation, int) or generation < 1:
+        raise RuntimeError(f"element inventory has no valid snapshot generation: {result}")
     for element in result.get("elements", []):
         if expected_text in [str(value) for value in element.get("text", [])]:
             if element.get("referenceStability") != "snapshot-only":
                 raise RuntimeError(f"element overstates reference stability: {element}")
+            if element.get("snapshotGeneration") != generation:
+                raise RuntimeError(f"element generation differs from its inventory: {element}")
             ref = element.get("ref")
             if not isinstance(ref, str) or not ref.startswith("slide:") or "/object:" not in ref:
                 raise RuntimeError(f"element did not expose a CakeOS snapshot ref: {element}")
@@ -30,6 +35,24 @@ def require_text(response: dict, expected_text: str) -> None:
 
 def slide_count(response: dict) -> int:
     return len(response["result"]["slides"])
+
+
+def require_stale_generation(client: WorkerClient, ref: str, generation: int) -> None:
+    stale, payload = client.request(
+        "replaceElementText",
+        ref=ref,
+        snapshotGeneration=generation,
+        text="must reject stale generation",
+    )
+    message = str(stale.get("error", {}).get("message", ""))
+    if (
+        stale.get("ok")
+        or payload
+        or stale.get("error", {}).get("code") != "REVISION_CONFLICT"
+        or stale.get("error", {}).get("reason") != "stale_snapshot_generation"
+        or "generation" not in message
+    ):
+        raise RuntimeError(f"worker accepted stale snapshot generation {generation}: {stale}")
 
 
 def main() -> int:
@@ -58,7 +81,15 @@ def main() -> int:
         if payload:
             raise RuntimeError("hello unexpectedly returned binary data")
         capabilities = set(hello["result"]["capabilities"])
-        for capability in ("listElements", "replaceElementText", "undo", "redo", "saveAs"):
+        for capability in (
+            "listElements",
+            "replaceElementText",
+            "undo",
+            "redo",
+            "saveAs",
+            "snapshotGeneration",
+            "snapshotGenerationRequiredAfterTransition",
+        ):
             if capability not in capabilities:
                 raise RuntimeError(f"worker is missing text capability {capability}")
 
@@ -70,36 +101,80 @@ def main() -> int:
         if payload:
             raise RuntimeError("listElements unexpectedly returned binary data")
         ref = element_ref_with_text(inventory, "Alpha")
+        snapshot_generation = inventory["result"]["snapshotGeneration"]
+
+        unchanged, unchanged_payload = client.require_ok(
+            "replaceElementText",
+            ref=ref,
+            snapshotGeneration=snapshot_generation,
+            text="Alpha",
+        )
+        if unchanged_payload or (
+            unchanged["result"].get("changed") is not False
+            or unchanged["result"].get("snapshotFresh") is not True
+            or unchanged["result"].get("snapshotGeneration") != snapshot_generation
+        ):
+            raise RuntimeError(f"no-op text replacement changed snapshot state: {unchanged}")
 
         multiline, multiline_payload = client.request(
             "replaceElementText",
             ref=ref,
+            snapshotGeneration=snapshot_generation,
             text="Alpha\nBeta",
         )
-        if multiline.get("ok") or multiline_payload:
+        if (
+            multiline.get("ok")
+            or multiline_payload
+            or multiline.get("error", {}).get("code") != "INVALID_ARGUMENT"
+        ):
             raise RuntimeError("worker accepted multiline text in the single-line semantic write slice")
         multiline_message = str(multiline.get("error", {}).get("message", ""))
         if "single-line" not in multiline_message:
             raise RuntimeError(f"worker did not explain multiline rejection: {multiline}")
         still_fresh, _ = client.require_ok("listElements", slideIndex=0)
         require_text(still_fresh, "Alpha")
+        if still_fresh["result"]["snapshotGeneration"] != snapshot_generation:
+            raise RuntimeError("rejected multiline edit advanced the snapshot generation")
 
         replaced, payload = client.require_ok(
             "replaceElementText",
             ref=ref,
+            snapshotGeneration=snapshot_generation,
             text="CakeOS Typed",
         )
         if payload:
             raise RuntimeError("replaceElementText unexpectedly returned binary data")
-        if replaced["result"].get("ref") != ref or replaced["result"].get("snapshotFresh") is not False:
+        if (
+            replaced["result"].get("ref") != ref
+            or replaced["result"].get("snapshotFresh") is not False
+            or replaced["result"].get("snapshotGeneration") == snapshot_generation
+        ):
             raise RuntimeError(f"replaceElementText returned invalid metadata: {replaced}")
+        mutation_generation = replaced["result"]["snapshotGeneration"]
 
         stale, stale_payload = client.request("listElements", slideIndex=0)
-        if stale.get("ok") or stale_payload:
+        if (
+            stale.get("ok")
+            or stale_payload
+            or stale.get("error", {}).get("code") != "REVISION_CONFLICT"
+            or stale.get("error", {}).get("reason") != "snapshot_not_fresh"
+        ):
             raise RuntimeError("worker returned element data from a stale post-text snapshot")
         stale_message = str(stale.get("error", {}).get("message", ""))
         if "stale" not in stale_message or "save" not in stale_message:
             raise RuntimeError(f"worker did not explain stale text snapshot: {stale}")
+        tokenless_stale_replace, tokenless_stale_replace_payload = client.request(
+            "replaceElementText", ref=ref, text="must not mutate stale snapshot"
+        )
+        if (
+            tokenless_stale_replace.get("ok")
+            or tokenless_stale_replace_payload
+            or tokenless_stale_replace.get("error", {}).get("code") != "REVISION_CONFLICT"
+            or tokenless_stale_replace.get("error", {}).get("reason") != "snapshot_not_fresh"
+        ):
+            raise RuntimeError(
+                f"worker accepted tokenless replacement on a stale snapshot: {tokenless_stale_replace}"
+            )
         replace_events = client.take_events()
         require_semantic_mutation_events(replace_events, "replaceElementText")
 
@@ -108,6 +183,24 @@ def main() -> int:
             raise RuntimeError("text replacement did not persist to ODP")
         updated_inventory, _ = client.require_ok("listElements", slideIndex=0)
         require_text(updated_inventory, "CakeOS Typed")
+        updated_generation = updated_inventory["result"]["snapshotGeneration"]
+        if updated_generation == mutation_generation:
+            raise RuntimeError("save-as did not advance the semantic snapshot generation")
+        tokenless_after_save, tokenless_after_save_payload = client.request(
+            "replaceElementText", ref=ref, text="must require a generation"
+        )
+        if (
+            tokenless_after_save.get("ok")
+            or tokenless_after_save_payload
+            or tokenless_after_save.get("error", {}).get("code")
+            != "INVALID_ARGUMENT"
+            or tokenless_after_save.get("error", {}).get("reason")
+            != "snapshot_generation_required"
+        ):
+            raise RuntimeError(
+                f"tokenless text mutation was not refused after save-as: {tokenless_after_save}"
+            )
+        require_stale_generation(client, ref, snapshot_generation)
 
         client.require_ok("undo")
         stale_after_undo, payload = client.request("listElements", slideIndex=0)
@@ -116,6 +209,7 @@ def main() -> int:
         client.require_ok("saveAs", path=str(undone), format="odp")
         undo_inventory, _ = client.require_ok("listElements", slideIndex=0)
         require_text(undo_inventory, "Alpha")
+        require_stale_generation(client, ref, updated_generation)
 
         client.require_ok("redo")
         stale_after_redo, payload = client.request("listElements", slideIndex=0)
@@ -124,18 +218,41 @@ def main() -> int:
         client.require_ok("saveAs", path=str(redone), format="odp")
         redo_inventory, _ = client.require_ok("listElements", slideIndex=0)
         require_text(redo_inventory, "CakeOS Typed")
+        redo_generation = redo_inventory["result"]["snapshotGeneration"]
 
         client.require_ok("close")
         client.require_ok("open", path=str(redone))
         reopened_inventory, _ = client.require_ok("listElements", slideIndex=0)
         require_text(reopened_inventory, "CakeOS Typed")
+        reopened_generation = reopened_inventory["result"]["snapshotGeneration"]
+        if reopened_generation == redo_generation:
+            raise RuntimeError("reopen did not advance the semantic snapshot generation")
+        tokenless_after_reopen, tokenless_after_reopen_payload = client.request(
+            "replaceElementText", ref=ref, text="must require a generation"
+        )
+        if (
+            tokenless_after_reopen.get("ok")
+            or tokenless_after_reopen_payload
+            or tokenless_after_reopen.get("error", {}).get("code")
+            != "INVALID_ARGUMENT"
+            or tokenless_after_reopen.get("error", {}).get("reason")
+            != "snapshot_generation_required"
+        ):
+            raise RuntimeError(
+                f"tokenless text mutation was not refused after reopen: {tokenless_after_reopen}"
+            )
+        require_stale_generation(client, ref, redo_generation)
 
         malformed, malformed_payload = client.request(
             "replaceElementText",
             ref="object:0",
             text="bad",
         )
-        if malformed.get("ok") or malformed_payload:
+        if (
+            malformed.get("ok")
+            or malformed_payload
+            or malformed.get("error", {}).get("code") != "INVALID_ARGUMENT"
+        ):
             raise RuntimeError("worker accepted a malformed semantic element ref")
 
         # Prove that a CakeOS-managed text history entry does not obstruct an
@@ -153,7 +270,13 @@ def main() -> int:
 
         mixed_inventory, _ = client.require_ok("listElements", slideIndex=0)
         mixed_ref = element_ref_with_text(mixed_inventory, "Alpha")
-        client.require_ok("replaceElementText", ref=mixed_ref, text="Mixed Text")
+        mixed_generation = mixed_inventory["result"]["snapshotGeneration"]
+        client.require_ok(
+            "replaceElementText",
+            ref=mixed_ref,
+            snapshotGeneration=mixed_generation,
+            text="Mixed Text",
+        )
 
         client.require_ok("undo")
         mixed_native_undo, _ = client.require_ok("undo")

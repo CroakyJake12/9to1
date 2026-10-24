@@ -371,6 +371,17 @@ struct PresentEngine::Impl {
         }
     }
 
+    void requireSnapshotDocument(std::string_view snapshotPathOrUrl) const
+    {
+        requireDocument();
+        const std::string snapshotUrl = PresentEngine::pathToFileUrl(
+            requireNonEmpty(snapshotPathOrUrl, "snapshotPathOrUrl"));
+        if (snapshotUrl != documentUrl) {
+            throw std::invalid_argument(
+                "semantic snapshot does not identify the currently open presentation");
+        }
+    }
+
     void requireSlideIndex(int slideIndex) const
     {
         requireDocument();
@@ -424,6 +435,7 @@ struct PresentEngine::Impl {
     bool ownsProfile{false};
     std::unique_ptr<lok::Office> office;
     std::unique_ptr<lok::Document> document;
+    std::string documentUrl;
     EventCallback eventCallback;
     std::vector<HistoryEntry> history;
     std::size_t historyCursor{0U};
@@ -453,6 +465,7 @@ void PresentEngine::open(std::string_view documentPathOrUrl)
     next->initializeForRendering();
     next->setPartMode(LOK_PARTMODE_SLIDES);
     next->registerCallback(&Impl::callbackThunk, impl_.get());
+    impl_->documentUrl = url;
     impl_->document = std::move(next);
     impl_->clearHistory();
 }
@@ -460,12 +473,18 @@ void PresentEngine::open(std::string_view documentPathOrUrl)
 void PresentEngine::close() noexcept
 {
     impl_->document.reset();
+    impl_->documentUrl.clear();
     impl_->clearHistory();
 }
 
 bool PresentEngine::isOpen() const noexcept
 {
     return static_cast<bool>(impl_->document);
+}
+
+void PresentEngine::requireSnapshotDocument(std::string_view snapshotPathOrUrl) const
+{
+    impl_->requireSnapshotDocument(snapshotPathOrUrl);
 }
 
 std::vector<SlideInfo> PresentEngine::slides() const
@@ -803,6 +822,7 @@ void PresentEngine::saveAs(
             optionsValue.empty() ? nullptr : optionsValue.c_str())) {
         throw impl_->lastError("failed to save presentation");
     }
+    impl_->documentUrl = url;
 }
 
 void PresentEngine::setEventCallback(EventCallback callback)

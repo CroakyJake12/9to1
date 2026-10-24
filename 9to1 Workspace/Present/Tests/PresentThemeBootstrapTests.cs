@@ -19,6 +19,11 @@ public sealed class PresentThemeBootstrapTests
         // service can populate Application.Current.Resources.
         var application = new PresentApplication();
         application.Initialize();
+        Assert.DoesNotContain(application.Styles, style =>
+            string.Equals(
+                style.GetType().Assembly.GetName().Name,
+                "Avalonia.Themes.Fluent",
+                StringComparison.Ordinal));
         foreach (var key in new[]
         {
             "HavenTextPrimaryBrush", "HavenTextSecondaryBrush", "HavenTextMutedBrush",

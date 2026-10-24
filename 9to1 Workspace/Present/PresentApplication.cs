@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml.Styling;
-using Avalonia.Themes.Fluent;
 
 namespace HavenOS.Apps.Present;
 
@@ -12,7 +11,6 @@ public sealed class PresentApplication : Application
 
     public override void Initialize()
     {
-        Styles.Add(new FluentTheme());
         var theme = new Uri("avares://Haven/Styles/DefaultTheme.axaml");
         Styles.Add(new StyleInclude(theme) { Source = theme });
     }
