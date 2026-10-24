@@ -80,7 +80,13 @@ public sealed partial class BrowseNativeOwnershipTests
         await Assert.ThrowsAnyAsync<IOException>(() => chrome.CloseTabAsync(closing));
         Assert.Equal(survivor, chrome.State.SelectedTabId);
         Assert.Equal(survivor, Assert.Single(chrome.State.Tabs).Id);
+        Assert.True(chrome.CanReopenClosedTab);
+        Directory.Delete(Path.Combine(paths.DataDirectory, "browse-engine-preferences.json"));
+        await chrome.ReopenClosedTabAsync();
+        Assert.Equal(closing, chrome.State.SelectedTabId);
+        Assert.Contains(chrome.State.Tabs, tab => tab.Id == closing);
         await Assert.ThrowsAsync<AggregateException>(() => chrome.DisposeAsync().AsTask());
+        RetainedFailedOwners.Remove(chrome);
     }
 
     [Fact]

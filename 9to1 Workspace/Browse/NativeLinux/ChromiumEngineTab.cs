@@ -16,7 +16,7 @@ namespace HavenOS.Apps.Browse;
 /// the final address is safe). Popups are attributed by opener target id and
 /// routed through canonical Browse boundaries or denied — never auto-granted.
 /// </summary>
-internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOriginalPageCommitSource, IBrowseEngineRetirementGuard, IBrowseOriginalDownloadContentSource, IBrowseOriginalPendingDownloadSource
+internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOriginalPageCommitSource, IBrowseOriginalNavigationStateSource, IBrowseEngineRetirementGuard, IBrowseOriginalDownloadContentSource, IBrowseOriginalPendingDownloadSource
 {
     private readonly Uri _initialAddress;
     private readonly ChromiumLease _lease;
@@ -31,6 +31,7 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
     private readonly List<Task> _sourceTasks = [];
     private readonly List<Exception> _sourceFailures = [];
     private string? _targetId, _sessionId;
+    private string? _mainFrameId;
     private Uri? _committedAddress;
     private bool _navigationBlocked;
     private BrowserSnapshot _state;
@@ -50,6 +51,7 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
     private static readonly HashSet<string> _trackedLifecycleEvents = new(StringComparer.Ordinal)
     {
         "Page.frameNavigated",
+        "Page.navigatedWithinDocument",
         "Page.loadEventFired",
         "Page.lifecycleEvent",
         "Page.screencastFrame",
@@ -100,6 +102,7 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
     public event EventHandler<BrowsePopupRequest>? PopupRequested;
     public event EventHandler<BrowseEngineCrash>? Crashed;
     public event EventHandler<BrowserSnapshot>? PageCommitted;
+    public event EventHandler<BrowserSnapshot>? NavigationStateChanged;
 
     internal ChromiumLease Lease => _lease;
     internal IChromiumEndpoint Connection => _connection;
@@ -297,6 +300,9 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
             case "Page.frameNavigated":
                 HandleFrameNavigated(e.Params);
                 break;
+            case "Page.navigatedWithinDocument":
+                HandleNavigatedWithinDocument(e.Params);
+                break;
             case "Page.loadEventFired":
                 HandleLoadEventFired();
                 break;
@@ -320,6 +326,8 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
     private void HandleFrameNavigated(JsonElement parameters)
     {
         if (!parameters.TryGetProperty("frame", out var frame) || frame.TryGetProperty("parentId", out _)) return;
+        if (frame.TryGetProperty("id", out var frameId) && frameId.ValueKind == JsonValueKind.String)
+            _mainFrameId = frameId.GetString();
         if (!frame.TryGetProperty("url", out var urlElement) || urlElement.ValueKind != JsonValueKind.String) return;
         if (!Uri.TryCreate(urlElement.GetString(), UriKind.Absolute, out var uri)) return;
 
@@ -342,6 +350,32 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
             IsLoading = true,
             Status = "Loading…"
         });
+    }
+
+    private void HandleNavigatedWithinDocument(JsonElement parameters)
+    {
+        if (_mainFrameId is null || !parameters.TryGetProperty("frameId", out var frameId) ||
+            frameId.ValueKind != JsonValueKind.String || !string.Equals(frameId.GetString(), _mainFrameId, StringComparison.Ordinal) ||
+            !parameters.TryGetProperty("url", out var urlElement) || urlElement.ValueKind != JsonValueKind.String ||
+            !Uri.TryCreate(urlElement.GetString(), UriKind.Absolute, out var uri)) return;
+
+        var assessment = ChromiumNavigationPolicy.Assess(uri);
+        if (!assessment.IsAllowed)
+        {
+            Publish(State with { IsLoading = false, Status = assessment.Reason });
+            return;
+        }
+
+        // Fragment and History API transitions stay in the owning main document,
+        // but are still real top-level URL changes. Keep browser chrome and the
+        // engine's Back/Forward capability state synchronized without pretending a
+        // new document committed (pushState and replaceState share this CDP event).
+        _navigationBlocked = false;
+        _committedAddress = uri;
+        var snapshot = State with { Address = uri, IsLoading = false, Status = "Chromium page updated." };
+        Publish(snapshot);
+        NavigationStateChanged?.Invoke(this, snapshot);
+        _ = QueueInputAsync(RefreshHistoryStateAsync);
     }
 
     private void HandleLoadEventFired()

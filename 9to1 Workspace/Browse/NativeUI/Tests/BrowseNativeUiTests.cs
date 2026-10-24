@@ -35,6 +35,59 @@ public sealed class BrowseTestApplication : Application
 public sealed partial class BrowseNativeUiTests
 {
     private static readonly List<(BrowseNativeWindow Window, Exception Failure)> RetainedFailedOwners = [];
+
+    [AvaloniaFact]
+    public async Task Back_and_forward_controls_follow_the_selected_renderer_history_state()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        await chrome.SetSelectedTabEngineAsync(BrowseEngineKind.Chromium);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            var renderer = Assert.Single(factory.Hosts);
+            var back = Find(window, "BrowseBackButton");
+            var forward = Find(window, "BrowseForwardButton");
+
+            Assert.False(back.IsEnabled);
+            Assert.False(forward.IsEnabled);
+            renderer.PublishFixtureHistoryState(canGoBack: true, canGoForward: false);
+            Assert.True(back.IsEnabled);
+            Assert.False(forward.IsEnabled);
+            await Click(window, workspace, back);
+            Assert.False(back.IsEnabled);
+            Assert.True(forward.IsEnabled);
+            await Click(window, workspace, forward);
+            Assert.True(back.IsEnabled);
+            Assert.False(forward.IsEnabled);
+            Assert.Equal(new[] { "back", "forward" }, renderer.HistoryCalls);
+            Assert.Same(renderer, chrome.ObserveOriginalEngine(chrome.State.SelectedTabId));
+            await Shortcut(Key.Left);
+            Assert.False(back.IsEnabled);
+            Assert.True(forward.IsEnabled);
+            await Shortcut(Key.Right);
+            Assert.True(back.IsEnabled);
+            Assert.False(forward.IsEnabled);
+            Assert.Equal(new[] { "back", "forward", "back", "forward" }, renderer.HistoryCalls);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        async Task Shortcut(Key key)
+        {
+            var before = workspace.OriginalCommand;
+            window.KeyPress(key, RawInputModifiers.Alt, PhysicalKey.None, null);
+            window.KeyRelease(key, RawInputModifiers.Alt, PhysicalKey.None, null);
+            Assert.NotNull(workspace.OriginalCommand);
+            Assert.NotSame(before, workspace.OriginalCommand);
+            await Observe(workspace.OriginalCommand!, window);
+            await Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
+        }
+    }
+
     [AvaloniaFact]
     public async Task Actual_tab_rows_resolve_labels_and_select_current_source_issued_identity()
     {
@@ -725,15 +778,20 @@ public sealed partial class BrowseNativeUiTests
         public event EventHandler<BrowserSnapshot>? StateChanged;
         public event EventHandler<BrowserSnapshot>? PageCommitted;
         public List<Uri> RequestedAddresses { get; } = [];
+        public List<string> HistoryCalls { get; } = [];
         public event EventHandler<BrowsePopupRequest>? PopupRequested { add { } remove { } }
         public event EventHandler<BrowseEngineCrash>? Crashed { add { } remove { } }
+        public void PublishFixtureHistoryState(bool canGoBack, bool canGoForward)
+        { State = State with { CanGoBack = canGoBack, CanGoForward = canGoForward }; StateChanged?.Invoke(this, State); }
         public void PublishFixtureTitle(string title) { State = State with { Title = title }; StateChanged?.Invoke(this, State); }
         public void CommitFixturePage(Uri address, string title)
         { State = State with { Address = address, Title = title, IsLoading = false }; StateChanged?.Invoke(this, State); PageCommitted?.Invoke(this, State); }
         public Task NavigateAsync(Uri address, CancellationToken token)
         { token.ThrowIfCancellationRequested(); RequestedAddresses.Add(address); State = State with { Address = address, IsLoading = true }; StateChanged?.Invoke(this, State); return Task.CompletedTask; }
-        public Task GoBackAsync(CancellationToken token) => Task.CompletedTask;
-        public Task GoForwardAsync(CancellationToken token) => Task.CompletedTask;
+        public Task GoBackAsync(CancellationToken token)
+        { token.ThrowIfCancellationRequested(); HistoryCalls.Add("back"); PublishFixtureHistoryState(false, true); return Task.CompletedTask; }
+        public Task GoForwardAsync(CancellationToken token)
+        { token.ThrowIfCancellationRequested(); HistoryCalls.Add("forward"); PublishFixtureHistoryState(true, false); return Task.CompletedTask; }
         public Task ReloadAsync(CancellationToken token) => Task.CompletedTask;
         public int StopCalls { get; private set; }
         public Task StopAsync(CancellationToken token)

@@ -22,6 +22,13 @@ public interface IBrowseOriginalPageCommitSource
     event EventHandler<BrowserSnapshot>? PageCommitted;
 }
 
+/// <summary>Reports a same-document top-level URL change that updates the browser
+/// session address without claiming a new document commit/history visit.</summary>
+public interface IBrowseOriginalNavigationStateSource
+{
+    event EventHandler<BrowserSnapshot>? NavigationStateChanged;
+}
+
 public sealed partial class BrowseChrome
 {
     /// <summary>Observes the SAME source-owned engine object for a current tab.
@@ -41,6 +48,33 @@ public sealed partial class BrowseChrome
         if (snapshot.IsLoading) tab.HasOriginalCommittedPage = false;
         _status = tab.Status; Publish();
     }
+
+    private void CaptureOriginalNavigationState(TabRuntime tab, IBrowseEngineTab original, BrowserSnapshot snapshot)
+    {
+        if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab) ||
+            tab.Privacy == Haven.Core.BrowserTabPrivacy.Private || snapshot.IsLoading ||
+            snapshot.Address is not { Scheme: "http" or "https" }) return;
+        lock (_nativeSourceGate)
+        {
+            if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab)) return;
+            _originalNativeSources.RemoveAll(source => source.IsCompletedSuccessfully && !_contractSources.Contains(source));
+            PruneAdmissionRefusalsLocked(_originalNativeSources);
+            if (_originalNativeSources.Count >= 128) throw new InvalidOperationException("Browse retains unresolved native navigation-state sources.");
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var driver = PersistOriginalNavigationStateAsync(start.Task);
+            _originalNativeSources.Add(driver);
+            start.SetResult();
+        }
+    }
+
+    private async Task PersistOriginalNavigationStateAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        // SaveTabsAsync waits for earlier genuine commits before capturing the
+        // latest same-document address and retains the workspace owner's save task.
+        await SaveTabsAsync(CancellationToken.None).ConfigureAwait(false);
+    }
+
     private void CaptureOriginalNativeCallback(TabRuntime tab, IBrowseEngineTab original, Func<Task> callback)
     {
         lock (_nativeSourceGate)

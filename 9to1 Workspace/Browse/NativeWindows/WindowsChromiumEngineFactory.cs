@@ -47,7 +47,7 @@ public sealed class WindowsChromiumEngineFactory : IBrowseEngineHostFactory, IBr
     }
 }
 
-internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOriginalPageCommitSource, IBrowseEngineRetirementGuard, IBrowseOriginalDownloadContentSource
+internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOriginalPageCommitSource, IBrowseOriginalNavigationStateSource, IBrowseEngineRetirementGuard, IBrowseOriginalDownloadContentSource
 {
     private readonly BrowseEngineTabRequest _originalRequest;
     private readonly NativeWebView _view = new();
@@ -79,6 +79,7 @@ internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowse
     public event EventHandler<BrowsePopupRequest>? PopupRequested;
     public event EventHandler<BrowseEngineCrash>? Crashed;
     public event EventHandler<BrowserSnapshot>? PageCommitted;
+    public event EventHandler<BrowserSnapshot>? NavigationStateChanged;
     internal WindowsChromiumEngineTab(BrowseEngineTabRequest request,
         Func<Guid, IBrowseEngineTab, Uri, BrowserSitePermissionKind, BrowserSitePermissionDecision> originalPermission,
         BrowserDownloadTransport? transport, IBrowserNativeDownloadService? downloads)
@@ -112,6 +113,7 @@ internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowse
         _originalCore = CoreWebView2.CreateFromComICoreWebView2(handle.CoreWebView2);
         _originalCore.PermissionRequested += OnPermission;
         _originalCore.ProcessFailed += OnProcessFailed;
+        _originalCore.SourceChanged += OnSourceChanged;
         _originalDownloadBridge = new(_originalCore, _originalRequest.Privacy == BrowserTabPrivacy.Private, _transport, _downloads);
         Publish("Chromium native renderer connected.", false);
     }
@@ -163,6 +165,23 @@ internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowse
         if (args.IsSuccess && _originalCore is not null) _state = _state with { Title = _originalCore.DocumentTitle };
         Publish(args.IsSuccess ? "Chromium page loaded." : "Chromium could not load this page.", false);
         if (args.IsSuccess && args.Request is { Scheme: "http" or "https" }) PageCommitted?.Invoke(this, _state);
+    }
+    private void OnSourceChanged(object? sender, CoreWebView2SourceChangedEventArgs args)
+    {
+        using var originalInvocation = OriginalNativeInvocation.EnterExternal(this);
+        if (_retiring || _disposed || args.IsNewDocument || _originalCore is null ||
+            !Uri.TryCreate(_originalCore.Source, UriKind.Absolute, out var address)) return;
+        var assessment = BrowserNativeRequestPolicy.AssessTopLevel(address);
+        if (!assessment.IsAllowed)
+        {
+            Publish("Navigation blocked: " + assessment.Reason, false);
+            return;
+        }
+        if (_state.Address == address) return;
+
+        _state = _state with { Address = address, Title = _originalCore.DocumentTitle };
+        Publish("Chromium page updated.", false);
+        NavigationStateChanged?.Invoke(this, _state);
     }
     private void OnPopup(object? sender, WebViewNewWindowRequestedEventArgs args)
     {
@@ -260,7 +279,12 @@ internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowse
             // Public package API returns this SAME native scope directly.
             // Its asynchronous disposal owns pending native detach/destruction.
             _originalRetirementScope = _view.BeginReparentingAsync();
-            if (_originalCore is not null) { _originalCore.PermissionRequested -= OnPermission; _originalCore.ProcessFailed -= OnProcessFailed; }
+            if (_originalCore is not null)
+            {
+                _originalCore.PermissionRequested -= OnPermission;
+                _originalCore.ProcessFailed -= OnProcessFailed;
+                _originalCore.SourceChanged -= OnSourceChanged;
+            }
             _view.NavigationStarted -= OnNavigationStarted; _view.NavigationCompleted -= OnNavigationCompleted; _view.NewWindowRequested -= OnPopup;
             if (_view.Parent is Panel panel) panel.Children.Remove(_view);
             else if (_view.Parent is ContentControl content && ReferenceEquals(content.Content, _view)) content.Content = null;

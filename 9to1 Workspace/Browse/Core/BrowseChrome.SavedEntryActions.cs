@@ -26,6 +26,14 @@ public sealed partial class BrowseChrome
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
         var original = _data.History.SingleOrDefault(entry => entry.Id == originalEntryId)
             ?? throw new ArgumentException("The original saved history entry is no longer present.", nameof(originalEntryId));
+        // History is a record of web visits, not an alternate route into native
+        // apps. Old or externally modified stores can contain arbitrary absolute
+        // addresses, so reject non-web schemes before dispatch. NavigateAsync still
+        // applies the full canonical top-level policy (including credential checks).
+        // This guard is history-specific; bookmark and registered-route handling is unchanged.
+        if (!Uri.TryCreate(original.Address, UriKind.Absolute, out var address) ||
+            address.Scheme is not ("http" or "https"))
+            throw new InvalidOperationException("A saved history visit must use HTTP or HTTPS.");
         return NavigateAsync(original.Address, token);
     }
     /// <summary>Removes an exact recorded visit without changing the current tab or document.</summary>
@@ -66,9 +74,17 @@ public sealed partial class BrowseChrome
     {
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
         var originalTab = SelectedRuntime(); EnsureWebAddress(originalTab.Address);
-        _enginePolicy.SetSiteOverride(originalTab.Address.WebUri!, null);
-        await SaveEnginePreferencesAsync(token).ConfigureAwait(false);
-        var actualChoice = _enginePolicy.Resolve(originalTab.Address.WebUri!, originalTab.Id);
+        var address = originalTab.Address.WebUri!;
+        var host = address.IdnHost.TrimEnd('.');
+        var hadOverride = _enginePolicy.SiteOverrides.TryGetValue(host, out var previous);
+        _enginePolicy.SetSiteOverride(address, null);
+        try { await SaveEnginePreferencesAsync(token).ConfigureAwait(false); }
+        catch
+        {
+            if (hadOverride) _enginePolicy.SetSiteOverride(address, previous);
+            throw;
+        }
+        var actualChoice = _enginePolicy.Resolve(address, originalTab.Id);
         await SetTabEngineAsync(originalTab, actualChoice, token, persistTabOverride: false).ConfigureAwait(false);
         _status = _enginePolicy.TabOverrides.ContainsKey(originalTab.Id)
             ? "Site engine preference reset. This tab keeps its explicit engine choice."

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Avalonia.Controls;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -259,5 +260,248 @@ public sealed class ChromiumDownloadsTests
         public Task<string> CreateTargetAsync(string url, CancellationToken token) => throw new NotSupportedException();
         public Task<string> AttachAsync(string targetId, CancellationToken token) => throw new NotSupportedException();
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+}
+
+// This deterministic endpoint verifies ChromiumEngineTab's CDP contract only. It
+// is not installed-Chromium execution or native browser acceptance evidence.
+public sealed class ChromiumHistoryNavigationProtocolTests
+{
+    [Theory]
+    [InlineData("fragment")]
+    [InlineData("historyApi")]
+    public async Task Same_document_top_level_navigation_updates_url_and_refreshes_history_without_leaking_subframes(string navigationType)
+    {
+        var endpoint = new HistoryEndpoint();
+        var pool = new ChromiumProfilePool((_, _) => Task.FromResult<IChromiumEndpoint>(endpoint));
+        var profile = Path.Combine(Path.GetTempPath(), "chromium-history-same-document-fixture");
+        var lease = await pool.AcquireAsync(profile, CancellationToken.None);
+        var initial = new Uri("https://history.example/current");
+        var request = new BrowseEngineTabRequest(Guid.NewGuid(), BrowserTabPrivacy.Standard, profile, initial, BrowseEngineKind.Chromium);
+        await using var tab = new ChromiumEngineTab(request, lease, new HistoryView());
+        await tab.InitializeAsync(CancellationToken.None);
+
+        using (var mainFrame = JsonDocument.Parse(JsonSerializer.Serialize(new { frame = new { id = "main-frame", url = initial.AbsoluteUri } })))
+            endpoint.Emit(new("Page.frameNavigated", mainFrame.RootElement.Clone(), "history-session"));
+        endpoint.Commands.Clear();
+
+        using (var subframeNavigation = JsonDocument.Parse(JsonSerializer.Serialize(new
+            { frameId = "child-frame", url = "https://history.example/child#section", navigationType = "fragment" })))
+            endpoint.Emit(new("Page.navigatedWithinDocument", subframeNavigation.RootElement.Clone(), "history-session"));
+        Assert.Equal(initial, tab.State.Address);
+        Assert.Empty(endpoint.Commands);
+
+        var fragment = new Uri("https://history.example/current#section");
+        var refreshed = new TaskCompletionSource<BrowserSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var canonicalStateChange = new TaskCompletionSource<BrowserSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        tab.StateChanged += (_, snapshot) =>
+        {
+            if (snapshot.Address == fragment && snapshot.CanGoBack) refreshed.TrySetResult(snapshot);
+        };
+        tab.NavigationStateChanged += (_, snapshot) =>
+        {
+            if (snapshot.Address == fragment) canonicalStateChange.TrySetResult(snapshot);
+        };
+        using (var mainDocumentNavigation = JsonDocument.Parse(JsonSerializer.Serialize(new
+            { frameId = "main-frame", url = fragment.AbsoluteUri, navigationType })))
+            endpoint.Emit(new("Page.navigatedWithinDocument", mainDocumentNavigation.RootElement.Clone(), "history-session"));
+
+        var state = await refreshed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(fragment, (await canonicalStateChange.Task.WaitAsync(TimeSpan.FromSeconds(5))).Address);
+        Assert.Equal(fragment, state.Address);
+        Assert.True(state.CanGoBack);
+        Assert.False(state.CanGoForward);
+        Assert.Equal("Page.getNavigationHistory", Assert.Single(endpoint.Commands).Method);
+
+        using var deniedRoute = JsonDocument.Parse(JsonSerializer.Serialize(new
+            { frameId = "main-frame", url = "file:///private/document", navigationType = "historyApi" }));
+        endpoint.Commands.Clear();
+        endpoint.Emit(new("Page.navigatedWithinDocument", deniedRoute.RootElement.Clone(), "history-session"));
+        Assert.Equal(fragment, tab.State.Address);
+        Assert.Equal("Internal or privileged routes cannot be opened through the Chromium web backend.", tab.State.Status);
+        Assert.Empty(endpoint.Commands);
+
+        using var loadParameters = JsonDocument.Parse("{}");
+        endpoint.Emit(new("Page.loadEventFired", loadParameters.RootElement.Clone(), "history-session"));
+        Assert.Equal("Chromium page loaded.", tab.State.Status);
+    }
+
+    [Fact]
+    public async Task Completed_page_refreshes_back_forward_capabilities_from_CDPhistory()
+    {
+        var endpoint = new HistoryEndpoint();
+        var pool = new ChromiumProfilePool((_, _) => Task.FromResult<IChromiumEndpoint>(endpoint));
+        var profile = Path.Combine(Path.GetTempPath(), "chromium-history-refresh-fixture");
+        var lease = await pool.AcquireAsync(profile, CancellationToken.None);
+        var request = new BrowseEngineTabRequest(Guid.NewGuid(), BrowserTabPrivacy.Standard, profile,
+            new Uri("https://history.example/current"), BrowseEngineKind.Chromium);
+        await using var tab = new ChromiumEngineTab(request, lease, new HistoryView());
+        await tab.InitializeAsync(CancellationToken.None);
+        endpoint.Commands.Clear();
+        var committed = new TaskCompletionSource<BrowserSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var refreshed = new TaskCompletionSource<BrowserSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        tab.PageCommitted += (_, snapshot) => committed.TrySetResult(snapshot);
+        tab.StateChanged += (_, snapshot) =>
+        {
+            if (snapshot.CanGoBack || snapshot.CanGoForward) refreshed.TrySetResult(snapshot);
+        };
+
+        using var emptyParameters = JsonDocument.Parse("{}");
+        endpoint.Emit(new("Page.loadEventFired", emptyParameters.RootElement.Clone(), "history-session"));
+
+        var page = await committed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var historyState = await refreshed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(new Uri("https://history.example/current"), page.Address);
+        Assert.True(historyState.CanGoBack);
+        Assert.False(historyState.CanGoForward);
+        var refresh = Assert.Single(endpoint.Commands);
+        Assert.Equal("Page.getNavigationHistory", refresh.Method);
+        Assert.Equal("history-session", refresh.SessionId);
+    }
+
+    [Fact]
+    public async Task Back_forward_and_boundary_use_exact_CDP_history_entry_ids_without_URL_replay()
+    {
+        var endpoint = new HistoryEndpoint();
+        var pool = new ChromiumProfilePool((_, _) => Task.FromResult<IChromiumEndpoint>(endpoint));
+        var lease = await pool.AcquireAsync(Path.Combine(Path.GetTempPath(), "chromium-history-fixture"), CancellationToken.None);
+        var request = new BrowseEngineTabRequest(Guid.NewGuid(), BrowserTabPrivacy.Standard,
+            Path.Combine(Path.GetTempPath(), "chromium-history-fixture"), new Uri("https://history.example/current"), BrowseEngineKind.Chromium);
+        await using var tab = new ChromiumEngineTab(request, lease, new HistoryView());
+        await tab.InitializeAsync(CancellationToken.None);
+        endpoint.Commands.Clear();
+
+        await tab.GoBackAsync(CancellationToken.None);
+
+        Assert.Equal(new[] { "Page.getNavigationHistory", "Page.navigateToHistoryEntry" },
+            endpoint.Commands.Select(command => command.Method));
+        var backRead = endpoint.Commands[0];
+        Assert.Equal("history-session", backRead.SessionId);
+        Assert.Equal(JsonValueKind.Null, backRead.Parameters.ValueKind);
+        var back = endpoint.Commands[1];
+        Assert.Equal("history-session", back.SessionId);
+        Assert.Equal(101, back.Parameters.GetProperty("entryId").GetInt32());
+        Assert.DoesNotContain("Page.navigate", endpoint.Commands.Select(command => command.Method));
+        Assert.False(tab.State.CanGoBack);
+        Assert.True(tab.State.CanGoForward);
+
+        endpoint.Commands.Clear();
+        await tab.GoForwardAsync(CancellationToken.None);
+        Assert.Equal(new[] { "Page.getNavigationHistory", "Page.navigateToHistoryEntry" },
+            endpoint.Commands.Select(command => command.Method));
+        Assert.Equal(102, endpoint.Commands[1].Parameters.GetProperty("entryId").GetInt32());
+        Assert.True(tab.State.CanGoBack);
+        Assert.False(tab.State.CanGoForward);
+
+        endpoint.CurrentIndex = endpoint.Entries.Length - 1;
+        endpoint.Commands.Clear();
+        await tab.GoForwardAsync(CancellationToken.None);
+        Assert.Equal("Page.getNavigationHistory", Assert.Single(endpoint.Commands).Method);
+        Assert.Equal("No forward page.", tab.State.Status);
+    }
+
+    [Fact]
+    public async Task Pre_cancelled_history_step_dispatches_no_CDP_command_or_state_change()
+    {
+        var endpoint = new HistoryEndpoint();
+        var pool = new ChromiumProfilePool((_, _) => Task.FromResult<IChromiumEndpoint>(endpoint));
+        var profile = Path.Combine(Path.GetTempPath(), "chromium-history-cancel-fixture");
+        var lease = await pool.AcquireAsync(profile, CancellationToken.None);
+        var request = new BrowseEngineTabRequest(Guid.NewGuid(), BrowserTabPrivacy.Standard, profile,
+            new Uri("https://history.example/current"), BrowseEngineKind.Chromium);
+        await using var tab = new ChromiumEngineTab(request, lease, new HistoryView());
+        await tab.InitializeAsync(CancellationToken.None);
+        endpoint.Commands.Clear();
+        var before = tab.State;
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => tab.GoBackAsync(cancellation.Token));
+
+        Assert.Empty(endpoint.Commands);
+        Assert.Equal(before, tab.State);
+    }
+
+    [Fact]
+    public async Task Failed_CDP_history_navigation_does_not_publish_a_false_back_forward_state()
+    {
+        var endpoint = new HistoryEndpoint();
+        var pool = new ChromiumProfilePool((_, _) => Task.FromResult<IChromiumEndpoint>(endpoint));
+        var profile = Path.Combine(Path.GetTempPath(), "chromium-history-failure-fixture");
+        var lease = await pool.AcquireAsync(profile, CancellationToken.None);
+        var request = new BrowseEngineTabRequest(Guid.NewGuid(), BrowserTabPrivacy.Standard, profile,
+            new Uri("https://history.example/current"), BrowseEngineKind.Chromium);
+        await using var tab = new ChromiumEngineTab(request, lease, new HistoryView());
+        await tab.InitializeAsync(CancellationToken.None);
+        await tab.GoBackAsync(CancellationToken.None);
+        Assert.False(tab.State.CanGoBack);
+        Assert.True(tab.State.CanGoForward);
+        var before = tab.State;
+        endpoint.FailNextHistoryNavigation = true;
+        endpoint.Commands.Clear();
+
+        await Assert.ThrowsAsync<ChromiumCdpException>(() => tab.GoForwardAsync(CancellationToken.None));
+
+        Assert.Equal(new[] { "Page.getNavigationHistory", "Page.navigateToHistoryEntry" },
+            endpoint.Commands.Select(command => command.Method));
+        Assert.Equal(before, tab.State);
+        Assert.Equal(0, endpoint.CurrentIndex);
+    }
+
+    private sealed record CdpCommand(string? SessionId, string Method, JsonElement Parameters);
+
+    private sealed class HistoryEndpoint : IChromiumEndpoint
+    {
+        public event EventHandler<CdpEvent>? Recv;
+        public List<CdpCommand> Commands { get; } = [];
+        public (int Id, string Url)[] Entries { get; } =
+        [
+            (101, "https://history.example/first"),
+            (102, "https://history.example/current")
+        ];
+        public int CurrentIndex { get; set; } = 1;
+        public bool FailNextHistoryNavigation { get; set; }
+        public void Emit(CdpEvent message) => Recv?.Invoke(this, message);
+
+        public Task<JsonElement> SendAsync(string? sessionId, string method, object? parameters, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            var captured = JsonSerializer.SerializeToElement(parameters);
+            Commands.Add(new(sessionId, method, captured));
+            if (method == "Page.navigateToHistoryEntry" && FailNextHistoryNavigation)
+            {
+                FailNextHistoryNavigation = false;
+                throw new ChromiumCdpException("Scripted history-entry navigation failure.");
+            }
+            object result = method switch
+            {
+                "Page.getNavigationHistory" => new
+                {
+                    currentIndex = CurrentIndex,
+                    entries = Entries.Select(entry => new { id = entry.Id, url = entry.Url, title = entry.Url, transitionType = "typed" }).ToArray()
+                },
+                "Page.navigateToHistoryEntry" => NavigateTo(parameters),
+                _ => new { }
+            };
+            return Task.FromResult(JsonSerializer.SerializeToElement(result));
+        }
+
+        private object NavigateTo(object? parameters)
+        {
+            var entryId = JsonSerializer.SerializeToElement(parameters).GetProperty("entryId").GetInt32();
+            CurrentIndex = Array.FindIndex(Entries, entry => entry.Id == entryId);
+            if (CurrentIndex < 0) throw new InvalidOperationException("The test requested an unknown history entry ID.");
+            return new { };
+        }
+
+        public Task<string> CreateTargetAsync(string url, CancellationToken token) => Task.FromResult("history-target");
+        public Task<string> AttachAsync(string targetId, CancellationToken token) => Task.FromResult("history-session");
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    private sealed class HistoryView : IChromiumEngineView
+    {
+        public Control View { get; } = new Border();
+        public void PresentFrame(byte[] jpeg) { }
     }
 }

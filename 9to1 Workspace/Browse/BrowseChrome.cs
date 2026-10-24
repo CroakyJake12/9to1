@@ -104,6 +104,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private readonly List<TabRuntime> _tabs = [];
     private IReadOnlyList<BrowserDownloadRecord> _downloads = [];
     private Guid _selectedTabId;
+    private long _selectionGeneration;
     private string _popupStatus = "No popup request.";
     private string _status = "Browse is starting.";
     private bool _disposed;
@@ -224,8 +225,14 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     {
         ThrowIfCannotAccept();
         cancellationToken.ThrowIfCancellationRequested();
+        var previous = _enginePolicy.DefaultEngine;
         _enginePolicy.SetDefault(engine);
-        await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
+        try { await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false); }
+        catch
+        {
+            _enginePolicy.SetDefault(previous);
+            throw;
+        }
         _status = $"Default browser engine set to {engine}. New tabs use this choice unless a site has its own preference.";
         return Publish();
     }
@@ -243,9 +250,18 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             _status = "A site-specific engine preference is available after opening an HTTP or HTTPS page.";
             return Publish();
         }
-        _enginePolicy.SetSiteOverride(tab.Address.WebUri!, engine);
-        await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
-        await SetTabEngineAsync(tab, _enginePolicy.Resolve(tab.Address.WebUri!, tab.Id), cancellationToken, persistTabOverride: false).ConfigureAwait(false);
+        var address = tab.Address.WebUri!;
+        var host = address.IdnHost.TrimEnd('.');
+        var hadOverride = _enginePolicy.SiteOverrides.TryGetValue(host, out var previous);
+        _enginePolicy.SetSiteOverride(address, engine);
+        try { await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false); }
+        catch
+        {
+            if (hadOverride) _enginePolicy.SetSiteOverride(address, previous);
+            else _enginePolicy.SetSiteOverride(address, null);
+            throw;
+        }
+        await SetTabEngineAsync(tab, _enginePolicy.Resolve(address, tab.Id), cancellationToken, persistTabOverride: false).ConfigureAwait(false);
         _status = _enginePolicy.TabOverrides.ContainsKey(tab.Id)
             ? $"Site preference set to {engine}. This tab keeps its explicit engine choice."
             : $"Site preference set to {engine}. " + tab.Status;
@@ -275,7 +291,12 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             if (persistTabOverride)
             {
                 _enginePolicy.SetTabOverride(tab.Id, engine);
-                await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
+                try { await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false); }
+                catch
+                {
+                    _enginePolicy.SetTabOverride(tab.Id, hadOverride ? previousOverride : null);
+                    throw;
+                }
             }
             return Publish();
         }
@@ -364,12 +385,43 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         ThrowIfCannotAccept();
         cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
-        _selectedTabId = tab.Id;
-        if (tab.EngineState == BrowseEngineState.Crashed)
-            _status = "This tab's web renderer crashed. Recovery is available.";
-        else
-            _status = tab.Status;
-        if (_tabSessionPersistence is not null) await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
+        Guid previousSelection;
+        string previousStatus;
+        string selectedStatus;
+        long generation;
+        lock (_nativeSourceGate)
+        {
+            previousSelection = _selectedTabId;
+            previousStatus = _status;
+            _selectedTabId = tab.Id;
+            selectedStatus = _status = tab.EngineState == BrowseEngineState.Crashed
+                ? "This tab's web renderer crashed. Recovery is available."
+                : tab.Status;
+            generation = ++_selectionGeneration;
+        }
+        if (_tabSessionPersistence is not null)
+        {
+            try { await SaveTabsAsync(cancellationToken).ConfigureAwait(false); }
+            catch
+            {
+                lock (_nativeSourceGate)
+                {
+                    // Another selection or tab removal owns the newer state. Roll
+                    // back only while this request is still the latest selection,
+                    // its target remains selected, and its prior target still exists.
+                    if (_selectionGeneration == generation && _selectedTabId == tab.Id &&
+                        _tabs.Any(candidate => candidate.Id == previousSelection))
+                    {
+                        _selectedTabId = previousSelection;
+                        // Preserve a later status observation even when no newer
+                        // selection superseded this request.
+                        if (_status == selectedStatus) _status = previousStatus;
+                        _selectionGeneration++;
+                    }
+                }
+                throw;
+            }
+        }
         return Publish();
     }
 
@@ -390,11 +442,21 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         {
         cancellationToken.ThrowIfCancellationRequested();
         BeginContentClose(preparation);
-        var index = _tabs.IndexOf(tab);
-        var wasSelected = tab.Id == _selectedTabId;
         BrowseEngineKind? engineOverride = _enginePolicy.TabOverrides.TryGetValue(tab.Id, out var explicitEngine) ? explicitEngine : null;
+        // From this accepted close boundary onward, a pending selection rollback
+        // must not revive the tab even while renderer retirement is still awaiting.
+        lock (_nativeSourceGate) _selectionGeneration++;
         await ReleaseContentAsync(tab).ConfigureAwait(false);
-        _tabs.Remove(tab);
+        int index;
+        bool wasSelected;
+        // Determine against the latest selection/order after renderer retirement.
+        lock (_nativeSourceGate)
+        {
+            index = _tabs.IndexOf(tab);
+            if (index < 0) throw new InvalidOperationException("The tab was removed before its close completed.");
+            wasSelected = _selectedTabId == tab.Id;
+            _tabs.RemoveAt(index);
+        }
         _enginePolicy.SetTabOverride(tab.Id, null);
         if (_tabs.Count == 0)
         {
@@ -426,10 +488,13 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         tab.Session.Dispose();
         if (tab.Privacy == BrowserTabPrivacy.Private)
             await _privateProfiles.CleanupAsync(tab.Id, cancellationToken).ConfigureAwait(false);
+        // The renderer is retired and the tab is now genuinely closed. Keep its
+        // standard-tab recovery record before either durable write can fail, so a
+        // persistence outage does not turn a recoverable close into data loss.
+        RememberClosedTab(tab, index, engineOverride);
         await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
         _status = "Tab closed.";
         await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
-        RememberClosedTab(tab, index, engineOverride);
         return Publish();
         }
         catch (Exception error) { preparationFailure = error; throw; }
@@ -447,7 +512,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             { _status = BrowseInternalNavigation.UnavailableMessage; return Task.FromResult(Publish()); }
             return OpenContentAsync(reserved, openInNewTab: false, cancellationToken: cancellationToken);
         }
-        var web = BrowserSessionService.NormaliseAddress(value);
+        var web = BrowserSessionService.NormaliseAddress(value, _data.Settings.SearchTemplate);
         var assessment = BrowserNativeRequestPolicy.AssessTopLevel(web);
         if (!assessment.IsAllowed) throw new InvalidOperationException(assessment.Reason);
         return OpenContentAsync(AppContentAddress.Parse(web.AbsoluteUri), openInNewTab: false, cancellationToken: cancellationToken);
@@ -837,6 +902,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         host.PopupRequested += tab.PopupHandler = (_, request) => CaptureOriginalNativeCallback(tab, host, () => HandlePopupFromAsync(tab, request.Address));
         host.Crashed += tab.CrashHandler = (_, crash) => CaptureOriginalNativeCallback(tab, host, async () => { await ReportCrashAsync(tab.Id, crash.Reason).ConfigureAwait(false); });
         host.StateChanged += tab.NativeStateHandler = (_, snapshot) => ObserveOriginalNativeState(tab, host, snapshot);
+        if (host is IBrowseOriginalNavigationStateSource navigationState)
+            navigationState.NavigationStateChanged += tab.NavigationStateHandler = (_, snapshot) => CaptureOriginalNavigationState(tab, host, snapshot);
         if (host is IBrowseOriginalPageCommitSource committed)
             committed.PageCommitted += tab.NativeCommitHandler = (_, snapshot) => CaptureOriginalPageCommit(tab, host, snapshot);
         ApplyHostState(tab, host.State);
@@ -868,6 +935,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         if (tab.PopupHandler is not null) originalHost.PopupRequested -= tab.PopupHandler;
         if (tab.CrashHandler is not null) originalHost.Crashed -= tab.CrashHandler;
         if (tab.NativeStateHandler is not null) originalHost.StateChanged -= tab.NativeStateHandler;
+        if (originalHost is IBrowseOriginalNavigationStateSource navigationState && tab.NavigationStateHandler is not null)
+            navigationState.NavigationStateChanged -= tab.NavigationStateHandler;
         if (originalHost is IBrowseOriginalPageCommitSource committed && tab.NativeCommitHandler is not null)
             committed.PageCommitted -= tab.NativeCommitHandler;
         tab.Session.Detach(originalHost);
@@ -1168,6 +1237,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         public EventHandler<BrowseEngineCrash>? CrashHandler { get; set; }
         public EventHandler<BrowserSnapshot>? NativeStateHandler { get; set; }
         public EventHandler<BrowserSnapshot>? NativeCommitHandler { get; set; }
+        public EventHandler<BrowserSnapshot>? NavigationStateHandler { get; set; }
         public BrowseEngineState EngineState { get; set; }
         public bool CanGoBack { get; set; }
         public bool CanGoForward { get; set; }

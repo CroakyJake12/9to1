@@ -413,12 +413,21 @@ public sealed class BrowserSessionService(IAppPaths paths) : IBrowserToolService
     /// This constructs an address; it does not authorise navigation or bypass the
     /// caller's native/automation network policy.
     /// </summary>
-    public static Uri NormaliseAddress(string value)
+    public static Uri NormaliseAddress(string value) => NormaliseAddress(value, BrowserSettings.Default.SearchTemplate);
+
+    /// <summary>Resolves a URL/search phrase using the existing persisted search
+    /// template. This creates an address only; the caller still applies navigation policy.</summary>
+    public static Uri NormaliseAddress(string value, string searchTemplate)
     {
         var candidate = value.Trim();
         if (Uri.TryCreate(candidate, UriKind.Absolute, out var direct) && direct.Scheme is "http" or "https") return direct;
         if (!candidate.Contains(' ') && candidate.Contains('.')) return new Uri("https://" + candidate, UriKind.Absolute);
-        return new Uri("https://www.google.com/search?q=" + Uri.EscapeDataString(candidate), UriKind.Absolute);
+        if (string.IsNullOrWhiteSpace(searchTemplate) || !searchTemplate.Contains("{query}", StringComparison.Ordinal))
+            throw new InvalidOperationException("The configured browser search template is unavailable or invalid.");
+        var resolved = searchTemplate.Replace("{query}", Uri.EscapeDataString(candidate), StringComparison.Ordinal);
+        if (!Uri.TryCreate(resolved, UriKind.Absolute, out var search) || search.Scheme is not ("http" or "https"))
+            throw new InvalidOperationException("The configured browser search template must produce an absolute HTTP or HTTPS address.");
+        return search;
     }
 
     /// <summary>
