@@ -183,6 +183,11 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
             return DeveloperOperationResult<DeveloperWorkspace>.Failure(
                 DeveloperOperationErrorCode.InvalidStoredData, error, workspaceId.ToString("D"));
 
+        if (!ValidDraftRecoveryCatalogue(envelope.DraftRecoveries, workspaceId))
+            return DeveloperOperationResult<DeveloperWorkspace>.Failure(
+                DeveloperOperationErrorCode.InvalidStoredData,
+                "The protected draft-recovery catalogue is invalid and was left unchanged.", workspaceId.ToString("D"));
+
         return DeveloperOperationResult<DeveloperWorkspace>.Success(envelope.Workspace);
     }
 
@@ -226,7 +231,7 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
             if (updated.Validate() is { } updatedValidation)
                 return DeveloperOperationResult<DeveloperWorkspace>.Failure(
                     DeveloperOperationErrorCode.InvalidInput, updatedValidation, workspace.WorkspaceId.ToString("D"));
-            await WriteAsync(path, updated, cancellationToken, currentResult.Value!.EditorSessions).ConfigureAwait(false);
+            await WriteAsync(path, updated, cancellationToken, currentResult.Value!.EditorSessions, currentResult.Value!.DraftRecoveries).ConfigureAwait(false);
             return DeveloperOperationResult<DeveloperWorkspace>.Success(updated);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
@@ -270,12 +275,17 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
         Path.Combine(_workspaceDirectory, workspaceId.ToString("N") + ".json");
 
     private static Task WriteAsync(string path, DeveloperWorkspace workspace, CancellationToken cancellationToken,
-        IReadOnlyList<DeveloperCleanEditorSession>? editorSessions = null) =>
-        WriteEditorDocumentAsync(path, new WorkspaceDocument(CurrentSchemaVersion, workspace, editorSessions), cancellationToken);
+        IReadOnlyList<DeveloperCleanEditorSession>? editorSessions = null,
+        IReadOnlyList<DeveloperDraftRecoverySnapshot>? draftRecoveries = null) =>
+        WriteEditorDocumentAsync(path, new WorkspaceDocument(CurrentSchemaVersion, workspace, editorSessions, draftRecoveries), cancellationToken);
 
     private static async Task WriteEditorDocumentAsync(string path, WorkspaceDocument document, CancellationToken cancellationToken)
     {
         var bytes = JsonSerializer.SerializeToUtf8Bytes(document, JsonOptions);
+        // All writers share the genuine native reader's one-MiB bound, including ordinary
+        // workspace saves that now preserve protected recovery alongside clean metadata.
+        if (bytes.Length > 1024 * 1024)
+            throw new IOException("The canonical workspace document exceeds its native reader limit; prior state was preserved.");
         var temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
@@ -315,7 +325,9 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
     // generation does not change the workspace/project authority revision or registered route.
     private sealed record WorkspaceDocument(int SchemaVersion, DeveloperWorkspace Workspace,
         [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
-        IReadOnlyList<DeveloperCleanEditorSession>? EditorSessions = null);
+        IReadOnlyList<DeveloperCleanEditorSession>? EditorSessions = null,
+        [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<DeveloperDraftRecoverySnapshot>? DraftRecoveries = null);
 
     private sealed class ReleasingFileLock(FileStream file, SemaphoreSlim processLock) : IAsyncDisposable
     {
