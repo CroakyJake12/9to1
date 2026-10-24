@@ -1,4 +1,11 @@
 <Cui app="haven.data" version="1" theme="HavenUI" fontFamily="Montserrat">
+  <Actions>
+    <Action name="OpenQueryDatabase" command="data.workbook.open-query-panel.v1" parameter="{Binding query.databasePathDraft}" />
+    <Action name="CloseQueryDatabase" command="data.workbook.close-query-panel.v1" />
+    <Action name="RunReadOnlyQuery" command="data.workbook.run-read-only-query.v1" parameter="{Binding query.sql}" />
+    <Action name="CancelReadOnlyQuery" command="data.workbook.cancel-read-only-query.v1" />
+    <Action name="PublishVisibleRange" command="data.workbook.publish-visible.v1" parameter="{Binding query.publishTableName}" />
+  </Actions>
   <Workspace id="data-workspace" layout="rows" responsive="desktop,compact" accessibilityLabel="Data workbook workspace">
     <Header id="workbook-header">
       <Text id="app-title" level="h1">Data</Text>
@@ -14,22 +21,31 @@
       <Grid id="spreadsheet-grid" rows="10" columns="8" items="grid.values" rowVisibility="grid.rowVisibility" selectAction="data.workbook.select-cell.v1" keyboardNavigation="cell" accessibilityLabel="Workbook cells" />
       <Inspector id="data-inspector">
         <SortPanel id="sort-panel" accessibilityLabel="Sort visible rows">
-          <Select id="sort-column" bind="sort.keyColumn" accessibilityLabel="Sort column" />
+          <Select id="sort-column" items="columns" bind="sort.keyColumn" accessibilityLabel="Sort column" />
           <Toggle id="sort-direction" bind="sort.ascending" accessibilityLabel="Sort ascending" />
           <Button id="apply-sort" action="data.workbook.sort-visible.v1" capability="workbook.write" accessibilityLabel="Apply sort" />
         </SortPanel>
         <FilterPanel id="filter-panel" accessibilityLabel="Filter visible rows">
-          <Select id="filter-column" bind="filter.keyColumn" accessibilityLabel="Filter column" />
+          <Select id="filter-column" items="columns" bind="filter.keyColumn" accessibilityLabel="Filter column" />
           <TextField id="filter-value" bind="filter.value" accessibilityLabel="Filter value" />
           <Button id="apply-filter" action="data.workbook.filter-visible.v1" capability="workbook.write" accessibilityLabel="Apply filter" />
           <Button id="clear-filter" action="data.workbook.clear-filter.v1" capability="workbook.write" accessibilityLabel="Clear filter" />
         </FilterPanel>
-        <QueryPanel id="query-panel" accessibilityLabel="DuckDB query">
-          <TextField id="database-path" bind="query.databaseName" accessibilityLabel="DuckDB database" />
-          <Button id="publish-range" action="data.workbook.publish-visible.v1" capability="database.publish" accessibilityLabel="Publish visible cells to DuckDB" />
+        <TextField id="database-path" bind="query.databasePathDraft" accessibilityLabel="DuckDB database path to open" />
+        <Button id="open-query-database" action="OpenQueryDatabase" capability="database.query.read" accessibilityLabel="Open DuckDB database" />
+        <QueryPanel id="query-panel" when="query.isOpen" accessibilityLabel="DuckDB query">
+          <Button id="close-query-database" action="CloseQueryDatabase" capability="database.query.read" accessibilityLabel="Close query database" />
+          <Text id="query-target" role="status" bind="query.databaseTarget" accessibilityLabel="Active DuckDB query target" />
+          <TextField id="publish-table-name" bind="query.publishTableName" accessibilityLabel="DuckDB table name for visible cells" />
+          <Button id="publish-range" action="PublishVisibleRange" capability="database.publish" accessibilityLabel="Publish visible cells to DuckDB" />
           <CodeEditor id="query-editor" language="sql" bind="query.sql" accessibilityLabel="Read-only SQL query" />
-          <Button id="run-query" action="data.workbook.run-read-only-query.v1" capability="database.query.read" accessibilityLabel="Run read-only query" />
+          <Button id="run-query" action="RunReadOnlyQuery" capability="database.query.read" accessibilityLabel="Run read-only query" />
+          <Button id="cancel-query" action="CancelReadOnlyQuery" when="query.canCancel" capability="database.query.read" accessibilityLabel="Cancel running read-only query" />
+          <Text id="query-result-status" role="status" bind="query.resultStatus">No query results.</Text>
+          <Text id="query-error" role="alert" bind="query.errorMessage" accessibilityLabel="SQL execution error" />
           <Table id="query-results" columns="query.resultColumns" items="query.resultRows" accessibilityLabel="Query results" />
+          <Text id="query-history-title" level="h3">Recent successful queries for this connection</Text>
+          <Table id="query-history" columns="query.historyColumns" items="query.historyRows" accessibilityLabel="Recent successful SQL queries for the active connection" />
         </QueryPanel>
       </Inspector>
     </MainContent>

@@ -105,19 +105,48 @@ public sealed partial class DataPage : UserControl, IDisposable
         return Workbook?.Id == workbookId;
     }
 
-    public async Task<bool> SaveAsync(string reason = "Manual save", CancellationToken cancellationToken = default)
+    public async Task<bool> SaveAsync(
+        string reason = "Manual save",
+        CancellationToken cancellationToken = default,
+        Func<bool>? publishCompletion = null)
     {
-        if (_sharedInkInput?.PendingSubmission is { IsCompleted: false }) { _route.SetStatus("Finish the current drawing stroke before saving or closing Data."); return false; }
-        if (Workbook is null) return true; if (Interlocked.Exchange(ref _saveRunning, 1) != 0) return false;
+        bool CanPublishCompletion()
+        {
+            try { return publishCompletion?.Invoke() != false; }
+            catch (Exception) { return false; }
+        }
+        if (_sharedInkInput?.PendingSubmission is { IsCompleted: false })
+        {
+            if (CanPublishCompletion()) _route.SetStatus("Finish the current drawing stroke before saving or closing Data.");
+            return false;
+        }
+        var workbook = Workbook;
+        if (workbook is null) return true; if (Interlocked.Exchange(ref _saveRunning, 1) != 0) return false;
         try
         {
             RecalculateWorkbook(); if (_formulaReport.ChangedCells > 0) _dirty = true; if (!_dirty) { RenderFormulaState(); return true; }
-            if (string.IsNullOrWhiteSpace(Workbook.Title)) Workbook.Title = "Untitled workbook";
-            var result = await _repository.SaveAsync(Workbook, reason, cancellationToken); Workbook.Version = result.Version; _dirty = false;
-            await RefreshWorkbooksAsync(cancellationToken); _workbookIndex = IndexOfWorkbook(Workbook.Id); RenderCurrent(); _route.SetStatus($"Saved locally at {result.SavedAt.LocalDateTime:t} · v{result.Version}"); _bus.Fire("Data.Saved"); return true;
+            if (string.IsNullOrWhiteSpace(workbook.Title)) workbook.Title = "Untitled workbook";
+            var saveSourceFingerprint = QuerySourceFingerprint(workbook);
+            var result = await _repository.SaveAsync(workbook, reason, cancellationToken);
+            workbook.Version = result.Version;
+            await RefreshWorkbooksAsync(cancellationToken);
+            // A workbook switch may complete while repository I/O is pending. Update
+            // the saved object's revision, but never render/status/fire as though it
+            // were still the current workbook or clear the new workbook's dirty state.
+            if (!ReferenceEquals(Workbook, workbook)) return true;
+            _dirty = !string.Equals(QuerySourceFingerprint(workbook), saveSourceFingerprint, StringComparison.Ordinal);
+            _workbookIndex = IndexOfWorkbook(workbook.Id); RenderCurrent();
+            if (CanPublishCompletion())
+            {
+                _route.SetStatus(_dirty
+                    ? $"Saved locally at {result.SavedAt.LocalDateTime:t} · v{result.Version}; newer edits remain unsaved."
+                    : $"Saved locally at {result.SavedAt.LocalDateTime:t} · v{result.Version}");
+                _bus.Fire("Data.Saved");
+            }
+            return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception ex) { _route.SetStatus("Couldn’t save this workbook: " + ex.Message); return false; }
+        catch (Exception ex) { if (ReferenceEquals(Workbook, workbook) && CanPublishCompletion()) _route.SetStatus("Couldn’t save this workbook: " + ex.Message); return false; }
         finally { Interlocked.Exchange(ref _saveRunning, 0); RefreshSharedInkMount(); }
     }
 

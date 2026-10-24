@@ -14,20 +14,35 @@ public sealed class DataCuiSurfaceDefinition
         ["spreadsheet-grid"] = "Grid",
         ["sort-panel"] = "SortPanel",
         ["filter-panel"] = "FilterPanel",
+        ["database-path"] = "TextField",
+        ["open-query-database"] = "Button",
         ["query-panel"] = "QueryPanel",
+        ["close-query-database"] = "Button",
+        ["cancel-query"] = "Button",
+        ["query-target"] = "Text",
+        ["publish-table-name"] = "TextField",
         ["query-editor"] = "CodeEditor",
         ["query-results"] = "Table",
+        ["query-result-status"] = "Text",
+        ["query-error"] = "Text",
+        ["query-history"] = "Table",
+        ["query-history-title"] = "Text",
     };
 
     private static readonly string[] RequiredActions =
     [
         DataSelectCellAction.Id,
+        DataSelectSheetAction.Id,
+        DataOpenQueryPanelAction.Id,
+        DataCloseQueryPanelAction.Id,
+        DataPublishVisibleRangeAction.Id,
         DataEditCellAction.Id,
         DataSetFormulaAction.Id,
         DataSortVisibleRangeAction.Id,
         DataFilterVisibleRangeAction.Id,
         DataClearVisibleFilterAction.Id,
         DataRunReadOnlyQueryAction.Id,
+        DataCancelReadOnlyQueryAction.Id,
         DataSaveWorkbookAsAction.Id,
     ];
 
@@ -63,6 +78,7 @@ public sealed class DataCuiSurfaceDefinition
                 .Select(attribute => element.TryGetLiteralAttribute(attribute, out var value) ? value : null)
                 .Where(value => value is not null)
                 .Select(value => value!))
+            .Concat(document.Actions.Values.Select(action => action.Command))
             .ToHashSet(StringComparer.Ordinal);
         foreach (var requiredAction in RequiredActions)
         {

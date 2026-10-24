@@ -1,3 +1,7 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+
 namespace HavenOS.Apps.Data;
 
 public sealed record DataCellAddress(string Sheet, int Row, int Column);
@@ -8,7 +12,12 @@ public sealed record DataRangeSnapshot(
     int StartRow,
     int StartColumn,
     IReadOnlyList<IReadOnlyList<string>> Values,
-    IReadOnlyList<bool>? RowVisibility = null);
+    IReadOnlyList<bool>? RowVisibility = null)
+{
+    /// <summary>Stable digest of this detached range's coordinates, values and visibility metadata.</summary>
+    public string ContentFingerprint() => Convert.ToHexString(
+        SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(this))));
+}
 public sealed record DataSheetSummary(string Name, int Index);
 public sealed record DataWorkbookHandle(string Id, string Path, bool ReadOnly);
 public sealed record DataNamedRangeSummary(string Name, DataRangeRequest Range);
