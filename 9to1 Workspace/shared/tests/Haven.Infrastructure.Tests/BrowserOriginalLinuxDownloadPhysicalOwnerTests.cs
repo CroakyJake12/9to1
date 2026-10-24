@@ -30,6 +30,7 @@ public sealed class BrowserOriginalLinuxDownloadPhysicalOwnerTests
     [LinuxDownloadFact]
     public async Task Fresh_configured_private_root_is_created_and_real_approved_EOF_uses_the_same_pipeline()
     {
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This native Linux test requires Linux; other platforms must use the existing LinuxDownloadFact skip.");
         await using var rig = new Rig(createDownloads: false, allowProvision: true);
         Assert.False(Directory.Exists(rig.Downloads));
         var content = await rig.ApproveAsync();
@@ -112,6 +113,7 @@ public sealed class BrowserOriginalLinuxDownloadPhysicalOwnerTests
     [LinuxDownloadFact]
     public async Task Provisioning_refuses_insecure_existing_root_and_parent_without_changing_permissions()
     {
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This native Linux test requires Linux; other platforms must use the existing LinuxDownloadFact skip.");
         await using (var rig = new Rig(allowProvision: true))
         {
             var unsafeMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead;
@@ -139,6 +141,7 @@ public sealed class BrowserOriginalLinuxDownloadPhysicalOwnerTests
     [LinuxDownloadFact]
     public async Task Provisioning_never_follows_a_symlink_parent_or_creates_missing_ancestors()
     {
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This native Linux test requires Linux; other platforms must use the existing LinuxDownloadFact skip.");
         using var folder = new PrivateDirectory();
         var actualParent = Path.Combine(folder.Path, "actual");
         Directory.CreateDirectory(actualParent, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
@@ -170,6 +173,7 @@ public sealed class BrowserOriginalLinuxDownloadPhysicalOwnerTests
     [LinuxDownloadFact]
     public void Create_only_EEXIST_and_changed_effective_principal_never_adopt_or_mutate_a_competing_root()
     {
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This native Linux test requires Linux; other platforms must use the existing LinuxDownloadFact skip.");
         using var folder = new PrivateDirectory();
         var root = Path.Combine(folder.Path, "Haven");
         Directory.CreateDirectory(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
