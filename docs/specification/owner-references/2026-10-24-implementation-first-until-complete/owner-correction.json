@@ -1,0 +1,20 @@
+{
+  "schema": "9to1.direct-owner-execution-amendment/v1",
+  "recorded_at_utc": "2026-10-24T06:41:42.348267+00:00",
+  "source": "Direct owner message in this task on24October2026",
+  "verbatim_request": "Remember how we paused acceptance until 3am? Pause it again now until all apps are 100% on the implementation",
+  "status": "ACTIVE",
+  "acceptance": "PAUSED",
+  "resume_condition": "Every canonical app has100% implementation against authoritative scope, or explicit laterownerresume. No clock-based automatic resume and no inference from rough percentages/test counts.",
+  "working_mode": "Implement features and fixes; continue compilation and focused genuine basic smoke checks. Do not run full independent acceptance campaigns during pause.",
+  "reporting": "Freeze Accepted estimates; distinguish actualsourceimplementation, basiccompile/smoke and incompletechecks. Showauthenticcurrentcomponent screenshots whenpossible; no accepted/release labels fromthosechecks.",
+  "preserve": [
+    "Fullproductscopeandcanonicalspecification",
+    "CUIauthoring/sameStandalone-Havenimplementation",
+    "Allprevioussource/failures/licences/evidence",
+    "Resource/custody/exclusivityguards",
+    "Mercuryrevoked/noPCGPUwithoutnewwindow",
+    "Allsevenqualitycriteria andallmandatorynative/platform/install/deliverygates beforefutureaccepted/releasedclaims"
+  ],
+  "supersedes": "Prior24Oct02:00UTC/03:00BST acceptance resumption condition; broaderoverhaulstillimplementedinparallelwithoutdominatingproductimplementation."
+}

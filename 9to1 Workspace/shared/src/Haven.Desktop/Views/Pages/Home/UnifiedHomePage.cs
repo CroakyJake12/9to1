@@ -24,6 +24,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private readonly Func<NewDashboardPage> _createDashboard;
     private readonly Func<HomeDiscoverPage> _createDiscover;
     private readonly Func<HomeEventsDestinationPage>? _createEvents;
+    private readonly Func<HomeSettingsDestinationPage>? _createSettings;
     private readonly Func<BrowseNavigationIntent, Task, bool> _queue;
     private readonly Func<string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
     private readonly bool _aiAvailable;
@@ -43,6 +44,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private NewDashboardPage? _dashboard;
     private HomeDiscoverPage? _discover;
     private HomeEventsDestinationPage? _events;
+    private HomeSettingsDestinationPage? _settings;
     private Control? _appsView;
     private string _section;
     private long _selection;
@@ -56,16 +58,17 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         Func<NewDashboardPage> createDashboard, Func<HomeDiscoverPage> createDiscover,
         Func<BrowseNavigationIntent, Task, bool> queue,
         Func<string, CancellationToken, Task<AppContentAddress>> prepareAiDraft, bool aiAvailable = true,
-        Func<HomeEventsDestinationPage>? createEvents = null)
+        Func<HomeEventsDestinationPage>? createEvents = null,
+        Func<HomeSettingsDestinationPage>? createSettings = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _request = request; _modes = modes; _createDashboard = createDashboard;
-        _createDiscover = createDiscover; _queue = queue; _createEvents = createEvents; _prepareAiDraft = prepareAiDraft; _aiAvailable = aiAvailable;
+        _createDiscover = createDiscover; _queue = queue; _createEvents = createEvents; _createSettings = createSettings; _prepareAiDraft = prepareAiDraft; _aiAvailable = aiAvailable;
         _section = request.Address.Authority switch
         {
             "newtab" => "newtab",
             _ when request.Address.ResourceSegments.Count == 1 &&
-                request.Address.ResourceSegments[0] is "models" or "events" => request.Address.ResourceSegments[0],
+                request.Address.ResourceSegments[0] is "models" or "events" or "settings" => request.Address.ResourceSegments[0],
             _ => "apps"
         };
         _work = new(StopAsync, CleanupAsync);
@@ -117,7 +120,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     }
 
     public bool? IsActionAvailable(string command) => IsAlive && (command == "home.events"
-        ? _createEvents is not null : command is
+        ? _createEvents is not null : command == "home.settings" ? _createSettings is not null : command is
         "home.apps" or "home.dashboard" or "home.models" or "home.newtab" or "home.submit" or
         "home.library" or "home.events" or "home.mesh" or "home.settings" or "home.account" or
         "home.notifications" or "home.open-app" or "home.set-app-query" or "home.clear-app-query");
@@ -136,6 +139,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                 case "home.events":
                     if (_createEvents is null) throw new InvalidOperationException("The Home Events source is unavailable.");
                     await SelectAsync("events", original, linked.Token); break;
+                case "home.settings":
+                    if (_createSettings is null) throw new InvalidOperationException("The Home Settings owner is unavailable.");
+                    if (_request.Address.Authority == "newtab") Queue(AppContentAddress.Parse("browse://home/settings"), original, false);
+                    else await SelectAsync("settings", original, linked.Token);
+                    break;
                 case "home.newtab":
                     if (_request.Address.Authority == "newtab") await SelectAsync("newtab", original, linked.Token);
                     else Queue(AppContentAddress.Parse("browse://newtab"), original, true);
@@ -156,7 +164,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private static string HeadingFor(string section) => section switch
     {
         "newtab" => "New Tab", "models" => "Models / Discover", "dashboard" => "Dashboard",
-        "events" => "Events", _ => "Apps"
+        "events" => "Events", "settings" => "Settings", _ => "Apps"
     };
 
     private async Task SelectAsync(string section, DesktopOriginalWorkLifetime.Original original, CancellationToken token)
@@ -190,8 +198,20 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             if (!original.IsAcceptedPublicationCurrent) return;
             prepared = events;
         }
+        if (section == "settings")
+        {
+            if (_settings is null)
+                original.RunAcceptedPublicationCallback(() => _settings = (_createSettings
+                    ?? throw new InvalidOperationException("The Home Settings owner is unavailable."))());
+            if (!original.IsAcceptedPublicationCurrent) return;
+            var settings = _settings ?? throw new InvalidOperationException("The Home Settings owner was not acquired.");
+            await original.AwaitAsync(settings.ActivateAsync(token));
+            if (!original.IsAcceptedPublicationCurrent) return;
+            prepared = settings;
+        }
         _dashboard?.Deactivate(); _discover?.Deactivate();
         if (section != "events") _events?.Deactivate();
+        if (section != "settings") _settings?.Deactivate();
         _section = section;
         _railBindings.Refresh();
         Set(_searchRow!, "IsVisible", section == "newtab");
@@ -214,7 +234,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                 .ToArray();
             UpdateAppsState();
         }
-        else if (section == "events")
+        else if (section is "events" or "settings")
         {
             _viewport.Child = prepared!;
         }
@@ -405,7 +425,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, original.Token);
             if (_dashboard is not null && !await original.AwaitAsync(_dashboard.TryPrepareToCloseAsync(linked.Token))) return false;
             if (_discover is not null && !await original.AwaitAsync(_discover.TryPrepareToCloseAsync(linked.Token))) return false;
-            return _events is null || await original.AwaitAsync(_events.TryPrepareToCloseAsync(linked.Token));
+            if (_events is not null && !await original.AwaitAsync(_events.TryPrepareToCloseAsync(linked.Token))) return false;
+            return _settings is null || await original.AwaitAsync(_settings.TryPrepareToCloseAsync(linked.Token));
         });
         start.SetResult(); return _preparation;
     }
@@ -428,6 +449,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (_dashboard is not null) Acquire(_dashboard.CloseAndDrainAsync);
         if (_discover is not null) Acquire(_discover.CloseAndDrainAsync);
         if (_events is not null) Acquire(_events.CloseAndDrainAsync);
+        if (_settings is not null) Acquire(_settings.CloseAndDrainAsync);
         Acquire(_loader.WhenActionsIdleAsync); Acquire(_appsLoader.WhenActionsIdleAsync);
         foreach (var actual in _stopSources)
             try { await actual; }

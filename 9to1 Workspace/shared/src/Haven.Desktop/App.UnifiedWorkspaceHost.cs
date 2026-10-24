@@ -45,6 +45,69 @@ public sealed partial class App
         return host ?? throw new InvalidOperationException("No original unified host was retained.");
     }
 
+    /// <summary>Source-owned device appearance observation over the SAME actual Home graph.
+    /// No Chrome/tab state, cache, readiness flag or caller-supplied grant is consulted.</summary>
+    internal static Task<bool> ObserveOriginalHomeAppearanceAuthorityAsync(IServiceProvider services,
+        HomeNativeWindowsComposition home, AuthenticatedResourceActor expectedActor,
+        CancellationToken appLifetime, CancellationToken windowLifetime,
+        Action<Action> runWithinOriginalSource, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor); ArgumentNullException.ThrowIfNull(runWithinOriginalSource);
+        if (!appLifetime.CanBeCanceled || !windowLifetime.CanBeCanceled)
+            throw new ArgumentException("Borrow the actual App and window work lifetimes.");
+        var originals = new CloudflareOriginalTaskLedger();
+        originals.BindOriginalOwner(home); originals.BindOriginalCallerCallback(runWithinOriginalSource);
+        return originals.RunToOriginalSettlementAsync(async () =>
+        {
+            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(home);
+            // Source cancellation belongs to the async source body and actual principal tasks.
+            // Do not manufacture a linked token or turn private cancellation into a finite
+            // synchronous caller-scope fault. App/window/Home remain the original owners.
+            void DemandOwner()
+            {
+                appLifetime.ThrowIfCancellationRequested(); windowLifetime.ThrowIfCancellationRequested();
+                runWithinOriginalSource(() => WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(services, home));
+                if (home.OriginalCloseTask is not null || home.OriginalProcessRetirementRequestTask is not null)
+                    throw new ObjectDisposedException("The original Home appearance owner is retiring.");
+            }
+            void Demand() { token.ThrowIfCancellationRequested(); DemandOwner(); }
+            void Own(Action body) => originals.Invoke(() => { DemandOwner(); body(); return true; });
+            void Retain(Task actual) { _ = originals.Track(actual); }
+            bool ServicesCurrent(HomeCoreStateSnapshot snapshot)
+            {
+                // Same actual three required Home services as standalone Appearance; no Ready
+                // flag, peer grant, cached service result or additional settings provider.
+                if (snapshot.Revision < 0 || snapshot.Services is null || snapshot.Services.Count > 128 ||
+                    snapshot.Services.Any(service => service is null || service.Revision < 0 ||
+                        string.IsNullOrWhiteSpace(service.ServiceId) || !Enum.IsDefined(service.State)) ||
+                    snapshot.Services.Select(service => service.ServiceId).Distinct(StringComparer.Ordinal).Count() != snapshot.Services.Count)
+                    throw new InvalidDataException("The original Home appearance services supplied invalid observations.");
+                return new[] { "home.core", "home.state", "permissions.trust" }.All(id =>
+                    snapshot.Services.Any(service => service.ServiceId == id &&
+                        new HomeServiceRequirement(id, 1).Accepts(service.ContractVersion) && service.IsAvailable &&
+                        service.State == HomeServiceLifecycleState.Ready));
+            }
+            async Task<AuthenticatedResourceActor?> ReadActorAsync() =>
+                await originals.AwaitAsync(originals.Invoke(() =>
+                    home.Profiles.GetCurrentAsync(Own, Retain, token).AsTask())).ConfigureAwait(false);
+            Demand();
+            var start = home.OriginalStartTask;
+            if (start is not { IsCompletedSuccessfully: true }) return false;
+            var before = originals.Invoke(() => { DemandOwner(); return home.Runtime.Current; });
+            if (!ServicesCurrent(before)) return false;
+            var actor = await ReadActorAsync().ConfigureAwait(false);
+            Demand();
+            if (actor != expectedActor) return false;
+            var after = originals.Invoke(() => { DemandOwner(); return home.Runtime.Current; });
+            if (after.Revision != before.Revision || !ServicesCurrent(after)) return false;
+            var finalActor = await ReadActorAsync().ConfigureAwait(false);
+            Demand();
+            var final = originals.Invoke(() => { DemandOwner(); return home.Runtime.Current; });
+            return ReferenceEquals(start, home.OriginalStartTask) && start.IsCompletedSuccessfully &&
+                finalActor == expectedActor && final.Revision == after.Revision && ServicesCurrent(final);
+        });
+    }
+
     /// <summary>One real Browse content host; no hidden MainView, second provider,
     /// app catalogue, or workspace repository. The App retains this owner before startup.</summary>
     internal sealed partial class UnifiedWorkspaceHost : ContentControl, IDesktopOriginalRetirementParticipant,
@@ -276,7 +339,7 @@ public sealed partial class App
             DemandCurrent();
             _homeTheme = new NativeHomeThemePreferences(_services.GetRequiredService<UserPreferencesService>().HomeThemePreferencePath,
                 new HomeThemeScope(HomeDataScope.DeviceLocal, _actor.ProfileId), UserPreferencesService.ProjectLegacyHomeTheme,
-                async lifetime => IsCurrent && await ObserveActorAsync(lifetime).ConfigureAwait(false) == _actor,
+                lifetime => new ValueTask<bool>(ObserveAppearanceAuthorityAsync(lifetime)),
                 callback => Dispatcher.UIThread.Post(callback));
             await Track(_homeTheme.RefreshAsync(currentToken));
             if (IsAcceptedStartupRetirement(currentToken)) return;
@@ -336,7 +399,9 @@ public sealed partial class App
                         _home.Permissions, _home.Profiles, actor);
                     return new HomeEventsDestinationPage(new HomeEventsService([activity], activity),
                         token => AdmitHomeAsync(request, token));
-                });
+                },
+                settings: request => new HomeSettingsDestinationPage(actualTheme,
+                    token => AdmitHomeSettingsAsync(request, token)));
             IBrowseEngineHostFactory? engines = null;
             if (!OperatingSystem.IsWindows())
                 engines = new ChromiumEngineFactory(
@@ -599,6 +664,35 @@ public sealed partial class App
                 throw new UnauthorizedAccessException("The Home tab does not belong to the current authenticated profile.");
             var ready = await CheckAsync(token).ConfigureAwait(false);
             if (ready.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(ready.Message);
+        }
+
+        private async Task AdmitHomeSettingsAsync(BrowseAppContentRequest request, CancellationToken token)
+        {
+            if (request.Privacy != BrowserTabPrivacy.Standard || _actor is not { } actor ||
+                !StringComparer.Ordinal.Equals(actor.ProfileId, request.ProfileId))
+                throw new HomeSettingsAuthorityRefusal("Settings belongs to the original authenticated Home profile.");
+            if (!await ObserveAppearanceAuthorityAsync(token).ConfigureAwait(false))
+                throw new HomeSettingsAuthorityRefusal("Home settings is unavailable for the current profile or services.");
+        }
+
+        // Appearance is owned by this actual App/window/Home composition, not by browser-tab
+        // publication. Chrome drains first; admitted preference work remains owned until its
+        // SAME source is explicitly sealed and joined below. UI guards keep DemandCurrent.
+        private void DemandAppearanceOwner()
+        {
+            _appLifetime.ThrowIfCancellationRequested(); _windowLifetime.ThrowIfCancellationRequested();
+            if (_closed) throw new ObjectDisposedException(nameof(UnifiedWorkspaceHost));
+            WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(_services, _home);
+        }
+
+        private Task<bool> ObserveAppearanceAuthorityAsync(CancellationToken token)
+        {
+            var actor = _actor ?? throw new UnauthorizedAccessException("The original Home appearance actor is unavailable.");
+            // The actual preference source/page owns and joins this authority Task. Do not also
+            // retain its cooperative private cancellation as an independent host failure.
+            return ObserveOriginalHomeAppearanceAuthorityAsync(_services, _home, actor, _appLifetime, _windowLifetime,
+                body => CloudflareOriginalExecutionGuard.InvokeOriginal(this,
+                    () => { DemandAppearanceOwner(); body(); return true; }), token);
         }
 
         private Task<AuthenticatedResourceActor> ObserveActorAsync(CancellationToken token) => RunObservation(async ledger =>

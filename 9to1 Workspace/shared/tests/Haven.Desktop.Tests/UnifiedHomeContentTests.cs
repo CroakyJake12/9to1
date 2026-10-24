@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Haven.Infrastructure;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -37,12 +39,656 @@ public sealed class UnifiedHomeContentTests
         Func<BrowseNavigationIntent, Task, bool>? navigation = null,
         Func<BrowseAppContentRequest, CancellationToken, Task>? admission = null, bool aiAvailable = true,
         Func<NewDashboardPage>? dashboard = null, Func<HomeDiscoverPage>? discover = null,
-        Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null) => new(source,
+        Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
+        Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null) => new(source,
             dashboard ?? (() => throw new InvalidOperationException("Apps must not construct an unused dashboard.")),
             discover ?? (() => throw new InvalidOperationException("Apps must not construct an unused model catalogue.")),
             navigation ?? ((_, _) => true),
             (_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI."),
-            admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events);
+            admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events, settings);
+
+    // Merge inside the existing UnifiedHomeContentTests class. This is a component
+    // control over the real Home/source-authority seam and real Browse retirement;
+    // it is not an installed/native App-host or Windows compatibility acceptance.
+    public static bool LinuxHomeAppearanceAuthoritySupported => OperatingSystem.IsLinux();
+
+    [AvaloniaFact(SkipUnless = nameof(LinuxHomeAppearanceAuthoritySupported),
+        Skip = "Linux component owner fixture; installed Windows/native acceptance is separate.")]
+    public async Task Source_owned_appearance_refresh_outlives_retired_Browse_chrome_while_actual_App_and_window_tokens_remain_live()
+    {
+        await using var rig = await HomeAppearanceAuthorityRig.CreateAsync();
+        BrowseChrome? chrome = null;
+        try
+        {
+            chrome = await BrowseChrome.CreateAsync(rig.Paths,
+                internalContentFactory: Factory(new(), rig.AppLifetime.Token,
+                    admission: async (request, token) =>
+                    {
+                        if (request.ProfileId != rig.Actor.ProfileId || !await rig.ObserveAsync(token))
+                            throw new UnauthorizedAccessException("The actual Home/source authority refused this fixture tab.");
+                    }),
+                homeProfileId: rig.Actor.ProfileId, cancellationToken: rig.AppLifetime.Token);
+            var before = await File.ReadAllBytesAsync(rig.PreferencePath);
+            rig.Principal.HoldNext = true;
+            var refresh = rig.Source.RefreshAsync();
+            await rig.Principal.Entered.Task.WaitAsync(HomeAppearanceAuthorityRig.Limit);
+            var actualPrincipal = Assert.IsAssignableFrom<Task<string?>>(rig.Principal.HeldOriginal);
+            Assert.False(actualPrincipal.IsCompleted);
+            Assert.False(refresh.IsCompleted);
+
+            var preparation = await chrome.PrepareCloseAsync(rig.AppLifetime.Token);
+            Assert.NotNull(preparation);
+            var actualChromeClose = preparation!.BeginClose();
+            await actualChromeClose.WaitAsync(HomeAppearanceAuthorityRig.Limit);
+            Assert.NotNull(chrome.OriginalClose);
+            Assert.True(actualChromeClose.IsCompletedSuccessfully);
+            Assert.False(rig.AppLifetime.IsCancellationRequested);
+            Assert.False(rig.WindowLifetime.IsCancellationRequested);
+            Assert.Null(rig.Source.OriginalClose);
+            Assert.Null(rig.Home.OriginalCloseTask);
+            Assert.False(refresh.IsCompleted); // Closing Chrome cannot manufacture source settlement.
+
+            rig.Principal.Release.TrySetResult();
+            await refresh.WaitAsync(HomeAppearanceAuthorityRig.Limit);
+            Assert.True(actualPrincipal.IsCompletedSuccessfully);
+            Assert.True(refresh.IsCompletedSuccessfully);
+            Assert.Equal("Professional", rig.Source.Current.Name);
+            Assert.Equal("device:" + rig.Actor.ProfileId, rig.Source.Current.ScopeId);
+            Assert.Equal(before, await File.ReadAllBytesAsync(rig.PreferencePath));
+            Assert.Empty(rig.Source.AuthorityObservations);
+        }
+        finally
+        {
+            rig.Principal.Release.TrySetResult();
+            if (chrome is not null)
+            {
+                if (chrome.OriginalClose is { } accepted)
+                    await accepted.WaitAsync(HomeAppearanceAuthorityRig.Limit);
+                else
+                {
+                    var preparation = await chrome.PrepareCloseAsync(rig.AppLifetime.Token);
+                    Assert.NotNull(preparation);
+                    await preparation!.BeginClose().WaitAsync(HomeAppearanceAuthorityRig.Limit);
+                }
+            }
+        }
+    }
+
+    // Implementation regression for source-owned cancellation across actual Home reads.
+    // AUTHORED NOT RUN: the source must keep its exact private token through normal close.
+    [AvaloniaFact(SkipUnless = nameof(LinuxHomeAppearanceAuthoritySupported),
+        Skip = "Linux component owner fixture; installed Windows/native acceptance is separate.")]
+    public async Task Source_close_joins_its_held_actual_authority_and_accepts_only_its_same_private_owner_cancellation()
+    {
+        await using var rig = await HomeAppearanceAuthorityRig.CreateAsync();
+        rig.Principal.HoldNext = true;
+        var refresh = rig.Source.RefreshAsync();
+        await rig.Principal.Entered.Task.WaitAsync(HomeAppearanceAuthorityRig.Limit);
+        var rawPrincipal = Assert.IsAssignableFrom<Task<string?>>(rig.Principal.HeldOriginal);
+        var close = rig.Source.DisposeAsync().AsTask();
+        Assert.Same(close, rig.Source.DisposeAsync().AsTask());
+        Assert.False(close.IsCompleted);
+        Assert.False(rawPrincipal.IsCompleted);
+        rig.Principal.Release.TrySetResult();
+        await close.WaitAsync(HomeAppearanceAuthorityRig.Limit);
+        Assert.True(rawPrincipal.IsCompleted);
+        Assert.True(refresh.IsCanceled);
+        var canceled = await Record.ExceptionAsync(() => refresh);
+        var observation = Assert.Single(rig.Source.AuthorityObservations);
+        Assert.Equal(observation.RequestedToken,
+            Assert.IsAssignableFrom<OperationCanceledException>(canceled).CancellationToken);
+        Assert.True(Assert.IsAssignableFrom<Task<bool>>(rig.LastAuthority).IsCanceled);
+        Assert.True(close.IsCompletedSuccessfully);
+        Assert.Null(rig.Home.OriginalCloseTask); // The source never owns the borrowed Home.
+    }
+
+    [AvaloniaTheory(SkipUnless = nameof(LinuxHomeAppearanceAuthoritySupported),
+        Skip = "Linux component owner fixture; installed Windows/native acceptance is separate.")]
+    [InlineData("full-actor")]
+    [InlineData("required-service")]
+    public async Task Source_owned_appearance_authority_still_refuses_a_foreign_full_actor_or_unready_actual_Home_service(string refusal)
+    {
+        await using var rig = await HomeAppearanceAuthorityRig.CreateAsync();
+        var before = await File.ReadAllBytesAsync(rig.PreferencePath);
+        var previous = rig.Source.Current;
+        try
+        {
+            if (refusal == "full-actor")
+                rig.ExpectedActor = rig.Actor with { AuthenticationRevision = rig.Actor.AuthenticationRevision + ":foreign" };
+            else
+                rig.Home.Runtime.ReportServiceState("permissions.trust", HomeServiceLifecycleState.Unavailable, false,
+                    "Controlled actual Home service refusal");
+            var refresh = rig.Source.RefreshAsync();
+            var failure = await Record.ExceptionAsync(async () => await refresh.WaitAsync(HomeAppearanceAuthorityRig.Limit));
+            Assert.NotNull(failure);
+            rig.ExpectFailedSource(failure!);
+            Assert.True(refresh.IsFaulted);
+            Assert.True(HomeAppearanceAuthorityRig.ContainsCause<UnauthorizedAccessException>(failure!));
+            Assert.Equal(previous, rig.Source.Current);
+            Assert.Equal(before, await File.ReadAllBytesAsync(rig.PreferencePath));
+            Assert.Null(rig.Home.OriginalCloseTask);
+        }
+        finally
+        {
+            rig.ExpectedActor = rig.Actor;
+            if (refusal == "required-service")
+                rig.Home.Runtime.ReportServiceState("permissions.trust", HomeServiceLifecycleState.Ready, true);
+        }
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(LinuxHomeAppearanceAuthoritySupported),
+        Skip = "Linux component owner fixture; installed Windows/native acceptance is separate.")]
+    public async Task Source_owned_appearance_authority_retains_the_actual_faulted_principal_Task_and_foreign_OCE_cause()
+    {
+        await using var rig = await HomeAppearanceAuthorityRig.CreateAsync();
+        var before = await File.ReadAllBytesAsync(rig.PreferencePath);
+        using var foreign = new CancellationTokenSource();
+        foreign.Cancel();
+        var originalCause = new OperationCanceledException("A real principal source FAULTED; this is not native owner retirement.",
+            foreign.Token);
+        var originalPrincipal = Task.FromException<string?>(originalCause);
+        rig.Principal.NextOriginal = originalPrincipal;
+        var refresh = rig.Source.RefreshAsync();
+        var failure = await Record.ExceptionAsync(async () => await refresh.WaitAsync(HomeAppearanceAuthorityRig.Limit));
+        Assert.NotNull(failure);
+        rig.ExpectFailedSource(failure!);
+        Assert.Same(originalPrincipal, rig.Principal.LastOriginal);
+        Assert.True(originalPrincipal.IsFaulted);
+        Assert.False(originalPrincipal.IsCanceled);
+        Assert.True(refresh.IsFaulted);
+        Assert.False(refresh.IsCanceled);
+        Assert.True(HomeAppearanceAuthorityRig.HasExactCause(failure!, originalCause));
+        var actualAuthority = Assert.IsAssignableFrom<Task<bool>>(rig.LastAuthority);
+        Assert.True(actualAuthority.IsFaulted);
+        var retained = Assert.Single(rig.Source.AuthorityObservations);
+        Assert.Same(actualAuthority, retained.Source);
+        Assert.True(HomeAppearanceAuthorityRig.HasExactCause(retained.Cause, originalCause));
+        Assert.Equal(foreign.Token, originalCause.CancellationToken);
+        Assert.False(rig.AppLifetime.IsCancellationRequested);
+        Assert.False(rig.WindowLifetime.IsCancellationRequested);
+        Assert.Equal(before, await File.ReadAllBytesAsync(rig.PreferencePath));
+        Assert.Null(rig.Source.OriginalClose);
+    }
+
+    private sealed class HomeAppearanceAuthorityPrincipal : ITrustedHostPrincipalSource
+    {
+        private readonly OperatingSystemPrincipalSource _actual = new();
+        internal bool HoldNext;
+        internal Task<string?>? HeldOriginal, LastOriginal, NextOriginal;
+        internal readonly TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        {
+            if (NextOriginal is { } next)
+            {
+                NextOriginal = null;
+                return new(LastOriginal = next); // Deliberate fault injection, never an alternate identity grant.
+            }
+            var original = _actual.GetPrincipalAsync(token).AsTask();
+            if (HoldNext)
+            {
+                HoldNext = false;
+                var held = HoldOriginalAsync(original, token);
+                LastOriginal = HeldOriginal = held;
+                Entered.TrySetResult();
+                return new(held);
+            }
+            return new(LastOriginal = original);
+        }
+
+        private async Task<string?> HoldOriginalAsync(Task<string?> original, CancellationToken token)
+        {
+            var principal = await original.ConfigureAwait(false);
+            await Release.Task.ConfigureAwait(false); // Raw source stays held until its actual acknowledgement.
+            token.ThrowIfCancellationRequested();
+            return principal;
+        }
+    }
+
+    private sealed class HomeAppearanceAuthorityRig : IAsyncDisposable
+    {
+        internal static readonly TimeSpan Limit = TimeSpan.FromSeconds(10);
+        internal readonly LayoutPaths Paths = new();
+        internal readonly HomeAppearanceAuthorityPrincipal Principal = new();
+        internal readonly CancellationTokenSource AppLifetime = new(), WindowLifetime = new();
+        internal readonly HomeNativeWindowsComposition Home;
+        internal readonly Microsoft.Extensions.DependencyInjection.ServiceProvider Provider;
+        internal AuthenticatedResourceActor Actor = null!, ExpectedActor = null!;
+        internal NativeHomeThemePreferences Source = null!;
+        internal Task<bool>? LastAuthority;
+        internal string PreferencePath => Path.Combine(Paths.DataDirectory, "preferences.json");
+        private readonly HashSet<Exception> _expectedFailures = new(ReferenceEqualityComparer.Instance);
+
+        private HomeAppearanceAuthorityRig()
+        {
+            if (OperatingSystem.IsLinux()) File.SetUnixFileMode(Paths.DataDirectory,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            Home = new(new FileHomeCoreStateStore(Path.Combine(Paths.DataDirectory, "home-appearance-state.json")),
+                Principal, Paths, new("9to1.home.appearance.fixture." + Guid.NewGuid().ToString("N")));
+            var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+            // Preserve the real uninstantiated production descriptor checks, including the
+            // Linux secret-store wiring, then bind the SAME protected local Home tuple.
+            services.AddHavenInfrastructure();
+            services.AddHavenOwnedWindowsHomeDomain(Home, Paths, Principal);
+            Provider = services.BuildServiceProvider();
+        }
+
+        internal static async Task<HomeAppearanceAuthorityRig> CreateAsync()
+        {
+            var rig = new HomeAppearanceAuthorityRig();
+            try
+            {
+                await File.WriteAllTextAsync(rig.PreferencePath,
+                    "{\"havenUiThemeName\":\"Professional\",\"defaultModel\":\"preserved-model\",\"futureSetting\":{\"keep\":true}}");
+                // This is the genuine isolated Home process startup. It observes package/broker
+                // health but has no admitted generation capability and sends no model request.
+                await rig.Home.StartOriginalAsync().WaitAsync(Limit);
+                rig.Actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None)
+                    ?? throw new InvalidOperationException("The original operating-system Home profile is unavailable.");
+                rig.ExpectedActor = rig.Actor;
+                rig.Source = new(rig.PreferencePath, new(HomeDataScope.DeviceLocal, rig.Actor.ProfileId),
+                    UserPreferencesService.ProjectLegacyHomeTheme,
+                    token => new ValueTask<bool>(rig.ObserveAsync(token)), callback => Dispatcher.UIThread.Post(callback));
+                await rig.Source.RefreshAsync().WaitAsync(Limit);
+                Assert.False(rig.Home.InstalledPeerAdmissionConfigured);
+                Assert.Null(rig.Actor.AccountId);
+                Assert.Null(rig.Actor.OrganisationId);
+                return rig;
+            }
+            catch (Exception primary)
+            {
+                try { await rig.DisposeAsync(); }
+                catch (Exception cleanup) { throw new AggregateException("Actual Home appearance fixture startup and cleanup failed.", primary, cleanup); }
+                throw;
+            }
+        }
+
+        internal Task<bool> ObserveAsync(CancellationToken token)
+        {
+            var actual = App.ObserveOriginalHomeAppearanceAuthorityAsync(Provider, Home, ExpectedActor,
+                AppLifetime.Token, WindowLifetime.Token, body => body(), token);
+            Interlocked.Exchange(ref LastAuthority, actual);
+            return actual;
+        }
+
+        internal void ExpectFailedSource(Exception error)
+        {
+            foreach (var cause in Leaves(error)) _expectedFailures.Add(cause);
+        }
+
+        internal static bool ContainsCause<T>(Exception error) where T : Exception =>
+            error is T || error is AggregateException group && group.InnerExceptions.Any(ContainsCause<T>) ||
+            error.InnerException is { } inner && ContainsCause<T>(inner);
+
+        internal static bool HasExactCause(Exception error, Exception expected) =>
+            ReferenceEquals(error, expected) || error is AggregateException group && group.InnerExceptions.Any(inner => HasExactCause(inner, expected)) ||
+            error.InnerException is { } inner && HasExactCause(inner, expected);
+
+        private static IEnumerable<Exception> Leaves(Exception error) => error is AggregateException group
+            ? group.InnerExceptions.SelectMany(Leaves)
+            : new[] { error };
+
+        public async ValueTask DisposeAsync()
+        {
+            Principal.NextOriginal = null;
+            Principal.HoldNext = false;
+            Principal.Release.TrySetResult();
+            var failures = new List<Exception>();
+            async Task<bool> Join(Task actual)
+            {
+                try { await actual.WaitAsync(Limit); }
+                catch (Exception caught)
+                {
+                    foreach (var cause in Leaves(actual.Exception ?? caught))
+                        if (!_expectedFailures.Contains(cause)) failures.Add(cause);
+                }
+                return actual.IsCompleted;
+            }
+            var sourceSettled = true;
+            if (Source is not null)
+            {
+                try { sourceSettled = await Join(Source.DisposeAsync().AsTask()); }
+                catch (Exception error) { failures.Add(error); sourceSettled = false; }
+            }
+            // A timeout never permits closing the Home/provider dependency while an
+            // actual appearance original still borrows it. Leave that custody intact.
+            var homeClosed = false;
+            if (sourceSettled && failures.Count == 0)
+                try
+                {
+                    var homeClose = Home.CloseAndDrainAsync();
+                    await Join(homeClose);
+                    homeClosed = homeClose.IsCompletedSuccessfully;
+                }
+                catch (Exception error) { failures.Add(error); }
+            if (homeClosed)
+                try { await Join(Provider.DisposeAsync().AsTask()); } catch (Exception error) { failures.Add(error); }
+            // Unexpected failures retain their actual fixture files for the owning runner.
+            if (failures.Count != 0) throw new AggregateException("Original Home appearance fixture cleanup failed.", failures);
+            AppLifetime.Dispose(); WindowLifetime.Dispose();
+            Directory.Delete(Paths.DataDirectory, true);
+        }
+    }
+
+    // Actual canonical CUI/native preference file/factory routes. The explicit admission
+    // callbacks in these component cases are controlled; actual Home authority has separate cases.
+    [AvaloniaFact]
+    public async Task Settings_rail_saves_through_the_same_canonical_appearance_source_and_retains_its_page()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-route-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"defaultModel\":\"retained-model\"}");
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        using var lifetime = new CancellationTokenSource();
+        HomeSettingsDestinationPage? settings = null;
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            settings: _ => settings = new(source, _ => Task.CompletedTask)).CreateSession(Request()));
+        Window? window = null;
+        try
+        {
+            await session.InitializeAsync();
+            var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
+            window = Show(page);
+            page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-settings")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.NotNull(settings);
+            Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
+            Assert.Contains(settings!.GetVisualDescendants(), control => control.Name == "home-appearance-settings");
+            AppearanceOption(settings, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.True(settings.LastWrite!.ConfirmedWrite!.Succeeded);
+            Assert.Equal(1, settings.LastWrite.ConfirmedWrite.Value!.Preference.Revision);
+            var saved = HomeNativePreferenceFile.Read(file);
+            Assert.Equal("retained-model", saved["defaultModel"]!.GetValue<string>());
+            Assert.Equal("Glow", HomeNativePreferenceFile.Resolve(saved,
+                new(HomeDataScope.DeviceLocal, "original-home-profile"), UserPreferencesService.ProjectLegacyHomeTheme).ThemeName);
+            Assert.Single(Directory.EnumerateFiles(root, "*.json"));
+            await page.DispatchAsync("home.apps", null);
+            await page.DispatchAsync("home.settings", null);
+            Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
+            Assert.True(await session.TryPrepareToCloseAsync());
+            await session.CloseAndDrainAsync();
+            Assert.True(session.CanRetireOriginalView);
+            Assert.True(settings.OriginalClose!.IsCompletedSuccessfully);
+            // A tab is only a borrower. Closing it cannot dispose the shared source or its context.
+            await source.RefreshAsync();
+            Assert.Equal("Glow", source.Context.Current.Theme.Name);
+        }
+        finally
+        {
+            try { await session.CloseAndDrainAsync(); }
+            finally { try { window?.Close(); } finally { await source.DisposeAsync(); Directory.Delete(root, true); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Settings_shared_appearance_fragment_scrolls_at_520px_and_keeps_its_actual_last_action_reachable()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-short-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        var initial = await File.ReadAllBytesAsync(file);
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        using var lifetime = new CancellationTokenSource();
+        HomeSettingsDestinationPage? settings = null;
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            settings: _ => settings = new(source, _ => Task.CompletedTask)).CreateSession(Request("browse://home/settings")));
+        Window? window = null;
+        void Layout() { window!.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+        try
+        {
+            await session.InitializeAsync();
+            window = new Window { Width = 520, Height = 520, Content = session.OriginalNativeView };
+            window.Show(); Layout(); Assert.NotNull(settings);
+            var fragment = Assert.Single(settings!.GetVisualDescendants().OfType<CuiContainerControl>(),
+                control => control.Name == "home-appearance-settings");
+            Assert.Equal("Vertical Stack", fragment.LayoutType);
+            var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
+            Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
+            Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, scroll.VerticalScrollBarVisibility);
+            Assert.True(scroll.Viewport.Height > 0 && scroll.Viewport.Height <= 520);
+            Assert.True(scroll.Extent.Height > scroll.Viewport.Height,
+                $"The constrained real fragment must exercise overflow: extent={scroll.Extent}, viewport={scroll.Viewport}.");
+            scroll.Offset = new Vector(0, scroll.Extent.Height); Layout();
+            Assert.True(scroll.Offset.Y > 0);
+            var refresh = Assert.Single(settings.GetVisualDescendants().OfType<Button>(),
+                control => control.Name == "home-appearance-refresh");
+            var origin = refresh.TranslatePoint(default, scroll)!.Value;
+            Assert.True(origin.Y >= -.5 && origin.Y + refresh.Bounds.Height <= scroll.Viewport.Height + .5,
+                $"The actual last action is clipped after scrolling: origin={origin}, bounds={refresh.Bounds}, viewport={scroll.Viewport}.");
+            Assert.True(refresh.IsEnabled);
+            refresh.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.Equal(initial, await File.ReadAllBytesAsync(file)); // Refresh cannot replay a write.
+            await session.CloseAndDrainAsync(); Assert.True(session.CanRetireOriginalView);
+            await source.RefreshAsync(); // Normal tab close does not retire the shared Home owner.
+        }
+        finally
+        {
+            try { await session.CloseAndDrainAsync(); }
+            finally { try { window?.Close(); } finally { await source.DisposeAsync(); Directory.Delete(root, true); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Configured_Home_Settings_has_one_strict_route_preserving_New_Tab_nested_and_private_refusals()
+    {
+        using var lifetime = new CancellationTokenSource();
+        var paths = new LayoutPaths();
+        var file = Path.Combine(paths.DataDirectory, "preferences.json");
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        BrowseChrome? chrome = null;
+        try
+        {
+            chrome = await BrowseChrome.CreateAsync(paths, internalContentFactory: Factory(new(), lifetime.Token,
+                settings: _ => new(source, _ => Task.CompletedTask)), homeProfileId: "original-home-profile", cancellationToken: lifetime.Token);
+            var actual = await chrome.NavigateAsync("browse://home/settings", lifetime.Token);
+            Assert.Equal("browse://home/settings", actual.SelectedTab.Address.Value);
+            Assert.Equal(BrowseEngineState.NativeApp, actual.SelectedTab.EngineState);
+            foreach (var invalid in new[] { "browse://newtab/settings", "browse://home/settings/nested" })
+            {
+                var refused = await chrome.NavigateAsync(invalid, lifetime.Token);
+                Assert.Equal("browse://home/settings", refused.SelectedTab.Address.Value);
+                Assert.Contains("not registered", refused.Status, StringComparison.Ordinal);
+            }
+            Assert.Throws<NotSupportedException>(() => Factory(new(), lifetime.Token,
+                settings: _ => new(source, _ => Task.CompletedTask)).CreateSession(
+                    Request("browse://home/settings") with { Privacy = BrowserTabPrivacy.Private }));
+        }
+        finally
+        {
+            try
+            {
+                if (chrome is not null)
+                {
+                    var preparation = await chrome.PrepareCloseAsync(lifetime.Token);
+                    Assert.NotNull(preparation); await preparation!.BeginClose();
+                }
+            }
+            finally { await source.DisposeAsync(); Directory.Delete(paths.DataDirectory, true); }
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Settings_expected_denial_clears_the_projection_without_losing_a_confirmed_write(bool denyAfterWrite)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-denial-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        var checks = 0; var armed = false;
+        Task Admit(CancellationToken _) => armed && ++checks == (denyAfterWrite ? 2 : 1)
+            ? Task.FromException(new HomeSettingsAuthorityRefusal("Actual owning predicate returned false")) : Task.CompletedTask;
+        var page = new HomeSettingsDestinationPage(source, Admit);
+        Window? window = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page);
+            var initial = await File.ReadAllBytesAsync(file); armed = true;
+            AppearanceOption(page, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.False(page.IsActionAvailable("ApplyHomeAppearance"));
+            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-theme-option");
+            if (denyAfterWrite)
+            {
+                Assert.True(page.LastWrite!.ConfirmedWrite!.Succeeded);
+                Assert.Equal(1, page.LastWrite.ConfirmedWrite.Value!.Preference.Revision);
+                Assert.NotEqual(initial, await File.ReadAllBytesAsync(file));
+            }
+            else { Assert.Null(page.LastWrite); Assert.Equal(initial, await File.ReadAllBytesAsync(file)); }
+            Assert.Empty(page.AdmissionObservations); // Explicit owner denial is not fabricated I/O failure.
+            await page.CloseAndDrainAsync();
+            Assert.True(page.OriginalClose!.IsCompletedSuccessfully);
+        }
+        finally
+        {
+            try { await page.CloseAndDrainAsync(); }
+            finally { try { window?.Close(); } finally { await source.DisposeAsync(); Directory.Delete(root, true); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Settings_tab_close_joins_the_actual_global_write_without_canceling_or_disposing_its_owner()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-held-close-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        var entered = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var armed = false; var once = true;
+        async ValueTask<bool> Authorize(CancellationToken token)
+        {
+            if (armed && once) { once = false; entered.TrySetResult(token); await release.Task; }
+            token.ThrowIfCancellationRequested(); return true;
+        }
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, Authorize, callback => Dispatcher.UIThread.Post(callback));
+        var page = new HomeSettingsDestinationPage(source, _ => Task.CompletedTask);
+        Window? window = null; Task? close = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page); armed = true;
+            AppearanceOption(page, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var token = await entered.Task.WaitAsync(TimeSpan.FromSeconds(20));
+            close = page.CloseAndDrainAsync(); Assert.Same(close, page.CloseAndDrainAsync());
+            Assert.False(close.IsCompleted); Assert.False(token.IsCancellationRequested);
+            release.TrySetResult();
+            await close.WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.True(page.LastWrite!.ConfirmedWrite!.Succeeded);
+            Assert.False(token.IsCancellationRequested);
+            await source.RefreshAsync();
+            Assert.Equal("Glow", source.Context.Current.Theme.Name);
+        }
+        finally
+        {
+            release.TrySetResult();
+            try { await (close ?? page.CloseAndDrainAsync()).WaitAsync(TimeSpan.FromSeconds(20)); }
+            finally { try { window?.Close(); } finally { await source.DisposeAsync(); Directory.Delete(root, true); } }
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("io")]
+    [InlineData("foreign-cancel")]
+    [InlineData("faulted-owner-oce")]
+    [InlineData("mixed-owner-and-io")]
+    [InlineData("mixed-io-and-owner")]
+    public async Task Settings_actual_admission_faults_are_not_quiet_owner_denials_or_successful_close(string kind)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-raw-admission-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        var actualAdmission = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var armed = false;
+        Task Admit(CancellationToken token)
+        { if (!armed) return Task.CompletedTask; entered.TrySetResult(token); return actualAdmission.Task; }
+        var page = new HomeSettingsDestinationPage(source, Admit);
+        Window? window = null; Task? close = null; Exception? expected = null, sibling = null;
+        using var foreign = new CancellationTokenSource();
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page);
+            var initial = await File.ReadAllBytesAsync(file); armed = true;
+            AppearanceOption(page, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var ownerToken = await entered.Task.WaitAsync(TimeSpan.FromSeconds(20));
+            close = page.CloseAndDrainAsync(); Assert.False(close.IsCompleted);
+            if (kind == "foreign-cancel")
+            {
+                foreign.Cancel(); actualAdmission.SetCanceled(foreign.Token);
+            }
+            else if (kind.StartsWith("mixed-", StringComparison.Ordinal))
+            {
+                expected = new HomeSettingsAuthorityRefusal("One owning predicate denied, but its raw Task also failed.");
+                sibling = new IOException("A separate actual authority storage observation failed.");
+                actualAdmission.SetException(kind == "mixed-owner-and-io" ? [expected, sibling] : [sibling, expected]);
+            }
+            else
+            {
+                expected = kind == "io" ? new UnauthorizedAccessException("Original authority I/O access fault")
+                    : new OperationCanceledException("FAULTED raw source carrying the canceled page-owner token", ownerToken);
+                actualAdmission.SetException(expected);
+            }
+            var failure = await Record.ExceptionAsync(() => close.WaitAsync(TimeSpan.FromSeconds(20)));
+            Assert.NotNull(failure); Assert.True(close.IsFaulted);
+            var observation = Assert.Single(page.AdmissionObservations);
+            Assert.Same(actualAdmission.Task, observation.Source); Assert.Equal(ownerToken, observation.RequestedToken);
+            if (expected is not null)
+            {
+                if (sibling is null) Assert.Same(expected, observation.Cause);
+                else
+                {
+                    Assert.Equal(2, Assert.IsType<AggregateException>(observation.Cause).InnerExceptions.Count);
+                    Assert.True(ContainsSameSettingsCause(observation.Cause, expected));
+                    Assert.True(ContainsSameSettingsCause(observation.Cause, sibling));
+                    Assert.True(ContainsSameSettingsCause(failure!, sibling));
+                }
+                Assert.True(actualAdmission.Task.IsFaulted); Assert.False(actualAdmission.Task.IsCanceled);
+                Assert.True(ContainsSameSettingsCause(failure!, expected));
+            }
+            else
+            {
+                Assert.True(actualAdmission.Task.IsCanceled);
+                Assert.Equal(foreign.Token, Assert.IsAssignableFrom<OperationCanceledException>(observation.Cause).CancellationToken);
+                Assert.True(ContainsSameSettingsCause(failure!, observation.Cause));
+            }
+            Assert.Null(page.LastWrite);
+            Assert.Null(page.Content); // All acknowledged actions/loaders physically closed despite retained failure.
+            Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+            await source.RefreshAsync(); // The unrelated global owner remains live.
+        }
+        finally
+        {
+            actualAdmission.TrySetResult();
+            if (close is null) close = page.CloseAndDrainAsync();
+            var terminal = await Record.ExceptionAsync(() => close.WaitAsync(TimeSpan.FromSeconds(20)));
+            try
+            {
+                if (terminal is not null && !(expected is not null && ContainsSameSettingsCause(terminal, expected)) &&
+                    !page.AdmissionObservations.Any(observation => ContainsSameSettingsCause(terminal, observation.Cause))) throw terminal;
+            }
+            finally { try { window?.Close(); } finally { await source.DisposeAsync(); Directory.Delete(root, true); } }
+        }
+    }
+
+    private static bool ContainsSameSettingsCause(Exception actual, Exception expected) =>
+        ReferenceEquals(actual, expected) || actual is AggregateException group && group.InnerExceptions.Any(inner => ContainsSameSettingsCause(inner, expected)) ||
+        actual.InnerException is { } cause && ContainsSameSettingsCause(cause, expected);
+
+    private static Button AppearanceOption(HomeSettingsDestinationPage page, string name) =>
+        Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+            button.Name == "home-theme-option" && string.Equals(button.Content?.ToString(), name, StringComparison.Ordinal));
 
     [AvaloniaFact]
     public async Task Home_appearance_targets_save_the_real_native_file_preserve_other_settings_and_reopen_live_contexts()

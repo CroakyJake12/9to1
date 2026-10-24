@@ -117,3 +117,7 @@ Native ARM candidate identity: use the committed-tree generator and focused Git-
 ## Python maintenance tools
 
 Follow [the Python maintenance procedure](docs/development/workflow.md#python-maintenance-tools) for committed native-input identity, explicitly closed Root alternative-index archives and deterministic benchmark stream checks. Preserve the original source base, every prior input pin, historical evidence and the existing coordinator. Use fresh private outputs outside Git/worktrees. Preparation does not authorise cleanup, inference, SDK execution or promotion; current desktop/provider limits and all native/package/release gates still apply.
+
+## Latest owner execution override — 24 October 2026
+
+Read `docs/specification/owner-references/2026-10-24-implementation-first-until-complete/owner-correction.json`. Independent acceptance is PAUSED until every canonical app reaches100% implementation, or a later explicit owner instruction resumes it. Implement features and fixes; run compilation and focused authentic basic smoke checks. Do not wait for full acceptance to integrate WIP into the development candidate. Freeze Accepted progress estimates, retain all existing evidence, and do not call unverified work accepted or release-ready. This supersedes the earlier03:00BST automatic acceptance resumption. Full scope, CUI/same-app requirements, resource/custody safeguards and future release/install/native gates remain.

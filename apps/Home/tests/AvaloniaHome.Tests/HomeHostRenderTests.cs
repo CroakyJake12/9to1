@@ -216,6 +216,42 @@ public sealed class HomeHostRenderTests
                 var retroHero = Assert.Single(retroInspection.Tree.Search("home-hero")).ElementId;
                 Assert.NotEqual(bubbleRadius, Assert.Single(retroInspection.GetResources(retroHero).Values,
                     value => value.Key == "CuiCardRadius").Value);
+
+                // Keep all legacy reader/Retro/source-trace coverage above. Now exercise the
+                // same canonical Appearance choices and genuine file CAS through standalone.
+                Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control => control.Name == "nav-settings")
+                    .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => reopened.GetVisualDescendants().Any(control => control.Name == "home-appearance-settings"),
+                    "The canonical standalone Appearance fragment did not open.");
+                var standaloneAppearance = Assert.Single(reopened.GetVisualDescendants().OfType<CuiContainerControl>(),
+                    control => control.Name == "home-appearance-settings");
+                Assert.Equal("Vertical Stack", standaloneAppearance.LayoutType);
+                Assert.IsType<ScrollViewer>(standaloneAppearance.Child);
+                var outerWorkspace = Assert.Single(reopened.GetVisualDescendants().OfType<CuiContainerControl>(),
+                    control => control.Name == "home-workspace-scroll");
+                Assert.IsType<ScrollViewer>(outerWorkspace.Child); // Original standalone flow is preserved.
+                var actualActor = originalComposition.Profiles.GetCurrentAsync(CancellationToken.None).AsTask();
+                WaitFor(() => actualActor.IsCompleted, "The original Home profile observation did not settle.");
+                var actor = Assert.IsType<AuthenticatedResourceActor>(actualActor.GetAwaiter().GetResult());
+                var choice = Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control =>
+                    control.Name == "home-theme-option" && control.Content?.ToString() == "Glow");
+                Assert.True(choice.IsEnabled);
+                choice.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var preferenceFile = Path.Combine(dataDirectory, "preferences.json");
+                WaitFor(() => HomeNativePreferenceFile.Read(preferenceFile)[HomeNativePreferenceFile.ThemeKey] is not null,
+                    "The actual standalone Appearance click did not save its canonical preference envelope.");
+                var savedPreference = HomeNativePreferenceFile.Resolve(HomeNativePreferenceFile.Read(preferenceFile),
+                    new HomeThemeScope(HomeDataScope.DeviceLocal, actor.ProfileId),
+                    (_, _) => throw new InvalidOperationException("This assertion requires the real saved canonical envelope, not a projected legacy value."));
+                Assert.Equal("Glow", savedPreference.ThemeName);
+                Assert.Equal(1, savedPreference.Revision);
+                WaitFor(() => CuiSurfacePaletteCatalog.ActiveTheme == CuiTheme.Glow,
+                    "The confirmed saved appearance did not update the same live standalone context.");
+                var appearanceInspection = Assert.IsType<CuiLiveTreeInspector>(originalApp.CaptureDiagnostics(reopened));
+                var appearance = Assert.Single(appearanceInspection.Tree.Search("home-appearance-settings"));
+                var appearanceTrace = Assert.IsType<CuiAuthoredControlTrace>(appearanceInspection.GetSource(appearance.ElementId));
+                Assert.EndsWith("Home.cui", appearanceTrace.Source.FilePath, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal("home-appearance-settings", appearanceTrace.AuthoredId);
             }
             finally
             {

@@ -22,13 +22,15 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
     private readonly CancellationToken _hostLifetime;
     private readonly bool _aiAvailable;
     private readonly Func<BrowseAppContentRequest, HomeEventsDestinationPage>? _events;
+    private readonly Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? _settings;
 
     internal UnifiedHomeContentFactory(IModeRegistry modes, Func<NewDashboardPage> dashboard,
         Func<HomeDiscoverPage> discover, Func<BrowseNavigationIntent, Task, bool> queue,
         Func<string, CancellationToken, Task<AppContentAddress>> prepareAiDraft,
         Func<BrowseAppContentRequest, CancellationToken, Task> admit,
         Func<bool> hostIsCurrent, CancellationToken hostLifetime, bool aiAvailable = true,
-        Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null)
+        Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
+        Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null)
     {
         _modes = modes ?? throw new ArgumentNullException(nameof(modes));
         _dashboard = dashboard ?? throw new ArgumentNullException(nameof(dashboard));
@@ -38,7 +40,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         _admit = admit ?? throw new ArgumentNullException(nameof(admit));
         _hostIsCurrent = hostIsCurrent ?? throw new ArgumentNullException(nameof(hostIsCurrent));
         if (!hostLifetime.CanBeCanceled) throw new ArgumentException("Retain the original host lifetime.", nameof(hostLifetime));
-        _hostLifetime = hostLifetime; _aiAvailable = aiAvailable; _events = events;
+        _hostLifetime = hostLifetime; _aiAvailable = aiAvailable; _events = events; _settings = settings;
     }
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
@@ -54,7 +56,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         var isHome = request.Address.Authority == "home";
         var admissibleSegments = segments.Count == 0 ||
             (isHome && segments.Count == 1 && (segments[0].Equals("models", StringComparison.Ordinal) ||
-                _events is not null && segments[0].Equals("events", StringComparison.Ordinal)));
+                _events is not null && segments[0].Equals("events", StringComparison.Ordinal) ||
+                _settings is not null && segments[0].Equals("settings", StringComparison.Ordinal)));
         if (!admissibleSegments)
             throw new NotSupportedException("This Home destination is unavailable or belongs to another authority.");
         if (request.TabId == Guid.Empty || string.IsNullOrWhiteSpace(request.ProfileId))
@@ -117,7 +120,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
                             _page = new UnifiedHomePage(_request, _owner._modes, _owner._dashboard,
                                 _owner._discover, _owner._queue, _owner._prepareAiDraft, _owner._aiAvailable,
-                                _owner._events is null ? null : () => _owner._events(_request)));
+                                _owner._events is null ? null : () => _owner._events(_request),
+                                _owner._settings is null ? null : () => _owner._settings(_request)));
                         DemandCurrent();
                         var page = _page ?? throw new InvalidOperationException("The original Home page was not acquired.");
                         await original.AwaitAsync(page.InitializeAsync(linked.Token));

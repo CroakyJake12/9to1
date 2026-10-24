@@ -1,0 +1,9 @@
+<Project>
+  <!-- Co-located projects need separate restore and compiler intermediates.
+       Microsoft.Common.props imports this file before choosing either root.
+       Keep explicit caller-provided roots and all existing final output paths. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Den' Or '$(MSBuildProjectName)' == 'Dulche.Runtime' Or '$(MSBuildProjectName)' == 'Dulche.Agents'">
+    <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath Condition="'$(MSBuildProjectExtensionsPath)' == ''">$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>
