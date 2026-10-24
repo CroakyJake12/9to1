@@ -508,7 +508,7 @@ public static class CuiPropertyPresentation
             if (property.Name is "IsEnabled" or "IsChecked" or "IsSelected") UpdateState();
         }
         private bool IsInputRepresentation(AvaloniaProperty property) =>
-            _control is TextBox && property.Name=="Text" || _control is ToggleButton && property.Name=="IsChecked" ||
+            _control is TextBox && property.Name=="Text" || _control is ToggleButton or MenuItem && property.Name=="IsChecked" ||
             _control is RangeBase or NumericUpDown && property.Name=="Value" ||
             _control is SelectingItemsControl && property.Name is "SelectedIndex" or "SelectedItem";
         public void Dispose()
