@@ -26,7 +26,7 @@ public sealed class PrivacyPreferenceStore : IPrivacyPreferenceStore
     public async Task UpdateAsync(PrivacyPreferences preferences, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(preferences);
-        var normalized = preferences with { UpdatedAt = DateTimeOffset.UtcNow };
+        var normalized = Snapshot(preferences with { UpdatedAt = DateTimeOffset.UtcNow });
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -56,12 +56,28 @@ public sealed class PrivacyPreferenceStore : IPrivacyPreferenceStore
         if (!File.Exists(path)) return PrivacyPreferences.Default;
         try
         {
-            return JsonSerializer.Deserialize<PrivacyPreferences>(File.ReadAllText(path), JsonOptions)
-                ?? PrivacyPreferences.Default;
+            var loaded = JsonSerializer.Deserialize<PrivacyPreferences>(File.ReadAllText(path), JsonOptions);
+            return loaded is null || loaded.BackgroundLearningPolicy is null
+                ? PrivacyPreferences.Default
+                : Snapshot(loaded);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
             return PrivacyPreferences.Default;
         }
+    }
+
+    private static PrivacyPreferences Snapshot(PrivacyPreferences preferences)
+    {
+        var policy = preferences.BackgroundLearningPolicy
+            ?? throw new ArgumentException("Privacy preferences require a contributor policy.", nameof(preferences));
+        return preferences with
+        {
+            BackgroundLearningPolicy = policy with
+            {
+                AllowedAppIds = policy.AllowedAppIds is null ? null : Array.AsReadOnly(policy.AllowedAppIds.ToArray()),
+                AllowedProjectIds = policy.AllowedProjectIds is null ? null : Array.AsReadOnly(policy.AllowedProjectIds.ToArray())
+            }
+        };
     }
 }

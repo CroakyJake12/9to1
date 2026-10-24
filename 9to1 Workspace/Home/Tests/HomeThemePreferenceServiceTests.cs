@@ -46,6 +46,54 @@ public sealed class HomeThemePreferenceServiceTests
         Assert.Equal("ThemeScopeMismatch",(await service.GetAsync(Device)).Code);
     }
     [Fact]
+    public async Task Cache_permission_failure_does_not_discard_an_authorized_primary_theme_read()
+    {
+        var stored = HomeThemePreference.Default(Device) with { ThemeName = "Glow", Revision = 4 };
+        var backend = new Backend { Value = stored, CacheFailure = new UnauthorizedAccessException("offline cache is read-only") };
+        using var service = new HomeThemePreferenceService(backend, new Authority(), new Catalog());
+
+        var result = await service.GetAsync(Device);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal("Succeeded", result.Code);
+        Assert.Equal(stored, result.Value!.Preference);
+        Assert.Equal("Glow", result.Value.EffectiveThemeName);
+        Assert.Contains("offline cache could not be refreshed", result.Diagnostic, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(stored, backend.Value);
+    }
+    [Fact]
+    public async Task Cache_failure_does_not_bypass_the_final_authority_check()
+    {
+        var stored = HomeThemePreference.Default(Device) with { ThemeName = "Glow", Revision = 4 };
+        var authority = new Authority();
+        var backend = new Backend
+        {
+            Value = stored,
+            CacheFailure = new UnauthorizedAccessException("cache became read-only"),
+            CacheWriteAction = () => authority.Allowed = false
+        };
+        using var service = new HomeThemePreferenceService(backend, authority, new Catalog());
+
+        var result = await service.GetAsync(Device);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal("PermissionDenied", result.Code);
+        Assert.Null(result.Value);
+        Assert.Equal(stored, backend.Value);
+        Assert.Null(backend.Cache);
+    }
+    [Fact]
+    public async Task Cache_write_cancellation_is_not_swallowed_after_a_primary_read()
+    {
+        var stored = HomeThemePreference.Default(Device) with { ThemeName = "Glow", Revision = 4 };
+        var backend = new Backend { Value = stored, CacheFailure = new OperationCanceledException("cache refresh cancelled") };
+        using var service = new HomeThemePreferenceService(backend, new Authority(), new Catalog());
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.GetAsync(Device));
+        Assert.Equal(stored, backend.Value);
+        Assert.Null(backend.Cache);
+    }
+    [Fact]
     public async Task Permission_denial_never_falls_back_to_a_cached_account()
     {
         var backend=new Backend { ReadState=HomeThemeReadState.PermissionDenied,Cache=HomeThemePreference.Default(Device) };
@@ -109,9 +157,78 @@ public sealed class HomeThemePreferenceServiceTests
         Assert.Equal("Dark",themeOnly.Value.Preference.Appearance);
         var reloaded = await service.GetAsync(Device);
         Assert.Equal(accent,reloaded.Value!.Preference.Accent);
+        Assert.Equal("#2563EB",reloaded.Value.Preference.Accent!.ResolveColour("app.canvas"));
+        Assert.Equal("#DB3545",reloaded.Value.Preference.Accent.ResolveColour("app.present"));
         var none = await service.SetAsync(Device,"Professional",new(),2,accent:accent.WithMode(HomeThemeAccentOverrideMode.None));
         Assert.True(none.Succeeded); Assert.Null(none.Value!.Preference.Accent!.ResolveColour("app.present"));
         Assert.Equal("#DB3545",none.Value.Preference.Accent.IndividualApps["app.present"]);
+    }
+    [Fact]
+    public async Task Persisted_accent_mode_transitions_preserve_individual_choices_and_restore_effective_fallbacks()
+    {
+        var initial = new HomeThemeAccentPreference(HomeThemeAccentOverrideMode.IndividualApps,
+            individualApps: new Dictionary<string,string>
+            { ["app.present"] = "#DB3545", ["app.write"] = "#123ABC" });
+        var backend = new Backend { CloneReceipt = true };
+        using var service = new HomeThemePreferenceService(backend, new Authority(), new Catalog());
+
+        var individual = await service.SetAsync(Device, "Professional", new(), 0, accent: initial);
+        Assert.True(individual.Succeeded);
+        Assert.Equal("#DB3545", individual.Value!.Preference.Accent!.ResolveColour("app.present"));
+        Assert.Equal("#2563EB", individual.Value.Preference.Accent.ResolveColour("app.canvas"));
+
+        var allAppsPreference = initial.WithAllAppsColour("#7A2BBC").WithMode(HomeThemeAccentOverrideMode.AllApps);
+        var allApps = await service.SetAsync(Device, "Professional", new(), 1, accent: allAppsPreference);
+        Assert.True(allApps.Succeeded);
+        Assert.Equal("#7A2BBC", allApps.Value!.Preference.Accent!.ResolveColour("app.canvas"));
+        Assert.NotEqual(HomeThemeAccentPreference.InitialIndividualAppColour,
+            allApps.Value.Preference.Accent.ResolveColour("app.canvas"));
+        Assert.Equal("#DB3545", allApps.Value.Preference.Accent.IndividualApps["app.present"]);
+        Assert.Equal("#123ABC", allApps.Value.Preference.Accent.IndividualApps["app.write"]);
+        var restoredAllApps = (await service.GetAsync(Device)).Value!.Preference.Accent!;
+        Assert.Equal(HomeThemeAccentOverrideMode.AllApps, restoredAllApps.Mode);
+        Assert.Equal("#7A2BBC", restoredAllApps.AllAppsColour);
+        Assert.Equal("#7A2BBC", restoredAllApps.ResolveColour("app.canvas"));
+        Assert.Equal("#DB3545", restoredAllApps.IndividualApps["app.present"]);
+
+        var nonePreference = allAppsPreference.WithMode(HomeThemeAccentOverrideMode.None);
+        var none = await service.SetAsync(Device, "Professional", new(), 2, accent: nonePreference);
+        Assert.True(none.Succeeded);
+        Assert.Null(none.Value!.Preference.Accent!.ResolveColour("app.canvas"));
+        Assert.Equal("#DB3545", none.Value.Preference.Accent.IndividualApps["app.present"]);
+        var restoredNone = (await service.GetAsync(Device)).Value!.Preference.Accent!;
+        Assert.Equal(HomeThemeAccentOverrideMode.None, restoredNone.Mode);
+        Assert.Equal("#7A2BBC", restoredNone.AllAppsColour);
+        Assert.Null(restoredNone.ResolveColour("app.canvas"));
+        Assert.Equal("#123ABC", restoredNone.IndividualApps["app.write"]);
+
+        var restored = await service.SetAsync(Device, "Professional", new(), 3,
+            accent: nonePreference.WithMode(HomeThemeAccentOverrideMode.IndividualApps));
+        Assert.True(restored.Succeeded);
+        var reloaded = await service.GetAsync(Device);
+        var savedAccent = reloaded.Value!.Preference.Accent!;
+        Assert.Equal(HomeThemeAccentOverrideMode.IndividualApps, savedAccent.Mode);
+        Assert.Equal("#7A2BBC", savedAccent.AllAppsColour);
+        Assert.Equal("#DB3545", savedAccent.ResolveColour("app.present"));
+        Assert.Equal("#123ABC", savedAccent.ResolveColour("app.write"));
+        Assert.Equal("#2563EB", savedAccent.ResolveColour("app.canvas"));
+    }
+    [Fact]
+    public async Task Full_individual_accent_capacity_preserves_every_choice_and_keeps_blue_fallback()
+    {
+        var choices = Enumerable.Range(1, HomeThemeAccentPreference.MaximumIndividualAppChoices)
+            .ToDictionary(index => $"app.custom-{index:D2}", index => "#" + index.ToString("X6"));
+        var backend = new Backend { CloneReceipt = true };
+        using var service = new HomeThemePreferenceService(backend, new Authority(), new Catalog());
+
+        var saved = await service.SetAsync(Device, "Professional", new(), 0,
+            accent: new(HomeThemeAccentOverrideMode.IndividualApps, individualApps: choices));
+        Assert.True(saved.Succeeded);
+        var restored = (await service.GetAsync(Device)).Value!.Preference.Accent!;
+
+        Assert.Equal(HomeThemeAccentPreference.MaximumIndividualAppChoices, restored.IndividualApps.Count);
+        foreach (var (appId, colour) in choices) Assert.Equal(colour, restored.ResolveColour(appId));
+        Assert.Equal("#2563EB", restored.ResolveColour("app.not-configured"));
     }
     [Fact]
     public void Legacy_v1_preferences_default_to_no_override_and_invalid_new_values_fail_without_mutation()
@@ -191,7 +308,7 @@ public sealed class HomeThemePreferenceServiceTests
     private sealed class Backend:IHomeThemePreferenceBackend
     {
         public HomeThemePreference? Value,Cache;public bool CloneReceipt;public int CacheReads;public HomeThemeReadState ReadState=HomeThemeReadState.Available;
-        public HomeThemeReadResult? OverrideRead;public Exception? CacheFailure;public Action? ReadAction;
+        public HomeThemeReadResult? OverrideRead;public Exception? CacheFailure;public Action? ReadAction;public Action? CacheWriteAction;
         public TaskCompletionSource? HoldCommit;public TaskCompletionSource CommitEntered=new(TaskCreationOptions.RunContinuationsAsynchronously);
         public event EventHandler<HomeThemeScope>? Changed;
         public bool Supports(HomeThemeScope scope)=>scope.Scope==HomeDataScope.DeviceLocal;
@@ -205,7 +322,7 @@ public sealed class HomeThemePreferenceServiceTests
             lock(this) {if((Value?.Revision??0)!=expectedRevision)return new(false,"RevisionConflict");Value=CloneReceipt ? JsonSerializer.Deserialize(JsonSerializer.Serialize(candidate,AccentJsonContext.Default.HomeThemePreference),AccentJsonContext.Default.HomeThemePreference) : candidate;return new(true,"Succeeded",Value);}
         }
         public Task WriteCacheAsync(HomeThemePreference preference,CancellationToken token=default)
-        {if(CacheFailure is not null)throw CacheFailure;Cache=preference;return Task.CompletedTask;}
+        {CacheWriteAction?.Invoke();if(CacheFailure is not null)throw CacheFailure;Cache=preference;return Task.CompletedTask;}
         public void Invalidate(HomeThemeScope scope)=>Changed?.Invoke(this,scope);
     }
 }

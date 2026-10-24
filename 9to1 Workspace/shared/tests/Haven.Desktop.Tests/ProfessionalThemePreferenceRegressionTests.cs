@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using Haven.Desktop;
 using Haven.Desktop.HavenUI.Tokens;
 using Haven.Desktop.Services;
+using HavenOS.Home.Core;
 using Xunit;
 
 namespace Haven.Desktop.Tests;
@@ -19,6 +20,110 @@ namespace Haven.Desktop.Tests;
 /// </summary>
 public sealed class ProfessionalThemePreferenceRegressionTests
 {
+    [Fact]
+    public void Motion_preference_load_distinguishes_absence_from_failed_or_oversized_reads()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "haven-motion-preference-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var absent = new MotionPreferencesService(Path.Combine(directory, "absent", "prefs.json"));
+            Assert.False(absent.ReduceAnimations);
+
+            var writablePath = Path.Combine(directory, "writable", "prefs.json");
+            var writable = new MotionPreferencesService(writablePath);
+            var successfulWrites = 0;
+            writable.Changed += (_, _) => successfulWrites++;
+            writable.SetReduceAnimations(true);
+            Assert.True(writable.ReduceAnimations);
+            Assert.Equal(1, successfulWrites);
+            Assert.True(new MotionPreferencesService(writablePath).ReduceAnimations);
+
+            var malformedPath = Path.Combine(directory, "malformed.json");
+            File.WriteAllText(malformedPath, "{");
+            Assert.True(new MotionPreferencesService(malformedPath).ReduceAnimations);
+
+            var nullPath = Path.Combine(directory, "null.json");
+            File.WriteAllText(nullPath, "null");
+            Assert.True(new MotionPreferencesService(nullPath).ReduceAnimations);
+
+            var oversizedPath = Path.Combine(directory, "oversized.json");
+            File.WriteAllText(oversizedPath, new string('x', 65_537));
+            Assert.True(new MotionPreferencesService(oversizedPath).ReduceAnimations);
+
+            var inaccessiblePath = Path.Combine(directory, "unreadable-directory");
+            Directory.CreateDirectory(inaccessiblePath);
+            var failedSave = new MotionPreferencesService(inaccessiblePath);
+            Assert.True(failedSave.ReduceAnimations);
+            var notifications = 0;
+            failedSave.Changed += (_, _) => notifications++;
+            failedSave.SetReduceAnimations(false);
+            Assert.True(failedSave.ReduceAnimations);
+            Assert.Equal(0, notifications);
+        }
+        finally
+        {
+            try { Directory.Delete(directory, recursive: true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Home_individual_accent_effective_fallback_reaches_the_shared_cui_context()
+    {
+        using var paths = new TemporaryPaths();
+        var preferencePath = Path.Combine(paths.DataDirectory, "preferences.json");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "fixture-profile");
+        var accent = new HomeThemeAccentPreference(HomeThemeAccentOverrideMode.IndividualApps,
+            individualApps: new Dictionary<string, string>
+            { ["app.present"] = "#DB3545", ["app.custom"] = "#37A169" });
+        var saved = new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion, scope,
+            "Professional", 1, new()) { Accent = accent };
+
+        var receipt = await HomeNativePreferenceFile.CompareExchangeAsync(preferencePath, scope, 0, saved,
+            UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), CancellationToken.None);
+        Assert.True(receipt.Succeeded);
+
+        await using var source = new NativeHomeThemePreferences(preferencePath, scope,
+            UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => callback());
+        await source.RefreshAsync();
+
+        Assert.Equal("#DB3545", source.Current.EffectiveAccent.ResolveColour("app.present"));
+        Assert.Equal("#37A169", source.Current.EffectiveAccent.ResolveColour("app.custom"));
+        Assert.Equal("#2563EB", source.Current.EffectiveAccent.ResolveColour("app.write"));
+        Assert.Equal(source.Current.EffectiveAccent.ResolveColour("app.write"),
+            source.Context.Current.EffectiveAccent.ResolveColour("app.write"));
+    }
+
+    [AvaloniaFact]
+    public async Task Home_to_cui_adapter_preserves_all_32_explicit_individual_accent_choices()
+    {
+        using var paths = new TemporaryPaths();
+        var preferencePath = Path.Combine(paths.DataDirectory, "preferences.json");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "fixture-full-accent-profile");
+        var choices = Enumerable.Range(1, HomeThemeAccentPreference.MaximumIndividualAppChoices)
+            .ToDictionary(index => $"app.custom-{index:D2}", index => "#" + index.ToString("X6"));
+        var saved = new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion, scope,
+            "Professional", 1, new())
+        { Accent = new(HomeThemeAccentOverrideMode.IndividualApps, individualApps: choices) };
+        var receipt = await HomeNativePreferenceFile.CompareExchangeAsync(preferencePath, scope, 0, saved,
+            UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), CancellationToken.None);
+        Assert.True(receipt.Succeeded);
+
+        await using var source = new NativeHomeThemePreferences(preferencePath, scope,
+            UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => callback());
+        await source.RefreshAsync();
+
+        var projected = source.Context.Current.EffectiveAccent.IndividualApps;
+        Assert.Equal(HomeThemeAccentPreference.MaximumIndividualAppChoices, projected.Count);
+        foreach (var (appId, colour) in choices) Assert.Equal(colour, projected[appId]);
+    }
+
     [AvaloniaFact]
     public void Cui_only_theme_choices_survive_reload_and_glow_stays_glow()
     {

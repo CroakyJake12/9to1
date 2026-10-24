@@ -149,7 +149,8 @@ public sealed class HomeThemePreferenceService : IDisposable,IAsyncDisposable
         if(!fromCache && !invalid && read.Preference is not null)
         {
             try { await _backend.WriteCacheAsync(value,token).ConfigureAwait(false); }
-            catch(IOException) { diagnostic="Theme loaded, but its offline cache could not be refreshed."; }
+            catch(Exception error) when(error is IOException or UnauthorizedAccessException)
+            { diagnostic="Theme loaded, but its offline cache could not be refreshed."; }
         }
         if (!await _authority.CanAccessAsync(scope,false,token).ConfigureAwait(false)) return Denied();
         return new(true,fallback?"ThemeFallback":fromCache?"ThemeCached":"Succeeded",new(value,name,fromCache,fallback,diagnostic),diagnostic);

@@ -18,6 +18,11 @@ public sealed record CanvasPenPresetPreferenceState(
 public sealed partial class UserPreferencesService
 {
     private const int CurrentCanvasPenPresetVersion = 1;
+    private sealed record CanvasPenPresetReadState(CanvasPenPresetPreferenceState State, bool Writable);
+    private static readonly HashSet<string> CanvasPresetStateProperties = new(StringComparer.OrdinalIgnoreCase)
+        { "version", "customPresets" };
+    private static readonly HashSet<string> CanvasPresetProperties = new(StringComparer.OrdinalIgnoreCase)
+        { "id", "name", "tool", "color", "opacity", "thickness", "effect" };
 
     private static IReadOnlyList<CanvasPenPresetPreference> BuiltInCanvasPenPresets { get; } =
     [
@@ -31,10 +36,19 @@ public sealed partial class UserPreferencesService
 
     public bool CanvasPenPresetPreferencesWritable
     {
+        get => CanvasPresetReadState.Writable;
+    }
+
+    /// <summary>Explains why saved custom presets are read-only; original data remains untouched.</summary>
+    public string? CanvasPenPresetPreferencesDiagnostic
+    {
         get
         {
-            var state = CanvasPresetState;
-            return state.Version is > 0 and <= CurrentCanvasPenPresetVersion;
+            var read = CanvasPresetReadState;
+            if (read.Writable) return null;
+            return read.State.Version > CurrentCanvasPenPresetVersion
+                ? "Custom pen presets were saved by a newer version. Original data is preserved; built-in pens remain available and custom edits are read-only."
+                : "Saved custom pen presets are incompatible. Original data is preserved; built-in pens remain available and custom edits are read-only.";
         }
     }
 
@@ -42,15 +56,10 @@ public sealed partial class UserPreferencesService
     {
         get
         {
-            var state = CanvasPresetState;
-            if (state.Version is <= 0 or > CurrentCanvasPenPresetVersion) return BuiltInCanvasPenPresets;
-            var custom = (state.CustomPresets ?? [])
-                .Select(value => NormaliseCanvasPreset(value, custom: true))
-                .Where(value => value is not null)
-                .Cast<CanvasPenPresetPreference>()
-                .Where(value => BuiltInCanvasPenPresets.All(builtIn => !builtIn.Id.Equals(value.Id, StringComparison.OrdinalIgnoreCase)))
-                .DistinctBy(value => value.Id, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            var read = CanvasPresetReadState;
+            if (!read.Writable) return BuiltInCanvasPenPresets;
+            var custom = read.State.CustomPresets.Select(value => NormaliseCanvasPreset(value, custom: true))
+                .Cast<CanvasPenPresetPreference>().ToArray();
             return BuiltInCanvasPenPresets.Concat(custom).ToArray();
         }
     }
@@ -90,33 +99,74 @@ public sealed partial class UserPreferencesService
         return true;
     }
 
-    private CanvasPenPresetPreferenceState CanvasPresetState => ReadCanvasPresetState(_preferences.CanvasPenPresets);
+    private CanvasPenPresetReadState CanvasPresetReadState => ReadCanvasPresetState(_preferences.CanvasPenPresets);
 
-    private static CanvasPenPresetPreferenceState ReadCanvasPresetState(JsonElement? payload)
+    private static CanvasPenPresetReadState ReadCanvasPresetState(JsonElement? payload)
     {
         if (payload is not { ValueKind: JsonValueKind.Object } value)
-            return new CanvasPenPresetPreferenceState(CurrentCanvasPenPresetVersion, []);
+            return IncompatibleCanvasPresetState();
+        if (!HasOnlyProperties(value, CanvasPresetStateProperties)) return IncompatibleCanvasPresetState();
+        var customPresets = value.EnumerateObject()
+            .FirstOrDefault(property => property.Name.Equals("customPresets", StringComparison.OrdinalIgnoreCase));
+        if (customPresets.Value.ValueKind != JsonValueKind.Array ||
+            customPresets.Value.EnumerateArray().Any(preset => !HasOnlyProperties(preset, CanvasPresetProperties)))
+            return IncompatibleCanvasPresetState();
         try
         {
-            return JsonSerializer.Deserialize<CanvasPenPresetPreferenceState>(value.GetRawText(), JsonOptions)
-                ?? new CanvasPenPresetPreferenceState(CurrentCanvasPenPresetVersion, []);
+            var state = JsonSerializer.Deserialize<CanvasPenPresetPreferenceState>(value.GetRawText(), JsonOptions);
+            if (state is null) return IncompatibleCanvasPresetState();
+            var writable = state.Version == CurrentCanvasPenPresetVersion && state.CustomPresets is not null &&
+                state.CustomPresets.All(IsValidStoredCanvasPreset) &&
+                state.CustomPresets.Select(preset => preset.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() == state.CustomPresets.Count;
+            return new(state, writable);
         }
         catch (JsonException)
         {
-            return new CanvasPenPresetPreferenceState(CurrentCanvasPenPresetVersion, []);
+            return IncompatibleCanvasPresetState();
         }
         catch (NotSupportedException)
         {
-            return new CanvasPenPresetPreferenceState(CurrentCanvasPenPresetVersion, []);
+            return IncompatibleCanvasPresetState();
         }
+    }
+
+    private static CanvasPenPresetReadState IncompatibleCanvasPresetState() =>
+        new(new CanvasPenPresetPreferenceState(0, []), false);
+
+    private static bool HasOnlyProperties(JsonElement value, IReadOnlySet<string> allowed)
+    {
+        if (value.ValueKind != JsonValueKind.Object) return false;
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var property in value.EnumerateObject())
+            if (!allowed.Contains(property.Name) || !seen.Add(property.Name)) return false;
+        return true;
+    }
+
+    private static bool IsValidStoredCanvasPreset(CanvasPenPresetPreference? value) =>
+        value is not null && !string.IsNullOrWhiteSpace(value.Id) &&
+        !value.Id.StartsWith("builtin-", StringComparison.OrdinalIgnoreCase) &&
+        !string.IsNullOrWhiteSpace(value.Name) && value.Name.Length <= 80 &&
+        (string.Equals(value.Tool, "Pen", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value.Tool, "Highlighter", StringComparison.OrdinalIgnoreCase)) &&
+        IsCanvasPresetColour(value.Color) && double.IsFinite(value.Opacity) && value.Opacity is >= 0.05 and <= 1 &&
+        double.IsFinite(value.Thickness) && value.Thickness is >= 0.5 and <= 64 &&
+        (string.Equals(value.Effect, "Pressure", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value.Effect, "Uniform", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value.Effect, "Marker", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsCanvasPresetColour(string? value)
+    {
+        var colour = value?.Trim();
+        return colour is not null && colour.StartsWith('#') && colour.Length is 7 or 9 &&
+            colour.Skip(1).All(Uri.IsHexDigit);
     }
 
     private static CanvasPenPresetPreference? NormaliseCanvasPreset(CanvasPenPresetPreference? value, bool custom)
     {
         if (value is null) return null;
-        var tool = value.Tool.Equals("Highlighter", StringComparison.OrdinalIgnoreCase) ? "Highlighter" : "Pen";
-        var effect = value.Effect.Equals("Uniform", StringComparison.OrdinalIgnoreCase) ? "Uniform"
-            : value.Effect.Equals("Marker", StringComparison.OrdinalIgnoreCase) ? "Marker"
+        var tool = string.Equals(value.Tool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? "Highlighter" : "Pen";
+        var effect = string.Equals(value.Effect, "Uniform", StringComparison.OrdinalIgnoreCase) ? "Uniform"
+            : string.Equals(value.Effect, "Marker", StringComparison.OrdinalIgnoreCase) ? "Marker"
             : "Pressure";
         var color = NormaliseCanvasColour(value.Color, tool == "Highlighter" ? "#FFFFC928" : "#FF2F80ED");
         var id = value.Id?.Trim() ?? string.Empty;

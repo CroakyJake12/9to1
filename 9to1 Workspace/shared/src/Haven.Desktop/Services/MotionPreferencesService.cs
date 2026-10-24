@@ -17,6 +17,7 @@ namespace Haven.Desktop.Services;
 /// </summary>
 public sealed class MotionPreferencesService
 {
+    private const int MaximumPreferenceBytes = 65_536;
     /// <summary>
     /// Stores json options locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -43,10 +44,14 @@ public sealed class MotionPreferencesService
     private MotionPreferences _preferences;
 
     private MotionPreferencesService()
+        : this(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Haven", "ui-preferences.json"))
     {
-        var localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var directory = Path.Combine(localData, "Haven");
-        _path = Path.Combine(directory, "ui-preferences.json");
+    }
+
+    internal MotionPreferencesService(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        _path = Path.GetFullPath(path);
         _preferences = Load();
     }
 
@@ -77,8 +82,9 @@ public sealed class MotionPreferencesService
         lock (_gate)
         {
             if (_preferences.ReduceAnimations == value) return;
-            _preferences = _preferences with { ReduceAnimations = value };
-            Save();
+            var next = _preferences with { ReduceAnimations = value };
+            if (!Save(next)) return;
+            _preferences = next;
         }
 
         Changed?.Invoke(this, EventArgs.Empty);
@@ -91,31 +97,64 @@ public sealed class MotionPreferencesService
     {
         try
         {
-            if (!File.Exists(_path)) return new MotionPreferences();
-            return JsonSerializer.Deserialize<MotionPreferences>(File.ReadAllText(_path), JsonOptions)
-                   ?? new MotionPreferences();
+            using var input = new FileStream(_path, FileMode.Open, FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            var buffer = new byte[MaximumPreferenceBytes + 1];
+            var length = 0;
+            while (length < buffer.Length)
+            {
+                var read = input.Read(buffer.AsSpan(length));
+                if (read == 0) break;
+                length += read;
+            }
+            if (length > MaximumPreferenceBytes) return ConservativeMotionPreferences();
+            return Deserialize(buffer.AsSpan(0, length));
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
         {
             return new MotionPreferences();
         }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            // A present but unreadable accessibility preference must not silently
+            // become permission to run motion-heavy presentation.
+            return ConservativeMotionPreferences();
+        }
     }
+
+    private static MotionPreferences Deserialize(ReadOnlySpan<byte> json) =>
+        JsonSerializer.Deserialize<MotionPreferences>(json, JsonOptions) ?? ConservativeMotionPreferences();
+
+    private static MotionPreferences ConservativeMotionPreferences() => new() { ReduceAnimations = true };
 
     /// <summary>
     /// Performs the save step owned by this component.
     /// </summary>
-    private void Save()
+    private bool Save(MotionPreferences preferences)
     {
+        var temporary = _path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-            var temporary = _path + ".tmp";
-            File.WriteAllText(temporary, JsonSerializer.Serialize(_preferences, JsonOptions));
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(preferences, JsonOptions);
+            using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                output.Write(bytes);
+                output.Flush(flushToDisk: true);
+            }
             File.Move(temporary, _path, true);
+            return true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             System.Diagnostics.Debug.WriteLine("[9to1 motion preferences] " + exception.Message);
+            return false;
+        }
+        finally
+        {
+            try { if (File.Exists(temporary)) File.Delete(temporary); }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            { System.Diagnostics.Debug.WriteLine("[9to1 motion preferences] temporary cleanup failed: " + exception.Message); }
         }
     }
 

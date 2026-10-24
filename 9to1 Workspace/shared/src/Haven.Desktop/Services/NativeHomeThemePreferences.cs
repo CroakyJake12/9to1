@@ -256,7 +256,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                     DisplayScale = access.DisplayScale, InterfaceFontFamilyOverride = access.InterfaceFontFamily,
                     CodeFontFamilyOverride = access.CodeFontFamily },
                 value.Appearance is null ? null : Enum.Parse<CuiAppearance>(value.Appearance),
-                value.Accent is { } accent ? new((CuiAccentOverrideMode)accent.Mode, accent.AllAppsColour, accent.IndividualApps) : null,
+                ToCuiAccentPreference(value.Accent),
                 resolved.UsedFallback ? null : value.CustomThemesJson);
             if (next.Revision < Current.Revision && next.ScopeId == Current.ScopeId) return;
             Diagnostic = resolved.Diagnostic;
@@ -265,6 +265,26 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             Changed?.Invoke(this, EventArgs.Empty);
         }
         finally { _refresh.Release(); }
+    }
+
+    private static CuiAccentPreference? ToCuiAccentPreference(HomeThemeAccentPreference? accent)
+    {
+        if (accent is null) return null;
+        IReadOnlyDictionary<string, string> choices = accent.IndividualApps;
+        if (accent.Mode == HomeThemeAccentOverrideMode.IndividualApps)
+        {
+            // Project Home's effective per-app fallback into the transient CUI
+            // observation. This is not a second store: explicit Home values win,
+            // and the synthesized entries are never written back to preferences.
+            var effective = accent.IndividualApps.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+            foreach (var app in CuiAppAccentCatalog.Defaults)
+            {
+                if (effective.Count == HomeThemeAccentPreference.MaximumIndividualAppChoices) break;
+                effective.TryAdd(app.AppId, HomeThemeAccentPreference.InitialIndividualAppColour);
+            }
+            choices = effective;
+        }
+        return new((CuiAccentOverrideMode)accent.Mode, accent.AllAppsColour, choices);
     }
 
     private void Invalidated(object? sender, HomeThemeScope scope)

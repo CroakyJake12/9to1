@@ -8,7 +8,9 @@ public enum HomeThemeAccentOverrideMode { None = 0, AllApps = 1, IndividualApps 
 /// <summary>Immutable, value-equal accent choices; storage remains owned by Home.</summary>
 public sealed class HomeThemeAccentPreference : IEquatable<HomeThemeAccentPreference>
 {
+    public const int MaximumIndividualAppChoices = 32;
     public const string InitialAllAppsColour = "#6366F1";
+    public const string InitialIndividualAppColour = "#2563EB";
     public static HomeThemeAccentPreference Default { get; } = new();
     public HomeThemeAccentOverrideMode Mode { get; }
     public string? AllAppsColour { get; }
@@ -20,7 +22,7 @@ public sealed class HomeThemeAccentPreference : IEquatable<HomeThemeAccentPrefer
         if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
         Mode = mode;
         AllAppsColour = allAppsColour is null ? null : CanonicalColour(allAppsColour);
-        if (individualApps?.Count > 32) throw new ArgumentException("Too many app accent choices.", nameof(individualApps));
+        if (individualApps?.Count > MaximumIndividualAppChoices) throw new ArgumentException("Too many app accent choices.", nameof(individualApps));
         var copy = new SortedDictionary<string, string>(StringComparer.Ordinal);
         foreach (var (appId, colour) in individualApps ?? new Dictionary<string, string>())
         {
@@ -41,7 +43,7 @@ public sealed class HomeThemeAccentPreference : IEquatable<HomeThemeAccentPrefer
     public string? ResolveColour(string appId) => Mode switch
     {
         HomeThemeAccentOverrideMode.AllApps => AllAppsColour ?? InitialAllAppsColour,
-        HomeThemeAccentOverrideMode.IndividualApps => IndividualApps.GetValueOrDefault(appId),
+        HomeThemeAccentOverrideMode.IndividualApps => IndividualApps.GetValueOrDefault(appId, InitialIndividualAppColour),
         _ => null
     };
     public static string CanonicalColour(string colour)
