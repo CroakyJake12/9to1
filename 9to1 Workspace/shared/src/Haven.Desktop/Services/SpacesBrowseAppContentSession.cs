@@ -17,6 +17,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Services;
 
+internal sealed class SpacesHistoryAuthorityRefusal : Exception
+{
+    internal SpacesHistoryAuthorityRefusal(string message) : base(message) { }
+}
+
+
 /// <summary>A Space UI action that was refused before it could change anything. The refusal is
 /// reported in the surface that owns the action instead of being retained as a close obligation,
 /// so one failed click can never make the tab permanently unclosable.</summary>
@@ -39,6 +45,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private readonly object _gate = new();
     private readonly List<Task> _commands = [];
     private readonly SemaphoreSlim _commandSerial = new(1, 1);
+    private AuthenticatedResourceActor? _historyOriginalActor;
     private readonly Dictionary<Guid, NewChatPage> _chatsBySpace = [];
     private readonly List<NewChatPage> _ownedChats = [];
     private sealed class CommandExecution(SpacesBrowseAppContentSession owner)
@@ -140,6 +147,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 if (service is null || !service.IsAvailable || service.State != HomeServiceLifecycleState.Ready)
                     throw new UnauthorizedAccessException("A required Home service is unavailable for Spaces.");
             }
+            _historyOriginalActor = actor;
             var registry = _services.GetRequiredService<SpaceRegistry>();
             var navigationHost = new HavenSpacesActionHost(this);
             var page = new SpacesHomePage(registry, navigationHost, SpacesHomePage.ImmediateReadinessInstance,
@@ -148,7 +156,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 sidebarItemsProvider: ReadSpaceSidebarItemsAsync,
                 workspaceCommandHost: ExecuteWorkspaceCommandAsync,
                 conversationSearchProvider: _services.GetRequiredService<IConversationRepository>() is ISpaceConversationSearch
-                    ? FindSpaceConversationTitlesAsync : null);
+                    ? FindSpaceConversationTitlesAsync : null,
+                publishConversationRows: PublishOriginalConversationRowsAsync);
             _spacesPage = page;
             try
             {
@@ -576,27 +585,105 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             owner.ExecuteCommandAsync(action, cancellationToken);
     }
 
+    private sealed record HistoryHomeAuthority(AuthenticatedResourceActor Actor, long ServicesRevision);
+    private sealed class OriginalHistoryRows(SpacesBrowseAppContentSession owner, HistoryHomeAuthority authority,
+        SpacesHomeSelection selection, long routeEpoch, IReadOnlyList<SpacesHomeConversationRow> rows)
+        : IReadOnlyList<SpacesHomeConversationRow>
+    {
+        internal SpacesBrowseAppContentSession Owner => owner;
+        internal HistoryHomeAuthority Authority => authority;
+        internal SpacesHomeSelection Selection => selection;
+        internal long RouteEpoch => routeEpoch;
+        public int Count => rows.Count;
+        public SpacesHomeConversationRow this[int index] => rows[index];
+        public IEnumerator<SpacesHomeConversationRow> GetEnumerator() => rows.GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private void DemandHistoryServicesCurrent(HomeNativeWindowsComposition home)
+    {
+        if (_request.Privacy != BrowserTabPrivacy.Standard)
+            throw new SpacesHistoryAuthorityRefusal("Space history requires the authenticated standard profile.");
+        foreach (var required in new[] { "home.core", "home.state", "permissions.trust" })
+        {
+            var service = home.Runtime.Current.Services.SingleOrDefault(item => item.ServiceId == required);
+            if (service is null || !service.IsAvailable || service.State != HomeServiceLifecycleState.Ready)
+                throw new SpacesHistoryAuthorityRefusal("A required Home service is unavailable for Space history.");
+        }
+    }
+
+    private async Task<HistoryHomeAuthority> ReadHistoryHomeAuthorityAsync(CancellationToken token)
+    {
+        var actor = _historyOriginalActor
+            ?? throw new SpacesHistoryAuthorityRefusal("The original admitted history actor is unavailable.");
+        if (!string.Equals(actor.ProfileId, _request.ProfileId, StringComparison.Ordinal))
+            throw new SpacesHistoryAuthorityRefusal("Space history belongs to a different authenticated profile.");
+        var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+        if (home.OriginalStartTask is { } started) await started;
+        DemandHistoryServicesCurrent(home);
+        // Read SAME canonical Home state and use the existing explicit actor predicate.
+        // Do not catch Home/principal/store OS-access exceptions: only an actual FALSE
+        // observation is an expected authority refusal. No recursive store lease is held.
+        var read = await home.StateStore.ReadAsync(token);
+        var state = read.State;
+        if (!read.IsSuccess || state is null)
+            throw new InvalidDataException("The canonical Home profile state is unavailable; preserve it for recovery.");
+        if (!await home.Profiles.CheckAsync(state, actor, HomeStateCommitPhase.Publication, token))
+            throw new SpacesHistoryAuthorityRefusal("The authenticated Home actor changed during history access.");
+        DemandHistoryServicesCurrent(home);
+        token.ThrowIfCancellationRequested(); DemandAlive();
+        return new(actor, home.Runtime.Current.Revision);
+    }
+
+    private async Task PublishOriginalConversationRowsAsync(IReadOnlyList<SpacesHomeConversationRow> rows,
+        Action<bool> commit, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (rows is not OriginalHistoryRows original || !ReferenceEquals(original.Owner, this))
+            throw new InvalidOperationException("The SAME original history batch is required for publication.");
+        HistoryHomeAuthority current;
+        try { current = await ReadHistoryHomeAuthorityAsync(token); }
+        catch (SpacesHistoryAuthorityRefusal) { commit(false); return; }
+        Dispatcher.UIThread.VerifyAccess();
+        // Comparison and the supplied original UI commit are synchronous in this continuation.
+        // No dispatcher hop/await may be inserted between this decision and the cache publication.
+        var allowed = current == original.Authority && IsPublicationCurrent &&
+            ReferenceEquals(_spacesPage?.Controller.State.Selection, original.Selection) &&
+            _routeEpoch == original.RouteEpoch;
+        var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+        try { DemandHistoryServicesCurrent(home); }
+        catch (SpacesHistoryAuthorityRefusal) { allowed = false; }
+        commit(allowed && home.Runtime.Current.Revision == original.Authority.ServicesRevision);
+    }
+
     /// <summary>Reads the selected Space's real recent conversations for the contextual sidebar.
     /// A store without Space membership queries truthfully contributes no rows; any other failure
     /// is reported to the caller rather than being presented as an empty history.</summary>
     private async Task<IReadOnlyList<SpacesHomeConversationRow>> ReadSpaceConversationsAsync(Guid spaceId, CancellationToken token)
     {
+        var selection = _spacesPage?.Controller.State.Selection;
+        var epoch = _routeEpoch;
+        var authority = await ReadHistoryHomeAuthorityAsync(token).ConfigureAwait(false);
+        if (!IsPublicationCurrent || selection?.Id != spaceId ||
+            !ReferenceEquals(_spacesPage?.Controller.State.Selection, selection) || _routeEpoch != epoch)
+            throw new SpacesHistoryAuthorityRefusal("The selected history context changed before reading.");
         IReadOnlyList<Conversation> rows;
         try
         {
             rows = await _services.GetRequiredService<IConversationRepository>()
                 .GetBySpaceAsync(spaceId, 20, token).ConfigureAwait(false);
         }
-        catch (NotSupportedException) { return []; }
+        catch (NotSupportedException) { rows = []; }
         Guid? current;
         lock (_gate) current = _publishedChatRoute?.Page.CurrentConversation.Id;
-        return rows
-            .Where(row => !row.IsArchived && !row.IsTemporary)
+        var projection = rows
+            .Where(row => row.SpaceId == spaceId && !row.IsArchived && !row.IsTemporary)
             .Select(row => new SpacesHomeConversationRow(row.Id,
                 string.IsNullOrWhiteSpace(row.Title) ? "Untitled conversation" : row.Title,
                 row.UpdatedAt.LocalDateTime.ToString("d MMM yyyy HH:mm"),
                 row.Id == current))
             .ToArray();
+        return new OriginalHistoryRows(this, authority, selection!, epoch, projection);
     }
 
     /// <summary>Searches the SAME current Space's canonical saved titles. No recent-list filtering,
@@ -608,15 +695,24 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         DemandAlive();
         var selection = _spacesPage?.Controller.State.Selection;
         if (!IsPublicationCurrent || selection?.Id != spaceId)
-            throw new InvalidOperationException("The selected Space changed before chat history search.");
+            throw new SpacesHistoryAuthorityRefusal("The selected Space changed before chat history search.");
+        var epoch = _routeEpoch;
+        var authority = await ReadHistoryHomeAuthorityAsync(token).ConfigureAwait(false);
+        if (!ReferenceEquals(_spacesPage?.Controller.State.Selection, selection) || _routeEpoch != epoch)
+            throw new SpacesHistoryAuthorityRefusal("The selected history context changed before search.");
         var registry = _services.GetRequiredService<SpaceRegistry>();
         var originalSpace = await registry.ReadExistingAsync(spaceId, token).ConfigureAwait(false);
         if (originalSpace is null || originalSpace.IsArchived)
-            throw new InvalidOperationException("The selected Space is unavailable.");
+            throw new SpacesHistoryAuthorityRefusal("The selected Space is unavailable.");
         var repository = _services.GetRequiredService<IConversationRepository>();
         if (repository is not ISpaceConversationSearch search)
             throw new NotSupportedException("This conversation store does not support saved-title search.");
+        if (await ReadHistoryHomeAuthorityAsync(token).ConfigureAwait(false) != authority ||
+            !ReferenceEquals(_spacesPage?.Controller.State.Selection, selection) || _routeEpoch != epoch)
+            throw new SpacesHistoryAuthorityRefusal("Home or Space authority changed before the title query.");
         var matches = await search.FindSavedTitlesBySpaceAsync(spaceId, query, 50, token).ConfigureAwait(false);
+        if (await ReadHistoryHomeAuthorityAsync(token).ConfigureAwait(false) != authority)
+            throw new SpacesHistoryAuthorityRefusal("Home authority changed during chat history search.");
         var currentRows = new List<Conversation>();
         foreach (var match in matches.Take(50).DistinctBy(row => row.Id))
         {
@@ -632,12 +728,13 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         DemandAlive();
         if (!IsPublicationCurrent || !ReferenceEquals(_spacesPage?.Controller.State.Selection, selection) ||
             finalSpace is null || finalSpace.IsArchived || finalSpace.Revision != originalSpace.Revision)
-            throw new InvalidOperationException("The selected Space changed during chat history search.");
+            throw new SpacesHistoryAuthorityRefusal("The selected Space changed during chat history search.");
         Guid? activeConversation;
         lock (_gate) activeConversation = _publishedChatRoute?.Page.CurrentConversation.Id;
-        return currentRows.Select(row => new SpacesHomeConversationRow(row.Id,
+        var projection = currentRows.Select(row => new SpacesHomeConversationRow(row.Id,
             string.IsNullOrWhiteSpace(row.Title) ? "Untitled conversation" : row.Title,
             row.UpdatedAt.LocalDateTime.ToString("d MMM yyyy HH:mm"), row.Id == activeConversation)).ToArray();
+        return new OriginalHistoryRows(this, authority, selection!, epoch, projection);
     }
 
     /// <summary>Reads the custom sidebar elements declared by the extensions actually attached to the
@@ -802,32 +899,80 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
 
     /// <summary>Opens an existing conversation of the selected Space from the contextual sidebar.
     /// The real stored identity is restored; nothing is replaced or recreated on failure.</summary>
-    private async Task OpenConversationOnUiAsync(Guid conversationId, CancellationToken token)
+    private sealed record HistoryOpenTicket(SpacesHomePage Owner,
+        SpacesHomePage.ConversationOpenIntent? Issued, long RouteEpoch);
+
+    private void DemandCurrentHistoryOpen(HistoryOpenTicket ticket)
+    {
+        if (ticket.Issued is not { } issued || !IsPublicationCurrent ||
+            !ReferenceEquals(_spacesPage, ticket.Owner) || _routeEpoch != ticket.RouteEpoch ||
+            !ticket.Owner.IsCurrentConversationOpenIntent(issued))
+            throw new SpacesWorkspaceActionRefusal("The selected conversation is no longer available in this history view.");
+    }
+
+    private async Task OpenConversationOnUiAsync(HistoryOpenTicket ticket, CancellationToken token)
+    {
+        try { await OpenOriginalHistoryConversationOnUiAsync(ticket, token); }
+        catch (SpacesHistoryAuthorityRefusal denial)
+        {
+            _spacesPage?.RefuseConversationHistoryAccess();
+            throw new SpacesWorkspaceActionRefusal(denial.Message);
+        }
+    }
+
+    private async Task OpenOriginalHistoryConversationOnUiAsync(HistoryOpenTicket ticket, CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess();
-        token.ThrowIfCancellationRequested();
-        DemandAlive();
+        token.ThrowIfCancellationRequested(); DemandAlive(); DemandCurrentHistoryOpen(ticket);
+        var originalAuthority = await ReadHistoryHomeAuthorityAsync(token);
+        DemandCurrentHistoryOpen(ticket);
+        var conversationId = ticket.Issued!.ConversationId;
+        var spaceId = ticket.Issued.SpaceId;
         var conversations = _services.GetRequiredService<IConversationRepository>();
         var row = await conversations.GetAsync(conversationId, token)
             ?? throw new SpacesWorkspaceActionRefusal("The selected conversation is no longer available.");
-        if (row.IsArchived || row.IsTemporary)
+        DemandCurrentHistoryOpen(ticket);
+        if (await ReadHistoryHomeAuthorityAsync(token) != originalAuthority)
+            throw new SpacesHistoryAuthorityRefusal("Home authority changed before opening that conversation.");
+        if (row.IsArchived || row.IsTemporary || row.SpaceId != spaceId)
             throw new SpacesWorkspaceActionRefusal("That conversation is not available in this Space.");
+        var registry = _services.GetRequiredService<SpaceRegistry>();
+        var originalSpace = await registry.ReadExistingAsync(spaceId, token);
+        DemandCurrentHistoryOpen(ticket);
+        if (originalSpace is null || originalSpace.IsArchived)
+            throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
+        if (await ReadHistoryHomeAuthorityAsync(token) != originalAuthority)
+            throw new SpacesHistoryAuthorityRefusal("Home authority changed before restoring that conversation.");
+        DemandCurrentHistoryOpen(ticket);
         var chat = await NewChatSessionFactory().RestoreAsync(conversationId, token)
             ?? throw new SpacesWorkspaceActionRefusal("The selected conversation is no longer available.");
         _ownedChats.Add(chat);
         var published = false;
         try
         {
-            token.ThrowIfCancellationRequested();
-            DemandAlive();
-            if (chat.CurrentConversation.Id != conversationId || chat.CurrentConversation.SpaceId != row.SpaceId)
-                throw new InvalidOperationException("The restored conversation is not the selected Space conversation.");
+            token.ThrowIfCancellationRequested(); DemandAlive(); DemandCurrentHistoryOpen(ticket);
+            var finalRow = await conversations.GetAsync(conversationId, token);
+            var finalSpace = await registry.ReadExistingAsync(spaceId, token);
+            var finalAuthority = await ReadHistoryHomeAuthorityAsync(token);
+            // This continuation is on the UI dispatcher. The full actor/services comparison,
+            // issued row/selection/projection/route checks and mount have no intervening await.
+            Dispatcher.UIThread.VerifyAccess();
+            if (finalAuthority != originalAuthority)
+                throw new SpacesHistoryAuthorityRefusal("Home authority changed before opening that conversation.");
+            if (finalRow is null || finalRow.IsArchived || finalRow.IsTemporary ||
+                finalRow.SpaceId != spaceId || finalSpace is null || finalSpace.IsArchived ||
+                finalSpace.Revision != originalSpace.Revision || chat.CurrentConversation.Id != conversationId ||
+                chat.CurrentConversation.SpaceId != spaceId)
+                throw new SpacesWorkspaceActionRefusal("The selected conversation or its Home authority changed before opening.");
             lock (_gate)
             {
-                token.ThrowIfCancellationRequested();
-                DemandAlive();
+                token.ThrowIfCancellationRequested(); DemandAlive(); DemandCurrentHistoryOpen(ticket);
+                var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+                DemandHistoryServicesCurrent(home);
+                if (home.Runtime.Current.Revision != originalAuthority.ServicesRevision)
+                    throw new SpacesHistoryAuthorityRefusal("Home services changed before opening that conversation.");
                 PublishChatPage(chat);
-                if (chat.CurrentConversation.SpaceId is { } spaceId) _chatsBySpace[spaceId] = chat;
+                _chatsBySpace[spaceId] = chat;
                 ObserveConversationRoute(chat);
                 published = true;
             }
@@ -856,6 +1001,12 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 if (parameter is not string { Length: > 0 } sidebarItemId)
                     throw new InvalidOperationException("The Spaces sidebar command has no item identity.");
                 return AdmitWorkspaceDriver((start, execution) => ExecuteSidebarItemDriverAsync(start, execution, sidebarItemId, caller, originatingSettlement));
+            }
+            if (command == "spaces.open-conversation")
+            {
+                var owner = _spacesPage ?? throw new InvalidOperationException("The original Spaces history owner is unavailable.");
+                var ticket = new HistoryOpenTicket(owner, parameter as SpacesHomePage.ConversationOpenIntent, _routeEpoch);
+                return AdmitWorkspaceDriver((start, execution) => ExecuteWorkspaceCommandDriverAsync(start, execution, command, ticket, caller));
             }
             if (parameter is not Guid target || target == Guid.Empty)
                 throw new InvalidOperationException("The Spaces workspace command has no valid target identity.");
@@ -1052,7 +1203,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             throw new SpacesWorkspaceActionRefusal("The tab could not accept that sidebar destination.");
     }
 
-    private async Task ExecuteWorkspaceCommandDriverAsync(Task start, CommandExecution execution, string command, Guid target,
+    private async Task ExecuteWorkspaceCommandDriverAsync(Task start, CommandExecution execution, string command, object target,
         CancellationToken caller)
     {
         await start.ConfigureAwait(false);
@@ -1070,8 +1221,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                     DemandAlive();
                     try
                     {
-                        if (command == "spaces.new-chat") await NewConversationOnUiAsync(target, linked.Token);
-                        else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync(target, linked.Token);
+                        if (command == "spaces.new-chat") await NewConversationOnUiAsync((Guid)target, linked.Token);
+                        else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync((HistoryOpenTicket)target, linked.Token);
                         else throw new InvalidOperationException($"The Spaces workspace command '{command}' is not owned by this host.");
                     }
                     catch (SpacesWorkspaceActionRefusal refusal)

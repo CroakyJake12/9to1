@@ -42,7 +42,7 @@
     <Action name="EditDetails" command="spaces.edit-details" parameter="{Binding selection.id}" />
     <Action name="ManageSelected" command="spaces.edit-details" parameter="{Binding selection.id}" />
     <Action name="NewChat" command="spaces.new-chat" parameter="{Binding selection.id}" />
-    <Action name="OpenConversation" command="spaces.open-conversation" parameter="{Binding conversation.id}" />
+    <Action name="OpenConversation" command="spaces.open-conversation" parameter="{Binding conversation.openIntent}" />
     <Action name="OpenSidebarItem" command="spaces.open-sidebar-item" parameter="{Binding item.sidebarItemId}" />
     <Action name="ToggleSidebar" command="spaces.toggle-sidebar" />
     <Action name="ToggleSwitcher" command="spaces.toggle-space-switcher" />

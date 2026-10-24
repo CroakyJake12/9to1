@@ -64,6 +64,24 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     private string _conversationHistoryEmpty = "No chats yet";
     private long _conversationQueryRevision;
     private long _conversationReadSequence;
+    private readonly Dictionary<Guid, ConversationOpenIntent> _conversationOpenIntents = [];
+    private readonly Func<IReadOnlyList<SpacesHomeConversationRow>, Action<bool>, CancellationToken, Task>? _publishConversationRows;
+
+    /// <summary>Opaque issued history target. Equality of IDs or copied row values is not issuance.</summary>
+    public sealed class ConversationOpenIntent
+    {
+        internal ConversationOpenIntent(SpacesHomePage owner, SpacesHomeSelection selection,
+            SpacesHomeConversationRow row, long generation, long queryRevision, long sequence)
+        { Owner = owner; Selection = selection; Row = row; Generation = generation; QueryRevision = queryRevision; Sequence = sequence; }
+        internal SpacesHomePage Owner { get; }
+        internal SpacesHomeSelection Selection { get; }
+        internal SpacesHomeConversationRow Row { get; }
+        internal long Generation { get; }
+        internal long QueryRevision { get; }
+        internal long Sequence { get; }
+        public Guid ConversationId => Row.Id;
+        public Guid SpaceId => Selection.Id;
+    }
 
     /// <summary>Issued presentation target, never a conversation or store authority.</summary>
     public sealed record ConversationSearchIntent(Guid SpaceId, string Query, long Revision);
@@ -78,13 +96,15 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationsProvider = null,
         Func<string, object?, CancellationToken, Task?, Task>? workspaceCommandHost = null,
         Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? sidebarItemsProvider = null,
-        Func<Guid, string, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationSearchProvider = null)
+        Func<Guid, string, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationSearchProvider = null,
+        Func<IReadOnlyList<SpacesHomeConversationRow>, Action<bool>, CancellationToken, Task>? publishConversationRows = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         if (navigationHost is null) throw new ArgumentNullException(nameof(navigationHost));
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         _conversationsProvider = conversationsProvider;
         _conversationSearchProvider = conversationSearchProvider;
+        _publishConversationRows = publishConversationRows;
         _sidebarItemsProvider = sidebarItemsProvider;
         _workspaceCommandHost = workspaceCommandHost;
 
@@ -254,7 +274,53 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     }
     public bool TrySetValue(string path, object? value)
     { lock (_gate) return CanAdmitHomeMutation() && _bindings.TrySetValue(path, value); }
-    public bool TryGetItemValue(object item, string path, out object? value) => _bindings.TryGetItemValue(item, path, out value);
+    public bool TryGetItemValue(object item, string path, out object? value)
+    {
+        if (item is SpacesHomeConversationRow row)
+        {
+            lock (_gate)
+            {
+                SynchronizeConversationScope();
+                if (_controller.State.Selection is not { } selection || !_active || _work.IsRetiring ||
+                    !_conversations.Any(current => ReferenceEquals(current, row)))
+                { value = null; return false; }
+                if (path.Equals("openIntent", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!_conversationOpenIntents.TryGetValue(row.Id, out var issued) || !ReferenceEquals(issued.Row, row) ||
+                        !ReferenceEquals(issued.Selection, selection) || issued.Generation != _generation ||
+                        issued.QueryRevision != _conversationQueryRevision || issued.Sequence != _conversationReadSequence)
+                        _conversationOpenIntents[row.Id] = issued = new(this, selection, row, _generation,
+                            _conversationQueryRevision, _conversationReadSequence);
+                    value = issued; return true;
+                }
+            }
+        }
+        return _bindings.TryGetItemValue(item, path, out value);
+    }
+
+    internal bool IsCurrentConversationOpenIntent(ConversationOpenIntent intent)
+    {
+        lock (_gate)
+            return CanAdmitHomeMutation() && ReferenceEquals(intent.Owner, this) &&
+                ReferenceEquals(_controller.State.Selection, intent.Selection) && intent.SpaceId == _conversationScopeId &&
+                intent.Generation == _generation && intent.QueryRevision == _conversationQueryRevision &&
+                intent.Sequence == _conversationReadSequence &&
+                _conversationOpenIntents.TryGetValue(intent.ConversationId, out var issued) && ReferenceEquals(issued, intent) &&
+                _conversations.Any(row => ReferenceEquals(row, intent.Row));
+    }
+
+    internal void RefuseConversationHistoryAccess()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_gate)
+        {
+            _conversationReadSequence++;
+            ClearConversationProjection();
+            _conversationHistoryNotice = "History access or context changed. Reload this Spaces tab.";
+            _conversationHistoryEmpty = "History access is unavailable.";
+            _bindings.Refresh();
+        }
+    }
     public bool TrySetItemValue(object item, string path, object? value)
     { lock (_gate) return CanAdmitHomeMutation() && _bindings.TrySetItemValue(item, path, value); }
 
@@ -355,6 +421,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             case "spaces.open-conversation":
                 if (_workspaceCommandHost is not { } conversationHost)
                     throw new InvalidOperationException("No Spaces workspace host is available to open a conversation.");
+                if (parameter is not ConversationOpenIntent issuedConversation || !IsCurrentConversationOpenIntent(issuedConversation))
+                {
+                    InvokeOriginalSource(() => _controller.ReportWorkspaceActionRefusal("The selected conversation is no longer available in this history view."));
+                    break;
+                }
                 await original.AwaitAsync(InvokeOriginalSource(() => conversationHost("spaces.open-conversation", parameter, token, null))).ConfigureAwait(false);
                 break;
             case "spaces.open-sidebar-item":
@@ -399,7 +470,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                     _conversationQuery = nextQuery;
                     _conversationQueryRevision++;
                     _conversationReadSequence++; // A late read for earlier text cannot publish.
-                    _conversations = [];
+                    ClearConversationProjection();
                     _conversationHistoryNotice = "Press Search to find saved chat titles in this Space.";
                     _conversationHistoryEmpty = "Search has not run for this text.";
                 }
@@ -424,7 +495,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                     _conversationReadSequence++;
                     if (_appliedConversationQuery.Length > 256)
                     {
-                        _conversations = [];
+                        ClearConversationProjection();
                         _conversationHistoryNotice = "Use at most 256 characters to search chat titles.";
                         _conversationHistoryEmpty = "Search has not run for this text.";
                     }
@@ -523,6 +594,12 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         return true;
     }
 
+    private void ClearConversationProjection()
+    {
+        _conversations = [];
+        _conversationOpenIntents.Clear();
+    }
+
     // Only this view's read projection and search text are reset. The mounted conversation,
     // composer draft, provider original and repository are never changed by history search.
     private void SynchronizeConversationScope()
@@ -533,7 +610,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         _conversationQuery = _appliedConversationQuery = string.Empty;
         _conversationQueryRevision++;
         _conversationReadSequence++;
-        _conversations = [];
+        ClearConversationProjection();
         _conversationHistoryNotice = string.Empty;
         _conversationHistoryEmpty = "No chats yet";
     }
@@ -570,7 +647,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             recent = _conversationsProvider;
             search = _conversationSearchProvider;
             if (query.Length == 0 && recent is null) return;
-            _conversations = [];
+            ClearConversationProjection();
             _conversationHistoryNotice = query.Length == 0 ? "Loading recent chats…" : "Searching saved chat titles…";
             _conversationHistoryEmpty = "Loading chat history…";
         }
@@ -594,14 +671,57 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 : await (search ?? throw new NotSupportedException("This conversation store does not support saved-title search."))
                     (selection.Id, query, cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
+            // The SAME batch's owning service validates current authority in the actual UI
+            // settlement and calls Commit directly. There is no scheduling hop after that check.
+            var publication = await Dispatcher.UIThread.InvokeAsync<Task>(async () =>
+            {
+                lock (_gate)
+                    if (!IsConversationReadCurrent(generation, sequence, selection, queryRevision, query)) return;
+                var settled = false;
+                void Commit(bool admitted)
+                {
+                    Dispatcher.UIThread.VerifyAccess();
+                    if (settled) throw new InvalidOperationException("The original history publication was settled twice.");
+                    settled = true;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    lock (_gate)
+                    {
+                        if (!IsConversationReadCurrent(generation, sequence, selection, queryRevision, query)) return;
+                        ClearConversationProjection();
+                        if (admitted)
+                        {
+                            _conversations = rows;
+                            _conversationHistoryNotice = query.Length == 0
+                                ? "Showing the 20 most recent saved chats."
+                                : "Showing up to 50 newest saved-title matches in this Space.";
+                            _conversationHistoryEmpty = query.Length == 0 ? "No chats yet" : "No saved chat titles match this search.";
+                        }
+                        else
+                        {
+                            _conversationHistoryNotice = "History access or context changed. Reload this Spaces tab.";
+                            _conversationHistoryEmpty = "History access is unavailable.";
+                        }
+                        _bindings.Refresh();
+                    }
+                }
+                if (_publishConversationRows is { } publish) await publish(rows, Commit, cancellationToken);
+                else Commit(true); // Controlled/domain hosts supply no Home authority or canonical store.
+                if (!settled) throw new InvalidOperationException("The owning history source did not settle its original publication.");
+            }).GetTask().ConfigureAwait(false);
+            await publication.ConfigureAwait(false);
+        }
+        catch (SpacesHistoryAuthorityRefusal)
+        {
+            // An expected authority/context refusal is neither no-match success nor a retained
+            // I/O failure that poisons ordinary close. No canonical metadata is published.
             lock (_gate)
             {
-                if (!IsConversationReadCurrent(generation, sequence, selection, queryRevision, query)) return;
-                _conversations = rows;
-                _conversationHistoryNotice = query.Length == 0
-                    ? "Showing the 20 most recent saved chats."
-                    : "Showing up to 50 newest saved-title matches in this Space.";
-                _conversationHistoryEmpty = query.Length == 0 ? "No chats yet" : "No saved chat titles match this search.";
+                if (IsConversationReadCurrent(generation, sequence, selection, queryRevision, query))
+                {
+                    ClearConversationProjection();
+                    _conversationHistoryNotice = "History access or context changed. Reload this Spaces tab.";
+                    _conversationHistoryEmpty = "History access is unavailable.";
+                }
             }
             await PublishAsync().ConfigureAwait(false);
         }
@@ -611,7 +731,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             {
                 if (IsConversationReadCurrent(generation, sequence, selection, queryRevision, query))
                 {
-                    _conversations = [];
+                    ClearConversationProjection();
                     _conversationHistoryNotice = failure is OperationCanceledException
                         ? "Chat history read was canceled."
                         : "Chat history could not be read. Try again.";

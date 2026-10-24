@@ -328,7 +328,7 @@ public sealed class SpacesConversationRouteTests
 
             // A sidebar row restores that exact stored conversation identity rather than
             // creating another one or reusing the currently mounted page.
-            await spaces.DispatchAsync("spaces.open-conversation", firstId).AsTask().WaitAsync(Bound);
+            await spaces.DispatchAsync("spaces.open-conversation", IssuedHistoryTarget(spaces, firstId)).AsTask().WaitAsync(Bound);
             await session.OriginalQueuedNavigation!.WaitAsync(Bound);
             var reopened = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
             Assert.NotEqual(second.ConversationId, reopened.ConversationId);
@@ -389,7 +389,7 @@ public sealed class SpacesConversationRouteTests
 
             // History remains an explicit request for the exact saved identity, not another Fresh.
             var writesBeforeRestore = rig.ConversationWrites;
-            await spaces.DispatchAsync("spaces.open-conversation", firstId).AsTask().WaitAsync(Bound);
+            await spaces.DispatchAsync("spaces.open-conversation", IssuedHistoryTarget(spaces, firstId)).AsTask().WaitAsync(Bound);
             await session.OriginalQueuedNavigation!.WaitAsync(Bound);
             Assert.Equal(firstId, Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent).ConversationId);
             Assert.Equal(writesBeforeRestore, rig.ConversationWrites);
@@ -883,6 +883,14 @@ public sealed class SpacesConversationRouteTests
         if (failures.Count > 1) throw new AggregateException("Spaces manager navigation and independent cleanup failed.", failures);
     }
 
+    internal static SpacesHomePage.ConversationOpenIntent IssuedHistoryTarget(SpacesHomePage page, Guid id)
+    {
+        Assert.True(page.TryGetValue("spaces.conversations", out var projection));
+        var row = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<HistoryRow>>(projection), item => item.Id == id);
+        Assert.True(page.TryGetItemValue(row, "openIntent", out var intent));
+        return Assert.IsType<SpacesHomePage.ConversationOpenIntent>(intent);
+    }
+
     private static Avalonia.Controls.TextBox RenderedComposerTextBox(NewChatPage page) => page
         .GetVisualDescendants().OfType<Avalonia.Controls.TextBox>()
         .Single(input => AutomationProperties.GetAutomationId(input) == "composer-input");
@@ -905,6 +913,9 @@ public sealed class SpacesConversationRouteTests
         internal readonly Dictionary<Guid, Conversation> Written = new();
         internal readonly SpaceRegistry Spaces;
         internal Func<Guid, Task<IReadOnlyList<ChatMessage>>>? ReadMessages;
+        internal Func<Guid, CancellationToken, Task<Conversation?>>? ReadConversation;
+        internal Func<Guid, string, int, CancellationToken, Task<IReadOnlyList<Conversation>>>? FindTitles;
+        internal int TitleReads, RowReads;
         internal readonly ChatMessage SavedMessage;
         internal int ConversationWrites, ModelReads;
         private readonly ServiceProvider _services;
@@ -912,26 +923,29 @@ public sealed class SpacesConversationRouteTests
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "9to1-space-route-" + Guid.NewGuid().ToString("N"));
         internal Rig(bool withHome = false, bool allowConversationWrites = false, IVersionedSettingsStore? settings = null,
             InstalledExtensionPackage[]? extensionPackages = null,
-            Func<CancellationToken, Task<IReadOnlyList<InstalledExtensionPackage>>>? getInstalledAsync = null)
+            Func<CancellationToken, Task<IReadOnlyList<InstalledExtensionPackage>>>? getInstalledAsync = null,
+            bool withTitleSearch = false, ITrustedHostPrincipalSource? principals = null)
         {
             Directory.CreateDirectory(_directory);
             Spaces = new(settings ?? new Settings());
             SavedMessage = new(Guid.NewGuid(), Row!.Id, MessageRole.User, "Persisted history fixture", null, null, null, DateTimeOffset.UnixEpoch);
-            var conversations = Proxy<IConversationRepository>((name, args) => name switch
+            object? ConversationIo(string name, object?[]? args) => name switch
             {
-                "GetAsync" => Task.FromResult(Written.TryGetValue((Guid)args![0]!, out var stored) ? stored
-                    : Row is { } row && row.Id == (Guid)args![0]! ? row : null),
+                "GetAsync" => ReadOriginalRowAsync((Guid)args![0]!, (CancellationToken)args[1]!),
+                "FindSavedTitlesBySpaceAsync" => FindOriginalTitlesAsync((Guid)args![0]!, (string)args[1]!, (int)args[2]!, (CancellationToken)args[3]!),
                 // The contextual Space sidebar reads the selected Space's own conversations. The
                 // fixture still controls all I/O: a row only appears under the Space it names.
                 "GetBySpaceAsync" => Task.FromResult<IReadOnlyList<Conversation>>(
                     Written.Values.Where(row => row.SpaceId == (Guid)args![0]!).Concat(
                         Row is { } scoped && scoped.SpaceId == (Guid)args![0]! && !Written.ContainsKey(scoped.Id)
                             ? [scoped] : Array.Empty<Conversation>()).ToArray()),
-                "GetMessagesAsync" => ReadMessages?.Invoke((Guid)args![0]!) ?? Task.FromResult<IReadOnlyList<ChatMessage>>([SavedMessage with { ConversationId = Row!.Id }]),
+                "GetMessagesAsync" => ReadMessages?.Invoke((Guid)args![0]!) ?? Task.FromResult<IReadOnlyList<ChatMessage>>([SavedMessage with { ConversationId = (Guid)args![0]! }]),
                 "GetContextEntriesAsync" => Task.FromResult<IReadOnlyList<ConversationContextEntry>>([]),
                 "UpsertConversationAsync" => allowConversationWrites ? RecordConversationWrite((Conversation)args![0]!) : RecordUnexpectedWrite(),
                 _ => throw Unexpected(name)
-            });
+            };
+            IConversationRepository conversations = withTitleSearch
+                ? Proxy<SearchableConversationFixture>(ConversationIo) : Proxy<IConversationRepository>(ConversationIo);
             // The actual factory requires the shared routed source; preserve the real caller token.
             var routed = Proxy<IProviderModelClient>((name, args) => name == "GetModelsAsync"
                 ? Models((CancellationToken)args![0]!) : throw Unexpected(name));
@@ -974,7 +988,7 @@ public sealed class SpacesConversationRouteTests
             if (withHome)
             {
                 Home = new(new FileHomeCoreStateStore(Path.Combine(_directory, "Home", "home-core-state.json")),
-                    new OperatingSystemPrincipalSource(), paths, new("spaces.route.test." + Guid.NewGuid().ToString("N")));
+                    principals ?? new OperatingSystemPrincipalSource(), paths, new("spaces.route.test." + Guid.NewGuid().ToString("N")));
                 services.AddSingleton(Home);
             }
             if (extensionPackages is not null || getInstalledAsync is not null)
@@ -995,6 +1009,19 @@ public sealed class SpacesConversationRouteTests
                     paths));
             }
             _services = services.BuildServiceProvider();
+        }
+        private Task<Conversation?> ReadOriginalRowAsync(Guid id, CancellationToken token)
+        {
+            RowReads++;
+            return ReadConversation?.Invoke(id, token) ?? Task.FromResult(Written.TryGetValue(id, out var row) ? row : Row?.Id == id ? Row : null);
+        }
+        private Task<IReadOnlyList<Conversation>> FindOriginalTitlesAsync(Guid space, string query, int limit, CancellationToken token)
+        {
+            TitleReads++;
+            return FindTitles?.Invoke(space, query, limit, token) ?? Task.FromResult<IReadOnlyList<Conversation>>(
+                Written.Values.Concat(Row is { } row && !Written.ContainsKey(row.Id) ? [row] : Array.Empty<Conversation>())
+                    .Where(row => row.SpaceId == space && !row.IsArchived && !row.IsTemporary && row.Title.Contains(query, StringComparison.OrdinalIgnoreCase))
+                    .Take(limit).ToArray());
         }
         private Task RecordUnexpectedWrite() { ConversationWrites++; throw Unexpected("Creating or modifying a saved conversation during restore"); }
         private Task RecordConversationWrite(Conversation conversation)
@@ -1034,6 +1061,7 @@ public sealed class SpacesConversationRouteTests
         ((ControlledIo)(object)value).Call = invoke ?? ((name, _) => throw Unexpected(name));
         return value;
     }
+    public interface SearchableConversationFixture : IConversationRepository, ISpaceConversationSearch { }
     public class ControlledIo : DispatchProxy
     {
         public Func<string, object?[]?, object?> Call { get; set; } = null!;
@@ -1264,5 +1292,359 @@ public sealed class SpacesSavedTitleSearchTests
         public Task RemoveAsync(string key, CancellationToken cancellationToken) { _values.Remove(key); return Task.CompletedTask; }
         public Task<SettingsExportManifest> ExportAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+}
+
+
+/// <summary>Production Spaces session + actual Home identity/runtime + real NewChatPage.
+/// Canonical repository/provider I/O is controlled; installed/native/packaged acceptance is NOT implied.</summary>
+public sealed class SpacesHistoryAuthorityTests
+{
+    private static readonly TimeSpan Limit = TimeSpan.FromSeconds(10);
+
+    [AvaloniaTheory]
+    [InlineData("actor", "before")]
+    [InlineData("actor", "query")]
+    [InlineData("actor", "row")]
+    [InlineData("trust", "before")]
+    [InlineData("trust", "query")]
+    [InlineData("trust", "row")]
+    public async Task Current_Home_authority_is_required_before_read_and_after_every_held_source(string authority, string phase)
+    {
+        await using var owner = await Owner.CreateAsync();
+        var original = owner.Chat;
+        original.SetDraft("Original canonical chat draft");
+        var models = owner.Rig.ModelReads;
+        var writes = owner.Rig.ConversationWrites;
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (phase == "query") owner.Rig.FindTitles = async (_, _, _, _) => { entered.TrySetResult(); await release.Task; return [owner.Result]; };
+        if (phase == "row") owner.Rig.ReadConversation = async (id, _) =>
+        { if (id == owner.Result.Id) { entered.TrySetResult(); await release.Task; return owner.Result; } return owner.Rig.Row; };
+        void Revoke()
+        {
+            if (authority == "actor") owner.Principal.Current = "different-trusted-principal";
+            else owner.Rig.Home!.Runtime.ReportServiceState("permissions.trust", HomeServiceLifecycleState.Unavailable, false, "Controlled revocation");
+        }
+        Task? read = null;
+        try
+        {
+            if (phase == "before") Revoke();
+            await owner.Page.DispatchAsync("spaces.set-conversation-query", "Needle");
+            read = Click(owner.Page, "space-history-search-button"); // Actual authored CUI action settlement.
+            if (phase != "before") { await entered.Task.WaitAsync(Limit); Revoke(); release.TrySetResult(); }
+            await read.WaitAsync(Limit);
+            Assert.Empty(Rows(owner.Page));
+            Assert.Contains("access", Assert.IsType<string>(Value(owner.Page, "spaces.conversationHistoryNotice")));
+            Assert.Same(original, owner.Page.SpaceWorkspaceContent);
+            Assert.Equal("Original canonical chat draft", original.ComposerInput.Text);
+            Assert.Equal(writes, owner.Rig.ConversationWrites);
+            Assert.Equal(models, owner.Rig.ModelReads);
+            if (phase == "before") Assert.Equal(0, owner.Rig.TitleReads);
+            // Owner.DisposeAsync asserts ordinary session/Home close succeeds after expected denial.
+        }
+        finally { release.TrySetResult(); if (read is not null) await read.WaitAsync(Limit); }
+    }
+
+    [AvaloniaFact]
+    public async Task Retained_Chat_history_target_cannot_open_under_the_Study_sidebar()
+    {
+        await using var owner = await Owner.CreateAsync();
+        owner.Chat.SetDraft("Retained Chat draft");
+        await Search(owner.Page);
+        var retained = SpacesConversationRouteTests.IssuedHistoryTarget(owner.Page, owner.Result.Id);
+        await owner.Page.DispatchAsync("spaces.select", SpaceRegistry.StudySpaceId);
+        await owner.Session.OriginalQueuedNavigation!.WaitAsync(Limit);
+        var study = Assert.IsType<NewChatPage>(owner.Page.SpaceWorkspaceContent);
+        study.SetDraft("Current Study draft");
+        var writes = owner.Rig.ConversationWrites; var models = owner.Rig.ModelReads; var reads = owner.Rig.RowReads;
+        await owner.Page.DispatchAsync("spaces.open-conversation", retained);
+        Assert.Same(study, owner.Page.SpaceWorkspaceContent);
+        Assert.Equal(SpaceRegistry.StudySpaceId, study.CurrentConversation.SpaceId);
+        Assert.Equal(SpaceRegistry.StudySpaceId, owner.Page.Controller.State.Selection!.Id);
+        Assert.Equal("Current Study draft", study.ComposerInput.Text);
+        Assert.Equal("Retained Chat draft", owner.Chat.ComposerInput.Text);
+        Assert.Equal(writes, owner.Rig.ConversationWrites); Assert.Equal(models, owner.Rig.ModelReads); Assert.Equal(reads, owner.Rig.RowReads);
+        Assert.False(owner.Page.TryGetItemValue(new HistoryRow(retained.ConversationId, "Copied foreign row", "now", false), "title", out _));
+        await owner.Page.DispatchAsync("spaces.open-conversation", retained.ConversationId); // Raw IDs are not issued history authority.
+        Assert.Same(study, owner.Page.SpaceWorkspaceContent);
+        Assert.Equal(reads, owner.Rig.RowReads);
+    }
+
+    [AvaloniaTheory]
+    [InlineData("clear")]
+    [InlineData("query")]
+    [InlineData("moved")]
+    [InlineData("archived")]
+    [InlineData("temporary")]
+    public async Task Held_canonical_row_cannot_mount_after_issued_projection_or_membership_changes(string change)
+    {
+        await using var owner = await Owner.CreateAsync();
+        await Search(owner.Page);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var armed = true;
+        owner.Rig.ReadConversation = async (id, _) =>
+        {
+            if (id == owner.Result.Id && armed) { armed = false; entered.TrySetResult(); await release.Task; }
+            return owner.Rig.Written.TryGetValue(id, out var actual) ? actual : owner.Rig.Row;
+        };
+        owner.Chat.SetDraft("Do not replace this draft");
+        var writes = owner.Rig.ConversationWrites; var models = owner.Rig.ModelReads;
+        Task? open = null;
+        Task? clearSettlement = null;
+        try
+        {
+            open = Click(owner.Page, "open-space-conversation");
+            await entered.Task.WaitAsync(Limit);
+            if (change == "clear")
+            {
+                clearSettlement = Click(owner.Page, "space-history-clear-button");
+                // The overall loader settlement includes the held Open. Join only the genuine
+                // Clear original here; join both loader snapshots after releasing that Open.
+                await owner.Page.LatestOriginalMutation!.WaitAsync(Limit);
+            }
+            else if (change == "query") await owner.Page.DispatchAsync("spaces.set-conversation-query", "different text");
+            else owner.Rig.Written[owner.Result.Id] = change switch
+            {
+                "moved" => owner.Result with { SpaceId = SpaceRegistry.StudySpaceId },
+                "archived" => owner.Result with { IsArchived = true },
+                _ => owner.Result with { IsTemporary = true }
+            };
+            release.TrySetResult();
+            await open.WaitAsync(Limit);
+            if (clearSettlement is not null) await clearSettlement.WaitAsync(Limit);
+            Assert.Same(owner.Chat, owner.Page.SpaceWorkspaceContent);
+            Assert.Equal("Do not replace this draft", owner.Chat.ComposerInput.Text);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, owner.Page.Controller.State.Selection!.Id);
+            Assert.Equal(writes, owner.Rig.ConversationWrites); Assert.Equal(models, owner.Rig.ModelReads);
+            Assert.Contains("available", owner.Page.Controller.State.StatusMessage);
+        }
+        finally { release.TrySetResult(); if (open is not null) await open.WaitAsync(Limit); }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_restore_cannot_publish_Chat_result_after_a_real_Study_selection_was_admitted()
+    {
+        await using var owner = await Owner.CreateAsync();
+        owner.Chat.SetDraft("Retained original work");
+        await Search(owner.Page);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        owner.Rig.ReadMessages = async id =>
+        { if (id == owner.Result.Id) { entered.TrySetResult(); await release.Task; } return [owner.Rig.SavedMessage with { ConversationId = id }]; };
+        var published = new List<Guid>();
+        owner.Session.StateChanged += (_, _) =>
+        { if (owner.Page.SpaceWorkspaceContent is NewChatPage chat) published.Add(chat.ConversationId); };
+        Task? open = null;
+        try
+        {
+            open = Click(owner.Page, "open-space-conversation");
+            await entered.Task.WaitAsync(Limit);
+            await owner.Page.DispatchAsync("spaces.select", SpaceRegistry.StudySpaceId);
+            var studyNavigation = owner.Session.OriginalQueuedNavigation!;
+            release.TrySetResult();
+            await open.WaitAsync(Limit);
+            await studyNavigation.WaitAsync(Limit);
+            var current = Assert.IsType<NewChatPage>(owner.Page.SpaceWorkspaceContent);
+            Assert.Equal(SpaceRegistry.StudySpaceId, owner.Page.Controller.State.Selection!.Id);
+            Assert.Equal(SpaceRegistry.StudySpaceId, current.CurrentConversation.SpaceId);
+            Assert.DoesNotContain(owner.Result.Id, published); // It was never a transient wrong-Space publication.
+            Assert.Equal("Retained original work", owner.Chat.ComposerInput.Text);
+        }
+        finally { release.TrySetResult(); if (open is not null) await open.WaitAsync(Limit); }
+    }
+
+    [AvaloniaFact]
+    public async Task Actual_CUI_search_result_click_opens_exact_saved_identity_without_mutating_prior_work()
+    {
+        await using var owner = await Owner.CreateAsync();
+        owner.Chat.SetDraft("Original unsent work");
+        var writes = owner.Rig.ConversationWrites; var models = owner.Rig.ModelReads;
+        await Search(owner.Page);
+        Assert.Equal(models, owner.Rig.ModelReads); Assert.Equal(writes, owner.Rig.ConversationWrites);
+        Assert.Equal(owner.Result.Id, Assert.Single(Rows(owner.Page)).Id);
+        await Click(owner.Page, "open-space-conversation").WaitAsync(Limit);
+        var opened = Assert.IsType<NewChatPage>(owner.Page.SpaceWorkspaceContent);
+        Assert.Equal(owner.Result.Id, opened.ConversationId);
+        Assert.Equal(SpaceRegistry.ChatSpaceId, opened.CurrentConversation.SpaceId);
+        Assert.Equal(SpaceRegistry.ChatSpaceId, owner.Page.Controller.State.Selection!.Id);
+        Assert.Equal(owner.Result, owner.Rig.Written[owner.Result.Id]);
+        Assert.Equal(writes, owner.Rig.ConversationWrites);
+        Assert.Equal("Original unsent work", owner.Chat.ComposerInput.Text);
+        Assert.Same(owner.Page, Assert.IsType<ContentControl>(owner.Session.OriginalNativeView).Content);
+    }
+
+    [AvaloniaTheory]
+    [InlineData("find")]
+    [InlineData("row")]
+    [InlineData("restore")]
+    [InlineData("home")]
+    public async Task Original_upstream_access_exception_is_the_same_cause_and_is_retained_by_close(string source)
+    {
+        await using var owner = await Owner.CreateAsync();
+        var cause = new UnauthorizedAccessException("Original controlled " + source + " OS/source access failure");
+        owner.ExpectedRetainedCause = cause;
+        Task action;
+        if (source is "find" or "home")
+        {
+            if (source == "find") owner.Rig.FindTitles = (_, _, _, _) => Task.FromException<IReadOnlyList<Conversation>>(cause);
+            else owner.Principal.Read = _ => ValueTask.FromException<string?>(cause);
+            await owner.Page.DispatchAsync("spaces.set-conversation-query", "Needle");
+            action = owner.Page.DispatchAsync("spaces.search-conversations", Value(owner.Page, "spaces.conversationSearchIntent")).AsTask();
+        }
+        else
+        {
+            await Search(owner.Page);
+            var intent = SpacesConversationRouteTests.IssuedHistoryTarget(owner.Page, owner.Result.Id);
+            var reads = 0;
+            owner.Rig.ReadConversation = (id, _) =>
+            {
+                if (id == owner.Result.Id && ++reads == (source == "row" ? 1 : 2))
+                    return Task.FromException<Conversation?>(cause);
+                return Task.FromResult(owner.Rig.Written.TryGetValue(id, out var row) ? row : owner.Rig.Row);
+            };
+            // RestoreAsync's first action is its own canonical GetAsync. The second held
+            // read faults there, before a replacement chat or model read can be constructed.
+            action = owner.Page.DispatchAsync("spaces.open-conversation", intent).AsTask();
+        }
+        var actual = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => action.WaitAsync(Limit));
+        Assert.Same(cause, actual);
+        if (source == "home") owner.Principal.Read = null; // Recover the producer; its original failed task must still be retained.
+        Assert.Same(owner.Chat, owner.Page.SpaceWorkspaceContent);
+        if (source is "find" or "home")
+        {
+            Assert.Contains("could not be read", Assert.IsType<string>(Value(owner.Page, "spaces.conversationHistoryNotice")));
+            Assert.DoesNotContain("access or context changed", Assert.IsType<string>(Value(owner.Page, "spaces.conversationHistoryNotice")));
+        }
+        var close = await Record.ExceptionAsync(() => owner.Session.CloseAndDrainAsync().WaitAsync(Limit));
+        Assert.NotNull(close);
+        Assert.True(ContainsSameCause(close!, cause), "Close must retain the exact original access exception object.");
+    }
+
+    [AvaloniaFact]
+    public async Task Final_UI_publication_check_held_after_row_read_cannot_publish_after_trust_revocation()
+    {
+        await using var owner = await Owner.CreateAsync();
+        owner.Chat.SetDraft("Retain actual chat while final UI admission waits");
+        var oldRow = Assert.Single(Rows(owner.Page), row => row.Id == owner.Result.Id);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var armed = 1;
+        owner.Rig.ReadConversation = (id, _) =>
+        {
+            if (id == owner.Result.Id)
+            {
+                // This callback is the LAST canonical row read in the provider. There are
+                // no further source authority checks until the actual UI publication callback.
+                owner.Principal.Read = async token =>
+                {
+                    if (Interlocked.Exchange(ref armed, 0) == 1)
+                    {
+                        Assert.True(Dispatcher.UIThread.CheckAccess());
+                        entered.TrySetResult();
+                        await release.Task.WaitAsync(token);
+                    }
+                    token.ThrowIfCancellationRequested();
+                    return owner.Principal.Current;
+                };
+                return Task.FromResult<Conversation?>(owner.Result);
+            }
+            return Task.FromResult(owner.Rig.Row);
+        };
+        var writes = owner.Rig.ConversationWrites; var models = owner.Rig.ModelReads;
+        Task? search = null;
+        try
+        {
+            await owner.Page.DispatchAsync("spaces.set-conversation-query", "Needle");
+            search = Click(owner.Page, "space-history-search-button");
+            await entered.Task.WaitAsync(Limit);
+            Assert.Equal(1, owner.Rig.TitleReads); // Earlier canonical query validation actually completed.
+            owner.Rig.Home!.Runtime.ReportServiceState("permissions.trust", HomeServiceLifecycleState.Unavailable, false, "Revoked during final UI admission");
+            release.TrySetResult();
+            await search.WaitAsync(Limit);
+            Assert.Empty(Rows(owner.Page));
+            Assert.False(owner.Page.TryGetItemValue(oldRow, "openIntent", out _));
+            Assert.Contains("access or context changed", Assert.IsType<string>(Value(owner.Page, "spaces.conversationHistoryNotice")));
+            Assert.Same(owner.Chat, owner.Page.SpaceWorkspaceContent);
+            Assert.Equal("Retain actual chat while final UI admission waits", owner.Chat.ComposerInput.Text);
+            Assert.Equal(writes, owner.Rig.ConversationWrites); Assert.Equal(models, owner.Rig.ModelReads);
+            // Default Owner disposal asserts a normal close after this genuine expected denial.
+        }
+        finally { release.TrySetResult(); if (search is not null) await search.WaitAsync(Limit); }
+    }
+
+    private static bool ContainsSameCause(Exception actual, Exception expected) =>
+        ReferenceEquals(actual, expected) ||
+        (actual is AggregateException aggregate && aggregate.InnerExceptions.Any(error => ContainsSameCause(error, expected))) ||
+        (actual.InnerException is { } inner && ContainsSameCause(inner, expected));
+
+    private static object? Value(SpacesHomePage page, string path)
+    { Assert.True(page.TryGetValue(path, out var value)); return value; }
+    private static IReadOnlyList<HistoryRow> Rows(SpacesHomePage page) => Assert.IsAssignableFrom<IReadOnlyList<HistoryRow>>(Value(page, "spaces.conversations"));
+    private static async Task Search(SpacesHomePage page)
+    { await page.DispatchAsync("spaces.set-conversation-query", "Needle"); await Click(page, "space-history-search-button").WaitAsync(Limit); }
+    private static Task Click(SpacesHomePage page, string id)
+    {
+        Dispatcher.UIThread.RunJobs();
+        var button = Assert.Single(page.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == id);
+        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
+        var host = (CakeOS.Cui.Runtime.CuiSceneHost)typeof(SpacesHomePage).GetField("_host", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+        var show = (Task<CakeOS.Cui.Runtime.CuiSceneAvailability>)typeof(SpacesHomePage).GetField("_exactOriginalShow", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+        return host.CaptureOriginalActionSettlement(show);
+    }
+
+    private sealed class Principal : ITrustedHostPrincipalSource
+    {
+        internal string? Current = "source63-guard-test-principal";
+        internal Func<CancellationToken, ValueTask<string?>>? Read;
+        public ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        { token.ThrowIfCancellationRequested(); return Read?.Invoke(token) ?? ValueTask.FromResult(Current); }
+    }
+    private sealed class Owner : IAsyncDisposable
+    {
+        internal SpacesConversationRouteTests.Rig Rig = null!;
+        internal SpacesBrowseAppContentSession Session = null!;
+        internal SpacesHomePage Page = null!;
+        internal NewChatPage Chat = null!;
+        internal Window Window = null!;
+        internal Principal Principal = null!;
+        internal Conversation Result = null!;
+        internal Exception? ExpectedRetainedCause;
+        internal static async Task<Owner> CreateAsync()
+        {
+            var owner = new Owner { Principal = new Principal() };
+            owner.Rig = new(withHome: true, allowConversationWrites: true, withTitleSearch: true, principals: owner.Principal);
+            await owner.Rig.Home!.StartOriginalAsync().WaitAsync(Limit);
+            var actor = (await owner.Rig.Home.Profiles.GetCurrentAsync(CancellationToken.None))!;
+            owner.Rig.Row = owner.Rig.Row! with { SpaceId = SpaceRegistry.ChatSpaceId };
+            owner.Result = owner.Rig.Row! with { Id = Guid.NewGuid(), Title = "Needle older saved chat" };
+            owner.Rig.Written.Add(owner.Result.Id, owner.Result);
+            owner.Session = owner.Rig.Session($"9to1://spaces/selected/{SpaceRegistry.ChatSpaceId:D}/chat/{owner.Rig.Row!.Id:D}", profileId: actor.ProfileId);
+            await owner.Session.InitializeAsync().WaitAsync(Limit);
+            var root = Assert.IsType<ContentControl>(owner.Session.OriginalNativeView);
+            owner.Page = Assert.IsType<SpacesHomePage>(root.Content);
+            owner.Chat = Assert.IsType<NewChatPage>(owner.Page.SpaceWorkspaceContent);
+            owner.Window = new Window { Width = 1200, Height = 900, Content = root };
+            owner.Window.Show(); Dispatcher.UIThread.RunJobs(); owner.Window.UpdateLayout();
+            return owner;
+        }
+        public async ValueTask DisposeAsync()
+        {
+            var errors = new List<Exception>();
+            var close = await Record.ExceptionAsync(() => Session.CloseAndDrainAsync().WaitAsync(Limit));
+            if (ExpectedRetainedCause is { } expected)
+            {
+                if (close is null || !ContainsSameCause(close, expected))
+                    errors.Add(new InvalidOperationException("Close lost the exact original access failure.", close));
+            }
+            else if (close is not null) errors.Add(close);
+            try { await Rig.Home!.CloseAndDrainAsync().WaitAsync(Limit); } catch (Exception e) { errors.Add(e); }
+            try { Window.Close(); } catch (Exception e) { errors.Add(e); }
+            try { Rig.Dispose(); } catch (Exception e) { errors.Add(e); }
+            if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+            if (errors.Count > 1) throw new AggregateException("History test and independent original cleanup", errors);
+        }
     }
 }

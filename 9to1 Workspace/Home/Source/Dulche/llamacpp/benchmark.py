@@ -21,6 +21,9 @@ from datetime import datetime, timezone
 from typing import Any
 
 
+MAX_SSE_LINE_BYTES = 1024 * 1024
+
+
 class BenchmarkError(RuntimeError):
     pass
 
@@ -43,8 +46,11 @@ def default_broker_socket() -> pathlib.Path:
     return root / "inference.sock"
 
 
-def parse_sse_data_line(line: bytes) -> dict[str, Any] | str | None:
-    text = line.decode("utf-8", "replace").strip()
+def parse_sse_data_line(line: bytes, *, strict: bool = False) -> dict[str, Any] | str | None:
+    try:
+        text = line.decode("utf-8", "strict" if strict else "replace").strip()
+    except UnicodeDecodeError as exc:
+        raise BenchmarkError("chat stream contains invalid UTF-8") from exc
     if not text.startswith("data:"):
         return None
     payload = text[5:].strip()
@@ -52,9 +58,15 @@ def parse_sse_data_line(line: bytes) -> dict[str, Any] | str | None:
         return "DONE"
     try:
         value = json.loads(payload)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        if strict:
+            raise BenchmarkError("chat stream contains malformed data") from exc
         return None
-    return value if isinstance(value, dict) else None
+    if isinstance(value, dict):
+        return value
+    if strict:
+        raise BenchmarkError("chat stream data must be an object")
+    return None
 
 
 def _json_request(socket_path: pathlib.Path, method: str, path: str, *, timeout: float, payload: dict[str, Any] | None = None) -> tuple[int, dict[str, Any]]:
@@ -152,6 +164,7 @@ def _stream_chat(socket_path: pathlib.Path, payload: dict[str, Any], *, timeout:
     completion_tokens: int | None = None
     finish_reason: str | None = None
     status = 0
+    terminal_received = False
     try:
         conn.request("POST", "/v1/chat/completions", body=encoded, headers={"Content-Type": "application/json"})
         response = conn.getresponse()
@@ -161,26 +174,51 @@ def _stream_chat(socket_path: pathlib.Path, payload: dict[str, Any], *, timeout:
             raise BenchmarkError(f"chat failed with HTTP {status}: {detail[:1000]}")
         sampler.start()
         while True:
-            line = response.readline()
+            line = response.readline(MAX_SSE_LINE_BYTES + 1)
+            if len(line) > MAX_SSE_LINE_BYTES:
+                raise BenchmarkError("chat stream data line exceeds 1 MiB")
             if not line:
-                break
-            event = parse_sse_data_line(line)
+                raise BenchmarkError("chat stream ended before terminal [DONE]")
+            event = parse_sse_data_line(line, strict=True)
             if event == "DONE":
+                terminal_received = True
                 break
             if not isinstance(event, dict):
                 continue
+            if "error" in event:
+                raise BenchmarkError("chat stream reported an error event")
             usage = event.get("usage")
-            if isinstance(usage, dict) and isinstance(usage.get("completion_tokens"), int):
-                completion_tokens = usage["completion_tokens"]
+            if usage is not None and not isinstance(usage, dict):
+                raise BenchmarkError("chat stream usage must be an object")
+            if isinstance(usage, dict) and "completion_tokens" in usage:
+                count = usage["completion_tokens"]
+                if type(count) is not int or count < 0:
+                    raise BenchmarkError("chat stream completion usage must be a nonnegative integer")
+                completion_tokens = count
             choices = event.get("choices")
+            if choices is not None and not isinstance(choices, list):
+                raise BenchmarkError("chat stream choices must be a list")
             if isinstance(choices, list) and choices:
+                if len(choices) != 1 or not isinstance(choices[0], dict):
+                    raise BenchmarkError("chat stream must contain one choice per event")
                 choice = choices[0]
-                if isinstance(choice, dict):
-                    delta = choice.get("delta")
-                    if isinstance(delta, dict) and delta.get("content") and first_content is None:
-                        first_content = time.monotonic()
-                    if choice.get("finish_reason") is not None:
-                        finish_reason = str(choice["finish_reason"])
+                delta = choice.get("delta")
+                if delta is not None and not isinstance(delta, dict):
+                    raise BenchmarkError("chat stream delta must be an object")
+                content = delta.get("content") if isinstance(delta, dict) else None
+                if content is not None and not isinstance(content, str):
+                    raise BenchmarkError("chat stream content must be text")
+                if content and first_content is None:
+                    first_content = time.monotonic()
+                reason = choice.get("finish_reason")
+                if reason is not None:
+                    if not isinstance(reason, str) or not reason.strip():
+                        raise BenchmarkError("chat stream finish reason must be a nonempty string")
+                    if finish_reason is not None and finish_reason != reason:
+                        raise BenchmarkError("chat stream has conflicting finish reasons")
+                    finish_reason = reason
+        if not terminal_received or finish_reason is None:
+            raise BenchmarkError("chat stream lacks a completed choice")
         ended = time.monotonic()
     finally:
         sampler.stop()
@@ -189,12 +227,24 @@ def _stream_chat(socket_path: pathlib.Path, payload: dict[str, Any], *, timeout:
     tokens_per_second = None
     if completion_tokens is not None and generation_seconds and generation_seconds > 0:
         tokens_per_second = completion_tokens / generation_seconds
+    request_seconds = max(ended - started, 0.0)
+    request_tokens_per_second = None
+    if completion_tokens is not None and request_seconds > 0:
+        request_tokens_per_second = completion_tokens / request_seconds
     return {
         "httpStatus": status,
         "timeToFirstTokenMs": None if first_content is None else (first_content - started) * 1000.0,
         "totalGenerationMs": (ended - started) * 1000.0,
         "completionTokens": completion_tokens,
+        # Preserve the legacy scalar's interval; it is not native decode speed.
+        # Usage can include reasoning tokens emitted before visible content.
         "completionTokensPerSecond": tokens_per_second,
+        "completionTokensPerSecondBasis": "reportedCompletionTokens / secondsAfterFirstVisibleContent",
+        "completionTokensPerSecondIsNativeDecodeRate": False,
+        "requestCompletionTokensPerSecond": request_tokens_per_second,
+        "requestCompletionTokensPerSecondBasis": "reportedCompletionTokens / requestStartToTerminalSeconds",
+        "nativeDecodeTokensPerSecond": None,
+        "streamCompleted": terminal_received,
         "finishReason": finish_reason,
         "peakProcessTreeRssBytes": sampler.peak_bytes,
     }
@@ -253,6 +303,8 @@ def run_benchmark(*, socket_path: pathlib.Path, model_id: str, prompt: str, max_
         "notes": [
             "A benchmark result is runtime evidence only for the exact model/backend/hardware/software combination that produced it.",
             "Missing completion token usage leaves tokens-per-second null rather than estimating tokens from text.",
+            "Legacy completionTokensPerSecond retains its post-first-visible-content interval and must not be compared as native decode speed; reported usage can include earlier reasoning tokens.",
+            "requestCompletionTokensPerSecond is end-to-end request throughput, including prefill, reasoning, transport and terminal handling; native decode speed requires separate engine telemetry.",
             "RSS sampling covers the supplied root PID and descendants visible through procfs."
         ],
     }
