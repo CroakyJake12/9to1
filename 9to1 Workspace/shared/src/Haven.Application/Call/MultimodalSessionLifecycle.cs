@@ -22,7 +22,9 @@ public static class MultimodalSessionLifecycle
             [MultimodalSessionState.AssistantSpeaking] = Set(MultimodalSessionState.UserSpeaking, MultimodalSessionState.Processing, MultimodalSessionState.Listening, MultimodalSessionState.Paused, MultimodalSessionState.Reconnecting, MultimodalSessionState.Stopped, MultimodalSessionState.Ended, MultimodalSessionState.Failed),
             [MultimodalSessionState.Paused] = Set(MultimodalSessionState.Listening, MultimodalSessionState.Processing, MultimodalSessionState.Reconnecting, MultimodalSessionState.Stopped, MultimodalSessionState.Ended, MultimodalSessionState.Failed),
             [MultimodalSessionState.Reconnecting] = Set(MultimodalSessionState.Listening, MultimodalSessionState.Paused, MultimodalSessionState.Ended, MultimodalSessionState.Failed),
-            [MultimodalSessionState.Stopped] = Set(MultimodalSessionState.Starting, MultimodalSessionState.Listening, MultimodalSessionState.Processing, MultimodalSessionState.Ended, MultimodalSessionState.Failed),
+            // A stopped runtime must pass through Starting before any active
+            // callback can make the session Listening/Processing again.
+            [MultimodalSessionState.Stopped] = Set(MultimodalSessionState.Starting, MultimodalSessionState.Ended, MultimodalSessionState.Failed),
             [MultimodalSessionState.Failed] = Set(MultimodalSessionState.Reconnecting, MultimodalSessionState.Ended),
             [MultimodalSessionState.Ended] = Set()
         };
@@ -72,10 +74,31 @@ public static class MultimodalSessionLifecycle
             Revision = checked(session.Revision + 1),
             MicrophoneState = next switch
             {
-                MultimodalSessionState.Starting => MicrophoneCaptureState.Starting,
-                MultimodalSessionState.Reconnecting => MicrophoneCaptureState.Disconnected,
-                MultimodalSessionState.Paused or MultimodalSessionState.Stopped =>
-                    session.MicrophoneState == MicrophoneCaptureState.Off ? MicrophoneCaptureState.Off : MicrophoneCaptureState.Paused,
+                MultimodalSessionState.Starting => session.MicrophoneState is
+                    MicrophoneCaptureState.Off or MicrophoneCaptureState.PermissionDenied or
+                        MicrophoneCaptureState.Unavailable or MicrophoneCaptureState.Muted
+                    ? session.MicrophoneState : MicrophoneCaptureState.Starting,
+                // A successful runtime transition out of startup/recovery must not
+                // leave the durable microphone snapshot stuck in Starting/Paused.
+                // Permission and capability failures are deliberately preserved:
+                // changing the session state cannot manufacture microphone access.
+                MultimodalSessionState.Listening when session.MicrophoneState is
+                    MicrophoneCaptureState.Starting or MicrophoneCaptureState.Paused or MicrophoneCaptureState.Disconnected
+                    => MicrophoneCaptureState.Listening,
+                MultimodalSessionState.Reconnecting => session.MicrophoneState switch
+                {
+                    // Reconnection concerns a capture that was actually active.
+                    // It cannot grant permission, unmute, or make an off device live.
+                    MicrophoneCaptureState.Off or MicrophoneCaptureState.PermissionDenied or
+                        MicrophoneCaptureState.Unavailable or MicrophoneCaptureState.Muted => session.MicrophoneState,
+                    _ => MicrophoneCaptureState.Disconnected
+                },
+                MultimodalSessionState.Paused or MultimodalSessionState.Stopped => session.MicrophoneState switch
+                {
+                    MicrophoneCaptureState.Off or MicrophoneCaptureState.PermissionDenied or
+                        MicrophoneCaptureState.Unavailable or MicrophoneCaptureState.Muted => session.MicrophoneState,
+                    _ => MicrophoneCaptureState.Paused
+                },
                 MultimodalSessionState.Ended or MultimodalSessionState.Failed => MicrophoneCaptureState.Off,
                 _ => session.MicrophoneState
             }

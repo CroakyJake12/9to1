@@ -68,6 +68,8 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
     /// Stores turn gate locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly SemaphoreSlim _turnGate = new(1, 1);
+    private long _speechInputGeneration;
+    private long _speechInputStartGeneration;
 
     /// <summary>
     /// Stores lifetime cts locally so this component can preserve the dependency, cache, or state between member calls.
@@ -340,7 +342,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
         if (muted)
         {
             DiscardPendingTranscript();
-            await _speechInput.StopAsync(cancellationToken).ConfigureAwait(false);
+            await StopSpeechInputAsync(cancellationToken).ConfigureAwait(false);
             SetInputStatus(new VoiceInputStatus(VoiceInputState.Muted, "Microphone muted.", CanRetry: true));
             SetState(State, "Microphone muted");
             return;
@@ -379,7 +381,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                 throw new ArgumentException("The selected microphone is not available.", nameof(deviceId));
             var previous = _options?.InputDeviceId;
             if (string.Equals(previous, deviceId, StringComparison.Ordinal)) return;
-            await _speechInput.StopAsync(cancellationToken).ConfigureAwait(false);
+            await StopSpeechInputAsync(cancellationToken).ConfigureAwait(false);
             _options = (_options ?? throw new InvalidOperationException("Call options are unavailable.")) with { InputDeviceId = deviceId };
             var updated = (CurrentSession ?? throw new InvalidOperationException("Call session is unavailable.")) with { InputDeviceId = deviceId };
             try
@@ -550,24 +552,36 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
         string text,
         bool fromSpeech,
         Guid userMessageId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SpeechInputAdmission? speechAdmission = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         text = text.Trim();
         if (text.Length == 0) return;
+        if (speechAdmission is { } expectedInput &&
+            !IsCurrentSpeechInputCallback(expectedInput.Generation, expectedInput.SessionId,
+                expectedInput.Lifetime, cancellationToken)) return;
         EnsureActive();
         if (State == CallState.Paused) throw new InvalidOperationException("Resume the call before sending a turn.");
+        var admittedSession = CurrentSession!;
+        var admittedLifetime = speechAdmission?.Lifetime ?? _lifetimeCts;
 
         await _turnGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         Exception? fatalError = null;
         try
         {
+            if (speechAdmission is { } queuedInput && !IsCurrentSpeechInputCallback(
+                queuedInput.Generation, queuedInput.SessionId, queuedInput.Lifetime, cancellationToken)) return;
             EnsureActive();
+            if (!IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime)) return;
             await RetireOriginalNarrationAsync().ConfigureAwait(false);
+            if (!IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime) ||
+                speechAdmission is { } retiredInput && !IsCurrentSpeechInputCallback(
+                    retiredInput.Generation, retiredInput.SessionId, retiredInput.Lifetime, cancellationToken)) return;
             var options = _options!;
             var conversation = CurrentConversation!;
-            var narrationLifetime = _lifetimeCts;
-            var narrationCall = CurrentSession!;
+            var narrationLifetime = admittedLifetime;
+            var narrationCall = admittedSession;
             _turnCts?.Dispose();
             _turnCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken,
@@ -587,15 +601,20 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                 fromSpeech ? "{\"call\":{\"source\":\"speech\"}}" : "{\"call\":{\"source\":\"typed\"}}",
                 now);
             CurrentConversation = conversation = conversation with { UpdatedAt = now };
-            await _conversations.UpsertConversationAsync(CurrentConversation, turnToken).ConfigureAwait(false);
+            await _conversations.UpsertConversationAsync(conversation, turnToken).ConfigureAwait(false);
+            if (!IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime) ||
+                speechAdmission is { } preMessageInput && !IsCurrentSpeechInputCallback(
+                    preMessageInput.Generation, preMessageInput.SessionId, preMessageInput.Lifetime, cancellationToken)) return;
             if (retainTranscript)
                 await _conversations.AddMessageAsync(userMessage, turnToken).ConfigureAwait(false);
             else
                 AppendEphemeral(new OllamaMessage("user", text));
+            if (!IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime)) return;
             TranscriptChanged?.Invoke(this, new(userMessage.Id, MessageRole.User, userMessage.Content, false, true));
 
             SetState(CallState.Thinking, "9to1 is thinking…");
-            var history = await _conversations.GetContextMessagesAsync(CurrentConversation.Id, turnToken).ConfigureAwait(false);
+            var history = await _conversations.GetContextMessagesAsync(conversation.Id, turnToken).ConfigureAwait(false);
+            if (!IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime)) return;
             var requestMessages = history
                 .Where(message => message.Role is MessageRole.User or MessageRole.Assistant)
                 .Select(message => new OllamaMessage(
@@ -611,9 +630,11 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                 try { snapshot = await _screenShare.GetLatestSnapshotAsync(turnToken).ConfigureAwait(false); }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    SetState(CallState.Thinking, $"Screen frame unavailable ({ex.Message}); continuing with voice only.");
+                    if (IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime))
+                        SetState(CallState.Thinking, $"Screen frame unavailable ({ex.Message}); continuing with voice only.");
                 }
             }
+            if (!IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime)) return;
             if (snapshot is not null && requestMessages.Count > 0)
                 requestMessages[^1] = requestMessages[^1] with { Images = [snapshot.Base64Jpeg] };
 
@@ -626,7 +647,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                 : null;
             var speechTask = speechChannel is null
                 ? Task.CompletedTask
-                : SpeakQueuedAsync(speechChannel.Reader, turnToken);
+                : SpeakQueuedAsync(speechChannel.Reader, turnToken, admittedSession.Id, admittedLifetime);
             var interrupted = false;
 
             try
@@ -640,6 +661,11 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
 
                 await foreach (var delta in _ollama.StreamChatAsync(request, turnToken).ConfigureAwait(false))
                 {
+                    if (!IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime))
+                    {
+                        interrupted = true;
+                        break;
+                    }
                     if (string.IsNullOrEmpty(delta)) continue;
                     assistantText.Append(delta);
                     TranscriptChanged?.Invoke(this, new(assistantId, MessageRole.Assistant, delta, true, false));
@@ -664,7 +690,11 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                 speechChannel?.Writer.TryComplete();
                 try { await speechTask.ConfigureAwait(false); }
                 catch (OperationCanceledException) when (turnToken.IsCancellationRequested) { interrupted = true; }
-                catch (Exception ex) { SetState(CallState.Thinking, $"Speech output stopped ({ex.Message}); transcript preserved."); }
+                catch (Exception ex)
+                {
+                    if (IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime))
+                        SetState(CallState.Thinking, $"Speech output stopped ({ex.Message}); transcript preserved.");
+                }
 
                 if (assistantText.Length > 0)
                 {
@@ -677,18 +707,19 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                         "Haven", options.Model.Name, metadata, _timeProvider.GetUtcNow());
                     if (retainTranscript)
                         await _conversations.AddMessageAsync(assistant, CancellationToken.None).ConfigureAwait(false);
-                    else
+                    else if (IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime))
                         AppendEphemeral(new OllamaMessage("assistant", content));
                     if (!interrupted && fatalError is null && !turnToken.IsCancellationRequested &&
                         narrationLifetime is not null && ReferenceEquals(_lifetimeCts, narrationLifetime) &&
                         ReferenceEquals(_options, options) && CurrentSession?.Id == narrationCall.Id &&
                         CurrentConversation?.Id == conversation.Id && IsActive && !_ending && !_disposed)
                         PublishOriginalNarration(narrationCall.Id, conversation.Id, assistantId, narrationLifetime, options, content);
-                    TranscriptChanged?.Invoke(this, new(assistantId, MessageRole.Assistant, content, false, true, interrupted));
+                    if (IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime))
+                        TranscriptChanged?.Invoke(this, new(assistantId, MessageRole.Assistant, content, false, true, interrupted));
                 }
             }
 
-            if (fatalError is null && IsActive && State != CallState.Paused)
+            if (fatalError is null && IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime) && State != CallState.Paused)
                 SetState(CallState.Listening, interrupted ? "Interrupted · listening" : "Listening");
         }
         finally
@@ -703,7 +734,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
             // A provider/model failure belongs to this turn, not to the lifetime of the
             // voice session. Keep the microphone and call open so the user can retry,
             // change the model, or continue typing instead of silently ending the call.
-            if (IsActive && State != CallState.Paused)
+            if (IsCurrentSessionLifetime(admittedSession.Id, admittedLifetime) && State != CallState.Paused)
                 SetState(CallState.Listening, $"Message failed: {fatalError.Message} · call remains active");
 
             throw new InvalidOperationException(fatalError.Message, fatalError);
@@ -713,12 +744,13 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
     /// <summary>
     /// Performs speak queued asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task SpeakQueuedAsync(ChannelReader<string> reader, CancellationToken cancellationToken)
+    private async Task SpeakQueuedAsync(ChannelReader<string> reader, CancellationToken cancellationToken,
+        Guid sessionId, CancellationTokenSource? lifetime)
     {
         var failed = false;
         await foreach (var sentence in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
-            if (failed) continue;
+            if (failed || !IsCurrentSessionLifetime(sessionId, lifetime)) continue;
             try
             {
                 SetState(CallState.Speaking, "9to1 is speaking…");
@@ -732,7 +764,8 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
             catch (Exception ex)
             {
                 failed = true;
-                SetState(CallState.Thinking, $"Speech output unavailable ({ex.Message}); continuing with transcript.");
+                if (IsCurrentSessionLifetime(sessionId, lifetime))
+                    SetState(CallState.Thinking, $"Speech output unavailable ({ex.Message}); continuing with transcript.");
             }
         }
     }
@@ -763,15 +796,20 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
         return _speechOutput.SpeakAsync(sentence, voiceName, outputDeviceId, cancellationToken);
     }
 
-    private async Task HandleSpeechInputEventAsync(SpeechInputEvent inputEvent, CancellationToken cancellationToken)
+    private async Task HandleSpeechInputEventAsync(SpeechInputEvent inputEvent, CancellationToken cancellationToken,
+        long generation, Guid sessionId, CancellationTokenSource? lifetime)
     {
-        if (!IsActive || _ending || IsMuted || State == CallState.Paused) return;
+        if (!IsCurrentSpeechInputCallback(generation, sessionId, lifetime, cancellationToken)
+            || IsMuted || State == CallState.Paused) return;
         switch (inputEvent.Kind)
         {
             case SpeechInputEventKind.SpeechStarted:
                 _discardTranscriptUntilSpeechStarted = false;
                 if (State is CallState.Speaking or CallState.Thinking)
+                {
                     await InterruptAsync(cancellationToken).ConfigureAwait(false);
+                    if (!IsCurrentSpeechInputCallback(generation, sessionId, lifetime, cancellationToken)) return;
+                }
                 _partialUserMessageId = Guid.NewGuid();
                 SetInputStatus(new VoiceInputStatus(VoiceInputState.Listening, "Microphone listening."));
                 SetState(CallState.Transcribing, "Listening to you…");
@@ -795,10 +833,16 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                 if (reactions is not null)
                 {
                     foreach (var reaction in reactions)
+                    {
+                        if (!IsCurrentSpeechInputCallback(generation, sessionId, lifetime, cancellationToken)) return;
                         await PublishVoiceReactionAsync(reaction, cancellationToken).ConfigureAwait(false);
+                    }
                 }
-                await RunTurnAsync(inputEvent.Text!, true, messageId, cancellationToken).ConfigureAwait(false);
-                _voiceReactionRuntime?.ResetTransientAfterTurn();
+                if (!IsCurrentSpeechInputCallback(generation, sessionId, lifetime, cancellationToken)) return;
+                await RunTurnAsync(inputEvent.Text!, true, messageId, cancellationToken,
+                    new SpeechInputAdmission(generation, sessionId, lifetime)).ConfigureAwait(false);
+                if (IsCurrentSpeechInputCallback(generation, sessionId, lifetime, cancellationToken))
+                    _voiceReactionRuntime?.ResetTransientAfterTurn();
                 break;
             case SpeechInputEventKind.AudioLevel:
                 AudioLevelChanged?.Invoke(this, new(Math.Clamp(inputEvent.AudioLevel, 0, 1)));
@@ -810,10 +854,12 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                     : "No speech was detected · listening");
                 break;
             case SpeechInputEventKind.Error:
-                await DegradeSpeechInputAsync(inputEvent.Error ?? "Speech input failed.").ConfigureAwait(false);
+                await DegradeSpeechInputAsync(inputEvent.Error ?? "Speech input failed.", generation,
+                    sessionId, lifetime, cancellationToken).ConfigureAwait(false);
                 break;
             case SpeechInputEventKind.SourceClosed:
-                await DegradeSpeechInputAsync("The microphone source closed unexpectedly.").ConfigureAwait(false);
+                await DegradeSpeechInputAsync("The microphone source closed unexpectedly.", generation,
+                    sessionId, lifetime, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }
@@ -821,23 +867,58 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
     /// <summary>
     /// Performs start speech input asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private Task StartSpeechInputAsync(CancellationToken cancellationToken) =>
-        _speechInput.StartAsync(
+    private async Task<long> StartSpeechInputAsync(CancellationToken cancellationToken)
+    {
+        var generation = Interlocked.Increment(ref _speechInputGeneration);
+        Volatile.Write(ref _speechInputStartGeneration, generation);
+        var sessionId = CurrentSession?.Id ?? Guid.Empty;
+        var lifetime = _lifetimeCts;
+        await _speechInput.StartAsync(
             new SpeechInputOptions(
                 _options?.InputDeviceId,
                 _speechModel,
                 ActiveVoiceProfile is null || ActiveVoiceProfile.ContinuousListening
                     ? _options?.InputMode ?? CallInputMode.HandsFree
                     : CallInputMode.PushToTalk),
-            HandleSpeechInputEventAsync,
-            cancellationToken);
+            (inputEvent, callbackToken) => HandleSpeechInputEventAsync(
+                inputEvent, callbackToken, generation, sessionId, lifetime),
+            cancellationToken).ConfigureAwait(false);
+        if (generation != Volatile.Read(ref _speechInputGeneration) &&
+            generation == Volatile.Read(ref _speechInputStartGeneration))
+            await BestEffortAsync(() => _speechInput.StopAsync(CancellationToken.None)).ConfigureAwait(false);
+        return generation;
+    }
+
+    private async Task StopSpeechInputAsync(CancellationToken cancellationToken)
+    {
+        Interlocked.Increment(ref _speechInputGeneration);
+        await _speechInput.StopAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private bool IsCurrentSessionLifetime(Guid sessionId, CancellationTokenSource? lifetime) =>
+        sessionId != Guid.Empty && IsActive && !_ending && !_disposed &&
+        CurrentSession?.Id == sessionId && lifetime is not null &&
+        ReferenceEquals(lifetime, _lifetimeCts) && !lifetime.IsCancellationRequested;
+
+    private bool IsCurrentSpeechInputCallback(long generation, Guid sessionId,
+        CancellationTokenSource? lifetime, CancellationToken callbackToken) =>
+        !callbackToken.IsCancellationRequested &&
+        generation == Volatile.Read(ref _speechInputGeneration) &&
+        IsCurrentSessionLifetime(sessionId, lifetime);
+
+    private readonly record struct SpeechInputAdmission(
+        long Generation, Guid SessionId, CancellationTokenSource? Lifetime);
 
     private async Task<bool> TryStartSpeechInputAsync(CancellationToken cancellationToken)
     {
         SetInputStatus(new VoiceInputStatus(VoiceInputState.Starting, "Starting microphone…", CanRetry: true));
+        var sessionId = CurrentSession?.Id ?? Guid.Empty;
+        var lifetime = _lifetimeCts;
         try
         {
-            await StartSpeechInputAsync(cancellationToken).ConfigureAwait(false);
+            var generation = await StartSpeechInputAsync(cancellationToken).ConfigureAwait(false);
+            if (generation != Volatile.Read(ref _speechInputGeneration) ||
+                !IsCurrentSessionLifetime(sessionId, lifetime)) return false;
             SetInputStatus(new VoiceInputStatus(VoiceInputState.Listening, "Microphone listening."));
             return true;
         }
@@ -859,11 +940,15 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
         }
     }
 
-    private async Task DegradeSpeechInputAsync(string message)
+    private async Task DegradeSpeechInputAsync(string message, long generation, Guid sessionId,
+        CancellationTokenSource? lifetime, CancellationToken callbackToken)
     {
+        if (!IsCurrentSpeechInputCallback(generation, sessionId, lifetime, callbackToken)) return;
         DiscardPendingTranscript();
+        var retiredGeneration = Interlocked.Increment(ref _speechInputGeneration);
         await BestEffortAsync(() => _speechInput.StopAsync(CancellationToken.None)).ConfigureAwait(false);
-        if (_ending || !IsActive || State == CallState.Paused) return;
+        if (retiredGeneration != Volatile.Read(ref _speechInputGeneration) ||
+            !IsCurrentSessionLifetime(sessionId, lifetime) || State == CallState.Paused) return;
 
         SetInputStatus(new VoiceInputStatus(
             VoiceInputState.Error,
@@ -952,7 +1037,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
     private async Task StopMediaInputAndOutputAsync(CancellationToken cancellationToken)
     {
         DiscardPendingTranscript();
-        await BestEffortAsync(() => _speechInput.StopAsync(cancellationToken)).ConfigureAwait(false);
+        await BestEffortAsync(() => StopSpeechInputAsync(cancellationToken)).ConfigureAwait(false);
         await BestEffortAsync(() => _speechOutput.StopAsync(cancellationToken)).ConfigureAwait(false);
     }
 
