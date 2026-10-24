@@ -80,7 +80,7 @@ public sealed class CuiMenuItem : MenuItem
         AvaloniaProperty? ownerOpenProperty = owner switch
         {
             MenuItem => MenuItem.IsSubMenuOpenProperty,
-            ContextMenu => ContextMenu.IsOpenProperty,
+            Avalonia.Controls.ContextMenu _ => Avalonia.Controls.ContextMenu.IsOpenProperty,
             _ => null,
         };
         EventHandler<AvaloniaPropertyChangedEventArgs>? ownerChanged = null;
