@@ -129,7 +129,7 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
             {
                 lock (_gate)
                 {
-                    var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == project && value.Snapshot.Document == document);
+                    var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == project && SameDocument(value.Snapshot.Document, document));
                     if (existing is not null)
                     {
                         DemandSameTask(existing.Snapshot.OriginalObservation.OriginalContext, context);
@@ -154,7 +154,7 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
                         Sha256(text), 1, null, null, read.Value);
                     lock (_gate)
                     {
-                        var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == project && value.Snapshot.Document == document);
+                        var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == project && SameDocument(value.Snapshot.Document, document));
                         if (existing is not null)
                         {
                             DemandSameTask(existing.Snapshot.OriginalObservation.OriginalContext, context);
@@ -182,7 +182,7 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
                 {
                     if (_preparedOpens.Count + _opening >= MaximumRetainedPasses)
                         throw new InvalidOperationException("Pending source-open custody is full; finish the admitted opens first.");
-                    var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == project && value.Snapshot.Document == document);
+                    var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == project && SameDocument(value.Snapshot.Document, document));
                     if (existing is not null) DemandSameTask(existing.Snapshot.OriginalObservation.OriginalContext, context);
                     _opening++;
                 }
@@ -217,7 +217,8 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
             if (!_preparedOpens.TryGetValue(prepared.PreparationId, out var issued) || !ReferenceEquals(issued, prepared))
                 throw new InvalidOperationException("Only this session's exact pending source-open preparation may be accepted.");
             var snapshot = prepared.Snapshot;
-            var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == snapshot.Project && value.Snapshot.Document == snapshot.Document);
+            var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == snapshot.Project &&
+                SameDocument(value.Snapshot.Document, snapshot.Document));
             if (existing is not null)
             {
                 if (replaceCleanEditor is not null) throw new InvalidOperationException("Refocusing an owned editor cannot replace another tab.");
@@ -269,7 +270,8 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
             var fresh = prepared.Snapshot;
             if (fresh.IsDirty || fresh.PreparedChangeSetId is not null || fresh.LastAppliedChangeSetId is not null)
                 throw new UnauthorizedAccessException("Recovery requires a clean fresh source observation, not a copied draft/pass.");
-            var matching = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == fresh.Project && value.Snapshot.Document == fresh.Document);
+            var matching = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == fresh.Project &&
+                SameDocument(value.Snapshot.Document, fresh.Document));
             if (sameOriginalCleanEditor is null)
             {
                 if (matching is not null)
@@ -486,6 +488,15 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
         try { return await actual.ConfigureAwait(false); } catch (Exception) when (actual.IsFaulted) { throw actual.Exception!; }
     }
     private Entry DemandEntry(Guid id) => _editors.TryGetValue(id, out var entry) ? entry : throw new KeyNotFoundException("The source editor is not owned by this session.");
+    private static bool SameDocument(DeveloperCodeDocument left, DeveloperCodeDocument right) =>
+        left is not null && right is not null && left.Validate() is null && right.Validate() is null &&
+        left.WorkspaceId == right.WorkspaceId && left.ProjectId == right.ProjectId && left.FileId == right.FileId &&
+        StringComparer.Ordinal.Equals(left.CanonicalResourceId, right.CanonicalResourceId) &&
+        left.WorkspaceRevision == right.WorkspaceRevision &&
+        PathComparer.Equals(Path.GetFullPath(Path.Combine(left.WorkspaceRoot, left.RelativePath)),
+            Path.GetFullPath(Path.Combine(right.WorkspaceRoot, right.RelativePath)));
+    private static StringComparer PathComparer => OperatingSystem.IsWindows()
+        ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
     private void DemandAdmission() { if (_retiring) throw new ObjectDisposedException(nameof(DeveloperSourceReviewSession)); }
     private static void DemandRevision(Entry entry, long expected)
     { if (entry.Snapshot.DraftRevision != expected) throw new InvalidOperationException("The draft changed; review its current revision."); }

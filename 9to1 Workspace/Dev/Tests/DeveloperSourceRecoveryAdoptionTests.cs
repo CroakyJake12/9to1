@@ -9,6 +9,38 @@ namespace HavenOS.Apps.Dev.Tests;
 public sealed partial class DeveloperTaskWorkspaceServiceTests
 {
     [Fact]
+    public async Task Source_editor_refocus_uses_host_filesystem_case_semantics()
+    {
+        var f = await Fixture.CreateAsync(); await using var review = new DeveloperSourceReviewSession(f.Dev);
+        var opened = (await review.OpenAsync(f.Reference, f.Context(), f.Document, OriginalTestBodyToken)).Value!;
+        var draft = review.UpdateDraft(opened.EditorId, opened.DraftRevision, "unsaved retained draft");
+        var caseVariantDocument = f.Document with
+        {
+            FileId = OperatingSystem.IsWindows() ? f.Document.FileId : Guid.NewGuid(),
+            CanonicalResourceId = OperatingSystem.IsWindows() ? f.Document.CanonicalResourceId : "file-case-distinct",
+            RelativePath = "SRC/CODE.CS"
+        };
+
+        var refocused = (await review.OpenAsync(f.Reference, f.Context(), caseVariantDocument, OriginalTestBodyToken)).Value!;
+
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Equal(opened.EditorId, refocused.EditorId);
+            Assert.Equal(draft.DraftText, refocused.DraftText);
+            Assert.Equal(draft.DraftRevision, refocused.DraftRevision);
+        }
+        else
+        {
+            Assert.NotEqual(opened.EditorId, refocused.EditorId);
+            Assert.Equal(f.Document.RelativePath, opened.Document.RelativePath);
+            Assert.Equal(caseVariantDocument.RelativePath, refocused.Document.RelativePath);
+        }
+        Assert.Equal(2, f.Tools.ReadCalls); // Both focus attempts use a fresh authorised read.
+        Assert.Equal(0, f.Tools.WriteCalls);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
     public async Task Explicit_recovery_refreshes_clean_basis_while_normal_open_still_refuses_changed_source()
     {
         var f = await Fixture.CreateAsync(); await using var review = new DeveloperSourceReviewSession(f.Dev);
