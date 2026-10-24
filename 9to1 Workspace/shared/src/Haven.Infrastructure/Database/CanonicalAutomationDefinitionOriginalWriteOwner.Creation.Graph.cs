@@ -55,12 +55,16 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
     }
     public async ValueTask RequireCurrentAsync(IOriginalGraphOwnerSelection value, GraphPublicationIntent intent, CancellationToken token)
     {
+        if (value is SavedGraphPublicationSelection)
+        { await RequireSavedGraphPublicationCurrentAsync(value, intent, token).ConfigureAwait(false); return; }
         var actual = RequireGraphSelection(value, intent);
         await RevalidateOriginalCreationWithinSourceAsync(actual.Reservation, body => body(), _ => { }, token).ConfigureAwait(false);
     }
     public async ValueTask RequirePublishedAsync(IOriginalGraphOwnerSelection value, GraphPublicationIntent intent,
         GraphPublicationReceipt knownPublication, CancellationToken token)
     {
+        if (value is SavedGraphPublicationSelection)
+        { await RequireSavedGraphPublicationPublishedAsync(value, intent, knownPublication, token).ConfigureAwait(false); return; }
         var actual = RequireGraphSelection(value, intent);
         if (knownPublication.OperationId != actual.Reservation.GraphOperationId || knownPublication.Owner != intent.Owner ||
             knownPublication.Kind != GraphPublicationKind.SaveDraft || knownPublication.GraphId != actual.Reservation.GraphId ||
@@ -72,7 +76,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
     {
         var schemas = _creationSchemas ?? throw new InvalidOperationException("Actual graph schemas are unavailable.");
         var graph = new GraphDocument(GraphDocument.CurrentSchemaVersion, reservation.GraphId, 1,
-            "automations.empty-draft.v1", GraphRevisionState.Draft, [], []);
+            CanonicalAutomationCoreNodes.IsRegistered(schemas) ? CanonicalAutomationCoreNodes.ProfileId : CanonicalAutomationCoreNodes.EmptyProfileId,
+            GraphRevisionState.Draft, [], []);
         var owner = new GraphOwnerDescriptor("automations", reservation.OriginalStoreIdentity.StoreId, "automation.definition", reservation.AutomationId);
         var origin = new GraphOwnerCreationOrigin(1, owner.StoreId, reservation.AutomationId, reservation.DefinitionOperationId,
             reservation.GraphOperationId, reservation.Name, reservation.CapturedAt, reservation.OriginalAbsenceSha256, reservation.Actor);

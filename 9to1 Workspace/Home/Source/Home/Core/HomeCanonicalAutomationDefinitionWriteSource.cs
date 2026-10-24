@@ -21,6 +21,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
     public const string RestoreAction = "automations.restore";
     public const string CreateAction = "automations.create";
     public const string CreationRecoveryAction = "automations.create.recover";
+    public const string BindGraphDraftAction = "automations.graph.bind-draft";
+    public const string BindGraphActiveAction = "automations.graph.bind-active";
     private HomeGraphCreationAssociationSource? _creationGraphs;
     public void BindOriginalCreationGraphSource(HomeGraphCreationAssociationSource source)
     {
@@ -28,7 +30,7 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
             throw new UnauthorizedAccessException("The SAME original graph creation composition is required.");
         lock (_gate) { DemandLive(); if (_creationGraphs is not null) throw new InvalidOperationException("Creation graph source is already bound."); _creationGraphs = source; }
     }
-    public static bool IsSupportedAction(string action) => action is RecoveryAction or DisableAction or EditAction or ArchiveAction or RestoreAction or CreateAction or CreationRecoveryAction or "automations.graph.save-draft";
+    public static bool IsSupportedAction(string action) => action is RecoveryAction or DisableAction or EditAction or ArchiveAction or RestoreAction or CreateAction or CreationRecoveryAction or BindGraphDraftAction or BindGraphActiveAction or "automations.graph.save-draft" or "automations.activate";
     public string ResourceKind => "automation.definition";
     private readonly FileHomeCoreStateStore _store;
     private readonly HomeLocalProfileIdentity _profiles;
@@ -115,7 +117,7 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
     public Task<ResourceAccessDecision> EvaluateWithinOriginalSourceAsync(AuthenticatedResourceActor actor, string action, ResourceScope resource,
         Action<Action> scope, Action<Task> retain, CancellationToken token)
     {
-        if (action == "automations.graph.save-draft")
+        if (action is "automations.graph.save-draft" or "automations.activate")
         {
             if (_creationGraphs is null) return Task.FromResult(new ResourceAccessDecision(false,
                 "HOME_AUTOMATION_CREATION_ORIGIN_UNAVAILABLE", actor.ActorId, resource.Revision, actor.OrganisationId));
@@ -250,7 +252,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
                     OriginalIntentDigest = owner._creator.GetOriginalChangeIntentDigest(intent),
                     Store = intent.OriginalStoreIdentity, intent.OriginalDefinition, intent.ChangeKind, intent.ExpectedRevision, intent.OriginalRowSha256,
                     Ownership = new { _ownership.ResourceKind, _ownership.StoreId, _ownership.ProfileId, _ownership.ObservedStoreRevision } });
-                if (_reviewChangeKind is CanonicalAutomationOriginalChangeKind.EditDisabled or CanonicalAutomationOriginalChangeKind.ArchiveDisabled or CanonicalAutomationOriginalChangeKind.RestoreDisabled or CanonicalAutomationOriginalChangeKind.CreateDisabled or CanonicalAutomationOriginalChangeKind.RecoverCreated)
+                if (_reviewChangeKind is CanonicalAutomationOriginalChangeKind.EditDisabled or CanonicalAutomationOriginalChangeKind.ArchiveDisabled or CanonicalAutomationOriginalChangeKind.RestoreDisabled or CanonicalAutomationOriginalChangeKind.CreateDisabled or CanonicalAutomationOriginalChangeKind.RecoverCreated or
+                    CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled or CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled)
                     _arguments = JsonSerializer.SerializeToElement(new { intent.OperationId, intent.Actor,
                         OriginalIntentDigest = owner._creator.GetOriginalChangeIntentDigest(intent),
                         Store = intent.OriginalStoreIdentity, intent.OriginalDefinition, intent.ProposedDefinition,
@@ -268,6 +271,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
                     CanonicalAutomationOriginalChangeKind.RecoverLegacy => "Recover this exact stored automation as disabled and needing review, preserving its other values and history; execution remains unavailable",
                     CanonicalAutomationOriginalChangeKind.CreateDisabled => "Create this exact new disabled and unscheduled Automation referencing its separately reviewed empty Home graph Draft. This does not activate, schedule or run an Automation",
                     CanonicalAutomationOriginalChangeKind.RecoverCreated => "Observe this exact original SQL creation receipt and reconcile only its original Home audit, without inserting, activating, scheduling or running an Automation",
+                    CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled => "Bind this exact already-published Home graph Draft to its original Automation. Preserve identity, other settings and history; execution stays disabled with no next trigger",
+                    CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled => "Bind this exact already-activated Home graph revision to its original Automation. Preserve identity, other settings and history; this does not enable, schedule or run it",
                     CanonicalAutomationOriginalChangeKind.EditDisabled => "Save the reviewed name, instructions and schedule to this disabled automation; preserve its identity, graph and history, clear its pending next time and keep execution disabled",
                     CanonicalAutomationOriginalChangeKind.ArchiveDisabled => "Archive this exact disabled Automation and clear its next trigger time. Preserve its identity, graph, settings and run history. Existing runs are not cancelled or resumed; new execution stays disabled",
                     CanonicalAutomationOriginalChangeKind.RestoreDisabled => "Restore this exact archived Automation to the library, keeping it disabled with no next trigger time. Preserve its identity, graph, settings and run history; this does not activate, schedule or resume execution",
@@ -343,7 +348,7 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
 public sealed class HomeCanonicalAutomationDefinitionActionPolicySource : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
-        appId == "automations" && actionId != "automations.graph.save-draft" && HomeCanonicalAutomationDefinitionWriteSource.IsSupportedAction(actionId)
+        appId == "automations" && actionId is not ("automations.graph.save-draft" or "automations.activate") && HomeCanonicalAutomationDefinitionWriteSource.IsSupportedAction(actionId)
         ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.Elevated, false, false, RequiresPerActionApproval: true) : null;
 }
 

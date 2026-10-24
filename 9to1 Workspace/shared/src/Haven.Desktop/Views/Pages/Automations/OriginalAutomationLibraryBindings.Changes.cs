@@ -21,12 +21,12 @@ internal sealed partial class OriginalAutomationLibraryBindings
         _initialScheduleValue = "", _initialDay = "", _editScheduleHint = "", _editScheduleKind = "";
     private bool _editGraph, _editScheduleReady, _editSubmitted;
     private bool IsCurrentSelection => _selectedTarget is { } current && current.Epoch == _epoch && _issued.Contains(current);
-    private bool CanEditDraft => !_retiring && !_busy && !_editSubmitted && IsCurrentSelection &&
+    private bool CanEditDraft => !_retiring && !_busy && !_editSubmitted && !HasGraphUnsubmittedChanges && IsCurrentSelection &&
         _writer?.SupportsOriginalDisabledEdit == true && _selectedTarget!.Row.Value is { IsEnabled: false, ArchivedAt: null } && _editScheduleReady;
     private bool EditValuesChanged => _selectedTarget is { } selected &&
         (_editName != selected.Row.Value.Name || _editInstruction != selected.Row.Value.Instruction ||
          _editScheduleValue != _initialScheduleValue || _editDay != _initialDay);
-    private bool HasUnsubmittedEdits => !_editSubmitted && EditValuesChanged;
+    private bool HasUnsubmittedEdits => (!_editSubmitted && EditValuesChanged) || HasGraphUnsubmittedChanges;
     private void ClearEditDraft()
     {
         _editName = _editInstruction = _editScheduleValue = _editDay = _initialScheduleValue = _initialDay =

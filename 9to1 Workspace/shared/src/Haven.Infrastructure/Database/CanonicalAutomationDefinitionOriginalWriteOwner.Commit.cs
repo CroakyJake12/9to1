@@ -87,7 +87,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
             source.Run(() => DemandOriginalChangeCommit(intent));
             // Creation alone takes native SQLite transaction BEFORE held Home.
             // This avoids Home -> SQLite acquisition while the graph fingerprint is held.
-            if (intent.Creation is not null)
+            if (intent.Creation is not null || intent.GraphPublication is not null)
                 source.Run(() => current.Pin!.BeginPinnedOriginalWriter(() => DemandOriginalChangeCommit(intent)));
             await source.Read(() => writes.AcquireOriginalCommitEntryWithinSourceAsync(claim, source.Run, source.Retain, token)).ConfigureAwait(false);
             await source.Read(() => writes.ValidateOriginalCommitWithinSourceAsync(claim, source.Run, source.Retain, token)).ConfigureAwait(false);
@@ -143,13 +143,14 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         var source = current.Source; var intent = current.Intent; var pin = current.Pin!;
         if (intent.Creation is not null) return await AtomicCreationAsync(current, writes, token).ConfigureAwait(false);
         void Demand() { DemandOriginalChangeCommit(intent); writes.DemandOriginalCommit(current.Claim!, intent); }
-        source.Run(() => { token.ThrowIfCancellationRequested(); Demand(); pin.BeginPinnedOriginalWriter(Demand); });
+        source.Run(() => { token.ThrowIfCancellationRequested(); Demand();
+            if (intent.GraphPublication is null) pin.BeginPinnedOriginalWriter(Demand); });
         var snapshot = await ReadSnapshotWithinLeaseAsync(pin, intent.OriginalDefinition.Id,
             intent.OriginalRawId, intent.OperationId, token).ConfigureAwait(false);
         if (Hash(snapshot) != Hash(intent.Snapshot))
             throw new UnauthorizedAccessException("The full raw row/descriptor/receipt changed before atomic CAS.");
         DemandNoLegacyLease(snapshot.Row); DemandDescriptor(snapshot, intent.Actor, intent.OriginalStoreIdentity, intent.OriginalDefinition.Id);
-        if (intent.Edit is not null) DemandEditableSnapshot(snapshot);
+        if (intent.Edit is not null || intent.GraphPublication is not null) DemandEditableSnapshot(snapshot);
         DurableOperation operation;
         if (snapshot.Operation is { } durable)
         {
@@ -159,7 +160,9 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         }
         else
         {
-            if (IsArchiveRestore(intent.ChangeKind))
+            if (intent.GraphPublication is not null)
+                await BindGraphRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), intent.ProposedDefinition, Demand, token).ConfigureAwait(false);
+            else if (IsArchiveRestore(intent.ChangeKind))
                 await ArchiveRestoreRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), intent.ChangeKind,
                     intent.ProposedDefinition, Demand, token).ConfigureAwait(false);
             else if (intent.Edit is not null)
@@ -167,7 +170,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
             else
                 await DisableRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), Demand, token).ConfigureAwait(false);
             var after = await ReadRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), token).ConfigureAwait(false);
-            if (!(IsArchiveRestore(intent.ChangeKind) ? SameExceptArchiveRestored(snapshot.Row, after, intent.ProposedDefinition)
+            if (!(intent.GraphPublication is not null ? SameExceptGraphBound(snapshot.Row, after, intent.ProposedDefinition)
+                : IsArchiveRestore(intent.ChangeKind) ? SameExceptArchiveRestored(snapshot.Row, after, intent.ProposedDefinition)
                 : intent.Edit is null ? SameExceptDisabled(snapshot.Row, after) : SameExceptEdited(snapshot.Row, after, intent.ProposedDefinition)))
                 throw new InvalidDataException("The atomic change did not preserve every other observed row value/storage class.");
             var beforeHash = snapshot.RowSha256;
@@ -182,7 +186,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
                 intent.ChangeKind == CanonicalAutomationOriginalChangeKind.RecoverLegacy ? AutomationOperationalState.NeedsAttention : AutomationOperationalState.Disabled,
                 intent.OperationId, beforeHash, afterHash, snapshot.DescriptorJson is null ? null : RawJsonDigest(snapshot.DescriptorJson), receipt)
             {
-                GraphBinding = snapshot.Descriptor?.GraphBinding, CreationOriginSha256 = snapshot.Descriptor?.CreationOriginSha256,
+                GraphBinding = intent.GraphPublication is null ? snapshot.Descriptor?.GraphBinding : intent.ProposedDefinition.GraphBinding,
+                CreationOriginSha256 = snapshot.Descriptor?.CreationOriginSha256,
                 OriginalCreateRequestId = snapshot.Descriptor?.OriginalCreateRequestId,
                 OriginalCreateArgumentsSha256 = snapshot.Descriptor?.OriginalCreateArgumentsSha256
             };
@@ -195,6 +200,32 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         var acknowledgment = new Acknowledgment(intent, operation);
         source.Run(() => { Demand(); current.Acknowledgment = acknowledgment; _acknowledgments.Add(acknowledgment, acknowledgment); });
         return acknowledgment;
+    }
+    private static Task BindGraphRowWithinLeaseAsync(CanonicalSqliteOriginalStoreLease lease, string rawId,
+        AutomationDefinition proposed, Action demand, CancellationToken token) => Execute(lease, command =>
+        {
+            demand();
+            if (proposed.IsEnabled || proposed.NextRunAt is not null || proposed.ArchivedAt is not null ||
+                !CanonicalAutomationGraphReferenceCodec.TryDeserialize(proposed.Instruction, out var reference) || reference.Binding != proposed.GraphBinding)
+                throw new UnauthorizedAccessException("Only the exact disabled, unarchived canonical graph binding may be written.");
+            command.CommandText = "UPDATE automations SET instruction=$graph,updated_at=$updated,is_enabled=0,next_run_at=NULL " +
+                "WHERE id=$id COLLATE BINARY AND is_enabled=0 AND archived_at IS NULL AND lease_token IS NULL AND lease_until IS NULL;";
+            command.Parameters.AddWithValue("$id", rawId); command.Parameters.AddWithValue("$graph", proposed.Instruction);
+            command.Parameters.AddWithValue("$updated", proposed.UpdatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+        }, token);
+    private static bool SameExceptGraphBound(IReadOnlyDictionary<string, string?> before,
+        IReadOnlyDictionary<string, string?> after, AutomationDefinition proposed)
+    {
+        string Text(string value) => JsonSerializer.Serialize(new { storageClass = "text", value });
+        var changed = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["instruction"] = Text(proposed.Instruction),
+            ["updated_at"] = Text(proposed.UpdatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture)),
+            ["is_enabled"] = JsonSerializer.Serialize(new { storageClass = "integer", value = 0L }), ["next_run_at"] = null
+        };
+        return before.Count == after.Count && changed.All(pair => before.ContainsKey(pair.Key) &&
+            after.TryGetValue(pair.Key, out var value) && value == pair.Value) &&
+            before.All(pair => changed.ContainsKey(pair.Key) || after.TryGetValue(pair.Key, out var value) && value == pair.Value);
     }
     private static Task ArchiveRestoreRowWithinLeaseAsync(CanonicalSqliteOriginalStoreLease lease, string rawId,
         CanonicalAutomationOriginalChangeKind kind, AutomationDefinition proposed, Action demand, CancellationToken token) =>

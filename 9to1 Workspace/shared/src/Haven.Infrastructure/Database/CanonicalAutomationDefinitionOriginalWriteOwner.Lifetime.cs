@@ -43,10 +43,24 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         Commit[] all; lock (_gate) { _retiring = true; all = _activeCommits.ToArray(); }
         foreach (var current in all) AcquireOriginalPendingWithdrawal(current);
         RequestOriginalCreationReviewWithdrawals();
+        RequestOriginalSavedGraphReviewWithdrawals();
     }
     private void RequestOriginalCreationReviewWithdrawals()
     {
         CreationProcess[] processes; lock (_gate) processes = _creationProcesses.Values.ToArray();
+        foreach (var process in processes)
+        {
+            lock (_gate)
+            {
+                if (process.Driver.IsCompleted || process.Review is null || process.Withdrawal is not null) continue;
+                try { process.Withdrawal = process.Review.WithdrawPendingAsync(); _withdrawals.Add(process.Withdrawal); }
+                catch (Exception cause) { _withdrawalBirthFailures.Add(cause); }
+            }
+        }
+    }
+    private void RequestOriginalSavedGraphReviewWithdrawals()
+    {
+        GraphPublishProcess[] processes; lock (_gate) processes = _graphPublishProcesses.ToArray();
         foreach (var process in processes)
         {
             lock (_gate)
@@ -63,6 +77,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         RetireOriginalDeliveries();
         CreationDelivery[] deliveries; lock (_gate) deliveries = _ownedCreationDeliveries.ToArray();
         foreach (var delivery in deliveries) delivery.RequestOriginalRetirement();
+        GraphPublishDelivery[] graphDeliveries; lock (_gate) graphDeliveries = _graphPublishDeliveries.ToArray();
+        foreach (var delivery in graphDeliveries) delivery.RequestOriginalRetirement();
     }
     public void DemandExternalOriginalJoin()
     {
@@ -103,6 +119,10 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         catch (Exception cause) { errors.Add(cause); }
         CreationDelivery[] creations; lock (_gate) creations = _ownedCreationDeliveries.ToArray();
         foreach (var delivery in creations)
+            try { await delivery.CloseAndDrainOriginalAsync().ConfigureAwait(false); }
+            catch (Exception cause) { errors.Add(cause); }
+        GraphPublishDelivery[] graphDeliveries; lock (_gate) graphDeliveries = _graphPublishDeliveries.ToArray();
+        foreach (var delivery in graphDeliveries)
             try { await delivery.CloseAndDrainOriginalAsync().ConfigureAwait(false); }
             catch (Exception cause) { errors.Add(cause); }
         if (_creationGraphs is not null)

@@ -78,11 +78,12 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
     private sealed class Intent(CanonicalAutomationDefinitionOriginalWriteOwner owner,
         CanonicalAutomationLibraryOriginalReadOwner.OriginalWriteSelection? selection,
         CanonicalAutomationOriginalChangeKind kind, Guid operationId, Snapshot snapshot,
-        CanonicalAutomationOriginalEdit? edit = null, AutomationDefinition? proposed = null, CreationReady? creation = null) : ICanonicalAutomationDefinitionOriginalChangeIntent
+        CanonicalAutomationOriginalEdit? edit = null, AutomationDefinition? proposed = null, CreationReady? creation = null, GraphReady? graphPublication = null) : ICanonicalAutomationDefinitionOriginalChangeIntent
     {
         internal readonly CanonicalAutomationDefinitionOriginalWriteOwner Owner = owner;
         internal readonly CanonicalAutomationLibraryOriginalReadOwner.OriginalWriteSelection? Selection = selection;
         internal readonly CreationReady? Creation = creation;
+        internal readonly GraphReady? GraphPublication = graphPublication;
         internal string OriginalRawId => Selection is { } row ? RawText(row.Row.RetainedProtectedDescriptors, "id") : ProposedDefinition.Id.ToString("D");
         internal readonly Snapshot Snapshot = snapshot;
         internal readonly CanonicalAutomationOriginalEdit? Edit = edit;
@@ -98,7 +99,9 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
           CanonicalAutomationOriginalChangeKind.ArchiveDisabled => "automations.archive",
           CanonicalAutomationOriginalChangeKind.RestoreDisabled => "automations.restore",
           CanonicalAutomationOriginalChangeKind.CreateDisabled => "automations.create",
-          CanonicalAutomationOriginalChangeKind.RecoverCreated => "automations.create.recover", _ => "automations.disable" };
+          CanonicalAutomationOriginalChangeKind.RecoverCreated => "automations.create.recover",
+          CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled => "automations.graph.bind-draft",
+          CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled => "automations.graph.bind-active", _ => "automations.disable" };
         public Guid OperationId { get; } = operationId;
         public long ExpectedRevision => Snapshot.Descriptor?.Revision ?? 0;
         public string OriginalRowSha256 => Snapshot.RowSha256;
@@ -158,7 +161,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             if (hadPrior) map[this] = prior; else map.Remove(this);
         }
     };
-    private bool IsInside => _creationExecution.Value is not null || _logical.Value != 0 || _executing.Value is not null || _physical?.ContainsKey(this) == true;
+    private bool IsInside => _graphPublicationExecution.Value is not null || _creationExecution.Value is not null || _logical.Value != 0 || _executing.Value is not null || _physical?.ContainsKey(this) == true;
     private Original Reserve(CanonicalSqliteOriginalSourceScope source, Intent? sameValidation = null)
     {
         lock (_gate)
@@ -166,7 +169,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             var current = _physical?.TryGetValue(this, out var physical) == true ? physical : _executing.Value;
             var admittedSameCommit = sameValidation is not null && current is not null && ReferenceEquals(current.Intent, sameValidation) && !current.Driver.IsCompleted;
             var admittedCreation = _creationExecution.Value is { } creation && ReferenceEquals(creation.Owner, this) && !creation.Driver.IsCompleted;
-            ObjectDisposedException.ThrowIf(_retiring && !admittedSameCommit && !admittedCreation, this);
+            var admittedGraphPublication = _graphPublicationExecution.Value is { } graphProcess && ReferenceEquals(graphProcess.Owner, this) && !graphProcess.Driver.IsCompleted;
+            ObjectDisposedException.ThrowIf(_retiring && !admittedSameCommit && !admittedCreation && !admittedGraphPublication, this);
             _originals.RemoveAll(item => item.Joined && item.Raw is { } raw && (raw.IsCompletedSuccessfully || IsAcknowledgedOriginalChangeSourceRefusal(raw)));
             if (_originals.Count >= 128) throw new InvalidOperationException("Automation change custody is full; unresolved originals remain retained.");
             var record = new Original(source); _originals.Add(record); return record;
@@ -200,6 +204,10 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             actual.ChangeKind, actual.OriginalStoreIdentity, actual.ProposedDefinition, actual.Snapshot.RowSha256,
             creation.Reservation.OriginalSchemaSha256, Origin = creation.Graph.Origin,
             GraphFingerprint = creation.Graph.FingerprintSha256 });
+        if (actual.GraphPublication is { } published) return Hash(new { SchemaVersion = 1, actual.Actor, actual.OperationId,
+            actual.ChangeKind, actual.OriginalStoreIdentity, actual.ProposedDefinition, actual.Snapshot.RowSha256,
+            ExpectedOwnerRevision = actual.ExpectedRevision, GraphPublication = published.Publication.Receipt,
+            GraphFingerprint = published.Publication.FingerprintSha256 });
         return ReviewDigest(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalDefinition.Id,
             actual.OperationId, actual.ChangeKind, actual.Snapshot, actual.Edit,
             IsArchiveRestore(actual.ChangeKind) ? actual.ProposedDefinition : null);
@@ -329,7 +337,10 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             if (Hash(snapshot) != Hash(actual.Snapshot))
                 throw new UnauthorizedAccessException("The full reviewed row/owner descriptor/operation changed; obtain a fresh observation and approval.");
             DemandNoLegacyLease(snapshot.Row);
-            if (actual.Edit is not null) DemandEditableSnapshot(snapshot);
+            if (actual.Edit is not null || actual.GraphPublication is not null) DemandEditableSnapshot(snapshot);
+            if (actual.GraphPublication is { } graphPublication &&
+                !await source.Read(() => _creationGraphs!.IsPublishedSavedCurrentAsync(graphPublication.Publication, token)).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("The SAME live actual graph publication changed before saved-definition binding.");
             await DemandCurrentAsync(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalStoreOwnership, source, token).ConfigureAwait(false);
             await source.JoinAllAsync().ConfigureAwait(false); return 0;
         }), actual);

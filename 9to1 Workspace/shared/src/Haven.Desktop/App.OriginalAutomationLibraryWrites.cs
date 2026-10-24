@@ -27,9 +27,9 @@ public sealed partial class App
         _actualAutomationLibraryWritePolicy = new();
         _actualAutomationCreationGraphRegistry = new();
         _actualAutomationCreationGraphPolicy = new();
-        // This trusted profile reflects the actual zero registered node adapters.
-        // It permits an empty saved Draft only and advertises no execution capability.
-        _actualAutomationCreationSchemas = new([], [new("automations.empty-draft.v1", new HashSet<string>(), new HashSet<string>())]);
+        // Keep the old empty profile unchanged. New canonical Drafts use a separate
+        // compiled flow/value catalogue; registration grants no execution or Run.
+        _actualAutomationCreationSchemas = CanonicalAutomationCoreNodes.CreateRegistry();
     }
     private void ConfigureOriginalAutomationLibraryWriteRegistrations(IServiceCollection collection,
         HomeNativeWindowsComposition home)

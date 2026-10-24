@@ -89,6 +89,10 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
     public Task<GraphDocument?> ReadOriginalCanonicalGraphWithinSourceAsync(ICanonicalAutomationLibraryOriginalObservation sameObservation,
         AutomationOwnerRead<AutomationDefinition> sameRow, Action<Action> scope, Action<Task> retain, CancellationToken token)
     {
+        // Current saved-graph reads use the distinct protected owner/session protocol.
+        // The actual inception/absence recovery methods above remain unchanged.
+        if (_creationGraphs is not null && _creationSchemas is not null)
+            return ReadOriginalSavedGraphWithinSourceAsync(sameObservation, sameRow, scope, retain, token);
         var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
         return Admit(source, () => _store.RetainOriginalReader<GraphDocument?>(source, async () =>
         {

@@ -3,6 +3,10 @@
     <Action name="RecoverOriginalAutomationCreation" command="recover-creation" parameter="{Binding creation.Target}" />
     <Action name="OpenSavedAutomation" command="select" parameter="{Binding automation.Target}" />
     <Action name="InspectSavedGraphNode" command="graph-node" parameter="{Binding graphNode.Target}" />
+    <Action name="AddDraftGraphNode" command="add-graph-node" parameter="{Binding draftType.Target}" />
+    <Action name="SelectDraftGraphNode" command="select-edit-node" parameter="{Binding draftNode.Target}" />
+    <Action name="SelectDraftGraphPort" command="select-graph-port" parameter="{Binding draftPort.Target}" />
+    <Action name="DeleteDraftGraphConnection" command="disconnect-graph-link" parameter="{Binding draftConnection.Target}" />
     <Action name="FollowSavedGraphConnection" command="graph-node" parameter="{Binding graphConnection.Target}" />
   </Actions>
   <Page id="saved-automation-library" AccessibleName="Saved automation library">
@@ -65,6 +69,65 @@
           <Text Text="Saved lifecycle facts are shown with their original Run IDs and pinned revisions. Result and error contents, inputs, outputs and continuation details are hidden here. Reading history does not run, retry or change a workflow." TextWrapping="Wrap" />
         </Container>
         <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasStoredGraph}">
+          <Button id="automation-open-graph-editor" action="open-graph-editor" Interactive="{Binding CanOpenGraphEditor}">Open graph Draft editor</Button>
+        </Container>
+        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasGraphEditor}">
+          <Text Text="Graph Draft editor" FontSize="22" FontWeight="SemiBold" />
+          <Text id="automation-graph-editor-identity" Text="{Binding GraphEditorIdentity}" TextWrapping="Wrap" />
+          <Text id="automation-graph-editor-status" Text="{Binding GraphEditorStatus}" TextWrapping="Wrap" AccessibleName="Graph Draft editing status" />
+          <Text Text="Save sends this exact graph Draft and its Automation link for separate Home reviews. Activate publishes an already-saved revision; execution stays disabled. Discard local edits before switching automations or refreshing." TextWrapping="Wrap" />
+          <Text Text="Add a registered node" FontWeight="SemiBold" />
+          <Input id="automation-draft-node-search" Type="Text" Value="{Binding GraphEditorSearch, Mode=TwoWay}" PlaceholderText="Find a registered node" Interactive="{Binding CanSearchGraphTypes}" AccessibleName="Search registered graph node types" />
+          <Repeat Source="{Binding GraphEditorTypes}" As="draftType" Key="{Binding draftType.Key}">
+            <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8">
+              <Text Text="{Binding draftType.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding draftType.Detail}" TextWrapping="Wrap" />
+              <Button action="AddDraftGraphNode" Interactive="{Binding draftType.CanUse}">Add node</Button>
+            </Container>
+          </Repeat>
+          <Text Text="Draft nodes" FontWeight="SemiBold" />
+          <Text Text="{Binding GraphEditorPageLabel}" />
+          <Repeat Source="{Binding GraphEditorNodes}" As="draftNode" Key="{Binding draftNode.Key}">
+            <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8">
+              <Text Text="{Binding draftNode.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding draftNode.Detail}" TextWrapping="Wrap" />
+              <Button action="SelectDraftGraphNode" Interactive="{Binding draftNode.CanUse}">Select draft node</Button>
+            </Container>
+          </Repeat>
+          <Button action="draft-graph-back" Interactive="{Binding CanPreviousGraphDraftPage}">Previous draft nodes</Button>
+          <Button action="draft-graph-next" Interactive="{Binding CanNextGraphDraftPage}">Next draft nodes</Button>
+          <Container Type="Vertical Stack" CellGap="4" IsVisible="{Binding HasGraphValue}">
+            <Text Text="Literal value" FontWeight="SemiBold" />
+            <Input id="automation-draft-node-value" Type="Text" Value="{Binding GraphEditorValue, Mode=TwoWay}" Interactive="{Binding CanEditGraphValue}" Multiline="True" MinHeight="80" TextWrapping="Wrap" AccessibleName="Selected node literal value" />
+            <Button id="automation-apply-draft-value" action="apply-graph-value" Interactive="{Binding CanApplyGraphValue}">Apply value to local draft</Button>
+          </Container>
+          <Button action="remove-graph-node" Interactive="{Binding CanRemoveGraphNode}">Remove selected node</Button>
+          <Text Text="Typed ports" FontWeight="SemiBold" />
+          <Text Text="Choose an output port, then an input port. The shared graph checks types and connection limits." TextWrapping="Wrap" />
+          <Text Text="{Binding GraphEditorPortsLabel}" TextWrapping="Wrap" />
+          <Repeat Source="{Binding GraphEditorPorts}" As="draftPort" Key="{Binding draftPort.Key}">
+            <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8">
+              <Text Text="{Binding draftPort.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding draftPort.Detail}" TextWrapping="Wrap" />
+              <Button action="SelectDraftGraphPort" Interactive="{Binding draftPort.CanUse}">Choose port</Button>
+            </Container>
+          </Repeat>
+          <Button id="automation-connect-draft-ports" action="connect-graph-ports" Interactive="{Binding CanConnectGraphPorts}">Connect selected ports</Button>
+          <Text Text="Selected node connections" FontWeight="SemiBold" />
+          <Repeat Source="{Binding GraphEditorConnections}" As="draftConnection" Key="{Binding draftConnection.Key}">
+            <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8">
+              <Text Text="{Binding draftConnection.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding draftConnection.Detail}" TextWrapping="Wrap" />
+              <Button action="DeleteDraftGraphConnection" Interactive="{Binding draftConnection.CanUse}">Delete connection</Button>
+            </Container>
+          </Repeat>
+          <Button id="automation-undo-draft" action="undo-graph-edit" Interactive="{Binding CanUndoGraphEdit}">Undo draft change</Button>
+          <Button id="automation-redo-draft" action="redo-graph-edit" Interactive="{Binding CanRedoGraphEdit}">Redo draft change</Button>
+          <Button id="automation-save-graph-draft" action="save-graph-draft" Interactive="{Binding CanSaveGraphDraft}">Save graph Draft for Home review</Button>
+          <Button id="automation-activate-graph-draft" action="activate-graph-draft" Interactive="{Binding CanActivateGraphDraft}">Activate saved graph for Home review</Button>
+          <Button id="automation-discard-graph" action="discard-graph-edits" Interactive="{Binding CanDiscardGraphEdits}">Discard local graph and close editor</Button>
+        </Container>
+        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasStoredGraph}">
           <Text Text="Saved graph" FontSize="20" FontWeight="SemiBold" />
           <Text Text="Inspect the actual saved snapshot. These controls do not edit, activate, test or run the workflow." TextWrapping="Wrap" />
           <Text id="automation-library-graph-status" Text="{Binding GraphStatus}" TextWrapping="Wrap" AccessibleName="Saved graph inspection status" />
@@ -125,6 +188,7 @@
           <Button action="graph-diagnostics-back" Interactive="{Binding CanGraphDiagnosticsBack}">Previous diagnostics</Button>
           <Button action="graph-diagnostics-next" Interactive="{Binding CanGraphDiagnosticsNext}">Next diagnostics</Button>
         </Container>
+        <Text id="automation-graph-publication-status" Text="{Binding GraphPublicationStatus}" TextWrapping="Wrap" AccessibleName="Automation graph publication status" />
         <Text Text="{Binding Review}" TextWrapping="Wrap" />
         <Text Text="Recovering legacy settings marks them for attention and disables execution. Saving edits or disabling also requires individual Home approval. Running requires separate setup and approval." TextWrapping="Wrap" />
         <Button id="automation-library-recover" action="recover" Interactive="{Binding CanRecover}">Review saved settings</Button>

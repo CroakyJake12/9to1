@@ -2,7 +2,7 @@ using Haven.Core;
 
 namespace Haven.Application.Automations;
 
-public enum CanonicalAutomationOriginalChangeKind { RecoverLegacy = 0, Disable = 1, EditDisabled = 2, CreateDisabled = 3, RecoverCreated = 4, ArchiveDisabled = 5, RestoreDisabled = 6 }
+public enum CanonicalAutomationOriginalChangeKind { RecoverLegacy = 0, Disable = 1, EditDisabled = 2, CreateDisabled = 3, RecoverCreated = 4, ArchiveDisabled = 5, RestoreDisabled = 6, BindGraphDraftDisabled = 7, BindGraphActiveDisabled = 8 }
 
 /// <summary>Detached editable values, never a store selection, approval or run grant.
 /// The protected owner must revalidate the actual recovered, disabled row separately.</summary>

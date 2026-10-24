@@ -7,6 +7,7 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
 {
     private sealed partial class Claim
     {
+        private IAsyncDisposable? _graphPublicationLifetime;
         internal Task AcquireEntry(Action<Action> scope, Action<Task> retain, CancellationToken token)
         {
             Task actual; Context context; TaskCompletionSource begin;
@@ -21,6 +22,14 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                     // The producer has acquired its actual protected canonical store pins. Do not
                     // call ordinary store/profile/READ APIs here or while Home is held.
                     sources.Invoke(() => { owner._creator.DemandOriginalChangeCommit(intent); return true; });
+                    if (intent.ChangeKind is CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled or CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled)
+                        sources.Invoke(() =>
+                        {
+                            _graphPublicationLifetime = owner._creationGraphs?.TryAcquirePublishedSavedIntentLifetime(intent);
+                            if (_graphPublicationLifetime is null)
+                                throw new UnauthorizedAccessException("The SAME live publisher association lifetime is unavailable or contended.");
+                            return true;
+                        });
                     await sources.Capture(() => owner._store.AcquireLocalOperationLeaseCoreAsync(owner._profiles,
                         Actor!, new HeldGuard(this), sources.Scope, sources.Retain, token), value => _home = value).ConfigureAwait(false);
                     if (_home is not IHomeOriginalScopedLocalOperationLease held)
@@ -94,7 +103,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                         if (expected != claim.Actor || claim._ownership is null || claim._attestation is null ||
                             !HomeLocalStoreOwnership.IsReceiptCurrentInState(state, claim._ownership) ||
                             !claim.Owner._broker.IsClaimedAttestationCurrentInState(claim._attestation, expected, state)) return false;
-                        if ((claim.Intent.ChangeKind is CanonicalAutomationOriginalChangeKind.CreateDisabled or CanonicalAutomationOriginalChangeKind.RecoverCreated) &&
+                        if ((claim.Intent.ChangeKind is CanonicalAutomationOriginalChangeKind.CreateDisabled or CanonicalAutomationOriginalChangeKind.RecoverCreated or
+                            CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled or CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled) &&
                             claim.Owner._creationGraphs?.IsIntentGraphCurrentInState(claim.Intent, state) != true) return false;
                         claim.Owner._creator.DemandOriginalChangeCommit(claim.Intent); return true;
                     });

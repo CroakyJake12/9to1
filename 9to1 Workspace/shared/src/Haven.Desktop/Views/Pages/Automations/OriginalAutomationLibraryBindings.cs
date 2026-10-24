@@ -49,7 +49,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         if (actualWriter is not null && actualSource is null) throw new ArgumentException("The actual writer requires its configured saved library.");
         _status = actualSource is null ? "Open Automations from Home to view your saved library."
             : "Your saved automations will appear here.";
-        _work = new(RetireLibraryDeliveriesAsync, JoinLibraryDeliveriesAsync);
+        _work = new(RetireGraphPublicationAndLibraryAsync, JoinGraphPublicationAndLibraryAsync);
     }
     internal Task InitializeAsync() => OriginalInitialization ??= _source is null ? Task.CompletedTask : Start("refresh", null);
 
@@ -77,7 +77,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
             "CanEditName" => CanEditDraft, "CanEditContent" => CanEditDraft && !_editGraph,
             "HasEditDay" => _selectedTarget?.Row.Value.ScheduleKind == AutomationScheduleKind.Weekly,
             "CanSaveEdits" => IsActionAvailable("save-edits") == true,
-            "CanDiscardEdits" => IsActionAvailable("discard-edits") == true, _ => CreationValue(path) ?? GraphValue(path) ?? RunsValue(path)
+            "CanDiscardEdits" => IsActionAvailable("discard-edits") == true, _ => CreationValue(path) ?? GraphValue(path) ?? GraphEditingValue(path) ?? RunsValue(path)
         };
         return value is not null;
     }
@@ -86,6 +86,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         if (_retiring || _busy || value is not string text) return false;
         if (path == "NewAutomationName") return SetCreationValue(path, text);
         if (path == "GraphNodeSearch") return SetGraphValue(path, text);
+        if (path is "GraphEditorSearch" or "GraphEditorValue") return SetGraphEditingValue(path, text);
         if (path != "Search") return SetEditValue(path, text);
         if (HasUnsubmittedEdits || text.Length > 256) return false;
         if (_search == text) return true;
@@ -107,12 +108,17 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         "restore" => !HasUnsubmittedEdits && _writer?.SupportsOriginalArchiveRestore == true && IsCurrentSelection &&
             _selectedTarget!.Row.RetainedProtectedDescriptors.ContainsKey("archived_at") && _selectedTarget!.Row is { RequiresRecovery: false, Value: { IsEnabled: false, ArchivedAt: not null } },
         "save-edits" => CanEditDraft && EditValuesChanged,
-        "discard-edits" => HasUnsubmittedEdits,
-        _ => CreationActionAvailable(command) || GraphActionAvailable(command) || RunsActionAvailable(command)
+        "discard-edits" => !_editSubmitted && EditValuesChanged,
+        _ => CreationActionAvailable(command) || GraphActionAvailable(command) || GraphEditingActionAvailable(command) || RunsActionAvailable(command)
     });
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (command is "save-graph-draft" or "activate-graph-draft") return new(StartGraphPublication(command, parameter));
+        if (command is "open-graph-editor" or "add-graph-node" or "select-edit-node" or "select-graph-port" or
+            "remove-graph-node" or "apply-graph-value" or "connect-graph-ports" or "disconnect-graph-link" or
+            "undo-graph-edit" or "redo-graph-edit" or "draft-graph-back" or "draft-graph-next" or "discard-graph-edits")
+            return new(StartGraphEditing(command, parameter));
         if (command is "refresh-runs" or "older-runs") return new(StartRuns(command, parameter));
         if (command is "create-draft" or "recover-creation" or "refresh-creations" or "discard-new")
             return new(StartCreationAction(command, parameter));
@@ -251,12 +257,13 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
     private static string DescribeState(AutomationDefinition definition) => definition.ArchivedAt is not null
         ? "Archived" : definition.IsEnabled ? "Enabled in saved settings" : "Disabled in saved settings";
     private void ClearSelection()
-    { _selectedTarget = null; _selectedName = "Select a saved automation"; _instruction = _selectedSchedule = _selectedState = _review = ""; ClearEditDraft(); ClearGraphInspection(); ClearRunHistory(); }
+    { _selectedTarget = null; _selectedName = "Select a saved automation"; _instruction = _selectedSchedule = _selectedState = _review = ""; ClearEditDraft(); ClearGraphInspection(); ClearGraphEditor(); ClearRunHistory(); }
     private void Changed() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
     { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null)); return true; });
     public bool TryGetItemValue(object item, string path, out object? value)
     {
-        if (TryGetCreationItemValue(item, path, out value) || TryGetGraphItemValue(item, path, out value) || TryGetRunItemValue(item, path, out value)) return true;
+        if (TryGetCreationItemValue(item, path, out value) || TryGetGraphItemValue(item, path, out value) ||
+            TryGetGraphEditingItemValue(item, path, out value) || TryGetRunItemValue(item, path, out value)) return true;
         value = item is LibraryRow row && _rows.Any(current => ReferenceEquals(current, row)) ? path switch
         { "Key" => row.Key, "Name" => row.Name, "Status" => row.Status, "Schedule" => row.Schedule, "Target" => row.Target,
           "CanOpen" => !_retiring && !_busy && !HasUnsubmittedEdits && row.Target is RowTarget target &&

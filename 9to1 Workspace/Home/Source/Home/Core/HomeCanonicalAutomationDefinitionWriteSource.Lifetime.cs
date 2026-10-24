@@ -75,12 +75,20 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                 sources.Errors.Retain(new InvalidOperationException("The retained actual SQL child did not issue a healthy SAME acknowledgment; preserve its operation/payload for recovery."));
             // Independent original cleanup. Both raw releases are acquired before either
             // await; no failure/hold skips the sibling. Home audit is never under these locks.
-            var releases = new List<Task>(); var expectedReleases = (_home is null ? 0 : 1) + (_completion is null ? 0 : 1);
+            var releases = new List<Task>(); var expectedReleases = (_home is null ? 0 : 1) + (_completion is null ? 0 : 1) + (_graphPublicationLifetime is null ? 0 : 1);
             if (_home is { } home) sources.AcquireClose(home.DisposeAsync, releases);
             if (_completion is { } completion) sources.AcquireClose(completion.DisposeAsync, releases);
             foreach (var actual in releases)
                 try { await sources.Await(actual).ConfigureAwait(false); }
                 catch (Exception cause) { sources.Errors.Retain(cause); }
+            if (_graphPublicationLifetime is { } graphLifetime)
+            {
+                var graphReleases = new List<Task>(); sources.AcquireClose(graphLifetime.DisposeAsync, graphReleases);
+                releases.AddRange(graphReleases);
+                foreach (var actual in graphReleases)
+                    try { await sources.Await(actual).ConfigureAwait(false); }
+                    catch (Exception cause) { sources.Errors.Retain(cause); }
+            }
             bool releaseAcknowledged = releases.Count == expectedReleases && releases.All(raw => raw.IsCompletedSuccessfully);
             bool nativeReleased = false;
             try { nativeReleased = sources.Physical(() => owner._creator.IsOwnedOriginalChangeNativeRelease(intent, sql)); }
@@ -114,6 +122,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                                         CanonicalAutomationOriginalChangeKind.RecoverCreated => "HOME_AUTOMATION_DEFINITION_CREATION_AUDIT_RECOVERED",
                                         CanonicalAutomationOriginalChangeKind.ArchiveDisabled => "HOME_AUTOMATION_DEFINITION_ARCHIVED",
                                         CanonicalAutomationOriginalChangeKind.RestoreDisabled => "HOME_AUTOMATION_DEFINITION_RESTORED_DISABLED",
+                                        CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled => "HOME_AUTOMATION_GRAPH_DRAFT_BOUND_DISABLED",
+                                        CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled => "HOME_AUTOMATION_GRAPH_ACTIVE_BOUND_DISABLED",
                                         _ => "HOME_AUTOMATION_DEFINITION_DISABLED"
                                     }
                                     : sql is null ? "HOME_AUTOMATION_WRITE_NOT_DISPATCHED" : "HOME_AUTOMATION_WRITE_OUTCOME_UNCONFIRMED",
