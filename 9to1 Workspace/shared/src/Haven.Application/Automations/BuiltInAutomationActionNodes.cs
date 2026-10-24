@@ -152,6 +152,49 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
         var forwarding = string.Equals(value, UpstreamInputPlaceholder, StringComparison.Ordinal);
         if (forwarding)
         {
+            var typedInputPorts = context.Node.EffectivePorts.Where(port =>
+                port.Direction == AutomationGraphPortDirection.Input &&
+                !string.Equals(port.DataType, "flow", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var typedValues = new List<(AutomationGraphPortDefinition Port, AutomationGraphValue Value)>();
+            if (context.TypedInputs is not null)
+            {
+                foreach (var port in typedInputPorts)
+                {
+                    if (!context.TypedInputs.TryGetValue(port.Id, out var inputs)) continue;
+                    typedValues.AddRange(inputs.Select(input => (port, input)));
+                }
+            }
+
+            if (typedInputPorts.Length > 0 && typedValues.Count == 0)
+                return new(false, $"Action value '{UpstreamInputPlaceholder}' needs a connected typed input value; it will not fall back to an unrelated flow output.");
+
+            if (typedValues.Count > 0)
+            {
+                if (typedValues.Count != 1)
+                    return new(false, $"Action value '{UpstreamInputPlaceholder}' is ambiguous: connect exactly one typed input value.");
+
+                var inputValue = typedValues[0].Value;
+                var outputPorts = context.Node.EffectivePorts.Where(port =>
+                    port.Direction == AutomationGraphPortDirection.Output &&
+                    !string.Equals(port.DataType, "flow", StringComparison.OrdinalIgnoreCase)).ToArray();
+                if (outputPorts.Length != 1)
+                    return new(false, $"Action value '{UpstreamInputPlaceholder}' needs exactly one declared typed output port.");
+                var outputPort = outputPorts[0];
+                if (!string.Equals(outputPort.DataType, "any", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(outputPort.DataType, inputValue.DataType, StringComparison.OrdinalIgnoreCase))
+                    return new(false, $"Action typed output '{outputPort.Id}' declares '{outputPort.DataType}' and cannot forward input type '{inputValue.DataType}' without a registered conversion.");
+
+                var forwardingMessage = isPreview
+                    ? "Test mode would forward the single typed upstream value without conversion."
+                    : "Forwarded the single typed upstream value without conversion.";
+                var traceOutput = inputValue.TryGetString(out var stringValue) ? LimitOutput(stringValue) : null;
+                return new(true, forwardingMessage, traceOutput,
+                    TypedOutputs: new Dictionary<string, AutomationGraphValue>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        [outputPort.Id] = inputValue
+                    });
+            }
+
             if (context.Inputs.Count == 0)
                 return new(false, $"Action value '{UpstreamInputPlaceholder}' needs one upstream node output, but no input is available.");
             if (context.Inputs.Count > 1)

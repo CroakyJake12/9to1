@@ -4,10 +4,15 @@ namespace Haven.Application.Automations;
 public static class AutomationGraphTestRunner
 {
     public static Task<AutomationGraphRunResult> RunAsync(AutomationGraphDefinition graph, CancellationToken cancellationToken)
+        => RunAsync(graph, cancellationToken, null);
+
+    public static Task<AutomationGraphRunResult> RunAsync(AutomationGraphDefinition graph,
+        CancellationToken cancellationToken,
+        IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, AutomationGraphValue>>? triggerOutputs)
     {
         ArgumentNullException.ThrowIfNull(graph);
         return new AutomationGraphRunner([new SimulatedDeviceNodeExecutor(), new BuiltInAutomationActionNodeExecutor()])
-            .RunAsync(graph, AutomationGraphRunMode.Test, cancellationToken);
+            .RunAsync(graph, AutomationGraphRunMode.Test, cancellationToken, triggerOutputs);
     }
 
     private sealed class SimulatedDeviceNodeExecutor : IAutomationGraphNodeExecutor
@@ -20,7 +25,8 @@ public static class AutomationGraphTestRunner
             cancellationToken.ThrowIfCancellationRequested();
             var node = context.Node.ToDevice();
             if (node is null) return Task.FromResult(new AutomationGraphNodeExecutionResult(false, "The DEVICE node is missing a target or action."));
-            return Task.FromResult(new AutomationGraphNodeExecutionResult(true, $"Test mode would execute {node.ActionKey} on {node.Target.DisplayName} without performing the device action."));
+            return Task.FromResult(new AutomationGraphNodeExecutionResult(false,
+                $"Test cannot safely simulate device action '{node.ActionKey}' on {node.Target.DisplayName}; no device preview is available. Confirm an explicit real Run to perform this side effect."));
         }
     }
 }

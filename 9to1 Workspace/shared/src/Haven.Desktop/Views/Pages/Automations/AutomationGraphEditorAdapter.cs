@@ -33,6 +33,7 @@ internal static class AutomationGraphEditorAdapter
     public static NodeEditorDocument ToEditor(AutomationGraphDefinition graph)
     {
         ArgumentNullException.ThrowIfNull(graph);
+        DemandStableConnectionIds(graph.Edges.Select(edge => edge.Id));
         var nodes = graph.Nodes.Select(node =>
         {
             var metadata = node.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
@@ -43,7 +44,7 @@ internal static class AutomationGraphEditorAdapter
             return new NodeEditorNode(node.Id, node.Category, string.IsNullOrWhiteSpace(node.Title) ? DefaultTitle(node) : node.Title)
             { Subtitle = node.Subtitle ?? string.Empty, X = node.X, Y = node.Y, Width = node.Width, Height = node.Height, Ports = ports, Metadata = metadata };
         }).ToArray();
-        var edges = graph.Edges.Select(edge => new NodeEditorEdge(edge.Id == Guid.Empty ? Guid.NewGuid() : edge.Id, edge.FromNodeId, edge.FromPortId, edge.ToNodeId, edge.ToPortId)
+        var edges = graph.Edges.Select(edge => new NodeEditorEdge(edge.Id, edge.FromNodeId, edge.FromPortId, edge.ToNodeId, edge.ToPortId)
         { Branch = edge.Branch ?? string.Empty, Label = edge.Label ?? string.Empty, Metadata = edge.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal) }).ToArray();
         return new NodeEditorDocument(nodes, edges);
     }
@@ -51,6 +52,9 @@ internal static class AutomationGraphEditorAdapter
     public static AutomationGraphDefinition FromEditor(NodeEditorDocument document, AutomationGraphDefinition? previous = null)
     {
         ArgumentNullException.ThrowIfNull(document); previous ??= AutomationGraphDefinition.Empty;
+        if (document.Nodes.Any(node => node.Id == Guid.Empty))
+            throw new InvalidOperationException("Graph editor nodes must retain their stable IDs.");
+        DemandStableConnectionIds(document.Edges.Select(edge => edge.Id));
         var previousNodes = previous.Nodes.GroupBy(node => node.Id).ToDictionary(group => group.Key, group => group.First());
         var previousEdges = previous.Edges.GroupBy(edge => edge.Id).ToDictionary(group => group.Key, group => group.First());
         var nodes = document.Nodes.Select(node =>
@@ -67,9 +71,18 @@ internal static class AutomationGraphEditorAdapter
         {
             previousEdges.TryGetValue(edge.Id, out var old); var branch = edge.Branch;
             if (string.IsNullOrWhiteSpace(branch) && byId.TryGetValue(edge.FromNodeId, out var from) && IsCondition(from.Category) && (string.Equals(edge.FromPortId, "true", StringComparison.OrdinalIgnoreCase) || string.Equals(edge.FromPortId, "false", StringComparison.OrdinalIgnoreCase))) branch = edge.FromPortId.ToLowerInvariant();
-            return new AutomationGraphEdgeDefinition(edge.FromNodeId, edge.ToNodeId) { Id = edge.Id == Guid.Empty ? old?.Id ?? Guid.NewGuid() : edge.Id, FromPortId = edge.FromPortId, ToPortId = edge.ToPortId, Branch = branch ?? old?.Branch ?? string.Empty, Label = edge.Label ?? old?.Label ?? string.Empty, Metadata = edge.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal) };
+            return new AutomationGraphEdgeDefinition(edge.FromNodeId, edge.ToNodeId) { Id = edge.Id, FromPortId = edge.FromPortId, ToPortId = edge.ToPortId, Branch = branch ?? old?.Branch ?? string.Empty, Label = edge.Label ?? old?.Label ?? string.Empty, Metadata = edge.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal) };
         }).ToArray();
         return new AutomationGraphDefinition(AutomationGraphDefinition.CurrentVersion, nodes, edges);
+    }
+
+    private static void DemandStableConnectionIds(IEnumerable<Guid> connectionIds)
+    {
+        var ids = connectionIds.ToArray();
+        if (ids.Any(id => id == Guid.Empty))
+            throw new InvalidOperationException("Graph editor connections must retain their stable IDs.");
+        if (ids.Distinct().Count() != ids.Length)
+            throw new InvalidOperationException("Graph editor connection IDs must be unique.");
     }
 
     public static IReadOnlyList<NodeEditorDiagnostic> ValidateConfiguration(AutomationGraphDefinition graph)

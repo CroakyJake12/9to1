@@ -34,4 +34,21 @@ public sealed class AutomationGraphEditorAdapterTests
         var conditionNode = new NodeEditorNode(Guid.NewGuid(), condition.Category, condition.Title) { Ports = condition.Ports, Metadata = condition.Metadata ?? new Dictionary<string, string>() }; var actionNode = new NodeEditorNode(Guid.NewGuid(), action.Category, action.Title) { Ports = action.Ports, Metadata = action.Metadata ?? new Dictionary<string, string>() };
         var graph = AutomationGraphEditorAdapter.FromEditor(new NodeEditorDocument([conditionNode, actionNode], [new NodeEditorEdge(Guid.NewGuid(), conditionNode.Id, "false", actionNode.Id, "in")])); Assert.Equal("false", Assert.Single(graph.Edges).Branch);
     }
+
+    [Fact]
+    public void Adapter_refuses_missing_connection_identity_instead_of_generating_a_replacement()
+    {
+        var source = Guid.NewGuid(); var target = Guid.NewGuid();
+        var malformed = new AutomationGraphDefinition(1,
+            [new AutomationGraphNodeDefinition(source, "Trigger", null, null, new Dictionary<string, string>()),
+             new AutomationGraphNodeDefinition(target, "Action", null, null, new Dictionary<string, string>())],
+            [new AutomationGraphEdgeDefinition(source, target) { Id = Guid.Empty }]);
+        Assert.Throws<InvalidOperationException>(() => AutomationGraphEditorAdapter.ToEditor(malformed));
+
+        var editorSource = new NodeEditorNode(source, "Trigger", "Trigger");
+        var editorTarget = new NodeEditorNode(target, "Action", "Action");
+        var malformedEditor = new NodeEditorDocument([editorSource, editorTarget],
+            [new NodeEditorEdge(Guid.Empty, source, "out", target, "in")]);
+        Assert.Throws<InvalidOperationException>(() => AutomationGraphEditorAdapter.FromEditor(malformedEditor));
+    }
 }
