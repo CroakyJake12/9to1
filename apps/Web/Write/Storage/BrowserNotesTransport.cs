@@ -15,7 +15,7 @@ public sealed partial class BrowserNotesTransport : INotesBrowserTransport
         try { json = await Invoke(id, action, arguments.GetRawText()); }
         catch (Exception error) when (action is "Save" or "Delete")
         { throw new NotesCommitOutcomeUnknownException("Storage acknowledgment was lost; inspect the durable version before retrying.", error); }
-        var result = NotesStorageAcknowledgment.Parse(action, json);
+        var result = NotesStorageAcknowledgment.Parse(action, json, arguments);
         var committed = result.TryGetProperty("committed", out var flag) && flag.ValueKind == JsonValueKind.True;
         if (!committed) cancellationToken.ThrowIfCancellationRequested();
         return result;

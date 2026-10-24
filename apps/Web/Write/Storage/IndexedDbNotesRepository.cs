@@ -21,15 +21,27 @@ public sealed class IndexedDbNotesRepository(INotesBrowserTransport transport, I
     }
     private async Task<JsonElement> Call(string action, object args, CancellationToken ct)
     {
-        var reply = await transport.InvokeAsync(action, Args(args), ct);
-        if (reply.ValueKind != JsonValueKind.Object || !reply.TryGetProperty("ok", out var ok) || ok.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
-            throw action is "Save" or "Delete" ? new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed storage response.");
-        if (ok.GetBoolean()) return reply;
+        var arguments = Args(args);
+        var reply = await transport.InvokeAsync(action, arguments, ct);
+        NotesStorageAcknowledgment.Validate(action, reply, arguments);
+        if (reply.GetProperty("ok").GetBoolean()) return reply;
         var error = reply.GetProperty("error");
         var code = error.GetProperty("code").GetString();
         if (code == "Cancelled") throw new OperationCanceledException(ct);
-        if (code == "RevisionConflict") throw new NotesRevisionConflictException(error.GetProperty("documentId").GetGuid(),
-            long.Parse(error.GetProperty("expectedVersion").GetString()!, CultureInfo.InvariantCulture), long.Parse(error.GetProperty("actualVersion").GetString()!, CultureInfo.InvariantCulture));
+        if (code == "RevisionConflict")
+        {
+            // The shared validator established the shape. A valid-looking conflict
+            // for another dispatch cannot prove this original mutation did not commit.
+            var documentId = error.GetProperty("documentId").GetGuid();
+            _ = NotesStorageAcknowledgment.TryVersion(error.GetProperty("expectedVersion"), out var expectedVersion);
+            _ = NotesStorageAcknowledgment.TryVersion(error.GetProperty("actualVersion"), out var actualVersion);
+            if (!arguments.TryGetProperty("documentId", out var sentId) || sentId.ValueKind != JsonValueKind.String ||
+                !sentId.TryGetGuid(out var expectedId) || expectedId != documentId ||
+                !arguments.TryGetProperty("expectedVersion", out var sentVersion) ||
+                !NotesStorageAcknowledgment.TryVersion(sentVersion, out var dispatchedVersion) || dispatchedVersion != expectedVersion)
+                throw NotesStorageAcknowledgment.Malformed(action, "Revision-conflict identity does not match the original mutation.");
+            throw new NotesRevisionConflictException(documentId, expectedVersion, actualVersion);
+        }
         throw new IOException($"Browser notes storage: {code}.");
     }
     private static JsonElement Value(JsonElement reply) => reply.GetProperty("value");
