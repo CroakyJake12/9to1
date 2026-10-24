@@ -33,8 +33,9 @@ public sealed partial class CanonicalProjectContextStoreReadOwnerTests
         Assert.True(editor.Connect(4, edge).Succeeded);
         var projection = new NodeGraphAutomationAdapter(schemas, CanonicalAutomationCoreNodes.Bindings()).Compile(editor.Current);
         Assert.Equal(graph.GraphId, projection.GraphId); Assert.Equal(5L, projection.SourceRevision);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var actual = await new AutomationGraphRunner([new BuiltInAutomationActionNodeExecutor()]).RunAsync(
-            projection.Definition, AutomationGraphRunMode.Real, TestContext.Current.CancellationToken);
+            projection.Definition, AutomationGraphRunMode.Real, timeout.Token);
         Assert.True(actual.Succeeded, actual.FailureMessage);
         Assert.Contains(actual.Trace, value => value.NodeId == emit.NodeId && value.Output == "a genuine deterministic output");
         Assert.True(editor.Disconnect(5, edge.ConnectionId).Succeeded);
