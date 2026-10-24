@@ -10,10 +10,11 @@ public sealed record ProfileState(IReadOnlyList<AccountProfile> Profiles,IReadOn
 public sealed class ProfileService(string statePath,Guid? trustedVerifiedJacobAccountID)
 {
     public AccountProfile? Get(Guid authenticatedAccountID)
-    {using var lease=DurableState.Acquire(statePath);return Read().Profiles.SingleOrDefault(p=>p.AccountID==authenticatedAccountID);}
+    {DemandAccountID(authenticatedAccountID);using var lease=DurableState.Acquire(statePath);return Read().Profiles.SingleOrDefault(p=>p.AccountID==authenticatedAccountID);}
     public bool HasAccountBoundFreeBusiness(Guid authenticatedAccountID)=>trustedVerifiedJacobAccountID is {} verified&&verified==authenticatedAccountID;
     public bool UsernameAvailable(Guid authenticatedAccountID,string username)
     {
+        DemandAccountID(authenticatedAccountID);
         var normalized=NormalizeUsername(username);
         if(normalized=="croakyjake" && authenticatedAccountID!=trustedVerifiedJacobAccountID)return false;
         using var lease=DurableState.Acquire(statePath);
@@ -21,13 +22,16 @@ public sealed class ProfileService(string statePath,Guid? trustedVerifiedJacobAc
     }
     public AccountProfile Update(Guid authenticatedAccountID,long expectedRevision,JsonElement patch)
     {
+        DemandAccountID(authenticatedAccountID);
         if(patch.ValueKind!=JsonValueKind.Object)throw new ArgumentException("invalid_profile_patch");
         using var lease=DurableState.Acquire(statePath);var state=Read();var current=state.Profiles.SingleOrDefault(p=>p.AccountID==authenticatedAccountID);
         if((current?.Revision??0)!=expectedRevision)throw new InvalidOperationException("profile_revision_conflict");
+        if(current?.Revision==long.MaxValue)throw new InvalidOperationException("profile_revision_exhausted");
         var values=new Dictionary<string,string?>{["name"]=current?.Name,["username"]=current?.Username,["icon"]=current?.Icon,["pronouns"]=current?.Pronouns,["job"]=current?.Job};
+        var seen=new HashSet<string>(StringComparer.Ordinal);
         foreach(var field in patch.EnumerateObject())
         {
-            if(!values.ContainsKey(field.Name)||field.Value.ValueKind is not (JsonValueKind.Null or JsonValueKind.String))throw new ArgumentException("invalid_profile_field");
+            if(!seen.Add(field.Name)||!values.ContainsKey(field.Name)||field.Value.ValueKind is not (JsonValueKind.Null or JsonValueKind.String))throw new ArgumentException("invalid_profile_field");
             values[field.Name]=field.Value.ValueKind==JsonValueKind.Null?null:field.Value.GetString()?.Trim();
         }
         if(string.IsNullOrWhiteSpace(values["name"])||string.IsNullOrWhiteSpace(values["username"]))throw new ArgumentException("name_and_username_required");
@@ -41,6 +45,8 @@ public sealed class ProfileService(string statePath,Guid? trustedVerifiedJacobAc
             Audit=state.Audit.Append(new(Guid.NewGuid(),authenticatedAccountID,"ProfileUpdated",DateTimeOffset.UtcNow,profile.Revision)).ToArray()});return profile;
     }
     private static string? Empty(string? value)=>string.IsNullOrEmpty(value)?null:value;
+    private static void DemandAccountID(Guid accountID)
+    {if(accountID==Guid.Empty)throw new ArgumentException("invalid_authenticated_account");}
     private static string NormalizeUsername(string value)
     {
         if(string.IsNullOrWhiteSpace(value))throw new ArgumentException("username_required");
@@ -48,5 +54,24 @@ public sealed class ProfileService(string statePath,Guid? trustedVerifiedJacobAc
         if(string.IsNullOrWhiteSpace(normalized))throw new ArgumentException("username_required");
         return normalized;
     }
-    private ProfileState Read()=>File.Exists(statePath)?DurableState.Read<ProfileState>(statePath):new([],[]);
+    private ProfileState Read()
+    {
+        if(!File.Exists(statePath))return new([],[]);
+        var state=DurableState.Read<ProfileState>(statePath);
+        if(state.Profiles is null||state.Audit is null||
+            state.Profiles.Any(p=>p is null||p.AccountID==Guid.Empty||string.IsNullOrWhiteSpace(p.Name)||string.IsNullOrWhiteSpace(p.Username)||p.Revision<1||p.Name.Length>1000||p.Username.Length>1000||p.Icon?.Length>1000||p.Pronouns?.Length>1000||p.Job?.Length>1000)||
+            state.Profiles.Select(p=>p.AccountID).Distinct().Count()!=state.Profiles.Count||
+            state.Audit.Any(a=>a is null||a.AuditEventID==Guid.Empty||a.AccountID==Guid.Empty||string.IsNullOrWhiteSpace(a.Action)||a.At==default||a.Revision<1||!state.Profiles.Any(p=>p.AccountID==a.AccountID&&p.Revision>=a.Revision)||a.Action!="ProfileUpdated")||
+            state.Audit.Select(a=>a.AuditEventID).Distinct().Count()!=state.Audit.Count||
+            state.Audit.Select(a=>(a.AccountID,a.Revision)).Distinct().Count()!=state.Audit.Count)
+            throw new InvalidDataException("invalid_profile_state");
+        try
+        {
+            if(state.Profiles.Select(p=>NormalizeUsername(p.Username)).Distinct(StringComparer.Ordinal).Count()!=state.Profiles.Count||
+                state.Profiles.Any(p=>NormalizeUsername(p.Username)=="croakyjake"&&p.AccountID!=trustedVerifiedJacobAccountID))
+                throw new InvalidDataException("invalid_profile_state");
+        }
+        catch(ArgumentException error){throw new InvalidDataException("invalid_profile_state",error);}
+        return state;
+    }
 }

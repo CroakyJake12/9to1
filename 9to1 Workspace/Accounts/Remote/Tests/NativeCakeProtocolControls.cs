@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Globalization;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -23,6 +25,22 @@ internal static class Program
         {
             ("EdDSA_pair_real_loopback_PKCE_and_canonical_current", ValidPairAsync),
             ("canonical_profile_and_sessions_envelopes", EnvelopesAsync),
+            ("profile_create_update_readback_collision_reservation", ProfileCreateUpdateReadbackAsync),
+            ("retired_profile_mutation_retains_original_outcome_privately", RetiredProfileMutationOutcomeAsync),
+            ("profile_update_without_session_refused_before_dispatch", ProfileUpdateWithoutSessionAsync),
+            ("profile_patch_transport_unknown_remains_completion_unknown", ProfilePatchTransportUnknownAsync),
+            ("profile_identity_must_match_authenticated_principal", ProfilePrincipalMismatchAsync),
+            ("invalid_profile_patch_fields_rejected_before_request", InvalidProfilePatchAsync),
+            ("malformed_successful_profile_patch_response_is_completion_unknown", MalformedProfilePatchResponseAsync),
+            ("retry_after_metadata_on_mutation_is_not_retried", RetryAfterMutationMetadataAsync),
+            ("retry_after_delta_metadata", () => RetryAfterMetadataAsync("23", 23)),
+            ("retry_after_max_representable_delta_metadata", () => RetryAfterMetadataAsync("2147483647", int.MaxValue)),
+            ("retry_after_future_date_metadata", () => RetryAfterMetadataAsync(new DateTimeOffset(2026,10,5,17,0,30,TimeSpan.Zero).ToString("r",CultureInfo.InvariantCulture), 30)),
+            ("retry_after_past_date_clamped_to_zero", () => RetryAfterMetadataAsync(new DateTimeOffset(2026,10,5,16,59,0,TimeSpan.Zero).ToString("r",CultureInfo.InvariantCulture), 0)),
+            ("retry_after_missing_metadata", () => RetryAfterMetadataAsync(null, null)),
+            ("retry_after_malformed_metadata", () => RetryAfterMetadataAsync("not-a-date", null)),
+            ("retry_after_negative_delta_metadata", () => RetryAfterMetadataAsync("-7", null)),
+            ("retry_after_unrepresentable_delta_metadata", () => RetryAfterMetadataAsync("2147483648", null)),
             ("memory_expiry_refuses_before_API", ExpiryAsync),
             ("server_revocation_clears_memory", RevokedAsync),
             ("server_permission_denial_is_not_login_success", DeniedAsync),
@@ -40,10 +58,25 @@ internal static class Program
             ("loopback_wrong_method_refused_before_exchange", () => CallbackRefusedAsync("method")),
             ("originating_callback_resource_is_same_and_single_use", OriginatingSingleUseAsync)
         };
-        foreach (var mutation in new[] { "kid", "signature", "issuer", "id-audience", "nonce", "subject", "access-subject", "sid", "id-sid", "azp", "client-id", "missing-client", "resource", "scope", "expired" })
+        foreach (var mutation in new[] { "kid", "signature", "issuer", "id-audience", "nonce", "subject", "access-subject", "sid", "id-sid", "azp", "client-id", "missing-client", "resource", "scope", "missing-profile-write-scope", "expired" })
         {
             var exact = mutation;
             controls.Add(("signed_pair_refuses_" + exact, () => SignedPairRefusedAsync(exact)));
+        }
+        foreach(var mutation in new[]{"blank-name","null-name","blank-username","null-username","unnormalizable-username","zero-profile-revision","oversized-profile-optional"})
+        {
+            var exact=mutation;
+            controls.Add(("profile_response_refuses_"+exact,()=>ProfileShapeRefusedAsync(exact)));
+        }
+        foreach(var mutation in new[]{"null-session","foreign-session-account","blank-device","oversized-device","default-session-created","session-expiry-not-after-create","session-revoked-before-create","blank-session-client"})
+        {
+            var exact=mutation;
+            controls.Add(("session_response_refuses_"+exact,()=>SessionShapeRefusedAsync(exact)));
+        }
+        foreach(var mutation in new[]{"blank-current-display-name","null-current-display-name"})
+        {
+            var exact=mutation;
+            controls.Add(("current_response_refuses_"+exact,()=>CurrentShapeRefusedAsync(exact)));
         }
         var failed = 0;
         foreach (var control in controls)
@@ -75,6 +108,7 @@ internal static class Program
         Check.Equal(NativeCakeClientOptions.RequiredRedirect, rig.Browser.Query["redirect_uri"]);
         Check.Equal("code", rig.Browser.Query["response_type"]);
         Check.True(NativeCakeClientOptions.Scopes.SetEquals(rig.Browser.Query["scope"].Split(' ')));
+        Check.True(rig.Browser.Query["scope"].Split(' ').Contains("cake:profile:write",StringComparer.Ordinal));
         Check.Equal(1, rig.Browser.Requests);
         var callback = rig.Browser.CallbackTask ?? throw new InvalidOperationException("No original callback task");
         await callback;
@@ -95,6 +129,248 @@ internal static class Program
         Check.Equal(1, actualSessions.Length);
         Check.Equal(rig.SessionId, actualSessions[0].SessionID);
         Check.Equal(rig.Account, actualSessions[0].AccountID);
+    });
+
+    private static Task ProfileCreateUpdateReadbackAsync() => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.ProfileExists=false;
+        rig.ProfileRevision=0;
+        using var create=JsonDocument.Parse("{\"name\":\"  Sample User  \",\"username\":\" @new-user \"}");
+        var created=await rig.Track(rig.Session.UpdateProfileAsync(0,create.RootElement.Clone(),rig.Token));
+        Check.Equal(ApiFailure.None,created.Failure);
+        var createdProfile=created.Value??throw new InvalidOperationException("Profile creation returned no profile");
+        Check.Equal(rig.Account,createdProfile.AccountID);
+        Check.Equal("Sample User",createdProfile.Name);
+        Check.Equal("@new-user",createdProfile.Username);
+        Check.Equal(1L,createdProfile.Revision);
+        Check.True(createdProfile.Icon is null&&createdProfile.Pronouns is null&&createdProfile.Job is null);
+
+        var initialRead=await rig.Track(rig.Session.ProfileAsync(rig.Token));
+        Check.Equal(ApiFailure.None,initialRead.Failure);
+        Check.Equal(createdProfile,initialRead.Value);
+
+        using var addOptionals=JsonDocument.Parse("{\"icon\":\" avatar \",\"pronouns\":\" they/them \",\"job\":\" Engineer \"}");
+        var updated=await rig.Track(rig.Session.UpdateProfileAsync(createdProfile.Revision,addOptionals.RootElement.Clone(),rig.Token));
+        Check.Equal(ApiFailure.None,updated.Failure);
+        var updatedProfile=updated.Value??throw new InvalidOperationException("Profile update returned no profile");
+        Check.Equal("Sample User",updatedProfile.Name);
+        Check.Equal("@new-user",updatedProfile.Username);
+        Check.Equal("avatar",updatedProfile.Icon);
+        Check.Equal("they/them",updatedProfile.Pronouns);
+        Check.Equal("Engineer",updatedProfile.Job);
+        var updatedRead=await rig.Track(rig.Session.ProfileAsync(rig.Token));
+        Check.Equal(updatedProfile,updatedRead.Value);
+
+        using var clearOptionals=JsonDocument.Parse("{\"icon\":null,\"pronouns\":\" \",\"job\":null}");
+        var cleared=await rig.Track(rig.Session.UpdateProfileAsync(updatedProfile.Revision,clearOptionals.RootElement.Clone(),rig.Token));
+        Check.Equal(ApiFailure.None,cleared.Failure);
+        var clearedProfile=cleared.Value??throw new InvalidOperationException("Profile clear returned no profile");
+        Check.Equal("Sample User",clearedProfile.Name);
+        Check.Equal("@new-user",clearedProfile.Username);
+        Check.True(clearedProfile.Icon is null&&clearedProfile.Pronouns is null&&clearedProfile.Job is null);
+
+        Task<ApiResult<RemoteProfile>> detachedUpdate;
+        using(var borrowedDocument=JsonDocument.Parse("{\"icon\":\"detached-icon\",\"job\":\"detached-job\"}"))
+            detachedUpdate=rig.Track(rig.Session.UpdateProfileAsync(clearedProfile.Revision,borrowedDocument.RootElement,rig.Token));
+        var detachedResult=await detachedUpdate;
+        Check.Equal(ApiFailure.None,detachedResult.Failure);
+        var detachedProfile=detachedResult.Value??throw new InvalidOperationException("Detached profile update returned no profile");
+        Check.Equal("detached-icon",detachedProfile.Icon);
+        Check.Equal("detached-job",detachedProfile.Job);
+        var detachedRead=await rig.Track(rig.Session.ProfileAsync(rig.Token));
+        Check.Equal(detachedProfile,detachedRead.Value);
+        var beforeRefusals=(await rig.Track(rig.Session.ProfileAsync(rig.Token))).Value!;
+
+        using var collision=JsonDocument.Parse("{\"username\":\"taken-user\"}");
+        var collisionResult=await rig.Track(rig.Session.UpdateProfileAsync(detachedProfile.Revision,collision.RootElement.Clone(),rig.Token));
+        Check.Equal(ApiFailure.Conflict,collisionResult.Failure);
+        Check.Equal(beforeRefusals,(await rig.Track(rig.Session.ProfileAsync(rig.Token))).Value);
+
+        using var reserved=JsonDocument.Parse("{\"username\":\"@CroakyJake\"}");
+        var reservedResult=await rig.Track(rig.Session.UpdateProfileAsync(detachedProfile.Revision,reserved.RootElement.Clone(),rig.Token));
+        Check.Equal(ApiFailure.PermissionDenied,reservedResult.Failure);
+        Check.Equal(beforeRefusals,(await rig.Track(rig.Session.ProfileAsync(rig.Token))).Value);
+
+        using var stale=JsonDocument.Parse("{\"job\":\"Must not apply\"}");
+        var staleResult=await rig.Track(rig.Session.UpdateProfileAsync(updatedProfile.Revision,stale.RootElement.Clone(),rig.Token));
+        Check.Equal(ApiFailure.Conflict,staleResult.Failure);
+        Check.Equal(beforeRefusals,(await rig.Track(rig.Session.ProfileAsync(rig.Token))).Value);
+
+        if(!rig.Session.TryGetCurrentSnapshot(out var firstSnapshot))throw new InvalidOperationException("Initial account session disappeared");
+        var firstSession=firstSnapshot!;
+        var signedOut=await rig.Track(rig.Session.SignOutAsync(rig.Token));
+        Check.Equal(ApiFailure.None,signedOut.Failure);
+        Check.True(signedOut.Value!.Acknowledged);
+        Check.False(rig.Session.TryGetCurrentSnapshot(out _));
+        var reopened=await rig.Track(rig.Session.SignInAsync(rig.Token));
+        Check.Equal(rig.Account,reopened.AccountId);
+        Check.True(reopened.SessionId!=firstSession.SessionId);
+        Check.True(reopened.ExpiresAt>rig.Clock.Now);
+        Check.True(rig.Session.TryGetCurrentSnapshot(out var reopenedSnapshot));
+        Check.Equal(reopened,reopenedSnapshot!);
+        var activeSessions=await rig.Track(rig.Session.SessionsAsync(rig.Token));
+        Check.Equal(ApiFailure.None,activeSessions.Failure);
+        Check.Equal(reopened.SessionId,activeSessions.Value!.Single().SessionID);
+        var reopenedProfile=await rig.Track(rig.Session.ProfileAsync(rig.Token));
+        Check.Equal(ApiFailure.None,reopenedProfile.Failure);
+        Check.Equal(beforeRefusals,reopenedProfile.Value);
+    });
+
+    private static Task RetiredProfileMutationOutcomeAsync() => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        var patchEntered=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var patchReply=new TaskCompletionSource<HttpResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.ProfilePatchEntered=patchEntered;
+        rig.ProfilePatchReply=(_,_)=>{patchEntered.TrySetResult();return patchReply.Task;};
+        using var fields=JsonDocument.Parse("{\"job\":\"Committed before session switch\"}");
+        var pending=rig.Track(rig.Session.UpdateProfileAsync(7,fields.RootElement.Clone(),rig.Token));
+        await patchEntered.Task.WaitAsync(rig.Token);
+
+        var signedOut=await rig.Track(rig.Session.SignOutAsync(rig.Token));
+        Check.Equal(ApiFailure.None,signedOut.Failure);
+        var reopened=await rig.Track(rig.Session.SignInAsync(rig.Token));
+        Check.Equal(rig.Account,reopened.AccountId);
+
+        patchReply.SetResult(rig.ProfileResponse()); // The fake server committed before holding this ACK.
+        var retiredResult=await pending;
+        Check.Equal(ApiFailure.InvalidToken,retiredResult.Failure);
+        Check.True(retiredResult.Value is null); // Never publish the prior session's profile into its replacement.
+        Check.Equal(1,rig.ProfileMutationCount);
+
+        var issuedField=typeof(NativeCakeAccountSession).GetField("issued",BindingFlags.Instance|BindingFlags.NonPublic)
+            ??throw new InvalidOperationException("No native account task custody");
+        var issued=(System.Collections.IEnumerable)(issuedField.GetValue(rig.Session)??throw new InvalidOperationException("Missing issued-task custody"));
+        var work=issued.Cast<object>().Single(item=>ReferenceEquals(item.GetType().GetField("Task",BindingFlags.Instance|BindingFlags.NonPublic)?.GetValue(item),pending));
+        var observationField=work.GetType().GetField("ProfileMutationObservation",BindingFlags.Instance|BindingFlags.NonPublic)
+            ??throw new InvalidOperationException("No private profile mutation outcome custody");
+        var observation=observationField.GetValue(work)??throw new InvalidOperationException("Original profile mutation outcome was discarded");
+        var observationType=observation.GetType();
+        var original=(ApiResult<RemoteProfile>?)observationType.GetProperty("OriginalResult")?.GetValue(observation)
+            ??throw new InvalidOperationException("Missing original profile mutation response");
+        Check.Equal(ApiFailure.None,original.Failure);
+        Check.Equal("Committed before session switch",original.Value!.Job);
+        Check.True((bool)observationType.GetProperty("ClientApiInvoked")!.GetValue(observation)!);
+        Check.True(observationType.GetProperty("HttpDispatchObserved")!.GetValue(observation) is null);
+        Check.True((bool)observationType.GetProperty("ContextRetired")!.GetValue(observation)!);
+        Check.False((bool)observationType.GetProperty("CallerCancelled")!.GetValue(observation)!);
+
+        var current=await rig.Track(rig.Session.ProfileAsync(rig.Token));
+        Check.Equal(ApiFailure.None,current.Failure);
+        Check.Equal(original.Value,current.Value);
+        Check.True(((System.Collections.IEnumerable)issuedField.GetValue(rig.Session)!).Cast<object>().Contains(work));
+        Check.True(ReferenceEquals(observation,observationField.GetValue(work))); // Next admission retains the unacknowledged original outcome.
+    });
+
+    private static Task ProfileUpdateWithoutSessionAsync() => WithRigAsync(async rig =>
+    {
+        using var fields=JsonDocument.Parse("{\"job\":\"must not dispatch\"}");
+        var result=await rig.Track(rig.Session.UpdateProfileAsync(7,fields.RootElement.Clone(),rig.Token));
+        Check.Equal(ApiFailure.InvalidToken,result.Failure);
+        Check.True(result.Value is null);
+        Check.Equal(0,rig.ProfileMutationCount);
+    });
+
+    private static Task ProfilePatchTransportUnknownAsync() => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.ProfileStatus=HttpStatusCode.BadGateway;
+        using var fields=JsonDocument.Parse("{\"job\":\"possibly committed\"}");
+        var result=await rig.Track(rig.Session.UpdateProfileAsync(7,fields.RootElement.Clone(),rig.Token));
+        Check.Equal(ApiFailure.CompletionUnknown,result.Failure);
+        Check.True(result.Value is null);
+        Check.Equal(1,rig.ProfileMutationCount);
+    });
+
+    private static Task InvalidProfilePatchAsync() => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        foreach(var raw in new[]{"{\"username\":\"first\",\"username\":\"second\"}","{\"name\":\" \"}","{\"name\":null}","{\"username\":\"\"}","{\"username\":null}","{\"username\":\"@@@\"}","{\"unknown\":\"value\"}","{\"name\":42}"})
+        {
+            using var fieldsDocument=JsonDocument.Parse(raw);
+            var result=await rig.Track(rig.UpdateProfileAsync(6,fieldsDocument.RootElement.Clone()));
+            Check.Equal(ApiFailure.InvalidInput,result.Failure);
+        }
+        using var oversizedName=JsonDocument.Parse(JsonSerializer.Serialize(new{name=new string('x',1001)}));
+        Check.Equal(ApiFailure.InvalidInput,(await rig.Track(rig.UpdateProfileAsync(6,oversizedName.RootElement.Clone()))).Failure);
+        using var createWithoutUsername=JsonDocument.Parse("{\"name\":\"New user\"}");
+        Check.Equal(ApiFailure.InvalidInput,(await rig.Track(rig.UpdateProfileAsync(0,createWithoutUsername.RootElement.Clone()))).Failure);
+        using var createWithoutName=JsonDocument.Parse("{\"username\":\"new-user\"}");
+        Check.Equal(ApiFailure.InvalidInput,(await rig.Track(rig.UpdateProfileAsync(0,createWithoutName.RootElement.Clone()))).Failure);
+        Check.Equal(0, rig.ProfileMutationCount);
+    });
+
+    private static Task ProfilePrincipalMismatchAsync() => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.ProfileAccountMismatch = true;
+        var result = await rig.Track(rig.Session.ProfileAsync(rig.Token));
+        Check.Equal(ApiFailure.InvalidResponse, result.Failure);
+        Check.True(result.Value is null);
+    });
+
+    private static Task MalformedProfilePatchResponseAsync() => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.ProfileMutation="unnormalizable-username";
+        using var fields=JsonDocument.Parse("{\"username\":\"valid-new-name\"}");
+        var result=await rig.Track(rig.UpdateProfileAsync(7,fields.RootElement.Clone()));
+        Check.Equal(ApiFailure.CompletionUnknown,result.Failure);
+        Check.True(result.Value is null);
+        Check.Equal(1,rig.ProfileMutationCount);
+    });
+
+    private static Task RetryAfterMetadataAsync(string? header,int? expectedSeconds) => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.CurrentStatus=(HttpStatusCode)429;
+        rig.RetryAfterHeader=header;
+        var result=await rig.Track(rig.Session.CurrentAsync(rig.Token));
+        Check.Equal(ApiFailure.Limited,result.Failure);
+        Check.True(result.Value is null);
+        Check.Equal(expectedSeconds,result.RetryAfterSeconds);
+        Check.Equal(2,rig.CurrentCount); // Sign-in plus one limited request; never retried.
+    });
+
+    private static Task RetryAfterMutationMetadataAsync() => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.ProfileStatus=(HttpStatusCode)429;
+        rig.RetryAfterHeader="31";
+        using var fields=JsonDocument.Parse("{\"username\":\"retry-later\"}");
+        var result=await rig.Track(rig.UpdateProfileAsync(7,fields.RootElement.Clone()));
+        Check.Equal(ApiFailure.Limited,result.Failure);
+        Check.Equal((int?)31,result.RetryAfterSeconds);
+        Check.True(result.Value is null);
+        Check.Equal(1,rig.ProfileMutationCount); // The operation is never resent automatically.
+    });
+
+    private static Task ProfileShapeRefusedAsync(string mutation) => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.ProfileMutation=mutation;
+        var result=await rig.Track(rig.Session.ProfileAsync(rig.Token));
+        Check.Equal(ApiFailure.InvalidResponse,result.Failure);
+        Check.True(result.Value is null);
+    });
+
+    private static Task SessionShapeRefusedAsync(string mutation) => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.SessionMutation=mutation;
+        var result=await rig.Track(rig.Session.SessionsAsync(rig.Token));
+        Check.Equal(ApiFailure.InvalidResponse,result.Failure);
+        Check.True(result.Value is null);
+    });
+
+    private static Task CurrentShapeRefusedAsync(string mutation) => WithRigAsync(async rig =>
+    {
+        await rig.Track(rig.Session.SignInAsync(rig.Token));
+        rig.CurrentMutation=mutation;
+        var result=await rig.Track(rig.Session.CurrentAsync(rig.Token));
+        Check.Equal(ApiFailure.InvalidResponse,result.Failure);
+        Check.True(result.Value is null);
     });
 
     private static Task ExpiryAsync() => WithRigAsync(async rig =>
@@ -344,14 +620,28 @@ internal sealed class Rig
     internal const string ClientId = "synthetic-native-client";
     internal readonly Guid Account = Guid.Parse("76cf1461-1394-4c32-9c62-cc315aac2ef9");
     internal readonly Guid SessionId = Guid.Parse("7be0d553-cbb9-4d92-b098-3c4a630ba00b");
+    internal readonly Guid ReopenedSessionId = Guid.Parse("9a240031-b0c4-4a95-a5cc-a0d784dff6e1");
+    internal Guid CurrentSessionId=>ExchangeCount>1?ReopenedSessionId:SessionId;
     internal readonly FixedClock Clock = new();
     internal readonly Browser Browser;
     internal readonly NativeCakeClientOptions Options = CreateOptions();
     internal readonly NativeCakeAccountSession Session;
     internal string Mutation = "";
+    internal string ProfileMutation = "";
+    internal string SessionMutation = "";
+    internal string CurrentMutation = "";
+    internal string? RetryAfterHeader;
     internal HttpStatusCode CurrentStatus = HttpStatusCode.OK;
+    internal HttpStatusCode ProfileStatus = HttpStatusCode.OK;
     internal HttpStatusCode ExchangeStatus = HttpStatusCode.OK;
-    internal int ExchangeCount, CurrentCount, MutationCount;
+    internal bool ProfileAccountMismatch;
+    internal bool ProfileExists=true;
+    internal long ProfileRevision=7;
+    internal string ProfileName="Synthetic owner",ProfileUsername="synthetic";
+    internal string? ProfileIcon,ProfilePronouns,ProfileJob;
+    internal TaskCompletionSource? ProfilePatchEntered;
+    internal Func<HttpRequestMessage,CancellationToken,Task<HttpResponseMessage>>? ProfilePatchReply;
+    internal int ExchangeCount, CurrentCount, MutationCount, ProfileMutationCount;
     internal Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>? DiscoveryReply, MutationReply;
     private readonly Ed25519PrivateKeyParameters privateKey = new(Enumerable.Range(1, 32).Select(i => (byte)i).ToArray(), 0);
     private readonly Ed25519PrivateKeyParameters otherKey = new(Enumerable.Range(33, 32).Select(i => (byte)i).ToArray(), 0);
@@ -382,6 +672,8 @@ internal sealed class Rig
     }
 
     internal T Track<T>(T original) where T : Task { originals.Add(original); return original; }
+    internal Task<ApiResult<RemoteProfile>> UpdateProfileAsync(long revision, JsonElement fields)
+        => api.UpdateProfileAsync(Jwt(false), revision, fields, Token);
     internal void Release(Action release) => releases.Add(release);
     internal void Own(IDisposable registration) => borrowedRegistrations.Add(registration);
     internal async Task<Exception> ExpectFailureAsync(Task original)
@@ -466,11 +758,75 @@ internal sealed class Rig
         if (path == "/api/account/current")
         {
             CurrentCount++;
-            if (CurrentStatus != HttpStatusCode.OK) return new HttpResponseMessage(CurrentStatus);
-            return Json(new { accountId = Account.ToString("D"), displayName = "Synthetic owner" });
+            if (CurrentStatus != HttpStatusCode.OK)
+            {
+                var response=new HttpResponseMessage(CurrentStatus);
+                if(RetryAfterHeader is not null&&!response.Headers.TryAddWithoutValidation("Retry-After",RetryAfterHeader))
+                    throw new InvalidOperationException("Synthetic Retry-After header was not retained");
+                return response;
+            }
+            var displayName=CurrentMutation switch{"blank-current-display-name"=>" ","null-current-display-name"=>(string?)null,_=>"Synthetic owner"};
+            return Json(new { accountId = Account.ToString("D"), displayName });
         }
-        if (path == "/api/account/profile") return Json(new { profile = new { accountId = Account.ToString("D"), name = "Synthetic owner", username = "synthetic", icon = (string?)null, pronouns = (string?)null, job = (string?)null, revision = 7 } });
-        if (path == "/api/account/sessions") return Json(new { sessions = new[] { new { sessionId = SessionId.ToString("D"), accountId = Account.ToString("D"), deviceName = "Synthetic Windows", createdAt = Clock.Now.AddMinutes(-1), expiresAt = Clock.Now.AddMinutes(5), revokedAt = (DateTimeOffset?)null, registeredClientId = ClientId } } });
+        if (path == "/api/account/profile")
+        {
+            if (request.Method == HttpMethod.Patch) ProfileMutationCount++;
+            if(request.Method==HttpMethod.Patch&&ProfileStatus!=HttpStatusCode.OK)
+            {
+                var response=new HttpResponseMessage(ProfileStatus);
+                if(RetryAfterHeader is not null&&!response.Headers.TryAddWithoutValidation("Retry-After",RetryAfterHeader))
+                    throw new InvalidOperationException("Synthetic Retry-After header was not retained");
+                return response;
+            }
+            if(request.Method==HttpMethod.Patch)
+            {
+                using var patchDocument=JsonDocument.Parse(await request.Content!.ReadAsStringAsync(ct));
+                var patchRoot=patchDocument.RootElement;
+                var expected=patchRoot.GetProperty("expectedRevision").GetInt64();
+                if(expected!=ProfileRevision||(expected==0&&ProfileExists)||(expected>0&&!ProfileExists))
+                    return new HttpResponseMessage(HttpStatusCode.Conflict);
+                var fields=patchRoot.GetProperty("fields");
+                if(fields.TryGetProperty("username",out var proposedUsername))
+                {
+                    var normalized=proposedUsername.GetString()!.Trim().TrimStart('@').Normalize(NormalizationForm.FormKC).ToLowerInvariant();
+                    if(normalized=="taken-user")return new HttpResponseMessage(HttpStatusCode.Conflict);
+                    if(normalized=="croakyjake")return new HttpResponseMessage(HttpStatusCode.Forbidden);
+                }
+                if(fields.TryGetProperty("name",out var nameField))ProfileName=nameField.GetString()!.Trim();
+                if(fields.TryGetProperty("username",out var usernameField))ProfileUsername=usernameField.GetString()!.Trim();
+                if(fields.TryGetProperty("icon",out var iconField))ProfileIcon=NormalizeOptional(iconField);
+                if(fields.TryGetProperty("pronouns",out var pronounsField))ProfilePronouns=NormalizeOptional(pronounsField);
+                if(fields.TryGetProperty("job",out var jobField))ProfileJob=NormalizeOptional(jobField);
+                ProfileExists=true;
+                ProfileRevision=expected+1;
+                if(ProfilePatchReply is {} held)
+                {
+                    ProfilePatchEntered?.TrySetResult();
+                    return await held(request,ct);
+                }
+            }
+            if(!ProfileExists)return new HttpResponseMessage(HttpStatusCode.NotFound);
+            var profileAccount = ProfileAccountMismatch ? Guid.NewGuid() : Account;
+            var name=ProfileMutation switch{"blank-name"=>" ","null-name"=>(string?)null,_=>"Synthetic owner"};
+            var username=ProfileMutation switch{"blank-username"=>" ","null-username"=>(string?)null,"unnormalizable-username"=>"@@@",_=>"synthetic"};
+            var job=ProfileMutation=="oversized-profile-optional"?new string('x',1001):null;
+            if(ProfileMutation==""){name=ProfileName;username=ProfileUsername;job=ProfileJob;}
+            var icon=ProfileMutation==""?ProfileIcon:null;
+            var pronouns=ProfileMutation==""?ProfilePronouns:null;
+            var revision=ProfileMutation=="zero-profile-revision"?0:ProfileRevision;
+            return Json(new { profile = new { accountId = profileAccount.ToString("D"), name, username, icon, pronouns, job, revision } });
+        }
+        if (path == "/api/account/sessions")
+        {
+            if(SessionMutation=="null-session")return Json(new{sessions=new object?[]{null}});
+            var sessionAccount=SessionMutation=="foreign-session-account"?Guid.NewGuid():Account;
+            var created=SessionMutation=="default-session-created"?default:Clock.Now.AddMinutes(-1);
+            var expires=SessionMutation=="session-expiry-not-after-create"?created:Clock.Now.AddMinutes(5);
+            var revoked=SessionMutation=="session-revoked-before-create"?Clock.Now.AddMinutes(-2):(DateTimeOffset?)null;
+            var device=SessionMutation switch{"blank-device"=>" ","oversized-device"=>new string('x',121),_=>"Synthetic Windows"};
+            var client=SessionMutation=="blank-session-client"?" ":ClientId;
+            return Json(new { sessions = new[] { new { sessionId = CurrentSessionId.ToString("D"), accountId = sessionAccount.ToString("D"), deviceName = device, createdAt = created, expiresAt = expires, revokedAt = revoked, registeredClientId = client } } });
+        }
         if (path == "/api/account/signout")
         {
             MutationCount++;
@@ -479,6 +835,16 @@ internal sealed class Rig
         }
         throw new InvalidOperationException("Unexpected synthetic provider route " + path);
     }
+
+    private static string? NormalizeOptional(JsonElement value)
+    {
+        if(value.ValueKind==JsonValueKind.Null)return null;
+        var normalized=value.GetString()?.Trim();
+        return string.IsNullOrEmpty(normalized)?null:normalized;
+    }
+
+    internal HttpResponseMessage ProfileResponse()
+        =>Json(new {profile=new {accountId=Account.ToString("D"),name=ProfileName,username=ProfileUsername,icon=ProfileIcon,pronouns=ProfilePronouns,job=ProfileJob,revision=ProfileRevision}});
 
     private string Jwt(bool identity)
     {
@@ -491,7 +857,7 @@ internal sealed class Rig
         if (identity) payload["nonce"] = Browser.Query["nonce"];
         else
         {
-            payload["sid"] = SessionId.ToString("D");
+            payload["sid"] = CurrentSessionId.ToString("D");
             payload["azp"] = ClientId; payload["client_id"] = ClientId;
             payload["scope"] = string.Join(' ', NativeCakeClientOptions.Scopes.Order(StringComparer.Ordinal));
         }
@@ -509,6 +875,7 @@ internal sealed class Rig
             case "missing-client" when !identity: payload.Remove("azp"); payload.Remove("client_id"); break;
             case "resource" when !identity: payload["aud"] = "https://different-resource.invalid"; break;
             case "scope" when !identity: payload["scope"] = "openid profile"; break;
+            case "missing-profile-write-scope" when !identity: payload["scope"] = string.Join(' ',NativeCakeClientOptions.Scopes.Where(x=>x!="cake:profile:write").Order(StringComparer.Ordinal)); break;
             case "expired" when identity: payload["iat"] = now - 300; payload["exp"] = now; break;
         }
         var kid = identity && Mutation == "kid" ? "unknown-key" : "synthetic-ed25519";

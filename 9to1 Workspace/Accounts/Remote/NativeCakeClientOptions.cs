@@ -7,7 +7,7 @@ public sealed record NativeCakeClientOptions(string Issuer,string PublicClientId
  Uri DiscoveryUri,Uri AuthorizationUri,Uri TokenUri,Uri JwksUri)
 {
  public const string RequiredRedirect="http://127.0.0.1:43821/cake-id/callback/";
- public static IReadOnlySet<string> Scopes {get;}=new[]{"openid","profile","cake:account:read","cake:profile:read","cake:sessions:read","cake:sessions:revoke"}.ToFrozenSet(StringComparer.Ordinal);
+  public static IReadOnlySet<string> Scopes {get;}=new[]{"openid","profile","cake:account:read","cake:profile:read","cake:profile:write","cake:sessions:read","cake:sessions:revoke"}.ToFrozenSet(StringComparer.Ordinal);
  public NativeCakeClientOptions Capture()
  {
   static bool Https(Uri u)=>u.IsAbsoluteUri&&u.Scheme=="https"&&u.UserInfo.Length==0&&u.Query.Length==0&&u.Fragment.Length==0;

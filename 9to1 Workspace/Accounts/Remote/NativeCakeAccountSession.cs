@@ -1,5 +1,7 @@
 using NineToOne.Accounts.Oidc;
 using NineToOne.Accounts.Remote;
+using System.Text;
+using System.Text.Json;
 namespace NineToOne.Accounts.Native;
 
 public sealed record NativeCakeAccountSnapshot(Guid AccountId,Guid SessionId,string DisplayName,DateTimeOffset ExpiresAt);
@@ -9,6 +11,8 @@ public interface INativeCakeAccountSession:IAsyncDisposable
  Task<NativeCakeAccountSnapshot> SignInAsync(CancellationToken ct);
  Task<ApiResult<RemoteCurrent>> CurrentAsync(CancellationToken ct);
  Task<ApiResult<RemoteProfile>> ProfileAsync(CancellationToken ct);
+ Task<ApiResult<RemoteProfile>> UpdateProfileAsync(long expectedRevision,JsonElement fields,CancellationToken ct)
+  =>Task.FromResult(new ApiResult<RemoteProfile>(null,ApiFailure.Unavailable));
  Task<ApiResult<RemoteSession[]>> SessionsAsync(CancellationToken ct);
  Task<ApiResult<RemoteMutationAcknowledgement>> SignOutAsync(CancellationToken ct);
  bool TryGetCurrentSnapshot(out NativeCakeAccountSnapshot? snapshot);
@@ -54,22 +58,52 @@ public sealed class NativeCakeAccountSession:INativeCakeAccountSession
    },ct);}catch{signing=false;throw;}
   }
  }
- public Task<ApiResult<RemoteCurrent>> CurrentAsync(CancellationToken ct)=>ReadAsync((a,c,t)=>a.CurrentForHostAsync(c.AccessToken,()=>CurrentCredential(c),t),ct);
- public Task<ApiResult<RemoteProfile>> ProfileAsync(CancellationToken ct)=>ReadAsync((a,c,t)=>a.ProfileForHostAsync(c.AccessToken,()=>CurrentCredential(c),t),ct);
- public Task<ApiResult<RemoteSession[]>> SessionsAsync(CancellationToken ct)=>ReadAsync((a,c,t)=>a.SessionsAsync(c.AccessToken,t),ct);
- private Task<ApiResult<T>> ReadAsync<T>(Func<WorkerAccountApiClient,NativeCakeCredential,CancellationToken,Task<ApiResult<T>>> body,CancellationToken ct)
+  public Task<ApiResult<RemoteCurrent>> CurrentAsync(CancellationToken ct)=>WithCurrentCredentialAsync((a,c,t)=>a.CurrentForHostAsync(c.AccessToken,()=>CurrentCredential(c),t),ct);
+  public Task<ApiResult<RemoteProfile>> ProfileAsync(CancellationToken ct)=>WithCurrentCredentialAsync((a,c,t)=>a.ProfileForHostAsync(c.AccessToken,()=>CurrentCredential(c),t),ct);
+  public Task<ApiResult<RemoteProfile>> UpdateProfileAsync(long expectedRevision,JsonElement fields,CancellationToken ct)
+  {
+   if(fields.ValueKind!=JsonValueKind.Object||Encoding.UTF8.GetByteCount(fields.GetRawText())>65536)
+    return Task.FromResult(new ApiResult<RemoteProfile>(null,ApiFailure.InvalidInput));
+   var capturedFields=default(JsonElement);
+   return WithCurrentCredentialAsync((a,c,t)=>a.UpdateProfileAsync(c.AccessToken,expectedRevision,capturedFields,t),ct,
+    ()=>capturedFields=fields.Clone(),retainProfileMutationOutcome:true);
+  }
+  public Task<ApiResult<RemoteSession[]>> SessionsAsync(CancellationToken ct)=>WithCurrentCredentialAsync((a,c,t)=>a.SessionsAsync(c.AccessToken,t),ct);
+  private Task<ApiResult<T>> WithCurrentCredentialAsync<T>(Func<WorkerAccountApiClient,NativeCakeCredential,CancellationToken,Task<ApiResult<T>>> body,CancellationToken ct,Action? prepareBeforeIssue=null,bool retainProfileMutationOutcome=false)
  {
   lock(sync)
   {
-   DemandAdmission();ct.ThrowIfCancellationRequested();var original=credential;var originalApi=api;
-   if(originalApi is null||original is null||!CurrentCredential(original))return Task.FromResult(new ApiResult<T>(default,ApiFailure.InvalidToken));
-   return Issue(async token=>
-   {
-    if(!CurrentCredential(original))return new(default,ApiFailure.InvalidToken);
-    var result=await NativeCakeErrors.Await(body(originalApi,original,token)).ConfigureAwait(false);token.ThrowIfCancellationRequested();
-    lock(sync){if(!CurrentCredential(original))return new(default,ApiFailure.InvalidToken);if(result.Failure==ApiFailure.InvalidToken){credential=null;generation++;}}
-    return result;
-   },ct);
+    DemandAdmission();ct.ThrowIfCancellationRequested();var original=credential;var originalApi=api;
+    if(originalApi is null||original is null||!CurrentCredential(original))return Task.FromResult(new ApiResult<T>(default,ApiFailure.InvalidToken));
+    prepareBeforeIssue?.Invoke();
+    var profileMutationWork=retainProfileMutationOutcome?new Work():null;
+    return Issue(async token=>
+    {
+     if(!CurrentCredential(original))
+     {
+       if(profileMutationWork is not null)profileMutationWork.ProfileMutationObservation=new(new(null,ApiFailure.InvalidToken),false,false,true,token.IsCancellationRequested);
+      return new(default,ApiFailure.InvalidToken);
+     }
+     var result=await NativeCakeErrors.Await(body(originalApi,original,token)).ConfigureAwait(false);
+     if(profileMutationWork is not null)profileMutationWork.ProfileMutationObservation=ProfileMutationObservationFor(result,true,null,false,false);
+     try{token.ThrowIfCancellationRequested();}
+     catch(OperationCanceledException)
+     {
+      if(profileMutationWork is not null)profileMutationWork.ProfileMutationObservation=ProfileMutationObservationFor(result,true,null,!CurrentCredential(original),true);
+      throw;
+     }
+     lock(sync)
+     {
+      if(!CurrentCredential(original))
+      {
+        if(profileMutationWork is not null)profileMutationWork.ProfileMutationObservation=ProfileMutationObservationFor(result,true,null,true,false);
+       return new(default,ApiFailure.InvalidToken);
+      }
+       if(result.Failure==ApiFailure.InvalidToken){credential=null;generation++;}
+       if(profileMutationWork is not null)profileMutationWork.ProfileMutationObservation=null;
+       return result;
+      }
+    },ct,profileMutationWork);
   }
  }
  public Task<ApiResult<RemoteMutationAcknowledgement>> SignOutAsync(CancellationToken ct)
@@ -109,13 +143,13 @@ public sealed class NativeCakeAccountSession:INativeCakeAccountSession
  private bool CurrentCredential(NativeCakeCredential original){lock(sync){if(credential is {} current&&clock.GetUtcNow()>=current.ExpiresAt){credential=null;generation++;}return !closing&&ReferenceEquals(credential,original);}}
  private void DemandAdmission()
  {
-  ObjectDisposedException.ThrowIf(closing,this);issued.RemoveAll(x=>x.Task?.IsCompletedSuccessfully==true);
+   ObjectDisposedException.ThrowIf(closing,this);issued.RemoveAll(x=>x.Task?.IsCompletedSuccessfully==true&&x.ProfileMutationObservation is null);
   if(capacitySealed)throw capacityRefusal;if(issued.Count>=16){capacitySealed=true;throw capacityRefusal;}
  }
- private Task<T> Issue<T>(Func<CancellationToken,Task<T>> body,CancellationToken ct)
- {
-  // Caller holds the SAME owner lock; publish before any cancellation/body callback.
-  var record=new Work();var gate=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+  private Task<T> Issue<T>(Func<CancellationToken,Task<T>> body,CancellationToken ct,Work? taskWork=null)
+  {
+   // Caller holds the SAME owner lock; publish before any cancellation/body callback.
+   var record=taskWork??new Work();var gate=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
   var actual=RunIssueAsync(gate.Task,body,ct,record);record.Task=actual;issued.Add(record);gate.SetResult();return actual;
  }
  private async Task<T> RunIssueAsync<T>(Task gate,Func<CancellationToken,Task<T>> body,CancellationToken caller,Work record)
@@ -159,5 +193,8 @@ public sealed class NativeCakeAccountSession:INativeCakeAccountSession
   try{stop.Dispose();}catch(Exception e){NativeCakeErrors.Add(errors,e);}
   NativeCakeErrors.Throw(errors);
  }
- private sealed class Work {internal Task? Task;internal Exception[] Errors=[];}
+   private static ProfileMutationObservation ProfileMutationObservationFor<T>(T result,bool clientApiInvoked,bool? httpDispatchObserved,bool contextRetired,bool callerCancelled)
+    =>result is ApiResult<RemoteProfile> profileResult?new(profileResult,clientApiInvoked,httpDispatchObserved,contextRetired,callerCancelled):throw new InvalidOperationException("profile_mutation_result_contract_mismatch");
+   private sealed record ProfileMutationObservation(ApiResult<RemoteProfile> OriginalResult,bool ClientApiInvoked,bool? HttpDispatchObserved,bool ContextRetired,bool CallerCancelled);
+  private sealed class Work {internal Task? Task;internal Exception[] Errors=[];internal ProfileMutationObservation? ProfileMutationObservation;}
 }

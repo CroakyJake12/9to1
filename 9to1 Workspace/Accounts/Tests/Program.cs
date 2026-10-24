@@ -88,11 +88,75 @@ try
     var jacob=Guid.NewGuid();var profiles=new ProfileService(Path.Combine(root,"profiles.json"),jacob);
     var personal=profiles.Update(id,0,JsonSerializer.SerializeToElement(new{name="User",username="normal-user"}));
     Assert(personal.Icon is null&&personal.Pronouns is null&&personal.Job is null,"only Name and Username required");
+    Assert(profiles.Get(Guid.NewGuid()) is null,"unknown account has no local profile identity");
+    try{profiles.Update(id,personal.Revision-1,JsonSerializer.SerializeToElement(new{name="Stale"}));throw new Exception("stale profile update accepted");}catch(InvalidOperationException error)when(error.Message=="profile_revision_conflict"){}
     var withJob=profiles.Update(id,personal.Revision,JsonSerializer.SerializeToElement(new{job="Developer"}));
     Assert(withJob.Name=="User"&&withJob.Job=="Developer","partial optional update preserves required identity");
-    Assert(profiles.Update(id,withJob.Revision,JsonSerializer.SerializeToElement(new{job=(string?)null})).Job is null,"optional Job cleared");
+    var clearedJob=profiles.Update(id,withJob.Revision,JsonSerializer.SerializeToElement(new{job=(string?)null}));
+    Assert(clearedJob.Job is null,"optional Job cleared");
+    var renamed=profiles.Update(id,clearedJob.Revision,JsonSerializer.SerializeToElement(new{username="renamed-user"}));
+    Assert(renamed.AccountID==id&&profiles.Get(id)?.AccountID==id,"username rename preserves canonical account identity");
+    var trustedProfile=profiles.Update(jacob,0,JsonSerializer.SerializeToElement(new{name="Trusted",username="trusted-user"}));
+    var trustedRenamed=profiles.Update(jacob,trustedProfile.Revision,JsonSerializer.SerializeToElement(new{username="trusted-renamed"}));
+    var trustedReserved=profiles.Update(jacob,trustedRenamed.Revision,JsonSerializer.SerializeToElement(new{username="@CroakyJake"}));
+    Assert(trustedReserved.AccountID==jacob&&profiles.Get(jacob)?.AccountID==jacob&&profiles.HasAccountBoundFreeBusiness(jacob),"trusted reserved handle and rename preserve canonical identity and bound Business entitlement");
     Assert(!profiles.UsernameAvailable(id,"@cRoAkYjAkE")&&profiles.UsernameAvailable(jacob,"@CroakyJake"),"reserved trusted account only");
     Assert(!profiles.HasAccountBoundFreeBusiness(id)&&profiles.HasAccountBoundFreeBusiness(jacob),"free Business identity-bound");
+    var beforeInvalidPrincipal=File.ReadAllBytes(Path.Combine(root,"profiles.json"));
+    try{profiles.Get(Guid.Empty);throw new Exception("empty profile principal accepted");}catch(ArgumentException error)when(error.Message.Contains("invalid_authenticated_account",StringComparison.Ordinal)){}
+    try{profiles.UsernameAvailable(Guid.Empty,"candidate");throw new Exception("empty availability principal accepted");}catch(ArgumentException error)when(error.Message.Contains("invalid_authenticated_account",StringComparison.Ordinal)){}
+    try{profiles.Update(Guid.Empty,0,JsonSerializer.SerializeToElement(new{name="Invalid",username="invalid"}));throw new Exception("empty update principal accepted");}catch(ArgumentException error)when(error.Message.Contains("invalid_authenticated_account",StringComparison.Ordinal)){}
+    Assert(File.ReadAllBytes(Path.Combine(root,"profiles.json")).SequenceEqual(beforeInvalidPrincipal),"invalid principal attempts do not mutate profile persistence");
+    var profilePath=Path.Combine(root,"profiles.json");var validProfileBytes=File.ReadAllText(profilePath);
+    using var duplicateProfileFieldDocument=JsonDocument.Parse("{\"username\":\"first\",\"username\":\"second\"}");
+    foreach(var invalidPatch in new[]{
+        JsonSerializer.SerializeToElement(new{name="  "}),
+        JsonSerializer.SerializeToElement(new{username=""}),
+        JsonSerializer.SerializeToElement(new{username="@@@"}),
+        JsonSerializer.SerializeToElement(new{unknown="value"}),
+        JsonSerializer.SerializeToElement(new{name=42}),
+        duplicateProfileFieldDocument.RootElement.Clone()})
+    {
+        try{profiles.Update(id,renamed.Revision,invalidPatch);throw new Exception("invalid profile patch accepted: "+invalidPatch.GetRawText());}
+        catch(ArgumentException error)when(error.Message is "name_and_username_required" or "username_required" or "invalid_profile_field"){}
+        Assert(File.ReadAllText(profilePath)==validProfileBytes,"invalid profile patch leaves persisted identity unchanged: "+invalidPatch.GetRawText());
+    }
+    try{profiles.Update(id,renamed.Revision,JsonSerializer.SerializeToElement(new{username="@CrOaKyJaKe"}));throw new Exception("reserved handle case variant accepted");}
+    catch(UnauthorizedAccessException error)when(error.Message=="reserved_username"){}
+    Assert(File.ReadAllText(profilePath)==validProfileBytes,"reserved handle denial leaves persisted profile unchanged");
+    var invalidProfileJson=System.Text.Json.Nodes.JsonNode.Parse(validProfileBytes)!;
+    invalidProfileJson["State"]!["Profiles"]![0]!["Revision"]=0;
+    var invalidProfileBytes=invalidProfileJson.ToJsonString();File.WriteAllText(profilePath,invalidProfileBytes);
+    try{profiles.Get(id);throw new Exception("corrupt profile state accepted");}catch(InvalidDataException error)when(error.Message=="invalid_profile_state"){}
+    Assert(File.ReadAllText(profilePath)==invalidProfileBytes,"corrupt profile state preserved and fails closed");
+    File.WriteAllText(profilePath,validProfileBytes);
+    foreach(var corruption in new[]{"foreign-audit-owner","future-audit-revision","duplicate-audit-event","normalized-username-collision","compatibility-username-collision","reserved-username-foreign-owner"})
+    {
+        var corruptState=System.Text.Json.Nodes.JsonNode.Parse(validProfileBytes)!;
+        var audit=corruptState["State"]!["Audit"]!;
+        if(corruption=="normalized-username-collision")corruptState["State"]!["Profiles"]![1]!["Username"]="@RENAMED-USER";
+        else if(corruption=="compatibility-username-collision")corruptState["State"]!["Profiles"]![1]!["Username"]="ＲＥＮＡＭＥＤ－ＵＳＥＲ";
+        else if(corruption=="reserved-username-foreign-owner")
+        {
+            corruptState["State"]!["Profiles"]![1]!["Username"]="trusted-unique-user";
+            corruptState["State"]!["Profiles"]![0]!["Username"]="@CrOaKyJaKe";
+        }
+        else if(corruption=="foreign-audit-owner")audit[0]!["AccountID"]=Guid.NewGuid().ToString();
+        else if(corruption=="future-audit-revision")audit[0]!["Revision"]=long.MaxValue;
+        else audit[1]!["AuditEventID"]=audit[0]!["AuditEventID"]!.GetValue<string>();
+        var corruptBytes=corruptState.ToJsonString();File.WriteAllText(profilePath,corruptBytes);
+        try{profiles.UsernameAvailable(id,"new-name");throw new Exception("corrupt profile state accepted: "+corruption);}catch(InvalidDataException error)when(error.Message=="invalid_profile_state"){}
+        Assert(File.ReadAllText(profilePath)==corruptBytes,"corrupt profile state preserved: "+corruption);
+    }
+    File.WriteAllText(profilePath,validProfileBytes);
+    var exhaustedState=System.Text.Json.Nodes.JsonNode.Parse(validProfileBytes)!;
+    exhaustedState["State"]!["Profiles"]![0]!["Revision"]=long.MaxValue;
+    var accountAudit=exhaustedState["State"]!["Audit"]!.AsArray().Where(entry=>Guid.Parse(entry!["AccountID"]!.GetValue<string>())==id).ToArray();
+    accountAudit[^1]!["Revision"]=long.MaxValue;
+    var exhaustedBytes=exhaustedState.ToJsonString();File.WriteAllText(profilePath,exhaustedBytes);
+    try{profiles.Update(id,long.MaxValue,JsonSerializer.SerializeToElement(new{name="No wrap",username="normal-user"}));throw new Exception("profile revision overflow accepted");}catch(InvalidOperationException error)when(error.Message=="profile_revision_exhausted"){}
+    Assert(File.ReadAllText(profilePath)==exhaustedBytes,"exhausted profile revision cannot overwrite durable state");
+    File.WriteAllText(profilePath,validProfileBytes);
     var organisations=new OrganisationService(Path.Combine(root,"organisations.json"),profiles);
     var org=organisations.CreateTrustedOrganisation(id,"Fixture company",BusinessAddOnKind.Business,"fixture-approved-billing");
     Assert(org.AddOn.Currency=="USD"&&org.AddOn.MonthlyPrice==5&&org.AddOn.SeatLimit==50,"organisation add-on separate fixed USD no seat fees");

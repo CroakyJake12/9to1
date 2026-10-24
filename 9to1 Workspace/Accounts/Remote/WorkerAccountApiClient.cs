@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using NineToOne.Accounts.Oidc;
 namespace NineToOne.Accounts.Remote;
@@ -20,30 +21,52 @@ public sealed class WorkerAccountApiClient : IDisposable
  internal WorkerAccountApiClient(Uri origin,OidcResourceConsumer consumer,TokenPolicy policy,TimeProvider clock,HttpMessageHandler handler)
  {if(origin.Scheme!="https"||origin.UserInfo.Length!=0||origin.AbsolutePath!="/"||origin.Query.Length!=0||origin.Fragment.Length!=0)throw new ArgumentException("Exact HTTPS Worker origin required");
   this.origin=origin;this.consumer=consumer;this.policy=policy;this.clock=clock;http=new(handler){Timeout=TimeSpan.FromSeconds(15)};}
- public Task<ApiResult<RemoteCurrent>> CurrentAsync(string token,CancellationToken ct)
-  =>SendAsync<RemoteCurrent>(HttpMethod.Get,"api/account/current",token,"cake:account:read",null,(x,id)=>x.AccountID==id,ct);
- public Task<ApiResult<RemoteProfile>> ProfileAsync(string token,CancellationToken ct)
-  =>SendAsync<RemoteProfile>(HttpMethod.Get,"api/account/profile",token,"cake:profile:read",null,(x,id)=>x.AccountID==id,ct);
+  public Task<ApiResult<RemoteCurrent>> CurrentAsync(string token,CancellationToken ct)
+   =>SendAsync<RemoteCurrent>(HttpMethod.Get,"api/account/current",token,"cake:account:read",null,(x,id)=>x.AccountID==id&&IsValidCurrent(x),ct);
+  public Task<ApiResult<RemoteProfile>> ProfileAsync(string token,CancellationToken ct)
+   =>SendAsync<RemoteProfile>(HttpMethod.Get,"api/account/profile",token,"cake:profile:read",null,(x,id)=>x.AccountID==id&&IsValidProfile(x),ct);
  // Denial-only private Web-host read admission; Worker independently validates all authority.
- public Task<ApiResult<RemoteCurrent>> CurrentForHostAsync(string token,Func<bool> readAdmission,CancellationToken ct)
-  =>SendAsync<RemoteCurrent>(HttpMethod.Get,"api/account/current",token,"cake:account:read",null,(x,id)=>x.AccountID==id,ct,readAdmission:readAdmission);
- public Task<ApiResult<RemoteProfile>> ProfileForHostAsync(string token,Func<bool> readAdmission,CancellationToken ct)
-  =>SendAsync<RemoteProfile>(HttpMethod.Get,"api/account/profile",token,"cake:profile:read",null,(x,id)=>x.AccountID==id,ct,readAdmission:readAdmission);
+  public Task<ApiResult<RemoteCurrent>> CurrentForHostAsync(string token,Func<bool> readAdmission,CancellationToken ct)
+   =>SendAsync<RemoteCurrent>(HttpMethod.Get,"api/account/current",token,"cake:account:read",null,(x,id)=>x.AccountID==id&&IsValidCurrent(x),ct,readAdmission:readAdmission);
+  public Task<ApiResult<RemoteProfile>> ProfileForHostAsync(string token,Func<bool> readAdmission,CancellationToken ct)
+   =>SendAsync<RemoteProfile>(HttpMethod.Get,"api/account/profile",token,"cake:profile:read",null,(x,id)=>x.AccountID==id&&IsValidProfile(x),ct,readAdmission:readAdmission);
  public Task<ApiResult<RemoteProfile>> UpdateProfileAsync(string token,long expectedRevision,JsonElement fields,CancellationToken ct)
  {
   var names=new HashSet<string>{"name","username","icon","pronouns","job"};
-  if(expectedRevision<1||expectedRevision==long.MaxValue||fields.ValueKind!=JsonValueKind.Object
-   ||System.Text.Encoding.UTF8.GetByteCount(fields.GetRawText())>65536)
-   return Task.FromResult(new ApiResult<RemoteProfile>(null,ApiFailure.InvalidInput));
-  foreach(var field in fields.EnumerateObject())
-   if(!names.Contains(field.Name)||field.Value.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)
-    ||(field.Value.ValueKind==JsonValueKind.String&&field.Value.GetString()!.Length>1000))
+    if(expectedRevision<0||expectedRevision==long.MaxValue||fields.ValueKind!=JsonValueKind.Object
+    ||System.Text.Encoding.UTF8.GetByteCount(fields.GetRawText())>65536)
     return Task.FromResult(new ApiResult<RemoteProfile>(null,ApiFailure.InvalidInput));
-  return SendAsync<RemoteProfile>(HttpMethod.Patch,"api/account/profile",token,"cake:profile:write",new{expectedRevision,fields=fields.Clone()},(x,id)=>x.AccountID==id&&x.Revision==expectedRevision+1,ct);
- }
- public Task<ApiResult<RemoteSession[]>> SessionsAsync(string token,CancellationToken ct)
-  =>SendAsync<RemoteSession[]>(HttpMethod.Get,"api/account/sessions",token,"cake:sessions:read",null,
-   (items,id)=>items.All(x=>x.AccountID==id&&x.SessionID!=Guid.Empty)&&items.Select(x=>x.SessionID).Distinct().Count()==items.Length,ct);
+   var seen=new HashSet<string>(StringComparer.Ordinal);
+    foreach(var field in fields.EnumerateObject())
+     if(!seen.Add(field.Name)||!names.Contains(field.Name)||field.Value.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)
+     ||(field.Value.ValueKind==JsonValueKind.String&&field.Value.GetString()!.Length>1000)
+     ||field.Name=="name"&&(field.Value.ValueKind!=JsonValueKind.String||string.IsNullOrWhiteSpace(field.Value.GetString()))
+      ||field.Name=="username"&&(field.Value.ValueKind!=JsonValueKind.String||!IsValidUsername(field.Value.GetString())))
+      return Task.FromResult(new ApiResult<RemoteProfile>(null,ApiFailure.InvalidInput));
+    if(expectedRevision==0&&(!seen.Contains("name")||!seen.Contains("username")))
+     return Task.FromResult(new ApiResult<RemoteProfile>(null,ApiFailure.InvalidInput));
+   return SendAsync<RemoteProfile>(HttpMethod.Patch,"api/account/profile",token,"cake:profile:write",new{expectedRevision,fields=fields.Clone()},(x,id)=>x.AccountID==id&&x.Revision==expectedRevision+1&&IsValidProfile(x),ct);
+  }
+  private static bool IsValidProfile(RemoteProfile profile)
+   =>profile.AccountID!=Guid.Empty&&!string.IsNullOrWhiteSpace(profile.Name)&&profile.Name.Length<=1000&&
+    IsValidUsername(profile.Username)&&profile.Username.Length<=1000&&(profile.Icon?.Length??0)<=1000&&
+    (profile.Pronouns?.Length??0)<=1000&&(profile.Job?.Length??0)<=1000&&profile.Revision>=1;
+  private static bool IsValidUsername(string? username)
+  {
+   if(string.IsNullOrWhiteSpace(username))return false;
+   try{return !string.IsNullOrWhiteSpace(username.Trim().TrimStart('@').Normalize(NormalizationForm.FormKC));}
+   catch(ArgumentException){return false;}
+  }
+  private static bool IsValidCurrent(RemoteCurrent current)
+   =>current.AccountID!=Guid.Empty&&!string.IsNullOrWhiteSpace(current.DisplayName);
+  private static bool IsValidSession(RemoteSession? session,Guid accountID)
+   =>session is not null&&session.AccountID==accountID&&session.SessionID!=Guid.Empty&&
+    !string.IsNullOrWhiteSpace(session.DeviceName)&&session.DeviceName.Length<=120&&session.CreatedAt!=default&&
+    session.ExpiresAt>session.CreatedAt&&(session.RevokedAt is null||session.RevokedAt.GetValueOrDefault()>=session.CreatedAt)&&
+    (session.RegisteredClientID is null||!string.IsNullOrWhiteSpace(session.RegisteredClientID));
+  public Task<ApiResult<RemoteSession[]>> SessionsAsync(string token,CancellationToken ct)
+   =>SendAsync<RemoteSession[]>(HttpMethod.Get,"api/account/sessions",token,"cake:sessions:read",null,
+    (items,id)=>items.All(x=>IsValidSession(x,id))&&items.Select(x=>x.SessionID).Distinct().Count()==items.Length,ct);
  public Task<ApiResult<RemoteMutationAcknowledgement>> SignOutAsync(string token,CancellationToken ct)
   =>SendAsync<RemoteMutationAcknowledgement>(HttpMethod.Post,"api/account/signout",token,"cake:sessions:revoke",null,(_,_)=>true,ct,true);
  public Task<ApiResult<RemoteMutationAcknowledgement>> RevokeSessionAsync(string token,Guid originalSelectedSessionId,CancellationToken ct)
@@ -69,7 +92,7 @@ public sealed class WorkerAccountApiClient : IDisposable
    using var response=await http.SendAsync(request,HttpCompletionOption.ResponseHeadersRead,deadline.Token);
    if(response.StatusCode==HttpStatusCode.Unauthorized)return new(default,ApiFailure.InvalidToken);
    if(response.StatusCode==HttpStatusCode.Forbidden)return new(default,ApiFailure.PermissionDenied);
-   if(response.StatusCode==(HttpStatusCode)429)return new(default,ApiFailure.Limited);
+    if(response.StatusCode==(HttpStatusCode)429)return new(default,ApiFailure.Limited,RetryAfterSeconds(response));
    if(response.StatusCode==HttpStatusCode.Conflict)return new(default,ApiFailure.Conflict);
    if(expectNoContent && response.StatusCode==HttpStatusCode.NoContent)
     return new((T)(object)new RemoteMutationAcknowledgement(true),ApiFailure.None);
@@ -94,6 +117,24 @@ public sealed class WorkerAccountApiClient : IDisposable
   }
   catch(Exception error)when(error is HttpRequestException or OperationCanceledException or JsonException)
   {return new(default,mutation?ApiFailure.CompletionUnknown:ApiFailure.Unavailable);}
- }
- public void Dispose()=>http.Dispose();
+  }
+  private int? RetryAfterSeconds(HttpResponseMessage response)
+  {
+   RetryConditionHeaderValue? retryAfter;
+   try{retryAfter=response.Headers.RetryAfter;}
+   catch(FormatException){return null;}
+   if(retryAfter is null)return null;
+   double seconds;
+   if(retryAfter.Delta is {} delta)
+   {
+    if(delta<TimeSpan.Zero)return null;
+    seconds=Math.Ceiling(delta.TotalSeconds);
+   }
+   else if(retryAfter.Date is {} date)
+    // An elapsed absolute retry date is valid and reports zero; it is not a fabricated delay.
+    seconds=Math.Ceiling(Math.Max(0,(date-clock.GetUtcNow()).TotalSeconds));
+   else return null;
+   return double.IsFinite(seconds)&&seconds>=0&&seconds<=int.MaxValue?(int)seconds:null;
+  }
+  public void Dispose()=>http.Dispose();
 }
