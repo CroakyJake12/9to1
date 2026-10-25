@@ -26,6 +26,20 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     private IReadOnlyList<SpaceBuilderFilesSourceOption> _filesChoices = [];
     private long? _filesChoicesRevision;
     private bool _sourcePickerBusy;
+    private bool _graphContextBusy;
+    private long _graphContextGeneration;
+    private IReadOnlyList<SpaceBuilderGraphContextChoice> _graphContextChoices = [];
+    private string _graphContextStatus = "Select an Append reviewed Space source node to choose its configured source.";
+    private sealed record GraphContextSnapshot(SpaceLayoutEditorPage Editor, SpaceGraphContextTarget Target,
+        SpaceBuilderDraft Draft, Guid SpaceId, long SpaceRevision, long DraftRevision, long ActiveRevision, long Generation);
+    private sealed class GraphContextInput(SpaceBuilderPage owner, GraphContextSnapshot snapshot,
+        SpaceContextReference source, IReadOnlyList<SpaceActivationAncestryRevision> ancestry)
+    {
+        internal readonly SpaceBuilderPage Owner = owner;
+        internal readonly GraphContextSnapshot Snapshot = snapshot;
+        internal readonly SpaceContextReference Source = source;
+        internal readonly IReadOnlyList<SpaceActivationAncestryRevision> Ancestry = ancestry;
+    }
     private readonly ExtensionManager? _extensions;
     private readonly SpaceBuilderCuiBindings _bindings;
     private readonly ICuiSceneReadiness _readiness;
@@ -79,7 +93,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             (capability, required) => { _controller.SetModelCapabilityRequired(capability, required); },
             allowed => { _controller.SetPersonalMemoryReadAllowed(allowed); },
             (kind, id, policy) => { _controller.SetCapabilityOverride(kind, id, policy); }, TryUpdateExamplePair,
-            () => _filesChoices, () => _filesSource is not null && !_sourcePickerBusy);
+            () => _filesChoices, () => _filesSource is not null && !_sourcePickerBusy,
+            () => _graphContextChoices, () => _graphContextStatus, CanChooseGraphContext);
         _controller.StateChanged += OnStateChanged;
         Document = document;
         _contentGrid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
@@ -432,6 +447,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private async ValueTask DispatchAsync(string command, object? parameter, CancellationToken token)
     {
+        if (command == "space-builder.graph-context.refresh") { await RefreshGraphContextChoicesAsync(token).ConfigureAwait(false); return; }
+        if (command == "space-builder.graph-context.assign") { await AssignGraphContextChoiceAsync(parameter, token).ConfigureAwait(false); return; }
         if (command == "space-builder.example.add" || command == "space-builder.example.remove")
         {
             lock (_gate)
@@ -655,6 +672,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private void OnStateChanged(SpaceBuilderState state)
     {
+        if (_graphContextChoices.FirstOrDefault()?.Input is GraphContextInput input && !ReferenceEquals(input.Snapshot.Draft, state.Draft))
+            InvalidateGraphContextChoices();
         if (_boardsChoicesRevision is { } revision && state.SpaceRevision != revision)
         { _boardsChoices = []; _boardsChoicesRevision = null; }
         if (_filesChoicesRevision is { } filesRevision && state.SpaceRevision != filesRevision)
@@ -666,6 +685,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private void BuildGraphEditor(SpaceDefinition space)
     {
+        if (_graphEditor is not null) _graphEditor.ContextTargetChanged -= OnGraphContextTargetChanged;
         _graphEditor?.Dispose();
         if (_graphEditor is not null) _contentGrid.Children.Remove(_graphEditor);
         _graphEditor = new SpaceLayoutEditorPage(space, OnGraphDraftChanged)
@@ -673,10 +693,147 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             Height = 460,
             IsVisible = false
         };
+        _graphEditor.ContextTargetChanged += OnGraphContextTargetChanged;
+        InvalidateGraphContextChoices();
         Grid.SetRow(_graphEditor, 1);
         _contentGrid.Children.Add(_graphEditor);
         UpdateGraphVisibility(_controller.State);
     }
+
+    internal SpaceLayoutEditorPage? OriginalGraphEditor => _graphEditor;
+    internal IReadOnlyList<SpaceBuilderGraphContextChoice> GraphContextChoices => _graphContextChoices;
+    private bool CanChooseGraphContext() => !_graphContextBusy && CanChooseGraphContextTarget();
+    private bool CanChooseGraphContextTarget() => CanMutate() && !_controller.State.IsBusy &&
+        _controller.State.EditorView == SpaceBuilderEditorView.Expert && _controller.State.ExpertSection == SpaceBuilderExpertSection.UserMessageLogic &&
+        _graphEditor?.CaptureContextTarget() is not null;
+    private void InvalidateGraphContextChoices()
+    {
+        _graphContextGeneration++; _graphContextChoices = [];
+        _graphContextStatus = "Select an Append reviewed Space source node, then refresh configured sources.";
+    }
+    private void OnGraphContextTargetChanged()
+    {
+        lock (_gate) { if (!_live || _work.IsRetiring) return; InvalidateGraphContextChoices(); }
+        RefreshBindings();
+    }
+    private bool IsCurrentGraphContextSnapshot(GraphContextSnapshot snapshot) => CanMutate() &&
+        ReferenceEquals(_graphEditor, snapshot.Editor) && snapshot.Editor.CaptureContextTarget() == snapshot.Target &&
+        ReferenceEquals(_controller.State.Draft, snapshot.Draft) && _controller.State.SpaceId == snapshot.SpaceId &&
+        _controller.State.SpaceRevision == snapshot.SpaceRevision && _controller.State.DraftRevision == snapshot.DraftRevision &&
+        _controller.State.ActiveRevision == snapshot.ActiveRevision && _graphContextGeneration == snapshot.Generation;
+    private static SpaceConfigurationDocument GraphContextConfiguration(SpaceDefinition current, SpaceBuilderDraft draft) =>
+        (current.DraftConfiguration ?? SpaceConfigurationDocument.From(current)) with
+        { ContextPolicy = draft.ContextPolicy, Inheritance = draft.Inheritance, ContextReferences = draft.ContextReferences.ToArray() };
+    private static bool MatchesGraphContextStore(SpaceDefinition? current, GraphContextSnapshot snapshot) => current is not null &&
+        !current.IsArchived && current.Id == snapshot.SpaceId && current.Revision == snapshot.SpaceRevision &&
+        current.DraftConfigurationRevision == snapshot.DraftRevision && current.ActiveConfigurationRevision == snapshot.ActiveRevision;
+    private string GraphContextLabel(SpaceContextReference source) =>
+        _filesChoices.FirstOrDefault(choice => choice.Id == source.CanonicalEntityId)?.Label ??
+        _boardsChoices.FirstOrDefault(choice => choice.Id == source.CanonicalEntityId)?.Label ??
+        (source.OwnerAppId + " / " + source.CanonicalEntityId);
+
+    internal Task RefreshGraphContextChoicesAsync(CancellationToken caller = default) => RunGraphContextOperationAsync(false, null, caller);
+    internal Task AssignGraphContextChoiceAsync(object? input, CancellationToken caller = default) => RunGraphContextOperationAsync(true, input, caller);
+    private Task RunGraphContextOperationAsync(bool assigning, object? requested, CancellationToken caller)
+    {
+        lock (_gate)
+        {
+            if (!CanChooseGraphContext()) return Task.CompletedTask;
+            _graphContextBusy = true;
+            _controllerOperations++;
+            try { return _work.RunAsync(async original =>
+            {
+                GraphContextSnapshot? snapshot = null;
+                try
+                {
+                    original.BindPublicationGuard(IsPresentationCurrent);
+                    using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, original.Token);
+                    GraphContextInput? selected = null;
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        original.DemandPublication();
+                        lock (_gate)
+                        {
+                            if (!CanChooseGraphContextTarget() || _graphEditor is not { } editor || editor.CaptureContextTarget() is not { } target) return;
+                            if (assigning)
+                            {
+                                if (requested is not GraphContextInput choice || !ReferenceEquals(choice.Owner, this) ||
+                                    !_graphContextChoices.Any(row => ReferenceEquals(row.Input, choice)) || !IsCurrentGraphContextSnapshot(choice.Snapshot))
+                                { _graphContextStatus = "The draft, node or source choice changed. Refresh configured sources."; _bindings.Refresh(); return; }
+                                selected = choice; snapshot = choice.Snapshot;
+                            }
+                            else
+                            {
+                                var state = _controller.State;
+                                if (state.SpaceRevision is not { } spaceRevision || state.DraftRevision is not { } draftRevision || state.ActiveRevision is not { } activeRevision) return;
+                                snapshot = new(editor, target, state.Draft, state.SpaceId, spaceRevision, draftRevision, activeRevision, ++_graphContextGeneration);
+                                _graphContextChoices = [];
+                            }
+                            _graphContextStatus = "Checking the current draft’s configured sources…"; _bindings.Refresh();
+                        }
+                    }).GetTask()).ConfigureAwait(false);
+                    if (snapshot is null) return;
+                    var current = await original.AwaitAsync(Source(() => _originalRegistry.ReadExistingAsync(snapshot.SpaceId, linked.Token))).ConfigureAwait(false);
+                    if (!MatchesGraphContextStore(current, snapshot))
+                    {
+                        await PublishGraphContextStatusAsync(original, snapshot, "The saved Space or draft changed. Reload before choosing a source.").ConfigureAwait(false);
+                        return;
+                    }
+                    void Own(Action body) => Source(() => { body(); return true; });
+                    void Retain(Task actual) => _ = original.AwaitAsync(actual);
+                    var resolved = await original.AwaitAsync(Source(() => new SpacePolicyResolver(_originalRegistry).ResolveDraftAsync(current!,
+                        GraphContextConfiguration(current!, snapshot.Draft), Own, Retain, linked.Token))).ConfigureAwait(false);
+                    var candidates = SpaceUserMessageGraph.GetConfiguredContextCandidates(resolved.Policy);
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
+                    {
+                        lock (_gate)
+                        {
+                            if (!IsCurrentGraphContextSnapshot(snapshot)) return;
+                            if (selected is not null)
+                            {
+                                if (!resolved.Ancestry.SequenceEqual(selected.Ancestry) || !candidates.Any(source => source == selected.Source))
+                                { InvalidateGraphContextChoices(); _graphContextStatus = "The configured source or ancestor policy changed. Refresh sources."; }
+                                else
+                                {
+                                    var assigned = Source(() => snapshot.Editor.TryAssignContextSource(snapshot.Target, selected.Source.ContextId));
+                                    _graphContextStatus = assigned ? "Configured source assigned to the graph draft. Validate before activating."
+                                        : "The selected graph node changed. Refresh sources before assigning.";
+                                }
+                            }
+                            else
+                            {
+                                _graphContextChoices = candidates.Select(source => new SpaceBuilderGraphContextChoice(
+                                    $"{snapshot.Target.NodeId:D}:{snapshot.Target.GraphRevision}:{source.ContextId:D}:{snapshot.Generation}",
+                                    GraphContextLabel(source), source.RevisionToken ?? "Current version at request time",
+                                    snapshot.Target.ContextId == source.ContextId.ToString("D"),
+                                    new GraphContextInput(this, snapshot, source, Array.AsReadOnly(resolved.Ancestry.ToArray())))).ToArray();
+                                _graphContextStatus = candidates.Count == 0 ? "No included read-intent sources fit this draft’s retrieval limit. Configure sources in Advanced or Files first."
+                                    : "Choose one configured source for this node. This does not read content or grant permission.";
+                            }
+                            _bindings.Refresh();
+                        }
+                    })).GetTask()).ConfigureAwait(false);
+                }
+                catch (Exception error)
+                {
+                    original.Capture(null, error);
+                    if (snapshot is not null)
+                        try { await PublishGraphContextStatusAsync(original, snapshot, "Configured sources could not be checked; the graph draft was preserved.").ConfigureAwait(false); }
+                        catch (Exception reportError) { original.Capture(null, reportError); }
+                    throw;
+                }
+                finally
+                {
+                    lock (_gate) { _controllerOperations--; _graphContextBusy = false; }
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(_bindings.Refresh)).GetTask()).ConfigureAwait(false);
+                }
+            }); }
+            catch { _controllerOperations--; _graphContextBusy = false; throw; }
+        }
+    }
+    private Task PublishGraphContextStatusAsync(DesktopOriginalWorkLifetime.Original original, GraphContextSnapshot snapshot, string message) =>
+        original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
+        { lock (_gate) { if (IsCurrentGraphContextSnapshot(snapshot)) { _graphContextChoices = []; _graphContextStatus = message; _bindings.Refresh(); } } })).GetTask());
 
     internal SpaceLayoutDocument? CurrentGraphDraft => _graphEditor is null
         ? null : SpaceLayoutEditorAdapter.FromEditor(_graphEditor.Editor.Document, _controller.State.Draft.LayoutDocument);
@@ -762,6 +919,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             try { await hostClose.ConfigureAwait(false); } catch (Exception error) { failures.Add(error); }
         await Source(() => Dispatcher.UIThread.InvokeAsync(() =>
         {
+            if (_graphEditor is not null) _graphEditor.ContextTargetChanged -= OnGraphContextTargetChanged;
             _graphEditor?.Dispose();
             _graphEditor = null;
             Content = null;

@@ -1,5 +1,6 @@
 <Cui id="spaces.builder" version="1">
   <Actions>
+    <Action name="AssignGraphContextSource" command="space-builder.graph-context.assign" parameter="{Binding graphSource.input}" />
     <Action name="AttachBoardsSource" command="space-builder.source.attach" parameter="{Binding source.input}" />
     <Action name="AttachFilesSource" command="space-builder.files.attach" parameter="{Binding file.input}" />
     <Action name="RemoveContextSource" command="space-builder.source.remove" parameter="{Binding context.id}" />
@@ -37,6 +38,18 @@
           <Text id="space-builder-expert-harness-panel" text="Harness Logic · shared Space NodeEditor · draft graph changes are saved with this Space." IsVisible="{Binding builder.expert.isHarness}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Text id="space-builder-expert-model-panel" text="Model Logic · shared Space NodeEditor · only registered and permitted node schemas can be activated." IsVisible="{Binding builder.expert.isModel}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Text id="space-builder-expert-user-message-panel" text="User Message Logic · shared Space NodeEditor · source messages remain immutable; transformations require registered nodes." IsVisible="{Binding builder.expert.isUserMessage}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container id="space-builder-graph-context-picker" Type="Vertical Stack" CellGap="6" Active="{Binding builder.expert.isUserMessage}">
+            <Text text="Source for selected graph node" font-weight="SemiBold" />
+            <Text text="Select an Append reviewed Space source node, then choose one configured source. This changes the draft only; content and permission are checked by its original owner at request time." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Button id="space-builder-graph-context-refresh" content="Choose or refresh configured sources" action="space-builder.graph-context.refresh" Interactive="{Binding builder.canChooseGraphContext}" />
+            <Repeat Source="{Binding builder.graphContextChoices}" As="graphSource" Key="{Binding graphSource.id}">
+              <Container Type="Horizontal Stack" CellGap="8">
+                <Button id="space-builder-graph-context-assign" content="{Binding graphSource.label}" action="AssignGraphContextSource" Selected="{Binding graphSource.selected}" accessible-name="{Binding graphSource.label}" />
+                <Text text="{Binding graphSource.revision}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              </Container>
+            </Repeat>
+            <Text id="space-builder-graph-context-status" text="{Binding builder.graphContextStatus}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" role="status" />
+          </Container>
           <Container id="space-builder-expert-files-panel" Type="Vertical Stack" CellGap="6" Active="{Binding builder.expert.isFiles}">
             <Text text="Files references · stable Files identity and revision are stored on this Space." foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
             <Text text="A reference records Space read intent only. Browsing does not read file contents or grant Home access. At request time, Files checks its current read permission and may provide a bounded UTF-8 preview; unsupported, binary, unmaterialized or oversized files are omitted." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />

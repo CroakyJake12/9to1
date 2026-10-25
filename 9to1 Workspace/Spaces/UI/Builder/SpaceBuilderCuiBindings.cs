@@ -32,6 +32,9 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Func<int, SpaceExamplePair, SpaceExamplePair, bool>? _updateExamplePair;
     private readonly Func<IReadOnlyList<SpaceBuilderFilesSourceOption>> _filesOptions;
     private readonly Func<bool> _canBrowseFiles;
+    private readonly Func<IReadOnlyList<SpaceBuilderGraphContextChoice>> _graphContextChoices;
+    private readonly Func<string> _graphContextStatus;
+    private readonly Func<bool> _canChooseGraphContext;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
     private static readonly string[] CapabilityOverrideOptions = ["Inherit", "Enabled", "Disabled"];
@@ -60,7 +63,10 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null,
         Func<int, SpaceExamplePair, SpaceExamplePair, bool>? updateExamplePair = null,
         Func<IReadOnlyList<SpaceBuilderFilesSourceOption>>? filesOptions = null,
-        Func<bool>? canBrowseFiles = null)
+        Func<bool>? canBrowseFiles = null,
+        Func<IReadOnlyList<SpaceBuilderGraphContextChoice>>? graphContextChoices = null,
+        Func<string>? graphContextStatus = null,
+        Func<bool>? canChooseGraphContext = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -84,6 +90,9 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _updateExamplePair = updateExamplePair;
         _filesOptions = filesOptions ?? (() => []);
         _canBrowseFiles = canBrowseFiles ?? (() => false);
+        _graphContextChoices = graphContextChoices ?? (() => []);
+        _graphContextStatus = graphContextStatus ?? (() => "The graph context-selection owner is unavailable in this host.");
+        _canChooseGraphContext = canChooseGraphContext ?? (() => false);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -149,6 +158,9 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
                         ? "Space read intent; Home authorization required" : reference.Permission.ToString(),
                     included = reference.IncludedAutomatically
                 }).ToArray(),
+            "builder.graphContextChoices" => _graphContextChoices(),
+            "builder.graphContextStatus" => _graphContextStatus(),
+            "builder.canChooseGraphContext" => _isCurrent() && state.CanEdit && !state.IsBusy && _canChooseGraphContext(),
             "builder.contextReferences" => state.Draft.ContextReferences.Select((reference, index) => new SpaceBuilderContextReferenceRow
             {
                 id = reference.ContextId.ToString("D"),
@@ -370,6 +382,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
 
     public bool? IsActionAvailable(string command) => command switch
     {
+        "space-builder.graph-context.refresh" or "space-builder.graph-context.assign" => _isCurrent() && _state().CanEdit && !_state().IsBusy && _canChooseGraphContext(),
         "space-builder.save" => _isCurrent() && _state().CanSave,
         "space-builder.activate" => _isCurrent() && _state().CanActivate,
         "space-builder.view.basic" or "space-builder.view.advanced" or "space-builder.view.expert" => _isCurrent(),
@@ -485,3 +498,8 @@ public sealed class SpaceBuilderExamplePairRow
     public string user { get; init; } = string.Empty;
     public string assistant { get; init; } = string.Empty;
 }
+
+/// <summary>Display metadata and an opaque original presentation input. It carries no
+/// resource/body permission and is never serialized as an executable graph contract.</summary>
+public sealed record SpaceBuilderGraphContextChoice(string Id, string Label, string Revision,
+    bool Selected, [property: System.Text.Json.Serialization.JsonIgnore] object Input);

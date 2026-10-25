@@ -91,6 +91,8 @@ internal static class SpaceLayoutEditorAdapter
     }
 }
 
+internal sealed record SpaceGraphContextTarget(Guid GraphId, long GraphRevision, Guid NodeId, string ContextId);
+
 internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
 {
     private readonly SpaceRegistry _registry;
@@ -255,6 +257,23 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         finally { _suppressDraftChange = false; }
     }
 
+    internal event Action? ContextTargetChanged;
+    internal SpaceGraphContextTarget? CaptureContextTarget()
+    {
+        if (_disposed || Editor.SelectedNodeIds.Count != 1) return null;
+        var node = Editor.Document.Nodes.SingleOrDefault(node => node.Id == Editor.SelectedNodeIds.Single());
+        return node?.TypeId == SpaceUserMessageGraph.AppendCapturedContextType
+            ? new(Editor.Document.GraphId, Editor.Document.Revision, node.Id, node.Metadata.GetValueOrDefault("contextId", "")) : null;
+    }
+    internal bool TryAssignContextSource(SpaceGraphContextTarget expected, Guid contextId)
+    {
+        if (contextId == Guid.Empty || CaptureContextTarget() != expected) return false;
+        var assigned = Editor.UpdateNode(expected.NodeId, current => current with
+        { Metadata = new Dictionary<string, string>(current.Metadata, StringComparer.Ordinal) { ["contextId"] = contextId.ToString("D") } });
+        if (assigned) OnSelectionChanged(Editor.SelectedNodeIds);
+        return assigned;
+    }
+
     private void AddRegisteredUserMessageNode(string typeId)
     {
         var canonical = SpaceUserMessageGraph.CreateNode(typeId);
@@ -265,6 +284,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
 
     private void OnSelectionChanged(IReadOnlyCollection<Guid> selectedIds)
     {
+        ContextTargetChanged?.Invoke();
         foreach (var (input, handler) in _configurationInputs) input.TextChanged -= handler;
         _configurationInputs.Clear();
         foreach (var (button, _, _, _, handler) in _configurationOptionButtons) button.Invoked -= handler;
