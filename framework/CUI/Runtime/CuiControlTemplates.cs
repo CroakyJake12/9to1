@@ -112,7 +112,12 @@ public static class CuiControlTemplates
         return presenter;
     }
 
-    private static Control Button(Button owner, INameScope scope) => Frame(owner, Presenter(owner, scope));
+    private static Control Button(Button owner, INameScope scope)
+    {
+        var frame = Frame(owner, Presenter(owner, scope));
+        _ = new CuiButtonFeedback(owner, frame);
+        return frame;
+    }
     private static Control Content(ContentControl owner, INameScope scope)
     {
         if (owner is ComboBoxItem) CuiPropertyPresentation.ConfigurePart(owner, CuiPropertyPresentation.TemplatePart.FloatingMenuItem);
