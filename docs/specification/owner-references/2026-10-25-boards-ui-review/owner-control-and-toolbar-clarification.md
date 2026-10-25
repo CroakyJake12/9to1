@@ -63,3 +63,32 @@ The owner requested these refinements after the first navy-layout render:
 
 The referenced capture predates the shared Glow patch. That observation is not
 evidence that the subsequently integrated theme code has rendered correctly.
+
+## Later live refinements (25 October, after the themed-table capture)
+
+- Horizontal toolbar scrolling is allowed. Keep one row and provide left/right
+  arrows over soft shadow backdrops instead of the large scrollbar. Preserve
+  keyboard and wheel access to every command; wrapping is superseded.
+- The surrounding background should be only slightly darker than the content
+  background. Boards uses purple for accents unless explicitly overridden; blue
+  selections and active-control fills must not dominate through a Home/Browse
+  loader identity or borrowed palette.
+- Undo and redo use recognizable icons. Editing/Viewing and Vertical/Free use
+  two-position sliding selectors. Vertical/Free are the owner's presentation
+  labels for the canonical page placement behavior, not a rename of the separate
+  freeform-object position lock. Preserve existing absolute positions and data.
+- Make section headings slightly larger again. Section icons are configurable
+  and coloured, with contrast adapted to the current background. Offer a fixed
+  filled-icon family and a few live name-based generated suggestions in exactly
+  that design scheme. Do not report static name matching as actual generation.
+- Block insert/reorder controls appear only while their element is hovered or
+  focused (including keyboard focus). List Add item follows the same behavior.
+  Keep stable layout, accessible hit targets and correct vertical alignment.
+- Repair the visibly clipped table border; maintain its themed cell/header
+  appearance and explicit user overrides.
+- Give the bottom Add page or section action a pill container specifically;
+  this does not authorize turning the rest of the interface into pills again.
+
+These later explicit decisions supersede any intermediate wrapping proposal or
+static capture. Implementation, source compilation, basic rendering and full
+acceptance remain separate states.
