@@ -163,10 +163,10 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
             DemandAlive();
             preparation = await AwaitOnUiAsync(() => choice.PrepareCloseAsync(token)).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("Canvas refused to close its owner chooser; preserve the actual view.");
-            await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false);
-            dialog = null;
             await AwaitOnUiAsync(preparation.BeginClose).ConfigureAwait(false);
             accepted = true;
+            await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false);
+            dialog = null;
             await AwaitOnUiAsync(choice.CloseAndDrainAsync).ConfigureAwait(false);
             await route.CloseAndDrainAsync().ConfigureAwait(false);
             var reference = new BoardEmbeddedArtifactReference("canvas", selected.ArtifactId,
@@ -188,13 +188,13 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
                         preparation = await AwaitOnUiAsync(() => choice.PrepareCloseAsync(CancellationToken.None)).ConfigureAwait(false);
                     if (preparation is null)
                         throw new InvalidOperationException("Canvas chooser still has original Home/native work; retain its visible owner and refuse cleanup.");
+                    await AwaitOnUiAsync(preparation.BeginClose).ConfigureAwait(false);
+                    accepted = true;
                     if (dialog is not null)
                     {
                         await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false);
                         dialog = null;
                     }
-                    await AwaitOnUiAsync(preparation.BeginClose).ConfigureAwait(false);
-                    accepted = true;
                     await AwaitOnUiAsync(choice.CloseAndDrainAsync).ConfigureAwait(false);
                 }
                 catch (Exception error) { failures.Add(error); }
@@ -668,10 +668,10 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
                     _preparation = await AwaitOnUiAsync(() => choice.PrepareCloseAsync(CancellationToken.None)).ConfigureAwait(false);
                 if (_preparation is null && choice.IsAlive)
                     throw new InvalidOperationException("Canvas still has pending Home/native work; keep its chooser owner retained.");
-                if (dialog is not null)
-                    await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false);
                 if (_preparation is not null && choice.IsAlive)
                     await AwaitOnUiAsync(_preparation.BeginClose).ConfigureAwait(false);
+                if (dialog is not null)
+                    await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false);
                 await AwaitOnUiAsync(choice.CloseAndDrainAsync).ConfigureAwait(false);
                 await route.CloseAndDrainAsync().ConfigureAwait(false);
                 lifetime.Cancel();
