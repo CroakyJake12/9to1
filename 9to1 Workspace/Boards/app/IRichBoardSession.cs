@@ -65,6 +65,7 @@ public sealed class RichBoardBlock
     public int TableRows { get; set; }
     public int TableCols { get; set; }
     public List<double> ColumnWidths { get; set; } = [];
+    public List<double> RowHeights { get; set; } = [];
     public RichImageView? Image { get; set; }
     public RichDividerView? Divider { get; set; }
     public RichGraphView? Graph { get; set; }

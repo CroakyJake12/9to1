@@ -415,7 +415,10 @@ public static class BlockRenderer
 
         var grid = new Grid();
         for (var r = 0; r < rows; r++)
-            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+        {
+            var height = r < block.RowHeights.Count ? block.RowHeights[r] : 0;
+            grid.RowDefinitions.Add(new RowDefinition(height > 0 ? new GridLength(height) : GridLength.Auto));
+        }
         for (var c = 0; c < cols; c++)
         {
             var width = c < block.ColumnWidths.Count && block.ColumnWidths[c] > 0
