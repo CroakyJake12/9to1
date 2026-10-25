@@ -21,7 +21,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     private readonly Func<HomeDeepLink, Task, bool> _queue;
     private readonly Func<HomeDeepLink, CancellationToken, Task>? _prepareNavigation;
     private readonly Func<HomeArtifactReference, CancellationToken, Task<BoardEmbeddedArtifactReference?>>? _selectArtifact;
-    private readonly TaskCompletionSource<BoardEmbeddedArtifactReference?>? _selection = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<BoardEmbeddedArtifactReference?> _selection = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
     private readonly TextBox _search = new() { MaxLength = 256 };
