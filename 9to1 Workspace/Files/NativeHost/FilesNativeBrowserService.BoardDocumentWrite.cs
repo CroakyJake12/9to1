@@ -651,7 +651,7 @@ public sealed partial class FilesNativeBrowserService
         private static bool HasExpectedRevision(FilesRevisionId? actual, string expected) =>
             Guid.TryParseExact(expected, "D", out var parsed) && actual?.Value == parsed;
 
-        private static string? NormalizeSha256(string? value)
+        internal static string? NormalizeSha256(string? value)
         {
             if (value?.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) == true) value = value[7..];
             return value is { Length: 64 } && value.All(Uri.IsHexDigit) ? value.ToUpperInvariant() : null;
