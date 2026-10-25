@@ -425,7 +425,7 @@ public sealed partial class FilesNativeBrowserService
                     CurrentRevisionId: { } fileRevision } fileRow || parentId.Value != operation.Folder.Id.Value ||
                 fileRow.Id.Value != operation.FileId || fileRow.Name != operation.DisplayName ||
                 fileRow.SizeBytes != operation.Payload.LongLength ||
-                !StringComparer.OrdinalIgnoreCase.Equals(FilesNativeBrowserService.NormalizeSha256(fileRow.ContentHash), operation.PayloadHash) ||
+                !StringComparer.OrdinalIgnoreCase.Equals(BoardDocumentWriteOwner.NormalizeSha256(fileRow.ContentHash), operation.PayloadHash) ||
                 fileRow.LocationId != parentRow.LocationId ||
                 fileRevision.Value != operation.FileRevisionId || !FilesNativeBrowserService.IsBoardDocumentCandidate(fileRow))
                 return Unknown();
