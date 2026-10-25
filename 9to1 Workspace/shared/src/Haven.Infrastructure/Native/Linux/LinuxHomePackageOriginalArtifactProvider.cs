@@ -24,7 +24,7 @@ public sealed class LinuxHomePackageOriginalArtifactProvider : IHomePackageOrigi
     private readonly ConditionalWeakTable<HomePackageOriginalArtifactObservation, Evidence> _issued = new();
     private sealed record Evidence(LinuxHomePackageOriginalArtifactProvider Owner, string RegistrySha256,
         string CatalogueRevision, string SignedSha256, string PayloadSha256);
-    private sealed record Row(HomePackageArtifactDescriptor Descriptor, byte[] Signed, byte[] Payload);
+    internal sealed record Row(HomePackageArtifactDescriptor Descriptor, byte[] Signed, byte[] Payload);
     private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web)
     { MaxDepth = 16, UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow };
 
@@ -69,7 +69,7 @@ public sealed class LinuxHomePackageOriginalArtifactProvider : IHomePackageOrigi
             return null;
         var enrollment = retained.Deserialize<HomePackageOriginalPublisherEnrollmentRecord>(Web)
             ?? throw new InvalidDataException("The retained original publisher enrollment is empty.");
-        var rows = ReadCatalogue(enrollment, cancellationToken);
+        var rows = ReadCatalogue(enrollment, _abi, cancellationToken);
         if (!rows.TryGetValue(request.PackageId, out var row) ||
             request.RequestedVersion is not null && request.RequestedVersion != row.Descriptor.Version ||
             request.RequestedChannel is not null && request.RequestedChannel != row.Descriptor.Channel ||
@@ -119,7 +119,8 @@ public sealed class LinuxHomePackageOriginalArtifactProvider : IHomePackageOrigi
             : throw new InvalidDataException("The canonical package registry requires recovery: " + read.Failure?.Code);
     }
 
-    private Dictionary<string, Row> ReadCatalogue(HomePackageOriginalPublisherEnrollmentRecord enrollment, CancellationToken token)
+    internal static Dictionary<string, Row> ReadCatalogue(HomePackageOriginalPublisherEnrollmentRecord enrollment,
+        string expectedAbi, CancellationToken token)
     {
         if (enrollment.SchemaVersion != HomePackageOriginalPublisherEnrollmentRecord.RetainedCatalogueSchemaVersion ||
             !Identifier(enrollment.IssuerKeyId) || !Text(enrollment.CatalogueRevision, 1024) ||
@@ -133,16 +134,26 @@ public sealed class LinuxHomePackageOriginalArtifactProvider : IHomePackageOrigi
             HomePackageOriginalPublisherEnrollmentRecord.MaximumRetainedCatalogueBytes);
         if (!Digest(catalogueBytes).Equals(enrollment.CatalogueSha256, StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("The exact retained original catalogue failed integrity.");
+        return ReadCatalogueBytes(catalogueBytes, enrollment.IssuerKeyId, enrollment.CatalogueRevision,
+            enrollment.HomePackageId, enrollment.RootPackageId, enrollment.SelectedPackageIds, expectedAbi, token);
+    }
+
+    internal static Dictionary<string, Row> ReadCatalogueBytes(byte[] catalogueBytes, string issuer, string revision,
+        string homePackageId, string rootPackageId, IReadOnlyList<string> selectedPackageIds, string expectedAbi, CancellationToken token)
+    {
+        if (!Identifier(issuer) || !Text(revision, 1024) || !Identifier(homePackageId) || !Identifier(rootPackageId) ||
+            homePackageId == rootPackageId || catalogueBytes.Length is < 1 or > HomePackageOriginalPublisherEnrollmentRecord.MaximumRetainedCatalogueBytes)
+            throw new InvalidDataException("The bounded original catalogue identity tuple is invalid.");
         // Reuse the original installer's maintained catalogue DTO; do not introduce
         // another catalogue schema, package database or publisher enrollment format.
         var catalogue = JsonSerializer.Deserialize<NativeWindowsHomeInstallerBootstrapAdmission.Catalogue>(catalogueBytes, Web)
             ?? throw new InvalidDataException("The original retained catalogue is empty.");
         var packages = catalogue.Packages?.Take(129).ToArray();
         var mandatory = catalogue.MandatoryPackageIds?.Take(129).ToArray();
-        var selected = enrollment.SelectedPackageIds?.Take(129).ToArray();
-        if (catalogue.SchemaVersion != 1 || catalogue.IssuerKeyId != enrollment.IssuerKeyId ||
-            catalogue.CatalogueRevision != enrollment.CatalogueRevision || catalogue.HomePackageId != enrollment.HomePackageId ||
-            catalogue.RootPackageId != enrollment.RootPackageId || packages is not { Length: >= 2 and <= 128 } ||
+        var selected = selectedPackageIds?.Take(129).ToArray();
+        if (catalogue.SchemaVersion != 1 || catalogue.IssuerKeyId != issuer ||
+            catalogue.CatalogueRevision != revision || catalogue.HomePackageId != homePackageId ||
+            catalogue.RootPackageId != rootPackageId || packages is not { Length: >= 2 and <= 128 } ||
             mandatory is not { Length: >= 2 and <= 128 } || selected is not { Length: >= 2 and <= 128 } ||
             mandatory.Any(id => !Identifier(id)) || selected.Any(id => !Identifier(id)) ||
             mandatory.Distinct(StringComparer.Ordinal).Count() != mandatory.Length ||
@@ -160,14 +171,14 @@ public sealed class LinuxHomePackageOriginalArtifactProvider : IHomePackageOrigi
             var descriptor = HomePackageOriginalArtifactDescriptorParser.Parse(signed, payload, catalogue.CatalogueRevision,
                 new(basic.PackageId, HomePackageAction.Install, "retained.catalogue.observation", basic.Version, basic.Channel, catalogue.CatalogueRevision)).Descriptor;
             using var envelope = JsonDocument.Parse(signed, new JsonDocumentOptions { MaxDepth = 8 });
-            if (envelope.RootElement.GetProperty("issuerKeyId").GetString() != enrollment.IssuerKeyId ||
-                descriptor.Platform != "linux" || descriptor.Abi != _abi ||
+            if (envelope.RootElement.GetProperty("issuerKeyId").GetString() != issuer ||
+                descriptor.Platform != "linux" || descriptor.Abi != expectedAbi ||
                 !rows.TryAdd(descriptor.PackageId, new(descriptor, signed, payload)))
                 throw new InvalidDataException("An original package issuer/platform/ABI tuple is inconsistent or duplicated.");
         }
-        if (!rows.TryGetValue(enrollment.HomePackageId, out var home) || home.Descriptor.AppId != "home" ||
-            !rows.TryGetValue(enrollment.RootPackageId, out var root) || root.Descriptor.AppId != "root" ||
-            !mandatory.Contains(enrollment.HomePackageId) || !mandatory.Contains(enrollment.RootPackageId) ||
+        if (!rows.TryGetValue(homePackageId, out var home) || home.Descriptor.AppId != "home" ||
+            !rows.TryGetValue(rootPackageId, out var root) || root.Descriptor.AppId != "root" ||
+            !mandatory.Contains(homePackageId) || !mandatory.Contains(rootPackageId) ||
             mandatory.Any(id => !rows.ContainsKey(id) || !selected.Contains(id)) || selected.Any(id => !rows.ContainsKey(id)))
             throw new InvalidDataException("The original catalogue must retain its genuine Home/Root and all mandatory/selected package identities.");
         return rows;

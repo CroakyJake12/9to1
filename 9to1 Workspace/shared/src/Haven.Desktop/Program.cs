@@ -30,6 +30,13 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+#if !ANDROID
+        if (Services.LinuxHomePublisherEnrollmentCommand.IsInvocation(args))
+        {
+            Environment.ExitCode = Services.LinuxHomePublisherEnrollmentCommand.Run(args, Console.Out, Console.Error);
+            return;
+        }
+#endif
         // Explicit create-new setup owns all its refusals BEFORE generic bootstrap
         // reporting can construct a default Haven/Logs directory.
         if (Services.WindowsNativePersonalTaskStoreSetupCommand.IsInvocation(args))
