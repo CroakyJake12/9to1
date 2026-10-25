@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using Haven.UI.Components;
+using Haven.UI;
 
 namespace Haven.Desktop.Views.Pages.Write;
 
@@ -15,9 +16,20 @@ public sealed partial class WritePage
         if (_embeddedReadOnly == readOnly) return;
         _embeddedReadOnly = readOnly;
         _route.DocumentSurface.SetReadOnly(readOnly);
+        _route.NewButton.SetValue(HavenProperties.Enabled, false);
+        _route.ImportButton.SetValue(HavenProperties.Enabled, false);
+        _route.ExportButton.SetValue(HavenProperties.Enabled, false);
+        _route.PreviousButton.SetValue(HavenProperties.Enabled, false);
+        _route.NextButton.SetValue(HavenProperties.Enabled, false);
         foreach (var element in Descendants(_route.Root))
             if (element is Button or Input or Select or Toggle)
-                element.SetValue(HavenProperties.Enabled, !readOnly);
+            {
+                var enabled = !readOnly;
+                if (element is Button button && (button == _route.NewButton || button == _route.ImportButton ||
+                    button == _route.ExportButton || button == _route.PreviousButton || button == _route.NextButton))
+                    enabled = false;
+                element.SetValue(HavenProperties.Enabled, enabled);
+            }
     }
 
     private static IEnumerable<HavenElement> Descendants(HavenElement element) =>
