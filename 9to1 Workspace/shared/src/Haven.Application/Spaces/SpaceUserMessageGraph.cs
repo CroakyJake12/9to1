@@ -31,20 +31,30 @@ public sealed class SpaceUserMessageGraph
     public const string RouteWordsType = "spaces.user-message.route-words";
     public const string MergeType = "spaces.user-message.merge-selected";
     public const string RouteJsonBooleanType = "spaces.user-message.route-json-boolean";
+    public const string AppendCapturedContextType = "spaces.user-message.append-captured-context";
     public const string CapabilityId = "spaces.user-message.derive";
     internal const string Category = "SpaceUserMessage";
     private readonly AutomationGraphProjection _projection;
     private readonly IReadOnlyDictionary<Guid, string> _types;
     private readonly Guid _output;
+    private readonly IReadOnlyDictionary<Guid, Guid> _contextIds;
     private SpaceUserMessageGraph(Guid spaceId, long spaceRevision, AutomationGraphProjection projection,
         IReadOnlyDictionary<Guid, string> types, Guid output)
-    { SpaceId = spaceId; SpaceRevision = spaceRevision; _projection = projection; _types = types; _output = output; }
+    {
+        SpaceId = spaceId; SpaceRevision = spaceRevision; _projection = projection; _types = types; _output = output;
+        _contextIds = new ReadOnlyDictionary<Guid, Guid>(projection.Definition.Nodes
+            .Where(node => node.ActionKey == AppendCapturedContextType)
+            .ToDictionary(node => node.Id, node => Guid.ParseExact(node.Parameters["contextId"], "D")));
+        ReferencedContextIds = Array.AsReadOnly(_contextIds.Values.Distinct().Order().ToArray());
+    }
     public Guid SpaceId { get; }
     public long SpaceRevision { get; }
     public Guid GraphId => _projection.GraphId;
     public long GraphRevision => _projection.SourceRevision;
     public string Sha256 => _projection.SourceDigest;
 
+    /// <summary>Configuration dependencies only, never read or execution authority.</summary>
+    public IReadOnlyList<Guid> ReferencedContextIds { get; }
     public static IReadOnlyList<GraphNodeType> Types() =>
     [
         Type(SourceType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
@@ -73,12 +83,14 @@ public sealed class SpaceUserMessageGraph
             [new("in", GraphPortDirection.Input, "string"), new("true", GraphPortDirection.Output, "string"), new("false", GraphPortDirection.Output, "string")]),
         Type(RouteJsonBooleanType, "{\"type\":\"object\",\"properties\":{\"pointer\":{\"type\":\"string\",\"maxLength\":512}},\"required\":[\"pointer\"],\"additionalProperties\":false}",
             [new("in", GraphPortDirection.Input, JsonDataType), new("true", GraphPortDirection.Output, JsonDataType), new("false", GraphPortDirection.Output, JsonDataType)]),
+        Type(AppendCapturedContextType, "{\"type\":\"object\",\"properties\":{\"contextId\":{\"type\":\"string\",\"minLength\":36,\"maxLength\":36}},\"required\":[\"contextId\"],\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, "string"), new("out", GraphPortDirection.Output, "string")]),
         Type(MergeType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
             [new("in", GraphPortDirection.Input, "string", true), new("out", GraphPortDirection.Output, "string")])
     ];
     public static GraphCapabilityProfile Profile() => new(ProfileId,
         new HashSet<string>([SourceType, TruncateType, OutputType, ExtractNumbersType, NumbersToTextType, SearchWordsType, MatchesToTextType,
-            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType, RouteWordsType, RouteJsonBooleanType, MergeType], StringComparer.Ordinal),
+            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType, RouteWordsType, RouteJsonBooleanType, AppendCapturedContextType, MergeType], StringComparer.Ordinal),
         new HashSet<string>([CapabilityId], StringComparer.Ordinal));
     /// <summary>Author a node from the actual shared registered schema. This is draft
     /// data only; inserting it never activates a Space or starts a request.</summary>
@@ -94,7 +106,7 @@ public sealed class SpaceUserMessageGraph
             SearchWordsType => "Search words or phrases", MatchesToTextType => "Render matches",
             ParseJsonType => "Parse strict JSON (depth 32)", SelectJsonType => "Select JSON value",
             RenderJsonType => "Render compact JSON", JsonStringType => "Read JSON string",
-            RouteWordsType => "Route by words or phrases", RouteJsonBooleanType => "Route by JSON boolean", MergeType => "Merge selected text",
+            RouteWordsType => "Route by words or phrases", RouteJsonBooleanType => "Route by JSON boolean", AppendCapturedContextType => "Append reviewed Space source", MergeType => "Merge selected text",
             _ => throw new ArgumentException("This node has no authoring implementation.", nameof(typeId))
         })
         {
@@ -106,6 +118,7 @@ public sealed class SpaceUserMessageGraph
             {
                 TruncateType => new Dictionary<string, string>(StringComparer.Ordinal) { ["maximumTextElements"] = "1000" },
                 ExtractNumbersType => new Dictionary<string, string>(StringComparer.Ordinal) { ["locale"] = "invariant" },
+                AppendCapturedContextType => new Dictionary<string, string>(StringComparer.Ordinal) { ["contextId"] = "" },
                 SelectJsonType or RouteJsonBooleanType => new Dictionary<string, string>(StringComparer.Ordinal) { ["pointer"] = "" },
                 SearchWordsType or RouteWordsType => new Dictionary<string, string>(StringComparer.Ordinal)
                     { ["query"] = "word", ["locale"] = "invariant", ["comparison"] = "ordinal", ["boundary"] = "whole-word" },
@@ -181,6 +194,13 @@ public sealed class SpaceUserMessageGraph
                     throw Invalid("Numeric extraction requires an explicit supported locale: invariant, en-US, de-DE or fr-FR.");
                 configuration = JsonSerializer.SerializeToElement(node.Metadata);
             }
+            else if (node.TypeId == AppendCapturedContextType)
+            {
+                if (node.Metadata.Count != 1 || !node.Metadata.TryGetValue("contextId", out var idText) ||
+                    !Guid.TryParseExact(idText, "D", out var contextId) || contextId == Guid.Empty || idText != contextId.ToString("D"))
+                    throw Invalid("Append reviewed Space source requires one actual configured ContextId in canonical GUID form.");
+                configuration = JsonSerializer.SerializeToElement(node.Metadata);
+            }
             else if (node.TypeId is SelectJsonType or RouteJsonBooleanType)
             {
                 if (node.Metadata.Count != 1 || !node.Metadata.TryGetValue("pointer", out var pointer) || !IsSupportedJsonPointer(pointer))
@@ -249,12 +269,28 @@ public sealed class SpaceUserMessageGraph
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(nodeId.ToString("D") + ":" + key));
         return new Guid(bytes.AsSpan(0, 16));
     }
-    public async Task<SpaceUserMessageGraphResult> ExecuteAsync(ChatMessage input, CancellationToken token)
+    public Task<SpaceUserMessageGraphResult> ExecuteAsync(ChatMessage input, CancellationToken token) => ExecuteCoreAsync(input, null, token);
+
+    internal Task<SpaceUserMessageGraphResult> ExecuteWithCapturedPolicyAsync(ChatMessage input,
+        OriginalSpacePolicySnapshot snapshot, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        if (!ReferenceEquals(snapshot.UserMessageGraph, this) || snapshot.Policy.SpaceId != SpaceId ||
+            snapshot.Lineage.Ancestors[^1].Revision != SpaceRevision)
+            throw Invalid("The captured context must belong to this same active Space graph and revision.");
+        snapshot.CapturedContext?.ValidateAgainst(snapshot);
+        foreach (var id in ReferencedContextIds)
+            if (!snapshot.Policy.Sources.Any(source => source.ContextId == id && source.IncludedAutomatically &&
+                source.Permission is SpaceContextPermission.Read or SpaceContextPermission.ReadWrite))
+                throw Invalid("A configured graph source is outside the effective included read-permitted Space context.");
+        return ExecuteCoreAsync(input, snapshot.CapturedContext, token);
+    }
+    private async Task<SpaceUserMessageGraphResult> ExecuteCoreAsync(ChatMessage input, OriginalSpaceCapturedContext? captured, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(input);
         if (input.Id == Guid.Empty || input.ConversationId == Guid.Empty || input.Role != MessageRole.User || input.Content is null || input.Content.Length > 65536)
             throw Invalid("The graph requires the bounded actual original user message.");
-        var run = await new AutomationGraphRunner([new SpaceUserMessageGraphExecutor(input.Content)])
+        var run = await new AutomationGraphRunner([new SpaceUserMessageGraphExecutor(input.Content, captured)])
             .RunAsync(_projection.Definition, AutomationGraphRunMode.Real, token).ConfigureAwait(false);
         var output = run.Trace.SingleOrDefault(item => item.NodeId == _output);
         if (!run.Succeeded || output is not { Status: AutomationGraphTraceStatus.Succeeded, Output: not null })
@@ -267,6 +303,7 @@ public sealed class SpaceUserMessageGraph
                 : _types[failed.NodeId] switch
                 {
                     ParseJsonType => "Parse JSON requires strict valid JSON, unique decoded property names, no comments/trailing commas, at most 32 nested containers and a typed result within 262144 UTF-8 bytes.",
+                    AppendCapturedContextType => "Append reviewed Space source requires its actual included captured source; missing or omitted bodies cannot be invented, and the whole derived value must fit 131072 UTF-8 bytes.",
                     RouteJsonBooleanType => "Route by JSON boolean requires one present true/false JSON value at its exact pointer; strings, numbers, null and missing values are not coerced.",
                     MergeType => "Merge selected text requires exactly one active typed value; zero or multiple active inputs cannot produce a request.",
                     SelectJsonType => "Select JSON requires one present value: check exact field names and existing zero-based array indices without leading zeros.",
@@ -285,7 +322,13 @@ public sealed class SpaceUserMessageGraph
             return new SpaceUserMessageGraphTrace(item.NodeId, _types[item.NodeId], item.Status.ToString(),
                 item.Status == AutomationGraphTraceStatus.Skipped ? 0 : item.Inputs?.Values.SingleOrDefault() is { } before ? TextElements(before) : TextElements(input.Content),
                 TextElements(item.Output ?? ""), value?.DataType ?? "string", value?.JsonValue is { } json ? Digest(json.GetRawText()) : null,
-                HasFlag(value, "moreResultsOmitted"), HasFlag(value, "hasUncertainty")) { SelectedBranch = item.Branch };
+                HasFlag(value, "moreResultsOmitted"), HasFlag(value, "hasUncertainty"))
+            {
+                SelectedBranch = item.Branch,
+                ContextSource = item.Status == AutomationGraphTraceStatus.Succeeded && _contextIds.TryGetValue(item.NodeId, out var contextId) &&
+                    captured?.Items.SingleOrDefault(row => row.ContextId == contextId) is { } source
+                        ? new(source.ContextId, source.OwnerAppId, Digest(source.Revision), Digest(source.Text)) : null
+            };
         }).ToArray();
         return new(SpaceId, SpaceRevision, GraphId, GraphRevision, input.Id, output.Output, Digest(input.Content),
             Digest(output.Output), trace.Where(item => item.TypeId == TruncateType).Sum(item => Math.Max(0, item.InputTextElements - item.OutputTextElements)), Array.AsReadOnly(trace))
@@ -304,7 +347,9 @@ public sealed record SpaceUserMessageGraphTrace(Guid NodeId, string TypeId, stri
     string OutputDataType = "string", string? OutputSha256 = null, bool MoreResultsOmitted = false, bool HasUncertainty = false)
 {
     public string? SelectedBranch { get; init; }
+    public SpaceUserMessageContextTrace? ContextSource { get; init; }
 }
+public sealed record SpaceUserMessageContextTrace(Guid ContextId, string OwnerAppId, string RevisionSha256, string BodySha256);
 public sealed record SpaceUserMessageGraphResult(Guid SpaceId, long SpaceRevision, Guid GraphId, long GraphRevision,
     Guid UserMessageId, string DerivedText, string InputSha256, string OutputSha256, int OmittedTextElements,
     IReadOnlyList<SpaceUserMessageGraphTrace> Trace)
