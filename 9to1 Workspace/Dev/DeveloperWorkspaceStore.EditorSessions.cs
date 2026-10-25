@@ -5,7 +5,8 @@ namespace HavenOS.Apps.Dev;
 
 /// <summary>A clean source observation, never a Files identity or permission. No draft text,
 /// baseline text, review decision or executable command is persisted in editor-session metadata.</summary>
-public sealed record DeveloperCleanEditorTab(string RelativePath, string ContentSha256, bool IsPinned);
+public sealed record DeveloperCleanEditorTab(string RelativePath, string ContentSha256, bool IsPinned,
+    bool IsPreview = false, string GroupId = "default");
 
 /// <summary>Restorable clean presentation state. ProjectReference is the saved observation;
 /// only the current configured source owner may rebind and read it. Session generation is a
@@ -58,12 +59,17 @@ public sealed partial class FileDeveloperWorkspaceStore
         IReadOnlyList<DeveloperCleanEditorTab> tabs, string? selectedRelativePath,
         CancellationToken cancellationToken = default)
     {
-        if (!ValidEditorProject(project) || profileId == Guid.Empty || expectedGeneration < 0 || tabs is null ||
-            !ValidCleanTabs(tabs, selectedRelativePath))
+        if (!ValidEditorProject(project) || profileId == Guid.Empty || expectedGeneration < 0 ||
+            expectedGeneration == long.MaxValue || tabs is null)
             return EditorFailure<DeveloperCleanEditorSession>(DeveloperOperationErrorCode.InvalidInput,
                 "Select at most eight distinct clean source observations and a valid session generation.", project?.Reference.WorkspaceId ?? Guid.Empty);
         // Detach before awaiting the lock; the caller cannot mutate an admitted queued write.
         var captured = Array.AsReadOnly(tabs.ToArray());
+        if (!ValidCleanTabs(captured, selectedRelativePath))
+            return EditorFailure<DeveloperCleanEditorSession>(DeveloperOperationErrorCode.InvalidInput,
+                "Select at most eight distinct clean source observations and a valid session generation.", project.Reference.WorkspaceId);
+        var capturedSelection = selectedRelativePath is null ? null :
+            captured.Single(value => EditorPathComparer.Equals(value.RelativePath, selectedRelativePath)).RelativePath;
         var acquired = await AcquireWriteLockAsync(project.Reference.WorkspaceId, cancellationToken).ConfigureAwait(false);
         if (acquired.Error is not null) return CopyEditorError<DeveloperCleanEditorSession>(acquired.Error);
         await using var writeLock = acquired.Lock!;
@@ -83,7 +89,7 @@ public sealed partial class FileDeveloperWorkspaceStore
                 return EditorFailure<DeveloperCleanEditorSession>(DeveloperOperationErrorCode.CapabilityUnavailable,
                     "The bounded workspace editor-session catalogue is full; no previous session was removed.", project.Reference.WorkspaceId);
             var next = new DeveloperCleanEditorSession(profileId, project.Reference, EditorProjectStamp(project),
-                checked(expectedGeneration + 1), captured, selectedRelativePath, DateTimeOffset.UtcNow);
+                checked(expectedGeneration + 1), captured, capturedSelection, DateTimeOffset.UtcNow);
             if (old is not null) sessions[sessions.IndexOf(old)] = next; else sessions.Add(next);
             var nextDocument = document with { EditorSessions = Array.AsReadOnly(sessions.ToArray()) };
             // The genuine native project reader has the same finite one-MiB metadata limit.
@@ -113,12 +119,14 @@ public sealed partial class FileDeveloperWorkspaceStore
         var sessions = document.EditorSessions;
         if (sessions is not null && (sessions.Count > MaximumEditorSessions ||
             sessions.Any(value => value is null || value.ProfileId == Guid.Empty || value.Generation < 1 ||
+                value.SavedAt == default || value.SavedAt.Offset != TimeSpan.Zero ||
                 value.ProjectReference is null || value.ProjectReference.WorkspaceId != workspaceId ||
                 value.ProjectReference.ProjectId == Guid.Empty || value.ProjectReference.RootId == Guid.Empty ||
                 value.ProjectReference.WorkspaceRevision < 1 || value.ProjectReference.ProjectRevision < 1 ||
                 value.ProjectStamp is not { Length: 64 } || !value.ProjectStamp.All(Uri.IsHexDigit) ||
                 value.Tabs is null || !ValidCleanTabs(value.Tabs, value.SelectedRelativePath)) ||
-            sessions.Select(value => (value.ProfileId, value.ProjectReference.ProjectId, value.ProjectReference.RootId)).Distinct().Count() != sessions.Count))
+            sessions.Select(value => (value.ProfileId, value.ProjectReference.ProjectId, value.ProjectReference.RootId,
+                value.ProjectReference.RepositoryBindingId)).Distinct().Count() != sessions.Count))
             return EditorFailure<WorkspaceDocument>(DeveloperOperationErrorCode.InvalidStoredData,
                 "The saved clean editor-session metadata is invalid and was left unchanged.", workspaceId);
         return DeveloperOperationResult<WorkspaceDocument>.Success(document);
@@ -127,9 +135,13 @@ public sealed partial class FileDeveloperWorkspaceStore
     private static bool ValidCleanTabs(IReadOnlyList<DeveloperCleanEditorTab> tabs, string? selected) =>
         tabs.Count <= DeveloperSourceReviewSession.MaximumOpenDocuments &&
         tabs.All(value => value is not null && SafeEditorPath(value.RelativePath) &&
-            value.ContentSha256 is { Length: 64 } && value.ContentSha256.All(Uri.IsHexDigit)) &&
-        tabs.Select(value => value.RelativePath).Distinct(StringComparer.Ordinal).Count() == tabs.Count &&
-        (selected is null || tabs.Any(value => StringComparer.Ordinal.Equals(value.RelativePath, selected)));
+            value.ContentSha256 is { Length: 64 } && value.ContentSha256.All(Uri.IsHexDigit) &&
+            !string.IsNullOrWhiteSpace(value.GroupId)) &&
+        tabs.Select(value => value.RelativePath).Distinct(EditorPathComparer).Count() == tabs.Count &&
+        (selected is null || tabs.Any(value => EditorPathComparer.Equals(value.RelativePath, selected)));
+
+    private static StringComparer EditorPathComparer => OperatingSystem.IsWindows()
+        ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
     private static bool SafeEditorPath(string path) => !string.IsNullOrWhiteSpace(path) && path.Length <= 2048 &&
         !Path.IsPathRooted(path) && !path.Contains('\\') && !path.Any(value => value < 32 || value == ':') &&
@@ -153,7 +165,8 @@ public sealed partial class FileDeveloperWorkspaceStore
     private static string EditorProjectStamp(DeveloperResolvedProject project) =>
         Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { project.Project, project.Root, project.Repository })));
     private static bool SameEditorKey(DeveloperCleanEditorSession value, Guid profile, DeveloperProjectReference project) =>
-        value.ProfileId == profile && value.ProjectReference.ProjectId == project.ProjectId && value.ProjectReference.RootId == project.RootId;
+        value.ProfileId == profile && value.ProjectReference.ProjectId == project.ProjectId &&
+        value.ProjectReference.RootId == project.RootId && value.ProjectReference.RepositoryBindingId == project.RepositoryBindingId;
     private static DeveloperOperationResult<T> EditorConflict<T>(Guid id) => EditorFailure<T>(DeveloperOperationErrorCode.RevisionConflict,
         "The current canonical workspace differs from this selected revision. Reload the project before changing editor state.", id);
     private static DeveloperOperationResult<T> EditorFailure<T>(DeveloperOperationErrorCode code, string message, Guid id) =>
