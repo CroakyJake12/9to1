@@ -35,7 +35,13 @@ public sealed class CuiMaterialTests
             foreach (var (material, fallback) in new[] { ("CuiShellMaterial", "CuiBackgroundBrush"), ("CuiWorkspaceMaterial", "CuiWorkspaceBrush"),
                          ("CuiSurfaceMaterial", "CuiPanelBrush"), ("CuiFloatingSurfaceMaterial", "CuiPanel2Brush") })
             {
-                if (theme != CuiTheme.Professional || contrast) Assert.Same(resources[fallback], resources[material]);
+                if (theme == CuiTheme.Glow && !contrast)
+                {
+                    var gradient = Assert.IsAssignableFrom<ILinearGradientBrush>(resources[material]);
+                    Assert.True(gradient.GradientStops.Select(stop => stop.Color).Distinct().Count() > 1);
+                    Assert.IsNotType<CuiMaterialBrush>(gradient); // ordinary paint, no implicit backdrop filtering
+                }
+                else if (theme != CuiTheme.Professional || contrast) Assert.Same(resources[fallback], resources[material]);
                 else Assert.IsType<CuiMaterialBrush>(resources[material]);
             }
             if (theme == CuiTheme.Professional && !contrast)

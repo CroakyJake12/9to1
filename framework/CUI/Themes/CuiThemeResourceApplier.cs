@@ -354,6 +354,25 @@ public static class CuiThemeResourceApplier
         resources["CuiSelectionIndicatorBrush"] = new SolidColorBrush(palette.Accent);
         resources["CuiSelectionIndicatorRadius"] = new CornerRadius(2);
         CuiPresetSurfaceResources.Apply(resources, palette, settings);
+        ApplyGlowSurfaceResources(resources, palette, settings);
+    }
+
+    private static void ApplyGlowSurfaceResources(IResourceDictionary resources, CuiPalette palette, CuiAccessibilitySettings settings)
+    {
+        if (palette.Theme != CuiTheme.Glow || settings.HighContrast) return;
+        // Surface roles carry Glow's visible tonal gradients. Keep the solid
+        // palette tokens as contrast/document-colour anchors; a surface does
+        // not become a primary action and no outline or effect is introduced.
+        IBrush Surface(Color colour, double strength) => CreateGradientBrush(new(
+            Blend(colour, palette.AccentStrong, .025),
+            Blend(colour, palette.Accent, strength * .45),
+            Blend(colour, palette.AccentSecondary, strength),
+            new RelativePoint(0, 0, RelativeUnit.Relative),
+            new RelativePoint(1, 1, RelativeUnit.Relative)));
+        resources["CuiShellMaterial"] = Surface(palette.TideBase, .09);
+        resources["CuiWorkspaceMaterial"] = Surface(palette.TideBase, .14);
+        resources["CuiSurfaceMaterial"] = Surface(palette.Panel, .12);
+        resources["CuiFloatingSurfaceMaterial"] = Surface(palette.Panel2, .16);
     }
 
     private static Color InputSurface(CuiPalette palette) =>

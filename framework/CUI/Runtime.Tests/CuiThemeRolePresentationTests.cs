@@ -91,6 +91,24 @@ public sealed class CuiThemeRolePresentationTests
     }
 
     [Fact]
+    public void Glow_surface_gradients_follow_the_chosen_accent_without_replacing_solid_document_tokens()
+    {
+        var purple = new ResourceDictionary(); var green = new ResourceDictionary();
+        CuiThemeResourceApplier.ApplyToResources(purple, CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Dark, CuiTheme.Glow, "#7026D9"));
+        CuiThemeResourceApplier.ApplyToResources(green, CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Dark, CuiTheme.Glow, "#168B4F"));
+        foreach (var key in new[] { "CuiShellMaterial", "CuiWorkspaceMaterial", "CuiSurfaceMaterial", "CuiFloatingSurfaceMaterial" })
+        {
+            var first = Assert.IsAssignableFrom<ILinearGradientBrush>(purple[key]);
+            var second = Assert.IsAssignableFrom<ILinearGradientBrush>(green[key]);
+            Assert.NotEqual(first.GradientStops.Select(stop => stop.Color), second.GradientStops.Select(stop => stop.Color));
+        }
+        Assert.IsAssignableFrom<ISolidColorBrush>(purple["CuiPanelBrush"]);
+        Assert.IsAssignableFrom<ISolidColorBrush>(purple["CuiPanel2Brush"]);
+        CuiCustomThemeResourceApplier.ApplyToResources(purple, CuiCustomThemeContract.CreateDefault());
+        Assert.Same(purple["CuiPanelBrush"], purple["CuiSurfaceMaterial"]);
+    }
+
+    [Fact]
     public async Task Boards_loader_uses_its_app_palette_for_surfaces_selection_focus_and_live_overrides()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
