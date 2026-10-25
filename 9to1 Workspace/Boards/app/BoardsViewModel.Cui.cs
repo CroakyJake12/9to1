@@ -71,19 +71,27 @@ public sealed partial class BoardsViewModel
             "BlockDuplicate" => BoardBlockAction.Duplicate, "BlockDelete" => BoardBlockAction.Delete, _ => null
         };
         if (action is null) return false;
-        if (_blockActionBusy || !BlockActionEditingAllowed() || _session is not ContractSessionAdapter adapter)
-        { Set("StatusText", "Select an editable flow block."); return true; }
-        var pageId = SelectedPageId; var blockId = SelectedBlockId;
-        var target = adapter.CaptureBlockAction(pageId, blockId);
+        if (_session is not ContractSessionAdapter adapter) return true;
+        var target = adapter.CaptureBlockAction(SelectedPageId, SelectedBlockId);
         if (target is null) { Set("StatusText", "Select an editable flow block."); return true; }
+        return await DispatchCuiBlockActionAsync(new BoardBlockActionRequest(target, action.Value), cancellationToken);
+    }
+
+    internal async ValueTask<bool> DispatchCuiBlockActionAsync(
+        BoardBlockActionRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!_isEditMode || _blockActionBusy || !BlockActionEditingAllowed() ||
+            _session is not ContractSessionAdapter adapter ||
+            SelectedPageId != request.Target.PageId || SelectedBlockId != request.Target.BlockId)
+        { Set("StatusText", "Select an editable flow block."); return true; }
         var epoch = Interlocked.Read(ref _textRangeEpoch);
         _blockActionBusy = true; RefreshCuiBlockActions();
         try
         {
             // Native read-only/enabled/selection changes advance the same range
             // epoch. The gate callback reads no UI properties on a worker thread.
-            var result = await adapter.ApplyBlockActionAsync(target, action.Value,
-                () => !_textRangeDetached && SelectedPageId == pageId && SelectedBlockId == blockId &&
+            var result = await adapter.ApplyBlockActionAsync(request.Target, request.Action,
+                () => !_textRangeDetached && SelectedPageId == request.Target.PageId && SelectedBlockId == request.Target.BlockId &&
                     Interlocked.Read(ref _textRangeEpoch) == epoch, cancellationToken);
             if (!result.Applied) { Set("StatusText", "Block action refused: " + result.Code); return true; }
             _selectedBlockId = result.SelectedBlockId ?? string.Empty;

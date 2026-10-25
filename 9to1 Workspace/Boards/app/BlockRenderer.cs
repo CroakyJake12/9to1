@@ -102,14 +102,8 @@ public static class BlockRenderer
             Grid.SetColumn(insert, 0);
             row.Children.Add(insert);
 
-            var grip = BoardsIcons.IconButton(BoardsIcons.Grip, "Block actions", "Open block actions");
-            grip.Padding = new Thickness(4, 4);
+            var grip = BlockGripCui.Build(vm, selectId);
             grip.Margin = new Thickness(0, 2, 4, 0);
-            grip.Background = Brushes.Transparent;
-            grip.ContextMenu = BuildBlockContextMenu(vm, selectId);
-            grip.Click += (_, _) => grip.ContextMenu?.Open(grip);
-            AutomationProperties.SetName(grip, "Open block actions");
-            AutomationProperties.SetHelpText(grip, "Move, duplicate, or delete this block.");
             Grid.SetColumn(grip, 1);
             row.Children.Add(grip);
         }
@@ -127,32 +121,6 @@ public static class BlockRenderer
         return border;
     }
 
-    private static ContextMenu BuildBlockContextMenu(BoardsViewModel vm, string blockId)
-    {
-        var menu = new ContextMenu();
-        var blockIndex = vm.PageBlocks.Select((block, index) => (block, index))
-            .FirstOrDefault(item => item.block.Id == blockId);
-        var block = blockIndex.block;
-        var index = blockIndex.index;
-        var eligible = block is not null && block.Kind is ("paragraph" or "heading" or "table" or "image" or "divider" or "graph");
-        MenuItem Item(string label, string command, bool enabled)
-        {
-            var item = new MenuItem { Header = label, IsEnabled = enabled };
-            AutomationProperties.SetName(item, label + " block");
-            item.Click += async (_, _) =>
-            {
-                vm.FocusBlock(blockId);
-                await vm.DispatchAsync(command, null);
-            };
-            return item;
-        }
-
-        menu.Items.Add(Item("Move up", "BlockMoveUp", vm.IsEditMode && eligible && index > 0));
-        menu.Items.Add(Item("Move down", "BlockMoveDown", vm.IsEditMode && eligible && index < vm.PageBlocks.Count - 1));
-        menu.Items.Add(Item("Duplicate", "BlockDuplicate", vm.IsEditMode && eligible));
-        menu.Items.Add(Item("Delete", "BlockDelete", vm.IsEditMode && eligible));
-        return menu;
-    }
 
     // ----- Block dispatch -----
 
