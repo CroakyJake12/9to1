@@ -33,6 +33,8 @@ public sealed class HavenRichSection
     public string IconKey { get; set; } = HavenRichSectionIcons.Default;
     /// <summary>Optional explicit section icon color; null follows the active theme.</summary>
     public string? IconColor { get; set; }
+    /// <summary>Owner-generated bounded geometry; present only when IconKey is "generated".</summary>
+    public HavenRichSectionGeneratedIcon? GeneratedIcon { get; set; }
     public List<HavenRichPage> Pages { get; set; } = [new HavenRichPage()];
 }
 
@@ -40,6 +42,7 @@ public sealed class HavenRichSection
 public static class HavenRichSectionIcons
 {
     public const string Default = "boards";
+    public const string Generated = "generated";
     private static readonly HashSet<string> SupportedKeys = new(StringComparer.Ordinal)
     {
         "boards", "section", "folder", "file", "chat", "study", "calendar", "target", "bookmark", "shield", "play"
@@ -322,8 +325,15 @@ public static class HavenRichNotesValidator
         {
             RequireId(section.Id, "Section");            if (string.IsNullOrWhiteSpace(section.Title))
                 throw new InvalidOperationException("Rich board sections must have non-empty titles.");
-            if (!HavenRichSectionIcons.IsSupported(section.IconKey))
-                throw new InvalidOperationException($"Section icon key '{section.IconKey}' is not supported.");
+            if (section.IconKey == HavenRichSectionIcons.Generated)
+                HavenRichSectionIconGeometry.Validate(section.GeneratedIcon);
+            else
+            {
+                if (!HavenRichSectionIcons.IsSupported(section.IconKey))
+                    throw new InvalidOperationException($"Section icon key '{section.IconKey}' is not supported.");
+                if (section.GeneratedIcon is not null)
+                    throw new InvalidOperationException("Generated geometry is only valid when the section icon key is 'generated'.");
+            }
             if (!HavenRichSectionIcons.IsSupportedColor(section.IconColor))
                 throw new InvalidOperationException("Section icon color must be null or a six-digit #RRGGBB value.");
             if (section.Pages.Count == 0)
@@ -739,10 +749,31 @@ public static partial class HavenRichNotesOps
 
         var section = RequireSection(notes, sectionId);
         var normalizedColor = iconColor?.ToUpperInvariant();
-        if (section.IconKey == iconKey && section.IconColor == normalizedColor)
+        if (section.IconKey == iconKey && section.IconColor == normalizedColor && section.GeneratedIcon is null)
             return;
         section.IconKey = iconKey;
         section.IconColor = normalizedColor;
+        section.GeneratedIcon = null;
+        Touch(notes);
+    }
+
+    public static void SetSectionGeneratedIcon(HavenRichNotes notes, string sectionId,
+        HavenRichSectionGeneratedIcon generatedIcon, string? iconColor)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        ArgumentNullException.ThrowIfNull(generatedIcon);
+        if (!HavenRichSectionIcons.IsSupportedColor(iconColor))
+            throw new ArgumentException("Section icon color must be null or a six-digit #RRGGBB value.", nameof(iconColor));
+        HavenRichSectionIconGeometry.Validate(generatedIcon);
+
+        var section = RequireSection(notes, sectionId);
+        var normalizedColor = iconColor?.ToUpperInvariant();
+        if (section.IconKey == HavenRichSectionIcons.Generated && section.IconColor == normalizedColor &&
+            HavenRichSectionIconGeometry.AreEqual(section.GeneratedIcon, generatedIcon))
+            return;
+        section.IconKey = HavenRichSectionIcons.Generated;
+        section.IconColor = normalizedColor;
+        section.GeneratedIcon = HavenRichSectionIconGeometry.Copy(generatedIcon);
         Touch(notes);
     }
 

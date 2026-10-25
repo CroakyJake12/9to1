@@ -1674,6 +1674,62 @@ public sealed class ContractAdapterTests
         Assert.False(HavenRichSectionIcons.IsSupported("../../path"));
     }
 
+    [Fact]
+    public async Task Generated_section_icon_is_detached_undoable_and_round_trips_with_cui_projection()
+    {
+        var root = TempDirectory();
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "generated-section-icon.9to1board");
+            string sectionId;
+            var geometry = new HavenRichSectionGeneratedIcon
+            {
+                Shapes =
+                [
+                    new HavenRichSectionIconRoundRect(2, 2, 20, 20, 3),
+                    new HavenRichSectionIconCircle(12, 12, 5),
+                    new HavenRichSectionIconPolygon([new(8, 8), new(16, 8), new(12, 16)], IsCutout: true)
+                ]
+            };
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                sectionId = Assert.Single(adapter.Document.Sections).Id;
+                await adapter.SetSectionGeneratedIconAsync(sectionId, geometry, "#7755aa");
+                ((HavenRichSectionIconPolygon)geometry.Shapes[2]).Points[0] = new(9, 9);
+
+                var projected = Assert.Single(adapter.Document.Sections);
+                Assert.Equal(HavenRichSectionIcons.Generated, projected.IconKey);
+                Assert.Equal("#7755AA", projected.IconColor);
+                Assert.Equal(new HavenRichSectionIconPoint(8, 8),
+                    Assert.IsType<HavenRichSectionIconPolygon>(projected.GeneratedIcon!.Shapes[2]).Points[0]);
+
+                Assert.True(await adapter.UndoAsync());
+                projected = Assert.Single(adapter.Document.Sections);
+                Assert.Equal(HavenRichSectionIcons.Default, projected.IconKey);
+                Assert.Null(projected.GeneratedIcon);
+                Assert.True(await adapter.RedoAsync());
+                Assert.Equal(HavenRichSectionIcons.Generated, Assert.Single(adapter.Document.Sections).IconKey);
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var restored = Assert.Single(reopened.Document.Sections);
+            Assert.Equal(sectionId, restored.Id);
+            Assert.Equal(HavenRichSectionIcons.Generated, restored.IconKey);
+            Assert.Equal("#7755AA", restored.IconColor);
+            Assert.IsType<HavenRichSectionIconRoundRect>(restored.GeneratedIcon!.Shapes[0]);
+            Assert.IsType<HavenRichSectionIconCircle>(restored.GeneratedIcon.Shapes[1]);
+            Assert.True(Assert.IsType<HavenRichSectionIconPolygon>(restored.GeneratedIcon.Shapes[2]).IsCutout);
+
+            await reopened.SetSectionIconAsync(sectionId, "study", null);
+            var builtin = Assert.Single(reopened.Document.Sections);
+            Assert.Equal("study", builtin.IconKey);
+            Assert.Null(builtin.GeneratedIcon);
+        }
+        finally { DeleteDirectory(root); }
+    }
+
     private static string TempDirectory()
     {
         var root = Path.Combine(Path.GetTempPath(), "cakeos-adapter-tests", Guid.NewGuid().ToString("N"));
