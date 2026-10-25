@@ -376,12 +376,12 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 "SavedBuildStages" => SavedStageChoices(_project).Select(choice => new SavedStageItem(choice.SelectionKey,
                     choice.Label, choice.Summary + (choice.UnavailableReason is { } reason ? "\n" + reason : ""),
                     "Inspect saved stage " + choice.Label, !_pending)).ToArray(),
-                "SavedBuildStagesStatus" => SavedStageChoices(_project).Count == 0 ? "No saved build stages for this project root and environment."
-                    : "Choose a saved stage to inspect its exact command and dependencies.",
+                "SavedBuildStagesStatus" => DeveloperSavedStageSelection.Observe(_project).Error?.Message ?? (SavedStageChoices(_project).Count == 0 ? "No saved build stages for this project root and environment."
+                    : "Choose a saved stage to inspect its command and dependencies."),
                 "SelectedBuildStageSummary" => _selectedSavedStage is not { } selectedStage ? "Choose a saved stage before running it."
-                    : selectedStage.Summary + "\n" + (_manual ? "Execution is unavailable in this project session."
-                        : !IsSelectedSavedStageCurrent(_project) ? selectedStage.UnavailableReason ?? "This definition changed. Select the current stage again."
-                        : "Run uses this selected definition through the current task and Home execution checks."),
+                    : selectedStage.Summary + "\n" + (!IsSelectedSavedStageCurrent(_project) ? selectedStage.UnavailableReason ?? "This definition changed. Select the current stage again."
+                        : _manual && _manualProcessOwner is not { SupportsSavedStages: true } ? "Saved-stage execution is unavailable in this session."
+                        : "Run asks permission to execute this saved stage. Dependent pipelines are not supported here."),
                 "CanRunSavedStage" => IsActionAvailable("dev.run-stage"),
                 "SourceFindQuery" => _sourceFindQuery, "SourceReplaceText" => _sourceReplaceText,
                 "SourceFindMatchCase" => _sourceFindMatchCase, "SourceFindStatus" => _sourceFindStatus,
@@ -534,6 +534,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (command is "dev.find-next-source" or "dev.find-previous-source" or "dev.replace-all-source")
                 return CurrentSourceTab() is not null && !string.IsNullOrEmpty(_sourceFindQuery);
             if (command == "dev.replace-source-match") return CanReplaceSourceMatch();
+            if (command == "dev.run-stage" && _manual) return _manualProcessOwner is { SupportsSavedStages: true } && IsSelectedSavedStageCurrent(_project);
             if (command == "dev.select-build-stage") return SavedStageChoices(_project).Count != 0;
             if (command == "dev.inspect-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && _manualRecoveryCandidates.Count > 0;
             if (command == "dev.reconcile-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && SelectedManualRecoveryCandidate() is not null;
@@ -548,9 +549,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 ProjectFolderEntries().Count() > (_projectEntryPage + 1) * ProjectExplorerPageSize;
             if (_manual)
             {
-                // Manual (no-AI) open offers only confined read/tree/search. Every mutation and
-                // process-execution action is unavailable here: it requires a separate current
-                // authorized Task/execution authority and fails closed with no effects.
+                // Manual editing and the separately admitted declared process routes are handled
+                // above. Arbitrary commands and branch mutations remain unavailable here.
                 return command switch
                 {
                     "dev.refresh" => true,
@@ -600,6 +600,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         if (command is "dev.find-next-source" or "dev.find-previous-source" or "dev.replace-source-match" or "dev.replace-all-source")
             return DispatchSourceFindAsync(command, cancellationToken);
         if (command == "dev.select-build-stage") return SelectSavedBuildStage(parameter);
+        if (_manual && command == "dev.run-stage") return RunManualSavedStageAsync(cancellationToken);
         if (command == "dev.go-to-source-location") return DispatchSourceLocationAsync(cancellationToken);
         if (command is "dev.inspect-recovered-draft" or "dev.reconcile-recovered-draft" or "dev.use-merged-recovered-draft")
             return DispatchManualRecoveryConflictAsync(command, parameter, cancellationToken);

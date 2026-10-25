@@ -1026,6 +1026,45 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Manual_saved_stage_picker_runs_actual_command_without_AI_and_preserves_dirty_source()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine Home/Files/kernel fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(true, savedStages: true); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            page = await ManualFileNavigationPage(f, reader);
+            page.TrySetValue("SourcePath", "seed.txt"); var open = page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(open); await open; page.TrySetValue("DraftText", "unsaved stage editor text");
+            var tab = Assert.Single(NativeSourceTabs(page)); Assert.False(page.IsActionAvailable("dev.run-stage"));
+            Assert.True(page.TryGetValue("SavedBuildStages", out var rows));
+            var items = Assert.IsAssignableFrom<System.Collections.IEnumerable>(rows).Cast<object>().ToArray();
+            var compile = Assert.Single(items, item => (string)item.GetType().GetProperty("Label")!.GetValue(item)! == "Fixture build / Compile");
+            var key = (string)compile.GetType().GetProperty("SelectionKey")!.GetValue(compile)!;
+            await page.DispatchAsync("dev.select-build-stage", key, OriginalTestBodyToken);
+            Assert.True(page.IsActionAvailable("dev.run-stage")); Assert.True(page.TryGetValue("SelectedBuildStageSummary", out var summary));
+            Assert.Contains("Unsaved editor changes are kept", Assert.IsType<string>(summary));
+            var run = page.DispatchAsync("dev.run-stage", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(run); await reader.AcceptExecute(run); await run;
+            var observed = Assert.IsType<DeveloperManualStageObservation>(typeof(DeveloperProjectWorkbenchPage)
+                .GetProperty("OriginalManualStageObservation", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            Assert.True(observed.ProcessSucceeded); Assert.Equal("fixture-build", observed.SavedTaskId); Assert.Equal("compile", observed.StageId);
+            Assert.True(page.TryGetValue("ProcessOutput", out var output)); Assert.Contains("saved-stage-ready", Assert.IsType<string>(output));
+            Assert.Contains("stage-error", Assert.IsType<string>(output)); Assert.True(page.TryGetValue("DraftText", out var draft));
+            Assert.Equal("unsaved stage editor text", draft); Assert.Same(tab, Assert.Single(NativeSourceTabs(page))); Assert.True(page.HasUnsavedWork);
+            var dependent = Assert.Single(items, item => (string)item.GetType().GetProperty("Label")!.GetValue(item)! == "Fixture build / Package");
+            await page.DispatchAsync("dev.select-build-stage", dependent.GetType().GetProperty("SelectionKey")!.GetValue(dependent), OriginalTestBodyToken);
+            Assert.False(page.IsActionAvailable("dev.run-stage"));
+            Assert.Equal(Guid.Empty, SearchPublicationField("_taskId").GetValue(page)); Assert.Equal(0, f.Owner.ExecuteCalls);
+            Assert.Equal(0, f.Tools.ReadCalls); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static async Task<DeveloperProjectWorkbenchPage> ManualFileNavigationPage(Fixture fixture, ActualReaderFixture reader)
     {
         await fixture.Dev.CloseAndDrainAsync();
@@ -1043,7 +1082,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     private sealed record ActualReaderFixture(DeveloperManualSourceReadOwner Owner, IAsyncDisposable Lifetime,
         DeveloperResolvedProject? Saved, FileDeveloperWorkspaceStore? SavedStore, Func<Task, Task> AcceptRead, Func<Task, Task> ObserveRead,
         DeveloperManualProjectProcessOwner ProcessOwner, Func<Task, Task> AcceptExecute);
-    private static async Task<ActualReaderFixture> ActualOptionalReaderFixture(bool canonicalSavedProject = false)
+    private static async Task<ActualReaderFixture> ActualOptionalReaderFixture(bool canonicalSavedProject = false, bool savedStages = false)
     {
         var type = typeof(Haven.Desktop.Tests.FilesDeveloperOriginalSourcePublicationTests)
             .GetNestedType("Rig", BindingFlags.NonPublic)!;
@@ -1053,6 +1092,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var rig = actual.GetType().GetProperty("Result")!.GetValue(actual)!;
         try
         {
+            if (savedStages)
+                await (Task)type.GetMethod("ConfigureSavedStagesAsync", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(rig, null)!;
             var graph = (IServiceProvider)type.GetProperty("Graph", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(rig)!;
             object Required(Type service) => graph.GetService(service) ?? throw new InvalidOperationException("Missing genuine optional reader service: " + service.Name);
             var reader = new DeveloperManualSourceReadOwner((NativeFilesWorkspaceService)Required(typeof(NativeFilesWorkspaceService)),
