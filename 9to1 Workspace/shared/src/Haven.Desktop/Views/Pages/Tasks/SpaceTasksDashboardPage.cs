@@ -498,13 +498,14 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                 // The original callback is caller/business owned, with its original token.
                 // This page does not substitute a view token or claim provider completion.
                 await original.AwaitAsync(InvokePhysicalSource(source)).ConfigureAwait(false);
-                await DispatchOriginalAsync(original, () =>
+                if (!original.IsPublicationCurrent) return; // The real business result is already joined.
+                await DispatchOriginalAsync(original, () => original.RunAcceptedPublicationCallback(() =>
                 {
-                    original.DemandPublication();
                     if (clearInstruction) _scene.ClearInstruction(instructionVersion);
                     _scene.SetStatus("Request handed to the task workspace.");
-                }).ConfigureAwait(false);
-                await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
+                })).ConfigureAwait(false);
+                if (original.IsPublicationCurrent)
+                    await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
             }
             catch (Exception error)
             {
