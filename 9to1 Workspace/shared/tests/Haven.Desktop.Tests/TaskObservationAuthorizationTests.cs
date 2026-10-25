@@ -81,7 +81,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             var task = rig.Service.CurrentCanonicalTask!;
             rig.RemediationRows.OriginalRead = held.Task;
             var reading = rig.Tasks.ReadOriginalTaskPermissionReviewAsync(task.TaskId, task.ExecutionId, token);
-            await rig.RemediationRows.OriginalReadEntered.Task.WaitAsync(token);
+            await rig.RemediationRows.OriginalReadEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
             var close = rig.Owner.CloseAndDrainAsync();
             Assert.False(close.IsCompleted); Assert.False(reading.IsCompleted); Assert.False(held.Task.IsCompleted);
             held.SetException([first, sibling]);
