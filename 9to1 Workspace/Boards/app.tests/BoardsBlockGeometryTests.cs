@@ -45,15 +45,19 @@ public sealed class BoardsBlockGeometryTests
 
             Border Row(string id) => Assert.Single(host.GetLogicalDescendants().OfType<Border>(), border =>
                 border.Tag is BlockReorderRow row && row.BlockId == id);
-            (double Height, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double Opacity) MeasureRow(string id)
+            (double Height, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double Opacity,
+                string InsertLayout) MeasureRow(string id)
             {
                 var border = Row(id);
                 var grid = Assert.IsType<Grid>(border.Child);
                 var insert = Assert.Single(grid.Children.OfType<Button>(), button =>
                     AutomationProperties.GetName(button) == "Insert");
                 var gripButton = Assert.Single(border.GetLogicalDescendants().OfType<Button>(), button => button.Name == "BlockGripToggle");
+                var insertLayout = $"Width={insert.Width}, Height={insert.Height}, MinHeight={insert.MinHeight}, " +
+                    $"MaxHeight={insert.MaxHeight}, Bounds={insert.Bounds}, Padding={insert.Padding}, " +
+                    $"BorderThickness={insert.BorderThickness}, Margin={insert.Margin}";
                 return (border.Bounds.Height, insert.Bounds.Height, insert.Bounds.Top,
-                    gripButton.Bounds.Height, gripButton.Bounds.Top, insert.Opacity);
+                    gripButton.Bounds.Height, gripButton.Bounds.Top, insert.Opacity, insertLayout);
             }
 
             var shortRow = MeasureRow("short-note");
@@ -69,8 +73,10 @@ public sealed class BoardsBlockGeometryTests
 
         Assert.True(actual.tallRow.Height > actual.shortRow.Height + 100,
             $"Expected table row to be substantially taller; short={actual.shortRow.Height}, tall={actual.tallRow.Height}.");
-        Assert.Equal(32, actual.shortRow.InsertHeight);
-        Assert.Equal(32, actual.tallRow.InsertHeight);
+        Assert.True(actual.shortRow.InsertHeight == 32,
+            $"Expected a 32px insert target beside a short block; actual={actual.shortRow.InsertHeight}; {actual.shortRow.InsertLayout}.");
+        Assert.True(actual.tallRow.InsertHeight == 32,
+            $"Expected a 32px insert target beside a tall block; actual={actual.tallRow.InsertHeight}; {actual.tallRow.InsertLayout}.");
         Assert.Equal(32, actual.tallRow.GripHeight);
         Assert.InRange(actual.tallRow.InsertTop, 0, 2);
         Assert.InRange(actual.tallRow.GripTop, 0, 2);
