@@ -82,8 +82,8 @@ public static class ToolbarBuilder
             Separator()));
         host.Children.Add(Group(AlignGroup(vm, selected), Separator()));
         host.Children.Add(Group(
-            IndentButton(vm, BoardsIcons.ChevronLeft, "Decrease indent", () => vm.ShiftSelectedIndent(-1)),
-            IndentButton(vm, BoardsIcons.ChevronRight, "Increase indent", () => vm.ShiftSelectedIndent(1)),
+            IndentButton(vm, BoardsIcons.IndentDecrease, "Decrease indent", () => vm.ShiftSelectedIndent(-1)),
+            IndentButton(vm, BoardsIcons.IndentIncrease, "Increase indent", () => vm.ShiftSelectedIndent(1)),
             Separator()));
         host.Children.Add(Group(DrawButton(vm), CreateInsertButton(vm)));
         ThemeApplier.ApplyToolbarInputSurface(host);

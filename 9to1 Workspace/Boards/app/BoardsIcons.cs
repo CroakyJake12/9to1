@@ -40,6 +40,8 @@ public static class BoardsIcons
     public const string AlignLeft = "align-left";
     public const string AlignCenter = "align-center";
     public const string AlignRight = "align-right";
+    public const string IndentIncrease = "indent-increase";
+    public const string IndentDecrease = "indent-decrease";
     public const string Subscript = "subscript";
     public const string Superscript = "superscript";
     public const string Theme = "palette";
@@ -50,7 +52,7 @@ public static class BoardsIcons
     {
         var icon = new Image
         {
-            Source = BoardsCuiIconResolver.CreateIcon(glyph, BoardsTheme.TextBrush),
+            Source = BoardsCuiIconResolver.CreateIcon(glyph, BoardsCuiIconResolver.SemanticBrush(glyph)),
             Width = size,
             Height = size,
             Stretch = Avalonia.Media.Stretch.Uniform,

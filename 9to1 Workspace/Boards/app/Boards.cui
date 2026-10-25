@@ -21,8 +21,8 @@
               </Button>
             </Container>
             <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
-            <Button Type="Menu Item" ID="UndoButton" IconSource="icon:undo" IconOnly="True" Action="Undo" Interactive="{Binding IsEditMode}" AccessibleName="Undo" Tooltip="Undo" />
-            <Button Type="Menu Item" ID="RedoButton" IconSource="icon:redo" IconOnly="True" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" Tooltip="Redo" />
+            <Button Type="Menu Item" ID="UndoButton" IconSource="icon:undo" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Undo" Interactive="{Binding IsEditMode}" AccessibleName="Undo" Tooltip="Undo" />
+            <Button Type="Menu Item" ID="RedoButton" IconSource="icon:redo" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" Tooltip="Redo" />
           </Container>
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" Row="0" CellGap="6" VerticalAlignment="Center">
             <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="8" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 2" CornerRadius="10">
@@ -34,7 +34,7 @@
               <Button ID="FreeLayoutToggle" Content="Free Placement" Action="SetFreeLayout" Selected="{Binding IsFreeLayout}" Interactive="{Binding CanChangeLayoutMode}" FontSize="12" FontWeight="SemiBold" Padding="8 2" AccessibleName="Use free placement" Tooltip="Unlock spatial placement for page blocks" />
             </Container>
             <Container Type="Menu" ID="MoreMenu">
-              <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" Width="32" Height="32" Padding="0" AccessibleName="More board actions" Tooltip="More">
+              <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" AccessibleName="More board actions" Tooltip="More">
                 <Button Type="Menu Item" Content="Styles…" Action="ManageStyles" />
                 <Button Type="Menu Item" Content="Toggle light or dark appearance" Action="ToggleTheme" />
                 <Button Type="Menu Item" ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />

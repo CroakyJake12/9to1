@@ -80,7 +80,7 @@ public sealed class HavenUiDrawingTests
         {
             "grip", "strikethrough", "subscript", "superscript", "align-left", "align-center",
             "align-right", "bulleted-list", "numbered-list", "image", "paperclip", "edit",
-            "section", "table", "chart", "info",
+            "section", "table", "chart", "info", "indent-increase", "indent-decrease",
         };
         var signatures = distinctKeys.Select(GeometrySignature).ToArray();
         Assert.Equal(distinctKeys.Length, signatures.Distinct(StringComparer.Ordinal).Count());
@@ -90,6 +90,21 @@ public sealed class HavenUiDrawingTests
         Assert.All(grip.Path.Figures, figure => Assert.True(figure.Closed));
         foreach (var key in new[] { "align-left", "align-center", "align-right", "bulleted-list" })
             Assert.All(HavenIconCatalog.Resolve(key).Path.Figures, figure => Assert.True(figure.Closed));
+
+        var increaseIndent = HavenIconCatalog.Resolve("indent-increase");
+        var decreaseIndent = HavenIconCatalog.Resolve("indent-decrease");
+        Assert.Equal(5, increaseIndent.Path.Figures.Count);
+        Assert.Equal(5, decreaseIndent.Path.Figures.Count);
+        Assert.All(increaseIndent.Path.Figures.Take(2), figure => Assert.False(figure.Closed));
+        Assert.All(increaseIndent.Path.Figures.Skip(2), figure => Assert.True(figure.Closed));
+        Assert.NotEqual(GeometrySignature("indent-increase"), GeometrySignature("indent-decrease"));
+
+        var table = HavenIconCatalog.Resolve("table");
+        Assert.Equal(5, table.Path.Figures.Count);
+        Assert.True(table.Path.Figures[0].Closed);
+        Assert.All(table.Path.Figures.Skip(1), figure => Assert.False(figure.Closed));
+        Assert.Equal(18, HavenIconCatalog.Resolve("subscript").Path.Figures[2].Start.Y);
+        Assert.Equal(4, HavenIconCatalog.Resolve("superscript").Path.Figures[2].Start.Y);
     }
 
     private static string GeometrySignature(string key)
