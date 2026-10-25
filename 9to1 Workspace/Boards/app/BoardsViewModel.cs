@@ -946,8 +946,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         RequestRebuild();
     }
 
-    public void RenameSection(string sectionId, string title)
+    public async Task RenameSectionAsync(string sectionId, string title)
     {
+        if (_session is ContractSessionAdapter adapter)
+        {
+            await adapter.RenameSectionAsync(sectionId, title);
+            PushDocumentToBindings();
+            NavRebuildRequested?.Invoke();
+            RequestRebuild();
+            return;
+        }
         var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
         if (section is null)
             return;
@@ -957,8 +965,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         NavRebuildRequested?.Invoke();
     }
 
-    public void RenamePage(string sectionId, string pageId, string title)
+    public async Task RenamePageAsync(string sectionId, string pageId, string title)
     {
+        if (_session is ContractSessionAdapter adapter)
+        {
+            await adapter.RenamePageAsync(pageId, title);
+            PushDocumentToBindings();
+            NavRebuildRequested?.Invoke();
+            RequestRebuild();
+            return;
+        }
         var page = _session.Document.Sections
             .FirstOrDefault(s => s.Id == sectionId)?.Pages.FirstOrDefault(p => p.Id == pageId);
         if (page is null)
