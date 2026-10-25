@@ -749,14 +749,19 @@ public static partial class HavenRichNotesOps
     public static void InsertTableRow(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
-        if (HasMergedCells(table))
-            throw new InvalidOperationException("Split merged cells before adding a table row.");
         var width = table.Rows[0].Cells.Count;
+        var at = Math.Clamp(index, 0, table.Rows.Count);
+        // Appending after the final row leaves all existing merge rectangles
+        // and stable cell slots untouched. Inserting through a merged region
+        // still needs an explicit topology operation.
+        if (HasMergedCells(table) && at != table.Rows.Count)
+            throw new InvalidOperationException("Append rows after merged cells; split them before inserting inside the table.");
         var row = new HavenRichTableRow();
         for (var c = 0; c < width; c++)
             row.Cells.Add(new HavenRichTableCell());
-        table.Rows.Insert(Math.Clamp(index, 0, table.Rows.Count), row);
-        table.RowHeights.Insert(Math.Clamp(index, 0, table.RowHeights.Count), 0);
+        while (table.RowHeights.Count < table.Rows.Count) table.RowHeights.Add(0);
+        table.Rows.Insert(at, row);
+        table.RowHeights.Insert(at, 0);
         TouchNotes(notes);
     }
 
@@ -791,14 +796,17 @@ public static partial class HavenRichNotesOps
     public static void InsertTableColumn(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
-        if (HasMergedCells(table))
-            throw new InvalidOperationException("Split merged cells before adding a table column.");
         var width = table.Rows[0].Cells.Count;
         if (width >= 50) throw new InvalidOperationException("Tables support at most 50 columns.");
         var at = Math.Clamp(index, 0, width);
+        // Appending a new unit cell after the last column preserves existing
+        // merge rectangles; an interior insertion would require remapping them.
+        if (HasMergedCells(table) && at != width)
+            throw new InvalidOperationException("Append columns after merged cells; split them before inserting inside the table.");
+        while (table.ColumnWidths.Count < width) table.ColumnWidths.Add(0);
         foreach (var row in table.Rows)
             row.Cells.Insert(at, new HavenRichTableCell());
-        table.ColumnWidths.Insert(Math.Clamp(at, 0, table.ColumnWidths.Count), 0);
+        table.ColumnWidths.Insert(at, 0);
         TouchNotes(notes);
     }
 

@@ -36,6 +36,10 @@ public sealed partial class BoardsViewModel
         Set("ContextCanMoveRowDown", cellKey is not null && !block!.HasMergedCells && row < block!.TableRows - 1);
         Set("ContextCanMoveColumnLeft", cellKey is not null && !block!.HasMergedCells && column > 0);
         Set("ContextCanMoveColumnRight", cellKey is not null && !block!.HasMergedCells && column < block!.TableCols - 1);
+        Set("ContextCanAddTableRow", block is { Kind: "table", TableRows: < 100 });
+        Set("ContextCanDeleteTableRow", block is { Kind: "table", HasMergedCells: false, TableRows: > 1 });
+        Set("ContextCanAddTableColumn", block is { Kind: "table", TableCols: < 50 });
+        Set("ContextCanDeleteTableColumn", block is { Kind: "table", HasMergedCells: false, TableCols: > 1 });
         Set("ContextCanChangeTableStructure", block is { Kind: "table", HasMergedCells: false });
         Set("ContextCanMergeCellRight", cellSpan?.CanMergeRight == true);
         Set("ContextCanMergeCellDown", cellSpan?.CanMergeDown == true);

@@ -354,6 +354,98 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Appending_table_rows_and_columns_preserves_merged_slots_through_undo_and_reopen()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "table-append.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            var pageId = string.Empty;
+            var blockId = string.Empty;
+            string[] originalCellIds = [];
+            var originalRows = 0;
+            var originalColumns = 0;
+            await using (var seed = await RichBoardSession.CreateNewAsync(store, "Merged table append"))
+            {
+                await seed.SaveAsAsync(path);
+                pageId = seed.Rich.Sections[0].Pages[0].Id;
+                await seed.MutateAsync(rich =>
+                {
+                    var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Table);
+                    blockId = block.Id;
+                    var table = block.Table!;
+                    table.Rows[0].Cells[0].Text = "Anchor";
+                    table.Rows[0].Cells[1].Text = "Covered content";
+                    Assert.True(HavenRichNotesOps.MergeTableCellRight(rich, pageId, block.Id, 0, 0));
+                    originalCellIds = table.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id).ToArray();
+                    originalRows = table.Rows.Count;
+                    originalColumns = table.Rows[0].Cells.Count;
+                });
+                await seed.SaveAsync();
+            }
+
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var viewModel = new BoardsViewModel(adapter);
+                viewModel.FocusBlock(blockId);
+                viewModel.FocusCell(blockId, 0, 0);
+                Assert.True(viewModel.TryGetValue("ContextCanAddTableRow", out var canAddRow) && canAddRow is true);
+                Assert.True(viewModel.TryGetValue("ContextCanAddTableColumn", out var canAddColumn) && canAddColumn is true);
+                Assert.True(viewModel.TryGetValue("ContextCanDeleteTableRow", out var canDeleteRow) && canDeleteRow is false);
+                Assert.True(viewModel.TryGetValue("ContextCanDeleteTableColumn", out var canDeleteColumn) && canDeleteColumn is false);
+
+                await viewModel.DispatchAsync("ContextAddRow", null);
+                var rowAppendedDocument = await adapter.GetDetachedContractDocumentAsync();
+                var rowAppended = rowAppendedDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                    .Single(candidate => candidate.Id == blockId).Table!;
+                Assert.Equal(originalRows + 1, rowAppended.Rows.Count);
+                Assert.Equal(originalColumns, rowAppended.Rows[0].Cells.Count);
+                Assert.Equal(2, rowAppended.Rows[0].Cells[0].ColumnSpan);
+                Assert.Equal(originalCellIds, rowAppended.Rows.Take(originalRows)
+                    .SelectMany(row => row.Cells).Select(cell => cell.Id));
+                await viewModel.DispatchAsync("ContextAddColumn", null);
+                var appendedDocument = await adapter.GetDetachedContractDocumentAsync();
+                var appended = appendedDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                    .Single(candidate => candidate.Id == blockId).Table!;
+                Assert.Equal(originalRows + 1, appended.Rows.Count);
+                Assert.Equal(originalColumns + 1, appended.Rows[0].Cells.Count);
+                Assert.Equal(originalCellIds, appended.Rows.Take(originalRows)
+                    .SelectMany(row => row.Cells.Take(originalColumns)).Select(cell => cell.Id));
+                Assert.Equal(2, appended.Rows[0].Cells[0].ColumnSpan);
+                Assert.Equal(appended.Rows[0].Cells[0].Id, appended.Rows[0].Cells[1].CoveredByCellId);
+                Assert.Equal("Covered content", appended.Rows[0].Cells[1].Text);
+                Assert.True(await adapter.UndoAsync());
+                Assert.True(await adapter.UndoAsync());
+                var undoneDocument = await adapter.GetDetachedContractDocumentAsync();
+                var undone = undoneDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                    .Single(candidate => candidate.Id == blockId).Table!;
+                Assert.Equal(originalRows, undone.Rows.Count);
+                Assert.Equal(originalColumns, undone.Rows[0].Cells.Count);
+                Assert.Equal(originalCellIds, undone.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id));
+                Assert.Equal(2, undone.Rows[0].Cells[0].ColumnSpan);
+
+                Assert.True(await adapter.RedoAsync());
+                Assert.True(await adapter.RedoAsync());
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var reopenedDocument = await reopened.GetDetachedContractDocumentAsync();
+            var reopenedTable = reopenedDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                .Single(candidate => candidate.Id == blockId).Table!;
+            Assert.Equal(originalRows + 1, reopenedTable.Rows.Count);
+            Assert.Equal(originalColumns + 1, reopenedTable.Rows[0].Cells.Count);
+            Assert.Equal(2, reopenedTable.Rows[0].Cells[0].ColumnSpan);
+            Assert.Equal(reopenedTable.Rows[0].Cells[0].Id, reopenedTable.Rows[0].Cells[1].CoveredByCellId);
+            Assert.Equal("Covered content", reopenedTable.Rows[0].Cells[1].Text);
+            Assert.Equal(originalCellIds, reopenedTable.Rows.Take(originalRows)
+                .SelectMany(row => row.Cells.Take(originalColumns)).Select(cell => cell.Id));
+        }
+        finally { DeleteDirectory(root); }
+    }
+
+    [Fact]
     public async Task Exact_table_dimensions_are_one_undoable_edit_and_reopen_with_merged_cell_identity()
     {
         var root = TempDirectory();
