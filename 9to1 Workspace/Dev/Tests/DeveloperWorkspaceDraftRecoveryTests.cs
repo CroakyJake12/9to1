@@ -14,6 +14,10 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
 {
     private readonly string _root = Path.Combine(Path.GetTempPath(), "9to1-draft-recovery-tests", Guid.NewGuid().ToString("N"));
     private readonly byte[] _key = RandomNumberGenerator.GetBytes(32);
+    // The owning Dev project uses xUnit2. Use a real per-fixture deadline rather than
+    // a TestContext API from the separate xUnit3 Desktop test project.
+    private readonly CancellationTokenSource _runEditDeadline = new(TimeSpan.FromSeconds(30));
+    private CancellationToken RunEditToken => _runEditDeadline.Token;
     private static DeveloperDraftRecoveryScope Scope() => new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
     private static DeveloperDraftRecoveryPayload Payload(string text = "private unsaved source — preserve me") =>
         new([new("src/Main.cui", new string('a', 64), text, true), new("readme.md", new string('b', 64), "another dirty draft", true)], "src/Main.cui");
@@ -523,7 +527,7 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
         var (store, project) = await CreateAsync(); var scope = ManualScope(); var keyReads = 0;
         var reviewed = DeveloperRunConfigurationEdit.Prepare(project, "run", "printf newly-configured", 25).Value!;
         var saved = await store.SaveReviewedRunConfigurationAsync(project, reviewed, scope, 0,
-            _ => { keyReads++; throw new InvalidOperationException("No recovery means no key request."); }, RevalidateRunMetadata, TestContext.Current.CancellationToken);
+            _ => { keyReads++; throw new InvalidOperationException("No recovery means no key request."); }, RevalidateRunMetadata, RunEditToken);
         Assert.True(saved.Succeeded, saved.Error?.Message); Assert.Equal(0, keyReads); Assert.False(saved.Value!.MigratedRecovery);
         Assert.Equal(project.Reference.WorkspaceRevision + 1, saved.Value.Project.Reference.WorkspaceRevision);
         Assert.Equal(project.Reference.ProjectRevision + 1, saved.Value.Project.Reference.ProjectRevision);
@@ -531,10 +535,10 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
         Assert.Null(Assert.Single(DeveloperRunConfigurationSelection.Observe(saved.Value.Project).Value!).UnavailableReason);
         Assert.Equal(project.Root, saved.Value.Project.Root); Assert.Equal(project.Repository, saved.Value.Project.Repository);
         Assert.Empty(saved.Value.Project.Workspace.OpenEditors);
-        var metadata = await File.ReadAllBytesAsync(PathFor(project), TestContext.Current.CancellationToken);
+        var metadata = await File.ReadAllBytesAsync(PathFor(project), RunEditToken);
         var stale = await store.SaveReviewedRunConfigurationAsync(project, reviewed, scope, 0,
-            _ => throw new InvalidOperationException("Stale input must refuse before keys."), RevalidateRunMetadata, TestContext.Current.CancellationToken);
-        Assert.False(stale.Succeeded); Assert.Equal(metadata, await File.ReadAllBytesAsync(PathFor(project), TestContext.Current.CancellationToken));
+            _ => throw new InvalidOperationException("Stale input must refuse before keys."), RevalidateRunMetadata, RunEditToken);
+        Assert.False(stale.Succeeded); Assert.Equal(metadata, await File.ReadAllBytesAsync(PathFor(project), RunEditToken));
         Assert.Single(Directory.GetFiles(Path.Combine(_root, "workspaces"), "*.json"));
     }
 
@@ -543,27 +547,27 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     {
         var (store, project) = await CreateAsync(); var scope = ManualScope(); var payload = Payload();
         var original = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, payload, _key);
-        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, RunEditToken)).Succeeded);
         var tabs = new[] { new DeveloperCleanEditorTab("readme.md", new string('b', 64), true, false, "right") };
-        Assert.True((await store.SaveEditorSessionAsync(project, scope.ProfileId, 0, tabs, tabs[0].RelativePath, TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await store.SaveEditorSessionAsync(project, scope.ProfileId, 0, tabs, tabs[0].RelativePath, RunEditToken)).Succeeded);
         var review = DeveloperRunConfigurationEdit.Prepare(project, "run", "printf migrated-target", 25).Value!;
         byte[]? suppliedKey = null;
         var saved = await store.SaveReviewedRunConfigurationAsync(project, review, scope, 1,
-            _ => Task.FromResult(suppliedKey = _key.ToArray()), RevalidateRunMetadata, TestContext.Current.CancellationToken);
+            _ => Task.FromResult(suppliedKey = _key.ToArray()), RevalidateRunMetadata, RunEditToken);
         Assert.True(saved.Succeeded, saved.Error?.Message); Assert.True(saved.Value!.MigratedRecovery);
         Assert.All(suppliedKey!, value => Assert.Equal(0, value));
-        var current = saved.Value.Project; var loaded = await store.GetDraftRecoveryAsync(current, scope, TestContext.Current.CancellationToken);
+        var current = saved.Value.Project; var loaded = await store.GetDraftRecoveryAsync(current, scope, RunEditToken);
         Assert.True(loaded.Succeeded); var migrated = Assert.IsType<DeveloperDraftRecoverySnapshot>(loaded.Value);
         Assert.Equal(2, migrated.Generation); Assert.NotEqual(original.ProjectStamp, migrated.ProjectStamp);
         Assert.Equal(current.Reference, migrated.ProjectReference); Assert.Equal(scope, migrated.Scope);
         Assert.NotEqual(original.ProtectedPayload, migrated.ProtectedPayload);
         var restored = FileDeveloperWorkspaceStore.UnprotectDraftRecovery(current, scope, migrated, _key);
         Assert.Equal(payload.Tabs.ToArray(), restored.Tabs.ToArray()); Assert.Equal(payload.SelectedRelativePath, restored.SelectedRelativePath);
-        Assert.Throws<UnauthorizedAccessException>(() => FileDeveloperWorkspaceStore.UnprotectDraftRecovery(current, scope, original, _key));
-        var layout = await store.GetEditorSessionAsync(current, scope.ProfileId, TestContext.Current.CancellationToken);
+        Assert.Throws<UnauthorizedAccessException>(() => { _ = FileDeveloperWorkspaceStore.UnprotectDraftRecovery(current, scope, original, _key); });
+        var layout = await store.GetEditorSessionAsync(current, scope.ProfileId, RunEditToken);
         Assert.True(layout.Succeeded); Assert.Equal(2, layout.Value!.Generation); Assert.Equal(tabs, layout.Value.Tabs);
         Assert.Equal(current.Reference, layout.Value.ProjectReference); Assert.Equal(2, saved.Value.CleanSessionGeneration);
-        var onDisk = await File.ReadAllTextAsync(PathFor(project), TestContext.Current.CancellationToken);
+        var onDisk = await File.ReadAllTextAsync(PathFor(project), RunEditToken);
         Assert.DoesNotContain(payload.Tabs[0].DraftText, onDisk); Assert.DoesNotContain(Convert.ToBase64String(_key), onDisk);
         // Authority-changing target edits never reuse presentation-only transition receipts.
         Assert.Null(((IDeveloperProjectOriginalMetadataTransitionStore)store).GetOriginalMetadataTransition(migrated));
@@ -572,7 +576,7 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     [Fact]
     public async Task Editing_a_saved_target_uses_its_exact_previous_digest_and_migrates_recovery_again_without_changing_draft_payload()
     {
-        var (store, project) = await CreateAsync(); var scope = ManualScope(); var token = TestContext.Current.CancellationToken;
+        var (store, project) = await CreateAsync(); var scope = ManualScope(); var token = RunEditToken;
         var original = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
         Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, token)).Succeeded);
         var create = DeveloperRunConfigurationEdit.Prepare(project, "run", "printf first", 20).Value!;
@@ -596,7 +600,7 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     [Fact]
     public async Task Mutating_caller_owned_workspace_lists_during_key_IO_cannot_add_an_unreviewed_root_to_the_canonical_write()
     {
-        var (store, originalProject) = await CreateAsync(); var scope = ManualScope(); var token = TestContext.Current.CancellationToken;
+        var (store, originalProject) = await CreateAsync(); var scope = ManualScope(); var token = RunEditToken;
         var roots = originalProject.Workspace.Roots.ToList();
         var project = originalProject with { Workspace = originalProject.Workspace with { Roots = roots } };
         var original = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
@@ -632,18 +636,18 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
             original = original with { ProtectedPayload = Convert.ToBase64String(encrypted) };
         }
         if (refusal == "tampered-header") original = original with { SavedAtUtc = original.SavedAtUtc.AddTicks(1) };
-        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, TestContext.Current.CancellationToken)).Succeeded);
-        var before = await File.ReadAllBytesAsync(PathFor(project), TestContext.Current.CancellationToken); var reads = 0;
+        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, RunEditToken)).Succeeded);
+        var before = await File.ReadAllBytesAsync(PathFor(project), RunEditToken); var reads = 0;
         var review = DeveloperRunConfigurationEdit.Prepare(project, "run", "printf should-not-save", 25).Value!;
         var observed = await store.SaveReviewedRunConfigurationAsync(project, review, scope, refusal == "stale-generation" ? 0 : 1,
             _ => { reads++; if (refusal == "missing-key") throw new InvalidDataException("The original key is missing; it was not recreated.");
-                return Task.FromResult(refusal == "wrong-key" ? RandomNumberGenerator.GetBytes(32) : _key.ToArray()); }, RevalidateRunMetadata, TestContext.Current.CancellationToken);
-        Assert.False(observed.Succeeded); Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project), TestContext.Current.CancellationToken));
+                return Task.FromResult(refusal == "wrong-key" ? RandomNumberGenerator.GetBytes(32) : _key.ToArray()); }, RevalidateRunMetadata, RunEditToken);
+        Assert.False(observed.Succeeded); Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project), RunEditToken));
         Assert.Equal(refusal is "wrong-key" or "missing-key" or "corrupt-ciphertext" or "tampered-header" ? 1 : 0, reads);
-        var still = await store.GetDraftRecoveryAsync(project, savedScope, TestContext.Current.CancellationToken);
+        var still = await store.GetDraftRecoveryAsync(project, savedScope, RunEditToken);
         Assert.True(still.Succeeded); Assert.Equal(original, still.Value);
         if (refusal is "corrupt-ciphertext" or "tampered-header")
-            Assert.ThrowsAny<CryptographicException>(() => FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, savedScope, still.Value!, _key));
+            Assert.ThrowsAny<CryptographicException>(() => { _ = FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, savedScope, still.Value!, _key); });
         else Assert.Equal(Payload().Tabs.ToArray(), FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, savedScope, still.Value!, _key).Tabs.ToArray());
     }
 
@@ -652,23 +656,23 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     {
         var (store, project) = await CreateAsync(); var scope = ManualScope();
         var original = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
-        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, RunEditToken)).Succeeded);
         var review = DeveloperRunConfigurationEdit.Prepare(project, "run", "printf refused", 25).Value!;
         byte[] external = [];
         var observed = await store.SaveReviewedRunConfigurationAsync(project, review, scope, 1, async _ =>
         {
-            var document = JsonNode.Parse(await File.ReadAllTextAsync(PathFor(project), TestContext.Current.CancellationToken))!;
+            var document = JsonNode.Parse(await File.ReadAllTextAsync(PathFor(project), RunEditToken))!;
             document["workspace"]!["revision"] = project.Workspace.Revision + 1;
-            external = Encoding.UTF8.GetBytes(document.ToJsonString()); await File.WriteAllBytesAsync(PathFor(project), external, TestContext.Current.CancellationToken);
+            external = Encoding.UTF8.GetBytes(document.ToJsonString()); await File.WriteAllBytesAsync(PathFor(project), external, RunEditToken);
             return _key.ToArray();
-        }, RevalidateRunMetadata, TestContext.Current.CancellationToken);
-        Assert.False(observed.Succeeded); Assert.Equal(external, await File.ReadAllBytesAsync(PathFor(project), TestContext.Current.CancellationToken));
+        }, RevalidateRunMetadata, RunEditToken);
+        Assert.False(observed.Succeeded); Assert.Equal(external, await File.ReadAllBytesAsync(PathFor(project), RunEditToken));
     }
 
     [Fact]
     public async Task Same_store_manual_start_exclusion_blocks_every_ordinary_metadata_writer_and_releases_after_its_real_pin()
     {
-        var (store, project) = await CreateAsync(); var scope = ManualScope(); var token = TestContext.Current.CancellationToken;
+        var (store, project) = await CreateAsync(); var scope = ManualScope(); var token = RunEditToken;
         var original = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
         Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, token)).Succeeded);
         var before = await File.ReadAllBytesAsync(PathFor(project), token);
@@ -697,8 +701,8 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     [InlineData(true)]
     public async Task Admitted_metadata_writer_excludes_new_start_pins_and_settled_or_cancelled_writer_releases_exclusion(bool cancel)
     {
-        var (store, project) = await CreateAsync(); var scope = ManualScope(); var before = await File.ReadAllBytesAsync(PathFor(project), TestContext.Current.CancellationToken);
-        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var (store, project) = await CreateAsync(); var scope = ManualScope(); var before = await File.ReadAllBytesAsync(PathFor(project), RunEditToken);
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(RunEditToken);
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var writer = store.PrepareAndSaveDraftRecoveryAsync(project, scope, 0, async (_, ct) =>
@@ -708,13 +712,13 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
         }, cancellation.Token);
         try
         {
-            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), RunEditToken);
             Assert.Throws<InvalidOperationException>(() => store.AcquireOriginalRunMetadataReadPin(project.Reference.WorkspaceId));
             if (cancel) cancellation.Cancel(); else release.TrySetResult();
             if (cancel)
             {
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(() => writer);
-                Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project), TestContext.Current.CancellationToken));
+                Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project), RunEditToken));
             }
             else Assert.True((await writer).Succeeded);
         }
@@ -751,6 +755,7 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     }
     public void Dispose()
     {
+        try { _runEditDeadline.Cancel(); } finally { _runEditDeadline.Dispose(); }
         CryptographicOperations.ZeroMemory(_key);
         if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
     }
