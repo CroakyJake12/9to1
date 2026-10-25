@@ -96,14 +96,15 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
                 (review, reviewToken) => PresentReviewAsync(approvals, review.Authorization, reviewToken),
                 (review, reviewToken) => PresentReviewAsync(approvals, review.Authorization, reviewToken),
                 OriginalScope, RetainOriginalTask, lifetime.Token, allowWrites: mode == BoardEmbeddedArtifactMode.Edit);
-            page = await CreateWritePageAsync(repository, reference.ArtifactId, token).ConfigureAwait(false);
-            await AwaitOnUiAsync(() => page.InitializeAsync(token)).ConfigureAwait(false);
-            if (page.Document is not { } opened || opened.Id != reference.ArtifactId || opened.Version != expectedVersion)
+            var openedPage = await CreateWritePageAsync(repository, reference.ArtifactId, token).ConfigureAwait(false);
+            page = openedPage;
+            await AwaitOnUiAsync(() => openedPage.InitializeAsync(token)).ConfigureAwait(false);
+            if (openedPage.Document is not { } opened || opened.Id != reference.ArtifactId || opened.Version != expectedVersion)
                 throw new IOException("The selected Write document changed from its pinned Notes version.");
             await RevalidateAsync(originals, token).ConfigureAwait(false);
-            await Dispatcher.UIThread.InvokeAsync(() => page.SetEmbeddedReadOnly(mode == BoardEmbeddedArtifactMode.View)).GetTask().ConfigureAwait(false);
+            await Dispatcher.UIThread.InvokeAsync(() => openedPage.SetEmbeddedReadOnly(mode == BoardEmbeddedArtifactMode.View)).GetTask().ConfigureAwait(false);
             DemandOwnerCurrent();
-            var session = new EmbeddedWriteSession(this, page, repository, reference, mode, lifetime);
+            var session = new EmbeddedWriteSession(this, openedPage, repository, reference, mode, lifetime);
             lock (_gate) _sessions.Add(session);
             page = null; repository = null; lifetime = null!;
             return (IBoardsEmbeddedArtifactSession)session;
@@ -461,7 +462,8 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             {
                 if (!_pageDrained && _page is not null)
                 {
-                    await AwaitOnUiAsync(() => _page.CloseAndDrainAsync()).ConfigureAwait(false);
+                    var page = _page;
+                    await AwaitOnUiAsync(() => page.CloseAndDrainAsync()).ConfigureAwait(false);
                     _pageDrained = true;
                     _page = null;
                 }
