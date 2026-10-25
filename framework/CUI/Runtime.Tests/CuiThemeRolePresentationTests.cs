@@ -56,6 +56,10 @@ public sealed class CuiThemeRolePresentationTests
             var resources = new ResourceDictionary();
             CuiThemeResourceApplier.ApplyToResources(resources,
                 CuiSurfacePaletteCatalog.For("Boards", appearance, CuiTheme.Glow, accent));
+            var primary = Assert.IsAssignableFrom<IGradientBrush>(resources["CuiAccentPrimaryBrush"]);
+            var secondary = Assert.IsAssignableFrom<IGradientBrush>(resources["CuiAccentSecondaryBrush"]);
+            Assert.True(secondary.GradientStops.Average(stop => CuiContrast.Ratio(stop.Color, Colors.Black)) >
+                primary.GradientStops.Average(stop => CuiContrast.Ratio(stop.Color, Colors.Black)));
             foreach (var role in new[] { "Primary", "Secondary", "Tertiary", "Negative" })
                 foreach (var state in new[] { "", "Hover", "Pressed" })
                 {

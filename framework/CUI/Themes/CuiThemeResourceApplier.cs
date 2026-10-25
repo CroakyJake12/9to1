@@ -384,6 +384,8 @@ public static class CuiThemeResourceApplier
                 Blend(palette.Panel, accent.Middle, .22),
                 Blend(palette.Panel, accent.End, .18), accent.StartPoint, accent.EndPoint));
         }
+        var glowPrimary = ReadableActionGradient(palette.AccentPalette.Primary, 5.5);
+        var glowSecondary = ReadableActionGradient(Shift(glowPrimary, Colors.White, .12));
         foreach (var role in new[] { "Primary", "Secondary", "Tertiary" })
         {
             var softInk = palette.AccentSecondary;
@@ -396,8 +398,8 @@ public static class CuiThemeResourceApplier
             resources[$"CuiAccent{role}PressedForegroundBrush"] = glow ? Brushes.White : resources["CuiAccentForegroundBrush"];
             var gradient = role switch
             {
-                "Primary" => palette.AccentPalette.Primary,
-                "Secondary" => palette.AccentPalette.Secondary,
+                "Primary" => glow ? glowPrimary : palette.AccentPalette.Primary,
+                "Secondary" => glow ? glowSecondary : palette.AccentPalette.Secondary,
                 _ => palette.AccentPalette.Tertiary
             };
             if (glow)
@@ -448,11 +450,11 @@ public static class CuiThemeResourceApplier
         resources["CuiButtonMotionDuration"] = TimeSpan.FromMilliseconds(180 * settings.EffectiveMotionScale(CuiThemeCatalog.Resolve(palette.Theme).MotionDurationScale));
     }
 
-    private static CuiAccentGradient ReadableActionGradient(CuiAccentGradient gradient) => gradient with
+    private static CuiAccentGradient ReadableActionGradient(CuiAccentGradient gradient, double minimumRatio = 4.5) => gradient with
     {
-        Start = CuiContrast.EnsureForegroundContrast(gradient.Start, Colors.White, 4.5),
-        Middle = CuiContrast.EnsureForegroundContrast(gradient.Middle, Colors.White, 4.5),
-        End = CuiContrast.EnsureForegroundContrast(gradient.End, Colors.White, 4.5)
+        Start = CuiContrast.EnsureForegroundContrast(gradient.Start, Colors.White, minimumRatio),
+        Middle = CuiContrast.EnsureForegroundContrast(gradient.Middle, Colors.White, minimumRatio),
+        End = CuiContrast.EnsureForegroundContrast(gradient.End, Colors.White, minimumRatio)
     };
 
     private static void ApplyButtonForegroundResources(IResourceDictionary resources, CuiPalette palette)
