@@ -123,6 +123,81 @@ public sealed class EmbeddedPresentationLifecycleTests
         }
     }
 
+    [Fact]
+    public async Task Mounted_embedded_page_closes_when_navigation_selects_a_native_page()
+    {
+        var (bytes, sectionId, embeddedPageId, nativePageId, reference) = MakeBoardWithEmbeddedWrite();
+        TestUiThread.Run(() => { });
+        var owner = new DelayedEmbeddedHost(reference);
+        var presentation = PumpUi(TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
+            bytes, "files:document-navigation-gate", "revision-1",
+            (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")),
+            embeddedArtifactHost: owner)));
+        var window = TestUiThread.Run(() => MountAndAssert(presentation.Content, "Embedded lifecycle content"));
+        try
+        {
+            PumpUi(TestUiThread.Run(() => presentation.WaitUntilReadyAsync()));
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+            TestUiThread.Run(() => presentation.ViewModel.SelectPage(sectionId, embeddedPageId));
+            PumpUntilUi(owner.OpenStarted.Task);
+            owner.CompleteOpen();
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+            var embeddedHost = TestUiThread.Run(() =>
+                BoardsCuiControlFinder.FindByAutomationId<Panel>(presentation.Content, "EmbeddedArtifactHost"));
+            Assert.NotNull(embeddedHost);
+            Assert.Contains(owner.Session.Content, embeddedHost!.Children);
+
+            TestUiThread.Run(() => presentation.ViewModel.SelectPage(sectionId, nativePageId));
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+            Assert.Equal(nativePageId, presentation.ViewModel.SelectedPageId);
+            Assert.Equal(1, owner.Session.BeginCloseCount);
+            Assert.Equal(1, owner.Session.CloseCount);
+            Assert.Equal(1, owner.Session.DisposeCount);
+            Assert.DoesNotContain(owner.Session.Content, embeddedHost.Children);
+        }
+        finally
+        {
+            TestUiThread.Run(window.Close);
+            await DrainAndDisposeAsync(presentation.DisposeAsync().AsTask());
+        }
+    }
+
+    [Fact]
+    public async Task Embedded_artifact_that_fails_fresh_revalidation_is_never_published()
+    {
+        var (bytes, sectionId, embeddedPageId, _, reference) = MakeBoardWithEmbeddedWrite();
+        TestUiThread.Run(() => { });
+        var owner = new DelayedEmbeddedHost(reference);
+        owner.Session.RevalidationResult = false;
+        var presentation = PumpUi(TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
+            bytes, "files:document-revalidation-gate", "revision-1",
+            (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")),
+            embeddedArtifactHost: owner)));
+        var window = TestUiThread.Run(() => MountAndAssert(presentation.Content, "Embedded lifecycle content"));
+        try
+        {
+            PumpUi(TestUiThread.Run(() => presentation.WaitUntilReadyAsync()));
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+            TestUiThread.Run(() => presentation.ViewModel.SelectPage(sectionId, embeddedPageId));
+            PumpUntilUi(owner.OpenStarted.Task);
+            owner.CompleteOpen();
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+            var embeddedHost = TestUiThread.Run(() =>
+                BoardsCuiControlFinder.FindByAutomationId<Panel>(presentation.Content, "EmbeddedArtifactHost"));
+            Assert.NotNull(embeddedHost);
+            Assert.DoesNotContain(owner.Session.Content, embeddedHost!.Children);
+            Assert.Equal(1, owner.Session.RevalidateCount);
+            Assert.Equal(1, owner.Session.BeginCloseCount);
+            Assert.Equal(1, owner.Session.CloseCount);
+            Assert.True(presentation.ViewModel.Get("EmbeddedPageUnavailable") is true);
+        }
+        finally
+        {
+            TestUiThread.Run(window.Close);
+            await DrainAndDisposeAsync(presentation.DisposeAsync().AsTask());
+        }
+    }
+
     private static Window MountAndAssert(Control content, string expectedText)
     {
         var window = new Window { Width = 1200, Height = 800, Content = content };
@@ -215,10 +290,11 @@ public sealed class EmbeddedPresentationLifecycleTests
         public int RevalidateCount { get; private set; }
         public int BeginCloseCount { get; private set; }
         public int AbortCloseCount { get; private set; }
+        public bool RevalidationResult { get; set; } = true;
         public Task<bool> RevalidateAsync(CancellationToken ct = default)
         {
             RevalidateCount++;
-            return Task.FromResult(true);
+            return Task.FromResult(RevalidationResult);
         }
         public Task<IBoardsEmbeddedArtifactClosePreparation?> PrepareToCloseAsync(CancellationToken ct = default) =>
             Task.FromResult<IBoardsEmbeddedArtifactClosePreparation?>(new ClosePreparation(this));
