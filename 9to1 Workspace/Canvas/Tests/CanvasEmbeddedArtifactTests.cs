@@ -44,18 +44,21 @@ public sealed class CanvasEmbeddedArtifactTests
                 selected.FileId, storeId, new FilesRevisionId(Guid.NewGuid())));
             Assert.Empty(access.ReadScopes);
 
+            access.ReadScopes.Clear();
             var opened = await bridge.OpenEmbeddedArtifactAsync(artifact.ArtifactId, artifact.RevisionId);
             Assert.Equal(selected.FileId, opened.FileId);
             Assert.Equal(artifact.ArtifactId, opened.Opened.Artifact.ArtifactId);
             Assert.Equal(artifact.RevisionId, opened.Opened.Artifact.RevisionId);
             Assert.Equal(selected.Revision.Id, opened.Opened.Revision.Id);
             Assert.Equal(selected.Revision.Id, opened.Opened.CasRevisionId);
-            Assert.Equal(new[] { selected.FileId.ToString(), selected.FileId.ToString() }, access.ReadScopes);
-            Assert.DoesNotContain(unrelated.FileId.ToString(), access.ReadScopes);
+            AssertOnlySelectedFileReadChecks(access, selected.FileId);
+            Assert.DoesNotContain(unrelated.FileId.ToString(), access.ReadScopes.Select(scope => scope.Id));
 
+            access.ReadScopes.Clear();
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 bridge.OpenEmbeddedArtifactAsync(artifact.ArtifactId, Guid.NewGuid()));
-            Assert.Equal(new[] { selected.FileId.ToString(), selected.FileId.ToString() }, access.ReadScopes);
+            AssertOnlySelectedFileReadChecks(access, selected.FileId);
+            Assert.DoesNotContain(unrelated.FileId.ToString(), access.ReadScopes.Select(scope => scope.Id));
 
             var editor = new CanvasArtifactSession(opened.Opened.Artifact);
             Assert.True(editor.RenameArtifact(new(artifact.RevisionId, Guid.NewGuid(), new(owner, "Fixture actor")),
@@ -63,17 +66,37 @@ public sealed class CanvasEmbeddedArtifactTests
             var updated = editor.GetArtifactSnapshot();
             var saved = await bridge.SaveAsync(opened.FileId, updated, opened.Opened.CasRevisionId,
                 opened.Opened.StoreId, actor.Actor);
+            access.ReadScopes.Clear();
             await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.ResolveEmbeddedArtifactMetadataAsync(
                 selected.FileId, storeId, selected.Revision.Id));
             Assert.Empty(access.ReadScopes);
+            access.ReadScopes.Clear();
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 bridge.OpenEmbeddedArtifactAsync(artifact.ArtifactId, artifact.RevisionId));
+            AssertOnlySelectedFileReadChecks(access, selected.FileId);
+            Assert.DoesNotContain(unrelated.FileId.ToString(), access.ReadScopes.Select(scope => scope.Id));
+            access.ReadScopes.Clear();
             var reopened = await bridge.OpenEmbeddedArtifactAsync(artifact.ArtifactId, updated.RevisionId);
             Assert.Equal(opened.FileId, reopened.FileId);
             Assert.Equal(updated.RevisionId, reopened.Opened.Artifact.RevisionId);
             Assert.Equal(saved.Id, reopened.Opened.Revision.Id);
+            AssertOnlySelectedFileReadChecks(access, selected.FileId);
+            Assert.DoesNotContain(unrelated.FileId.ToString(), access.ReadScopes.Select(scope => scope.Id));
         }
         finally { Directory.Delete(root, recursive: true); }
+    }
+
+    private static void AssertOnlySelectedFileReadChecks(TrackingFilesResolver access, HostedItemId selectedFile)
+    {
+        Assert.Equal(2, access.ReadScopes.Count);
+        Assert.All(access.ReadScopes, scope =>
+        {
+            Assert.Equal("files.item", scope.Kind);
+            Assert.Equal(selectedFile.ToString(), scope.Id);
+            Assert.Equal(ResourceAccess.Read, scope.Access);
+            Assert.False(string.IsNullOrWhiteSpace(scope.Revision));
+        });
+        Assert.Equal(access.ReadScopes[0].Revision, access.ReadScopes[1].Revision);
     }
 
     private sealed class TestActorSource(AuthenticatedResourceActor actor) : IAuthenticatedResourceActorSource
@@ -86,11 +109,11 @@ public sealed class CanvasEmbeddedArtifactTests
     private sealed class TrackingFilesResolver(Func<DurableDriveProvider> provider) : ICanonicalResourceAccessResolver
     {
         public string ResourceKind => "files.item";
-        internal List<string> ReadScopes { get; } = [];
+        internal List<ResourceScope> ReadScopes { get; } = [];
         public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor,
             string actionId, ResourceScope scope, CancellationToken cancellationToken)
         {
-            if (actionId == "canvas.file.open" && scope.Access == ResourceAccess.Read) ReadScopes.Add(scope.Id);
+            if (actionId == "canvas.file.open" && scope.Access == ResourceAccess.Read) ReadScopes.Add(scope);
             var result = await provider().GetAsync(new(Guid.Parse(scope.Id)), cancellationToken);
             var allowed = result.IsSuccess && result.Value!.OwnerPrincipalId == actor.ActorId &&
                 (result.Value.CurrentRevisionId?.ToString() ?? "uncommitted") == scope.Revision &&
