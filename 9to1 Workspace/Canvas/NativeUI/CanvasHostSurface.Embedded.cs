@@ -123,9 +123,13 @@ public sealed partial class CanvasHostSurface
 
     internal void CompleteEmbeddedChoice(CanvasEmbeddedArtifactTarget? target)
     {
-        if (!_embeddedChooser || _embeddedChoiceMode == CanvasEmbeddedArtifactChoiceMode.CreateNew)
-            throw new InvalidOperationException("This Canvas surface is not accepting an existing artifact choice.");
-        if (target is not null) target.Validate();
+        if (!_embeddedChooser) throw new InvalidOperationException("This Canvas surface is not an embedded chooser.");
+        if (target is not null)
+        {
+            target.Validate();
+            if (_embeddedChoiceWitness is not { } witness || witness.Target != target)
+                throw new InvalidOperationException("The Canvas choice does not match this owner's current selection witness.");
+        }
         _embeddedChoice.TrySetResult(target);
     }
 

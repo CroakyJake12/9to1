@@ -359,7 +359,9 @@ public sealed partial class CanvasHostSurface : ContentControl
         _model.Set("CanSearch", canBrowse && idle && noPending);
         _model.Set("HasNoDocuments", _documents.Length == 0);
         _model.Set("HasMoreDocuments", _nextPage is not null);
-        _launchRows = _documents.Select(item => new CanvasLaunchRow(item)).ToArray();
+        if (_launchRows.Length != _documents.Length ||
+            _launchRows.Where((row, index) => !ReferenceEquals(row.Item, _documents[index])).Any())
+            _launchRows = _documents.Select(item => new CanvasLaunchRow(item)).ToArray();
         _model.Set("Canvases", _launchRows);
         _model.Set("CanNavigate", canBrowse && idle && noPending);
         _model.Set("CanSetup", (standalone || chooser) && idle && _ready && _configuration is null && noPending);
