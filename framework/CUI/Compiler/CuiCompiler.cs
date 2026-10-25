@@ -671,7 +671,10 @@ public sealed class CuiCompiler
                 && !declaredType.Value.Equals("Grid", StringComparison.OrdinalIgnoreCase))
                 diagnostics.Error("CUIC023", $"{property.Name} requires Container Type Grid.", value.Span);
 
-            if (value is CuiLiteralValue literal && !IsValidLiteral(property.LanguageType, literal.Value))
+            if (property.Name.Equals("TextSelection", StringComparison.OrdinalIgnoreCase) &&
+                (value is CuiLiteralValue || value is CuiBindingValue { Mode: CuiBindingMode.TwoWay }))
+                diagnostics.Error("CUIC015", "TextSelection requires a one-way typed selection request, never a literal or two-way text binding.", value.Span);
+            else if (value is CuiLiteralValue literal && !IsValidLiteral(property.LanguageType, literal.Value))
                 diagnostics.Error("CUIC015", $"Value '{literal.Value}' is not valid for {property.LanguageType} property '{property.Name}'.", value.Span);
             else if (IsStaticDirective(property.Name) && value is not CuiLiteralValue)
                 diagnostics.Error("CUIC015", $"Property '{property.Name}' is a static boolean contract and requires a declared literal true/false.", value.Span);

@@ -17,7 +17,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command", "dev.run-tests",
             "dev.run-stage", "dev.create-branch", "dev.switch-branch",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin",
-            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result", "dev.inspect-recovered-draft", "dev.reconcile-recovered-draft", "dev.use-merged-recovered-draft"];
+            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result", "dev.inspect-recovered-draft", "dev.reconcile-recovered-draft", "dev.use-merged-recovered-draft", "dev.go-to-source-location"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
         Assert.Equal(nodes.Length, nodes.Select(value => value.StableId).Distinct().Count());
     }
@@ -61,6 +61,8 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             && pair.Value is CuiLiteralValue font && font.Value == "monospace");
         Assert.Contains(editor.Properties, pair => pair.Key.Equals("Value", StringComparison.OrdinalIgnoreCase)
             && pair.Value is CuiBindingValue draft && draft.Path == "DraftText");
+        Assert.Contains(editor.Properties, pair => pair.Key.Equals("TextSelection", StringComparison.OrdinalIgnoreCase)
+            && pair.Value is CuiBindingValue selection && selection.Path == "EditorTextSelection");
     }
     [Fact]
     public void Recovery_merge_is_a_real_editable_CUI_input_with_explicit_adoption_and_readonly_originals()

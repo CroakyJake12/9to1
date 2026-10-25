@@ -8,6 +8,25 @@ public sealed class CuiCompilerTests
     private static CuiCompilerOptions Options() => new(new CuiCompilationMetadata("1.0", "1.0", "2.0", ["layout"]));
 
     [Fact]
+    public void Text_selection_admits_the_typed_one_way_text_input_port()
+    {
+        var result = new CuiCompiler().Compile("<Page><Input Type=\"Text\" Value=\"source\" TextSelection=\"{Binding Selection}\" /></Page>", "navigation.cui", Options());
+        Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
+    }
+
+    [Theory]
+    [InlineData("<Page><Input Type=\"Text\" TextSelection=\"3:7\" /></Page>")]
+    [InlineData("<Page><Input Type=\"Text\" TextSelection=\"{Binding Selection, Mode=TwoWay}\" /></Page>")]
+    [InlineData("<Page><Input Type=\"Number\" TextSelection=\"{Binding Selection}\" /></Page>")]
+    [InlineData("<Page><Button TextSelection=\"{Binding Selection}\" /></Page>")]
+    public void Text_selection_rejects_literal_two_way_and_nontext_ports(string source)
+    {
+        var result = new CuiCompiler().Compile(source, "invalid-navigation.cui", Options());
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code is "CUIC015" or "CUIC013");
+    }
+
+    [Fact]
     public void Compile_emits_compatibility_metadata_and_authored_identity()
     {
         var result = new CuiCompiler().Compile("<Page id=\"home\"><Text id=\"title\" Text=\"Welcome\" /></Page>", "home.cui", Options());

@@ -115,7 +115,10 @@ public sealed class CuiControlRegistry
 
     /// <summary>Specialised Object capabilities extend only their registered type's property contract.</summary>
     public bool SupportsProperty(CuiRuntimeElementDescriptor element, string? objectType, CuiRuntimePropertyDescriptor property) =>
-        property.IsAttached || element.AllowedProperties.Contains(property.Name)
+        property.Name.Equals("TextSelection", StringComparison.OrdinalIgnoreCase)
+            ? element.Name.Equals("Input", StringComparison.OrdinalIgnoreCase) &&
+                (objectType is null || objectType.Equals("Text", StringComparison.OrdinalIgnoreCase))
+            : property.IsAttached || element.AllowedProperties.Contains(property.Name)
         || element.Name == "Object" && objectType is not null
         && _objectProperties.TryGetValue(objectType, out var properties) && properties.Contains(property.Name);
 
@@ -391,7 +394,7 @@ public sealed class CuiControlRegistry
         var input = common.Concat(new[]
         {
             "Type", "Text", "Value", "Checked", "IsChecked", "PlaceholderText", "AcceptsReturn", "Foreground",
-            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest", "EmbeddedInput", "DisplayValue", "FormattedText", "VerticalContentAlignment"
+            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest", "EmbeddedInput", "DisplayValue", "FormattedText", "TextSelection", "VerticalContentAlignment"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var content = common.Concat(new[]
         {
@@ -452,6 +455,7 @@ public sealed class CuiControlRegistry
             ("FocusRequested", "boolean", typeof(bool), true), ("SelectOnFocusRequest", "boolean", typeof(bool), true),
             ("DisplayValue", "text", typeof(string), false),
             ("FormattedText", "formatted-text", typeof(CuiFormattedText), true),
+            ("TextSelection", "text-selection", typeof(CuiTextSelection), false),
             ("DefaultAction", "boolean", typeof(bool), true), ("CancelAction", "boolean", typeof(bool), true),
             ("TabIndex", "integer", typeof(int), true), ("AccessibleName", "text", typeof(string), true),
             ("AccessibleDescription", "text", typeof(string), true), ("Role", "symbol", typeof(string), true),
