@@ -1,4 +1,5 @@
 using CakeOS.Cui.Themes;
+using CakeOS.Apps.Boards.App;
 using Haven.Browser;
 using Haven.Core;
 using Haven.Infrastructure;
@@ -19,16 +20,22 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
     private readonly CancellationToken _appLifetime, _hostLifetime;
     private readonly Func<bool> _reduceMotion;
     private readonly CuiThemePreferenceContext? _theme;
+    private readonly Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? _takePreparedBoardRead;
+    private readonly Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? _takePreparedBoardWrite;
     private BoardsBrowseAppContentFactory(IServiceProvider provider, HomeNativeWindowsComposition home,
         CancellationToken appLifetime, CancellationToken hostLifetime, Func<bool> reduceMotion,
-        CuiThemePreferenceContext? theme)
+        CuiThemePreferenceContext? theme,
+        Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? takePreparedBoardRead,
+        Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite)
     { _provider = provider; _home = home; _appLifetime = appLifetime; _hostLifetime = hostLifetime;
-        _reduceMotion = reduceMotion; _theme = theme; }
+        _reduceMotion = reduceMotion; _theme = theme; _takePreparedBoardRead = takePreparedBoardRead; _takePreparedBoardWrite = takePreparedBoardWrite; }
 
     internal static BoardsBrowseAppContentFactory BindOriginalSameProcess(IServiceProvider originalProvider,
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
         CancellationToken originalHostLifetime, Func<bool> actualReduceMotion,
-        CuiThemePreferenceContext? actualThemePreference = null)
+        CuiThemePreferenceContext? actualThemePreference = null,
+        Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? takePreparedBoardRead = null,
+        Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(actualReduceMotion);
@@ -36,7 +43,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             throw new ArgumentException("Retain the actual application and host lifetimes.");
         originalAppLifetime.ThrowIfCancellationRequested(); originalHostLifetime.ThrowIfCancellationRequested();
         return new(originalProvider, sameHome, originalAppLifetime, originalHostLifetime,
-            actualReduceMotion, actualThemePreference);
+            actualReduceMotion, actualThemePreference, takePreparedBoardRead, takePreparedBoardWrite);
     }
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
@@ -48,6 +55,38 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         if (request.Privacy != BrowserTabPrivacy.Standard)
             throw new NotSupportedException("An owned device Boards library is not a private browser session.");
         var address = BoardsBrowseAppContentAddress.Parse(request.Address);
+        if (address.IsFilesDocument)
+        {
+            if (address.Writable)
+            {
+                if (_takePreparedBoardWrite is null || address.StoreId is not { } writeStore ||
+                    address.ParentFolderId is not { } writeParent || address.FileId is not { } writeFile ||
+                    address.RevisionId is not { } writeRevision || address.ReadToken is not { } writeToken)
+                    throw new UnauthorizedAccessException("A writable rich Files board requires its exact Home-prepared write lease.");
+                var writeLease = _takePreparedBoardWrite(writeToken, writeStore, writeParent, writeFile, writeRevision);
+                if (!writeLease.IsOpen || !StringComparer.Ordinal.Equals(writeLease.ProfileId, request.ProfileId))
+                {
+                    writeLease.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                    throw new UnauthorizedAccessException("The selected writable board belongs to another original Home profile.");
+                }
+                var writeLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
+                try { return new BoardsWritableRichDocumentBrowseAppContentSession(request, address, writeLease, writeLifetime); }
+                catch { writeLifetime.Dispose(); writeLease.DisposeAsync().AsTask().GetAwaiter().GetResult(); throw; }
+            }
+            if (_takePreparedBoardRead is null || address.StoreId is not { } store ||
+                address.ParentFolderId is not { } parent || address.FileId is not { } file ||
+                address.RevisionId is not { } revision || address.ReadToken is not { } readToken)
+                throw new UnauthorizedAccessException("A rich Files board requires its exact Home-prepared read lease.");
+            var lease = _takePreparedBoardRead(readToken, store, parent, file, revision);
+            if (!lease.IsOpen || !StringComparer.Ordinal.Equals(lease.ProfileId, request.ProfileId))
+            {
+                lease.DisposeAsync().GetAwaiter().GetResult();
+                throw new UnauthorizedAccessException("The selected rich board belongs to another original Home profile.");
+            }
+            var readLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
+            try { return new BoardsRichDocumentBrowseAppContentSession(request, address, lease, readLifetime); }
+            catch { readLifetime.Dispose(); lease.DisposeAsync().GetAwaiter().GetResult(); throw; }
+        }
         // All borrowed resolution and identity checks precede the per-tab lifetime acquisition.
         var notes = _provider.GetRequiredService<NotesRepository>();
         var verified = _provider.GetRequiredService<VerifiedNotesRepository>();
