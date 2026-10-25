@@ -1,5 +1,6 @@
 using CakeOS.Apps.Boards.App;
 using CakeOS.Apps.Boards.Contract;
+using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
 
