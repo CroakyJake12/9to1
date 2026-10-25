@@ -1,3 +1,7 @@
+## Immediate desktop delivery correction — 25 October 2026
+
+Read [the latest desktop delivery handoff](docs/development/desktop-test-build-handoff-2026-10-25.md). The owner now needs the current runnable apps on the **desktop as an amd64 .deb** to continue development inside 9to1. Source handoff alone does not satisfy this. Local build and usable test delivery are the first priority; cloud remains on HOLD at the owner-reported 1% usage.
+
 ## Current local transition — 25 October 2026
 
 The owner requests local development takeover because cloud usage is low.
