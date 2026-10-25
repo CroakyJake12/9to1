@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.VisualTree;
 using Avalonia.Headless.XUnit;
+using CakeOS.Apps.Boards.App;
+using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Browser;
@@ -12,6 +14,8 @@ using HavenOS.Home.NativeUI;
 using Microsoft.Extensions.DependencyInjection;
 using HavenOS.Apps.Browse;
 using NineToOne.Web.Productivity.Boards;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Haven.Desktop.Tests;
 
@@ -30,6 +34,47 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.Throws<UnauthorizedAccessException>(() => BoardsBrowseAppContentAddress.Parse(AppContentAddress.Parse("9to1://files")));
         foreach (var suffix in new[] { Guid.Empty.ToString("D"), id.ToString("N"), id.ToString("D") + "/foreign" })
             Assert.Throws<FormatException>(() => BoardsBrowseAppContentAddress.Parse(AppContentAddress.Parse("9to1://boards/notebooks/" + suffix)));
+
+        var store = Guid.NewGuid(); var folder = Guid.NewGuid(); var file = Guid.NewGuid();
+        var revision = Guid.NewGuid(); var token = Guid.NewGuid();
+        var selected = BoardsBrowseAppContentAddress.Parse(BoardsBrowseAppContentAddress.ForFile(store, folder, file, revision, token));
+        Assert.True(selected.IsFilesDocument); Assert.Null(selected.DocumentId);
+        Assert.Equal(store, selected.StoreId); Assert.Equal(folder, selected.ParentFolderId);
+        Assert.Equal(file, selected.FileId); Assert.Equal(revision, selected.RevisionId); Assert.Equal(token, selected.ReadToken);
+        Assert.Throws<FormatException>(() => BoardsBrowseAppContentAddress.Parse(
+            AppContentAddress.Parse($"9to1://boards/files/{store:D}/{folder:D}/{file:D}/{revision:D}/{Guid.Empty:D}")));
+    }
+
+    [AvaloniaFact]
+    public async Task Selected_Files_document_uses_the_read_only_rich_surface_and_closes_its_byte_lease()
+    {
+        var store = Guid.NewGuid(); var folder = Guid.NewGuid(); var file = Guid.NewGuid();
+        var revision = Guid.NewGuid(); var token = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var document = new HavenBoardDocument(HavenBoardDocument.FormatIdentity, HavenBoardDocument.CurrentSchemaVersion,
+            Guid.NewGuid(), now, now, null, HavenRichNotes.Create("Selected Files board"));
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var actor = new AuthenticatedResourceActor("local:fixture", "fixture-profile", null, null, "fixture-revision");
+        var read = new FilesOriginalBoardDocumentRead(store, file, folder, revision,
+            Convert.ToHexString(SHA256.HashData(bytes)), bytes);
+        var lease = new NativeHomeFilesBoardReadLease(read, actor, () => true,
+            _ => Task.FromResult(true));
+        var address = BoardsBrowseAppContentAddress.ForFile(store, folder, file, revision, token);
+        var request = new BrowseAppContentRequest(Guid.NewGuid(), address, actor.ProfileId, BrowserTabPrivacy.Standard);
+        using var lifetime = new CancellationTokenSource();
+        var session = new BoardsRichDocumentBrowseAppContentSession(request,
+            BoardsBrowseAppContentAddress.Parse(address), lease, lifetime);
+        Assert.False(session.IsPublicationCurrent);
+        var original = session.InitializeAsync(TestContext.Current.CancellationToken);
+        Assert.Same(original, session.InitializeAsync());
+        await original;
+        Assert.True(session.IsPublicationCurrent);
+        Assert.IsAssignableFrom<Control>(session.OriginalNativeView);
+        Assert.Contains("Selected Files board", session.Title, StringComparison.Ordinal);
+        await session.CloseAndDrainAsync();
+        Assert.True(session.CanRetireOriginalView);
+        Assert.False(session.IsPublicationCurrent);
+        Assert.False(lease.IsOpen);
     }
 
     [AvaloniaFact]

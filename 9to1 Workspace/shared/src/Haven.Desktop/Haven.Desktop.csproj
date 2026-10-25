@@ -47,6 +47,9 @@
     <ProjectReference Include="../../../Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj" />
     <ProjectReference Include="../../../Files/NativeUI/HavenOS.Files.NativeUI.csproj" />
     <ProjectReference Include="../../../Canvas/NativeUI/HavenOS.Canvas.NativeUI.csproj" />
+    <!-- The standalone rich Boards document renderer is shared with the native Home-hosted
+         read-only Files view. The embedding project is cross-platform and owns the source once. -->
+    <ProjectReference Include="../../../Boards/app/CakeOS.Apps.Boards.Embedding.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
     <ProjectReference Include="../../../Browse/NativeUI/HavenOS.Apps.Browse.NativeUI.csproj" />
     <!-- The genuine installed-Chromium engine is the Linux Browse backend. NativeLinux

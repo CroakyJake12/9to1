@@ -129,12 +129,14 @@ public sealed partial class App
         private CuiControlLoader? _startupLoadingLoader;
         private Task? _initialization, _close, _pendingClose, _workspaceClose, _sceneClose, _sessionClose;
         private readonly List<Task> _closeAttempts = [];
+        private sealed record PreparedBoardRead(AppContentAddress Address, Guid Token);
         private Task<CuiSceneAvailability>? _sceneInitialization;
         private Task<BrowseChrome>? _chromeCreation;
         private BrowseChrome? _chrome;
         private BrowseNativeWorkspace? _workspace;
         private UnifiedWorkspaceSession? _session;
         private AuthenticatedResourceActor? _actor;
+        private NativeHomeFilesBoardReadSource? _boardReadSource;
         private volatile bool _closed;
         private volatile bool _startupRetirement;
 
@@ -338,6 +340,8 @@ public sealed partial class App
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _appLifetime, _windowLifetime, _startupCancellation.Token);
             var currentToken = linked.Token;
             _actor = await ObserveActorAsync(currentToken);
+            _boardReadSource = new NativeHomeFilesBoardReadSource(
+                _services.GetRequiredService<HavenOS.Files.NativeHost.FilesNativeBrowserService>(), _actor);
             var availability = await CheckAsync(currentToken);
             if (availability.State != CuiSceneAvailabilityState.Ready) throw new InvalidOperationException(availability.Message);
             DemandCurrent();
@@ -367,7 +371,10 @@ public sealed partial class App
             var actualTheme = _homeTheme
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
             var boards = BoardsBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
-                () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context);
+                () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context,
+                (token, store, folder, file, revision) => (_boardReadSource ?? throw new UnauthorizedAccessException(
+                    "The original Home Files board reader is unavailable."))
+                    .TakePrepared(token, store, folder, file, revision));
             var canvas = CanvasBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime, actualTheme.Context);
             var present = PresentBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
             var modes = _services.GetRequiredService<IModeRegistry>();
@@ -696,21 +703,40 @@ public sealed partial class App
                 "home-library:" + request.TabId.ToString("D"),
                 (authorization, token) => PresentHomeLibraryReviewAsync(approvals, authorization, token), Admit, Parent, Alive);
             var browser = _services.GetRequiredService<HavenOS.Files.NativeHost.FilesNativeBrowserService>();
+            var boardRead = _boardReadSource ?? throw new UnauthorizedAccessException("The original Home Files board reader is unavailable.");
             if (!browser.IsBoundToOriginalComposition(
                 _services.GetRequiredService<HavenOS.Files.NativeHost.NativeFilesWorkspaceAuthority>(),
                 _home.Profiles, _home.Resources, _services.GetRequiredService<ICompatibilityPackageContentSource>()))
                 throw new UnauthorizedAccessException("Library must borrow the actual Files/Home metadata owner tuple.");
             var filesSource = new NativeHomeFilesLibrarySource(browser, actor, _home.StateStore,
-                ObserveAppearanceAuthorityAsync, Parent, Alive);
+                ObserveAppearanceAuthorityAsync, Parent, Alive, boardRead);
             source = new(_home.StateStore, new("boards", "Boards", boardsSource), new("files", "Files", filesSource));
             var preparedFiles = new System.Runtime.CompilerServices.ConditionalWeakTable<HomeDeepLink, AppContentAddress>();
+            var preparedBoards = new System.Runtime.CompilerServices.ConditionalWeakTable<HomeDeepLink, PreparedBoardRead>();
             async Task PrepareFilesNavigation(HomeDeepLink link, CancellationToken token)
             {
-                if (link.OwnerApp != "files" || link.TargetRouteId is not ("files.folder" or "files.preview")) return;
+                if (link.OwnerApp != "files" || link.TargetRouteId is not ("files.folder" or "files.preview" or "files.board")) return;
                 lock (preparedFiles) preparedFiles.Remove(link);
+                lock (preparedBoards)
+                    if (preparedBoards.TryGetValue(link, out var previous))
+                    { preparedBoards.Remove(link); Track(boardRead.DiscardPreparedAsync(previous.Token)); }
                 var target = await filesSource.ResolveOriginalOpenTargetAsync(link, token).ConfigureAwait(false);
                 token.ThrowIfCancellationRequested();
                 if (target is null) return;
+                if (link.TargetRouteId == "files.board")
+                {
+                    var prepared = await filesSource.PrepareOriginalBoardReadAsync(link, token).ConfigureAwait(false);
+                    if (prepared is not { } tokenId) return;
+                    try
+                    {
+                        token.ThrowIfCancellationRequested();
+                        var address = BoardsBrowseAppContentAddress.ForFile(target.StoreId, target.FolderId,
+                            target.FileId!.Value, target.RevisionId!.Value, tokenId);
+                        lock (preparedBoards) { preparedBoards.Remove(link); preparedBoards.Add(link, new(address, tokenId)); }
+                    }
+                    catch { Track(boardRead.DiscardPreparedAsync(tokenId)); throw; }
+                    return;
+                }
                 var address = target.FileId is { } file && target.RevisionId is { } revision
                     ? FilesBrowseAppContentAddress.ForTextPreview(target.StoreId, target.FolderId, file, revision)
                     : FilesBrowseAppContentAddress.For(target.StoreId, target.FolderId);
@@ -719,9 +745,17 @@ public sealed partial class App
             page = new(source.CreateService, source.RevalidateAsync, (link, settlement) =>
             {
                 AppContentAddress address;
+                PreparedBoardRead? queuedBoard = null;
                 if (link.OwnerApp == "boards" && link.TargetRouteId == "boards.notebook" &&
                     Guid.TryParseExact(link.ObjectId, "D", out var id) && id != Guid.Empty && link.ObjectId == id.ToString("D"))
                     address = AppContentAddress.Parse("9to1://boards/notebooks/" + id.ToString("D"));
+                else if (link.OwnerApp == "files" && link.TargetRouteId == "files.board")
+                {
+                    if (!preparedBoards.TryGetValue(link, out var prepared)) return false;
+                    queuedBoard = prepared;
+                    address = prepared.Address;
+                    preparedBoards.Remove(link);
+                }
                 else if (link.OwnerApp == "files" && (link.TargetRouteId is "files.folder" or "files.preview"))
                 {
                     // Issued-link resolution already rechecked this exact row through the actual
@@ -730,8 +764,10 @@ public sealed partial class App
                     address = issuedAddress;
                 }
                 else return false;
-                return IsCurrent && _workspace is { } workspace && workspace.QueueNavigation(
+                var accepted = IsCurrent && _workspace is { } workspace && workspace.QueueNavigation(
                     new(request.TabId, address, true), settlement);
+                if (!accepted && queuedBoard is not null) Track(boardRead.DiscardPreparedAsync(queuedBoard.Token));
+                return accepted;
             }, source, theme, PrepareFilesNavigation);
             return page;
         }
@@ -968,6 +1004,8 @@ public sealed partial class App
                     // Browser admission/commands and native engines have drained. Only
                     // then retire this Files registration cohort; Home/Files are borrowed.
                     try { await JoinOriginalDownloadFilesAsync(failures); }
+                    catch (Exception error) { AddAppCause(failures, error); }
+                    try { if (_boardReadSource is not null) await _boardReadSource.DrainPreparedAsync(); }
                     catch (Exception error) { AddAppCause(failures, error); }
                     try { _sceneClose ??= _scene?.CloseOriginalAsync(); } catch (Exception error) { AddAppCause(failures, error); }
                     await Join(_sceneClose);

@@ -16,6 +16,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
     private sealed record Entry(HomeArtifactReference View, FilesNativeBrowserPage Page, HostedItemMetadata Row);
     private sealed record Operation(Task Task, CancellationToken Token);
     private readonly FilesNativeBrowserService _browser;
+    private readonly NativeHomeFilesBoardReadSource? _boardRead;
     private readonly AuthenticatedResourceActor _actor;
     private readonly IHomeCoreStateStore _home;
     private readonly Func<CancellationToken, Task<bool>> _ownerCurrent;
@@ -32,9 +33,11 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
     private Task? _close;
     internal NativeHomeFilesLibrarySource(FilesNativeBrowserService browser, AuthenticatedResourceActor actor,
         IHomeCoreStateStore home, Func<CancellationToken, Task<bool>> ownerCurrent,
-        Action<Action> parent, Func<bool> alive)
-    { _browser = browser; _actor = actor; _home = home; _ownerCurrent = ownerCurrent; _parent = parent; _alive = alive; }
-    public string? AvailabilityNotice => "Files shows folder and supported raw text/code references from its current metadata. Text preview requires an existing local content anchor.";
+        Action<Action> parent, Func<bool> alive, NativeHomeFilesBoardReadSource? boardRead = null)
+    { _browser = browser; _boardRead = boardRead; _actor = actor; _home = home; _ownerCurrent = ownerCurrent; _parent = parent; _alive = alive; }
+    public string? AvailabilityNotice => _boardRead is null || !_browser.HasOriginalBoardDocumentReadOwner
+        ? "Files shows folder and supported raw text/code references from its current metadata. Text preview requires an existing local content anchor."
+        : "Files shows current folders, supported text/code references and .9to1board documents. Board documents open read-only from their exact selected Files revision; text preview requires an existing local content anchor.";
     public HomeLibraryService CreateService(IHomeDeepLinkRouter router) => new(this, this, router, new HomeCoreLibraryPreferences(_home));
     public Task RevalidateAsync(CancellationToken token) => RunAsync(async (source, caller) =>
     { await RequireOwnerAsync(source, caller).ConfigureAwait(false); return true; }, token);
@@ -99,11 +102,14 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                         var isText = row.Kind == HostedItemKind.File && folder.Id is not null &&
                             row.CurrentRevisionId is not null && _browser.HasOriginalTextPreviewOwner &&
                             FilesNativeBrowserService.IsTextPreviewCandidate(row);
-                        if (!isFolder && !isText) continue; // Other owning artifacts/binary viewers are not guessed.
+                        var isBoard = row.Kind == HostedItemKind.File && folder.Id is not null &&
+                            row.CurrentRevisionId is not null && _boardRead is not null && _browser.HasOriginalBoardDocumentReadOwner &&
+                            FilesNativeBrowserService.IsBoardDocumentCandidate(row);
+                        if (!isFolder && !isText && !isBoard) continue; // Other owning artifacts/binary viewers are not guessed.
                         var id = store.ToString("D") + "/" + row.Id.Value.ToString("D");
-                        var view = new HomeArtifactReference("files", id, row.Name, isFolder ? "Files folder" : "Text/code file",
+                        var view = new HomeArtifactReference("files", id, row.Name, isFolder ? "Files folder" : isBoard ? "9to1 board document" : "Text/code file",
                             folder.Label, row.OwnerPrincipalId, null, row.ModifiedAt, false, false, row.IsShared, false, [],
-                            new(HomeRoute.Library, "files", id, "open", isFolder ? "files.folder" : "files.preview"));
+                            new(HomeRoute.Library, "files", id, "open", isFolder ? "files.folder" : isBoard ? "files.board" : "files.preview"));
                         if (!_entries.TryAdd(id, new(view, page, row)))
                             throw new InvalidDataException("The original Files cursor returned duplicate item identities.");
                     }
@@ -128,14 +134,16 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         RunAsync(async (source, caller) => app == "files" && _entries.TryGetValue(id, out var entry) &&
             await IsCurrentAsync(entry, source, caller).ConfigureAwait(false), token);
     public Task<bool> CanOpenAsync(HomeDeepLink link, CancellationToken token) =>
-        RunAsync(async (source, caller) => link.OwnerApp == "files" && (link.TargetRouteId is "files.folder" or "files.preview") &&
+        RunAsync(async (source, caller) => link.OwnerApp == "files" && (link.TargetRouteId is "files.folder" or "files.preview" or "files.board") &&
             _entries.TryGetValue(link.ObjectId, out var entry) && ReferenceEquals(entry.View.OpenLink, link) &&
             await IsCurrentAsync(entry, source, caller).ConfigureAwait(false), token);
     private async Task<bool> IsCurrentAsync(Entry entry, CloudflareOriginalTaskLedger source, CancellationToken token)
     {
         if (!entry.Page.Items.Any(row => ReferenceEquals(row, entry.Row)) ||
             entry.Row.Kind != HostedItemKind.Folder && (entry.Row.Kind != HostedItemKind.File || entry.Page.ParentID is null ||
-                entry.Row.CurrentRevisionId is null || !FilesNativeBrowserService.IsTextPreviewCandidate(entry.Row))) return false;
+                entry.Row.CurrentRevisionId is null ||
+                !FilesNativeBrowserService.IsTextPreviewCandidate(entry.Row) &&
+                !FilesNativeBrowserService.IsBoardDocumentCandidate(entry.Row))) return false;
         await source.AwaitAsync(source.Invoke(() => ValidatePageAsync(entry.Page, token))).ConfigureAwait(false);
         await RequireOwnerAsync(source, token).ConfigureAwait(false);
         return true;
@@ -151,7 +159,34 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
             if (entry.Row.Kind == HostedItemKind.File && link.TargetRouteId == "files.preview" &&
                 entry.Page.ParentID is { } parent && entry.Row.CurrentRevisionId is { } revision)
                 return new(store, parent, entry.Row.Id.Value, revision.Value);
+            if (entry.Row.Kind == HostedItemKind.File && link.TargetRouteId == "files.board" &&
+                entry.Page.ParentID is { } boardParent && entry.Row.CurrentRevisionId is { } boardRevision &&
+                _boardRead is not null && _browser.HasOriginalBoardDocumentReadOwner && FilesNativeBrowserService.IsBoardDocumentCandidate(entry.Row))
+                return new(store, boardParent, entry.Row.Id.Value, boardRevision.Value);
             return null;
+        }, token);
+
+    internal Task<Guid?> PrepareOriginalBoardReadAsync(HomeDeepLink link, CancellationToken token) =>
+        RunAsync<Guid?>(async (source, caller) =>
+        {
+            if (link.OwnerApp != "files" || link.TargetRouteId != "files.board" ||
+                !_entries.TryGetValue(link.ObjectId, out var entry) || !ReferenceEquals(entry.View.OpenLink, link) ||
+                !await IsCurrentAsync(entry, source, caller).ConfigureAwait(false) ||
+                entry.Row.Kind != HostedItemKind.File || !FilesNativeBrowserService.IsBoardDocumentCandidate(entry.Row)) return null;
+            var boardRead = _boardRead ?? throw new NotSupportedException("The original Home selected-board reader is unavailable.");
+            var lease = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedAsync(entry.Page, entry.Row,
+                _alive, _ownerCurrent, Own, Retain, source, caller))).ConfigureAwait(false);
+            try
+            {
+                if (!await IsCurrentAsync(entry, source, caller).ConfigureAwait(false) || !lease.IsOpen)
+                    throw new UnauthorizedAccessException("The selected Home Library board row retired before its read was prepared.");
+                return boardRead.RegisterPrepared(lease);
+            }
+            catch
+            {
+                await lease.DisposeAsync().ConfigureAwait(false);
+                throw;
+            }
         }, token);
 
     private Task ValidatePageAsync(FilesNativeBrowserPage page, CancellationToken token) =>

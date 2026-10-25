@@ -249,6 +249,56 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             }
             finally { await rig.Keep(source.DisposeAsync().AsTask()); }
         });
+
+    [Fact]
+    public Task Home_Library_prepares_exact_selected_board_revision_as_read_only_bytes_without_paths_or_writes()
+        => Run(async rig =>
+        {
+            var boardBytes = Encoding.UTF8.GetBytes("{\"format\":\"9to1.board\",\"schemaVersion\":3,\"payload\":\"selected revision\"}");
+            var uploaded = await rig.UploadAsync("selected.9to1board", boardBytes, "application/json");
+            var before = await rig.BytesAsync();
+            var graph = Assert.IsAssignableFrom<IServiceProvider>(rig.Graph);
+            var profiles = graph.GetRequiredService<IAuthenticatedResourceActorSource>();
+            async Task<bool> Current(CancellationToken token) => await profiles.GetCurrentAsync(token) == rig.Workspace.Actor;
+            var boardRead = new NativeHomeFilesBoardReadSource(rig.Browser, rig.Workspace.Actor);
+            var source = new NativeHomeFilesLibrarySource(rig.Browser, rig.Workspace.Actor,
+                graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true,
+                boardRead);
+            try
+            {
+                var results = await rig.Keep(source.SearchAsync(new HomeLibraryQuery(Text: "selected.9to1board"), rig.Token));
+                var selected = Assert.Single(results);
+                Assert.Equal("files", selected.OwnerApp);
+                Assert.Equal("9to1 board document", selected.ArtifactType);
+                Assert.Equal("files.board", selected.OpenLink.TargetRouteId);
+                Assert.True(await rig.Keep(source.CanOpenAsync(selected.OpenLink, rig.Token)));
+                Assert.False(await rig.Keep(source.CanOpenAsync(selected.OpenLink with { }, rig.Token)));
+
+                var target = await rig.Keep(source.ResolveOriginalOpenTargetAsync(selected.OpenLink, rig.Token));
+                Assert.NotNull(target);
+                Assert.Equal(rig.Workspace.Configuration.StoreId, target.StoreId);
+                Assert.Equal(rig.Folder.Value, target.FolderId);
+                Assert.Equal(uploaded.FileId.Value, target.FileId);
+                Assert.Equal(uploaded.RevisionId.Value, target.RevisionId);
+
+                var prepared = await rig.Keep(source.PrepareOriginalBoardReadAsync(selected.OpenLink, rig.Token));
+                Assert.NotNull(prepared);
+                await using (var lease = boardRead.TakePrepared(prepared.Value, target.StoreId, target.FolderId,
+                    target.FileId!.Value, target.RevisionId!.Value))
+                {
+                    Assert.Equal(boardBytes, lease.Bytes.ToArray());
+                    Assert.Equal(Convert.ToHexString(SHA256.HashData(boardBytes)), lease.Sha256);
+                    await rig.Keep(lease.DemandCurrentAsync(rig.Token));
+                }
+                Assert.Equal(before.Home, (await rig.BytesAsync()).Home);
+                Assert.Equal(before.Drive, (await rig.BytesAsync()).Drive);
+            }
+            finally
+            {
+                await rig.Keep(boardRead.DrainPreparedAsync());
+                await rig.Keep(source.DisposeAsync().AsTask());
+            }
+        });
     private sealed class UnusedLibraryRouter : IHomeDeepLinkRouter
     {
         public Task<HomeFeatureNavigationResult> OpenAsync(HomeDeepLink link, CancellationToken token = default) =>
