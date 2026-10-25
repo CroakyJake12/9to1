@@ -11,6 +11,50 @@ public sealed class TaskExecutionRepositoryTests : IDisposable
     private readonly TestPaths paths = new();
 
     [Fact]
+    public async Task Task_census_pages_all_canonical_keys_including_older_completed_and_shared_context_tasks_without_duplicates()
+    {
+        var database = await DatabaseAsync();
+        var repository = new TaskExecutionRepository(database);
+        var ids = Enumerable.Range(1, 6).Select(number => Guid.Parse($"00000000-0000-0000-0000-{number:000000000000}")).ToArray();
+        var context = Guid.NewGuid();
+        var rows = new List<TaskExecutionSnapshot>();
+        foreach (var (id, index) in ids.Select((id, index) => (id, index)).Reverse())
+        {
+            var row = Snapshot() with
+            {
+                TaskId = id, ContextId = context, Queue = [], Plan = [], LastCheckpointActionId = null,
+                State = index % 2 == 0 ? TaskExecutionLifecycle.Completed : TaskExecutionLifecycle.Cancelled,
+                CreatedAt = DateTimeOffset.UnixEpoch.AddDays(index), UpdatedAt = DateTimeOffset.UnixEpoch.AddDays(6 - index)
+            };
+            rows.Add(row); await repository.UpsertAsync(row, CancellationToken.None);
+        }
+        var first = await repository.ReadTaskCandidatesAsync(2, null, CancellationToken.None);
+        Assert.Equal(ids[..2], first.TaskIds);
+        Assert.Equal(ids[1], first.NextTaskId);
+        // A real activity timestamp change must not shift the already issued key cursor.
+        var changed = rows.Single(row => row.TaskId == ids[0]) with { UpdatedAt = DateTimeOffset.UtcNow, PersistenceRevision = 2 };
+        await repository.UpsertAsync(changed, CancellationToken.None);
+        var second = await repository.ReadTaskCandidatesAsync(2, first.NextTaskId, CancellationToken.None);
+        var third = await repository.ReadTaskCandidatesAsync(2, second.NextTaskId, CancellationToken.None);
+        Assert.Equal(ids, first.TaskIds.Concat(second.TaskIds).Concat(third.TaskIds));
+        Assert.Null(third.NextTaskId);
+        Assert.All(first.TaskIds.Concat(second.TaskIds).Concat(third.TaskIds).GroupBy(id => id), group => Assert.Single(group));
+        Assert.Equal(context, (await repository.GetAsync(ids[5], CancellationToken.None))!.ContextId);
+        Assert.Equal(1, (await repository.GetAsync(ids[5], CancellationToken.None))!.PersistenceRevision);
+    }
+
+    [Fact]
+    public async Task Task_census_is_bounded_and_refuses_invalid_cursors_without_creating_rows()
+    {
+        var repository = new TaskExecutionRepository(await DatabaseAsync());
+        Assert.Empty((await repository.ReadTaskCandidatesAsync(10, null, CancellationToken.None)).TaskIds);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => repository.ReadTaskCandidatesAsync(0, null, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => repository.ReadTaskCandidatesAsync(101, null, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentException>(() => repository.ReadTaskCandidatesAsync(10, Guid.Empty, CancellationToken.None));
+        Assert.Empty((await repository.ReadTaskCandidatesAsync(10, null, CancellationToken.None)).TaskIds);
+    }
+
+    [Fact]
     public async Task A_stale_checkpoint_preserves_the_current_accepted_plan_and_queue()
     {
         var database = await DatabaseAsync();

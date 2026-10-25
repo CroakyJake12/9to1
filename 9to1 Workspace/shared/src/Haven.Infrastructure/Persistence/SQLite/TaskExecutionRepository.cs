@@ -5,8 +5,35 @@ using Microsoft.Data.Sqlite;
 namespace Haven.Infrastructure;
 
 /// <summary>Publishes one task checkpoint atomically only while its persisted revision and identity are current.</summary>
-public sealed class TaskExecutionRepository(ISqliteConnectionFactory factory) : ITaskExecutionRepository
+public sealed class TaskExecutionRepository(ISqliteConnectionFactory factory) : ITaskExecutionRepository, ITaskExecutionObservationCensus
 {
+    public async Task<TaskObservationCandidatePage> ReadTaskCandidatesAsync(int maximumItems, Guid? afterTaskId,
+        CancellationToken cancellationToken)
+    {
+        if (maximumItems is < 1 or > 100) throw new ArgumentOutOfRangeException(nameof(maximumItems));
+        if (afterTaskId == Guid.Empty) throw new ArgumentException("A task cursor must be an existing canonical key or null.", nameof(afterTaskId));
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT task_id FROM task_execution_state
+            WHERE ($after IS NULL OR task_id COLLATE BINARY > $after)
+            ORDER BY task_id COLLATE BINARY LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$after", afterTaskId is { } after ? after.ToString("D") : DBNull.Value);
+        command.Parameters.AddWithValue("$limit", maximumItems + 1);
+        var candidates = new List<Guid>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var stored = reader.GetString(0);
+            if (!Guid.TryParse(stored, out var id) || id == Guid.Empty || stored != id.ToString("D"))
+                throw new InvalidDataException("A task census key is not a canonical task identity; explicit data recovery is required.");
+            candidates.Add(id);
+        }
+        var more = candidates.Count > maximumItems;
+        var page = candidates.Take(maximumItems).ToArray();
+        return new(Array.AsReadOnly(page), more ? page[^1] : null);
+    }
     public async Task UpsertAsync(TaskExecutionSnapshot snapshot, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
