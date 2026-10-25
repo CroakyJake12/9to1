@@ -15,6 +15,7 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
     private readonly BrowseAppContentRequest _request;
     private readonly BoardsBrowseAppContentAddress _address;
     private readonly CancellationTokenSource _lifetime;
+    private readonly IBoardsEmbeddedArtifactHost? _embeddedHost;
     private readonly object _gate = new();
     private NativeHomeFilesBoardReadLease? _lease;
     private BoardsReadOnlyPresentation? _presentation;
@@ -23,12 +24,13 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
 
     internal BoardsRichDocumentBrowseAppContentSession(BrowseAppContentRequest request,
         BoardsBrowseAppContentAddress address, NativeHomeFilesBoardReadLease lease,
-        CancellationTokenSource lifetime)
+        CancellationTokenSource lifetime, IBoardsEmbeddedArtifactHost? embeddedHost = null)
     {
         _request = request ?? throw new ArgumentNullException(nameof(request));
         _address = address ?? throw new ArgumentNullException(nameof(address));
         _lease = lease ?? throw new ArgumentNullException(nameof(lease));
         _lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
+        _embeddedHost = embeddedHost;
         if (!address.IsFilesDocument || address.StoreId != lease.StoreId || address.ParentFolderId != lease.ParentFolderId ||
             address.FileId != lease.FileId || address.RevisionId != lease.RevisionId ||
             !StringComparer.Ordinal.Equals(request.ProfileId, lease.ProfileId))
@@ -88,7 +90,7 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
             using var uiPhase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             linked.Token.ThrowIfCancellationRequested();
             await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(true);
-            var presentation = await BoardsReadOnlyPresentation.OpenReadOnlyDocumentAsync(bytes, linked.Token);
+            var presentation = await BoardsReadOnlyPresentation.OpenReadOnlyDocumentAsync(bytes, linked.Token, _embeddedHost);
             try
             {
                 // The CUI host is independently validated by the Boards owner; Home publishes
@@ -109,12 +111,27 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        BoardsReadOnlyPresentation? presentation;
         lock (_gate)
         {
             if (_close is not null) return Task.FromResult(_close.IsCompletedSuccessfully);
             if (_initialization is { IsCompleted: false }) return Task.FromResult(false);
-            return Task.FromResult(true); // This surface is read-only and owns no save work.
+            presentation = _presentation;
         }
+        return presentation is null ? Task.FromResult(true) : PreparePresentationToCloseAsync(presentation, cancellationToken);
+    }
+
+    private async Task<bool> PreparePresentationToCloseAsync(BoardsReadOnlyPresentation presentation, CancellationToken token)
+    {
+        Task<bool> actual;
+        if (Dispatcher.UIThread.CheckAccess()) actual = presentation.TryPrepareToCloseAsync(token);
+        else
+        {
+            var dispatch = Dispatcher.UIThread.InvokeAsync<Task<bool>>(
+                () => presentation.TryPrepareToCloseAsync(token)).GetTask();
+            actual = await dispatch.ConfigureAwait(false);
+        }
+        return await actual.ConfigureAwait(false);
     }
 
     public Task CloseAndDrainAsync()
@@ -124,8 +141,6 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
         {
             if (_close is not null) return _close;
             _closing = true;
-            try { _lifetime.Cancel(); }
-            catch { /* Cancellation is advisory; the actual initialization remains joined. */ }
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _close = CloseCoreAsync(start.Task);
             start.SetResult();
@@ -155,6 +170,8 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
             await dispose.ConfigureAwait(false);
             _presentation = null;
         }
+        if (_embeddedHost is IAsyncDisposable embeddedOwner)
+            await embeddedOwner.DisposeAsync().ConfigureAwait(false);
         var lease = _lease;
         if (lease is not null)
         {
@@ -162,6 +179,7 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
             _lease = null;
         }
         _published = false;
+        try { _lifetime.Cancel(); } catch { /* Already-settled page closure is authoritative. */ }
         _lifetime.Dispose();
     }
 }
