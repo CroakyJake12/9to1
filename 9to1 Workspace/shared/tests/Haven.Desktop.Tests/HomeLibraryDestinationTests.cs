@@ -288,10 +288,36 @@ public sealed class HomeLibraryDestinationTests
             $"artifact IDs=[{string.Join(",", page.Current?.Items.Select(item => item.ArtifactId) ?? [])}]; " +
             $"repeat source=[{RepeatSourceDiagnostic(page)}]; " +
             $"repeat tree=[{repeatTree}]; " +
+            $"repeat child tree=[{RepeatChildTreeDiagnostic(page)}]; " +
             $"runtime diagnostics=[{RepeatRuntimeDiagnosticSummary(page)}]; " +
             $"buttons=[{string.Join("; ", controls.Select(item =>
                 $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
         return matches[0];
+    }
+    private static string RepeatChildTreeDiagnostic(HomeLibraryDestinationPage page)
+    {
+        var host = page.GetVisualDescendants().OfType<StackPanel>().FirstOrDefault(control =>
+            CuiRuntimeIdentity.GetStableId(control) == "id:home-library-rows");
+        if (host is null) return "repeat host is not in the visual tree";
+        var visited = new HashSet<Control>(ReferenceEqualityComparer.Instance);
+        var entries = new List<string>();
+        void Visit(Control control, int depth)
+        {
+            if (entries.Count >= 40 || depth > 6 || !visited.Add(control)) return;
+            Control[] children = control switch
+            {
+                CuiContainerControl container => container.AuthoredChildren.ToArray(),
+                Panel panel => panel.Children.OfType<Control>().ToArray(),
+                Decorator { Child: Control child } => [child],
+                ContentControl { Content: Control child } => [child],
+                ItemsControl items => items.Items.OfType<Control>().ToArray(),
+                _ => Array.Empty<Control>()
+            };
+            entries.Add($"{new string(' ', depth * 2)}{control.GetType().Name}:stable='{CuiRuntimeIdentity.GetStableId(control)}',visible={control.IsVisible},bounds={control.Bounds},children={children.Count}");
+            foreach (var child in children) Visit(child, depth + 1);
+        }
+        foreach (var child in host.Children.OfType<Control>().Take(4)) Visit(child, 0);
+        return string.Join(" | ", entries);
     }
     private static string RepeatRuntimeDiagnosticSummary(HomeLibraryDestinationPage page)
     {
