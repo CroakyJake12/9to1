@@ -216,6 +216,24 @@ internal static class ScopedEmailSharingTests
             "folder move preview includes inherited permission effects for every descendant");
         Require((await f.Provider.GetAsync(f.Child.Id, default)).Value!.ParentId == f.Root.Id,
             "preview does not move the item or mutate its ACL");
+
+        var move = new FilesOperation(new(Guid.NewGuid()), f.Owner, f.Child.Id, f.Root.Id, f.Sibling.Id,
+            "Move", child.CurrentRevisionId, null, FilesOperationState.Pending, f.Clock.Now, f.Clock.Now, null, null);
+        var policyRequired = await f.Provider.MutateAsync(move, null, default);
+        Require(policyRequired.Error?.Code == FilesErrorCode.PermissionRequired,
+            "a move with changed access cannot commit before the caller selects an explicit policy");
+        var preserved = await f.Provider.MutateAsync(move with
+        {
+            PermissionInheritancePolicy = FilesPermissionInheritancePolicy.PreserveExplicitGrants,
+        }, null, default);
+        Require(preserved.IsSuccess && preserved.Value!.PermissionInheritancePolicy == FilesPermissionInheritancePolicy.PreserveExplicitGrants,
+            "the selected preserve policy is recorded on the durable move");
+        var shares = (await f.Provider.GetEmailSharesAsync(f.Child.Id, null, f.OwnerGuard)).Value!.Items;
+        var preservedRecipient = shares.Single(grant => grant.Share.PrincipalId == f.Recipient);
+        Require(!preservedRecipient.Share.IsRevoked && preservedRecipient.Share.Role == FilesAccessRole.Viewer,
+            "the move atomically converts lost inherited access into an explicit direct grant on the moved folder");
+        Require((await f.Provider.OpenSharedViewAsync(preservedRecipient.Share.Id, f.RecipientGuard)).IsSuccess,
+            "the same recipient retains access to the canonical moved folder after restartable publication");
     }
 
     private static async Task ExpiryAndLastPublicationFence()

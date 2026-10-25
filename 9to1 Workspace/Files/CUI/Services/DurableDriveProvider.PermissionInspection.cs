@@ -43,12 +43,16 @@ public sealed partial class DurableDriveProvider
         }
 
         var now = _shareClock.GetUtcNow();
+        var inheritedToPreserve = policy is FilesPermissionInheritancePolicy.PreserveExplicitGrants
+            ? InheritedSharesToPreserve(state, itemId, destinationFolderId, now)
+            : Array.Empty<FilesEmailShare>();
         var affected = state.Items.Where(entry => IsVisible(state, entry) &&
             (entry.Metadata.Id == itemId || IsDescendantOf(state, entry, itemId)))
             .OrderBy(entry => entry.Metadata.Id.Value).Select(entry =>
             {
                 var currentGrants = EffectiveGrants(state, entry.Metadata.Id, now);
-                var resultingGrants = EffectiveGrants(state, entry.Metadata.Id, now, itemId, destinationFolderId);
+                var resultingGrants = EffectiveGrants(state, entry.Metadata.Id, now, itemId,
+                    destinationFolderId, inheritedToPreserve);
                 return new FilesItemPermissionChange(entry.Metadata.Id, currentGrants, resultingGrants);
             }).ToArray();
         var current = affected.Single(change => change.ItemId == itemId).CurrentEffectiveGrants;
@@ -66,7 +70,8 @@ public sealed partial class DurableDriveProvider
         EffectiveGrants(state, itemId, now, null, null);
 
     private FilesPrincipalGrant[] EffectiveGrants(State state, HostedItemId itemId, DateTimeOffset now,
-        HostedItemId? movedRootId, HostedItemId? replacementParentId)
+        HostedItemId? movedRootId, HostedItemId? replacementParentId,
+        IReadOnlyList<FilesEmailShare>? preservedInheritedGrants = null)
     {
         var chain = new List<HostedItemId> { itemId };
         var currentItem = state.Items.Single(entry => entry.Metadata.Id == itemId);
@@ -87,16 +92,47 @@ public sealed partial class DurableDriveProvider
         var itemOwner = currentItem.Metadata.OwnerPrincipalId;
         var ownerGrant = new FilesPrincipalGrant(itemOwner, FilesAccessRole.Owner, FilesGrantOrigin.Direct,
             itemId, state.StoreCreatedAtUtc ?? currentItem.Metadata.CreatedAt, itemOwner);
-        var scopedGrants = chain.SelectMany((scopeId, index) => state.Shares
-                .Where(entry => entry.Share.ItemId == scopeId && IsActiveShare(entry, now))
+        var scopedGrants = chain.SelectMany((scopeId, index) =>
+        {
+            var grants = state.Shares.Where(entry => entry.Share.ItemId == scopeId && IsActiveShare(entry, now))
                 .Select(entry => new FilesPrincipalGrant(entry.Share.PrincipalId, entry.Share.Role,
                     index == 0 ? FilesGrantOrigin.Direct : FilesGrantOrigin.Inherited,
-                    scopeId, entry.Share.CreatedAt, entry.GrantedByPrincipalId)));
+                    scopeId, entry.Share.CreatedAt, entry.GrantedByPrincipalId, entry.RecipientEmail));
+            if (scopeId != movedRootId || preservedInheritedGrants is null) return grants;
+            var preserved = preservedInheritedGrants.Select(entry => new FilesPrincipalGrant(entry.Share.PrincipalId,
+                entry.Share.Role, index == 0 ? FilesGrantOrigin.Direct : FilesGrantOrigin.Inherited,
+                scopeId, entry.Share.CreatedAt, entry.GrantedByPrincipalId, entry.RecipientEmail));
+            return grants.Concat(preserved);
+        });
         return new[] { ownerGrant }.Concat(scopedGrants)
             .OrderBy(grant => grant.PrincipalId, StringComparer.Ordinal)
             .ThenBy(grant => grant.Origin)
             .ThenBy(grant => grant.GrantedOnItemId.Value)
             .ToArray();
+    }
+
+    private FilesEmailShare[] InheritedSharesToPreserve(State state, HostedItemId movedItemId,
+        HostedItemId? destinationParentId, DateTimeOffset now)
+    {
+        var sourceAncestors = AncestorIds(state, state.Items.Single(entry => entry.Metadata.Id == movedItemId).Metadata.ParentId);
+        var destinationAncestors = AncestorIds(state, destinationParentId).ToHashSet();
+        return state.Shares.Where(entry => sourceAncestors.Contains(entry.Share.ItemId) &&
+                !destinationAncestors.Contains(entry.Share.ItemId) && IsActiveShare(entry, now))
+            .ToArray();
+    }
+
+    private static HashSet<HostedItemId> AncestorIds(State state, HostedItemId? parentId)
+    {
+        var result = new HashSet<HostedItemId>();
+        while (parentId is { } currentId)
+        {
+            if (!result.Add(currentId)) throw new InvalidDataException("Files item ancestry contains a cycle.");
+            var parent = state.Items.SingleOrDefault(entry => entry.Metadata.Id == currentId && IsVisible(state, entry));
+            if (parent is null || parent.Metadata.Kind is not HostedItemKind.Folder)
+                throw new InvalidDataException("Files item ancestry is unavailable or invalid.");
+            parentId = parent.Metadata.ParentId;
+        }
+        return result;
     }
 
     private static string[] ChangedPrincipals(IEnumerable<FilesPrincipalGrant> current,
@@ -108,6 +144,19 @@ public sealed partial class DurableDriveProvider
             .Where(principal => !currentRoles.TryGetValue(principal, out var before) ||
                 !resultingRoles.TryGetValue(principal, out var after) || before != after)
             .ToArray();
+    }
+
+    private bool MoveChangesEffectivePermissions(State state, HostedItemId itemId,
+        HostedItemId? destinationFolderId, DateTimeOffset now)
+    {
+        foreach (var entry in state.Items.Where(value => IsVisible(state, value) &&
+            (value.Metadata.Id == itemId || IsDescendantOf(state, value, itemId))))
+        {
+            var current = EffectiveGrants(state, entry.Metadata.Id, now);
+            var resulting = EffectiveGrants(state, entry.Metadata.Id, now, itemId, destinationFolderId);
+            if (ChangedPrincipals(current, resulting).Length != 0) return true;
+        }
+        return false;
     }
 
     private static Dictionary<string, FilesAccessRole> EffectiveRoles(IEnumerable<FilesPrincipalGrant> grants) =>

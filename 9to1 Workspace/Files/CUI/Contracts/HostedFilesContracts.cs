@@ -199,7 +199,8 @@ public sealed record FilesPrincipalGrant(
 	FilesGrantOrigin Origin,
 	HostedItemId GrantedOnItemId,
 	DateTimeOffset GrantedAt,
-	string GrantedByPrincipalId);
+	string GrantedByPrincipalId,
+	string? RecipientAddress = null);
 
 public sealed record FilesPermissionChangePreview(
 	HostedItemId ItemId,
