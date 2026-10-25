@@ -144,7 +144,8 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
     private async Task<HomeNativeInstalledPeer?> Verify(CanonicalSqliteOriginalSourceScope source, HomeNativeObservedPeer observed,
         AuthenticatedResourceActor expected, CancellationToken token)
     {
-        // Until Root owns an actual selected-app launch, every other process is denied.
+        if (observed.ProcessId != Environment.ProcessId)
+            return await VerifyOriginalSelectedProcess(source, observed, expected, token).ConfigureAwait(false);
         if (_listening is null || _homeActivation is null || _homeRow is null || observed.ProcessId != Environment.ProcessId ||
             _home is null || _actualListening is null || !_home.IsCurrentOriginalRootListeningObservation(_actualListening)) return null;
         if (expected != await Actor(source, token).ConfigureAwait(false)) return null;
@@ -167,12 +168,23 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
         AuthenticatedResourceActor originalActor, string actualKernelStartIdentity,
         HomeNativeInstalledPeer originalVerifiedPeer, CancellationToken cancellationToken)
         => new(Admit(body => body(), _ => { }, async (source, token) => {
-            // This initial bootstrap producer owns only its actual controlled Home.
-            // No caller-provided PID/app/actor tuple can admit another process.
-            if (_listening is null || _homeActivation is null || actualPeer.ProcessId != Environment.ProcessId ||
+            // Root owns the actual controlled image; Home still owns the accepted
+            // kernel peer/start pin. Neither detached tuple alone can admit a caller.
+            if (_listening is null || _homeActivation is null ||
                 originalActor != _listening.Actor || string.IsNullOrWhiteSpace(actualKernelStartIdentity)) return false;
             var verified = await Verify(source, actualPeer, originalActor, token).ConfigureAwait(false);
             if (verified is null || !SameInstalledPeer(verified, originalVerifiedPeer)) return false;
+            if (actualPeer.ProcessId != Environment.ProcessId)
+            {
+                var selected = await Exchange(source, new(1, Guid.NewGuid(), "observe-selected-process") { ProcessId = actualPeer.ProcessId }, token).ConfigureAwait(false);
+                return selected.SelectedWitness is { } actual && selected.SelectedChoice == actual.OriginalChoice &&
+                    actual.ProcessId == actualPeer.ProcessId && actual.OperatingSystemPrincipalId == actualPeer.OperatingSystemPrincipalId &&
+                    actual.ProcessStartIdentity == actualKernelStartIdentity && actual.ExecutableIdentity == verified.ExecutableIdentity &&
+                    actual.OriginalChoice.AppId == verified.AppId && actual.OriginalChoice.InstalledApplicationId == verified.InstalledApplicationId &&
+                    actual.OriginalChoice.ActivationSha256 == verified.InstallationRevision && actual.OriginalChoice.OriginalListening == _listening &&
+                    originalActor == await Actor(source, token).ConfigureAwait(false) &&
+                    _home is not null && _actualListening is not null && _home.IsCurrentOriginalRootListeningObservation(_actualListening);
+            }
             var current = await Exchange(source, new(1, Guid.NewGuid(), "check-home"), token).ConfigureAwait(false);
             var witness = current.OriginalHomeProcess;
             if (current.Listening != _listening || witness is null || witness.ProcessId != actualPeer.ProcessId ||

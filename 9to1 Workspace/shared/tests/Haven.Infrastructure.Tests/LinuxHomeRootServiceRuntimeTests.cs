@@ -127,5 +127,41 @@ public sealed class LinuxHomeRootServiceRuntimeTests
         Assert.Equal(actualStart, HavenOS.Home.Core.HomeNativePeerObservation.ReadLinuxProcessStartMetadata(Environment.ProcessId));
     }
 
+    [LinuxFact]
+    public async Task Selected_startup_refuses_an_actual_unregistered_Unix_listener_without_creating_Home_state_or_mutating_its_endpoint()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "h-root-refusal-" + Guid.NewGuid().ToString("N") + ".sock");
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        using var listener = new System.Net.Sockets.Socket(System.Net.Sockets.AddressFamily.Unix,
+            System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Unspecified);
+        listener.Bind(new System.Net.Sockets.UnixDomainSocketEndPoint(path)); listener.Listen(1);
+        try
+        {
+            var accepted = listener.AcceptAsync(lifetime.Token).AsTask();
+            var owner = new LinuxHomeApplicationStartupOwner(path,
+                new("notes", "1.0.0", [new("home.state", 1)]), lifetime.Token);
+            var actual = owner.ConnectWithinOriginalSourceAsync(body => body(), _ => { }, lifetime.Token);
+            using var peer = await accepted;
+            await Assert.ThrowsAsync<AggregateException>(() => actual);
+            await Assert.ThrowsAsync<AggregateException>(() => owner.CloseAndDrainOriginalAsync());
+            Assert.True(File.Exists(path));
+        }
+        finally { listener.Dispose(); File.Delete(path); }
+    }
+
+    [LinuxFact]
+    public async Task Original_Linux_Apps_stays_unavailable_without_actual_Root_and_does_not_admit_a_copied_launch_request()
+    {
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var root = Path.Combine(Path.GetTempPath(), "h-apps-no-root-" + Guid.NewGuid().ToString("N"));
+        await using var client = new LinuxHomeRootClient(Path.Combine(root, "not-bound.sock"), lifetime.Token);
+        var snapshot = await client.GetSnapshotAsync(new(), lifetime.Token);
+        Assert.Equal(HomeAppsDataState.Unavailable, snapshot.State); Assert.Empty(snapshot.Packages);
+        var request = new HomePackageActionRequest("unissued.package", HomePackageAction.Launch, "unissued.operation", ExpectedRevision: "unissued.snapshot");
+        var result = await client.ExecuteAsync(request, lifetime.Token);
+        Assert.Equal(HomePackageOperationState.Rejected, result.State);
+        Assert.False(Directory.Exists(root));
+    }
+
     [DllImport("libc", EntryPoint = "geteuid")] private static extern uint GetEuid();
 }

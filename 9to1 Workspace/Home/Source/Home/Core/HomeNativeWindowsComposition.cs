@@ -86,8 +86,10 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null,
         string? linuxDulcheExecutableSha256 = null,
         HomeDulcheCapabilityObservation? dulcheCapabilityObservation = null,
-        HomeNativePreferenceBinding? configuredNativePreferences = null)
+        HomeNativePreferenceBinding? configuredNativePreferences = null,
+        bool originalBorrowedHomeStartupExpected = false)
     {
+        _originalBorrowedHomeExpected = originalBorrowedHomeStartupExpected;
         StateStore = originalStateStore ?? throw new ArgumentNullException(nameof(originalStateStore));
         ArgumentNullException.ThrowIfNull(originalPrincipalSource);
         _paths = CapturedPaths.Capture(trustedHomePaths);
@@ -165,6 +167,7 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         var dulcheRuntime = new HomeDulcheRuntimeService(dulcheSource);
         Runtime = new([new HomeCoreStateService(StateStore), permissionsService, Productivity, dulcheRuntime], Sessions);
         Api = api = new(Runtime, Sessions, Profiles);
+        if (_originalBorrowedHomeExpected) _originalBorrowedApi = new BorrowedCoreApi(this);
         var components = new Dictionary<Type, object>
         {
             [typeof(FileHomeCoreStateStore)] = StateStore,
@@ -187,7 +190,7 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
             [typeof(HomePermissionsCoreService)] = permissionsService,
             [typeof(HomeCoreRuntime)] = Runtime,
             [typeof(HomeCoreApi)] = Api,
-            [typeof(IHomeCoreApi)] = Api,
+            [typeof(IHomeCoreApi)] = OriginalConsumerApi,
             [typeof(HomeDulcheRuntimeService)] = dulcheRuntime,
             [typeof(IHomeDulcheRuntimeObservationSource)] = dulcheSource,
             [typeof(HomeNativePreferenceBinding)] = NativePreferences,
@@ -233,6 +236,7 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         {
             ObjectDisposedException.ThrowIf(_closing || _originalProcessRetiring, this);
             if (_start is not null) return _start;
+            if (_originalBorrowedHomeExpected) throw new UnauthorizedAccessException("This native app must bind its actual existing Home session; starting another host is refused.");
             var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _start = StartCoreAsync(gate.Task);
             gate.SetResult();

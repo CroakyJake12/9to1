@@ -20,7 +20,7 @@ internal static class WindowsHomeSameProcessRuntimeObservation
         _ = provider.RequireOriginalWindowsHomeComponents(home);
         if (!ReferenceEquals(provider.GetRequiredService<HomeCoreRuntime>(), home.Runtime) ||
             !ReferenceEquals(provider.GetRequiredService<HomeCoreApi>(), home.Api) ||
-            !ReferenceEquals(provider.GetRequiredService<IHomeCoreApi>(), home.Api) ||
+            !ReferenceEquals(provider.GetRequiredService<IHomeCoreApi>(), home.OriginalConsumerApi) ||
             !ReferenceEquals(provider.GetRequiredService<ITrustedHostPrincipalSource>(),
                 home.Services.GetService(typeof(ITrustedHostPrincipalSource))))
             throw new UnauthorizedAccessException("Retain the SAME actual Windows Home runtime, API and OS principal source.");
@@ -37,6 +37,10 @@ internal static class WindowsHomeSameProcessRuntimeObservation
             home.OriginalCloseTask is not null || home.OriginalProcessRetirementRequestTask is not null)
             throw new ObjectDisposedException("The original Windows Home runtime is no longer current.");
         if (observed.State != CuiSceneAvailabilityState.Ready) return observed;
+        if (home.IsOriginalBorrowedHomeExpected)
+            return observed.Code.StartsWith("BorrowedHomeCurrent:", StringComparison.Ordinal) &&
+                home.IsCurrentOriginalBorrowedHomeCorrelation(observed.Code["BorrowedHomeCurrent:".Length..])
+                ? observed : new(CuiSceneAvailabilityState.Unavailable, "BorrowedHomeChanged", "The original existing Home observation changed; refresh it.");
         return ObserveRequiredServices(home.Runtime.Current);
     }
 
@@ -104,6 +108,17 @@ internal static class WindowsHomeSameProcessRuntimeObservation
                 return actor;
             }
             var actor = await ReadProfileAsync().ConfigureAwait(false);
+            if (home.IsOriginalBorrowedHomeExpected)
+            {
+                var remote = await originals.AwaitAsync(originals.Invoke(() => home.ObserveOriginalBorrowedHomeWithinSourceAsync(
+                    OwnSource, Retain, currentToken))).ConfigureAwait(false);
+                Demand();
+                if (remote.Actor != actor || actor != await ReadProfileAsync().ConfigureAwait(false) ||
+                    !home.IsCurrentOriginalBorrowedHomeObservation(remote) || !remote.RequiredServicesAvailable)
+                    return new CuiSceneAvailability(CuiSceneAvailabilityState.Unavailable, remote.Code, remote.Message);
+                return new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "BorrowedHomeCurrent:" + remote.CorrelationId,
+                    "The authenticated existing Home supplies the current required services.");
+            }
             var before = originals.Invoke(() => { Demand(); return home.Runtime.Current; });
             if (await ReadProfileAsync().ConfigureAwait(false) != actor)
                 throw new UnauthorizedAccessException("The original Home profile changed during runtime observation.");

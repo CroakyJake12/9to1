@@ -42,6 +42,7 @@ public sealed partial class App
         if (!ReferenceEquals(client, _actualLinuxRootClient) || _actualLinuxRootRegistration is not null)
             throw new UnauthorizedAccessException("The SAME actual Linux Root client must own this Home registration.");
         _actualLinuxRootRegistration = new(owners, client);
+        RetainOriginalInstalledHomeApps(owners, client);
         foreach (var pair in _actualLinuxRootRegistration.OriginalServices) result.Add(pair.Key, pair.Value);
     }
     private void RegisterOriginalLinuxRootOwners(IServiceCollection collection, HomeNativeWindowsComposition home, LinuxHomeRootClient? client)
@@ -80,8 +81,9 @@ public sealed partial class App
         {
             var failures = new List<Exception>();
             if (_actualLinuxRootStart is { } start) try { await start.ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
-            var homeDrained = home is null;
-            if (home is not null)
+            var launchesDrained = await JoinOriginalInstalledHomeLaunchesBeforeHomeCloseAsync().ConfigureAwait(false);
+            var homeDrained = home is null && launchesDrained;
+            if (home is not null && launchesDrained)
                 try { await home.CloseAndDrainAsync().ConfigureAwait(false); homeDrained = true; } catch (Exception cause) { failures.Add(cause); }
             if (homeDrained)
                 try

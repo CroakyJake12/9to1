@@ -2,6 +2,7 @@
 using Haven.Application;
 using Haven.Desktop.Services;
 using Haven.Infrastructure.Native.Windows;
+using Haven.Infrastructure.Native.Linux;
 using HavenOS.Home.Apps;
 using HomeAppsSnapshot = HavenOS.Home.Apps.HomeAppsSnapshot;
 using HavenOS.Home.Core;
@@ -27,6 +28,15 @@ public sealed partial class App
             ?? throw new InvalidOperationException("The actual installed Home launch source has not been retained."));
         _actualInstalledHomeAppsPolicy = new();
     }
+    private void PrepareOriginalInstalledHomeApps(LinuxHomeRootClient? sameClient)
+    {
+        if (sameClient is null) return;
+        if (!ReferenceEquals(sameClient, _actualLinuxRootClient) || _actualInstalledHomeAppsResolver is not null)
+            throw new InvalidOperationException("Prepare the SAME original Linux installed Home Apps composition once.");
+        _actualInstalledHomeAppsResolver = new(() => _actualInstalledHomeAppsSource
+            ?? throw new InvalidOperationException("The actual Linux installed Home launch source is absent."));
+        _actualInstalledHomeAppsPolicy = new();
+    }
     private IEnumerable<ICanonicalResourceAccessResolver> OriginalInstalledHomeAppsResolvers() =>
         _actualInstalledHomeAppsResolver is { } same ? [same] : [];
     private IEnumerable<IHomeActionPolicySource> OriginalInstalledHomeAppsPolicies() =>
@@ -47,6 +57,22 @@ public sealed partial class App
         _actualInstalledHomeAppsFeature = new(sameClient);
         _actualInstalledHomeAppsPort = new(this);
     }
+    private void RetainOriginalInstalledHomeApps(HomeNativeWindowsOwnerComponents owners, LinuxHomeRootClient sameClient)
+    {
+        if (!ReferenceEquals(sameClient, _actualLinuxRootClient) || _actualInstalledHomeAppsSource is not null ||
+            _actualLinuxRootRegistration is not { } registration || !ReferenceEquals(registration.OriginalClient, sameClient))
+            throw new UnauthorizedAccessException("Retain the SAME actual Linux Root/Home/index before composing installed Apps.");
+        var source = _actualInstalledHomeAppsSource = new(owners.StateStore, owners.Profiles, owners.Resources, owners.Broker, owners.Permissions, sameClient);
+        sameClient.BindOriginalApplicationLaunchSource(source);
+        if (!sameClient.HasOriginalApplicationLaunchSource(source) || _actualInstalledHomeAppsResolver?.IsBoundToOriginalOwner(source) != true)
+            throw new UnauthorizedAccessException("The actual Linux installed Home launch pairing failed.");
+        _actualInstalledHomeAppsFeature = new(sameClient); _actualInstalledHomeAppsPort = new(this);
+    }
+    private bool HasOriginalInstalledHomeAppsProducer(HomeNativeWindowsComposition home, HomeCanonicalInstalledApplicationLaunchSource source)
+        => _actualLinuxRootClient is { } linux
+            ? linux.HasOriginalApplicationLaunchSource(source) && source.HasOriginalComposition(home.StateStore, home.Profiles, linux) && _actualLinuxRootRegistration?.HasOriginalComposition(home) == true
+            : _actualHomeRootClient is { } windows && windows.HasOriginalApplicationLaunchSource(source) &&
+                source.HasOriginalComposition(home.StateStore, home.Profiles, windows) && _actualHomeRootRegistration?.HasOriginalComposition(home) == true;
     private void DemandOriginalInstalledHomeAppsJoin()
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(_actualHomeRootSourceOwner);
@@ -57,12 +83,14 @@ public sealed partial class App
         // This is the client-owned launch-only barrier. Its prepared-review child
         // waits accepted late publication before issuer withdrawal; transport and
         // unrelated Home host reads remain live until actual Home closes.
-        if (_actualHomeRootClient is not { } same) return;
+        Func<Task>? drain = _actualLinuxRootClient is { } linux ? linux.DrainOriginalApplicationLaunchesBeforeHomeCloseAsync
+            : _actualHomeRootClient is { } windows ? windows.DrainOriginalApplicationLaunchesBeforeHomeCloseAsync : null;
+        if (drain is null) return;
         try
         {
             _originalAppWork.RunCloseCallback(() => OriginalHomeRootSources().Invoke(() =>
             {
-                var raw = same.DrainOriginalApplicationLaunchesBeforeHomeCloseAsync();
+                var raw = drain();
                 _actualInstalledHomeAppsDrain = raw; _ = OriginalHomeRootSources().Track(raw);
                 return true;
             }));
@@ -109,12 +137,10 @@ public sealed partial class App
         private readonly App _owner = owner;
         private void DemandSource()
         {
-            if (_owner._actualHomeRootClient is not { } client || _owner._actualWindowsHome is not { } home ||
+            if (_owner._actualWindowsHome is not { } home ||
                 _owner._actualInstalledHomeAppsSource is not { } source || _owner._actualInstalledHomeAppsFeature is null ||
                 !ReferenceEquals(_owner._actualInstalledHomeAppsPort, this) ||
-                !client.HasOriginalApplicationLaunchSource(source) ||
-                !source.HasOriginalComposition(home.StateStore, home.Profiles, client) ||
-                _owner._actualHomeRootRegistration?.HasOriginalComposition(home) != true)
+                !_owner.HasOriginalInstalledHomeAppsProducer(home, source))
                 throw new UnauthorizedAccessException("Use the SAME actual installed Root/Home Apps source.");
         }
         internal Task<HomeAppsSnapshot> ReadAsync(HomeAppsQuery query, CancellationToken token) =>

@@ -98,6 +98,15 @@ public sealed partial class App
             Demand();
             var start = home.OriginalStartTask;
             if (start is not { IsCompletedSuccessfully: true }) return false;
+            if (home.IsOriginalBorrowedHomeExpected)
+            {
+                var remote = await originals.AwaitAsync(originals.Invoke(() => home.ObserveOriginalBorrowedHomeWithinSourceAsync(Own, Retain, token))).ConfigureAwait(false);
+                Demand();
+                if (remote.Actor != expectedActor || !remote.RequiredServicesAvailable || !home.IsCurrentOriginalBorrowedHomeObservation(remote)) return false;
+                var currentActor = await ReadActorAsync().ConfigureAwait(false); Demand();
+                return currentActor == expectedActor && ReferenceEquals(start, home.OriginalStartTask) &&
+                    home.IsCurrentOriginalBorrowedHomeObservation(remote);
+            }
             var before = originals.Invoke(() => { DemandOwner(); return home.Runtime.Current; });
             if (!ServicesCurrent(before)) return false;
             var actor = await ReadActorAsync().ConfigureAwait(false);
