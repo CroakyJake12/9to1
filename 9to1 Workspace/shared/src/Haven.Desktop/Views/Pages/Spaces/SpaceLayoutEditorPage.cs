@@ -115,7 +115,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         _onDraftChanged = onDraftChanged;
         _space = space ?? throw new ArgumentNullException(nameof(space));
 
-        var root = new HavenPage { Name = "Spaces.Layout.Root", Layout = HavenLayout.Grid, Rows = "Auto Auto 1fr Auto" };
+        var root = new HavenPage { Name = "Spaces.Layout.Root", Layout = HavenLayout.Grid, Rows = "Auto Auto Auto 1fr Auto" };
         root.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         root.SetValue(HavenProperties.Height, HavenLength.Percent(100));
         root.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(18)));
@@ -132,6 +132,16 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         ResetView = ActionButton("Spaces.Layout.ResetView", "maximize", "Reset view");
         Save = ActionButton("Spaces.Layout.Save", "save", onDraftChanged is null ? "Save layout" : "Validate graph", ButtonVariant.Primary);
         header.Add(title);
+        header.Add(DeleteSelection);
+        header.Add(ResetView);
+        header.Add(Save);
+        root.Add(header);
+
+        var palette = new Container { Name = "Spaces.Layout.UserMessagePalette", Layout = HavenLayout.Wrap };
+        palette.SetValue(HavenProperties.Row, 1);
+        palette.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+        palette.SetValue(HavenProperties.Gap, HavenLength.Px(8));
+        palette.Accessibility.AccessibleName = "Registered user-message nodes";
         var profile = SpaceUserMessageGraph.Profile();
         foreach (var schema in SpaceUserMessageGraph.Types().Where(type => profile.AllowedNodeTypes.Contains(type.TypeId)))
         {
@@ -141,15 +151,12 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
             EventHandler handler = (_, _) => AddRegisteredUserMessageNode(typeId);
             button.Invoked += handler;
             _userMessagePalette.Add((button, typeId, handler));
-            header.Add(button);
+            palette.Add(button);
         }
-        header.Add(DeleteSelection);
-        header.Add(ResetView);
-        header.Add(Save);
-        root.Add(header);
+        root.Add(palette);
 
         _configurationInspector = new Container { Name = "Spaces.Layout.NodeConfiguration", Layout = HavenLayout.Wrap };
-        _configurationInspector.SetValue(HavenProperties.Row, 1);
+        _configurationInspector.SetValue(HavenProperties.Row, 2);
         _configurationInspector.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         _configurationInspector.SetValue(HavenProperties.Gap, HavenLength.Px(8));
         _configurationInspector.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
@@ -158,7 +165,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
 
         Editor = new NodeEditor { Name = "Spaces.Layout.NodeEditor" };
         Editor.Accessibility.AccessibleName = $"{space.Name} layout and additional logic editor";
-        Editor.SetValue(HavenProperties.Row, 2);
+        Editor.SetValue(HavenProperties.Row, 3);
         Editor.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         Editor.SetValue(HavenProperties.Height, HavenLength.Percent(100));
         Editor.SetValue(HavenProperties.MinHeight, HavenLength.Px(420));
@@ -173,7 +180,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
             ? "Add registered nodes, connect their typed ports, then validate the graph."
             : $"Loaded {Editor.Document.Nodes.Count} nodes and {Editor.Document.Edges.Count} connections.")
         { Name = "Spaces.Layout.Status", Level = TextLevel.Caption };
-        Status.SetValue(HavenProperties.Row, 3);
+        Status.SetValue(HavenProperties.Row, 4);
         Status.SetValue(HavenProperties.Foreground, "TextSecondary");
         root.Add(Status);
 

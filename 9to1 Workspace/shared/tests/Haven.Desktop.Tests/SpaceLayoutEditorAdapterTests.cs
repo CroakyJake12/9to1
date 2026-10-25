@@ -64,14 +64,17 @@ public sealed class SpaceLayoutEditorAdapterTests
         foreach (var type in types)
         {
             var authored = Assert.Single(nodes, node => node.TypeId == type.TypeId);
+            var canonical = SpaceLayoutEditorAdapter.ToEditor(
+                new SpaceLayoutDocument([SpaceUserMessageGraph.CreateNode(type.TypeId)], [])).Nodes.Single();
             Assert.Equal(type.Version, authored.SchemaVersion);
+            Assert.Equal(canonical.Category, authored.Category);
+            Assert.Equal(canonical.Title, authored.Title);
             Assert.Equal(type.Ports.Select(port => (port.Key, port.Direction, port.DataType, port.Multiple)),
                 authored.Ports.Select(port => (port.Id, port.Direction == NodeEditorPortDirection.Input
                     ? GraphPortDirection.Input : GraphPortDirection.Output, port.DataType, port.AllowsMultipleConnections)));
-            Assert.Equal(type.TypeId == SpaceUserMessageGraph.TruncateType ? "1000" : null,
-                type.TypeId == SpaceUserMessageGraph.TruncateType
-                    ? authored.Metadata.GetValueOrDefault("maximumTextElements")
-                    : authored.Metadata.Count == 0 ? null : "unexpected metadata");
+            Assert.Equal(canonical.Metadata.Count, authored.Metadata.Count);
+            foreach (var metadata in canonical.Metadata)
+                Assert.Equal(metadata.Value, authored.Metadata[metadata.Key]);
         }
 
         var source = Assert.Single(nodes, node => node.TypeId == SpaceUserMessageGraph.SourceType);
@@ -83,11 +86,89 @@ public sealed class SpaceLayoutEditorAdapterTests
         Assert.Equal("1000", maximumInput.Text);
         maximumInput.Text = "256";
         Assert.Equal("256", Assert.Single(page.Editor.Document.Nodes, node => node.Id == truncate.Id).Metadata["maximumTextElements"]);
+        var extraNodes = nodes.Where(node => node.TypeId is not (SpaceUserMessageGraph.SourceType or
+            SpaceUserMessageGraph.TruncateType or SpaceUserMessageGraph.OutputType)).ToArray();
+        if (extraNodes.Length > 0)
+        {
+            page.Editor.SelectNode(extraNodes[0].Id);
+            foreach (var extra in extraNodes.Skip(1)) page.Editor.SelectNode(extra.Id, additive: true);
+            page.Editor.DeleteSelection();
+        }
         Assert.True(page.Editor.Connect(source.Id, "out", truncate.Id, "in"));
         Assert.True(page.Editor.Connect(truncate.Id, "out", output.Id, "in"));
         Assert.NotNull(latestDraft);
         var compiled = SpaceUserMessageGraph.Compile(space.Id, space.Revision, latestDraft!);
         Assert.Equal(space.Id, compiled.SpaceId);
         Assert.Equal(space.Revision, compiled.SpaceRevision);
+    }
+
+    [Fact]
+    public void User_message_palette_authors_an_executable_typed_numbers_chain()
+    {
+        var (page, space, latestDraft) = NewPage();
+        using (page)
+        {
+            foreach (var type in new[] { SpaceUserMessageGraph.SourceType, SpaceUserMessageGraph.ExtractNumbersType,
+                         SpaceUserMessageGraph.NumbersToTextType, SpaceUserMessageGraph.OutputType })
+                Assert.Contains(page.UserMessagePalette, entry => entry.TypeId == type);
+            Add(page, SpaceUserMessageGraph.SourceType);
+            Add(page, SpaceUserMessageGraph.ExtractNumbersType);
+            Add(page, SpaceUserMessageGraph.NumbersToTextType);
+            Add(page, SpaceUserMessageGraph.OutputType);
+
+            var nodes = page.Editor.Document.Nodes.ToDictionary(node => node.TypeId, StringComparer.Ordinal);
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.SourceType].Id, "out",
+                nodes[SpaceUserMessageGraph.ExtractNumbersType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.ExtractNumbersType].Id, "out",
+                nodes[SpaceUserMessageGraph.NumbersToTextType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.NumbersToTextType].Id, "out",
+                nodes[SpaceUserMessageGraph.OutputType].Id, "in"));
+
+            Assert.NotNull(latestDraft());
+            Assert.Equal(space.Id, SpaceUserMessageGraph.Compile(space.Id, space.Revision, latestDraft()!).SpaceId);
+        }
+    }
+
+    [Fact]
+    public void User_message_palette_authors_and_configures_an_executable_phrase_search_chain()
+    {
+        var (page, space, latestDraft) = NewPage();
+        using (page)
+        {
+            Add(page, SpaceUserMessageGraph.SourceType);
+            Add(page, SpaceUserMessageGraph.SearchWordsType);
+            Add(page, SpaceUserMessageGraph.MatchesToTextType);
+            Add(page, SpaceUserMessageGraph.OutputType);
+
+            var nodes = page.Editor.Document.Nodes.ToDictionary(node => node.TypeId, StringComparer.Ordinal);
+            page.Editor.SelectNode(nodes[SpaceUserMessageGraph.SearchWordsType].Id);
+            var query = Assert.Single(page.NodeConfigurationInputs,
+                pair => pair.Key.EndsWith(".query", StringComparison.Ordinal)).Value;
+            Assert.Equal("word", query.Text);
+            query.Text = "permission scope";
+            Assert.Equal("permission scope", Assert.Single(page.Editor.Document.Nodes,
+                node => node.TypeId == SpaceUserMessageGraph.SearchWordsType).Metadata["query"]);
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.SourceType].Id, "out",
+                nodes[SpaceUserMessageGraph.SearchWordsType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.SearchWordsType].Id, "out",
+                nodes[SpaceUserMessageGraph.MatchesToTextType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.MatchesToTextType].Id, "out",
+                nodes[SpaceUserMessageGraph.OutputType].Id, "in"));
+
+            Assert.NotNull(latestDraft());
+            Assert.Equal(space.Id, SpaceUserMessageGraph.Compile(space.Id, space.Revision, latestDraft()!).SpaceId);
+        }
+    }
+
+    private static void Add(SpaceLayoutEditorPage page, string typeId) =>
+        Assert.Single(page.UserMessagePalette, entry => entry.TypeId == typeId).Button.Invoke();
+
+    private static (SpaceLayoutEditorPage Page, SpaceDefinition Space, Func<SpaceLayoutDocument?> LatestDraft) NewPage()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var space = new SpaceDefinition(Guid.NewGuid(), "Graph authoring", "", "space", SpaceKind.General,
+            false, false, null, "", SpaceThinkingMode.Default, [], [], null, now, now);
+        SpaceLayoutDocument? latestDraft = null;
+        return (new SpaceLayoutEditorPage(space, draft => latestDraft = draft), space, () => latestDraft);
     }
 }
