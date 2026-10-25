@@ -170,6 +170,19 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 RequestRebuild();
                 break;
             case "AddSection":
+                if (_session is ContractSessionAdapter sectionAdapter)
+                {
+                    var sectionId = await sectionAdapter.AddSectionAsync(cancellationToken: cancellationToken);
+                    var addedSection = _session.Document.Sections.First(sectionItem => sectionItem.Id == sectionId);
+                    _selectedSectionId = sectionId;
+                    _selectedPageId = addedSection.Pages[0].Id;
+                    SelectExistingBlock(addedSection.Pages[0]);
+                    SyncSelectedInkView();
+                    PushDocumentToBindings();
+                    RequestRebuild();
+                    NavRebuildRequested?.Invoke();
+                    break;
+                }
                 var section = new RichBoardSection { Title = $"Section {_session.Document.Sections.Count + 1}" };
                 section.Pages.Add(new RichBoardPage { Title = "New page" });
                 _session.Document.Sections.Add(section);
@@ -182,6 +195,19 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 RequestRebuild();
                 break;
             case "AddPage":
+                if (_session is ContractSessionAdapter pageAdapter)
+                {
+                    var pageId = await pageAdapter.AddPageAsync(CurrentSection().Id, cancellationToken: cancellationToken);
+                    var addedPage = _session.Document.Sections.SelectMany(sectionItem => sectionItem.Pages)
+                        .First(pageItem => pageItem.Id == pageId);
+                    _selectedPageId = pageId;
+                    SelectExistingBlock(addedPage);
+                    SyncSelectedInkView();
+                    PushDocumentToBindings();
+                    RequestRebuild();
+                    NavRebuildRequested?.Invoke();
+                    break;
+                }
                 var page = new RichBoardPage { Title = $"Page {CurrentSection().Pages.Count + 1}" };
                 CurrentSection().Pages.Add(page);
                 _selectedPageId = page.Id;

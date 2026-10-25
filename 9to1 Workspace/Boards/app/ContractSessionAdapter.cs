@@ -757,6 +757,39 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         finally { _mergeGate.Release(); }
     }
 
+    public async ValueTask<string> AddSectionAsync(string? title = null, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string id = string.Empty;
+            await _real.MutateAsync(rich =>
+                id = HavenRichNotesOps.AddSection(rich, title).Id, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<string> AddPageAsync(string sectionId, string? title = null,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string id = string.Empty;
+            await _real.MutateAsync(rich =>
+                id = HavenRichNotesOps.AddPage(rich, sectionId, title).Id, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     public async ValueTask<string> DuplicateSectionAsync(string sectionId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
