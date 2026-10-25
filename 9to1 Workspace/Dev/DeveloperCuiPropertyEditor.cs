@@ -11,17 +11,24 @@ namespace HavenOS.Apps.Dev;
 
 public sealed record DeveloperCuiInspectableProperty(string Name, string Value, string LanguageType, bool CanEdit, string? UnavailableReason);
 public sealed record DeveloperCuiPropertyInspection(Guid Id, string RelativePath, string ContentSha256, string AuthoredId,
-    string ComponentType, IReadOnlyList<DeveloperCuiInspectableProperty> Properties, string? UnavailableReason);
+    string ComponentType, IReadOnlyList<DeveloperCuiInspectableProperty> Properties, string? UnavailableReason)
+{
+    public bool CanAddTextChild { get; init; }
+}
 public sealed record DeveloperCuiPropertyChange(string Text, string? Error = null);
 
 /// <summary>Bounded authoring edits of existing literal attributes in XML-shaped CUI. The
 /// authoritative semantic parser verifies identity/value meaning; System.Xml supplies positions
 /// in ORIGINAL text, since CUI semantic spans describe normalized shorthand. Never serializes a
 /// document or rewrites unsupported syntax. Returns a draft only, with no IO or write authority.</summary>
-public static class DeveloperCuiPropertyEditor
+public static partial class DeveloperCuiPropertyEditor
 {
     public const int MaximumPropertyCharacters = 16_000;
-    private sealed record Captured(DeveloperCuiPropertyInspection Inspection, XElement? Element);
+    private sealed record Captured(DeveloperCuiPropertyInspection Inspection, XElement? Element)
+    {
+        public CuiComponent? Component { get; init; }
+        public CuiDocument? Document { get; init; }
+    }
     public static DeveloperCuiPropertyInspection Inspect(string path, string text, string authoredId, CancellationToken token = default) =>
         Capture(path, text, authoredId, token).Inspection;
 
@@ -121,7 +128,9 @@ public static class DeveloperCuiPropertyEditor
                 : attribute.Value.Length > MaximumPropertyCharacters ? "This literal exceeds the bounded property editor limit." : null;
             properties.Add(new(attribute.Name.LocalName, attribute.Value, descriptor.LanguageType, reason is null, reason));
         }
-        return new(new(Guid.NewGuid(), path, hash, authoredId, selectedComponent.Type, Array.AsReadOnly(properties.ToArray()), null), target);
+        return new(new(Guid.NewGuid(), path, hash, authoredId, selectedComponent.Type, Array.AsReadOnly(properties.ToArray()), null)
+            { CanAddTextChild = SupportsTextChild(selectedComponent) && IsBasicAuthoringContext(document, selectedComponent) }, target)
+            { Component = selectedComponent, Document = document };
     }
 
     private static bool SupportedLiteral(CuiRuntimePropertyDescriptor property) => property.LanguageType is "text" or "content" or "boolean" or "integer" or "number" or "length" || property.AllowedValues.Count > 0;

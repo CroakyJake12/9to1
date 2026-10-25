@@ -8,6 +8,20 @@ namespace HavenOS.Apps.Dev.Tests;
 public sealed class DeveloperWorkbenchCuiDocumentTests
 {
     [Fact]
+    public void Designer_Text_child_controls_edit_inputs_and_stage_the_same_source_draft()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        foreach (var (id, binding) in new[] { ("dev-cui-new-text-id", "CuiNewTextId"), ("dev-cui-new-text-value", "CuiNewTextValue") })
+        {
+            var input = Assert.Single(nodes, node => node.Name == id); Assert.Equal("Input", input.Type);
+            Assert.Contains(input.Properties.Values, value => value is CuiBindingValue actual && actual.Path == binding);
+        }
+        var add = Assert.Single(nodes, node => node.Name == "dev-add-cui-text-child");
+        Assert.Contains(add.Actions.Values, action => action.Name == "dev.add-cui-text-child");
+        Assert.Contains(add.Properties.Values, value => value is CuiBindingValue binding && binding.Path == "CanAddCuiTextChild");
+    }
+
+    [Fact]
     public void Current_project_go_to_file_has_bound_query_results_and_actual_open_and_page_actions()
     {
         var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
@@ -50,7 +64,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
-            "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.preview-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.preview-edit",
+            "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.preview-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.add-cui-text-child", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.new-run-target", "dev.edit-run-target", "dev.review-run-target", "dev.save-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];
