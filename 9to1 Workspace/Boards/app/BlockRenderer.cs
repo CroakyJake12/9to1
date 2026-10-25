@@ -1166,10 +1166,12 @@ public static class BlockRenderer
         // Size from persisted object bounds so saved content beyond the first
         // viewport remains reachable after reopen instead of being clipped.
         var canvasWidth = Math.Clamp(
-            Math.Max(1200, boxes.Select(box => box.X + box.Width + 40).DefaultIfEmpty(1200).Max()),
+            Math.Max(1200, Math.Max(boxes.Select(box => box.CanvasWidth).DefaultIfEmpty(1200).Max(),
+                boxes.Select(box => box.X + box.Width + 40).DefaultIfEmpty(1200).Max())),
             1200, 100000);
         var canvasHeight = Math.Clamp(
-            Math.Max(900, boxes.Select(box => box.Y + box.Height + 40).DefaultIfEmpty(900).Max()),
+            Math.Max(900, Math.Max(boxes.Select(box => box.CanvasHeight).DefaultIfEmpty(900).Max(),
+                boxes.Select(box => box.Y + box.Height + 40).DefaultIfEmpty(900).Max())),
             900, 100000);
         var canvas = new Canvas
         {
