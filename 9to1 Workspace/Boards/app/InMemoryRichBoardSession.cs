@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace CakeOS.Apps.Boards.App;
 
-public sealed class InMemoryRichBoardSession : IRichBoardSession
+public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionLifetime
 {
     private static readonly ConcurrentDictionary<string, string> Store = new(StringComparer.OrdinalIgnoreCase);
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
@@ -17,7 +17,7 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
     private readonly Stack<string> _undo = new();
     private readonly Stack<string> _redo = new();
     private bool _dirty;
-    private bool _disposed;
+    private volatile bool _disposed;
     private string _status = "Ready";
 
     public InMemoryRichBoardSession()
@@ -26,6 +26,7 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
     }
 
     public RichBoardDocument Document { get; private set; } = CreateDefault();
+    bool IBoardSessionLifetime.IsDisposed => _disposed;
 
     public string Snapshot => JsonSerializer.Serialize(Document, JsonOptions);
 

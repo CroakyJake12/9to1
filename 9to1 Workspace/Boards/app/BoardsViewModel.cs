@@ -254,6 +254,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Push bindings, flag dirty and rebuild after a direct view-model edit.</summary>
     public void CommitViewEdit()
     {
+        if (_disposed || SessionIsDisposed) return;
         if (!RequireEditMode()) return;
         PushDocumentToBindings();
         _session.MarkDirty();
@@ -268,7 +269,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
-        if (_disposed) return;
+        if (_disposed || SessionIsDisposed) return;
         if (!CanEdit && command is ("ToggleEditView" or "ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or
             "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or "FileMenu" or
             "OverflowMenu" or "BoardProperties" or "CloseWindow"))
@@ -831,6 +832,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private bool RequireEditMode()
     {
+        if (_disposed || SessionIsDisposed) return false;
         if (!CanEdit)
         {
             Set("StatusText", "This board source is open read-only.");
@@ -840,6 +842,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("StatusText", "View mode: switch to Edit to change this board.");
         return false;
     }
+
+    private bool SessionIsDisposed => _session is IBoardSessionLifetime { IsDisposed: true };
 
     internal void ApplyAuthoringState(Control? root)
     {
@@ -1159,7 +1163,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void EditText(string controlName, string text)
     {
-        if (_disposed) return;
+        if (_disposed || SessionIsDisposed) return;
         if (!_isEditMode && controlName != "NavSearchBox") return;
         switch (controlName)
         {
@@ -1356,7 +1360,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void EditCheck(string controlName, bool done)
     {
-        if (_disposed) return;
+        if (_disposed || SessionIsDisposed) return;
         if (!_isEditMode) return;
         switch (controlName)
         {
