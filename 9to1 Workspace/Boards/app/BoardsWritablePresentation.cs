@@ -134,7 +134,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
                 viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Ready to edit");
                 viewModel.Set("SaveStateText", "Saved source revision");
-                loader = new CuiControlLoader();
+                loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
                 loader.SetBindingContext(viewModel);
                 loader.SetActionDispatcher(viewModel);
                 var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));

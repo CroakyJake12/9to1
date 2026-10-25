@@ -15,7 +15,7 @@ internal static class GraphSliderCui
         Action valuesChanged)
     {
         var context = new GraphSliderContext(viewModel, blockId, graph);
-        var loader = new CuiControlLoader();
+        var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
         loader.SetBindingContext(context);
         (Control? Root, IReadOnlyList<CuiDiagnostic> Diagnostics) loaded;
         try
