@@ -719,7 +719,7 @@ public sealed partial class App
                 _boardCreations.TryGetValue(origin.TabId, out var state);
                 if (state?.Driver is { IsCompleted: false })
                     return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OperationInProgress,
-                        "BoardCreateOperationInProgress", "Wait for the original board operation to settle."));
+                        "BoardCreateOperationInProgress", "A Board operation is already in progress."));
                 // Every new create gets a new picker/source. Old sources remain retained
                 // because an opened document still borrows its exact read/write lease.
                 if (state is null || request.Operation == BoardsHomeBoardCreationOperation.Create &&
@@ -727,7 +727,7 @@ public sealed partial class App
                 {
                     if (_retainedBoardCreations.Count >= 64)
                         return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit,
-                            "BoardCreateSourceLimit", "Close this Home window before creating more boards."));
+                            "BoardCreateSourceLimit", "Close this Home window before creating more Boards."));
                     state = new(); _boardCreations[origin.TabId] = state; _retainedBoardCreations.Add(state);
                 }
                 var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -747,7 +747,7 @@ public sealed partial class App
                 {
                     if (state.CreateDispatched && !state.Opened)
                         return DescribeBoardCreation(state, "RetainedCreateRequiresRecovery", "Resume the retained create or open operation; it will not be created again.");
-                    if (request.ValidatedDraft.IsEmpty) return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "BoardDraftRequired", "A validated board draft is required.");
+                    if (request.ValidatedDraft.IsEmpty) return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "BoardDraftRequired", "This Board could not be created. Try again.");
                     state.Source ??= CreateBoardCreationSource(origin, state);
                     var theme = _homeTheme ?? throw new InvalidOperationException("The actual Home theme owner is absent.");
                     state.Page ??= state.Source.CreateBoardFolderPickerPage(token => AdmitHomeAsync(origin, token), theme.Context);
@@ -765,7 +765,7 @@ public sealed partial class App
                         folder = ReferenceEquals(completed, selected) ? await selected : null;
                     }
                     finally { picker.Close(); picker.Content = null; await shown; }
-                    if (folder is null) return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No board was created.");
+                    if (folder is null) return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No Board was created.");
                     caller.ThrowIfCancellationRequested();
                     state.CreateDispatched = true;
                     try
@@ -780,13 +780,13 @@ public sealed partial class App
                         // Files create claim. Post-claim failures carry retained settlement.
                         state.CreateDispatched = false; state.UnknownFailure = declinedBeforeClaim;
                         return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit,
-                            "BoardCreateReviewRefused", "The board was not created: " + declinedBeforeClaim.Message);
+                            "BoardCreateReviewRefused", "This Board was not created. Try again.");
                     }
                 }
                 else
                 {
                     if (state.Source is null || !state.CreateDispatched)
-                        return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "NoRetainedBoardCreate", "There is no retained board creation to resume.");
+                        return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "NoRetainedBoardCreate", "There is no Board operation to resume.");
                     if (request.Operation == BoardsHomeBoardCreationOperation.RetrySettlement)
                     {
                         if (state.Result is not { State: FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, SettlementAttempt: { } attempt })
@@ -841,18 +841,18 @@ public sealed partial class App
                 state.Opened = true;
                 var warning = state.Result.State != FilesOriginalBoardDocumentCreateSettlementState.Committed || state.Result.CleanupFailures.Count != 0;
                 return new(warning ? BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning : BoardsHomeBoardCreationOutcome.Opened,
-                    warning ? "BoardOpenedWithRecordedAuditWarning" : "BoardOpened", "The exact created Files board is open in its new rich session.");
+                    warning ? "BoardOpenedWithRecordedAuditWarning" : "BoardOpened", "Board opened.");
             }
             catch (OperationCanceledException cause) when (!state.CreateDispatched && caller.IsCancellationRequested && cause.CancellationToken == caller)
-            { return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No board was created."); }
+            { return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No Board was created."); }
             catch (Exception cause)
             {
                 state.UnknownFailure = cause;
                 if (state.Result is not null)
                     return DescribeBoardCreation(state, "RetainedBoardOperationFailed", "The original outcome is retained. Resume only its permitted audit, inspection or exact recorded open.");
                 return state.CreateDispatched
-                    ? new(BoardsHomeBoardCreationOutcome.OutcomeUnknown, "BoardCreateOutcomeUnconfirmed", "The original create outcome is retained. Inspect or settle it; do not create it again.")
-                    : new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "BoardCreateNotStarted", "The board was not created: " + cause.Message);
+                    ? new(BoardsHomeBoardCreationOutcome.OutcomeUnknown, "BoardCreateOutcomeUnconfirmed", "Check whether the Board was saved.")
+                    : new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "BoardCreateNotStarted", "This Board was not created. Try again.");
             }
         }
         private static BoardsHomeBoardCreationResult DescribeBoardCreation(BoardCreationState state, string code, string message)
@@ -864,7 +864,13 @@ public sealed partial class App
                 FilesOriginalBoardDocumentCreateSettlementState.NotCreated => BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit,
                 _ => state.Result?.Receipt is not null ? BoardsHomeBoardCreationOutcome.CreatedOpenFailed : BoardsHomeBoardCreationOutcome.OutcomeUnknown
             };
-            return new(outcome, code, message);
+            return new(outcome, code, outcome switch {
+                BoardsHomeBoardCreationOutcome.HomeAuditPending => "Finish saving this Board.",
+                BoardsHomeBoardCreationOutcome.OutcomeUnknown or BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit => "Check whether the Board was saved.",
+                BoardsHomeBoardCreationOutcome.CreatedOpenFailed => "Your Board was saved. Try opening it again.",
+                BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit => "This Board was not created. Try again.",
+                _ => message
+            });
         }
         private NativeHomeFilesLibrarySource CreateBoardCreationSource(BrowseAppContentRequest origin, BoardCreationState state)
         {
