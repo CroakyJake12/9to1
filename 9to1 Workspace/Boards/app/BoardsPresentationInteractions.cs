@@ -270,17 +270,26 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
         _searchBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "NavSearchBox");
         if (_titleBox is not null)
         {
-            _titleChanged = (_, _) => viewModel.EditText("BoardTitleBox", _titleBox.Text ?? string.Empty);
+            _titleChanged = (_, _) =>
+            {
+                if (!_disposed) viewModel.EditText("BoardTitleBox", _titleBox.Text ?? string.Empty);
+            };
             _titleBox.TextChanged += _titleChanged;
         }
         if (_pageTitleBox is not null)
         {
-            _pageTitleChanged = (_, _) => viewModel.EditText("PageTitleBox", _pageTitleBox.Text ?? string.Empty);
+            _pageTitleChanged = (_, _) =>
+            {
+                if (!_disposed) viewModel.EditText("PageTitleBox", _pageTitleBox.Text ?? string.Empty);
+            };
             _pageTitleBox.TextChanged += _pageTitleChanged;
         }
         if (_searchBox is not null)
         {
-            _searchChanged = (_, _) => viewModel.SearchText = _searchBox.Text ?? string.Empty;
+            _searchChanged = (_, _) =>
+            {
+                if (!_disposed) viewModel.SearchText = _searchBox.Text ?? string.Empty;
+            };
             _searchBox.TextChanged += _searchChanged;
         }
         _rootKeyDown = (_, e) => HandleKey(e);

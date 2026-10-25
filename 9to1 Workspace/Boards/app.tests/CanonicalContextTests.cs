@@ -2,6 +2,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using Xunit;
 
@@ -34,6 +35,7 @@ public sealed class CanonicalContextTests
             var pageTitle = Assert.Single(controls.OfType<TextBox>(), control => AutomationProperties.GetName(control) == "Page title");
             Assert.Same(pageTitle, BoardsCuiControlFinder.FindByAutomationId<TextBox>(loadedRoot, "PageTitleBox"));
             pageTitle.Text = "Editable page heading";
+            Dispatcher.UIThread.RunJobs();
             Assert.Equal("Editable page heading", document.Sections[0].Pages[0].Title);
             var alternating = Assert.Single(controls.OfType<CheckBox>(), control => control.Content?.ToString() == "Alternating rows");
             alternating.IsChecked = true;
@@ -80,7 +82,7 @@ public sealed class CanonicalContextTests
             Assert.Equal("#FFFFF3C4", table.CellStyles["1,1"].Background);
             Assert.Same(document, session.Document);
             Assert.Equal(table.Id, vm.SelectedBlockId);
-            vm.Detach();
+            vm.Dispose();
         });
         await session.SaveAsync();
         Assert.Contains("#FFFFFFFF", session.Snapshot, StringComparison.Ordinal);

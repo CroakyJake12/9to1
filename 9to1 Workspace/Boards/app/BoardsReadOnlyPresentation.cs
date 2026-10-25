@@ -146,7 +146,11 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         await (_renderQueue?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         await _embeddedArtifacts.DisposeAsync().ConfigureAwait(false);
         await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
-        await Dispatcher.UIThread.InvokeAsync(_loader.Dispose);
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            ViewModel.Dispose();
+            _loader.Dispose();
+        });
         await _session.DisposeAsync().ConfigureAwait(false);
     }
 }

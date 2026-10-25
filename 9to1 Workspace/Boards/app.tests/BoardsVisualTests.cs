@@ -304,7 +304,12 @@ public sealed class BoardsVisualTests
                 window.Close();
             });
         }
-        finally { await session.DisposeAsync(); }
+        finally
+        {
+            Ui(() => Avalonia.Threading.Dispatcher.UIThread.RunJobs());
+            vm.Dispose();
+            await session.DisposeAsync();
+        }
     }
 
     [Fact]
