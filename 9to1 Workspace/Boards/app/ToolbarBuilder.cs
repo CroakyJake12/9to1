@@ -72,6 +72,7 @@ public static class ToolbarBuilder
         bar.Children.Add(Separator());
         bar.Children.Add(DrawButton(vm));
         bar.Children.Add(CreateInsertButton(vm));
+        ThemeApplier.ApplyToolbarInputSurface(bar);
         host.Children.Add(bar);
     }
 

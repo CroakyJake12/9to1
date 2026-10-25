@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\contract\CakeOS.Apps.Boards.Contract.csproj" />
+    <ProjectReference Include="..\..\shared\src\Haven.UI\Haven.UI.csproj" />
   </ItemGroup>
 
   <Import Project="..\..\..\framework\CUI\Compiler\buildTransitive\CakeOS.Cui.props" />

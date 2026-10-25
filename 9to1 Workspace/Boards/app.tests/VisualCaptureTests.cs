@@ -31,7 +31,12 @@ public sealed class VisualCaptureTests
     private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false, bool openStyleMenu = false)
     {
         var priorMode = TestUiThread.Run(() => BoardsTheme.Mode);
-        TestUiThread.Run(() => SetTheme(dark));
+        var priorCuiTheme = TestUiThread.Run(() => CuiSurfacePaletteCatalog.ActiveTheme);
+        TestUiThread.Run(() =>
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
+            SetTheme(dark);
+        });
         var opening = TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
             File.ReadAllBytes(boardPath), boardPath, "visual-capture-r1",
             (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(
@@ -51,7 +56,11 @@ public sealed class VisualCaptureTests
             if (window is not null) TestUiThread.Run(window.Close);
             var disposal = TestUiThread.Run(() => presentation.DisposeAsync().AsTask());
             PumpUi(disposal, "presentation disposal");
-            TestUiThread.Run(() => SetTheme(priorMode == BoardsThemeMode.Dark));
+            TestUiThread.Run(() =>
+            {
+                CuiSurfacePaletteCatalog.ActiveTheme = priorCuiTheme;
+                SetTheme(priorMode == BoardsThemeMode.Dark);
+            });
         }
     }
 
