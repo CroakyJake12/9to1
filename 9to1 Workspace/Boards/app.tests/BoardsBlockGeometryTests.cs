@@ -58,8 +58,8 @@ public sealed class BoardsBlockGeometryTests
                 var insert = Assert.Single(grid.Children.OfType<Button>(), button =>
                     AutomationProperties.GetName(button) == "Insert");
                 var gripButton = Assert.Single(border.GetLogicalDescendants().OfType<Button>(), button => button.Name == "BlockGripToggle");
-                var gripRoot = Assert.Single(grid.Children.Where(child =>
-                    child.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle")));
+                var gripRoot = Assert.Single(grid.Children, child =>
+                    child.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle"));
                 var glyph = Assert.IsType<Image>(gripButton.Content);
                 var addGlyph = Assert.IsType<Image>(insert.Content);
                 var insertLayout = $"Width={insert.Width}, Height={insert.Height}, MinHeight={insert.MinHeight}, " +
