@@ -93,7 +93,7 @@ public sealed partial class ChatSessionService
         var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalCallerCallback(Acquire);
         return await originals.RunToOriginalSettlementAsync(async () =>
         {
-            var capture = originals.Invoke(() => { var task = source.CaptureAsync(conversation, Acquire, token); Retain(task); return task; });
+            var capture = originals.Invoke(() => { var task = source.CaptureAsync(conversation, OriginalSpaceContextBudget.ForRequest(options?.ContextLimit ?? 32768), Acquire, token); Retain(task); return task; });
             var input = await originals.AwaitAsync(capture).ConfigureAwait(false);
             var read = originals.Invoke(() => { var task = source.ReadAsync(input, conversation, Acquire, token); Retain(task); return task; });
             var snapshot = await originals.AwaitAsync(read).ConfigureAwait(false);
