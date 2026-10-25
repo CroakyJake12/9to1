@@ -6,6 +6,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using CakeOS.Cui.Themes;
 using Avalonia.LogicalTree;
@@ -35,6 +36,55 @@ public sealed class BrowseTestApplication : Application
 public sealed partial class BrowseNativeUiTests
 {
     private static readonly List<(BrowseNativeWindow Window, Exception Failure)> RetainedFailedOwners = [];
+
+    [AvaloniaFact]
+    public async Task Selected_tab_uses_neutral_default_then_only_explicit_accent_and_clears_back()
+    {
+        var previousTheme = CuiSurfacePaletteCatalog.ActiveTheme;
+        var previousOverride = CuiSurfacePaletteCatalog.OverrideAccent;
+        var previousAccent = CuiSurfacePaletteCatalog.AccentOverride;
+        try
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Professional;
+            CuiSurfacePaletteCatalog.OverrideAccent = false;
+            CuiSurfacePaletteCatalog.AccentOverride = null;
+            await using var chrome = await BrowseChrome.CreateAsync(new Paths());
+            await using var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+            var first = chrome.State.SelectedTabId;
+            var firstRow = Assert.Single(Rows(workspace));
+            Assert.Equal(Color.Parse("#FFF2F2F2"), firstRow.BackgroundColor);
+            Assert.Equal(Colors.Black, firstRow.ForegroundColor);
+
+            var second = (await chrome.NewTabAsync(false)).SelectedTabId;
+            Assert.Equal(Colors.Transparent, Rows(workspace).Single(row => row.Key == first.ToString("D")).BackgroundColor);
+            Assert.Equal(Color.Parse("#FFF2F2F2"), Rows(workspace).Single(row => row.Selected).BackgroundColor);
+
+            CuiSurfacePaletteCatalog.OverrideAccent = true;
+            CuiSurfacePaletteCatalog.AccentOverride = CuiAccentColour.Teal;
+            await chrome.SelectTabAsync(first);
+            var selected = Rows(workspace).Single(row => row.Selected);
+            var dark = Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ||
+                Application.Current?.RequestedThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+            var palette = CuiSurfacePaletteCatalog.For("Browse", dark ? CuiAppearance.SuperDark : CuiAppearance.SuperBright,
+                CuiSurfacePaletteCatalog.ActiveTheme);
+            Assert.Equal(palette.Accent, selected.BackgroundColor);
+            Assert.Equal(palette.AccentInk, selected.ForegroundColor);
+
+            CuiSurfacePaletteCatalog.OverrideAccent = false;
+            CuiSurfacePaletteCatalog.AccentOverride = null;
+            await chrome.SelectTabAsync(second);
+            selected = Rows(workspace).Single(row => row.Selected);
+            Assert.Equal(Color.Parse("#FFF2F2F2"), selected.BackgroundColor);
+            Assert.Equal(Colors.Black, selected.ForegroundColor);
+            Assert.Equal(Colors.Transparent, Rows(workspace).Single(row => row.Key == first.ToString("D")).BackgroundColor);
+        }
+        finally
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = previousTheme;
+            CuiSurfacePaletteCatalog.OverrideAccent = previousOverride;
+            CuiSurfacePaletteCatalog.AccentOverride = previousAccent;
+        }
+    }
     [AvaloniaFact]
     public async Task Actual_tab_rows_resolve_labels_and_select_current_source_issued_identity()
     {
