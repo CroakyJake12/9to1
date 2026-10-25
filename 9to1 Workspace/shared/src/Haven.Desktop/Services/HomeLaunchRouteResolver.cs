@@ -18,6 +18,8 @@ internal static class HomeLaunchRouteResolver
     {
         ArgumentNullException.ThrowIfNull(key);
         var normalized = key.Trim().ToLowerInvariant();
+        if (normalized == "boards")
+            return AppContentAddress.Parse("browse://home/library/boards");
         if (normalized == "chat")
             return AppContentAddress.Parse($"9to1://spaces/selected/{SpaceRegistry.ChatSpaceId:D}");
         return AppContentAddress.Parse($"9to1://{normalized}");
