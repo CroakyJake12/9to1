@@ -106,7 +106,7 @@ public sealed class NavBuilderTests
         Assert.Equal("study", section.IconKey);
         Assert.Equal("#187B72", section.IconColor);
         Assert.True(vm.Get("IsSectionIconPickerOpen") as bool?);
-        await vm.DispatchAsync("CloseSectionIconPicker");
+        await vm.DispatchAsync("CloseSectionIconPicker", null);
         Assert.False(vm.Get("IsSectionIconPickerOpen") as bool?);
         vm.Dispose();
     }
