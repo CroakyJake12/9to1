@@ -832,6 +832,87 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
         await rig.CloseUnpublishedRunAsync(admission, request);
     }, canonicalSavedProject: true);
 
+    [LinuxPublicationFact]
+    public Task Manual_saved_stage_without_Task_or_launch_configuration_retains_real_success_failure_and_stage_identity() => Run(async rig =>
+    {
+        await rig.ConfigureSavedStagesAsync(); Assert.Empty(rig.Saved.Workspace.RunConfigurations);
+        Assert.True(rig.ProcessOwner.SupportsSavedStages);
+        foreach (var stageId in new[] { "compile", "test" })
+        {
+            var selected = Assert.Single(DeveloperSavedStageSelection.Observe(rig.Saved).Value!, choice => choice.Stage.StageId == stageId);
+            var operation = rig.Keep(rig.ProcessOwner.RunStageAsync(rig.Saved, selected, body => body(), rig.Token));
+            await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+            var request = await rig.DecideNextAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+            var scope = Assert.Single(request.Impact.ResourceBinding!.Scopes); Assert.Equal(ResourceAccess.Execute, scope.Access);
+            var observed = await operation; Assert.True(observed.CleanupCompleted); Assert.Empty(observed.OriginalErrors);
+            Assert.Equal(selected.Task.TaskId, observed.SavedTaskId); Assert.Equal(selected.Task.Revision, observed.SavedTaskRevision);
+            Assert.Equal(stageId, observed.StageId); Assert.Equal(selected.Stage.Kind, observed.StageKind);
+            Assert.Equal(selected.DefinitionSha256, observed.DefinitionSha256); Assert.NotNull(observed.OperationId);
+            Assert.Equal(stageId == "compile", observed.ProcessSucceeded); Assert.Equal(stageId == "compile" ? 0 : 7, observed.Process!.ExitCode);
+            Assert.False(observed.Process.TimedOut); Assert.True(Assert.Single(observed.PhysicalOutcome!.Effects).TerminalOutcomeKnown);
+            Assert.Equal(stageId == "compile" ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.Failed,
+                (await rig.Keep(rig.Home.Permissions.ReadRequestObservationAsync(request.RequestId, rig.Token)))!.State);
+            if (stageId == "compile") { Assert.Equal("saved-stage-ready", observed.Process.StandardOutput); Assert.Equal("stage-error", observed.Process.StandardError); }
+            else Assert.Equal("actual test failure", observed.Process.StandardError);
+        }
+        Assert.Equal("compiled", await File.ReadAllTextAsync(Path.Combine(rig.ProjectRoot, "stage-built.txt"), rig.Token));
+        var dependent = Assert.Single(DeveloperSavedStageSelection.Observe(rig.Saved).Value!, choice => choice.Stage.StageId == "package");
+        Assert.Contains("prerequisites", dependent.UnavailableReason!);
+        Assert.Throws<UnauthorizedAccessException>(() => { _ = rig.ProcessOwner.RunStageAsync(rig.Saved, dependent, body => body(), rig.Token); });
+        Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "must-not-start.txt")));
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_saved_stage_declined_review_has_no_process_or_permission_substitution() => Run(async rig =>
+    {
+        await rig.ConfigureSavedStagesAsync();
+        var selected = Assert.Single(DeveloperSavedStageSelection.Observe(rig.Saved).Value!, choice => choice.Stage.StageId == "compile");
+        var operation = rig.Keep(rig.ProcessOwner.RunStageAsync(rig.Saved, selected, body => body(), rig.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.DecideNextAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Decline);
+        var observed = await operation;
+        Assert.False(observed.ProcessSucceeded); Assert.Null(observed.Process); Assert.Null(observed.PhysicalOutcome); Assert.NotEmpty(observed.OriginalErrors);
+        foreach (var error in observed.OriginalErrors) { Assert.All(OriginalLeaves(error), cause => Assert.IsType<UnauthorizedAccessException>(cause)); rig.Expect(error); }
+        Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "stage-built.txt")));
+        Assert.Single(rig.Decisions, item => item.Scope.ActionName == HomeDeveloperManualProjectExecutionAdmissionSource.RunAction);
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_saved_stage_cancellation_during_review_retains_actual_cancellation_without_starting() => Run(async rig =>
+    {
+        await rig.ConfigureSavedStagesAsync(); using var stop = CancellationTokenSource.CreateLinkedTokenSource(rig.Token);
+        var selected = Assert.Single(DeveloperSavedStageSelection.Observe(rig.Saved).Value!, choice => choice.Stage.StageId == "compile");
+        var operation = rig.Keep(rig.ProcessOwner.RunStageAsync(rig.Saved, selected, body => body(), stop.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.ObservePendingAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction);
+        stop.Cancel(); var observed = await operation.WaitAsync(TimeSpan.FromSeconds(5), rig.Token);
+        Assert.False(observed.ProcessSucceeded); Assert.Null(observed.Process); Assert.Null(observed.PhysicalOutcome); Assert.NotEmpty(observed.OriginalErrors);
+        foreach (var error in observed.OriginalErrors) { Assert.All(OriginalLeaves(error), cause => Assert.IsAssignableFrom<OperationCanceledException>(cause)); rig.Expect(error); }
+        Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "stage-built.txt")));
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_saved_stage_changed_command_after_accept_is_refused_at_actual_native_start_pin() => Run(async rig =>
+    {
+        await rig.ConfigureSavedStagesAsync(); var source = await rig.OpenRegisteredReadAsync();
+        var selected = Assert.Single(DeveloperSavedStageSelection.Observe(rig.Saved).Value!, choice => choice.Stage.StageId == "compile");
+        var binding = await rig.Keep(rig.Selections.CaptureOriginalManualStageAsync(source.Selection, source.Read, source.Capture,
+            selected.Task.TaskId, selected.Task.Revision, selected.Stage.StageId, selected.DefinitionSha256, rig.Token));
+        var acquisition = rig.Keep(((IDeveloperProjectOriginalManualStageAdmissionSource)rig.Runs).AcquireOriginalManualStageAsync(binding, rig.Token));
+        var request = await rig.DecideNextAsync(acquisition, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        var admission = await acquisition; Assert.Null(admission.OriginalFence.OriginalAttempt); rig.AssertGenuineManualComposition(admission.OriginalFence);
+        var document = JsonNode.Parse(await File.ReadAllTextAsync(rig.SavedMetadataPath, rig.Token))!;
+        document["workspace"]!["tasks"]![0]!["stages"]![0]!["command"] = "printf substitute > stage-built.txt";
+        await File.WriteAllTextAsync(rig.SavedMetadataPath, document.ToJsonString(), rig.Token);
+        var physical = Assert.IsAssignableFrom<IWorkspaceOriginalInvocationSource>(rig.Graph.GetRequiredService<IWorkspaceToolService>());
+        var invocation = rig.RetainInvocation(physical.AcquireOriginalInvocation(admission.OriginalFence));
+        await rig.RefusesAsync(() => invocation.Tools.RunProcessAsync(WorkspaceToolProcessRequestFactory.CreateOriginal(binding.CanonicalRoot, binding.Command, binding.TimeoutSeconds), rig.Token));
+        var outcome = await rig.Keep(invocation.CompleteOriginalAsync(false, rig.Token));
+        Assert.True(physical.ValidateOriginalOutcome(invocation, outcome)); Assert.True(outcome.KnownNoEffect);
+        Assert.All(outcome.Effects, effect => Assert.False(effect.Admitted)); Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "stage-built.txt")));
+        admission.ObserveOriginalProcessOutcome(invocation, null, outcome); await rig.CloseUnpublishedRunAsync(admission, request);
+    }, canonicalSavedProject: true);
+
     private static async Task<DeveloperManualGitObservation> InspectGit(Rig rig, DeveloperProjectGitInspectionKind kind)
     {
         var prepared = DeveloperGitCommand.Prepare(rig.Saved, kind).Value!;
@@ -1180,6 +1261,18 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null);
             Assert.True((await Keep(_workspace.Provider.MutateAsync(operation, "actual-manual-saved-project", Token))).IsSuccess);
             if (register) await RegisterSavedProjectAsync();
+        }
+        internal async Task ConfigureSavedStagesAsync()
+        {
+            var original = Saved;
+            var task = new DeveloperTaskDefinition("fixture-build", "Fixture build", "workspace", "local", original.Root.RootId.ToString("D"), [],
+                [new("compile", DeveloperBuildStageKind.Compile, "Compile", [], "printf 'saved-stage-ready'; printf 'stage-error' >&2; printf compiled > stage-built.txt", [], TimeSpan.FromSeconds(10)),
+                 new("test", DeveloperBuildStageKind.Test, "Tests", [], "printf 'actual test failure' >&2; exit 7", [], TimeSpan.FromSeconds(10)),
+                 new("package", DeveloperBuildStageKind.Package, "Package", ["compile"], "printf package > must-not-start.txt", [], TimeSpan.FromSeconds(10))], true);
+            var saved = await Keep(SavedStore.SaveAsync(original.Workspace with { Tasks = [task] }, original.Workspace.Revision, Token));
+            Assert.True(saved.Succeeded, saved.Error?.Message);
+            var workspace = Assert.IsType<DeveloperWorkspace>(saved.Value);
+            _savedProject = original with { Reference = original.Reference with { WorkspaceRevision = workspace.Revision }, Workspace = workspace };
         }
         internal async Task RegisterSavedProjectAsync()
         {

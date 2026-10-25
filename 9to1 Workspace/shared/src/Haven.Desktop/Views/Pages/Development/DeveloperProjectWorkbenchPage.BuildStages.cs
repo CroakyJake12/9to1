@@ -17,37 +17,17 @@ public sealed partial class DeveloperProjectWorkbenchPage
     private SavedStageChoice? _selectedSavedStage;
 
     private static IReadOnlyList<SavedStageChoice> SavedStageChoices(DeveloperResolvedProject project) =>
-        project.Workspace.Tasks.Where(task => task.EnvironmentId == project.Root.EnvironmentId &&
-                task.WorkingDirectoryRootId == project.Reference.RootId.ToString("D"))
-            .SelectMany(task => (task.Stages ?? []).Select(stage =>
-            {
-                var unavailable = SavedStageUnavailable(task, stage);
-                var command = stage.Command ?? "(no saved command)";
-                var summary = $"Task {task.TaskId}, revision {task.Revision}; stage {stage.StageId} ({stage.Kind}).\n" +
-                    $"Environment: {task.EnvironmentId}; root: {task.WorkingDirectoryRootId}.\n" +
-                    $"Command: {command}\nArguments: {JsonSerializer.Serialize(stage.Arguments)}\n" +
-                    $"Dependencies: {string.Join(", ", (task.DependsOn ?? []).Concat(stage.DependsOn ?? []))}. " +
-                    $"Timeout: {stage.Timeout?.TotalSeconds ?? 600} seconds. Workspace trust required: {task.RequiresWorkspaceTrust}.";
-                return new SavedStageChoice(project.Reference, task.TaskId, task.Revision, stage.StageId,
-                    DeveloperTaskWorkspaceService.ComputeSavedTaskDefinitionSha256(task),
-                    task.Label + " / " + stage.Label, summary, unavailable);
-            })).ToArray();
-
-    private static string? SavedStageUnavailable(DeveloperTaskDefinition task, DeveloperBuildStage stage)
-    {
-        if (task.Revision < 1 || string.IsNullOrWhiteSpace(task.TaskId) || string.IsNullOrWhiteSpace(stage.StageId) ||
-            task.DependsOn is null || stage.DependsOn is null || stage.Arguments is null)
-            return "The saved stage definition is incomplete.";
-        if (task.DependsOn.Count != 0 || stage.DependsOn.Count != 0)
-            return "This stage needs the pipeline dependency coordinator; running it alone would skip prerequisites.";
-        if (stage.Arguments.Count != 0)
-            return "The current command provider cannot execute this saved argument vector.";
-        if (string.IsNullOrWhiteSpace(stage.Command) || stage.Command.Length > 32_000 || stage.Command.Contains('\0'))
-            return "The saved command is missing or invalid.";
-        var timeout = stage.Timeout?.TotalSeconds ?? 600;
-        if (timeout <= 0 || timeout > 900) return "The current stage provider supports timeouts from 1 to 900 seconds.";
-        return null;
-    }
+        (DeveloperSavedStageSelection.Observe(project).Value ?? []).Select(choice =>
+        {
+            var task = choice.Task; var stage = choice.Stage;
+            var summary = $"{task.Label} / {stage.Label} ({stage.Kind})\n" +
+                $"Command: {stage.Command ?? "(no saved command)"}\nArguments: {JsonSerializer.Serialize(stage.Arguments)}\n" +
+                $"Dependencies: {string.Join(", ", task.DependsOn.Concat(stage.DependsOn))}. " +
+                $"Timeout: {stage.Timeout?.TotalSeconds ?? 600} seconds.\n" +
+                "Runs saved files. Unsaved editor changes are kept; review and save them first if the stage needs them.";
+            return new SavedStageChoice(project.Reference, task.TaskId, task.Revision, stage.StageId,
+                choice.DefinitionSha256, task.Label + " / " + stage.Label, summary, choice.UnavailableReason);
+        }).ToArray();
 
     private void CaptureSelectedSavedStage() => _selectedSavedStage = SavedStageChoices(_project)
         .SingleOrDefault(choice => choice.TaskId == _stageTaskId && choice.StageId == _stageId);
