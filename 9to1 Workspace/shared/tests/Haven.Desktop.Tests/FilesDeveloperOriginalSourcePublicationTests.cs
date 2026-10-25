@@ -709,7 +709,7 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
             Assert.All(OriginalLeaves(error), cause => Assert.IsAssignableFrom<OperationCanceledException>(cause));
             rig.Expect(error); // Only these exact observed cancellations are expected at owner drain.
         }
-        Assert.Throws<InvalidOperationException>(() => rig.ProcessOwner.RunAsync(rig.Saved, choice, body => body(), rig.Token));
+        Assert.Throws<InvalidOperationException>(() => { _ = rig.ProcessOwner.RunAsync(rig.Saved, choice, body => body(), rig.Token); });
     }, canonicalSavedProject: true, manualRunCommand: "printf started > manual-started.txt; sleep 20; printf finished > manual-finished.txt");
 
     [LinuxPublicationFact]
