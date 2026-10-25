@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using CakeOS.Apps.Boards.Contract;
+using Haven.Application;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.PermissionsTrustNotifications;
