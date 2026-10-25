@@ -135,7 +135,12 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         value = null;
-        if (item is not LibraryRow row || !_rows.Any(current => ReferenceEquals(current, row))) return false;
+        // The CUI Repeat may retain an item scope while bindings are refreshed (for example
+        // when the page enters/leaves its busy state). Accept a re-materialized row only when
+        // it still carries the same current Home link object and stable identity; the action
+        // dispatcher independently resolves that exact link against the current page.
+        if (item is not LibraryRow row || !_rows.Any(current =>
+            StringComparer.Ordinal.Equals(current.Key, row.Key) && ReferenceEquals(current.Target, row.Target))) return false;
         value = path.ToLowerInvariant() switch
         {
             "key" => row.Key,
