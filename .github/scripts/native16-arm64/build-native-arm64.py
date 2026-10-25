@@ -24,6 +24,7 @@ def run(name,args):
  stage.update(exit_code=res.returncode,ended_at=now(),log_sha256=sha(log));(evidence/'native-build-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
  if res.returncode:print(log.read_text()[-18000:]);raise RuntimeError(name+' failed '+str(res.returncode))
 try:
+ run('rnote-source-preflight',[sys.executable,str(infra/'rnote-native/rnote_native_stage.py'),'--root',str(root),'--verify-source-only'])
  donorproj='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
  run('donor-task-restore',['dotnet','restore',donorproj,*common,*props(hostart)])
  run('donor-task-build',['dotnet','build',donorproj,'-c','Release','--no-restore',*common,*props(hostart)])
@@ -51,6 +52,8 @@ try:
  import shutil
  shutil.copyfile(launcher,pub/'home-root-launcher');(pub/'home-root-launcher').chmod(0o755)
  receipt['native_root_launcher']={'source':str(native_launcher/'home-root-launcher.c'),'source_sha256':sha(native_launcher/'home-root-launcher.c'),'published_sha256':sha(pub/'home-root-launcher'),'privilege_mode':'ordinary0755-no-setuid-no-file-capabilities','production_admission':'REQUIRES_REAL_SIGNED_ROOT_COHORT'}
+ run('rnote-native-stage',[sys.executable,str(infra/'rnote-native/rnote_native_stage.py'),'--root',str(root),'--publish',str(pub),'--target',str(out/'rnote-target'),'--receipt',str(evidence/'rnote-native-stage.json'),'--source-archive',str(evidence/'rnote-corresponding-source.tar.gz')])
+ receipt['rnote_native_stage']={'receipt':str(evidence/'rnote-native-stage.json'),'sha256':sha(evidence/'rnote-native-stage.json'),'runtime':'NOT RUN'}
  shape=subprocess.run([sys.executable,str(infra/'verify-arm64-publish.READONLY.py'),str(pub)],capture_output=True,text=True);(evidence/'arm64-publish-shape.json').write_text(shape.stdout)
  if shape.returncode:raise RuntimeError('Actual native publish shape failed')
  inspected=json.loads(shape.stdout)
@@ -65,7 +68,7 @@ try:
      if missing:raise RuntimeError('Browser stage supplied but missing mandatory integration inputs: '+','.join(missing))
      for k,v in required.items():browser_args += [k,os.environ[v]]
      receipt['bundled_browser_stage']='MERGE_REQUESTED_VERIFIED_ACI'
- run('package',['python3',str(infra/'package-arm64-deb.ROOT-ONLY.py'),'--publish',str(pub),'--output',str(out/'package'),'--version',version,'--maintainer','CroakyJake12 <124530029+CroakyJake12@users.noreply.github.com>','--build-provenance',str(evidence/'source-and-build.json'),'--readme',str(infra/'PREVIEW-README.md'),'--notices',str(infra/'notices'),'--source-licence',str(infra/'LICENSE'),*inference_args,*browser_args])
+ run('package',['python3',str(infra/'package-arm64-deb.ROOT-ONLY.py'),'--publish',str(pub),'--output',str(out/'package'),'--version',version,'--maintainer','CroakyJake12 <124530029+CroakyJake12@users.noreply.github.com>','--build-provenance',str(evidence/'source-and-build.json'),'--readme',str(infra/'PREVIEW-README.md'),'--notices',str(infra/'notices'),'--source-licence',str(infra/'LICENSE'),'--rnote-native-receipt',str(evidence/'rnote-native-stage.json'),*inference_args,*browser_args])
  package=json.loads((out/'package/package-receipt.json').read_text());receipt['package']=package;receipt['status']='PASS_BUILD_AND_PACKAGE_ONLY_NOT_NATIVE_APP_ACCEPTED'
  if package.get('bundled_browser'):
      (evidence/'browser-stage-identity.json').write_text(json.dumps(package['bundled_browser'],indent=2)+'\n')
