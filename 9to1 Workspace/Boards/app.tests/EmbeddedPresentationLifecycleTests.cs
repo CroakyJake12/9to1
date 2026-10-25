@@ -334,6 +334,19 @@ public sealed class EmbeddedPresentationLifecycleTests
         return task.GetAwaiter().GetResult();
     });
 
+    private static void PumpUi(Task task) => TestUiThread.Run(() =>
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        while (!task.IsCompleted && DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(1);
+        }
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(task.IsCompleted, "Boards presentation operation timed out while pumping the UI dispatcher.");
+        task.GetAwaiter().GetResult();
+    });
+
     private static async Task DrainAndDisposeAsync(Task task)
     {
         var cleanup = Task.Run(async () => await task.ConfigureAwait(false));

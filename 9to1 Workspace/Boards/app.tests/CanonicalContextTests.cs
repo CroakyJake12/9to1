@@ -25,10 +25,10 @@ public sealed class CanonicalContextTests
             loader.SetBindingContext(vm); loader.SetActionDispatcher(vm);
             var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
             Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
-            Assert.NotNull(root);
-            loader.WireBindings(root);
-            vm.Attach(root);
-            var controls = root.GetLogicalDescendants().OfType<Control>().ToArray();
+            var loadedRoot = Assert.IsType<Control>(root);
+            loader.WireBindings(loadedRoot);
+            vm.Attach(loadedRoot);
+            var controls = loadedRoot.GetLogicalDescendants().OfType<Control>().ToArray();
             var pageTitle = Assert.Single(controls.OfType<TextBox>(), control => AutomationProperties.GetName(control) == "Page title");
             pageTitle.Text = "Editable page heading";
             Assert.Equal("Editable page heading", document.Sections[0].Pages[0].Title);
