@@ -222,7 +222,8 @@ public sealed partial class CanvasHostSurface : ContentControl
     private IStorageProvider NativePicker => Original(() => _services.GetService<IStorageProvider>())
         ?? TopLevel.GetTopLevel(this)?.StorageProvider
         ?? throw new InvalidOperationException("Canvas has no attached native picker.");
-    private bool WriteAvailable() => !_closed && _preparedClose is null && _ready && _workspace is not null;
+    private bool WriteAvailable() => !_closed && _preparedClose is null && _ready && _workspace is not null &&
+        (_embeddedTarget is null || _embeddedMutationsAllowed);
     private bool HasRetainedCanvas() => _view is CanvasNativeCuiSurface { OriginalCloseTask: null } && _opened is not null && _openedFile is not null;
     private bool EditorViewActive() => !_closed && _workspaceSurface?.IsEffectivelyVisible == true &&
         HasRetainedCanvas() && ReferenceEquals(_content.Content, _view);
@@ -388,6 +389,32 @@ public sealed partial class CanvasHostSurface : ContentControl
                 throw new InvalidOperationException("This Canvas revision changed; reopen it.");
         });
         var strokeOwner = _stroke!;
+        var allowEmbeddedMutation = _embeddedTarget is null || _embeddedMutationsAllowed;
+        CanvasNativeInkContext? ink = allowEmbeddedMutation
+            ? new(fileId, opened.CasRevisionId, opened.Artifact.ArtifactId, opened.Artifact.RevisionId,
+                () => WriteAvailable() && _pendingRequest is null && _pendingAudit is null && _pendingBeginAudit is null && !_requestUncertain,
+                async (intent, token) =>
+                {
+                    if (!EditorViewActive() || _busy || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain)
+                        throw new UnauthorizedAccessException("Finish the current Home request before drawing.");
+                    _busy = true; RefreshBindings();
+                    try
+                    {
+                        SetStatus(await RequestAsync(CanvasStrokeWriteIntent.ActionId, intent.Scopes, intent.Arguments,
+                            "Add this exact captured stroke to the displayed Canvas revision", async (cap, cancel) =>
+                            {
+                                var committed = await Original(() => strokeOwner.ExecuteAsync(intent, cap, cancel));
+                                await RequireOriginalOwnerAsync(original,captured.StoreId,cancel);
+                                var current = await Original(() => files.OpenAsync(committed.FileId,captured.StoreId, cancel));
+                                if (current.Artifact.ArtifactId != committed.Artifact.ArtifactId || current.Artifact.RevisionId != committed.Artifact.RevisionId)
+                                    throw new InvalidOperationException("The Canvas changed after the stroke commit. Reopen its current revision.");
+                                return new(current, committed.FileId);
+                            }, null, token));
+                    }
+                    finally { _busy = false; RefreshBindings(); }
+                }, captured.StoreId)
+            : null;
+        var eraser = allowEmbeddedMutation ? CreateEraserContext(fileId, captured, files, original) : null;
         _nativeOwnerAcquired = true; // Monotonic native custody, never a document-discard witness.
         var surface = new CanvasNativeCuiSurface(async token =>
         {
@@ -396,28 +423,7 @@ public sealed partial class CanvasHostSurface : ContentControl
             if (current.CasRevisionId != captured.CasRevisionId || current.Artifact.ArtifactId != captured.Artifact.ArtifactId ||
                 current.Artifact.RevisionId != captured.Artifact.RevisionId) throw new InvalidOperationException("This Canvas changed. Refresh and reopen it.");
             return CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(current.Artifact));
-        }, originalReadiness, new(fileId, opened.CasRevisionId, opened.Artifact.ArtifactId, opened.Artifact.RevisionId,
-            () => WriteAvailable() && _pendingRequest is null && _pendingAudit is null && _pendingBeginAudit is null && !_requestUncertain,
-            async (intent, token) =>
-            {
-                if (!EditorViewActive() || _busy || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain)
-                    throw new UnauthorizedAccessException("Finish the current Home request before drawing.");
-                _busy = true; RefreshBindings();
-                try
-                {
-                    SetStatus(await RequestAsync(CanvasStrokeWriteIntent.ActionId, intent.Scopes, intent.Arguments,
-                        "Add this exact captured stroke to the displayed Canvas revision", async (cap, cancel) =>
-                        {
-                            var committed = await Original(() => strokeOwner.ExecuteAsync(intent, cap, cancel));
-                            await RequireOriginalOwnerAsync(original,captured.StoreId,cancel);
-                            var current = await Original(() => files.OpenAsync(committed.FileId,captured.StoreId, cancel));
-                            if (current.Artifact.ArtifactId != committed.Artifact.ArtifactId || current.Artifact.RevisionId != committed.Artifact.RevisionId)
-                                throw new InvalidOperationException("The Canvas changed after the stroke commit. Reopen its current revision.");
-                            return new(current, committed.FileId);
-                        }, null, token));
-                }
-                finally { _busy = false; RefreshBindings(); }
-            },captured.StoreId),CreateEraserContext(fileId,captured,files,original));
+        }, originalReadiness, ink, eraser);
         await InitializeOwnedSurfaceAsync(surface, ct);
         Task? publication = null;
         try
@@ -431,6 +437,15 @@ public sealed partial class CanvasHostSurface : ContentControl
             });
             await publication;
             _opened = captured; _openedFile = fileId;
+            if (_embeddedTarget is { } embedded)
+            {
+                if (captured.Artifact.ArtifactId != embedded.ArtifactId)
+                    throw new InvalidOperationException("Canvas cannot replace the artifact identity pinned by its containing page.");
+                // The ordinary Canvas Home/Files operation has reopened the actual
+                // acknowledged current revision. Advance the private owner pin only now.
+                _embeddedTarget = embedded with { ExpectedRevisionId = captured.Artifact.RevisionId };
+                _embeddedSelection = new(fileId, captured);
+            }
         }
         catch (Exception error)
         {
