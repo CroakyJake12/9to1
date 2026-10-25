@@ -154,6 +154,14 @@
       <Text text="{Binding CuiSelectedProperty}" accessible-name="Selected component and registered property type" />
       <Input id="dev-cui-property-value" Type="Text" Value="{Binding CuiPropertyDraftValue}" Multiline="true" accessible-name="New literal attribute value; bindings and resources remain code-defined" Interactive="{Binding CanEditCuiProperty}" />
       <Button id="dev-change-cui-property" action="dev.change-cui-property" content="Update property in draft" Interactive="{Binding CanChangeCuiProperty}" />
+      <Text text="Text hierarchy" font-size="18" />
+      <Text text="Move a self-closing literal Text across an adjacent literal Text, or remove it from the draft. Surrounding comments and spacing stay in place. Other constructs stay in source." text-wrapping="Wrap" />
+      <Container Type="Wrap" CellGap="6">
+        <Button id="dev-move-cui-text-up" action="dev.move-cui-text-up" content="Move Text up" Interactive="{Binding CanMoveCuiTextUp}" />
+        <Button id="dev-move-cui-text-down" action="dev.move-cui-text-down" content="Move Text down" Interactive="{Binding CanMoveCuiTextDown}" />
+        <Button id="dev-remove-cui-text" action="dev.remove-cui-text" content="Remove Text from draft" Interactive="{Binding CanRemoveCuiText}" />
+      </Container>
+      <Text text="{Binding CuiTextEditingStatus}" text-wrapping="Wrap" accessible-name="Text hierarchy editing status" />
       <Text text="Add a Text child" font-size="18" />
       <Text text="Adds fixed text inside the selected Page or layout Container. Templates, repeating content, theme scopes, custom controls and shorthand stay in source." text-wrapping="Wrap" />
       <Input id="dev-cui-new-text-id" Type="Text" Value="{Binding CuiNewTextId}" placeholdertext="new-text" accessible-name="Unique ID for the new Text component" Interactive="{Binding CanConfigureCuiTextChild}" />

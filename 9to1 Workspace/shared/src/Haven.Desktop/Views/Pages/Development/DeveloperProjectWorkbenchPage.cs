@@ -347,6 +347,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetRunEditValue(path, out value)) return true;
             if (TryGetCuiPropertyValue(path, out value)) return true;
             if (TryGetCuiChildrenValue(path, out value)) return true;
+            if (TryGetCuiTextEditingValue(path, out value)) return true;
             if (TryGetLineEndingValue(path, out value)) return true;
             if (TryGetGitInspectionValue(path, out value)) return true;
             if (TryGetCuiAnalysisValue(path, out value)) return true;
@@ -524,6 +525,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (command == "dev.run-selected-target") return (!_manual || _manualProcessOwner is not null) && IsSelectedRunTargetCurrent(_project);
             if (command == "dev.review-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && HasNewFileSlot(_newFileName) && DeveloperNewSourceFile.Prepare(_newFileName, _newFileCuiTemplate).Succeeded;
             if (command == "dev.create-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && CurrentNewFileReview();
+            if (command == "dev.move-cui-text-up") return CurrentCuiPropertyInspection() is { CanMoveTextUp: true };
+            if (command == "dev.move-cui-text-down") return CurrentCuiPropertyInspection() is { CanMoveTextDown: true };
+            if (command == "dev.remove-cui-text") return CurrentCuiPropertyInspection() is { CanRemoveText: true };
             if (command == "dev.add-cui-text-child") return CanConfigureCuiTextChild() && !string.IsNullOrWhiteSpace(_cuiNewTextId) && _cuiNewTextId.Length <= 128 && _cuiNewTextValue.Length <= DeveloperCuiPropertyEditor.MaximumPropertyCharacters;
             if (command == "dev.select-cui-property") return CurrentCuiPropertyInspection()?.Properties.Take(100).Any(property => property.CanEdit) == true;
             if (command == "dev.change-cui-property") return SelectedCuiProperty() is { CanEdit: true } property && property.Value != _cuiPropertyDraftValue;
@@ -591,6 +595,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         if (command is "dev.review-new-source-file" or "dev.create-new-source-file") return DispatchNewSourceFileAsync(command, cancellationToken);
         if (_manual && command is ("dev.git-status" or "dev.git-diff" or "dev.git-branches")) return InspectManualGitAsync(command, cancellationToken);
         if (command == "dev.select-cui-property") return SelectCuiProperty(parameter);
+        if (command is "dev.move-cui-text-up" or "dev.move-cui-text-down" or "dev.remove-cui-text") return DispatchCuiTextEditingAsync(command, cancellationToken);
         if (command == "dev.add-cui-text-child") return DispatchCuiTextChildAsync(cancellationToken);
         if (command is "dev.check-line-endings" or "dev.use-lf-endings" or "dev.use-crlf-endings") return DispatchLineEndingsAsync(command, cancellationToken);
         if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);

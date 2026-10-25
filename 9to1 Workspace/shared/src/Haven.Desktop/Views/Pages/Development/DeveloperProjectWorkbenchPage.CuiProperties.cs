@@ -20,6 +20,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
         _cuiPropertyTabId = tabId; _cuiPropertyAnalysisId = analysisId; _cuiPropertyInspection = inspection;
         _cuiPropertyName = null; _cuiPropertyDraftValue = "";
         OnCuiTextChildTargetChanged(inspection);
+        OnCuiTextEditingTargetChanged(inspection);
         _cuiPropertyStatus = inspection?.UnavailableReason ?? (inspection is null
             ? "This component has no authored id. Add a unique id in source before property editing."
             : $"{inspection.ComponentType} #{inspection.AuthoredId}: choose an existing literal attribute. Bindings and structured values remain code-defined. Only the chosen attribute value changes; review is required before saving." +
