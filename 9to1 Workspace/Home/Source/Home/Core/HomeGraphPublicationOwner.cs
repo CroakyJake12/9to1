@@ -198,7 +198,10 @@ public sealed class HomeGraphPublicationOwner
                     if (actor != _intent.OriginalActor) { _noPublicationKnown = true; return null; }
                     _claimed = true;
                     _publicationAttempted = true; // BEFORE entering the writer; a lost return is unknown.
-                    _known = await _issuer._graphs.TryPublishGuardedAsync(_intent, _prepared.Submission.Impact.ArgumentsDigest!, new PublicationGuard(this), ct, _intent.CreationOrigin is null ? null : RequestId).ConfigureAwait(false);
+                    // Persist the exact permission request for every graph write.
+                    // The receipt is read-only recovery evidence after a process
+                    // restart; it never recreates this review or its capability.
+                    _known = await _issuer._graphs.TryPublishGuardedAsync(_intent, _prepared.Submission.Impact.ArgumentsDigest!, new PublicationGuard(this), ct, RequestId).ConfigureAwait(false);
                     _noPublicationKnown = _known is null; // Actual writer returned refusal, not an inferred transport failure.
                     return _known;
                 }

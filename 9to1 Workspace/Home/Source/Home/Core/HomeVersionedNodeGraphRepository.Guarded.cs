@@ -7,6 +7,11 @@ namespace HavenOS.Home.Core;
 
 public sealed partial class HomeVersionedNodeGraphRepository
 {
+    internal GraphPublicationIntent CaptureRecoveryIntent(GraphOwnerDescriptor owner, AuthenticatedResourceActor actor,
+        Guid operationId, GraphPublicationKind kind, GraphDocument graph, long expectedRevision,
+        IReadOnlyList<ResourceScope> scopes) => GraphPublicationIntent.Capture(owner, actor, operationId, kind,
+            graph, expectedRevision, scopes, schemas, new(16384, 32));
+
     // Internal only: the public persistence interface cannot supply arbitrary actor guards as authority.
     // The owning Home issuer must claim its distinct graph capability before calling this body.
     internal async Task<GraphPublicationReceipt?> TryPublishGuardedAsync(GraphPublicationIntent intent,

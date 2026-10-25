@@ -112,6 +112,21 @@ internal sealed partial class OriginalAutomationLibraryBindings
         _graphAllDiagnostics = [new("canonical-draft-empty", "draft.incomplete", "An empty saved Draft has no runnable graph. Configure supported nodes and a schedule before execution can be admitted.")];
         RefreshGraphDiagnostics();
     }
+    private void LoadCanonicalGraphRecoveryInspection(RowTarget selection,
+        ICanonicalAutomationOriginalGraphPublicationRecovery recovery)
+    {
+        if (recovery.AutomationId != selection.Row.Value.Id || recovery.PublishedGraph.GraphId != recovery.GraphId)
+            throw new UnauthorizedAccessException("The recovery observation does not match the selected Automation and Home graph.");
+        ClearGraphInspection(); _hasStoredGraph = true;
+        var graph = recovery.PublishedGraph;
+        _graphIdentity = $"Automation {recovery.AutomationId:D} · Home graph {recovery.GraphId:D} · Published revision {recovery.PublishedGraphRevision} · {recovery.Kind}";
+        _graphDigest = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(graph))).ToLowerInvariant();
+        _graphStatus = $"Home records an audited {recovery.Kind} publication of {graph.Nodes.Count} nodes and {graph.Connections.Count} connections. The saved Automation still points to revision {recovery.ExpectedGraphRevision}; review recovery to bind the existing Home revision. No graph will be republished.";
+        _graphNodeTitle = "Published Home graph is retained for recovery";
+        _graphAllDiagnostics = [new("graph-publication-binding-pending", "binding.recovery.required",
+            "The durable Home graph publication is audited, but its separate Automation definition binding did not complete.", null, null)];
+        RefreshGraphDiagnostics();
+    }
     private object? GraphValue(string path) => path switch
     {
         "HasStoredGraph" => _hasStoredGraph, "GraphStatus" => _graphStatus,
