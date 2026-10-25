@@ -309,13 +309,25 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
             var attempt = default(FilesOriginalBoardDocumentCreateAttempt?);
             FilesOriginalBoardDocumentCreateSettlementResult settlement;
             var prepareOpen = true;
+            Task<FilesOriginalBoardDocumentCreateReceipt>? createTask = null;
             try
             {
-                var createTask = StartSettlementAwareTask(source, retain => createOwner.CreateBoardDocumentWithinSourceAsync(
+                createTask = StartSettlementAwareTask(source, createOwner, retain => createOwner.CreateBoardDocumentWithinSourceAsync(
                     entry.Page, entry.Row, _actor, displayName, validatedDocument, _alive, _boardWriteReview!,
                     "home-library-board-create:" + entry.Row.Id.Value.ToString("D"), Own, retain, caller));
                 var receipt = await createTask.ConfigureAwait(false);
                 settlement = new(FilesOriginalBoardDocumentCreateSettlementState.Committed, receipt, []);
+            }
+            catch (Exception error) when (createTask is not null && createOwner.IsOriginalReviewRefusal(createTask, error))
+            {
+                // Preserve the existing preclaim UnauthorizedAccess contract used by
+                // the Home route. Only this owner's exact genuine refusal is marked
+                // expected; copied or mixed source failures never enter this registry.
+                var refusal = error;
+                while (refusal is AggregateException group) refusal = group.InnerExceptions[0];
+                if (!_refusals.TryGetValue(refusal, out _)) _refusals.Add(refusal, new());
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(refusal).Throw();
+                throw;
             }
             catch (Exception error) when (FindCreateSettlementFailure(error) is not null)
             {
@@ -326,7 +338,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 {
                     try
                     {
-                        var retryTask = StartSettlementAwareTask(source, retain => createOwner.RetryCreateSettlementWithinSourceAsync(
+                        var retryTask = StartSettlementAwareTask(source, createOwner, retain => createOwner.RetryCreateSettlementWithinSourceAsync(
                             attempt, Own, retain, caller), cancellationIsPending: true);
                         settlement = await retryTask.ConfigureAwait(false);
                     }
@@ -347,7 +359,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                     // Reconciliation may corroborate the exact Files artifact after an
                     // uncertain effect. Keep that evidence separate from publication: the
                     // user must explicitly choose Open recorded board, which performs a new
-                    // files.board.read review and exact receipt validation.
+                    // files.board.read authorization and exact receipt validation.
                     prepareOpen = false;
                     try
                     {
@@ -376,7 +388,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
             FilesOriginalBoardDocumentCreateSettlementResult settlement;
             try
             {
-                var retryTask = StartSettlementAwareTask(source, retain => owner.RetryCreateSettlementWithinSourceAsync(
+                var retryTask = StartSettlementAwareTask(source, owner, retain => owner.RetryCreateSettlementWithinSourceAsync(
                     sameAttempt, Own, retain, caller), cancellationIsPending: true);
                 settlement = await retryTask.ConfigureAwait(false);
             }
@@ -401,7 +413,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         CloudflareOriginalTaskLedger source, FilesNativeBrowserService.BoardDocumentCreateOwner owner,
         FilesOriginalBoardDocumentCreateAttempt attempt, CancellationToken token)
     {
-        var observeTask = StartSettlementAwareTask(source, retain => owner.ObserveCreateSettlementWithinSourceAsync(
+        var observeTask = StartSettlementAwareTask(source, owner, retain => owner.ObserveCreateSettlementWithinSourceAsync(
             attempt, Own, retain, token));
         return await observeTask.ConfigureAwait(false);
     }
@@ -550,18 +562,19 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         }
         return error.InnerException is { } cause ? FindCreateSettlementFailure(cause) : null;
     }
-    private static Task<T> StartSettlementAwareTask<T>(CloudflareOriginalTaskLedger source,
+    private static Task<T> StartSettlementAwareTask<T>(CloudflareOriginalTaskLedger source, FilesNativeBrowserService.BoardDocumentCreateOwner owner,
         Func<Action<Task>, Task<T>> start, bool cancellationIsPending = false)
     {
         ArgumentNullException.ThrowIfNull(source); ArgumentNullException.ThrowIfNull(start);
         Task<T>? actual = null;
-        source.Invoke(() => { actual = start(task => source.Track(ObserveCreateSettlementAsync(task, cancellationIsPending))); return true; });
+        source.Invoke(() => { actual = start(task => source.Track(ObserveCreateSettlementAsync(owner, task, cancellationIsPending))); return true; });
         return actual ?? throw new InvalidOperationException("The original Files board-create owner returned no retained operation.");
     }
-    private static async Task ObserveCreateSettlementAsync(Task actual, bool cancellationIsPending)
+    private static async Task ObserveCreateSettlementAsync(FilesNativeBrowserService.BoardDocumentCreateOwner owner, Task actual, bool cancellationIsPending)
     {
         try { await actual.ConfigureAwait(false); }
-        catch (Exception error) when (FindCreateSettlementFailure(error) is not null)
+        catch (Exception error) when (owner.IsOriginalReviewRefusal(actual, error) || owner.IsOriginalPendingAuditFailure(actual, error) ||
+            FindCreateSettlementFailure(error) is { State: not FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending })
         {
             // The caller awaits the exact task and converts only the owner's typed outcome to
             // data. This successful wrapper preserves source custody without making a known

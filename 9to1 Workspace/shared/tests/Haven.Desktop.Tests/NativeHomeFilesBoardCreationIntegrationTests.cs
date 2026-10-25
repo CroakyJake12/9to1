@@ -28,135 +28,151 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
     }
 
     [LinuxFact]
-    public async Task Declined_create_leaves_no_board_and_successful_receipt_reopens_the_same_revision_after_read_refusal()
+    public async Task Declined_create_leaves_no_board_and_successful_receipt_saves_and_reopens_the_same_file()
     {
-        await using var rig = await Rig.CreateAsync();
-        var reads = 0;
-        var phase = 0;
-        async Task Review(HomePermissionAuthorization authorization, CancellationToken token)
+        await WithRigAsync(async rig =>
         {
-            var choice = phase == 0 || Interlocked.Increment(ref reads) == 2
-                ? HomeApprovalChoice.Decline : HomeApprovalChoice.Accept;
-            Assert.True((await rig.Trust.DecideAsync(authorization.RequestId, choice, cancellationToken: token)).Succeeded);
-        }
-        await rig.InitializeLibraryAsync(Review);
-        var selected = await rig.SelectBoardsFolderAsync();
-        var bytes = BoardBytes(Guid.NewGuid(), "Declined before create");
+            var reviews = 0;
+            var declineCreate = true;
+            async Task Review(HomePermissionAuthorization authorization, CancellationToken token)
+            {
+                Interlocked.Increment(ref reviews);
+                var choice = declineCreate ? HomeApprovalChoice.Decline : HomeApprovalChoice.Accept;
+                Assert.True((await rig.Trust.DecideAsync(authorization.RequestId, choice, cancellationToken: token)).Succeeded);
+            }
+            await rig.InitializeLibraryAsync(Review);
+            var selected = await rig.SelectBoardsFolderAsync();
+            var bytes = BoardBytes(Guid.NewGuid(), "Declined before create");
 
-        var refused = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(
-            rig.Library.CreateInSelectedFolderAsync(selected, "Refused board", bytes, rig.Token)));
-        Assert.DoesNotContain("FILES_BOARD_CREATED", refused.ToString(), StringComparison.Ordinal);
-        Assert.Empty(await rig.ListBoardsAsync());
+            var refused = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(
+                rig.Library.CreateInSelectedFolderAsync(selected, "Refused board", bytes, rig.Token)));
+            Assert.DoesNotContain("FILES_BOARD_CREATED", refused.ToString(), StringComparison.Ordinal);
+            Assert.True(rig.Library.IsExpectedRefusal(refused));
+            Assert.False(rig.Library.IsExpectedRefusal(new UnauthorizedAccessException(refused.Message)));
+            Assert.Empty(await rig.ListBoardsAsync());
 
-        // A new action is reviewed independently. The first review accepts create and the
-        // next review declines only the separate files.board.read needed to open its receipt.
-        phase = 1;
-        reads = 0;
-        selected = await rig.SelectBoardsFolderAsync();
-        var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(
-            selected, "Created board", BoardBytes(Guid.NewGuid(), "Created then read-refused"), rig.Token));
+            // A new create is reviewed independently. Fresh READ authorization uses the
+            // actual Files resource owner; it does not invoke a write-review callback.
+            declineCreate = false;
+            reviews = 0;
+            selected = await rig.SelectBoardsFolderAsync();
+            var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(
+                selected, "Created board", BoardBytes(Guid.NewGuid(), "Created after review decline"), rig.Token));
 
-        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, created.State);
-        var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
-        Assert.Null(created.PreparedAddress);
-        Assert.Equal("CreatedOpenFailed", created.OpenFailureCode);
-        Assert.Equal(2, reads);
-        var rows = await rig.ListBoardsAsync();
-        var row = Assert.Single(rows);
-        Assert.Equal(receipt.FileId, row.Id.Value);
-        Assert.Equal(receipt.FilesCasRevisionId, row.CurrentRevisionId!.Value.Value);
-        Assert.Equal(receipt.DisplayName, row.Name);
+            Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, created.State);
+            var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
+            Assert.NotNull(created.PreparedAddress);
+            Assert.Null(created.OpenFailureCode);
+            Assert.Equal(1, reviews);
+            var rows = await rig.ListBoardsAsync();
+            var row = Assert.Single(rows);
+            Assert.Equal(receipt.FileId, row.Id.Value);
+            Assert.Equal(receipt.FilesCasRevisionId, row.CurrentRevisionId!.Value.Value);
+            Assert.Equal(receipt.DisplayName, row.Name);
 
-        // Opening the exact retained receipt performs a new currentness check and fresh READ
-        // review. It prepares the same existing file rather than issuing another create.
-        var address = await rig.Keep(rig.Library.PrepareCreatedBoardOpenAsync(receipt, rig.Token));
-        Assert.Equal(3, reads);
-        var parsed = BoardsBrowseAppContentAddress.Parse(address);
-        Assert.True(parsed.IsFilesDocument);
-        Assert.True(parsed.Writable);
-        Assert.Equal(receipt.FilesStoreId, parsed.StoreId);
-        Assert.Equal(receipt.ParentFolderId, parsed.ParentFolderId);
-        Assert.Equal(receipt.FileId, parsed.FileId);
-        Assert.Equal(receipt.FilesCasRevisionId, parsed.RevisionId);
-        var lease = rig.Writes.TakePrepared(parsed.ReadToken!.Value, parsed.StoreId!.Value,
-            parsed.ParentFolderId!.Value, parsed.FileId!.Value, parsed.RevisionId!.Value);
-        await using (lease)
-        {
-            Assert.Equal(receipt.DocumentId, lease.DocumentId);
-            Assert.Equal(receipt.FileId, lease.FileId);
-            Assert.Equal(receipt.FilesCasRevisionId, lease.RevisionId);
-            var document = HavenBoardDocumentCodec.Deserialize(lease.Bytes);
-            Assert.Equal(receipt.DocumentId, document.DocumentId);
-            Assert.Equal("Created then read-refused", document.RichNotes!.Title);
-            await rig.Keep(lease.DemandCurrentAsync(rig.Token));
+            // Open only the exact address prepared by the actual current Files READ owner.
+            var address = created.PreparedAddress!;
+            var parsed = BoardsBrowseAppContentAddress.Parse(address);
+            Assert.True(parsed.IsFilesDocument);
+            Assert.True(parsed.Writable);
+            Assert.Equal(receipt.FilesStoreId, parsed.StoreId);
+            Assert.Equal(receipt.ParentFolderId, parsed.ParentFolderId);
+            Assert.Equal(receipt.FileId, parsed.FileId);
+            Assert.Equal(receipt.FilesCasRevisionId, parsed.RevisionId);
+            var lease = rig.Writes.TakePrepared(parsed.ReadToken!.Value, parsed.StoreId!.Value,
+                parsed.ParentFolderId!.Value, parsed.FileId!.Value, parsed.RevisionId!.Value);
+            await using (lease)
+            {
+                Assert.Equal(receipt.DocumentId, lease.DocumentId);
+                Assert.Equal(receipt.FileId, lease.FileId);
+                Assert.Equal(receipt.FilesCasRevisionId, lease.RevisionId);
+                var document = HavenBoardDocumentCodec.Deserialize(lease.Bytes);
+                Assert.Equal(receipt.DocumentId, document.DocumentId);
+                Assert.Equal("Created after review decline", document.RichNotes!.Title);
+                await rig.Keep(lease.DemandCurrentAsync(rig.Token));
 
-            var originalRevision = receipt.FilesCasRevisionId;
-            var originalLeaves = Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content");
-            var originalLeaf = Assert.Single(originalLeaves);
-            var originalPhysicalBytes = await File.ReadAllBytesAsync(originalLeaf, rig.Token);
-            var editedBytes = BoardBytes(receipt.DocumentId, "Saved through Home reviewed write");
-            var saved = await rig.Keep(lease.SaveAsync(lease.SourceId, originalRevision.ToString("D"),
-                editedBytes, rig.Token).AsTask());
-            Assert.True(saved.Committed, saved.Message);
-            Assert.NotNull(saved.NewRevision);
-            var savedRevision = Guid.Parse(saved.NewRevision!);
-            Assert.NotEqual(originalRevision, savedRevision);
-            Assert.Equal(savedRevision, lease.RevisionId);
-            Assert.Equal(originalPhysicalBytes, await File.ReadAllBytesAsync(originalLeaf, rig.Token));
-            Assert.Equal(2, Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content").Length);
-            Assert.Equal(4, reads); // create, declined READ, accepted READ, reviewed WRITE.
-        }
-        var currentReference = Assert.Single(await rig.Keep(rig.Library.SearchAsync(
-            new HomeLibraryQuery(OwnerApp: "files", ArtifactType: "9to1 board document"), rig.Token)));
-        var readToken = await rig.Keep(rig.Library.PrepareOriginalBoardReadAsync(currentReference.OpenLink, rig.Token))
-            ?? throw new InvalidOperationException("The current Home Library board row did not prepare a read.");
-        var currentRow = Assert.Single(await rig.ListBoardsAsync());
-        var reopened = rig.Read.TakePrepared(readToken, receipt.FilesStoreId, receipt.ParentFolderId,
-            receipt.FileId, currentRow.CurrentRevisionId!.Value.Value);
-        await using (reopened)
-        {
-            Assert.Equal(receipt.FileId, reopened.FileId);
-            Assert.Equal(currentRow.CurrentRevisionId!.Value.Value, reopened.RevisionId);
-            var updatedDocument = HavenBoardDocumentCodec.Deserialize(reopened.Bytes);
-            Assert.Equal(receipt.DocumentId, updatedDocument.DocumentId);
-            Assert.Equal("Saved through Home reviewed write", updatedDocument.RichNotes!.Title);
-            await rig.Keep(reopened.DemandCurrentAsync(rig.Token));
-        }
+                var originalRevision = receipt.FilesCasRevisionId;
+                var originalLeaves = Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content");
+                var originalLeaf = Assert.Single(originalLeaves);
+                var originalPhysicalBytes = await File.ReadAllBytesAsync(originalLeaf, rig.Token);
+                var editedBytes = BoardBytes(receipt.DocumentId, "Saved through Home reviewed write");
+                var saved = await rig.Keep(lease.SaveAsync(lease.SourceId, originalRevision.ToString("D"),
+                    editedBytes, rig.Token).AsTask());
+                Assert.True(saved.Committed, saved.Message);
+                Assert.NotNull(saved.NewRevision);
+                var savedRevision = Guid.Parse(saved.NewRevision!);
+                Assert.NotEqual(originalRevision, savedRevision);
+                Assert.Equal(savedRevision, lease.RevisionId);
+                Assert.Equal(originalPhysicalBytes, await File.ReadAllBytesAsync(originalLeaf, rig.Token));
+                Assert.Equal(2, Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content").Length);
+                Assert.Equal(2, reviews); // One create review and one explicit Save WRITE review.
+            }
+            var currentReference = Assert.Single(await rig.Keep(rig.Library.SearchAsync(
+                new HomeLibraryQuery(OwnerApp: "files", ArtifactType: "9to1 board document"), rig.Token)));
+            var readToken = await rig.Keep(rig.Library.PrepareOriginalBoardReadAsync(currentReference.OpenLink, rig.Token))
+                ?? throw new InvalidOperationException("The current Home Library board row did not prepare a read.");
+            var currentRow = Assert.Single(await rig.ListBoardsAsync());
+            var reopened = rig.Read.TakePrepared(readToken, receipt.FilesStoreId, receipt.ParentFolderId,
+                receipt.FileId, currentRow.CurrentRevisionId!.Value.Value);
+            await using (reopened)
+            {
+                Assert.Equal(receipt.FileId, reopened.FileId);
+                Assert.Equal(currentRow.CurrentRevisionId!.Value.Value, reopened.RevisionId);
+                var updatedDocument = HavenBoardDocumentCodec.Deserialize(reopened.Bytes);
+                Assert.Equal(receipt.DocumentId, updatedDocument.DocumentId);
+                Assert.Equal("Saved through Home reviewed write", updatedDocument.RichNotes!.Title);
+                await rig.Keep(reopened.DemandCurrentAsync(rig.Token));
+            }
+        });
     }
 
     [LinuxFact]
     public async Task Lost_create_audit_acknowledgement_reuses_the_same_receipt_without_a_second_create()
     {
-        await using var rig = await Rig.CreateAsync();
-        rig.FailNextBoardCreateAudits(1); // The actual Home record is persisted before its acknowledgement is lost.
-        var approvals = 0;
-        async Task Review(HomePermissionAuthorization authorization, CancellationToken token)
+        await WithRigAsync(async rig =>
         {
-            approvals++;
-            Assert.True((await rig.Trust.DecideAsync(authorization.RequestId, HomeApprovalChoice.Accept,
-                cancellationToken: token)).Succeeded);
-        }
-        await rig.InitializeLibraryAsync(Review);
-        var selected = await rig.SelectBoardsFolderAsync();
-        var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(
-            selected, "Audit retry board", BoardBytes(Guid.NewGuid(), "Audit retry"), rig.Token));
+            rig.FailNextBoardCreateAudits(1); // The actual Home record is persisted before its acknowledgement is lost.
+            var approvals = 0;
+            async Task Review(HomePermissionAuthorization authorization, CancellationToken token)
+            {
+                approvals++;
+                Assert.True((await rig.Trust.DecideAsync(authorization.RequestId, HomeApprovalChoice.Accept,
+                    cancellationToken: token)).Succeeded);
+            }
+            await rig.InitializeLibraryAsync(Review);
+            var selected = await rig.SelectBoardsFolderAsync();
+            var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(
+                selected, "Audit retry board", BoardBytes(Guid.NewGuid(), "Audit retry"), rig.Token));
 
-        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, created.State);
-        var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
-        Assert.NotNull(created.PreparedAddress);
-        Assert.Equal(1, rig.BoardCreateAuditFailureCount);
-        Assert.Equal(2, approvals); // One create review and one independent fresh read review.
-        Assert.Single(await rig.ListBoardsAsync());
-        var parsed = BoardsBrowseAppContentAddress.Parse(created.PreparedAddress!);
-        Assert.Equal(receipt.FileId, parsed.FileId);
-        Assert.Equal(receipt.FilesCasRevisionId, parsed.RevisionId);
-        var lease = rig.Writes.TakePrepared(parsed.ReadToken!.Value, parsed.StoreId!.Value,
-            parsed.ParentFolderId!.Value, parsed.FileId!.Value, parsed.RevisionId!.Value);
-        await using (lease)
-        {
-            Assert.Equal(receipt.DocumentId, lease.DocumentId);
-            await rig.Keep(lease.DemandCurrentAsync(rig.Token));
-        }
+            Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, created.State);
+            var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
+            Assert.NotNull(created.PreparedAddress);
+            Assert.Equal(1, rig.BoardCreateAuditFailureCount);
+            Assert.Equal(1, approvals); // READ uses fresh ResourceAuthorization, without an invented write-review callback.
+            Assert.Single(await rig.ListBoardsAsync());
+            var parsed = BoardsBrowseAppContentAddress.Parse(created.PreparedAddress!);
+            Assert.Equal(receipt.FileId, parsed.FileId);
+            Assert.Equal(receipt.FilesCasRevisionId, parsed.RevisionId);
+            var lease = rig.Writes.TakePrepared(parsed.ReadToken!.Value, parsed.StoreId!.Value,
+                parsed.ParentFolderId!.Value, parsed.FileId!.Value, parsed.RevisionId!.Value);
+            await using (lease)
+            {
+                Assert.Equal(receipt.DocumentId, lease.DocumentId);
+                await rig.Keep(lease.DemandCurrentAsync(rig.Token));
+            }
+        });
+    }
+
+    private static async Task WithRigAsync(Func<Rig, Task> body)
+    {
+        var rig = await Rig.CreateAsync();
+        var failures = new List<Exception>();
+        try { await body(rig); } catch (Exception error) { failures.Add(error); }
+        try { await rig.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
+        // Test cleanup must never replace the first failed product assertion.
+        // Expected owner refusals remain explicitly asserted in each body.
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count != 0) throw new AggregateException("The board workflow and its independent cleanup retained their failures.", failures);
     }
 
     private static byte[] BoardBytes(Guid documentId, string title)

@@ -64,6 +64,8 @@ public sealed partial class FilesNativeBrowserService
             internal FilesResult<FilesRevision>? ActualResult;
             internal HomeExecutionOutcome? ActualOutcome;
             internal Exception? AuditFailure;
+            internal Exception? OriginalReviewRefusal;
+            internal readonly HashSet<Task> OriginalAuditTasks = new(ReferenceEqualityComparer.Instance);
             internal FilesOriginalBoardDocumentCreateReceipt? Receipt;
             internal Task<FilesOriginalBoardDocumentCreateReceipt>? Task;
             internal Task<FilesOriginalBoardDocumentCreateSettlementResult>? SettlementTask;
@@ -87,6 +89,7 @@ public sealed partial class FilesNativeBrowserService
         private readonly ConditionalWeakTable<IFilesOriginalBoardDocumentCreateDestination, CreateOperation> _issued = new();
         private readonly ConditionalWeakTable<FilesOriginalBoardDocumentCreateReceipt, CreateOperation> _receipts = new();
         private readonly ConditionalWeakTable<FilesOriginalBoardDocumentCreateAttempt, CreateOperation> _attempts = new();
+        private readonly ConditionalWeakTable<Task, CreateOperation> _originalTasks = new();
         private readonly Dictionary<string, CreateOperation> _operations = new(StringComparer.Ordinal);
         private readonly List<Task<FilesOriginalBoardDocumentCreateReceipt>> _active = [];
         private readonly List<Task<FilesOriginalBoardDocumentCreateSettlementResult>> _activeSettlements = [];
@@ -139,12 +142,12 @@ public sealed partial class FilesNativeBrowserService
             var errors = new List<Exception>();
             foreach (var task in settlements)
                 try { await task.ConfigureAwait(false); }
-                catch (Exception error) { CaptureTaskFailure(errors, task, error); }
+                catch (Exception error) { if (!IsRecoveredOriginalAuditFailure(task, error)) CaptureTaskFailure(errors, task, error); }
             foreach (var task in active)
                 try { await task.ConfigureAwait(false); }
                 catch (Exception error)
                 {
-                    if (!IsAuditOnlyFailureSettled(task, error))
+                    if (!IsOriginalReviewRefusal(task, error) && !IsRecoveredOriginalAuditFailure(task, error))
                         CaptureTaskFailure(errors, task, error);
                 }
             lock (_gate)
@@ -159,12 +162,12 @@ public sealed partial class FilesNativeBrowserService
             else errors.Add(observed);
         }
 
-        private bool IsAuditOnlyFailureSettled(Task<FilesOriginalBoardDocumentCreateReceipt> original, Exception failure)
+        private bool IsRecoveredOriginalAuditFailure(Task original, Exception failure)
         {
-            if (!OnlyHomeAuditPending(failure)) return false;
+            if (!IsOriginalPendingAuditFailure(original, failure)) return false;
             lock (_gate)
             {
-                var operation = _operations.Values.FirstOrDefault(candidate => ReferenceEquals(candidate.Task, original));
+                if (!_originalTasks.TryGetValue(original, out var operation)) return false;
                 if (operation?.SettlementTask is not { IsCompletedSuccessfully: true } settled) return false;
                 var result = settled.Result;
                 return result.CleanupFailures.Count == 0 &&
@@ -173,12 +176,73 @@ public sealed partial class FilesNativeBrowserService
             }
         }
 
-        private static bool OnlyHomeAuditPending(Exception failure)
+        /// <summary>Observation-only classification of an exact task already retained by this
+        /// owner. Copied exceptions, IDs and general UnauthorizedAccess/IO failures do not match.</summary>
+        public bool IsOriginalReviewRefusal(Task original, Exception failure)
         {
-            if (failure is FilesOriginalBoardDocumentCreateSettlementException
-                { State: FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending }) return true;
-            return failure is AggregateException { InnerExceptions.Count: > 0 } aggregate &&
-                aggregate.InnerExceptions.All(OnlyHomeAuditPending);
+            lock (_gate)
+                return _originalTasks.TryGetValue(original, out var operation) && operation.OriginalReviewRefusal is { } refusal &&
+                    IsActualTaskFailure(original, failure) &&
+                    !operation.Claimed && operation.Capability is null && operation.Fence is null && operation.Materialization is null &&
+                    operation.Mapping is null && operation.ActualResult is null && operation.CleanupFailures.Count == 0 &&
+                    OnlyOriginalFailures(failure, item => ReferenceEquals(item, refusal));
+        }
+        public bool IsOriginalPendingAuditFailure(Task original, Exception failure)
+        {
+            lock (_gate)
+            {
+                if (!_originalTasks.TryGetValue(original, out var operation) || !IsActualTaskFailure(original, failure) || !operation.Claimed ||
+                    operation.CleanupFailures.Count != 0 || !(operation.ExactCommitReceipt || operation.ActualResult is { IsSuccess: false })) return false;
+                var actual = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
+                foreach (var audit in operation.OriginalAuditTasks)
+                    if (audit.Exception is { } observed) CollectOriginalFailures(observed, actual);
+                if (actual.Count == 0) return false;
+                return OnlyOriginalFailures(failure, item => actual.Contains(item), operation.Attempt);
+            }
+        }
+        private static bool IsActualTaskFailure(Task original, Exception failure)
+        {
+            if (original.Exception is not { } observed) return false;
+            var actual = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
+            CollectOriginalFailures(observed, actual);
+            return OnlyOriginalFailures(failure, actual.Contains);
+        }
+        private static void CollectOriginalFailures(Exception error, HashSet<Exception> target)
+        {
+            var pending = new Stack<Exception>(); pending.Push(error);
+            while (pending.TryPop(out var current))
+            {
+                if (!target.Add(current)) continue;
+                if (target.Count > 4096) throw new InvalidOperationException("The original audit failure graph exceeds its bound.");
+                if (current is AggregateException group) foreach (var child in group.InnerExceptions) pending.Push(child);
+            }
+        }
+        private static bool OnlyOriginalFailures(Exception error, Func<Exception, bool> issued,
+            FilesOriginalBoardDocumentCreateAttempt? attempt = null)
+        {
+            var pending = new Stack<Exception>(); var count = 0; pending.Push(error);
+            while (pending.TryPop(out var current))
+            {
+                if (++count > 4096) return false;
+                if (issued(current)) continue;
+                if (current is FilesOriginalBoardDocumentCreateSettlementException typed && attempt is not null &&
+                    ReferenceEquals(typed.Attempt, attempt) && typed.State == FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending &&
+                    typed.CleanupFailures.Count == 0 && typed.InnerException is { } cause)
+                { pending.Push(cause); continue; }
+                if (current is not AggregateException { InnerExceptions.Count: > 0 } group) return false;
+                foreach (var child in group.InnerExceptions) pending.Push(child);
+            }
+            return true;
+        }
+        private T RetainOriginalTask<T>(CreateOperation operation, T actual, bool audit = false) where T : Task
+        {
+            lock (_gate)
+            {
+                if (!_originalTasks.TryGetValue(actual, out var retained)) _originalTasks.Add(actual, operation);
+                else if (!ReferenceEquals(retained, operation)) throw new InvalidOperationException("Another operation owns this original task.");
+                if (audit) operation.OriginalAuditTasks.Add(actual);
+            }
+            return actual;
         }
 
         /// <summary>Creates one new canonical .9to1board file from the exact current selected
@@ -228,7 +292,7 @@ public sealed partial class FilesNativeBrowserService
             var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
             originals.BindOriginalCallerCallback(scope);
             operation.Source = new FilesOriginalReadSourceScope(body => originals.Invoke(() => { body(); return true; }),
-                actual => { originals.Track(actual); retain(actual); });
+                actual => { RetainOriginalTask(operation, actual); originals.Track(actual); retain(actual); });
             TaskCompletionSource start = new(TaskCreationOptions.RunContinuationsAsynchronously);
             Task<FilesOriginalBoardDocumentCreateReceipt> actual;
             Task<FilesOriginalBoardDocumentCreateReceipt>? existingTask = null;
@@ -270,11 +334,13 @@ public sealed partial class FilesNativeBrowserService
                         CryptographicOperations.ZeroMemory(payload);
                         throw new InvalidOperationException("Settle retained original Files board creations before starting another.");
                     }
-                    _active.RemoveAll(task => task.IsCompletedSuccessfully || task.IsFaulted || task.IsCanceled);
+                    _active.RemoveAll(task => task.IsCompletedSuccessfully || task.IsFaulted &&
+                        (IsOriginalReviewRefusal(task, task.Exception!) || IsRecoveredOriginalAuditFailure(task, task.Exception!)));
                     if (_active.Count >= 32)
                     { CryptographicOperations.ZeroMemory(payload); throw new InvalidOperationException("Settle original Files board creations before starting another."); }
                     actual = Run(start.Task);
                     operation.Task = actual;
+                    RetainOriginalTask(operation, actual);
                     _operations.Add(key, operation); _active.Add(actual);
                     _attempts.Add(operation.Attempt, operation);
                 }
@@ -340,9 +406,12 @@ public sealed partial class FilesNativeBrowserService
                 if (_retiring) throw new ObjectDisposedException(nameof(BoardDocumentCreateOwner));
                 if (operation.SettlementTask is { } existing && !existing.IsFaulted && !existing.IsCanceled)
                 { retain(existing); return existing; }
+                if (operation.OriginalAuditTasks.Count >= 32)
+                    throw new InvalidOperationException("Retain and inspect the original bounded audit attempts before another retry.");
                 recovery = RetryCreateSettlementCoreAsync(operation, scope, retain, token);
                 operation.SettlementTask = recovery;
-                _activeSettlements.RemoveAll(task => task.IsCompletedSuccessfully || task.IsFaulted || task.IsCanceled);
+                RetainOriginalTask(operation, recovery);
+                _activeSettlements.RemoveAll(task => task.IsCompletedSuccessfully);
                 _activeSettlements.Add(recovery);
             }
             retain(recovery);
@@ -359,11 +428,11 @@ public sealed partial class FilesNativeBrowserService
                     throw new FilesOriginalBoardDocumentCreateSettlementException(operation.Attempt,
                         FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown, operation.Receipt,
                         operation.CleanupFailures, new InvalidOperationException("The retained create has no exact terminal Home outcome to retry."));
-                var source = FilesOriginalParentSourceCallbacks.Create(scope, retain);
+                var source = FilesOriginalParentSourceCallbacks.Create(scope, task => { RetainOriginalTask(operation, task); retain(task); });
                 HomePermissionOperationResult settled;
                 try
                 {
-                    settled = await source.Observe(() => _broker.RetryCompletionAuditAsync(capability, token)).ConfigureAwait(false);
+                    settled = await source.Observe(() => RetainOriginalTask(operation, _broker.RetryCompletionAuditAsync(capability, token), audit: true)).ConfigureAwait(false);
                 }
                 catch (Exception error)
                 {
@@ -553,8 +622,8 @@ public sealed partial class FilesNativeBrowserService
                                 "The Files create effect is uncertain; do not replay it.", []);
                     var outcome = operation.ActualOutcome
                         ?? throw new InvalidOperationException("The Home board-create operation has no terminal outcome.");
-                    var audit = await source.Observe(() => _broker.CompleteExecutionAsync(claimed,
-                        outcome, CancellationToken.None)).ConfigureAwait(false);
+                    var audit = await source.Observe(() => RetainOriginalTask(operation, _broker.CompleteExecutionAsync(claimed,
+                        outcome, CancellationToken.None), audit: true)).ConfigureAwait(false);
                     operation.AuditRecorded = audit.Succeeded;
                     if (!audit.Succeeded) operation.AuditFailure = new InvalidOperationException(audit.Message);
                 }
@@ -718,7 +787,15 @@ public sealed partial class FilesNativeBrowserService
                 await source.ObserveVoid(() => presentReview(approval, token)).ConfigureAwait(false);
             approval = await source.Observe(() => _broker.GetAuthorizationAsync(approval.RequestId, token)).ConfigureAwait(false);
             operation.Approval = approval;
-            if (!approval.IsAllowed) throw new UnauthorizedAccessException(approval.Message);
+            if (!approval.IsAllowed)
+            {
+                var refusal = new UnauthorizedAccessException(approval.Message);
+                // Only the genuine current Home decision, before begin/claim or any
+                // Files effect, issues this expected-refusal observation.
+                if (approval.State is HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked)
+                    operation.OriginalReviewRefusal = refusal;
+                throw refusal;
+            }
 
             var reviewed = await source.Observe(() => workspace.Provider.GetForOriginalStoreAsync(
                 operation.Page.StoreID, operation.Folder.Id, token)).ConfigureAwait(false);
