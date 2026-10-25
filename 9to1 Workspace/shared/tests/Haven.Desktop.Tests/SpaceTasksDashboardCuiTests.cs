@@ -17,10 +17,13 @@ public sealed partial class SpaceTasksDashboardOriginalWorkTests
         Assert.NotNull(rig.Page.OriginalScene.Root);
         Assert.Single(rig.Page.OriginalScene.RecentRows.GetVisualDescendants().OfType<Button>());
         var initial = string.Join("\n", rig.Page.OriginalScene.RecentRows.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text));
-        Assert.Contains("Saved Running", initial, StringComparison.Ordinal);
+        Assert.Contains("Activity unconfirmed", initial, StringComparison.Ordinal);
         Assert.Contains("Original objective", initial, StringComparison.Ordinal);
         Assert.DoesNotContain("Working", initial, StringComparison.Ordinal);
         Assert.DoesNotContain("Verified", initial, StringComparison.Ordinal);
+        Assert.DoesNotContain(rig.Snapshot.TaskId.ToString("D"), initial, StringComparison.Ordinal);
+        Assert.DoesNotContain("original owner", initial, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("custody", initial, StringComparison.OrdinalIgnoreCase);
 
         rig.Tasks.Current = rig.Snapshot with { State = TaskExecutionLifecycle.Completed, PersistenceRevision = rig.Snapshot.PersistenceRevision + 1 };
         await rig.Page.RefreshOriginalAsync(TestContext.Current.CancellationToken);

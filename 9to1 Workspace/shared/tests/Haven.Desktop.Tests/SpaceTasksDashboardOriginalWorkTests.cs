@@ -33,6 +33,7 @@ public sealed partial class SpaceTasksDashboardOriginalWorkTests
         Assert.Equal(rig.Snapshot.TaskId, actual.Snapshot!.TaskId);
         Assert.Equal(rig.Snapshot.ExecutionId, actual.Snapshot.ExecutionId);
         Assert.Equal(rig.Conversation.Id, actual.Snapshot.ContextId);
+        Click(rig, rig.Page.OriginalScene.DetailsToggle);
         var text = string.Join("\n", rig.Page.OriginalScene.RecentRows.GetVisualDescendants().OfType<TextBlock>().Select(x => x.Text));
         Assert.Contains(rig.Snapshot.TaskId.ToString("D"), text);
         Assert.Contains(rig.Snapshot.ExecutionId.ToString("D"), text);

@@ -63,6 +63,7 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     public Control? Root { get; private set; }
     public TextBox Instruction => Find<TextBox>("tasks-new-instruction");
     public Button DelegateTask => Find<Button>("tasks-delegate");
+    public Button DetailsToggle => Find<Button>("tasks-details-toggle");
     public Control RecentRows => Find<Control>("tasks-recent-rows");
     public long InstructionVersion => _instructionVersion;
     public event EventHandler<string>? DelegateRequested;
@@ -116,23 +117,24 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
             "accessibleName" => row.Conversation.Title + "; " + Status(row),
             "status" => Status(row), "completed" => task?.State == TaskExecutionLifecycle.Completed,
             "summary" => task is null ? "No canonical task has been started." : task.PromptSummary,
+            "progress" => task?.Plan.Count > 0 ? $"{row.Projection?.AcceptedActions.Count ?? 0} action(s) completed." : "",
             "observationText" => row.ExecutionObservation + " " + row.RecoveryObservation,
             "checkpoint" => task is null ? "" : $"Accepted {row.Projection?.AcceptedActions.Count ?? 0} of {task.Plan.Count} recorded action(s). " +
                 (task.CheckpointId is { } checkpoint ? $"Acknowledged checkpoint {checkpoint:D}." : "No acknowledged checkpoint is recorded."),
             "identity" => task is null ? $"Conversation {row.Conversation.Id:D}" : $"Task {task.TaskId:D}; run {task.ExecutionId:D}",
             _ => null
         };
-        return path is "id" or "observation" or "title" or "openLabel" or "accessibleName" or "status" or "completed" or "summary" or "observationText" or "checkpoint" or "identity";
+        return path is "id" or "observation" or "title" or "openLabel" or "accessibleName" or "status" or "completed" or "summary" or "progress" or "observationText" or "checkpoint" or "identity";
     }
     private static string Status(SpaceTaskObservation row) => row.HasObservedLiveExecution ? $"Working · observed {row.Activity!.ObservedAt.LocalDateTime:g}" : row.Snapshot?.State switch
     {
         TaskExecutionLifecycle.Completed => "Completed · not verified",
-        TaskExecutionLifecycle.Blocked => "Blocked · inspect the recorded reason",
-        TaskExecutionLifecycle.Suspended => "Suspended · continuation requires its original owner",
+        TaskExecutionLifecycle.Blocked => "Blocked · details available",
+        TaskExecutionLifecycle.Suspended => "Suspended",
         TaskExecutionLifecycle.WaitingSafeBoundary => "Waiting for a safe boundary",
-        TaskExecutionLifecycle.Failed => "Failed · inspect the retained recovery outcome",
+        TaskExecutionLifecycle.Failed => "Failed · details available",
         TaskExecutionLifecycle.Cancelled => "Cancelled",
-        TaskExecutionLifecycle.Running => "Saved Running · live execution has not been observed",
+        TaskExecutionLifecycle.Running => "Activity unconfirmed",
         _ => "Not started"
     };
     public bool TrySetItemValue(object item, string path, object? value) => false;

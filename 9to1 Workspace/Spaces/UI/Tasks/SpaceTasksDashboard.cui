@@ -2,7 +2,9 @@
   <Actions>
     <Action name="OpenExistingTask" command="tasks.open" parameter="{Binding task.observation}" />
     <Action name="SubmitNewTask" command="tasks.submit" parameter="{Binding Event}" />
+    <Action name="ToggleTaskDetails"><Toggle Target="DetailsOpen" /></Action>
   </Actions>
+  <Variable Type="bool" ID="DetailsOpen">False</Variable>
   <Theme Name="user_preference">
     <Page id="space-tasks-dashboard" accessible-name="Tasks and recorded progress">
       <Container id="tasks-dashboard-scroll" Type="Vertical Stack" Padding="24" CellGap="14" VerticalScrolling="True" HorizontalScrolling="False">
@@ -17,6 +19,7 @@
         </Container>
         <Text id="tasks-one-off-note" text="Reusable and scheduled work belongs in Automations." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
         <Text id="tasks-existing-heading" text="Existing work" font-size="18" font-weight="SemiBold" />
+        <Button id="tasks-details-toggle" action="ToggleTaskDetails" content="Show/hide task details" accessible-name="Show or hide diagnostic details for the displayed tasks" />
         <If Condition="{Binding HasRows}" Negate="True">
           <Text id="tasks-empty" text="No task conversations are available in this Space. Start a task above." TextWrapping="Wrap" />
         </If>
@@ -31,9 +34,14 @@
                 <Text id="tasks-tile-status" text="{Binding task.status}" font-weight="SemiBold" TextWrapping="Wrap" accessible-name="{Binding task.status}" />
               </If>
               <Text id="tasks-tile-summary" text="{Binding task.summary}" TextWrapping="Wrap" />
-              <Text id="tasks-tile-observation" text="{Binding task.observationText}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-              <Text id="tasks-tile-checkpoint" text="{Binding task.checkpoint}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-              <Text id="tasks-tile-identity" text="{Binding task.identity}" foreground="{Resource CuiTextSoftBrush}" font-size="11" TextWrapping="Wrap" accessible-name="Canonical task and run identities" />
+              <Text id="tasks-tile-progress" text="{Binding task.progress}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              <If Condition="{Binding DetailsOpen}">
+                <Container id="tasks-tile-details" Type="Vertical Stack" CellGap="6" accessible-name="Task diagnostics">
+                  <Text id="tasks-tile-observation" text="{Binding task.observationText}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Text id="tasks-tile-checkpoint" text="{Binding task.checkpoint}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Text id="tasks-tile-identity" text="{Binding task.identity}" foreground="{Resource CuiTextSoftBrush}" font-size="11" TextWrapping="Wrap" accessible-name="Canonical task and run identities" />
+                </Container>
+              </If>
             </Container>
           </Repeat>
         </Container>
