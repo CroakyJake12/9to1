@@ -280,8 +280,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                     await OpenBoardPathAsync(board.Path, null);
                 break;
             case "OpenRecentPage":
-                if (parameter is RecentPageCard page && _allRecentPages.Any(item => ReferenceEquals(item, page)) && OpenBoardPathAsync is not null)
-                    await OpenBoardPathAsync(page.Path, page.PageId);
+                if (parameter is RecentPageCard recentPage && _allRecentPages.Any(item => ReferenceEquals(item, recentPage)) && OpenBoardPathAsync is not null)
+                    await OpenBoardPathAsync(recentPage.Path, recentPage.PageId);
                 break;
             case "SaveBoard":
                 Set("SaveStateText", "Saving…");
