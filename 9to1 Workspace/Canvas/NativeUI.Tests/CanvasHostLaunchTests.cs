@@ -122,7 +122,7 @@ public sealed class CanvasHostLaunchTests
             Assert.True(artifact.IsSuccess);
 
             using var process = new CancellationTokenSource();
-            var owner = new CanvasHostSurface(fixture.Services, process.Token, null);
+            var owner = fixture.CreateSurface(process.Token);
             Window? window = null;
             try
             {
@@ -149,7 +149,7 @@ public sealed class CanvasHostLaunchTests
                 window?.Close();
             }
 
-            var createOwner = new CanvasHostSurface(fixture.Services, process.Token, null);
+            var createOwner = fixture.CreateSurface(process.Token);
             Window? createWindow = null;
             try
             {
@@ -161,6 +161,25 @@ public sealed class CanvasHostLaunchTests
                 await UntilAsync(() => Find(shownCreateWindow, "canvas-launch").IsEffectivelyVisible);
                 Assert.True(Find(shownCreateWindow, "canvas-create").IsEffectivelyVisible);
                 Assert.False(Find(shownCreateWindow, "canvas-launch-cards").IsEffectivelyVisible);
+                Assert.IsType<TextBox>(Find(shownCreateWindow, "canvas-host-new-name")).Text = "Board-created Canvas";
+                Click(Assert.IsType<Button>(Find(shownCreateWindow, "canvas-create")));
+                await UntilAsync(async () => (await fixture.Permissions.GetSnapshotAsync(cancellationToken: process.Token))
+                    .PendingRequests.Count == 1);
+                Assert.False(create.Choice.IsCompleted);
+                await AcceptAndFinishAsync(shownCreateWindow, fixture.Permissions, process.Token);
+                var createdTarget = Assert.IsType<CanvasEmbeddedArtifactTarget>(await create.Choice);
+                await createOwner.LatestOriginalCommand!;
+                await create.RevalidateAsync(createdTarget, process.Token);
+                var registered = await fixture.Workspace.Provider.GetArtifactByOwnerIdentityAsync(
+                    "canvas", createdTarget.ArtifactId.ToString("N"), process.Token);
+                Assert.True(registered.IsSuccess);
+                var currentCreatedItem = await fixture.Workspace.Provider.GetAsync(registered.Value!.FileId, process.Token);
+                Assert.True(currentCreatedItem.IsSuccess);
+                var createdContent = await fixture.Workspace.Provider.GetCurrentArtifactContentForOriginalStoreAsync(
+                    fixture.Workspace.Configuration.StoreId, registered.Value.FileId,
+                    currentCreatedItem.Value!.CurrentRevisionId, process.Token);
+                Assert.True(createdContent.IsSuccess);
+                Assert.Equal(createdTarget.ExpectedRevisionId.ToString("N"), createdContent.Value!.Revision.OwningAppRevisionId);
             }
             finally
             {
@@ -266,6 +285,8 @@ public sealed class CanvasHostLaunchTests
     internal static Button[] Cards(Control root) => Find(root, "canvas-launch-cards")
         .GetVisualDescendants().OfType<Button>().ToArray();
     internal static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    private static void Click(Control root, string content) => Click(Assert.Single(root.GetVisualDescendants().OfType<Button>(),
+        button => Equals(button.Content, content)));
     internal static async Task UntilAsync(Func<bool> predicate)
     {
         for (var attempt = 0; attempt < 300; attempt++)
@@ -274,6 +295,29 @@ public sealed class CanvasHostLaunchTests
             await Task.Delay(10);
         }
         Assert.True(predicate());
+    }
+    private static async Task UntilAsync(Func<Task<bool>> predicate)
+    {
+        for (var attempt = 0; attempt < 300; attempt++)
+        {
+            if (await predicate()) return;
+            await Task.Delay(10);
+        }
+        Assert.True(await predicate());
+    }
+    private static async Task AcceptAndFinishAsync(Control root, HomePermissionTrustService permissions, CancellationToken token)
+    {
+        await UntilAsync(() => root.GetVisualDescendants().OfType<Button>().Any(button =>
+            Equals(button.Content, "Accept once") && button.IsEnabled));
+        Click(root, "Accept once");
+        for (var attempt = 0; attempt < 300; attempt++)
+        {
+            if ((await permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests.Count == 0) break;
+            await Task.Delay(10);
+        }
+        await UntilAsync(() => root.GetVisualDescendants().OfType<Button>().Any(button =>
+            Equals(button.Content, "Finish approved request") && button.IsEnabled));
+        Click(root, "Finish approved request");
     }
 
     internal sealed class Fixture : IAsyncDisposable
@@ -297,7 +341,13 @@ public sealed class CanvasHostLaunchTests
         internal void ExpectExactFailure(Exception cause) => _expectedFailures.Add(cause);
         internal NativeFilesWorkspace Workspace = null!;
         internal CanvasFilesArtifactBridge Bridge = null!;
+        internal HomePermissionTrustService Permissions = null!;
+        internal HomeResourceOperationBroker Broker = null!;
+        internal NativeFilesWorkspaceAuthority Authority = null!;
         internal HostedItemId Folder => Workspace.Configuration.AppFolders["canvas"];
+        internal CanvasHostSurface CreateSurface(CancellationToken lifetime) => new(_services, lifetime,
+            (workspace, capability, alive, token) => Authority.CaptureOriginalCanvasCommitFenceAsync(
+                workspace, Broker, capability, alive, token));
         internal static async Task<Fixture> CreateAsync()
         {
             var fixture = new Fixture();
@@ -307,27 +357,27 @@ public sealed class CanvasHostLaunchTests
                 var state = new FileHomeCoreStateStore(Path.Combine(fixture._root, "home.json"));
                 var profiles = new HomeLocalProfileIdentity(state, new OperatingSystemPrincipalSource());
                 var files = new NativeFilesWorkspaceService(state, profiles);
-                var permissions = new HomePermissionTrustService(state, new CanvasNativeActionPolicies().TryGet);
-                var ownership = new HomeLocalStoreOwnership(state, profiles, new HomeLocalStoreEvidenceRegistry([files]), permissions);
-                var authority = new NativeFilesWorkspaceAuthority(files, profiles, new HomeResourceStoreOwnershipAuthority(ownership, profiles));
+                fixture.Permissions = new(state, new CanvasNativeActionPolicies().TryGet);
+                var ownership = new HomeLocalStoreOwnership(state, profiles, new HomeLocalStoreEvidenceRegistry([files]), fixture.Permissions);
+                fixture.Authority = new(files, profiles, new HomeResourceStoreOwnershipAuthority(ownership, profiles));
                 var selected = Path.Combine(fixture._root, "selected-empty-workspace"); Directory.CreateDirectory(selected);
                 await files.ConfigureNewAsync(selected, ownership, default);
-                fixture.Workspace = (await authority.GetCurrentAsync(default))!;
+                fixture.Workspace = (await fixture.Authority.GetCurrentAsync(default))!;
                 var resources = new ResourceAuthorizationService(profiles, [new FilesArtifactResourceResolver(async (actor, token) =>
-                { var current = await authority.GetCurrentAsync(token); return current?.Actor == actor ? current.Provider : null; },
+                { var current = await fixture.Authority.GetCurrentAsync(token); return current?.Actor == actor ? current.Provider : null; },
                 async (actor, app, token) =>
-                { var current = await authority.GetCurrentAsync(token); return current?.Actor == actor && current.Configuration.AppFolders.TryGetValue(app, out var folder) ? folder : null; })]);
-                var broker = new HomeResourceOperationBroker(resources, permissions);
-                var runtime = new HomeCoreRuntime([new HomeCoreStateService(state), new HomePermissionsCoreService(permissions, profiles)]);
+                { var current = await fixture.Authority.GetCurrentAsync(token); return current?.Actor == actor && current.Configuration.AppFolders.TryGetValue(app, out var folder) ? folder : null; })]);
+                fixture.Broker = new(resources, fixture.Permissions);
+                var runtime = new HomeCoreRuntime([new HomeCoreStateService(state), new HomePermissionsCoreService(fixture.Permissions, profiles)]);
                 var registrations = new ServiceCollection();
                 registrations.AddSingleton(runtime); registrations.AddSingleton(profiles);
                 registrations.AddSingleton<IAuthenticatedResourceActorSource>(profiles);
-                registrations.AddSingleton(files); registrations.AddSingleton(authority); registrations.AddSingleton(resources);
-                registrations.AddSingleton(broker); registrations.AddSingleton(permissions); registrations.AddSingleton(ownership);
+                registrations.AddSingleton(files); registrations.AddSingleton(fixture.Authority); registrations.AddSingleton(resources);
+                registrations.AddSingleton(fixture.Broker); registrations.AddSingleton(fixture.Permissions); registrations.AddSingleton(ownership);
                 fixture._services = registrations.BuildServiceProvider();
                 fixture.Bridge = new(profiles, actor => actor == fixture.Workspace.Actor ? fixture.Workspace.Provider : null,
                     fixture.Workspace.Directories, resources, () => true,
-                    (actor, provider, token) => authority.CaptureCommitAuthorityAsync(actor, provider, () => true, token));
+                    (actor, provider, token) => fixture.Authority.CaptureCommitAuthorityAsync(actor, provider, () => true, token));
                 return fixture;
             }
             catch { await fixture.DisposeAsync(); throw; }
