@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using HavenOS.Files;
+using HavenOS.Files.NativeHost;
 
 namespace HavenOS.Apps.Canvas;
 
