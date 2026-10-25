@@ -46,3 +46,21 @@ Recover current commands, source/runner hashes, failures and next actions from
 the durable ledger. Never infer implementation or accepted percentages from the
 number of commits, tests or tracker packets. The supplied tracker is a gap queue;
 its embedded historical model and execution instructions are not owner authority.
+
+## Latest owner addition — Boards
+
+Boards joins Spaces, Home/Haven and Build in the first implementation group.
+The isolated Luna Boards worker owns Boards source and dedicated tests; the earlier
+worker named `resume_luna_boards_20261025` now owns Home browser work. These are
+different scopes. Deliver real runnable test copies as each priority app reaches
+100% implementation, with source identity and honest remaining platform checks.
+
+Actual basic checks since the first checkpoint: Build editor/session/recovery
+35/35 passed at 7a6c6351763fdfa8b5b35a6ef2a0897f835c4870; Spaces policy/context
+51/51 passed at 30921ba6d2a7a5ce6e4faf27780f55e6b518d82f. Later combined Desktop
+production and portable tests compiled at 24be0a86fd6a33c7689691fb4a8a021705487e87,
+but the cross-target invocation failed on a duplicate Windows test compile item.
+That source fix is integrated; Linux-only basic execution and new feature checks
+remain pending. The next Build check found one new test-analyzer diagnostic; it
+is assigned to its owner. Preserve all failure receipts. These are exact scoped
+results, not full acceptance or proof that current later revisions still pass.
