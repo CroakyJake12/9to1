@@ -68,7 +68,18 @@ public sealed record SpaceContextReference(
     SpaceContextIndexState IndexState,
     bool IncludedAutomatically,
     DateTimeOffset AddedAt,
-    Guid? HostedFileId = null);
+    Guid? HostedFileId = null)
+{
+    /// <summary>Files-issued immutable content digest observed when this reference was selected.
+    /// This is provenance metadata only, never an access grant.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ContentSha256 { get; init; }
+
+    /// <summary>Files-owned parent folder observed for current-row re-selection. It is a location
+    /// hint only and never grants access or proves that the file remains in that folder.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? ParentFolderId { get; init; }
+}
 
 public sealed record SpaceShareGrant(
     string PrincipalId,
@@ -145,14 +156,87 @@ public sealed record SpaceDefinition(
     IReadOnlyList<SpaceContextReference>? ContextReferences = null,
     IReadOnlyList<SpaceShareGrant>? Shares = null)
 {
+    /// <summary>Monotonic active configuration version; independent of registry CAS revision.</summary>
+    public long ActiveConfigurationRevision { get; init; } = 1;
+    /// <summary>Revision used by the Builder draft editor; null draft means edits start from active.</summary>
+    public long DraftConfigurationRevision { get; init; } = 1;
+    /// <summary>The active version on which the retained draft was based.</summary>
+    public long DraftBaseActiveRevision { get; init; } = 1;
+    /// <summary>One saved draft projection of this Space; never read by runtime consumers.</summary>
+    public SpaceConfigurationDocument? DraftConfiguration { get; init; }
+    public IReadOnlyList<SpaceConfigurationRevision> ConfigurationHistory { get; init; } = [];
+
     /// <summary>Origin is derived from the protected registry bit and is not independently mutable.</summary>
     public SpaceOrigin Origin => IsBuiltIn ? SpaceOrigin.BuiltIn : SpaceOrigin.UserCreated;
 }
+
+/// <summary>Typed single document projection used by Basic, Advanced and Expert. It contains
+/// configuration only; Space identity, ownership, hierarchy and lifecycle stay on SpaceDefinition.</summary>
+public sealed record SpaceConfigurationDocument(
+    string Name,
+    string Description,
+    string IconKey,
+    string? ModelName,
+    string Instructions,
+    SpaceThinkingMode ThinkingMode,
+    IReadOnlyList<SpaceExamplePair> ExamplePairs,
+    IReadOnlyList<SpaceFileReference> Files,
+    SpaceGeneratedSurface? GeneratedSurface,
+    SpaceLayoutDocument? LayoutDocument,
+    SpaceModelPolicy? ModelPolicy,
+    SpaceContextPolicy? ContextPolicy,
+    SpaceMemoryPolicy? MemoryPolicy,
+    IReadOnlyList<SpaceCapabilityBinding> CapabilityBindings,
+    SpaceCapabilityCategoryPolicy? CapabilityCategoryPolicy,
+    SpaceInheritancePolicy? Inheritance,
+    IReadOnlyList<SpaceContextReference> ContextReferences,
+    IReadOnlyList<SpaceShareGrant> Shares)
+{
+    public static SpaceConfigurationDocument From(SpaceDefinition space) => new(
+        space.Name, space.Description, space.IconKey, space.ModelName, space.Instructions, space.ThinkingMode,
+        space.ExamplePairs?.ToArray() ?? [], space.Files?.ToArray() ?? [], space.GeneratedSurface, space.LayoutDocument,
+        space.ModelPolicy is null ? null : space.ModelPolicy with { RequiredCapabilities = space.ModelPolicy.RequiredCapabilities?.ToArray() },
+        space.ContextPolicy, space.MemoryPolicy is null ? null : space.MemoryPolicy with { AllowedScopes = space.MemoryPolicy.AllowedScopes?.ToArray() },
+        space.CapabilityBindings?.ToArray() ?? [], space.CapabilityCategoryPolicy, space.Inheritance,
+        space.ContextReferences?.ToArray() ?? [], space.Shares?.ToArray() ?? []);
+
+    public SpaceDefinition ApplyTo(SpaceDefinition space, bool activateLayout = false) => space with
+    {
+        Name = Name,
+        Description = Description,
+        IconKey = IconKey,
+        ModelName = ModelName,
+        Instructions = Instructions,
+        ThinkingMode = ThinkingMode,
+        ExamplePairs = ExamplePairs.ToArray(),
+        Files = Files.ToArray(),
+        GeneratedSurface = GeneratedSurface,
+        LayoutDocument = LayoutDocument is null ? null : activateLayout ? LayoutDocument with { State = SpaceLayoutRevisionState.Active } : LayoutDocument,
+        ModelPolicy = ModelPolicy is null ? null : ModelPolicy with { RequiredCapabilities = ModelPolicy.RequiredCapabilities?.ToArray() },
+        ContextPolicy = ContextPolicy,
+        MemoryPolicy = MemoryPolicy is null ? null : MemoryPolicy with { AllowedScopes = MemoryPolicy.AllowedScopes?.ToArray() },
+        CapabilityBindings = CapabilityBindings.ToArray(),
+        CapabilityCategoryPolicy = CapabilityCategoryPolicy,
+        Inheritance = Inheritance,
+        ContextReferences = ContextReferences.ToArray(),
+        Shares = Shares.ToArray()
+    };
+}
+
+public sealed record SpaceConfigurationRevision(long Revision, SpaceConfigurationDocument Configuration, DateTimeOffset ActivatedAt);
 
 public enum SpaceOrigin { BuiltIn = 0, UserCreated = 1 }
 
 public sealed class SpaceRevisionConflictException(Guid spaceId, long expectedRevision, long actualRevision)
     : InvalidOperationException($"Space '{spaceId}' changed from revision {expectedRevision} to revision {actualRevision}.")
+{
+    public Guid SpaceId { get; } = spaceId;
+    public long ExpectedRevision { get; } = expectedRevision;
+    public long ActualRevision { get; } = actualRevision;
+}
+
+public sealed class SpaceDraftRevisionConflictException(Guid spaceId, long expectedRevision, long actualRevision)
+    : InvalidOperationException($"Space '{spaceId}' draft changed from revision {expectedRevision} to {actualRevision}.")
 {
     public Guid SpaceId { get; } = spaceId;
     public long ExpectedRevision { get; } = expectedRevision;

@@ -6,7 +6,7 @@ public sealed partial class SpaceRegistry
 {
     private const string SettingsKey = "spaces.registry";
     private const string CurrentSpaceSettingsKey = "spaces.current";
-    private const int CurrentVersion = 3;
+    private const int CurrentVersion = 4;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -79,8 +79,9 @@ public sealed partial class SpaceRegistry
         if (state is null) return null;
         if (state.Version is < 2 or > CurrentVersion) throw new InvalidDataException("A stored Space snapshot requires a supported schema.");
         ValidateDeletionState(state);
-        ValidateRegistry(state.Spaces);
-        var matches = state.Spaces.Where(space => space.Id == id).ToArray();
+        var spaces = state.Spaces.Select(NormalizeStoredSpace).ToArray();
+        ValidateRegistry(spaces);
+        var matches = spaces.Where(space => space.Id == id).ToArray();
         return matches.Length == 1 ? CloneSpace(matches[0]) : null;
     }
 
@@ -100,8 +101,10 @@ public sealed partial class SpaceRegistry
         cancellationToken.ThrowIfCancellationRequested();
         if (state is null) return [];
         if (state.Version is < 2 or > CurrentVersion) throw new InvalidDataException("A stored Space census requires a supported schema.");
-        ValidateDeletionState(state); ValidateRegistry(state.Spaces);
-        var active = state.Spaces.Where(space => !space.IsArchived).ToArray();
+        ValidateDeletionState(state);
+        var spaces = state.Spaces.Select(NormalizeStoredSpace).ToArray();
+        ValidateRegistry(spaces);
+        var active = spaces.Where(space => !space.IsArchived).ToArray();
         if (active.Length > maximumSpaces)
             throw new InvalidOperationException("The existing Space census exceeds its explicit bound; select fewer Spaces through the owning service.");
         return active.Select(CloneSpace).ToArray();
@@ -140,6 +143,7 @@ public sealed partial class SpaceRegistry
                 Shares: [],
                 ParentSpaceId: parentSpaceId,
                 Position: position);
+            created = InitializeConfigurationHistory(created);
             ValidateDefinition(created, state.Spaces);
             return (state with { Spaces = [.. state.Spaces, created] }, created);
         }, cancellationToken).ConfigureAwait(false);
@@ -199,6 +203,11 @@ public sealed partial class SpaceRegistry
                 ParentSpaceId = existing.ParentSpaceId,
                 Position = existing.Position,
                 UpdatedAt = _clock(),
+                ActiveConfigurationRevision = existing.ActiveConfigurationRevision,
+                DraftConfigurationRevision = existing.DraftConfigurationRevision,
+                DraftBaseActiveRevision = existing.DraftBaseActiveRevision,
+                DraftConfiguration = existing.DraftConfiguration,
+                ConfigurationHistory = existing.ConfigurationHistory,
                 ExamplePairs = updated.ExamplePairs?.ToArray() ?? [],
                 Files = updated.Files?.ToArray() ?? [],
                 CapabilityBindings = updated.CapabilityBindings?.ToArray() ?? [],
@@ -210,6 +219,137 @@ public sealed partial class SpaceRegistry
 
     public Task<SpaceDefinition> UpdateAsync(SpaceDefinition updated, CancellationToken cancellationToken) =>
         UpdateAsync(updated, expectedRevision: null, cancellationToken);
+
+    /// <summary>Persists the Builder's one canonical draft without changing active fields or
+    /// SpaceDefinition.Revision, so live Tasks/Projects keep their active revision.</summary>
+    public Task<SpaceDefinition> SaveDraftAsync(Guid id, SpaceConfigurationDocument draft,
+        long expectedSpaceRevision, long expectedDraftRevision, long expectedActiveConfigurationRevision,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+        return MutateAsync(state =>
+        {
+            var current = FindRequired(state.Spaces, id);
+            if (current.IsBuiltIn || current.IsArchived)
+                throw new InvalidOperationException("This Space cannot accept a Builder draft.");
+            if (current.Revision != expectedSpaceRevision)
+                throw new SpaceRevisionConflictException(id, expectedSpaceRevision, current.Revision);
+            if (current.DraftConfigurationRevision != expectedDraftRevision)
+                throw new SpaceDraftRevisionConflictException(id, expectedDraftRevision, current.DraftConfigurationRevision);
+            if (current.ActiveConfigurationRevision != expectedActiveConfigurationRevision ||
+                current.DraftBaseActiveRevision != current.ActiveConfigurationRevision)
+                throw new InvalidOperationException("The active Space configuration changed after this draft began; reload and reconcile before saving.");
+
+            var peers = state.Spaces.Where(space => space.Id != id).ToArray();
+            var normalized = CloneConfiguration(draft);
+            ValidateConfiguration(current, normalized, peers);
+            var name = normalized.Name.Trim();
+            if (peers.Any(space => StringComparer.OrdinalIgnoreCase.Equals(space.Name, name) ||
+                space.DraftConfiguration is { } peerDraft && StringComparer.OrdinalIgnoreCase.Equals(peerDraft.Name.Trim(), name)))
+                throw new InvalidOperationException($"A Space or saved draft named '{name}' already exists.");
+            var saved = current with
+            {
+                DraftConfiguration = normalized,
+                DraftConfigurationRevision = checked(current.DraftConfigurationRevision + 1),
+                DraftBaseActiveRevision = current.ActiveConfigurationRevision,
+                UpdatedAt = _clock()
+            };
+            ValidateDefinition(saved, peers);
+            return (state with { Spaces = state.Spaces.Select(space => space.Id == id ? saved : space).ToArray() }, saved);
+        }, cancellationToken);
+    }
+
+    /// <summary>Publishes a saved Builder draft as one new active configuration revision.
+    /// The supplied registry and draft revisions are checked in the same global-store mutation.</summary>
+    public Task<SpaceDefinition> ActivateDraftAsync(Guid id, long expectedSpaceRevision,
+        long expectedDraftRevision, long expectedActiveConfigurationRevision,
+        CancellationToken cancellationToken = default) => ActivateDraftCoreAsync(id, expectedSpaceRevision,
+            expectedDraftRevision, expectedActiveConfigurationRevision, null, cancellationToken);
+
+    /// <summary>Validates current external dependencies through their owning services, then
+    /// publishes only if the same Space, draft, active configuration and policy ancestry remain
+    /// current in the registry transaction.</summary>
+    public async Task<SpaceDefinition> ActivateDraftAsync(Guid id, long expectedSpaceRevision,
+        long expectedDraftRevision, long expectedActiveConfigurationRevision,
+        ISpaceDraftActivationValidator validator, Action<Action> acquireOriginal,
+        Action<Task> retainOriginal, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(validator);
+        ArgumentNullException.ThrowIfNull(acquireOriginal);
+        ArgumentNullException.ThrowIfNull(retainOriginal);
+        var current = await ReadExistingAsync(id, cancellationToken).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"Space '{id}' was not found.");
+        if (current.Revision != expectedSpaceRevision)
+            throw new SpaceRevisionConflictException(id, expectedSpaceRevision, current.Revision);
+        if (current.DraftConfigurationRevision != expectedDraftRevision)
+            throw new SpaceDraftRevisionConflictException(id, expectedDraftRevision, current.DraftConfigurationRevision);
+        if (current.ActiveConfigurationRevision != expectedActiveConfigurationRevision ||
+            current.DraftBaseActiveRevision != current.ActiveConfigurationRevision)
+            throw new InvalidOperationException("The active Space configuration changed after this draft began; reload and reconcile before activation.");
+        var draft = current.DraftConfiguration ?? throw new InvalidOperationException("Save the Builder draft before activating it.");
+        Task<SpaceDraftActivationValidation>? actual = null;
+        acquireOriginal(() =>
+        {
+            actual = validator.ValidateAsync(current, draft, acquireOriginal, retainOriginal, cancellationToken);
+            retainOriginal(actual);
+        });
+        var validation = await (actual ?? throw new InvalidOperationException("The activation validator did not return its original task."))
+            .ConfigureAwait(false);
+        return await ActivateDraftCoreAsync(id, expectedSpaceRevision, expectedDraftRevision,
+            expectedActiveConfigurationRevision, validation, cancellationToken).ConfigureAwait(false);
+    }
+
+    private Task<SpaceDefinition> ActivateDraftCoreAsync(Guid id, long expectedSpaceRevision,
+        long expectedDraftRevision, long expectedActiveConfigurationRevision,
+        SpaceDraftActivationValidation? validation, CancellationToken cancellationToken) => MutateAsync(state =>
+    {
+        var current = FindRequired(state.Spaces, id);
+        if (current.IsBuiltIn || current.IsArchived)
+            throw new InvalidOperationException("This Space cannot be activated.");
+        if (current.Revision != expectedSpaceRevision)
+            throw new SpaceRevisionConflictException(id, expectedSpaceRevision, current.Revision);
+        if (current.DraftConfigurationRevision != expectedDraftRevision)
+            throw new SpaceDraftRevisionConflictException(id, expectedDraftRevision, current.DraftConfigurationRevision);
+        if (current.ActiveConfigurationRevision != expectedActiveConfigurationRevision ||
+            current.DraftBaseActiveRevision != current.ActiveConfigurationRevision)
+            throw new InvalidOperationException("The active Space configuration changed after this draft began; reload and reconcile before activation.");
+        var draft = current.DraftConfiguration ?? throw new InvalidOperationException("Save the Builder draft before activating it.");
+        ValidateConfiguration(current, draft, state.Spaces.Where(space => space.Id != id).ToArray());
+        if (validation is not null)
+        {
+            if (validation.SpaceId != id || validation.SpaceRevision != expectedSpaceRevision ||
+                validation.DraftConfigurationRevision != expectedDraftRevision ||
+                validation.ActiveConfigurationRevision != expectedActiveConfigurationRevision ||
+                !AncestryMatches(state.Spaces, id, validation.Ancestry))
+                throw new InvalidOperationException("A Space or ancestor changed after dependency validation; no active configuration was published.");
+        }
+        // Pure candidate validation uses the same registered executor catalogue as request
+        // derivation. Recheck inside the atomic publication transaction against the exact
+        // Space revision that this activation will create.
+        if (draft.LayoutDocument is { Nodes.Count: > 0 } layout)
+            _ = SpaceUserMessageGraph.Compile(id, checked(current.Revision + 1), layout);
+        if (draft.Shares.Count != 0 || draft.GeneratedSurface is not null)
+            throw new InvalidOperationException("Activation is unavailable until the owning share or generated-surface service validates this draft.");
+        if (validation is null && (draft.CapabilityBindings.Count != 0 ||
+            !string.IsNullOrWhiteSpace(draft.ModelPolicy?.DefaultModelId) ||
+            !string.IsNullOrWhiteSpace(draft.ModelPolicy?.ProviderConstraint) ||
+            draft.ModelPolicy?.RequiredCapabilities?.Count > 0 || current.ParentSpaceId is not null))
+            throw new InvalidOperationException("Activation requires the current model and installed capability owners to validate this draft.");
+
+        var nextActiveRevision = checked(current.ActiveConfigurationRevision + 1);
+        var activated = draft.ApplyTo(current, activateLayout: true) with
+        {
+            Revision = checked(current.Revision + 1),
+            ActiveConfigurationRevision = nextActiveRevision,
+            DraftConfigurationRevision = checked(current.DraftConfigurationRevision + 1),
+            DraftBaseActiveRevision = nextActiveRevision,
+            DraftConfiguration = null,
+            UpdatedAt = _clock()
+        };
+        activated = AppendConfigurationRevision(activated, SpaceConfigurationDocument.From(activated), nextActiveRevision, activated.UpdatedAt);
+        ValidateDefinition(activated, state.Spaces.Where(space => space.Id != id).ToArray());
+        return (state with { Spaces = state.Spaces.Select(space => space.Id == id ? activated : space).ToArray() }, activated);
+    }, cancellationToken);
 
     public async Task<SpaceDefinition> MoveAsync(
         Guid id,
@@ -335,10 +475,16 @@ public sealed partial class SpaceRegistry
                 LayoutDocument = CloneLayout(source.LayoutDocument),
                 Shares = [],
                 Revision = 1,
+                ActiveConfigurationRevision = 1,
+                DraftConfigurationRevision = 1,
+                DraftBaseActiveRevision = 1,
+                DraftConfiguration = null,
+                ConfigurationHistory = [],
                 CreatedAt = now,
                 UpdatedAt = now
             };
-            return (state with { Spaces = [.. state.Spaces, fork] }, fork);
+            var initializedFork = InitializeConfigurationHistory(fork);
+            return (state with { Spaces = [.. state.Spaces, initializedFork] }, initializedFork);
         }, cancellationToken).ConfigureAwait(false);
     }
 
@@ -406,7 +552,20 @@ public sealed partial class SpaceRegistry
             var existing = FindRequired(state.Spaces, id);
             var changed = update(existing, state.Spaces);
             if (changed != existing)
+            {
                 changed = changed with { Revision = checked(existing.Revision + 1) };
+                if (!ConfigurationEquals(SpaceConfigurationDocument.From(existing), SpaceConfigurationDocument.From(changed)))
+                {
+                    var activeRevision = checked(existing.ActiveConfigurationRevision + 1);
+                    changed = changed with
+                    {
+                        ActiveConfigurationRevision = activeRevision,
+                        DraftBaseActiveRevision = existing.DraftConfiguration is null
+                            ? activeRevision : changed.DraftBaseActiveRevision
+                    };
+                    changed = AppendConfigurationRevision(changed, SpaceConfigurationDocument.From(changed), activeRevision, changed.UpdatedAt);
+                }
+            }
             ValidateDefinition(changed, state.Spaces.Where(space => space.Id != id).ToArray());
             var spaces = state.Spaces.Select(space => space.Id == id ? changed : space).ToArray();
             return (state with { Spaces = spaces }, changed);
@@ -567,7 +726,13 @@ public sealed partial class SpaceRegistry
         {
             Metadata = new Dictionary<string, string>(edge.Metadata, StringComparer.Ordinal)
         }).ToArray();
-        return new SpaceLayoutDocument(nodes, edges);
+        return layout with
+        {
+            Nodes = nodes,
+            Edges = edges,
+            Groups = layout.Groups.Select(group => group with { NodeIds = group.NodeIds.ToArray() }).ToArray(),
+            Comments = layout.Comments.ToArray()
+        };
     }
 
     private IReadOnlyList<SpaceDefinition> BuiltIns()
@@ -600,8 +765,9 @@ public sealed partial class SpaceRegistry
         SpaceKind kind,
         string instructions,
         SpaceThinkingMode thinkingMode,
-        DateTimeOffset createdAt) =>
-        new(id, name, string.Empty, icon, kind, true, false, null, instructions, thinkingMode,
+        DateTimeOffset createdAt)
+    {
+        var space = new SpaceDefinition(id, name, string.Empty, icon, kind, true, false, null, instructions, thinkingMode,
             [], [], null, createdAt, createdAt,
             Revision: 1,
             ModelPolicy: new SpaceModelPolicy(null),
@@ -611,41 +777,108 @@ public sealed partial class SpaceRegistry
             Inheritance: DefaultInheritance,
             ContextReferences: [],
             Shares: []);
+        return InitializeConfigurationHistory(space);
+    }
 
     private static readonly SpaceMemoryPolicy DefaultMemoryPolicy = new([SpaceMemoryScope.Conversation, SpaceMemoryScope.Space]);
     private static readonly SpaceInheritancePolicy DefaultInheritance = new();
 
-    private static SpaceDefinition NormalizeStoredSpace(SpaceDefinition space) => space with
+    private static SpaceDefinition NormalizeStoredSpace(SpaceDefinition space)
     {
-        Revision = Math.Max(1, space.Revision),
-        ContextPolicy = space.ContextPolicy ?? new SpaceContextPolicy(),
-        CapabilityBindings = space.CapabilityBindings?.ToArray() ?? [],
-        Inheritance = space.Inheritance ?? DefaultInheritance,
-        ContextReferences = space.ContextReferences?.ToArray() ?? [],
-        Shares = space.Shares?.ToArray() ?? [],
-        Files = space.Files?.ToArray() ?? [],
-        ExamplePairs = space.ExamplePairs?.ToArray() ?? [],
-        LayoutDocument = CloneLayout(space.LayoutDocument),
-        ModelPolicy = (space.ModelPolicy ?? new SpaceModelPolicy(space.ModelName)) with
+        var normalized = space with
         {
-            RequiredCapabilities = space.ModelPolicy?.RequiredCapabilities?.ToArray()
-        },
-        MemoryPolicy = (space.MemoryPolicy ?? DefaultMemoryPolicy) with
+            Revision = Math.Max(1, space.Revision),
+            ActiveConfigurationRevision = Math.Max(1, space.ActiveConfigurationRevision),
+            DraftConfigurationRevision = Math.Max(1, space.DraftConfigurationRevision),
+            DraftBaseActiveRevision = Math.Max(1, space.DraftBaseActiveRevision),
+            ContextPolicy = space.ContextPolicy ?? new SpaceContextPolicy(),
+            CapabilityBindings = space.CapabilityBindings?.ToArray() ?? [],
+            Inheritance = space.Inheritance ?? DefaultInheritance,
+            ContextReferences = space.ContextReferences?.ToArray() ?? [],
+            Shares = space.Shares?.ToArray() ?? [],
+            Files = space.Files?.ToArray() ?? [],
+            ExamplePairs = space.ExamplePairs?.ToArray() ?? [],
+            LayoutDocument = CloneLayout(space.LayoutDocument),
+            ModelPolicy = (space.ModelPolicy ?? new SpaceModelPolicy(space.ModelName)) with
+            {
+                RequiredCapabilities = space.ModelPolicy?.RequiredCapabilities?.ToArray()
+            },
+            MemoryPolicy = (space.MemoryPolicy ?? DefaultMemoryPolicy) with
+            {
+                AllowedScopes = space.MemoryPolicy?.AllowedScopes?.ToArray()
+            }
+        };
+        normalized = normalized with
         {
-            AllowedScopes = space.MemoryPolicy?.AllowedScopes?.ToArray()
-        }
-    };
+            DraftConfiguration = normalized.DraftConfiguration is null ? null : CloneConfiguration(normalized.DraftConfiguration),
+            ConfigurationHistory = normalized.ConfigurationHistory is { Count: > 0 } history
+                ? history.Select(revision => revision with { Configuration = CloneConfiguration(revision.Configuration) }).ToArray()
+                : [new SpaceConfigurationRevision(normalized.ActiveConfigurationRevision,
+                    SpaceConfigurationDocument.From(normalized), normalized.UpdatedAt)]
+        };
+        return normalized;
+    }
 
     private static SpaceDefinition CloneSpace(SpaceDefinition space) => NormalizeStoredSpace(space);
 
+    private static SpaceConfigurationDocument CloneConfiguration(SpaceConfigurationDocument configuration) => configuration with
+    {
+        ExamplePairs = configuration.ExamplePairs.ToArray(),
+        Files = configuration.Files.ToArray(),
+        LayoutDocument = CloneLayout(configuration.LayoutDocument),
+        ModelPolicy = configuration.ModelPolicy is null ? null : configuration.ModelPolicy with
+            { RequiredCapabilities = configuration.ModelPolicy.RequiredCapabilities?.ToArray() },
+        MemoryPolicy = configuration.MemoryPolicy is null ? null : configuration.MemoryPolicy with
+            { AllowedScopes = configuration.MemoryPolicy.AllowedScopes?.ToArray() },
+        CapabilityBindings = configuration.CapabilityBindings.ToArray(),
+        ContextReferences = configuration.ContextReferences.ToArray(),
+        Shares = configuration.Shares.ToArray()
+    };
+
+    private static SpaceDefinition InitializeConfigurationHistory(SpaceDefinition space)
+    {
+        var revision = Math.Max(1, space.ActiveConfigurationRevision);
+        return space with
+        {
+            ActiveConfigurationRevision = revision,
+            DraftConfigurationRevision = revision,
+            DraftBaseActiveRevision = revision,
+            ConfigurationHistory = [new SpaceConfigurationRevision(revision,
+                CloneConfiguration(SpaceConfigurationDocument.From(space)), space.UpdatedAt)]
+        };
+    }
+
+    private static SpaceDefinition AppendConfigurationRevision(SpaceDefinition space,
+        SpaceConfigurationDocument configuration, long revision, DateTimeOffset at)
+    {
+        var history = space.ConfigurationHistory.Where(item => item.Revision != revision).Append(
+            new SpaceConfigurationRevision(revision, CloneConfiguration(configuration), at))
+            .OrderBy(item => item.Revision).TakeLast(100).ToArray();
+        return space with { ConfigurationHistory = history };
+    }
+
+    private static bool ConfigurationEquals(SpaceConfigurationDocument first, SpaceConfigurationDocument second) =>
+        StringComparer.Ordinal.Equals(JsonSerializer.Serialize(first), JsonSerializer.Serialize(second));
+
+    private static void ValidateConfiguration(SpaceDefinition owner, SpaceConfigurationDocument configuration,
+        IReadOnlyList<SpaceDefinition> peers)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var projection = configuration.ApplyTo(owner with { DraftConfiguration = null });
+        ValidateDefinition(projection, peers);
+    }
+
     private static void ValidateLayout(SpaceLayoutDocument layout)
     {
-        if (layout.Nodes is null || layout.Edges is null || layout.Nodes.Count > 500 || layout.Edges.Count > 2000)
+        if (layout.Nodes is null || layout.Edges is null || layout.Nodes.Count > SpaceLayoutDocument.MaximumNodes ||
+            layout.Edges.Count > SpaceLayoutDocument.MaximumEdges || layout.SchemaVersion is < 1 or > SpaceLayoutDocument.CurrentSchemaVersion ||
+            !Enum.IsDefined(layout.State) || layout.Revision < 0 || layout.Groups is null || layout.Comments is null)
             throw new ArgumentException("Space layout graph is missing collections or exceeds supported bounds.", nameof(layout));
         var nodes = new Dictionary<Guid, SpaceLayoutNode>();
         foreach (var node in layout.Nodes)
         {
             if (node is null || node.Id == Guid.Empty || string.IsNullOrWhiteSpace(node.Category) ||
+                node.SchemaVersion < 1 ||
                 string.IsNullOrWhiteSpace(node.Title) || !double.IsFinite(node.X) || !double.IsFinite(node.Y) ||
                 !double.IsFinite(node.Width) || !double.IsFinite(node.Height) || node.Width <= 0 || node.Height <= 0 ||
                 node.Ports is null || node.Metadata is null || !nodes.TryAdd(node.Id, node))
@@ -666,7 +899,23 @@ public sealed partial class SpaceRegistry
             if (from?.Direction != SpaceLayoutPortDirection.Output || to?.Direction != SpaceLayoutPortDirection.Input)
                 throw new ArgumentException($"Layout edge '{edge.Id}' must connect an output port to an input port.", nameof(layout));
         }
+        var groups = new HashSet<Guid>();
+        foreach (var group in layout.Groups)
+            if (group is null || group.Id == Guid.Empty || string.IsNullOrWhiteSpace(group.Title) ||
+                group.NodeIds is null || !groups.Add(group.Id) || group.NodeIds.Distinct().Count() != group.NodeIds.Count ||
+                group.NodeIds.Any(nodeId => !nodes.ContainsKey(nodeId)))
+                throw new ArgumentException("Space layout groups require unique IDs and references to existing nodes.", nameof(layout));
+        var comments = new HashSet<Guid>();
+        foreach (var comment in layout.Comments)
+            if (comment is null || comment.Id == Guid.Empty || string.IsNullOrWhiteSpace(comment.Text) ||
+                !double.IsFinite(comment.X) || !double.IsFinite(comment.Y) || !double.IsFinite(comment.Width) ||
+                !double.IsFinite(comment.Height) || comment.Width <= 0 || comment.Height <= 0 || !comments.Add(comment.Id))
+                throw new ArgumentException("Space layout comments require unique IDs and valid geometry.", nameof(layout));
     }
+
+    /// <summary>Side-effect-free validation entry point for an authored Space graph draft.
+    /// Resource availability and grants remain owned by their respective registries.</summary>
+    public static void ValidateLayoutDocument(SpaceLayoutDocument layout) => ValidateLayout(layout);
 
     private static void ValidateRegistry(IReadOnlyList<SpaceDefinition> spaces)
     {
@@ -693,10 +942,21 @@ public sealed partial class SpaceRegistry
             throw new ArgumentException("Space text fields cannot be null.");
         _ = NormalizeName(space.Name);
         EnsureUniqueName(peers, space.Name, space.Id);
+        if (peers.Any(peer => peer.DraftConfiguration is { } draft &&
+            StringComparer.OrdinalIgnoreCase.Equals(draft.Name.Trim(), space.Name.Trim())))
+            throw new InvalidOperationException($"A saved Space draft already uses the name '{space.Name}'.");
         if (!Enum.IsDefined(space.Kind) || !Enum.IsDefined(space.ThinkingMode))
             throw new ArgumentException("Space type or thinking mode is unknown.");
-        if (space.Position < 0 || space.Revision < 1)
+        if (space.Position < 0 || space.Revision < 1 || space.ActiveConfigurationRevision < 1 ||
+            space.DraftConfigurationRevision < 1 || space.DraftBaseActiveRevision < 1 ||
+            space.DraftBaseActiveRevision > space.ActiveConfigurationRevision)
             throw new ArgumentOutOfRangeException(nameof(space), "Space position and revision are invalid.");
+        if (space.ConfigurationHistory is null || space.ConfigurationHistory.Count is < 1 or > 100 ||
+            space.ConfigurationHistory.Any(revision => revision is null || revision.Revision < 1 ||
+                revision.Revision > space.ActiveConfigurationRevision || revision.Configuration is null) ||
+            space.ConfigurationHistory.Select(revision => revision.Revision).Distinct().Count() != space.ConfigurationHistory.Count ||
+            !space.ConfigurationHistory.Any(revision => revision.Revision == space.ActiveConfigurationRevision))
+            throw new ArgumentException("Space configuration history is invalid or missing its active revision.");
         if (space.ContextPolicy is { } context &&
             (!Enum.IsDefined(context.WebAccess) || context.MaximumRetrievedItems is < 0 or > 1000))
             throw new ArgumentException("Space context policy is invalid.");
@@ -704,8 +964,11 @@ public sealed partial class SpaceRegistry
             (!Enum.IsDefined(memory.DefaultScope) || memory.AllowedScopes?.Any(scope => !Enum.IsDefined(scope)) == true ||
              memory.AllowedScopes is { } allowed && !allowed.Contains(memory.DefaultScope)))
             throw new ArgumentException("Space memory policy is invalid.");
-        if (space.ModelPolicy?.RequiredCapabilities?.Any(string.IsNullOrWhiteSpace) == true)
-            throw new ArgumentException("Required model capabilities cannot be empty.");
+        if (space.ModelPolicy is { } modelPolicy &&
+            (modelPolicy.RequiredCapabilities?.Any(string.IsNullOrWhiteSpace) == true ||
+             modelPolicy.DefaultModelId is not null && string.IsNullOrWhiteSpace(modelPolicy.DefaultModelId) ||
+             modelPolicy.ProviderConstraint is not null && string.IsNullOrWhiteSpace(modelPolicy.ProviderConstraint)))
+            throw new ArgumentException("Model policy identifiers and required capabilities must be non-empty when supplied.");
         if (space.CapabilityBindings is null || space.CapabilityBindings.Any(binding => binding is null ||
                 string.IsNullOrWhiteSpace(binding.CapabilityId) || !Enum.IsDefined(binding.Kind) || !Enum.IsDefined(binding.Override)) ||
             space.CapabilityBindings.Select(binding => (binding.Kind, binding.CapabilityId)).Distinct().Count() != space.CapabilityBindings.Count)
@@ -714,7 +977,11 @@ public sealed partial class SpaceRegistry
                 reference.ContextId == Guid.Empty || string.IsNullOrWhiteSpace(reference.OwnerAppId) ||
                 string.IsNullOrWhiteSpace(reference.CanonicalEntityId) || !Enum.IsDefined(reference.Kind) ||
                 reference.HostedFileId == Guid.Empty ||
-                !Enum.IsDefined(reference.Permission) || !Enum.IsDefined(reference.IndexState)) ||
+                !Enum.IsDefined(reference.Permission) || !Enum.IsDefined(reference.IndexState) ||
+                reference.ContentSha256 is { } digest && (reference.Kind != SpaceContextReferenceKind.File ||
+                    reference.OwnerAppId != "files" || !IsSha256Digest(digest)) ||
+                reference.ParentFolderId is { } parentFolderId && (parentFolderId == Guid.Empty ||
+                    reference.Kind != SpaceContextReferenceKind.File || reference.OwnerAppId != "files")) ||
             space.ContextReferences.Select(reference => reference.ContextId).Distinct().Count() != space.ContextReferences.Count)
             throw new ArgumentException("Space context references must be valid and unique.");
         if (space.Shares is null || space.Shares.Any(grant => grant is null ||
@@ -723,12 +990,17 @@ public sealed partial class SpaceRegistry
             throw new ArgumentException("Space share grants must be valid and unique.");
         if (space.Inheritance is null || space.ExamplePairs is null || space.Files is null)
             throw new ArgumentException("Space configuration collections and inheritance policy are required.");
+        if (space.Files.Any(file => file is null || string.IsNullOrWhiteSpace(file.Path) ||
+            string.IsNullOrWhiteSpace(file.DisplayName) || !Enum.IsDefined(file.Permission)))
+            throw new ArgumentException("Space file references must have valid identifying metadata.");
         if (space.CapabilityCategoryPolicy is { } categoryPolicy &&
             (!Enum.IsDefined(categoryPolicy.Skills) || !Enum.IsDefined(categoryPolicy.Plugins) ||
              !Enum.IsDefined(categoryPolicy.Apps) || !Enum.IsDefined(categoryPolicy.Models) ||
              !Enum.IsDefined(categoryPolicy.Memory)))
             throw new ArgumentException("Space capability category policy contains an unknown state.");
         if (space.LayoutDocument is { } layout) ValidateLayout(layout);
+        if (space.DraftConfiguration is { } draft)
+            ValidateConfiguration(space with { DraftConfiguration = null }, draft, peers);
         if (space.ParentSpaceId is { } parent) ValidateParent(peers.Append(space).ToArray(), space.Id, parent);
     }
 
@@ -748,6 +1020,28 @@ public sealed partial class SpaceRegistry
         }
     }
 
+    private static bool AncestryMatches(IReadOnlyList<SpaceDefinition> spaces, Guid spaceId,
+        IReadOnlyList<SpaceActivationAncestryRevision> expected)
+    {
+        if (expected is null || expected.Count is < 1 or > 128 ||
+            expected.Any(revision => revision is null || revision.SpaceId == Guid.Empty || revision.SpaceRevision < 1)) return false;
+        var chain = new List<SpaceDefinition>();
+        var seen = new HashSet<Guid>();
+        var id = spaceId;
+        while (true)
+        {
+            if (chain.Count >= 128 || !seen.Add(id)) return false;
+            var current = spaces.SingleOrDefault(space => space.Id == id);
+            if (current is null || current.IsArchived) return false;
+            chain.Add(current);
+            if (current.ParentSpaceId is not { } parentId) break;
+            id = parentId;
+        }
+        chain.Reverse();
+        return chain.Count == expected.Count && chain.Select((space, index) =>
+            space.Id == expected[index].SpaceId && space.Revision == expected[index].SpaceRevision).All(matches => matches);
+    }
+
     private static SpaceDefinition FindRequired(IReadOnlyList<SpaceDefinition> spaces, Guid id) =>
         spaces.FirstOrDefault(space => space.Id == id)
         ?? throw new KeyNotFoundException($"Space '{id}' was not found.");
@@ -765,6 +1059,10 @@ public sealed partial class SpaceRegistry
         if (spaces.Any(space => space.Id != exceptId && space.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException($"A Space named '{name}' already exists.");
     }
+
+    private static bool IsSha256Digest(string value) => value.Length == 71 &&
+        value.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) &&
+        value.AsSpan(7).IndexOfAnyExcept("0123456789abcdefABCDEF") < 0;
 
     private static string MakeUniqueName(IReadOnlyList<SpaceDefinition> spaces, string desired)
     {
