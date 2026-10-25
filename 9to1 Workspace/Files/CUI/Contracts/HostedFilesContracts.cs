@@ -209,7 +209,13 @@ public sealed record FilesPermissionChangePreview(
 	IReadOnlyList<FilesPrincipalGrant> CurrentEffectiveGrants,
 	IReadOnlyList<FilesPrincipalGrant> ResultingEffectiveGrants,
 	IReadOnlyList<string> ChangedPrincipalIds,
-	bool RequiresApproval);
+	bool RequiresApproval,
+	IReadOnlyList<FilesItemPermissionChange>? AffectedItems = null);
+
+public sealed record FilesItemPermissionChange(
+	HostedItemId ItemId,
+	IReadOnlyList<FilesPrincipalGrant> CurrentEffectiveGrants,
+	IReadOnlyList<FilesPrincipalGrant> ResultingEffectiveGrants);
 
 public sealed record FilesShare(
 	FilesShareId Id,

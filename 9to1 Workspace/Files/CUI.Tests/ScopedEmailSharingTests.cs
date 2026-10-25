@@ -12,6 +12,7 @@ internal static class ScopedEmailSharingTests
         await EditorScopeRevocationAndReplay();
         await ExistingRecipientRoleReplacementSurvivesRestart();
         await ExistingRecipientExpiryReplacementSurvivesRestart();
+        await EffectiveGrantsAndMovePreviewPreserveDirectAndInheritedScopes();
         await ExpiryAndLastPublicationFence();
         await LegacyAndCorruptStateArePreserved();
         await MissingOrReplacedStoreCannotBeRecreated();
@@ -171,6 +172,50 @@ internal static class ScopedEmailSharingTests
         Denied(await f.Restart().OpenSharedViewAsync(current.Share.Id, f.RecipientGuard), "expiry remains enforced after restart");
         var replay = await f.Provider.GrantEmailAccessAsync(changed, f.OwnerGuard);
         Require(replay.IsSuccess && replay.Value!.Share.Id == current.Share.Id, "exact operation replay cannot create another grant");
+    }
+
+    private static async Task EffectiveGrantsAndMovePreviewPreserveDirectAndInheritedScopes()
+    {
+        using var f = new Fixture(); await f.Initialize();
+        var rootGrant = await f.Request(FilesAccessRole.Viewer);
+        Require((await f.Provider.GrantEmailAccessAsync(rootGrant, f.OwnerGuard)).IsSuccess, "ancestor Viewer grant commits");
+        var child = (await f.Provider.GetAsync(f.Child.Id, default)).Value!;
+        var childGrant = await f.Request(FilesAccessRole.Editor);
+        childGrant = childGrant with
+        {
+            ItemId = f.Child.Id,
+            ExpectedRevision = child.CurrentRevisionId!.Value,
+            RecipientPrincipalId = f.WrongPrincipal,
+        };
+        Require((await f.Provider.GrantEmailAccessAsync(childGrant, f.OwnerGuard)).IsSuccess, "child Editor grant commits independently");
+
+        var grants = await f.Provider.GetGrantsAsync(f.Child.Id, null);
+        Require(grants.Items.Count == 3, "grant listing includes owner, direct and inherited scopes");
+        var owner = grants.Items.Single(grant => grant.Role == FilesAccessRole.Owner);
+        var inherited = grants.Items.Single(grant => grant.PrincipalId == f.Recipient);
+        var direct = grants.Items.Single(grant => grant.PrincipalId == f.WrongPrincipal);
+        Require(owner.PrincipalId == f.Owner && owner.Origin == FilesGrantOrigin.Direct &&
+            owner.GrantedOnItemId == f.Child.Id, "canonical item owner is explicit in the grant projection");
+        Require(inherited.Role == FilesAccessRole.Viewer && inherited.Origin == FilesGrantOrigin.Inherited &&
+            inherited.GrantedOnItemId == f.Root.Id, "ancestor grant is identified as inherited from its canonical folder");
+        Require(direct.Role == FilesAccessRole.Editor && direct.Origin == FilesGrantOrigin.Direct &&
+            direct.GrantedOnItemId == f.Child.Id, "item grant remains a direct Editor scope");
+
+        var preview = await f.Provider.PreviewMovePermissionsAsync(f.Child.Id, f.Sibling.Id,
+            FilesPermissionInheritancePolicy.RequireApprovalOnChange);
+        Require(preview.CurrentEffectiveGrants.Any(grant => grant.PrincipalId == f.Recipient && grant.Origin == FilesGrantOrigin.Inherited) &&
+            !preview.ResultingEffectiveGrants.Any(grant => grant.PrincipalId == f.Recipient),
+            "moving under a private folder removes only the source ancestor's inherited grant");
+        Require(preview.ResultingEffectiveGrants.Any(grant => grant.PrincipalId == f.WrongPrincipal && grant.Origin == FilesGrantOrigin.Direct),
+            "moving preserves an explicit direct grant on the canonical item");
+        Require(preview.ChangedPrincipalIds.SequenceEqual(new[] { f.Recipient }) && preview.RequiresApproval,
+            "the preview identifies the affected principal and marks policy-required review");
+        Require(preview.AffectedItems!.Select(change => change.ItemId).OrderBy(id => id.Value)
+                .SequenceEqual(new[] { f.Child.Id, f.Grandchild.Id }.OrderBy(id => id.Value)) &&
+            preview.AffectedItems.All(change => !change.ResultingEffectiveGrants.Any(grant => grant.PrincipalId == f.Recipient)),
+            "folder move preview includes inherited permission effects for every descendant");
+        Require((await f.Provider.GetAsync(f.Child.Id, default)).Value!.ParentId == f.Root.Id,
+            "preview does not move the item or mutate its ACL");
     }
 
     private static async Task ExpiryAndLastPublicationFence()
