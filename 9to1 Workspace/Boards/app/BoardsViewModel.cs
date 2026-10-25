@@ -16,6 +16,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
+using CakeOS.Apps.Boards.Contract;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -333,10 +334,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 if (_session is ContractSessionAdapter pageAdapter)
                 {
                     var pageId = await pageAdapter.AddPageAsync(CurrentSection().Id, cancellationToken: cancellationToken);
-                    var addedPage = _session.Document.Sections.SelectMany(sectionItem => sectionItem.Pages)
+                    var createdPage = _session.Document.Sections.SelectMany(sectionItem => sectionItem.Pages)
                         .First(pageItem => pageItem.Id == pageId);
                     _selectedPageId = pageId;
-                    SelectExistingBlock(addedPage);
+                    SelectExistingBlock(createdPage);
                     SyncSelectedInkView();
                     PushDocumentToBindings();
                     RequestRebuild();

@@ -103,7 +103,7 @@ public sealed class RecentBoardCatalog
                 if (document?.RichNotes is not { } notes)
                     throw new InvalidDataException("The file does not contain a Boards notes document.");
                 var page = notes.Sections.SelectMany(section => section.Pages).FirstOrDefault();
-                var preview = page?.Blocks.Select(block => block.Text).FirstOrDefault(text => !string.IsNullOrWhiteSpace(text))
+                var preview = page?.Blocks.Select(block => block.PlainText).FirstOrDefault(text => !string.IsNullOrWhiteSpace(text))
                     ?? (page is null ? "No pages" : $"{notes.Sections.Sum(section => section.Pages.Count)} pages · {notes.Sections.Count} sections");
                 result.Add(new RecentBoardCard(reference.Path, reference.Path, notes.Title, preview,
                     document.ModifiedUtc, true));
@@ -134,7 +134,7 @@ public sealed class RecentBoardCatalog
                 var page = section?.Pages.FirstOrDefault(page => page.Id == reference.PageId);
                 if (section is null || page is null) continue;
                 result.Add(new RecentPageCard(reference.Path, section.Id, page.Id, notes.Title, page.Title,
-                    page.Blocks.Select(block => block.Text).FirstOrDefault(text => !string.IsNullOrWhiteSpace(text)) ?? "No text preview",
+                    page.Blocks.Select(block => block.PlainText).FirstOrDefault(text => !string.IsNullOrWhiteSpace(text)) ?? "No text preview",
                     reference.OpenedUtc));
             }
             catch (Exception error) when (IsExpectedBoardReadFailure(error))
