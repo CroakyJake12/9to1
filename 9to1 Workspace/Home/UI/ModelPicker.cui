@@ -96,7 +96,7 @@
                                 <Button action="ClearReasoningLevel" content="Clear level" margin="6 0 0 0" accessible-name="Clear the saved reasoning level default" />
                               </If>
                               <Else>
-                                <Button action="SetReasoningLevel" content="Set level" margin="6 0 0 0" accessible-name="Set a reasoning level default" />
+                                <Text text="Reasoning choices are unavailable for this model." foreground="{Resource CuiTextSoftBrush}" margin="6 0 0 0" />
                               </Else>
                             </Else>
                           </Container>
