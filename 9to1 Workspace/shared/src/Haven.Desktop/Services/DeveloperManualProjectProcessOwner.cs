@@ -28,6 +28,8 @@ public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceServi
     private readonly List<Operation> _operations = [];
     private bool _sealed; private Task? _close;
     private readonly CancellationTokenSource _retirement = new();
+    private readonly List<Exception> _retirementErrors = [];
+    private Task? _retirementRequest;
     private sealed class Operation
     {
         internal readonly CloudflareOriginalTaskLedger Sources = new();
@@ -128,9 +130,29 @@ public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceServi
         return new(project.Reference, selected.Configuration.Id, selected.DefinitionSha256, operationId, result, outcome,
             cleanupCompleted, Array.AsReadOnly(sources.OriginalErrors.ToArray()));
     }
+    public void RequestOriginalRetirement()
+    {
+        DemandExternalOriginalJoin(); TaskCompletionSource admitted;
+        lock (_gate)
+        {
+            _sealed = true;
+            if (_retirementRequest is not null) return;
+            admitted = new(TaskCreationOptions.RunContinuationsAsynchronously); _retirementRequest = admitted.Task;
+        }
+        try { CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { _retirement.Cancel(); return true; }); }
+        catch (Exception error)
+        {
+            lock (_gate) _retirementErrors.Add(error);
+            throw;
+        }
+        finally { admitted.SetResult(); } // Joins the actual finite callback cohort before CTS disposal.
+    }
     public Task CloseAndDrainOriginalAsync()
     {
         DemandExternalOriginalJoin();
+        try { RequestOriginalRetirement(); }
+        catch (Exception error)
+        { lock (_gate) if (!_retirementErrors.Any(prior => ReferenceEquals(prior, error))) _retirementErrors.Add(error); }
         lock (_gate)
         {
             if (_close is not null) return _close; _sealed = true;
@@ -141,8 +163,10 @@ public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceServi
     private async Task ClosePublishedAsync(Task begin, Operation[] operations)
     {
         await begin.ConfigureAwait(false); using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-        var errors = new List<Exception>();
-        try { _retirement.Cancel(); } catch (Exception error) { errors.Add(error); }
+        var errors = new List<Exception>(); Task? retirement;
+        lock (_gate) retirement = _retirementRequest;
+        if (retirement is not null) await retirement.ConfigureAwait(false);
+        lock (_gate) errors.AddRange(_retirementErrors);
         foreach (var operation in operations)
         {
             try
