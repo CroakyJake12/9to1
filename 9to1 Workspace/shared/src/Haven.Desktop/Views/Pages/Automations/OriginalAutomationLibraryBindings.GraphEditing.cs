@@ -354,6 +354,8 @@ internal sealed partial class OriginalAutomationLibraryBindings
                             _epoch++; _issued.Clear(); _rows = []; _next = null; _currentPage = null; _creationRows = [];
                             ClearSelection(); _status = "Graph publication completed. Refresh the library to open its current saved revision.";
                         }
+                        else if (completed.Kind == CanonicalAutomationGraphPublicationCompletionKind.DeclinedBeforeEffect)
+                            _graphEditStatus = completed.Message + " Your local draft is preserved; submit this action again to request a fresh Home review.";
                         else _graphEditStatus = completed.Message + " Local edits remain in this session; no replacement publication was started.";
                     }
                 }
