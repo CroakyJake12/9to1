@@ -6,7 +6,12 @@ namespace Haven.Application.Automations;
 
 /// <summary>Compiled owning-app bindings, never a catalogue supplied by graph JSON or model output.</summary>
 public sealed record AutomationNodeGraphBinding(string TypeId, int TypeVersion, string AppId, string CapabilityId,
-    Func<string?, bool> SupportsEntity, Func<GraphNode, AutomationGraphNodeDefinition?> Project);
+    Func<string?, bool> SupportsEntity, Func<GraphNode, AutomationGraphNodeDefinition?> Project)
+{
+    /// <summary>Compiled owning-app routing only. Graph JSON cannot supply branch labels.
+    /// Keys must be declared output ports; unmapped output ports remain unconditional.</summary>
+    public IReadOnlyDictionary<string, string> OutputBranches { get; init; } = new Dictionary<string, string>();
+}
 
 /// <summary>An execution projection receipt is not permission to activate or dispatch its graph.</summary>
 public sealed record AutomationGraphProjection(Guid GraphId, long SourceRevision, int SourceSchemaVersion,
@@ -17,7 +22,12 @@ public sealed record AutomationGraphProjection(Guid GraphId, long SourceRevision
 public sealed class NodeGraphAutomationAdapter(NodeGraphSchemaRegistry schemas,
     IEnumerable<AutomationNodeGraphBinding> trustedBindings)
 {
-    private readonly AutomationNodeGraphBinding[] _bindings = trustedBindings.ToArray();
+    private readonly AutomationNodeGraphBinding[] _bindings = trustedBindings.Select(binding => binding with
+    {
+        OutputBranches = new System.Collections.ObjectModel.ReadOnlyDictionary<string, string>(
+            (binding.OutputBranches ?? throw new ArgumentException("A trusted output-branch map cannot be null.", nameof(trustedBindings)))
+                .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal))
+    }).ToArray();
 
     public AutomationGraphProjection Compile(GraphDocument source)
     {
@@ -31,13 +41,19 @@ public sealed class NodeGraphAutomationAdapter(NodeGraphSchemaRegistry schemas,
                 string.Join(", ", issues.Select(issue => issue.Code)));
         var nodes = new List<AutomationGraphNodeDefinition>();
         var ports = new Dictionary<Guid, (Guid NodeId, string Key)>();
+        var branches = new Dictionary<Guid, string>();
         foreach (var node in graph.Nodes)
         {
             var matches = _bindings.Where(binding => binding.TypeId == node.TypeId && binding.TypeVersion == node.TypeVersion &&
                 binding.AppId == node.AppId && binding.CapabilityId == node.CapabilityId).ToArray();
             if (matches.Length != 1 || !matches[0].SupportsEntity(node.EntityId))
                 throw new InvalidDataException("The node has no unambiguous owning Automation binding.");
-            var projected = matches[0].Project(node);
+            var binding = matches[0];
+            if (binding.OutputBranches.Any(pair => pair.Value is null || pair.Value.Length is < 1 or > 32 ||
+                pair.Value.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not ('_' or '-')) ||
+                !node.Ports.Any(port => port.Key == pair.Key && port.Direction == GraphPortDirection.Output)))
+                throw new InvalidDataException("A trusted branch map must name registered output ports and bounded literal branch labels.");
+            var projected = binding.Project(node);
             if (projected is null || projected.Id != node.NodeId || string.IsNullOrWhiteSpace(projected.Category))
                 throw new InvalidDataException("The owning binding changed or omitted the canonical node identity.");
             if (projected.EffectivePorts.Count != node.Ports.Count)
@@ -51,6 +67,8 @@ public sealed class NodeGraphAutomationAdapter(NodeGraphSchemaRegistry schemas,
                         ? AutomationGraphPortDirection.Input : AutomationGraphPortDirection.Output))
                     throw new InvalidDataException("The owning binding changed a canonical port identity or type.");
                 ports.Add(port.PortId, (node.NodeId, port.Key));
+                if (port.Direction == GraphPortDirection.Output && binding.OutputBranches.TryGetValue(port.Key, out var branch))
+                    branches.Add(port.PortId, branch);
             }
             nodes.Add(projected);
         }
@@ -60,7 +78,8 @@ public sealed class NodeGraphAutomationAdapter(NodeGraphSchemaRegistry schemas,
             var input = ports[connection.InputPortId];
             return new AutomationGraphEdgeDefinition(output.NodeId, input.NodeId)
             {
-                Id = connection.ConnectionId, FromPortId = output.Key, ToPortId = input.Key
+                Id = connection.ConnectionId, FromPortId = output.Key, ToPortId = input.Key,
+                Branch = branches.GetValueOrDefault(connection.OutputPortId) ?? ""
             };
         }).ToArray();
         // The existing codec supplies the Automation model's structural validation and detached payload.

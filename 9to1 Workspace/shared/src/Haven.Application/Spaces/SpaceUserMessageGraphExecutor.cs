@@ -19,7 +19,7 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput) : IAut
     public bool CanExecute(AutomationGraphNodeDefinition node) => node.Category == SpaceUserMessageGraph.Category &&
         node.ActionKey is SpaceUserMessageGraph.SourceType or SpaceUserMessageGraph.TruncateType or SpaceUserMessageGraph.OutputType or
             SpaceUserMessageGraph.ExtractNumbersType or SpaceUserMessageGraph.NumbersToTextType or SpaceUserMessageGraph.SearchWordsType or SpaceUserMessageGraph.MatchesToTextType or
-            SpaceUserMessageGraph.ParseJsonType or SpaceUserMessageGraph.SelectJsonType or SpaceUserMessageGraph.RenderJsonType or SpaceUserMessageGraph.JsonStringType;
+            SpaceUserMessageGraph.ParseJsonType or SpaceUserMessageGraph.SelectJsonType or SpaceUserMessageGraph.RenderJsonType or SpaceUserMessageGraph.JsonStringType or SpaceUserMessageGraph.RouteWordsType or SpaceUserMessageGraph.MergeType;
     public Task<AutomationGraphNodeExecutionResult> ExecuteAsync(AutomationGraphNodeExecutionContext context, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
@@ -47,6 +47,15 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput) : IAut
             return Task.FromResult(ExtractNumbers(text, context.Node.Parameters["locale"], token));
         if (context.Node.ActionKey == SpaceUserMessageGraph.SearchWordsType)
             return Task.FromResult(SearchWords(text, context.Node.Parameters, token));
+        if (context.Node.ActionKey == SpaceUserMessageGraph.RouteWordsType)
+        {
+            var branch = FindWord(text, context.Node.Parameters, 0, token) >= 0 ? "true" : "false";
+            return Task.FromResult(new AutomationGraphNodeExecutionResult(true,
+                "Selected one branch using explicit literal word/phrase matching semantics.", text, branch,
+                new Dictionary<string, AutomationGraphValue> { [branch] = AutomationGraphValue.FromString(text) }));
+        }
+        if (context.Node.ActionKey == SpaceUserMessageGraph.MergeType)
+            return Task.FromResult(Result(text, "Joined exactly one active typed branch value."));
         if (context.Node.ActionKey == SpaceUserMessageGraph.TruncateType)
         {
             var maximum = int.Parse(context.Node.Parameters["maximumTextElements"], CultureInfo.InvariantCulture);
@@ -204,29 +213,36 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput) : IAut
     private static AutomationGraphNodeExecutionResult SearchWords(string text, IReadOnlyDictionary<string, string> configuration, CancellationToken token)
     {
         var query = configuration["query"];
-        var comparison = configuration["comparison"] == "ordinal" ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        var wholeWord = configuration["boundary"] == "whole-word";
         var matches = new List<SpacePhraseMatch>();
         var more = false;
         var offset = 0;
         while (offset <= text.Length - query.Length)
         {
-            token.ThrowIfCancellationRequested();
-            var found = text.IndexOf(query, offset, comparison);
+            var found = FindWord(text, configuration, offset, token);
             if (found < 0) break;
-            var end = found + query.Length;
-            if (!wholeWord || !IsWordBefore(text, found) && !IsWordAfter(text, end))
-            {
-                if (matches.Count == MaximumResults) { more = true; break; }
-                matches.Add(new(found, query.Length, text.Substring(found, query.Length)));
-                offset = end; // Explicitly non-overlapping matches.
-            }
-            else offset = found + 1;
+            if (matches.Count == MaximumResults) { more = true; break; }
+            matches.Add(new(found, query.Length, text.Substring(found, query.Length)));
+            offset = found + query.Length; // Explicitly non-overlapping matches.
         }
         return Structured(SpaceUserMessageGraph.MatchesDataType,
             new SpacePhraseMatches(query, configuration["locale"], configuration["comparison"], configuration["boundary"],
                 "Literal non-overlapping ordinal Unicode matching; whitespace and diacritics are significant, no regex/stemming/normalisation or locale-specific collation. Whole-word edges exclude Unicode letters, numbers, connector punctuation and combining marks. Spans are UTF-16 offsets in this node's input.",
                 matches, more), "Matched literal words or phrases under the explicit comparison and boundary semantics.");
+    }
+    private static int FindWord(string text, IReadOnlyDictionary<string, string> configuration, int offset, CancellationToken token)
+    {
+        var query = configuration["query"];
+        var comparison = configuration["comparison"] == "ordinal" ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var wholeWord = configuration["boundary"] == "whole-word";
+        while (offset <= text.Length - query.Length)
+        {
+            token.ThrowIfCancellationRequested();
+            var found = text.IndexOf(query, offset, comparison);
+            if (found < 0) return -1;
+            if (!wholeWord || !IsWordBefore(text, found) && !IsWordAfter(text, found + query.Length)) return found;
+            offset = found + 1;
+        }
+        return -1;
     }
     private static bool IsWordBefore(string text, int offset) => offset > 0 &&
         Rune.DecodeLastFromUtf16(text.AsSpan(0, offset), out var value, out _) == System.Buffers.OperationStatus.Done && IsWord(value);
