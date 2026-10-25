@@ -25,6 +25,7 @@ internal interface IChatComposerTaskActions
     bool CanSteer { get; }
     bool CanQueue { get; }
     bool CanStop { get; }
+    bool CanPause => false;
     bool CanResume => false;
     bool HasSendModePreference => false;
     TaskFollowUpMode? PreferredSendMode => null;
@@ -39,6 +40,7 @@ internal interface IChatComposerTaskActions
             return ValueTask.FromException(new InvalidOperationException("The selected task submit action is unavailable. The draft was retained."));
         return steer ? Steer() : Queue();
     }
+    ValueTask Pause() => ValueTask.FromException(new NotSupportedException("This task source has no original pause command."));
     ValueTask Resume() => ValueTask.FromException(new NotSupportedException("This task source has no original resume command."));
     ValueTask Steer();
     ValueTask Queue();

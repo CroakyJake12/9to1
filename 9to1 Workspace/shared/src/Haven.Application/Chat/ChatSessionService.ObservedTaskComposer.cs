@@ -59,6 +59,24 @@ public sealed partial class ChatSessionService
         async Task<TaskRunOriginalRunControlAvailability?> ReadAsync() => !same.Owner.HasCommandAuthority ? null :
             await same.Owner.GetOriginalRunControlAvailabilityAsync(same.Context.TaskId, same.Context.ExecutionId, token).ConfigureAwait(false);
     }
+    /// <summary>Request the real original producer's pause. Only its eventual result is an
+    /// acknowledgement; requesting this never advertises a resumable boundary.</summary>
+    public async Task<TaskRunOriginalRunControlResult> PauseObservedTaskComposerAsync(
+        TaskRunOriginalInitialChatObservationLease sameObservation, CancellationToken commandToken)
+    {
+        var same = RequireObservedTaskComposerIdentity(sameObservation);
+        await safety.EnsureMayActAsync(same.Context.ContextId, "chat.pause", commandToken).ConfigureAwait(false);
+        var controls = await same.Owner.GetOriginalRunControlAvailabilityAsync(
+            same.Context.TaskId, same.Context.ExecutionId, commandToken).ConfigureAwait(false);
+        if (controls.CanonicalTaskContext.ContextId != sameObservation.ConversationId || !controls.CanPause)
+            throw new InvalidOperationException("The original task has no supported pause operation.");
+        var result = await same.Owner.PauseOriginalRunAsync(same.Context.TaskId, same.Context.ExecutionId, commandToken).ConfigureAwait(false);
+        if (result.CanonicalTaskContext.TaskId != same.Context.TaskId ||
+            result.CanonicalTaskContext.ExecutionId != same.Context.ExecutionId ||
+            result.CanonicalTaskContext.ContextId != sameObservation.ConversationId || result.Kind != TaskRunOriginalRunControlKind.Pause)
+            throw new InvalidDataException("The original pause acknowledgement belongs to another task operation.");
+        return result;
+    }
     public async Task<TaskRunOriginalResumeObservationLease> StartObservedTaskComposerResumeAsync(
         TaskRunOriginalInitialChatObservationLease sameObservation, TaskRunOriginalRunControlAvailability observed,
         CancellationToken observationToken)

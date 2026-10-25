@@ -38,14 +38,14 @@ public sealed partial class NewChatPage
         if (current?.Owner.CanSubmitFollowUp != true) return false;
         var target = CaptureOriginalConversationTarget();
         lock (_originalSendGate)
-            return !_nativeTaskFollowUpAdmissions.Contains(target) &&
+            return !_nativeTaskPauseAdmissions.Contains(target) && !_nativeTaskFollowUpAdmissions.Contains(target) &&
                 (!_nativeTaskFollowUpAcks.TryGetValue(target, out var accepted) || accepted.Revision != Volatile.Read(ref _originalComposerRevision));
     }
     private bool CanStopNativeComposerTask()
     {
         var current = CurrentTaskComposerPresentation(requireLive: false);
         if (current?.Owner.CurrentAcknowledgedContext is null) return false;
-        lock (_originalSendGate) return !_originalTaskStopAdmissionReserved && _actualOriginalTaskStop is not { IsCompleted: false } &&
+        lock (_originalSendGate) return !_nativeTaskPauseAdmissions.Contains(CaptureOriginalConversationTarget()) && !_originalTaskStopAdmissionReserved && _actualOriginalTaskStop is not { IsCompleted: false } &&
             (_isSending || _nativeTaskControls.TryGetValue(CaptureOriginalConversationTarget(), out var available) && available.CanStop);
     }
     private ValueTask StopNativeComposerTask()
@@ -54,6 +54,67 @@ public sealed partial class NewChatPage
             return ValueTask.FromException(new InvalidOperationException("This task has no current stop operation."));
         lock (_originalSendGate) return new(_actualOriginalTaskStop
             ?? throw new InvalidOperationException("The original task stop has not published its driver."));
+    }
+    private readonly HashSet<OriginalConversationTarget> _nativeTaskPauseAdmissions = [];
+    private (OriginalConversationTarget Target, TaskRunOriginalRunControlResult Result)? _nativeTaskPauseResult;
+    public TaskRunOriginalRunControlResult? CanonicalTaskPauseAcknowledgement =>
+        _nativeTaskPauseResult is { } actual && actual.Target == CaptureOriginalConversationTarget() ? actual.Result : null;
+
+    private bool CanPauseNativeComposerTask()
+    {
+        var current = CurrentTaskComposerPresentation(requireLive: false);
+        if (_safetyLocked || current?.Owner.CurrentAcknowledgedContext is null) return false;
+        var target = CaptureOriginalConversationTarget();
+        lock (_originalSendGate) return !_nativeTaskPauseAdmissions.Contains(target) &&
+            !_nativeTaskResumeAdmissions.Contains(target) && !_originalTaskStopAdmissionReserved &&
+            _actualOriginalTaskStop is not { IsCompleted: false } &&
+            (_isSending || _nativeTaskControls.TryGetValue(target, out var controls) && controls.CanPause);
+    }
+    private Task PauseNativeComposerTaskAsync()
+    {
+        DemandOriginalChatCurrent();
+        if (!CanPauseNativeComposerTask()) throw new InvalidOperationException("The original task has no supported pause operation.");
+        var current = CurrentTaskComposerPresentation(requireLive: false)!;
+        var target = CaptureOriginalConversationTarget();
+        lock (_originalSendGate)
+            if (!_nativeTaskPauseAdmissions.Add(target)) throw new InvalidOperationException("A pause is already pending for this task.");
+        try
+        {
+            return _originalWork.RunAsync(async original =>
+            {
+                BindOriginalConversationTarget(original, target);
+                try
+                {
+                    original.DemandPublication();
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
+                    {
+                        SetProjectionStatus("Stopping task at its supported pause boundary...");
+                        _scene.ComposerView.RefreshSurface();
+                    })).GetTask()).ConfigureAwait(false);
+                    original.DemandPublication();
+                    var actual = current.Owner.AcquireActualComposerPause(original.Token);
+                    var result = await original.AwaitAsync(actual).ConfigureAwait(false);
+                    _nativeTaskPauseResult = (target, result); // Actual owner ACK survives withdrawal.
+                    if (!original.IsPublicationCurrent) return;
+                    await RefreshNativeTaskControlsAsync(original, current).ConfigureAwait(false);
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
+                        SetProjectionStatus(result.Disposition == TaskRunOriginalRunControlDisposition.AlreadyCompletedByOriginal
+                            ? "The original task completed before its pause was acknowledged."
+                            : result.CanResumeUnstartedOriginal || result.CanResumeOriginalToolCheckpoint
+                                ? "Task paused. Its original continuation is available."
+                                : "The original task is suspended and requires inspection before continuation."))).GetTask()).ConfigureAwait(false);
+                }
+                catch (Exception cause) { original.Retain(cause); throw; }
+                finally
+                {
+                    lock (_originalSendGate) _nativeTaskPauseAdmissions.Remove(target);
+                    if (original.IsPublicationCurrent)
+                        await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                            original.RunAcceptedPublicationCallback(_scene.ComposerView.RefreshSurface)).GetTask()).ConfigureAwait(false);
+                }
+            });
+        }
+        catch { lock (_originalSendGate) _nativeTaskPauseAdmissions.Remove(target); throw; }
     }
     private Task AdmitNativeTaskFollowUpAsync(TaskFollowUpMode mode)
     {
@@ -180,7 +241,7 @@ public sealed partial class NewChatPage
     {
         if (_safetyLocked || CurrentTaskComposerPresentation(requireLive: false) is null) return false;
         var target = CaptureOriginalConversationTarget();
-        lock (_originalSendGate) return !_nativeTaskResumeAdmissions.Contains(target) &&
+        lock (_originalSendGate) return !_nativeTaskPauseAdmissions.Contains(target) && !_nativeTaskResumeAdmissions.Contains(target) &&
             _nativeTaskControls.TryGetValue(target, out var controls) &&
             (controls.CanResumeUnstartedOriginal || controls.CanResumeOriginalToolCheckpoint || controls.CanResumeColdOriginal);
     }
@@ -305,6 +366,8 @@ public sealed partial class NewChatPage
         public bool CanSteer => page.CanSubmitNativeTaskFollowUp();
         public bool CanQueue => page.CanSubmitNativeTaskFollowUp();
         public bool CanStop => page.CanStopNativeComposerTask();
+        public bool CanPause => page.CanPauseNativeComposerTask();
+        public ValueTask Pause() => new(page.PauseNativeComposerTaskAsync());
         public bool HasSendModePreference => page._conversation.SpaceId is { } space && space != Guid.Empty &&
             !page._safetyLocked && page.CurrentTaskComposerPresentation()?.Owner.CanSubmitFollowUp == true;
         public TaskFollowUpMode? PreferredSendMode => page.NativePreferredSubmitMode;
