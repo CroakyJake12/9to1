@@ -247,23 +247,10 @@ internal sealed class HomePackageOriginalDependencyLifecycle
             _policy.OriginalHomePackageId != _homePackageId ||
             _policy.Platform != _platform || _policy.Abi != _abi)
             return Refuse("PackageSelectionChanged", "The original package classification/platform policy changed.", request.PackageId);
-        if (_classes[request.PackageId] == HomePackageComponentClass.MandatorySharedCore)
-            return Refuse("PackageDependencyConflict", "Mandatory Home/shared core cannot be removed.", request.PackageId);
-        var dependents = entries.Values.Where(entry => entry.PackageId != request.PackageId &&
-            (entry.InstalledVersion is not null || entry.InstallationState is
-                HomePackageInstallState.Unknown or HomePackageInstallState.Staged or
-                HomePackageInstallState.Updating or HomePackageInstallState.Repairing or HomePackageInstallState.Removing) &&
-            entry.Dependencies.Any(dependency => dependency.PackageId == request.PackageId))
-            .Select(entry => entry.PackageId).Order(StringComparer.Ordinal).ToArray();
-        if (dependents.Length != 0)
-            return Refuse("PackageDependencyConflict", "Other installed or pending packages still require this component.", request.PackageId);
-        if (!entries.TryGetValue(request.PackageId, out var originalEntry) ||
-            originalEntry.InstalledVersion is null || !originalEntry.PreservesOwnedArtifactsOnUninstall ||
-            originalEntry.InstallationState != HomePackageInstallState.Installed ||
-            registry.RecentOperations.Any(item => item.PackageId == request.PackageId &&
-                item.State is HomePackageJournalState.Pending or HomePackageJournalState.Staged or
-                    HomePackageJournalState.Validated or HomePackageJournalState.Activating or HomePackageJournalState.OutcomeUnknown) ||
-            !_policy.SupportsOriginalAction(selected, HomePackageAction.Uninstall))
+        var refusal = EvaluateRemovalState(registry, selected.Descriptor, _homePackageId, null);
+        if (refusal is not null) return new(null, refusal);
+        var originalEntry = entries[request.PackageId];
+        if (!_policy.SupportsOriginalAction(selected, HomePackageAction.Uninstall))
             return Refuse("PackageDependencyConflict", "A genuine artifact-preserving removal with a known original state is required.", request.PackageId);
         var retained = entries.Values.Where(entry => entry.PackageId != request.PackageId &&
             entry.InstalledVersion is not null && _classes.TryGetValue(entry.PackageId, out var value) &&
@@ -273,6 +260,32 @@ internal sealed class HomePackageOriginalDependencyLifecycle
             new HomePackageOriginalLifecycleStep(selected, _classes[request.PackageId], HomePackageAction.Uninstall,
                 originalEntry.Revision, originalEntry.InstalledVersion, originalEntry.LastKnownGoodVersion, false)
         }), Array.AsReadOnly(new[] { request.PackageId }), Array.AsReadOnly(retained), false), null);
+    }
+
+    // Shared pure state predicate used by the planner and the privileged owner.
+    // Ignoring a journal entry is only for that owner's SAME already-reserved
+    // operation; this observation supplies no caller, approval or root authority.
+    internal static HomeAppsError? EvaluateRemovalState(HomePackageDatabaseSnapshot registry,
+        HomePackageArtifactDescriptor descriptor, string originalHomePackageId, string? originalReservedOperationId)
+    {
+        var packageId = descriptor.PackageId;
+        if (descriptor.ComponentClass == "mandatory-shared-core" || packageId == originalHomePackageId)
+            return new("PackageDependencyConflict", "Mandatory Home/shared core cannot be removed.", packageId, false, true);
+        var dependents = registry.Packages.Where(entry => entry.PackageId != packageId &&
+            (entry.InstalledVersion is not null || entry.InstallationState is
+                HomePackageInstallState.Unknown or HomePackageInstallState.Staged or
+                HomePackageInstallState.Updating or HomePackageInstallState.Repairing or HomePackageInstallState.Removing) &&
+            entry.Dependencies.Any(dependency => dependency.PackageId == packageId)).ToArray();
+        if (dependents.Length != 0)
+            return new("PackageDependencyConflict", "Other installed or pending packages still require this component.", packageId, false, true);
+        var originalEntry = registry.Packages.SingleOrDefault(entry => entry.PackageId == packageId);
+        if (originalEntry is null || originalEntry.InstalledVersion is null || !originalEntry.PreservesOwnedArtifactsOnUninstall ||
+            originalEntry.InstallationState != HomePackageInstallState.Installed ||
+            registry.RecentOperations.Any(item => item.PackageId == packageId && item.OperationId != originalReservedOperationId &&
+                item.State is HomePackageJournalState.Pending or HomePackageJournalState.Staged or
+                    HomePackageJournalState.Validated or HomePackageJournalState.Activating or HomePackageJournalState.OutcomeUnknown))
+            return new("PackageDependencyConflict", "A genuine artifact-preserving removal with a known original state is required.", packageId, false, true);
+        return null;
     }
 
     private static HomePackageOriginalLifecyclePlanningResult Refuse(string code, string message, string target) =>
