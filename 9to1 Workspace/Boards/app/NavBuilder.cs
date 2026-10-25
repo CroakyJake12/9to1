@@ -172,6 +172,7 @@ public static class NavBuilder
             VerticalContentAlignment = VerticalAlignment.Center,
             Padding = new Thickness(4, 0),
         };
+        SetNavigationButtonPresentation(title, "Boards section row label");
         Grid.SetColumn(title, 2);
         ToolTip.SetTip(title, "Open first page of " + section.Title);
         Avalonia.Automation.AutomationProperties.SetName(title, "Section " + section.Title);
@@ -266,6 +267,7 @@ public static class NavBuilder
             VerticalContentAlignment = VerticalAlignment.Center,
             Padding = new Thickness(4, 0),
         };
+        SetNavigationButtonPresentation(button, "Boards page row label");
         var pageTitle = new TextBlock
         {
             Text = page.Title,
@@ -323,6 +325,24 @@ public static class NavBuilder
             CornerRadius = new CornerRadius(6),
             Background = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
         };
+    }
+
+    private static void SetNavigationButtonPresentation(Button button, string source)
+    {
+        CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
+            CuiPropertyLevel.Instance, source + " surface");
+        CuiPropertyPresentation.Set(button, "BorderWidth", new Thickness(0),
+            CuiPropertyLevel.Instance, source + " border");
+        CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
+            CuiPropertyLevel.Instance, source + " shape");
+        CuiPropertyPresentation.Set(button, "HorizontalAlignment", HorizontalAlignment.Stretch,
+            CuiPropertyLevel.Instance, source + " width");
+        CuiPropertyPresentation.Set(button, "HorizontalContentAlignment", HorizontalAlignment.Left,
+            CuiPropertyLevel.Instance, source + " text alignment");
+        CuiPropertyPresentation.Set(button, "VerticalContentAlignment", VerticalAlignment.Center,
+            CuiPropertyLevel.Instance, source + " vertical alignment");
+        CuiPropertyPresentation.Set(button, "Padding", new Thickness(4, 0),
+            CuiPropertyLevel.Instance, source + " padding");
     }
 
     private static void TakePendingRename(StackPanel host, BoardsViewModel vm)

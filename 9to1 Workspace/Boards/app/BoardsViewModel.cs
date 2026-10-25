@@ -72,6 +72,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _embeddedArtifactHost = embeddedArtifactHost;
         _homeBoardCreationHost = homeBoardCreationHost;
+        Set(nameof(IsStandalonePresentation), true);
+        Set(nameof(IsEmbeddedPresentation), false);
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
         Set("ModeLabel", _isEditMode ? "Editing" : "Viewing");

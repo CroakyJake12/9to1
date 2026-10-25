@@ -11,10 +11,6 @@
           <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" CellGap="4">
             <Container Type="Menu" ID="FileMenu">
               <Button Type="Menu Item" ID="FileMenuButton" Content="File" Interactive="{Binding CanEdit}" AccessibleName="Board file menu">
-                <Button Type="Menu Item" Content="Retry opening created board" Action="RetryOpenCreatedBoard" Interactive="{Binding CanRetryHomeBoardOpen}" />
-                <Button Type="Menu Item" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" />
-                <Button Type="Menu Item" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" />
-                <Button Type="Menu Item" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" />
                 <Button Type="Menu Item" Content="Open…" Action="OpenBoard" />
                 <Button Type="Menu Item" Content="Save" Action="SaveBoard" />
                 <Button Type="Menu Item" Content="Save As…" Action="SaveAsBoard" />
@@ -53,13 +49,13 @@
           </Container>
           <Container Type="Menu" ID="BoardSwitcherMenu" Row="1">
             <Button Type="Menu Item" ID="BoardSwitcher" Content="{Binding BoardTitle, fallback=Your boards}" Interactive="{Binding CanOpenBoardMenu}" AccessibleName="Current Board and board actions" HorizontalAlignment="Stretch">
-              <Button Type="Menu Item" Content="New Board…" Action="NewBoard" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
-              <Button Type="Menu Item" Content="Open Board…" Action="OpenBoard" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open an existing Board" />
-              <Button Type="Menu Item" Content="All Boards…" Action="ShowLanding" Interactive="{Binding CanSwitchBoard}" AccessibleName="Browse and switch Boards" />
-              <Button Type="Menu Item" Content="Retry opening created Board" Action="RetryOpenCreatedBoard" Interactive="{Binding CanRetryHomeBoardOpen}" AccessibleName="Retry opening the same created Board" />
-              <Button Type="Menu Item" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" AccessibleName="Retry finishing the Board save" />
-              <Button Type="Menu Item" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
-              <Button Type="Menu Item" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
+              <Button Type="Menu Item" ID="BoardSwitcherCreate" Content="New Board…" Action="NewBoard" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
+              <Button Type="Menu Item" ID="BoardSwitcherOpen" Content="Open Board…" Action="OpenBoard" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open an existing Board" />
+              <Button Type="Menu Item" ID="BoardSwitcherAll" Content="All Boards…" Action="ShowLanding" Interactive="{Binding CanSwitchBoard}" AccessibleName="Browse and switch Boards" />
+              <Button Type="Menu Item" ID="BoardSwitcherRetryOpen" Content="Retry opening created Board" Action="RetryOpenCreatedBoard" Interactive="{Binding CanRetryHomeBoardOpen}" AccessibleName="Retry opening the same created Board" />
+              <Button Type="Menu Item" ID="BoardSwitcherRetrySave" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" AccessibleName="Retry finishing the Board save" />
+              <Button Type="Menu Item" ID="BoardSwitcherCheck" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
+              <Button Type="Menu Item" ID="BoardSwitcherRecorded" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
             </Button>
           </Container>
           <Input id="NavSearchBox" Row="2" accessible-name="Search sections and pages" placeholdertext="Search pages" margin="0 0 4 0" Type="Text" ID="NavSearchBox" />
@@ -82,11 +78,11 @@
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
       <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
         <Container Type="Grid" Row="0" ColumnSizes="Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar">
-          <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="12 6" AccessibleName="Text formatting">
-            <Button ID="RangeBold" Content="B" FontWeight="Bold" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
-            <Button ID="RangeItalic" Content="I" FontStyle="Italic" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic" />
-            <Button ID="RangeUnderline" Content="U" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" Tooltip="Underline" />
-            <Button ID="RangeStrike" Content="S" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough" />
+          <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="12 6" VerticalAlignment="Top" AccessibleName="Text formatting">
+            <Button ID="RangeBold" Content="B" Width="38" Height="38" VerticalAlignment="Top" FontWeight="Bold" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
+            <Button ID="RangeItalic" Content="I" Width="38" Height="38" VerticalAlignment="Top" FontStyle="Italic" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic" />
+            <Button ID="RangeUnderline" Content="U" Width="38" Height="38" VerticalAlignment="Top" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" Tooltip="Underline" />
+            <Button ID="RangeStrike" Content="S" Width="38" Height="38" VerticalAlignment="Top" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough" />
           </Container>
           <Container Type="Vertical Stack" ID="ToolbarHost" Column="1" />
         </Container>
@@ -94,15 +90,15 @@
           <If Condition="{Binding ContextIsTable}">
             <Container Type="Wrap" CellGap="4">
               <Text Text="Table" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0 0 4 0" />
-              <Button Content="+ Row" Action="ContextAddRow" Interactive="{Binding ContextCanAddTableRow}" AccessibleName="Append table row; preserves existing merged cells" />
-              <Button Content="− Row" Action="ContextDeleteRow" Interactive="{Binding ContextCanDeleteTableRow}" AccessibleName="Delete last table row when it does not intersect merged cells" Tooltip="Split the merged cells in the last row before deleting that row" />
+              <Button Content="+ Row" Action="ContextAddRow" Interactive="{Binding ContextCanAddTableRow}" AccessibleName="Add table row" Tooltip="Append a row without changing existing merged cells" />
+              <Button Content="− Row" Action="ContextDeleteRow" Interactive="{Binding ContextCanDeleteTableRow}" AccessibleName="Delete last table row" Tooltip="Split the merged cells in the last row before deleting that row" />
               <Button Content="↑ Row" Action="ContextMoveRowUp" Interactive="{Binding ContextCanMoveRowUp}" AccessibleName="Move selected table row up" />
               <Button Content="↓ Row" Action="ContextMoveRowDown" Interactive="{Binding ContextCanMoveRowDown}" AccessibleName="Move selected table row down" />
               <Button Content="Shorter row" Action="ContextRowShorter" AccessibleName="Shorten selected table row" Interactive="{Binding ContextHasCell}" />
               <Button Content="Taller row" Action="ContextRowTaller" AccessibleName="Heighten selected table row" Interactive="{Binding ContextHasCell}" />
               <Button Content="Auto height" Action="ContextRowAutoHeight" AccessibleName="Reset selected table row height to automatic" Interactive="{Binding ContextHasCell}" />
-              <Button Content="+ Column" Action="ContextAddColumn" Interactive="{Binding ContextCanAddTableColumn}" AccessibleName="Append table column; preserves existing merged cells" />
-              <Button Content="− Column" Action="ContextDeleteColumn" Interactive="{Binding ContextCanDeleteTableColumn}" AccessibleName="Delete last table column when it does not intersect merged cells" Tooltip="Split the merged cells in the last column before deleting that column" />
+              <Button Content="+ Column" Action="ContextAddColumn" Interactive="{Binding ContextCanAddTableColumn}" AccessibleName="Add table column" Tooltip="Append a column without changing existing merged cells" />
+              <Button Content="− Column" Action="ContextDeleteColumn" Interactive="{Binding ContextCanDeleteTableColumn}" AccessibleName="Delete last table column" Tooltip="Split the merged cells in the last column before deleting that column" />
               <Button Content="← Column" Action="ContextMoveColumnLeft" Interactive="{Binding ContextCanMoveColumnLeft}" AccessibleName="Move selected table column left" />
               <Button Content="→ Column" Action="ContextMoveColumnRight" Interactive="{Binding ContextCanMoveColumnRight}" AccessibleName="Move selected table column right" />
               <Button Content="Merge →" Action="ContextMergeCellRight" Interactive="{Binding ContextCanMergeCellRight}" AccessibleName="Merge selected table cell with adjacent cell to the right; split restores covered content" Tooltip="Covered cell content stays recoverable when you split the merge" />
