@@ -155,7 +155,9 @@ public sealed class CuiThemeRolePresentationTests
                         {
                             ("CuiPanel2Brush", expected.Panel2), ("CuiPanel3Brush", expected.Panel3),
                             ("HavenPanel2Brush", expected.Panel2), ("HavenPanel3Brush", expected.Panel3),
-                            ("CuiSelectionBrush", expected.AccentSoft), ("CuiFocusBrush", expected.Focus)
+                            ("CuiSelectionBrush", expected.AccentSoft), ("CuiFocusBrush", expected.Focus),
+                            ("CuiAttentionBrush", expected.Attention), ("HavenAttentionBrush", expected.Attention),
+                            ("CuiAttentionBorderBrush", expected.AttentionBorder), ("HavenAttentionBorderBrush", expected.AttentionBorder)
                         })
                         {
                             Assert.True(control.Resources.TryGetResource(key, null, out var actual));
