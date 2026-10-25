@@ -18,7 +18,8 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput) : IAut
         RegexOptions.CultureInvariant | RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100));
     public bool CanExecute(AutomationGraphNodeDefinition node) => node.Category == SpaceUserMessageGraph.Category &&
         node.ActionKey is SpaceUserMessageGraph.SourceType or SpaceUserMessageGraph.TruncateType or SpaceUserMessageGraph.OutputType or
-            SpaceUserMessageGraph.ExtractNumbersType or SpaceUserMessageGraph.NumbersToTextType or SpaceUserMessageGraph.SearchWordsType or SpaceUserMessageGraph.MatchesToTextType;
+            SpaceUserMessageGraph.ExtractNumbersType or SpaceUserMessageGraph.NumbersToTextType or SpaceUserMessageGraph.SearchWordsType or SpaceUserMessageGraph.MatchesToTextType or
+            SpaceUserMessageGraph.ParseJsonType or SpaceUserMessageGraph.SelectJsonType or SpaceUserMessageGraph.RenderJsonType or SpaceUserMessageGraph.JsonStringType;
     public Task<AutomationGraphNodeExecutionResult> ExecuteAsync(AutomationGraphNodeExecutionContext context, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
@@ -26,6 +27,8 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput) : IAut
         if (context.Node.ActionKey == SpaceUserMessageGraph.SourceType) return Task.FromResult(Result(originalInput, "Read original user-message input."));
         if (context.TypedInputs is null || !context.TypedInputs.TryGetValue("in", out var inputs) || inputs.Count != 1)
             return Task.FromResult(new AutomationGraphNodeExecutionResult(false, "Exactly one present typed input is required."));
+        if (context.Node.ActionKey is SpaceUserMessageGraph.SelectJsonType or SpaceUserMessageGraph.RenderJsonType or SpaceUserMessageGraph.JsonStringType)
+            return Task.FromResult(UseJsonValue(inputs[0], context.Node.ActionKey, context.Node.Parameters, token));
         if (context.Node.ActionKey is SpaceUserMessageGraph.NumbersToTextType or SpaceUserMessageGraph.MatchesToTextType)
         {
             var expected = context.Node.ActionKey == SpaceUserMessageGraph.NumbersToTextType ? SpaceUserMessageGraph.NumbersDataType : SpaceUserMessageGraph.MatchesDataType;
@@ -38,6 +41,8 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput) : IAut
         if (!inputs[0].TryGetString(out var text) || text is null)
             return Task.FromResult(new AutomationGraphNodeExecutionResult(false, "Exactly one present string input is required."));
         if (text.Length > 131072) return Task.FromResult(new AutomationGraphNodeExecutionResult(false, "The derived string input exceeds its supported bound."));
+        if (context.Node.ActionKey == SpaceUserMessageGraph.ParseJsonType)
+            return Task.FromResult(ParseJson(text, token));
         if (context.Node.ActionKey == SpaceUserMessageGraph.ExtractNumbersType)
             return Task.FromResult(ExtractNumbers(text, context.Node.Parameters["locale"], token));
         if (context.Node.ActionKey == SpaceUserMessageGraph.SearchWordsType)
@@ -62,6 +67,77 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput) : IAut
         return new(true, message, json.GetRawText(), TypedOutputs: new Dictionary<string, AutomationGraphValue>
             { ["out"] = AutomationGraphValue.FromJson(type, json) });
     }
+    private static AutomationGraphNodeExecutionResult ParseJson(string text, CancellationToken token)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(text, new JsonDocumentOptions
+                { AllowTrailingCommas = false, CommentHandling = JsonCommentHandling.Disallow, MaxDepth = 32 });
+            if (!UniqueJsonObjectKeys(document.RootElement, token))
+                return new(false, "JSON object property names must be unique after decoding; duplicate fields are ambiguous.");
+            // An envelope distinguishes present JSON null from absent graph input and
+            // prevents user property names from becoming graph omission/uncertainty flags.
+            return Structured(SpaceUserMessageGraph.JsonDataType, new { value = document.RootElement },
+                "Parsed strict JSON with unique ordinal property names and maximum container depth 32.");
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or ArgumentException)
+        { return new(false, "The derived input is not strict JSON within the supported depth of 32. Comments, trailing commas and malformed Unicode are unsupported."); }
+    }
+    private static bool UniqueJsonObjectKeys(JsonElement value, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (value.ValueKind == JsonValueKind.Object)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var field in value.EnumerateObject())
+                if (!names.Add(field.Name) || !UniqueJsonObjectKeys(field.Value, token)) return false;
+        }
+        else if (value.ValueKind == JsonValueKind.Array)
+            foreach (var item in value.EnumerateArray()) if (!UniqueJsonObjectKeys(item, token)) return false;
+        else if (value.ValueKind == JsonValueKind.String)
+            _ = value.GetString(); // Demand actual valid decoded text, not an invalid escaped surrogate.
+        return true;
+    }
+    private static AutomationGraphNodeExecutionResult UseJsonValue(AutomationGraphValue input, string action,
+        IReadOnlyDictionary<string, string> configuration, CancellationToken token)
+    {
+        if (input.DataType != SpaceUserMessageGraph.JsonDataType || input.State != AutomationGraphValueState.Value ||
+            input.JsonValue is not { ValueKind: JsonValueKind.Object } envelope || !envelope.TryGetProperty("value", out var value))
+            return new(false, "Exactly one present typed JSON value is required.");
+        token.ThrowIfCancellationRequested();
+        if (action == SpaceUserMessageGraph.SelectJsonType)
+        {
+            var pointer = configuration["pointer"];
+            if (!SpaceUserMessageGraph.IsSupportedJsonPointer(pointer)) return new(false, "The configured JSON Pointer is invalid.");
+            if (pointer.Length != 0)
+                foreach (var encoded in pointer.Split('/').Skip(1))
+                {
+                    token.ThrowIfCancellationRequested();
+                    var part = encoded.Replace("~1", "/", StringComparison.Ordinal).Replace("~0", "~", StringComparison.Ordinal);
+                    if (value.ValueKind == JsonValueKind.Object)
+                    {
+                        if (!value.TryGetProperty(part, out value)) return new(false, "The JSON Pointer did not identify one value.");
+                    }
+                    else if (value.ValueKind == JsonValueKind.Array)
+                    {
+                        if (part.Length == 0 || part.Length > 1 && part[0] == '0' || !part.All(char.IsAsciiDigit) ||
+                            !int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out var index) || index >= value.GetArrayLength())
+                            return new(false, "The JSON Pointer requires an existing array index written without leading zeros.");
+                        value = value[index];
+                    }
+                    else return new(false, "The JSON Pointer cannot traverse a scalar JSON value.");
+                }
+            return Structured(SpaceUserMessageGraph.JsonDataType, new { value },
+                "Selected exactly one JSON value using ordinal RFC 6901 field names and zero-based array indices.");
+        }
+        if (action == SpaceUserMessageGraph.JsonStringType && value.ValueKind != JsonValueKind.String)
+            return new(false, "Read JSON string requires an actual string; numbers, objects, arrays, booleans and null are not coerced.");
+        var rendered = action == SpaceUserMessageGraph.JsonStringType ? value.GetString()! : JsonSerializer.Serialize(value, OutputJson);
+        return rendered.Length <= 131072 ? Result(rendered, action == SpaceUserMessageGraph.JsonStringType
+            ? "Read the selected JSON string without coercion." : "Rendered the selected JSON value as compact JSON.")
+            : new(false, "The rendered JSON value exceeds the supported 131072-character bound.");
+    }
+
     private static AutomationGraphNodeExecutionResult ExtractNumbers(string text, string locale, CancellationToken token)
     {
         var results = new List<SpaceExtractedNumber>();

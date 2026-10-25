@@ -23,6 +23,11 @@ public sealed class SpaceUserMessageGraph
     public const string MatchesToTextType = "spaces.user-message.matches-to-text";
     public const string NumbersDataType = "spaces.number-extraction.v1";
     public const string MatchesDataType = "spaces.phrase-matches.v1";
+    public const string ParseJsonType = "spaces.user-message.parse-json";
+    public const string SelectJsonType = "spaces.user-message.select-json";
+    public const string RenderJsonType = "spaces.user-message.render-json";
+    public const string JsonStringType = "spaces.user-message.json-string";
+    public const string JsonDataType = "spaces.json-value.v1";
     public const string CapabilityId = "spaces.user-message.derive";
     internal const string Category = "SpaceUserMessage";
     private readonly AutomationGraphProjection _projection;
@@ -52,10 +57,19 @@ public sealed class SpaceUserMessageGraph
         Type(SearchWordsType, "{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"locale\":{\"type\":\"string\",\"enum\":[\"invariant\"]},\"comparison\":{\"type\":\"string\",\"enum\":[\"ordinal\",\"ordinal-ignore-case\"]},\"boundary\":{\"type\":\"string\",\"enum\":[\"substring\",\"whole-word\"]}},\"required\":[\"query\",\"locale\",\"comparison\",\"boundary\"],\"additionalProperties\":false}",
             [new("in", GraphPortDirection.Input, "string"), new("out", GraphPortDirection.Output, MatchesDataType)]),
         Type(MatchesToTextType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
-            [new("in", GraphPortDirection.Input, MatchesDataType), new("out", GraphPortDirection.Output, "string")])
+            [new("in", GraphPortDirection.Input, MatchesDataType), new("out", GraphPortDirection.Output, "string")]),
+        Type(ParseJsonType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, "string"), new("out", GraphPortDirection.Output, JsonDataType)]),
+        Type(SelectJsonType, "{\"type\":\"object\",\"properties\":{\"pointer\":{\"type\":\"string\",\"maxLength\":512}},\"required\":[\"pointer\"],\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, JsonDataType), new("out", GraphPortDirection.Output, JsonDataType)]),
+        Type(RenderJsonType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, JsonDataType), new("out", GraphPortDirection.Output, "string")]),
+        Type(JsonStringType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, JsonDataType), new("out", GraphPortDirection.Output, "string")])
     ];
     public static GraphCapabilityProfile Profile() => new(ProfileId,
-        new HashSet<string>([SourceType, TruncateType, OutputType, ExtractNumbersType, NumbersToTextType, SearchWordsType, MatchesToTextType], StringComparer.Ordinal),
+        new HashSet<string>([SourceType, TruncateType, OutputType, ExtractNumbersType, NumbersToTextType, SearchWordsType, MatchesToTextType,
+            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType], StringComparer.Ordinal),
         new HashSet<string>([CapabilityId], StringComparer.Ordinal));
     /// <summary>Author a node from the actual shared registered schema. This is draft
     /// data only; inserting it never activates a Space or starts a request.</summary>
@@ -69,17 +83,20 @@ public sealed class SpaceUserMessageGraph
             SourceType => "Original user message", TruncateType => "Truncate text", OutputType => "Request text",
             ExtractNumbersType => "Extract numbers", NumbersToTextType => "Render numbers",
             SearchWordsType => "Search words or phrases", MatchesToTextType => "Render matches",
+            ParseJsonType => "Parse strict JSON (depth 32)", SelectJsonType => "Select JSON value",
+            RenderJsonType => "Render compact JSON", JsonStringType => "Read JSON string",
             _ => throw new ArgumentException("This node has no authoring implementation.", nameof(typeId))
         })
         {
             TypeId = type.TypeId, SchemaVersion = type.Version,
-            Ports = type.Ports.Select(port => new SpaceLayoutPort(port.Key, port.DataType == "string" ? "Text" : port.DataType == NumbersDataType ? "Numbers" : "Matches",
+            Ports = type.Ports.Select(port => new SpaceLayoutPort(port.Key, port.DataType == "string" ? "Text" : port.DataType == NumbersDataType ? "Numbers" : port.DataType == JsonDataType ? "JSON" : "Matches",
                 port.Direction == GraphPortDirection.Input ? SpaceLayoutPortDirection.Input : SpaceLayoutPortDirection.Output,
                 port.DataType, port.Multiple)).ToArray(),
             Metadata = typeId switch
             {
                 TruncateType => new Dictionary<string, string>(StringComparer.Ordinal) { ["maximumTextElements"] = "1000" },
                 ExtractNumbersType => new Dictionary<string, string>(StringComparer.Ordinal) { ["locale"] = "invariant" },
+                SelectJsonType => new Dictionary<string, string>(StringComparer.Ordinal) { ["pointer"] = "" },
                 SearchWordsType => new Dictionary<string, string>(StringComparer.Ordinal)
                     { ["query"] = "word", ["locale"] = "invariant", ["comparison"] = "ordinal", ["boundary"] = "whole-word" },
                 _ => new Dictionary<string, string>(StringComparer.Ordinal)
@@ -143,6 +160,12 @@ public sealed class SpaceUserMessageGraph
                     throw Invalid("Numeric extraction requires an explicit supported locale: invariant, en-US, de-DE or fr-FR.");
                 configuration = JsonSerializer.SerializeToElement(node.Metadata);
             }
+            else if (node.TypeId == SelectJsonType)
+            {
+                if (node.Metadata.Count != 1 || !node.Metadata.TryGetValue("pointer", out var pointer) || !IsSupportedJsonPointer(pointer))
+                    throw Invalid("Select JSON requires one RFC 6901 pointer of at most 512 characters; empty selects the root, and only ~0/~1 escapes are supported.");
+                configuration = JsonSerializer.SerializeToElement(node.Metadata);
+            }
             else if (node.TypeId == SearchWordsType)
             {
                 if (node.Metadata.Count != 4 || !node.Metadata.TryGetValue("query", out var query) || string.IsNullOrWhiteSpace(query) || query.Length > 256 ||
@@ -184,6 +207,13 @@ public sealed class SpaceUserMessageGraph
         var runner = new AutomationGraphRunner([new SpaceUserMessageGraphExecutor("")]);
         if (runner.Validate(projection.Definition).Count != 0) throw Invalid("The shared graph executor rejected this graph.");
         return new(spaceId, spaceRevision, projection, nodes.ToDictionary(node => node.NodeId, node => node.TypeId), output);
+    }
+    internal static bool IsSupportedJsonPointer(string? pointer)
+    {
+        if (pointer is null || pointer.Length > 512 || pointer.Length > 0 && pointer[0] != '/') return false;
+        for (var index = 0; index < pointer.Length; index++)
+            if (pointer[index] == '~' && (++index == pointer.Length || pointer[index] is not ('0' or '1'))) return false;
+        return true;
     }
     private static Guid PortId(Guid nodeId, string key)
     {
