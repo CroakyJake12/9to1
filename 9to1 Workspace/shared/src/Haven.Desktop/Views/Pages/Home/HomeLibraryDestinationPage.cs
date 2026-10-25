@@ -143,8 +143,12 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
                     {
                         if (!opened.Succeeded) _page = null;
                         _status = opened.Succeeded ? selected.OwnerApp == "files"
-                            ? selected.OpenLink.TargetRouteId == "files.preview" ? "Opening the original text/code preview in Files."
-                                : "Opening the canonical folder in Files."
+                            ? selected.OpenLink.TargetRouteId switch
+                            {
+                                "files.board" => "Opening this .9to1board as a read-only rich Boards document from the selected Files revision.",
+                                "files.preview" => "Opening the original text/code preview in Files.",
+                                _ => "Opening the canonical folder in Files."
+                            }
                             : "Opening the canonical notebook in Boards." : opened.Message;
                     });
             }
