@@ -146,6 +146,10 @@ public sealed partial class HomeNativeWindowsComposition
         return result ?? throw new InvalidOperationException("No original borrowed Core result was returned.");
     }
 
+    // IHomeCoreApi's caller parameter belongs to its local call shape only. The
+    // remote Home always authorizes THIS retained native session's kernel/Root
+    // identity and actual service-read review; caller metadata cannot impersonate
+    // Home, replace the session actor or supply resource/data consent.
     private sealed class BorrowedCoreApi(HomeNativeWindowsComposition owner) : IHomeCoreApi
     {
         public async Task<HomeCoreOperationResult<HomeCoreStateSnapshot>> GetStateAsync(HomeCallerIdentity caller, CancellationToken token = default)
