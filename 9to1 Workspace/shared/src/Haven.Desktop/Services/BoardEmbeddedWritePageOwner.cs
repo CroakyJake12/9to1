@@ -104,7 +104,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             await RevalidateAsync(originals, token).ConfigureAwait(false);
             await Dispatcher.UIThread.InvokeAsync(() => openedPage.SetEmbeddedReadOnly(mode == BoardEmbeddedArtifactMode.View)).GetTask().ConfigureAwait(false);
             DemandOwnerCurrent();
-            var session = new EmbeddedWriteSession(this, openedPage, repository, reference, mode, lifetime);
+            var session = new EmbeddedWriteSession(this, openedPage, repository, reference, lifetime);
             lock (_gate) _sessions.Add(session);
             page = null; repository = null; lifetime = null!;
             return (IBoardsEmbeddedArtifactSession)session;
@@ -199,7 +199,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
         }, ct);
 
     public Task<BoardEmbeddedArtifactReference?> CreateAsync(string applicationId, CancellationToken ct = default) =>
-        RunAsync(async (originals, token) =>
+        RunAsync<BoardEmbeddedArtifactReference?>(async (originals, token) =>
         {
             if (applicationId != "write") throw new NotSupportedException("The original Notes creation owner currently creates Write documents only.");
             await RevalidateAsync(originals, token).ConfigureAwait(false);
@@ -297,7 +297,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
         HomeNativeApprovalWindowOwner approvals)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(_provider, _home);
-        if (!verified.IsBoundToOriginal(notes) || !admission.IsBoundToOriginalNotes(notes) ||
+        if (!admission.IsBoundToOriginalNotes(notes) ||
             !ReferenceEquals(_home.Services.GetService(typeof(NotesRepository)), notes) ||
             !ReferenceEquals(_home.Services.GetService(typeof(VerifiedNotesRepository)), verified) ||
             !ReferenceEquals(_home.Services.GetService(typeof(HomeNotesResourceAdmissionSource)), admission) ||
@@ -485,7 +485,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
 
     private sealed class EmbeddedWriteSession(BoardEmbeddedWritePageOwner owner, WritePage page,
         NotesOriginalWriteWorkspaceRepository repository, BoardEmbeddedArtifactReference openedReference,
-        BoardEmbeddedArtifactMode mode, CancellationTokenSource lifetime) : IBoardsEmbeddedArtifactSession
+        CancellationTokenSource lifetime) : IBoardsEmbeddedArtifactSession
     {
         private readonly object _sync = new();
         private bool _prepared, _closed;
