@@ -55,6 +55,13 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
                 provider.GetRequiredService<IBrowserNavigationPolicy>(),
                 provider.GetRequiredService<LinuxOriginalDownloadDirectory>().Path,
                 provider.GetRequiredService<IBrowserOriginalNativeDownloadPhysicalOwner>()));
+            Type[] boardWrites = [typeof(Haven.Infrastructure.Native.Linux.FilesOriginalBoardDocumentPhysicalOwner),
+                typeof(IFilesOriginalBoardDocumentPhysicalOwner)];
+            if (services.Any(item => boardWrites.Contains(item.ServiceType)))
+                throw new InvalidOperationException("Configure the original Linux Files board-document physical owner once.");
+            services.AddSingleton<Haven.Infrastructure.Native.Linux.FilesOriginalBoardDocumentPhysicalOwner>();
+            services.AddSingleton<IFilesOriginalBoardDocumentPhysicalOwner>(provider =>
+                provider.GetRequiredService<Haven.Infrastructure.Native.Linux.FilesOriginalBoardDocumentPhysicalOwner>());
         }
         else services.AddSingleton<BrowserDownloadTransport>();
         services.AddSingleton<BrowserBackgroundPageLoader>();

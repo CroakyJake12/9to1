@@ -75,6 +75,14 @@ internal static class FilesDomainContractTests
 		Check.Equal(FilesRiskLevel.Destructive, purge.Risk);
 		Check.False(purge.IsReversible);
 		Check.True(purge.AffectedObjects.Contains("impact", StringComparison.OrdinalIgnoreCase));
+		FilesActionDefinition boardSave = GetAllActions().Single(action => action.Name == "SaveBoardDocument");
+		Check.Equal(FilesRiskLevel.Elevated, boardSave.Risk);
+		Check.True(boardSave.IsReversible);
+		Check.True(boardSave.HasExternalSideEffects);
+		Check.True(boardSave.ArgumentsSchema.Contains("expected revision", StringComparison.OrdinalIgnoreCase));
+		Check.True(boardSave.ArgumentsSchema.Contains("document ID", StringComparison.OrdinalIgnoreCase));
+		Check.True(boardSave.ArgumentsSchema.Contains("SHA-256", StringComparison.OrdinalIgnoreCase));
+		Check.True(boardSave.RequiredPermissions.Contains("files.write", StringComparer.Ordinal));
 	}
 
 	private static void ProviderRegistryReportsUnavailableAndUnsupportedOperations()

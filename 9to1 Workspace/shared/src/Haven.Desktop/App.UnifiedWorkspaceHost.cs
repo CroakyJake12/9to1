@@ -129,7 +129,7 @@ public sealed partial class App
         private CuiControlLoader? _startupLoadingLoader;
         private Task? _initialization, _close, _pendingClose, _workspaceClose, _sceneClose, _sessionClose;
         private readonly List<Task> _closeAttempts = [];
-        private sealed record PreparedBoardRead(AppContentAddress Address, Guid Token);
+        private sealed record PreparedBoardRead(AppContentAddress Address, Guid Token, bool Writable);
         private Task<CuiSceneAvailability>? _sceneInitialization;
         private Task<BrowseChrome>? _chromeCreation;
         private BrowseChrome? _chrome;
@@ -137,6 +137,8 @@ public sealed partial class App
         private UnifiedWorkspaceSession? _session;
         private AuthenticatedResourceActor? _actor;
         private NativeHomeFilesBoardReadSource? _boardReadSource;
+        private NativeHomeFilesBoardWriteSource? _boardWriteSource;
+        private HavenOS.Files.NativeHost.FilesNativeBrowserService.BoardDocumentWriteOwner? _boardDocumentWriteOwner;
         private volatile bool _closed;
         private volatile bool _startupRetirement;
 
@@ -342,6 +344,13 @@ public sealed partial class App
             _actor = await ObserveActorAsync(currentToken);
             _boardReadSource = new NativeHomeFilesBoardReadSource(
                 _services.GetRequiredService<HavenOS.Files.NativeHost.FilesNativeBrowserService>(), _actor);
+            var filesBrowser = _services.GetRequiredService<HavenOS.Files.NativeHost.FilesNativeBrowserService>();
+            if (OperatingSystem.IsLinux() && filesBrowser.HasNativeMutationOwner &&
+                _services.GetService<IFilesOriginalBoardDocumentPhysicalOwner>() is { } boardPhysicalOwner)
+            {
+                _boardDocumentWriteOwner = filesBrowser.CreateOriginalBoardDocumentWriteOwner(boardPhysicalOwner);
+                _boardWriteSource = new NativeHomeFilesBoardWriteSource(filesBrowser, _boardDocumentWriteOwner, _actor);
+            }
             var availability = await CheckAsync(currentToken);
             if (availability.State != CuiSceneAvailabilityState.Ready) throw new InvalidOperationException(availability.Message);
             DemandCurrent();
@@ -374,6 +383,9 @@ public sealed partial class App
                 () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context,
                 (token, store, folder, file, revision) => (_boardReadSource ?? throw new UnauthorizedAccessException(
                     "The original Home Files board reader is unavailable."))
+                    .TakePrepared(token, store, folder, file, revision),
+                (token, store, folder, file, revision) => (_boardWriteSource ?? throw new UnauthorizedAccessException(
+                    "The original Home Files board writer is unavailable."))
                     .TakePrepared(token, store, folder, file, revision));
             var canvas = CanvasBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime, actualTheme.Context);
             var present = PresentBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
@@ -696,6 +708,9 @@ public sealed partial class App
                 .InvokeOriginalSource(() => CloudflareOriginalExecutionGuard.InvokeOriginal(
                     source ?? throw new InvalidOperationException("Retain the original source composition before source work."),
                     () => { body(); return true; }));
+            void WriteScope(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+            { DemandCurrent(); body(); return true; });
+            void WriteRetain(Task actual) { _ = Track(actual); }
             var boardsSource = new NativeHomeArtifactLibrarySource(_home,
                 _services.GetRequiredService<Haven.Infrastructure.NotesRepository>(),
                 _services.GetRequiredService<Haven.Infrastructure.VerifiedNotesRepository>(),
@@ -709,7 +724,9 @@ public sealed partial class App
                 _home.Profiles, _home.Resources, _services.GetRequiredService<ICompatibilityPackageContentSource>()))
                 throw new UnauthorizedAccessException("Library must borrow the actual Files/Home metadata owner tuple.");
             var filesSource = new NativeHomeFilesLibrarySource(browser, actor, _home.StateStore,
-                ObserveAppearanceAuthorityAsync, Parent, Alive, boardRead);
+                ObserveAppearanceAuthorityAsync, Parent, Alive, boardRead, _boardWriteSource,
+                (authorization, token) => PresentHomeLibraryReviewAsync(approvals, authorization, token),
+                WriteScope, WriteRetain);
             source = new(_home.StateStore, new("boards", "Boards", boardsSource), new("files", "Files", filesSource));
             var preparedFiles = new System.Runtime.CompilerServices.ConditionalWeakTable<HomeDeepLink, AppContentAddress>();
             var preparedBoards = new System.Runtime.CompilerServices.ConditionalWeakTable<HomeDeepLink, PreparedBoardRead>();
@@ -719,22 +736,39 @@ public sealed partial class App
                 lock (preparedFiles) preparedFiles.Remove(link);
                 lock (preparedBoards)
                     if (preparedBoards.TryGetValue(link, out var previous))
-                    { preparedBoards.Remove(link); Track(boardRead.DiscardPreparedAsync(previous.Token)); }
+                    {
+                        preparedBoards.Remove(link);
+                        _ = Track(previous.Writable
+                            ? (_boardWriteSource?.DiscardPreparedAsync(previous.Token) ?? Task.CompletedTask)
+                            : boardRead.DiscardPreparedAsync(previous.Token));
+                    }
                 var target = await filesSource.ResolveOriginalOpenTargetAsync(link, token).ConfigureAwait(false);
                 token.ThrowIfCancellationRequested();
                 if (target is null) return;
                 if (link.TargetRouteId == "files.board")
                 {
-                    var prepared = await filesSource.PrepareOriginalBoardReadAsync(link, token).ConfigureAwait(false);
+                    var writable = filesSource.HasWritableBoardSource;
+                    var prepared = writable
+                        ? await filesSource.PrepareOriginalBoardWriteAsync(link, token).ConfigureAwait(false)
+                        : await filesSource.PrepareOriginalBoardReadAsync(link, token).ConfigureAwait(false);
                     if (prepared is not { } tokenId) return;
                     try
                     {
                         token.ThrowIfCancellationRequested();
-                        var boardAddress = BoardsBrowseAppContentAddress.ForFile(target.StoreId, target.FolderId,
-                            target.FileId!.Value, target.RevisionId!.Value, tokenId);
-                        lock (preparedBoards) { preparedBoards.Remove(link); preparedBoards.Add(link, new(boardAddress, tokenId)); }
+                        var boardAddress = writable
+                            ? BoardsBrowseAppContentAddress.ForWritableFile(target.StoreId, target.FolderId,
+                                target.FileId!.Value, target.RevisionId!.Value, tokenId)
+                            : BoardsBrowseAppContentAddress.ForFile(target.StoreId, target.FolderId,
+                                target.FileId!.Value, target.RevisionId!.Value, tokenId);
+                        lock (preparedBoards) { preparedBoards.Remove(link); preparedBoards.Add(link, new(boardAddress, tokenId, writable)); }
                     }
-                    catch { _ = Track(boardRead.DiscardPreparedAsync(tokenId)); throw; }
+                    catch
+                    {
+                        _ = Track(writable
+                            ? (_boardWriteSource?.DiscardPreparedAsync(tokenId) ?? Task.CompletedTask)
+                            : boardRead.DiscardPreparedAsync(tokenId));
+                        throw;
+                    }
                     return;
                 }
                 var address = target.FileId is { } file && target.RevisionId is { } revision
@@ -766,7 +800,9 @@ public sealed partial class App
                 else return false;
                 var accepted = IsCurrent && _workspace is { } workspace && workspace.QueueNavigation(
                     new(request.TabId, address, true), settlement);
-                if (!accepted && queuedBoard is not null) Track(boardRead.DiscardPreparedAsync(queuedBoard.Token));
+                if (!accepted && queuedBoard is not null) Track(queuedBoard.Writable
+                    ? (_boardWriteSource?.DiscardPreparedAsync(queuedBoard.Token) ?? Task.CompletedTask)
+                    : boardRead.DiscardPreparedAsync(queuedBoard.Token));
                 return accepted;
             }, source, theme, PrepareFilesNavigation);
             return page;
@@ -1006,6 +1042,10 @@ public sealed partial class App
                     try { await JoinOriginalDownloadFilesAsync(failures); }
                     catch (Exception error) { AddAppCause(failures, error); }
                     try { if (_boardReadSource is not null) await _boardReadSource.DrainPreparedAsync(); }
+                    catch (Exception error) { AddAppCause(failures, error); }
+                    try { if (_boardWriteSource is not null) await _boardWriteSource.DrainPreparedAsync(); }
+                    catch (Exception error) { AddAppCause(failures, error); }
+                    try { if (_boardDocumentWriteOwner is not null) await _boardDocumentWriteOwner.CloseAndDrainAsync(); }
                     catch (Exception error) { AddAppCause(failures, error); }
                     try { _sceneClose ??= _scene?.CloseOriginalAsync(); } catch (Exception error) { AddAppCause(failures, error); }
                     await Join(_sceneClose);
