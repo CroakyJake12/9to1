@@ -32,7 +32,7 @@ internal sealed class OriginalInstalledHomeAppsPage : UserControl,
     private readonly List<HomePackageEntry> _currentRows = [];
     private readonly List<Exception> _callbackFailures = [];
     private HomeAppsSnapshot? _snapshot;
-    private App.OriginalInstalledHomeLaunch? _launch;
+    private App.OriginalInstalledHomeAction? _action;
     private string? _nextPage;
     private bool _busy;
     private Exception? _constructionFailure;
@@ -63,7 +63,7 @@ internal sealed class OriginalInstalledHomeAppsPage : UserControl,
                 var body = new StackPanel { Spacing = 16, Margin = new Thickness(24), MaxWidth = 980,
                     HorizontalAlignment = HorizontalAlignment.Stretch };
                 body.Children.Add(new TextBlock { Text = "Installed apps", FontSize = 26 });
-                body.Children.Add(new TextBlock { Text = "Open a current installed app after its individual Home review. Data access and actions inside that app require their own permission.",
+                body.Children.Add(new TextBlock { Text = "Installed package actions come only from the current Home catalogue and require individual Home review. Data access and actions inside an opened app require their own permission.",
                     TextWrapping = Avalonia.Media.TextWrapping.Wrap });
                 body.Children.Add(_detail); body.Children.Add(_search);
                 body.Children.Add(_refresh); body.Children.Add(_rows); body.Children.Add(_next);
@@ -117,7 +117,7 @@ internal sealed class OriginalInstalledHomeAppsPage : UserControl,
                 });
                 return;
             }
-            var result = _launch is { } accepted ? Acquire(original, () => _source.ObserveLaunch(accepted)) : null;
+            var result = _action is { } accepted ? Acquire(original, () => _source.ObserveAction(accepted)) : null;
             var query = Acquire(original, () => new HomeAppsQuery(_search.Text, PageToken: next ? _nextPage : null));
             var raw = Acquire(original, () => _source.ReadAsync(query, CancellationToken.None));
             var snapshot = await original.AwaitAsync(raw);
@@ -125,22 +125,31 @@ internal sealed class OriginalInstalledHomeAppsPage : UserControl,
             {
                 _snapshot = snapshot; _nextPage = snapshot.NextPageToken;
                 _currentRows.Clear(); _currentRows.AddRange(snapshot.Packages); _rows.Children.Clear();
-                _detail.Text = _launch is not null && result is null
-                    ? "Waiting for the individual Home review. You can close this page; Home keeps the accepted launch operation."
-                    : result is not null ? result.Message : snapshot.Error?.Message ?? (snapshot.State switch
-                    { HomeAppsDataState.Empty => "No installed apps match this view.", HomeAppsDataState.Available => "Choose Launch to request Home approval.",
-                        HomeAppsDataState.Partial => "Current app information is incomplete. Refresh before requesting a launch.", _ => "The installed app catalogue is unavailable." });
+                _detail.Text = _action is not null && result is null
+                    ? "Waiting for the individual Home review. You can close this page; Home keeps the accepted package action."
+                    : result is not null ? DescribeActionResult(result) : snapshot.Error?.Message ?? (snapshot.State switch
+                    { HomeAppsDataState.Empty => "No installed apps match this view.", HomeAppsDataState.Available => "Choose a supported action to request Home review.",
+                        HomeAppsDataState.Partial => "Current app information is incomplete. Refresh before requesting an action.", _ => "The installed app catalogue is unavailable." });
                 foreach (var row in _currentRows)
                 {
-                    var button = new Button { Content = "Launch", IsEnabled = !snapshot.IsStale &&
-                        snapshot.State == HomeAppsDataState.Available && row.SupportedActions.Contains(HomePackageAction.Launch) &&
-                        (_launch is null || result?.State is HomePackageOperationState.Succeeded or HomePackageOperationState.Rejected) };
-                    button.Click += (_, _) => { _ = LaunchOriginalRowAsync(snapshot, row); };
                     var text = new StackPanel { Spacing = 4 };
                     text.Children.Add(new TextBlock { Text = row.Name, FontSize = 18 });
+                    text.Children.Add(new TextBlock { Text = "Package " + row.PackageId + (row.AppId is null ? "" : " · App " + row.AppId), TextWrapping = Avalonia.Media.TextWrapping.Wrap });
                     text.Children.Add(new TextBlock { Text = "Installed version: " + (row.InstalledVersion ?? "unavailable"), TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+                    text.Children.Add(new TextBlock { Text = "Available version: " + (row.AvailableVersion ?? "unknown") + " · Channel: " + (row.UpdateChannel ?? "unknown"), TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+                    text.Children.Add(new TextBlock { Text = "State: " + row.InstallationState + " · Compatibility: " + row.CompatibilityState, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
                     text.Children.Add(new TextBlock { Text = row.CompatibilityMessage ?? "Compatibility will be checked at launch.", TextWrapping = Avalonia.Media.TextWrapping.Wrap });
-                    text.Children.Add(button); _rows.Children.Add(text);
+                    var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+                    foreach (var action in DisplayActions.Where(row.SupportedActions.Contains))
+                    {
+                        var button = new Button { Content = ActionLabel(action), IsEnabled = !snapshot.IsStale &&
+                            snapshot.State == HomeAppsDataState.Available &&
+                            (_action is null || result?.State is HomePackageOperationState.Succeeded or HomePackageOperationState.Rejected) };
+                        button.Click += (_, _) => { _ = StartActionOriginalRowAsync(snapshot, row, action); };
+                        actions.Children.Add(button);
+                    }
+                    if (actions.Children.Count > 0) text.Children.Add(actions);
+                    _rows.Children.Add(text);
                 }
                 _next.IsVisible = _nextPage is not null;
             });
@@ -152,15 +161,36 @@ internal sealed class OriginalInstalledHomeAppsPage : UserControl,
             { _refresh.IsEnabled = true; _next.IsEnabled = _nextPage is not null; });
         }
     });
-    internal Task LaunchOriginalRowAsync(HomeAppsSnapshot snapshot, HomePackageEntry row) => _work.RunAsync(original =>
+    private static readonly HomePackageAction[] DisplayActions =
+        [HomePackageAction.Install, HomePackageAction.Update, HomePackageAction.Repair, HomePackageAction.Uninstall, HomePackageAction.Launch];
+    private static string ActionLabel(HomePackageAction action) => action switch
+    {
+        HomePackageAction.Install => "Install", HomePackageAction.Update => "Update", HomePackageAction.Repair => "Repair",
+        HomePackageAction.Uninstall => "Remove", HomePackageAction.Launch => "Launch", _ => action.ToString()
+    };
+    private static string DescribeActionResult(HomePackageActionResult result)
+    {
+        var details = new List<string> { result.Message, "Operation " + result.OperationId + " · " + result.State };
+        if (result.Action is HomePackageAction.Install or HomePackageAction.Update or HomePackageAction.Repair or HomePackageAction.Rollback)
+            details.Add("Previous known-good version retained: " + (result.PreviousKnownGoodVersionRetained ? "yes" : "no"));
+        Add("Completed", result.SucceededSteps); Add("Failed", result.FailedSteps);
+        Add("Skipped", result.SkippedSteps); Add("Rolled back", result.RolledBackSteps);
+        if (result.Error is { } error) details.Add(error.Code + ": " + error.Message);
+        return string.Join("\n", details);
+        void Add(string label, IReadOnlyList<string> values)
+        { if (values.Count > 0) details.Add(label + ": " + string.Join(", ", values)); }
+    }
+    internal Task StartActionOriginalRowAsync(HomeAppsSnapshot snapshot, HomePackageEntry row, HomePackageAction action) => _work.RunAsync(original =>
     {
         Dispatcher.UIThread.VerifyAccess();
         original.BindPublicationGuard(() => !_work.IsRetiring && _window.IsVisible && ReferenceEquals(TopLevel.GetTopLevel(this), _window));
         if (_busy || !ReferenceEquals(snapshot, _snapshot) || !_currentRows.Any(actual => ReferenceEquals(actual, row)))
-            throw new UnauthorizedAccessException("Choose the SAME currently rendered installed app row.");
+            throw new UnauthorizedAccessException("Choose the SAME currently rendered app row.");
+        if (!row.SupportedActions.Contains(action))
+            throw new UnauthorizedAccessException("The current Home catalogue does not support that package action.");
         var source = _source ?? throw new InvalidOperationException("The installed Root source is unavailable.");
-        _launch = Acquire(original, () => source.StartLaunch(snapshot, row));
-        Publish(original, () => { _detail.Text = "Waiting for Home approval. Refresh to observe the launch outcome.";
+        _action = Acquire(original, () => source.StartAction(snapshot, row, action));
+        Publish(original, () => { _detail.Text = "Waiting for Home approval for " + ActionLabel(action) + ". Refresh to observe the outcome.";
             foreach (var button in _rows.GetVisualDescendants().OfType<Button>()) button.IsEnabled = false; });
         return Task.CompletedTask;
     });
