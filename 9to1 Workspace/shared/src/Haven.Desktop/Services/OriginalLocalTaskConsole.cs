@@ -73,6 +73,7 @@ public static partial class OriginalLocalTaskConsole
         "files-configure <chosen empty absolute directory> | files-status | files-list [observed parent GUID]",
         "strata-select <explicit nonsecret developer artifact JSON> (configuration only; Task-scoped individual Home READ approval follows; protected Safetensors/CUDA remain required)",
         "project-register <write or observed destination folder GUID> <existing absolute project path> | container-create <saved workspace GUID> <saved project GUID> <saved root GUID> <name>",
+        "project-run <saved workspace GUID> <saved project GUID> <saved root GUID> <exact configuration ID> [exact repository binding ID] | project-run-stop (manual console Run; no Task)",
         "containers | project <workspace-id> <project-id> <root-id> <existing-container-id> | project-clear | spaces | space <space-id> | space-create <name>",
         "task <instruction> | context | attach | open <space-id> <reference-id> <task-id> <run-id>",
         "status | read <project-relative-path> | steer <instruction> | queue <instruction> | pause | stop | resume",
@@ -185,11 +186,11 @@ public static partial class OriginalLocalTaskConsole
                 PrepareOriginalUcmlOwners();
                 _registration = CloudflareLocalDomainRegistration.CreateOriginal(store, new OperatingSystemPrincipalSource(), _paths,
                     originalResolvers: ProjectConfigurationRequested
-                        ? [new HomeColdProjectReadResourceResolver(RequireCapturedOriginalProjectSource), _setupReadResolver!, _setupDestinationResolver!, _currentExecutionResolver!, _strataArtifactResolver, _ucmlWriteResolver!]
-                        : [_setupReadResolver!, _setupDestinationResolver!, _strataArtifactResolver, _ucmlWriteResolver!],
+                        ? [new HomeColdProjectReadResourceResolver(RequireCapturedOriginalProjectSource), _setupReadResolver!, _setupDestinationResolver!, _setupEditResolver!, _setupManualRunResolver!, _currentExecutionResolver!, _strataArtifactResolver, _ucmlWriteResolver!]
+                        : [_setupReadResolver!, _setupDestinationResolver!, _setupEditResolver!, _setupManualRunResolver!, _strataArtifactResolver, _ucmlWriteResolver!],
                     originalPolicies: ProjectConfigurationRequested
-                        ? [new HomeColdProjectReadActionPolicySource(), _setupReadPolicy!, _setupPolicy!, _currentExecutionPolicy!, new HomeStrataDeveloperArtifactActionPolicySource(), _ucmlWritePolicy!, new LocalStoreImportPolicy(), new HomeUcmlContextActionPolicy()]
-                        : [_setupReadPolicy!, _setupPolicy!, new HomeStrataDeveloperArtifactActionPolicySource(), _ucmlWritePolicy!, new LocalStoreImportPolicy(), new HomeUcmlContextActionPolicy()],
+                        ? [new HomeColdProjectReadActionPolicySource(), _setupReadPolicy!, _setupPolicy!, _setupEditPolicy!, _setupManualRunPolicy!, _currentExecutionPolicy!, new HomeStrataDeveloperArtifactActionPolicySource(), _ucmlWritePolicy!, new LocalStoreImportPolicy(), new HomeUcmlContextActionPolicy()]
+                        : [_setupReadPolicy!, _setupPolicy!, _setupEditPolicy!, _setupManualRunPolicy!, new HomeStrataDeveloperArtifactActionPolicySource(), _ucmlWritePolicy!, new LocalStoreImportPolicy(), new HomeUcmlContextActionPolicy()],
                     configureOriginalStores: identity =>
                     {
                         _nativeFiles = new NativeFilesWorkspaceService(identity.StateStore, identity.Profiles);
@@ -219,10 +220,12 @@ public static partial class OriginalLocalTaskConsole
                 collection.AddSingleton(_nativeAuthority!);
                 collection.AddSingleton(_fileResolver!);
                 collection.AddFilesNativeHost();
-                collection.AddHavenOriginalNativeDevelopment();
                 if (ProjectConfigurationRequested) collection.AddHavenOwnedNativeColdProjectResources(_registration!.OriginalHome);
                 ConfigureOriginalDeveloperSetupOwners(collection);
                 ConfigureOriginalCurrentProjectExecutionOwners(collection);
+                // Manual reader/editor/process factories inspect these genuine owner registrations.
+                // Register them after the setup/execution sources, before building the provider.
+                collection.AddHavenOriginalNativeDevelopment();
                 collection.AddHavenOriginalTaskExecutionServices();
                 _provider = collection.BuildServiceProvider();
                 _strataInstallations = _provider.GetRequiredService<HomeApprovedStrataDeveloperArtifactSource>();
@@ -362,6 +365,8 @@ public static partial class OriginalLocalTaskConsole
                 case "files-status":
                     Write(await Acquire(original, () => _nativeFiles!.GetConfigurationAsync(token)).ConfigureAwait(false)); break;
                 case "files-list": await ListOriginalFilesAsync(original, argument, token).ConfigureAwait(false); break;
+                case "project-run": LaunchOriginalManualProjectRun(original, argument, token); break;
+                case "project-run-stop": StopOriginalManualProjectRun(original); break;
                 case "project-register": LaunchOriginalExistingProjectRegistration(original, argument, token); break;
                 case "container-create": await CreateOriginalProjectContainerAsync(original, argument, token).ConfigureAwait(false); break;
                 case "containers": Write(await Acquire(original, () => Resolve<IContainerRepository>(original).GetByModeAsync(HavenMode.Tasks, token)).ConfigureAwait(false)); break;

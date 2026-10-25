@@ -89,6 +89,33 @@ public sealed class OriginalNativeDevelopmentCompositionTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Fact]
+    public void Manual_Run_composition_requires_its_distinct_admission_and_retains_one_owner_on_repeat_registration()
+    {
+        foreach (var withExecution in new[] { false, true })
+        {
+            var services = new ServiceCollection(); services.AddHavenInfrastructure(); services.AddFilesNativeHost();
+            // Descriptor-only controls: these unavailable factories must NEVER become an allow
+            // source or be invoked by registration. Real admission/execution uses the owning
+            // Home/Files process fixture; this isolates conditional native composition.
+            services.AddSingleton<IDeveloperProjectOriginalReadAdmissionSource>(_ => throw new InvalidOperationException("No test READ is admitted."));
+            services.AddSingleton<FilesDeveloperOriginalSourceSelection>(_ => throw new InvalidOperationException("No test Files selection is issued."));
+            services.AddSingleton<IDeveloperProjectOriginalPhysicalCaptureSource>(_ => throw new InvalidOperationException("No test physical capture is issued."));
+            if (withExecution)
+                services.AddSingleton<IDeveloperProjectOriginalManualExecutionAdmissionSource>(_ => throw new InvalidOperationException("No test execution is admitted."));
+            services.AddHavenOriginalNativeDevelopment();
+            Assert.Single(services, item => item.ServiceType == typeof(DeveloperManualSourceReadOwner));
+            var runs = services.Where(item => item.ServiceType == typeof(DeveloperManualProjectProcessOwner)).ToArray();
+            if (withExecution)
+            {
+                var original = Assert.Single(runs); Assert.Equal(ServiceLifetime.Singleton, original.Lifetime);
+                services.AddHavenOriginalNativeDevelopment();
+                Assert.Same(original, Assert.Single(services, item => item.ServiceType == typeof(DeveloperManualProjectProcessOwner)));
+            }
+            else Assert.Empty(runs);
+        }
+    }
+
     private sealed class OwnedPaths(string root) : IAppPaths
     {
         public string DataDirectory => root;
