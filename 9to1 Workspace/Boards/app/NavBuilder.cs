@@ -128,7 +128,7 @@ public static class NavBuilder
         var row = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions("24,20,*,Auto"),
-            Height = 34,
+            Height = 38,
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         var chevron = new Button
@@ -161,7 +161,7 @@ public static class NavBuilder
             Content = new TextBlock
             {
                 Text = section.Title,
-                FontSize = 14,
+                FontSize = 15,
                 FontWeight = FontWeight.SemiBold,
                 Foreground = BoardsTheme.TextBrush,
                 TextTrimming = TextTrimming.CharacterEllipsis,

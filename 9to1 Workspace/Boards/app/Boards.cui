@@ -22,11 +22,14 @@
                 <Button Type="Menu Item" Content="Exit" Action="CloseWindow" />
               </Button>
             </Container>
-            <Button ID="UndoButton" Content="Undo" Action="Undo" Interactive="{Binding IsEditMode}" AccessibleName="Undo" />
-            <Button ID="RedoButton" Content="Redo" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" />
+            <Button Type="Menu Item" ID="UndoButton" IconSource="icon:undo" IconOnly="True" Action="Undo" Interactive="{Binding IsEditMode}" AccessibleName="Undo" Tooltip="Undo" />
+            <Button Type="Menu Item" ID="RedoButton" IconSource="icon:redo" IconOnly="True" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" Tooltip="Redo" />
           </Container>
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" Row="1" CellGap="6" VerticalAlignment="Center">
-            <Button ID="EditViewToggle" Content="{Binding ModeLabel, fallback=Editing}" Action="ToggleEditView" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
+            <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="6" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="8 4" CornerRadius="10">
+              <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input ID="EditViewToggle" Type="Switch" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
+            </Container>
             <Button ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
             <Text ID="PageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Current Board, section and page" />
             <Button ID="ThemeButton" Content="Appearance" Action="ToggleTheme" AccessibleName="Toggle light or dark appearance" />
@@ -63,7 +66,7 @@
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
           <Container Type="Menu" Row="3" Margin="0 8 0 0">
-            <Button Type="Menu Item" Content="+ Add page or section" Interactive="{Binding CanEdit}" AccessibleName="Add a page or section" ID="AddNewButton">
+            <Button Type="Menu Item" Content="+ Add page or section" Interactive="{Binding CanEdit}" AccessibleName="Add a page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiPanel2Brush}" BorderWidth="0" CornerRadius="18">
               <Button Type="Menu Item" Content="New page in this section" Action="AddPage" AccessibleName="Create a page in the current section" />
               <Button Type="Menu Item" Content="New section" Action="AddSection" AccessibleName="Create a new section in this Board" />
               <Button Type="Menu Item" Content="Attach existing Write document…" Action="AddWritePage" Interactive="{Binding CanAddWritePage}" AccessibleName="Attach an existing Write document as a page" />
