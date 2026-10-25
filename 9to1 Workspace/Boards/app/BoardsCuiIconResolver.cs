@@ -81,7 +81,9 @@ public static class BoardsCuiIconResolver
             : FindBrush(role, target) is { } brush
                 ? RepresentativeColor(brush, background)
                 : PaletteColor(normalized, palette);
-        return new SolidColorBrush(ContrastSafeColor(desired, backgrounds, 3d));
+        return TryContrastSafeColor(desired, backgrounds, 3d, out var safeColor)
+            ? new SolidColorBrush(safeColor)
+            : text;
     }
 
     private static IBrush? FindBrush(string name, Control? target)
@@ -140,7 +142,7 @@ public static class BoardsCuiIconResolver
         }
     }
 
-    private static Color ContrastSafeColor(Color desired, IReadOnlyList<Color> backgrounds, double minimumRatio)
+    private static bool TryContrastSafeColor(Color desired, IReadOnlyList<Color> backgrounds, double minimumRatio, out Color safeColor)
     {
         var candidates = new List<Color> { desired, Colors.Black, Colors.White };
         candidates.AddRange(backgrounds.Select(background =>
@@ -150,7 +152,8 @@ public static class BoardsCuiIconResolver
             .Select(candidate => (Color: candidate, MinimumRatio: backgrounds.Min(background => CuiContrast.Ratio(candidate, background))))
             .OrderByDescending(candidate => candidate.MinimumRatio)
             .First();
-        return best.MinimumRatio >= minimumRatio ? best.Color : desired;
+        safeColor = best.Color;
+        return best.MinimumRatio >= minimumRatio;
     }
 
     private static Color PaletteColor(string key, CuiPalette palette) => key switch

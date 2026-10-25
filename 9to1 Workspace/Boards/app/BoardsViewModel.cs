@@ -1903,6 +1903,36 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         NavRebuildRequested?.Invoke();
     }
 
+    public async Task SetSectionIconAsync(string sectionId, string iconKey, string? iconColor)
+    {
+        if (!RequireEditMode()) return;
+        if (!BoardsIcons.SectionIconChoices.Contains(iconKey, StringComparer.Ordinal) ||
+            (iconColor is not null && (iconColor.Length != 7 || iconColor[0] != '#' ||
+                !iconColor.Skip(1).All(Uri.IsHexDigit))))
+        {
+            Set("StatusText", "Choose an available section icon and color.");
+            return;
+        }
+
+        try
+        {
+            await _session.SetSectionIconAsync(sectionId, iconKey, iconColor);
+            PushDocumentToBindings();
+            NavRebuildRequested?.Invoke();
+            RequestRebuild();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                                          InvalidOperationException or ArgumentException)
+        {
+            System.Diagnostics.Trace.TraceWarning($"Section appearance change failed: {exception.Message}");
+            Set("StatusText", "The section appearance could not be saved. Try again.");
+        }
+    }
+
     public async Task RenamePageAsync(string sectionId, string pageId, string title)
     {
         if (!RequireEditMode()) return;
