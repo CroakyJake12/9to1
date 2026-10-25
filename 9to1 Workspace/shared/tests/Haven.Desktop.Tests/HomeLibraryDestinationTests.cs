@@ -117,7 +117,9 @@ public sealed class HomeLibraryDestinationTests
         var row = new HomeArtifactReference("boards", id, "Shared notebook", "Boards notebook", "Team space",
             "fixture-profile", "Morgan", DateTimeOffset.UnixEpoch, IsRecent: true, IsPinned: true,
             IsShared: true, IsGenerated: true, Tags: ["team"], OpenLink: link);
-        var page = Page(new Index([row]), new(), (_, _) => true); Window? window = null;
+        var preferences = new Preferences();
+        await preferences.SetPinnedAsync("boards", id, true, CancellationToken.None);
+        var page = Page(new Index([row]), new(), (_, _) => true, preferences); Window? window = null;
         try
         {
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
@@ -125,7 +127,7 @@ public sealed class HomeLibraryDestinationTests
                 control => HasAuthoredIdentity(control, "home-library-recent")).Text);
             Assert.Equal("Pinned", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
                 control => HasAuthoredIdentity(control, "home-library-pinned")).Text);
-            Assert.Equal("Shared", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+            Assert.Equal("Shared by", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
                 control => HasAuthoredIdentity(control, "home-library-shared")).Text);
             Assert.Equal("Morgan", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
                 control => HasAuthoredIdentity(control, "home-library-shared-by")).Text);
