@@ -264,17 +264,19 @@ public sealed class SpaceBuilderCanonicalSourceTests
                 foreach (var scroll in root.GetVisualDescendants().OfType<ScrollViewer>())
                     scroll.Offset = new Avalonia.Vector(0, scroll.Extent.Height);
                 window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
-                Button Find(string id) => root.GetVisualDescendants().OfType<Button>().Single(button =>
-                    button.Name == id || AutomationProperties.GetAutomationId(button) == id);
+                bool HasCuiId(Button button, string id) =>
+                    button.Name == id || AutomationProperties.GetAutomationId(button) == id ||
+                    CuiRuntimeIdentity.GetStableId(button)?.EndsWith("/id:" + id, StringComparison.Ordinal) == true;
+                Button Find(string id) => root.GetVisualDescendants().OfType<Button>().Single(button => HasCuiId(button, id));
                 var options = Assert.IsAssignableFrom<IReadOnlyList<SpaceBuilderBoardsSourceOption>>(GetBinding("builder.boardOptions"));
                 Assert.Single(options);
-                var matchingAdds = root.GetVisualDescendants().OfType<Button>().Where(button =>
-                    button.Name == "space-builder-attach-boards-source" ||
-                    AutomationProperties.GetAutomationId(button) == "space-builder-attach-boards-source").ToArray();
+                var matchingAdds = root.GetVisualDescendants().OfType<Button>()
+                    .Where(button => HasCuiId(button, "space-builder-attach-boards-source")).ToArray();
                 Assert.True(matchingAdds.Length == 1,
                     $"Expected the single Boards source action in Advanced; found {matchingAdds.Length}. " +
                     $"Buttons=[{string.Join(", ", root.GetVisualDescendants().OfType<Button>().Select(button =>
-                        $"{button.Name ?? "<unnamed>"}/{AutomationProperties.GetAutomationId(button) ?? "<no-id>"}"))}]");
+                        $"{button.Name ?? "<unnamed>"}/{AutomationProperties.GetAutomationId(button) ?? "<no-id>"}/" +
+                        $"{CuiRuntimeIdentity.GetStableId(button) ?? "<no-stable-id>"}"))}]");
                 var add = matchingAdds[0]; Assert.True(add.IsEnabled);
                 add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
                 var fileOptions = Assert.IsAssignableFrom<IReadOnlyList<SpaceBuilderFilesSourceOption>>(GetBinding("builder.filesOptions"));
