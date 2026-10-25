@@ -58,8 +58,11 @@ public static class ThemeApplier
     {
         foreach (var combo in root.GetVisualDescendants().OfType<ComboBox>())
         {
-            CuiPropertyPresentation.Set(combo, "Background", BoardsTheme.CardBrush, CuiPropertyLevel.Instance,
-                "Boards toolbar surface");
+            var dropdownBrush = combo.TryFindResource("CuiAccentSoftBrush", out var accentSoft) && accentSoft is IBrush brush
+                ? brush
+                : BoardsTheme.CardBrush;
+            CuiPropertyPresentation.Set(combo, "Background", dropdownBrush, CuiPropertyLevel.Instance,
+                "Boards toolbar dropdown trigger");
             CuiPropertyPresentation.Set(combo, "Foreground", BoardsTheme.TextBrush, CuiPropertyLevel.Instance,
                 "Boards toolbar surface");
             CuiPropertyPresentation.Set(combo, "BorderWidth", new Avalonia.Thickness(0), CuiPropertyLevel.Instance,

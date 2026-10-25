@@ -304,13 +304,25 @@ public static class NavBuilder
             HorizontalAlignment = HorizontalAlignment.Center,
         };
         CuiPropertyPresentation.Set(selectedMarker, "Background",
-            selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
+            selected ? new SolidColorBrush(BoardsTheme.SharedPalette.AccentStrong) : Brushes.Transparent,
             CuiPropertyLevel.Instance, "Boards selected page marker");
         Grid.SetColumn(selectedMarker, 0);
         row.Children.Add(selectedMarker);
         row.Children.Add(disclosure);
         Grid.SetColumn(disclosure, 1);
-        var pageIcon = BoardsIcons.Glyph(BoardsIcons.Page, 15, "Page");
+        var pageIcon = new Image
+        {
+            Source = BoardsCuiIconResolver.CreateSectionIcon(BoardsIcons.Page,
+                BoardsCuiIconResolver.SemanticBrush(BoardsIcons.Page)),
+            Width = 16,
+            Height = 16,
+            Stretch = Avalonia.Media.Stretch.Uniform,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        BoardsCuiIconResolver.ObserveSemanticIcon(pageIcon, BoardsIcons.Page);
+        ToolTip.SetTip(pageIcon, "Page");
+        Avalonia.Automation.AutomationProperties.SetName(pageIcon, "Page icon");
         Grid.SetColumn(pageIcon, 2);
         row.Children.Add(pageIcon);
         var button = new Button

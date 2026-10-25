@@ -9,6 +9,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -74,7 +75,15 @@ public sealed class BoardsEditorTests
     {
         var grip = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("grip", Brushes.White).Drawing);
         Assert.NotNull(grip.Brush);
-        Assert.NotNull(grip.Pen);
+        Assert.Null(grip.Pen);
+
+        var alignment = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("align-left", Brushes.White).Drawing);
+        Assert.NotNull(alignment.Brush);
+        Assert.Null(alignment.Pen);
+
+        var bullets = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("bulleted-list", Brushes.White).Drawing);
+        Assert.NotNull(bullets.Brush);
+        Assert.Null(bullets.Pen);
 
         var attachment = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("paperclip", Brushes.White).Drawing);
         Assert.Null(attachment.Brush);
@@ -155,6 +164,48 @@ public sealed class BoardsEditorTests
             Assert.True(Assert.IsType<bool>(vm.Get(property)));
         }
 
+        TestUiThread.Run(vm.Dispose);
+    }
+
+    [Fact]
+    public async Task Toolbar_font_controls_accept_typed_values_and_dropdown_choices_with_undo()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(null);
+        var vm = new BoardsViewModel(session);
+        var controls = TestUiThread.Run(() =>
+        {
+            var host = new StackPanel();
+            ToolbarBuilder.Rebuild(host, vm);
+            return Flatten(host).OfType<ComboBox>().ToDictionary(
+                combo => Avalonia.Automation.AutomationProperties.GetName(combo) ?? string.Empty,
+                StringComparer.Ordinal);
+        });
+        var font = controls["Font family"];
+        var size = controls["Font size"];
+        Assert.True(font.IsEditable);
+        Assert.True(size.IsEditable);
+
+        TestUiThread.Run(() => font.SelectedItem = "Georgia");
+        Assert.Equal("Georgia", session.Document.Sections[0].Pages[0].Blocks[0].FontFamily);
+        TestUiThread.Run(() =>
+        {
+            font.Text = "Cascadia Mono";
+            font.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        });
+        Assert.Equal("Cascadia Mono", session.Document.Sections[0].Pages[0].Blocks[0].FontFamily);
+
+        TestUiThread.Run(() => size.SelectedItem = "20");
+        Assert.Equal(20, session.Document.Sections[0].Pages[0].Blocks[0].FontSize);
+        TestUiThread.Run(() =>
+        {
+            size.Text = "18.5";
+            size.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        });
+        Assert.Equal(18.5, session.Document.Sections[0].Pages[0].Blocks[0].FontSize);
+
+        Assert.True(await session.UndoAsync());
+        Assert.Equal(20, session.Document.Sections[0].Pages[0].Blocks[0].FontSize);
         TestUiThread.Run(vm.Dispose);
     }
 

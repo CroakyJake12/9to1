@@ -647,7 +647,9 @@ public static class BoardsCuiIconResolver
             Brush = filledSilhouette ? brush : null,
             // Keep the authored open details visible on filled silhouettes (for example the
             // dividers in the Boards mark and the lines in the section glyph).
-            Pen = new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round),
+            Pen = filledSilhouette && source.Path.Figures.All(figure => figure.Closed)
+                ? null
+                : new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round),
         })
         {
             Viewbox = source.ViewBox is { } viewBox
