@@ -92,7 +92,6 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
         await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
         var configured = policy.Model.DefaultModelId is not null || policy.Model.ProviderConstraint is not null ||
             (policy.Model.RequiredCapabilities?.Count ?? 0) != 0 || policy.ModelsCategoryDisabled;
-        var candidates = result.Models;
         if (policy.ModelsCategoryDisabled)
             return new([], null, PreventImplicitFallback: true,
                 PolicyNotice: "Models are disabled by this Space or an ancestor policy.");
@@ -104,6 +103,7 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
 
         var result = await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
         await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        var candidates = result.Models;
 
         var required = new List<ToolCapability>();
         foreach (var name in policy.Model.RequiredCapabilities ?? [])
