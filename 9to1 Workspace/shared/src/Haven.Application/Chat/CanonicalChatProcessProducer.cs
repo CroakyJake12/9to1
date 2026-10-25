@@ -31,6 +31,8 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
     private bool _admissionSealed;
     private bool _lifetimeDisposed;
     private bool _sourceInvoked;
+    private bool _runWithdrawalRequested;
+    private Task<bool>? _runWithdrawalEnd;
     private CancellationToken _enumerationToken;
     private IAsyncEnumerator<ChatStreamEvent>? _iterator;
     private ChatStreamEvent? _current;
@@ -135,6 +137,12 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
         lock (_gate)
         {
             if (_capacityFailure is { } capacityCause) ExceptionDispatchInfo.Capture(capacityCause).Throw();
+            // A genuine run-level pause owns the existing Dispose/stop, not another Move.
+            // Its reader observes end-of-stream only AFTER those same cleanup tasks and
+            // the durable terminal acknowledgement succeed. Process sealing stays a refusal.
+            if (_runWithdrawalRequested && _enumerationClaimed && _dispose is { } withdrawal &&
+                !_owner.HasSealedOriginalProcessProducerAdmission)
+                return new(_runWithdrawalEnd ??= ObserveOriginalRunWithdrawalEndAsync(withdrawal));
             if (!_enumerationClaimed || _admissionSealed || _dispose is not null || _owner.HasSealedOriginalProcessProducerAdmission)
                 throw new InvalidOperationException("Canonical Move admission is unavailable.");
             if (_lastMove is { IsCompleted: false })
@@ -154,6 +162,17 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
         }
         start.SetResult();
         return new(actual);
+    }
+
+    private async Task<bool> ObserveOriginalRunWithdrawalEndAsync(Task sameDispose)
+    {
+        await sameDispose.ConfigureAwait(false);
+        Task? sameStop;
+        lock (_gate) sameStop = _stop;
+        if (sameStop is not null) await sameStop.ConfigureAwait(false);
+        if (!HasHealthyClosedOriginal)
+            throw new InvalidOperationException("The original run withdrawal has no healthy cleanup and terminal acknowledgement.");
+        return false;
     }
 
     private async Task<bool> MoveOriginalAsync(Task start)
@@ -208,7 +227,7 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
         Check(ActiveOriginal.Value); Check(SynchronousOriginal);
     }
 
-    internal void DemandExternalOriginalJoin()
+    private void DemandExternalMoveOrDisposeJoin()
     {
         void Check(Context? context)
         {
@@ -217,6 +236,11 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
                     throw new InvalidOperationException("An original canonical callback cannot join its own Move/Dispose.");
         }
         Check(ActiveOriginal.Value); Check(SynchronousOriginal);
+    }
+
+    internal void DemandExternalOriginalJoin()
+    {
+        DemandExternalMoveOrDisposeJoin();
         _custody.DemandExternalJoin();
     }
 
@@ -260,6 +284,7 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
         {
             _admissionSealed = true;
             if (processRetirement) _custody.MarkRetirementRequested();
+            else _runWithdrawalRequested = true;
             if (!_lifetimeDisposed && _stop is null)
             {
                 stopStart = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -286,6 +311,25 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
     public ValueTask DisposeAsync()
     {
         DemandExternalOriginalJoin();
+        return AcquireOriginalDispose();
+    }
+
+    /// <summary>The privately issued hosted driver owns this exact source enumeration, not
+    /// the coordinator's process drain. Its final child join must not be mistaken for joining
+    /// that encompassing driver. Public disposal and actual Move/Dispose reentry stay guarded.</summary>
+    internal ValueTask DisposeHostedOriginalSourceAsync(HostedOriginalRunResume host,
+        IAsyncEnumerator<ChatStreamEvent> sameIterator)
+    {
+        if (!ReferenceEquals(host.Issuer, _owner) || !ReferenceEquals(host.Source, this) ||
+            !ReferenceEquals(sameIterator, this) || !_owner.IsIssuedOriginalRunResumeObservation(host.Lease) ||
+            !ReferenceEquals(host.Lease.Original, host) || host.ProducerCustody.OriginalBody is not { IsCompleted: false })
+            throw new InvalidOperationException("Only the live privately issued host may join its exact continuation source.");
+        DemandExternalMoveOrDisposeJoin();
+        return AcquireOriginalDispose();
+    }
+
+    private ValueTask AcquireOriginalDispose()
+    {
         TaskCompletionSource? start = null;
         Task actual;
         lock (_gate)

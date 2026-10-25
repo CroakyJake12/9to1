@@ -36,10 +36,27 @@ public sealed partial class ChatCloudPermissionCallerTests
         var held = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         rig.Client.RunApprovedOwnedFrame = true;
         CancellationToken actualProducerToken = default;
-        rig.Capture.ApprovedProviderBody = actual => { actualProducerToken = actual; entered.TrySetResult(); return held.Task; };
+        var acquired = new TaskCompletionSource<TaskRunOriginalResumeObservationLease>(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.Capture.ApprovedProviderBody = async actual =>
+        {
+            actualProducerToken = actual;
+            var issued = await acquired.Task.ConfigureAwait(false);
+            var host = typeof(TaskRunOriginalResumeObservationLease).GetField("Original", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(issued)!;
+            var source = host.GetType().GetField("Source", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host)!;
+            var sameIterator = Assert.IsAssignableFrom<IAsyncEnumerator<ChatStreamEvent>>(source);
+            // A business callback must still refuse public self-disposal and the narrow
+            // private host seam while its SAME Move is active. Only the outer host's finally
+            // may perform the owned child join after that Move actually settles.
+            Assert.Throws<InvalidOperationException>(() => { _ = sameIterator.DisposeAsync(); });
+            var hostDispose = source.GetType().GetMethod("DisposeHostedOriginalSourceAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            var refusal = Assert.Throws<TargetInvocationException>(() => hostDispose.Invoke(source, [host, sameIterator]));
+            Assert.IsType<InvalidOperationException>(refusal.InnerException);
+            Assert.Throws<InvalidOperationException>(() => rig.Tasks.DemandExternalOriginalProcessJoin());
+            entered.TrySetResult();
+            return await held.Task.ConfigureAwait(false);
+        };
         SpaceOriginalRunResumeObservation? observer = null;
         Task? childClose = null, close = null, producer = null;
-        var acquired = new TaskCompletionSource<TaskRunOriginalResumeObservationLease>(TaskCreationOptions.RunContinuationsAsynchronously);
         var retiring = false;
         var parent = new DesktopOriginalWorkLifetime(() =>
         {

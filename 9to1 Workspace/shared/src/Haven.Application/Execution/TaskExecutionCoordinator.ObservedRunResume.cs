@@ -225,7 +225,8 @@ public sealed partial class TaskExecutionCoordinator
         finally
         {
             if (iterator is not null)
-                await operation.AwaitAsync(() => iterator.DisposeAsync().AsTask(), owningCleanup: true).ConfigureAwait(false);
+                await operation.AwaitAsync(() => original.Source.DisposeHostedOriginalSourceAsync(original, iterator).AsTask(),
+                    owningCleanup: true).ConfigureAwait(false);
         }
         var actual = original.ActualRun ?? throw new InvalidOperationException("The hosted continuation never bound its genuine same-run input/creation receipt.");
         var terminal = actual.OriginalTerminalObservation
