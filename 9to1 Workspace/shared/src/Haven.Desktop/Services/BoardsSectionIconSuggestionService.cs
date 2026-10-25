@@ -4,6 +4,7 @@ using CakeOS.Apps.Boards.App;
 using CakeOS.Apps.Boards.Contract;
 using Dulche.Runtime;
 using Haven.Application;
+using Haven.Application.Haven;
 using Haven.Core;
 using HavenOS.Home.Core;
 
