@@ -79,6 +79,9 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.True(session.IsPublicationCurrent);
         Assert.IsAssignableFrom<Control>(session.OriginalNativeView);
         Assert.Contains("Selected Files board", session.Title, StringComparison.Ordinal);
+        var closePreparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(
+            await session.PrepareCloseAsync(TestContext.Current.CancellationToken));
+        await closePreparation.BeginClose();
         await session.CloseAndDrainAsync();
         Assert.True(session.CanRetireOriginalView);
         Assert.False(session.IsPublicationCurrent);
