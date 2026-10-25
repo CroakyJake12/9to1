@@ -110,10 +110,21 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             var receipt = await save(sourceId, expectedRevision, isolatedBytes, token).ConfigureAwait(false);
             if (receipt is null)
                 throw new InvalidDataException("The external save returned no receipt.");
-            if (!receipt.Committed || receipt.Conflict || string.IsNullOrWhiteSpace(receipt.NewRevision) ||
-                string.Equals(receipt.NewRevision, expectedRevision, StringComparison.Ordinal))
+            var invalidRevision = string.IsNullOrWhiteSpace(receipt.NewRevision) ||
+                string.Equals(receipt.NewRevision, expectedRevision, StringComparison.Ordinal);
+            if (!receipt.Committed || receipt.Conflict || invalidRevision)
             {
-                host!.LastSaveReceipt = receipt;
+                host!.LastSaveReceipt = receipt.Committed
+                    ? receipt with
+                    {
+                        Committed = false,
+                        Conflict = receipt.Conflict || invalidRevision,
+                        Code = receipt.Code ?? (invalidRevision ? "invalid-revision" : "conflict"),
+                        Message = receipt.Message ?? (invalidRevision
+                            ? "The external source did not confirm a new board revision."
+                            : "The source changed before this board revision could be saved.")
+                    }
+                    : receipt;
                 var failure = !string.IsNullOrWhiteSpace(receipt.Message)
                     ? receipt.Message
                     : receipt.Conflict
