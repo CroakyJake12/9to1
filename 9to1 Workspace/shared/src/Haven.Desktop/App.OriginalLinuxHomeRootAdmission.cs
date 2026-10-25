@@ -65,7 +65,7 @@ public sealed partial class App
                 original.DemandPublication();
                 if (!ReferenceEquals(home, _actualWindowsHome) || !registration.HasOriginalComposition(home))
                     throw new UnauthorizedAccessException("The actual Linux Home/Root composition changed during startup.");
-                body(); original.DemandPublication();
+                body(); original.DemandPublication(); return true;
             });
             void Retain(Task raw) { /* each client/source privately retains its exact raw child first */ }
             await original.AwaitAsync(client.ConnectOriginalWithinSourceAsync(Scope, Retain, original.Token));
