@@ -112,6 +112,21 @@
               <Button Content="Wider" Action="ContextImageWider" AccessibleName="Wider image" />
               <Button Content="Natural size" Action="ContextImageNatural" />
               <Input Type="Select" Width="100" AccessibleName="Image alignment" ItemsSource="{Binding ContextHorizontalOptions}" SelectedIndex="{Binding ContextImageAlignmentIndex}" />
+              <Input Type="Checkbox" Content="Keep aspect ratio" Checked="{Binding ContextImageKeepAspectRatio}" />
+              <Button Content="Shorter" Action="ContextImageShorter" AccessibleName="Shorter image" />
+              <Button Content="Taller" Action="ContextImageTaller" AccessibleName="Taller image" />
+              <Button Content="Rotate left" Action="ContextImageRotateLeft" AccessibleName="Rotate image left" />
+              <Button Content="Rotate right" Action="ContextImageRotateRight" AccessibleName="Rotate image right" />
+              <Button Content="Crop left" Action="ContextImageCropLeft" AccessibleName="Crop image from the left" />
+              <Button Content="Crop right" Action="ContextImageCropRight" AccessibleName="Crop image from the right" />
+              <Button Content="Crop top" Action="ContextImageCropTop" AccessibleName="Crop image from the top" />
+              <Button Content="Crop bottom" Action="ContextImageCropBottom" AccessibleName="Crop image from the bottom" />
+              <Button Content="Reset crop" Action="ContextImageResetCrop" AccessibleName="Reset image crop" />
+              <Button Content="Fit mode" Action="ContextImageCycleFit" AccessibleName="Change image fit mode" />
+              <Text Text="{Binding ContextImageFitMode}" VerticalAlignment="Center" AccessibleName="Image fit mode" />
+              <Input Type="Text" Width="160" AccessibleName="Image caption" PlaceholderText="Caption" Value="{Binding ContextImageCaption}" WriteBack="True" />
+              <Input Type="Text" Width="160" AccessibleName="Image alt text" PlaceholderText="Alt text" Value="{Binding ContextImageAltText}" WriteBack="True" />
+              <Input Type="Text" Width="200" AccessibleName="Image link metadata" PlaceholderText="Link metadata" Value="{Binding ContextImageLinkUri}" WriteBack="True" />
               <Button Content="Replace…" Action="ContextReplaceImage" AccessibleName="Replace image from a file" />
               <Button Content="Remove" Action="ContextRemoveImage" AccessibleName="Remove this image" />
             </Container>

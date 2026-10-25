@@ -18,6 +18,12 @@ public sealed class ContractAdapterTests
         var document = new HavenBoardDocument(HavenBoardDocument.FormatIdentity,
             HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), now, now,
             Snapshot: null, RichNotes: HavenRichNotes.Create("Read-only source"));
+        var imageBlock = new HavenRichBlock
+        {
+            Kind = HavenRichBlockKind.Image,
+            Image = new HavenRichImage { DisplayName = "remote.png", LocalReference = "sidecar:" + new string('a', 64) }
+        };
+        document.RichNotes!.Sections[0].Pages[0].Blocks.Add(imageBlock);
         var bytes = JsonSerializer.SerializeToUtf8Bytes(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         var originalBytes = bytes.ToArray();
         var decoded = HavenBoardDocumentCodec.Deserialize(bytes);
@@ -29,6 +35,7 @@ public sealed class ContractAdapterTests
         Assert.False(vm.CanToggleEditMode);
         Assert.False(adapter.CanUndo);
         Assert.False(adapter.CanRedo);
+        Assert.Null(await adapter.GetImageBytesAsync(imageBlock.Id));
 
         var originalPageCount = adapter.Document.Sections[0].Pages.Count;
         await vm.DispatchAsync("AddPage", null);
@@ -52,6 +59,69 @@ public sealed class ContractAdapterTests
 
         var oversized = new byte[HavenBoardDocumentCodec.MaximumDocumentBytes + 1];
         Assert.Throws<InvalidDataException>(() => HavenBoardDocumentCodec.Deserialize(oversized));
+    }
+
+    [Fact]
+    public async Task Image_formatting_metadata_survives_save_and_reopen()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "image-formatting.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            string pageId;
+            string blockId;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var page = adapter.Document.Sections[0].Pages[0];
+                pageId = page.Id;
+                var image = new RichBoardBlock
+                {
+                    Kind = "image",
+                    Image = new RichImageView { DisplayName = "diagram.png", DataBase64 = "AQ==" }
+                };
+                blockId = image.Id;
+                page.Blocks.Add(image);
+                adapter.MarkDirty();
+                await adapter.SaveAsync();
+
+                image.Image!.Width = 360;
+                image.Image.Height = 240;
+                image.Image.KeepAspectRatio = false;
+                image.Image.RotationDegrees = 90;
+                image.Image.CropLeft = 0.1;
+                image.Image.CropRight = 0.05;
+                image.Image.CropTop = 0.2;
+                image.Image.FitMode = "cover";
+                image.Image.Alignment = "center";
+                image.Image.Caption = "Rendered diagram";
+                image.Image.AltText = "A labelled diagram";
+                image.Image.LinkUri = "https://example.test/reference";
+                adapter.MarkDirty();
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var saved = Assert.Single(reopened.Document.Sections[0].Pages.Single(page => page.Id == pageId).Blocks,
+                block => block.Id == blockId);
+            var projected = saved.Image!;
+            Assert.Equal(360, projected.Width);
+            Assert.Equal(240, projected.Height);
+            Assert.False(projected.KeepAspectRatio);
+            Assert.Equal(90, projected.RotationDegrees);
+            Assert.Equal(0.1, projected.CropLeft);
+            Assert.Equal(0.05, projected.CropRight);
+            Assert.Equal(0.2, projected.CropTop);
+            Assert.Equal("cover", projected.FitMode);
+            Assert.Equal("center", projected.Alignment);
+            Assert.Equal("Rendered diagram", projected.Caption);
+            Assert.Equal("A labelled diagram", projected.AltText);
+            Assert.Equal("https://example.test/reference", projected.LinkUri);
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
     }
 
     [Fact]
