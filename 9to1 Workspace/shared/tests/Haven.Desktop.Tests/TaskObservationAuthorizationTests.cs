@@ -175,6 +175,22 @@ public sealed partial class ChatCloudPermissionCallerTests
         public Task<SettingsImportResult> ImportAsync(SettingsExportManifest value, CancellationToken token) => throw new NotSupportedException();
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Task_observation_requires_a_complete_current_authentication_revision_even_for_historical_readonly_tasks(string invalidRevision)
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig();
+        var task = await rig.Tasks.BeginAuthorizedAsync(Guid.NewGuid(), Guid.NewGuid(), "actual owned task", TaskExecutionDurability.PersistedPlan, [], token);
+        rig.Actors.Current = rig.Actors.Current! with { AuthenticationRevision = invalidRevision };
+        var single = await rig.Tasks.ReadAuthorizedTaskObservationAsync(task.TaskId, token);
+        Assert.Equal(TaskObservationDisposition.Denied, single.Disposition); Assert.Null(single.Snapshot);
+        var page = await rig.Tasks.ReadAuthorizedTaskPageAsync(10, null, token);
+        Assert.Equal(TaskObservationDisposition.Denied, page.Disposition); Assert.Empty(page.Tasks);
+        Assert.Equal(0, rig.Client.Dispatches);
+    }
+
     [Fact]
     public async Task Task_observation_reopens_historical_own_task_after_authentication_renewal_without_renewing_command_admission()
     {

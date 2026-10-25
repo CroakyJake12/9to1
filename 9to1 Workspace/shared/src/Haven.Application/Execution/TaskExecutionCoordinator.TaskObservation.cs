@@ -69,7 +69,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunObservationAuth
         lock (_sync) if (_originalAdmissionSealed) return null;
         var actual = RunDelegationCallback(() => _actors.GetCurrentAsync(token).AsTask(), token);
         var actor = await ObserveOriginalPermissionReadAsync(actual).ConfigureAwait(false);
-        return actor is null ? null : new TaskObservationPrincipal(this, actor);
+        return actor is null || !ValidActor(actor) ? null : new TaskObservationPrincipal(this, actor);
     }
     async Task ITaskRunObservationAuthority.ValidateObservationPrincipalAsync(TaskObservationPrincipal principal, CancellationToken token)
     {
