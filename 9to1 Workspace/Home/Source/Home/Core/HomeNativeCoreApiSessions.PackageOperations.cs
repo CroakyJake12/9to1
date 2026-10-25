@@ -1,4 +1,5 @@
 using HavenOS.Home.Apps;
+using Haven.Application;
 
 namespace HavenOS.Home.Core;
 
