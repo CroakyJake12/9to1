@@ -190,7 +190,7 @@ public sealed class VisualCaptureTests
             ?? throw new InvalidOperationException("The block grip is not in the page card visual tree.");
         var insertPoint = insert.TranslatePoint(new Point(0, 0), pageCard)
             ?? throw new InvalidOperationException("The block insert action is not in the page card visual tree.");
-        Assert.InRange(Math.Abs(blockTextPoint.X - titlePoint.X), 0, 1,
+        Assert.True(Math.Abs(blockTextPoint.X - titlePoint.X) <= 1,
             $"Block text should align with the page title; block={blockTextPoint}, title={titlePoint}.");
         Assert.Equal(32, grip.Bounds.Width);
         Assert.Equal(32, grip.Bounds.Height);
