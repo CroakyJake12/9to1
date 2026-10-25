@@ -189,6 +189,7 @@ internal sealed class BrowseEngineViewport : ContentControl
     private readonly Dictionary<IBrowseEngineTab, Control> _originalViews = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<IBrowseAppContentSession, Border> _originalAppViews = new(ReferenceEqualityComparer.Instance);
     private BrowseNativeWorkspace.TabRow? _tabDragSource;
+    private IPointer? _tabDragPointer;
     private Point _tabDragStart;
     private bool _tabDragActive;
     private readonly TextBlock _unavailable = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(24),
@@ -211,6 +212,7 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.AddHandler(InputElement.PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        _findKeyScope?.AddHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost, RoutingStrategies.Tunnel, handledEventsToo: true);
     }
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
     {
@@ -219,36 +221,45 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTabPointerPressed);
         _findKeyScope?.RemoveHandler(InputElement.PointerMovedEvent, OnTabPointerMoved);
         _findKeyScope?.RemoveHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased);
-        _tabDragSource = null; _tabDragActive = false;
+        _findKeyScope?.RemoveHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost);
+        ClearTabDrag();
         _findKeyScope = null;
     }
     private void OnTabPointerPressed(object? sender, PointerPressedEventArgs args)
     {
         if (!_workspace.IsReady || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
             !TryFindTabRow(args.Source, out _, out var row)) return;
-        _tabDragSource = row; _tabDragStart = args.GetPosition(this); _tabDragActive = false;
+        _tabDragSource = row; _tabDragPointer = args.Pointer; _tabDragStart = args.GetPosition(this); _tabDragActive = false;
     }
     private void OnTabPointerMoved(object? sender, PointerEventArgs args)
     {
-        if (_tabDragSource is null || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
-        if (!_tabDragActive && (args.GetPosition(this) - _tabDragStart).Length < 8) return;
+        if (_tabDragSource is null || !ReferenceEquals(_tabDragPointer, args.Pointer) ||
+            !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        if (!_tabDragActive)
+        {
+            var position = args.GetPosition(this);
+            var deltaX = position.X - _tabDragStart.X; var deltaY = position.Y - _tabDragStart.Y;
+            if (deltaX * deltaX + deltaY * deltaY < 64) return;
+        }
         _tabDragActive = true; args.Handled = true;
     }
     private async void OnTabPointerReleased(object? sender, PointerReleasedEventArgs args)
     {
         var source = _tabDragSource;
+        if (source is null || !ReferenceEquals(_tabDragPointer, args.Pointer)) return;
         var wasDrag = _tabDragActive;
-        _tabDragSource = null; _tabDragActive = false;
+        ClearTabDrag();
         if (!wasDrag) return;
+        if (!_workspace.IsCurrentTabRow(source)) return; // Let a stale row's ordinary release continue through CUI.
         args.Handled = true;
-        if (source is null || _findKeyScope is not { } scope) return;
+        if (_findKeyScope is not { } scope) return;
         var point = args.GetPosition(scope);
         var tabButtons = scope.GetVisualDescendants().OfType<Button>()
             .Where(button => button.Name == "BrowseTabButton")
             .ToArray();
         var targetIndex = Array.FindIndex(tabButtons, button => button.TranslatePoint(default, scope) is { } origin &&
                 new Rect(origin, button.Bounds.Size).Contains(point));
-        if ((uint)targetIndex >= (uint)tabButtons.Length || !_workspace.TryGetCurrentTabRow(targetIndex, out var target) || target is null) return;
+        if ((uint)targetIndex >= (uint)tabButtons.Length || !TryGetTabRow(tabButtons[targetIndex], out var target) || target is null) return;
         var targetButton = tabButtons[targetIndex];
         var targetOrigin = targetButton.TranslatePoint(default, scope);
         if (targetOrigin is null) return;
@@ -265,15 +276,33 @@ internal sealed class BrowseEngineViewport : ContentControl
         for (var control = source as Control; control is not null; control = control.GetVisualParent() as Control)
             if (control is Button candidate && candidate.Name == "BrowseTabButton")
             {
-                var buttons = _findKeyScope?.GetVisualDescendants().OfType<Button>()
-                    .Where(item => item.Name == "BrowseTabButton").ToArray() ?? [];
-                var index = Array.IndexOf(buttons, candidate);
-                if (_workspace.TryGetCurrentTabRow(index, out var current) && current is not null)
+                if (TryGetTabRow(candidate, out var current) && current is not null)
                 { button = candidate; row = current; return true; }
                 break;
             }
         button = null!; row = null!; return false;
     }
+    private bool TryGetTabRow(Button button, out BrowseNativeWorkspace.TabRow? row)
+    {
+        row = null;
+        var stableId = CuiRuntimeIdentity.GetStableId(button);
+        if (stableId is null) return false;
+        var marker = stableId.LastIndexOf("|key:", StringComparison.Ordinal);
+        if (marker < 0) return false;
+        var valueStart = marker + 5;
+        var lengthEnd = stableId.IndexOf(':', valueStart);
+        if (lengthEnd < 0 || !int.TryParse(stableId.AsSpan(valueStart, lengthEnd - valueStart), out var length) || length < 1)
+            return false;
+        var keyStart = lengthEnd + 1;
+        if (keyStart + length > stableId.Length) return false;
+        return _workspace.TryGetCurrentTabRow(stableId.Substring(keyStart, length), out row);
+    }
+    private void OnTabPointerCaptureLost(object? sender, PointerCaptureLostEventArgs args)
+    {
+        if (ReferenceEquals(_tabDragPointer, args.Pointer)) ClearTabDrag();
+    }
+    private void ClearTabDrag()
+    { _tabDragSource = null; _tabDragPointer = null; _tabDragActive = false; }
     private async void OnFindKeyDown(object? sender, KeyEventArgs args)
     {
         if (args.Handled || !_workspace.IsReady || _findKeyScope is not { } scope) return;
