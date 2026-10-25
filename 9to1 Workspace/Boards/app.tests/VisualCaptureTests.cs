@@ -142,14 +142,24 @@ public sealed class VisualCaptureTests
             ?? throw new InvalidOperationException("The authored EditorScroll host did not create its CUI-owned ScrollViewer. Runtime tree:\n" + tree);
         Assert.True(editorScroll.Bounds.Width > width * 0.70,
             $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
-        var widthDifference = Math.Abs(pageCard.Bounds.Width - editorScroll.Viewport.Width);
-        Assert.True(widthDifference <= 1,
-            $"The seamless page width {pageCard.Bounds.Width} did not fill its editor viewport {editorScroll.Viewport.Width}.");
+        var horizontalInset = pageCard.Margin.Left + pageCard.Margin.Right;
+        var widthDifference = editorScroll.Viewport.Width - pageCard.Bounds.Width;
+        Assert.True(horizontalInset > 0,
+            $"The authored PageCard should retain its intentional inset margin; margin={pageCard.Margin}.");
+        Assert.InRange(widthDifference, horizontalInset - 1, horizontalInset + 1);
+        var pageCardOrigin = pageCard.TranslatePoint(new Point(0, 0), editorScroll);
+        Assert.NotNull(pageCardOrigin);
+        Assert.True(pageCardOrigin.Value.X >= -1,
+            $"The inset page card begins outside the editor viewport; origin={pageCardOrigin.Value}, viewport={editorScroll.Viewport}.");
+        Assert.True(pageCardOrigin.Value.X + pageCard.Bounds.Width <= editorScroll.Viewport.Width + 1,
+            $"The page card is clipped by the editor viewport; origin={pageCardOrigin.Value}, card={pageCard.Bounds}, viewport={editorScroll.Viewport}.");
         Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
-        Assert.Equal(new Thickness(0), pageCard.Margin);
-        Assert.Equal(new Thickness(0), pageCard.Padding);
+        Assert.True(pageCard.Padding.Left + pageCard.Padding.Right > 0 &&
+            pageCard.Padding.Top + pageCard.Padding.Bottom > 0,
+            $"The authored PageCard should preserve its inner content inset; padding={pageCard.Padding}.");
         Assert.Equal(new Thickness(0), pageCard.BorderThickness);
-        Assert.Equal(new CornerRadius(0), pageCard.CornerRadius);
+        Assert.True(pageCard.CornerRadius.TopLeft > 0,
+            $"The authored PageCard should retain its rounded panel treatment; radius={pageCard.CornerRadius}.");
         var contentLayer = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "DocumentContentLayer")
             ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
         Assert.Equal(new Thickness(40, 32), contentLayer.Margin);
