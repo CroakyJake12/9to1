@@ -104,6 +104,40 @@ public sealed class CuiHorizontalOverflowTests
     }
 
     [Fact]
+    public async Task Scoped_thin_scrollbar_keeps_native_hit_area_drag_and_contrast_fallback()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader();
+            var loaded = loader.LoadMarkup("<Container Type='Vertical Stack' VerticalScrolling='True' ScrollBarThickness='6'>" +
+                "<Text Text='Document' Height='1000'/></Container>");
+            Assert.Empty(loaded.Diagnostics);
+            var container = Assert.IsType<CuiContainerControl>(loaded.Root);
+            var window = new Window { Content = container, Width = 300, Height = 180 };
+            try
+            {
+                window.Show(); Pump(window);
+                var scroll = Assert.IsType<ScrollViewer>(container.Child);
+                var bar = scroll.GetVisualDescendants().OfType<ScrollBar>().Single(value => value.Orientation == Avalonia.Layout.Orientation.Vertical);
+                var thumb = Assert.Single(bar.GetVisualDescendants().OfType<Track>()).Thumb!;
+                var face = thumb.GetVisualDescendants().OfType<Border>().Single(value => value.Name == "CuiScrollThumbFace");
+                Assert.Equal(6, face.Bounds.Width, 2);
+                Assert.True(thumb.Bounds.Width >= 12); Assert.True(bar.Bounds.Width >= 12);
+                var point = thumb.TranslatePoint(new Point(thumb.Bounds.Width / 2, thumb.Bounds.Height / 2), window)!.Value;
+                window.MouseDown(point, MouseButton.Left); window.MouseMove(point + new Vector(0, 40));
+                window.MouseUp(point + new Vector(0, 40), MouseButton.Left); Pump(window);
+                Assert.True(scroll.Offset.Y > 0);
+                container.SetScrollBarThickness(8); Pump(window); Assert.Equal(8, face.Bounds.Width, 2);
+                container.Resources["CuiHighContrast"] = true; Pump(window); Assert.Equal(12, face.Bounds.Width, 2);
+                container.Resources["CuiHighContrast"] = false;
+                container.SetScrollBarThickness(0); Pump(window); Assert.Equal(12, face.Bounds.Width, 2);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public void Ordinary_horizontal_scrollers_keep_their_existing_rail_by_default()
     {
         using var loader = new CuiControlLoader();

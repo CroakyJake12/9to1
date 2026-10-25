@@ -385,7 +385,7 @@ public sealed class CuiControlRegistry
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "HorizontalOverflowArrows", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
+            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "HorizontalOverflowArrows", "ScrollBarThickness", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
@@ -513,6 +513,7 @@ public sealed class CuiControlRegistry
             ("IsHitTestVisible", "boolean", typeof(bool), true),
             ("HorizontalScrolling", "boolean", typeof(bool), true), ("VerticalScrolling", "boolean", typeof(bool), true),
             ("HorizontalOverflowArrows", "boolean", typeof(bool), true),
+            ("ScrollBarThickness", "length", typeof(double), true),
             ("FollowAtEnd", "boolean", typeof(bool), true),
             ("CompoundFocus", "boolean", typeof(bool), false),
             ("OwnsBackdrop", "boolean", typeof(bool), false),
@@ -580,7 +581,7 @@ public sealed class CuiControlRegistry
             ("multiline", "AcceptsReturn"),
             ("rotation", "Rotate"), ("rotate", "Rotate"), ("scale-x", "ScaleX"), ("scale-y", "ScaleY"),
             ("skew-x", "SkewX"), ("skew-y", "SkewY"), ("translate-x", "TranslateX"), ("translate-y", "TranslateY"),
-            ("horizontal-scrolling", "HorizontalScrolling"), ("vertical-scrolling", "VerticalScrolling"), ("horizontal-overflow-arrows", "HorizontalOverflowArrows"), ("follow-at-end", "FollowAtEnd"),
+            ("horizontal-scrolling", "HorizontalScrolling"), ("vertical-scrolling", "VerticalScrolling"), ("horizontal-overflow-arrows", "HorizontalOverflowArrows"), ("scrollbar-thickness", "ScrollBarThickness"), ("follow-at-end", "FollowAtEnd"),
             ("text-alignment", "TextAlignment"), ("vertical-text-alignment", "VerticalTextAlignment"),
             ("is-hit-test-visible", "IsHitTestVisible"),
             ("accessibility-name", "AccessibleName")
