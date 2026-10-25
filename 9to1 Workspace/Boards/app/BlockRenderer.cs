@@ -545,22 +545,35 @@ public static class BlockRenderer
         var alt = image?.AltText;
         var displayName = image?.DisplayName ?? "image";
         var width = image?.Width ?? 0;
+        var height = image?.Height ?? 0;
+        var keepAspect = image?.KeepAspectRatio != false;
+        var rotation = image?.RotationDegrees ?? 0;
+        var cropLeft = image?.CropLeft ?? 0;
+        var cropTop = image?.CropTop ?? 0;
+        var cropRight = image?.CropRight ?? 0;
+        var cropBottom = image?.CropBottom ?? 0;
+        var fitMode = image?.FitMode ?? "contain";
+        var caption = image?.Caption ?? string.Empty;
         frame.PointerPressed += (_, _) => vm.FocusBlock(captured);
-        _ = LoadImageIntoAsync(frame, vm, captured, alignment, alt, displayName, width);
+        _ = LoadImageIntoAsync(frame, vm, captured, alignment, alt, displayName, width, height,
+            keepAspect, rotation, cropLeft, cropTop, cropRight, cropBottom, fitMode, caption);
         shell.Children.Add(frame);
         return shell;
     }
 
     private static async Task LoadImageIntoAsync(
         Border frame, BoardsViewModel vm, string blockId,
-        string? alignment, string? altText, string displayName, double width)
+        string? alignment, string? altText, string displayName, double width, double height,
+        bool keepAspect, double rotation, double cropLeft, double cropTop, double cropRight, double cropBottom,
+        string fitMode, string caption)
     {
         // Embedded bytes resolve synchronously (cached per document version);
         // only sidecar payloads take the async path below.
         var immediate = vm.TryResolveImageBytes(blockId);
         if (immediate is not null)
         {
-            SetImageContent(frame, immediate, alignment, altText, displayName, width);
+            SetImageContent(frame, immediate, alignment, altText, displayName, width, height,
+                keepAspect, rotation, cropLeft, cropTop, cropRight, cropBottom, fitMode, caption);
             return;
         }
         byte[]? bytes = null;
@@ -579,10 +592,12 @@ public static class BlockRenderer
         }
         var captured = bytes;
         if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-            SetImageContent(frame, captured, alignment, altText, displayName, width);
+            SetImageContent(frame, captured, alignment, altText, displayName, width, height,
+                keepAspect, rotation, cropLeft, cropTop, cropRight, cropBottom, fitMode, caption);
         else
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                SetImageContent(frame, captured, alignment, altText, displayName, width));
+                SetImageContent(frame, captured, alignment, altText, displayName, width, height,
+                    keepAspect, rotation, cropLeft, cropTop, cropRight, cropBottom, fitMode, caption));
     }
 
     private static void SetImagePlaceholder(Border frame, string displayName) =>
@@ -597,29 +612,63 @@ public static class BlockRenderer
         };
 
     private static void SetImageContent(
-        Border frame, byte[] bytes, string? alignment, string? altText, string displayName, double width)
+        Border frame, byte[] bytes, string? alignment, string? altText, string displayName, double width,
+        double height, bool keepAspect, double rotation, double cropLeft, double cropTop,
+        double cropRight, double cropBottom, string fitMode, string caption)
     {
         try
         {
             using var stream = new MemoryStream(bytes);
             var bitmap = new Bitmap(stream);
+            IImage source = bitmap;
+            var left = Math.Clamp((int)Math.Round(bitmap.PixelSize.Width * cropLeft), 0, bitmap.PixelSize.Width - 1);
+            var top = Math.Clamp((int)Math.Round(bitmap.PixelSize.Height * cropTop), 0, bitmap.PixelSize.Height - 1);
+            var right = Math.Clamp((int)Math.Round(bitmap.PixelSize.Width * (1 - cropRight)), left + 1, bitmap.PixelSize.Width);
+            var bottom = Math.Clamp((int)Math.Round(bitmap.PixelSize.Height * (1 - cropBottom)), top + 1, bitmap.PixelSize.Height);
+            if (left > 0 || top > 0 || right < bitmap.PixelSize.Width || bottom < bitmap.PixelSize.Height)
+                source = new CroppedBitmap(bitmap, new PixelRect(left, top, right - left, bottom - top));
+            var stretch = fitMode switch
+            {
+                "cover" => Stretch.UniformToFill,
+                "fill" => Stretch.Fill,
+                "natural" => Stretch.None,
+                _ => Stretch.Uniform
+            };
+            var fitHeight = height > 0 ? height : fitMode == "cover" && width > 0
+                ? Math.Min(720, width * 0.67)
+                : double.NaN;
             var control = new Image
             {
-                Source = bitmap,
-                Width = width > 0 ? width : double.NaN,
+                Source = source,
+                Width = fitMode == "natural" || width <= 0 ? double.NaN : width,
+                Height = fitMode == "cover" ? fitHeight : keepAspect || height <= 0 ? double.NaN : height,
                 MaxWidth = 720,
-                Stretch = Stretch.Uniform,
+                MaxHeight = 720,
+                Stretch = stretch,
                 HorizontalAlignment = alignment switch
                 {
                     "center" => HorizontalAlignment.Center,
                     "right" => HorizontalAlignment.Right,
                     _ => HorizontalAlignment.Left,
                 },
+                RenderTransform = Math.Abs(rotation) < 0.001 ? null : new RotateTransform(rotation),
+                RenderTransformOrigin = RelativePoint.Center,
                 Margin = new Thickness(0, 4, 0, 4),
             };
             AutomationProperties.SetName(control, "Image: " +
                 (!string.IsNullOrEmpty(altText) ? altText : displayName));
-            frame.Child = control;
+            var content = new StackPanel { Spacing = 4 };
+            content.Children.Add(control);
+            if (!string.IsNullOrWhiteSpace(caption))
+                content.Children.Add(new TextBlock
+                {
+                    Text = caption,
+                    TextWrapping = TextWrapping.Wrap,
+                    FontSize = 12,
+                    Foreground = BoardsTheme.SecondaryTextBrush,
+                    HorizontalAlignment = control.HorizontalAlignment,
+                });
+            frame.Child = content;
         }
         catch
         {

@@ -152,8 +152,22 @@ public sealed class HavenRichImage
     public long SizeBytes { get; set; }
     /// <summary>Display width in device-independent pixels; 0 preserves natural size.</summary>
     public double Width { get; set; }
+    /// <summary>Optional display height; 0 derives it from the cropped source aspect ratio.</summary>
+    public double Height { get; set; }
+    public bool KeepAspectRatio { get; set; } = true;
+    /// <summary>Non-destructive quarter-turn or arbitrary display rotation in degrees.</summary>
+    public double RotationDegrees { get; set; }
+    /// <summary>Normalized source crop edges, each in the 0..1 range.</summary>
+    public double CropLeft { get; set; }
+    public double CropTop { get; set; }
+    public double CropRight { get; set; }
+    public double CropBottom { get; set; }
+    /// <summary>Renderer policy: contain, cover, fill or natural.</summary>
+    public string FitMode { get; set; } = "contain";
     public HavenRichAlignment Alignment { get; set; } = HavenRichAlignment.Inherit;
     public string AltText { get; set; } = string.Empty;
+    public string Caption { get; set; } = string.Empty;
+    public string LinkUri { get; set; } = string.Empty;
 
     public static void Validate(HavenRichImage image)
     {
@@ -162,8 +176,23 @@ public sealed class HavenRichImage
             throw new InvalidOperationException("Image media type must be an image/* type.");
         if (string.IsNullOrEmpty(image.DataBase64) && string.IsNullOrEmpty(image.LocalReference))
             throw new InvalidOperationException("Images must carry embedded bytes or a sidecar reference.");
-        if (image.Width is < 0 or > 8000)
-            throw new InvalidOperationException("Image width is outside the supported range.");
+        if (!double.IsFinite(image.Width) || !double.IsFinite(image.Height) ||
+            image.Width is < 0 or > 8000 || image.Height is < 0 or > 8000)
+            throw new InvalidOperationException("Image dimensions are outside the supported range.");
+        if (!double.IsFinite(image.RotationDegrees) || image.RotationDegrees is < -360 or > 360)
+            throw new InvalidOperationException("Image rotation is outside the supported range.");
+        if (!double.IsFinite(image.CropLeft) || !double.IsFinite(image.CropTop) ||
+            !double.IsFinite(image.CropRight) || !double.IsFinite(image.CropBottom) ||
+            image.CropLeft is < 0 or > 0.9 || image.CropRight is < 0 or > 0.9 ||
+            image.CropTop is < 0 or > 0.9 || image.CropBottom is < 0 or > 0.9 ||
+            image.CropLeft + image.CropRight >= 1 || image.CropTop + image.CropBottom >= 1)
+            throw new InvalidOperationException("Image crop bounds are invalid.");
+        if (image.FitMode is not ("contain" or "cover" or "fill" or "natural"))
+            throw new InvalidOperationException("Image fit mode is unsupported.");
+        if ((image.LinkUri?.Length ?? 0) > 2048)
+            throw new InvalidOperationException("Image link metadata is too long.");
+        if ((image.Caption?.Length ?? 0) > 2048 || (image.AltText?.Length ?? 0) > 2048)
+            throw new InvalidOperationException("Image caption or accessibility text is too long.");
     }
 }
 

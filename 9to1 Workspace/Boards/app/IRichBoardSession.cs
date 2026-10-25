@@ -122,8 +122,18 @@ public sealed class RichImageView
     public string MediaType { get; set; } = "image/png";
     public string? DataBase64 { get; set; }
     public double Width { get; set; }
+    public double Height { get; set; }
+    public bool KeepAspectRatio { get; set; } = true;
+    public double RotationDegrees { get; set; }
+    public double CropLeft { get; set; }
+    public double CropTop { get; set; }
+    public double CropRight { get; set; }
+    public double CropBottom { get; set; }
+    public string FitMode { get; set; } = "contain";
     public string Alignment { get; set; } = "inherit";
     public string AltText { get; set; } = string.Empty;
+    public string Caption { get; set; } = string.Empty;
+    public string LinkUri { get; set; } = string.Empty;
 }
 
 public sealed class RichDividerView
