@@ -790,7 +790,11 @@ public sealed partial class CanvasHostSurface : ContentControl
         }
         catch (Exception error) { SetStatus(error.Message); throw; }
         finally { _busy = false; RefreshBindings(); }
-        if (completedEmbeddedChoice is not null) CompleteEmbeddedChoice(completedEmbeddedChoice);
+        if (completedEmbeddedChoice is not null)
+        {
+            CompleteEmbeddedChoice(completedEmbeddedChoice);
+            RefreshBindings();
+        }
     }
     private sealed class Actions(CanvasHostSurface owner) : ICuiResultReportingDispatcher
     {

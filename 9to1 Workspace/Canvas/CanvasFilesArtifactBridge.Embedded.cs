@@ -15,8 +15,13 @@ public sealed partial class CanvasFilesArtifactBridge
     /// <summary>Resolve the current Canvas app identity from a selected current Files row without
     /// reading content bytes or issuing a Home permission. This metadata is descriptive only;
     /// callers must revalidate before use and Canvas must perform its normal Home read admission.</summary>
-    public async Task<CanvasEmbeddedArtifactMetadata> ResolveEmbeddedArtifactMetadataAsync(HostedItemId fileId,
+    public Task<CanvasEmbeddedArtifactMetadata> ResolveEmbeddedArtifactMetadataAsync(HostedItemId fileId,
         Guid expectedStoreId, FilesRevisionId expectedFilesRevision, CancellationToken cancellationToken = default)
+        => RunOriginalIoAsync(scope => ResolveEmbeddedArtifactMetadataBodyAsync(scope, fileId, expectedStoreId,
+            expectedFilesRevision, cancellationToken));
+
+    private async Task<CanvasEmbeddedArtifactMetadata> ResolveEmbeddedArtifactMetadataBodyAsync(OriginalIoScope io,
+        HostedItemId fileId, Guid expectedStoreId, FilesRevisionId expectedFilesRevision, CancellationToken cancellationToken)
     {
         if (fileId.Value == Guid.Empty) throw new ArgumentException("A current Files item is required.", nameof(fileId));
         if (expectedStoreId == Guid.Empty) throw new ArgumentException("The original Files store identity is required.", nameof(expectedStoreId));
@@ -24,6 +29,7 @@ public sealed partial class CanvasFilesArtifactBridge
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("No verified Home actor is active.");
         var provider = providers(actor) ?? throw new UnauthorizedAccessException("No canonical Files provider is bound to the Home actor.");
+        RetainOriginalBindings(io);
         if ((await provider.GetStoreEvidenceAsync(expectedStoreId, cancellationToken).ConfigureAwait(false)).StoreId != expectedStoreId)
             throw new InvalidOperationException("The original Files store changed before Canvas selection.");
 
