@@ -55,6 +55,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
     <Compile Include="OriginalNativeDevelopmentCompositionTests.cs;SpaceLayoutEditorAdapterTests.cs" />
+    <Compile Include="SpaceTasksDashboardOriginalWorkTests.cs;SpaceTasksDashboardCuiTests.cs" />
     <Compile Include="StrataLoopbackProviderSettingsTests.cs" />
     <Compile Include="HomeLibraryDestinationTests.cs;DeveloperManualDraftRecoveryTests.cs" />
     <Compile Include="DeveloperSavedProjectsNavigationTests.cs;TaskRunEndPassTests.cs" />
