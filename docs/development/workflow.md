@@ -97,6 +97,18 @@ read-only bridge operations remain read-only; a delivery journal ID is not proof
 that a worker executed a task. Publication/authentication/delivery use only the
 existing supported mechanisms.
 
+## Preserve integrated commits during conflict recovery
+
+Before each integration sequence, retain the exact clean candidate HEAD and the
+ordered donor commits in the existing coordinator record. After resolving or
+aborting a cherry-pick, compare the actual HEAD with that checkpoint and run
+`git merge-base --is-ancestor <retained-candidate> HEAD` before continuing.
+An abort can restore the start of an older sequencer and remove a later manual
+fix from the active branch. Keep its commit and failure evidence; reconcile the
+missing change explicitly rather than trusting a previous “integrated” report.
+Never reset active worker worktrees. Build evidence belongs to its exact source,
+and a repaired successor must be checked before its result replaces the failure.
+
 ## Atomic checkpoints and blocker dashboard
 
 The coordinator creates the projection once from a real existing checkpoint:
