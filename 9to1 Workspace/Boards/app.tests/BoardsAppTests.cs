@@ -7,6 +7,7 @@ using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Cui.Language;
@@ -73,6 +74,26 @@ public sealed class BoardsAppTests
 
         Assert.True(errors.Length == 0, $"GraphSliderCui.cui parse errors: {string.Join("; ", errors)}");
         Assert.NotEmpty(document.Components);
+    }
+
+    [Fact]
+    public void Block_grip_cui_fragment_parses_with_authored_typed_actions()
+    {
+        var path = Path.Combine(Path.GetDirectoryName(FindBoardsCui())!, "BlockGripCui.cui");
+        var parser = new CuiRichParser();
+        var document = parser.ParseFile(path);
+        var errors = parser.Diagnostics.Diagnostics
+            .Where(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error)
+            .Select(diagnostic => diagnostic.ToString())
+            .ToArray();
+
+        Assert.True(errors.Length == 0, $"BlockGripCui.cui parse errors: {string.Join("; ", errors)}");
+        Assert.NotEmpty(document.Components);
+        var source = File.ReadAllText(path);
+        Assert.Contains("Action="MoveUp"", source, StringComparison.Ordinal);
+        Assert.Contains("Action="MoveDown"", source, StringComparison.Ordinal);
+        Assert.Contains("Action="Duplicate"", source, StringComparison.Ordinal);
+        Assert.Contains("Action="Delete"", source, StringComparison.Ordinal);
     }
 
     [Fact]

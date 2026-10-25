@@ -11,6 +11,7 @@ using CakeOS.Apps.Boards.Contract;
 namespace CakeOS.Apps.Boards.App;
 
 public enum BoardBlockAction { MoveUp, MoveDown, Duplicate, Delete }
+public sealed record BoardBlockActionRequest(BoardBlockActionTarget Target, BoardBlockAction Action);
 public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string PageId, string BlockId,
     string ViewStamp, int ViewIndex, int ViewCount);
 public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId);
