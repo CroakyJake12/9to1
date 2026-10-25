@@ -22,20 +22,24 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
     private readonly CuiThemePreferenceContext? _theme;
     private readonly Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? _takePreparedBoardRead;
     private readonly Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? _takePreparedBoardWrite;
+    private readonly Func<BrowseAppContentRequest, ReadOnlyMemory<byte>, CancellationToken, Task<bool>>? _createAndOpenBoard;
     private BoardsBrowseAppContentFactory(IServiceProvider provider, HomeNativeWindowsComposition home,
         CancellationToken appLifetime, CancellationToken hostLifetime, Func<bool> reduceMotion,
         CuiThemePreferenceContext? theme,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? takePreparedBoardRead,
-        Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite)
+        Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite,
+        Func<BrowseAppContentRequest, ReadOnlyMemory<byte>, CancellationToken, Task<bool>>? createAndOpenBoard)
     { _provider = provider; _home = home; _appLifetime = appLifetime; _hostLifetime = hostLifetime;
-        _reduceMotion = reduceMotion; _theme = theme; _takePreparedBoardRead = takePreparedBoardRead; _takePreparedBoardWrite = takePreparedBoardWrite; }
+        _reduceMotion = reduceMotion; _theme = theme; _takePreparedBoardRead = takePreparedBoardRead;
+        _takePreparedBoardWrite = takePreparedBoardWrite; _createAndOpenBoard = createAndOpenBoard; }
 
     internal static BoardsBrowseAppContentFactory BindOriginalSameProcess(IServiceProvider originalProvider,
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
         CancellationToken originalHostLifetime, Func<bool> actualReduceMotion,
         CuiThemePreferenceContext? actualThemePreference = null,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? takePreparedBoardRead = null,
-        Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite = null)
+        Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite = null,
+        Func<BrowseAppContentRequest, ReadOnlyMemory<byte>, CancellationToken, Task<bool>>? createAndOpenBoard = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(actualReduceMotion);
@@ -43,7 +47,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             throw new ArgumentException("Retain the actual application and host lifetimes.");
         originalAppLifetime.ThrowIfCancellationRequested(); originalHostLifetime.ThrowIfCancellationRequested();
         return new(originalProvider, sameHome, originalAppLifetime, originalHostLifetime,
-            actualReduceMotion, actualThemePreference, takePreparedBoardRead, takePreparedBoardWrite);
+            actualReduceMotion, actualThemePreference, takePreparedBoardRead, takePreparedBoardWrite, createAndOpenBoard);
     }
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
@@ -74,8 +78,10 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                 try
                 {
                     embeddedOwner = CreateEmbeddedArtifactHost(request, writeLifetime.Token);
+                    var boardCreationHost = _createAndOpenBoard is null ? null :
+                        new HomeBoardCreationHost(_createAndOpenBoard, request, writeLifetime.Token);
                     return new BoardsWritableRichDocumentBrowseAppContentSession(
-                        request, address, writeLease, writeLifetime, embeddedOwner);
+                        request, address, writeLease, writeLifetime, embeddedOwner, boardCreationHost);
                 }
                 catch
                 {
@@ -152,6 +158,20 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         {
             writeOwner.DisposeAsync().AsTask().GetAwaiter().GetResult();
             throw;
+        }
+    }
+
+    private sealed class HomeBoardCreationHost(
+        Func<BrowseAppContentRequest, ReadOnlyMemory<byte>, CancellationToken, Task<bool>> createAndOpen,
+        BrowseAppContentRequest request,
+        CancellationToken tabLifetime) : IBoardsHomeBoardCreationHost
+    {
+        public async Task<bool> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+            CancellationToken cancellationToken = default)
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+            linked.Token.ThrowIfCancellationRequested();
+            return await createAndOpen(request, validatedDraft, linked.Token).ConfigureAwait(false);
         }
     }
 }

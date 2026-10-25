@@ -8,6 +8,20 @@ namespace CakeOS.Apps.Boards.Tests;
 public sealed class HavenBoardReducerTests
 {
     [Fact]
+    public void New_document_factory_creates_a_valid_canonical_rich_board_without_a_path()
+    {
+        var created = HavenBoardDocumentCodec.CreateNew("  Research notes  ");
+        var encoded = JsonSerializer.SerializeToUtf8Bytes(created, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var reopened = HavenBoardDocumentCodec.Deserialize(encoded);
+
+        Assert.NotEqual(Guid.Empty, reopened.DocumentId);
+        Assert.Equal(HavenBoardDocument.CurrentSchemaVersion, reopened.SchemaVersion);
+        Assert.Equal("Research notes", reopened.RichNotes!.Title);
+        Assert.NotNull(reopened.RichNotes.Sections.Single().Pages.Single());
+        Assert.Null(reopened.Snapshot);
+    }
+
+    [Fact]
     public void Move_within_group_matches_appflowy_remove_then_insert_semantics()
     {
         var snapshot = new HavenBoardSnapshot(

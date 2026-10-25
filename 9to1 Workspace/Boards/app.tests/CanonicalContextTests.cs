@@ -1,5 +1,6 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.LogicalTree;
 using CakeOS.Cui.Runtime;
 using Xunit;
@@ -55,6 +56,19 @@ public sealed class CanonicalContextTests
             var taller = Assert.Single(controls.OfType<Button>(), control => AutomationProperties.GetName(control) == "Heighten selected table row");
             taller.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             Assert.Equal(80, table.RowHeights[1]);
+            var widthDraft = Assert.Single(controls.OfType<NumericUpDown>(), control =>
+                AutomationProperties.GetName(control).StartsWith("Exact selected table column width", StringComparison.Ordinal));
+            var heightDraft = Assert.Single(controls.OfType<NumericUpDown>(), control =>
+                AutomationProperties.GetName(control).StartsWith("Exact selected table row height", StringComparison.Ordinal));
+            widthDraft.Value = 312;
+            heightDraft.Value = 128;
+            Assert.Equal(184, table.ColumnWidths[1]);
+            Assert.Equal(80, table.RowHeights[1]);
+            var applyDimensions = Assert.Single(controls.OfType<Button>(), control =>
+                AutomationProperties.GetName(control) == "Apply exact selected row height and column width");
+            applyDimensions.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(312, table.ColumnWidths[1]);
+            Assert.Equal(128, table.RowHeights[1]);
             var italic = Assert.Single(controls.OfType<Button>(), control => AutomationProperties.GetName(control) == "Toggle selected cell italic");
             italic.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             Assert.True(table.CellStyles["1,1"].Italic);

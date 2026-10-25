@@ -8,6 +8,17 @@ public static class HavenBoardDocumentCodec
     public const int MaximumDocumentBytes = 40 * 1024 * 1024;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
+    /// <summary>Creates a validated empty rich Board document with stable canonical IDs.</summary>
+    public static HavenBoardDocument CreateNew(string? title = null)
+    {
+        var notes = HavenRichNotes.Create(string.IsNullOrWhiteSpace(title) ? "Untitled board" : title.Trim());
+        HavenRichNotesValidator.Validate(notes);
+        var now = DateTimeOffset.UtcNow;
+        return new HavenBoardDocument(HavenBoardDocument.FormatIdentity,
+            HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), now, now,
+            Snapshot: null, RichNotes: notes);
+    }
+
     /// <summary>
     /// Deserializes the supplied bounded document bytes, applying the same schema migrations and
     /// domain validators used by the local file store. Future schemas are refused explicitly.

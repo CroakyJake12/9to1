@@ -12,6 +12,32 @@ namespace CakeOS.Apps.Boards.App.Tests;
 public sealed class ContractAdapterTests
 {
     [Fact]
+    public async Task Home_board_creation_intent_sends_a_validated_draft_without_mutating_the_pinned_board()
+    {
+        var original = CreateNotesDocument("Current pinned Board");
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(original,
+            (_, _) => ValueTask.FromResult(true));
+        await using (adapter)
+        {
+            var originalSnapshot = adapter.Snapshot;
+            var host = new DecliningBoardCreationHost();
+            var viewModel = new BoardsViewModel(adapter, homeBoardCreationHost: host);
+            Assert.False(viewModel.CanSwitchBoard);
+            Assert.True(viewModel.CanCreateBoard);
+
+            await viewModel.DispatchAsync("NewBoard", null);
+
+            Assert.NotNull(host.Draft);
+            var draft = HavenBoardDocumentCodec.Deserialize(host.Draft!.Value);
+            Assert.NotEqual(original.DocumentId, draft.DocumentId);
+            Assert.Equal("Untitled board", draft.RichNotes!.Title);
+            Assert.Equal(originalSnapshot, adapter.Snapshot);
+            Assert.False(adapter.HasUnsavedChanges);
+            Assert.Equal("New Board creation was canceled.", viewModel.Get("StatusText"));
+        }
+    }
+
+    [Fact]
     public async Task External_writable_session_requires_explicit_save_and_clears_only_after_acknowledgement()
     {
         var document = CreateNotesDocument("Home source");
@@ -121,6 +147,73 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Exact_table_dimensions_are_one_undoable_edit_and_reopen_with_merged_cell_identity()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "table-resize.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            var pageId = string.Empty;
+            var blockId = string.Empty;
+            var cellIds = Array.Empty<string>();
+            await using (var seed = await RichBoardSession.CreateNewAsync(store, "Table resize"))
+            {
+                await seed.SaveAsAsync(path);
+                pageId = seed.Rich.Sections[0].Pages[0].Id;
+                await seed.MutateAsync(rich =>
+                {
+                    var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Table);
+                    blockId = block.Id;
+                    block.Table!.Rows[0].Cells[0].Text = "Anchor";
+                    block.Table.Rows[0].Cells[1].Text = "Covered content";
+                    Assert.True(HavenRichNotesOps.MergeTableCellRight(rich, pageId, block.Id, 0, 0));
+                    cellIds = block.Table.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id).ToArray();
+                });
+                await seed.SaveAsync();
+            }
+
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var viewModel = new BoardsViewModel(adapter);
+                viewModel.FocusBlock(blockId);
+                viewModel.FocusCell(blockId, 1, 1);
+                Assert.True(viewModel.TrySetValue("ContextColumnWidthDraft", 312d));
+                Assert.True(viewModel.TrySetValue("ContextRowHeightDraft", 144d));
+                await viewModel.DispatchAsync("ContextApplyCellDimensions", null);
+
+                var resizedDocument = await adapter.GetDetachedContractDocumentAsync();
+                var resizedTable = resizedDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                    .Single(block => block.Id == blockId).Table!;
+                Assert.Equal(312, resizedTable.ColumnWidths[1]);
+                Assert.Equal(144, resizedTable.RowHeights[1]);
+                Assert.Equal(cellIds, resizedTable.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id));
+                Assert.True(adapter.CanUndo);
+                Assert.True(await adapter.UndoAsync());
+                var undoneDocument = await adapter.GetDetachedContractDocumentAsync();
+                var undoneTable = undoneDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                    .Single(block => block.Id == blockId).Table!;
+                Assert.Empty(undoneTable.ColumnWidths);
+                Assert.Empty(undoneTable.RowHeights);
+                Assert.Equal(cellIds, undoneTable.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id));
+                Assert.True(await adapter.RedoAsync());
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var document = await reopened.GetDetachedContractDocumentAsync();
+            var table = document.RichNotes!.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+            Assert.Equal(312, table.ColumnWidths[1]);
+            Assert.Equal(144, table.RowHeights[1]);
+            Assert.Equal(cellIds, table.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id));
+            Assert.Equal(cellIds[1], table.Rows[0].Cells[1].Id);
+            Assert.Equal(table.Rows[0].Cells[0].Id, table.Rows[0].Cells[1].CoveredByCellId);
+            Assert.Equal("Covered content", table.Rows[0].Cells[1].Text);
+        }
+        finally { DeleteDirectory(root); }
+    }
+
+    [Fact]
     public async Task Table_merge_and_split_context_actions_preserve_stable_blank_slots_and_undo()
     {
         var document = CreateNotesDocument("Table merge actions");
@@ -179,6 +272,19 @@ public sealed class ContractAdapterTests
         return new HavenBoardDocument(HavenBoardDocument.FormatIdentity,
             HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), now, now,
             Snapshot: null, RichNotes: HavenRichNotes.Create(title));
+    }
+
+    private sealed class DecliningBoardCreationHost : IBoardsHomeBoardCreationHost
+    {
+        public ReadOnlyMemory<byte>? Draft { get; private set; }
+
+        public Task<bool> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Draft = validatedDraft.ToArray();
+            return Task.FromResult(false);
+        }
     }
 
     [Fact]
