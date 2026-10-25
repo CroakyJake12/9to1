@@ -83,4 +83,51 @@ public sealed class SpaceBuilderCuiTests
             return true;
         }, token);
     }
+
+    [Fact]
+    public async Task Authored_view_containers_follow_the_live_builder_view_binding()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Authored view", cancellationToken: deadline.Token);
+        var controller = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await controller.LoadAsync(deadline.Token));
+        var bindings = new SpaceBuilderCuiBindings(() => controller.State,
+            (field, value) => controller.SetField(field, value),
+            (category, state) => controller.SetCategoryState(category, state),
+            (kind, id) => controller.DetachCapability(kind, id),
+            () => [], () => [], (_, _, _) => ValueTask.CompletedTask,
+            selectView: controller.SelectEditorView, selectExpertSection: controller.SelectExpertSection,
+            previewDraft: controller.PreviewDraft, validateDraft: controller.ValidateDraftAsync);
+
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(bindings);
+            var (tree, diagnostics) = loader.TryLoad(SpaceBuilderCuiDocument.Load());
+            Assert.Empty(diagnostics);
+            var root = Assert.IsAssignableFrom<Control>(tree);
+            loader.WireBindings(root);
+            var window = new Window { Content = root, Width = 900, Height = 800 };
+            window.Show();
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            Control expertView = root.GetVisualDescendants().OfType<Control>()
+                .Single(control => control.Name == "space-builder-expert-view" ||
+                    AutomationProperties.GetAutomationId(control) == "space-builder-expert-view");
+            Assert.False(expertView.IsVisible);
+
+            await bindings.DispatchAsync("space-builder.view.expert", null, deadline.Token);
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(SpaceBuilderEditorView.Expert, controller.State.EditorView);
+            Assert.True(expertView.IsVisible);
+            window.Close();
+            loader.Dispose();
+            Dispatcher.UIThread.RunJobs();
+            return true;
+        }, deadline.Token);
+    }
 }
