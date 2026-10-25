@@ -42,6 +42,27 @@ public sealed class SpaceUserMessageGraph
     public static GraphCapabilityProfile Profile() => new(ProfileId,
         new HashSet<string>([SourceType, TruncateType, OutputType], StringComparer.Ordinal),
         new HashSet<string>([CapabilityId], StringComparer.Ordinal));
+    /// <summary>Author a node from the actual shared registered schema. This is draft
+    /// data only; inserting it never activates a Space or starts a request.</summary>
+    public static SpaceLayoutNode CreateNode(string typeId)
+    {
+        var type = CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(ProfileId)
+            .SingleOrDefault(type => type.TypeId == typeId)
+            ?? throw new ArgumentException("No registered Space user-message node has this type.", nameof(typeId));
+        return new(Guid.NewGuid(), typeId == SourceType ? "Event" : "Logic", typeId switch
+        {
+            SourceType => "Original user message", TruncateType => "Truncate text", OutputType => "Request text",
+            _ => throw new ArgumentException("This node has no authoring implementation.", nameof(typeId))
+        })
+        {
+            TypeId = type.TypeId, SchemaVersion = type.Version,
+            Ports = type.Ports.Select(port => new SpaceLayoutPort(port.Key, "Text",
+                port.Direction == GraphPortDirection.Input ? SpaceLayoutPortDirection.Input : SpaceLayoutPortDirection.Output,
+                port.DataType, port.Multiple)).ToArray(),
+            Metadata = typeId == TruncateType ? new Dictionary<string, string>(StringComparer.Ordinal)
+                { ["maximumTextElements"] = "1000" } : new Dictionary<string, string>(StringComparer.Ordinal)
+        };
+    }
     private static GraphNodeType Type(string id, string schema, IReadOnlyList<GraphPortTemplate> ports)
     {
         using var document = JsonDocument.Parse(schema);
