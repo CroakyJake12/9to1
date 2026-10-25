@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using Haven.Application;
 
 namespace HavenOS.Home.Core;
 
@@ -75,6 +76,8 @@ public sealed partial class HomeNativeLinuxCoreHost : IAsyncDisposable
             _listener = _custody.BindOriginalSocket();
             _listener.Listen(32);
             _custody.DemandCurrent();
+            if (!_lease.IsHeld) throw new UnauthorizedAccessException("The original Home lease retired before endpoint publication.");
+            _custody.PublishLocator(_endpoint);
             _listening.TrySetResult();
             while (true)
             {
@@ -116,6 +119,7 @@ public sealed partial class HomeNativeLinuxCoreHost : IAsyncDisposable
             foreach (var entry in originals)
                 try { await entry.Original.ConfigureAwait(false); }
                 catch (Exception cause) { HomeUnixCoreTransport.Add(failures, cause); }
+            try { _custody?.RemoveOwnedLocator(); } catch (Exception cause) { HomeUnixCoreTransport.Add(failures, cause); }
             try { _custody?.RemoveOwnedSocket(); } catch (Exception cause) { HomeUnixCoreTransport.Add(failures, cause); }
             try { _custody?.Dispose(); } catch (Exception cause) { HomeUnixCoreTransport.Add(failures, cause); }
         }
@@ -173,4 +177,12 @@ public sealed partial class HomeNativeLinuxCoreHost : IAsyncDisposable
         HomeUnixCoreTransport.Throw(failures);
     }
     public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+}
+
+public sealed partial class HomeNativeCoreApiSessions
+{
+    // Composition check only. Reference equality confers no installed identity;
+    // the configured verifier must still authenticate each actual observed peer.
+    internal bool HasOriginalLinuxHostComposition(IAuthenticatedResourceActorSource actors,
+        IHomeNativeInstalledPeerOriginalActorVerifier verifier) => ReferenceEquals(_actors, actors) && ReferenceEquals(_verifier, verifier);
 }
