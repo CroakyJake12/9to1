@@ -25,13 +25,13 @@
             <Button Type="Menu Item" ID="RedoButton" IconSource="icon:redo" IconOnly="True" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" Tooltip="Redo" />
           </Container>
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" Row="0" CellGap="6" VerticalAlignment="Center">
-            <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="6" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 2" CornerRadius="10">
-              <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+            <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="8" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 2" CornerRadius="10">
+              <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
               <Input ID="EditViewToggle" Type="Switch" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
             </Container>
             <Container Type="Horizontal Stack" ID="LayoutModeToggleGroup" CellGap="4" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 2" CornerRadius="10" AccessibleName="Page layout mode">
-              <Button ID="VerticalLayoutToggle" Content="Vertical Stacking" Action="SetVerticalLayout" Selected="{Binding IsVerticalLayout}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="Use vertical stacking" Tooltip="Keep blocks in vertical document flow" />
-              <Button ID="FreeLayoutToggle" Content="Free Placement" Action="SetFreeLayout" Selected="{Binding IsFreeLayout}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="Use free placement" Tooltip="Unlock spatial placement for page blocks" />
+              <Button ID="VerticalLayoutToggle" Content="Vertical Stacking" Action="SetVerticalLayout" Selected="{Binding IsVerticalLayout}" Interactive="{Binding CanChangeLayoutMode}" FontSize="12" FontWeight="SemiBold" Padding="8 2" AccessibleName="Use vertical stacking" Tooltip="Keep blocks in vertical document flow" />
+              <Button ID="FreeLayoutToggle" Content="Free Placement" Action="SetFreeLayout" Selected="{Binding IsFreeLayout}" Interactive="{Binding CanChangeLayoutMode}" FontSize="12" FontWeight="SemiBold" Padding="8 2" AccessibleName="Use free placement" Tooltip="Unlock spatial placement for page blocks" />
             </Container>
             <Container Type="Menu" ID="MoreMenu">
               <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" Width="32" Height="32" Padding="0" AccessibleName="More board actions" Tooltip="More">
@@ -50,7 +50,7 @@
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="icon:boards" Width="20" Height="20" VerticalAlignment="Center" AccessibleName="Current Board" />
             <Container Type="Vertical Stack" ID="BoardIdentity" Column="1" CellGap="0" VerticalAlignment="Center">
-              <Input id="BoardTitleBox" accessible-name="Board title" font-size="15" font-weight="SemiBold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
+              <Input id="BoardTitleBox" accessible-name="Board title" font-size="15" font-weight="Bold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
               <Text ID="SaveState" Text="{Binding SaveStateText, fallback=Saved}" FontSize="11" VerticalAlignment="Center" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
             <Container Type="Menu" ID="BoardSwitcherMenu" Column="2">
@@ -70,7 +70,7 @@
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
           <Container Type="Menu" Row="3" Margin="0 8 0 0">
-            <Button Type="Menu Item" Content="+ Add page or section" Interactive="{Binding CanEdit}" AccessibleName="Add a page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiPanel2Brush}" BorderWidth="0" CornerRadius="18">
+            <Button Type="Menu Item" Content="+ Add page or section" Interactive="{Binding CanEdit}" FontWeight="SemiBold" AccessibleName="Add a page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiPanel2Brush}" BorderWidth="0" CornerRadius="18">
               <Button Type="Menu Item" Content="New page in this section" Action="AddPage" AccessibleName="Create a page in the current section" />
               <Button Type="Menu Item" Content="New section" Action="AddSection" AccessibleName="Create a new section in this Board" />
               <Button Type="Menu Item" Content="Attach existing Write document…" Action="AddWritePage" Interactive="{Binding CanAddWritePage}" AccessibleName="Attach an existing Write document as a page" />
@@ -186,7 +186,7 @@
         <Container horizontalalignment="Stretch" cornerradius="22" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Row="2" Background="{Resource CuiPanel2Brush}" BorderWidth="0">
           <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
             <Container Type="Grid" ID="PageSurface">
-              <Container margin="40 36" Type="Vertical Stack" ID="DocumentContentLayer">
+              <Container margin="44 36" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
                 <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />

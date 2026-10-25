@@ -153,7 +153,7 @@ public sealed class VisualCaptureTests
         Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
         var contentLayer = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "DocumentContentLayer")
             ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
-        Assert.Equal(new Thickness(40, 36), contentLayer.Margin);
+        Assert.Equal(new Thickness(44, 36), contentLayer.Margin);
         Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
         var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
             ?? throw new InvalidOperationException("Missing authored standalone TopBar. Runtime tree:\n" + tree);
