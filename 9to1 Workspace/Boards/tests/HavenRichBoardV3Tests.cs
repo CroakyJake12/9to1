@@ -75,7 +75,7 @@ public sealed class HavenRichBoardV3Tests
                 var pageId = session.Rich.Sections[0].Pages[0].Id;
                 await session.MutateAsync(rich =>
                 {
-                    var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Graph);
+                    var block = HavenRichNotesOps.AddGraphBlock(rich, pageId);
                     blockId = block.Id;
                     HavenRichNotesOps.SetGraphSliders(rich, pageId, blockId, [slider]);
                     HavenRichNotesOps.UpdateGraphExpression(rich, pageId, blockId,
@@ -419,7 +419,7 @@ public sealed class HavenRichBoardV3Tests
             await session.MutateAsync(rich => Assert.True(HavenRichNotesOps.MoveTableRow(rich, pageId, blockId, 1, 0)));
             var movedRows = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
             Assert.Equal(rowIds[1], movedRows.Rows[0].Cells.Select(cell => cell.Id));
-            Assert.Equal(new[] { 60d, 30d }, movedRows.RowHeights);
+            Assert.Equal(new[] { 60d, 30d, 0d }, movedRows.RowHeights);
             Assert.Equal("bottom-left", movedRows.Rows[0].Cells[0].Text);
             Assert.True(await session.UndoAsync());
             var restoredRows = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
@@ -429,7 +429,7 @@ public sealed class HavenRichBoardV3Tests
             await session.MutateAsync(rich => Assert.True(HavenRichNotesOps.MoveTableColumn(rich, pageId, blockId, 1, 0)));
             var movedColumns = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
             Assert.Equal(column1Ids, movedColumns.Rows.Select(row => row.Cells[0].Id));
-            Assert.Equal(new[] { 240d, 120d }, movedColumns.ColumnWidths);
+            Assert.Equal(new[] { 240d, 120d, 0d }, movedColumns.ColumnWidths);
             Assert.Equal("top-right", movedColumns.Rows[0].Cells[0].Text);
             Assert.True(await session.UndoAsync());
             var restoredColumns = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
