@@ -68,7 +68,9 @@ public sealed partial class HomeNativeWindowsComposition
             if (!_originalBorrowedHomeExpected || _originalBorrowedSession is null) throw new UnauthorizedAccessException("The original authenticated Home session is not bound.");
             work.Driver = Read(); RetainOriginalHomeProcessSource(work.Driver);
         }
-        try { sources.Run(() => retain(work.Driver)); } finally { begin.SetResult(); }
+        try { sources.Run(() => retain(work.Driver)); }
+        catch (Exception cause) { begin.SetException(cause); throw; }
+        begin.SetResult();
         return work.Driver;
         async Task<OriginalBorrowedHomeObservation> Read()
         {
