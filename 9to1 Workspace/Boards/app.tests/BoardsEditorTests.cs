@@ -236,7 +236,7 @@ public sealed class BoardsEditorTests
         var expected = new[]
         {
             "TopBarLeft", "TopBarRight", "BoardTitleBox", "NavSearchBox", "NavHost",
-            "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "BlocksHost",
+            "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "BlocksHost",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -248,6 +248,17 @@ public sealed class BoardsEditorTests
             && horizontalScrolling is CakeOS.Cui.Language.CuiLiteralValue { Value: "true" });
         Assert.True(toolbarHost.Properties.TryGetValue("VerticalScrolling", out var verticalScrolling)
             && verticalScrolling is CakeOS.Cui.Language.CuiLiteralValue { Value: "false" });
+        var boardSwitcher = components.Single(component => component.Name == "BoardSwitcher");
+        Assert.True(boardSwitcher.Properties.TryGetValue("IconSource", out var boardIcon)
+            && boardIcon is CakeOS.Cui.Language.CuiLiteralValue { Value: "icon:boards" });
+        Assert.True(boardSwitcher.Properties.TryGetValue("Content", out var boardTitle)
+            && boardTitle is CakeOS.Cui.Language.CuiBindingValue { Path: "BoardTitle" });
+        var searchBox = components.Single(component => component.Name == "NavSearchBox");
+        Assert.True(searchBox.Properties.TryGetValue("cornerradius", out var searchRadius)
+            && searchRadius is CakeOS.Cui.Language.CuiLiteralValue { Value: "18" });
+        var pageCard = components.Single(component => component.Name == "PageCard");
+        Assert.True(pageCard.Properties.TryGetValue("cornerradius", out var pageCorner)
+            && pageCorner is CakeOS.Cui.Language.CuiLiteralValue { Value: "26 0 0 0" });
 
         var found = await OnUiThreadAsync(() =>
         {

@@ -141,6 +141,7 @@ public static class NavBuilder
             BorderThickness = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
         };
+        SetNavigationButtonPresentation(chevron, "Boards section disclosure");
         ToolTip.SetTip(chevron, collapsed ? "Expand section" : "Collapse section");
         Avalonia.Automation.AutomationProperties.SetName(chevron, (collapsed ? "Expand " : "Collapse ") + section.Title);
         chevron.Click += (_, _) =>
@@ -207,13 +208,18 @@ public static class NavBuilder
             title.ContextMenu = menu;
         }
         row.Children.Add(title);
-        return new Border
+        var header = new Border
         {
             Child = row,
             Margin = new Thickness(0, 1, 0, 1),
             CornerRadius = new CornerRadius(6),
             Background = Brushes.Transparent,
         };
+        CuiPropertyPresentation.Set(header, "Background", Brushes.Transparent,
+            CuiPropertyLevel.Instance, "Boards section row surface");
+        CuiPropertyPresentation.Set(header, "CornerRadius", new CornerRadius(6),
+            CuiPropertyLevel.Instance, "Boards section row shape");
+        return header;
     }
 
     private static Control BuildPageRow(
@@ -223,7 +229,7 @@ public static class NavBuilder
         var selected = vm.SelectedPageId == page.Id && vm.SelectedSectionId == section.Id;
         var row = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("24,20,*,Auto"),
+            ColumnDefinitions = new ColumnDefinitions("3,24,20,*,Auto"),
             Height = 34,
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
@@ -236,6 +242,7 @@ public static class NavBuilder
             BorderThickness = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
         };
+        SetNavigationButtonPresentation(disclosure, "Boards page disclosure");
         if (hasChildren)
         {
             disclosure.Content = BoardsIcons.Glyph(collapsed ? BoardsIcons.ChevronRight : BoardsIcons.ChevronDown, 10);
@@ -254,9 +261,23 @@ public static class NavBuilder
             ToolTip.SetTip(disclosure, "No subpages");
             Avalonia.Automation.AutomationProperties.SetName(disclosure, "No subpages for " + page.Title);
         }
+        var selectedMarker = new Border
+        {
+            Width = 2,
+            Height = 16,
+            CornerRadius = new CornerRadius(1),
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        CuiPropertyPresentation.Set(selectedMarker, "Background",
+            selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
+            CuiPropertyLevel.Instance, "Boards selected page marker");
+        Grid.SetColumn(selectedMarker, 0);
+        row.Children.Add(selectedMarker);
         row.Children.Add(disclosure);
+        Grid.SetColumn(disclosure, 1);
         var pageIcon = BoardsIcons.Glyph(BoardsIcons.Page, 15, "Page");
-        Grid.SetColumn(pageIcon, 1);
+        Grid.SetColumn(pageIcon, 2);
         row.Children.Add(pageIcon);
         var button = new Button
         {
@@ -272,13 +293,14 @@ public static class NavBuilder
         {
             Text = page.Title,
             FontSize = 13,
-            Foreground = selected ? BoardsTheme.AccentContrastBrush : BoardsTheme.TextBrush,
+            Foreground = BoardsTheme.TextBrush,
+            FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
         CuiPropertyPresentation.Set(pageTitle, "Foreground", pageTitle.Foreground,
             CuiPropertyLevel.Instance, "Boards page title text");
         button.Content = pageTitle;
-        Grid.SetColumn(button, 2);
+        Grid.SetColumn(button, 3);
         ToolTip.SetTip(button, page.Title);
         Avalonia.Automation.AutomationProperties.SetName(button, "Page " + page.Title);
         button.Click += (_, _) => vm.SelectPage(section.Id, page.Id);
@@ -318,13 +340,19 @@ public static class NavBuilder
             button.ContextMenu = menu;
         }
         row.Children.Add(button);
-        return new Border
+        var pageRow = new Border
         {
             Child = row,
             Margin = new Thickness((depth + 1) * 16, 1, 0, 1),
-            CornerRadius = new CornerRadius(6),
-            Background = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
+            CornerRadius = new CornerRadius(selected ? 8 : 4),
+            Background = selected ? BoardsTheme.CardBrush : Brushes.Transparent,
         };
+        CuiPropertyPresentation.Set(pageRow, "Background",
+            selected ? BoardsTheme.CardBrush : Brushes.Transparent,
+            CuiPropertyLevel.Instance, "Boards page row surface");
+        CuiPropertyPresentation.Set(pageRow, "CornerRadius", new CornerRadius(selected ? 8 : 4),
+            CuiPropertyLevel.Instance, "Boards page row shape");
+        return pageRow;
     }
 
     private static void SetNavigationButtonPresentation(Button button, string source)
