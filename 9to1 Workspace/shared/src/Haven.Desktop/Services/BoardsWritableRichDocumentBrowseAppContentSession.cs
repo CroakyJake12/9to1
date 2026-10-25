@@ -17,6 +17,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     private readonly CancellationTokenSource _lifetime;
     private readonly IBoardsEmbeddedArtifactHost? _embeddedHost;
     private readonly IBoardsHomeBoardCreationHost? _homeBoardCreationHost;
+    private readonly IBoardsSectionIconGenerationHost? _sectionIconGenerationHost;
     private readonly object _gate = new();
     private NativeHomeFilesBoardWriteLease? _lease;
     private BoardsWritablePresentation? _presentation;
@@ -31,7 +32,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     internal BoardsWritableRichDocumentBrowseAppContentSession(BrowseAppContentRequest request,
         BoardsBrowseAppContentAddress address, NativeHomeFilesBoardWriteLease lease,
         CancellationTokenSource lifetime, IBoardsEmbeddedArtifactHost? embeddedHost = null,
-        IBoardsHomeBoardCreationHost? homeBoardCreationHost = null)
+        IBoardsHomeBoardCreationHost? homeBoardCreationHost = null,
+        IBoardsSectionIconGenerationHost? sectionIconGenerationHost = null)
     {
         _request = request ?? throw new ArgumentNullException(nameof(request));
         ArgumentNullException.ThrowIfNull(address);
@@ -39,6 +41,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         _lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
         _embeddedHost = embeddedHost;
         _homeBoardCreationHost = homeBoardCreationHost;
+        _sectionIconGenerationHost = sectionIconGenerationHost;
         if (!address.IsFilesDocument || !address.Writable || address.StoreId != lease.StoreId ||
             address.ParentFolderId != lease.ParentFolderId || address.FileId != lease.FileId ||
             address.RevisionId != lease.RevisionId || !StringComparer.Ordinal.Equals(request.ProfileId, lease.ProfileId))
@@ -95,7 +98,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(true);
             var presentation = await BoardsWritablePresentation.OpenWritableDocumentAsync(
                 bytes, lease.SourceId, lease.RevisionId.ToString("D"), lease.SaveAsync, linked.Token, _embeddedHost,
-                homeBoardCreationHost: _homeBoardCreationHost);
+                homeBoardCreationHost: _homeBoardCreationHost,
+                sectionIconGenerationHost: _sectionIconGenerationHost);
             try
             {
                 await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(true);

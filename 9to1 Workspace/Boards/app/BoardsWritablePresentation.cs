@@ -23,6 +23,20 @@ public delegate ValueTask<BoardsExternalSaveReceipt> BoardsExternalSaveCallback(
     ReadOnlyMemory<byte> validatedDocument,
     CancellationToken cancellationToken);
 
+/// <summary>Preview returned by an explicit name-only section icon suggestion request.</summary>
+public sealed record BoardsGeneratedSectionIconResult(
+    HavenRichSectionGeneratedIcon Geometry,
+    string ProviderId,
+    string ModelId);
+
+/// <summary>Optional Home-owned model route used only after the user requests an icon suggestion.</summary>
+public interface IBoardsSectionIconGenerationHost
+{
+    bool CanGenerate { get; }
+    Task<BoardsGeneratedSectionIconResult> GenerateAsync(string sectionTitle,
+        CancellationToken cancellationToken = default);
+}
+
 /// <summary>
 /// Editable detached presentation for one Home-authorized source revision. It reuses
 /// the standalone Boards domain, editor and compiled CUI while granting persistence only
@@ -90,7 +104,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         CancellationToken ct = default,
         IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null,
         bool standaloneChrome = false,
-        IBoardsHomeBoardCreationHost? homeBoardCreationHost = null)
+        IBoardsHomeBoardCreationHost? homeBoardCreationHost = null,
+        IBoardsSectionIconGenerationHost? sectionIconGenerationHost = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceId);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceRevision);
@@ -168,7 +183,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             return await Dispatcher.UIThread.InvokeAsync<BoardsWritablePresentation>(() =>
             {
                 ct.ThrowIfCancellationRequested();
-        var viewModel = new BoardsViewModel(session, embeddedArtifactHost, homeBoardCreationHost);
+                var viewModel = new BoardsViewModel(session, embeddedArtifactHost, homeBoardCreationHost,
+                    sectionIconGenerationHost);
                 viewModel.SetLanding(false);
                 if (!standaloneChrome) viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Ready to edit");

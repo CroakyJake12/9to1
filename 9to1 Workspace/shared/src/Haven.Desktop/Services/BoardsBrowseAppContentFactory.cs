@@ -1,6 +1,7 @@
 using CakeOS.Cui.Themes;
 using CakeOS.Apps.Boards.App;
 using Haven.Browser;
+using Haven.Application;
 using Haven.Core;
 using Haven.Infrastructure;
 using HavenOS.Apps.Browse;
@@ -103,8 +104,15 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                     embeddedOwner = CreateEmbeddedArtifactHost(request, writeLifetime.Token);
                     var boardCreationHost = _createAndOpenBoard is null ? null :
                         CreateOriginalHomeBoardCreationHost(_createAndOpenBoard, request, writeLifetime.Token);
+                    var modelClient = _provider.GetService<IProviderModelClient>();
+                    var modelSelection = _provider.GetService<HomeModelSelectionSource>();
+                    IBoardsSectionIconGenerationHost? iconGenerationHost =
+                        modelClient is null || modelSelection is null ? null :
+                        new BoardsSectionIconSuggestionService(modelClient, modelSelection, request.ProfileId,
+                            _appLifetime, writeLifetime.Token, () => !writeLifetime.IsCancellationRequested);
                     return new BoardsWritableRichDocumentBrowseAppContentSession(
-                        request, address, writeLease, writeLifetime, embeddedOwner, boardCreationHost);
+                        request, address, writeLease, writeLifetime, embeddedOwner, boardCreationHost,
+                        iconGenerationHost);
                 }
                 catch
                 {

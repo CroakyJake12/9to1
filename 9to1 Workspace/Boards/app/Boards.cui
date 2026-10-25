@@ -252,7 +252,7 @@
       </Container>
       <Container Type="Overlay" ID="SectionIconPickerBackdrop" Row="1" Column="0" ColumnSpan="2" Active="{Binding IsSectionIconPickerOpen}" Background="#88000000" BorderWidth="0">
         <Container Type="Overlay" ID="SectionIconPickerPanel" Width="520" Height="620" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{Resource CuiFloatingSurfaceMaterial}" Padding="18" CornerRadius="18" BorderWidth="0">
-          <Container Type="Grid" RowSizes="Auto Auto Auto 1fr Auto" CellGap="10">
+          <Container Type="Grid" RowSizes="Auto Auto Auto Auto 1fr Auto" CellGap="10">
             <Container Type="Horizontal Stack" Row="0" CellGap="8" VerticalAlignment="Center">
               <Container Type="Vertical Stack" CellGap="2" HorizontalAlignment="Stretch">
                 <Text Text="Section icon and color" FontSize="19" FontWeight="SemiBold" />
@@ -275,7 +275,18 @@
                 </Repeat>
               </Container>
             </Container>
-            <Container Type="Overlay" Row="3" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
+            <Container Type="Horizontal Stack" Row="3" CellGap="10" VerticalAlignment="Center">
+              <Button ID="SuggestSectionIconButton" Content="Suggest from section name" Action="SuggestSectionIcon" IsEnabled="{Binding CanSuggestSectionIcon}" AccessibleName="Create an icon preview from this section name" Tooltip="Sends the section name only to the currently selected Home model" />
+              <If Condition="{Binding IsSectionIconSuggestionInProgress}"><Text Text="Creating preview…" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" /></If>
+              <If Condition="{Binding HasGeneratedSectionIconPreview}">
+                <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
+                  <Image ID="GeneratedSectionIconPreviewImage" Source="{Binding GeneratedSectionIconPreview.Preview}" Width="28" Height="28" AccessibleName="Generated section icon preview" />
+                  <Text Text="{Binding SectionIconSuggestionCaption}" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+                  <Button ID="ApplyGeneratedSectionIconButton" Content="Apply preview" Action="ApplyGeneratedSectionIcon" AccessibleName="Apply generated icon preview to this section" />
+                </Container>
+              </If>
+            </Container>
+            <Container Type="Overlay" Row="4" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
               <Container Type="Vertical Stack" CellGap="6">
                 <Text Text="Choose an icon" FontWeight="SemiBold" />
                 <If Condition="{Binding HasSectionIconPickerChoices}">
@@ -291,7 +302,7 @@
                 <Else><Text Text="No icons match that search." Foreground="{Resource CuiTextSoftBrush}" /></Else>
               </Container>
             </Container>
-            <Text Row="4" Text="Icon choices are built in. Color remains readable against the active theme." FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Text Row="5" Text="Built-in icons are available offline. Suggestions send only the section name to your selected Home model; Board content is not sent. A suggestion is saved only when you apply its preview." FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           </Container>
         </Container>
       </Container>
