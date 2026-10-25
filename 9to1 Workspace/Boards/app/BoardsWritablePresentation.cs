@@ -106,6 +106,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             // Copy before crossing the application boundary. The Files owner validates the
             // exact source and expected revision again before publishing new immutable bytes.
             var isolatedBytes = bytes.ToArray();
+            host!.LastSaveReceipt = null;
             var receipt = await save(sourceId, expectedRevision, isolatedBytes, token).ConfigureAwait(false);
             if (receipt is null)
                 throw new InvalidDataException("The external save returned no receipt.");
