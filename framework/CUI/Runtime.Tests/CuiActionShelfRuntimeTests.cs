@@ -72,9 +72,9 @@ public sealed class CuiActionShelfRuntimeTests
                 Assert.Equal("unchanged draft", editor.Text); Assert.Equal(2, editor.SelectionStart); Assert.Equal(7, editor.SelectionEnd);
                 Assert.True(shelf.TryGetValue("Shelf.Dots", out var dots)); Assert.Equal("○ ● ○", dots);
                 Assert.True(front.Focus());
-                window.KeyPress(Key.Right, RawInputModifiers.None); Pump(window);
+                window.KeyPress(Key.Right, RawInputModifiers.None, PhysicalKey.ArrowRight, null); Pump(window);
                 Assert.Equal("C", front.Content);
-                window.KeyPress(Key.Right, RawInputModifiers.None); Pump(window); // Deliberate wrap, actual3 positions.
+                window.KeyPress(Key.Right, RawInputModifiers.None, PhysicalKey.ArrowRight, null); Pump(window); // Deliberate wrap, actual3 positions.
                 Assert.Equal("A", front.Content);
                 var frontPoint = front.TranslatePoint(new Point(28, 28), window)!.Value;
                 window.MouseWheel(frontPoint, new Vector(0, -1)); Pump(window);
