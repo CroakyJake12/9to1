@@ -163,7 +163,7 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
     [Fact]
     public void Browse_split_projection_persists_two_different_profile_panes_and_rejects_invalid_references()
     {
-        var a = Tab("A"); var b = Tab("B"); var original = Session([a, b]);
+        var a = Profiled(Tab("A"), "profile-a"); var b = Profiled(Tab("B"), "profile-b"); var original = Session([a, b]);
         var paneIds = new[] { b.Id, a.Id };
         var split = Projection([Project(a) with { ProfileId = "profile-a" },
             Project(b) with { ProfileId = "profile-b" }], b.Id) with
@@ -223,7 +223,8 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
     public void Canonical_group_metadata_updates_existing_guid_and_order_without_replacing_other_windows()
     {
         var groupId = Guid.NewGuid();
-        var a = Tab("A") with { GroupId = groupId }; var b = Tab("B") with { GroupId = groupId };
+        var a = Profiled(Tab("A"), "actual-profile") with { GroupId = groupId };
+        var b = Profiled(Tab("B"), "other-profile") with { GroupId = groupId };
         var original = Session([a, b]) with { Groups = [new(groupId, "Research", false, [a.Id, b.Id])] };
         var projection = Projection([Project(b) with { Group = groupId.ToString("D"), ProfileId = "other-profile" },
             Project(a) with { Group = groupId.ToString("D"), ProfileId = "actual-profile" }], b.Id) with
@@ -243,12 +244,12 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
     public void Group_mutation_refuses_cross_window_membership_stale_names_and_private_members()
     {
         var groupId = Guid.NewGuid(); var a = Tab("A") with { GroupId = groupId };
-        var b = Tab("B") with { GroupId = groupId }; var original = Session([a, b]) with
+        var b = Profiled(Tab("B"), "other-profile") with { GroupId = groupId }; var original = Session([a, b]) with
         { Groups = [new(groupId, "Research", false, [a.Id, b.Id])] };
         var foreignWindow = Window([b.Id], WorkspaceWindowKind.Normal);
         var shared = original with { Windows = [original.Windows[0], foreignWindow] };
         var mutation = Projection([Project(a) with { Group = groupId.ToString("D") },
-            Project(b) with { Group = groupId.ToString("D") }], a.Id) with
+            Project(b) with { Group = groupId.ToString("D"), ProfileId = "other-profile" }], a.Id) with
         { Groups = [new(groupId, "Renamed", true, [a.Id, b.Id])] };
         Assert.Throws<InvalidDataException>(() => Merge(shared, mutation, a.Id, b.Id));
 
@@ -265,6 +266,16 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
         Assert.Throws<InvalidDataException>(() => Merge(original, Projection([
             Project(a) with { Group = groupId.ToString("D") }, privateMember], a.Id) with
         { Groups = [new(groupId, "Research", false, [a.Id, b.Id])] }, a.Id, b.Id));
+    }
+
+    [Fact]
+    public void Existing_tab_profile_cannot_be_rewritten_by_a_projection()
+    {
+        var tab = Profiled(Tab("Retained profile"), "other-profile");
+        var original = Session([tab]);
+        var forged = Projection([Project(tab) with { ProfileId = "forged-profile" }], tab.Id);
+
+        Assert.Throws<InvalidDataException>(() => Merge(original, forged, tab.Id));
     }
 
     [Fact]
@@ -363,7 +374,7 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
         var beforeOriginal = JsonSerializer.Serialize(original); var beforeCurrent = JsonSerializer.Serialize(current);
         var beforeManaged = managed.ToArray();
 
-        Assert.Throws<InvalidDataException>(() => UnifiedWorkspaceSessionProjection.Merge(original, windowId, current, managed));
+        Assert.Throws<InvalidDataException>(() => UnifiedWorkspaceSessionProjection.Merge(original, windowId, "actual-profile", current, managed));
 
         Assert.Equal(beforeOriginal, JsonSerializer.Serialize(original));
         Assert.Equal(beforeCurrent, JsonSerializer.Serialize(current));
@@ -371,11 +382,13 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
     }
 
     private static WorkspaceSessionSnapshot Merge(WorkspaceSessionSnapshot original, BrowseTabSessionProjection current,
-        params Guid[] managed) => UnifiedWorkspaceSessionProjection.Merge(original, original.Windows[0].Id, current, managed.ToHashSet());
+        params Guid[] managed) => UnifiedWorkspaceSessionProjection.Merge(original, original.Windows[0].Id, "actual-profile", current, managed.ToHashSet());
     private static BrowseTabSessionProjection Projection(IReadOnlyList<BrowserTabState> tabs, Guid? selected) => new(tabs, selected);
     private static BrowserTabState Project(TabSessionSnapshot tab) =>
         new(tab.Id, tab.Title, "https://example.test/" + tab.Id.ToString("D"), BrowserTabPrivacy.Standard, string.Empty, tab.UpdatedAt)
             { ProfileId = "actual-profile" };
+    private static TabSessionSnapshot Profiled(TabSessionSnapshot tab, string profileId) =>
+        UnifiedWorkspaceTabState.Merge(tab, Project(tab) with { ProfileId = profileId });
     private static TabSessionSnapshot Tab(string title) => new(Guid.NewGuid(), "browse", title, "{}", null, null,
         null, false, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(1));
     private static WorkspaceSessionSnapshot Session(IReadOnlyList<TabSessionSnapshot> tabs) =>
