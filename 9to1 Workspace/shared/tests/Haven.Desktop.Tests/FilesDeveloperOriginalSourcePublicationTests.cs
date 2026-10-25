@@ -572,6 +572,68 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
         }, canonicalSavedProject: true);
     }, canonicalSavedProject: true);
 
+    [LinuxPublicationFact]
+    public async Task Manual_editor_CREATE_and_cold_read_use_real_registered_absent_approval_for_nonempty_and_empty_files()
+    {
+        foreach (var reviewed in new[] { Reviewed, "" })
+            await Run(async rig =>
+            {
+                var owner = ManualEditor(rig);
+                var preview = rig.Keep(owner.PreviewCreateAsync(rig.Saved, Target, rig.Token));
+                await rig.DecideNextAsync(preview, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+                await preview; Assert.False(File.Exists(rig.TargetPath));
+                Assert.DoesNotContain(rig.Decisions, request => request.Scope.ActionName == HomeDeveloperProjectEditAdmissionSource.CreateAction);
+                var create = rig.Keep(owner.CreateAsync(rig.Saved, Target, reviewed, rig.Token));
+                await rig.DecideNextAsync(create, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+                var request = await rig.DecideNextAsync(create, HomeDeveloperProjectEditAdmissionSource.CreateAction, HomeApprovalChoice.Accept);
+                Assert.Equal(DeveloperProjectSourceWriteRevision.Absent, Assert.Single(request.Impact.ResourceBinding!.Scopes).Revision);
+                Assert.Equal(Hash(reviewed), await create);
+                var cold = rig.Keep(owner.ReadAsync(rig.Saved, Target, rig.Token));
+                await rig.DecideNextAsync(cold, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+                var read = await cold; Assert.Equal(reviewed, read.Text); Assert.Equal(Hash(reviewed), read.Sha256);
+                Assert.Equal(Encoding.UTF8.GetBytes(reviewed), await File.ReadAllBytesAsync(rig.TargetPath, rig.Token));
+                Assert.Equal(3, rig.Decisions.Count(decision => decision.Scope.ActionName == HomeDeveloperProjectReadAdmissionSource.ReadAction));
+                Assert.Single(rig.Decisions, decision => decision.Scope.ActionName == HomeDeveloperProjectEditAdmissionSource.CreateAction);
+            }, canonicalSavedProject: true);
+    }
+
+    [LinuxPublicationFact]
+    public Task Manual_editor_CREATE_decline_closes_actual_admissions_without_publishing() => Run(async rig =>
+    {
+        var create = rig.Keep(ManualEditor(rig).CreateAsync(rig.Saved, Target, Reviewed, rig.Token));
+        await rig.DecideNextAsync(create, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        var request = await rig.DecideNextAsync(create, HomeDeveloperProjectEditAdmissionSource.CreateAction, HomeApprovalChoice.Decline);
+        await rig.RefusesAsync(() => create); Assert.False(File.Exists(rig.TargetPath));
+        var observed = await rig.Keep(rig.Home.Permissions.ReadRequestObservationAsync(request.RequestId, rig.Token));
+        Assert.Equal(HomePermissionRequestState.Denied, observed!.State);
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_editor_CREATE_refuses_empty_file_appearing_after_review_without_requesting_overwrite() => Run(async rig =>
+    {
+        var owner = ManualEditor(rig);
+        var preview = rig.Keep(owner.PreviewCreateAsync(rig.Saved, Target, rig.Token));
+        await rig.DecideNextAsync(preview, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept); await preview;
+        await File.WriteAllTextAsync(rig.TargetPath, "", rig.Token); // external interference, never the publication writer
+        File.SetUnixFileMode(rig.TargetPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        var create = rig.Keep(owner.CreateAsync(rig.Saved, Target, Reviewed, rig.Token));
+        await rig.DecideNextAsync(create, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.RefusesAsync(() => create);
+        Assert.Equal("", await File.ReadAllTextAsync(rig.TargetPath, rig.Token));
+        Assert.DoesNotContain(rig.Decisions, decision => decision.Scope.ActionName == HomeDeveloperProjectEditAdmissionSource.CreateAction);
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_editor_CREATE_refuses_a_substituted_saved_root_before_read_or_write_approval() => Run(async rig =>
+    {
+        var substitute = rig.Saved with { Root = rig.Saved.Root with { Location = Path.Combine(rig.ProjectRoot, "different-root") } };
+        await rig.RefusesAsync(() => ManualEditor(rig).PreviewCreateAsync(substitute, Target, rig.Token));
+        Assert.Empty(rig.Decisions); Assert.False(File.Exists(rig.TargetPath));
+    }, canonicalSavedProject: true);
+
+    private static DeveloperManualSourceEditOwner ManualEditor(Rig rig) => new(
+        rig.Graph.GetRequiredService<NativeFilesWorkspaceService>(), rig.Selections, rig.Reads, rig.Edits, rig.Kernel);
+
     private static async Task Run(Func<Rig, Task> body, string? existingTarget = null,
         bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true)
     {

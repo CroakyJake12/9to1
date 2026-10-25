@@ -93,7 +93,7 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
         string[] expected = [
             "dev.refresh", "dev.tree", "dev.git-status", "dev.git-diff",
             "dev.git-branches", "dev.project-folder-up", "dev.open-project-entry", "dev.project-entries-previous",
-            "dev.project-entries-next", "dev.open-source", "dev.search", "dev.open-search-result",
+            "dev.project-entries-next", "dev.review-new-source-file", "dev.create-new-source-file", "dev.open-source", "dev.search", "dev.open-search-result",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
@@ -119,7 +119,7 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
         string[] expected = [
             "dev.refresh", "dev.tree", "dev.git-status", "dev.git-diff",
             "dev.git-branches", "dev.project-folder-up", "dev.open-project-entry", "dev.project-entries-previous",
-            "dev.project-entries-next", "dev.open-source", "dev.search", "dev.open-search-result",
+            "dev.project-entries-next", "dev.review-new-source-file", "dev.create-new-source-file", "dev.open-source", "dev.search", "dev.open-search-result",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
