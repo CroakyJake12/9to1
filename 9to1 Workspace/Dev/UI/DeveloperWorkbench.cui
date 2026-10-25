@@ -38,6 +38,15 @@
         </Container>
         <Text text="{Binding ProjectExplorerStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
       </Container>
+      <Text text="New source file" font-size="18" />
+      <Text text="Create one file directly in the selected project root. New directories, nested paths and multi-file project templates are not supported here." text-wrapping="Wrap" />
+      <Input id="dev-new-file-name" Type="Text" Value="{Binding NewFileName}" placeholdertext="Page.cui" accessible-name="New direct-root file name" Interactive="{Binding CanConfigureNewFile}" />
+      <Input id="dev-new-file-cui-template" Type="Checkbox" Checked="{Binding NewFileCuiTemplate}" content="Start with a CUI page (clear for an empty source file)" Interactive="{Binding CanConfigureNewFile}" />
+      <Button id="dev-review-new-source-file" action="dev.review-new-source-file" content="Review new file" Interactive="{Binding CanReviewNewFile}" />
+      <Text text="{Binding NewFileReview}" text-wrapping="Wrap" accessible-name="Reviewed new-file path root template byte length and source hash" />
+      <Object id="dev-new-file-source" type="ReadOnlyText" text="{Binding NewFileSource}" font-family="monospace" min-height="100" accessible-name="Exact reviewed source to create; blank for an empty source file" />
+      <Button id="dev-create-new-source-file" action="dev.create-new-source-file" content="Create reviewed file" Interactive="{Binding CanCreateNewFile}" />
+      <Text text="{Binding NewFileStatus}" text-wrapping="Wrap" accessible-name="Actual reviewed CREATE and cold source open status" />
       <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
       <Button id="dev-open-source" action="dev.open-source" content="Open source" Interactive="{Binding CanOpenSource}" />
       <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />

@@ -337,6 +337,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             // Preserve source/outcome evidence in its actual owner; a withdrawn binding cannot disclose it.
             if (!_active || _work.IsRetiring) { value = null; return false; }
             if (TryGetManualRecoveryConflictValue(path, out value)) return true;
+            if (TryGetNewFileValue(path, out value)) return true;
             if (TryGetCuiPropertyValue(path, out value)) return true;
             if (TryGetCuiAnalysisValue(path, out value)) return true;
             value = path switch
@@ -415,6 +416,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     }
     public bool TrySetValue(string path, object? value)
     {
+        if (path == "NewFileCuiTemplate") return SetNewFileTemplate(value);
         if (path == "SourceFindMatchCase")
         {
             if (value is not bool enabled) return false;
@@ -443,7 +445,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             });
             return true;
         }
-        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "SourceFindQuery" or "SourceReplaceText" or "CuiPropertyDraftValue" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
+        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "SourceFindQuery" or "SourceReplaceText" or "CuiPropertyDraftValue" or "NewFileName" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
         long generation; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
         {
@@ -459,6 +461,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             // Its tab retains the exact draft/review; manual apply is unavailable
                             // until the path once again names the actually open source.
                             StoreSelectedTab(); _sourcePath = text; break;
+                        case "NewFileName": ChangeNewFileName(text); break;
                         case "SearchQuery": if (!StringComparer.Ordinal.Equals(_searchQuery, text)) { _searchQuery = text; InvalidateProjectSearch(); } break;
                         case "RecoveredMergedDraft": UpdateRecoveryMerge(text); break;
                         case "SourceLocation": _sourceLocation = text; break;
@@ -484,6 +487,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (command == "dev.review-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && HasNewFileSlot(_newFileName) && DeveloperNewSourceFile.Prepare(_newFileName, _newFileCuiTemplate).Succeeded;
+            if (command == "dev.create-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && CurrentNewFileReview();
             if (command == "dev.select-cui-property") return CurrentCuiPropertyInspection()?.Properties.Take(100).Any(property => property.CanEdit) == true;
             if (command == "dev.change-cui-property") return SelectedCuiProperty() is { CanEdit: true } property && property.Value != _cuiPropertyDraftValue;
             if (command == "dev.analyze-cui-draft") return CurrentSourceTab() is { } source && DeveloperCuiSourceAnalysis.Supports(source.Path, CurrentEditorText());
@@ -541,6 +546,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command is "dev.review-new-source-file" or "dev.create-new-source-file") return DispatchNewSourceFileAsync(command, cancellationToken);
         if (command == "dev.select-cui-property") return SelectCuiProperty(parameter);
         if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);
         if (command == "dev.analyze-cui-draft") return DispatchCuiAnalysisAsync(cancellationToken);

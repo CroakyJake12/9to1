@@ -33,6 +33,55 @@ public sealed class DeveloperManualSourceEditOwner(
     IDeveloperProjectOriginalEditAdmissionSource edits,
     IDeveloperProjectOriginalPhysicalCaptureSource capture)
 {
+    /// <summary>Fresh READ-authorized absence observation for the native new-file review. No
+    /// WRITE is requested and no empty-file hash substitutes for the tagged absent precondition.
+    /// The actual CREATE admission and final no-replace fence recheck absence independently.</summary>
+    public Task PreviewCreateAsync(DeveloperResolvedProject project, string relativePath, CancellationToken token)
+        => CreateCoreAsync(project, relativePath, null, token);
+
+    /// <summary>Publishes one reviewed direct-root file through SAME registered Files selection,
+    /// Home READ + distinct CREATE WRITE and native no-replace owner. Returns only its verified
+    /// committed hash after both admissions close. Nested/multi-file templates are unsupported.</summary>
+    public Task<string> CreateAsync(DeveloperResolvedProject project, string relativePath, string reviewedText, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(reviewedText);
+        return CreateCoreAsync(project, relativePath, reviewedText, token);
+    }
+
+    private async Task<string> CreateCoreAsync(DeveloperResolvedProject project, string relativePath, string? reviewedText, CancellationToken token)
+    {
+        DemandSafeProjectRelativePath(relativePath);
+        if (relativePath.Contains('/') || relativePath.Contains('\\'))
+            throw new NotSupportedException("The admitted CREATE owner supports one direct project-root file, not directories or nested templates.");
+        ReadLease? lease = null; IDeveloperProjectOriginalEditAdmission? write = null;
+        var errors = new List<Exception>(); string result = DeveloperProjectSourceWriteRevision.Absent;
+        try
+        {
+            lease = await AcquireReadAsync(project, token).ConfigureAwait(false);
+            await lease.ReadAdmission.RevalidateOriginalAsync(token).ConfigureAwait(false);
+            await capture.ValidateOriginalCreateTargetAsync(lease.Capture, relativePath, token).ConfigureAwait(false);
+            if (reviewedText is not null)
+            {
+                write = await edits.AcquireOriginalCreateAsync(lease.Selection, lease.Capture, relativePath, reviewedText, token).ConfigureAwait(false);
+                result = await capture.ApplyOriginalCapturedFileCreateAsync(lease.Capture, lease.ReadAdmission, write,
+                    relativePath, reviewedText, token).ConfigureAwait(false);
+                if (!StringComparer.Ordinal.Equals(result, Sha256(reviewedText)))
+                    throw new InvalidDataException("The CREATE owner did not verify the exact reviewed source hash; inspect its original outcome.");
+            }
+            else await lease.ReadAdmission.RevalidateOriginalAsync(token).ConfigureAwait(false);
+        }
+        catch (Exception error) { errors.Add(error); }
+        // Close both actual admissions independently. A published file does not make a failed
+        // Home completion/audit look successful, and one close fault never hides its sibling.
+        if (write is not null)
+            try { await write.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { errors.Add(error); }
+        if (lease is not null)
+            try { await lease.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { errors.Add(error); }
+        if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+        if (errors.Count > 1) throw new AggregateException("Source CREATE or its original Home admissions did not settle cleanly.", errors);
+        return result;
+    }
+
     /// <summary>Reads one exact captured source file's complete text through the genuine Home/Files/
     /// kernel owner (never raw path IO) and returns it with its current SHA-256 revision. The captured
     /// read itself refuses any stale/mutated source, so the returned hash is the exact current revision.</summary>

@@ -16,7 +16,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         string[] expected = [
             "dev.refresh", "dev.tree", "dev.git-status", "dev.git-diff",
             "dev.git-branches", "dev.project-folder-up", "dev.open-project-entry", "dev.project-entries-previous",
-            "dev.project-entries-next", "dev.open-source", "dev.search", "dev.open-search-result",
+            "dev.project-entries-next", "dev.review-new-source-file", "dev.create-new-source-file", "dev.open-source", "dev.search", "dev.open-search-result",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
@@ -172,6 +172,23 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         Assert.Contains(update.Actions.Values, action => action.Name == "dev.change-cui-property");
         Assert.Contains(update.Properties, pair => pair.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
             && pair.Value is CuiBindingValue binding && binding.Path == "CanChangeCuiProperty");
+    }
+
+    [Fact]
+    public void New_source_creation_is_explicitly_reviewed_and_template_content_remains_readonly_until_publication()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        foreach (var (id, command, availability) in new[] { ("dev-review-new-source-file", "dev.review-new-source-file", "CanReviewNewFile"),
+            ("dev-create-new-source-file", "dev.create-new-source-file", "CanCreateNewFile") })
+        {
+            var button = Assert.Single(nodes, node => node.Name == id);
+            Assert.Contains(button.Actions.Values, action => action.Name == command);
+            Assert.Contains(button.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
+                && property.Value is CuiBindingValue binding && binding.Path == availability);
+        }
+        var source = Assert.Single(nodes, node => node.Name == "dev-new-file-source");
+        Assert.Equal("Object", source.Type); Assert.True(source.TryGetLiteralAttribute("type", out var renderer)); Assert.Equal("ReadOnlyText", renderer);
+        Assert.DoesNotContain(source.Properties.Keys, key => key.Equals("Value", StringComparison.OrdinalIgnoreCase));
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)
