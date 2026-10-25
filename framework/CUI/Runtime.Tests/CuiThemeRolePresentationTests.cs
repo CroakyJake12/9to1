@@ -91,6 +91,65 @@ public sealed class CuiThemeRolePresentationTests
     }
 
     [Fact]
+    public async Task Boards_loader_uses_its_app_palette_for_surfaces_selection_focus_and_live_overrides()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var source = new ScopedThemeSource();
+            using var preference = new CuiThemePreferenceContext(source);
+            using var loader = new CuiControlLoader();
+            loader.SetSurface("Boards", "app.boards");
+            loader.SetThemePreferenceContext(preference);
+            var (root, diagnostics) = loader.LoadMarkup("<Page><Container Type='Vertical Stack'>" +
+                "<Input Type='Text' ID='field'/>" +
+                "<Button ID='row' Content='Selected page'/>" +
+                "<Button ID='action' Content='Action' AccentRole='Primary'/>" +
+                "</Container></Page>");
+            Assert.Empty(diagnostics); Assert.NotNull(root);
+            var window = new Window { Content = root, Width = 420, Height = 300 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var field = Assert.Single(root!.GetVisualDescendants().OfType<TextBox>());
+                var row = root.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "row");
+                var action = root.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "action");
+                CuiPropertyPresentation.SetSelected(row, true);
+                void CheckPalette(string? accent)
+                {
+                    var expected = CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Dark, CuiTheme.Glow, accent, "app.boards");
+                    foreach (var control in new Control[] { field, row, action })
+                        foreach (var (key, colour) in new[]
+                        {
+                            ("CuiPanel2Brush", expected.Panel2), ("CuiPanel3Brush", expected.Panel3),
+                            ("HavenPanel2Brush", expected.Panel2), ("HavenPanel3Brush", expected.Panel3),
+                            ("CuiSelectionBrush", expected.AccentSoft), ("CuiFocusBrush", expected.Focus)
+                        })
+                        {
+                            Assert.True(control.Resources.TryGetResource(key, null, out var actual));
+                            Assert.Equal(colour, Assert.IsAssignableFrom<ISolidColorBrush>(actual).Color);
+                        }
+                    Assert.Equal(expected.AccentSoft, Assert.IsAssignableFrom<ISolidColorBrush>(row.Background).Color);
+                    var expectedResources = new ResourceDictionary();
+                    CuiThemeResourceApplier.ApplyToResources(expectedResources, expected);
+                    Assert.Equal(Assert.IsAssignableFrom<IGradientBrush>(expectedResources["CuiAccentPrimaryBrush"])
+                            .GradientStops.Select(stop => (stop.Offset, stop.Color)),
+                        Assert.IsAssignableFrom<IGradientBrush>(action.Background)
+                            .GradientStops.Select(stop => (stop.Offset, stop.Color)));
+                }
+                CheckPalette(null);
+                var overrides = CuiAccentPreference.Default.WithMode(CuiAccentOverrideMode.IndividualApps)
+                    .WithAppColour("app.boards", "#168B4F").WithAppColour("app.write", "#D64B25");
+                source.Publish(source.Current with { Revision = 2, Accent = overrides });
+                CheckPalette("#168B4F");
+                source.Publish(source.Current with { Revision = 3, Accent = overrides.WithAppColour("app.boards", null) });
+                CheckPalette(null);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Authored_roles_react_and_text_actions_keep_focus_without_a_pill()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
@@ -134,6 +193,15 @@ public sealed class CuiThemeRolePresentationTests
             }
             finally { window.Close(); }
         }, CancellationToken.None);
+    }
+
+    private sealed class ScopedThemeSource : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; private set; } =
+            new("Glow", 1, "test-home-account", true, CuiAccessibilitySettings.Default, CuiAppearance.Dark);
+        public event EventHandler? Changed;
+        public void Publish(CuiThemePreferenceSnapshot snapshot)
+        { Current = snapshot; Changed?.Invoke(this, EventArgs.Empty); }
     }
 
     private static object? Resource(Control control, string key) => control.TryFindResource(key, out var value) ? value : null;
