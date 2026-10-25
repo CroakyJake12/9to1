@@ -55,7 +55,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
                 viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Read-only source");
                 viewModel.Set("SaveStateText", "Read-only source");
-                loader = new CuiControlLoader();
+                loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
                 loader.SetBindingContext(viewModel);
                 loader.SetActionDispatcher(viewModel);
                 var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));

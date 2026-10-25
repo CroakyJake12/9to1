@@ -68,7 +68,7 @@ public sealed class VisualCaptureTests
         {
             viewModel = new BoardsViewModel(adapter);
 
-            var loader = new CuiControlLoader();
+            var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
             loader.SetBindingContext(viewModel);
             loader.SetActionDispatcher(viewModel);
             var (root, diagnostics) = loader.LoadFile(FindBoardsCui());

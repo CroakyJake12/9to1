@@ -503,6 +503,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _isEditMode = enabled;
         if (enabled)
         {
+            _viewInkOverrides.Clear();
             _viewGraphOverrides.Clear();
             _graphSessionValues.Clear();
             SyncSelectedInkView();

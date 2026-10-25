@@ -18,6 +18,14 @@ public static class BoardsCuiDocuments
     private static readonly Lazy<IReadOnlyDictionary<string, CuiDocument>> CompiledDocuments =
         new(LoadEmbeddedDocuments, LazyThreadSafetyMode.ExecutionAndPublication);
 
+    /// <summary>Creates the actual Boards host registry, including its authored folder icon.</summary>
+    public static CuiControlRegistry CreateControlRegistry()
+    {
+        var registry = new CuiControlRegistry();
+        registry.RegisterImageSourceResolver(BoardsCuiIconResolver.Resolve);
+        return registry;
+    }
+
     public static CuiDocument Load(string sourceName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceName);

@@ -20,7 +20,7 @@ public sealed class CanonicalContextTests
         vm.FocusBlock(table.Id);
         TestUiThread.Run(() =>
         {
-            using var loader = new CuiControlLoader();
+            using var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
             loader.SetBindingContext(vm); loader.SetActionDispatcher(vm);
             var (root, diagnostics) = loader.LoadFile(FindSource());
             Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);

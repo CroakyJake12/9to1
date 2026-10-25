@@ -148,18 +148,19 @@ public sealed class ContractAdapterTests
                 adapter.MarkDirty();
                 await adapter.SaveAsync();
 
-                image.Image!.Width = 360;
-                image.Image.Height = 240;
-                image.Image.KeepAspectRatio = false;
-                image.Image.RotationDegrees = 90;
-                image.Image.CropLeft = 0.1;
-                image.Image.CropRight = 0.05;
-                image.Image.CropTop = 0.2;
-                image.Image.FitMode = "cover";
-                image.Image.Alignment = "center";
-                image.Image.Caption = "Rendered diagram";
-                image.Image.AltText = "A labelled diagram";
-                image.Image.LinkUri = "https://example.test/reference";
+                var liveImage = page.Blocks.Single(block => block.Id == blockId).Image!;
+                liveImage.Width = 360;
+                liveImage.Height = 240;
+                liveImage.KeepAspectRatio = false;
+                liveImage.RotationDegrees = 90;
+                liveImage.CropLeft = 0.1;
+                liveImage.CropRight = 0.05;
+                liveImage.CropTop = 0.2;
+                liveImage.FitMode = "cover";
+                liveImage.Alignment = "center";
+                liveImage.Caption = "Rendered diagram";
+                liveImage.AltText = "A labelled diagram";
+                liveImage.LinkUri = "https://example.test/reference";
                 adapter.MarkDirty();
                 await adapter.SaveAsync();
             }
