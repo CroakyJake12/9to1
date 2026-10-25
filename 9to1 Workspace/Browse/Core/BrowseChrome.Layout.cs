@@ -18,9 +18,7 @@ public sealed partial class BrowseChrome
             if (_disposed || _nativeRetiring || HasSplitView) return false;
             var selected = _tabs.FirstOrDefault(tab => tab.Id == _selectedTabId);
             return selected is { Privacy: Haven.Core.BrowserTabPrivacy.Standard } &&
-                StringComparer.Ordinal.Equals(selected.ProfileId, _homeProfileId) &&
-                _tabs.Any(tab => tab.Id != selected.Id && tab.Privacy == Haven.Core.BrowserTabPrivacy.Standard &&
-                    StringComparer.Ordinal.Equals(tab.ProfileId, _homeProfileId));
+                _tabs.Any(tab => tab.Id != selected.Id && tab.Privacy == Haven.Core.BrowserTabPrivacy.Standard);
         }
     }
 
@@ -52,15 +50,13 @@ public sealed partial class BrowseChrome
     {
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
         var selected = RequireTab(_selectedTabId);
-        if (selected.Privacy != Haven.Core.BrowserTabPrivacy.Standard ||
-            !StringComparer.Ordinal.Equals(selected.ProfileId, _homeProfileId))
-            throw new InvalidOperationException("Only standard tabs in the current profile can enter a split view.");
+        if (selected.Privacy != Haven.Core.BrowserTabPrivacy.Standard)
+            throw new InvalidOperationException("Only standard tabs can enter a split view.");
         var second = _tabs.FirstOrDefault(tab => tab.Id != selected.Id &&
-            tab.Privacy == Haven.Core.BrowserTabPrivacy.Standard &&
-            StringComparer.Ordinal.Equals(tab.ProfileId, _homeProfileId));
+            tab.Privacy == Haven.Core.BrowserTabPrivacy.Standard);
         if (second is null)
         {
-            _status = "Open another standard tab in this profile before splitting the view.";
+            _status = "Open another standard tab before splitting the view.";
             return Publish();
         }
         _paneTabIds.Clear(); _paneTabIds.Add(selected.Id); _paneTabIds.Add(second.Id);

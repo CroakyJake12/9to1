@@ -220,7 +220,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 else chrome.RestoreStandaloneClosedTabs();
                 if (tabSessionPersistence is not null && projected?.PaneTabIds is { Count: 2 } panes &&
                     panes[0] != panes[1] && panes.All(id => chrome._tabs.Any(tab => tab.Id == id &&
-                        tab.Privacy == BrowserTabPrivacy.Standard && StringComparer.Ordinal.Equals(tab.ProfileId, homeProfileId))) &&
+                        tab.Privacy == BrowserTabPrivacy.Standard)) &&
                     panes.Contains(chrome._selectedTabId) &&
                     (projected.SplitOrientation is null || Enum.IsDefined(projected.SplitOrientation.Value)) &&
                     (projected.PrimaryPaneRatio is null || IsValidPaneRatio(projected.PrimaryPaneRatio.Value)))

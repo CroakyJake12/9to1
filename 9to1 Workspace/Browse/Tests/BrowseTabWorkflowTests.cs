@@ -6,23 +6,29 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeOwnershipTests
 {
     [Fact]
-    public async Task Split_view_uses_existing_same_profile_tab_owners_and_persists_focus_and_close()
+    public async Task Split_view_keeps_existing_cross_profile_tab_owners_and_persists_focus_and_close()
     {
         var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
         await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
             new Dictionary<string, BrowseEngineKind>()));
         var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
-        var profile = "split-profile";
+        var profile = "profile-a";
         var session = new TabSessionFixture(new BrowseTabSessionProjection([
-            new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty,
-                DateTimeOffset.UtcNow) { ProfileId = profile },
-            new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty,
-                DateTimeOffset.UtcNow) { ProfileId = profile }
+            new(firstId, "First", "https://shared.example/first", BrowserTabPrivacy.Standard, string.Empty,
+                DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(secondId, "Second", "https://shared.example/second", BrowserTabPrivacy.Standard, string.Empty,
+                DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
         ], firstId));
         await using var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: profile,
             tabSessionPersistence: session);
         var originalHosts = factory.Hosts.ToArray();
         Assert.Equal(2, originalHosts.Length);
+        Assert.NotEqual(factory.Requests[0].ProfileDirectory, factory.Requests[1].ProfileDirectory);
+        await chrome.SetPermissionAsync(BrowserSitePermissionKind.Camera, BrowserSitePermissionDecision.Allow);
+        await chrome.SelectTabAsync(secondId);
+        await chrome.SetPermissionAsync(BrowserSitePermissionKind.Camera, BrowserSitePermissionDecision.Deny);
+        await chrome.SelectTabAsync(firstId);
+        Assert.Equal(BrowserSitePermissionDecision.Allow, Assert.Single(chrome.State.Permissions).Decision);
 
         Assert.True(chrome.CanSplitSelectedTab);
         await chrome.ToggleSplitViewAsync();
@@ -55,28 +61,35 @@ public sealed partial class BrowseNativeOwnershipTests
         Assert.Equal(secondId, restarted.State.SelectedTabId);
         Assert.Equal(Haven.Core.SplitOrientation.Horizontal, restarted.State.SplitOrientation);
         Assert.Equal(0.55, restarted.State.PrimaryPaneRatio, precision: 2);
+        Assert.Equal("profile-a", restarted.State.Tabs.Single(tab => tab.Id == firstId).ProfileId);
+        Assert.Equal("profile-b", restarted.State.Tabs.Single(tab => tab.Id == secondId).ProfileId);
+        Assert.NotEqual(factory.Requests[^2].ProfileDirectory, factory.Requests[^1].ProfileDirectory);
+        Assert.Equal(BrowserSitePermissionDecision.Deny, Assert.Single(restarted.State.Permissions).Decision);
+        await restarted.SelectTabAsync(firstId);
+        Assert.Equal(BrowserSitePermissionDecision.Allow, Assert.Single(restarted.State.Permissions).Decision);
     }
 
     [Fact]
-    public async Task Split_view_rejects_tabs_owned_by_another_profile()
+    public async Task Split_view_keeps_each_existing_tab_in_its_original_profile()
     {
         var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
+        var factory = new ChromiumFixtureFactory();
         var session = new TabSessionFixture(new BrowseTabSessionProjection([
-            new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty,
+            new(firstId, "First", "https://shared.example/first", BrowserTabPrivacy.Standard, string.Empty,
                 DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
-            new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty,
+            new(secondId, "Second", "https://shared.example/second", BrowserTabPrivacy.Standard, string.Empty,
                 DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
         ], firstId));
-        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile-a",
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), factory, homeProfileId: "profile-a",
             tabSessionPersistence: session);
-        Assert.False(chrome.CanSplitSelectedTab);
+        Assert.True(chrome.CanSplitSelectedTab);
         await chrome.ToggleSplitViewAsync();
-        Assert.Empty(chrome.State.PaneTabIds);
-        Assert.Contains("this profile", chrome.State.Status);
+        Assert.Equal(new[] { firstId, secondId }, chrome.State.PaneTabIds);
+        Assert.NotEqual(factory.Requests[0].ProfileDirectory, factory.Requests[1].ProfileDirectory);
     }
 
     [Fact]
-    public async Task Split_view_does_not_join_two_tabs_from_a_noncurrent_profile()
+    public async Task Split_view_accepts_existing_standard_tabs_from_a_noncurrent_profile()
     {
         var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
         var session = new TabSessionFixture(new BrowseTabSessionProjection([
@@ -87,9 +100,9 @@ public sealed partial class BrowseNativeOwnershipTests
         ], firstId));
         await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile-a",
             tabSessionPersistence: session);
-        Assert.False(chrome.CanSplitSelectedTab);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => chrome.ToggleSplitViewAsync());
-        Assert.Empty(chrome.State.PaneTabIds);
+        Assert.True(chrome.CanSplitSelectedTab);
+        await chrome.ToggleSplitViewAsync();
+        Assert.Equal(new[] { firstId, secondId }, chrome.State.PaneTabIds);
     }
 
     [Fact]
