@@ -397,7 +397,7 @@ public static class CuiControlTemplates
             if (subscriptions.Count != 0) return;
             foreach (var key in new[] { "CuiScrollBarSize", "CuiScrollThumbThickness", "CuiHighContrast" })
                 subscriptions.Add(owner.GetResourceObservable(key).Subscribe(new TemplateValueObserver(_ => Refresh())));
-            subscriptions.Add(bar.GetObservable(ScrollBar.OrientationProperty).Subscribe(new TemplateValueObserver<Orientation>(_ => Refresh())));
+            subscriptions.Add(bar.GetObservable(Avalonia.Controls.Primitives.ScrollBar.OrientationProperty).Subscribe(new TemplateValueObserver<Orientation>(_ => Refresh())));
             Refresh();
         };
         hit.DetachedFromVisualTree += (_, _) =>
