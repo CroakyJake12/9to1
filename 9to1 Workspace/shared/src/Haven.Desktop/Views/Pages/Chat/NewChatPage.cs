@@ -1844,6 +1844,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         var captured = CaptureCanonicalPermissionObservation(_conversation, actualEvent);
         _canonicalPermissionWaiting = captured;
         _canonicalPermissionWaitingGeneration = _originalPresentationGeneration;
+        EnsureNativeTaskPermissionWatch();
         // The actual stream has returned its suspended observation after cleanup.
         // Stop the live streaming decoration; do not synthesize AssistantCompleted,
         // persist a successful assistant result or change the canonical run state.

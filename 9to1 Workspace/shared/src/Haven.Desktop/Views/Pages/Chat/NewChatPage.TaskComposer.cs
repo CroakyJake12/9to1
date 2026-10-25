@@ -55,6 +55,7 @@ public sealed partial class NewChatPage
         lock (_originalSendGate) obsolete = _nativeTaskLiveResumes.Where(entry => entry.Key != target)
             .Select(entry => entry.Value.Observer).Distinct().ToArray();
         foreach (var observer in obsolete) CaptureNativeTaskResumeRetirement(observer);
+        RetireNativeTaskPermissionWatches(all: false);
     }
     private void RefreshNativeResumedComposerSurface()
     {
@@ -390,6 +391,118 @@ public sealed partial class NewChatPage
             return actual.Length == 0 ? null : Task.WhenAll(actual);
         }
     }
+    private sealed class NativeTaskPermissionWatch(OriginalConversationTarget target, OriginalInitialTaskPresentation presentation)
+    {
+        internal readonly OriginalConversationTarget Target = target;
+        internal readonly OriginalInitialTaskPresentation Presentation = presentation;
+        internal IDisposable? Subscription;
+        internal bool Retired, Dirty, Running;
+    }
+    private readonly Dictionary<OriginalConversationTarget, NativeTaskPermissionWatch> _nativeTaskPermissionWatches = [];
+    internal Task? ActualNativePermissionRefresh { get; private set; }
+    private void EnsureNativeTaskPermissionWatch()
+    {
+        DemandOriginalChatPublication();
+        var presentation = CurrentTaskComposerPresentation(requireLive: false);
+        if (presentation?.Owner.CurrentAcknowledgedContext is null) return;
+        var target = CaptureOriginalConversationTarget();
+        NativeTaskPermissionWatch watch;
+        IDisposable? previous = null;
+        lock (_originalSendGate)
+        {
+            if (_nativeTaskPermissionWatches.TryGetValue(target, out var existing))
+            {
+                if (ReferenceEquals(existing.Presentation, presentation)) return;
+                existing.Retired = true; previous = existing.Subscription;
+                _nativeTaskPermissionWatches.Remove(target);
+            }
+            watch = new(target, presentation); _nativeTaskPermissionWatches.Add(target, watch);
+        }
+        previous?.Dispose();
+        IDisposable? actual;
+        try { actual = _sessions.WatchObservedTaskComposerPermissions(presentation.Owner.ComposerIdentity, () => RequestNativeTaskPermissionRefresh(watch)); }
+        catch { lock (_originalSendGate) { watch.Retired = true; _nativeTaskPermissionWatches.Remove(target); } throw; }
+        bool withdrawn;
+        lock (_originalSendGate)
+        {
+            withdrawn = watch.Retired || _disposed || _originalWork.IsRetiring;
+            if (!withdrawn && actual is not null) watch.Subscription = actual;
+            else { watch.Retired = true; _nativeTaskPermissionWatches.Remove(target); }
+        }
+        if (withdrawn) { actual?.Dispose(); return; }
+        if (actual is not null) RequestNativeTaskPermissionRefresh(watch); // Reconcile a decision published before the initial UI observation.
+    }
+    private void RequestNativeTaskPermissionRefresh(NativeTaskPermissionWatch watch)
+    {
+        lock (_originalSendGate)
+        {
+            if (watch.Retired || _disposed || _originalWork.IsRetiring || CaptureOriginalConversationTarget() != watch.Target ||
+                !ReferenceEquals(_currentOriginalInitialTaskPresentation, watch.Presentation)) return;
+            watch.Dirty = true;
+            if (watch.Running) return;
+            watch.Running = true;
+        }
+        try { _ = _originalWork.RunAsync(async original =>
+        {
+            BindOriginalConversationTarget(original, watch.Target);
+            try
+            {
+                while (original.IsPublicationCurrent)
+                {
+                    lock (_originalSendGate) { if (watch.Retired) return; watch.Dirty = false; }
+                    var reviewed = await original.AwaitAsync(_sessions.ReadObservedTaskComposerPermissionAsync(
+                        watch.Presentation.Owner.ComposerIdentity, original.Token)).ConfigureAwait(false);
+                    await RefreshNativeTaskControlsAsync(original, watch.Presentation).ConfigureAwait(false);
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
+                    {
+                        if (watch.Retired || !ReferenceEquals(_currentOriginalInitialTaskPresentation, watch.Presentation) ||
+                            reviewed?.AcknowledgedDecision is not { } decision || _canonicalPermissionWaiting is not { } waiting ||
+                            waiting.PermissionRequest.Id != reviewed.Request.Id || waiting.CanonicalTaskContext.TaskId != reviewed.CanonicalTaskContext.TaskId ||
+                            waiting.CanonicalTaskContext.ExecutionId != reviewed.CanonicalTaskContext.ExecutionId) return;
+                        _canonicalPermissionWaiting = null; // Actual response ACK, never synthetic remediation state or execution.
+                        SetProjectionStatus(decision.Kind == PermissionDecisionKind.Allowed
+                            ? "Permission allowed. Resume this task separately when ready."
+                            : "Permission denied. The task remains suspended.");
+                        _scene.ComposerView.RefreshSurface();
+                    })).GetTask()).ConfigureAwait(false);
+                    lock (_originalSendGate) if (!watch.Dirty || watch.Retired) return;
+                }
+            }
+            catch (Exception error)
+            {
+                original.Retain(error);
+                lock (_originalSendGate) _nativeTaskControls.Remove(watch.Target);
+                if (original.IsPublicationCurrent)
+                    try { await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(
+                        _scene.ComposerView.RefreshSurface)).GetTask()).ConfigureAwait(false); }
+                    catch (Exception projectionError) { original.Retain(projectionError); }
+                original.ThrowRetained();
+            }
+            finally
+            {
+                bool repeat;
+                lock (_originalSendGate) { watch.Running = false; repeat = watch.Dirty && !watch.Retired; }
+                if (repeat && original.IsPublicationCurrent) RequestNativeTaskPermissionRefresh(watch);
+            }
+        }, actual => { lock (_originalSendGate) { ActualNativePermissionRefresh = actual; } }); }
+        catch { lock (_originalSendGate) watch.Running = false; throw; }
+    }
+    private void RetireNativeTaskPermissionWatches(bool all)
+    {
+        NativeTaskPermissionWatch[] retired;
+        var target = CaptureOriginalConversationTarget();
+        lock (_originalSendGate)
+        {
+            retired = _nativeTaskPermissionWatches.Values.Where(watch => all || watch.Target != target).ToArray();
+            foreach (var watch in retired) watch.Retired = true;
+        }
+        var errors = new List<Exception>();
+        foreach (var watch in retired)
+            try { watch.Subscription?.Dispose(); lock (_originalSendGate) _nativeTaskPermissionWatches.Remove(watch.Target); }
+            catch (Exception error) { errors.Add(error); }
+        if (errors.Count != 0) throw new AggregateException("Original task permission subscriptions could not retire.", errors);
+    }
+    private long _nativeTaskControlReadSequence;
     private readonly Dictionary<OriginalConversationTarget, TaskRunOriginalRunControlAvailability> _nativeTaskControls = [];
     private readonly HashSet<OriginalConversationTarget> _nativeTaskResumeAdmissions = [];
     private readonly List<SpaceOriginalRunResumeObservation> _nativeTaskResumeObservers = [];
@@ -402,10 +515,12 @@ public sealed partial class NewChatPage
         OriginalInitialTaskPresentation presentation)
     {
         if (!original.IsPublicationCurrent || presentation.ConversationId != _conversation.Id ||
-            presentation.Generation != _originalPresentationGeneration) return;
+            presentation.Generation != _originalPresentationGeneration ||
+            !ReferenceEquals(CurrentTaskComposerPresentation(requireLive: false), presentation)) return;
         var target = CaptureOriginalConversationTarget();
         var context = presentation.Owner.CurrentAcknowledgedContext;
         if (context is null) return;
+        var sequence = Interlocked.Increment(ref _nativeTaskControlReadSequence);
         var actual = presentation.Owner.AcquireActualComposerControls(original.Token);
         var controls = await original.AwaitAsync(actual).ConfigureAwait(false);
         if (controls is not null && (controls.CanonicalTaskContext.TaskId != context.TaskId ||
@@ -415,6 +530,8 @@ public sealed partial class NewChatPage
         {
             lock (_originalSendGate)
             {
+                if (Volatile.Read(ref _nativeTaskControlReadSequence) != sequence ||
+                    !ReferenceEquals(_currentOriginalInitialTaskPresentation, presentation)) return;
                 if (controls is not null && _nativeTaskControls.TryGetValue(target, out var newer) &&
                     newer.CanonicalTaskContext.PersistenceRevision > controls.CanonicalTaskContext.PersistenceRevision) return;
                 _nativeTaskControls.Remove(target);

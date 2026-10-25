@@ -150,6 +150,21 @@ public sealed partial class ChatSessionService
             throw new InvalidDataException("The original task context changed.");
         return (sameObservation.Original.Coordinator, context);
     }
+    public IDisposable? WatchObservedTaskComposerPermissions(TaskRunOriginalInitialChatObservationLease sameObservation, Action invalidated)
+    {
+        ArgumentNullException.ThrowIfNull(invalidated);
+        var same = RequireObservedTaskComposerIdentity(sameObservation);
+        return same.Owner.WatchOriginalTaskPermissionChanges(hint =>
+        {
+            if (hint.TaskId == same.Context.TaskId && hint.ExecutionId == same.Context.ExecutionId) invalidated();
+        });
+    }
+    public Task<TaskRunOriginalTaskPermissionReview?> ReadObservedTaskComposerPermissionAsync(
+        TaskRunOriginalInitialChatObservationLease sameObservation, CancellationToken token)
+    {
+        var same = RequireObservedTaskComposerIdentity(sameObservation);
+        return same.Owner.ReadOriginalTaskPermissionReviewAsync(same.Context.TaskId, same.Context.ExecutionId, token);
+    }
     public Task<TaskRunOriginalRunControlAvailability?> GetObservedTaskComposerControlsAsync(
         TaskRunOriginalInitialChatObservationLease sameObservation, CancellationToken token)
     {
