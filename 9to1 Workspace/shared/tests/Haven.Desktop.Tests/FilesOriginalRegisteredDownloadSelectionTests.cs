@@ -390,7 +390,7 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             await using var lease = await flow.SelectAsync(uploaded);
 
             var firstBytes = BoardBytes(documentId, "First edit");
-            var first = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), firstBytes, rig.Token));
+            var first = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), firstBytes, rig.Token).AsTask());
             Assert.True(first.Committed, first.Message);
             Assert.NotNull(first.NewRevision);
             var firstRevision = Guid.Parse(first.NewRevision!);
@@ -410,7 +410,7 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             Assert.Equal(firstLeaf, firstContent.ProviderContentReference);
             Assert.Equal(uploaded.ParentFolderId, firstItem.ParentId);
 
-            var reopened = await rig.ReadCurrentBoardAsync(lease.FileId);
+            var reopened = await rig.ReadCurrentBoardAsync(new(lease.FileId));
             try
             {
                 Assert.Equal(firstRevision, reopened.RevisionId);
@@ -420,13 +420,13 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             finally { CryptographicOperations.ZeroMemory(reopened.Bytes); }
 
             var secondBytes = BoardBytes(documentId, "Second edit");
-            var second = await rig.Keep(lease.SaveAsync(lease.SourceId, firstRevision.ToString("D"), secondBytes, rig.Token));
+            var second = await rig.Keep(lease.SaveAsync(lease.SourceId, firstRevision.ToString("D"), secondBytes, rig.Token).AsTask());
             Assert.True(second.Committed, second.Message);
             Assert.NotNull(second.NewRevision);
             var secondRevision = Guid.Parse(second.NewRevision!);
             Assert.NotEqual(firstRevision, secondRevision);
             Assert.Equal(secondRevision, lease.RevisionId);
-            Assert.Equal(reviews.Count, 2);
+            Assert.Equal(2, reviews.Count);
             Assert.NotEqual(reviews[0], reviews[1]);
             Assert.Equal(firstBytes, await rig.ReadPhysicalAsync(firstLeaf));
             var secondLeaf = $".9to1-board-{secondRevision:N}.content";
@@ -460,7 +460,7 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             await using var flow = await CreateBoardFlowAsync(rig, uploaded, physical, Review);
             await using var lease = await flow.SelectAsync(uploaded);
             var revised = BoardBytes(documentId, "Reviewed later");
-            var denied = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), revised, rig.Token));
+            var denied = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), revised, rig.Token).AsTask());
             Assert.False(denied.Committed);
             Assert.NotEqual("FILES_BOARD_WRITE_OUTCOME_UNKNOWN", denied.Code);
             Assert.Equal(uploaded.RevisionId.Value, lease.RevisionId);
@@ -471,7 +471,7 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             Assert.Single(reviews);
 
             choice = HomeApprovalChoice.Accept;
-            var accepted = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), revised, rig.Token));
+            var accepted = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), revised, rig.Token).AsTask());
             Assert.True(accepted.Committed, accepted.Message);
             Assert.NotNull(accepted.NewRevision);
             Assert.Equal(2, reviews.Count);
@@ -519,7 +519,7 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
         await using var flow = await CreateBoardFlowAsync(rig, uploaded, physical, Review);
         await using var lease = await flow.SelectAsync(uploaded);
         var proposal = BoardBytes(documentId, "Must not publish");
-        var result = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), proposal, rig.Token));
+        var result = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), proposal, rig.Token).AsTask());
         Assert.True(raced);
         Assert.False(result.Committed);
         Assert.True(result.Conflict, result.Code + ": " + result.Message);
@@ -575,12 +575,11 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
         var library = new NativeHomeFilesLibrarySource(rig.Browser, rig.Workspace.Actor,
             graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true,
             boardRead, writes, review, body => body(), rig.Retain);
-        return new BoardWriteFlow(rig, uploaded, library, boardRead, writes, writer, physical);
+        return new BoardWriteFlow(rig, uploaded, library, writes, writer, physical);
     }
 
     private sealed class BoardWriteFlow(Rig rig, FilesUploadedContent uploaded,
-        NativeHomeFilesLibrarySource library, NativeHomeFilesBoardReadSource boardRead,
-        NativeHomeFilesBoardWriteSource writes, FilesNativeBrowserService.BoardDocumentWriteOwner writer,
+        NativeHomeFilesLibrarySource library, NativeHomeFilesBoardWriteSource writes, FilesNativeBrowserService.BoardDocumentWriteOwner writer,
         FilesOriginalBoardDocumentPhysicalOwner physical) : IAsyncDisposable
     {
         internal async Task<NativeHomeFilesBoardWriteLease> SelectAsync(FilesUploadedContent selected)
@@ -705,7 +704,7 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             await Keep(File.WriteAllBytesAsync(Path.Combine(_directory, reference), suppliedBytes, Token));
             var current = (await Keep(Workspace.Provider.GetForOriginalStoreAsync(
                 Workspace.Configuration.StoreId, selected.FileId, Token))).Value!;
-            var parent = (await Keep(Workspace.Provider.GetForOriginalStoreAsync(Folder, Token))).Value!;
+            var parent = (await Keep(Workspace.Provider.GetForOriginalStoreAsync(Workspace.Configuration.StoreId, Folder, Token))).Value!;
             var replacement = new FilesUploadedContent(selected.FileId, selected.ParentFolderId, selected.Name,
                 selected.MimeType, new(Guid.NewGuid()), current.CurrentRevisionId, Workspace.Actor.ActorId,
                 DateTimeOffset.UtcNow, suppliedBytes.Length, Convert.ToHexString(SHA256.HashData(suppliedBytes)), reference);
