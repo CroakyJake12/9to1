@@ -37,6 +37,7 @@ internal static class UnifiedWorkspaceSessionProjection
         var owningWindow = original.Windows.SingleOrDefault(window => window.Id == windowId)
             ?? throw new InvalidDataException("The owning window must be seeded before merging its projection.");
         DemandUnique(owningWindow.Layout.Panes.Select(pane => pane.Id), "owning window panes");
+        DemandUnique(owningWindow.RecentlyClosedTabs.Select(tab => tab.Id), "owning window recently closed tabs");
         var ownedIds = owningWindow.OrderedTabIds.ToHashSet();
         var currentIds = current.Tabs.Select(tab => tab.Id).ToHashSet();
         var originalTabs = original.Tabs.ToDictionary(tab => tab.Id);
@@ -48,7 +49,8 @@ internal static class UnifiedWorkspaceSessionProjection
                     !StringComparer.Ordinal.Equals(tab.ProfileId, retainedProjection!.ProfileId))
                     throw new InvalidDataException("An existing tab cannot change profile without an authorized profile migration.");
             }
-            else if (!StringComparer.Ordinal.Equals(tab.ProfileId, currentProfileId))
+            else if (!StringComparer.Ordinal.Equals(tab.ProfileId, currentProfileId) &&
+                !IsCanonicalRecentlyClosedReopen(tab, owningWindow, currentProfileId))
             {
                 throw new InvalidDataException("A new tab must use the owning window's current profile.");
             }
@@ -190,6 +192,17 @@ internal static class UnifiedWorkspaceSessionProjection
             throw new InvalidDataException("The new group identity conflicts with an existing group.");
         groups.Add(new(id, name, false, Array.Empty<Guid>()));
         return id;
+    }
+
+    private static bool IsCanonicalRecentlyClosedReopen(BrowserTabState tab,
+        WorkspaceWindowSnapshot owningWindow, string currentProfileId)
+    {
+        var retained = owningWindow.RecentlyClosedTabs.SingleOrDefault(item => item.Id == tab.Id);
+        if (retained is null) return false;
+        // Older snapshots omitted a profile for recently closed tabs. Loading those
+        // rows already resolves the omission to this window's current profile.
+        var retainedProfile = string.IsNullOrEmpty(retained.ProfileId) ? currentProfileId : retained.ProfileId;
+        return StringComparer.Ordinal.Equals(tab.ProfileId, retainedProfile);
     }
 
     private static void MergeGroupMetadata(List<TabGroupSnapshot> groups,

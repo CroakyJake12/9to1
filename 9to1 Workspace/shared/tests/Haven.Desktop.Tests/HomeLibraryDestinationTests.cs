@@ -29,7 +29,7 @@ public sealed class HomeLibraryDestinationTests
         try
         {
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
-            var row = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-item"));
+            var row = FindLibraryButton(page, "home-library-item");
             Assert.Equal("Notebook 00", global::Avalonia.Automation.AutomationProperties.GetName(row));
             row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
@@ -50,7 +50,7 @@ public sealed class HomeLibraryDestinationTests
         try
         {
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
-            var row = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-item"));
+            var row = FindLibraryButton(page, "home-library-item");
             authorization.Allowed = false;
             row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
@@ -113,14 +113,14 @@ public sealed class HomeLibraryDestinationTests
         try
         {
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
-            var pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-toggle-pin"));
+            var pin = FindLibraryButton(page, "home-library-toggle-pin");
             pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
             var pinned = Assert.Single(page.Current!.Items);
             Assert.Equal(index.Rows.Single().ArtifactId, pinned.ArtifactId);
             Assert.True(pinned.IsPinned); Assert.True(preferences.IsPinned("boards", pinned.ArtifactId));
             Assert.True(authorization.Reads >= 2); // Search and the fresh pin action both recheck current read access.
             Assert.Single(index.Rows); // Pinning a reference never creates a copied artifact.
-            pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-toggle-pin"));
+            pin = FindLibraryButton(page, "home-library-toggle-pin");
             pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.False(Assert.Single(page.Current!.Items).IsPinned);
             Assert.False(preferences.IsPinned("boards", pinned.ArtifactId));
@@ -174,6 +174,17 @@ public sealed class HomeLibraryDestinationTests
         CuiRuntimeIdentity.GetStableId(control) is { } identity &&
         identity.Contains("id:home-library-rows|key:", StringComparison.Ordinal) &&
         identity.EndsWith("/id:" + authoredId, StringComparison.Ordinal);
+    private static Button FindLibraryButton(HomeLibraryDestinationPage page, string authoredId)
+    {
+        var controls = page.GetVisualDescendants().OfType<Button>().Take(80).ToArray();
+        var matches = controls.Where(item => HasAuthoredIdentity(item, authoredId)).ToArray();
+        Assert.True(matches.Length == 1,
+            $"Expected one {authoredId}; page rows={page.Current?.Items.Count ?? 0} " +
+            $"artifact IDs=[{string.Join(",", page.Current?.Items.Select(item => item.ArtifactId) ?? [])}]; " +
+            $"buttons=[{string.Join("; ", controls.Select(item =>
+                $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{global::Avalonia.Automation.AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
+        return matches[0];
+    }
     private static Window Show(Control page)
     { var window = new Window { Width = 800, Height = 620, Content = page }; window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); return window; }
     private sealed class Registry : IModeRegistry

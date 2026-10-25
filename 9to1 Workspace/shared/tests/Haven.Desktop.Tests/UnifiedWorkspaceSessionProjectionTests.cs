@@ -88,6 +88,45 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
             Projection([Project(open)], open.Id) with { ClosedTabs = overCapacity }, open.Id));
     }
 
+    [Fact]
+    public void Reopening_a_canonical_recent_tab_preserves_its_profile_but_does_not_authorize_another_profile()
+    {
+        var id = Guid.NewGuid();
+        var closed = new WorkspaceClosedTabSnapshot(id, "Saved research", "https://research.example/",
+            "alternate-profile", null, 0, null, false, DateTimeOffset.UnixEpoch);
+        var window = Window([], WorkspaceWindowKind.Main) with { RecentlyClosedTabs = [closed] };
+        var original = new WorkspaceSessionSnapshot(WorkspaceSessionSnapshot.CurrentSchemaVersion,
+            [], [], [window], DateTimeOffset.UnixEpoch);
+        var restored = new BrowserTabState(id, closed.Title, closed.Address, BrowserTabPrivacy.Standard,
+            string.Empty, closed.ClosedAt) { ProfileId = "alternate-profile" };
+
+        var merged = UnifiedWorkspaceSessionProjection.Merge(original, window.Id, "actual-profile",
+            Projection([restored], id), new HashSet<Guid>());
+
+        Assert.Equal("alternate-profile", Assert.Single(merged.Tabs).ProfileId);
+        Assert.Empty(Assert.Single(merged.Windows).RecentlyClosedTabs);
+        Assert.Throws<InvalidDataException>(() => UnifiedWorkspaceSessionProjection.Merge(original, window.Id,
+            "actual-profile", Projection([restored with { ProfileId = "forged-profile" }], id), new HashSet<Guid>()));
+    }
+
+    [Fact]
+    public void Reopening_a_legacy_recent_tab_without_profile_uses_the_current_window_profile()
+    {
+        var id = Guid.NewGuid();
+        var closed = new WorkspaceClosedTabSnapshot(id, "Legacy research", "https://research.example/",
+            string.Empty, null, 0, null, false, DateTimeOffset.UnixEpoch);
+        var window = Window([], WorkspaceWindowKind.Main) with { RecentlyClosedTabs = [closed] };
+        var original = new WorkspaceSessionSnapshot(WorkspaceSessionSnapshot.CurrentSchemaVersion,
+            [], [], [window], DateTimeOffset.UnixEpoch);
+        var restored = new BrowserTabState(id, closed.Title, closed.Address, BrowserTabPrivacy.Standard,
+            string.Empty, closed.ClosedAt) { ProfileId = "actual-profile" };
+
+        var merged = UnifiedWorkspaceSessionProjection.Merge(original, window.Id, "actual-profile",
+            Projection([restored], id), new HashSet<Guid>());
+
+        Assert.Equal("actual-profile", Assert.Single(merged.Tabs).ProfileId);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
