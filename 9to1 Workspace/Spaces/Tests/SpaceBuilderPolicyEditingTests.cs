@@ -117,7 +117,13 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.True(await reopened.LoadAsync(token));
         Assert.Equal(saved.DraftConfiguration.ContextPolicy, reopened.State.Draft.ContextPolicy);
         Assert.Equal(saved.DraftConfiguration.Inheritance, reopened.State.Draft.Inheritance);
-        Assert.Equal(saved.DraftConfiguration.ModelPolicy, reopened.State.Draft.ModelPolicy);
+        Assert.Equal(saved.DraftConfiguration.ModelPolicy?.DefaultModelId, reopened.State.Draft.ModelPolicy?.DefaultModelId);
+        Assert.Equal(saved.DraftConfiguration.ModelPolicy?.ProviderConstraint, reopened.State.Draft.ModelPolicy?.ProviderConstraint);
+        var savedDraftCapabilities = saved.DraftConfiguration.ModelPolicy?.RequiredCapabilities;
+        var reopenedDraftCapabilities = reopened.State.Draft.ModelPolicy?.RequiredCapabilities;
+        Assert.NotNull(savedDraftCapabilities);
+        Assert.NotNull(reopenedDraftCapabilities);
+        Assert.Equal(savedDraftCapabilities.ToArray(), reopenedDraftCapabilities.ToArray());
         Assert.Equal(saved.DraftConfiguration.MemoryPolicy!.AllowedScopes, reopened.State.Draft.MemoryPolicy!.AllowedScopes);
         Assert.Equal("Updated prompt", Assert.Single(reopened.State.Draft.ExamplePairs).User);
         Assert.Equal("Updated response", Assert.Single(reopened.State.Draft.ExamplePairs).Assistant);

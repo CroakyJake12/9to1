@@ -258,6 +258,12 @@ public sealed class SpaceBuilderCanonicalSourceTests
                 window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 await bindings.DispatchAsync("space-builder.view.advanced", null, token);
                 window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                // The authored Builder is vertically scrollable. Realized repeat rows below the
+                // initial viewport are absent from the visual tree until their section is brought
+                // into view, so exercise the actual row action after scrolling the rendered page.
+                foreach (var scroll in root.GetVisualDescendants().OfType<ScrollViewer>())
+                    scroll.Offset = new Avalonia.Vector(0, scroll.Extent.Height);
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 Button Find(string id) => root.GetVisualDescendants().OfType<Button>().Single(button =>
                     button.Name == id || AutomationProperties.GetAutomationId(button) == id);
                 var options = Assert.IsAssignableFrom<IReadOnlyList<SpaceBuilderBoardsSourceOption>>(GetBinding("builder.boardOptions"));
