@@ -1,4 +1,5 @@
 #if !ANDROID
+using CakeOS.Apps.Boards.App;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -367,7 +368,8 @@ public sealed partial class App
             var actualTheme = _homeTheme
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
             var boards = BoardsBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
-                () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context);
+                () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context,
+                createAndOpenBoard: CreateAndOpenBoardAsync);
             var canvas = CanvasBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime, actualTheme.Context);
             var present = PresentBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
             var modes = _services.GetRequiredService<IModeRegistry>();
@@ -672,6 +674,205 @@ public sealed partial class App
             if (ready.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(ready.Message);
         }
 
+        private readonly Dictionary<Guid, BoardCreationState> _boardCreations = [];
+        private readonly List<BoardCreationState> _retainedBoardCreations = [];
+        private sealed class BoardCreationState
+        {
+            internal HomeLibraryDestinationPage? Page;
+            internal NativeHomeFilesLibrarySource? Source;
+            internal NativeHomeFilesLibrarySource.NativeHomeFilesBoardCreateResult? Result;
+            internal Task<BoardsHomeBoardCreationResult>? Driver;
+            internal Task? OriginalSource, Navigation;
+            internal bool CreateDispatched, Opened;
+            internal Exception? UnknownFailure;
+        }
+        private Task<BoardsHomeBoardCreationResult> CreateAndOpenBoardAsync(BrowseAppContentRequest origin,
+            BoardsHomeBoardCreationRequest request, CancellationToken token)
+        {
+            Dispatcher.UIThread.VerifyAccess(); DemandCurrent();
+            if (origin.Address.Namespace != AppContentNamespace.NativeApp || origin.Address.Authority != "boards" ||
+                origin.Privacy != BrowserTabPrivacy.Standard || origin.ProfileId != _actor?.ProfileId ||
+                _chrome?.ObserveOriginalAppContent(origin.TabId) is not IBrowseNativeAppContentSession { IsPublicationCurrent: true })
+                throw new UnauthorizedAccessException("Create a board only from its actual current standard Home tab.");
+            lock (_gate)
+            {
+                _boardCreations.TryGetValue(origin.TabId, out var state);
+                if (state?.Driver is { IsCompleted: false })
+                    return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OperationInProgress,
+                        "BoardCreateOperationInProgress", "Wait for the original board operation to settle."));
+                // Every new create gets a new picker/source. Old sources remain retained
+                // because an opened document still borrows its exact read/write lease.
+                if (state is null || request.Operation == BoardsHomeBoardCreationOperation.Create &&
+                    (!state.CreateDispatched || state.Opened || state.Result?.State == FilesOriginalBoardDocumentCreateSettlementState.NotCreated))
+                {
+                    if (_retainedBoardCreations.Count >= 64)
+                        return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit,
+                            "BoardCreateSourceLimit", "Close this Home window before creating more boards."));
+                    state = new(); _boardCreations[origin.TabId] = state; _retainedBoardCreations.Add(state);
+                }
+                var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                var actual = Run(); state.Driver = actual; _sources.Add(actual); begin.SetResult(); return actual;
+                async Task<BoardsHomeBoardCreationResult> Run()
+                { await begin.Task; return await CreateAndOpenBoardCoreAsync(origin, request, state, token); }
+            }
+        }
+        private async Task<BoardsHomeBoardCreationResult> CreateAndOpenBoardCoreAsync(BrowseAppContentRequest origin,
+            BoardsHomeBoardCreationRequest request, BoardCreationState state, CancellationToken token)
+        {
+            using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, _appLifetime, _windowLifetime);
+            var caller = lifetime.Token;
+            try
+            {
+                if (request.Operation == BoardsHomeBoardCreationOperation.Create)
+                {
+                    if (state.CreateDispatched && !state.Opened)
+                        return DescribeBoardCreation(state, "RetainedCreateRequiresRecovery", "Resume the retained create or open operation; it will not be created again.");
+                    if (request.ValidatedDraft.IsEmpty) return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "BoardDraftRequired", "A validated board draft is required.");
+                    state.Source ??= CreateBoardCreationSource(origin, state);
+                    var theme = _homeTheme ?? throw new InvalidOperationException("The actual Home theme owner is absent.");
+                    state.Page ??= state.Source.CreateBoardFolderPickerPage(token => AdmitHomeAsync(origin, token), theme.Context);
+                    var owner = TopLevel.GetTopLevel(this) as Window ?? throw new InvalidOperationException("The actual Home window is unavailable.");
+                    var picker = new Window { Title = "Create board in Files", Width = 820, Height = 640, Content = state.Page };
+                    var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    picker.Closed += (_, _) => closed.TrySetResult();
+                    var shown = picker.ShowDialog(owner); Track(shown);
+                    HomeDeepLink? folder;
+                    try
+                    {
+                        await state.Page.ActivateAsync(caller);
+                        var selected = state.Page.FolderSelection;
+                        var completed = await Task.WhenAny(selected, closed.Task).WaitAsync(caller);
+                        folder = ReferenceEquals(completed, selected) ? await selected : null;
+                    }
+                    finally { picker.Close(); picker.Content = null; await shown; }
+                    if (folder is null) return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No board was created.");
+                    caller.ThrowIfCancellationRequested();
+                    state.CreateDispatched = true;
+                    try
+                    {
+                        var original = state.Source.CreateInSelectedFolderAsync(folder, "New board.9to1board", request.ValidatedDraft, caller);
+                        state.OriginalSource = original; Track(original);
+                        state.Result = await original;
+                    }
+                    catch (UnauthorizedAccessException declinedBeforeClaim)
+                    {
+                        // This source boundary refuses review/row/actor BEFORE issuing a
+                        // Files create claim. Post-claim failures carry retained settlement.
+                        state.CreateDispatched = false; state.UnknownFailure = declinedBeforeClaim;
+                        return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit,
+                            "BoardCreateReviewRefused", "The board was not created: " + declinedBeforeClaim.Message);
+                    }
+                }
+                else
+                {
+                    if (state.Source is null || !state.CreateDispatched)
+                        return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "NoRetainedBoardCreate", "There is no retained board creation to resume.");
+                    if (request.Operation == BoardsHomeBoardCreationOperation.RetrySettlement)
+                    {
+                        if (state.Result?.SettlementAttempt is not { } attempt)
+                            return DescribeBoardCreation(state, "NoOriginalSettlementAttempt", "The retained outcome requires its original owning recovery.");
+                        var retry = state.Source.RetryCreateSettlementAndPrepareAsync(attempt, caller);
+                        state.OriginalSource = retry; Track(retry); state.Result = await retry;
+                    }
+                    else if (request.Operation == BoardsHomeBoardCreationOperation.InspectOutcome)
+                    {
+                        if (state.Result?.SettlementAttempt is not { } attempt)
+                            return DescribeBoardCreation(state, "NoOriginalSettlementAttempt", "The retained outcome requires its original owning recovery.");
+                        var inspect = state.Source.ObserveCreateSettlementAsync(attempt, caller);
+                        state.OriginalSource = inspect; Track(inspect); state.Result = await inspect;
+                        return DescribeBoardCreation(state, "RecordedCreateObserved", "The recorded create was inspected. Open it separately through the current Files read review.");
+                    }
+                    else if (request.Operation is BoardsHomeBoardCreationOperation.RetryOpenExisting or BoardsHomeBoardCreationOperation.OpenRecordedExisting)
+                    {
+                        if (state.Result?.Receipt is not { } receipt)
+                            return DescribeBoardCreation(state, "RecordedBoardReceiptRequired", "Inspect or settle the original operation before opening its exact recorded artifact.");
+                        var prepare = state.Source.PrepareCreatedBoardOpenAsync(receipt, caller);
+                        state.OriginalSource = prepare; Track(prepare);
+                        var prepared = await prepare;
+                        state.Result = state.Result with { PreparedAddress = prepared };
+                    }
+                    else throw new ArgumentOutOfRangeException(nameof(request.Operation));
+                }
+                if (state.Result?.PreparedAddress is not { } address)
+                    return DescribeBoardCreation(state, "CreatedBoardNotOpened", "The retained board needs settlement or fresh Files read preparation before opening.");
+                // Creation and its Home audit have independently settled. Never wait
+                // on this encompassing UI action to permit its own navigation.
+                var settlement = state.OriginalSource ?? throw new InvalidOperationException("The original Files preparation source is absent.");
+                await settlement;
+                DemandCurrent(); caller.ThrowIfCancellationRequested();
+                var priorTabs = _chrome!.State.Tabs.Select(tab => tab.Id).ToHashSet();
+                if (_workspace is null || !_workspace.TryQueueNavigationOriginal(new(origin.TabId, address, OpenInNewTab: true), settlement, out var navigation) || navigation is null)
+                    return new(BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "BoardOpenNotAdmitted", "The board exists. Retry opening this same created board.");
+                state.Navigation = navigation; Track(navigation);
+                await navigation; // actual admitted driver, including native initialization/publication
+                DemandCurrent();
+                var createdTabs = _chrome!.State.Tabs.Where(tab => !priorTabs.Contains(tab.Id)).ToArray();
+                var published = createdTabs.Length == 1 ? _chrome.ObserveOriginalAppContent(createdTabs[0].Id) : null;
+                if (published is not IBrowseNativeAppContentSession { IsPublicationCurrent: true } || published.Address != address)
+                    return new(BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "BoardPublicationNotCurrent", "The board exists, but its actual rich session was not published. Retry the same board.");
+                state.Opened = true;
+                var warning = state.Result.State != FilesOriginalBoardDocumentCreateSettlementState.Committed || state.Result.CleanupFailures.Count != 0;
+                return new(warning ? BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning : BoardsHomeBoardCreationOutcome.Opened,
+                    warning ? "BoardOpenedWithRecordedAuditWarning" : "BoardOpened", "The exact created Files board is open in its new rich session.");
+            }
+            catch (OperationCanceledException cause) when (!state.CreateDispatched && caller.IsCancellationRequested && cause.CancellationToken == caller)
+            { return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No board was created."); }
+            catch (Exception cause)
+            {
+                state.UnknownFailure = cause;
+                if (state.Result?.Receipt is not null)
+                    return new(BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "CreatedBoardOpenFailed", "The board exists. Retry opening the same recorded board; it will not be created again.");
+                return state.CreateDispatched
+                    ? new(BoardsHomeBoardCreationOutcome.OutcomeUnknown, "BoardCreateOutcomeUnconfirmed", "The original create outcome is retained. Inspect or settle it; do not create it again.")
+                    : new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "BoardCreateNotStarted", "The board was not created: " + cause.Message);
+            }
+        }
+        private static BoardsHomeBoardCreationResult DescribeBoardCreation(BoardCreationState state, string code, string message)
+        {
+            var outcome = state.Result?.State switch {
+                FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending => BoardsHomeBoardCreationOutcome.HomeAuditPending,
+                FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown => BoardsHomeBoardCreationOutcome.OutcomeUnknown,
+                FilesOriginalBoardDocumentCreateSettlementState.CommittedWithUncertainAudit => BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit,
+                FilesOriginalBoardDocumentCreateSettlementState.NotCreated => BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit,
+                _ => state.Result?.Receipt is not null ? BoardsHomeBoardCreationOutcome.CreatedOpenFailed : BoardsHomeBoardCreationOutcome.OutcomeUnknown
+            };
+            return new(outcome, code, message);
+        }
+        private NativeHomeFilesLibrarySource CreateBoardCreationSource(BrowseAppContentRequest origin, BoardCreationState state)
+        {
+            var actor = _actor ?? throw new UnauthorizedAccessException("The actual Home actor is absent.");
+            var browser = _services.GetRequiredService<HavenOS.Files.NativeHost.FilesNativeBrowserService>();
+            var physical = _services.GetRequiredService<IFilesOriginalBoardDocumentPhysicalOwner>();
+            if (physical is not IFilesOriginalBoardDocumentCreatePhysicalOwner createPhysical)
+                throw new NotSupportedException("The actual existing Files physical owner has no original board-create port.");
+            var create = browser.CreateOriginalBoardDocumentCreateOwner(createPhysical);
+            var approvals = _services.GetRequiredService<HomeNativeApprovalWindowOwner>();
+            if (!approvals.IsBoundToOriginalComposition(_home)) throw new UnauthorizedAccessException("The actual Home review owner changed.");
+            if (!browser.IsBoundToOriginalComposition(
+                _services.GetRequiredService<HavenOS.Files.NativeHost.NativeFilesWorkspaceAuthority>(),
+                _home.Profiles, _home.Resources, _services.GetRequiredService<ICompatibilityPackageContentSource>()))
+                throw new UnauthorizedAccessException("Board creation must borrow the actual Files/Home owner tuple.");
+            bool Alive() => IsCurrent;
+            void Parent(Action body) => (state.Page ?? throw new InvalidOperationException("The original folder-picker page is not retained."))
+                .InvokeOriginalSource(() => { DemandCurrent(); body(); });
+            void WriteScope(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+            { DemandCurrent(); body(); return true; });
+            void Retain(Task raw) => Track(raw);
+            return new NativeHomeFilesLibrarySource(browser, actor, _home.StateStore, ObserveAppearanceAuthorityAsync,
+                Parent, Alive, _boardReadSource, _boardWriteSource,
+                (authorization, token) => PresentHomeLibraryReviewAsync(approvals, authorization, token), WriteScope, Retain, create);
+        }
+        private async Task CloseBoardCreationSourcesAsync(List<Exception> failures)
+        {
+            BoardCreationState[] states; lock (_gate) states = _retainedBoardCreations.ToArray();
+            foreach (var state in states)
+            {
+                if (state.Driver is { } driver) try { await driver; } catch (Exception cause) { AddAppCause(failures, cause); }
+                if (state.Page is { } page) try { await page.CloseAndDrainAsync(); } catch (Exception cause) { AddAppCause(failures, cause); }
+                else if (state.Source is { } source) try { await source.DisposeAsync(); } catch (Exception cause) { AddAppCause(failures, cause); }
+            }
+        }
+
         private HomeLibraryDestinationPage CreateHomeLibraryPage(BrowseAppContentRequest request, CuiThemePreferenceContext theme)
         {
             DemandCurrent();
@@ -970,6 +1171,7 @@ public sealed partial class App
                 {
                     // Browser admission/commands and native engines have drained. Only
                     // then retire this Files registration cohort; Home/Files are borrowed.
+                    try { await CloseBoardCreationSourcesAsync(failures); } catch (Exception error) { AddAppCause(failures, error); }
                     try { await JoinOriginalDownloadFilesAsync(failures); }
                     catch (Exception error) { AddAppCause(failures, error); }
                     try { _sceneClose ??= _scene?.CloseOriginalAsync(); } catch (Exception error) { AddAppCause(failures, error); }
