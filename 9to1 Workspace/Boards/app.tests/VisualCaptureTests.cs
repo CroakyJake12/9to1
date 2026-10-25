@@ -28,139 +28,169 @@ public sealed class VisualCaptureTests
         return dir;
     }
 
-    private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false, bool openStyleMenu = false) =>
-        // Funnelled through the shared test UI thread like every other suite.
-        TestUiThread.Run(() => CaptureOnUiThread(boardPath, width, height, shotName, dark, openStyleMenu));
-
-    private static string CaptureOnUiThread(string boardPath, int width, int height, string shotName, bool dark, bool openStyleMenu)
+    private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false, bool openStyleMenu = false)
     {
-        var priorMode = BoardsTheme.Mode;
+        var priorMode = TestUiThread.Run(() => BoardsTheme.Mode);
+        TestUiThread.Run(() => SetTheme(dark));
+        var opening = TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
+            File.ReadAllBytes(boardPath), boardPath, "visual-capture-r1",
+            (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(
+                false, null, "capture-save-disabled", "Visual capture does not save fixture edits."))));
+        var presentation = PumpUi(opening, "open presentation");
+        Window? window = null;
+        try
+        {
+            var mountedWindow = TestUiThread.Run(() => Mount(presentation.Content, width, height));
+            window = mountedWindow;
+            PumpUi(TestUiThread.Run(() => presentation.WaitUntilReadyAsync()), "surface readiness");
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()), "render drain");
+            return TestUiThread.Run(() => CaptureReadyOnUiThread(presentation, mountedWindow, width, height, shotName, openStyleMenu));
+        }
+        finally
+        {
+            if (window is not null) TestUiThread.Run(window.Close);
+            var disposal = TestUiThread.Run(() => presentation.DisposeAsync().AsTask());
+            PumpUi(disposal, "presentation disposal");
+            TestUiThread.Run(() => SetTheme(priorMode == BoardsThemeMode.Dark));
+        }
+    }
+
+    private static void SetTheme(bool dark)
+    {
         BoardsTheme.SetMode(dark ? BoardsThemeMode.Dark : BoardsThemeMode.Light);
         if (Avalonia.Application.Current is not null)
             Avalonia.Application.Current.RequestedThemeVariant = dark
                 ? Avalonia.Styling.ThemeVariant.Dark
                 : Avalonia.Styling.ThemeVariant.Light;
-        try
-        {
-            var presentation = BoardsWritablePresentation.OpenWritableDocumentAsync(
-                File.ReadAllBytes(boardPath), boardPath, "visual-capture-r1",
-                (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(
-                    false, null, "capture-save-disabled", "Visual capture does not save fixture edits.")))
-                .GetAwaiter().GetResult();
-            var viewModel = presentation.ViewModel;
-            var root = presentation.Content;
-            Window? window = null;
-            try
-            {
-                window = new Window
-                {
-                    Width = width,
-                    Height = height,
-                    Content = root,
-                    Background = BoardsTheme.AppBackgroundBrush,
-                };
-                window.Show();
-                window.Measure(new Size(width, height));
-                window.Arrange(new Rect(0, 0, width, height));
-                root.Measure(new Size(width, height));
-                root.Arrange(new Rect(0, 0, width, height));
-                Dispatcher.UIThread.RunJobs();
-                presentation.WaitUntilReadyAsync().GetAwaiter().GetResult();
-                Dispatcher.UIThread.RunJobs();
-                presentation.DrainRenderingAsync().GetAwaiter().GetResult();
-                window.Measure(new Size(width, height));
-                window.Arrange(new Rect(0, 0, width, height));
-                root.Measure(new Size(width, height));
-                root.Arrange(new Rect(0, 0, width, height));
-                var shotPath = Path.Combine(ShotsDirectory(), shotName);
-                void SaveCapture(string path)
-                {
-                    using var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new Vector(96, 96));
-                    bitmap.Render(window!);
-                    bitmap.Save(path);
-                }
-                SaveCapture(shotPath);
-
-                if (openStyleMenu)
-                {
-                    var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().FirstOrDefault(combo =>
-                        Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
-                    Assert.NotNull(styleMenu);
-                    Assert.Equal(viewModel.StyleList.Count, styleMenu.Items.Count);
-                    foreach (var name in new[] { "Header 4", "Header 5", "Header 6" })
-                        Assert.Contains(styleMenu.Items.Cast<ComboBoxItem>(), item =>
-                            item.Content is TextBlock preview && preview.Text == name);
-                    styleMenu.Focus();
-                    Assert.True(styleMenu.IsFocused, "The style menu must be keyboard-focusable.");
-                    window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, " ");
-                    Dispatcher.UIThread.RunJobs();
-                    Assert.True(styleMenu.IsDropDownOpen, "Space should open the focused style menu.");
-                    SaveCapture(Path.Combine(ShotsDirectory(), Path.GetFileNameWithoutExtension(shotName) + "-rendered.png"));
-                    SaveCapture(shotPath);
-                }
-
-                var tree = BoardsCuiControlFinder.DescribeRuntimeTree(root);
-                Assert.False(viewModel.IsLanding, "Opening a saved Board must activate its page surface.");
-                var pageCard = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "PageCard")
-                    ?? throw new InvalidOperationException("Missing authored PageCard. Runtime tree:\n" + tree);
-                Assert.True(root.Bounds.Width >= width - 1,
-                    $"The CUI root only measured {root.Bounds.Width}px of the {width}px capture.");
-                var navPane = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "NavPane")
-                    ?? throw new InvalidOperationException("Missing authored NavPane. Runtime tree:\n" + tree);
-                var editorScrollHost = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "EditorScroll")
-                    ?? throw new InvalidOperationException("Missing authored EditorScroll host. Runtime tree:\n" + tree);
-                var editorScroll = editorScrollHost.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()
-                    ?? throw new InvalidOperationException("The authored EditorScroll host did not create its CUI-owned ScrollViewer. Runtime tree:\n" + tree);
-                Assert.True(editorScroll.Bounds.Width > width * 0.70,
-                    $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
-                var widthDifference = Math.Abs(pageCard.Bounds.Width - editorScroll.Viewport.Width);
-                Assert.True(widthDifference <= 1,
-                    $"The seamless page width {pageCard.Bounds.Width} did not fill its editor viewport {editorScroll.Viewport.Width}.");
-                Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
-                Assert.Equal(new Thickness(0), pageCard.Margin);
-                Assert.Equal(new Thickness(0), pageCard.Padding);
-                Assert.Equal(new Thickness(0), pageCard.BorderThickness);
-                Assert.Equal(new CornerRadius(0), pageCard.CornerRadius);
-                var contentLayer = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "DocumentContentLayer")
-                    ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
-                Assert.Equal(new Thickness(40, 32), contentLayer.Margin);
-                Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
-                object? accent = null;
-                Assert.True(Avalonia.Application.Current?.TryGetResource("CuiAccentBrush", null, out accent) == true);
-                Assert.IsType<Avalonia.Media.LinearGradientBrush>(accent);
-                var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
-                    ?? throw new InvalidOperationException("Missing authored TopBar. Runtime tree:\n" + tree);
-                Assert.Same(accent, topBar.BorderBrush);
-                var host = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "BlocksHost")
-                    ?? throw new InvalidOperationException("Missing BlocksHost after the real presentation reached ready state. Runtime tree:\n" + tree);
-                Assert.NotEmpty(host.Children);
-
-                if (openStyleMenu)
-                {
-                    window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, "Escape");
-                    Dispatcher.UIThread.RunJobs();
-                    var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().Single(combo =>
-                        Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
-                    Assert.False(styleMenu.IsDropDownOpen, "Escape should close the style menu.");
-                    Assert.True(styleMenu.IsFocused, "Closing the menu should restore focus to the style control.");
-                }
-                return shotPath;
-            }
-            finally
-            {
-                window?.Close();
-                Dispatcher.UIThread.RunJobs();
-                presentation.DisposeAsync().AsTask().GetAwaiter().GetResult();
-            }
-        }
-        finally
-        {
-            BoardsTheme.SetMode(priorMode);
-            if (Avalonia.Application.Current is not null)
-                Avalonia.Application.Current.RequestedThemeVariant =
-                    Avalonia.Styling.ThemeVariant.Light;
-        }
     }
+
+    private static Window Mount(Control root, int width, int height)
+    {
+        var window = new Window
+        {
+            Width = width,
+            Height = height,
+            Content = root,
+            Background = BoardsTheme.AppBackgroundBrush,
+        };
+        window.Show();
+        window.Measure(new Size(width, height));
+        window.Arrange(new Rect(0, 0, width, height));
+        root.Measure(new Size(width, height));
+        root.Arrange(new Rect(0, 0, width, height));
+        Dispatcher.UIThread.RunJobs();
+        return window;
+    }
+
+    private static string CaptureReadyOnUiThread(BoardsWritablePresentation presentation, Window window,
+        int width, int height, string shotName, bool openStyleMenu)
+    {
+        var viewModel = presentation.ViewModel;
+        var root = presentation.Content;
+        window.Measure(new Size(width, height));
+        window.Arrange(new Rect(0, 0, width, height));
+        root.Measure(new Size(width, height));
+        root.Arrange(new Rect(0, 0, width, height));
+        var shotPath = Path.Combine(ShotsDirectory(), shotName);
+        void SaveCapture(string path)
+        {
+            using var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new Vector(96, 96));
+            bitmap.Render(window);
+            bitmap.Save(path);
+        }
+        SaveCapture(shotPath);
+
+        if (openStyleMenu)
+        {
+            var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().FirstOrDefault(combo =>
+                Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
+            Assert.NotNull(styleMenu);
+            Assert.Equal(viewModel.StyleList.Count, styleMenu.Items.Count);
+            foreach (var name in new[] { "Header 4", "Header 5", "Header 6" })
+                Assert.Contains(styleMenu.Items.Cast<ComboBoxItem>(), item =>
+                    item.Content is TextBlock preview && preview.Text == name);
+            styleMenu.Focus();
+            Assert.True(styleMenu.IsFocused, "The style menu must be keyboard-focusable.");
+            window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, " ");
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(styleMenu.IsDropDownOpen, "Space should open the focused style menu.");
+            SaveCapture(Path.Combine(ShotsDirectory(), Path.GetFileNameWithoutExtension(shotName) + "-rendered.png"));
+            SaveCapture(shotPath);
+        }
+
+        var tree = BoardsCuiControlFinder.DescribeRuntimeTree(root);
+        Assert.False(viewModel.IsLanding, "Opening a saved Board must activate its page surface.");
+        var pageCard = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "PageCard")
+            ?? throw new InvalidOperationException("Missing authored PageCard. Runtime tree:\n" + tree);
+        Assert.True(root.Bounds.Width >= width - 1,
+            $"The CUI root only measured {root.Bounds.Width}px of the {width}px capture.");
+        var navPane = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "NavPane")
+            ?? throw new InvalidOperationException("Missing authored NavPane. Runtime tree:\n" + tree);
+        var editorScrollHost = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "EditorScroll")
+            ?? throw new InvalidOperationException("Missing authored EditorScroll host. Runtime tree:\n" + tree);
+        var editorScroll = editorScrollHost.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()
+            ?? throw new InvalidOperationException("The authored EditorScroll host did not create its CUI-owned ScrollViewer. Runtime tree:\n" + tree);
+        Assert.True(editorScroll.Bounds.Width > width * 0.70,
+            $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
+        var widthDifference = Math.Abs(pageCard.Bounds.Width - editorScroll.Viewport.Width);
+        Assert.True(widthDifference <= 1,
+            $"The seamless page width {pageCard.Bounds.Width} did not fill its editor viewport {editorScroll.Viewport.Width}.");
+        Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
+        Assert.Equal(new Thickness(0), pageCard.Margin);
+        Assert.Equal(new Thickness(0), pageCard.Padding);
+        Assert.Equal(new Thickness(0), pageCard.BorderThickness);
+        Assert.Equal(new CornerRadius(0), pageCard.CornerRadius);
+        var contentLayer = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "DocumentContentLayer")
+            ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
+        Assert.Equal(new Thickness(40, 32), contentLayer.Margin);
+        Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
+        object? accent = null;
+        Assert.True(Avalonia.Application.Current?.TryGetResource("CuiAccentBrush", null, out accent) == true);
+        Assert.IsType<Avalonia.Media.LinearGradientBrush>(accent);
+        var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
+            ?? throw new InvalidOperationException("Missing authored TopBar. Runtime tree:\n" + tree);
+        Assert.Same(accent, topBar.BorderBrush);
+        var host = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "BlocksHost")
+            ?? throw new InvalidOperationException("Missing BlocksHost after the real presentation reached ready state. Runtime tree:\n" + tree);
+        Assert.NotEmpty(host.Children);
+
+        if (openStyleMenu)
+        {
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, "Escape");
+            Dispatcher.UIThread.RunJobs();
+            var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().Single(combo =>
+                Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
+            Assert.False(styleMenu.IsDropDownOpen, "Escape should close the style menu.");
+            Assert.True(styleMenu.IsFocused, "Closing the menu should restore focus to the style control.");
+        }
+        return shotPath;
+    }
+
+    private static T PumpUi<T>(Task<T> task, string operation) => TestUiThread.Run(() =>
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        while (!task.IsCompleted && DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(1);
+        }
+        Dispatcher.UIThread.RunJobs();
+        if (!task.IsCompleted) throw new TimeoutException($"Boards capture timed out during {operation}.");
+        return task.GetAwaiter().GetResult();
+    });
+
+    private static void PumpUi(Task task, string operation) => TestUiThread.Run(() =>
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        while (!task.IsCompleted && DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(1);
+        }
+        Dispatcher.UIThread.RunJobs();
+        if (!task.IsCompleted) throw new TimeoutException($"Boards capture timed out during {operation}.");
+        task.GetAwaiter().GetResult();
+    });
 
     private static async Task<string> FixtureDirAsync()
     {
