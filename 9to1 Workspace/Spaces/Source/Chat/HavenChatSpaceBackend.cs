@@ -123,10 +123,10 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
         var missingConfiguredDefault = !string.IsNullOrWhiteSpace(policy.Model.DefaultModelId) && preferred is null;
         var notice = missingConfiguredDefault
             ? $"The configured Space default model '{policy.Model.DefaultModelId}' is not currently eligible. Choose an eligible model or update the Space policy; no substitute was selected."
-            : configured && candidates.Length == 0
+            : configured && candidates.Count == 0
                 ? "No currently available model satisfies this Space's effective model policy."
                 : null;
-        return new(candidates, preferred, missingConfiguredDefault || configured && candidates.Length == 0, notice);
+        return new(candidates, preferred, missingConfiguredDefault || configured && candidates.Count == 0, notice);
     }
 
     public async Task<Conversation> CreateChatAsync(CancellationToken cancellationToken)
