@@ -7,7 +7,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
 {
     // Private view identities select observations, never Files identities, grants or review tokens.
     private sealed record ManualRecoveryCandidate(Guid ViewId, DeveloperDraftRecoveryTab SavedDraft,
-        string CurrentSourceText, string CurrentSourceSha256);
+        string CurrentSourceText, string CurrentSourceSha256, string? MergedDraftText = null);
     private sealed record ManualRecoveryCandidateItem(string SelectionKey, string Label, string AccessibleName, bool CanInspect);
     private readonly List<ManualRecoveryCandidate> _manualRecoveryCandidates = [];
     private Guid? _selectedManualRecoveryCandidate;
@@ -58,11 +58,33 @@ public sealed partial class DeveloperProjectWorkbenchPage
                 : $"{selected.SavedDraft.RelativePath}\nSaved baseline SHA-256: {selected.SavedDraft.OriginalSha256}\nCurrent source SHA-256: {selected.CurrentSourceSha256}\nRetained draft SHA-256: {DeveloperManualSourceEditOwner.Sha256(selected.SavedDraft.DraftText)}\nReconciliation changes only the editor basis. Review and Home write approval are still required before source changes.",
             "RecoveredCurrentSource" => selected?.CurrentSourceText ?? "",
             "RecoveredRetainedDraft" => selected?.SavedDraft.DraftText ?? "",
+            "RecoveredMergedDraft" => selected?.MergedDraftText ?? selected?.SavedDraft.DraftText ?? "",
+            "CanEditRecoveryMerge" => selected is not null,
+            "CanUseMergedRecoveredDraft" => IsActionAvailable("dev.use-merged-recovered-draft"),
             "CanReconcileRecoveredDraft" => IsActionAvailable("dev.reconcile-recovered-draft"),
             _ => null
         };
         return path is "HasRecoveredConflicts" or "RecoveredDraftCandidates" or "RecoveredDraftSummary" or
-            "RecoveredCurrentSource" or "RecoveredRetainedDraft" or "CanReconcileRecoveredDraft";
+            "RecoveredCurrentSource" or "RecoveredRetainedDraft" or "RecoveredMergedDraft" or
+            "CanEditRecoveryMerge" or "CanUseMergedRecoveredDraft" or "CanReconcileRecoveredDraft";
+    }
+
+    // Only authored merge buffers are new unsaved work; the original protected candidates
+    // remain durable and unchanged until explicit adoption of the complete replacement set.
+    private bool HasUnadoptedRecoveryMerge() => _manualRecoveryCandidates.Any(value =>
+        value.MergedDraftText is { } merged && !StringComparer.Ordinal.Equals(merged, value.SavedDraft.DraftText));
+
+    private void UpdateRecoveryMerge(string text)
+    {
+        if (text.Length > DeveloperSourceReviewSession.MaximumTextCharacters || text.IndexOf('\0') >= 0)
+            throw new ArgumentException("A complete bounded text merge is required; binary or oversized content is not truncated.", nameof(text));
+        var selected = SelectedManualRecoveryCandidate() ?? throw new InvalidOperationException("Select a protected draft before editing its merge.");
+        var merged = StringComparer.Ordinal.Equals(text, selected.SavedDraft.DraftText) ? null : text;
+        if (StringComparer.Ordinal.Equals(merged, selected.MergedDraftText)) return;
+        var position = _manualRecoveryCandidates.FindIndex(value => ReferenceEquals(value, selected));
+        // Replacing this exact immutable observation also fences an older in-flight adoption.
+        _manualRecoveryCandidates[position] = selected with { MergedDraftText = merged };
+        _status = "Merge draft updated. Use merged draft to place it in the editor, then review before saving.";
     }
 
     private ValueTask DispatchManualRecoveryConflictAsync(string command, object? parameter, CancellationToken token)
@@ -105,7 +127,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                             _status = "The recovery observation changed while source was read. All live drafts were preserved; inspect it again.";
                             return;
                         }
-                        if (command == "dev.reconcile-recovered-draft" && _selectedManualRecoveryCandidate != candidate.ViewId)
+                        if (command != "dev.inspect-recovered-draft" && _selectedManualRecoveryCandidate != candidate.ViewId)
                         {
                             _status = "Recovery selection changed; no draft was substituted.";
                             return;
@@ -117,7 +139,8 @@ public sealed partial class DeveloperProjectWorkbenchPage
                             _status = "Current source and the retained draft are shown separately. Use the explicit reconciliation action only after comparing them.";
                             return;
                         }
-                        var adoption = PrepareExplicitManualRecovery(candidate.SavedDraft, candidate.CurrentSourceSha256, fresh);
+                        var adoption = PrepareExplicitManualRecovery(candidate.SavedDraft, candidate.CurrentSourceSha256, fresh,
+                            command == "dev.use-merged-recovered-draft" ? candidate.MergedDraftText : null);
                         if (adoption is null)
                         {
                             _status = "Source changed again after inspection. The comparison was refreshed; inspect it before explicitly reconciling again.";
@@ -141,7 +164,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                         var manual = new ManualTabState(adoption.RetainedDraftText, adoption.CurrentSourceText,
                             adoption.CurrentSourceText, "", adoption.CurrentSourceSha256, "", nextDraftRevision, -1, false);
                         var tab = existing ?? new SourceTab(Guid.NewGuid(), adoption.RelativePath, null, manual);
-                        tab.Manual = manual; tab.Editor = null; tab.Pass = null; tab.IsPinned = true;
+                        tab.Manual = manual; tab.Editor = null; tab.Pass = null; tab.IsPinned = true; tab.IsPreview = false;
                         if (existing is null) _sourceTabs.Add(tab);
                         SelectTab(tab);
                         _manualRecoveryCandidates.RemoveAt(position);
@@ -172,12 +195,14 @@ public sealed partial class DeveloperProjectWorkbenchPage
     /// <summary>Pure comparison after explicit user choice and genuine fresh READ in the driver.
     /// This result is editor data, never a source/read/write authority or automatic merge.</summary>
     internal static DeveloperManualRecoveryAdoption? PrepareExplicitManualRecovery(DeveloperDraftRecoveryTab saved,
-        string inspectedCurrentSha256, string actuallyReadFreshSource)
+        string inspectedCurrentSha256, string actuallyReadFreshSource, string? explicitlyMergedDraft = null)
     {
         ArgumentNullException.ThrowIfNull(saved); ArgumentNullException.ThrowIfNull(actuallyReadFreshSource);
+        if (explicitlyMergedDraft is { } merged && (merged.Length > DeveloperSourceReviewSession.MaximumTextCharacters || merged.IndexOf('\0') >= 0))
+            throw new ArgumentException("A complete bounded text merge is required; binary or oversized content is not truncated.", nameof(explicitlyMergedDraft));
         var fresh = DeveloperManualSourceEditOwner.Sha256(actuallyReadFreshSource);
         if (!StringComparer.OrdinalIgnoreCase.Equals(inspectedCurrentSha256, fresh)) return null;
-        return new(saved.RelativePath, actuallyReadFreshSource, fresh, saved.DraftText, saved.OriginalSha256);
+        return new(saved.RelativePath, actuallyReadFreshSource, fresh, explicitlyMergedDraft ?? saved.DraftText, saved.OriginalSha256);
     }
 }
 

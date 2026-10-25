@@ -42,13 +42,14 @@ public sealed partial class DeveloperProjectWorkbenchPage
                         var position = _manualRecoveryCandidates.FindIndex(value => ReferenceEquals(value, candidate));
                         if (position < 0 || _project.Reference != project.Reference)
                         { _status = "The protected task observation changed during its genuine READ. Live and saved drafts were preserved."; return; }
-                        if (command == "dev.reconcile-recovered-draft" && _selectedManualRecoveryCandidate != candidate.ViewId)
+                        if (command != "dev.inspect-recovered-draft" && _selectedManualRecoveryCandidate != candidate.ViewId)
                         { _status = "Recovery selection changed. No task draft was substituted."; return; }
                         var refreshed = candidate with { CurrentSourceText = fresh, CurrentSourceSha256 = freshSha };
                         _manualRecoveryCandidates[position] = refreshed; _selectedManualRecoveryCandidate = refreshed.ViewId;
                         if (command == "dev.inspect-recovered-draft")
                         { _status = "Current task source and your protected draft are shown separately. Reconcile explicitly only after comparing them."; return; }
-                        var adoption = PrepareExplicitManualRecovery(candidate.SavedDraft, candidate.CurrentSourceSha256, fresh);
+                        var adoption = PrepareExplicitManualRecovery(candidate.SavedDraft, candidate.CurrentSourceSha256, fresh,
+                            command == "dev.use-merged-recovered-draft" ? candidate.MergedDraftText : null);
                         if (adoption is null)
                         { _status = "Source changed again after inspection. The comparison was refreshed; inspect before reconciling again."; return; }
                         if (adoption.RetainedDraftText.Length > DeveloperSourceReviewSession.MaximumTextCharacters ||
@@ -68,7 +69,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                         var clean = DemandValue(InvokeOriginalSource(() => _review!.AcceptPreparedRecoveryOpen(source, existing?.Editor)));
                         var editor = InvokeOriginalSource(() => _review!.UpdateDraft(clean.EditorId, clean.DraftRevision, adoption.RetainedDraftText));
                         var tab = existing ?? new SourceTab(editor.EditorId, adoption.RelativePath, editor, null);
-                        tab.Editor = editor; tab.Manual = null; tab.Pass = null; tab.IsPinned = true;
+                        tab.Editor = editor; tab.Manual = null; tab.Pass = null; tab.IsPinned = true; tab.IsPreview = false;
                         if (existing is null) _sourceTabs.Add(tab);
                         SelectTab(tab);
                         _manualRecoveryCandidates.RemoveAt(position);
