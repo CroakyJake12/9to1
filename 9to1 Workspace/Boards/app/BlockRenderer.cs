@@ -442,6 +442,14 @@ public static class BlockRenderer
             CornerRadius = new CornerRadius(Math.Clamp(block.TableStyle.CornerRadius, 0, 16)),
             Margin = new Thickness(0, 4, 0, 4),
             ClipToBounds = true,
+            Width = block.TableStyle.Width > 0 ? block.TableStyle.Width : double.NaN,
+            HorizontalAlignment = block.TableStyle.Alignment switch
+            {
+                "left" => HorizontalAlignment.Left,
+                "center" => HorizontalAlignment.Center,
+                "right" => HorizontalAlignment.Right,
+                _ => HorizontalAlignment.Stretch,
+            },
         };
         if (TryBrush(block.TableStyle.Background, out var tableBackground))
             tableBorder.Background = tableBackground;
@@ -467,6 +475,9 @@ public static class BlockRenderer
             for (var c = 0; c < cols; c++)
             {
                 var key = $"{r},{c}";
+                var isHeaderCell = block.TableStyle.HasHeaderRow && r == 0 ||
+                    block.TableStyle.HasHeaderColumn && c == 0;
+                var headerBackground = BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FF353B46" : "#FFE8EBF0";
                 block.CellSpans.TryGetValue(key, out var cellSpan);
                 if (cellSpan?.CoveredByCellId is not null) continue;
                 var rowSpan = Math.Clamp(cellSpan?.RowSpan ?? 1, 1, rows - r);
@@ -483,18 +494,20 @@ public static class BlockRenderer
                     Background = Brushes.Transparent,
                     BorderThickness = new Thickness(0),
                     Padding = new Thickness(8, 6),
-                    FontWeight = cellStyle?.Bold == true ? FontWeight.Bold : FontWeight.Normal,
+                    FontWeight = cellStyle?.Bold == true || isHeaderCell ? FontWeight.Bold : FontWeight.Normal,
                     FontStyle = cellStyle?.Italic == true ? FontStyle.Italic : FontStyle.Normal,
                     MinHeight = 30,
                 };
                 if (cellStyle is not null && TryBrush(cellStyle.Background, out var cellBackground))
                     box.Background = cellBackground;
+                else if (isHeaderCell)
+                    box.Background = BoardsTheme.Brush(headerBackground);
                 else if (block.TableStyle.AlternatingRows && r % 2 == 1)
                     box.Background = BoardsTheme.Brush(BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FF2A2E34" : "#FFF7F8FA");
                 if (cellStyle is not null && TryBrush(cellStyle.Foreground, out var cellForeground))
                     box.Foreground = cellForeground;
                 else
-                    box.Foreground = BoardsTheme.ContrastText(cellStyle?.Background);
+                    box.Foreground = BoardsTheme.ContrastText(isHeaderCell ? headerBackground : cellStyle?.Background);
                 ThemeApplier.SetDocumentTextSurface(box, box.Background ?? Brushes.Transparent);
                 box.TextAlignment = ParseAlignment(cellStyle?.AlignH ?? "inherit");
                 box.VerticalAlignment = cellStyle?.AlignV switch

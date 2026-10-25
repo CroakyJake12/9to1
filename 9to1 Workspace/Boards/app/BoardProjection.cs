@@ -207,7 +207,11 @@ internal static class Projector
                 BorderWidth = table.BorderWidth,
                 BorderStyle = table.BorderStyle.ToString().ToLowerInvariant(),
                 CornerRadius = table.CornerRadius,
-                AlternatingRows = table.AlternatingRows
+                AlternatingRows = table.AlternatingRows,
+                HasHeaderRow = table.HasHeaderRow,
+                HasHeaderColumn = table.HasHeaderColumn,
+                Width = table.Width,
+                Alignment = table.Alignment.ToString().ToLowerInvariant()
             },
             CellStyles = styles,
             TableRows = table.Rows.Count,
@@ -595,12 +599,16 @@ internal static class MergeDeltas
         var old = baselineBlock?.TableStyle;
         if (old is not null && current.Background == old.Background && current.BorderColor == old.BorderColor &&
             current.BorderWidth == old.BorderWidth && current.BorderStyle == old.BorderStyle &&
-            current.CornerRadius == old.CornerRadius && current.AlternatingRows == old.AlternatingRows)
+            current.CornerRadius == old.CornerRadius && current.AlternatingRows == old.AlternatingRows &&
+            current.HasHeaderRow == old.HasHeaderRow && current.HasHeaderColumn == old.HasHeaderColumn &&
+            current.Width == old.Width && current.Alignment == old.Alignment)
             return;
         HavenRichNotesOps.SetTableStyle(rich, page.Id, contractBlock.Id,
             background: current.Background, borderColor: current.BorderColor,
             borderWidth: current.BorderWidth, borderStyle: ParseBorderStyle(current.BorderStyle),
-            cornerRadius: current.CornerRadius, alternatingRows: current.AlternatingRows);
+            cornerRadius: current.CornerRadius, alternatingRows: current.AlternatingRows,
+            hasHeaderRow: current.HasHeaderRow, hasHeaderColumn: current.HasHeaderColumn,
+            width: current.Width, alignment: ParseAlignment(current.Alignment));
     }
 
     private static void MergeTableCells(
@@ -791,6 +799,10 @@ internal static class MergeDeltas
                     block.Table.BorderStyle = ParseBorderStyle(viewBlock.TableStyle.BorderStyle);
                     block.Table.CornerRadius = viewBlock.TableStyle.CornerRadius;
                     block.Table.AlternatingRows = viewBlock.TableStyle.AlternatingRows;
+                    block.Table.HasHeaderRow = viewBlock.TableStyle.HasHeaderRow;
+                    block.Table.HasHeaderColumn = viewBlock.TableStyle.HasHeaderColumn;
+                    block.Table.Width = viewBlock.TableStyle.Width;
+                    block.Table.Alignment = ParseAlignment(viewBlock.TableStyle.Alignment);
                     block.Table.ColumnWidths = [.. viewBlock.ColumnWidths];
                     block.Table.RowHeights = [.. viewBlock.RowHeights];
                 }
@@ -1138,7 +1150,11 @@ internal static class MergeDeltas
             BorderWidth = source.TableStyle.BorderWidth,
             BorderStyle = source.TableStyle.BorderStyle,
             CornerRadius = source.TableStyle.CornerRadius,
-            AlternatingRows = source.TableStyle.AlternatingRows
+            AlternatingRows = source.TableStyle.AlternatingRows,
+            HasHeaderRow = source.TableStyle.HasHeaderRow,
+            HasHeaderColumn = source.TableStyle.HasHeaderColumn,
+            Width = source.TableStyle.Width,
+            Alignment = source.TableStyle.Alignment
         },
         CellStyles = source.CellStyles.ToDictionary(
             kv => kv.Key,

@@ -105,6 +105,10 @@ public sealed class RichTableStyleView
     public string BorderStyle { get; set; } = "inherit";
     public double CornerRadius { get; set; }
     public bool AlternatingRows { get; set; }
+    public bool HasHeaderRow { get; set; }
+    public bool HasHeaderColumn { get; set; }
+    public double Width { get; set; }
+    public string Alignment { get; set; } = "inherit";
 }
 
 /// <summary>Per-cell formatting surfaced to the editor.</summary>
