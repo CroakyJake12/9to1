@@ -9,6 +9,25 @@ namespace Haven.Infrastructure.Tests;
 public sealed partial class NotesOriginalStoreTests
 {
     [LinuxNotesFact]
+    public async Task Embedded_Write_catalogue_review_returns_metadata_only_without_reading_a_document_body()
+    {
+        await using var home = await HomeRig.CreateAsync();
+        var document = NotesDocument.Create("Write catalogue entry");
+        document.Version = (await home.Notes.Owner.SaveAsync(document, "Create test document", home.Token)).Version;
+        var request = await home.Notes.Owner.PrepareOriginalLibraryReadAsync(null, home.Token);
+        var review = await home.Admission.RequestWriteLibrarySnapshotAsync(request, home.SessionId, home.Token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, review.Authorization.State);
+        Assert.True((await home.Permissions.DecideAsync(review.Authorization.RequestId,
+            HomeApprovalChoice.Accept, cancellationToken: home.Token)).Succeeded);
+        var admission = await home.Admission.BeginLibrarySnapshotAsync(review, home.Token);
+        Assert.NotNull(admission);
+        var snapshot = await home.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission!, home.Verified, home.Token);
+        Assert.Null(snapshot.SelectedDocument);
+        Assert.Single(snapshot.Metadata, row => row.Summary.Id == document.Id && row.Summary.Version == document.Version);
+        Assert.False(request.Outcome!.DocumentWasRead);
+    }
+
+    [LinuxNotesFact]
     public async Task Embedded_Write_uses_reviewed_metadata_and_exact_body_read_then_repeats_save_from_receipt_revision()
     {
         await using var home = await HomeRig.CreateAsync();
