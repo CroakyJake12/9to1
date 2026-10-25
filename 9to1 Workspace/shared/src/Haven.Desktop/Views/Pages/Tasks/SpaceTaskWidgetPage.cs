@@ -39,6 +39,10 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     private readonly CuiSceneHost _host;
     private readonly ChatComposerCuiView _composerView;
     private Task? _composerClose;
+    private Task<CuiSceneAvailability>? _lastTaskShow;
+    private TaskViewClosePreparation? _viewCloseLease;
+    private Task<TaskViewClosePreparation?>? _viewClosePreparation;
+    private readonly List<Task> _viewCloseOriginals = [];
     private long _instructionVersion;
     private long _acceptedInstructionVersion = -1;
     private bool _followUpAdmissionPending;
@@ -198,6 +202,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                 var show = InvokeOriginalSource(() => _host.ShowAsync(new("spaces.task-development", "Task and Dev", "Tasks",
                     Document, this, this, _readiness) { IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
                 // Capture even if a subsequent publication callback retires the page.
+                _lastTaskShow = show;
                 showJoin = original.AwaitAsync(show);
             }).GetTask();
             try { await original.AwaitAsync(dispatcher).ConfigureAwait(false); }
@@ -347,13 +352,13 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     public bool TrySetValue(string path, object? value)
     {
         if (path != "Instruction" || value is not string instruction) return false;
-        long generation; lock (_gate) generation = _generation;
+        long generation; lock (_gate) { if (_viewCloseLease is not null) return false; generation = _generation; }
         _work.RunSynchronous(original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
             lock (_gate)
             {
-                if (_instruction == instruction) return;
+                if (_viewCloseLease is not null || _instruction == instruction) return;
                 _instruction = instruction; _instructionVersion++;
             }
             NotifyOriginal(original, generation);
@@ -364,7 +369,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     {
         lock (_gate)
         {
-            if (!_active || _work.IsRetiring) return false;
+            if (!_active || _work.IsRetiring || _viewCloseLease is not null) return false;
             return command switch
             {
                 "task.refresh" => true,
@@ -381,6 +386,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     }
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        lock (_gate) if (_viewCloseLease is not null) return ValueTask.CompletedTask;
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This task operation is unavailable.");
         long generation; lock (_gate) generation = _generation;
         string capturedInstruction; long instructionVersion;
@@ -499,6 +505,104 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         readiness?.DemandExternalOriginalRetirementJoin();
         _development?.DemandExternalOriginalRetirementJoin(); // Pure borrowed-source dependency guard only.
     }
+    /// <summary>View-only reversible admission freeze. This does not stop the durable
+    /// Task/Run. A nonempty draft refuses closing rather than discarding unsent text.</summary>
+    internal sealed class TaskViewClosePreparation(SpaceTaskWidgetPage owner, long generation, long version)
+    {
+        internal readonly SpaceTaskWidgetPage Owner = owner;
+        internal readonly long Generation = generation, Version = version;
+        internal bool Ready;
+        internal bool IsCurrent { get { lock (Owner._gate) return Owner.IsCurrentTaskViewLease(this); } }
+    }
+    private bool IsCurrentTaskViewLease(TaskViewClosePreparation lease) => ReferenceEquals(_viewCloseLease, lease) &&
+        lease.Ready && !_work.IsRetiring && lease.Generation == _generation && _instructionVersion == lease.Version && _instruction.Length == 0;
+    internal Task<TaskViewClosePreparation?> PrepareTaskViewCloseAsync(CancellationToken caller)
+    {
+        DemandExternalOriginalRetirementJoin();
+        lock (_gate)
+        {
+            _work.DemandAdmission();
+            if (_viewCloseLease is not null) return _viewClosePreparation!;
+            if (_instruction.Length != 0 || _followUpAdmissionPending) return Task.FromResult<TaskViewClosePreparation?>(null);
+            var lease = new TaskViewClosePreparation(this, _generation, _instructionVersion);
+            _viewCloseLease = lease;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _viewCloseOriginals.RemoveAll(task => task.IsCompletedSuccessfully);
+            if (_viewCloseOriginals.Count >= 128) { _viewCloseLease = null; throw new InvalidOperationException("Retained Task-view preparations require retirement before another attempt."); }
+            _viewClosePreparation = PrepareTaskViewDriverAsync(start.Task, lease, caller);
+            _viewCloseOriginals.Add(_viewClosePreparation);
+            start.SetResult();
+            return _viewClosePreparation;
+        }
+    }
+    private async Task<TaskViewClosePreparation?> PrepareTaskViewDriverAsync(Task start, TaskViewClosePreparation lease, CancellationToken token)
+    {
+        await start.ConfigureAwait(false);
+        var accepted = false;
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            Task? composer = null, controls = null;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _composerView.RefreshSurface();
+                InvokeOriginalSource(() => { PropertyChanged?.Invoke(this, new(null)); return true; });
+                composer = _composerView.CaptureOriginalActionSettlement();
+                if (_lastTaskShow is { IsCompletedSuccessfully: true } shown && shown.Result.State == CuiSceneAvailabilityState.Ready)
+                    controls = _host.CaptureOriginalActionSettlement(shown);
+            }).GetTask().ConfigureAwait(false);
+            foreach (var original in new[] { composer, controls }.OfType<Task>()) await original.ConfigureAwait(false);
+            await _work.JoinAdmittedOriginalsAsync().ConfigureAwait(false);
+            lock (_gate)
+            {
+                token.ThrowIfCancellationRequested();
+                lease.Ready = true;
+                accepted = IsCurrentTaskViewLease(lease);
+            }
+        }
+        catch (Exception primary)
+        {
+            try { await AbortTaskViewCloseAsync(lease).ConfigureAwait(false); }
+            catch (Exception cleanup) { throw new AggregateException("Task-view preparation and its actual restoration failed.", primary, cleanup); }
+            throw;
+        }
+        if (!accepted) await AbortTaskViewCloseAsync(lease).ConfigureAwait(false);
+        return accepted ? lease : null;
+    }
+    internal Task AbortTaskViewCloseAsync(TaskViewClosePreparation lease)
+    {
+        lock (_gate)
+        {
+            _viewCloseOriginals.RemoveAll(task => task.IsCompletedSuccessfully);
+            if (_viewCloseOriginals.Count >= 128) throw new InvalidOperationException("Retained Task-view restoration originals require retirement.");
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var actual = AbortTaskViewDriverAsync(start.Task, lease);
+            _viewCloseOriginals.Add(actual); start.SetResult();
+            return actual;
+        }
+    }
+    private async Task AbortTaskViewDriverAsync(Task start, TaskViewClosePreparation lease)
+    {
+        await start.ConfigureAwait(false);
+        lock (_gate)
+        {
+            if (!ReferenceEquals(lease.Owner, this)) throw new InvalidOperationException("Foreign Task view preparation.");
+            if (!ReferenceEquals(_viewCloseLease, lease) || _work.IsRetiring) return;
+            _viewCloseLease = null; _viewClosePreparation = null; lease.Ready = false;
+        }
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        { if (!_work.IsRetiring) { _composerView.RefreshSurface(); InvokeOriginalSource(() => { PropertyChanged?.Invoke(this, new(null)); return true; }); } }).GetTask().ConfigureAwait(false);
+    }
+    internal Task BeginTaskViewClosePrepared(TaskViewClosePreparation lease)
+    {
+        DemandExternalOriginalRetirementJoin();
+        lock (_gate)
+        {
+            if (!IsCurrentTaskViewLease(lease)) throw new InvalidOperationException("This exact Task view preparation changed.");
+            return _work.CloseAndDrainAsync();
+        }
+    }
+
     public void RequestRetirement() => _work.RequestRetirement();
     public Task CloseAndDrainAsync() { DemandExternalOriginalRetirementJoin(); return _work.CloseAndDrainAsync(); }
     private Task StopOriginalPresentationAsync()
@@ -516,7 +620,8 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             try { lock (_gate) nativeClose = _nativeReadinessClose ??= readiness.RequestOriginalRetirementTask(); }
             catch (Exception error) { failures.Add(error); }
         try { hostClose = _hostClose ??= _host.CloseOriginalAsync(); } catch (Exception error) { failures.Add(error); }
-        return JoinOriginalPresentationChildrenAsync([nativeClose, hostClose, _composerClose], failures);
+        Task[] preparations; lock (_gate) preparations = _viewCloseOriginals.ToArray();
+        return JoinOriginalPresentationChildrenAsync([nativeClose, hostClose, _composerClose, .. preparations], failures);
     }
     private static async Task JoinOriginalPresentationChildrenAsync(Task?[] actualTasks, List<Exception> failures)
     {

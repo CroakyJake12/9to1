@@ -158,6 +158,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             _work.DemandAdmission();
             if (_homeCloseLease is not null) throw new InvalidOperationException("Abort the Home preparation before activation.");
             _active = true; generation = ++_generation;
+            SubscribeTaskSidebar();
             return RunHomeOriginal(async original =>
             {
                 original.BindPublicationGuard(() => IsCurrent(generation));
@@ -235,6 +236,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
 
     public bool TryGetValue(string path, out object? value)
     {
+        if (TryGetTaskSidebarValue(path, out value)) return true;
         if (path == "spaces.canMutate") { lock (_gate) value = CanAdmitHomeMutation(); return true; }
         if (path == "spaces.hasAppContent") { lock (_gate) value = _spaceWorkspace?.Content is not null; return true; }
         if (path == "spaces.hasSpaceSummary") { lock (_gate) value = _spaceWorkspace?.Content is null; return true; }
@@ -276,6 +278,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     { lock (_gate) return CanAdmitHomeMutation() && _bindings.TrySetValue(path, value); }
     public bool TryGetItemValue(object item, string path, out object? value)
     {
+        if (TryGetTaskSidebarItem(item, path, out value)) return true;
         if (item is SpacesHomeConversationRow row)
         {
             lock (_gate)
@@ -327,7 +330,8 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     public bool? IsActionAvailable(string command)
     {
         lock (_gate)
-            return CanAdmitHomeMutation() && _bindings.IsActionAvailable(command) == true &&
+            return command.StartsWith("spaces.tasks.", StringComparison.Ordinal) ? IsTaskSidebarActionAvailable(command) :
+                CanAdmitHomeMutation() && _bindings.IsActionAvailable(command) == true &&
                 (command is not ("spaces.search-conversations" or "spaces.clear-conversation-search") ||
                  (_conversationSearchProvider is not null && _controller.State.Selection is not null));
     }
@@ -360,6 +364,8 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     {
         original.DemandPublication();
         var id = parameter is Guid g ? g : _controller.State.Selection?.Id ?? Guid.Empty;
+        if (command.StartsWith("spaces.tasks.", StringComparison.Ordinal))
+        { await DispatchTaskSidebarAsync(original, generation, command, parameter, token).ConfigureAwait(false); return; }
         switch (command)
         {
             case "spaces.create":
@@ -607,6 +613,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         var selectedId = _controller.State.Selection?.Id;
         if (selectedId == _conversationScopeId) return;
         _conversationScopeId = selectedId;
+        ResetSidebarTasks();
         _conversationQuery = _appliedConversationQuery = string.Empty;
         _conversationQueryRevision++;
         _conversationReadSequence++;
@@ -845,6 +852,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     private Task StopOriginalPresentationAsync()
     {
         lock (_gate) { _active = false; _generation++; }
+        RetireTaskSidebar();
         _controller.StateChanged -= OnControllerStateChanged;
         _bindings.PropertyChanged -= OnBindingsPropertyChanged;
         try { return _hostClose ??= _host.CloseOriginalAsync(); }

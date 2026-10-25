@@ -74,12 +74,15 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private volatile bool _closing;
 
     internal SpacesBrowseAppContentSession(BrowseAppContentRequest request, IServiceProvider services,
-        CancellationToken hostLifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null)
+        CancellationToken hostLifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null,
+        Func<Haven.Desktop.Views.Pages.Tasks.SpaceTaskWidgetPage, NativeCanonicalTaskSceneReadiness>? bindTaskFrame = null,
+        CancellationToken appLifetime = default)
     {
         _request = request;
         _services = services;
         _hostQueueNavigation = queueNavigation;
-        _lifetime = CancellationTokenSource.CreateLinkedTokenSource(hostLifetime);
+        _bindTaskFrame = bindTaskFrame;
+        _lifetime = CancellationTokenSource.CreateLinkedTokenSource(hostLifetime, appLifetime);
         _token = _lifetime.Token;
         _address = request.Address;
     }
@@ -159,6 +162,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                     ? FindSpaceConversationTitlesAsync : null,
                 publishConversationRows: PublishOriginalConversationRowsAsync);
             _spacesPage = page;
+            BindTaskSidebar(page);
             try
             {
                 await page.ActivateAsync(token);
@@ -171,7 +175,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 // Saved Chat routes carry a canonical ConversationId, including the
                 // existing legacy workspace migration. Restore it before publishing
                 // a generic Spaces location over the saved target.
-                if (!await TryRestoreRequestedBuilderAsync(token) && !await TryRestoreRequestedDetailsAsync(token) && !await TryRestoreRequestedConversationAsync(token))
+                if (!await TryRestoreRequestedBuilderAsync(token) && !await TryRestoreRequestedDetailsAsync(token) && !await TryRestoreRequestedTaskAsync(token) && !await TryRestoreRequestedConversationAsync(token))
                 {
                     UpdateAddress(page.Controller.State.Selection?.Id);
                     SetRootContent(page);
@@ -247,6 +251,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         // A preparation may be waiting for the same page cancellation or real save source.
         BeginDetailsRetirement(failures);
         BeginBuilderRetirement(failures);
+        BeginTaskViewRetirement(failures);
         if (_initialization is { } initialization)
             try { await initialization.ConfigureAwait(false); }
             catch (OperationCanceledException) when (initialization.IsCanceled && _token.IsCancellationRequested) { }
@@ -268,8 +273,10 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         // A command acquired before retirement may have produced an owner late.
         BeginDetailsRetirement(failures);
         BeginBuilderRetirement(failures);
+        BeginTaskViewRetirement(failures);
         await JoinDetailsRetirementAsync(failures).ConfigureAwait(false);
         await JoinBuilderRetirementAsync(failures).ConfigureAwait(false);
+        await JoinTaskViewRetirementAsync(failures).ConfigureAwait(false);
         await OnUiAsync(async () =>
         {
             foreach (var chat in _ownedChats.ToArray())
@@ -405,6 +412,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 _address = builder.Address;
             else if (_publishedChatRoute is { } chat)
                 _address = chat.Address;
+            else if (_publishedTaskRoute is { } task && ReferenceEquals(_spacesPage?.SpaceWorkspaceContent, task.Page))
+                _address = task.Address;
             else if (selectedSpaceId is { } id && id != Guid.Empty)
                 _address = AppContentAddress.Parse($"9to1://spaces/selected/{id:D}");
             else
@@ -432,6 +441,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             SetRootContent(chat);
         }
         _publishedDetailsRoute = null;
+        _publishedTaskRoute = null;
         _routeEpoch++;
         _chatPage = chat;
         _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
@@ -453,6 +463,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         var home = _spacesPage;
         if (home is not null) home.ClearSpaceWorkspace();
         _publishedChatRoute = null;
+        _publishedTaskRoute = null;
         _routeEpoch++;
         UpdateAddress(home?.Controller.State.Selection?.Id);
     }
@@ -493,6 +504,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         if (ExecutingCommand.Value is { } execution && ReferenceEquals(execution.Owner, this) &&
             Volatile.Read(ref execution.Active) && execution.Original is { IsCompleted: false })
             throw new InvalidOperationException("An active Spaces command cannot join its own retirement.");
+        Haven.Desktop.Views.Pages.Tasks.SpaceTaskWidgetPage[] taskViews;
+        lock (_gate) taskViews = _ownedTaskViews.ToArray();
+        foreach (var page in taskViews) page.DemandExternalOriginalRetirementJoin();
     }
 
     private Task ExecuteCommandAsync(SpacesAction action, CancellationToken caller)
@@ -546,6 +560,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         // Opening/selecting a Space is an explicit new-chat action. Prior chats stay owned
         // with their identities and drafts; only explicit history/restore or management return
         // may reopen them. Reusing the last page here would silently undo that navigation intent.
+        var actualSpace = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(registeredSpaceId, token)
+            ?? throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
+        if (actualSpace.IsArchived) throw new SpacesWorkspaceActionRefusal("The selected Space is archived.");
         var factory = NewChatSessionFactory();
         var page = await factory.CreateNewAsync(token);
         _ownedChats.Add(page);
@@ -554,6 +571,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         {
             token.ThrowIfCancellationRequested();
             DemandAlive();
+            if (actualSpace.Kind == SpaceKind.Tasks) page.ConfigureTaskMode();
             await page.AssignSpaceAsync(spaceId);
             lock (_gate)
             {
@@ -786,7 +804,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     /// projection, so a failed read never takes a live navigation down with it.</summary>
     private Task RefreshSpacesConversationsAsync(CancellationToken token)
     {
-        try { return _spacesPage?.RefreshConversationsAsync(token) ?? Task.CompletedTask; }
+        try { return _spacesPage is { } home ? home.Controller.State.Selection?.Id == SpaceRegistry.TasksSpaceId
+            ? home.RefreshTaskSidebarAsync(token) : home.RefreshConversationsAsync(token) : Task.CompletedTask; }
         catch (Exception failure)
         {
             System.Diagnostics.Trace.TraceError("Spaces sidebar refresh failed: {0}", failure);
@@ -877,6 +896,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         {
             token.ThrowIfCancellationRequested();
             DemandAlive();
+            if (space.Kind == SpaceKind.Tasks) page.ConfigureTaskMode();
             await page.AssignSpaceAsync(spaceId);
             lock (_gate)
             {
@@ -1001,6 +1021,14 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 if (parameter is not string { Length: > 0 } sidebarItemId)
                     throw new InvalidOperationException("The Spaces sidebar command has no item identity.");
                 return AdmitWorkspaceDriver((start, execution) => ExecuteSidebarItemDriverAsync(start, execution, sidebarItemId, caller, originatingSettlement));
+            }
+            if (command == "spaces.tasks.open")
+            {
+                var owner = _spacesPage ?? throw new InvalidOperationException("The actual Tasks sidebar owner is unavailable.");
+                if (parameter is not SpacesHomePage.TaskOpenIntent intent || !owner.IsCurrentTaskOpenIntent(intent))
+                    throw new SpacesWorkspaceActionRefusal("The task tile changed before navigation.");
+                var ticket = new TaskOpenTicket(owner, intent, _routeEpoch);
+                return AdmitWorkspaceDriver((start, execution) => ExecuteWorkspaceCommandDriverAsync(start, execution, command, ticket, caller));
             }
             if (command == "spaces.open-conversation")
             {
@@ -1222,6 +1250,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                     try
                     {
                         if (command == "spaces.new-chat") await NewConversationOnUiAsync((Guid)target, linked.Token);
+                        else if (command == "spaces.tasks.open") await OpenSidebarTaskOnUiAsync((TaskOpenTicket)target, linked.Token);
                         else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync((HistoryOpenTicket)target, linked.Token);
                         else throw new InvalidOperationException($"The Spaces workspace command '{command}' is not owned by this host.");
                     }

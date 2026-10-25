@@ -1,3 +1,4 @@
+using Haven.Desktop.Views.Pages.Tasks;
 using Haven.Desktop.Views.Pages.Spaces;
 using Avalonia.Controls;
 using HavenOS.Apps.Browse;
@@ -26,6 +27,8 @@ internal sealed partial class SpacesBrowseAppContentSession
         internal readonly SpacesBrowseAppContentSession Owner = owner;
         internal readonly SpaceDetailsPage[] Pages = pages;
         internal readonly SpaceBuilderPage[] Builders = builders;
+        internal readonly SpaceTaskWidgetPage[] TaskViews = owner._ownedTaskViews.Where(page => page.OriginalClose is null).ToArray();
+        internal readonly List<(SpaceTaskWidgetPage Page, SpaceTaskWidgetPage.TaskViewClosePreparation Lease)> TaskLeases = [];
         internal SpacesHomeViewState? HomeState = homeState;
         internal SpacesHomePage.HomeClosePreparation? HomeLease;
         internal long Epoch = epoch;
@@ -98,6 +101,14 @@ internal sealed partial class SpacesBrowseAppContentSession
             {
                 linked.Token.ThrowIfCancellationRequested();
                 if (!await PrepareBuilderAsync(candidate, page, linked.Token).ConfigureAwait(false)) return false;
+            }
+            foreach (var page in candidate.TaskViews)
+            {
+                var original = page.PrepareTaskViewCloseAsync(linked.Token);
+                lock (_gate) RetainPreparation(original);
+                var lease = await original.ConfigureAwait(false);
+                if (lease is null) return false;
+                lock (_gate) candidate.TaskLeases.Add((page, lease));
             }
             if (candidate.HomeLease is { } currentHome && !currentHome.IsCurrent) return false;
             lock (_gate)
@@ -311,6 +322,8 @@ internal sealed partial class SpacesBrowseAppContentSession
         !_commands.Any(task => !task.IsCompletedSuccessfully) &&
         _ownedDetails.Where(page => page.OriginalClose is null).SequenceEqual(preparation.Pages) &&
         _ownedBuilders.Where(page => page.OriginalClose is null).SequenceEqual(preparation.Builders) &&
+        _ownedTaskViews.Where(page => page.OriginalClose is null).SequenceEqual(preparation.TaskViews) &&
+        preparation.TaskLeases.Count == preparation.TaskViews.Length && preparation.TaskLeases.All(item => item.Lease.IsCurrent) &&
         preparation.Leases.Count == preparation.Pages.Length &&
         preparation.BuilderLeases.Count == preparation.Builders.Length &&
         preparation.Leases.All(item => item.Lease.IsCurrent && item.Lease.Settlement.IsCompletedSuccessfully) &&
@@ -361,6 +374,12 @@ internal sealed partial class SpacesBrowseAppContentSession
             }
             catch (Exception cause)
             { if (actual is null) failures.Add(cause); else AddActualCauses(failures, actual, cause); }
+        }
+        foreach (var (page, lease) in preparation.TaskLeases.ToArray())
+        {
+            Task? actual = null;
+            try { actual = page.AbortTaskViewCloseAsync(lease); await actual.ConfigureAwait(false); }
+            catch (Exception cause) { if (actual is null) failures.Add(cause); else AddActualCauses(failures, actual, cause); }
         }
         if (preparation.HomeLease is { } homeLease)
         {
@@ -416,6 +435,16 @@ internal sealed partial class SpacesBrowseAppContentSession
                 catch (Exception cause)
                 {
                     if (page.OriginalClose is { } original) { RecordBuilderClose(page, original); acquired = true; }
+                    if (!acquired) throw;
+                    _preparedCloseFailures.Add(cause);
+                }
+            }
+            foreach (var (page, lease) in preparation.TaskLeases)
+            {
+                try { _taskViewCloses[page] = page.BeginTaskViewClosePrepared(lease); acquired = true; }
+                catch (Exception cause)
+                {
+                    if (page.OriginalClose is { } original) { _taskViewCloses[page] = original; acquired = true; }
                     if (!acquired) throw;
                     _preparedCloseFailures.Add(cause);
                 }

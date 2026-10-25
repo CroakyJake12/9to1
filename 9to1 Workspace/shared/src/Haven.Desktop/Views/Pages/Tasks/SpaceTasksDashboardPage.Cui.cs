@@ -171,7 +171,7 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
         };
         return path is "id" or "observation" or "title" or "openLabel" or "accessibleName" or "status" or "completed" or "summary" or "progress" or "observationText" or "checkpoint" or "identity" or "origin" or "hasPermissionReview" or "permissionPrimary";
     }
-    private static string Status(ITaskContextObservation row) => row.Snapshot?.State == TaskExecutionLifecycle.Blocked ? "Blocked · details available"
+    internal static string Status(ITaskContextObservation row) => row.Snapshot?.State == TaskExecutionLifecycle.Blocked ? "Blocked · details available"
         : row.PermissionReview is { CanRespond: true } ? "Permission needed"
         : row.HasObservedLiveExecution ? $"Working · observed {row.Activity!.ObservedAt.LocalDateTime:g}" : row.Snapshot?.State switch
     {
