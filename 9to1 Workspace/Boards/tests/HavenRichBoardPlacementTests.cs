@@ -84,9 +84,10 @@ public sealed class HavenRichBoardPlacementTests
             HavenRichNotesOps.PlaceBlock(notes, page.Id, block.Id, 12, 24, 300, 160, 1));
         HavenRichNotesOps.SetPageLayoutMode(notes, page.Id, HavenRichPageLayoutModes.Unlocked);
         HavenRichNotesOps.SetCanvasLocked(notes, page.Id, locked: true);
-        Assert.Throws<InvalidOperationException>(() =>
-            HavenRichNotesOps.PlaceBlock(notes, page.Id, block.Id, 12, 24, 300, 160, 1));
+        HavenRichNotesOps.PlaceBlock(notes, page.Id, block.Id, 12, 24, 300, 160, 1);
+        Assert.Equal(HavenRichBlockLayouts.Absolute, block.Layout);
         HavenRichNotesOps.SetCanvasLocked(notes, page.Id, locked: false);
+        HavenRichNotesOps.SetBlockFlowLayout(notes, page.Id, block.Id);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             HavenRichNotesOps.PlaceBlock(notes, page.Id, block.Id, double.NaN, 24, 300, 160, 1));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
