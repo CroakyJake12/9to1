@@ -215,7 +215,7 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
         private LinuxHomePublisherEnrollmentOwner Publisher { get; }
         internal LinuxHomeBootstrapActivationOwner Owner { get; }
         private readonly string _abi = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x64";
-        internal Rig(string? damage = null, bool failAfterPublication = false, bool loseSettlementAcknowledgement = false)
+        internal Rig(string? damage = null, bool failAfterPublication = false, bool loseSettlementAcknowledgement = false, bool includeNativeHelper = false)
         {
             File.SetUnixFileMode(Root, Mode700); Directory.CreateDirectory(Code, Mode755);
             Directory.CreateDirectory(Stage, Mode700); Directory.CreateDirectory(StateDirectory, Mode700);
@@ -234,8 +234,16 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
                 Write(Path.Combine(directory, "app"), executable); File.SetUnixFileMode(Path.Combine(directory, "app"), Mode700);
                 byte[] payload = [4, 5, 6]; Write(Path.Combine(directory, "payload.bin"), payload);
                 var version = damage == "opaque-version" ? "1" : "1.0.0";
-                var receipt = new LinuxHomeBootstrapActivationOwner.Receipt(1, app + ".pkg", app, version, "linux", _abi, "app",
-                    [new("app", executable.Length, Digest(executable))]);
+                var runtimeFiles = new List<HomePackageActivatedFile> { new("app", executable.Length, Digest(executable)) };
+                if (includeNativeHelper && app == "root")
+                {
+                    // A real native ELF is signed only into this TEST fixture. It is
+                    // never executed and does not prove the production helper protocol.
+                    Write(Path.Combine(directory, "home-root-launcher"), Elf);
+                    File.SetUnixFileMode(Path.Combine(directory, "home-root-launcher"), Mode700);
+                    runtimeFiles.Add(new("home-root-launcher", Elf.Length, Digest(Elf)));
+                }
+                var receipt = new LinuxHomeBootstrapActivationOwner.Receipt(1, app + ".pkg", app, version, "linux", _abi, "app", runtimeFiles);
                 var signedReceipt = Envelope(JsonSerializer.SerializeToUtf8Bytes(receipt, Web), corrupt: damage == "receipt-signature" && app == "home");
                 Write(Path.Combine(directory, "receipt.json"), signedReceipt);
                 var descriptor = new HomePackageArtifactDescriptor(1, app + ".pkg", app, version, "stable", "mandatory-shared-core", "linux", _abi,
