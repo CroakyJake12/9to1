@@ -24,6 +24,118 @@ public sealed class SpaceBuilderController
     public SpaceBuilderState State { get { lock (_gate) return _state; } }
     public event Action<SpaceBuilderState>? StateChanged;
 
+    public bool SelectEditorView(SpaceBuilderEditorView view)
+    {
+        if (!Enum.IsDefined(view)) throw new ArgumentOutOfRangeException(nameof(view));
+        Change(state => state with { EditorView = view });
+        return true;
+    }
+
+    public bool SelectExpertSection(SpaceBuilderExpertSection section)
+    {
+        if (!Enum.IsDefined(section)) throw new ArgumentOutOfRangeException(nameof(section));
+        Change(state => state with { EditorView = SpaceBuilderEditorView.Expert, ExpertSection = section });
+        return true;
+    }
+
+    /// <summary>Publishes one edit from the shared NodeEditor into this Space's unsaved Draft.
+    /// The caller cannot write the registry directly; the normal same-revision Save path owns persistence.</summary>
+    public bool SetLayoutDocument(SpaceLayoutDocument layout)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        if (layout.Nodes is null || layout.Edges is null || layout.Nodes.Count > SpaceLayoutDocument.MaximumNodes ||
+            layout.Edges.Count > SpaceLayoutDocument.MaximumEdges)
+            throw new ArgumentException("The Space graph exceeds the supported node or connection bounds.", nameof(layout));
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var canonicalLayout = layout with
+            {
+                GraphId = layout.GraphId == Guid.Empty ? _state.Draft.LayoutDocument?.GraphId ?? Guid.NewGuid() : layout.GraphId,
+                Revision = _state.Draft.LayoutDocument?.Revision ?? layout.Revision,
+                State = SpaceLayoutRevisionState.Draft
+            };
+            var draft = _state.Draft with { LayoutDocument = canonicalLayout };
+            if (draft == _state.Draft) return true;
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = "Expert graph changes are in the Space draft. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
+    public SpaceBuilderPreview? PreviewDraft()
+    {
+        SpaceBuilderPreview? preview = null;
+        Change(state =>
+        {
+            if (!state.IsLoaded || state.DraftRevision is not { } revision) return state with { StatusMessage = "Load the Space before previewing its draft." };
+            preview = new(state.SpaceId, revision, state.Draft.Name, state.Draft.Description,
+                state.Draft.Instructions, state.Draft.CapabilityBindings.Count,
+                state.Draft.LayoutDocument?.Nodes.Count ?? 0, state.Draft.LayoutDocument?.Edges.Count ?? 0);
+            return state with { Preview = preview, StatusMessage = preview.Notice };
+        });
+        return preview;
+    }
+
+    /// <summary>Validates the actual saved Space and current draft without publishing any change.
+    /// It cannot validate provider/resource availability owned by other services.</summary>
+    public async Task<IReadOnlyList<string>> ValidateDraftAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        SpaceBuilderState snapshot;
+        long editVersion;
+        lock (_gate) { snapshot = _state; editVersion = _editVersion; }
+        List<string> issues = [];
+        if (!snapshot.IsLoaded || snapshot.DraftRevision is not { } expectedRevision)
+            issues.Add("Load the existing Space before validating its draft.");
+        else
+        {
+            var spaces = await _registry.GetAllAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+            var current = spaces.SingleOrDefault(space => space.Id == snapshot.SpaceId);
+            if (current is null || current.IsArchived) issues.Add("The Space is unavailable or archived.");
+            else
+            {
+                if (current.Revision != expectedRevision)
+                    issues.Add($"The saved Space changed to revision {current.Revision}; reload before validating or saving.");
+                var name = snapshot.Draft.Name.Trim();
+                if (name.Length is < 1 or > 80) issues.Add("Space name must contain 1 to 80 characters.");
+                if (spaces.Any(space => space.Id != snapshot.SpaceId && StringComparer.OrdinalIgnoreCase.Equals(space.Name.Trim(), name)))
+                    issues.Add($"A Space named '{name}' already exists.");
+            }
+        }
+        if (!Enum.IsDefined(snapshot.Draft.ContextPolicy.WebAccess) || snapshot.Draft.ContextPolicy.MaximumRetrievedItems is < 0 or > 1000)
+            issues.Add("The source context policy contains an unsupported value.");
+        if (snapshot.Draft.CapabilityBindings.GroupBy(binding => (binding.Kind, binding.CapabilityId)).Any(group => group.Count() > 1) ||
+            snapshot.Draft.CapabilityBindings.Any(binding => string.IsNullOrWhiteSpace(binding.CapabilityId) ||
+                !Enum.IsDefined(binding.Kind) || !Enum.IsDefined(binding.Override)))
+            issues.Add("Canonical capability bindings must be valid and unique.");
+        if (snapshot.Draft.LayoutDocument is { } layout)
+        {
+            try { SpaceRegistry.ValidateLayoutDocument(layout); }
+            catch (ArgumentException error) { issues.Add("Graph validation failed: " + error.Message); }
+            if (layout.Nodes.Any(node => string.IsNullOrWhiteSpace(node.TypeId)))
+                issues.Add("The graph contains structural-only nodes without a registered TypeId; they cannot be activated.");
+        }
+        if (issues.Count == 0)
+            issues.Add("Draft structure is valid. Registered node schemas, resource availability, permissions and model capabilities still require validation by their owning services before activation.");
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (_editVersion != editVersion || _state.Draft != snapshot.Draft)
+                issues = ["The Space draft changed while validation was running; validate the current draft again."];
+            var result = Array.AsReadOnly(issues.ToArray());
+            var status = result.Count == 1 && result[0].StartsWith("Draft structure is valid", StringComparison.Ordinal)
+                ? result[0] : $"Draft validation found {result.Count} blocking issue(s).";
+            next = _state = _state with { ValidationIssues = result, StatusMessage = status };
+        }
+        StateChanged?.Invoke(next);
+        var result = next.ValidationIssues;
+        return result;
+    }
+
     public bool SetField(SpaceBuilderField field, string? value)
     {
         if (field == SpaceBuilderField.MaximumRetrievedItems && !string.IsNullOrWhiteSpace(value) &&
@@ -61,7 +173,7 @@ public sealed class SpaceBuilderController
             _editVersion++;
             next = _state = _state with
             {
-                Draft = draft,
+                Draft = draft, Preview = null, ValidationIssues = [],
                 HasChanges = draft != _baseline,
                 StatusMessage = _state.HasConflict ? _state.StatusMessage
                     : _state.IsSaving ? "Saving earlier changes; your latest edits are still unsaved."
@@ -92,7 +204,7 @@ public sealed class SpaceBuilderController
             var draft = _state.Draft with { CategoryPolicy = policy };
             if (draft == _state.Draft) return true;
             _editVersion++;
-            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
                 StatusMessage = draft == _baseline ? "No unsaved changes." : "Unsaved changes." };
         }
         StateChanged?.Invoke(next);
@@ -128,6 +240,7 @@ public sealed class SpaceBuilderController
                 return state with { DraftRevision = space.Revision, ActiveRevision = null,
                     Draft = _baseline, IsLoaded = true, IsReadOnly = space.IsBuiltIn,
                     HasChanges = false, HasConflict = false,
+                    Preview = null, ValidationIssues = [],
                     StatusMessage = space.IsBuiltIn ? "Built-in Space configuration is protected." : "Space Builder configuration loaded." };
             });
             return true;
@@ -163,6 +276,14 @@ public sealed class SpaceBuilderController
             }
             if (current.Revision != saving.DraftRevision)
                 throw new SpaceRevisionConflictException(current.Id, saving.DraftRevision!.Value, current.Revision);
+            var savedLayout = saving.Draft.LayoutDocument;
+            if (savedLayout is not null && !Equals(savedLayout, _baseline.LayoutDocument))
+                savedLayout = savedLayout with
+                {
+                    GraphId = savedLayout.GraphId == Guid.Empty ? _baseline.LayoutDocument?.GraphId ?? Guid.NewGuid() : savedLayout.GraphId,
+                    Revision = checked((_baseline.LayoutDocument?.Revision ?? savedLayout.Revision) + 1),
+                    State = SpaceLayoutRevisionState.Draft
+                };
             // Patch only this editor projection's fields on the canonical Space revision.
             // Unexposed model/memory/graph configuration survives; the registry checks the
             // SAME expected revision again. Saving preferences does not claim activation.
@@ -175,7 +296,8 @@ public sealed class SpaceBuilderController
                 ContextPolicy = saving.Draft.ContextPolicy,
                 Inheritance = saving.Draft.Inheritance,
                 ContextReferences = saving.Draft.ContextReferences.ToArray(),
-                Files = saving.Draft.LegacyFiles.ToArray()
+                Files = saving.Draft.LegacyFiles.ToArray(),
+                LayoutDocument = savedLayout
             }, saving.DraftRevision, cancellationToken).ConfigureAwait(false);
             Change(state =>
             {
@@ -183,7 +305,8 @@ public sealed class SpaceBuilderController
                 var draft = _editVersion == editVersion ? _baseline : state.Draft;
                 return state with { DraftRevision = saved.Revision,
                     Draft = draft, HasChanges = draft != _baseline, HasConflict = false,
-                    StatusMessage = draft == _baseline ? "Space Builder draft saved. Activation is not implemented." : "Earlier changes saved. Your latest edits are still unsaved." };
+                    Preview = null, ValidationIssues = [],
+                    StatusMessage = draft == _baseline ? "Space Builder draft saved. Activation requires the versioned active-definition workflow." : "Earlier changes saved. Your latest edits are still unsaved." };
             });
             return true;
         }
@@ -224,7 +347,7 @@ public sealed class SpaceBuilderController
                     b.Kind == binding.Kind && b.CapabilityId == binding.CapabilityId ? binding : b).ToArray();
                 var updatedDraft = _state.Draft with { CapabilityBindings = updated };
                 _editVersion++;
-                next = _state = _state with { Draft = updatedDraft, HasChanges = updatedDraft != _baseline,
+                next = _state = _state with { Draft = updatedDraft, Preview = null, ValidationIssues = [], HasChanges = updatedDraft != _baseline,
                     StatusMessage = "Capability updated. Save to persist." };
                 StateChanged?.Invoke(next);
                 return true;
@@ -232,7 +355,7 @@ public sealed class SpaceBuilderController
             var bindings = _state.Draft.CapabilityBindings.Append(binding).ToArray();
             var draft = _state.Draft with { CapabilityBindings = bindings };
             _editVersion++;
-            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
                 StatusMessage = "Capability attached. Save to persist." };
         }
         StateChanged?.Invoke(next);
@@ -252,7 +375,7 @@ public sealed class SpaceBuilderController
             if (bindings.Length == _state.Draft.CapabilityBindings.Count) return true;
             var draft = _state.Draft with { CapabilityBindings = bindings };
             _editVersion++;
-            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
                 StatusMessage = "Capability detached. Save to persist." };
         }
         StateChanged?.Invoke(next);
@@ -281,7 +404,7 @@ public sealed class SpaceBuilderController
             var rows = _state.Draft.ContextReferences.Where(value => value.ContextId != reference.ContextId).Append(reference).ToArray();
             var draft = _state.Draft with { ContextReferences = Array.AsReadOnly(rows) };
             _editVersion++;
-            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
                 StatusMessage = "Canonical Boards source selected. Save to persist; its body still requires original Home approval when used." };
         }
         StateChanged?.Invoke(next); return true;
@@ -296,7 +419,7 @@ public sealed class SpaceBuilderController
             if (rows.Length == _state.Draft.ContextReferences.Count) return false;
             var draft = _state.Draft with { ContextReferences = Array.AsReadOnly(rows) };
             _editVersion++;
-            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
                 StatusMessage = "Source reference removed from the draft. The notebook remains unchanged. Save to persist." };
         }
         StateChanged?.Invoke(next); return true;
@@ -311,7 +434,7 @@ public sealed class SpaceBuilderController
             if (rows.Length == _state.Draft.LegacyFiles.Count) return false;
             var draft = _state.Draft with { LegacyFiles = Array.AsReadOnly(rows) };
             _editVersion++;
-            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
                 StatusMessage = "Legacy reference removed from the draft. The original file is not deleted. Save to persist." };
         }
         StateChanged?.Invoke(next); return true;

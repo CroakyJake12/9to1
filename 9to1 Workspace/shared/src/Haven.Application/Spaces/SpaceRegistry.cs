@@ -567,7 +567,13 @@ public sealed partial class SpaceRegistry
         {
             Metadata = new Dictionary<string, string>(edge.Metadata, StringComparer.Ordinal)
         }).ToArray();
-        return new SpaceLayoutDocument(nodes, edges);
+        return layout with
+        {
+            Nodes = nodes,
+            Edges = edges,
+            Groups = layout.Groups.Select(group => group with { NodeIds = group.NodeIds.ToArray() }).ToArray(),
+            Comments = layout.Comments.ToArray()
+        };
     }
 
     private IReadOnlyList<SpaceDefinition> BuiltIns()
@@ -640,12 +646,15 @@ public sealed partial class SpaceRegistry
 
     private static void ValidateLayout(SpaceLayoutDocument layout)
     {
-        if (layout.Nodes is null || layout.Edges is null || layout.Nodes.Count > 500 || layout.Edges.Count > 2000)
+        if (layout.Nodes is null || layout.Edges is null || layout.Nodes.Count > SpaceLayoutDocument.MaximumNodes ||
+            layout.Edges.Count > SpaceLayoutDocument.MaximumEdges || layout.SchemaVersion is < 1 or > SpaceLayoutDocument.CurrentSchemaVersion ||
+            !Enum.IsDefined(layout.State) || layout.Revision < 0 || layout.Groups is null || layout.Comments is null)
             throw new ArgumentException("Space layout graph is missing collections or exceeds supported bounds.", nameof(layout));
         var nodes = new Dictionary<Guid, SpaceLayoutNode>();
         foreach (var node in layout.Nodes)
         {
             if (node is null || node.Id == Guid.Empty || string.IsNullOrWhiteSpace(node.Category) ||
+                node.SchemaVersion < 1 ||
                 string.IsNullOrWhiteSpace(node.Title) || !double.IsFinite(node.X) || !double.IsFinite(node.Y) ||
                 !double.IsFinite(node.Width) || !double.IsFinite(node.Height) || node.Width <= 0 || node.Height <= 0 ||
                 node.Ports is null || node.Metadata is null || !nodes.TryAdd(node.Id, node))
@@ -666,7 +675,23 @@ public sealed partial class SpaceRegistry
             if (from?.Direction != SpaceLayoutPortDirection.Output || to?.Direction != SpaceLayoutPortDirection.Input)
                 throw new ArgumentException($"Layout edge '{edge.Id}' must connect an output port to an input port.", nameof(layout));
         }
+        var groups = new HashSet<Guid>();
+        foreach (var group in layout.Groups)
+            if (group is null || group.Id == Guid.Empty || string.IsNullOrWhiteSpace(group.Title) ||
+                group.NodeIds is null || !groups.Add(group.Id) || group.NodeIds.Distinct().Count() != group.NodeIds.Count ||
+                group.NodeIds.Any(nodeId => !nodes.ContainsKey(nodeId)))
+                throw new ArgumentException("Space layout groups require unique IDs and references to existing nodes.", nameof(layout));
+        var comments = new HashSet<Guid>();
+        foreach (var comment in layout.Comments)
+            if (comment is null || comment.Id == Guid.Empty || string.IsNullOrWhiteSpace(comment.Text) ||
+                !double.IsFinite(comment.X) || !double.IsFinite(comment.Y) || !double.IsFinite(comment.Width) ||
+                !double.IsFinite(comment.Height) || comment.Width <= 0 || comment.Height <= 0 || !comments.Add(comment.Id))
+                throw new ArgumentException("Space layout comments require unique IDs and valid geometry.", nameof(layout));
     }
+
+    /// <summary>Side-effect-free validation entry point for an authored Space graph draft.
+    /// Resource availability and grants remain owned by their respective registries.</summary>
+    public static void ValidateLayoutDocument(SpaceLayoutDocument layout) => ValidateLayout(layout);
 
     private static void ValidateRegistry(IReadOnlyList<SpaceDefinition> spaces)
     {

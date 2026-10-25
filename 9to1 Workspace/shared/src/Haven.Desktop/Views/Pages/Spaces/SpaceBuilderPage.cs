@@ -26,6 +26,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     private readonly SpaceBuilderCuiBindings _bindings;
     private readonly ICuiSceneReadiness _readiness;
     private readonly CuiSceneHost _host;
+    private readonly Grid _contentGrid;
+    private SpaceLayoutEditorPage? _graphEditor;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly Func<Task, bool>? _queueBack;
     private Task? _activation;
@@ -66,10 +68,14 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             () => _installedSkills,
             () => _installedPlugins,
             DispatchAsync, CanMutate, () => _queueBack is not null,
-            () => _boardsChoices, () => _boardsSource is not null && !_sourcePickerBusy);
+            () => _boardsChoices, () => _boardsSource is not null && !_sourcePickerBusy,
+            _controller.SelectEditorView, _controller.SelectExpertSection,
+            _controller.PreviewDraft, _controller.ValidateDraftAsync);
         _controller.StateChanged += OnStateChanged;
         Document = document;
-        Content = _host;
+        _contentGrid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
+        _contentGrid.Children.Add(_host);
+        Content = _contentGrid;
     }
 
     public CuiDocument Document { get; }
@@ -161,21 +167,34 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             {
                 original.BindPublicationGuard(IsPresentationCurrent);
                 using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, original.Token);
-                await original.AwaitAsync(Source(() => _controller.LoadAsync(linked.Token))).ConfigureAwait(false);
-                if (_extensions is not null)
+                var loaded = await original.AwaitAsync(Source(() => _controller.LoadAsync(linked.Token))).ConfigureAwait(false);
+                var spaceForGraph = await original.AwaitAsync(Source(() => _originalRegistry.GetAsync(_controller.State.SpaceId, linked.Token))).ConfigureAwait(false);
+                if (spaceForGraph is null || spaceForGraph.IsArchived)
+                    throw new InvalidOperationException("The Space was unavailable while opening its graph editor.");
+                if (loaded && _extensions is not null)
                 {
-                    try
-                    {
-                        _installedSkills = await original.AwaitAsync(Source(() => _extensions.ListSkillsAsync(linked.Token))).ConfigureAwait(false);
-                        _installedPlugins = await original.AwaitAsync(Source(() => _extensions.ListPluginsAsync(linked.Token))).ConfigureAwait(false);
-                    }
-                    catch { _installedSkills = []; _installedPlugins = []; }
+                    List<string> catalogFailures = [];
+                    try { _installedSkills = await original.AwaitAsync(Source(() => _extensions.ListSkillsAsync(linked.Token))).ConfigureAwait(false); }
+                    catch (OperationCanceledException) when (linked.IsCancellationRequested) { throw; }
+                    catch (Exception error) { _installedSkills = []; catalogFailures.Add("Skills: " + error.Message); }
+                    try { _installedPlugins = await original.AwaitAsync(Source(() => _extensions.ListPluginsAsync(linked.Token))).ConfigureAwait(false); }
+                    catch (OperationCanceledException) when (linked.IsCancellationRequested) { throw; }
+                    catch (Exception error) { _installedPlugins = []; catalogFailures.Add("Plugins: " + error.Message); }
+                    if (catalogFailures.Count > 0)
+                        _controller.ReportSourceStatus("Installed capability catalog is incomplete; existing Space bindings were preserved. " +
+                            $"Loaded {_installedSkills.Count} Skills and {_installedPlugins.Count} Plugins. " + string.Join("; ", catalogFailures));
+                    else
+                        _controller.ReportSourceStatus($"Loaded {_installedSkills.Count} installed Skills and {_installedPlugins.Count} installed Plugins. " +
+                            "Space bindings remain canonical references and do not grant permissions.");
                 }
+                else if (loaded)
+                    _controller.ReportSourceStatus("Installed Skills/Plugins are unavailable in this host; existing Space bindings were preserved.");
                 Task<CuiSceneAvailability>? show = null;
                 var dispatch = Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     original.DemandPublication();
                     lock (_gate) _activated = true;
+                    BuildGraphEditor(spaceForGraph);
                     _bindings.Refresh();
                     show = _show = Source(() => _host.ShowAsync(new("spaces.builder", "Space Builder", "Space Builder",
                         Document, _bindings, _bindings, _readiness) { IsPublicationCurrent = IsPresentationCurrent }, linked.Token));
@@ -259,10 +278,10 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     }
 
     public Task<bool> SaveAsync(CancellationToken token = default) => RunControllerAsync(_controller.SaveAsync, token);
-    public Task<bool> DiscardChangesAsync(CancellationToken token = default) => RunControllerAsync(_controller.DiscardChangesAsync, token);
-    public Task<bool> ReloadAsync(CancellationToken token = default) => RunControllerAsync(_controller.LoadAsync, token);
+    public Task<bool> DiscardChangesAsync(CancellationToken token = default) => RunControllerAsync(_controller.DiscardChangesAsync, token, refreshGraph: true);
+    public Task<bool> ReloadAsync(CancellationToken token = default) => RunControllerAsync(_controller.LoadAsync, token, refreshGraph: true);
 
-    private Task<bool> RunControllerAsync(Func<CancellationToken, Task<bool>> operation, CancellationToken caller)
+    private Task<bool> RunControllerAsync(Func<CancellationToken, Task<bool>> operation, CancellationToken caller, bool refreshGraph = false)
     {
         lock (_gate)
         {
@@ -274,7 +293,18 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                 {
                     original.BindPublicationGuard(IsPresentationCurrent);
                     using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, original.Token);
-                    return await original.AwaitAsync(Source(() => operation(linked.Token))).ConfigureAwait(false);
+                    var result = await original.AwaitAsync(Source(() => operation(linked.Token))).ConfigureAwait(false);
+                    if (result && refreshGraph)
+                    {
+                        var savedSpace = await original.AwaitAsync(Source(() => _originalRegistry.GetAsync(_controller.State.SpaceId, linked.Token))).ConfigureAwait(false);
+                        if (savedSpace is not null)
+                            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                original.DemandPublication();
+                                _graphEditor?.ReloadDraft(savedSpace);
+                            }).GetTask()).ConfigureAwait(false);
+                    }
+                    return result;
                 }
                 finally { lock (_gate) _controllerOperations--; }
             }); }
@@ -311,23 +341,58 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         }
         if (command == "space-builder.skill.attach" && parameter is string skillId)
         {
-            var skill = _installedSkills.FirstOrDefault(s => s.SkillId == skillId);
-            if (skill is not null)
+            var listed = _installedSkills.FirstOrDefault(skill => skill.SkillId == skillId);
+            if (listed is null)
             {
-                var binding = new SpaceCapabilityBinding(skill.SkillId, SpaceCapabilityKind.Skill, SpaceCapabilityOverride.Inherit, skill.PackageVersion);
-                TryAttachCapability(binding);
+                _controller.ReportSourceStatus("This Skill is no longer in the page's canonical catalog; no new binding was added and saved bindings were preserved.");
+                return;
+            }
+            var (draftSnapshot, draftEditEpoch) = CaptureDraftSnapshot();
+            var skill = await RunExtensionReadAsync("Skill", (extensions, cancellation) => extensions.GetSkillAsync(skillId, cancellation), token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            if (skill is null) { _controller.ReportSourceStatus("This Skill is no longer installed; no new binding was added and saved bindings were preserved."); return; }
+            lock (_gate)
+            {
+                var current = _controller.State;
+                if (!CanMutate() || _editEpoch != draftEditEpoch || current.DraftRevision != draftSnapshot.DraftRevision || current.Draft != draftSnapshot.Draft)
+                { _controller.ReportSourceStatus("The Space draft changed during Skill revalidation; no new binding was added."); return; }
+                if (!TryAttachCapability(new SpaceCapabilityBinding(skill.SkillId, SpaceCapabilityKind.Skill,
+                    SpaceCapabilityOverride.Inherit, skill.PackageVersion))) return;
+                if (!skill.IsAvailable)
+                    _controller.ReportSourceStatus("The Skill is currently unavailable; its canonical binding is an unsaved draft reference and does not install or enable it. Save to persist.");
+                else if (!StringComparer.Ordinal.Equals(skill.PackageVersion, listed.PackageVersion))
+                    _controller.ReportSourceStatus($"Skill catalog changed; current canonical version {skill.PackageVersion} is attached to the unsaved draft. Save to persist.");
             }
             return;
         }
         if (command == "space-builder.plugin.attach" && parameter is string pluginId)
         {
-            var plugin = _installedPlugins.FirstOrDefault(p => p.Manifest.PackageId == pluginId);
-            if (plugin is not null)
+            var listed = _installedPlugins.FirstOrDefault(plugin => plugin.Manifest.PackageId == pluginId);
+            if (listed is null)
             {
+                _controller.ReportSourceStatus("This Plugin is no longer in the page's canonical catalog; no new binding was added and saved bindings were preserved.");
+                return;
+            }
+            var (draftSnapshot, draftEditEpoch) = CaptureDraftSnapshot();
+            var plugin = await RunExtensionReadAsync("Plugin", (extensions, cancellation) => extensions.GetPackageAsync(pluginId, cancellation), token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            if (plugin is null || plugin.Manifest.PackageType is not (ExtensionPackageType.Plugin or ExtensionPackageType.PluginAndSkills))
+            { _controller.ReportSourceStatus("This Plugin is no longer installed as a Plugin; no new binding was added and saved bindings were preserved."); return; }
+            lock (_gate)
+            {
+                var current = _controller.State;
+                if (!CanMutate() || _editEpoch != draftEditEpoch || current.DraftRevision != draftSnapshot.DraftRevision || current.Draft != draftSnapshot.Draft)
+                { _controller.ReportSourceStatus("The Space draft changed during Plugin revalidation; no new binding was added."); return; }
                 // Space attachment references the canonical package. Sidebar-only Plugins do
                 // not need a tool capability; resolution/permissions remain with their owners.
-                var binding = new SpaceCapabilityBinding(plugin.Manifest.PackageId, SpaceCapabilityKind.Plugin, SpaceCapabilityOverride.Inherit, plugin.Manifest.Version);
-                TryAttachCapability(binding);
+                if (!TryAttachCapability(new SpaceCapabilityBinding(plugin.Manifest.PackageId, SpaceCapabilityKind.Plugin,
+                    SpaceCapabilityOverride.Inherit, plugin.Manifest.Version))) return;
+                if (!plugin.IsEnabled)
+                    _controller.ReportSourceStatus($"Plugin is disabled (state {plugin.State}); the canonical draft binding does not enable it or grant permission. Save to persist.");
+                else if (plugin.State != ExtensionInstallState.Enabled)
+                    _controller.ReportSourceStatus($"Plugin reports state {plugin.State}; the canonical draft binding does not change package state or grant permission. Save to persist.");
+                else if (!StringComparer.Ordinal.Equals(plugin.Manifest.Version, listed.Manifest.Version))
+                    _controller.ReportSourceStatus($"Plugin catalog changed; current canonical version {plugin.Manifest.Version} is attached to the unsaved draft. Save to persist.");
             }
             return;
         }
@@ -366,11 +431,91 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         await actual.ConfigureAwait(false);
     }
 
+    private Task<T> RunExtensionReadAsync<T>(string resourceKind,
+        Func<ExtensionManager, CancellationToken, Task<T>> read, CancellationToken caller)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate() || _extensions is not { } extensions)
+                throw new InvalidOperationException($"The live {resourceKind} catalog is unavailable.");
+            _controllerOperations++;
+            try
+            {
+                return _work.RunAsync(async original =>
+                {
+                    try
+                    {
+                        original.BindPublicationGuard(IsPresentationCurrent);
+                        using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, original.Token);
+                        try
+                        {
+                            var result = await original.AwaitAsync(Source(() => read(extensions, linked.Token))).ConfigureAwait(false);
+                            original.DemandPublication();
+                            return result;
+                        }
+                        catch (OperationCanceledException) { throw; }
+                        catch (Exception error)
+                        {
+                            if (original.IsPublicationCurrent)
+                                _controller.ReportSourceStatus($"Could not revalidate the canonical {resourceKind}; no binding was changed: {error.Message}");
+                            throw;
+                        }
+                    }
+                    finally { lock (_gate) _controllerOperations--; }
+                });
+            }
+            catch { _controllerOperations--; throw; }
+        }
+    }
+
+    private (SpaceBuilderState State, long EditEpoch) CaptureDraftSnapshot()
+    {
+        lock (_gate) return (_controller.State, _editEpoch);
+    }
+
     private void OnStateChanged(SpaceBuilderState state)
     {
         if (_boardsChoicesRevision is { } revision && state.DraftRevision != revision)
         { _boardsChoices = []; _boardsChoicesRevision = null; }
         RefreshBindings();
+        if (Dispatcher.UIThread.CheckAccess()) UpdateGraphVisibility(state);
+        else Dispatcher.UIThread.Post(() => UpdateGraphVisibility(state));
+    }
+
+    private void BuildGraphEditor(SpaceDefinition space)
+    {
+        _graphEditor?.Dispose();
+        if (_graphEditor is not null) _contentGrid.Children.Remove(_graphEditor);
+        _graphEditor = new SpaceLayoutEditorPage(space, OnGraphDraftChanged)
+        {
+            Height = 460,
+            IsVisible = false
+        };
+        Grid.SetRow(_graphEditor, 1);
+        _contentGrid.Children.Add(_graphEditor);
+        UpdateGraphVisibility(_controller.State);
+    }
+
+    private void OnGraphDraftChanged(SpaceLayoutDocument document)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate()) return;
+            _work.RunSynchronous(original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                original.DemandPublication();
+                if (Source(() => _controller.SetLayoutDocument(document))) _editEpoch++;
+            });
+        }
+    }
+
+    private void UpdateGraphVisibility(SpaceBuilderState state)
+    {
+        if (_graphEditor is null) return;
+        _graphEditor.IsVisible = state.EditorView == SpaceBuilderEditorView.Expert &&
+            state.ExpertSection is SpaceBuilderExpertSection.HarnessLogic or
+                SpaceBuilderExpertSection.ModelLogic or SpaceBuilderExpertSection.UserMessageLogic;
     }
 
     private void RefreshBindings() => _ = RefreshBindingsAsync();
@@ -421,7 +566,12 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         List<Exception> failures = [];
         if (_hostClose is { } hostClose)
             try { await hostClose.ConfigureAwait(false); } catch (Exception error) { failures.Add(error); }
+        await Source(() => Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _graphEditor?.Dispose();
+            _graphEditor = null;
+            Content = null;
+        }).GetTask()).ConfigureAwait(false);
         if (failures.Count > 0) throw new AggregateException("The Space Builder surface did not close cleanly.", failures);
-        await Source(() => Dispatcher.UIThread.InvokeAsync(() => Content = null).GetTask()).ConfigureAwait(false);
     }
 }

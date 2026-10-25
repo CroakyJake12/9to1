@@ -538,6 +538,10 @@ public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCo
             ? new HavenPen(new HavenSolidBrush(255, 220, 64, 72), selected ? 4 : 3)
             : new HavenPen(new HavenTokenBrush(selected ? "Accent" : "Border"), selected ? 2.5 : 1);
         context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("SurfaceRaised"), 10, opacity));
+        // Semantic categories use only active theme tokens; category text remains visible so
+        // graph meaning never depends on colour alone.
+        context.Add(new HavenFillRoundedRectCommand(new HavenRect(rect.X, rect.Y, rect.Width, Math.Max(3, 4 * Zoom)),
+            new HavenTokenBrush(CategoryMaterialToken(node.Category)), 4, opacity));
         context.Add(new HavenStrokeRoundedRectCommand(rect, borderPen, 10, opacity));
         context.Add(new HavenTextCommand(new HavenRect(rect.X + 14, rect.Y + 10, Math.Max(20, rect.Width - 28), 18), new HavenTextLayout(node.Category.ToUpperInvariant(), "Segoe UI", Math.Max(9, 10 * Zoom), 600, Math.Max(20, rect.Width - 28)), new HavenTokenBrush("TextSecondary"), opacity));
         context.Add(new HavenTextCommand(new HavenRect(rect.X + 14, rect.Y + 30, Math.Max(20, rect.Width - 28), 24), new HavenTextLayout(node.Title, "Segoe UI", Math.Max(11, 15 * Zoom), 650, Math.Max(20, rect.Width - 28)), new HavenTokenBrush("TextPrimary"), opacity));
@@ -548,6 +552,17 @@ public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCo
             context.Add(new HavenEllipseCommand(new HavenRect(point.X - radius, point.Y - radius, radius * 2, radius * 2), new HavenTokenBrush("Accent"), null, opacity));
         }
     }
+
+    private static string CategoryMaterialToken(string category) => category.Trim().ToUpperInvariant() switch
+    {
+        "TRIGGER" => "Danger",
+        "CONDITION" => "Warning",
+        "EVENT" => "AccentSecondary",
+        "LOGIC" => "Accent",
+        "APP" => "AccentMuted",
+        "FILES" => "TextSecondary",
+        _ => "Accent"
+    };
 
     private void DrawMinimap(HavenDrawingContext context, double opacity)
     {

@@ -29,6 +29,7 @@ public sealed record SpaceBuilderDraft(
     public SpaceInheritancePolicy Inheritance { get; init; } = new();
     public IReadOnlyList<SpaceContextReference> ContextReferences { get; init; } = [];
     public IReadOnlyList<SpaceFileReference> LegacyFiles { get; init; } = [];
+    public SpaceLayoutDocument? LayoutDocument { get; init; }
 
     public static SpaceBuilderDraft Empty { get; } = new("", "", "", "",
         new Haven.Application.SpaceCapabilityCategoryPolicy(), []);
@@ -41,7 +42,8 @@ public sealed record SpaceBuilderDraft(
             ContextPolicy = space.ContextPolicy ?? new SpaceContextPolicy(),
             Inheritance = space.Inheritance ?? new SpaceInheritancePolicy(),
             ContextReferences = Array.AsReadOnly((space.ContextReferences ?? []).ToArray()),
-            LegacyFiles = Array.AsReadOnly(space.Files.ToArray())
+            LegacyFiles = Array.AsReadOnly(space.Files.ToArray()),
+            LayoutDocument = space.LayoutDocument
         };
 }
 
@@ -58,10 +60,23 @@ public sealed record SpaceBuilderState(
     bool HasConflict,
     string StatusMessage)
 {
+    public SpaceBuilderEditorView EditorView { get; init; } = SpaceBuilderEditorView.Basic;
+    public SpaceBuilderExpertSection ExpertSection { get; init; } = SpaceBuilderExpertSection.Details;
+    public SpaceBuilderPreview? Preview { get; init; }
+    public IReadOnlyList<string> ValidationIssues { get; init; } = [];
     public bool IsBusy => IsLoading || IsSaving;
     public bool CanEdit => IsLoaded && !IsReadOnly && !IsLoading;
     public bool CanSave => CanEdit && !IsBusy && HasChanges && !HasConflict;
     public bool CanDiscard => IsLoaded && !IsBusy && (HasChanges || HasConflict);
     public bool CanReload => !IsBusy && !HasChanges;
     public bool HasActiveRevision => ActiveRevision is not null;
+    public bool HasExpertConfiguration => Draft.LayoutDocument is { } layout &&
+        (layout.Nodes.Count != 0 || layout.Edges.Count != 0 || layout.Groups.Count != 0 || layout.Comments.Count != 0);
 }
+
+public sealed record SpaceBuilderPreview(Guid SpaceId, long DraftRevision, string Name, string Description,
+    string Instructions, int CapabilityCount, int GraphNodeCount, int GraphConnectionCount,
+    string Notice = "Configuration preview only; no conversation, model, app, tool or external action was run.");
+
+public enum SpaceBuilderEditorView { Basic, Advanced, Expert }
+public enum SpaceBuilderExpertSection { Details, HarnessLogic, ModelLogic, UserMessageLogic, Files }

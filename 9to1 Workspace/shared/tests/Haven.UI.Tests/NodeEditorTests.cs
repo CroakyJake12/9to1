@@ -90,6 +90,25 @@ public sealed class NodeEditorTests
     }
 
     [Fact]
+    public void Space_graph_categories_use_distinct_active_theme_tokens_and_keep_text_labels()
+    {
+        var categories = new[] { "Trigger", "Condition", "Event", "Logic", "App", "Files" };
+        var nodes = categories.Select((category, index) => Node(20 + index * 250, 20, category) with { Category = category }).ToArray();
+        var editor = Editor(new NodeEditorDocument(nodes, []), 1800, 320);
+        var commands = new HavenSceneRenderer().Render(editor);
+
+        var categoryTokens = commands.OfType<HavenFillRoundedRectCommand>()
+            .Where(command => command.Rect.Height == 4)
+            .Select(command => Assert.IsType<HavenTokenBrush>(command.Brush).Token)
+            .ToArray();
+        Assert.Equal(categories.Length, categoryTokens.Length);
+        Assert.Equal(categories.Length, categoryTokens.Distinct(StringComparer.Ordinal).Count());
+        foreach (var category in categories)
+            Assert.Contains(commands.OfType<HavenTextCommand>(), command =>
+                StringComparer.Ordinal.Equals(command.Layout.Text, category.ToUpperInvariant()));
+    }
+
+    [Fact]
     public void Keyboard_and_clipboard_contract_exposes_direct_editor_semantics()
     {
         var node = Node(10, 10, "One"); var editor = Editor(new NodeEditorDocument([node], [])); editor.SelectNode(node.Id);

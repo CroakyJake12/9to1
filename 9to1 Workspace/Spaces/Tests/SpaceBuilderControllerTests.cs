@@ -161,4 +161,99 @@ public sealed class SpaceBuilderControllerTests
         Assert.Equal("2.0.0", reopened.State.Draft.CapabilityBindings[0].VersionPin);
     }
 
+    [Fact]
+    public async Task Basic_advanced_and_expert_edit_one_space_and_preserve_the_graph_draft()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var space = await files.OpenRegistry().CreateAsync("One Space", cancellationToken: token);
+        var graphId = Guid.NewGuid();
+        var nodeId = Guid.NewGuid();
+        var originalGraph = new SpaceLayoutDocument(
+            [new SpaceLayoutNode(nodeId, "Logic", "Existing rule")
+            {
+                TypeId = "spaces.logic.identity",
+                SchemaVersion = 2,
+                Metadata = new Dictionary<string, string> { ["source"] = "author" }
+            }], [])
+        {
+            GraphId = graphId,
+            SchemaVersion = SpaceLayoutDocument.CurrentSchemaVersion,
+            Revision = 4,
+            Groups = [new SpaceLayoutGroup(Guid.NewGuid(), "Existing group", [nodeId])],
+            Comments = [new SpaceLayoutComment(Guid.NewGuid(), "Keep this note", 12, 18)]
+        };
+        space = await files.OpenRegistry().UpdateAsync(space with { LayoutDocument = originalGraph }, space.Revision, token);
+
+        var editor = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await editor.LoadAsync(token));
+        var originalRevision = editor.State.DraftRevision;
+        editor.SelectEditorView(SpaceBuilderEditorView.Advanced);
+        Assert.Equal(space.Id, editor.State.SpaceId);
+        Assert.Equal(originalRevision, editor.State.DraftRevision);
+        editor.SetField(SpaceBuilderField.Description, "Changed in Advanced");
+        editor.SelectExpertSection(SpaceBuilderExpertSection.ModelLogic);
+        var changedGraph = originalGraph with
+        {
+            Nodes = [.. originalGraph.Nodes, new SpaceLayoutNode(Guid.NewGuid(), "Condition", "New condition")]
+        };
+        Assert.True(editor.SetLayoutDocument(changedGraph));
+        Assert.Equal(graphId, editor.State.Draft.LayoutDocument!.GraphId);
+        Assert.Equal(SpaceBuilderEditorView.Expert, editor.State.EditorView);
+        Assert.Equal(originalRevision, editor.State.DraftRevision);
+        Assert.True(await editor.SaveAsync(token));
+
+        var reopened = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await reopened.LoadAsync(token));
+        var persisted = reopened.State.Draft.LayoutDocument!;
+        Assert.Equal(space.Id, reopened.State.SpaceId);
+        Assert.Equal(graphId, persisted.GraphId);
+        Assert.Equal(5, persisted.Revision);
+        Assert.Equal(2, persisted.Nodes.Count);
+        Assert.Equal("spaces.logic.identity", persisted.Nodes[0].TypeId);
+        Assert.Equal("author", persisted.Nodes[0].Metadata["source"]);
+        var persistedGroup = Assert.Single(persisted.Groups);
+        Assert.Equal("Existing group", persistedGroup.Title);
+        Assert.Equal(new[] { nodeId }, persistedGroup.NodeIds);
+        Assert.Equal(originalGraph.Comments.Single(), persisted.Comments.Single());
+        Assert.Equal("Changed in Advanced", reopened.State.Draft.Description);
+    }
+
+    [Fact]
+    public async Task Preview_and_validation_use_the_draft_without_changing_the_saved_space()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var space = await files.OpenRegistry().CreateAsync("Preview target", cancellationToken: token);
+        var editor = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await editor.LoadAsync(token));
+        Assert.True(editor.SetField(SpaceBuilderField.Description, "Draft description"));
+        var originalRevision = editor.State.DraftRevision;
+        var originalActiveRevision = editor.State.ActiveRevision;
+
+        var preview = editor.PreviewDraft();
+        Assert.NotNull(preview);
+        Assert.Equal(space.Id, preview!.SpaceId);
+        Assert.Equal(originalRevision, preview.DraftRevision);
+        Assert.Equal("Draft description", preview.Description);
+        Assert.Contains("no conversation", preview.Notice);
+        var valid = await editor.ValidateDraftAsync(token);
+        Assert.Single(valid);
+        Assert.StartsWith("Draft structure is valid", valid[0]);
+        var persisted = await files.OpenRegistry().GetAsync(space.Id, token);
+        Assert.Equal(space.Revision, persisted!.Revision);
+        Assert.Equal(space.Description, persisted.Description);
+        Assert.Equal(originalActiveRevision, editor.State.ActiveRevision);
+
+        var nodeId = Guid.NewGuid();
+        Assert.True(editor.SetLayoutDocument(new SpaceLayoutDocument(
+            [new SpaceLayoutNode(nodeId, "Logic", "Broken")],
+            [new SpaceLayoutEdge(Guid.NewGuid(), nodeId, "missing-output", Guid.NewGuid(), "missing-input")])));
+        var invalid = await editor.ValidateDraftAsync(token);
+        Assert.Contains(invalid, issue => issue.StartsWith("Graph validation failed", StringComparison.Ordinal));
+        Assert.Null(editor.State.Preview); // every later edit clears stale preview output
+    }
+
 }

@@ -20,6 +20,10 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Func<bool> _canGoBack;
     private readonly Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>> _sourceOptions;
     private readonly Func<bool> _canBrowseSources;
+    private readonly Action<SpaceBuilderEditorView>? _selectView;
+    private readonly Action<SpaceBuilderExpertSection>? _selectExpertSection;
+    private readonly Func<SpaceBuilderPreview?>? _previewDraft;
+    private readonly Func<CancellationToken, Task<IReadOnlyList<string>>>? _validateDraft;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
 
@@ -36,8 +40,11 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Action<SpaceCapabilityKind, string> detachCapability,
         Func<IReadOnlyList<Haven.Core.ExtensionSkillCatalogEntry>> installedSkills,
         Func<IReadOnlyList<Haven.Core.InstalledExtensionPackage>> installedPlugins,
-        Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent, Func<bool>? canGoBack,
-        Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>>? sourceOptions = null, Func<bool>? canBrowseSources = null)
+        Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent = null, Func<bool>? canGoBack = null,
+        Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>>? sourceOptions = null, Func<bool>? canBrowseSources = null,
+        Action<SpaceBuilderEditorView>? selectView = null, Action<SpaceBuilderExpertSection>? selectExpertSection = null,
+        Func<SpaceBuilderPreview?>? previewDraft = null,
+        Func<CancellationToken, Task<IReadOnlyList<string>>>? validateDraft = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -50,6 +57,10 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _canGoBack = canGoBack ?? (() => false);
         _sourceOptions = sourceOptions ?? (() => []);
         _canBrowseSources = canBrowseSources ?? (() => false);
+        _selectView = selectView;
+        _selectExpertSection = selectExpertSection;
+        _previewDraft = previewDraft;
+        _validateDraft = validateDraft;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -135,6 +146,23 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.canReload" => _isCurrent() && state.CanReload,
             "builder.canGoBack" => _isCurrent() && _canGoBack(),
             "builder.status" => state.StatusMessage,
+            "builder.view.isBasic" => state.EditorView == SpaceBuilderEditorView.Basic,
+            "builder.view.isAdvanced" => state.EditorView == SpaceBuilderEditorView.Advanced,
+            "builder.view.isExpert" => state.EditorView == SpaceBuilderEditorView.Expert,
+            "builder.expert.isDetails" => state.ExpertSection == SpaceBuilderExpertSection.Details,
+            "builder.expert.isHarness" => state.ExpertSection == SpaceBuilderExpertSection.HarnessLogic,
+            "builder.expert.isModel" => state.ExpertSection == SpaceBuilderExpertSection.ModelLogic,
+            "builder.expert.isUserMessage" => state.ExpertSection == SpaceBuilderExpertSection.UserMessageLogic,
+            "builder.expert.isFiles" => state.ExpertSection == SpaceBuilderExpertSection.Files,
+            "builder.hasExpertConfiguration" => state.HasExpertConfiguration,
+            "builder.graph.nodeCount" => state.Draft.LayoutDocument?.Nodes.Count ?? 0,
+            "builder.graph.edgeCount" => state.Draft.LayoutDocument?.Edges.Count ?? 0,
+            "builder.preview.exists" => state.Preview is not null,
+            "builder.preview.name" => state.Preview?.Name ?? string.Empty,
+            "builder.preview.description" => state.Preview?.Description ?? string.Empty,
+            "builder.preview.instructions" => state.Preview?.Instructions ?? string.Empty,
+            "builder.preview.notice" => state.Preview?.Notice ?? string.Empty,
+            "builder.validation.summary" => state.ValidationIssues.Count == 0 ? string.Empty : string.Join(" ", state.ValidationIssues),
             _ => null
         };
         return value is not null;
@@ -216,6 +244,10 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     public bool? IsActionAvailable(string command) => command switch
     {
         "space-builder.save" => _isCurrent() && _state().CanSave,
+        "space-builder.view.basic" or "space-builder.view.advanced" or "space-builder.view.expert" => _isCurrent(),
+        "space-builder.preview" or "space-builder.validate" => _isCurrent() && _state().IsLoaded && !_state().IsBusy,
+        "space-builder.expert.details" or "space-builder.expert.harness" or "space-builder.expert.model" or
+            "space-builder.expert.user-message" or "space-builder.expert.files" => _isCurrent(),
         "space-builder.discard" => _isCurrent() && _state().CanDiscard,
         "space-builder.reload" => _isCurrent() && _state().CanReload,
         "space-builder.back" => _isCurrent() && _canGoBack(),
@@ -230,6 +262,44 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     {
         if (IsActionAvailable(command) != true)
             throw new InvalidOperationException("This Space Builder command is unavailable.");
+        if (command.StartsWith("space-builder.view.", StringComparison.Ordinal))
+        {
+            _selectView?.Invoke(command switch
+            {
+                "space-builder.view.basic" => SpaceBuilderEditorView.Basic,
+                "space-builder.view.advanced" => SpaceBuilderEditorView.Advanced,
+                "space-builder.view.expert" => SpaceBuilderEditorView.Expert,
+                _ => throw new InvalidOperationException("Unknown Builder view.")
+            });
+            Refresh();
+            return;
+        }
+        if (command == "space-builder.preview")
+        {
+            _previewDraft?.Invoke();
+            Refresh();
+            return;
+        }
+        if (command == "space-builder.validate")
+        {
+            if (_validateDraft is not null) await _validateDraft(cancellationToken);
+            Refresh();
+            return;
+        }
+        if (command.StartsWith("space-builder.expert.", StringComparison.Ordinal))
+        {
+            _selectExpertSection?.Invoke(command switch
+            {
+                "space-builder.expert.details" => SpaceBuilderExpertSection.Details,
+                "space-builder.expert.harness" => SpaceBuilderExpertSection.HarnessLogic,
+                "space-builder.expert.model" => SpaceBuilderExpertSection.ModelLogic,
+                "space-builder.expert.user-message" => SpaceBuilderExpertSection.UserMessageLogic,
+                "space-builder.expert.files" => SpaceBuilderExpertSection.Files,
+                _ => throw new InvalidOperationException("Unknown Expert section.")
+            });
+            Refresh();
+            return;
+        }
         if (command == "space-builder.capability.remove" && parameter is string compositeKey)
         {
             var parts = compositeKey.Split(':', 2);

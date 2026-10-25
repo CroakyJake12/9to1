@@ -18,6 +18,8 @@ internal static class SpaceLayoutEditorAdapter
         return new NodeEditorDocument(
             document.Nodes.Select(node => new NodeEditorNode(node.Id, node.Category, node.Title)
             {
+                TypeId = node.TypeId,
+                SchemaVersion = node.SchemaVersion,
                 Subtitle = node.Subtitle,
                 X = node.X,
                 Y = node.Y,
@@ -36,15 +38,26 @@ internal static class SpaceLayoutEditorAdapter
                 Label = edge.Label,
                 Branch = edge.Branch,
                 Metadata = edge.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal)
-            }).ToArray());
+            }).ToArray())
+        {
+            GraphId = document.GraphId == Guid.Empty ? Guid.NewGuid() : document.GraphId,
+            SchemaVersion = document.SchemaVersion,
+            Revision = document.Revision,
+            State = document.State == SpaceLayoutRevisionState.Active ? NodeEditorRevisionState.Active : NodeEditorRevisionState.Draft,
+            ConnectionProfileId = document.ConnectionProfileId,
+            Groups = document.Groups.Select(group => new NodeEditorGroup(group.Id, group.Title, group.NodeIds.ToArray(), group.Color)).ToArray(),
+            Comments = document.Comments.Select(comment => new NodeEditorComment(comment.Id, comment.Text, comment.X, comment.Y, comment.Width, comment.Height)).ToArray()
+        };
     }
 
-    public static SpaceLayoutDocument FromEditor(NodeEditorDocument document)
+    public static SpaceLayoutDocument FromEditor(NodeEditorDocument document, SpaceLayoutDocument? previous = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         return new SpaceLayoutDocument(
             document.Nodes.Select(node => new SpaceLayoutNode(node.Id, node.Category, node.Title)
             {
+                TypeId = node.TypeId,
+                SchemaVersion = node.SchemaVersion,
                 Subtitle = node.Subtitle,
                 X = node.X,
                 Y = node.Y,
@@ -63,7 +76,16 @@ internal static class SpaceLayoutEditorAdapter
                 Label = edge.Label,
                 Branch = edge.Branch,
                 Metadata = edge.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal)
-            }).ToArray());
+            }).ToArray())
+        {
+            GraphId = document.GraphId,
+            SchemaVersion = document.SchemaVersion,
+            Revision = document.Revision,
+            State = document.State == NodeEditorRevisionState.Active ? SpaceLayoutRevisionState.Active : SpaceLayoutRevisionState.Draft,
+            ConnectionProfileId = document.ConnectionProfileId,
+            Groups = document.Groups.Select(group => new SpaceLayoutGroup(group.Id, group.Title, group.NodeIds.ToArray(), group.Color)).ToArray(),
+            Comments = document.Comments.Select(comment => new SpaceLayoutComment(comment.Id, comment.Text, comment.X, comment.Y, comment.Width, comment.Height)).ToArray()
+        };
     }
 }
 
@@ -76,13 +98,23 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     ];
 
     private readonly SpaceRegistry _registry;
+    private readonly Action<SpaceLayoutDocument>? _onDraftChanged;
     private SpaceDefinition _space;
     private bool _disposed;
     private bool _saving;
+    private bool _suppressDraftChange;
 
     public SpaceLayoutEditorPage(SpaceRegistry registry, SpaceDefinition space)
+        : this(registry, space, null) { }
+
+    public SpaceLayoutEditorPage(SpaceDefinition space, Action<SpaceLayoutDocument> onDraftChanged)
+        : this(null, space, onDraftChanged ?? throw new ArgumentNullException(nameof(onDraftChanged))) { }
+
+    private SpaceLayoutEditorPage(SpaceRegistry? registry, SpaceDefinition space, Action<SpaceLayoutDocument>? onDraftChanged)
     {
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        if (registry is null && onDraftChanged is null) throw new ArgumentNullException(nameof(registry));
+        _registry = registry!;
+        _onDraftChanged = onDraftChanged;
         _space = space ?? throw new ArgumentNullException(nameof(space));
 
         var root = new HavenPage { Name = "Spaces.Layout.Root", Layout = HavenLayout.Grid, Rows = "Auto 1fr Auto" };
@@ -99,13 +131,21 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         var title = new HavenText($"{space.Name} · layout and additional logic") { Level = TextLevel.H1 };
         title.SetValue(HavenProperties.Width, HavenLength.Fr(1));
         AddLogic = ActionButton("Spaces.Layout.AddLogic", "plus", "Add logic");
+        AddTrigger = ActionButton("Spaces.Layout.AddTrigger", "zap", "Trigger");
         AddCondition = ActionButton("Spaces.Layout.AddCondition", "git-branch", "Add condition");
+        AddEvent = ActionButton("Spaces.Layout.AddEvent", "bell", "Event");
+        AddApp = ActionButton("Spaces.Layout.AddApp", "grid", "App");
+        AddFiles = ActionButton("Spaces.Layout.AddFiles", "folder", "Files");
         DeleteSelection = ActionButton("Spaces.Layout.Delete", "trash", "Delete selected");
         ResetView = ActionButton("Spaces.Layout.ResetView", "maximize", "Reset view");
-        Save = ActionButton("Spaces.Layout.Save", "save", "Save layout", ButtonVariant.Primary);
+        Save = ActionButton("Spaces.Layout.Save", "save", onDraftChanged is null ? "Save layout" : "Validate graph", ButtonVariant.Primary);
         header.Add(title);
         header.Add(AddLogic);
+        header.Add(AddTrigger);
         header.Add(AddCondition);
+        header.Add(AddEvent);
+        header.Add(AddApp);
+        header.Add(AddFiles);
         header.Add(DeleteSelection);
         header.Add(ResetView);
         header.Add(Save);
@@ -139,7 +179,11 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         Content = Scene;
 
         AddLogic.Invoked += OnAddLogic;
+        AddTrigger.Invoked += OnAddTrigger;
         AddCondition.Invoked += OnAddCondition;
+        AddEvent.Invoked += OnAddEvent;
+        AddApp.Invoked += OnAddApp;
+        AddFiles.Invoked += OnAddFiles;
         DeleteSelection.Invoked += OnDeleteSelection;
         ResetView.Invoked += OnResetView;
         Save.Invoked += OnSave;
@@ -150,26 +194,57 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     internal NodeEditor Editor { get; }
     internal HavenText Status { get; }
     internal HavenButton AddLogic { get; }
+    internal HavenButton AddTrigger { get; }
     internal HavenButton AddCondition { get; }
+    internal HavenButton AddEvent { get; }
+    internal HavenButton AddApp { get; }
+    internal HavenButton AddFiles { get; }
     internal HavenButton DeleteSelection { get; }
     internal HavenButton ResetView { get; }
     internal HavenButton Save { get; }
 
+    public void ReloadDraft(SpaceDefinition space)
+    {
+        ArgumentNullException.ThrowIfNull(space);
+        if (_disposed) throw new ObjectDisposedException(nameof(SpaceLayoutEditorPage));
+        _space = space;
+        _suppressDraftChange = true;
+        try
+        {
+            Editor.Document = SpaceLayoutEditorAdapter.ToEditor(space.LayoutDocument);
+            Editor.ClearSelection();
+            Editor.ResetViewport();
+            Status.Content = $"Loaded {Editor.Document.Nodes.Count} nodes and {Editor.Document.Edges.Count} connections.";
+        }
+        finally { _suppressDraftChange = false; }
+    }
+
     private void OnAddLogic(object? sender, EventArgs e) => AddNode(new NodeEditorTemplate(
-        "AdditionalLogic",
-        "Additional logic",
-        "Describe an extra rule or processing step for this Space.",
+        "Logic",
+        "Logic placeholder",
+        "Structural only; an installed Logic schema is required before activation.",
         LogicPorts));
+
+    private void OnAddTrigger(object? sender, EventArgs e) => AddNode(new NodeEditorTemplate(
+        "Trigger", "Trigger placeholder", "Structural only; a registered trigger schema is required before activation.",
+        [new("out", "Out", NodeEditorPortDirection.Output, "flow", true)]));
 
     private void OnAddCondition(object? sender, EventArgs e) => AddNode(new NodeEditorTemplate(
         "Condition",
-        "Condition",
-        "Route the Space flow when a condition is true or false.",
+        "Condition placeholder",
+        "Structural only; a registered condition schema is required before activation.",
         [
             new("in", "In", NodeEditorPortDirection.Input, "flow", false),
             new("true", "True", NodeEditorPortDirection.Output, "flow", true),
             new("false", "False", NodeEditorPortDirection.Output, "flow", true)
         ]));
+
+    private void OnAddEvent(object? sender, EventArgs e) => AddStructuralCategory("Event");
+    private void OnAddApp(object? sender, EventArgs e) => AddStructuralCategory("App");
+    private void OnAddFiles(object? sender, EventArgs e) => AddStructuralCategory("Files");
+
+    private void AddStructuralCategory(string category) => AddNode(new NodeEditorTemplate(category,
+        category + " placeholder", $"Structural only; a registered {category} schema is required before activation.", LogicPorts));
 
     private void AddNode(NodeEditorTemplate template)
     {
@@ -183,6 +258,12 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     private void OnDocumentChanged(NodeEditorDocument document)
     {
         Status.Content = $"Unsaved changes · {document.Nodes.Count} nodes · {document.Edges.Count} connections";
+        if (!_suppressDraftChange && _onDraftChanged is not null)
+        {
+            try { _onDraftChanged(SpaceLayoutEditorAdapter.FromEditor(document, _space.LayoutDocument)); }
+            catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+            { Status.Content = $"Draft graph update rejected: {exception.Message}"; }
+        }
     }
 
     private async void OnSave(object? sender, EventArgs e)
@@ -198,11 +279,19 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         _saving = true;
         Save.SetValue(HavenProperties.Enabled, false);
         Save.SetState(HavenElementState.Disabled, true);
-        Status.Content = "Saving layout…";
+        Status.Content = _onDraftChanged is null ? "Saving layout…" : "Validating graph…";
         try
         {
-            _space = await _registry.SetLayoutAsync(_space.Id, SpaceLayoutEditorAdapter.FromEditor(Editor.Document), CancellationToken.None);
-            Status.Content = $"Saved {_space.LayoutDocument?.Nodes.Count ?? 0} nodes and {_space.LayoutDocument?.Edges.Count ?? 0} connections.";
+            if (_onDraftChanged is not null)
+            {
+                _onDraftChanged(SpaceLayoutEditorAdapter.FromEditor(Editor.Document, _space.LayoutDocument));
+                Status.Content = $"Graph is structurally valid and remains in the unsaved Space draft: {Editor.Document.Nodes.Count} nodes, {Editor.Document.Edges.Count} connections.";
+            }
+            else
+            {
+                _space = await _registry.SetLayoutAsync(_space.Id, SpaceLayoutEditorAdapter.FromEditor(Editor.Document, _space.LayoutDocument), CancellationToken.None);
+                Status.Content = $"Saved {_space.LayoutDocument?.Nodes.Count ?? 0} nodes and {_space.LayoutDocument?.Edges.Count ?? 0} connections.";
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
@@ -229,7 +318,11 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         if (_disposed) return;
         _disposed = true;
         AddLogic.Invoked -= OnAddLogic;
+        AddTrigger.Invoked -= OnAddTrigger;
         AddCondition.Invoked -= OnAddCondition;
+        AddEvent.Invoked -= OnAddEvent;
+        AddApp.Invoked -= OnAddApp;
+        AddFiles.Invoked -= OnAddFiles;
         DeleteSelection.Invoked -= OnDeleteSelection;
         ResetView.Invoked -= OnResetView;
         Save.Invoked -= OnSave;
