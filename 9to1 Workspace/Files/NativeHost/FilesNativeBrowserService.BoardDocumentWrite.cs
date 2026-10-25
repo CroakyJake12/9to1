@@ -46,6 +46,7 @@ public sealed partial class FilesNativeBrowserService
             internal NativeFilesWorkspace Workspace = null!;
             internal AuthenticatedResourceActor Actor = null!;
             internal string SourceId = string.Empty;
+            internal string OperationKey = string.Empty;
             internal string SessionId = string.Empty;
             internal string ExpectedRevision = string.Empty;
             internal string ExpectedSha256 = string.Empty;
@@ -236,7 +237,7 @@ public sealed partial class FilesNativeBrowserService
                 if (_operations.Count >= 64) throw new InvalidOperationException("Settle original Files board saves before another revision.");
                 var operation = new SaveOperation
                 {
-                    Owner = this, Browser = _browser, Page = page, OriginalRow = row,
+                    Owner = this, Browser = _browser, Page = page, OriginalRow = row, OperationKey = key,
                     Workspace = original.Workspace, Actor = actor, SourceId = sourceId, SessionId = sessionId,
                     ExpectedRevision = expectedRevision, ExpectedSha256 = NormalizeSha256(expectedSha256),
                     Payload = payload.ToArray(), PayloadSha256 = payloadHash, DocumentId = documentId,
@@ -351,8 +352,18 @@ public sealed partial class FilesNativeBrowserService
                 operation.Approval = await source.Observe(() => _broker.GetAuthorizationAsync(
                     operation.Approval.RequestId, token)).ConfigureAwait(false);
                 if (!operation.Approval.IsAllowed)
-                    return new(false, null, operation.Approval.Code, operation.Approval.Message,
-                        operation.Approval.State is HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked);
+                {
+                    if (operation.Approval.State is HomePermissionRequestState.Denied or
+                        HomePermissionRequestState.Blocked or HomePermissionRequestState.Cancelled)
+                    {
+                        lock (_gate)
+                            if (_operations.TryGetValue(operation.OperationKey, out var retained) && ReferenceEquals(retained, operation))
+                                _operations.Remove(operation.OperationKey);
+                        CryptographicOperations.ZeroMemory(operation.Payload);
+                        operation.Retired = true;
+                    }
+                    return new(false, null, operation.Approval.Code, operation.Approval.Message);
+                }
                 await RequireWrite(token).ConfigureAwait(false);
 
                 var capability = await source.Observe(() => _broker.BeginExecutionCapabilityAsync(
