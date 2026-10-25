@@ -85,7 +85,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
 
     private ValueTask DispatchCuiSourceNavigationAsync(string command, object? parameter, CancellationToken token)
     {
-        long generation; Guid tabId; DeveloperCuiSourceObservation analysis; CodeRange range; string text;
+        long generation; Guid tabId; DeveloperCuiSourceObservation analysis; CodeRange range; string text; string? authoredId;
         lock (_gate)
         {
             if (IsActionAvailable(command) != true || CurrentSourceTab() is not { } tab || CurrentCuiAnalysis() is not { } current || parameter is not string key)
@@ -95,6 +95,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                 index < 0 || key != Key(current, kind, index) || index >= (kind == "p" ? Math.Min(200, current.Problems.Count) : current.Outline.Count))
                 throw new InvalidOperationException("This CUI source location is stale or is not part of the displayed draft analysis.");
             analysis = current; range = kind == "p" ? current.Problems[index].Range : current.Outline[index].Range;
+            authoredId = kind == "e" ? current.Outline[index].AuthoredId : null;
             generation = _generation; tabId = tab.Id; text = CurrentEditorText(); _pending = true;
         }
         try
@@ -104,11 +105,15 @@ public sealed partial class DeveloperProjectWorkbenchPage
                 original.BindPublicationGuard(() => IsCurrent(generation));
                 try
                 {
+                    DeveloperCuiPropertyInspection? inspection = null;
+                    if (authoredId is not null)
+                        inspection = await original.AwaitAsync(Task.Run(() => DeveloperCuiPropertyEditor.Inspect(analysis.RelativePath, text, authoredId, token), token)).ConfigureAwait(false);
                     await PublishAsync(original, () =>
                     {
                         token.ThrowIfCancellationRequested();
                         if (CurrentSourceTab()?.Id != tabId || !ReferenceEquals(CurrentCuiAnalysis(), analysis) || !StringComparer.Ordinal.Equals(text, CurrentEditorText()))
                         { _status = "The draft analysis changed. Check the current draft again before navigating."; return; }
+                        if (command == "dev.go-to-cui-element") SetCuiPropertyInspection(tabId, analysis.Id, inspection);
                         var location = FormattableString.Invariant($"{range.Start.Line + 1}:{range.Start.Character + 1}");
                         if (!DeveloperTextNavigation.TryResolve(text, location, out var offset, token))
                         { _status = "This parser location cannot be mapped to the current source text. Inspect the reported line and column."; return; }

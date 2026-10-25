@@ -20,7 +20,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
-            "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.preview-edit",
+            "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];
@@ -149,6 +149,23 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             var action = Assert.Single(location.Actions.Values, value => value.Name == command);
             Assert.IsType<CuiBindingValue>(action.Parameter);
         }
+    }
+
+    [Fact]
+    public void Component_property_edits_use_observed_property_keys_and_the_same_current_draft_actions()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var choose = Assert.Single(nodes, node => node.Name == "dev-select-cui-property");
+        var select = Assert.Single(choose.Actions.Values, action => action.Name == "dev.select-cui-property");
+        Assert.IsType<CuiBindingValue>(select.Parameter);
+        var input = Assert.Single(nodes, node => node.Name == "dev-cui-property-value");
+        Assert.Equal("Input", input.Type);
+        Assert.Contains(input.Properties, pair => pair.Key.Equals("Value", StringComparison.OrdinalIgnoreCase)
+            && pair.Value is CuiBindingValue binding && binding.Path == "CuiPropertyDraftValue");
+        var update = Assert.Single(nodes, node => node.Name == "dev-change-cui-property");
+        Assert.Contains(update.Actions.Values, action => action.Name == "dev.change-cui-property");
+        Assert.Contains(update.Properties, pair => pair.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
+            && pair.Value is CuiBindingValue binding && binding.Path == "CanChangeCuiProperty");
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)

@@ -6,7 +6,10 @@ using Haven.Core;
 
 namespace HavenOS.Apps.Dev;
 
-public sealed record DeveloperCuiSourceElement(string Name, string Type, int Depth, CodeRange Range);
+public sealed record DeveloperCuiSourceElement(string Name, string Type, int Depth, CodeRange Range)
+{
+    public string? AuthoredId { get; init; }
+}
 public sealed record DeveloperCuiSourceObservation(Guid Id, string RelativePath, string ContentSha256,
     IReadOnlyList<CodeDiagnostic> Problems, IReadOnlyList<DeveloperCuiSourceElement> Outline, bool HasMoreElements);
 
@@ -51,7 +54,7 @@ public static class DeveloperCuiSourceAnalysis
             {
                 token.ThrowIfCancellationRequested();
                 if (elements.Count >= MaximumOutlineElements) { more = true; return; }
-                elements.Add(new(component.Name ?? component.Type, component.Type, depth, Range(component.Span)));
+                elements.Add(new(component.Name ?? component.Type, component.Type, depth, Range(component.Span)) { AuthoredId = component.AuthoredId });
                 Visit(component.Children, depth + 1); Visit(component.ElseChildren, depth + 1);
             }
         }
