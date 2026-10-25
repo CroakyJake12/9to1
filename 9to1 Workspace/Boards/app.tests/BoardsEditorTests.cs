@@ -337,20 +337,7 @@ public sealed class BoardsEditorTests
     }
 
     private static T? FindByAutomationId<T>(Control root, string automationId) where T : Control
-    {
-        if (root is T match
-            && (string.Equals(root.Name, automationId, StringComparison.Ordinal)
-                || string.Equals(Avalonia.Automation.AutomationProperties.GetAutomationId(root), automationId, StringComparison.Ordinal)))
-            return match;
-        foreach (var child in Flatten(root))
-        {
-            if (child is T typed
-                && (string.Equals(typed.Name, automationId, StringComparison.Ordinal)
-                    || string.Equals(Avalonia.Automation.AutomationProperties.GetAutomationId(typed), automationId, StringComparison.Ordinal)))
-                return typed;
-        }
-        return null;
-    }
+        => BoardsCuiControlFinder.FindByAutomationId<T>(root, automationId);
 
     private static IEnumerable<Control> Flatten(Control root)
     {
