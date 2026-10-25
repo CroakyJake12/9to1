@@ -139,14 +139,10 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
 
     private static SpaceLayoutDocument UserMessageLayout(int maximum)
     {
-        SpaceLayoutNode Node(string type, params SpaceLayoutPort[] ports) => new(Guid.NewGuid(), "Logic", type)
-        { TypeId = type, Ports = ports };
-        var source = Node(SpaceUserMessageGraph.SourceType, new SpaceLayoutPort("out", "Text", SpaceLayoutPortDirection.Output, "string", false));
-        var truncate = Node(SpaceUserMessageGraph.TruncateType,
-            new SpaceLayoutPort("in", "Text", SpaceLayoutPortDirection.Input, "string", false),
-            new SpaceLayoutPort("out", "Text", SpaceLayoutPortDirection.Output, "string", false)) with
+        var source = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SourceType);
+        var truncate = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.TruncateType) with
         { Metadata = new Dictionary<string, string> { ["maximumTextElements"] = maximum.ToString(System.Globalization.CultureInfo.InvariantCulture) } };
-        var output = Node(SpaceUserMessageGraph.OutputType, new SpaceLayoutPort("in", "Text", SpaceLayoutPortDirection.Input, "string", false));
+        var output = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.OutputType);
         return new([source, truncate, output],
             [new(Guid.NewGuid(), source.Id, "out", truncate.Id, "in"), new(Guid.NewGuid(), truncate.Id, "out", output.Id, "in")])
         { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
