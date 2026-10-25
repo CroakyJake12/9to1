@@ -31,6 +31,7 @@ internal static class Projector
         PageType = page.PageType,
         EmbeddedArtifact = page.EmbeddedArtifact,
         IsCanvasLocked = page.IsCanvasLocked,
+        LayoutMode = page.LayoutMode,
         InkPanX = page.InkView?.PanX ?? 0,
         InkPanY = page.InkView?.PanY ?? 0,
         InkZoom = page.InkView?.Zoom ?? 1,
@@ -42,6 +43,7 @@ internal static class Projector
         var blocks = new List<RichBoardBlock>();
         foreach (var block in page.Blocks)
         {
+            var firstProjectedBlock = blocks.Count;
             switch (block.Kind)
             {
                 case HavenRichBlockKind.Paragraph:
@@ -151,6 +153,15 @@ internal static class Projector
                     break;
                 default:
                     break;
+            }
+            for (var index = firstProjectedBlock; index < blocks.Count; index++)
+            {
+                blocks[index].Layout = block.Layout;
+                blocks[index].X = block.X;
+                blocks[index].Y = block.Y;
+                blocks[index].Width = block.Width;
+                blocks[index].Height = block.Height;
+                blocks[index].ZOrder = block.ZOrder;
             }
         }
         return blocks;
@@ -357,6 +368,9 @@ internal static class MergeDeltas
                 viewPage.IsCanvasLocked != baselinePage.IsCanvasLocked)
                 HavenRichNotesOps.SetCanvasLocked(rich, contractPage.Id, viewPage.IsCanvasLocked);
             if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
+                viewPage.LayoutMode != baselinePage.LayoutMode)
+                HavenRichNotesOps.SetPageLayoutMode(rich, contractPage.Id, viewPage.LayoutMode);
+            if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
                 (viewPage.PageType != baselinePage.PageType || !Equals(viewPage.EmbeddedArtifact, baselinePage.EmbeddedArtifact)))
                 HavenRichNotesOps.SetEmbeddedArtifact(rich, contractPage.Id,
                     viewPage.PageType, viewPage.EmbeddedArtifact);
@@ -378,6 +392,7 @@ internal static class MergeDeltas
                 continue;
             if (TrySplitItemId(viewBlock.Id, out var parentId, out var itemId))
             {
+                MergeBlockLayout(rich, page.Id, parentId, viewBlock, baselineBlock);
                 MergeItem(rich, page, parentId, itemId, viewBlock, baselineBlock);
                 continue;
             }
@@ -386,6 +401,7 @@ internal static class MergeDeltas
                 ImportViewBlock(rich, page, viewBlock);
                 continue;
             }
+            MergeBlockLayout(rich, page.Id, contractBlock.Id, viewBlock, baselineBlock);
             if (baselineBlock is not null && viewBlock.StyleId != baselineBlock.StyleId)
                 HavenRichNotesOps.ApplyStyleToBlock(rich, page.Id, contractBlock.Id, viewBlock.StyleId);
             switch (viewBlock.Kind)
@@ -483,6 +499,26 @@ internal static class MergeDeltas
             HavenRichNotesOps.SetBlockParagraph(rich, page.Id, contractBlock.Id,
                 ParseAlignment(viewBlock.Alignment), viewBlock.LineSpacing,
                 viewBlock.SpaceBefore, viewBlock.SpaceAfter, viewBlock.IndentLevel);
+    }
+
+    private static void MergeBlockLayout(
+        HavenRichNotes rich, string pageId, string contractBlockId,
+        RichBoardBlock current, RichBoardBlock? baseline)
+    {
+        if (baseline is null)
+            return;
+        if (current.Layout == baseline.Layout && current.X == baseline.X && current.Y == baseline.Y &&
+            current.Width == baseline.Width && current.Height == baseline.Height && current.ZOrder == baseline.ZOrder)
+            return;
+        if (current.Layout == HavenRichBlockLayouts.Absolute)
+        {
+            HavenRichNotesOps.PlaceBlock(rich, pageId, contractBlockId,
+                current.X, current.Y, current.Width, current.Height, current.ZOrder);
+        }
+        else if (current.Layout == HavenRichBlockLayouts.Flow && baseline.Layout == HavenRichBlockLayouts.Absolute)
+        {
+            HavenRichNotesOps.SetBlockFlowLayout(rich, pageId, contractBlockId);
+        }
     }
 
     private static bool FormatChanged(RichBoardBlock current, RichBoardBlock baseline) =>
@@ -669,6 +705,7 @@ internal static class MergeDeltas
         var page = HavenRichNotesOps.ImportPage(section, viewPage.Id, viewPage.Title);
         page.ParentPageId = viewPage.ParentPageId;
         page.IsCanvasLocked = viewPage.IsCanvasLocked;
+        page.LayoutMode = viewPage.LayoutMode;
         page.PageType = viewPage.PageType;
         page.EmbeddedArtifact = viewPage.EmbeddedArtifact;
         var checklistByParent = new Dictionary<string, HavenRichBlock>(StringComparer.Ordinal);
@@ -688,10 +725,38 @@ internal static class MergeDeltas
             }
             ImportViewBlockInner(page, viewBlock, checklistByParent);
         }
+        var projectedBlocks = page.Blocks.ToDictionary(block => block.Id, StringComparer.Ordinal);
+        foreach (var viewBlock in viewPage.Blocks)
+        {
+            var id = TrySplitItemId(viewBlock.Id, out var parentId, out _) ? parentId : viewBlock.Id;
+            if (!projectedBlocks.TryGetValue(id, out var block)) continue;
+            block.Layout = viewBlock.Layout;
+            block.X = viewBlock.X;
+            block.Y = viewBlock.Y;
+            block.Width = viewBlock.Width;
+            block.Height = viewBlock.Height;
+            block.ZOrder = viewBlock.ZOrder;
+        }
     }
 
-    private static void ImportViewBlock(HavenRichNotes rich, HavenRichPage page, RichBoardBlock viewBlock) =>
+    private static void ImportViewBlock(HavenRichNotes rich, HavenRichPage page, RichBoardBlock viewBlock)
+    {
         ImportViewBlockInner(page, viewBlock, new Dictionary<string, HavenRichBlock>(StringComparer.Ordinal));
+        CopyPlacementFromView(page, viewBlock);
+    }
+
+    private static void CopyPlacementFromView(HavenRichPage page, RichBoardBlock viewBlock)
+    {
+        var id = TrySplitItemId(viewBlock.Id, out var parentId, out _) ? parentId : viewBlock.Id;
+        var block = page.Blocks.FirstOrDefault(candidate => candidate.Id == id);
+        if (block is null) return;
+        block.Layout = viewBlock.Layout;
+        block.X = viewBlock.X;
+        block.Y = viewBlock.Y;
+        block.Width = viewBlock.Width;
+        block.Height = viewBlock.Height;
+        block.ZOrder = viewBlock.ZOrder;
+    }
 
     private static void ImportViewBlockInner(
         HavenRichPage page, RichBoardBlock viewBlock, Dictionary<string, HavenRichBlock> checklistByParent)

@@ -37,6 +37,7 @@ public sealed class RichBoardPage
     public string PageType { get; set; } = HavenRichPageTypes.Native;
     public Haven.Application.BoardEmbeddedArtifactReference? EmbeddedArtifact { get; set; }
     public bool IsCanvasLocked { get; set; }
+    public string LayoutMode { get; set; } = HavenRichPageLayoutModes.Locked;
     public List<RichBoardBlock> Blocks { get; set; } = [];
     public double InkPanX { get; set; }
     public double InkPanY { get; set; }
@@ -48,6 +49,12 @@ public sealed class RichBoardBlock
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Kind { get; set; } = "paragraph";
+    public string Layout { get; set; } = HavenRichBlockLayouts.Flow;
+    public double X { get; set; }
+    public double Y { get; set; }
+    public double Width { get; set; } = 320;
+    public double Height { get; set; } = 120;
+    public int ZOrder { get; set; }
     public string Text { get; set; } = string.Empty;
     public List<HavenRichTextRun> Runs { get; set; } = [];
     public string StyleId { get; set; } = "normal";

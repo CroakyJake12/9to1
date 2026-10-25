@@ -1131,6 +1131,64 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Native_block_placement_mode_and_absolute_geometry_survive_mode_switch_save_and_reopen()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "block-placement.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            string pageId;
+            string blockId;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var page = adapter.Document.Sections[0].Pages[0];
+                pageId = page.Id;
+                var block = page.Blocks[0];
+                blockId = block.Id;
+                Assert.Equal(HavenRichPageLayoutModes.Locked, page.LayoutMode);
+                Assert.Equal(HavenRichBlockLayouts.Flow, block.Layout);
+
+                await adapter.SetLayoutModeAsync(pageId, HavenRichPageLayoutModes.Unlocked);
+                await adapter.PlaceBlockAsync(pageId, blockId, 84, 136, 420, 208, 4);
+                page = adapter.Document.Sections[0].Pages.Single(item => item.Id == pageId);
+                block = Assert.Single(page.Blocks);
+                Assert.Equal(HavenRichPageLayoutModes.Unlocked, page.LayoutMode);
+                Assert.Equal(HavenRichBlockLayouts.Absolute, block.Layout);
+                Assert.Equal((84d, 136d, 420d, 208d, 4),
+                    (block.X, block.Y, block.Width, block.Height, block.ZOrder));
+
+                await adapter.SetLayoutModeAsync(pageId, HavenRichPageLayoutModes.Locked);
+                await adapter.SaveAsync();
+            }
+
+            await using (var reopened = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var page = reopened.Document.Sections[0].Pages.Single(item => item.Id == pageId);
+                var block = Assert.Single(page.Blocks);
+                Assert.Equal(HavenRichPageLayoutModes.Locked, page.LayoutMode);
+                Assert.Equal(HavenRichBlockLayouts.Absolute, block.Layout);
+                Assert.Equal((84d, 136d, 420d, 208d, 4),
+                    (block.X, block.Y, block.Width, block.Height, block.ZOrder));
+
+                await reopened.SetBlockFlowLayoutAsync(pageId, blockId);
+                await reopened.SaveAsync();
+            }
+
+            await using var finalReopen = await ContractSessionAdapter.OpenAsync(store, path);
+            var finalPage = finalReopen.Document.Sections[0].Pages.Single(item => item.Id == pageId);
+            var finalBlock = Assert.Single(finalPage.Blocks);
+            Assert.Equal(HavenRichBlockLayouts.Flow, finalBlock.Layout);
+            Assert.Equal((84d, 136d, 420d, 208d, 4),
+                (finalBlock.X, finalBlock.Y, finalBlock.Width, finalBlock.Height, finalBlock.ZOrder));
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
     public async Task Paragraph_split_and_merge_preserve_runs_undo_and_reopen()
     {
         var root = TempDirectory();
