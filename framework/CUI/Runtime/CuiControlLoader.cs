@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.Interactivity;
 using Avalonia.Input;
+using Avalonia.Controls.Presenters;
 using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
 using System.ComponentModel;
@@ -57,6 +58,8 @@ public sealed partial class CuiControlLoader : IDisposable
     private readonly Dictionary<Control, CuiActionInvocation> _actionInvocations = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<TextBox, EventHandler<KeyEventArgs>> _inputSubmitHandlers = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<TextBox> _pendingInputSubmits = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, ContextMenu> _ownedContextMenus = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, (EventHandler<AvaloniaPropertyChangedEventArgs> Opening, EventHandler<RoutedEventArgs> Closed)> _contextMenuFocusHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
@@ -318,6 +321,93 @@ public sealed partial class CuiControlLoader : IDisposable
         start.SetResult();
     }
 
+    private void OnInputSubmitKeyDown(TextBox input, KeyEventArgs args, Control? contextMenuOwner)
+    {
+        if (args.Handled || args.Key != Key.Enter || !input.IsEffectivelyEnabled || input.IsReadOnly ||
+            !input.IsEffectivelyVisible || HasInputPreedit(input)) return;
+
+        var modifiers = ToSubmitModifiers(args.KeyModifiers);
+        // Shift+Enter remains native editor input. Only plain Enter, Ctrl+Enter, or Alt+Enter
+        // are submit gestures; combined/Meta chords retain their ordinary TextBox handling.
+        if (modifiers.HasFlag(CuiInputSubmitModifiers.Shift) || modifiers.HasFlag(CuiInputSubmitModifiers.Meta) ||
+            modifiers.HasFlag(CuiInputSubmitModifiers.Control) && modifiers.HasFlag(CuiInputSubmitModifiers.Alt)) return;
+        if (modifiers.HasFlag(CuiInputSubmitModifiers.Control) && modifiers != CuiInputSubmitModifiers.Control) return;
+        if (modifiers.HasFlag(CuiInputSubmitModifiers.Alt) && modifiers != CuiInputSubmitModifiers.Alt) return;
+
+        if (!TryGetActionInvocation(input, out var invocation)) return;
+        var dispatcher = invocation.Owner ?? ScopedDispatcherFor(input) ?? _actionDispatcher;
+        if (dispatcher is null) return;
+        if (contextMenuOwner is not null && (!contextMenuOwner.IsEffectivelyEnabled ||
+            !_ownedContextMenus.TryGetValue(contextMenuOwner, out var ownedMenu) ||
+            !ReferenceEquals(contextMenuOwner.ContextMenu, ownedMenu))) return;
+
+        lock (_actionTasksGate)
+        {
+            if (_disposed || _admissionFailureTask is not null || !_pendingInputSubmits.Add(input)) return;
+        }
+
+        // Mark only an accepted gesture handled. The named action receives the actual input and
+        // unmodified Enter key identity, so its owner can apply the user's current submit policy.
+        args.Handled = true;
+        var request = new CuiInputSubmitRequest(input, args.Key, modifiers);
+        var start = new TaskCompletionSource();
+        lock (_actionTasksGate)
+        {
+            if (_disposed || _admissionFailureTask is not null)
+            {
+                _pendingInputSubmits.Remove(input);
+                return;
+            }
+            _pendingActionTasks.RemoveWhere(static task => task.IsCompletedSuccessfully);
+            var actual = _pendingActionTasks.Count >= MaximumRetainedActionTasks
+                ? RejectInputSubmitAsync(start.Task, input)
+                : DispatchInputSubmitAsync(start.Task, input, dispatcher, invocation, request);
+            _pendingActionTasks.Add(actual);
+        }
+        start.SetResult();
+    }
+
+    private async Task DispatchInputSubmitAsync(Task start, TextBox input, ICuiActionDispatcher dispatcher,
+        CuiActionInvocation invocation, CuiInputSubmitRequest request)
+    {
+        try
+        {
+            await start;
+            if (!IsActionOriginCurrent(_committedActionFrame, input, frameOwned: true) ||
+                !input.IsEffectivelyEnabled || input.IsReadOnly || !input.IsEffectivelyVisible) return;
+            await DispatchActionAsync(Task.CompletedTask, input, dispatcher, invocation with
+            {
+                Parameter = request,
+                ParameterContext = null,
+                LiveParameter = null,
+                FrameOwned = true
+            });
+        }
+        finally
+        {
+            lock (_actionTasksGate) _pendingInputSubmits.Remove(input);
+        }
+    }
+
+    private async Task RejectInputSubmitAsync(Task start, TextBox input)
+    {
+        try { await RejectActionDispatchAsync(start, input); }
+        finally { lock (_actionTasksGate) _pendingInputSubmits.Remove(input); }
+    }
+
+    private static CuiInputSubmitModifiers ToSubmitModifiers(KeyModifiers value)
+    {
+        var result = CuiInputSubmitModifiers.None;
+        if (value.HasFlag(KeyModifiers.Shift)) result |= CuiInputSubmitModifiers.Shift;
+        if (value.HasFlag(KeyModifiers.Control)) result |= CuiInputSubmitModifiers.Control;
+        if (value.HasFlag(KeyModifiers.Alt)) result |= CuiInputSubmitModifiers.Alt;
+        if (value.HasFlag(KeyModifiers.Meta)) result |= CuiInputSubmitModifiers.Meta;
+        return result;
+    }
+
+    private static bool HasInputPreedit(TextBox input) =>
+        input.GetVisualDescendants().OfType<TextPresenter>().Any(presenter => !string.IsNullOrEmpty(presenter.PreeditText));
+
     public void Dispose()
     {
         var start = new TaskCompletionSource();
@@ -354,6 +444,9 @@ public sealed partial class CuiControlLoader : IDisposable
             _repeats.Clear();
             foreach (var (control, handler) in _actionHandlers.ToArray()) Attempt(() => UnwireAction(control, handler));
             _actionHandlers.Clear();
+            foreach (var (input, handler) in _inputSubmitHandlers.ToArray()) Attempt(() => UnwireInputSubmit(input, handler));
+            _inputSubmitHandlers.Clear();
+            _pendingInputSubmits.Clear();
             // Close input/action admission FIRST (unwire actions, clear gestures). Owned physical close
             // admission stays alive because each portal holds its own publisher lease; native close
             // receipts published during CloseOwnedContextMenu/DetachPresentation are then joined by
@@ -1173,6 +1266,17 @@ public sealed partial class CuiControlLoader : IDisposable
             // joins the SAME ObserveActionDispatch admission/ledger pipeline as any authored action.
             WireFloatingCloseGesture((CuiContainerControl)control, contextMenuOwner);
         }
+        else if (control is TextBox submitInput && !_wiredActions.Contains(control)
+            && TryGetActionInvocation(control, out var submitInvocation)
+            && _authoredControls.TryGetValue(control, out var authoredInput)
+            && authoredInput.Properties.ContainsKey("SubmitAction")
+            && (_actionDispatcher is not null || submitInvocation.Owner is not null || ScopedDispatcherFor(control) is not null))
+        {
+            EventHandler<KeyEventArgs> handler = (_, args) => OnInputSubmitKeyDown(submitInput, args, contextMenuOwner);
+            submitInput.AddHandler(InputElement.KeyDownEvent, handler, RoutingStrategies.Tunnel);
+            _inputSubmitHandlers[submitInput] = handler;
+            _wiredActions.Add(control);
+        }
         else if (control is Button or MenuItem && !_wiredActions.Contains(control)
             && TryGetActionInvocation(control, out var actionInvocation)
             && (_actionDispatcher is not null
@@ -1226,6 +1330,9 @@ public sealed partial class CuiControlLoader : IDisposable
     {
         foreach (var (control, handler) in _actionHandlers) UnwireAction(control, handler);
         _actionHandlers.Clear();
+        foreach (var (input, handler) in _inputSubmitHandlers) UnwireInputSubmit(input, handler);
+        _inputSubmitHandlers.Clear();
+        _pendingInputSubmits.Clear();
         ClearFloatingCloseGestures();
         _wiredActions.Clear();
     }
@@ -1235,6 +1342,9 @@ public sealed partial class CuiControlLoader : IDisposable
         if (control is Button button) button.Click -= handler;
         else if (control is MenuItem item) item.Click -= handler;
     }
+
+    private static void UnwireInputSubmit(TextBox input, EventHandler<KeyEventArgs> handler) =>
+        input.RemoveHandler(InputElement.KeyDownEvent, handler);
 
     private void CloseOwnedContextMenu(Control owner)
     {
@@ -1811,6 +1921,9 @@ public sealed partial class CuiControlLoader : IDisposable
         {
             RetireFloatingCloseGesture(control);
             _wiredActions.Remove(control);
+            if (control is TextBox input && _inputSubmitHandlers.Remove(input, out var submitHandler))
+                UnwireInputSubmit(input, submitHandler);
+            if (control is TextBox pendingInput) _pendingInputSubmits.Remove(pendingInput);
             _actionInvocations.Remove(control);
             if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
             _observedBindings.Remove(control);
@@ -2372,9 +2485,9 @@ public sealed partial class CuiControlLoader : IDisposable
             // Generic framework directives (compound focus, embedded input, local
             // toggle, backdrop ownership) are behaviours, not native properties.
             var normalizedDirective = NormalizeProperty(propName);
-            if (normalizedDirective is "compoundfocus" or "embeddedinput" or "localtoggle" or "ownsbackdrop")
+            if (normalizedDirective is "compoundfocus" or "embeddedinput" or "localtoggle" or "ownsbackdrop" or "submitaction")
             {
-                ApplyDirective(control, normalizedDirective, value, value.Span);
+                if (normalizedDirective != "submitaction") ApplyDirective(control, normalizedDirective, value, value.Span);
                 continue;
             }
 
@@ -3527,6 +3640,36 @@ public sealed partial class CuiControlLoader : IDisposable
 
     private void ApplyActionTag(Control control, CuiComponent component)
     {
+        var submitRoute = component.Properties.FirstOrDefault(pair => pair.Key.Equals("SubmitAction", StringComparison.OrdinalIgnoreCase));
+        if (submitRoute.Value is not null)
+        {
+            if (control is not TextBox input || !string.Equals(
+                    component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value is CuiLiteralValue type
+                        ? type.Value : "Text", "Text", StringComparison.OrdinalIgnoreCase))
+                throw new CuiRuntimeLoadException(new("CUIR080", CuiDiagnosticSeverity.Error,
+                    "SubmitAction requires a text Input.", submitRoute.Value.Span));
+            if (component.Actions.Count > 0 || component.Children.Any(CuiActionEventContract.IsActionEvent))
+                throw new CuiRuntimeLoadException(new("CUIR080", CuiDiagnosticSeverity.Error,
+                    "SubmitAction is the only action route supported by a text Input.", submitRoute.Value.Span));
+            if (submitRoute.Value is not CuiLiteralValue route || string.IsNullOrWhiteSpace(route.Value) ||
+                !_documentActions.TryGetValue(route.Value, out var submitDefinition))
+                throw new CuiRuntimeLoadException(new("CUIR080", CuiDiagnosticSeverity.Error,
+                    "SubmitAction must name a declared CUI Action.", submitRoute.Value.Span));
+            if (submitDefinition.Parameter is not CuiBindingValue { Path: var eventPath } ||
+                !eventPath.Equals("Event", StringComparison.OrdinalIgnoreCase) ||
+                ((CuiBindingValue)submitDefinition.Parameter).Mode != CuiBindingMode.OneWay ||
+                string.IsNullOrWhiteSpace(submitDefinition.Command) ||
+                submitDefinition.LocalTarget is not null || (submitDefinition.Sets?.Count ?? 0) > 0)
+                throw new CuiRuntimeLoadException(new("CUIR080", CuiDiagnosticSeverity.Error,
+                    "A SubmitAction must be a command Action whose parameter is {Binding Event}.", submitRoute.Value.Span));
+            input.Tag = route.Value;
+            _actionInvocations[control] = new CuiActionInvocation(submitDefinition.Command, null, _bindingContext,
+                submitDefinition.Parameter as CuiBindingValue, OriginOnly: true,
+                _actionDispatcher as CuiQueryViewport, submitDefinition.Sets ?? Array.Empty<CuiSetDirective>(),
+                submitDefinition.ResultTarget);
+            return;
+        }
+
         var ownedEvent = CuiActionEventContract.OwnedAction(component);
         if (ownedEvent is not null && CuiActionEventContract.HasCompetingActionRoutes(component))
             throw new CuiRuntimeLoadException(new("CUIE004", CuiDiagnosticSeverity.Error,

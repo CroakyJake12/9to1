@@ -390,7 +390,7 @@ public sealed class CuiControlRegistry
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var input = common.Concat(new[]
         {
-            "Type", "Text", "Value", "Checked", "IsChecked", "PlaceholderText", "AcceptsReturn", "Foreground",
+            "Type", "Text", "Value", "Checked", "IsChecked", "PlaceholderText", "AcceptsReturn", "SubmitAction", "Foreground",
             "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest", "EmbeddedInput", "DisplayValue", "FormattedText", "VerticalContentAlignment"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var content = common.Concat(new[]
@@ -452,6 +452,7 @@ public sealed class CuiControlRegistry
             ("FocusRequested", "boolean", typeof(bool), true), ("SelectOnFocusRequest", "boolean", typeof(bool), true),
             ("DisplayValue", "text", typeof(string), false),
             ("FormattedText", "formatted-text", typeof(CuiFormattedText), true),
+            ("SubmitAction", "symbol", typeof(string), false),
             ("DefaultAction", "boolean", typeof(bool), true), ("CancelAction", "boolean", typeof(bool), true),
             ("TabIndex", "integer", typeof(int), true), ("AccessibleName", "text", typeof(string), true),
             ("AccessibleDescription", "text", typeof(string), true), ("Role", "symbol", typeof(string), true),

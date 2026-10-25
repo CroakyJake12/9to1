@@ -156,6 +156,7 @@ public sealed class CuiCompiler
         CuiDefinitionDependencies.Validate(document, diagnostics);
         foreach (var diagnostic in CuiActionEventContract.Validate(document))
             diagnostics.Error(diagnostic.Code, diagnostic.Message, diagnostic.Span);
+        ValidateInputSubmitActions(document, diagnostics);
         ValidateLocalState(document, diagnostics);
         ValidateOrchestration(document, diagnostics);
 
@@ -420,6 +421,52 @@ public sealed class CuiCompiler
                         $"Effect '{effect.Name}' condition path '{path}' does not reference a declared commandstate result variable.",
                         binding.Span);
             }
+        }
+    }
+
+    private static void ValidateInputSubmitActions(CuiDocument document, CuiDiagnosticBag diagnostics)
+    {
+        IEnumerable<CuiComponent> Components() => AllComponents(document.Components)
+            .Concat(document.Templates.Values.SelectMany(template => AllComponents(template.Content)));
+
+        foreach (var component in Components())
+        {
+            var route = component.Properties.FirstOrDefault(pair => pair.Key.Equals("SubmitAction", StringComparison.OrdinalIgnoreCase));
+            if (route.Value is null) continue;
+            if (!component.Type.Equals("Input", StringComparison.OrdinalIgnoreCase))
+            {
+                diagnostics.Error("CUIC047", "SubmitAction is supported only on a text Input.", route.Value.Span);
+                continue;
+            }
+
+            if (component.Actions.Count > 0 || component.Children.Any(CuiActionEventContract.IsActionEvent))
+            {
+                diagnostics.Error("CUIC051", "SubmitAction is the only action route supported by a text Input.", route.Value.Span);
+                continue;
+            }
+
+            var inputType = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value;
+            if (inputType is not null &&
+                (inputType is not CuiLiteralValue namedType || !namedType.Value.Equals("Text", StringComparison.OrdinalIgnoreCase)))
+            {
+                diagnostics.Error("CUIC047", "SubmitAction requires Input Type=\"Text\".", route.Value.Span);
+                continue;
+            }
+
+            if (route.Value is not CuiLiteralValue { Value.Length: > 0 } reference)
+            {
+                diagnostics.Error("CUIC048", "SubmitAction must name a declared CUI Action.", route.Value.Span);
+                continue;
+            }
+            if (!document.Actions.TryGetValue(reference.Value, out var action))
+            {
+                diagnostics.Error("CUIC049", $"SubmitAction references undeclared Action '{reference.Value}'.", route.Value.Span);
+                continue;
+            }
+            if (action.Parameter is not CuiBindingValue binding || !binding.Path.Equals("Event", StringComparison.OrdinalIgnoreCase) ||
+                binding.Mode != CuiBindingMode.OneWay ||
+                string.IsNullOrWhiteSpace(action.Command) || action.LocalTarget is not null || (action.Sets?.Count ?? 0) > 0)
+                diagnostics.Error("CUIC050", "A SubmitAction must reference a command Action whose parameter is {Binding Event}.", route.Value.Span);
         }
     }
 
