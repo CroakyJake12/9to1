@@ -461,9 +461,7 @@ public sealed class BoardsEditorTests
         Assert.True(Array.IndexOf(boardIdentityNames, "BoardTitleBox") < Array.IndexOf(boardIdentityNames, "SaveState"));
         var layoutToggle = components.Single(component => component.Name == "LayoutModeToggle");
         Assert.True(layoutToggle.Properties.TryGetValue("Checked", out var layoutChecked)
-            && layoutChecked is CuiBindingValue { Path: "IsFreeLayout" });
-        Assert.True(File.ReadAllText(path).Contains(
-            "Checked=\"{Binding IsFreeLayout, mode=TwoWay}\"", StringComparison.Ordinal));
+            && layoutChecked is CuiBindingValue { Path: "IsFreeLayout", Mode: CakeOS.Cui.Language.CuiBindingMode.TwoWay });
         Assert.True(layoutToggle.Properties.TryGetValue("Interactive", out var layoutInteractive)
             && layoutInteractive is CuiBindingValue { Path: "CanChangeLayoutMode" });
         var layoutLabel = components.Single(component => component.Name == "LayoutModeLabel");
