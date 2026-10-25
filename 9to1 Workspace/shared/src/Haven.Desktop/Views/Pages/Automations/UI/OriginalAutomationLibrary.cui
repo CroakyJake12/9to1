@@ -8,6 +8,7 @@
     <Action name="SelectDraftGraphPort" command="select-graph-port" parameter="{Binding draftPort.Target}" />
     <Action name="DeleteDraftGraphConnection" command="disconnect-graph-link" parameter="{Binding draftConnection.Target}" />
     <Action name="FollowSavedGraphConnection" command="graph-node" parameter="{Binding graphConnection.Target}" />
+    <Action name="RecoverPublishedAutomationGraph" command="recover-graph-publication" />
   </Actions>
   <Page id="saved-automation-library" AccessibleName="Saved automation library">
     <Container Type="Vertical Stack" Margin="24" VerticalScrolling="True" CellGap="16">
@@ -51,6 +52,10 @@
         <Text Text="{Binding SelectedState}" TextWrapping="Wrap" />
         <Text Text="{Binding SelectedSchedule}" TextWrapping="Wrap" />
         <Text Text="{Binding Instruction}" TextWrapping="Wrap" />
+        <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding HasGraphPublicationRecovery}">
+          <Text id="automation-library-graph-recovery-status" Text="{Binding GraphPublicationRecoveryStatus}" TextWrapping="Wrap" AccessibleName="Graph publication recovery status" />
+          <Button id="automation-library-recover-published-graph" action="RecoverPublishedAutomationGraph" Interactive="{Binding CanRecoverGraphPublication}">Review binding recovery for published graph</Button>
+        </Container>
         <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasRunHistorySource}">
           <Text Text="Saved run history" FontSize="20" FontWeight="SemiBold" />
           <Button id="automation-library-refresh-runs" action="refresh-runs" Interactive="{Binding CanRefreshRuns}">Refresh run history</Button>

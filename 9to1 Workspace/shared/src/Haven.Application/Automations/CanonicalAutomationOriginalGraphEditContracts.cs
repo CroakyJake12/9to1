@@ -15,6 +15,8 @@ public interface ICanonicalAutomationOriginalSavedGraphRead
     ResourceStoreIdentity OriginalStoreIdentity { get; }
     AutomationDefinition OriginalDefinition { get; }
     string OriginalCreationOriginSha256 { get; }
+    /// <summary>Hash of the exact protected definition/descriptor snapshot used by the original Home graph review.</summary>
+    string OriginalSnapshotSha256 { get; }
 }
 
 /// <summary>Private local draft session over the actual saved graph. Local revision is an
@@ -80,4 +82,30 @@ public interface ICanonicalAutomationOriginalGraphPublicationSource : ICanonical
         ICanonicalAutomationOriginalGraphEditSession sameSession, long expectedLocalRevision, GraphPublicationKind kind,
         Action<Action> scope, Action<Task> retain, CancellationToken token);
     bool IsIssuedOriginalGraphPublicationObservation(ICanonicalAutomationOriginalGraphPublicationObservation sameObservation);
+}
+
+/// <summary>Read-only metadata for a durable Home publication whose separate
+/// Automation definition binding did not complete. The instance is issued by
+/// the canonical write owner; its public fields do not supply receipt authority.</summary>
+public interface ICanonicalAutomationOriginalGraphPublicationRecovery
+{
+    Guid AutomationId { get; }
+    Guid GraphId { get; }
+    GraphPublicationKind Kind { get; }
+    long ExpectedGraphRevision { get; }
+    long PublishedGraphRevision { get; }
+    long? PublishedActiveRevision { get; }
+    GraphDocument PublishedGraph { get; }
+}
+
+public interface ICanonicalAutomationOriginalGraphPublicationRecoverySource : ICanonicalAutomationOriginalGraphPublicationSource
+{
+    bool IsIssuedOriginalGraphPublicationRecovery(ICanonicalAutomationOriginalGraphPublicationRecovery sameRecovery);
+    Task<ICanonicalAutomationOriginalGraphPublicationRecovery?> ReadOriginalGraphPublicationRecoveryWithinSourceAsync(
+        ICanonicalAutomationLibraryOriginalObservation sameObservation, AutomationOwnerRead<AutomationDefinition> sameRow,
+        Action<Action> scope, Action<Task> retain, CancellationToken token);
+    Task<ICanonicalAutomationDefinitionOriginalChangeAcknowledgment> RecoverOriginalGraphPublicationWithinSourceAsync(
+        ICanonicalAutomationLibraryOriginalObservation sameObservation, AutomationOwnerRead<AutomationDefinition> sameRow,
+        ICanonicalAutomationOriginalGraphPublicationRecovery sameRecovery, Action<Action> scope, Action<Task> retain,
+        CancellationToken token);
 }

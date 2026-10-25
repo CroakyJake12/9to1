@@ -132,16 +132,47 @@ public sealed partial class CanonicalProjectContextStoreReadOwnerTests
             Assert.Equal(before.Row.RetainedProtectedDescriptors.Count, intermediate.Row.RetainedProtectedDescriptors.Count);
             foreach (var pair in before.Row.RetainedProtectedDescriptors) Assert.Equal(pair.Value, intermediate.Row.RetainedProtectedDescriptors[pair.Key]);
             Assert.Equal(before.Row.Value.GraphBinding, intermediate.Row.Value.GraphBinding);
-            Assert.True((await rig.Keep(graph.Permissions.DecideAsync(bindingReview.RequestId, HomeApprovalChoice.Accept,
+            await Assert.ThrowsAsync<InvalidDataException>(() => rig.Keep(graph.Writer.ReadOriginalCreationRecoveryWithinSourceAsync(
+                intermediate.Page, rig.Scope, rig.Retain, rig.Token)));
+            Assert.True((await rig.Keep(graph.Permissions.DecideAsync(bindingReview.RequestId, HomeApprovalChoice.Decline,
                 cancellationToken: rig.Token))).Succeeded);
-            var done = await completion;
-            Assert.True(retry.IsIssuedOriginalCompletion(done));
-            Assert.Equal(CanonicalAutomationGraphPublicationCompletionKind.SavedDisabled, done.Kind);
+            var unbound = await completion;
+            Assert.True(retry.IsIssuedOriginalCompletion(unbound));
+            Assert.Equal(CanonicalAutomationGraphPublicationCompletionKind.GraphPublishedBindingPending, unbound.Kind);
             await rig.Keep(retry.CloseAndDrainOriginalAsync());
+
+            // Simulate a cold owner after Home publication/audit completed but
+            // the independently reviewed SQL binding was declined. Recovery
+            // reads the durable receipt and creates a fresh binding request;
+            // it never replays the graph publication.
+            await rig.Keep(graph.Writer.CloseAndDrainOriginalAsync());
+            await rig.Keep(graph.Writes.CloseAndDrainOriginalAsync());
+            graph = new ActualSavedGraphPublisher(rig, repository);
+            var cold = await graph.Select(reservation.AutomationId);
+            var recovery = await rig.Keep(graph.Writer.ReadOriginalGraphPublicationRecoveryWithinSourceAsync(
+                cold.Page, cold.Row, rig.Scope, rig.Retain, rig.Token));
+            Assert.NotNull(recovery);
+            Assert.Equal(reservation.AutomationId, recovery!.AutomationId);
+            Assert.Equal(reservation.GraphId, recovery.GraphId);
+            Assert.Equal(GraphPublicationKind.SaveDraft, recovery.Kind);
+            Assert.Equal(2, recovery.PublishedGraphRevision);
+            var recovering = graph.Writer.RecoverOriginalGraphPublicationWithinSourceAsync(cold.Page, cold.Row,
+                recovery, rig.Scope, rig.Retain, rig.Token);
+            var recoveryReview = await graph.Wait(recovering, HomeCanonicalAutomationDefinitionWriteSource.BindGraphDraftAction);
+            Assert.NotEqual(bindingReview.RequestId, recoveryReview.RequestId);
+            Assert.True((await rig.Keep(graph.Permissions.DecideAsync(recoveryReview.RequestId, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token))).Succeeded);
+            var recovered = await rig.Keep(recovering);
+            Assert.Equal(new AutomationDefinitionGraphBinding(reservation.GraphId, 2, null), recovered.Definition.GraphBinding);
+            Assert.False(recovered.Definition.IsEnabled); Assert.Null(recovered.Definition.NextRunAt);
+
             var saved = await graph.Select(reservation.AutomationId);
             Assert.Equal(reservation.AutomationId, saved.Row.Value.Id);
             Assert.Equal(new AutomationDefinitionGraphBinding(reservation.GraphId, 2, null), saved.Row.Value.GraphBinding);
             Assert.False(saved.Row.Value.IsEnabled); Assert.Null(saved.Row.Value.NextRunAt);
+            var linkedGraph = await rig.Keep(graph.Writer.ReadOriginalCanonicalGraphWithinSourceAsync(
+                saved.Page, saved.Row, rig.Scope, rig.Retain, rig.Token));
+            Assert.Equal(recovery.PublishedGraph, linkedGraph);
             foreach (var pair in before.Row.RetainedProtectedDescriptors.Where(pair => pair.Key is not ("instruction" or "updated_at")))
                 Assert.Equal(pair.Value, saved.Row.RetainedProtectedDescriptors[pair.Key]);
             var reopened = await rig.Keep(graph.Writer.ReadOriginalSavedGraphWithinSourceAsync(saved.Page, saved.Row,

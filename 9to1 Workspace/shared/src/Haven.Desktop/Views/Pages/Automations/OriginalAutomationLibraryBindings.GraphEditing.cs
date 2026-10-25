@@ -12,6 +12,18 @@ namespace Haven.Desktop.Views.Pages.Automations;
 /// protected workflow and no local result is represented as a saved revision.</summary>
 internal sealed partial class OriginalAutomationLibraryBindings
 {
+    private ICanonicalAutomationOriginalGraphPublicationRecoverySource? _graphRecoverySource =>
+        _writer as ICanonicalAutomationOriginalGraphPublicationRecoverySource;
+    private ICanonicalAutomationOriginalGraphPublicationRecovery? _graphPublicationRecovery;
+    private RowTarget? _graphPublicationRecoveryRow;
+    private string _graphPublicationRecoveryStatus = "";
+    private bool CanRecoverGraphPublication => !_retiring && !_busy && HasCurrentGraphRecovery &&
+        _graphRecoverySource?.IsIssuedOriginalGraphPublicationRecovery(_graphPublicationRecovery!) == true;
+    private bool HasCurrentGraphRecovery => _graphPublicationRecovery is { } recovery &&
+        _graphPublicationRecoveryRow is { } row && ReferenceEquals(_selectedTarget, row) && row.Epoch == _epoch &&
+        _issued.Contains(row) && recovery.AutomationId == row.Row.Value.Id;
+    private void ClearGraphRecovery()
+    { _graphPublicationRecovery = null; _graphPublicationRecoveryRow = null; _graphPublicationRecoveryStatus = ""; }
     private const int DraftGraphPageSize = 24;
     private ICanonicalAutomationOriginalGraphEditSource? _graphEdits => _writer as ICanonicalAutomationOriginalGraphEditSource;
     private ICanonicalAutomationOriginalGraphEditSession? _graphEditSession;
@@ -41,6 +53,9 @@ internal sealed partial class OriginalAutomationLibraryBindings
         "CanSaveGraphDraft" => GraphEditingActionAvailable("save-graph-draft"),
         "CanActivateGraphDraft" => GraphEditingActionAvailable("activate-graph-draft"),
         "GraphPublicationStatus" => _graphPublicationStatus,
+        "HasGraphPublicationRecovery" => HasCurrentGraphRecovery,
+        "CanRecoverGraphPublication" => CanRecoverGraphPublication,
+        "GraphPublicationRecoveryStatus" => _graphPublicationRecoveryStatus,
         "HasGraphEditor" => _graphEditSession is not null,
         "GraphEditorStatus" => _graphEditStatus,
         "GraphEditorIdentity" => _graphEditDocument is { } document
@@ -347,12 +362,19 @@ internal sealed partial class OriginalAutomationLibraryBindings
                     if (!_work.IsRetiring && epoch == _epoch)
                     {
                         _graphPublicationStatus = completed.Message;
-                        if (completed.Kind is CanonicalAutomationGraphPublicationCompletionKind.SavedDisabled or CanonicalAutomationGraphPublicationCompletionKind.ActiveGraphDisabled)
+                        if (completed.Kind is CanonicalAutomationGraphPublicationCompletionKind.SavedDisabled or
+                            CanonicalAutomationGraphPublicationCompletionKind.ActiveGraphDisabled or
+                            CanonicalAutomationGraphPublicationCompletionKind.GraphPublishedBindingPending)
                         {
-                            // Old SQL/library revisions are no longer selectable. A
-                            // fresh original READ is required before further edits.
+                            // The local editor and SQL/library selection are stale
+                            // after a durable Home publication, whether its binding
+                            // completed or needs a fresh recovery review. A fresh
+                            // original READ is required before further edits.
                             _epoch++; _issued.Clear(); _rows = []; _next = null; _currentPage = null; _creationRows = [];
-                            ClearSelection(); _status = "Graph publication completed. Refresh the library to open its current saved revision.";
+                            ClearSelection();
+                            _status = completed.Kind == CanonicalAutomationGraphPublicationCompletionKind.GraphPublishedBindingPending
+                                ? "The Home graph was published, but its Automation link still needs review. Refresh the library and reopen the Automation to recover the existing publication."
+                                : "Graph publication completed. Refresh the library to open its current saved revision.";
                         }
                         else if (completed.Kind == CanonicalAutomationGraphPublicationCompletionKind.DeclinedBeforeEffect)
                             _graphEditStatus = completed.Message + " Your local draft is preserved; submit this action again to request a fresh Home review.";
@@ -371,6 +393,81 @@ internal sealed partial class OriginalAutomationLibraryBindings
         catch
         {
             if (command.Driver is null) { lock (_gate) { _commands.Remove(command); _graphPublicationPresentations.Remove(retained); } _busy = false; }
+            throw;
+        }
+    }
+
+    private Task StartGraphPublicationRecovery(string action, object? parameter)
+    {
+        if (parameter is not null || action != "recover-graph-publication" || !CanRecoverGraphPublication ||
+            _graphRecoverySource is not { } source || _graphPublicationRecovery is not { } recovery ||
+            _graphPublicationRecoveryRow is not { } row)
+            throw new InvalidOperationException("Refresh the selected Automation and inspect its exact Home publication before recovery.");
+        var epoch = _epoch; var command = new Command(this);
+        lock (_gate)
+        {
+            _commands.RemoveAll(value => value.Driver?.IsCompletedSuccessfully == true && value.IsIndependentlyJoined);
+            if (_commands.Count >= 128) throw new InvalidOperationException("Retain current Automation recovery operations before starting another.");
+            _commands.Add(command);
+        }
+        _busy = true; _graphPublicationRecoveryStatus = "Waiting for a fresh Home review to bind the already-published graph. The graph will not be published again.";
+        try
+        {
+            return _work.RunAsync(async original =>
+            {
+                command.Bind(original);
+                try
+                {
+                    if (!_work.IsRetiring) Changed();
+                    var actor = await command.Read(() => _profiles!.GetCurrentAsync(command.Run, command.Retain, CancellationToken.None).AsTask())
+                        ?? throw new UnauthorizedAccessException("Your current Home profile is unavailable.");
+                    command.Run(() =>
+                    {
+                        DemandActualRow(row, actor);
+                        if (!source.IsIssuedOriginalGraphPublicationRecovery(recovery) ||
+                            recovery.AutomationId != row.Row.Value.Id || recovery.GraphId == Guid.Empty ||
+                            recovery.Kind == GraphPublicationKind.SaveDraft && recovery.PublishedGraphRevision <= recovery.ExpectedGraphRevision ||
+                            recovery.Kind == GraphPublicationKind.Activate && recovery.PublishedGraphRevision != recovery.ExpectedGraphRevision)
+                            throw new UnauthorizedAccessException("The exact current source-issued Home publication recovery is required.");
+                    });
+                    var acknowledgment = await command.Read(() => source.RecoverOriginalGraphPublicationWithinSourceAsync(
+                        row.Observation, row.Row, recovery, command.Run, command.Retain, CancellationToken.None));
+                    command.Run(() =>
+                    {
+                        var intent = acknowledgment.OriginalIntent;
+                        var expectedActive = recovery.Kind == GraphPublicationKind.Activate
+                            ? recovery.PublishedGraphRevision : recovery.PublishedActiveRevision;
+                        if (_writer?.IsIssuedOriginalChangeIntent(intent) != true || intent.Actor != actor ||
+                            intent.ChangeKind != (recovery.Kind == GraphPublicationKind.Activate
+                                ? CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled
+                                : CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled) ||
+                            intent.ProposedDefinition.Id != recovery.AutomationId ||
+                            intent.ProposedDefinition.GraphBinding != new AutomationDefinitionGraphBinding(
+                                recovery.GraphId, recovery.PublishedGraphRevision, expectedActive) ||
+                            acknowledgment.Definition.IsEnabled || acknowledgment.Definition.NextRunAt is not null)
+                            throw new UnauthorizedAccessException("The source did not return the same Home-reviewed disabled graph binding.");
+                    });
+                    await command.Join();
+                    if (!_work.IsRetiring && epoch == _epoch && ReferenceEquals(_selectedTarget, row))
+                    {
+                        ClearGraphRecovery();
+                        _epoch++; _issued.Clear(); _rows = []; _next = null; _currentPage = null; _creationRows = [];
+                        ClearSelection(); _graphPublicationRecoveryStatus = "The already-published Home graph is now linked to the same Automation. It remains disabled and unscheduled.";
+                        _status = "Graph publication recovery completed. Refresh the library to open its current saved revision.";
+                    }
+                }
+                catch (Exception cause)
+                {
+                    original.Retain(cause);
+                    if (!_work.IsRetiring) _graphPublicationRecoveryStatus = "Recovery needs inspection. The current Home receipt and saved definition were retained; the graph was not republished.";
+                    throw;
+                }
+                finally { try { await command.Join(); } finally { _busy = false; if (!_work.IsRetiring) Changed(); } }
+            }, actual => { command.Driver = actual; OriginalCommand = actual; });
+        }
+        catch
+        {
+            if (command.Driver is null) { lock (_gate) _commands.Remove(command); _busy = false; }
             throw;
         }
     }

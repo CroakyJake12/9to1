@@ -9,7 +9,7 @@ using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace Haven.Infrastructure;
 
-public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : ICanonicalAutomationOriginalGraphPublicationSource
+public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : ICanonicalAutomationOriginalGraphPublicationRecoverySource
 {
     private sealed class GraphReadOperation { internal Task? Driver; }
     private sealed class SavedGraphRead(CanonicalAutomationDefinitionOriginalWriteOwner owner, GraphReadOperation operation,
@@ -23,6 +23,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
         public AuthenticatedResourceActor Actor => Selection.Observation.Actor;
         public ResourceStoreIdentity OriginalStoreIdentity => Selection.Observation.OriginalStoreIdentity!;
         public string OriginalCreationOriginSha256 => OriginalSnapshot.Descriptor!.CreationOriginSha256!;
+        public string OriginalSnapshotSha256 => Hash(OriginalSnapshot);
         public AutomationDefinition OriginalDefinition => JsonSerializer.Deserialize<AutomationDefinition>(JsonSerializer.Serialize(Selection.Row.Value))!;
     }
     private sealed class SavedGraphSession(CanonicalAutomationDefinitionOriginalWriteOwner owner, SavedGraphRead read,
@@ -51,6 +52,110 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
     }
     private readonly ConditionalWeakTable<SavedGraphRead, GraphReadOperation> _savedGraphReads = new();
     private readonly ConditionalWeakTable<SavedGraphSession, SavedGraphSession> _savedGraphSessions = new();
+    private sealed class GraphPublicationRecovery(CanonicalAutomationDefinitionOriginalWriteOwner owner,
+        SavedGraphRead read, HomeGraphCreationAssociationSource.PublishedSavedObservation publication)
+        : ICanonicalAutomationOriginalGraphPublicationRecovery
+    {
+        internal readonly CanonicalAutomationDefinitionOriginalWriteOwner Owner = owner;
+        internal readonly SavedGraphRead Read = read;
+        internal readonly HomeGraphCreationAssociationSource.PublishedSavedObservation Publication = publication;
+        public Guid AutomationId => Read.Selection.Row.Value.Id;
+        public Guid GraphId => Publication.Binding.GraphId;
+        public GraphPublicationKind Kind => Publication.Receipt.Kind;
+        public long ExpectedGraphRevision => Publication.Receipt.ExpectedGraphRevision;
+        public long PublishedGraphRevision => Publication.Receipt.CommittedGraphRevision;
+        public long? PublishedActiveRevision => Publication.Binding.ActiveRevision;
+        public GraphDocument PublishedGraph => Publication.Graph;
+    }
+    private readonly ConditionalWeakTable<ICanonicalAutomationOriginalGraphPublicationRecovery, GraphPublicationRecovery>
+        _graphPublicationRecoveries = new();
+
+    public bool IsIssuedOriginalGraphPublicationRecovery(ICanonicalAutomationOriginalGraphPublicationRecovery value) =>
+        value is GraphPublicationRecovery actual && ReferenceEquals(actual.Owner, this) &&
+        _graphPublicationRecoveries.TryGetValue(value, out var issued) && ReferenceEquals(actual, issued) &&
+        IsIssuedOriginalSavedGraphRead(actual.Read) && _creationGraphs?.IsIssuedPublishedSavedObservation(actual.Publication) == true;
+
+    public Task<ICanonicalAutomationOriginalGraphPublicationRecovery?> ReadOriginalGraphPublicationRecoveryWithinSourceAsync(
+        ICanonicalAutomationLibraryOriginalObservation sameObservation, AutomationOwnerRead<AutomationDefinition> sameRow,
+        Action<Action> scope, Action<Task> retain, CancellationToken token)
+    {
+        var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
+        return Admit(source, () => _store.RetainOriginalReader<ICanonicalAutomationOriginalGraphPublicationRecovery?>(source, async () =>
+        {
+            var read = await source.Read(() => CaptureSavedGraphReadWithinSourceAsync(sameObservation, sameRow,
+                source.Run, source.Retain, token)).ConfigureAwait(false);
+            var publication = await source.Read(() => (_creationGraphs ??
+                throw new InvalidOperationException("The actual Home graph recovery source is unavailable."))
+                .CapturePublishedSavedRecoveryAsync(read, token)).ConfigureAwait(false);
+            if (publication is null)
+            {
+                await source.JoinAllAsync().ConfigureAwait(false);
+                return null;
+            }
+            var recovery = new GraphPublicationRecovery(this, read, publication);
+            await source.Read(() => RevalidateOriginalSavedGraphReadWithinSourceAsync(read,
+                source.Run, source.Retain, token)).ConfigureAwait(false);
+            if (!await source.Read(() => _creationGraphs!.IsPublishedSavedCurrentAsync(publication, token)).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("The same durable audited Home graph publication changed during recovery inspection.");
+            source.Run(() => _graphPublicationRecoveries.Add(recovery, recovery));
+            await source.JoinAllAsync().ConfigureAwait(false); return recovery;
+        }));
+    }
+
+    public Task<ICanonicalAutomationDefinitionOriginalChangeAcknowledgment> RecoverOriginalGraphPublicationWithinSourceAsync(
+        ICanonicalAutomationLibraryOriginalObservation sameObservation, AutomationOwnerRead<AutomationDefinition> sameRow,
+        ICanonicalAutomationOriginalGraphPublicationRecovery sameRecovery, Action<Action> scope, Action<Task> retain,
+        CancellationToken token)
+    {
+        if (!IsIssuedOriginalGraphPublicationRecovery(sameRecovery) || sameRecovery is not GraphPublicationRecovery recovery)
+            throw new UnauthorizedAccessException("Refresh the actual protected Home publication recovery observation.");
+        var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
+        return Admit(source, async () =>
+        {
+            var selection = source.Invoke(() => _library.ObserveOriginalWriteSelection(sameObservation, sameRow));
+            if (!ReferenceEquals(selection.Observation, recovery.Read.Selection.Observation) ||
+                selection.Observation.Actor != recovery.Read.Actor ||
+                selection.Observation.OriginalStoreIdentity != recovery.Read.OriginalStoreIdentity ||
+                selection.Row.Value.Id != recovery.AutomationId ||
+                AutomationDefinitionChange.ComputeRawRowSHA256(selection.Row.RetainedProtectedDescriptors) !=
+                    AutomationDefinitionChange.ComputeRawRowSHA256(recovery.Read.Selection.Row.RetainedProtectedDescriptors))
+                throw new UnauthorizedAccessException("Select the exact current Automation row used to inspect this durable Home publication.");
+            await source.Read(() => RevalidateOriginalSavedGraphReadWithinSourceAsync(recovery.Read,
+                source.Run, source.Retain, token)).ConfigureAwait(false);
+            if (!await source.Read(() => _creationGraphs!.IsPublishedSavedCurrentAsync(recovery.Publication, token)).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("The durable Home publication is no longer current; no binding review was started.");
+            var snapshot = await ReadSnapshotAsync(recovery.Read.Actor, recovery.Read.OriginalStoreIdentity,
+                recovery.AutomationId, RawText(recovery.Read.Selection.Row.RetainedProtectedDescriptors, "id"),
+                Guid.Empty, source, token).ConfigureAwait(false);
+            if (Hash(snapshot) != Hash(recovery.Read.OriginalSnapshot) || snapshot.Operation is not null)
+                throw new UnauthorizedAccessException("The complete original SQL row changed; refresh the Home publication and row before recovery.");
+            DemandDescriptor(snapshot, recovery.Read.Actor, recovery.Read.OriginalStoreIdentity, recovery.AutomationId);
+            DemandEditableSnapshot(snapshot);
+            var binding = recovery.Publication.Binding;
+            var reference = new CanonicalAutomationGraphReference(1, binding.GraphId, binding.DraftRevision, binding.ActiveRevision);
+            var proposed = recovery.Read.OriginalDefinition with
+            {
+                Instruction = CanonicalAutomationGraphReferenceCodec.Serialize(reference), GraphBinding = binding,
+                UpdatedAt = DateTimeOffset.UtcNow, IsEnabled = false, NextRunAt = null,
+                OperationalState = AutomationOperationalState.Disabled
+            };
+            var kind = recovery.Kind == GraphPublicationKind.SaveDraft
+                ? CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled
+                : CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled;
+            await source.JoinAllAsync().ConfigureAwait(false);
+            var intent = new Intent(this, recovery.Read.Selection, kind, Guid.NewGuid(), snapshot, proposed: proposed,
+                graphPublication: new(recovery.Publication));
+            source.Run(() => { _intents.Add(intent, intent); _creationGraphs.BindPublishedSavedIntent(intent, recovery.Publication); });
+            var acknowledgment = await source.Read(() => CommitOriginalChangeWithinSourceAsync(intent,
+                source.Run, source.Retain, token)).ConfigureAwait(false);
+            if (!_commits.TryGetValue(intent, out var commit) || commit.Atomic is not { } atomic ||
+                !IsOwnedOriginalChangeAcknowledgment(intent, acknowledgment, atomic) ||
+                !IsOwnedOriginalChangeNativeRelease(intent, atomic) ||
+                acknowledgment.Definition.GraphBinding != binding)
+                throw new UnauthorizedAccessException("A same-operation Home-reviewed SQL graph binding acknowledgment is required.");
+            await source.JoinAllAsync().ConfigureAwait(false); return acknowledgment;
+        });
+    }
     public bool SupportsOriginalSavedGraphEditing
     { get { lock (_gate) return !_retiring && _creationGraphs is not null && _creationSchemas is not null && CanonicalAutomationCoreNodes.IsRegistered(_creationSchemas); } }
 
@@ -434,6 +539,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             {
                 if (raw is null || !IsAcknowledgedOriginalChangeSourceRefusal(raw) ||
                     !source.AcknowledgeOriginalExternalPreEffectRefusal(raw, IsAcknowledgedOriginalChangeSourceRefusal)) throw;
+                if (!await source.Read(() => _creationGraphs.RetirePublishedReviewAsync(review)).ConfigureAwait(false))
+                    throw new InvalidOperationException("The completed graph publication review could not be retired after the separate binding review was declined.");
                 await source.JoinAllAsync().ConfigureAwait(false);
                 return new(CanonicalAutomationGraphPublicationCompletionKind.GraphPublishedBindingPending,
                     "Home published the graph but declined its separate saved-definition binding. The original publication is retained; it was not repeated.");

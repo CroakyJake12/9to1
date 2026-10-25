@@ -103,6 +103,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         "older" => !HasUnsubmittedEdits && _next is not null,
         "select" => !HasUnsubmittedEdits && _rows.Count != 0,
         "recover" or "disable" => !HasUnsubmittedEdits && _writer is not null && IsCurrentSelection,
+        "recover-graph-publication" => CanRecoverGraphPublication,
         "archive" => !HasUnsubmittedEdits && _writer?.SupportsOriginalArchiveRestore == true && IsCurrentSelection &&
             _selectedTarget!.Row.RetainedProtectedDescriptors.ContainsKey("archived_at") && _selectedTarget!.Row is { RequiresRecovery: false, Value: { IsEnabled: false, ArchivedAt: null } },
         "restore" => !HasUnsubmittedEdits && _writer?.SupportsOriginalArchiveRestore == true && IsCurrentSelection &&
@@ -115,6 +116,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (command is "save-graph-draft" or "activate-graph-draft") return new(StartGraphPublication(command, parameter));
+        if (command == "recover-graph-publication") return new(StartGraphPublicationRecovery(command, parameter));
         if (command is "open-graph-editor" or "add-graph-node" or "select-edit-node" or "select-graph-port" or
             "remove-graph-node" or "apply-graph-value" or "connect-graph-ports" or "disconnect-graph-link" or
             "undo-graph-edit" or "redo-graph-edit" or "draft-graph-back" or "draft-graph-next" or "discard-graph-edits")
@@ -173,19 +175,46 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
                             CancellationToken.None).AsTask());
                         if (current != actor) throw new UnauthorizedAccessException("Your Home profile changed while opening this saved automation.");
                         Haven.Application.NodeGraph.GraphDocument? canonical = null;
+                        ICanonicalAutomationOriginalGraphPublicationRecovery? graphRecovery = null;
+                        var graphRecoveryStatus = "";
                         if (CanonicalAutomationGraphReferenceCodec.IsReference(target.Row.Value.Instruction) && _creationSource is { } creationSource)
-                            canonical = await command.Read(() => creationSource.ReadOriginalCanonicalGraphWithinSourceAsync(target.Observation,
-                                target.Row, command.Run, command.Retain, CancellationToken.None));
+                        {
+                            try
+                            {
+                                canonical = await command.Read(() => creationSource.ReadOriginalCanonicalGraphWithinSourceAsync(target.Observation,
+                                    target.Row, command.Run, command.Retain, CancellationToken.None));
+                            }
+                            catch (Exception cause) when (cause is InvalidDataException or UnauthorizedAccessException)
+                            {
+                                if (_writer is ICanonicalAutomationOriginalGraphPublicationRecoverySource recoverySource)
+                                {
+                                    try
+                                    {
+                                        graphRecovery = await command.Read(() => recoverySource.ReadOriginalGraphPublicationRecoveryWithinSourceAsync(
+                                            target.Observation, target.Row, command.Run, command.Retain, CancellationToken.None));
+                                    }
+                                    catch (Exception recoveryCause) when (recoveryCause is InvalidDataException or UnauthorizedAccessException)
+                                    { graphRecoveryStatus = "The Home graph and Automation row need recovery inspection: " + recoveryCause.Message; }
+                                }
+                                if (graphRecovery is null && graphRecoveryStatus.Length == 0)
+                                    graphRecoveryStatus = "The current canonical Home graph could not be paired with this saved definition: " + cause.Message;
+                            }
+                        }
                         await command.Join();
                         if (!_work.IsRetiring && epoch == _epoch)
                         {
                             command.Run(() => DemandActualRow(target, actor));
                             var saved = target.Row.Value;
                             _selectedTarget = target; _selectedName = saved.Name; _instruction = saved.Instruction;
+                            _graphPublicationRecovery = graphRecovery; _graphPublicationRecoveryRow = graphRecovery is null ? null : target;
+                            _graphPublicationRecoveryStatus = graphRecovery is null ? graphRecoveryStatus :
+                                $"An audited Home {graphRecovery.Kind} publication is ready for a fresh Automation binding review.";
                             ClearRunHistory();
                             _selectedSchedule = saved.ScheduleKind + " · " + saved.ScheduleJson;
                             _selectedState = DescribeState(saved); _changeStatus = ""; LoadEditDraft(saved); LoadGraphInspection(target);
                             if (canonical is not null) LoadCanonicalGraphInspection(target, canonical);
+                            else if (graphRecovery is not null) LoadCanonicalGraphRecoveryInspection(target, graphRecovery);
+                            else if (graphRecoveryStatus.Length != 0) _graphStatus = graphRecoveryStatus;
                             _review = target.Row.RequiresRecovery
                                 ? "Recover legacy settings with Home review before saving edits. Each edit is checked against the current protected saved row."
                                 : "Saving edits requires its own Home review and keeps this automation disabled.";
@@ -257,7 +286,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
     private static string DescribeState(AutomationDefinition definition) => definition.ArchivedAt is not null
         ? "Archived" : definition.IsEnabled ? "Enabled in saved settings" : "Disabled in saved settings";
     private void ClearSelection()
-    { _selectedTarget = null; _selectedName = "Select a saved automation"; _instruction = _selectedSchedule = _selectedState = _review = ""; ClearEditDraft(); ClearGraphInspection(); ClearGraphEditor(); ClearRunHistory(); }
+    { _selectedTarget = null; _selectedName = "Select a saved automation"; _instruction = _selectedSchedule = _selectedState = _review = ""; ClearEditDraft(); ClearGraphRecovery(); ClearGraphInspection(); ClearGraphEditor(); ClearRunHistory(); }
     private void Changed() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
     { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null)); return true; });
     public bool TryGetItemValue(object item, string path, out object? value)

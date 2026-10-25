@@ -221,18 +221,38 @@ public sealed class HomeGraphCreationAssociationSource
     {
         internal readonly HomeGraphCreationAssociationSource Issuer;
         internal readonly SavedObservation Before;
-        internal readonly HomeGraphPublicationObservation Publication;
+        internal readonly HomeGraphPublicationObservation? Publication;
         internal readonly HomeCoreStateRecord Record;
         internal readonly byte[] Fingerprint;
         internal readonly OwnedGraphDefinition Stored;
+        internal readonly IReadOnlyList<ResourceScope> ReviewScopes;
+        internal readonly string ArgumentsDigest;
+        private readonly SemaphoreSlim _recoveryLifetime = new(1, 1);
         internal PublishedSavedObservation(HomeGraphCreationAssociationSource issuer, SavedObservation before,
-            HomeGraphPublicationObservation publication, HomeCoreStateRecord record, OwnedGraphDefinition stored)
+            HomeGraphPublicationObservation? publication, HomeCoreStateRecord record, OwnedGraphDefinition stored,
+            IReadOnlyList<ResourceScope> reviewScopes, string argumentsDigest)
         { Issuer = issuer; Before = before; Publication = publication; Record = record; Stored = stored;
+          ReviewScopes = reviewScopes; ArgumentsDigest = argumentsDigest;
           Fingerprint = SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(record)); }
         public AuthenticatedResourceActor Actor => Before.Actor;
         public Haven.Core.AutomationDefinitionGraphBinding Binding => new(Stored.Draft.GraphId, Stored.Draft.Revision, Stored.Active?.Revision);
-        public GraphPublicationReceipt Receipt => Publication.Receipt;
+        public GraphDocument Graph => JsonSerializer.Deserialize<GraphDocument>(JsonSerializer.Serialize(Stored.Draft))!;
+        public GraphPublicationReceipt Receipt => Publication?.Receipt ?? Stored.LastPublication!;
         public string FingerprintSha256 => Convert.ToHexString(Fingerprint);
+        internal IAsyncDisposable? TryAcquireRecoveryLifetime()
+        {
+            if (!_recoveryLifetime.Wait(0)) return null;
+            return new RecoveryLifetime(_recoveryLifetime);
+        }
+        private sealed class RecoveryLifetime(SemaphoreSlim gate) : IAsyncDisposable
+        {
+            private int _disposed;
+            public ValueTask DisposeAsync()
+            {
+                if (Interlocked.Exchange(ref _disposed, 1) == 0) gate.Release();
+                return ValueTask.CompletedTask;
+            }
+        }
     }
     private readonly ConditionalWeakTable<PublishedSavedObservation, PublishedSavedObservation> _savedPublications = new();
     private readonly ConditionalWeakTable<ICanonicalAutomationDefinitionOriginalChangeIntent, PublishedSavedObservation> _savedPublicationIntents = new();
@@ -269,15 +289,106 @@ public sealed class HomeGraphCreationAssociationSource
                 stored.Active is null || stored.Active.Revision != stored.Draft.Revision ||
                 JsonSerializer.Serialize(stored.Active with { State = GraphRevisionState.Draft }) != JsonSerializer.Serialize(stored.Draft)))
             throw new UnauthorizedAccessException("The actual published graph changed owner, profile, origin, revisions or proposed contents.");
-        var result = new PublishedSavedObservation(this, before, samePublication, record, stored);
+        var scopes = exactIntent.Scopes;
+        var result = new PublishedSavedObservation(this, before, samePublication, record, stored, scopes,
+            samePublication.Receipt.ArgumentsDigest);
         if (!await IsPublishedSavedRecordCurrentAsync(result, token).ConfigureAwait(false))
             throw new UnauthorizedAccessException("The actual Home publication changed while it was observed.");
+        _savedPublications.Add(result, result); return result;
+    }
+
+    public async Task<PublishedSavedObservation?> CapturePublishedSavedRecoveryAsync(
+        ICanonicalAutomationOriginalSavedGraphRead sameRead, CancellationToken token)
+    {
+        if (_creator is not ICanonicalAutomationOriginalGraphEditSource source || !source.IsIssuedOriginalSavedGraphRead(sameRead))
+            throw new UnauthorizedAccessException("The SAME current protected Automation definition read is required.");
+        await source.RevalidateOriginalSavedGraphReadWithinSourceAsync(sameRead, body => body(), _ => { }, token).ConfigureAwait(false);
+        var definition = sameRead.OriginalDefinition;
+        if (definition.GraphBinding is not { } priorBinding ||
+            !CanonicalAutomationGraphReferenceCodec.TryDeserialize(definition.Instruction, out var reference) ||
+            reference.Binding != priorBinding)
+            throw new InvalidDataException("The protected Automation row has no exact prior graph binding.");
+        var owner = new GraphOwnerDescriptor("automations", sameRead.OriginalStoreIdentity.StoreId,
+            "automation.definition", definition.Id);
+        var expectedScopes = new ResourceScope[]
+        {
+            new("automation.definition", owner.StoreId.ToString("D") + "/" + owner.EntityId.ToString("D"),
+                sameRead.OriginalSnapshotSha256, ResourceAccess.Write),
+            new("nodegraph.definition", sameRead.Actor.ProfileId + "/" + priorBinding.GraphId.ToString("D"),
+                priorBinding.DraftRevision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Write)
+        };
+        var ownership = await _ownership.GetVerifiedAsync("canonical.sqlite", owner.StoreId.ToString("D"), token).ConfigureAwait(false);
+        if (ownership is null || !await _ownership.IsCurrentAsync(ownership, sameRead.Actor, token).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The current actual canonical SQLite owner receipt is required.");
+        var records = await _graphs.ReadOriginalCreationRecordsAsync(token).ConfigureAwait(false);
+        var matches = records.Where(value => value.RecordId == "home.node-graph:" + priorBinding.GraphId.ToString("D")).ToArray();
+        if (matches.Length != 1) throw new InvalidDataException("The exact Home graph record is missing or ambiguous.");
+        var record = matches[0]; var stored = HomeVersionedNodeGraphRepository.DecodeOriginalCreationRecord(record);
+        if (stored.CanonicalOwner != owner || stored.OwnerAppId != owner.AppId || stored.OwnerEntityId != owner.CanonicalEntityId ||
+            stored.CreationOrigin is not { } currentOrigin || currentOrigin.StoreId != owner.StoreId ||
+            currentOrigin.AutomationId != owner.EntityId || currentOrigin.OriginalActor is null ||
+            !SamePrincipal(currentOrigin.OriginalActor, sameRead.Actor) ||
+            Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(currentOrigin))) !=
+                sameRead.OriginalCreationOriginSha256)
+            throw new InvalidDataException("The Home graph owner or creation origin does not match this Automation.");
+        if (stored.Draft.Revision == priorBinding.DraftRevision && stored.Active?.Revision == priorBinding.ActiveRevision)
+            return null;
+        var currentReceipt = stored.LastPublication;
+        if (currentReceipt is null || currentReceipt.OperationId == Guid.Empty || currentReceipt.GraphId != priorBinding.GraphId ||
+            currentReceipt.Kind is not (GraphPublicationKind.SaveDraft or GraphPublicationKind.Activate) ||
+            currentReceipt.ExpectedGraphRevision != priorBinding.DraftRevision ||
+            currentReceipt.Kind == GraphPublicationKind.SaveDraft && currentReceipt.CommittedGraphRevision != priorBinding.DraftRevision + 1 ||
+            currentReceipt.Kind == GraphPublicationKind.Activate && currentReceipt.CommittedGraphRevision != priorBinding.DraftRevision)
+            throw new InvalidDataException("The durable Home receipt does not extend the exact prior SQL graph revision.");
+        var exactIntent = _graphs.CaptureRecoveryIntent(owner, sameRead.Actor, currentReceipt.OperationId,
+            currentReceipt.Kind, stored.Draft, currentReceipt.ExpectedGraphRevision, expectedScopes);
+        var intentDigest = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(exactIntent.Arguments.GetRawText())));
+        var originDigest = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            JsonSerializer.SerializeToUtf8Bytes(stored.CreationOrigin)));
+        var publicationMatches = stored.CanonicalOwner == owner && stored.OwnerAppId == owner.AppId &&
+            stored.OwnerEntityId == owner.CanonicalEntityId && stored.CreationOrigin is { } origin &&
+            origin.StoreId == owner.StoreId && origin.AutomationId == owner.EntityId && origin.OriginalActor is not null &&
+            SamePrincipal(origin.OriginalActor, sameRead.Actor) && originDigest == sameRead.OriginalCreationOriginSha256 &&
+            JsonSerializer.Serialize(stored.Draft) == JsonSerializer.Serialize(exactIntent.Graph) &&
+            currentReceipt.OperationId == exactIntent.OperationId &&
+            currentReceipt.ArgumentsDigest == intentDigest && currentReceipt.Kind == exactIntent.Kind &&
+            currentReceipt.Owner == owner && currentReceipt.GraphId == exactIntent.Graph.GraphId &&
+            currentReceipt.ExpectedGraphRevision == exactIntent.ExpectedGraphRevision &&
+            currentReceipt.CommittedGraphRevision == exactIntent.Graph.Revision &&
+            (exactIntent.Kind == GraphPublicationKind.SaveDraft
+                ? stored.Active?.Revision == priorBinding.ActiveRevision
+                : stored.Active is { } active && active.Revision == exactIntent.Graph.Revision &&
+                    active.State == GraphRevisionState.Active &&
+                    JsonSerializer.Serialize(active) == JsonSerializer.Serialize(exactIntent.Graph with { State = GraphRevisionState.Active }) &&
+                    stored.ActivatedRevisions.Count(value => value.Revision == active.Revision) == 1 &&
+                    (priorBinding.ActiveRevision is null || stored.ActivatedRevisions.Any(value => value.Revision == priorBinding.ActiveRevision)));
+        if (!publicationMatches)
+            throw new InvalidDataException("The durable Home publication receipt does not match the prior protected SQL binding. No graph or SQL effect was repeated.");
+        var originalRequest = await _broker.ReadOriginalAutomationGraphPublicationRequestAsync(stored, sameRead.Actor,
+            expectedScopes, intentDigest, token).ConfigureAwait(false);
+        if (originalRequest is null)
+            throw new InvalidDataException("The original Home graph request does not match its durable receipt, actor, action, policy, scopes, or impact hash. No graph or SQL effect was repeated.");
+        if (originalRequest.State == HomePermissionRequestState.Executing)
+            throw new InvalidDataException("Home published the graph, but its original permission audit is still Executing. Binding recovery is blocked until that audit is reconciled.");
+        if (originalRequest.State != HomePermissionRequestState.Succeeded || originalRequest.ResultCode != "HOME_GRAPH_PUBLISHED")
+            throw new InvalidDataException($"The original Home graph request is {originalRequest.State} with result {originalRequest.ResultCode}; no binding recovery or graph replay was admitted.");
+        if (await _profiles.GetCurrentAsync(token).ConfigureAwait(false) != sameRead.Actor ||
+            !await _ownership.IsCurrentAsync(ownership, sameRead.Actor, token).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The actual Home actor or canonical store ownership changed during recovery observation.");
+        var before = new SavedObservation(this, sameRead, record, stored, ownership);
+        _savedObservations.Add(before, before);
+        var result = new PublishedSavedObservation(this, before, null, record, stored, expectedScopes, intentDigest);
+        if (!await IsPublishedSavedRecordCurrentAsync(result, token).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The exact audited Home publication changed during recovery observation.");
         _savedPublications.Add(result, result); return result;
     }
     private bool IsPublishedSavedCurrentInState(PublishedSavedObservation value, AuthenticatedResourceActor actor, HomeCoreStoredState state)
     {
         if (!IsIssuedPublishedSavedObservation(value) || value.Actor != actor ||
-            !_publisher.IsObservationCurrentInState(value.Publication, actor, state) ||
+            value.Publication is { } publication && !_publisher.IsObservationCurrentInState(publication, actor, state) ||
+            value.Publication is null && !_broker.IsOriginalAutomationGraphPublicationInState(value.Stored, actor,
+                value.ReviewScopes, value.ArgumentsDigest, state) ||
             !HomeLocalStoreOwnership.IsReceiptCurrentInState(state, value.Before.Ownership)) return false;
         var records = state.Records.Where(record => record.RecordId == value.Record.RecordId).ToArray();
         return records.Length == 1 && SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(records[0])).AsSpan().SequenceEqual(value.Fingerprint);
@@ -288,7 +399,9 @@ public sealed class HomeGraphCreationAssociationSource
         // During initial capture private issuance is completed only AFTER this
         // exact current record proof; no externally supplied object can reach it.
         if (!read.IsSuccess || value.Actor != await _profiles.GetCurrentAsync(token).ConfigureAwait(false) ||
-            !_publisher.IsObservationCurrentInState(value.Publication, value.Actor, read.State!) ||
+            value.Publication is { } publication && !_publisher.IsObservationCurrentInState(publication, value.Actor, read.State!) ||
+            value.Publication is null && !await _broker.IsOriginalAutomationGraphPublicationAsync(value.Stored, value.Actor,
+                value.ReviewScopes, value.ArgumentsDigest, token).ConfigureAwait(false) ||
             !HomeLocalStoreOwnership.IsReceiptCurrentInState(read.State!, value.Before.Ownership)) return false;
         var matches = read.State!.Records.Where(record => record.RecordId == value.Record.RecordId).ToArray();
         return matches.Length == 1 && SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(matches[0])).AsSpan().SequenceEqual(value.Fingerprint);
@@ -297,6 +410,7 @@ public sealed class HomeGraphCreationAssociationSource
     {
         if (!_creator.IsIssuedOriginalChangeIntent(intent) || !_savedPublicationIntents.TryGetValue(intent, out var value) ||
             !IsIssuedPublishedSavedObservation(value) || intent.Actor != value.Actor) return null;
+        if (value.Publication is null) return value.TryAcquireRecoveryLifetime();
         // Actual SQL transaction is already held. Never wait review -> original
         // SQL in reverse order; the existing publisher denies contention at once.
         return value.Publication.Review.TryAcquireAssociationLifetime(value.Publication);
@@ -310,7 +424,7 @@ public sealed class HomeGraphCreationAssociationSource
             intent.OriginalDefinition.Id != value.Before.OriginalRead.OriginalDefinition.Id || intent.ProposedDefinition.GraphBinding != value.Binding ||
             (value.Receipt.Kind == GraphPublicationKind.SaveDraft ? intent.ChangeKind != CanonicalAutomationOriginalChangeKind.BindGraphDraftDisabled :
                 intent.ChangeKind != CanonicalAutomationOriginalChangeKind.BindGraphActiveDisabled))
-            throw new UnauthorizedAccessException("Only the SAME original SQL binding intent and live actual graph publication may be paired.");
+            throw new UnauthorizedAccessException("Only the SAME original SQL binding intent and current actual Home publication may be paired.");
         _savedPublicationIntents.Add(intent, value);
     }
     // Saved graph READ is a distinct issuer path. Inception recovery above remains
