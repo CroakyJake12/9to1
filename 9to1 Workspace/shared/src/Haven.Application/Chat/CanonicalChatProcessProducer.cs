@@ -299,7 +299,11 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
         {
             _admissionSealed = true;
             if (processRetirement) _custody.MarkRetirementRequested();
-            else _runWithdrawalRequested = true;
+            else
+            {
+                _runWithdrawalRequested = true;
+                _originalInvocation?.WithdrawOriginalRunCompletion();
+            }
             if (!_lifetimeDisposed && _stop is null)
             {
                 stopStart = new(TaskCreationOptions.RunContinuationsAsynchronously);

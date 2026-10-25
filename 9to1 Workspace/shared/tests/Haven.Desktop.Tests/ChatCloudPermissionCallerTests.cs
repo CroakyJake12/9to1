@@ -635,7 +635,9 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
         private async Task<OllamaToolResponse> AskToolAsync(OllamaToolRequest request, CancellationToken token)
         { await _capture.AskAsync(request.ExecutionContext!, token); Dispatches++; throw new InvalidOperationException("No approved provider fixture starts"); }
-        public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken token) => new Stream(this, request, token);
+        public CancellationToken OriginalStreamToken;
+        public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken token)
+        { OriginalStreamToken = token; return new Stream(this, request, token); }
         private sealed class Stream(Client owner, OllamaChatRequest request, CancellationToken token) : IAsyncEnumerable<string>, IAsyncEnumerator<string>
         {
             public string Current => "unreachable provider effect";
@@ -705,6 +707,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         public bool RefuseSuspension;
         public TaskCompletionSource? HeldFollowUpWrite;
         public TaskCompletionSource? HeldTerminalWrite;
+        public TaskCompletionSource? HeldCompletionWrite;
+        public TaskCompletionSource CompletionWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource TerminalWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource FollowUpWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task? ContinuationWrite; public int ContinuationWriteCalls;
@@ -716,6 +720,11 @@ public sealed partial class ChatCloudPermissionCallerTests
             { ContinuationWriteCalls++; return actual; }
             if (RefuseSuspension && value.State == TaskExecutionLifecycle.Suspended) throw new TaskExecutionRevisionConflictException(value.TaskId, value.PersistenceRevision - 1, value.PersistenceRevision);
             var before = _rows.TryGetValue(value.TaskId, out var json) ? JsonSerializer.Deserialize<TaskExecutionSnapshot>(json) : null;
+            if (value.State == TaskExecutionLifecycle.Completed && HeldCompletionWrite is { } completing)
+            {
+                CompletionWriteEntered.TrySetResult();
+                return CommitHeldFollowUpAsync(value, before?.PersistenceRevision ?? 0, completing.Task);
+            }
             if (value.State == TaskExecutionLifecycle.Cancelled && before?.State == TaskExecutionLifecycle.Suspended && HeldTerminalWrite is { } terminal)
             {
                 TerminalWriteEntered.TrySetResult();
