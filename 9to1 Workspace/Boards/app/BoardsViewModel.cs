@@ -1822,6 +1822,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var selectedCharacters = selection is null ? 0 : Math.Abs(selection.Caret - selection.Anchor);
         Set("TextRangeSummary", selection is not null ? $"{selectedCharacters} {(selectedCharacters == 1 ? "character" : "characters")} selected"
             : _textRangeControl is not null ? "Caret formatting" : block is not null ? "Block selected" : "Select text");
+        Set("RangeBoldSelected", selection?.Bold ?? (block?.Bold == true));
+        Set("RangeItalicSelected", selection?.Italic ?? (block?.Italic == true));
+        Set("RangeUnderlineSelected", selection?.Underline ?? (block?.Underline == true));
+        Set("RangeStrikeSelected", selection?.StrikeThrough ?? (block?.Strike == true));
         Set("RangeBoldState", "Bold, " + (selection?.Bold.ToString().ToLowerInvariant() ?? (block?.Bold == true ? "on" : "off")));
         Set("RangeItalicState", "Italic, " + (selection?.Italic.ToString().ToLowerInvariant() ?? (block?.Italic == true ? "on" : "off")));
         Set("RangeUnderlineState", "Underline, " + (selection?.Underline.ToString().ToLowerInvariant() ?? (block?.Underline == true ? "on" : "off")));
