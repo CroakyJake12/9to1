@@ -57,9 +57,9 @@ public sealed class CanonicalContextTests
             taller.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             Assert.Equal(80, table.RowHeights[1]);
             var widthDraft = Assert.Single(controls.OfType<NumericUpDown>(), control =>
-                AutomationProperties.GetName(control).StartsWith("Exact selected table column width", StringComparison.Ordinal));
+                AutomationProperties.GetName(control)?.StartsWith("Exact selected table column width", StringComparison.Ordinal) == true);
             var heightDraft = Assert.Single(controls.OfType<NumericUpDown>(), control =>
-                AutomationProperties.GetName(control).StartsWith("Exact selected table row height", StringComparison.Ordinal));
+                AutomationProperties.GetName(control)?.StartsWith("Exact selected table row height", StringComparison.Ordinal) == true);
             widthDraft.Value = 312;
             heightDraft.Value = 128;
             Assert.Equal(184, table.ColumnWidths[1]);
