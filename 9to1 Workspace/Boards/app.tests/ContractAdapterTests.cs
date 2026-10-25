@@ -12,7 +12,7 @@ namespace CakeOS.Apps.Boards.App.Tests;
 public sealed class ContractAdapterTests
 {
     [Fact]
-    public async Task External_writable_session_requires_explicit_save_and_advances_only_on_receipt()
+    public async Task External_writable_session_requires_explicit_save_and_clears_only_after_acknowledgement()
     {
         var document = CreateNotesDocument("Home source");
         ReadOnlyMemory<byte> submitted = default;
@@ -148,7 +148,9 @@ public sealed class ContractAdapterTests
                 adapter.MarkDirty();
                 await adapter.SaveAsync();
 
-                var liveImage = page.Blocks.Single(block => block.Id == blockId).Image!;
+                var liveImage = adapter.Document.Sections.SelectMany(section => section.Pages)
+                    .Single(candidatePage => candidatePage.Id == pageId)
+                    .Blocks.Single(block => block.Id == blockId).Image!;
                 liveImage.Width = 360;
                 liveImage.Height = 240;
                 liveImage.KeepAspectRatio = false;
