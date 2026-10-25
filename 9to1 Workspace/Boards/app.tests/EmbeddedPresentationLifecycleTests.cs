@@ -155,7 +155,7 @@ public sealed class EmbeddedPresentationLifecycleTests
             Assert.NotNull(mountedState.Host);
             Assert.True(mountedState.HasContent,
                 $"The owner-opened control was not retained as an authored child (opens={owner.OpenCount}, " +
-                $"revalidations={owner.Session.RevalidationCount}, childCount={mountedState.AuthoredChildCount}, " +
+                $"revalidations={owner.Session.RevalidateCount}, childCount={mountedState.AuthoredChildCount}, " +
                 $"status='{mountedState.Status}'). Runtime tree:\n{mountedState.RuntimeTree}");
 
             TestUiThread.Run(() => presentation.ViewModel.SelectPage(sectionId, nativePageId));
@@ -164,7 +164,10 @@ public sealed class EmbeddedPresentationLifecycleTests
             Assert.Equal(1, owner.Session.BeginCloseCount);
             Assert.Equal(1, owner.Session.CloseCount);
             Assert.Equal(1, owner.Session.DisposeCount);
-            Assert.DoesNotContain(owner.Session.Content, embeddedHost.Children);
+            var stillMounted = TestUiThread.Run(() =>
+                BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(presentation.Content, "EmbeddedArtifactHost")?
+                    .AuthoredChildren.Contains(owner.Session.Content) ?? false);
+            Assert.False(stillMounted);
         }
         finally
         {
