@@ -14,6 +14,8 @@ public static class DeveloperManualExecutionServiceCollectionExtensions
         HomeDeveloperManualProjectExecutionResourceResolver originalResolver, HomeDeveloperManualProjectExecutionActionPolicySource originalPolicy)
     {
         ArgumentNullException.ThrowIfNull(sameHome);
+        if (!HomeLocalReadComposition.IsBound(sameHome.StateStore, sameHome.Profiles, sameHome.Ownership))
+            throw new InvalidOperationException("The original Windows Home store/profile/ownership tuple is required.");
         Same(services, typeof(HomeNativeWindowsComposition), sameHome);
         return Register(services, sameHome.StateStore, sameHome.Profiles, sameHome.Broker, sameHome.Permissions,
             sameHome.Resources, actualFiles, originalResolver, originalPolicy);
@@ -36,7 +38,7 @@ public static class DeveloperManualExecutionServiceCollectionExtensions
         HomeDeveloperManualProjectExecutionResourceResolver resolver, HomeDeveloperManualProjectExecutionActionPolicySource policy)
     {
         ArgumentNullException.ThrowIfNull(actualFiles); ArgumentNullException.ThrowIfNull(resolver); ArgumentNullException.ThrowIfNull(policy);
-        if (!profiles.IsBoundToStore(store) || !resources.IsBoundToActorSource(profiles) || !broker.IsBoundToOriginalComposition(resources, permissions))
+        if (!resources.IsBoundToActorSource(profiles) || !broker.IsBoundToOriginalComposition(resources, permissions))
             throw new InvalidOperationException("SAME original Home manual execution composition is required.");
         Same(services, typeof(FileHomeCoreStateStore), store); Same(services, typeof(HomeLocalProfileIdentity), profiles);
         Same(services, typeof(HomeResourceOperationBroker), broker); Same(services, typeof(HomePermissionTrustService), permissions);
