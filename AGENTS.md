@@ -1,3 +1,21 @@
+## Latest owner priority — 25 October 2026
+
+Finish implementation of Spaces, Home/Haven and Build first; these must support
+continued local development when the owner's cloud usage runs out. Resume the
+remaining apps after these three reach 100% implementation. Preserve completed
+other-app changes and safe WIP checkpoints. Use actual GPT-6.1 Sol and GPT-6 Luna
+subagents through supported interfaces. Prioritise end-to-end behaviours over
+unused backend methods, and use the canonical specification plus the supplied
+Progress Tracker to keep an explicit list of remaining requirements.
+
+The owner requests copies for testing as each priority app reaches 100%
+implementation. Prepare real runnable builds for the existing Linux ARM64 laptop
+path, retaining source, package identity and actual smoke/install results. A test
+build must state outstanding native/independent acceptance and known limitations;
+never describe a compiled package as fully accepted. Full independent acceptance
+remains paused under the existing owner instruction. Do not call an app 100%
+implemented while known feature gaps remain.
+
 ## Owner resume — 25 October 2026
 
 The owner explicitly resumes existing 9to1 implementation with GPT-6.1 Sol and
