@@ -212,6 +212,52 @@ public sealed class EmbeddedPresentationLifecycleTests
         }
     }
 
+    [Fact]
+    public async Task Failed_publication_closes_unadopted_owner_and_keeps_both_publication_and_close_errors()
+    {
+        var (bytes, sectionId, embeddedPageId, _, reference) = MakeBoardWithEmbeddedWrite();
+        TestUiThread.Run(() => { });
+        var owner = new DelayedEmbeddedHost(reference);
+        owner.Session.CloseFailure = new IOException("close sentinel");
+        var presentation = PumpUi(TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
+            bytes, "files:document-publication-failure", "revision-1",
+            (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")),
+            embeddedArtifactHost: owner)));
+        var window = TestUiThread.Run(() => MountAndAssert(presentation.Content, "Embedded lifecycle content"));
+        var unrelatedParent = TestUiThread.Run(() =>
+        {
+            var parent = new StackPanel();
+            parent.Children.Add(owner.Session.Content);
+            return parent;
+        });
+        try
+        {
+            PumpUi(TestUiThread.Run(() => presentation.WaitUntilReadyAsync()));
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+            TestUiThread.Run(() => presentation.ViewModel.SelectPage(sectionId, embeddedPageId));
+            PumpUntilUi(owner.OpenStarted.Task);
+            owner.CompleteOpen();
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+
+            Assert.Equal(1, owner.Session.CloseCount);
+            Assert.Equal(1, owner.Session.DisposeCount);
+            var published = TestUiThread.Run(() => BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(
+                presentation.Content, "EmbeddedArtifactHost")!.AuthoredChildren.Contains(owner.Session.Content));
+            Assert.False(published);
+            var status = presentation.ViewModel.Get("EmbeddedPageMessage")?.ToString() ?? string.Empty;
+            Assert.Contains("could not be opened", status, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("owner page also failed to close", status, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("close sentinel", status, StringComparison.Ordinal);
+            Assert.True(TestUiThread.Run(() => unrelatedParent.Children.Contains(owner.Session.Content)));
+        }
+        finally
+        {
+            TestUiThread.Run(window.Close);
+            await DrainAndDisposeAsync(presentation.DisposeAsync().AsTask());
+            GC.KeepAlive(unrelatedParent);
+        }
+    }
+
     private static Window MountAndAssert(Control content, string expectedText)
     {
         var window = new Window { Width = 1200, Height = 800, Content = content };
@@ -307,6 +353,7 @@ public sealed class EmbeddedPresentationLifecycleTests
         public int BeginCloseCount { get; private set; }
         public int AbortCloseCount { get; private set; }
         public bool RevalidationResult { get; set; } = true;
+        public Exception? CloseFailure { get; set; }
         public Task<bool> RevalidateAsync(CancellationToken ct = default)
         {
             RevalidateCount++;
@@ -314,7 +361,12 @@ public sealed class EmbeddedPresentationLifecycleTests
         }
         public Task<IBoardsEmbeddedArtifactClosePreparation?> PrepareToCloseAsync(CancellationToken ct = default) =>
             Task.FromResult<IBoardsEmbeddedArtifactClosePreparation?>(new ClosePreparation(this));
-        public Task CloseAndDrainAsync() { CloseCount++; return Task.CompletedTask; }
+        public Task CloseAndDrainAsync()
+        {
+            CloseCount++;
+            var failure = CloseFailure;
+            return failure is null ? Task.CompletedTask : Task.FromException(failure);
+        }
         public ValueTask DisposeAsync() { DisposeCount++; return ValueTask.CompletedTask; }
 
         private sealed class ClosePreparation(DelayedEmbeddedSession owner) : IBoardsEmbeddedArtifactClosePreparation

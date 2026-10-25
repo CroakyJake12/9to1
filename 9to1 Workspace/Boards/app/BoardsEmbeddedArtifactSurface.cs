@@ -67,7 +67,11 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             if (!IsEmbeddedArtifactPage(pageType))
             {
                 if (!await RetireCurrentAsync(restoreSelection: true).ConfigureAwait(true)) return;
-                viewModel.SetEmbeddedPageStatus(false, string.Empty);
+                await DispatchUiAsync(() =>
+                {
+                    viewModel.SetEmbeddedPageStatus(false, string.Empty);
+                    return true;
+                });
                 return;
             }
 
@@ -125,48 +129,47 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             if (!await RetireCurrentAsync(restoreSelection: true).ConfigureAwait(true)) return;
             if (host is null)
             {
-                viewModel.SetEmbeddedPageStatus(true, "Open this Board in Home to access its linked artifact.");
+                await DispatchUiAsync(() =>
+                {
+                    viewModel.SetEmbeddedPageStatus(true, "Open this Board in Home to access its linked artifact.");
+                    return true;
+                });
                 return;
             }
             if (reference is null)
             {
-                viewModel.SetEmbeddedPageStatus(true, "This embedded page has no owner reference. Reattach the artifact from its owning app.");
+                await DispatchUiAsync(() =>
+                {
+                    viewModel.SetEmbeddedPageStatus(true, "This embedded page has no owner reference. Reattach the artifact from its owning app.");
+                    return true;
+                });
                 return;
             }
 
+            IBoardsEmbeddedArtifactSession? opened = null;
+            var adopted = false;
+            var cleanupAttempted = false;
             try
             {
                 reference.Validate();
                 if (!string.Equals(reference.ApplicationId, ApplicationIdFor(pageType), StringComparison.Ordinal))
                     throw new InvalidDataException("The Board page type does not match its artifact owner.");
-                var opened = await host.OpenAsync(reference, mode);
+                var acquired = await host.OpenAsync(reference, mode);
+                opened = acquired;
                 if (!await DispatchUiAsync(() => IsCurrentSelection(pageId, sectionId, pageType, reference, mode)))
-                {
-                    await CloseUnpublishedAsync(opened);
                     return;
-                }
-                if (!Equals(opened.CurrentReference, reference))
-                {
-                    await CloseUnpublishedAsync(opened);
+                if (!Equals(acquired.CurrentReference, reference))
                     throw new InvalidDataException("The artifact owner did not open the pinned revision.");
-                }
-                if (!await opened.RevalidateAsync() || !opened.IsPublicationCurrent)
-                {
-                    await CloseUnpublishedAsync(opened);
+                if (!await acquired.RevalidateAsync() || !acquired.IsPublicationCurrent)
                     throw new UnauthorizedAccessException("The artifact revision or access changed before the embedded page could be shown.");
-                }
                 if (!await DispatchUiAsync(() => IsCurrentSelection(pageId, sectionId, pageType, reference, mode)))
-                {
-                    await CloseUnpublishedAsync(opened);
                     return;
-                }
                 // Resolve and mutate the authored CUI wrapper on the UI thread;
                 // owner awaits do not guarantee a dispatcher synchronization context.
                 var publication = await DispatchUiAsync(() => PublishOpenedArtifact(pageId!, sectionId,
-                    pageType, reference, mode, opened));
+                    pageType, reference, mode, acquired));
                 if (publication != PublicationResult.Published)
                 {
-                    await CloseUnpublishedAsync(opened);
                     if (publication == PublicationResult.HostUnavailable)
                         await DispatchUiAsync(() =>
                         {
@@ -176,16 +179,49 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                         });
                     return;
                 }
+                adopted = true;
             }
             catch (Exception error)
             {
+                adopted = opened is not null && ReferenceEquals(_session, opened);
+                Exception? cleanupError = null;
+                if (opened is not null && !adopted)
+                {
+                    cleanupAttempted = true;
+                    try { await CloseUnpublishedAsync(opened); }
+                    catch (Exception closeError) { cleanupError = closeError; }
+                }
+                var detail = cleanupError is null
+                    ? FirstLine(error.Message)
+                    : FirstLine(error.Message) + " (the unused owner page also failed to close: " + FirstLine(cleanupError.Message) + ")";
                 await DispatchUiAsync(() =>
                 {
+                    if (!IsCurrentSelection(pageId, sectionId, pageType, reference, mode)) return true;
                     _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
                     viewModel.SetEmbeddedPageStatus(true,
-                        "The linked artifact could not be opened: " + FirstLine(error.Message));
+                        "The linked artifact could not be opened: " + detail);
                     return true;
                 });
+            }
+            finally
+            {
+                if (opened is not null && !adopted && !cleanupAttempted)
+                {
+                    try { await CloseUnpublishedAsync(opened); }
+                    catch (Exception closeError)
+                    {
+                        await DispatchUiAsync(() =>
+                        {
+                            if (IsCurrentSelection(pageId, sectionId, pageType, reference, mode))
+                            {
+                                _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
+                                viewModel.SetEmbeddedPageStatus(true,
+                                    "The unused linked page could not be closed: " + FirstLine(closeError.Message));
+                            }
+                            return true;
+                        });
+                    }
+                }
             }
         }
         finally { _gate.Release(); }
@@ -254,7 +290,11 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                     await ownerPreparation.AbortAsync();
                     await ownerPreparation.DisposeAsync();
                 }
-                viewModel.Set("StatusText", "The embedded artifact owner refused to prepare this close; its page remains open.");
+                await DispatchUiAsync(() =>
+                {
+                    viewModel.Set("StatusText", "The embedded artifact owner refused to prepare this close; its page remains open.");
+                    return true;
+                });
                 return null;
             }
             _pendingPreparation = new SurfaceClosePreparation(this, session, ownerPreparation,
@@ -283,7 +323,7 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             preparation = await PrepareToCloseCoreAsync(cancellationToken);
             if (preparation is null)
             {
-                RestoreSelectionIfNeeded(restoreSelection, oldSectionId, oldPageId);
+                await RestoreSelectionIfNeededAsync(restoreSelection, oldSectionId, oldPageId);
                 return false;
             }
             await CommitPreparedCloseCoreAsync((SurfaceClosePreparation)preparation, restoreSelection, cancellationToken);
@@ -292,25 +332,31 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             if (preparation is not null) await AbortPreparedCloseCoreAsync((SurfaceClosePreparation)preparation);
-            RestoreSelectionIfNeeded(restoreSelection, oldSectionId, oldPageId);
+            await RestoreSelectionIfNeededAsync(restoreSelection, oldSectionId, oldPageId);
             throw;
         }
         catch (Exception error)
         {
             if (preparation is not null)
                 await AbortPreparedCloseCoreAsync((SurfaceClosePreparation)preparation);
-            RestoreSelectionIfNeeded(restoreSelection, oldSectionId, oldPageId);
-            viewModel.Set("StatusText", "The embedded page remains open: " + FirstLine(error.Message));
+            await RestoreSelectionIfNeededAsync(restoreSelection, oldSectionId, oldPageId);
+            await DispatchUiAsync(() =>
+            {
+                viewModel.Set("StatusText", "The embedded page remains open: " + FirstLine(error.Message));
+                return true;
+            });
             return false;
         }
     }
 
-    private void RestoreSelectionIfNeeded(bool restoreSelection, string? sectionId, string? pageId)
-    {
-        if (restoreSelection && sectionId is not null && pageId is not null &&
-            viewModel.SelectedPageId != pageId)
-            viewModel.SelectPage(sectionId, pageId);
-    }
+    private Task RestoreSelectionIfNeededAsync(bool restoreSelection, string? sectionId, string? pageId) =>
+        DispatchUiAsync(() =>
+        {
+            if (restoreSelection && sectionId is not null && pageId is not null &&
+                viewModel.SelectedPageId != pageId)
+                viewModel.SelectPage(sectionId, pageId);
+            return true;
+        });
 
     private async Task CommitPreparedCloseAsync(SurfaceClosePreparation preparation, bool restoreSelection,
         CancellationToken cancellationToken)
@@ -347,10 +393,14 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         }
         catch (Exception error)
         {
-            if (restoreSelection && sectionId is not null && pageId is not null &&
-                viewModel.SelectedPageId != pageId)
-                viewModel.SelectPage(sectionId, pageId);
-            viewModel.Set("StatusText", "The embedded page could not be closed: " + FirstLine(error.Message));
+            await DispatchUiAsync(() =>
+            {
+                if (restoreSelection && sectionId is not null && pageId is not null &&
+                    viewModel.SelectedPageId != pageId)
+                    viewModel.SelectPage(sectionId, pageId);
+                viewModel.Set("StatusText", "The embedded page could not be closed: " + FirstLine(error.Message));
+                return true;
+            });
             throw;
         }
 
@@ -365,27 +415,43 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             }
             else
             {
-                viewModel.Set("StatusText", "The linked source revision changed while this Board was read-only; reopen it from Home to refresh the link.");
+                await DispatchUiAsync(() =>
+                {
+                    viewModel.Set("StatusText", "The linked source revision changed while this Board was read-only; reopen it from Home to refresh the link.");
+                    return true;
+                });
                 throw new InvalidOperationException("The read-only Board cannot advance the linked artifact revision.");
             }
         }
 
         await ownerPreparation.BeginCloseAsync(cancellationToken);
-        (BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? _surface)
-            ?.RemoveChild(session.Content);
+        await DispatchUiAsync(() =>
+        {
+            if (ReferenceEquals(_session, session))
+                (BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? _surface)
+                    ?.RemoveChild(session.Content);
+            return true;
+        });
         try { await session.CloseAndDrainAsync(); }
         finally
         {
             try { await ownerPreparation.DisposeAsync(); }
             finally { await session.DisposeAsync(); }
         }
-        _session = null;
-        _pageId = null;
-        _sectionId = null;
-        _pageType = null;
-        _reference = null;
-        _pendingPreparation = null;
-        preparation.MarkCommitted();
+        await DispatchUiAsync(() =>
+        {
+            if (ReferenceEquals(_session, session))
+            {
+                _session = null;
+                _pageId = null;
+                _sectionId = null;
+                _pageType = null;
+                _reference = null;
+            }
+            _pendingPreparation = null;
+            preparation.MarkCommitted();
+            return true;
+        });
     }
 
     private async Task AbortPreparedCloseAsync(SurfaceClosePreparation preparation)
@@ -524,14 +590,28 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             return PublicationResult.SelectionChanged;
         var currentSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost");
         if (currentSurface is null) return PublicationResult.HostUnavailable;
-        currentSurface.AddChild(opened.Content);
-        _session = opened;
-        _pageId = pageId;
-        _sectionId = sectionId;
-        _pageType = pageType;
-        _reference = reference;
-        _mode = mode;
-        return PublicationResult.Published;
+        try
+        {
+            currentSurface.AddChild(opened.Content);
+            _session = opened;
+            _pageId = pageId;
+            _sectionId = sectionId;
+            _pageType = pageType;
+            _reference = reference;
+            _mode = mode;
+            return PublicationResult.Published;
+        }
+        catch (Exception publicationError)
+        {
+            if (!currentSurface.AuthoredChildren.Contains(opened.Content)) throw;
+            try { currentSurface.RemoveChild(opened.Content); }
+            catch (Exception detachError)
+            {
+                throw new AggregateException("The opened page could not be published or detached from the Board host.",
+                    publicationError, detachError);
+            }
+            throw;
+        }
     }
 
     private static bool IsEmbeddedArtifactPage(string pageType) =>
@@ -569,20 +649,36 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
     private static async Task CloseUnpublishedAsync(IBoardsEmbeddedArtifactSession session)
     {
         IBoardsEmbeddedArtifactClosePreparation? preparation = null;
+        var errors = new List<Exception>();
         try
         {
             preparation = await session.PrepareToCloseAsync().ConfigureAwait(true);
-            if (preparation is null || !preparation.IsCurrent) return;
+            if (preparation is null)
+                throw new InvalidOperationException("The owner refused to prepare the unpublished page for close.");
+            if (!preparation.IsCurrent)
+                throw new InvalidOperationException("The unpublished page close preparation became stale.");
             await preparation.BeginCloseAsync().ConfigureAwait(true);
             await session.CloseAndDrainAsync().ConfigureAwait(true);
         }
+        catch (Exception error) { errors.Add(error); }
         finally
         {
             try
             {
-                if (preparation is not null) await preparation.DisposeAsync().ConfigureAwait(true);
+                if (preparation is not null)
+                {
+                    try { await preparation.DisposeAsync().ConfigureAwait(true); }
+                    catch (Exception error) { errors.Add(error); }
+                }
             }
-            finally { await session.DisposeAsync().ConfigureAwait(true); }
+            finally
+            {
+                try { await session.DisposeAsync().ConfigureAwait(true); }
+                catch (Exception error) { errors.Add(error); }
+            }
         }
+        if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+        if (errors.Count > 1)
+            throw new AggregateException("The unpublished owner page could not be fully closed and drained.", errors);
     }
 }
