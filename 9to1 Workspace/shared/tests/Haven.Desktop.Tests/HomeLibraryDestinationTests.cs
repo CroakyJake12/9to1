@@ -313,7 +313,7 @@ public sealed class HomeLibraryDestinationTests
                 ItemsControl items => items.Items.OfType<Control>().ToArray(),
                 _ => Array.Empty<Control>()
             };
-            entries.Add($"{new string(' ', depth * 2)}{control.GetType().Name}:stable='{CuiRuntimeIdentity.GetStableId(control)}',visible={control.IsVisible},bounds={control.Bounds},children={children.Count}");
+            entries.Add($"{new string(' ', depth * 2)}{control.GetType().Name}:stable='{CuiRuntimeIdentity.GetStableId(control)}',visible={control.IsVisible},bounds={control.Bounds},children={children.Length}");
             foreach (var child in children) Visit(child, depth + 1);
         }
         foreach (var child in host.Children.OfType<Control>().Take(4)) Visit(child, 0);
