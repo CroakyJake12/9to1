@@ -67,6 +67,9 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     public BoardsExternalSaveReceipt? LastSaveReceipt { get; private set; }
     public BoardsViewModel ViewModel { get; }
     public Control Content { get; }
+    public Task WaitUntilReadyAsync(CancellationToken cancellationToken = default) =>
+        (_surfaceLifecycle ?? throw new InvalidOperationException("The Boards surface has not been initialized.")).WaitUntilReadyAsync(cancellationToken);
+    public Task DrainRenderingAsync() => _renderQueue?.DrainAsync() ?? Task.CompletedTask;
     /// <summary>Returns the detached document supplied when this presentation opened.</summary>
     public HavenBoardDocument Document => HavenBoardDocumentCodec.Deserialize(_initialDocumentBytes);
     public Task<HavenBoardDocument> GetCurrentDocumentAsync(CancellationToken cancellationToken = default) =>
