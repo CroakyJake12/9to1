@@ -60,7 +60,7 @@ public sealed partial class CuiControlLoader : IDisposable
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<TextBox, EventHandler<KeyEventArgs>> _inputSubmitHandlers = new(ReferenceEqualityComparer.Instance);
-    private readonly HashSet<TextBox> _pendingInputSubmits = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<TextBox, InputSubmitState> _inputSubmitStates = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, ContextMenu> _ownedContextMenus = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, (EventHandler<AvaloniaPropertyChangedEventArgs> Opening, EventHandler<RoutedEventArgs> Closed)> _contextMenuFocusHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
@@ -344,7 +344,12 @@ public sealed partial class CuiControlLoader : IDisposable
 
         lock (_actionTasksGate)
         {
-            if (_disposed || _admissionFailureTask is not null || !_pendingInputSubmits.Add(input)) return;
+            if (_disposed || _admissionFailureTask is not null || !_inputSubmitStates.TryGetValue(input, out var submitState) ||
+                submitState.LastAcceptedRevision == submitState.EditRevision) return;
+            // Deduplicate only this exact input edit revision. A real edit advances the
+            // revision immediately, even when the new value later matches an earlier value;
+            // another action may then run while the previous source task is still settling.
+            submitState.LastAcceptedRevision = submitState.EditRevision;
         }
 
         // Mark only an accepted gesture handled. The named action receives the actual input and
@@ -356,7 +361,6 @@ public sealed partial class CuiControlLoader : IDisposable
         {
             if (_disposed || _admissionFailureTask is not null)
             {
-                _pendingInputSubmits.Remove(input);
                 return;
             }
             _pendingActionTasks.RemoveWhere(static task => task.IsCompletedSuccessfully);
@@ -371,29 +375,21 @@ public sealed partial class CuiControlLoader : IDisposable
     private async Task DispatchInputSubmitAsync(Task start, TextBox input, ICuiActionDispatcher dispatcher,
         CuiActionInvocation invocation, CuiInputSubmitRequest request)
     {
-        try
+        await start;
+        if (!IsActionOriginCurrent(_committedActionFrame, input, frameOwned: true) ||
+            !input.IsEffectivelyEnabled || input.IsReadOnly || !input.IsEffectivelyVisible) return;
+        await DispatchActionAsync(Task.CompletedTask, input, dispatcher, invocation with
         {
-            await start;
-            if (!IsActionOriginCurrent(_committedActionFrame, input, frameOwned: true) ||
-                !input.IsEffectivelyEnabled || input.IsReadOnly || !input.IsEffectivelyVisible) return;
-            await DispatchActionAsync(Task.CompletedTask, input, dispatcher, invocation with
-            {
-                Parameter = request,
-                ParameterContext = null,
-                LiveParameter = null,
-                FrameOwned = true
-            });
-        }
-        finally
-        {
-            lock (_actionTasksGate) _pendingInputSubmits.Remove(input);
-        }
+            Parameter = request,
+            ParameterContext = null,
+            LiveParameter = null,
+            FrameOwned = true
+        });
     }
 
     private async Task RejectInputSubmitAsync(Task start, TextBox input)
     {
-        try { await RejectActionDispatchAsync(start, input); }
-        finally { lock (_actionTasksGate) _pendingInputSubmits.Remove(input); }
+        await RejectActionDispatchAsync(start, input);
     }
 
     private static CuiInputSubmitModifiers ToSubmitModifiers(KeyModifiers value)
@@ -447,7 +443,6 @@ public sealed partial class CuiControlLoader : IDisposable
             _actionHandlers.Clear();
             foreach (var (input, handler) in _inputSubmitHandlers.ToArray()) Attempt(() => UnwireInputSubmit(input, handler));
             _inputSubmitHandlers.Clear();
-            _pendingInputSubmits.Clear();
             // Close input/action admission FIRST (unwire actions, clear gestures). Owned physical close
             // admission stays alive because each portal holds its own publisher lease; native close
             // receipts published during CloseOwnedContextMenu/DetachPresentation are then joined by
@@ -1280,6 +1275,18 @@ public sealed partial class CuiControlLoader : IDisposable
             EventHandler<KeyEventArgs> handler = (_, args) => OnInputSubmitKeyDown(submitInput, args, contextMenuOwner);
             submitInput.AddHandler(InputElement.KeyDownEvent, handler, RoutingStrategies.Tunnel);
             _inputSubmitHandlers[submitInput] = handler;
+            var submitState = new InputSubmitState();
+            submitState.TextChanged = (_, _) =>
+            {
+                lock (_actionTasksGate)
+                {
+                    if (_disposed || !_inputSubmitStates.TryGetValue(submitInput, out var current) || !ReferenceEquals(current, submitState)) return;
+                    submitState.EditRevision = submitState.EditRevision == long.MaxValue ? 0 : submitState.EditRevision + 1;
+                    submitState.LastAcceptedRevision = null;
+                }
+            };
+            _inputSubmitStates[submitInput] = submitState;
+            submitInput.TextChanged += submitState.TextChanged;
             _wiredActions.Add(control);
         }
         else if (control is Button or MenuItem && !_wiredActions.Contains(control)
@@ -1337,7 +1344,6 @@ public sealed partial class CuiControlLoader : IDisposable
         _actionHandlers.Clear();
         foreach (var (input, handler) in _inputSubmitHandlers) UnwireInputSubmit(input, handler);
         _inputSubmitHandlers.Clear();
-        _pendingInputSubmits.Clear();
         ClearFloatingCloseGestures();
         _wiredActions.Clear();
     }
@@ -1348,8 +1354,12 @@ public sealed partial class CuiControlLoader : IDisposable
         else if (control is MenuItem item) item.Click -= handler;
     }
 
-    private static void UnwireInputSubmit(TextBox input, EventHandler<KeyEventArgs> handler) =>
+    private void UnwireInputSubmit(TextBox input, EventHandler<KeyEventArgs> handler)
+    {
         input.RemoveHandler(InputElement.KeyDownEvent, handler);
+        if (_inputSubmitStates.Remove(input, out var state) && state.TextChanged is not null)
+            input.TextChanged -= state.TextChanged;
+    }
 
     private void CloseOwnedContextMenu(Control owner)
     {
@@ -1928,7 +1938,6 @@ public sealed partial class CuiControlLoader : IDisposable
             _wiredActions.Remove(control);
             if (control is TextBox input && _inputSubmitHandlers.Remove(input, out var submitHandler))
                 UnwireInputSubmit(input, submitHandler);
-            if (control is TextBox pendingInput) _pendingInputSubmits.Remove(pendingInput);
             _actionInvocations.Remove(control);
             if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
             _observedBindings.Remove(control);
@@ -4395,6 +4404,13 @@ public sealed partial class CuiControlLoader : IDisposable
     /// edit/copy always operate on the canonical value; Raw tracks the last genuine user text so a
     /// later focus reveal never resurrects a stale host-published value. Handlers are retained for
     /// unsubscription on retirement.</summary>
+    private sealed class InputSubmitState
+    {
+        public long EditRevision;
+        public long? LastAcceptedRevision;
+        public EventHandler<TextChangedEventArgs>? TextChanged;
+    }
+
     private sealed class InputPresentationState
     {
         public string? Display;
