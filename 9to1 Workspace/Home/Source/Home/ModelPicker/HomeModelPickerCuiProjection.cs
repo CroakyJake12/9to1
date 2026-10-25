@@ -18,6 +18,8 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
     private readonly string? _effectiveArtifactRevision;
     private readonly string? _effectiveSelectedReasoningId;
     private readonly string? _pendingApprovalRequestId;
+    private readonly IReadOnlyList<HomeModelPickerCatalogueEntry> _catalogue;
+    private readonly string _catalogueStatus;
 
     public HomeModelPickerCuiProjection(
         HomeModelPickerEditorState state,
@@ -28,7 +30,9 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
         string? effectiveModelId = null,
         string? effectiveArtifactRevision = null,
         string? effectiveSelectedReasoningId = null,
-        string? pendingApprovalRequestId = null)
+        string? pendingApprovalRequestId = null,
+        IReadOnlyList<HomeModelPickerCatalogueEntry>? catalogue = null,
+        string? catalogueStatus = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _scope = scope;
@@ -39,6 +43,8 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
         _effectiveArtifactRevision = effectiveArtifactRevision;
         _effectiveSelectedReasoningId = effectiveSelectedReasoningId;
         _pendingApprovalRequestId = pendingApprovalRequestId;
+        _catalogue = catalogue ?? [];
+        _catalogueStatus = catalogueStatus ?? "Load the authorised model catalogue to add a route candidate.";
         Routes = Array.AsReadOnly((state.Snapshot?.Routes ?? [])
             .Select(route => new HomeModelPickerRouteRow(
                 route.RouteId == state.SelectedRouteId && state.DraftRoute is { } draft ? draft : route,
@@ -53,10 +59,12 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
             occurrences[text] = occurrence + 1;
             return new HomeModelPickerTraceRow(text, occurrence);
         }).ToArray());
+        Catalogue = Array.AsReadOnly(_catalogue.Select(entry => new HomeModelPickerCatalogueRow(entry)).ToArray());
     }
 
     public IReadOnlyList<HomeModelPickerRouteRow> Routes { get; }
     public IReadOnlyList<HomeModelPickerTraceRow> Trace { get; }
+    public IReadOnlyList<HomeModelPickerCatalogueRow> Catalogue { get; }
 
     public bool HasSnapshot => _state.Snapshot is not null;
 
@@ -79,6 +87,9 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
             case "HasRoutes": value = HasSnapshot && Routes.Count != 0; return true;
             case "HasPreview": value = _state.Preview is not null; return true;
             case "HasTrace": value = Trace.Count != 0; return true;
+            case "Catalogue": value = Catalogue; return true;
+            case "HasCatalogue": value = Catalogue.Count != 0; return true;
+            case "CatalogueStatus": value = _catalogueStatus; return true;
             case "Preview.ResolutionState": value = _state.Preview?.ResolutionState ?? string.Empty; return true;
             case "Preview.Trace": value = Trace; return true;
             case "RefreshSelection": value = new HomeModelPickerScopeSelection(_scope, _category); return true;
@@ -94,15 +105,23 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
 /// <summary>Canonical typed CUI action parameters for the model picker. These are the only
 /// objects routed through named &lt;Action parameter=...&gt; declarations; no ad-hoc metadata
 /// attributes are transported.</summary>
-/// <summary>Projects the exact advertised reasoning-level ID as its label. A provider's level IDs are
-/// semantic values, not percentages or ordinals; showing a derived percentage would imply unsupported
-/// behavior that the provider never advertised.</summary>
+/// <summary>Canonical label projection for an advertised reasoning-level ID list. The label derives
+/// only from the level's ordinal and the model's advertised level count via
+/// <see cref="ReasoningScale.TierPercentages"/> (3=35/70/100, 4=25/50/75/100, 5=20/40/60/80/100).
+/// Unknown counts and out-of-range ordinals stay a truthful unknown (null), never a fake 100 or an
+/// invented on/off or enum mapping.</summary>
 public static class HomeModelPickerReasoningLabels
 {
     public static string? LabelForLevel(IReadOnlyList<string> advertisedIds, string? levelId)
     {
         if (advertisedIds is null || string.IsNullOrWhiteSpace(levelId)) return null;
-        return advertisedIds.Contains(levelId, StringComparer.Ordinal) ? levelId : null;
+        var ordinal = -1;
+        for (var i = 0; i < advertisedIds.Count; i++)
+        {
+            if (StringComparer.Ordinal.Equals(advertisedIds[i], levelId)) { ordinal = i; break; }
+        }
+        if (ordinal < 0 || !ReasoningScale.TryTierPercentage(advertisedIds.Count, ordinal, out var percentage)) return null;
+        return $"{percentage}%";
     }
 }
 
@@ -111,6 +130,40 @@ public sealed record HomeModelPickerRouteSelection(string RouteId);
 public sealed record HomeModelPickerCandidateSelection(string ProviderId, string ModelId, string? ArtifactRevision);
 public sealed record HomeModelPickerCandidateToggleSelection(string ProviderId, string ModelId, string? ArtifactRevision, bool Enabled);
 public sealed record HomeModelPickerReasoningLevelSelection(string ProviderId, string ModelId, string? ArtifactRevision, string? ReasoningLevelId);
+public sealed record HomeModelPickerCatalogueSelection(string ProviderId, string ModelId, string? ArtifactRevision);
+
+public sealed class HomeModelPickerCatalogueRow : ICuiBindingContext
+{
+    private readonly HomeModelPickerCatalogueEntry _entry;
+
+    internal HomeModelPickerCatalogueRow(HomeModelPickerCatalogueEntry entry)
+    {
+        _entry = entry;
+        Identity = JsonSerializer.Serialize(new[] { entry.ProviderId, entry.ModelId, entry.ArtifactRevision });
+        Locality = entry.IsLocal switch { true => "Local", false => "Remote", null => "Locality unknown" };
+        Capabilities = entry.Capabilities is { Count: > 0 }
+            ? string.Join(" · ", entry.Capabilities.OrderBy(value => value, StringComparer.Ordinal))
+            : "Capabilities unknown";
+    }
+
+    public string Identity { get; }
+    public string Locality { get; }
+    public string Capabilities { get; }
+
+    public bool TryGetValue(string path, out object? value)
+    {
+        switch (path)
+        {
+            case "Identity": value = Identity; return true;
+            case "DisplayName": value = _entry.DisplayName; return true;
+            case "ProviderName": value = _entry.ProviderName; return true;
+            case "Locality": value = Locality; return true;
+            case "Capabilities": value = Capabilities; return true;
+            case "Selection": value = new HomeModelPickerCatalogueSelection(_entry.ProviderId, _entry.ModelId, _entry.ArtifactRevision); return true;
+            default: value = null; return false;
+        }
+    }
+}
 
 public sealed class HomeModelPickerRouteRow : ICuiBindingContext
 {

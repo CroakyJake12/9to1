@@ -11,6 +11,8 @@ namespace HavenOS.Home;
 public enum HomeModelPickerAction
 {
     Refresh,
+    RefreshCatalogue,
+    AddCatalogueCandidate,
     SelectCategory,
     SelectRoute,
     SetCandidateEnabled,
@@ -58,6 +60,8 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
     public string? EffectiveModelId { get; private set; }
     public string? EffectiveArtifactRevision { get; private set; }
     public string? EffectiveSelectedReasoningId { get; private set; }
+    public IReadOnlyList<HomeModelPickerCatalogueEntry> Catalogue { get; private set; } = [];
+    public string CatalogueStatus { get; private set; } = "Load the authorised model catalogue to add a route candidate.";
     public string? PendingApprovalRequestId { get; set; }
     public string? PendingAuditRequestId { get; set; }
     public HomeModelPickerCuiProjection Projection { get; private set; } =
@@ -104,11 +108,18 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
         RebuildProjection();
     }
 
+    public void ApplyCatalogue(HomeModelCataloguePage? page, string status)
+    {
+        Catalogue = page?.Items ?? [];
+        CatalogueStatus = status;
+        RebuildProjection();
+    }
+
     private void RebuildProjection()
     {
         Projection = new HomeModelPickerCuiProjection(State, Scope, Category,
             EffectiveAdvertisedReasoningIds, EffectiveProviderId, EffectiveModelId, EffectiveArtifactRevision,
-            EffectiveSelectedReasoningId, PendingApprovalRequestId);
+            EffectiveSelectedReasoningId, PendingApprovalRequestId, Catalogue, CatalogueStatus);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
@@ -119,7 +130,7 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
             return false;
         if (request.Action == HomeModelPickerAction.SelectRoute && string.IsNullOrWhiteSpace(request.RouteId))
             return false;
-        if ((request.Action is HomeModelPickerAction.SetCandidateEnabled or HomeModelPickerAction.MoveCandidateUp or HomeModelPickerAction.MoveCandidateDown or HomeModelPickerAction.SetReasoningLevel)
+        if ((request.Action is HomeModelPickerAction.SetCandidateEnabled or HomeModelPickerAction.MoveCandidateUp or HomeModelPickerAction.MoveCandidateDown or HomeModelPickerAction.SetReasoningLevel or HomeModelPickerAction.AddCatalogueCandidate)
             && (string.IsNullOrWhiteSpace(request.ProviderId) || string.IsNullOrWhiteSpace(request.ModelId) || (request.ArtifactRevision is not null && string.IsNullOrWhiteSpace(request.ArtifactRevision))))
             return false;
         if (request.Action == HomeModelPickerAction.SetCandidateEnabled && request.Enabled is null)
@@ -191,6 +202,8 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
             {
                 result = action.Action switch
                 {
+                    HomeModelPickerAction.RefreshCatalogue => Box(await LoadCatalogueAsync(cancellationToken).ConfigureAwait(false)),
+                    HomeModelPickerAction.AddCatalogueCandidate => Box(AddCatalogueCandidate(action)),
                     HomeModelPickerAction.Refresh => Box(await _editor.RefreshAsync(
                         action.Scope ?? Surface.Scope,
                         action.Category ?? Surface.Category,
@@ -229,6 +242,24 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
             await ApplyEffectiveReasoningAsync(cancellationToken).ConfigureAwait(false);
         }
         return result;
+    }
+
+    private async Task<HomeCoreOperationResult<HomeModelCataloguePage>> LoadCatalogueAsync(CancellationToken cancellationToken)
+    {
+        var result = await _editor.GetCatalogueAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        if (CanPublish()) Surface.ApplyCatalogue(result.Value, result.Succeeded ? "Authorised model catalogue loaded." : result.Message);
+        return result;
+    }
+
+    private HomeCoreOperationResult<HomeModelRouteContract> AddCatalogueCandidate(HomeModelPickerActionRequest action)
+    {
+        var entry = Surface.Catalogue.FirstOrDefault(item =>
+            string.Equals(item.ProviderId, action.ProviderId, StringComparison.Ordinal) &&
+            string.Equals(item.ModelId, action.ModelId, StringComparison.Ordinal) &&
+            string.Equals(item.ArtifactRevision, action.ArtifactRevision, StringComparison.Ordinal));
+        if (entry is null)
+            return Failure<HomeModelRouteContract>("CatalogueEntryNotLoaded", "Refresh the authorised catalogue and choose one of its current entries.");
+        return _editor.AddCandidate(entry);
     }
 
     /// <summary>The canonical picker commit path: persists the chosen advertised reasoning-level default

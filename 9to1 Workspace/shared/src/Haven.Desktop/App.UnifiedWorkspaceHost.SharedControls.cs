@@ -1168,6 +1168,18 @@ public sealed partial class App
                             Scope: (parameter as HomeModelPickerScopeSelection)?.Scope ?? _controller.Surface.Scope,
                             Category: (parameter as HomeModelPickerScopeSelection)?.Category ?? _controller.Surface.Category), cancellationToken));
                         return;
+                    case "RefreshCatalogue":
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.RefreshCatalogue), cancellationToken));
+                        return;
+                    case "AddCatalogueCandidate" when parameter is HomeModelPickerCatalogueSelection candidate:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.AddCatalogueCandidate, ProviderId: candidate.ProviderId,
+                            ModelId: candidate.ModelId, ArtifactRevision: candidate.ArtifactRevision), cancellationToken));
+                        return;
+                    case "AddCatalogueCandidate":
+                        RefuseMalformed(command);
+                        return;
                     case "SelectCategory" when parameter is string category:
                         await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
                             HomeModelPickerAction.SelectCategory, Category: category), cancellationToken));

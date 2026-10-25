@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Dulche.Runtime;
 using HavenOS.Home.Core;
 
 namespace HavenOS.Home;
@@ -35,6 +36,32 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
     private HomeModelPickerEditorState _state = HomeModelPickerEditorState.Initial;
 
     public HomeModelPickerEditorState Current => Volatile.Read(ref _state);
+
+    /// <summary>Reads the current authorised provider catalogue through Home's existing feature owner.
+    /// Catalogue entries remain detached from route state until the caller explicitly adds one to the draft.</summary>
+    public async Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(
+        string? query = null, CancellationToken cancellationToken = default)
+    {
+        await _operationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var result = await _provider.GetCatalogueAsync(query, cancellationToken).ConfigureAwait(false);
+            if (!result.Succeeded || result.Value is null) return result;
+            var page = result.Value;
+            if (page.Items is null || page.Offset < 0 || page.Limit < 0 || page.Items.Count > page.Limit ||
+                page.Items.Any(item => item is null || string.IsNullOrWhiteSpace(item.ProviderId) || string.IsNullOrWhiteSpace(item.ModelId)) ||
+                page.Items.Select(item => new ModelIdentity(item.ProviderId, item.ModelId).StableKey)
+                    .Distinct(StringComparer.OrdinalIgnoreCase).Count() != page.Items.Count)
+                return Fail<HomeModelCataloguePage>("InvalidCatalogue", "The model service returned invalid or ambiguous catalogue identities.");
+            return result with { Value = page with { Items = Array.AsReadOnly(page.Items.ToArray()) } };
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception exception)
+        {
+            return Fail<HomeModelCataloguePage>("HomeServiceUnavailable", $"Could not load the model catalogue ({exception.GetType().Name}).");
+        }
+        finally { _operationGate.Release(); }
+    }
 
     public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> RefreshAsync(
         string scope,
