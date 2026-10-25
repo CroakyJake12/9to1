@@ -288,9 +288,35 @@ public sealed class HomeLibraryDestinationTests
             $"artifact IDs=[{string.Join(",", page.Current?.Items.Select(item => item.ArtifactId) ?? [])}]; " +
             $"repeat source=[{RepeatSourceDiagnostic(page)}]; " +
             $"repeat tree=[{repeatTree}]; " +
+            $"runtime diagnostics=[{RepeatRuntimeDiagnosticSummary(page)}]; " +
             $"buttons=[{string.Join("; ", controls.Select(item =>
                 $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
         return matches[0];
+    }
+    private static string RepeatRuntimeDiagnosticSummary(HomeLibraryDestinationPage page)
+    {
+        try
+        {
+            const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic;
+            var loader = typeof(HomeLibraryDestinationPage).GetField("_loader", flags)?.GetValue(page);
+            var diagnostics = loader?.GetType().GetProperty("RuntimeDiagnostics", flags)?.GetValue(loader)
+                as System.Collections.IEnumerable;
+            if (diagnostics is null) return "loader/runtime diagnostic accessor unavailable";
+            return string.Join("; ", diagnostics.Cast<object>().Take(8).Select(diagnostic =>
+            {
+                string Read(string name) => diagnostic.GetType().GetProperty(name,
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.NonPublic)?.GetValue(diagnostic)?.ToString() ?? "<null>";
+                var message = Read("Message");
+                if (message.Length > 240) message = message[..240] + "…";
+                return $"{Read("Code")}/{Read("Severity")}: {message}";
+            }));
+        }
+        catch (Exception error)
+        {
+            return $"diagnostic extraction failed ({error.GetType().Name})";
+        }
     }
     private static string RepeatSourceDiagnostic(HomeLibraryDestinationPage page)
     {
