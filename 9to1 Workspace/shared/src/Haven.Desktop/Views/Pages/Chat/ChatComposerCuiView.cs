@@ -616,6 +616,13 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
     /// are exercised, never an alternate renderer.</summary>
     internal ChatComposerCuiView(IChatComposerSource source, ICuiSceneReadiness readiness,
         string? owningAppId = null, CuiThemePreferenceContext? themePreference = null)
+        : this(source, readiness, owningAppId, themePreference, true) { }
+
+    internal static ChatComposerCuiView CreateDeferred(IChatComposerSource source) =>
+        new(source, ChatComposerReadiness.Instance, null, null, false);
+
+    private ChatComposerCuiView(IChatComposerSource source, ICuiSceneReadiness readiness,
+        string? owningAppId, CuiThemePreferenceContext? themePreference, bool initializeImmediately)
     {
         _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)),
             sender => ReferenceEquals(sender, FindComposerTextBox()));
@@ -633,7 +640,7 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         _input = new CuiComposerInputPort(() => FindComposerTextBox(), focused => _bindings.IsFocused = focused);
         _owningAppId = owningAppId;
         _themePreference = themePreference;
-        _ = InitializeAsync();
+        if (initializeImmediately) _ = InitializeAsync();
     }
 
     private readonly string? _owningAppId;

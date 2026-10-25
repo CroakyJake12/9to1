@@ -73,7 +73,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         Document = SpaceTaskWidgetCuiDocument.Load();
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
-        _composerView = new ChatComposerCuiView(new TaskComposerSource(this));
+        _composerView = ChatComposerCuiView.CreateDeferred(new TaskComposerSource(this));
         var controls = new CuiControlRegistry();
         controls.BindAuthoredControl("task-composer-mount", _ => _composerView);
         _host = new CuiSceneHost(controls);

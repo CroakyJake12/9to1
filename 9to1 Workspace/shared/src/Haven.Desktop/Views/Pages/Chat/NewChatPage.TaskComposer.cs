@@ -191,17 +191,28 @@ public sealed partial class NewChatPage
                 try
                 {
                     original.DemandPublication();
-                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
-                    {
-                        SetProjectionStatus("Stopping task at its supported pause boundary...");
-                        _scene.ComposerView.RefreshSurface();
-                    })).GetTask()).ConfigureAwait(false);
-                    original.DemandPublication();
+                    // Claim the same issued command while the pressed continuation is still
+                    // live, before an optional dispatcher yield can retire that observer.
                     var actual = resumed is null ? current.Owner.AcquireActualComposerPause(original.Token)
                         : resumed.Observer.AcquireActualComposerCommand(lease =>
                             _sessions.PauseObservedResumedTaskComposerAsync(current.Owner.ComposerIdentity, lease, original.Token));
-                    var result = await original.AwaitAsync(actual).ConfigureAwait(false);
-                    _nativeTaskPauseResult = (target, result); // Actual owner ACK survives withdrawal.
+                    var terminal = original.ObserveTerminalAsync(actual); // Enrol the raw command before any UI callback.
+                    Task? projection = null;
+                    try { projection = Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
+                    {
+                        SetProjectionStatus("Stopping task at its supported pause boundary...");
+                        _scene.ComposerView.RefreshSurface();
+                    })).GetTask(); }
+                    catch (Exception cause) { original.Retain(cause); }
+                    var settled = await terminal.ConfigureAwait(false);
+                    if (settled.Succeeded && settled.Value is { } acknowledged)
+                        _nativeTaskPauseResult = (target, acknowledged); // Real ACK survives UI withdrawal/failure.
+                    else foreach (var cause in settled.Causes) original.Retain(cause); // No source cancellation/fault is waived.
+                    if (projection is not null)
+                        try { await original.AwaitAsync(projection).ConfigureAwait(false); }
+                        catch (Exception cause) { original.Retain(cause); }
+                    original.ThrowRetained();
+                    var result = settled.Value ?? throw new InvalidDataException("The original pause returned no acknowledgement.");
                     if (!original.IsPublicationCurrent) return;
                     await RefreshNativeTaskControlsAsync(original, current).ConfigureAwait(false);
                     await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
