@@ -77,9 +77,9 @@ public static class ToolbarBuilder
             Separator()));
         host.Children.Add(Group(
             Toggle(vm, BoardsIcons.BulletedList, "Bulleted list", "Toggle bulleted list",
-                selected?.Kind == "bulleted", async () => await vm.ConvertSelectedKindAsync("bulleted")),
+                selected?.Kind == "bulleted", async () => await vm.ConvertSelectedKindAsync("bulleted"), iconSize: 18),
             Toggle(vm, BoardsIcons.NumberedList, "Numbered list", "Toggle numbered list",
-                selected?.Kind == "numbered", async () => await vm.ConvertSelectedKindAsync("numbered")),
+                selected?.Kind == "numbered", async () => await vm.ConvertSelectedKindAsync("numbered"), iconSize: 18),
             Separator()));
         host.Children.Add(Group(AlignGroup(vm, selected), Separator()));
         host.Children.Add(Group(
@@ -312,17 +312,17 @@ public static class ToolbarBuilder
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal };
         row.Children.Add(Toggle(vm, BoardsIcons.AlignLeft, "Align left", "Align left",
-            selected?.Alignment == "left", async () => await vm.DispatchAsync("AlignLeft", null)));
+            selected?.Alignment == "left", async () => await vm.DispatchAsync("AlignLeft", null), iconSize: 18));
         row.Children.Add(Toggle(vm, BoardsIcons.AlignCenter, "Align center", "Align center",
-            selected?.Alignment == "center", async () => await vm.DispatchAsync("AlignCenter", null)));
+            selected?.Alignment == "center", async () => await vm.DispatchAsync("AlignCenter", null), iconSize: 18));
         row.Children.Add(Toggle(vm, BoardsIcons.AlignRight, "Align right", "Align right",
-            selected?.Alignment == "right", async () => await vm.DispatchAsync("AlignRight", null)));
+            selected?.Alignment == "right", async () => await vm.DispatchAsync("AlignRight", null), iconSize: 18));
         return row;
     }
 
     private static Control IndentButton(BoardsViewModel vm, string glyph, string tip, Action tapped)
     {
-        var button = BoardsIcons.IconButton(glyph, tip, tip, 15);
+        var button = BoardsIcons.IconButton(glyph, tip, tip, 18);
         button.Margin = new Thickness(1, 0);
         SetQuietToolbarControl(button, selected: false, "Boards toolbar indent control");
         ToolTip.SetTip(button, tip);
