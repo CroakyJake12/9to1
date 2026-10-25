@@ -271,12 +271,23 @@ public sealed class HomeLibraryDestinationTests
         identity.EndsWith("/id:" + authoredId, StringComparison.Ordinal);
     private static Button FindLibraryButton(HomeLibraryDestinationPage page, string authoredId)
     {
-        var controls = page.GetVisualDescendants().OfType<Button>().Take(80).ToArray();
+        var visual = page.GetVisualDescendants().OfType<Control>().Take(160).ToArray();
+        var controls = visual.OfType<Button>().Take(80).ToArray();
+        var repeatTree = string.Join("; ", visual.Where(control =>
+                CuiRuntimeIdentity.GetStableId(control) is { } id &&
+                (id.Contains("home-library-rows", StringComparison.Ordinal) || id.Contains("library-results", StringComparison.Ordinal)))
+            .Select(control =>
+            {
+                var id = CuiRuntimeIdentity.GetStableId(control);
+                var childCount = control is Panel panel ? panel.Children.Count : -1;
+                return $"{control.GetType().Name}:stable='{id}',children={childCount}";
+            }));
         var matches = controls.Where(item => HasAuthoredIdentity(item, authoredId)).ToArray();
         Assert.True(matches.Length == 1,
             $"Expected one {authoredId}; page rows={page.Current?.Items.Count ?? 0} " +
             $"artifact IDs=[{string.Join(",", page.Current?.Items.Select(item => item.ArtifactId) ?? [])}]; " +
             $"repeat source=[{RepeatSourceDiagnostic(page)}]; " +
+            $"repeat tree=[{repeatTree}]; " +
             $"buttons=[{string.Join("; ", controls.Select(item =>
                 $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
         return matches[0];
