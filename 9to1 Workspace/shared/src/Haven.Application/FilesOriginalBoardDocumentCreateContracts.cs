@@ -32,6 +32,62 @@ public sealed record FilesOriginalBoardDocumentCreateReceipt(Guid FilesStoreId, 
     Guid DocumentId, string DisplayName, string ContentSha256, long SizeBytes,
     AuthenticatedResourceActor OriginalActor);
 
+/// <summary>Opaque owner-issued handle for settling one original create request. It contains no
+/// caller-controlled request data and is useful only with the same live Files owner instance.</summary>
+public sealed class FilesOriginalBoardDocumentCreateAttempt
+{
+    // The public empty constructor cannot mint authority: the owner accepts only object
+    // identities present in its private ConditionalWeakTable.
+    public FilesOriginalBoardDocumentCreateAttempt() { }
+}
+
+public enum FilesOriginalBoardDocumentCreateSettlementState
+{
+    Committed,
+    NotCreated,
+    OutcomeUnknown,
+    HomeAuditPending,
+    CommittedWithCleanupIssues,
+}
+
+/// <summary>Recovery signal for a retained create operation. A committed receipt remains exact
+/// even when later cleanup/audit reporting fails; an unknown result must never be replayed.</summary>
+public sealed class FilesOriginalBoardDocumentCreateSettlementException : IOException
+{
+    public FilesOriginalBoardDocumentCreateSettlementException(
+        FilesOriginalBoardDocumentCreateAttempt attempt,
+        FilesOriginalBoardDocumentCreateSettlementState state,
+        FilesOriginalBoardDocumentCreateReceipt? receipt,
+        IReadOnlyList<Exception> cleanupFailures,
+        Exception? cause)
+        : base(state switch
+        {
+            FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending =>
+                "The retained Files board create needs audit-only Home settlement. Retry this exact attempt; do not create again.",
+            FilesOriginalBoardDocumentCreateSettlementState.CommittedWithCleanupIssues =>
+                "Files and Home committed the board create, but one or more cleanup steps reported errors.",
+            FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown =>
+                "The retained Files board create outcome is unknown. Do not replay it; reconcile the exact operation.",
+            _ => "The retained Files board create did not commit.",
+        }, cause)
+    {
+        Attempt = attempt ?? throw new ArgumentNullException(nameof(attempt));
+        State = state;
+        Receipt = receipt;
+        CleanupFailures = Array.AsReadOnly((cleanupFailures ?? throw new ArgumentNullException(nameof(cleanupFailures))).ToArray());
+    }
+
+    public FilesOriginalBoardDocumentCreateAttempt Attempt { get; }
+    public FilesOriginalBoardDocumentCreateSettlementState State { get; }
+    public FilesOriginalBoardDocumentCreateReceipt? Receipt { get; }
+    public IReadOnlyList<Exception> CleanupFailures { get; }
+}
+
+public sealed record FilesOriginalBoardDocumentCreateSettlementResult(
+    FilesOriginalBoardDocumentCreateSettlementState State,
+    FilesOriginalBoardDocumentCreateReceipt? Receipt,
+    IReadOnlyList<Exception> CleanupFailures);
+
 /// <summary>Separate capability surface for initial board creation. Implementations share the
 /// original Linux Files physical owner but do not change or weaken existing save CAS behavior.</summary>
 public interface IFilesOriginalBoardDocumentCreatePhysicalOwner
