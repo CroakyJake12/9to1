@@ -70,6 +70,40 @@ public sealed class BoardsEditorTests
         Assert.IsType<Avalonia.Media.Imaging.Bitmap>(images.light);
     }
 
+    [Fact]
+    public async Task Authored_edit_view_switch_tracks_the_mode_and_writes_through_the_view_model()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(null);
+        var viewModel = new BoardsViewModel(session);
+
+        TestUiThread.Run(() =>
+        {
+            using var loader = BoardsCuiDocuments.CreateLoader();
+            loader.SetBindingContext(viewModel);
+            loader.SetActionDispatcher(viewModel);
+            var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
+            Assert.DoesNotContain(diagnostics, item => item.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
+            var control = Assert.IsAssignableFrom<Control>(root);
+            loader.WireBindings(control);
+            viewModel.Attach(control);
+
+            var mode = Assert.IsType<ToggleSwitch>(BoardsCuiControlFinder.FindByAutomationId<ToggleSwitch>(control, "EditViewToggle"));
+            Assert.True(mode.IsChecked);
+            Assert.True(mode.IsEnabled);
+
+            Assert.True(viewModel.TrySetValue("IsEditMode", false));
+            Assert.False(mode.IsChecked);
+            Assert.Equal("Viewing", viewModel.Get("ModeLabel"));
+
+            mode.IsChecked = true;
+            Assert.True(viewModel.IsEditMode);
+            Assert.Equal("Editing", viewModel.Get("ModeLabel"));
+
+            viewModel.Dispose();
+        });
+    }
+
     private static Task<T> OnUiThreadAsync<T>(Func<T> work) =>
         // All UI work funnels through the shared test UI thread: with Skia
         // registered, control trees are strictly thread-affine.

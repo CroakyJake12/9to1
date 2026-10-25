@@ -209,6 +209,11 @@ public sealed partial class BoardsViewModel
     {
         if (_disposed || SessionIsDisposed) return false;
         var key = path[(path.LastIndexOf('.') + 1)..];
+        if (key == "IsEditMode" && value is bool editMode)
+        {
+            SetEditMode(editMode);
+            return true;
+        }
         if (key == "LandingSearchQuery")
         {
             SetLandingSearch(value as string);

@@ -76,6 +76,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set(nameof(IsEmbeddedPresentation), false);
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
+        Set("CanToggleEditMode", CanToggleEditMode);
         Set("ModeLabel", _isEditMode ? "Editing" : "Viewing");
         Set("ModeToggleAccessibleName", _isEditMode ? "Switch to Viewing mode" : "Switch to Editing mode");
         Set("RecentBoardsLoaded", false);
@@ -805,6 +806,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             SyncSelectedInkView();
         }
         Set("IsEditMode", enabled);
+        Set("IsEditingMode", enabled);
+        Set("IsViewingMode", !enabled);
         RefreshEmbeddedPageLinkState();
         Set("ShowNativeAuthoring", ShowNativeAuthoring);
         Set("ModeLabel", enabled ? "Editing" : "Viewing");
