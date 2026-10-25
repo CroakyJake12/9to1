@@ -460,7 +460,9 @@ public sealed partial class BoardsViewModel
         FocusCell(block.Id, row, column);
         RefreshAfterEdit();
         RefreshCuiContext();
-        Set("StatusText", action == BoardTableCellAction.Split ? "Table cell split." : "Table cells merged.");
+        Set("StatusText", action == BoardTableCellAction.Split
+            ? "Table cell split; covered cell values and formatting were restored."
+            : "Table cells merged; covered values and formatting remain recoverable on split.");
     }
 
     private void SetContextColumnWidth(RichBoardBlock block, int column, double? delta)

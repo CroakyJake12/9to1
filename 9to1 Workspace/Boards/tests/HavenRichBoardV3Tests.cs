@@ -464,8 +464,10 @@ public sealed class HavenRichBoardV3Tests
                     Assert.True(HavenRichNotesOps.DeleteTableColumn(rich, pageId, block.Id, 2));
                     anchorId = table.Rows[0].Cells[0].Id;
                     table.Rows[0].Cells[0].Text = "Title";
-                    table.Rows[0].Cells[1].Text = string.Empty;
+                    table.Rows[0].Cells[1].Text = "Right-side text";
                     table.Rows[0].Cells[1].Background = "#FFE8F0FE";
+                    table.Rows[1].Cells[0].Text = "Below text";
+                    table.Rows[1].Cells[1].Text = "Corner text";
                     originalCellIds = table.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id).ToArray();
                 });
 
@@ -512,10 +514,20 @@ public sealed class HavenRichBoardV3Tests
                 Assert.Null(cell.CoveredByCellId);
             });
             Assert.Equal("Title", split.Rows[0].Cells[0].Text);
+            Assert.Equal("Right-side text", split.Rows[0].Cells[1].Text);
             Assert.Equal("#FFE8F0FE", split.Rows[0].Cells[1].Background);
+            Assert.Equal("Below text", split.Rows[1].Cells[0].Text);
+            Assert.Equal("Corner text", split.Rows[1].Cells[1].Text);
             await reopened.MutateAsync(rich => HavenRichNotesOps.UpdateTableCell(rich, pageId, blockId,
                 split.Rows[0].Cells[1].Id, "occupied"));
-            Assert.False(HavenRichNotesOps.CanMergeTableCellRight(reopened.Rich, pageId, blockId, 0, 0));
+            Assert.True(HavenRichNotesOps.CanMergeTableCellRight(reopened.Rich, pageId, blockId, 0, 0));
+            await reopened.MutateAsync(rich =>
+            {
+                Assert.True(HavenRichNotesOps.MergeTableCellRight(rich, pageId, blockId, 0, 0));
+                Assert.True(HavenRichNotesOps.SplitTableCell(rich, pageId, blockId, 0, 0));
+            });
+            Assert.Equal("occupied", reopened.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId)
+                .Table!.Rows[0].Cells[1].Text);
         });
     }
 
