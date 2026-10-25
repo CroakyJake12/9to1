@@ -107,6 +107,12 @@
         <Button id="dev-replace-all-source" action="dev.replace-all-source" content="Replace all in draft" Interactive="{Binding CanFindSourceText}" />
       </Container>
       <Text text="{Binding SourceFindStatus}" text-wrapping="Wrap" accessible-name="Current draft find and replace result" />
+      <Text text="Static CUI draft preview" font-size="18" />
+      <Text text="{Binding CuiDraftPreviewSubset}" text-wrapping="Wrap" />
+      <Button id="dev-preview-cui-draft" action="dev.preview-cui-draft" content="Compile current draft preview" Interactive="{Binding CanPreviewCuiDraft}" />
+      <Text text="{Binding CuiDraftPreviewStatus}" text-wrapping="Wrap" accessible-name="Compiled preview identity current or last valid stale status" />
+      <Object id="dev-cui-draft-preview" type="DeveloperCuiDraftPreview" min-height="180" max-height="480" accessible-name="Noninteractive compiled static CUI draft preview" />
+      <Object id="dev-cui-preview-diagnostics" type="ReadOnlyText" text="{Binding CuiDraftPreviewDiagnostics}" max-height="180" font-family="monospace" accessible-name="Actual draft preview compiler and admission diagnostics" />
       <Button id="dev-analyze-cui-draft" action="dev.analyze-cui-draft" content="Check CUI draft" Interactive="{Binding CanAnalyzeCuiDraft}" />
       <Text text="{Binding CuiDraftAnalysisStatus}" text-wrapping="Wrap" accessible-name="CUI draft syntax checks and component outline availability" />
       <Container Type="Vertical Stack" max-height="200" VerticalScrolling="True" accessible-name="CUI draft Problems">
