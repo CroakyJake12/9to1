@@ -94,6 +94,10 @@ public sealed partial class ChatCloudPermissionCallerTests
             Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
         rig.Client.AvailableModels = [offered];
         var disposal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var providerEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var providerRelease = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var withdrawal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationTokenRegistration withdrawalRegistration = default;
         var directory = Path.Combine(Path.GetTempPath(), "native-task-pause-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         var drafts = new NativeComposerDraftStore();
@@ -114,8 +118,13 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.True(bindings.IsActionAvailable("composer.resume"));
             rig.Client.RunApprovedOwnedFrame = true;
             rig.Client.OriginalDispose = disposal.Task;
+            rig.Capture.ApprovedProviderBody = actualToken =>
+            {
+                withdrawalRegistration = actualToken.Register(() => withdrawal.TrySetResult());
+                providerEntered.TrySetResult(); return providerRelease.Task;
+            };
             resuming = bindings.DispatchAsync("composer.resume", null, token).AsTask();
-            await rig.Client.DisposeEntered.Task.WaitAsync(token);
+            await providerEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
             var lease = NativeComposerIssuedLease(page);
             producer = ActualHostedProducer(NativeComposerIssuedResumeLease(page));
             var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, token))!;
@@ -134,6 +143,12 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.False(bindings.IsActionAvailable("composer.pause"));
             Assert.False(bindings.IsActionAvailable("composer.resume"));
             Assert.False(disposal.Task.IsCanceled);
+            // A Stop request is not admission. Hold the actual provider body until
+            // its real owner token observes withdrawal, then independently hold cleanup.
+            await withdrawal.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            providerRelease.SetResult(false);
+            await rig.Client.DisposeEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.False(pausing.IsCompleted);
             disposal.SetResult();
             await pausing.WaitAsync(TimeSpan.FromSeconds(10));
             var ack = Assert.IsType<TaskRunOriginalRunControlResult>(page.CanonicalTaskPauseAcknowledgement);
@@ -170,12 +185,14 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
         finally
         {
+            providerRelease.TrySetResult(false);
             disposal.TrySetResult();
             if (pausing is not null) _ = await Record.ExceptionAsync(() => pausing);
             if (resuming is not null) _ = await Record.ExceptionAsync(() => resuming);
             page.RequestRetirement();
             _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
             if (producer is not null) _ = await Record.ExceptionAsync(() => producer);
+            withdrawalRegistration.Dispose();
             Directory.Delete(directory, true);
         }
     }
@@ -194,6 +211,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         var page = CreateNativeComposerPage(rig, directory, drafts);
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var withdrawal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationTokenRegistration withdrawalRegistration = default;
         Task? resumed = null;
         try
         {
@@ -210,7 +229,11 @@ public sealed partial class ChatCloudPermissionCallerTests
             await bindings.DispatchAsync("composer.refresh-task-controls", null);
             Assert.True(bindings.IsActionAvailable("composer.resume"));
             rig.Client.RunApprovedOwnedFrame = true;
-            rig.Capture.ApprovedProviderBody = _ => { entered.TrySetResult(); return release.Task; };
+            rig.Capture.ApprovedProviderBody = actualToken =>
+            {
+                withdrawalRegistration = actualToken.Register(() => withdrawal.TrySetResult());
+                entered.TrySetResult(); return release.Task;
+            };
             resumed = bindings.DispatchAsync("composer.resume", null).AsTask();
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
             var liveActivity = await rig.Tasks.ObserveOriginalRunActivityAsync(initial.TaskId, initial.ExecutionId, token);
@@ -231,6 +254,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.True(page.TryStopResponse()); // Keyboard/public Stop is the same real resumable pause.
             Assert.Null(page.CanonicalTaskPauseAcknowledgement);
             Assert.False(bindings.IsActionAvailable("composer.pause"));
+            await withdrawal.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
             release.SetResult(false);
             await resumed.WaitAsync(TimeSpan.FromSeconds(10));
             var pausing = OriginalNativePauseDriver(page);
@@ -253,6 +277,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             page.RequestRetirement();
             _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
             if (resumed is not null) _ = await Record.ExceptionAsync(() => resumed);
+            withdrawalRegistration.Dispose();
             Directory.Delete(directory, true);
         }
     }
