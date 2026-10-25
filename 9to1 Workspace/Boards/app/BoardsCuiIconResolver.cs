@@ -240,6 +240,11 @@ public static class BoardsCuiIconResolver
 
     private static bool TryContrastSafeColor(Color desired, IReadOnlyList<Color> backgrounds, double minimumRatio, out Color safeColor)
     {
+        if (backgrounds.Min(background => CuiContrast.Ratio(desired, background)) >= minimumRatio)
+        {
+            safeColor = desired;
+            return true;
+        }
         var candidates = new List<Color> { desired, Colors.Black, Colors.White };
         candidates.AddRange(backgrounds.Select(background =>
             CuiContrast.EnsureForegroundContrast(desired, background, minimumRatio)));
