@@ -5,6 +5,11 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop.Views.Pages.Tasks;
+using Haven.Application;
+using Haven.Core;
+using CakeOS.Cui.Runtime;
+using HavenOS.Apps.Spaces.Tasks;
 
 namespace HavenOS.Browse.Host.Tests;
 
@@ -25,6 +30,21 @@ public sealed class ChatComposerActionShelfTests
         Assert.Equal(running, bindings.IsActionAvailable("composer.stop"));
         Assert.True(bindings.TryGetValue("Composer.CanQueue", out var projectedQueue));
         Assert.Equal(queue, projectedQueue);
+    }
+
+    [Theory]
+    [InlineData("composer.steer")]
+    [InlineData("composer.pause")]
+    [InlineData("composer.resume")]
+    public async Task Ordinary_sources_cannot_advertise_or_invoke_task_commands(string command)
+    {
+        var source = new Source { IsSending = true, Draft = "ordinary follow up" };
+        var bindings = new ChatComposerBindings(source);
+        Assert.False(bindings.IsActionAvailable(command));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync(command, null).AsTask());
+        Assert.Equal(0, source.Sends);
+        Assert.Equal(0, source.Stops);
+        Assert.Equal("ordinary follow up", source.Draft);
     }
 
     [Fact]
@@ -167,5 +187,155 @@ public sealed class ChatComposerActionShelfTests
         public ValueTask FormatSelection(string command) => ValueTask.CompletedTask;
         public ValueTask InsertEmoji(string emoji) => ValueTask.CompletedTask;
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
+    }
+}
+
+// Real canonical widget/coordinator calls with a controlled repository/authority. These
+// assertions establish adapter admission and draft custody, not native release acceptance.
+public sealed class CanonicalTaskComposerTests
+{
+    [AvaloniaFact]
+    public async Task Queue_preserves_newer_typing_and_rejects_a_second_click_while_the_original_ack_is_pending()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var bindings = rig.Page.OriginalComposer.Bindings;
+        Assert.True(bindings.TrySetValue("Composer.Draft", "first instruction"));
+        rig.Tasks.HoldWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var pending = bindings.DispatchAsync("composer.queue", null).AsTask();
+        await rig.Tasks.WriteEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(pending.IsCompleted);
+        Assert.False(bindings.IsActionAvailable("composer.queue"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.queue", null).AsTask());
+        Assert.True(bindings.TrySetValue("Composer.Draft", "newer unsent instruction"));
+        rig.Tasks.HoldWrite.SetResult();
+        await pending.WaitAsync(TimeSpan.FromSeconds(5));
+        var queued = Assert.Single(rig.Tasks.Current.Queue);
+        Assert.Equal("first instruction", queued.Summary);
+        Assert.Equal(rig.Initial.TaskId, rig.Tasks.Current.TaskId);
+        Assert.Equal(rig.Initial.ExecutionId, rig.Tasks.Current.ExecutionId);
+        Assert.Equal(rig.Initial.ContextId, rig.Tasks.Current.ContextId);
+        Assert.Equal("newer unsent instruction", bindings.Source.Draft);
+        Assert.Equal(1, rig.Tasks.Writes);
+        Assert.True(bindings.IsActionAvailable("composer.queue"));
+        Assert.Same(rig.Page.AcknowledgedFollowUp!.Snapshot, rig.Tasks.Current);
+    }
+
+    [AvaloniaTheory]
+    [InlineData("composer.queue", TaskFollowUpMode.Queue)]
+    [InlineData("composer.steer", TaskFollowUpMode.Steer)]
+    public async Task Actual_task_ack_clears_only_the_submitted_draft_and_never_creates_a_new_run(string command, TaskFollowUpMode mode)
+    {
+        await using var rig = await Rig.CreateAsync();
+        var bindings = rig.Page.OriginalComposer.Bindings;
+        Assert.True(bindings.TrySetValue("Composer.Draft", "use the existing source"));
+        Assert.False(bindings.IsActionAvailable("composer.send"));
+        Assert.False(bindings.Source.CanResume); // No private original/cold continuation exists.
+        await bindings.DispatchAsync(command, null);
+        var actual = Assert.IsType<FollowUpDecision>(rig.Page.AcknowledgedFollowUp);
+        Assert.Equal(mode, actual.Mode);
+        Assert.Equal(rig.Initial.TaskId, actual.Snapshot.TaskId);
+        Assert.Equal(rig.Initial.ExecutionId, actual.Snapshot.ExecutionId);
+        Assert.Equal(rig.Initial.ContextId, actual.Snapshot.ContextId);
+        Assert.Equal("", bindings.Source.Draft);
+        Assert.False(bindings.IsActionAvailable("composer.queue"));
+        Assert.False(bindings.IsActionAvailable("composer.steer"));
+        Assert.Equal(1, rig.Tasks.Writes);
+        Assert.Empty(actual.Snapshot.Attempts);
+        Assert.Contains(mode == TaskFollowUpMode.Queue ? "task:queue" : "task:steer", rig.Authority.Commands);
+    }
+
+    private sealed class Rig : IAsyncDisposable
+    {
+        internal SpaceTaskWidgetPage Page = null!;
+        internal TaskExecutionSnapshot Initial = null!;
+        internal Tasks Tasks = new();
+        internal Authority Authority = new();
+        internal static async Task<Rig> CreateAsync()
+        {
+            var rig = new Rig();
+            var spaces = new SpaceRegistry(new Settings());
+            var space = await spaces.CreateAsync("Controlled composer task");
+            var now = DateTimeOffset.UtcNow;
+            var conversation = new Conversation(Guid.NewGuid(), HavenMode.Tasks, ConversationKind.Task,
+                "Actual task", null, null, false, false, now, now, SpaceId: space.Id);
+            var task = Guid.NewGuid(); var run = Guid.NewGuid();
+            rig.Initial = new(task, conversation.Id, run, "Existing objective", TaskExecutionLifecycle.Suspended,
+                TaskExecutionDurability.PersistedPlan, 1, [], [], [], [], null, now, now)
+                { PersistenceRevision = 2, OwnerBinding = new(task, conversation.Id, run,
+                    "controlled actor", "controlled profile", null, null, "revision", "test-only observation") };
+            rig.Tasks.Current = rig.Initial;
+            var coordinator = new TaskExecutionCoordinator(rig.Tasks, new Events(), admissionAuthority: rig.Authority);
+            rig.Page = new(new SpaceTaskWorkspaceService(spaces, new Conversations(conversation), coordinator), coordinator,
+                space.Id, conversation.Id, new UnavailableReadiness(), expectedOriginalTaskId: task, expectedOriginalExecutionId: run);
+            try
+            {
+                await rig.Page.ActivateAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+                var composer = await rig.Page.OriginalComposer.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.Equal(CuiSceneAvailabilityState.Ready, composer.State);
+                return rig;
+            }
+            catch
+            {
+                rig.Page.RequestRetirement();
+                _ = await Record.ExceptionAsync(() => rig.Page.CloseAndDrainAsync());
+                throw;
+            }
+        }
+        public async ValueTask DisposeAsync()
+        {
+            Tasks.HoldWrite?.TrySetResult();
+            Page.RequestRetirement();
+            await Page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+    private sealed class Authority : ITaskRunCommandAuthority
+    {
+        internal List<string> Commands = [];
+        public Task ValidateTaskCommandAsync(TaskExecutionSnapshot task, string command, CancellationToken token)
+        { token.ThrowIfCancellationRequested(); Commands.Add(command); return Task.CompletedTask; }
+        public Task<TaskExecutionOwnerBinding> AuthorizeStartAsync(TaskExecutionSnapshot task, CancellationToken token) => throw new NotSupportedException();
+        public Task<ITaskRunAdmissionLease> AuthorizeAttemptAsync(TaskExecutionSnapshot task, Guid id, TaskRunRouteCandidate route, Guid? previous, CancellationToken token) => throw new NotSupportedException();
+        public Task ValidateAcceptedActionAsync(TaskExecutionSnapshot task, Guid attempt, Guid action, string receipt, CancellationToken token) => throw new NotSupportedException();
+    }
+    private sealed class Tasks : ITaskExecutionRepository
+    {
+        internal TaskExecutionSnapshot Current = null!;
+        internal TaskCompletionSource? HoldWrite;
+        internal TaskCompletionSource WriteEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal int Writes;
+        public Task<TaskExecutionSnapshot?> GetAsync(Guid id, CancellationToken token) => Task.FromResult<TaskExecutionSnapshot?>(id == Current.TaskId ? Current : null);
+        public Task<TaskExecutionSnapshot?> GetByContextAsync(Guid id, CancellationToken token) => Task.FromResult<TaskExecutionSnapshot?>(id == Current.ContextId ? Current : null);
+        public async Task UpsertAsync(TaskExecutionSnapshot value, CancellationToken token)
+        {
+            WriteEntered.TrySetResult();
+            if (HoldWrite is { } held) await held.Task.WaitAsync(token);
+            token.ThrowIfCancellationRequested(); Current = value; Writes++;
+        }
+        public Task<IReadOnlyList<TaskExecutionSnapshot>> GetResumableAsync(CancellationToken token) => throw new NotSupportedException();
+    }
+    private sealed class Conversations(Conversation row) : IConversationRepository
+    {
+        public Task<Conversation?> GetAsync(Guid id, CancellationToken token) => Task.FromResult<Conversation?>(id == row.Id ? row : null);
+        public Task<IReadOnlyList<Conversation>> GetBySpaceAsync(Guid id, int limit, CancellationToken token) => Task.FromResult<IReadOnlyList<Conversation>>([row]);
+        public Task<IReadOnlyList<Conversation>> GetRecentAsync(HavenMode? mode, int limit, CancellationToken token) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
+        public Task UpsertConversationAsync(Conversation value, CancellationToken token) => throw new NotSupportedException();
+        public Task AddMessageAsync(ChatMessage value, CancellationToken token) => throw new NotSupportedException();
+        public Task DeleteConversationAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
+    }
+    private sealed class Settings : IVersionedSettingsStore
+    {
+        private readonly Dictionary<string, object> _values = [];
+        public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class => Task.FromResult(_values.GetValueOrDefault(key) as T);
+        public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class { _values[key] = value; return Task.CompletedTask; }
+        public Task RemoveAsync(string key, CancellationToken token) { _values.Remove(key); return Task.CompletedTask; }
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => throw new NotSupportedException();
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest value, CancellationToken token) => throw new NotSupportedException();
+    }
+    private sealed class Events : IExecutionEventSink { public bool TryPublish(ExecutionEvent value) => true; }
+    private sealed class UnavailableReadiness : ICuiSceneReadiness
+    {
+        public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) => new(new CuiSceneAvailability(
+            CuiSceneAvailabilityState.Unavailable, "CONTROLLED_WIDGET", "No real native task frame is claimed by this test."));
     }
 }

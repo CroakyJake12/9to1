@@ -13,17 +13,7 @@
       <Text text="{Binding Attempts}" text-wrapping="Wrap" accessible-name="Provider attempts" />
       <Text text="{Binding Recovery}" text-wrapping="Wrap" accessible-name="Recovery observation" />
       <Text text="{Binding Continuation}" text-wrapping="Wrap" accessible-name="Continuation availability" />
-      <Container Type="Wrap">
-        <Button id="space-task-pause" action="task.pause" content="Pause original run" accessible-name="Request and join this same original run pause" Interactive="{Binding CanPauseOriginal}" />
-        <Button id="space-task-stop" action="task.stop" content="Stop original run" accessible-name="Request and join this same original run stop" Interactive="{Binding CanStopOriginal}" />
-        <Button id="space-task-resume-original" action="task.resume-original" content="Resume approved original input" accessible-name="Observe the owning service resume this same approved unstarted input" Interactive="{Binding CanResumeOriginal}" />
-      </Container>
-      <Text text="Steer or queue work" font-size="18" />
-      <Input id="space-task-instruction" placeholdertext="Describe a follow-up" accessible-name="Task follow-up instruction" Type="Text" Value="{Binding Instruction}" Multiline="true" />
-      <Container Type="Wrap">
-        <Button id="space-task-steer" action="task.steer" content="Steer task" accessible-name="Steer this same task" Interactive="{Binding CanSubmit}" />
-        <Button id="space-task-queue" action="task.queue" content="Queue follow-up" accessible-name="Queue a follow-up on this same task" Interactive="{Binding CanSubmit}" />
-      </Container>
+      <Container id="task-composer-mount" Type="Vertical Stack" accessible-name="Task follow-up composer" />
       <Text text="{Binding FollowUps}" text-wrapping="Wrap" accessible-name="Steering and queued work" />
       <Text text="Development workspace" font-size="18" />
       <Text text="{Binding Project}" text-wrapping="Wrap" accessible-name="Canonical Dev project" />

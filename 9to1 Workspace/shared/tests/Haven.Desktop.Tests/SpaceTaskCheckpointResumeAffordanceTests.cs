@@ -57,6 +57,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.True(activation.IsCompleted);
             Assert.Equal(1, readiness.Calls);
             Assert.False(widget.IsActionAvailable("task.resume-original") == true);
+            Assert.False(widget.OriginalComposer.Bindings.IsActionAvailable("composer.resume") == true);
             Assert.True(widget.TryGetValue("Continuation", out var continuation));
             Assert.Contains("protected cold-journal resume False", Assert.IsType<string>(continuation));
 
@@ -73,7 +74,10 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.True(widget.IsActionAvailable("task.resume-original") == true);
             Assert.True(widget.TryGetValue("CanResumeOriginal", out var affordance));
             Assert.Equal(true, affordance);
-            dispatch = widget.DispatchAsync("task.resume-original", null, token).AsTask();
+            Assert.True(widget.OriginalComposer.Bindings.IsActionAvailable("composer.resume") == true);
+            // Exercise the SAME shared authored composer port. Its availability cannot
+            // replace the original coordinator's private continuation/owner checks.
+            dispatch = widget.OriginalComposer.Bindings.DispatchAsync("composer.resume", null, token).AsTask();
             var refusal = await Record.ExceptionAsync(() => dispatch.WaitAsync(token));
             Assert.NotNull(refusal);
             Assert.True(dispatch.IsFaulted);
