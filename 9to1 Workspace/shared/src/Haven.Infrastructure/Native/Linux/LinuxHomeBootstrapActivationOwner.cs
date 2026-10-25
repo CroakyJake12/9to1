@@ -230,14 +230,9 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
         ResultCode = "LinuxBootstrapActivatedRuntimeUnavailable", SucceededSteps = value.SucceededSteps.Concat(["atomic-bundle-publication"]).ToArray(),
         SkippedSteps = ["root-service-not-started", "installed-peer-not-established"] };
     private static bool SameInstalledActivation(HomePackageDatabaseEntry actual, HomePackageDatabaseEntry expected)
-    {
-        if (actual.PackageId != expected.PackageId || actual.AppId != expected.AppId || actual.InstalledVersion != expected.InstalledVersion ||
-            actual.InstallationState != HomePackageInstallState.Installed || actual.Compatibility != HomePackageCompatibility.HomeServiceUnavailable ||
-            actual.UnknownFields is not { } fields || !fields.TryGetValue(HomePackageOriginalInstalledActivationRecord.Field, out var retained)) return false;
-        var activation = retained.Deserialize<HomePackageOriginalInstalledActivationRecord>();
-        return activation is not null && JsonSerializer.Serialize(activation) ==
-            JsonSerializer.Serialize(expected.UnknownFields![HomePackageOriginalInstalledActivationRecord.Field].Deserialize<HomePackageOriginalInstalledActivationRecord>());
-    }
+        // Every original field, including integrity/dependencies/revision, must still
+        // match; recovery never overwrites a later owning policy decision.
+        => JsonSerializer.Serialize(actual) == JsonSerializer.Serialize(expected);
     private static HomePackageDatabaseEntry InstalledEntry(Verified value, HomePackageOriginalPublisherEnrollmentRecord enrollment,
         string activePath, string operation, DateTimeOffset verifiedAt)
     {
