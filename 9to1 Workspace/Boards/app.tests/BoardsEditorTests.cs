@@ -148,11 +148,11 @@ public sealed class BoardsEditorTests
 
         foreach (var (command, property) in expected)
         {
-            Assert.False(vm.Get(property) as bool? ?? false);
+            Assert.False(Assert.IsType<bool>(vm.Get(property)));
             var action = TestUiThread.Run(() => vm.DispatchAsync(command, null));
             PumpOnUi(action);
             await action;
-            Assert.True(vm.Get(property) as bool? ?? false);
+            Assert.True(Assert.IsType<bool>(vm.Get(property)));
         }
 
         TestUiThread.Run(vm.Dispose);
