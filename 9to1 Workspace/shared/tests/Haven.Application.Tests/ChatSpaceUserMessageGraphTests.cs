@@ -55,6 +55,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     [InlineData("unsupported")]
     [InlineData("port-type")]
     [InlineData("port-direction")]
+    [InlineData("port-count")]
     [InlineData("branch")]
     [InlineData("orphan")]
     [InlineData("configuration")]
@@ -67,6 +68,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         if (defect == "unsupported") nodes[1] = nodes[1] with { TypeId = "spaces.model.imaginary" };
         if (defect == "port-type") nodes[1] = nodes[1] with { Ports = nodes[1].Ports.Select(port => port with { DataType = "flow" }).ToArray() };
         if (defect == "port-direction") nodes[0] = nodes[0] with { Ports = [nodes[0].Ports[0] with { Direction = (SpaceLayoutPortDirection)99 }] };
+        if (defect == "port-count") nodes[1] = nodes[1] with { Ports = [.. nodes[1].Ports, new("extra", "Extra", SpaceLayoutPortDirection.Output, "string", false)] };
         if (defect == "branch") edges[0] = edges[0] with { Branch = "true" };
         if (defect == "orphan") nodes = [.. nodes, nodes[1] with { Id = Guid.NewGuid() }];
         if (defect == "configuration") nodes[1] = nodes[1] with { Metadata = new Dictionary<string, string> { ["maximumTextElements"] = "0" } };
