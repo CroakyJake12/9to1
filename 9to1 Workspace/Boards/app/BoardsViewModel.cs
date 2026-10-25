@@ -1822,16 +1822,20 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var selectedCharacters = selection is null ? 0 : Math.Abs(selection.Caret - selection.Anchor);
         Set("TextRangeSummary", selection is not null ? $"{selectedCharacters} {(selectedCharacters == 1 ? "character" : "characters")} selected"
             : _textRangeControl is not null ? "Caret formatting" : block is not null ? "Block selected" : "Select text");
-        Set("RangeBoldSelected", selection?.Bold ?? (block?.Bold == true));
-        Set("RangeItalicSelected", selection?.Italic ?? (block?.Italic == true));
-        Set("RangeUnderlineSelected", selection?.Underline ?? (block?.Underline == true));
-        Set("RangeStrikeSelected", selection?.StrikeThrough ?? (block?.Strike == true));
-        Set("RangeBoldState", "Bold, " + (selection?.Bold.ToString().ToLowerInvariant() ?? (block?.Bold == true ? "on" : "off")));
-        Set("RangeItalicState", "Italic, " + (selection?.Italic.ToString().ToLowerInvariant() ?? (block?.Italic == true ? "on" : "off")));
-        Set("RangeUnderlineState", "Underline, " + (selection?.Underline.ToString().ToLowerInvariant() ?? (block?.Underline == true ? "on" : "off")));
-        Set("RangeStrikeState", "Strikethrough, " + (selection?.StrikeThrough.ToString().ToLowerInvariant() ?? (block?.Strike == true ? "on" : "off")));
+        Set("RangeBoldSelected", selection is null ? block?.Bold == true : IsFormatMarkActive(selection.Bold));
+        Set("RangeItalicSelected", selection is null ? block?.Italic == true : IsFormatMarkActive(selection.Italic));
+        Set("RangeUnderlineSelected", selection is null ? block?.Underline == true : IsFormatMarkActive(selection.Underline));
+        Set("RangeStrikeSelected", selection is null ? block?.Strike == true : IsFormatMarkActive(selection.StrikeThrough));
+        Set("RangeBoldState", "Bold, " + (selection is null ? (block?.Bold == true ? "on" : "off") : FormatMarkName(selection.Bold)));
+        Set("RangeItalicState", "Italic, " + (selection is null ? (block?.Italic == true ? "on" : "off") : FormatMarkName(selection.Italic)));
+        Set("RangeUnderlineState", "Underline, " + (selection is null ? (block?.Underline == true ? "on" : "off") : FormatMarkName(selection.Underline)));
+        Set("RangeStrikeState", "Strikethrough, " + (selection is null ? (block?.Strike == true ? "on" : "off") : FormatMarkName(selection.StrikeThrough)));
         RefreshCuiBlockActions();
     }
+
+    private static bool IsFormatMarkActive(BoardTextMark mark) => mark is BoardTextMark.On or BoardTextMark.Mixed;
+
+    private static string FormatMarkName(BoardTextMark mark) => mark.ToString().ToLowerInvariant();
 
     private async ValueTask<bool> DispatchTextRangeAsync(string command, CancellationToken cancellationToken)
     {
