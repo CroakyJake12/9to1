@@ -306,6 +306,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
             // obtains files.board.create review/claim before any durable create effect.
             var attempt = default(FilesOriginalBoardDocumentCreateAttempt?);
             FilesOriginalBoardDocumentCreateSettlementResult settlement;
+            var prepareOpen = true;
             try
             {
                 var createTask = StartSettlementAwareTask(source, retain => createOwner.CreateBoardDocumentWithinSourceAsync(
@@ -342,6 +343,11 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 }
                 else if (cause.State == FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown)
                 {
+                    // Reconciliation may corroborate the exact Files artifact after an
+                    // uncertain effect. Keep that evidence separate from publication: the
+                    // user must explicitly choose Open recorded board, which performs a new
+                    // files.board.read review and exact receipt validation.
+                    prepareOpen = false;
                     try
                     {
                         settlement = await ObserveCreateSettlementWithinSourceAsync(source, createOwner, attempt!,
@@ -358,7 +364,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 (selectedReceipt.FilesStoreId != entry.Page.StoreID || selectedReceipt.ParentFolderId != entry.Row.Id.Value))
                 throw new InvalidDataException("The original Files create settlement names another store or selected parent folder.");
             return await FinishCreatedBoardWithinSourceAsync(source, createOwner, settlement, attempt,
-                CancellationToken.None).ConfigureAwait(false);
+                CancellationToken.None, prepareOpen).ConfigureAwait(false);
         }, token);
 
     internal Task<NativeHomeFilesBoardCreateResult> RetryCreateSettlementAndPrepareAsync(
