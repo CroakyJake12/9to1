@@ -55,7 +55,7 @@ public sealed class NavBuilderTests
             Assert.Equal(3, rows.Length);
             Assert.Equal(new[] { 16d, 32d, 48d }, rows.Select(row => row.Margin.Left));
             Assert.All(rows, row => Assert.Equal(34d, Assert.IsType<Grid>(row.Child).Height));
-            var rootDisclosure = Assert.IsType<Button>(Assert.IsType<Grid>(rows[0].Child).Children[0]);
+            var rootDisclosure = Assert.IsType<Button>(Assert.IsType<Grid>(rows[0].Child).Children.OfType<Button>().First());
             rootDisclosure.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             NavBuilder.Rebuild(nav, vm);
             Assert.Single(nav.Children.OfType<Border>().Skip(1));
@@ -66,7 +66,7 @@ public sealed class NavBuilderTests
             vm.SelectPage(section.Id, grandchild.Id);
             NavBuilder.Rebuild(nav, vm);
             Assert.Equal(3, nav.Children.OfType<Border>().Skip(1).Count());
-            var leafDisclosure = Assert.IsType<Button>(Assert.IsType<Grid>(nav.Children.OfType<Border>().Last().Child).Children[0]);
+            var leafDisclosure = Assert.IsType<Button>(Assert.IsType<Grid>(nav.Children.OfType<Border>().Last().Child).Children.OfType<Button>().First());
             Assert.False(leafDisclosure.IsEnabled);
         });
     }

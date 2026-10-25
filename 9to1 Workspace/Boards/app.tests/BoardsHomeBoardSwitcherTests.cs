@@ -43,6 +43,15 @@ public sealed class BoardsHomeBoardSwitcherTests
 
         TestUiThread.Run(() =>
         {
+            var switcher = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(loadedRoot, "BoardSwitcher");
+            Assert.NotNull(switcher);
+            Assert.Equal("Pinned Files Board", switcher!.Header);
+            viewModel.EditText("BoardTitleBox", "Renamed Files Board");
+            Assert.Equal("Renamed Files Board", switcher.Header);
+        });
+
+        TestUiThread.Run(() =>
+        {
             Assert.False(viewModel.CanSwitchBoard);
             Assert.True(Find("BoardSwitcher").IsEnabled);
             Assert.True(Find("BoardSwitcherCreate").IsEnabled);

@@ -17,13 +17,6 @@ internal static class VisualFixtures
         await session.SaveAsAsync(path);
         await session.MutateAsync(rich =>
         {
-            var formula = HavenRichNotesOps.CreateCustomStyle(rich, "Key Formula");
-            HavenRichNotesOps.UpdateStyle(rich, formula.Id, s =>
-            {
-                s.Bold = true;
-                s.FontSize = 16;
-                s.Background = "#FFFFF3C4";
-            });
             rich.Sections.Clear();
             var pure = new HavenRichSection { Title = "Pure Mathematics" };
             var stats = new HavenRichSection { Title = "Statistics" };
@@ -47,7 +40,6 @@ internal static class VisualFixtures
             var formulaBlock = new HavenRichBlock
             {
                 Kind = HavenRichBlockKind.Paragraph,
-                StyleId = formula.Id,
                 PlainText = "sin²θ + cos²θ = 1",
                 Runs =
                 [
