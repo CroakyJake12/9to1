@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 
 namespace CakeOS.Apps.Boards.App;
@@ -300,6 +301,7 @@ public static class ToolbarBuilder
     {
         var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", tooltip ?? "Insert a block (grouped menu with search)");
         var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
+        button.Tag = popup;
         var panel = new StackPanel { Orientation = Orientation.Vertical, MinWidth = 260 };
         var search = new TextBox { PlaceholderText = "Search blocks and styles…", Margin = new Thickness(0, 0, 0, 8) };
         Avalonia.Automation.AutomationProperties.SetName(search, "Search insert menu");
@@ -336,11 +338,21 @@ public static class ToolbarBuilder
         };
         button.Click += (_, _) =>
         {
-            search.Text = string.Empty;
-            Fill(string.Empty);
-            popup.Open();
+            OpenInsertMenu(button);
         };
         return button;
+    }
+
+    public static bool OpenInsertMenu(Control button)
+    {
+        ArgumentNullException.ThrowIfNull(button);
+        if (button.Tag is not Popup popup) return false;
+        var search = popup.Child?.GetLogicalDescendants().OfType<TextBox>().FirstOrDefault();
+        if (search is null) return false;
+        search.Text = string.Empty;
+        popup.Open();
+        search.Focus();
+        return true;
     }
 
     private static void AddGroup(

@@ -48,7 +48,10 @@
 - Inline block actions: **PARTIALLY IMPLEMENTED, owning checks pending**. Edit mode
   exposes an insertion menu and an authored CUI grip with typed, revision-checked
   move/duplicate/delete actions; View mode hides authoring controls. CUI-native
-  hover presentation, drag reordering and slash/split/merge shortcuts are incomplete.
+  hover presentation, drag reordering and split/merge shortcuts are incomplete.
+  Typing `/` in an empty text block now opens its existing searchable inline insert
+  menu, with the trigger cleared before document text is updated; this source change
+  is pending owning compile/runtime verification.
 - Remaining major Boards gaps are Progress Tracker packets B-01 through B-04.
   In particular, canonical Home Library landing integration, cross-client
   Board/Page convergence, embedded Write/Canvas/Chat/ScopedChat/Data

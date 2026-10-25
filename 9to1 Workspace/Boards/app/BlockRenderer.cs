@@ -13,6 +13,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
 
@@ -137,6 +138,16 @@ public static class BlockRenderer
     private static bool IsListKind(string kind) =>
         kind is "checklist" or "bulleted" or "numbered";
 
+    private static bool TryOpenInlineInsertMenu(TextBox editor)
+    {
+        foreach (var row in editor.GetVisualAncestors().OfType<Grid>())
+        {
+            var button = row.Children.OfType<Button>().FirstOrDefault(candidate => candidate.Tag is Popup);
+            if (button is not null && ToolbarBuilder.OpenInsertMenu(button)) return true;
+        }
+        return false;
+    }
+
     private static StackPanel BlockShell(BoardsViewModel vm, RichBoardBlock block)
     {
         // No visible header: blocks read as document content. Management lives
@@ -198,7 +209,21 @@ public static class BlockRenderer
         ToolTip.SetTip(box, (isHeading ? "Heading" : "Paragraph") + " — select to format");
         AutomationProperties.SetName(box, (isHeading ? "Heading" : "Paragraph") + " editor");
         var captured = block.Id;
-        box.TextChanged += (_, _) => vm.EditText("t_" + captured, box.Text ?? string.Empty);
+        box.TextChanged += (_, _) =>
+        {
+            if (vm.IsEditMode && string.Equals(box.Text, "/", StringComparison.Ordinal) &&
+                box.CaretIndex == 1 && box.SelectionStart == box.SelectionEnd &&
+                TryOpenInlineInsertMenu(box))
+            {
+                // The slash triggers the existing searchable insertion menu but
+                // never becomes document content; clearing it raises this handler
+                // with the empty value before search receives subsequent typing.
+                box.Text = string.Empty;
+                box.CaretIndex = 0;
+                return;
+            }
+            vm.EditText("t_" + captured, box.Text ?? string.Empty);
+        };
         box.GotFocus += (_, _) => vm.FocusBlock(captured);
         box.KeyDown += async (_, args) =>
         {
