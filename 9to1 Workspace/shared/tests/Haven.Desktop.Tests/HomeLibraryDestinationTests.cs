@@ -206,9 +206,23 @@ public sealed class HomeLibraryDestinationTests
         Assert.True(matches.Length == 1,
             $"Expected one {authoredId}; page rows={page.Current?.Items.Count ?? 0} " +
             $"artifact IDs=[{string.Join(",", page.Current?.Items.Select(item => item.ArtifactId) ?? [])}]; " +
+            $"repeat source=[{RepeatSourceDiagnostic(page)}]; " +
             $"buttons=[{string.Join("; ", controls.Select(item =>
                 $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
         return matches[0];
+    }
+    private static string RepeatSourceDiagnostic(HomeLibraryDestinationPage page)
+    {
+        if (!page.TryGetValue("LibraryRows", out var source)) return "binding-missing";
+        if (source is not System.Collections.IEnumerable rows) return source?.GetType().FullName ?? "null";
+        var items = rows.Cast<object>().Take(4).ToArray();
+        return $"type={source.GetType().FullName},count={items.Length},items=[{string.Join(";", items.Select(item =>
+        {
+            var key = page.TryGetItemValue(item, "Key", out var resolvedKey) ? Convert.ToString(resolvedKey) : "<unresolved>";
+            var name = page.TryGetItemValue(item, "DisplayName", out var displayName) ? Convert.ToString(displayName) : "<unresolved>";
+            var target = page.TryGetItemValue(item, "Target", out var resolvedTarget) ? resolvedTarget : null;
+            return $"key={key},name={name},target={target?.GetType().Name ?? "<unresolved>"}";
+        }))}]";
     }
     private static Window Show(Control page)
     { var window = new Window { Width = 800, Height = 620, Content = page }; window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); return window; }
