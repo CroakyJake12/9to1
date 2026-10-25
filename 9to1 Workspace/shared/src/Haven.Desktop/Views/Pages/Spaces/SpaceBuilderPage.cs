@@ -292,7 +292,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     }
 
     public Task<bool> SaveAsync(CancellationToken token = default) => RunControllerAsync(_controller.SaveAsync, token);
-    public Task<bool> ActivateAsync(CancellationToken token = default) => _activationValidator is { } validator
+    public Task<bool> ActivateDraftAsync(CancellationToken token = default) => _activationValidator is { } validator
         ? RunControllerAsync(cancellation => _controller.ActivateAsync(cancellation), token, refreshGraph: true,
             originalOperation: (own, retain, cancellation) => _controller.ActivateAsync(validator, own, retain, cancellation))
         : RunControllerAsync(cancellation => _controller.ActivateAsync(cancellation), token, refreshGraph: true);
@@ -485,7 +485,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         var actual = command switch
         {
             "space-builder.save" => SaveAsync(token),
-            "space-builder.activate" => ActivateAsync(token),
+            "space-builder.activate" => ActivateDraftAsync(token),
             "space-builder.discard" => DiscardChangesAsync(token),
             "space-builder.reload" => ReloadAsync(token),
             _ => throw new InvalidOperationException("This Space Builder command is not owned by this page.")
