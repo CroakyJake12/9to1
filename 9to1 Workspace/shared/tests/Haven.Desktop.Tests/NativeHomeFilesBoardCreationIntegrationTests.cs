@@ -11,6 +11,7 @@ using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace Haven.Desktop.Tests;
@@ -20,7 +21,11 @@ namespace Haven.Desktop.Tests;
 public sealed class NativeHomeFilesBoardCreationIntegrationTests
 {
     private sealed class LinuxFactAttribute : FactAttribute
-    { public LinuxFactAttribute() { if (!OperatingSystem.IsLinux()) Skip = "Requires the actual Linux Home/Files board owners."; } }
+    {
+        public LinuxFactAttribute([CallerFilePath] string? sourceFilePath = null, [CallerLineNumber] int sourceLineNumber = 0)
+            : base(sourceFilePath, sourceLineNumber)
+        { if (!OperatingSystem.IsLinux()) Skip = "Requires the actual Linux Home/Files board owners."; }
+    }
 
     [LinuxFact]
     public async Task Declined_create_leaves_no_board_and_successful_receipt_reopens_the_same_revision_after_read_refusal()
@@ -91,7 +96,7 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
             var originalPhysicalBytes = await File.ReadAllBytesAsync(originalLeaf, rig.Token);
             var editedBytes = BoardBytes(receipt.DocumentId, "Saved through Home reviewed write");
             var saved = await rig.Keep(lease.SaveAsync(lease.SourceId, originalRevision.ToString("D"),
-                editedBytes, rig.Token));
+                editedBytes, rig.Token).AsTask());
             Assert.True(saved.Committed, saved.Message);
             Assert.NotNull(saved.NewRevision);
             var savedRevision = Guid.Parse(saved.NewRevision!);
@@ -269,10 +274,11 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         internal async Task InitializeLibraryAsync(
             Func<HomePermissionAuthorization, CancellationToken, Task> presentReview)
         {
-            var profiles = _graph!.GetRequiredService<IAuthenticatedResourceActorSource>();
+            var graph = _graph ?? throw new InvalidOperationException("The Home/Files test graph has not been created.");
+            var profiles = graph.GetRequiredService<IAuthenticatedResourceActorSource>();
             async Task<bool> Current(CancellationToken token) => await profiles.GetCurrentAsync(token) == Workspace.Actor;
             _library = new NativeHomeFilesLibrarySource(Browser, Workspace.Actor,
-                _graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true,
+                graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true,
                 _read, _writes, presentReview, body => body(), Retain, _creator);
         }
 
