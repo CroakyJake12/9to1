@@ -1,4 +1,6 @@
 using Haven.Application;
+using Haven.Application.Compatibility;
+using HavenOS.Apps.Spaces.Builder;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using Microsoft.Extensions.DependencyInjection;
