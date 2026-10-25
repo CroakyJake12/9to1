@@ -103,11 +103,19 @@ public sealed class SpaceTaskWorkspaceService(
                 if (observed.PersistenceRevision == current.PersistenceRevision) activity = observed;
             }
         }
+        TaskRunOriginalTaskPermissionReview? permission = null;
+        if (commandIdentity)
+        {
+            var observed = await Join(() => canonical.ReadOriginalTaskPermissionReviewAsync(current.TaskId, current.ExecutionId, token), scope).ConfigureAwait(false);
+            if (observed?.CanonicalTaskContext is { } context && context.TaskId == current.TaskId &&
+                context.ExecutionId == current.ExecutionId && context.ContextId == current.ContextId &&
+                context.PersistenceRevision == current.PersistenceRevision) permission = observed;
+        }
         var issued = selected ?? new TaskContextSelection(this, current.TaskId, current.ExecutionId, current.ContextId,
             origin, currentConversation is not null, current.OwnerBinding!);
         if (selected is null) _selections.Add(issued, new object());
         return new(issued, currentConversation, space?.Revision, space?.Name, current,
-            TaskExecutionProjection.From(current)) { HasCurrentCommandIdentity = commandIdentity, Activity = activity };
+            TaskExecutionProjection.From(current)) { HasCurrentCommandIdentity = commandIdentity, Activity = activity, PermissionReview = permission };
     }
 
     public async Task<FollowUpDecision> SubmitSelectedFollowUpAsync(TaskContextSelection selection,
@@ -204,8 +212,45 @@ public sealed class SpaceTaskWorkspaceService(
         if (currentSpace!.Revision != space!.Revision)
             throw new SpaceRevisionConflictException(spaceId, space.Revision, currentSpace.Revision);
         cancellationToken.ThrowIfCancellationRequested();
+        var permission = snapshot?.OwnerBinding is not null && canonical.HasCommandAuthority
+            ? await Join(() => canonical.ReadOriginalTaskPermissionReviewAsync(snapshot.TaskId, snapshot.ExecutionId, cancellationToken), originalSourceCallbackScope).ConfigureAwait(false)
+            : null;
         return new(spaceId, currentSpace.Revision, currentConversation!, snapshot,
-            snapshot is null ? null : TaskExecutionProjection.From(snapshot), originalRetained) { Activity = activity };
+            snapshot is null ? null : TaskExecutionProjection.From(snapshot), originalRetained) { Activity = activity,
+                PermissionReview = permission?.CanonicalTaskContext.PersistenceRevision == snapshot?.PersistenceRevision ? permission : null };
+    }
+
+    public async Task<TaskRunOriginalTaskPermissionReview> ReadPermissionReviewAsync(ITaskContextObservation selected,
+        CancellationToken token, Action<Action>? originalSourceCallbackScope = null)
+    {
+        var current = await ReadExactTaskContextAsync(selected, token, originalSourceCallbackScope).ConfigureAwait(false);
+        return current.PermissionReview ?? throw new InvalidOperationException("This task has no current source-owned permission review.");
+    }
+    private async Task<ITaskContextObservation> ReadExactTaskContextAsync(ITaskContextObservation selected,
+        CancellationToken token, Action<Action>? sourceScope)
+    {
+        ArgumentNullException.ThrowIfNull(selected);
+        ITaskContextObservation current = selected switch
+        {
+            AuthorizedTaskContextObservation issued => await ReadSelectionAsync(issued.Selection, token, sourceScope).ConfigureAwait(false),
+            SpaceTaskObservation space => await ReadAsync(space.SpaceId, space.Conversation.Id, token, sourceScope).ConfigureAwait(false),
+            _ => throw new UnauthorizedAccessException("An actual original task-context observation is required.")
+        };
+        if (current.ContextId != selected.ContextId || current.Snapshot?.TaskId != selected.Snapshot?.TaskId ||
+            current.Snapshot?.ExecutionId != selected.Snapshot?.ExecutionId || current.OriginSpaceId != selected.OriginSpaceId)
+            throw new InvalidOperationException("The selected original Task/Run/context changed; refresh first.");
+        return current;
+    }
+    public async Task<TaskRunOriginalTaskPermissionResponse> RespondPermissionReviewAsync(ITaskContextObservation selected,
+        TaskRunOriginalTaskPermissionReview reviewed, bool approve, CancellationToken token,
+        Action<Action>? originalSourceCallbackScope = null)
+    {
+        var current = await ReadExactTaskContextAsync(selected, token, originalSourceCallbackScope).ConfigureAwait(false);
+        if (current.Snapshot is not { } task || task.TaskId != reviewed.CanonicalTaskContext.TaskId ||
+            task.ExecutionId != reviewed.CanonicalTaskContext.ExecutionId || task.ContextId != reviewed.CanonicalTaskContext.ContextId ||
+            task.PersistenceRevision != reviewed.CanonicalTaskContext.PersistenceRevision)
+            throw new InvalidOperationException("The original task changed after this review; review again before responding.");
+        return await Join(() => canonical.RespondOriginalTaskPermissionAsync(reviewed, approve, token), originalSourceCallbackScope).ConfigureAwait(false);
     }
 
     /// <summary>Queues or steers the same Task/Run. It does not resume or redispatch a provider.</summary>
@@ -325,6 +370,7 @@ public sealed record SpaceTaskObservation(
     public long? OriginSpaceRevision => SpaceRevision;
     public Conversation? OriginalConversation => Conversation;
     public string Title => Conversation.Title;
+    public TaskRunOriginalTaskPermissionReview? PermissionReview { get; init; }
     public TaskRunActivityObservation? Activity { get; init; }
     public bool HasObservedLiveExecution => Activity is { IsLive: true } live && Snapshot is { State: TaskExecutionLifecycle.Running } task &&
         live.TaskId == task.TaskId && live.ExecutionId == task.ExecutionId && live.ContextId == Conversation.Id &&
@@ -350,6 +396,7 @@ public interface ITaskContextObservation
     string Title { get; }
     TaskExecutionSnapshot? Snapshot { get; }
     TaskExecutionProjection? Projection { get; }
+    TaskRunOriginalTaskPermissionReview? PermissionReview { get; }
     TaskRunActivityObservation? Activity { get; }
     bool HasObservedLiveExecution { get; }
     string ExecutionObservation { get; }
@@ -386,6 +433,7 @@ public sealed record AuthorizedTaskContextObservation(TaskContextSelection Selec
     public string Title => OriginalConversation?.Title ?? Snapshot.PromptSummary;
     // A saved state supplies no producer or active-source witness. Only the actual
     // current source observation, scoped to this exact revision, can establish activity.
+    public TaskRunOriginalTaskPermissionReview? PermissionReview { get; init; }
     public TaskRunActivityObservation? Activity { get; init; }
     public bool HasObservedLiveExecution => Activity is { IsLive: true } live && Snapshot.State == TaskExecutionLifecycle.Running &&
         live.TaskId == Snapshot.TaskId && live.ExecutionId == Snapshot.ExecutionId && live.ContextId == ContextId &&
