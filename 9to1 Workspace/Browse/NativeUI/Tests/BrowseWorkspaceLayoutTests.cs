@@ -16,6 +16,39 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeUiTests
 {
     [AvaloniaFact]
+    public async Task Dragging_a_current_tab_row_reorders_its_stable_id_without_selecting_or_recreating_it()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var home = chrome.State.SelectedTabId;
+            var second = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var third = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var source = TabButton(window, workspace, second.ToString("D"));
+            var target = TabButton(window, workspace, third.ToString("D"));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var targetOrigin = target.TranslatePoint(default, window)!.Value;
+            var dropPoint = targetOrigin + new Vector(target.Bounds.Width * .75, target.Bounds.Height / 2);
+            window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
+            window.MouseMove(dropPoint); window.MouseUp(dropPoint, MouseButton.Left);
+            if (workspace.OriginalCommand is { } original) await original;
+            Layout();
+            Assert.Equal(new[] { home, third, second }, chrome.State.Tabs.Select(tab => tab.Id));
+            Assert.Equal(third, chrome.State.SelectedTabId);
+            Assert.Equal(2, factory.Hosts.Count);
+            await Retire(window);
+
+            void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
     public async Task Split_view_buttons_render_both_original_engine_views_and_focus_without_recreation()
     {
         var factory = new FixtureFactory(); var paths = new Paths();

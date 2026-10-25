@@ -295,6 +295,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.MoveTabLeft" => _chrome.CanMoveTab(tab.Id, -1),
             "9to1.Browse.MoveTabRight" => _chrome.CanMoveTab(tab.Id, 1),
             "9to1.Browse.SaveTabPlacement" => _chrome.HasUnsavedTabPlacement,
+            "9to1.Browse.ReorderTab" => _ready && !_busy && !_retiring && !_disposed,
             "9to1.Browse.ToggleSplitView" => _chrome.HasSplitView || _chrome.CanSplitSelectedTab,
             "9to1.Browse.ToggleSplitOrientation" => _chrome.HasSplitView,
             "9to1.Browse.WidenPrimaryPane" => _chrome.CanWidenPrimaryPane,
@@ -354,6 +355,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         { _status = "The tab row changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
         if (IsTabPlacementCommand(command) && !IsCurrentSelectedTabTarget(parameter))
         { _status = "The selected tab changed. Use its current tab controls."; Changed(); return ValueTask.CompletedTask; }
+        if (command == "9to1.Browse.ReorderTab" &&
+            (parameter is not TabReorderSelection reorder || !ReferenceEquals(reorder.Owner, this) ||
+             !IsCurrentTabTarget(reorder.Source) || !IsCurrentTabTarget(reorder.Target)))
+        { _status = "The tab rows changed. Drag their current rows again."; Changed(); return ValueTask.CompletedTask; }
         if (command == "9to1.Browse.CloseTabRow" &&
             !_chrome.State.Tabs.Any(tab => tab.Id == ((TabSelection)parameter!).TabId && tab.IsCloseable))
             return ValueTask.CompletedTask;
@@ -444,6 +449,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                         await Operation(() => _chrome.MoveTabAsync(placementTarget.TabId, command == "9to1.Browse.MoveTabLeft" ? -1 : 1, token));
                     break;
                 case "9to1.Browse.SaveTabPlacement": await Operation(() => _chrome.SaveTabPlacementAsync(token)); break;
+                case "9to1.Browse.ReorderTab":
+                    var reorderTarget = (TabReorderSelection)parameter!;
+                    await Operation(() => _chrome.MoveTabRelativeAsync(reorderTarget.Source.TabId, reorderTarget.Target.TabId,
+                        reorderTarget.BeforeTarget, token));
+                    break;
                 case "9to1.Browse.SelectTab":
                     if (!IsCurrentTabTarget(parameter)) { _status = "The tab row changed before selection; select its current row again."; break; }
                     var selectedTarget = (TabSelection)parameter!;
@@ -727,6 +737,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _chrome.RetirementStarted -= OnChromeRetirementStarted; _disposed = true;
     }
     private sealed record TabSelection(BrowseNativeWorkspace Owner, Guid TabId, long Epoch, bool IsPinned, string PlacementStamp);
+    private sealed record TabReorderSelection(BrowseNativeWorkspace Owner, TabSelection Source, TabSelection Target, bool BeforeTarget);
     private void IssueCurrentRows()
     {
         var actualRows = _snapshot.Tabs.Select(tab => (tab.Id, Key: tab.Id.ToString("D"),
@@ -747,6 +758,24 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private bool IsCurrentTabTarget(object? parameter) => parameter is TabSelection target &&
         ReferenceEquals(target.Owner, this) && target.Epoch == _rowEpoch &&
         _tabRows.Any(row => ReferenceEquals(row.Target, target)) && _chrome.State.Tabs.Any(tab => tab.Id == target.TabId);
+    public bool TryGetCurrentTabRow(int index, out TabRow? row)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        row = (uint)index < (uint)_tabRows.Length ? _tabRows[index] : null;
+        return row is not null && IsCurrentTabTarget(row.Target);
+    }
+    public ValueTask ReorderTabRowsAsync(TabRow source, TabRow target, bool beforeTarget, CancellationToken token = default)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (ReferenceEquals(source, target) || !_tabRows.Any(row => ReferenceEquals(row, source)) ||
+            !_tabRows.Any(row => ReferenceEquals(row, target))) return ValueTask.CompletedTask;
+        var sourceId = ((TabSelection)source.Target).TabId;
+        var targetId = ((TabSelection)target.Target).TabId;
+        if (!_chrome.CanMoveTabRelative(sourceId, targetId))
+        { _status = "Tabs can be reordered only within the same privacy, profile, and pinned section."; Changed(); return ValueTask.CompletedTask; }
+        return DispatchAsync("9to1.Browse.ReorderTab",
+            new TabReorderSelection(this, (TabSelection)source.Target, (TabSelection)target.Target, beforeTarget), token);
+    }
     private static bool IsTabPlacementCommand(string command) => command is
         "9to1.Browse.ToggleTabPinned" or "9to1.Browse.MoveTabLeft" or "9to1.Browse.MoveTabRight";
     private static string TabPlacementStamp(BrowseChromeSnapshot snapshot) => string.Join(";", snapshot.Tabs.Select(tab =>

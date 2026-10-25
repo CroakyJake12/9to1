@@ -7,6 +7,26 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeOwnershipTests
 {
     [Fact]
+    public async Task Stable_id_reorder_moves_before_or_after_a_target_without_crossing_private_owner()
+    {
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths());
+        var home = chrome.State.SelectedTabId;
+        var first = (await chrome.NewTabAsync(false)).SelectedTabId;
+        var second = (await chrome.NewTabAsync(false)).SelectedTabId;
+        var third = (await chrome.NewTabAsync(false)).SelectedTabId;
+        var privateTab = (await chrome.NewTabAsync(true)).SelectedTabId;
+
+        await chrome.MoveTabRelativeAsync(first, third, beforeTarget: false);
+        Assert.Equal(new[] { home, second, third, first, privateTab }, chrome.State.Tabs.Select(tab => tab.Id));
+        await chrome.MoveTabRelativeAsync(first, second, beforeTarget: true);
+        Assert.Equal(new[] { home, first, second, third, privateTab }, chrome.State.Tabs.Select(tab => tab.Id));
+        Assert.False(chrome.CanMoveTab(privateTab, -1));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            chrome.MoveTabRelativeAsync(privateTab, third, beforeTarget: true));
+        Assert.Equal(new[] { home, first, second, third, privateTab }, chrome.State.Tabs.Select(tab => tab.Id));
+    }
+
+    [Fact]
     public async Task Pin_and_move_preserve_live_views_selection_then_survive_reopen_and_restart()
     {
         var paths = new PreservedPaths();

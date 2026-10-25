@@ -188,6 +188,9 @@ internal sealed class BrowseEngineViewport : ContentControl
     private readonly Border _splitDivider = new() { Background = Brushes.Gray, Width = 1, IsVisible = false };
     private readonly Dictionary<IBrowseEngineTab, Control> _originalViews = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<IBrowseAppContentSession, Border> _originalAppViews = new(ReferenceEqualityComparer.Instance);
+    private BrowseNativeWorkspace.TabRow? _tabDragSource;
+    private Point _tabDragStart;
+    private bool _tabDragActive;
     private readonly TextBlock _unavailable = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(24),
         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
     public BrowseEngineViewport(BrowseNativeWorkspace workspace)
@@ -205,12 +208,71 @@ internal sealed class BrowseEngineViewport : ContentControl
         // keyboard adapter here, rather than only to the standalone window.
         _findKeyScope = this.GetVisualAncestors().OfType<CuiSceneHost>().FirstOrDefault();
         _findKeyScope?.AddHandler(KeyDownEvent, OnFindKeyDown, RoutingStrategies.Tunnel);
+        _findKeyScope?.AddHandler(InputElement.PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+        _findKeyScope?.AddHandler(InputElement.PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
+        _findKeyScope?.AddHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
     }
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
     {
         _workspace.PropertyChanged -= OnChanged;
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnFindKeyDown);
+        _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTabPointerPressed);
+        _findKeyScope?.RemoveHandler(InputElement.PointerMovedEvent, OnTabPointerMoved);
+        _findKeyScope?.RemoveHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased);
+        _tabDragSource = null; _tabDragActive = false;
         _findKeyScope = null;
+    }
+    private void OnTabPointerPressed(object? sender, PointerPressedEventArgs args)
+    {
+        if (!_workspace.IsReady || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
+            !TryFindTabRow(args.Source, out _, out var row)) return;
+        _tabDragSource = row; _tabDragStart = args.GetPosition(this); _tabDragActive = false;
+    }
+    private void OnTabPointerMoved(object? sender, PointerEventArgs args)
+    {
+        if (_tabDragSource is null || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        if (!_tabDragActive && (args.GetPosition(this) - _tabDragStart).Length < 8) return;
+        _tabDragActive = true; args.Handled = true;
+    }
+    private async void OnTabPointerReleased(object? sender, PointerReleasedEventArgs args)
+    {
+        var source = _tabDragSource;
+        var wasDrag = _tabDragActive;
+        _tabDragSource = null; _tabDragActive = false;
+        if (!wasDrag) return;
+        args.Handled = true;
+        if (source is null || _findKeyScope is not { } scope) return;
+        var point = args.GetPosition(scope);
+        var tabButtons = scope.GetVisualDescendants().OfType<Button>()
+            .Where(button => button.Name == "BrowseTabButton")
+            .ToArray();
+        var targetIndex = Array.FindIndex(tabButtons, button => button.TranslatePoint(default, scope) is { } origin &&
+                new Rect(origin, button.Bounds.Size).Contains(point));
+        if ((uint)targetIndex >= (uint)tabButtons.Length || !_workspace.TryGetCurrentTabRow(targetIndex, out var target) || target is null) return;
+        var targetButton = tabButtons[targetIndex];
+        var targetOrigin = targetButton.TranslatePoint(default, scope);
+        if (targetOrigin is null) return;
+        try
+        {
+            await _workspace.ReorderTabRowsAsync(source, target,
+                point.X < targetOrigin.Value.X + targetButton.Bounds.Width / 2);
+        }
+        catch (Exception failure)
+        { System.Diagnostics.Trace.TraceError("Browse retained its original drag-reorder task: {0}", failure); }
+    }
+    private bool TryFindTabRow(object? source, out Button button, out BrowseNativeWorkspace.TabRow row)
+    {
+        for (var control = source as Control; control is not null; control = control.GetVisualParent() as Control)
+            if (control is Button candidate && candidate.Name == "BrowseTabButton")
+            {
+                var buttons = _findKeyScope?.GetVisualDescendants().OfType<Button>()
+                    .Where(item => item.Name == "BrowseTabButton").ToArray() ?? [];
+                var index = Array.IndexOf(buttons, candidate);
+                if (_workspace.TryGetCurrentTabRow(index, out var current) && current is not null)
+                { button = candidate; row = current; return true; }
+                break;
+            }
+        button = null!; row = null!; return false;
     }
     private async void OnFindKeyDown(object? sender, KeyEventArgs args)
     {
