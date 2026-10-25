@@ -94,6 +94,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     }
     internal bool IsAlive => !_work.IsRetiring;
     internal HomeLibraryPage? Current => _page;
+    internal IReadOnlyList<CuiDiagnostic> RuntimeDiagnostics => _loader.RuntimeDiagnostics;
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
     internal Task<BoardEmbeddedArtifactReference?> Selection => _selection.Task;
