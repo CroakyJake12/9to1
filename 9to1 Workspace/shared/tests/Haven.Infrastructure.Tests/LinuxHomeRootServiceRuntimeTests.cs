@@ -163,5 +163,27 @@ public sealed class LinuxHomeRootServiceRuntimeTests
         Assert.False(Directory.Exists(root));
     }
 
+    [LinuxFact]
+    public async Task Rejected_original_startup_task_retention_faults_the_owned_gate_before_any_actual_socket_connection()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "h-start-gate-" + Guid.NewGuid().ToString("N") + ".sock");
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        using var listener = new System.Net.Sockets.Socket(System.Net.Sockets.AddressFamily.Unix,
+            System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Unspecified);
+        listener.Bind(new System.Net.Sockets.UnixDomainSocketEndPoint(path)); listener.Listen(1);
+        var owner = new LinuxHomeApplicationStartupOwner(path, new("notes", "1.0.0", [new("home.state", 1)]), lifetime.Token);
+        var rejected = new IOException("Actual original startup registration was rejected before productive work.");
+        try
+        {
+            var observed = Assert.Throws<IOException>(() => { _ = owner.ConnectWithinOriginalSourceAsync(body => body(), _ => throw rejected, lifetime.Token); });
+            Assert.Same(rejected, observed);
+            var close = await Assert.ThrowsAsync<AggregateException>(() => owner.CloseAndDrainOriginalAsync());
+            Assert.Contains(close.Flatten().InnerExceptions, error => ReferenceEquals(error, rejected));
+            Assert.False(listener.Poll(0, System.Net.Sockets.SelectMode.SelectRead)); // actual listener has no accepted/pending connection
+            Assert.True(File.Exists(path));
+        }
+        finally { listener.Dispose(); File.Delete(path); }
+    }
+
     [DllImport("libc", EntryPoint = "geteuid")] private static extern uint GetEuid();
 }

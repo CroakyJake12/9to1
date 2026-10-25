@@ -13,6 +13,7 @@ public sealed class LinuxHomeApplicationStartupOwner : IAsyncDisposable
     private readonly HomeCompatibilityRequest _requirements;
     private readonly LinuxHomeRootHostVerifier _verifier;
     private readonly List<Task> _originals = [];
+    private readonly List<Exception> _callbackFailures = [];
     private Socket? _socket;
     private HomeNativeStartupSession? _session;
     private LinuxHomeRootHostVerifier.Observation? _host;
@@ -72,11 +73,28 @@ public sealed class LinuxHomeApplicationStartupOwner : IAsyncDisposable
             System.Text.Json.JsonSerializer.Serialize(left.HomeActivation) == System.Text.Json.JsonSerializer.Serialize(right.HomeActivation);
     private Task<T> Admit<T>(Action<Action> scope, Action<Task> retain, Func<CanonicalSqliteOriginalSourceScope, CancellationToken, Task<T>> body, CancellationToken token)
     {
-        var source = new CanonicalSqliteOriginalSourceScope(this, scope, retain, _ => { }, () => { ObjectDisposedException.ThrowIf(_retiring, this); });
+        void DemandAdmission()
+        {
+            lock (_gate)
+            {
+                ObjectDisposedException.ThrowIf(_retiring, this);
+                if (_callbackFailures.Count != 0) throw new InvalidOperationException("The original selected startup callback admission failed.",
+                    new AggregateException(_callbackFailures));
+            }
+        }
+        var source = new CanonicalSqliteOriginalSourceScope(this, scope, retain,
+            cause => { lock (_gate) _callbackFailures.Add(cause); }, DemandAdmission);
         var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Task<T> actual;
-        lock (_gate) { ObjectDisposedException.ThrowIf(_retiring, this); actual = Drive(); _originals.Add(actual); }
-        try { source.Run(() => retain(actual)); } finally { begin.SetResult(); }
+        lock (_gate) { DemandAdmission(); actual = Drive(); _originals.Add(actual); }
+        try { source.Run(() => retain(actual)); }
+        catch (Exception cause)
+        {
+            lock (_gate) _callbackFailures.Add(cause);
+            begin.SetException(cause); // the privately retained original faults before productive work
+            throw;
+        }
+        begin.SetResult();
         return actual;
         async Task<T> Drive()
         {
@@ -96,6 +114,7 @@ public sealed class LinuxHomeApplicationStartupOwner : IAsyncDisposable
         async Task Close(Task[] originals)
         {
             var failures = new List<Exception>();
+            lock (_gate) failures.AddRange(_callbackFailures);
             try { _lifetime.Cancel(); } catch (Exception cause) { failures.Add(cause); }
             foreach (var task in originals) try { await task.ConfigureAwait(false); } catch (Exception cause) { failures.Add(task.Exception ?? cause); }
             if (_session is not null) try { await _session.CloseAndDrainAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
