@@ -1,9 +1,13 @@
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Threading;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Styling;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Core;
 using Haven.Application;
 using Haven.Application.Haven;
@@ -777,20 +781,33 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private void IssueCurrentRows()
     {
         var actualRows = _snapshot.Tabs.Where(tab => !tab.IsGroupCollapsed || tab.Id == _snapshot.SelectedTabId)
-            .Select(tab => (tab.Id, Key: tab.Id.ToString("D"),
-            Label: (tab.IsPinned ? "Pinned · " : string.Empty) + (tab.GroupName.Length > 0 ? tab.GroupName + " · " : string.Empty) + tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
-            Description: tab.Title + " · " + (tab.Address.IsWeb
-                ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
-                : tab.IsHome ? "Home" : tab.Address.Authority),
-            Selected: tab.Id == _snapshot.SelectedTabId, CanClose: tab.IsCloseable && !tab.IsPinned, Pinned: tab.IsPinned)).ToArray();
+            .Select(tab =>
+            {
+                var selected = tab.Id == _snapshot.SelectedTabId;
+                var appearance = TabAppearance(selected);
+                return (Id: tab.Id, Key: tab.Id.ToString("D"),
+                    Label: (tab.IsPinned ? "Pinned · " : string.Empty) + (tab.GroupName.Length > 0 ? tab.GroupName + " · " : string.Empty) + tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
+                    Description: tab.Title + " · " + (tab.Address.IsWeb
+                        ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
+                        : tab.IsHome ? "Home" : tab.Address.Authority) + (selected ? " · Selected tab" : string.Empty),
+                    Selected: selected, CanClose: tab.IsCloseable && !tab.IsPinned, Pinned: tab.IsPinned,
+                    Background: appearance.Background, Foreground: appearance.Foreground,
+                    CloseForeground: appearance.CloseForeground);
+            }).ToArray();
         if (_tabRows.Length == actualRows.Length && _tabRows.Zip(actualRows).All(pair =>
             pair.First.Key == pair.Second.Key && pair.First.Label == pair.Second.Label &&
             pair.First.Description == pair.Second.Description && pair.First.Selected == pair.Second.Selected &&
-            pair.First.CanClose == pair.Second.CanClose)) return;
+            pair.First.CanClose == pair.Second.CanClose && pair.First.BackgroundColor == pair.Second.Background &&
+            pair.First.ForegroundColor == pair.Second.Foreground && pair.First.CloseForegroundColor == pair.Second.CloseForeground)) return;
         var epoch = checked(++_rowEpoch);
         var placementStamp = TabPlacementStamp(_snapshot);
-        _tabRows = actualRows.Select(row => new TabRow(new TabSelection(this, row.Id, epoch, row.Pinned, placementStamp), row.Key, row.Label, row.Selected)
-            { Description = row.Description, CanClose = row.CanClose }).ToArray();
+        _tabRows = actualRows.Select(row => new TabRow(
+            new TabSelection(this, row.Id, epoch, row.Pinned, placementStamp), row.Key, row.Label, row.Selected)
+        {
+            Description = row.Description, CanClose = row.CanClose,
+            BackgroundColor = row.Background, ForegroundColor = row.Foreground,
+            CloseForegroundColor = row.CloseForeground
+        }).ToArray();
     }
     private void IssueGroupRows()
     {
@@ -858,7 +875,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 "CollapseLabel" => group.IsCollapsed ? "Expand " + group.Name : "Collapse " + group.Name, _ => null };
         else if (item is TabRow row && _tabRows.Any(current => ReferenceEquals(current, row)))
             value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,
-                "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label, _ => null };
+                "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label,
+                "Background" => row.Background, "Foreground" => row.Foreground,
+                "CloseForeground" => row.CloseForeground, _ => null };
         else if (item is SavedEntryRow saved && _bookmarkRows.Concat(_historyRows).Concat(_downloadRows).Any(current => ReferenceEquals(current, saved)))
             value = path switch { "Key" => saved.Key, "Label" => saved.Label, "Detail" => saved.Detail, "Target" => saved.Target,
                 "RemoveLabel" => saved.Target is SavedEntrySelection { Kind: SavedEntryKind.History }
@@ -906,10 +925,27 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
 
     public sealed record UsageWindowRow(string Key, string Label, double UsedUnits, double LimitUnits);
     public bool TrySetItemValue(object item, string path, object? value) => false;
+    private static (Color Background, Color Foreground, Color CloseForeground) TabAppearance(bool selected)
+    {
+        var appearance = Application.Current?.ActualThemeVariant == ThemeVariant.Dark ||
+            Application.Current?.RequestedThemeVariant == ThemeVariant.Dark ? CuiAppearance.SuperDark : CuiAppearance.SuperBright;
+        var palette = CuiSurfacePaletteCatalog.For("Browse", appearance, CuiSurfacePaletteCatalog.ActiveTheme);
+        if (!selected) return (Colors.Transparent, palette.Text, palette.TextSoft);
+        if (!CuiSurfacePaletteCatalog.OverrideAccent || CuiSurfacePaletteCatalog.AccentOverride is null)
+            return (Color.Parse("#FFF2F2F2"), Colors.Black, Colors.Black);
+        return (palette.Accent, palette.AccentInk, palette.AccentInk);
+    }
+
     public sealed record TabRow(object Target, string Key, string Label, bool Selected)
     {
         public string Description { get; init; } = Label;
         public bool CanClose { get; init; }
+        public Color BackgroundColor { get; init; } = Colors.Transparent;
+        public Color ForegroundColor { get; init; } = Colors.White;
+        public Color CloseForegroundColor { get; init; } = Colors.Gray;
+        public Color CloseForeground => CloseForegroundColor;
+        public IBrush Background => new SolidColorBrush(BackgroundColor);
+        public IBrush Foreground => new SolidColorBrush(ForegroundColor);
     }
 
     /// <summary>Formats a genuine byte count for the real storage quota label.</summary>
