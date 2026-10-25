@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Win32.SafeHandles;
 
 namespace HavenOS.Home.Core;
@@ -18,6 +19,9 @@ public sealed partial class HomeNativeLinuxCoreHost
         private readonly EndpointIdentity _parentIdentity;
         private SafeFileHandle? _bound;
         private EndpointIdentity? _boundIdentity;
+        private SafeFileHandle? _locator;
+        private EndpointIdentity? _locatorIdentity;
+        private string? _locatorLeaf;
 
         internal EndpointCustody(string path)
         {
@@ -105,7 +109,54 @@ public sealed partial class HomeNativeLinuxCoreHost
                 throw new Win32Exception(Marshal.GetLastPInvokeError(), "Remove only the original bound Unix socket name.");
             FlushEndpoint(_parent);
         }
-        public void Dispose() { _bound?.Dispose(); _parent.Dispose(); }
+        internal void PublishLocator(HomeNativeEndpointLocation endpoint)
+        {
+            DemandCurrent();
+            var path = Path.GetFullPath(endpoint.LocatorPath);
+            var leaf = Path.GetFileName(path);
+            if (Path.GetDirectoryName(path) != _parentPath || leaf is "" or "." or ".." ||
+                leaf.Any(value => value is '/' or '\\' || char.IsControl(value)) || path == _path)
+                throw new UnauthorizedAccessException("The routing locator must be a distinct scalar file in the SAME private endpoint directory.");
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(endpoint);
+            if (bytes.Length > 8192) throw new InvalidDataException("The native Home endpoint locator exceeds its bound.");
+            _locatorLeaf = "." + endpoint.Epoch.ToString("N") + ".endpoint-stage";
+            var how = new EndpointOpenHow { Flags = 2UL | 0x40UL | 0x80UL | 0x80000UL, Mode = 0x180, Resolve = 0xf };
+            var descriptor = OpenEndpointAt2(437, Fd(_parent), _locatorLeaf, ref how, (ulong)Marshal.SizeOf<EndpointOpenHow>());
+            if (descriptor < 0 || descriptor > int.MaxValue)
+                throw new Win32Exception(Marshal.GetLastPInvokeError(), "Exclusively create the original private endpoint locator stage.");
+            _locator = new((IntPtr)descriptor, ownsHandle: true);
+            _locatorIdentity = ReadEndpoint(_locator);
+            DemandLocatorCurrent();
+            RandomAccess.Write(_locator, bytes, 0);
+            FlushEndpoint(_locator);
+            DemandCurrent(); DemandLocatorCurrent();
+            // Publication never replaces a locator from another live or crashed
+            // owner. That preserved record requires its own explicit recovery.
+            if (EndpointRenameAt2(Fd(_parent), _locatorLeaf, Fd(_parent), leaf, 1) != 0)
+                throw new Win32Exception(Marshal.GetLastPInvokeError(), "Publish the original endpoint locator without replacement.");
+            _locatorLeaf = leaf;
+            DemandLocatorCurrent(); FlushEndpoint(_parent);
+        }
+
+        private void DemandLocatorCurrent()
+        {
+            DemandParentCurrent();
+            if (_locator is null || _locatorIdentity is not { } original || _locatorLeaf is null)
+                throw new UnauthorizedAccessException("The original endpoint locator has no retained inode.");
+            foreach (var actual in new[] { ReadEndpoint(_locator), ReadEndpointAt(Fd(_parent), _locatorLeaf, 0x100) })
+                if (!original.SameNode(actual) || actual.Mode != 0x8180 || actual.Uid != GetEuid() || actual.Links != 1)
+                    throw new UnauthorizedAccessException("The original private endpoint locator name, owner or mode changed.");
+        }
+
+        internal void RemoveOwnedLocator()
+        {
+            if (_locatorIdentity is null) return;
+            DemandLocatorCurrent();
+            if (UnlinkAt(Fd(_parent), _locatorLeaf!, 0) != 0)
+                throw new Win32Exception(Marshal.GetLastPInvokeError(), "Remove only the original endpoint locator inode.");
+            FlushEndpoint(_parent);
+        }
+        public void Dispose() { _locator?.Dispose(); _bound?.Dispose(); _parent.Dispose(); }
     }
 
     [StructLayout(LayoutKind.Sequential)] private struct EndpointOpenHow { internal ulong Flags, Mode, Resolve; }
@@ -163,4 +214,7 @@ public sealed partial class HomeNativeLinuxCoreHost
     [DllImport("libc", EntryPoint = "socket", SetLastError = true)] private static extern int EndpointSocket(int family, int kind, int protocol);
     [DllImport("libc", EntryPoint = "bind", SetLastError = true)]
     private static extern int EndpointBind(SafeSocketHandle socket, byte[] address, uint length);
+    [DllImport("libc", EntryPoint = "renameat2", SetLastError = true)]
+    private static extern int EndpointRenameAt2(int parent, [MarshalAs(UnmanagedType.LPUTF8Str)] string source,
+        int destinationParent, [MarshalAs(UnmanagedType.LPUTF8Str)] string destination, uint flags);
 }

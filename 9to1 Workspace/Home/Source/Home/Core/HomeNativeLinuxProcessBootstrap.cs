@@ -4,27 +4,32 @@ using Haven.Application;
 namespace HavenOS.Home.Core;
 
 /// <summary>Linux owner of the SAME process-local Home provider, runtime and OS-profile lease.
-/// This does not install Home, accept IPC clients or issue a Root listening observation.
-/// Native installed-peer IPC still requires its own authenticated Linux accepting owner.</summary>
+/// An explicitly configured original installed-peer verifier enables the SAME canonical
+/// Unix accepting host; the default unavailable verifier keeps startup process-local.
+/// This never installs Home or issues a Root/publisher listening observation.</summary>
 internal sealed class HomeNativeLinuxProcessBootstrap : IAsyncDisposable
 {
     private static readonly string[] RequiredServices = ["home.core", "home.state", "permissions.trust"];
     private readonly HomeNativeServiceSession _original;
     private readonly HomeNativeCoreApiSessions _sessions;
     private readonly IAppPaths _paths;
+    private readonly IHomeNativeInstalledPeerOriginalActorVerifier? _installedVerifier;
     private readonly CancellationTokenSource _lifetime;
     private readonly object _sync = new();
     private readonly Task _start;
     private Task<HomeNativeSessionLease?>? _leaseAcquisition;
     private HomeNativeSessionLease? _lease;
+    private HomeNativeLinuxCoreHost? _host;
     private Task<HomeCoreStateSnapshot>? _coreStart;
     private Task? _cleanup, _close;
     private bool _closing;
 
     private HomeNativeLinuxProcessBootstrap(HomeNativeServiceSession original,
-        HomeNativeCoreApiSessions sessions, IAppPaths paths, CancellationToken processLifetime)
+        HomeNativeCoreApiSessions sessions, IAppPaths paths,
+        IHomeNativeInstalledPeerOriginalActorVerifier? installedVerifier, CancellationToken processLifetime)
     {
         _original = original; _sessions = sessions; _paths = paths;
+        _installedVerifier = installedVerifier;
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(processLifetime);
         var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _start = StartOriginalAsync(begin.Task);
@@ -46,7 +51,10 @@ internal sealed class HomeNativeLinuxProcessBootstrap : IAsyncDisposable
             !ReferenceEquals(provider.GetService(typeof(IAuthenticatedResourceActorSource)), original.Actors) ||
             !ReferenceEquals(provider.GetService(typeof(IHomeCoreAuthorization)), sessions))
             throw new UnauthorizedAccessException("Retain the SAME canonical Home runtime, OS-profile source and private session issuer.");
-        return new(original, sessions, trustedPaths, processLifetime);
+        var installed = provider.GetService(typeof(IHomeNativeInstalledPeerVerifier)) as IHomeNativeInstalledPeerOriginalActorVerifier;
+        if (installed is not null && !sessions.HasOriginalLinuxHostComposition(original.Actors, installed))
+            throw new UnauthorizedAccessException("The configured Linux installed-peer verifier must belong to the SAME canonical session issuer and actor source.");
+        return new(original, sessions, trustedPaths, installed, processLifetime);
     }
 
     internal Task OriginalStartTask => _start;
@@ -83,6 +91,24 @@ internal sealed class HomeNativeLinuxProcessBootstrap : IAsyncDisposable
             }
             if (actor != await _original.Actors.GetCurrentAsync(token).ConfigureAwait(false) || !_lease.IsHeld)
                 throw new UnauthorizedAccessException("The original Home actor or process lease retired during startup.");
+            if (_installedVerifier is not null)
+            {
+                // Explicit production configuration, never a fallback admission policy.
+                // Discovery is only an adapter over the SAME verifier/actor/runtime graph.
+                var endpoint = await HomeNativeEndpointLocations.CreateForLeasedHostAsync(_lease, _paths,
+                    _original.Actors, token).ConfigureAwait(false);
+                HomeNativeLinuxCoreHost host;
+                lock (_sync)
+                {
+                    ObjectDisposedException.ThrowIf(_closing, this);
+                    token.ThrowIfCancellationRequested();
+                    host = _host = HomeNativeLinuxCoreHost.Start(new(_installedVerifier, _original.Actors, _original.Runtime),
+                        _sessions, _lease, endpoint, _lifetime.Token);
+                }
+                await host.OriginalListeningTask.ConfigureAwait(false);
+                if (actor != await _original.Actors.GetCurrentAsync(token).ConfigureAwait(false) || !_lease.IsHeld)
+                    throw new UnauthorizedAccessException("The original Home actor or process lease retired during Unix listener startup.");
+            }
             token.ThrowIfCancellationRequested();
             lock (_sync) ObjectDisposedException.ThrowIf(_closing, this);
         }
@@ -144,7 +170,10 @@ internal sealed class HomeNativeLinuxProcessBootstrap : IAsyncDisposable
         await begin.ConfigureAwait(false);
         List<Exception> failures = [];
         // Acquire/start originals have already settled before this method is admitted.
-        // Runtime disposal drains each actual service stop before the OS lease is released.
+        // Accepted socket/session work settles before the canonical sessions/runtime,
+        // and every actual service stop settles before the OS lease is released.
+        try { if (_host is not null) await _host.CloseAndDrainAsync().ConfigureAwait(false); }
+        catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
         try { await _sessions.DisposeAsync().ConfigureAwait(false); }
         catch (Exception error) { HomeUnixCoreTransport.Add(failures, error); }
         try { await _original.Runtime.DisposeAsync().ConfigureAwait(false); }

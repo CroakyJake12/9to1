@@ -23,6 +23,8 @@ public sealed class HomeNativeLinuxCoreHostTests
         await using var rig = await Rig.CreateAsync();
         var host = await rig.StartAsync();
         Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(host.Endpoint.SocketPath));
+        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(host.Endpoint.LocatorPath));
+        Assert.Equal(host.Endpoint, JsonSerializer.Deserialize<HomeNativeEndpointLocation>(File.ReadAllBytes(host.Endpoint.LocatorPath)));
         using var client = await rig.ConnectAsync();
         using var stream = new NetworkStream(client, ownsSocket: false);
         await HomeUnixDiscoveryTransport.WriteFrameAsync(stream, JsonSerializer.SerializeToUtf8Bytes(
@@ -33,6 +35,7 @@ public sealed class HomeNativeLinuxCoreHostTests
         Assert.Null(reply.Snapshot);
         await host.CloseAndDrainAsync().WaitAsync(rig.Token);
         Assert.False(File.Exists(host.Endpoint.SocketPath));
+        Assert.False(File.Exists(host.Endpoint.LocatorPath));
         Assert.True(rig.Lease.IsHeld); // socket host never owns/releases the canonical process lease
     }
 
@@ -130,6 +133,96 @@ public sealed class HomeNativeLinuxCoreHostTests
     }
 
     [LinuxFact]
+    public async Task Existing_locator_is_never_replaced_and_failed_start_removes_only_its_own_socket_stage()
+    {
+        await using var rig = await Rig.CreateAsync();
+        const string retained = "retained routing metadata from a prior owner";
+        File.WriteAllText(rig.Endpoint.LocatorPath, retained);
+        File.SetUnixFileMode(rig.Endpoint.LocatorPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        rig.ExpectCloseFailure = true;
+        var host = HomeNativeLinuxCoreHost.Start(rig.Discovery, rig.Sessions, rig.Lease, rig.Endpoint, rig.Lifetime);
+        rig.Host = host;
+        await Assert.ThrowsAnyAsync<System.ComponentModel.Win32Exception>(() => host.OriginalListeningTask.WaitAsync(rig.Token));
+        await Assert.ThrowsAnyAsync<Exception>(() => host.CloseAndDrainAsync().WaitAsync(rig.Token));
+        Assert.Equal(retained, File.ReadAllText(rig.Endpoint.LocatorPath));
+        Assert.False(File.Exists(rig.Endpoint.SocketPath));
+        Assert.Empty(Directory.EnumerateFiles(Path.GetDirectoryName(rig.Endpoint.SocketPath)!, "*.endpoint-stage"));
+    }
+
+    [LinuxFact]
+    public async Task Foreign_replacement_of_locator_is_preserved_and_original_socket_is_still_cleaned()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var host = await rig.StartAsync();
+        File.Move(host.Endpoint.LocatorPath, host.Endpoint.LocatorPath + ".retained");
+        File.WriteAllText(host.Endpoint.LocatorPath, "foreign locator");
+        rig.ExpectCloseFailure = true;
+        var error = await Assert.ThrowsAnyAsync<Exception>(() => host.CloseAndDrainAsync().WaitAsync(rig.Token));
+        Assert.Contains(Flatten(error), cause => cause is UnauthorizedAccessException);
+        Assert.Equal("foreign locator", File.ReadAllText(host.Endpoint.LocatorPath));
+        Assert.False(File.Exists(host.Endpoint.SocketPath));
+    }
+
+    [LinuxFact]
+    public async Task Explicit_bootstrap_hook_uses_same_canonical_graph_and_retains_denied_peer_semantics()
+    {
+        // This fixture implements the original-actor port only to DECLINE every
+        // request. A listening socket is never asserted to be installed authority.
+        var verifier = new DecliningOriginalActorVerifier();
+        await using var rig = await Rig.CreateAsync(verifier);
+        rig.Lease.Dispose(); // transfer the actual process lease acquisition to bootstrap
+        await using var bootstrap = HomeNativeLinuxProcessBootstrap.Start(rig.Canonical(verifier), new Paths(rig.Root), rig.Lifetime);
+        await bootstrap.OriginalStartTask.WaitAsync(rig.Token);
+        var endpoint = JsonSerializer.Deserialize<HomeNativeEndpointLocation>(File.ReadAllBytes(rig.Endpoint.LocatorPath))!;
+        using var client = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+        await client.ConnectAsync(new UnixDomainSocketEndPoint(endpoint.SocketPath), rig.Token);
+        using var stream = new NetworkStream(client, ownsSocket: false);
+        await HomeUnixDiscoveryTransport.WriteFrameAsync(stream, JsonSerializer.SerializeToUtf8Bytes(
+            new HomeNativeDiscoveryRequest([new("home.core", 1, 0)])), rig.Token);
+        var reply = JsonSerializer.Deserialize<HomeNativeDiscoveryResponse>(await HomeUnixDiscoveryTransport.ReadFrameAsync(stream, rig.Token))!;
+        Assert.Null(reply.Snapshot);
+        Assert.Equal("HomePeerOrServiceUnavailable", reply.Code);
+        await bootstrap.CloseAndDrainAsync().WaitAsync(rig.Token);
+        Assert.False(File.Exists(endpoint.SocketPath));
+        Assert.False(File.Exists(endpoint.LocatorPath));
+        using var reacquired = await HomeNativeSessionLease.TryAcquireAsync(rig.Profiles, new Paths(rig.Root), rig.Token);
+        Assert.NotNull(reacquired);
+    }
+
+    [LinuxFact]
+    public async Task Failed_configured_bootstrap_preserves_existing_locator_and_releases_the_actual_process_lease()
+    {
+        var verifier = new DecliningOriginalActorVerifier();
+        await using var rig = await Rig.CreateAsync(verifier);
+        rig.Lease.Dispose();
+        File.WriteAllText(rig.Endpoint.LocatorPath, "prior owner retained");
+        File.SetUnixFileMode(rig.Endpoint.LocatorPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        var bootstrap = HomeNativeLinuxProcessBootstrap.Start(rig.Canonical(verifier), new Paths(rig.Root), rig.Lifetime);
+        await Assert.ThrowsAnyAsync<Exception>(() => bootstrap.OriginalStartTask.WaitAsync(rig.Token));
+        await Assert.ThrowsAnyAsync<Exception>(() => bootstrap.CloseAndDrainAsync().WaitAsync(rig.Token));
+        Assert.Equal("prior owner retained", File.ReadAllText(rig.Endpoint.LocatorPath));
+        Assert.Empty(Directory.EnumerateFiles(Path.GetDirectoryName(rig.Endpoint.SocketPath)!, "*.sock"));
+        using var reacquired = await HomeNativeSessionLease.TryAcquireAsync(rig.Profiles, new Paths(rig.Root), rig.Token);
+        Assert.NotNull(reacquired);
+    }
+
+    [LinuxFact]
+    public async Task Default_bootstrap_remains_process_local_and_rejects_a_different_configured_verifier()
+    {
+        var unavailable = new UnavailableHomeNativeInstalledPeerVerifier();
+        await using var rig = await Rig.CreateAsync(unavailable);
+        Assert.Throws<UnauthorizedAccessException>(() => HomeNativeLinuxProcessBootstrap.Start(
+            rig.Canonical(new DecliningOriginalActorVerifier()), new Paths(rig.Root), rig.Lifetime));
+        Assert.True(rig.Lease.IsHeld);
+        Assert.False(File.Exists(rig.Endpoint.LocatorPath));
+        rig.Lease.Dispose();
+        await using var bootstrap = HomeNativeLinuxProcessBootstrap.Start(rig.Canonical(unavailable), new Paths(rig.Root), rig.Lifetime);
+        await bootstrap.OriginalStartTask.WaitAsync(rig.Token);
+        Assert.False(File.Exists(rig.Endpoint.LocatorPath));
+        Assert.Empty(Directory.EnumerateFiles(Path.GetDirectoryName(rig.Endpoint.SocketPath)!, "*.sock"));
+    }
+
+    [LinuxFact]
     public async Task Original_owner_cancellation_drains_the_listener_and_does_not_dispose_sessions_or_lease()
     {
         await using var rig = await Rig.CreateAsync();
@@ -169,7 +262,16 @@ public sealed class HomeNativeLinuxCoreHostTests
             var path = Path.Combine("/tmp", "hln-" + Guid.NewGuid().ToString("N")[..12]);
             return Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute).FullName;
         }
-        internal static async Task<Rig> CreateAsync()
+        internal HomeNativeServiceSession Canonical(IHomeNativeInstalledPeerVerifier registeredVerifier) =>
+            new(new Provider(new Dictionary<Type, object>
+            {
+                [typeof(HomeCoreRuntime)] = Runtime,
+                [typeof(IAuthenticatedResourceActorSource)] = Profiles,
+                [typeof(HomeNativeCoreApiSessions)] = Sessions,
+                [typeof(IHomeCoreAuthorization)] = Sessions,
+                [typeof(IHomeNativeInstalledPeerVerifier)] = registeredVerifier
+            }), Runtime, Profiles);
+        internal static async Task<Rig> CreateAsync(IHomeNativeInstalledPeerVerifier? configuredVerifier = null)
         {
             var rig = new Rig();
             try
@@ -179,7 +281,7 @@ public sealed class HomeNativeLinuxCoreHostTests
                 rig.Profiles = new(store, new OperatingSystemPrincipalSource());
                 var permissions = new HomePermissionTrustService(store, (_, _) => null);
                 HomeCoreApi? api = null;
-                var verifier = new UnavailableHomeNativeInstalledPeerVerifier();
+                var verifier = configuredVerifier ?? new UnavailableHomeNativeInstalledPeerVerifier();
                 rig.Sessions = new(permissions, rig.Profiles, verifier, () => api!);
                 rig.Runtime = new([new HomeCoreStateService(store), new HomePermissionsCoreService(permissions, rig.Profiles)], rig.Sessions);
                 api = new(rig.Runtime, rig.Sessions, rig.Profiles);
@@ -227,5 +329,14 @@ public sealed class HomeNativeLinuxCoreHostTests
         public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
         public string LogsDirectory => Path.Combine(DataDirectory, "logs");
         public string LegacyStatePath => Path.Combine(DataDirectory, "legacy");
+    }
+    private sealed class Provider(Dictionary<Type, object> services) : IServiceProvider
+    { public object? GetService(Type type) => services.GetValueOrDefault(type); }
+    private sealed class DecliningOriginalActorVerifier : IHomeNativeInstalledPeerOriginalActorVerifier
+    {
+        public ValueTask<HomeNativeInstalledPeer?> VerifyAsync(HomeNativeObservedPeer observed, CancellationToken token)
+        { token.ThrowIfCancellationRequested(); return ValueTask.FromResult<HomeNativeInstalledPeer?>(null); }
+        public ValueTask<HomeNativeInstalledPeer?> VerifyForActorAsync(HomeNativeObservedPeer observed,
+            AuthenticatedResourceActor expectedActor, CancellationToken token) => VerifyAsync(observed, token);
     }
 }
