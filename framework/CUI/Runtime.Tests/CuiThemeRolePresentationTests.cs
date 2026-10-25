@@ -12,6 +12,25 @@ namespace CakeOS.Cui.Runtime.Tests;
 public sealed class CuiThemeRolePresentationTests
 {
     [Theory]
+    [InlineData(CuiTheme.Glow)]
+    [InlineData(CuiTheme.Professional)]
+    public void Boards_uses_canonical_purple_by_default_and_explicit_accent_wins(CuiTheme theme)
+    {
+        // Bright exposes the chosen anchor directly; darker appearances retain
+        // their theme-owned tonal derivation from that same chosen identity.
+        var defaultPalette = CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, theme, accentColour: null);
+        var ownedPalette = CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, theme, null, "app.boards");
+        Assert.Equal(Color.Parse("#7026D9"), defaultPalette.Accent);
+        Assert.Equal(defaultPalette, ownedPalette);
+        var chosenPalette = CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, theme, "#168B4F", "app.boards");
+        Assert.Equal(Color.Parse("#168B4F"), chosenPalette.Accent);
+        Assert.NotEqual(defaultPalette.Accent, chosenPalette.Accent);
+        foreach (var appearance in Enum.GetValues<CuiAppearance>())
+            Assert.Equal(CuiSurfacePaletteCatalog.For("Boards", appearance, theme, "#7026D9", "app.boards"),
+                CuiSurfacePaletteCatalog.For("Boards", appearance, theme, null, "app.boards"));
+    }
+
+    [Theory]
     [InlineData("#D64B25")]
     [InlineData("#2864D7")]
     public void Glow_keeps_ordinary_controls_neutral_and_publishes_explicit_action_roles(string accent)

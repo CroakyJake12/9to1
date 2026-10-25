@@ -106,7 +106,7 @@ public static class CuiSurfacePaletteCatalog
             ["Launcher"] = Hue("#FFDCCEF0", "#FF8055B4", "#FFA17AC8", "#FF56377F", "#FFEDE5F6"),
             ["Go"] = Hue("#FF171D4A", "#FF3527FF", "#FF4658FF", "#FF2115C7", "#FF202750"),
             ["Spaces"] = Hue("#FF221A4A", "#FF9D5CFF", "#FFB87EFF", "#FF6E2BC7", "#FF29224F"),
-            ["Boards"] = Hue("#FF12332A", "#FF1FA37A", "#FF5FC2A0", "#FF0E6E52", "#FF1A3A31"),
+            ["Boards"] = Hue("#FF251940", "#FF7026D9", "#FF8F56E1", "#FF541CA3", "#FFEADEF9"),
             ["Maps"] = Hue("#FF10271E", "#FF2FBF7F", "#FF6BD9A4", "#FF12855A", "#FF17342A"),
             ["Dashboard"] = Hue("#FF171D4A", "#FF3527FF", "#FF5868FF", "#FF2115C7", "#FF202750"),
         };
