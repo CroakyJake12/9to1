@@ -24,6 +24,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
     private readonly IRichBoardSession _session;
+    private readonly IBoardsEmbeddedArtifactHost? _embeddedArtifactHost;
     private readonly Dictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
     private string _selectedSectionId = "section-1";
     private string _selectedPageId = "page-1";
@@ -53,13 +54,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
     private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
 
-    public BoardsViewModel(IRichBoardSession session)
+    public BoardsViewModel(IRichBoardSession session, IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null)
     {
         _session = session ?? throw new ArgumentNullException(nameof(session));
+        _embeddedArtifactHost = embeddedArtifactHost;
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
         Set("ModeLabel", _isEditMode ? "Edit" : "View");
         Set("RecentBoardsLoaded", false);
+        Set("CanAddWritePage", CanAddWritePage);
         _session.StatusChanged += (_, status) =>
         {
             Set("StatusText", status);
@@ -116,6 +119,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         IsStandalonePresentation = false;
         Set(nameof(IsStandalonePresentation), false);
+    }
+
+    public void SetEmbeddedPageStatus(bool unavailable, string message)
+    {
+        Set("EmbeddedPageUnavailable", unavailable);
+        Set("EmbeddedPageMessage", message);
     }
 
     public void SetLandingData(IReadOnlyList<RecentBoardCard> boards, IReadOnlyList<RecentPageCard> pages)
@@ -188,7 +197,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool CanSwitchBoard => CanEdit && _session is not IBoardSessionCapabilities { CanSwitchBoard: false };
     public bool CanSaveAs => CanEdit && _session is not IBoardSessionCapabilities { CanSaveAs: false };
     public bool CanCreateBoard => CanSwitchBoard;
+    public bool CanAddWritePage => _embeddedArtifactHost is not null && CanEdit && _isEditMode;
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
+    public string SelectedPageType => CurrentPage().PageType;
+    public Haven.Application.BoardEmbeddedArtifactReference? SelectedEmbeddedArtifact => CurrentPage().EmbeddedArtifact;
+    public bool ShowNativeAuthoring => _isEditMode &&
+        string.Equals(CurrentPage().PageType, HavenRichPageTypes.Native, StringComparison.Ordinal);
     public bool IsLanding => Get("IsLanding") as bool? ?? false;
     public IReadOnlyList<RecentBoardCard> RecentBoardCards => _recentBoardCards;
     public IReadOnlyList<RecentPageCard> RecentPageCards => _recentPageCards;
@@ -362,6 +376,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 _session.MarkDirty();
                 RequestRebuild();
                 break;
+            case "AddWritePage":
+                await AddWritePageAsync(createNew: false, cancellationToken: cancellationToken);
+                break;
+            case "CreateWritePage":
+                await AddWritePageAsync(createNew: true, cancellationToken: cancellationToken);
+                break;
             case "AddSubpage":
                 await AddSubpageAsync(_selectedSectionId, _selectedPageId);
                 break;
@@ -509,12 +529,71 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             SyncSelectedInkView();
         }
         Set("IsEditMode", enabled);
+        Set("CanAddWritePage", CanAddWritePage);
+        Set("ShowNativeAuthoring", ShowNativeAuthoring);
         Set("ModeLabel", enabled ? "Edit" : "View");
         if (!enabled) InvalidateTextRange();
         ApplyAuthoringState(_attachedRoot);
         RefreshTextRangeBindings();
         RefreshCuiContext();
         RequestRebuild();
+    }
+
+    private async Task AddWritePageAsync(bool createNew, CancellationToken cancellationToken)
+    {
+        if (!RequireEditMode()) return;
+        var host = _embeddedArtifactHost;
+        if (host is null)
+        {
+            Set("StatusText", "Write pages are available from the Home host.");
+            return;
+        }
+        Haven.Application.BoardEmbeddedArtifactReference? reference;
+        try
+        {
+            reference = createNew
+                ? await host.CreateAsync("write", cancellationToken).ConfigureAwait(true)
+                : await host.SelectAsync("write", cancellationToken).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            Set("StatusText", "Write page could not be selected: " + FirstLine(error.Message));
+            return;
+        }
+        if (reference is null)
+        {
+            Set("StatusText", createNew ? "Write page creation was cancelled." : "Write page selection was cancelled.");
+            return;
+        }
+        reference.Validate();
+        if (!string.Equals(reference.ApplicationId, "write", StringComparison.Ordinal))
+            throw new InvalidDataException("The Home Write owner returned a reference for another application.");
+        if (_session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", "This Board session cannot persist owner-backed pages.");
+            return;
+        }
+
+        try
+        {
+            var pageId = await adapter.AddEmbeddedArtifactPageAsync(CurrentSection().Id,
+                HavenRichPageTypes.Write, reference, createNew ? "New Write document" : "Write document",
+                cancellationToken: cancellationToken).ConfigureAwait(true);
+            SelectPage(_selectedSectionId, pageId);
+            Set("StatusText", createNew ? "Write document created and linked." : "Write document linked.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            Set("StatusText", "Write page could not be added: " + FirstLine(error.Message));
+        }
     }
 
     private bool RequireEditMode()
@@ -2941,6 +3020,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("SectionListText", string.Join("  |  ", doc.Sections.Select(s => s.Title)));
             Set("PageListText", string.Join("  |  ", CurrentSection().Pages.Select(p => p.Title)));
             Set("PageTitle", page.Title);
+            Set("IsNativePage", string.Equals(page.PageType, HavenRichPageTypes.Native, StringComparison.Ordinal));
+            Set("IsWritePage", string.Equals(page.PageType, HavenRichPageTypes.Write, StringComparison.Ordinal));
+            Set("ShowNativeAuthoring", ShowNativeAuthoring);
             RefreshPageBreadcrumb();
             Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock layout" : "Lock layout");
             Set("CanvasLockStatus", page.IsCanvasLocked ? "Layout locked · unlock to move boxes; drawing remains available." : "Layout unlocked");

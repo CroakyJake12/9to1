@@ -16,18 +16,21 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     private static readonly JsonSerializerOptions DocumentJson = new(JsonSerializerDefaults.Web);
     private readonly ContractSessionAdapter _session;
     private readonly CuiControlLoader _loader;
+    private readonly BoardsEmbeddedArtifactSurface _embeddedArtifacts;
     private BoardsPresentationRenderQueue? _renderQueue;
     private BoardsEmbeddedSurfaceLifecycle? _surfaceLifecycle;
     private bool _disposed;
 
     private BoardsReadOnlyPresentation(HavenBoardDocument document, ContractSessionAdapter session,
-        BoardsViewModel viewModel, CuiControlLoader loader, Control content)
+        BoardsViewModel viewModel, CuiControlLoader loader, Control content,
+        IBoardsEmbeddedArtifactHost? embeddedArtifactHost)
     {
         _documentBytes = JsonSerializer.SerializeToUtf8Bytes(document, DocumentJson);
         _session = session;
         ViewModel = viewModel;
         _loader = loader;
         Content = content;
+        _embeddedArtifacts = new BoardsEmbeddedArtifactSurface(embeddedArtifactHost, viewModel);
     }
 
     private readonly byte[] _documentBytes;
@@ -43,7 +46,8 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     public Task DrainRenderingAsync() => _renderQueue?.DrainAsync() ?? Task.CompletedTask;
 
     public static async Task<BoardsReadOnlyPresentation> OpenReadOnlyDocumentAsync(
-        ReadOnlyMemory<byte> verifiedDocument, CancellationToken ct = default)
+        ReadOnlyMemory<byte> verifiedDocument, CancellationToken ct = default,
+        IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null)
     {
         ct.ThrowIfCancellationRequested();
         var parsed = HavenBoardDocumentCodec.Deserialize(verifiedDocument);
@@ -54,7 +58,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
             return await Dispatcher.UIThread.InvokeAsync<BoardsReadOnlyPresentation>(() =>
             {
                 ct.ThrowIfCancellationRequested();
-                var viewModel = new BoardsViewModel(session);
+                var viewModel = new BoardsViewModel(session, embeddedArtifactHost);
                 viewModel.SetLanding(false);
                 viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Read-only source");
@@ -70,10 +74,12 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
                 loader.WireBindings(root);
                 viewModel.Attach(root);
                 ThemeApplier.ApplyChrome(root);
-                var host = new BoardsReadOnlyPresentation(parsed, session, viewModel, loader, root);
-                host.WireSurface(root);
-                host.QueueRender();
-                return host;
+                embeddedArtifactHost?.BindOwningControl(root);
+                var presentation = new BoardsReadOnlyPresentation(parsed, session, viewModel, loader, root,
+                    embeddedArtifactHost);
+                presentation.WireSurface(root);
+                presentation.QueueRender();
+                return presentation;
             });
         }
         catch
@@ -112,6 +118,8 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
             NavBuilder.Rebuild(nav, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
+        if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "EmbeddedArtifactHost") is { } embedded)
+            await _embeddedArtifacts.RenderAsync(embedded);
         ViewModel.RefreshCuiContext();
         if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "InkOverlayLayer") is { } ink)
             await (_surfaceLifecycle!.InkInteraction?.RenderAsync() ?? BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel));
@@ -120,6 +128,8 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
+        if (!await _embeddedArtifacts.TryPrepareToCloseAsync().ConfigureAwait(false))
+            throw new InvalidOperationException("The embedded Write page refused to close; its draft remains open.");
         _disposed = true;
         ViewModel.RebuildRequested -= QueueRender;
         ViewModel.NavRebuildRequested -= QueueRender;
@@ -131,6 +141,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         });
         await (_surfaceLifecycle?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         await (_renderQueue?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+        await _embeddedArtifacts.DisposeAsync().ConfigureAwait(false);
         await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(_loader.Dispose);
         await _session.DisposeAsync().ConfigureAwait(false);

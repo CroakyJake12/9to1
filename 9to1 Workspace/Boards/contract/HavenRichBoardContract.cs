@@ -1,10 +1,12 @@
+using Haven.Application;
+
 namespace CakeOS.Apps.Boards.Contract;
 
 /// <summary>
 /// Self-contained rich-notes payload stored inside <c>.9to1board</c> schema v2.
 /// Mirrors the semantics of the mature shared <c>NotesDocument</c> model
 /// (sections/pages/blocks/runs/lists/tables/ink/canvas/attachments) without
-/// taking a dependency on the shared tree, keeping the contract isolated.
+/// importing its document model. Cross-app pages use only the immutable shared artifact identity.
 /// </summary>
 public sealed class HavenRichNotes
 {
@@ -35,6 +37,10 @@ public sealed class HavenRichPage
     public string Id { get; set; } = "page-" + Guid.NewGuid().ToString("N")[..12];
     public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Page 1";
+    /// <summary>Page presentation owner. Native is the default for existing board documents.</summary>
+    public string PageType { get; set; } = HavenRichPageTypes.Native;
+    /// <summary>Stable, revision-pinned owner identity for an app-backed page.</summary>
+    public BoardEmbeddedArtifactReference? EmbeddedArtifact { get; set; }
     public int Order { get; set; }
     public bool IsCanvasLocked { get; set; }
     public double CanvasWidth { get; set; } = 1200;
@@ -43,6 +49,13 @@ public sealed class HavenRichPage
     public List<HavenRichInkStroke> Ink { get; set; } = [];
     public HavenRichInkView InkView { get; set; } = new();
     public List<HavenRichCanvasObject> Canvas { get; set; } = [];
+}
+
+/// <summary>Stable page type identifiers persisted in the rich board document.</summary>
+public static class HavenRichPageTypes
+{
+    public const string Native = "Native";
+    public const string Write = "Write";
 }
 
 public enum HavenRichBlockKind
@@ -244,6 +257,7 @@ public static class HavenRichNotesValidator
                     throw new InvalidOperationException($"Page ID '{page.Id}' is duplicated in the board.");
                 if (string.IsNullOrWhiteSpace(page.Title))
                     throw new InvalidOperationException("Rich board pages must have non-empty titles.");
+                ValidatePageArtifact(page);
                 var blockIds = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var block in page.Blocks)
                 {
@@ -283,6 +297,29 @@ public static class HavenRichNotesValidator
                 }
             }
         }
+    }
+
+    internal static void ValidatePageArtifact(HavenRichPage page)
+    {
+        var expectedApplication = page.PageType switch
+        {
+            HavenRichPageTypes.Native => null,
+            HavenRichPageTypes.Write => "write",
+            _ => throw new InvalidOperationException($"Board page type '{page.PageType}' is not supported.")
+        };
+        if (expectedApplication is null)
+        {
+            if (page.EmbeddedArtifact is not null)
+                throw new InvalidOperationException("A Native Board page cannot contain an external artifact reference.");
+            return;
+        }
+        if (page.EmbeddedArtifact is null)
+        {
+            throw new InvalidOperationException($"A {page.PageType} Board page requires an owner artifact reference.");
+        }
+        page.EmbeddedArtifact.Validate();
+        if (!string.Equals(page.EmbeddedArtifact.ApplicationId, expectedApplication, StringComparison.Ordinal))
+            throw new InvalidOperationException($"A {page.PageType} Board page must reference a {expectedApplication} artifact.");
     }
 
     private static void ValidateBlock(HavenRichBlock block)
@@ -364,6 +401,54 @@ public static partial class HavenRichNotesOps
         return page;
     }
 
+    /// <summary>Adds a page that references an owner-managed app artifact without copying its content.</summary>
+    public static HavenRichPage AddEmbeddedArtifactPage(HavenRichNotes notes, string sectionId,
+        string pageType, BoardEmbeddedArtifactReference reference, string? title = null,
+        string? parentPageId = null)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        ArgumentNullException.ThrowIfNull(reference);
+        var section = RequireSection(notes, sectionId);
+        var detachedReference = CopyArtifactReference(reference);
+        HavenRichNotesValidator.ValidatePageArtifact(new HavenRichPage
+        {
+            PageType = pageType,
+            EmbeddedArtifact = detachedReference
+        });
+        if (parentPageId is not null && !section.Pages.Any(page => page.Id == parentPageId))
+            throw new KeyNotFoundException("Parent page was not found in the selected section.");
+
+        var page = new HavenRichPage
+        {
+            Title = string.IsNullOrWhiteSpace(title) ? $"Page {section.Pages.Count + 1}" : title.Trim(),
+            Order = section.Pages.Count,
+            ParentPageId = parentPageId,
+            PageType = pageType,
+            EmbeddedArtifact = detachedReference,
+            Blocks = []
+        };
+        section.Pages.Add(page);
+        NormalizePages(section);
+        Touch(notes);
+        return page;
+    }
+
+    /// <summary>Replaces a page's pinned app reference after the caller has obtained it from its owner.</summary>
+    public static void SetEmbeddedArtifact(HavenRichNotes notes, string pageId,
+        string pageType, BoardEmbeddedArtifactReference? reference)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var page = RequirePage(notes, pageId);
+        var detachedReference = reference is null ? null : CopyArtifactReference(reference);
+        HavenRichNotesValidator.ValidatePageArtifact(new HavenRichPage { PageType = pageType, EmbeddedArtifact = detachedReference });
+        if (string.Equals(page.PageType, pageType, StringComparison.Ordinal) &&
+            Equals(page.EmbeddedArtifact, detachedReference))
+            return;
+        page.PageType = pageType;
+        page.EmbeddedArtifact = detachedReference;
+        Touch(notes);
+    }
+
     public static HavenRichPage AddSubpage(HavenRichNotes notes, string sectionId, string parentPageId, string? title = null)
     {
         var section = RequireSection(notes, sectionId);
@@ -416,6 +501,15 @@ public static partial class HavenRichNotesOps
         section.Pages.Add(page);
         NormalizePages(section);
         return page;
+    }
+
+    private static BoardEmbeddedArtifactReference CopyArtifactReference(BoardEmbeddedArtifactReference reference)
+    {
+        reference.Validate();
+        var revision = reference.ExpectedRevision.Sequence is { } sequence
+            ? new BoardEmbeddedArtifactRevision(sequence, null)
+            : new BoardEmbeddedArtifactRevision(null, reference.ExpectedRevision.VersionId);
+        return new BoardEmbeddedArtifactReference(reference.ApplicationId, reference.ArtifactId, revision);
     }
 
     public static void RenameSection(HavenRichNotes notes, string sectionId, string title)

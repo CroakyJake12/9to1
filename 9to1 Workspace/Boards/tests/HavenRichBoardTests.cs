@@ -14,6 +14,49 @@ public sealed class HavenRichBoardTests
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     [Fact]
+    public void Write_page_keeps_immutable_owner_identity_and_revision_through_board_codec()
+    {
+        var notes = HavenRichNotes.Create("Linked board");
+        var section = notes.Sections[0];
+        var revision = new Haven.Application.BoardEmbeddedArtifactRevision(Sequence: 12, VersionId: null);
+        var selected = new Haven.Application.BoardEmbeddedArtifactReference(
+            "write", Guid.NewGuid(), revision);
+
+        var page = HavenRichNotesOps.AddEmbeddedArtifactPage(notes, section.Id,
+            HavenRichPageTypes.Write, selected, "Planning document");
+
+        Assert.Equal(2L, notes.Version);
+        Assert.Equal(HavenRichPageTypes.Write, page.PageType);
+        Assert.NotSame(selected, page.EmbeddedArtifact);
+        Assert.NotSame(revision, page.EmbeddedArtifact!.ExpectedRevision);
+        HavenRichNotesValidator.Validate(notes);
+
+        var now = DateTimeOffset.UtcNow;
+        var document = new HavenBoardDocument(HavenBoardDocument.FormatIdentity,
+            HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), now, now, null, notes);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(document, Json);
+        var reopened = HavenBoardDocumentCodec.Deserialize(bytes);
+        var reopenedPage = Assert.Single(reopened.RichNotes!.Sections[0].Pages.Where(item => item.Id == page.Id));
+
+        Assert.Equal(selected.ApplicationId, reopenedPage.EmbeddedArtifact!.ApplicationId);
+        Assert.Equal(selected.ArtifactId, reopenedPage.EmbeddedArtifact.ArtifactId);
+        Assert.Equal(12L, reopenedPage.EmbeddedArtifact.ExpectedRevision.Sequence);
+        Assert.Null(reopenedPage.EmbeddedArtifact.ExpectedRevision.VersionId);
+    }
+
+    [Fact]
+    public void Write_page_refuses_a_reference_owned_by_another_application()
+    {
+        var notes = HavenRichNotes.Create("Linked board");
+        var reference = new Haven.Application.BoardEmbeddedArtifactReference("canvas", Guid.NewGuid(),
+            new Haven.Application.BoardEmbeddedArtifactRevision(Sequence: 1, VersionId: null));
+
+        Assert.Throws<InvalidOperationException>(() => HavenRichNotesOps.AddEmbeddedArtifactPage(
+            notes, notes.Sections[0].Id, HavenRichPageTypes.Write, reference));
+        Assert.Single(notes.Sections[0].Pages);
+    }
+
+    [Fact]
     public async Task Student_acceptance_ALevel_Maths_survives_close_reopen_edit_and_copy()
     {
         var root = TempDirectory();
