@@ -359,7 +359,7 @@ public static class BlockRenderer
         var focused = false;
         void UpdateGutterEmphasis()
         {
-            var opacity = hovering || focused ? 1 : 0;
+            var opacity = hovering || focused ? 1d : 0d;
             if (insert is not null) insert.Opacity = opacity;
             if (gripControl is not null)
             {
