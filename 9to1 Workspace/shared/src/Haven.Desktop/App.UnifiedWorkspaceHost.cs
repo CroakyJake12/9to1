@@ -720,9 +720,12 @@ public sealed partial class App
             BoardsHomeBoardCreationRequest request, CancellationToken token)
         {
             Dispatcher.UIThread.VerifyAccess(); DemandCurrent();
-            if (origin.Address.Namespace != AppContentNamespace.NativeApp || origin.Address.Authority != "boards" ||
-                origin.Privacy != BrowserTabPrivacy.Standard || origin.ProfileId != _actor?.ProfileId ||
-                _chrome?.ObserveOriginalAppContent(origin.TabId) is not IBrowseNativeAppContentSession { IsPublicationCurrent: true })
+            var isBoards = origin.Address.Namespace == AppContentNamespace.NativeApp && origin.Address.Authority == "boards";
+            var isBoardsLibrary = origin.Address.Namespace == AppContentNamespace.Browse && origin.Address.Authority == "home" &&
+                origin.Address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal);
+            var current = _chrome?.ObserveOriginalAppContent(origin.TabId);
+            if ((!isBoards && !isBoardsLibrary) || origin.Privacy != BrowserTabPrivacy.Standard || origin.ProfileId != _actor?.ProfileId ||
+                current is not IBrowseNativeAppContentSession { IsPublicationCurrent: true } || current.Address != origin.Address)
                 throw new UnauthorizedAccessException("Create a board only from its actual current standard Home tab.");
             lock (_gate)
             {
@@ -1043,7 +1046,11 @@ public sealed partial class App
                 return accepted;
             }, source, theme, PrepareFilesNavigation);
             if (request.Address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal))
+            {
                 page.SetInitialQuery("files", "9to1 board document");
+                page.SetBoardCreationHost(BoardsBrowseAppContentFactory.CreateOriginalHomeBoardCreationHost(
+                    CreateAndOpenBoardAsync, request, _windowLifetime), BoardsViewModel.CreateNewBoardDraftBytes);
+            }
             return page;
         }
         private async Task PresentHomeLibraryReviewAsync(HomeNativeApprovalWindowOwner approvals,
