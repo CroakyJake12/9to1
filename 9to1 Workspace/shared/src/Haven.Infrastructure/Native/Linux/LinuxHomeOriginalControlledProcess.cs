@@ -159,6 +159,18 @@ internal sealed class LinuxHomeOriginalControlledProcess : IAsyncDisposable
         {
             var failures = new List<Exception>();
             try { _lifetime.Cancel(); } catch (Exception cause) { failures.Add(cause); }
+            // The explicit pre-exec retirement frame never releases the child.
+            // Once resume was attempted, EOF remains the normal owned stop signal.
+            if (_prepare?.IsCompletedSuccessfully == true && !_resumeAttempted)
+                try
+                {
+                    using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                    await _supervisor.StandardInput.WriteAsync("C".AsMemory(), deadline.Token).ConfigureAwait(false);
+                    await _supervisor.StandardInput.FlushAsync(deadline.Token).ConfigureAwait(false);
+                    var cancelled = await LinuxHomeRootServiceRuntime.ReadLine(_supervisor.StandardOutput, deadline.Token).ConfigureAwait(false);
+                    if (cancelled != "OriginalLinuxHomeCancelledV1") throw new IOException("The actual native helper did not acknowledge retirement of the same paused child.");
+                }
+                catch (Exception cause) { failures.Add(cause); }
             try { _supervisor.StandardInput.Close(); } catch (Exception cause) { failures.Add(cause); }
             foreach (var original in new[] { _prepare, _resume })
                 if (original is not null) try { await original.ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }

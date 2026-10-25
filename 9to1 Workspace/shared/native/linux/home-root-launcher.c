@@ -53,10 +53,14 @@ static void write_exact(int fd,const void *bytes,size_t count) {
     const char *cursor=bytes;
     while(count) { ssize_t written=write(fd,cursor,count); if(written<0 && errno==EINTR) continue; if(written<=0) fail("write"); cursor+=written; count-=(size_t)written; }
 }
-static void expect_byte(int fd,char expected) {
+static char bounded_byte(int fd) {
     struct pollfd poller={.fd=fd,.events=POLLIN};
     int ready; do { ready=poll(&poller,1,15000); } while(ready<0 && errno==EINTR);
-    char actual=0; if(ready!=1 || read(fd,&actual,1)!=1 || actual!=expected) fail("bounded-control-frame");
+    char actual=0; if(ready!=1 || read(fd,&actual,1)!=1) fail("bounded-control-frame");
+    return actual;
+}
+static void expect_byte(int fd,char expected) {
+    if(bounded_byte(fd)!=expected) fail("bounded-control-frame");
 }
 static void proc_map(pid_t child,const char *leaf,const char *mapping) {
     char path[96]; int length=snprintf(path,sizeof(path),"/proc/%ld/%s",(long)child,leaf);
@@ -169,7 +173,19 @@ int main(int argc,char **argv) {
     }
     proc_map(child,"gid_map",mapping); write_exact(release[1],"M",1); expect_byte(ready[0],'D');
     if(dprintf(STDOUT_FILENO,"OriginalLinuxHomeChildV1:%ld:%lu\n",(long)child,(unsigned long)uid)<0) fail("private-child-observation");
-    expect_byte(STDIN_FILENO,'R'); write_exact(release[1],"R",1); close(release[1]); close(ready[0]);
+    char dispatch=bounded_byte(STDIN_FILENO);
+    if(dispatch=='C') {
+        /* Explicit retirement of this SAME paused, unreaped child. No release
+         * byte or executable-start observation is emitted for cancellation. */
+        if(kill(child,SIGKILL) && errno!=ESRCH) fail("cancel-prepared-child");
+        int status; while(waitpid(child,&status,0)<0) { if(errno!=EINTR) fail("cancel-prepared-reap"); }
+        owned_child=-1;
+        close(release[1]); close(ready[0]); close(executed[0]); close(child_pidfd);
+        if(dprintf(STDOUT_FILENO,"OriginalLinuxHomeCancelledV1\n")<0) fail("private-cancel-observation");
+        return 0;
+    }
+    if(dispatch!='R') fail("bounded-control-frame");
+    write_exact(release[1],"R",1); close(release[1]); close(ready[0]);
     struct pollfd effect={.fd=executed[0],.events=POLLIN|POLLHUP}; int result;
     do { result=poll(&effect,1,15000); } while(result<0 && errno==EINTR);
     int effect_errno=0; ssize_t observed=result==1?read(executed[0],&effect_errno,sizeof(effect_errno)):-1; close(executed[0]);
