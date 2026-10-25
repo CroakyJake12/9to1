@@ -901,7 +901,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     }
     private sealed class Tools : IWorkspaceToolService, IWorkspaceFileExistenceSource
     {
-        public int ReadCalls; public int WriteCalls; public string TextValue = "original source"; public Task? BeforeWrite; public int ProcessCalls; public ProcessRequest? LastProcessRequest; public ProcessResult Process = new(0, "observed", "", TimeSpan.Zero, false);
+        public int ReadCalls; public int WriteCalls; public string TextValue = "original source"; public Task? BeforeWrite { get; set; } public int ProcessCalls; public ProcessRequest? LastProcessRequest; public ProcessResult Process = new(0, "observed", "", TimeSpan.Zero, false);
         public bool PhysicalFiles; public Action? OnWrite;
         public Task? BeforeFileRead; public Action? ReadEntered;
         public string ResolveWorkspacePath(string root, string path) => Path.GetFullPath(Path.Combine(root, path));

@@ -24,13 +24,13 @@ public sealed class PresentFreehandTests
         var result = editor.TryInsertPreparedSharedObject(document.Id, document.Version, slideId, bundle,
             new CanvasPresentInkBridge(engine, document.Id, document.Version), -.001, .12, .004, .003);
         Assert.True(result.Inserted); Assert.Equal(id, result.ElementId);
-        var element = Assert.Single(editor.SelectedSlide.Elements.Where(value => value.Id == id));
+        var element = Assert.Single(editor.SelectedSlide.Elements, value => value.Id == id);
         Assert.Equal(-.001, element.X); Assert.Equal(.004, element.Width); Assert.Equal(.003, element.Height);
         Assert.True(JsonElement.DeepEquals(bundle, element.SharedProductivityBundle!.Value));
         Assert.Equal(id, Assert.Single(editor.Selection.ElementIds));
         Assert.True(editor.Undo()); Assert.Equal(initialIds, editor.SelectedSlide.Elements.Select(value => value.Id));
         Assert.False(editor.CanUndo); Assert.True(editor.CanRedo);
-        Assert.True(editor.Redo()); var restored = Assert.Single(editor.SelectedSlide.Elements.Where(value => value.Id == id));
+        Assert.True(editor.Redo()); var restored = Assert.Single(editor.SelectedSlide.Elements, value => value.Id == id);
         Assert.Equal(.004, restored.Width); Assert.True(JsonElement.DeepEquals(bundle, restored.SharedProductivityBundle!.Value));
     }
 
@@ -93,7 +93,7 @@ public sealed class PresentFreehandTests
         var reopened = Assert.IsType<PresentDocument>(await repository.LoadAsync(document.Id, TestContext.Current.CancellationToken));
         Assert.Equal(document.Id, reopened.Id); Assert.Equal(slide, reopened.Slides[0].Id);
         Assert.Equal("Keep genuine notes", reopened.Slides[0].SpeakerNotes);
-        var stroke = Assert.Single(reopened.Slides[0].Elements.Where(value => value.Id == id));
+        var stroke = Assert.Single(reopened.Slides[0].Elements, value => value.Id == id);
         Assert.Equal(-.001, stroke.Y); Assert.Equal(.002, stroke.Width);
         Assert.True(JsonElement.DeepEquals(bundle, stroke.SharedProductivityBundle!.Value));
         Assert.Equal(PresentSlideSizePreset.Portrait9By16, reopened.SlideSize.Preset);
