@@ -10,6 +10,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui;
 using Xunit;
@@ -47,7 +48,7 @@ public sealed class BoardsEditorTests
     {
         var grip = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("grip", Brushes.White).Drawing);
         Assert.NotNull(grip.Brush);
-        Assert.Null(grip.Pen);
+        Assert.NotNull(grip.Pen);
 
         var attachment = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("paperclip", Brushes.White).Drawing);
         Assert.Null(attachment.Brush);
@@ -55,7 +56,14 @@ public sealed class BoardsEditorTests
 
         var section = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("section", Brushes.White).Drawing);
         Assert.NotNull(section.Brush);
-        Assert.Null(section.Pen);
+        Assert.NotNull(section.Pen);
+
+        foreach (var key in BoardsIcons.SectionIconChoices)
+        {
+            var choice = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon(key, Brushes.White).Drawing);
+            Assert.NotNull(choice.Brush);
+            Assert.NotNull(choice.Pen);
+        }
     }
 
     [Fact]
@@ -90,6 +98,35 @@ public sealed class BoardsEditorTests
         Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.delete, iconBackground) >= 3d);
         Assert.Same(Brushes.Gray, brushes.disabled);
         Assert.Same(Brushes.White, brushes.highContrast);
+    }
+
+    [Fact]
+    public void Authored_CUI_icon_resolves_from_the_real_Boards_scoped_palette()
+    {
+        var result = TestUiThread.Run(() =>
+        {
+            var loader = BoardsCuiDocuments.CreateLoader();
+            var root = Assert.IsAssignableFrom<Control>(loader.LoadMarkup(
+                """
+                <Cui>
+                  <Container Type="Vertical Stack">
+                    <Image Name="ScopedPlus" Source="icon:plus" AccessibleName="Insert" />
+                  </Container>
+                </Cui>
+                """,
+                "boards-scoped-icon.cui").Root);
+            var image = FindByName<Image>(root, "ScopedPlus");
+            Assert.NotNull(image);
+            Assert.True(image!.TryFindResource("CuiPanel2Brush", out var rawBackground));
+            Assert.IsAssignableFrom<IBrush>(rawBackground);
+            var drawing = Assert.IsType<DrawingImage>(image.Source).Drawing;
+            var geometry = Assert.IsType<GeometryDrawing>(drawing);
+            var foregroundBrush = geometry.Brush ?? geometry.Pen?.Brush;
+            var foreground = Assert.IsAssignableFrom<ISolidColorBrush>(foregroundBrush);
+            return (Foreground: foreground.Color, Background: Assert.IsAssignableFrom<ISolidColorBrush>(rawBackground).Color);
+        });
+
+        Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(result.Foreground, result.Background) >= 3d);
     }
 
     [Fact]
