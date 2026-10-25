@@ -74,22 +74,33 @@ internal sealed class NativeHomeFilesBoardReadSource(FilesNativeBrowserService b
         var readTask = originals.Invoke(() => browser.ReadOriginalBoardDocumentWithinSourceAsync(page, row,
             actor, lifetime, withinOriginalSource, retainOriginalTask, token));
         var read = await originals.AwaitAsync(readTask).ConfigureAwait(false);
-        token.ThrowIfCancellationRequested();
-        if (!lifetime() || read.StoreId != page.StoreID || read.FileId != row.Id.Value ||
-            read.ParentFolderId != row.ParentId!.Value.Value || read.RevisionId != row.CurrentRevisionId!.Value.Value ||
-            read.Bytes.Length != row.SizeBytes)
+        return await CreateLeaseAfterReadAsync(read, page, row, actor, lifetime, homeAuthorityCurrent, token)
+            .ConfigureAwait(false);
+    }
+
+    internal static async Task<NativeHomeFilesBoardReadLease> CreateLeaseAfterReadAsync(
+        FilesOriginalBoardDocumentRead read, FilesNativeBrowserPage page, HostedItemMetadata row,
+        AuthenticatedResourceActor actor, Func<bool> lifetime,
+        Func<CancellationToken, Task<bool>> homeAuthorityCurrent, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(read);
+        try
         {
-            CryptographicOperations.ZeroMemory(read.Bytes);
-            throw new UnauthorizedAccessException("The original Home Library board selection changed during its read.");
+            token.ThrowIfCancellationRequested();
+            if (!lifetime() || read.StoreId != page.StoreID || read.FileId != row.Id.Value ||
+                read.ParentFolderId != row.ParentId!.Value.Value || read.RevisionId != row.CurrentRevisionId!.Value.Value ||
+                read.Bytes.Length != row.SizeBytes)
+                throw new UnauthorizedAccessException("The original Home Library board selection changed during its read.");
+            if (!await homeAuthorityCurrent(token).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("The original Home profile changed while reading the selected board.");
+            return new NativeHomeFilesBoardReadLease(read, actor, lifetime, homeAuthorityCurrent);
         }
-        if (!await homeAuthorityCurrent(token).ConfigureAwait(false))
+        finally
         {
+            // The Files original-read result is a transport buffer. Only the detached lease copy
+            // survives; cancellation, authority failure, or construction failure must clear it too.
             CryptographicOperations.ZeroMemory(read.Bytes);
-            throw new UnauthorizedAccessException("The original Home profile changed while reading the selected board.");
         }
-        var lease = new NativeHomeFilesBoardReadLease(read, actor, lifetime, homeAuthorityCurrent);
-        CryptographicOperations.ZeroMemory(read.Bytes);
-        return lease;
     }
 
     internal Guid RegisterPrepared(NativeHomeFilesBoardReadLease lease)
