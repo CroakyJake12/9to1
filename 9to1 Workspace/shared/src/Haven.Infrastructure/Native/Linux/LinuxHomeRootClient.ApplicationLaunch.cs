@@ -229,10 +229,11 @@ public sealed partial class LinuxHomeRootClient : IHomeAppsFeatureSource, ICanon
                 work.Atomic = InvokeOriginalLaunchWithinSourceAsync(work.Intent, source.Run, source.Retain, CancellationToken.None);
                 home.RetainOriginalLaunch(work.Claim, work.Atomic); work.AtomicRetained = true;
             });
+            var retainedAtomic = work.Atomic ?? throw new InvalidOperationException("The original Home-retained native launch task was not published.");
             work.AtomicStart.TrySetResult();
-            try { work.Acknowledgment = (LaunchAcknowledgment)await source.Read(() => work.Atomic).ConfigureAwait(false); }
+            try { work.Acknowledgment = (LaunchAcknowledgment)await source.Read(() => retainedAtomic).ConfigureAwait(false); }
             finally { work.Dispatched.TrySetResult(); }
-            await source.Read(() => home.CompleteOriginalLaunchWithinSourceAsync(work.Claim, work.Atomic!, source.Run, source.Retain, CancellationToken.None)).ConfigureAwait(false);
+            await source.Read(() => home.CompleteOriginalLaunchWithinSourceAsync(work.Claim, retainedAtomic, source.Run, source.Retain, CancellationToken.None)).ConfigureAwait(false);
             return work.Acknowledgment;
         }
         catch (Exception cause) { primary = cause; throw; }

@@ -46,12 +46,13 @@ public sealed class LinuxHomeApplicationStartupOwner : IAsyncDisposable
                 // This owner captures the disposable before any caller postguard;
                 // the finite source task returns only detached completion metadata.
                 _session = await HomeNativeStartupSession.AttachAsync(_socket!, _verifier,
-                    new("home", "9to1.package:" + _host.HomeActivation.PackageId), _lifetime.Token, caller).ConfigureAwait(false);
+                    new("home", "9to1.package:" + _host.HomeActivation.PackageId), _requirements, _lifetime.Token, caller).ConfigureAwait(false);
                 return _session is not null;
             }
             if (!await source.Read(AttachOriginal).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The actual selected app could not authenticate the original connected Home.");
-            return await source.Read(() => _session.CheckAsync(caller)).ConfigureAwait(false);
+            var connectedSession = _session ?? throw new InvalidOperationException("The original attached Home session was not retained.");
+            return await source.Read(() => connectedSession.CheckAsync(caller)).ConfigureAwait(false);
         }, token);
     }
     public Task InitializeWithinOriginalSourceAsync(Func<HomeNativeStartupSession, AuthenticatedResourceActor, Task> initialize,
