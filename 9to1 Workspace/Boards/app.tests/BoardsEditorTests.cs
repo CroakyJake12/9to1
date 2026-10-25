@@ -10,6 +10,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using CakeOS.Apps.Boards.Contract;
+using CakeOS.Cui;
 using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
@@ -245,20 +246,20 @@ public sealed class BoardsEditorTests
         Assert.Equal(expected.Length, components.Length);
         var toolbarHost = components.Single(component => component.Name == "ToolbarHost");
         Assert.True(toolbarHost.Properties.TryGetValue("HorizontalScrolling", out var horizontalScrolling)
-            && horizontalScrolling is CakeOS.Cui.Language.CuiLiteralValue { Value: "true" });
+            && horizontalScrolling is CuiLiteralValue { Value: "true" });
         Assert.True(toolbarHost.Properties.TryGetValue("VerticalScrolling", out var verticalScrolling)
-            && verticalScrolling is CakeOS.Cui.Language.CuiLiteralValue { Value: "false" });
+            && verticalScrolling is CuiLiteralValue { Value: "false" });
         var boardSwitcher = components.Single(component => component.Name == "BoardSwitcher");
         Assert.True(boardSwitcher.Properties.TryGetValue("IconSource", out var boardIcon)
-            && boardIcon is CakeOS.Cui.Language.CuiLiteralValue { Value: "icon:boards" });
+            && boardIcon is CuiLiteralValue { Value: "icon:boards" });
         Assert.True(boardSwitcher.Properties.TryGetValue("Content", out var boardTitle)
-            && boardTitle is CakeOS.Cui.Language.CuiBindingValue { Path: "BoardTitle" });
+            && boardTitle is CuiBindingValue { Path: "BoardTitle" });
         var searchBox = components.Single(component => component.Name == "NavSearchBox");
         Assert.True(searchBox.Properties.TryGetValue("cornerradius", out var searchRadius)
-            && searchRadius is CakeOS.Cui.Language.CuiLiteralValue { Value: "18" });
+            && searchRadius is CuiLiteralValue { Value: "18" });
         var pageCard = components.Single(component => component.Name == "PageCard");
         Assert.True(pageCard.Properties.TryGetValue("cornerradius", out var pageCorner)
-            && pageCorner is CakeOS.Cui.Language.CuiLiteralValue { Value: "26" });
+            && pageCorner is CuiLiteralValue { Value: "26" });
 
         var found = await OnUiThreadAsync(() =>
         {
