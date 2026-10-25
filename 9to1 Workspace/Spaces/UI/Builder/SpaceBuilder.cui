@@ -190,9 +190,9 @@
           </Repeat>
           <Repeat id="space-builder-context-references" Source="{Binding builder.contextReferences}" As="context" Key="{Binding context.id}">
             <Container Type="Horizontal Stack" CellGap="8">
-              <Text text="{Binding context.label}" foreground="{Resource CuiTextBrush}" />
-              <Text text="{Binding context.revision}" foreground="{Resource CuiTextSoftBrush}" />
-              <Text text="{Binding context.policy}" foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="space-builder-context-reference-label" text="{Binding context.label}" foreground="{Resource CuiTextBrush}" />
+              <Text id="space-builder-context-reference-revision" text="{Binding context.revision}" foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="space-builder-context-reference-policy" text="{Binding context.policy}" foreground="{Resource CuiTextSoftBrush}" />
               <Text text="Priority" foreground="{Resource CuiTextSoftBrush}" />
               <Text text="{Binding context.order}" foreground="{Resource CuiTextSoftBrush}" />
               <Input id="space-builder-context-included" Type="Switch" Checked="{Binding context.included, mode=TwoWay}" Interactive="{Binding builder.canSetContextIncluded}" accessible-name="Include this canonical source automatically" />
