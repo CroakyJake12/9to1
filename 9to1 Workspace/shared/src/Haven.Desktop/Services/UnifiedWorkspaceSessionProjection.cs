@@ -213,9 +213,8 @@ internal static class UnifiedWorkspaceSessionProjection
             if (!actualMembers.SetEquals(group.OrderedTabIds))
                 throw new InvalidDataException("A tab group must list every current member in its canonical order.");
             var memberTabs = group.OrderedTabIds.Select(id => currentTabs[id]).ToArray();
-            if (memberTabs.Skip(1).Any(tab => !StringComparer.Ordinal.Equals(tab.ProfileId, memberTabs[0].ProfileId) ||
-                tab.Privacy != BrowserTabPrivacy.Standard))
-                throw new InvalidDataException("A tab group cannot cross profile or privacy ownership.");
+            if (memberTabs.Any(tab => tab.Privacy != BrowserTabPrivacy.Standard))
+                throw new InvalidDataException("A tab group cannot contain private tabs.");
             if (externalGroupIds.Contains(group.Id) || groups.Any(existing => existing.Id == group.Id && !touchedGroupIds.Contains(group.Id)))
                 throw new InvalidDataException("A tab group owned by another window cannot be changed here.");
             var index = groups.FindIndex(existing => existing.Id == group.Id);

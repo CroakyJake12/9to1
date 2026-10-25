@@ -221,7 +221,7 @@
           <Text Text="Tab groups" FontWeight="Bold" />
           <Input Type="Text" id="BrowseTabGroupNameInput" Value="{Binding GroupName, Mode=TwoWay}" Interactive="{Binding CanManageTabGroups}" AccessibleName="Tab group name" />
           <Container Type="Wrap" CellGap="4">
-            <Button id="BrowseCreateTabGroupButton" action="9to1.Browse.CreateTabGroup" Interactive="{Binding Can.CreateTabGroup}" AccessibleName="Group selected tab with another tab in this profile">Create group</Button>
+            <Button id="BrowseCreateTabGroupButton" action="9to1.Browse.CreateTabGroup" Interactive="{Binding Can.CreateTabGroup}" AccessibleName="Create a group for the selected standard tab">Create group</Button>
             <Button id="BrowseUngroupSelectedTabButton" action="9to1.Browse.UngroupSelectedTab" Interactive="{Binding Can.UngroupSelectedTab}">Ungroup selected tab</Button>
           </Container>
           <Repeat Source="{Binding TabGroups}" As="group" Key="{Binding group.Key}">

@@ -9,7 +9,7 @@ public sealed partial class BrowseChrome
         {
             if (!CanManageTabGroups) return false;
             var selected = _tabs.FirstOrDefault(tab => tab.Id == _selectedTabId);
-            return IsGroupable(selected) && _tabs.Any(tab => tab.Id != selected!.Id && IsGroupCompatible(selected, tab));
+            return IsGroupable(selected);
         }
     }
     public bool CanUngroupSelectedTab => CanManageTabGroups &&
@@ -19,6 +19,7 @@ public sealed partial class BrowseChrome
         if (!CanManageTabGroups || _tabs.FirstOrDefault(tab => tab.Id == _selectedTabId) is not { } selected || !IsGroupable(selected)) return false;
         var group = _tabGroups.FirstOrDefault(item => item.Id == groupId);
         if (group is null) return false;
+        if (StringComparer.Ordinal.Equals(selected.Group, group.Id.ToString("D"))) return false;
         var members = _tabs.Where(tab => tab.Group == group.Id.ToString("D")).ToArray();
         return members.Length > 0 && members.All(member => IsGroupCompatible(selected, member));
     }
@@ -168,12 +169,9 @@ public sealed partial class BrowseChrome
         DemandGroupPersistence(); var normalized = NormalizeGroupName(name);
         var selected = RequireTab(_selectedTabId);
         if (!IsGroupable(selected)) throw new InvalidOperationException("Only standard tabs outside Home can join a tab group.");
-        var neighbor = _tabs.FirstOrDefault(tab => tab.Id != selected.Id && IsGroupCompatible(selected, tab));
-        if (neighbor is null) { _status = "Open another standard tab in this profile to create a group."; return Publish(); }
         var id = Guid.NewGuid(); var key = id.ToString("D");
         DissolveTabFromGroup(selected);
-        DissolveTabFromGroup(neighbor);
-        selected.Group = key; neighbor.Group = key;
+        selected.Group = key;
         _tabGroups.Add(new(id, normalized, false, OrderedGroupMembers(key)));
         await SaveGroupChangeAsync("Tab group created.", token).ConfigureAwait(false);
         return Publish();
@@ -186,9 +184,8 @@ public sealed partial class BrowseChrome
             ?? throw new ArgumentException("The current tab group is no longer available.", nameof(groupId));
         if (!IsGroupable(tab)) throw new InvalidOperationException("Only standard tabs outside Home can join a tab group.");
         var members = _tabs.Where(item => StringComparer.Ordinal.Equals(item.Group, groupId.ToString("D"))).ToArray();
-        if (members.Length == 0) throw new InvalidOperationException("Reopen a tab from this group before adding another tab.");
         if (members.Any(member => !IsGroupCompatible(tab, member)))
-            throw new InvalidOperationException("A group can contain standard tabs from only one profile.");
+            throw new InvalidOperationException("A group can contain tabs only when each member is a standard tab.");
         if (StringComparer.Ordinal.Equals(tab.Group, groupId.ToString("D"))) return Publish();
         DissolveTabFromGroup(tab); tab.Group = groupId.ToString("D");
         ReplaceGroupMembers(group);
@@ -308,9 +305,8 @@ public sealed partial class BrowseChrome
         if (!TryGetGroupId(tab.Group, out var groupId)) return;
         tab.Group = string.Empty;
         var remaining = OrderedGroupMembers(groupId.ToString("D"));
-        if (remaining.Length < 2)
+        if (remaining.Length == 0)
         {
-            foreach (var member in _tabs.Where(item => remaining.Contains(item.Id))) member.Group = string.Empty;
             _tabGroups.RemoveAll(group => group.Id == groupId);
             lock (_closedTabsGate)
                 for (var index = 0; index < _closedTabs.Count; index++)

@@ -18,13 +18,15 @@ public sealed partial class BrowseNativeOwnershipTests
         await chrome.CreateTabGroupAsync("Research");
         var group = Assert.Single(chrome.State.Groups);
         var stableId = group.Id;
-        Assert.Equal(new[] { first, third }, group.OrderedTabIds);
+        Assert.Equal(new[] { third }, group.OrderedTabIds);
 
         await chrome.SelectTabAsync(second);
         Assert.True(chrome.CanMoveSelectedTabToGroup(stableId));
         await chrome.MoveSelectedTabToGroupAsync(stableId);
         await chrome.RenameTabGroupAsync(stableId, "Project notes");
         await chrome.SetTabGroupCollapsedAsync(stableId, true);
+        await chrome.SelectTabAsync(first);
+        await chrome.MoveSelectedTabToGroupAsync(stableId);
         Assert.Equal(stableId, Assert.Single(chrome.State.Groups).Id);
         Assert.Equal("Project notes", Assert.Single(chrome.State.Groups).Name);
         Assert.True(Assert.Single(chrome.State.Groups).IsCollapsed);
@@ -33,6 +35,11 @@ public sealed partial class BrowseNativeOwnershipTests
         { Assert.Equal("Project notes", tab.GroupName); Assert.True(tab.IsGroupCollapsed); });
         Assert.Equal(new[] { first, second, third }, session.Saves[^1].Groups!.Single().OrderedTabIds);
 
+        await chrome.SelectTabAsync(first);
+        await chrome.UngroupSelectedTabAsync();
+        await chrome.SelectTabAsync(second);
+        await chrome.UngroupSelectedTabAsync();
+        Assert.Equal(new[] { third }, Assert.Single(chrome.State.Groups).OrderedTabIds);
         await chrome.DissolveTabGroupAsync(stableId);
         Assert.Empty(chrome.State.Groups);
         Assert.All(chrome.State.Tabs, tab => Assert.Null(tab.GroupId));
