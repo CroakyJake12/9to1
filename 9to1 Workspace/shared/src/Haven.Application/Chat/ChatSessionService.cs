@@ -2050,8 +2050,8 @@ public sealed partial class ChatSessionService(
             {
                 try
                 {
-                    var completed = await taskCoordinator!.CompleteOriginalInvocationAsync(originalCustody).ConfigureAwait(false);
-                    if (completed is not null) CurrentCanonicalTask = completed;
+                    var completionAcknowledgement = await taskCoordinator!.CompleteOriginalInvocationAsync(originalCustody).ConfigureAwait(false);
+                    if (completionAcknowledgement is not null) CurrentCanonicalTask = completionAcknowledgement;
                 }
                 catch (Exception completionFailure) { originalCustody.Retain(completionFailure, originalCustody.OriginalCompletion); }
             }
