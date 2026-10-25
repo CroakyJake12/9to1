@@ -471,52 +471,16 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
                 bufferSize: 16 * 1024,
                 options: FileOptions.Asynchronous | FileOptions.SequentialScan);
             using var json = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-            var root = json.RootElement;
-            if (!root.TryGetProperty("format", out var format) ||
-                !string.Equals(format.GetString(), HavenBoardDocument.FormatIdentity, StringComparison.Ordinal) ||
-                !root.TryGetProperty("schemaVersion", out var versionElement) ||
-                !versionElement.TryGetInt32(out var version))
-                return new DocumentReadResult(null, null, null, new InvalidDataException(
-                    "The .9to1board is missing its required format identity or schema version."), Migrated: false);
-
-            if (version > HavenBoardDocument.CurrentSchemaVersion)
-                return new DocumentReadResult(null, null, new UnsupportedHavenBoardDocumentVersionException(version), null, Migrated: false);
-            if (version < 0)
-                return new DocumentReadResult(null, null, null, new InvalidDataException("The .9to1board schema version is invalid."), Migrated: false);
-
-            HavenBoardDocument? document = version switch
+            HavenBoardDocument document;
+            bool migrated;
+            try
             {
-                3 => root.Deserialize<HavenBoardDocument>(Json),
-                2 => root.Deserialize<HavenBoardDocument>(Json),
-                1 => MigrateSchemaOne(root),
-                0 => MigrateSchemaZero(root),
-                _ => null
-            };
-            var migrated = version < HavenBoardDocument.CurrentSchemaVersion;
-
-            if (document is null ||
-                document.DocumentId == Guid.Empty ||
-                document.CreatedUtc == default ||
-                document.ModifiedUtc == default ||
-                (document.Snapshot is null && document.RichNotes is null))
-                return new DocumentReadResult(null, null, null, new InvalidDataException(
-                    "The .9to1board is incomplete, has a mismatched board identity, or fails validation."), Migrated: false);
-
-            if (document.Snapshot is not null)
-            {
-                if (expectedBoardId is not null &&
-                    !string.Equals(document.Snapshot.Id, expectedBoardId, StringComparison.Ordinal))
-                    return new DocumentReadResult(null, null, null, new InvalidDataException(
-                        "The .9to1board is incomplete, has a mismatched board identity, or fails validation."), Migrated: false);
-                HavenBoardReducer.Validate(document.Snapshot);
+                document = HavenBoardDocumentCodec.DeserializeRoot(json.RootElement, expectedBoardId, out migrated);
             }
-            if (document.RichNotes is not null)
+            catch (UnsupportedHavenBoardDocumentVersionException error)
             {
-                if (version < 3)
-                    HavenRichNotesV3Migration.Upgrade(document.RichNotes);
-                HavenRichNotesValidator.Validate(document.RichNotes);
+                return new DocumentReadResult(null, null, error, null, Migrated: false);
             }
-
             return new DocumentReadResult(document.Snapshot, document, null, null, migrated);
         }
         catch (JsonException error)
@@ -527,46 +491,18 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
         {
             return new DocumentReadResult(null, null, null, error, Migrated: false);
         }
+        catch (InvalidDataException error)
+        {
+            return new DocumentReadResult(null, null, null, error, Migrated: false);
+        }
         catch (NotSupportedException error)
         {
             return new DocumentReadResult(null, null, null, new InvalidDataException("The .9to1board contains unsupported data.", error), Migrated: false);
         }
     }
 
-    /// <summary>
-    /// Migrates a schema v1 envelope in memory: the snapshot facet is preserved verbatim
-    /// and a rich-notes seed is derived from it. The original file is untouched until save.
-    /// </summary>
-    private static HavenBoardDocument? MigrateSchemaOne(JsonElement root)
-    {
-        var document = root.Deserialize<HavenBoardDocument>(Json);
-        if (document?.Snapshot is null)
-            return null;
-        return document with { RichNotes = HavenRichNotesSeeder.SeedFromSnapshot(document.Snapshot) };
-    }
-
     private static HavenBoardDocument MigrateLegacySnapshot(HavenBoardSnapshot snapshot)
     {
-        var now = DateTimeOffset.UtcNow;
-        return new HavenBoardDocument(
-            HavenBoardDocument.FormatIdentity,
-            HavenBoardDocument.CurrentSchemaVersion,
-            Guid.NewGuid(),
-            now,
-            now,
-            snapshot,
-            HavenRichNotesSeeder.SeedFromSnapshot(snapshot));
-    }
-
-    private static HavenBoardDocument? MigrateSchemaZero(JsonElement root)
-    {
-        if (!root.TryGetProperty("snapshot", out var snapshotElement))
-            return null;
-
-        var snapshot = snapshotElement.Deserialize<HavenBoardSnapshot>(Json);
-        if (snapshot is null)
-            return null;
-
         var now = DateTimeOffset.UtcNow;
         return new HavenBoardDocument(
             HavenBoardDocument.FormatIdentity,

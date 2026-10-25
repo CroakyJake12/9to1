@@ -16,6 +16,12 @@
   <!-- Avalonia fork: reference source projects directly (no meta-package, no AXAML).
        Mirrors apps/Home/src/AvaloniaHome packaging. -->
   <ItemGroup>
+    <Compile Remove="**\*.cs" />
+    <Compile Include="Program.cs" />
+    <ProjectReference Include="CakeOS.Apps.Boards.Embedding.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Controls\Avalonia.Controls.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Remote.Protocol\Avalonia.Remote.Protocol.csproj" />
@@ -39,6 +45,4 @@
     <Content Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Fonts.Inter\Assets\OFL.txt" Link="licenses\Inter-OFL.txt" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <Import Project="..\..\..\framework\CUI\Compiler\buildTransitive\CakeOS.Cui.props" />
-  <Import Project="..\..\..\framework\CUI\Compiler\buildTransitive\CakeOS.Cui.targets" />
 </Project>

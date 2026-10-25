@@ -18,7 +18,8 @@ public sealed class RichBoardSession : IAsyncDisposable
 
     private static readonly JsonSerializerOptions HistoryJson = new(JsonSerializerDefaults.Web);
 
-    private readonly JsonFileHavenBoardStore _store;
+    private readonly JsonFileHavenBoardStore? _store;
+    private readonly bool _readOnly;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Timer _autosaveTimer;
     private readonly TimeSpan _autosaveDelay = TimeSpan.FromMilliseconds(750);
@@ -27,9 +28,10 @@ public sealed class RichBoardSession : IAsyncDisposable
     private long _lastSavedRichVersion = -1;
     private bool _disposed;
 
-    private RichBoardSession(JsonFileHavenBoardStore store, HavenBoardDocument document, string? filePath)
+    private RichBoardSession(JsonFileHavenBoardStore? store, HavenBoardDocument document, string? filePath, bool readOnly = false)
     {
         _store = store;
+        _readOnly = readOnly;
         Document = document;
         FilePath = filePath;
         _lastSavedRichVersion = document.RichNotes?.Version ?? -1;
@@ -40,6 +42,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public HavenBoardDocument Document { get; private set; }
     public HavenRichNotes Rich => Document.RichNotes ?? throw new InvalidOperationException("This board has no rich notes yet.");
     public bool HasRichNotes => Document.RichNotes is not null;
+    public bool IsReadOnly => _readOnly;
     public string? FilePath { get; private set; }
     public string Status { get; private set; } = string.Empty;
     public bool HasUnsavedChanges { get; private set; }
@@ -85,6 +88,14 @@ public sealed class RichBoardSession : IAsyncDisposable
         return new RichBoardSession(store, EnsureRich(document), Path.GetFullPath(path));
     }
 
+    /// <summary>Creates an isolated immutable session from an already validated document snapshot.</summary>
+    public static RichBoardSession OpenReadOnly(HavenBoardDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        var copy = HavenBoardDocumentCodec.Deserialize(JsonSerializer.SerializeToUtf8Bytes(document, HistoryJson));
+        return new RichBoardSession(null, EnsureRich(copy), filePath: null, readOnly: true);
+    }
+
     private static HavenBoardDocument EnsureRich(HavenBoardDocument document)
     {
         if (document.RichNotes is not null)
@@ -101,6 +112,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(mutation);
         ThrowIfDisposed();
+        if (_readOnly) throw new InvalidOperationException("This board source is open read-only.");
 
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -127,6 +139,7 @@ public sealed class RichBoardSession : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(condition);
         ArgumentNullException.ThrowIfNull(mutation);
         ThrowIfDisposed();
+        if (_readOnly) return false;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -146,6 +159,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     {
         get
         {
+            if (_readOnly) return false;
             lock (_undo) return _undo.Count > 0;
         }
     }
@@ -154,6 +168,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     {
         get
         {
+            if (_readOnly) return false;
             lock (_redo) return _redo.Count > 0;
         }
     }
@@ -165,6 +180,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        if (_readOnly) return false;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -194,6 +210,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public async Task<bool> RedoAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        if (_readOnly) return false;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -252,6 +269,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public Task RequestAutosaveAsync()
     {
         ThrowIfDisposed();
+        if (_readOnly) return Task.CompletedTask;
         _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
         return Task.CompletedTask;
     }
@@ -260,6 +278,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public async Task FlushAsync()
     {
         ThrowIfDisposed();
+        if (_readOnly) return;
         await _gate.WaitAsync().ConfigureAwait(false);
         _gate.Release();
         // If a save is running, the gate above serialized after it; re-check dirtiness.
@@ -279,6 +298,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        if (_readOnly) throw new InvalidOperationException("This board source is open read-only and cannot be saved.");
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -294,6 +314,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public async Task SaveAsAsync(string path, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        if (_readOnly) throw new InvalidOperationException("This board source is open read-only and cannot be saved elsewhere.");
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -313,6 +334,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         ThrowIfDisposed();
+        if (_readOnly) throw new InvalidOperationException("This board source is open read-only.");
         var info = new FileInfo(sourcePath);
         if (!info.Exists)
             throw new FileNotFoundException("Attachment source was not found.", sourcePath);
@@ -390,6 +412,10 @@ public sealed class RichBoardSession : IAsyncDisposable
         if (!string.IsNullOrEmpty(attachment.LocalReference) &&
             attachment.LocalReference.StartsWith("sidecar:", StringComparison.Ordinal))
         {
+            if (string.IsNullOrWhiteSpace(FilePath))
+                return Task.FromResult(new HavenAttachmentResolution(
+                    attachment.Id, HavenAttachmentStatus.Missing, null, null,
+                    $"Attachment '{attachment.DisplayName}' is unavailable in this detached document view."));
             var digest = attachment.LocalReference["sidecar:".Length..];
             var blobPath = Path.Combine(SidecarDirectoryFor(FilePath), digest + ".blob");
             if (File.Exists(blobPath))
@@ -467,7 +493,8 @@ public sealed class RichBoardSession : IAsyncDisposable
         HavenRichNotesValidator.Validate(Document.RichNotes);
         var now = DateTimeOffset.UtcNow;
         var toSave = Document with { ModifiedUtc = now };
-        await _store.SaveDocumentAtPathAsync(toSave, targetPath, cancellationToken).ConfigureAwait(false);
+        await (_store ?? throw new InvalidOperationException("This board session has no writable store."))
+            .SaveDocumentAtPathAsync(toSave, targetPath, cancellationToken).ConfigureAwait(false);
 
         FilePath = targetPath; // Publish the destination only after the actual store acknowledgement.
         Document = toSave;

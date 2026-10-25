@@ -144,29 +144,33 @@ public static class NavBuilder
         title.Click += (_, _) => vm.SelectSection(section.Id);
         title.DoubleTapped += (_, _) =>
         {
+            if (!vm.CanEdit) return;
             _pendingRename = (true, section.Id, null);
             vm.RequestNavRebuild();
         };
         title.KeyDown += (_, e) =>
         {
-            if (e.Key == Key.F2)
+            if (vm.CanEdit && e.Key == Key.F2)
             {
                 _pendingRename = (true, section.Id, null);
                 vm.RequestNavRebuild();
                 e.Handled = true;
             }
         };
-        var menu = new ContextMenu();
-        AddMenuItem(menu, "Rename", () =>
+        if (vm.CanEdit)
         {
-            _pendingRename = (true, section.Id, null);
-            vm.RequestNavRebuild();
-        });
-        AddMenuItem(menu, "Duplicate", async () => await vm.DuplicateSectionAsync(section.Id));
-        AddMenuItem(menu, "Move up", async () => await vm.MoveSectionAsync(section.Id, -1));
-        AddMenuItem(menu, "Move down", async () => await vm.MoveSectionAsync(section.Id, 1));
-        AddMenuItem(menu, "Delete", async () => await vm.DeleteSectionAsync(section.Id));
-        title.ContextMenu = menu;
+            var menu = new ContextMenu();
+            AddMenuItem(menu, "Rename", () =>
+            {
+                _pendingRename = (true, section.Id, null);
+                vm.RequestNavRebuild();
+            });
+            AddMenuItem(menu, "Duplicate", async () => await vm.DuplicateSectionAsync(section.Id));
+            AddMenuItem(menu, "Move up", async () => await vm.MoveSectionAsync(section.Id, -1));
+            AddMenuItem(menu, "Move down", async () => await vm.MoveSectionAsync(section.Id, 1));
+            AddMenuItem(menu, "Delete", async () => await vm.DeleteSectionAsync(section.Id));
+            title.ContextMenu = menu;
+        }
         row.Children.Add(chevron);
         row.Children.Add(title);
         return row;
@@ -219,41 +223,50 @@ public static class NavBuilder
         button.Click += (_, _) => vm.SelectPage(section.Id, page.Id);
         button.DoubleTapped += (_, _) =>
         {
+            if (!vm.CanEdit) return;
             _pendingRename = (false, section.Id, page.Id);
             vm.RequestNavRebuild();
         };
         button.KeyDown += (_, e) =>
         {
-            if (e.Key == Key.F2)
+            if (vm.CanEdit && e.Key == Key.F2)
             {
                 _pendingRename = (false, section.Id, page.Id);
                 vm.RequestNavRebuild();
                 e.Handled = true;
             }
         };
-        var menu = new ContextMenu();
-        AddMenuItem(menu, "Rename", () =>
+        if (vm.CanEdit)
         {
-            _pendingRename = (false, section.Id, page.Id);
-            vm.RequestNavRebuild();
-        });
-        AddMenuItem(menu, "Duplicate", async () => await vm.DuplicatePageAsync(section.Id, page.Id));
-        AddMenuItem(menu, "Move up", async () => await vm.MovePageAsync(section.Id, page.Id, -1));
-        AddMenuItem(menu, "Move down", async () => await vm.MovePageAsync(section.Id, page.Id, 1));
-        AddMenuItem(menu, "Delete", async () => await vm.DeletePageAsync(section.Id, page.Id));
-        AddMenuItem(menu, "Add subpage", async () => await vm.AddSubpageAsync(section.Id, page.Id));
-        if (page.ParentPageId is not null)
-            AddMenuItem(menu, "Move to section root", async () => await vm.SetPageParentAsync(section.Id, page.Id, null));
-        var pageIndex = section.Pages.IndexOf(page);
-        if (pageIndex > 0)
-            AddMenuItem(menu, "Nest under previous page", async () => await vm.SetPageParentAsync(section.Id, page.Id, section.Pages[pageIndex - 1].Id));
-        button.ContextMenu = menu;
+            var menu = new ContextMenu();
+            AddMenuItem(menu, "Rename", () =>
+            {
+                _pendingRename = (false, section.Id, page.Id);
+                vm.RequestNavRebuild();
+            });
+            AddMenuItem(menu, "Duplicate", async () => await vm.DuplicatePageAsync(section.Id, page.Id));
+            AddMenuItem(menu, "Move up", async () => await vm.MovePageAsync(section.Id, page.Id, -1));
+            AddMenuItem(menu, "Move down", async () => await vm.MovePageAsync(section.Id, page.Id, 1));
+            AddMenuItem(menu, "Delete", async () => await vm.DeletePageAsync(section.Id, page.Id));
+            AddMenuItem(menu, "Add subpage", async () => await vm.AddSubpageAsync(section.Id, page.Id));
+            if (page.ParentPageId is not null)
+                AddMenuItem(menu, "Move to section root", async () => await vm.SetPageParentAsync(section.Id, page.Id, null));
+            var pageIndex = section.Pages.IndexOf(page);
+            if (pageIndex > 0)
+                AddMenuItem(menu, "Nest under previous page", async () => await vm.SetPageParentAsync(section.Id, page.Id, section.Pages[pageIndex - 1].Id));
+            button.ContextMenu = menu;
+        }
         row.Children.Add(button);
         return row;
     }
 
     private static void TakePendingRename(StackPanel host, BoardsViewModel vm)
     {
+        if (!vm.CanEdit)
+        {
+            _pendingRename = null;
+            return;
+        }
         if (_pendingRename is not var (isSection, sectionId, pageId))
             return;
         _pendingRename = null;

@@ -16,11 +16,11 @@ public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string 
     string ViewStamp, int ViewIndex, int ViewCount);
 public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId);
 
-public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession
+public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession, IBoardSessionCapabilities
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    private readonly JsonFileHavenBoardStore _store;
+    private readonly JsonFileHavenBoardStore? _store;
     private readonly RichBoardSession _real;
     private readonly SemaphoreSlim _mergeGate = new(1, 1);
     private readonly RichBoardDocument _view = new() { Title = "Untitled board", Sections = [] };
@@ -30,7 +30,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     private readonly Guid _textOwner = Guid.NewGuid();
     private BoardTextSelection? _issuedTextSelection;
 
-    private ContractSessionAdapter(JsonFileHavenBoardStore store, RichBoardSession real)
+    private ContractSessionAdapter(JsonFileHavenBoardStore? store, RichBoardSession real)
     {
         _store = store;
         _real = real;
@@ -70,6 +70,15 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         var adapter = new ContractSessionAdapter(store, real);
         adapter.RefreshView();
         return adapter;
+    }
+
+    /// <summary>Opens a detached, non-persisting view over an already validated document.</summary>
+    public static Task<ContractSessionAdapter> OpenReadOnlyAsync(HavenBoardDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        var adapter = new ContractSessionAdapter(null, RichBoardSession.OpenReadOnly(document));
+        adapter.RefreshView();
+        return Task.FromResult(adapter);
     }
 
     /// <summary>Creates and durably saves a new board at a distinct local path.</summary>
@@ -117,6 +126,11 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
 
     public RichBoardDocument Document => _view;
     public string Snapshot => JsonSerializer.Serialize(_view, Json);
+    public bool CanEdit => !_real.IsReadOnly;
+    private void EnsureEditable()
+    {
+        if (!CanEdit) throw new InvalidOperationException("This board source is open read-only.");
+    }
     public string Status => _lastError ?? _real.Status;
     public string? FilePath => _real.FilePath;
     public event EventHandler<string>? StatusChanged;
@@ -390,6 +404,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     public void MarkDirty()
     {
         ThrowIfDisposed();
+        EnsureEditable();
         _ = MergeAsync();
         _ = _real.RequestAutosaveAsync();
     }
@@ -397,6 +412,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     public async ValueTask SaveAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        EnsureEditable();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -421,6 +437,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     public async ValueTask SaveAsAsync(string path, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        EnsureEditable();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
