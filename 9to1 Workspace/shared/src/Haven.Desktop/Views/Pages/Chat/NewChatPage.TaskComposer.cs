@@ -284,12 +284,31 @@ public sealed partial class NewChatPage
             catch (Exception error) { CaptureOriginalGeneratedCauses(failures, actual, error); }
         }
     }
+    private TaskFollowUpMode? NativePreferredSubmitMode => _conversation.SpaceId is { } space && space != Guid.Empty
+        ? _preferences.GetSpaceSubmitMode(space, space == SpaceRegistry.ResearchSpaceId) switch
+        { SpaceSubmitMode.Steer => TaskFollowUpMode.Steer, SpaceSubmitMode.Queue => TaskFollowUpMode.Queue, _ => null }
+        : null;
+    private ValueTask SetNativePreferredSubmitMode(TaskFollowUpMode mode)
+    {
+        if (!Enum.IsDefined(mode) || _conversation.SpaceId is not { } space || space == Guid.Empty)
+            return ValueTask.FromException(new InvalidOperationException("This task has no canonical Space preference scope."));
+        return new(RunChatOriginalAsync(() =>
+        {
+            _preferences.SetSpaceSubmitMode(space, mode == TaskFollowUpMode.Steer ? SpaceSubmitMode.Steer : SpaceSubmitMode.Queue);
+            _scene.ComposerView.RefreshSurface();
+            return Task.CompletedTask;
+        }));
+    }
     private sealed class NativeTaskComposerActions(NewChatPage page) : IChatComposerTaskActions
     {
         public bool IsApplicable => page._conversation.Mode == HavenMode.Tasks && (page._isSending || page.HasStarted);
         public bool CanSteer => page.CanSubmitNativeTaskFollowUp();
         public bool CanQueue => page.CanSubmitNativeTaskFollowUp();
         public bool CanStop => page.CanStopNativeComposerTask();
+        public bool HasSendModePreference => page._conversation.SpaceId is { } space && space != Guid.Empty &&
+            !page._safetyLocked && page.CurrentTaskComposerPresentation()?.Owner.CanSubmitFollowUp == true;
+        public TaskFollowUpMode? PreferredSendMode => page.NativePreferredSubmitMode;
+        public ValueTask SetPreferredSendMode(TaskFollowUpMode mode) => page.SetNativePreferredSubmitMode(mode);
         public bool CanResume => page.CanResumeNativeComposerTask();
         public ValueTask Resume() => new(page.ResumeNativeComposerTaskAsync());
         public ValueTask Steer() => new(page.AdmitNativeTaskFollowUpAsync(TaskFollowUpMode.Steer));

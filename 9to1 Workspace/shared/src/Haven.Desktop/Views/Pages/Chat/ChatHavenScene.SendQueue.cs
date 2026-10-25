@@ -14,8 +14,8 @@ internal sealed partial class ChatHavenScene
 
     private IChatComposerTaskActions? ActiveTaskComposer =>
         _composerSource.TaskActions is { IsApplicable: true } actual ? actual : null;
-    private ValueTask SubmitTaskComposerAsync(IChatComposerTaskActions actual) => actual.CanQueue
-        ? actual.Queue() : ValueTask.FromException(new InvalidOperationException("Choose an available task action. The task draft has been retained."));
+    private ValueTask SubmitTaskComposerAsync(IChatComposerTaskActions actual) => actual.CanSubmit
+        ? actual.Submit(alternate: false) : ValueTask.FromException(new InvalidOperationException("Choose an available task action. The task draft has been retained."));
 
     /// <summary>True while at least one typed message is parked in the in-memory send queue.</summary>
     internal bool HasQueuedComposerMessages => _composerQueue?.HasQueuedComposerMessages ?? false;

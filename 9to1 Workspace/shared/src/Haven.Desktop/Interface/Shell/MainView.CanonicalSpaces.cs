@@ -116,6 +116,7 @@ public sealed partial class MainView
                 current.Snapshot?.TaskId, current.Snapshot?.ExecutionId);
             RetainOriginalCanonicalPage(page); // Late acquisition stays in the shell cohort even if binding seals it.
             acquiredPage = page; acquiredReadiness = readiness;
+            page.BindOriginalComposerPreferences(_preferences);
             actualReadinessAcquisition = page.AcquireOriginalNativeReadinessAsync(bindFrame);
         });
         if (actualReadinessAcquisition is null || acquiredPage is null || acquiredReadiness is null)

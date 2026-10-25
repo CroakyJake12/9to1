@@ -25,6 +25,13 @@ internal sealed partial class ChatHavenScene
         public bool CanStop => ActiveTask is { } task ? task.CanStop : _scene._isSending;
         public bool CanSteer => ActiveTask?.CanSteer == true;
         public bool CanResume => ActiveTask?.CanResume == true;
+        public bool HasSendModePreference => ActiveTask?.HasSendModePreference == true;
+        public TaskFollowUpMode? PreferredSendMode => ActiveTask?.PreferredSendMode;
+        public bool CanSubmit => ActiveTask is { } task ? task.CanSubmit : CanSend || CanQueue;
+        public ValueTask SetPreferredSendMode(TaskFollowUpMode mode) => ActiveTask is { } task ? task.SetPreferredSendMode(mode) :
+            ValueTask.FromException(new InvalidOperationException("This conversation has no active task preference owner."));
+        public ValueTask Queue() => ActiveTask is { CanQueue: true } task ? task.Queue() : _scene.HandleComposerSendAsync();
+        public ValueTask Submit(bool alternate) => ActiveTask is { } task ? task.Submit(alternate) : _scene.HandleComposerSendAsync();
         public ValueTask Resume() => ActiveTask is { CanResume: true } task ? task.Resume() :
             ValueTask.FromException(new InvalidOperationException("This task has no available original continuation."));
         public bool CanQueue => ActiveTask is { } task ? task.CanQueue :

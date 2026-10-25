@@ -5,6 +5,8 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop;
+using Avalonia.Input;
 using Haven.Desktop.Views.Pages.Tasks;
 using Haven.Application;
 using Haven.Core;
@@ -194,6 +196,7 @@ public sealed class ChatComposerActionShelfTests
         public bool CanSteer => IsApplicable;
         public bool CanQueue => IsApplicable;
         public bool CanStop => IsApplicable;
+        public TaskFollowUpMode? PreferredSendMode => TaskFollowUpMode.Queue;
         public int Queues, Steers;
         public ValueTask Steer() { Steers++; return ValueTask.CompletedTask; }
         public ValueTask Queue() { Queues++; return new(queue); }
@@ -240,6 +243,82 @@ public sealed class ChatComposerActionShelfTests
 // assertions establish adapter admission and draft custody, not native release acceptance.
 public sealed class CanonicalTaskComposerTests
 {
+    [AvaloniaTheory]
+    [InlineData(SpaceSubmitMode.Steer, KeyModifiers.None, TaskFollowUpMode.Steer)]
+    [InlineData(SpaceSubmitMode.Steer, KeyModifiers.Alt, TaskFollowUpMode.Queue)]
+    [InlineData(SpaceSubmitMode.Queue, KeyModifiers.None, TaskFollowUpMode.Queue)]
+    [InlineData(SpaceSubmitMode.Queue, KeyModifiers.Alt, TaskFollowUpMode.Steer)]
+    [InlineData(SpaceSubmitMode.Queue, KeyModifiers.Control, TaskFollowUpMode.Queue)]
+    public async Task Actual_input_submit_uses_saved_space_mode_and_alt_changes_only_this_instruction(
+        SpaceSubmitMode preferred, KeyModifiers modifiers, TaskFollowUpMode expected)
+    {
+        using var preferences = new PreferencesOwner();
+        await using var rig = await Rig.CreateAsync(preferences.Service);
+        preferences.Service.SetSpaceSubmitMode(rig.SpaceId, preferred);
+        var view = rig.Page.OriginalComposer;
+        var window = new Window { Width = 500, Height = 360, Content = view };
+        window.Show();
+        try
+        {
+            rig.Page.OriginalComposer.Bindings.TrySetValue("Composer.Draft", "keyboard follow-up");
+            Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var input = view.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetAutomationId(box) == "composer-input");
+            input.Focus();
+            var key = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, KeyModifiers = modifiers, Source = input };
+            input.RaiseEvent(key);
+            Assert.True(key.Handled);
+            await view.CaptureOriginalActionSettlement().WaitAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(expected, rig.Page.AcknowledgedFollowUp!.Mode);
+            Assert.Equal(preferred, preferences.Service.GetSpaceSubmitMode(rig.SpaceId, false));
+            Assert.Equal(rig.Initial.TaskId, rig.Tasks.Current.TaskId);
+            Assert.Equal(rig.Initial.ExecutionId, rig.Tasks.Current.ExecutionId);
+            Assert.Equal(1, rig.Tasks.Writes);
+            Assert.Equal("", view.Source.Draft);
+        }
+        finally { window.Content = null; window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Preference_choice_is_real_and_a_foreign_submit_sender_cannot_dispatch_it()
+    {
+        using var preferences = new PreferencesOwner();
+        await using var rig = await Rig.CreateAsync(preferences.Service);
+        var bindings = rig.Page.OriginalComposer.Bindings;
+        bindings.TrySetValue("Composer.Draft", "retain this instruction");
+        Assert.Null(preferences.Service.GetSpaceSubmitMode(rig.SpaceId, false));
+        Assert.False(bindings.IsActionAvailable("composer.submit")); // No invented DEC-006 default.
+        await bindings.DispatchAsync("composer.prefer-queue", null, TestContext.Current.CancellationToken);
+        Assert.Equal(SpaceSubmitMode.Queue, preferences.Service.GetSpaceSubmitMode(rig.SpaceId, false));
+        Assert.True(bindings.IsActionAvailable("composer.submit"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.submit",
+            new CuiInputSubmitRequest(new TextBox(), Key.Enter, CuiInputSubmitModifiers.None), TestContext.Current.CancellationToken).AsTask());
+        Assert.Equal(0, rig.Tasks.Writes);
+        Assert.Equal("retain this instruction", bindings.Source.Draft);
+        var reloaded = new UserPreferencesService(preferences.Paths);
+        Assert.Equal(SpaceSubmitMode.Queue, reloaded.GetSpaceSubmitMode(rig.SpaceId, false));
+    }
+
+    private sealed class PreferencesOwner : IDisposable
+    {
+        private readonly string _directory = Path.Combine(Path.GetTempPath(), "9to1-submit-mode-" + Guid.NewGuid().ToString("N"));
+        internal IAppPaths Paths { get; }
+        internal UserPreferencesService Service { get; }
+        internal PreferencesOwner()
+        {
+            Directory.CreateDirectory(_directory); Paths = new PathsOwner(_directory); Service = new(Paths);
+        }
+        public void Dispose() => Directory.Delete(_directory, true);
+        private sealed class PathsOwner(string directory) : IAppPaths
+        {
+            public string DataDirectory => directory;
+            public string DatabasePath => Path.Combine(directory, "data.db");
+            public string BrowserProfileDirectory => Path.Combine(directory, "browser");
+            public string AttachmentsDirectory => Path.Combine(directory, "attachments");
+            public string LogsDirectory => Path.Combine(directory, "logs");
+            public string LegacyStatePath => Path.Combine(directory, "legacy");
+        }
+    }
+
     [AvaloniaFact]
     public async Task Queue_preserves_newer_typing_and_rejects_a_second_click_while_the_original_ack_is_pending()
     {
@@ -294,13 +373,15 @@ public sealed class CanonicalTaskComposerTests
     {
         internal SpaceTaskWidgetPage Page = null!;
         internal TaskExecutionSnapshot Initial = null!;
+        internal Guid SpaceId;
         internal Tasks Tasks = new();
         internal Authority Authority = new();
-        internal static async Task<Rig> CreateAsync()
+        internal static async Task<Rig> CreateAsync(UserPreferencesService? preferences = null)
         {
             var rig = new Rig();
             var spaces = new SpaceRegistry(new Settings());
             var space = await spaces.CreateAsync("Controlled composer task");
+            rig.SpaceId = space.Id;
             var now = DateTimeOffset.UtcNow;
             var conversation = new Conversation(Guid.NewGuid(), HavenMode.Tasks, ConversationKind.Task,
                 "Actual task", null, null, false, false, now, now, SpaceId: space.Id);
@@ -313,6 +394,7 @@ public sealed class CanonicalTaskComposerTests
             var coordinator = new TaskExecutionCoordinator(rig.Tasks, new Events(), admissionAuthority: rig.Authority);
             rig.Page = new(new SpaceTaskWorkspaceService(spaces, new Conversations(conversation), coordinator), coordinator,
                 space.Id, conversation.Id, new UnavailableReadiness(), expectedOriginalTaskId: task, expectedOriginalExecutionId: run);
+            if (preferences is not null) rig.Page.BindOriginalComposerPreferences(preferences);
             try
             {
                 await rig.Page.ActivateAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
