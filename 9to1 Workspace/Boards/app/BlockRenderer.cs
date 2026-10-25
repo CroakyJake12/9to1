@@ -105,11 +105,10 @@ public static class BlockRenderer
         BoardsViewModel vm, string selectId, Control inner, string insertAfterBlockId, int blockIndex, StackPanel host)
     {
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
-        // The first slot stays a compact, fixed target even when the content in
-        // the row (especially a table) is much taller than an ordinary block.
-        // The drag grip sits before the insert action. Its 36px slot includes
-        // the 4px gap; both interactive targets remain fixed at 32px.
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("36,32,*") };
+        // The 64px gutter occupies the page-card margin before the text column;
+        // the two 32px targets remain outside document flow and the block text
+        // aligns with the page title/content start.
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,32,*") };
         Button? insert = null;
         Control? gripControl = null;
         if (vm.IsEditMode)
@@ -139,11 +138,11 @@ public static class BlockRenderer
         }
         else
         {
-            // Keep the document column aligned between modes without leaving
+            // Keep the content start aligned between modes without leaving
             // an edit command in the read-only surface.
             row.Children.Add(new Border
             {
-                Width = 36,
+                Width = BlockGutterTargetSize,
                 Height = BlockGutterTargetSize,
                 IsHitTestVisible = false,
                 Focusable = false,
@@ -166,7 +165,7 @@ public static class BlockRenderer
             BorderThickness = new Thickness(3, 0, 0, 0),
             BorderBrush = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
             Padding = new Thickness(9, 2, 0, 2),
-            Margin = new Thickness(0, 0, 0, 10),
+            Margin = new Thickness(-73, 0, 0, 10),
             Background = Brushes.Transparent,
         };
         border.Tag = new BlockReorderRow(selectId, blockIndex);
@@ -314,7 +313,7 @@ public static class BlockRenderer
             TextWrapping = TextWrapping.Wrap,
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
-            Padding = new Thickness(2, 6),
+            Padding = new Thickness(0, 6),
             Margin = new Thickness(Math.Max(0, block.IndentLevel) * 20, 0, 0, 0),
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };

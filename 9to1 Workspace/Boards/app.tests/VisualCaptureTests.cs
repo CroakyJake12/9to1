@@ -162,7 +162,7 @@ public sealed class VisualCaptureTests
             $"The authored PageCard should retain its rounded panel treatment; radius={pageCard.CornerRadius}.");
         var contentLayer = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "DocumentContentLayer")
             ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
-        Assert.Equal(new Thickness(40, 36), contentLayer.Margin);
+        Assert.Equal(new Thickness(44, 36), contentLayer.Margin);
         Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
         var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
             ?? throw new InvalidOperationException("Missing authored standalone TopBar. Runtime tree:\n" + tree);
@@ -174,6 +174,38 @@ public sealed class VisualCaptureTests
         var host = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "BlocksHost")
             ?? throw new InvalidOperationException("Missing BlocksHost after the real presentation reached ready state. Runtime tree:\n" + tree);
         Assert.NotEmpty(host.Children);
+
+        var pageTitle = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "PageTitleBox")
+            ?? throw new InvalidOperationException("Missing authored PageTitleBox. Runtime tree:\n" + tree);
+        var firstBlockText = host.GetVisualDescendants().OfType<TextBox>()
+            .FirstOrDefault(input => input.Name?.StartsWith("t_", StringComparison.Ordinal) == true)
+            ?? throw new InvalidOperationException("The rendered page has no block text editor. Runtime tree:\n" + tree);
+        var firstBlockRow = host.GetVisualDescendants().OfType<Border>()
+            .FirstOrDefault(border => border.Tag is BlockReorderRow)
+            ?? throw new InvalidOperationException("The rendered page has no block gutter row. Runtime tree:\n" + tree);
+        var gutterGrid = firstBlockRow.Child as Grid
+            ?? throw new InvalidOperationException("The block gutter row has no authored grid.");
+        var grip = gutterGrid.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "BlockGripToggle");
+        var insert = gutterGrid.GetVisualDescendants().OfType<Button>().Single(button =>
+            Avalonia.Automation.AutomationProperties.GetName(button) == "Insert");
+        var titlePoint = pageTitle.TranslatePoint(new Point(0, 0), pageCard)
+            ?? throw new InvalidOperationException("The page title is not in the page card visual tree.");
+        var blockTextPoint = firstBlockText.TranslatePoint(new Point(0, 0), pageCard)
+            ?? throw new InvalidOperationException("The block text is not in the page card visual tree.");
+        var gripPoint = grip.TranslatePoint(new Point(0, 0), pageCard)
+            ?? throw new InvalidOperationException("The block grip is not in the page card visual tree.");
+        var insertPoint = insert.TranslatePoint(new Point(0, 0), pageCard)
+            ?? throw new InvalidOperationException("The block insert action is not in the page card visual tree.");
+        Assert.InRange(Math.Abs(blockTextPoint.Value.X - titlePoint.Value.X), 0, 1,
+            $"Block text should align with the page title; block={blockTextPoint.Value}, title={titlePoint.Value}.");
+        Assert.Equal(32, grip.Bounds.Width);
+        Assert.Equal(32, grip.Bounds.Height);
+        Assert.Equal(32, insert.Bounds.Width);
+        Assert.Equal(32, insert.Bounds.Height);
+        Assert.True(gripPoint.Value.X >= 0 && gripPoint.Value.X + grip.Bounds.Width <= titlePoint.Value.X + 1,
+            $"The 32px grip target must fit in the margin left of the title; grip={gripPoint.Value}, title={titlePoint.Value}, card={pageCard.Bounds}.");
+        Assert.True(insertPoint.Value.X >= 0 && insertPoint.Value.X + insert.Bounds.Width <= titlePoint.Value.X + 1,
+            $"The 32px insert target must fit in the margin left of the title; insert={insertPoint.Value}, title={titlePoint.Value}, card={pageCard.Bounds}.");
 
         if (openStyleMenu)
         {
