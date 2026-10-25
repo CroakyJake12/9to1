@@ -37,8 +37,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly object _gate = new();
     // Manual (no-AI) open: admits a resolved saved project by its real stored identity without a
-    // Task/Run/context. Reads/search are performed by a confined file reader; edits and process
-    // execution require a separate current authorized Task/execution authority and fail closed.
+    // Task/Run/context. Every source read/write and process uses its separate genuine Home
+    // admission; saved metadata and declaration edits never substitute for those permissions.
     private readonly bool _manual;
     private readonly DeveloperManualSourceReadOwner? _manualReader;
     private readonly DeveloperManualSourceEditOwner? _manualEditor;
@@ -342,6 +342,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetManualRecoveryConflictValue(path, out value)) return true;
             if (TryGetNewFileValue(path, out value)) return true;
             if (TryGetRunTargetValue(path, out value)) return true;
+            if (TryGetRunEditValue(path, out value)) return true;
             if (TryGetCuiPropertyValue(path, out value)) return true;
             if (TryGetCuiAnalysisValue(path, out value)) return true;
             value = path switch
@@ -420,6 +421,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     }
     public bool TrySetValue(string path, object? value)
     {
+        if (path is "RunEditId" or "RunEditCommand" or "RunEditTimeout") return SetRunEditValue(path, value);
         if (path == "NewFileCuiTemplate") return SetNewFileTemplate(value);
         if (path == "SourceFindMatchCase")
         {
@@ -493,6 +495,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (!_active || _work.IsRetiring) return false;
             if (command == "dev.stop-manual-run") return _manualRunStop is not null && !_manualRunStop.IsCancellationRequested;
             if (_pending) return false;
+            if (command == "dev.new-run-target") return CanConfigureRunTarget();
+            if (command == "dev.edit-run-target") return CanConfigureRunTarget() && _selectedRunTarget is { } editable &&
+                DeveloperRunConfigurationSelection.Observe(_project).Value?.Any(choice => choice.SelectionKey == editable.SelectionKey) == true;
+            if (command == "dev.review-run-target") return CanConfigureRunTarget() && PrepareRunTargetEdit().Succeeded;
+            if (command == "dev.save-run-target") return CanConfigureRunTarget() && CurrentRunTargetEditReview();
             if (command == "dev.select-run-target") return DeveloperRunConfigurationSelection.Observe(_project) is { Succeeded: true, Value.Count: > 0 };
             if (command == "dev.run-selected-target") return (!_manual || _manualProcessOwner is not null) && IsSelectedRunTargetCurrent(_project);
             if (command == "dev.review-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && HasNewFileSlot(_newFileName) && DeveloperNewSourceFile.Prepare(_newFileName, _newFileCuiTemplate).Succeeded;
@@ -554,6 +561,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command is "dev.new-run-target" or "dev.edit-run-target" or "dev.review-run-target") return ConfigureRunTarget(command);
+        if (command == "dev.save-run-target") return SaveRunTargetAsync(cancellationToken);
         if (command == "dev.select-run-target") return SelectRunTarget(parameter);
         if (command == "dev.run-selected-target") return RunSelectedTargetAsync(cancellationToken);
         if (command == "dev.stop-manual-run") return StopManualRun();

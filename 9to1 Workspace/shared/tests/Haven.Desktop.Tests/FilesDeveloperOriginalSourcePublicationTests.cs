@@ -741,6 +741,61 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
         await rig.CloseUnpublishedRunAsync(admission, request);
     }, canonicalSavedProject: true, manualRunCommand: "printf original > manual-started.txt");
 
+    [LinuxPublicationFact]
+    public Task Newly_registered_manual_project_can_review_save_then_run_its_first_console_declaration_without_a_Task() => Run(async rig =>
+    {
+        Assert.Empty(rig.Saved.Project.RunConfigurationIds);
+        var graph = rig.Graph;
+        var reader = new DeveloperManualSourceReadOwner(graph.GetRequiredService<NativeFilesWorkspaceService>(), rig.Selections, rig.Reads, rig.Kernel);
+        var reviewed = DeveloperRunConfigurationEdit.Prepare(rig.Saved, "first-run", "printf 'newly configured'", 20).Value!;
+        var update = rig.Keep(reader.SaveReviewedRunConfigurationAsync(rig.SavedStore, null,
+            graph.GetRequiredService<IProviderSecretStore>(), graph.GetRequiredService<IAppPaths>(), rig.Saved, reviewed, 0, body => body(), rig.Token));
+        await rig.DecideNextAsync(update, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        var observed = await update; Assert.Empty(observed.OriginalErrors);
+        Assert.NotNull(observed.OriginalStoreResult); Assert.True(observed.OriginalStoreResult!.Succeeded, observed.OriginalStoreResult.Error?.Message);
+        var saved = observed.OriginalStoreResult.Value!; Assert.False(saved.MigratedRecovery);
+        Assert.Equal(rig.Saved.Reference.WorkspaceRevision + 1, saved.Project.Reference.WorkspaceRevision);
+        Assert.Equal(rig.Saved.Root, saved.Project.Root); Assert.Equal(rig.Saved.Repository, saved.Project.Repository);
+        Assert.DoesNotContain(rig.Decisions, decision => decision.Scope.ActionName == HomeDeveloperManualProjectExecutionAdmissionSource.RunAction);
+        var selected = Assert.Single(DeveloperRunConfigurationSelection.Observe(saved.Project).Value!);
+        var operation = rig.Keep(rig.ProcessOwner.RunAsync(saved.Project, selected, body => body(), rig.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.DecideNextAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        var process = await operation;
+        Assert.True(process.ProcessSucceeded); Assert.Equal("newly configured", process.Process!.StandardOutput);
+        Assert.Equal(selected.DefinitionSha256, process.DefinitionSha256); Assert.Empty(process.OriginalErrors);
+        Assert.Equal("existing independent source\n", await File.ReadAllTextAsync(rig.SeedPath, rig.Token));
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_start_pin_and_canonical_metadata_update_reservations_exclude_each_other_until_actual_native_close() => Run(async rig =>
+    {
+        var source = await rig.OpenRegisteredReadAsync();
+        var choice = Assert.Single(DeveloperRunConfigurationSelection.Observe(rig.Saved).Value!);
+        Task<IDeveloperProjectOriginalManualExecutionBinding> Bind() => rig.Keep(rig.Selections.CaptureOriginalManualExecutionAsync(
+            source.Selection, source.Read, source.Capture, choice.Configuration.Id, choice.Configuration.Revision, choice.DefinitionSha256, rig.Token));
+        var first = await Bind(); var pin = await rig.Keep(rig.Selections.AcquireOriginalManualExecutionPinAsync(first, rig.Token));
+        var actor = rig.Selections.GetOriginalRegisteredDescriptor(source.Selection).OriginalActor;
+        Assert.Throws<InvalidOperationException>(() => rig.Selections.AcquireOriginalManualMetadataUpdate(source.Selection, source.Capture, actor));
+        await rig.Keep(rig.Selections.CloseOriginalManualExecutionPinAsync(first, pin));
+        var second = await Bind();
+        using (rig.Selections.AcquireOriginalManualMetadataUpdate(source.Selection, source.Capture, actor))
+        {
+            var acquiring = rig.Keep(rig.Selections.AcquireOriginalManualExecutionPinAsync(second, rig.Token));
+            var refusal = await Assert.ThrowsAnyAsync<Exception>(() => acquiring);
+            Assert.All(OriginalLeaves(refusal), cause =>
+            {
+                Assert.IsType<InvalidOperationException>(cause); Assert.Contains("changing target metadata", cause.Message);
+            });
+            rig.Expect(refusal);
+        }
+        var afterRelease = await rig.Keep(rig.Selections.AcquireOriginalManualExecutionPinAsync(second, rig.Token));
+        rig.Selections.DemandOriginalManualExecutionPin(second, afterRelease);
+        await rig.Keep(rig.Selections.CloseOriginalManualExecutionPinAsync(second, afterRelease));
+        Assert.DoesNotContain(rig.Decisions, decision => decision.Scope.ActionName == HomeDeveloperManualProjectExecutionAdmissionSource.RunAction);
+        Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "should-not-run.txt")));
+    }, canonicalSavedProject: true, manualRunCommand: "printf forbidden > should-not-run.txt");
+
     private static IEnumerable<Exception> OriginalLeaves(Exception error) => error is AggregateException group
         ? group.InnerExceptions.SelectMany(OriginalLeaves) : [error];
 

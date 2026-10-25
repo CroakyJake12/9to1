@@ -25,6 +25,11 @@ public interface IDeveloperProjectOriginalManualExecutionSource
     IReadOnlyList<ResourceScope> GetOriginalManualExecutionScopes(IDeveloperProjectOriginalManualExecutionBinding sameBinding);
     Task RevalidateOriginalManualExecutionAsync(IDeveloperProjectOriginalManualExecutionBinding sameBinding,
         AuthenticatedResourceActor sameActor, CancellationToken token);
+    /// <summary>Exclusion only, not authority: reciprocal with actual in-flight/held manual
+    /// start pins. The caller still needs genuine registered READ, canonical CAS and key custody.</summary>
+    IDisposable AcquireOriginalManualMetadataUpdate(IDeveloperProjectOriginalReadSelection sameSelection,
+        IDeveloperProjectOriginalExistingSourceCapture sameCapture, AuthenticatedResourceActor sameActor)
+        => throw new NotSupportedException("The configured Files owner cannot exclude manual start pins for metadata updates.");
     Task<IDeveloperWorkspaceOriginalExecutionCommitPin> AcquireOriginalManualExecutionPinAsync(
         IDeveloperProjectOriginalManualExecutionBinding sameBinding, CancellationToken token);
     void DemandOriginalManualExecutionPin(IDeveloperProjectOriginalManualExecutionBinding sameBinding,

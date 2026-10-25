@@ -158,6 +158,18 @@
         </Container>
       </Repeat>
       <Text text="{Binding SelectedRunTargetSummary}" text-wrapping="Wrap" accessible-name="Selected exact Run target and execution admission" />
+      <Text text="Configure a console target" font-size="18" />
+      <Container Type="Wrap" CellGap="6">
+        <Button id="dev-new-run-target" action="dev.new-run-target" content="New target" Interactive="{Binding CanConfigureRunTarget}" />
+        <Button id="dev-edit-run-target" action="dev.edit-run-target" content="Edit selected target" Interactive="{Binding CanEditRunTarget}" />
+      </Container>
+      <Input id="dev-run-edit-id" Type="Text" Value="{Binding RunEditId}" accessible-name="Stable console target ID" Interactive="{Binding CanConfigureRunTarget}" />
+      <Input id="dev-run-edit-command" Type="Text" Value="{Binding RunEditCommand}" accessible-name="Exact saved console command; saving does not execute" Interactive="{Binding CanConfigureRunTarget}" />
+      <Input id="dev-run-edit-timeout" Type="Text" Value="{Binding RunEditTimeout}" accessible-name="Console timeout in seconds from 1 to 900" Interactive="{Binding CanConfigureRunTarget}" />
+      <Button id="dev-review-run-target" action="dev.review-run-target" content="Review declaration" Interactive="{Binding CanReviewRunTarget}" />
+      <Object id="dev-run-edit-review" type="ReadOnlyText" text="{Binding RunEditReview}" accessible-name="Exact reviewed declaration and recovery migration limits" />
+      <Button id="dev-save-run-target" action="dev.save-run-target" content="Save reviewed declaration" Interactive="{Binding CanSaveRunTarget}" />
+      <Text text="{Binding RunEditStatus}" text-wrapping="Wrap" />
       <Button id="dev-run-selected-target" action="dev.run-selected-target" content="Run selected target" Interactive="{Binding CanRunSelectedTarget}" />
       <Button id="dev-stop-manual-run" action="dev.stop-manual-run" content="Stop manual Run" Interactive="{Binding CanStopManualRun}" />
       <Input id="dev-terminal-command" placeholdertext="Explicit command in this project" accessible-name="Terminal command" Type="Text" Value="{Binding Command}" />

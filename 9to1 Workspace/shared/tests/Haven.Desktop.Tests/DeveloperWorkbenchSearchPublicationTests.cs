@@ -601,6 +601,61 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Committed_Run_declaration_reconciliation_retains_manual_dirty_tab_history_and_invalidates_only_old_reviews()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional reader fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            var before = (await f.Dev.ResolveAsync(f.Reference)).Value!;
+            var constructor = typeof(DeveloperProjectWorkbenchPage).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
+                .Single(value => value.GetParameters().Length == 16 && value.GetParameters()[9].ParameterType == typeof(DeveloperManualSourceReadOwner));
+            Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> unused =
+                (_, _, _) => throw new InvalidOperationException("View-only reconciliation never requests source or Task access.");
+            page = (DeveloperProjectWorkbenchPage)constructor.Invoke([f.Dev, f.Tasks, before, new SearchPublicationNoReadiness(), unused,
+                (Action)(() => { }), OriginalTestBodyToken, null, null, reader.Owner, null, null, null, null, null, null]);
+            SearchPublicationField("_active").SetValue(page, true); // Component-only admission; no native frame or Home grant.
+            var type = typeof(DeveloperProjectWorkbenchPage);
+            var stateType = type.GetNestedType("ManualTabState", BindingFlags.NonPublic)!;
+            var state = stateType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Single(value => value.GetParameters().Length == 9).Invoke(["authored unsaved draft", "saved source", "saved source", "old reviewed after", new string('a', 64), new string('b', 64), 9L, 9L, true]);
+            var tabType = type.GetNestedType("SourceTab", BindingFlags.NonPublic)!;
+            var tab = tabType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Single(value => value.GetParameters().Length == 4).Invoke([Guid.NewGuid(), "Main.cui", null, state]);
+            var history = new DeveloperDraftHistory("saved source"); history.RecordChange("saved source", "authored unsaved draft");
+            tabType.GetField("DraftHistory")!.SetValue(tab, history); tabType.GetField("DraftHistoryBasis")!.SetValue(tab, new string('a', 64));
+            ((System.Collections.IList)SearchPublicationField("_sourceTabs").GetValue(page)!).Add(tab);
+            type.GetMethod("SelectTab", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(page, [tab]);
+            var configuration = new DeveloperRunConfiguration("manual-run", "Workspace", before.Project.ProjectId.ToString("D"), "console", [],
+                before.Root.RootId.ToString("D"), "local", [], null) { Command = "printf later", TimeoutSeconds = 20 };
+            var project = before.Project with { Revision = before.Project.Revision + 1, RunConfigurationIds = [configuration.Id] };
+            var workspace = before.Workspace with { Revision = before.Workspace.Revision + 1, Projects = [project], RunConfigurations = [configuration] };
+            var after = before with { Reference = before.Reference with { WorkspaceRevision = workspace.Revision, ProjectRevision = project.Revision }, Workspace = workspace, Project = project };
+            var scope = new DeveloperDraftRecoveryScope(Guid.NewGuid(), Guid.Empty, Guid.Empty, Guid.Empty, IsManual: true);
+            // Typed result input isolates view reconciliation. Actual canonical commit and native
+            // Run admission are covered by the genuine publication fixture, not this component test.
+            type.GetMethod("AdoptSavedRunTarget", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(page,
+                [new DeveloperRunConfigurationEditResult(after, configuration, scope, 12, 7, true)]);
+            Assert.Same(tab, Assert.Single(NativeSourceTabs(page))); Assert.Same(history, tabType.GetField("DraftHistory")!.GetValue(tab));
+            Assert.True(history.CanUndo("authored unsaved draft"));
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("authored unsaved draft", draft);
+            Assert.Equal(9L, SearchPublicationField("_manualDraftRevision").GetValue(page));
+            Assert.False((bool)SearchPublicationField("_manualReviewed").GetValue(page)!);
+            Assert.Equal(new string('a', 64), SearchPublicationField("_manualBeforeSha256").GetValue(page));
+            Assert.Equal(after, SearchPublicationField("_project").GetValue(page));
+            Assert.Equal(12L, SearchPublicationField("_manualRecoveryGeneration").GetValue(page));
+            Assert.Equal(7L, SearchPublicationField("_cleanSessionGeneration").GetValue(page));
+            Assert.True(page.HasUnsavedWork); Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Tools.WriteCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));

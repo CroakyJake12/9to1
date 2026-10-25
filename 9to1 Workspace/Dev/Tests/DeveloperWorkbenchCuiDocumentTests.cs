@@ -21,7 +21,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
             "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.preview-edit",
-            "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
+            "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.new-run-target", "dev.edit-run-target", "dev.review-run-target", "dev.save-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
@@ -206,6 +206,21 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         Assert.Contains(stop.Actions.Values, action => action.Name == "dev.stop-manual-run");
         Assert.Contains(stop.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
             && property.Value is CuiBindingValue binding && binding.Path == "CanStopManualRun");
+    }
+
+    [Fact]
+    public void Run_target_authoring_uses_exact_review_save_actions_typed_inputs_and_readonly_review()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        foreach (var (id, command) in new[] { ("dev-new-run-target", "dev.new-run-target"), ("dev-edit-run-target", "dev.edit-run-target"),
+            ("dev-review-run-target", "dev.review-run-target"), ("dev-save-run-target", "dev.save-run-target") })
+            Assert.Contains(Assert.Single(nodes, node => node.Name == id).Actions.Values, action => action.Name == command);
+        foreach (var (id, path) in new[] { ("dev-run-edit-id", "RunEditId"), ("dev-run-edit-command", "RunEditCommand"), ("dev-run-edit-timeout", "RunEditTimeout") })
+            Assert.Contains(Assert.Single(nodes, node => node.Name == id).Properties, property => property.Key.Equals("Value", StringComparison.OrdinalIgnoreCase)
+                && property.Value is CuiBindingValue binding && binding.Path == path);
+        var review = Assert.Single(nodes, node => node.Name == "dev-run-edit-review");
+        Assert.Equal("Object", review.Type); Assert.True(review.TryGetLiteralAttribute("type", out var renderer)); Assert.Equal("ReadOnlyText", renderer);
+        Assert.DoesNotContain(review.Properties.Keys, key => key.Equals("Value", StringComparison.OrdinalIgnoreCase));
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)
