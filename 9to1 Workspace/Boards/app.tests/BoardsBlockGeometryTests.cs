@@ -213,11 +213,19 @@ public sealed class BoardsBlockGeometryTests
         absolute.Width = 320;
         absolute.Height = 144;
         absolute.ZOrder = 2;
+        page.Blocks.Clear();
+        page.Blocks.Add(absolute);
         page.Blocks.Add(new RichBoardBlock
         {
             Id = "flow-note",
             Kind = "paragraph",
             Text = "Flow note",
+        });
+        page.Blocks.Add(new RichBoardBlock
+        {
+            Id = "flow-note-later",
+            Kind = "paragraph",
+            Text = "Later flow note",
         });
         var viewModel = new BoardsViewModel(session);
 
@@ -263,7 +271,8 @@ public sealed class BoardsBlockGeometryTests
                 ResizedTextX: resizedTextPoint.Value.X, ResizedTextY: resizedTextPoint.Value.Y,
                 InitialHostWidth: initialHostSize.Width, ResizedHostWidth: absoluteHost.Bounds.Width,
                 AbsoluteWidth: absoluteRow.Bounds.Width, AbsoluteHeight: absoluteRow.Bounds.Height,
-                FlowCount: flowHost.GetVisualDescendants().OfType<Border>().Count(border => border.Tag is BlockReorderRow),
+                FlowBlockIds: flowHost.GetVisualDescendants().OfType<Border>()
+                    .Select(border => border.Tag).OfType<BlockReorderRow>().Select(row => row.BlockId).ToArray(),
                 AbsoluteCount: absoluteHost.Children.OfType<Border>().Count(border => border.Tag is BlockReorderRow));
             window.Close();
             return result;
@@ -277,7 +286,7 @@ public sealed class BoardsBlockGeometryTests
         Assert.True(actual.ResizedHostWidth > actual.InitialHostWidth);
         Assert.Equal(396, actual.AbsoluteWidth);
         Assert.Equal(148, actual.AbsoluteHeight);
-        Assert.Equal(1, actual.FlowCount);
+        Assert.Equal(new[] { "flow-note", "flow-note-later" }, actual.FlowBlockIds);
         Assert.Equal(1, actual.AbsoluteCount);
     }
 
