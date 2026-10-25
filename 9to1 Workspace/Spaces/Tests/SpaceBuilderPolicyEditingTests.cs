@@ -88,8 +88,16 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.Equal(new SpaceInheritancePolicy(true, true, true, true, false, false, false), saved.DraftConfiguration.Inheritance);
         Assert.Equal(original.ModelPolicy?.DefaultModelId, saved.ModelPolicy?.DefaultModelId);
         Assert.Equal(original.ModelPolicy?.ProviderConstraint, saved.ModelPolicy?.ProviderConstraint);
-        Assert.Equal(original.ModelPolicy?.RequiredCapabilities.ToArray(), saved.ModelPolicy?.RequiredCapabilities.ToArray());
-        Assert.Equal(original.MemoryPolicy?.AllowedScopes.ToArray(), saved.MemoryPolicy?.AllowedScopes.ToArray());
+        var originalRequiredCapabilities = Assert.IsType<SpaceModelPolicy>(original.ModelPolicy).RequiredCapabilities;
+        var savedRequiredCapabilities = Assert.IsType<SpaceModelPolicy>(saved.ModelPolicy).RequiredCapabilities;
+        Assert.NotNull(originalRequiredCapabilities);
+        Assert.NotNull(savedRequiredCapabilities);
+        Assert.Equal(originalRequiredCapabilities.ToArray(), savedRequiredCapabilities.ToArray());
+        var originalMemoryScopes = Assert.IsType<SpaceMemoryPolicy>(original.MemoryPolicy).AllowedScopes;
+        var savedMemoryScopes = Assert.IsType<SpaceMemoryPolicy>(saved.MemoryPolicy).AllowedScopes;
+        Assert.NotNull(originalMemoryScopes);
+        Assert.NotNull(savedMemoryScopes);
+        Assert.Equal(originalMemoryScopes.ToArray(), savedMemoryScopes.ToArray());
         Assert.Equal(JsonSerializer.Serialize(original.ExamplePairs), JsonSerializer.Serialize(saved.ExamplePairs));
         Assert.Equal(new SpaceModelPolicy("ollama:configured-model-2", ["text", "Vision"], "ollama"), saved.DraftConfiguration.ModelPolicy);
         Assert.Equal(new[] { SpaceMemoryScope.Conversation, SpaceMemoryScope.Space, SpaceMemoryScope.Personal },
