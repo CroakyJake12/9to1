@@ -189,8 +189,8 @@ public sealed class BoardsBlockGeometryTests
                 HasGrip: grid.GetLogicalDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle"));
         });
 
-        Assert.Equal(36, actual.Column.Value);
-        Assert.Equal(36, actual.FirstSlotWidth);
+        Assert.Equal(32, actual.Column.Value);
+        Assert.Equal(32, actual.FirstSlotWidth);
         Assert.Equal(32, actual.SecondSlotWidth);
         Assert.False(actual.HasInsert);
         Assert.False(actual.HasGrip);
