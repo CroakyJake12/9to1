@@ -25,6 +25,7 @@
           <Input id="BoardTitleBox" accessible-name="Board title" font-size="20" font-weight="SemiBold" vertical-alignment="Center" margin="12 0" Type="Text" ID="BoardTitleBox" Column="1" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" BorderWidth="0" />
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="2" CellGap="6">
             <Button ID="EditViewToggle" Content="{Binding ModeLabel, fallback=Edit}" Action="ToggleEditView" AccessibleName="Switch between Edit and View mode" />
+            <Button ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="Lock or unlock freeform canvas layout" />
             <Text ID="SaveState" Text="{Binding SaveStateText, fallback=Saved}" FontSize="12" VerticalAlignment="Center" Margin="0 0 8 0" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
             <Button ID="ThemeButton" Content="Appearance" Action="ToggleTheme" AccessibleName="Toggle light or dark appearance" />
             <Container Type="Menu" ID="MoreMenu">

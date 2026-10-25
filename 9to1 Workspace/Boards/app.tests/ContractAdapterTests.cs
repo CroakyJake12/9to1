@@ -72,6 +72,56 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Canvas_lock_is_page_scoped_persistent_and_blocks_layout_edits_only()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "canvas-lock.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            string pageId;
+            string objectId;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                pageId = adapter.Document.Sections[0].Pages[0].Id;
+                var otherPageId = await adapter.AddPageAsync(adapter.Document.Sections[0].Id, "Other page");
+                await adapter.AddCanvasObjectAsync(pageId, "Text", "Keep position", 48, 72);
+                var box = Assert.Single(await adapter.GetCanvasObjectsAsync(pageId));
+                objectId = box.Id;
+                var vm = new BoardsViewModel(adapter);
+                await vm.ToggleCanvasLockAsync();
+                Assert.True(vm.IsCanvasLocked);
+                Assert.False(adapter.Document.Sections[0].Pages.Single(item => item.Id == otherPageId).IsCanvasLocked);
+                await vm.MoveCanvasBoxAsync(objectId, 240, 180);
+                box = Assert.Single(await adapter.GetCanvasObjectsAsync(pageId));
+                Assert.Equal((48d, 72d), (box.X, box.Y));
+                await vm.ToggleCanvasLockAsync();
+                Assert.False(vm.IsCanvasLocked);
+                await vm.MoveCanvasBoxAsync(objectId, 240, 180);
+                await vm.ToggleCanvasLockAsync();
+                await vm.DispatchAsync("ToggleEditView", null);
+                await vm.MoveCanvasBoxAsync(objectId, 300, 300);
+                box = Assert.Single(await adapter.GetCanvasObjectsAsync(pageId));
+                Assert.Equal((240d, 180d), (box.X, box.Y));
+                await adapter.CommitInkStrokeAsync(pageId, [(1, 2), (3, 4)]);
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var page = reopened.Document.Sections[0].Pages.Single(item => item.Id == pageId);
+            Assert.True(page.IsCanvasLocked);
+            var savedBox = Assert.Single(await reopened.GetCanvasObjectsAsync(pageId));
+            Assert.Equal(objectId, savedBox.Id);
+            Assert.Equal((240d, 180d), (savedBox.X, savedBox.Y));
+            Assert.Single(await reopened.GetInkStrokesAsync(pageId));
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
     public async Task Adapter_merge_preserves_contract_only_state()
     {
         var root = TempDirectory();

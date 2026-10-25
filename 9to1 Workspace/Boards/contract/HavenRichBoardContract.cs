@@ -36,6 +36,7 @@ public sealed class HavenRichPage
     public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Page 1";
     public int Order { get; set; }
+    public bool IsCanvasLocked { get; set; }
     public double CanvasWidth { get; set; } = 1200;
     public double CanvasHeight { get; set; } = 900;
     public List<HavenRichBlock> Blocks { get; set; } = [new HavenRichBlock()];
@@ -394,6 +395,14 @@ public static partial class HavenRichNotesOps
         }
         if (page.ParentPageId == parentPageId) return;
         page.ParentPageId = parentPageId;
+        Touch(notes);
+    }
+
+    public static void SetCanvasLocked(HavenRichNotes notes, string pageId, bool locked)
+    {
+        var page = RequirePage(notes, pageId);
+        if (page.IsCanvasLocked == locked) return;
+        page.IsCanvasLocked = locked;
         Touch(notes);
     }
 

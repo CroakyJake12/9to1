@@ -28,6 +28,7 @@ internal static class Projector
         Id = page.Id,
         ParentPageId = page.ParentPageId,
         Title = page.Title,
+        IsCanvasLocked = page.IsCanvasLocked,
         InkPanX = page.InkView?.PanX ?? 0,
         InkPanY = page.InkView?.PanY ?? 0,
         InkZoom = page.InkView?.Zoom ?? 1,
@@ -319,6 +320,9 @@ internal static class MergeDeltas
             if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
                 viewPage.ParentPageId != baselinePage.ParentPageId)
                 HavenRichNotesOps.SetPageParent(rich, contractPage.Id, viewPage.ParentPageId);
+            if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
+                viewPage.IsCanvasLocked != baselinePage.IsCanvasLocked)
+                HavenRichNotesOps.SetCanvasLocked(rich, contractPage.Id, viewPage.IsCanvasLocked);
             MergeBlocks(rich, contractPage, viewPage,
                 baselinePage?.Blocks.ToDictionary(b => b.Id, StringComparer.Ordinal)
                 ?? new Dictionary<string, RichBoardBlock>(StringComparer.Ordinal));
@@ -616,6 +620,7 @@ internal static class MergeDeltas
     {
         var page = HavenRichNotesOps.ImportPage(section, viewPage.Id, viewPage.Title);
         page.ParentPageId = viewPage.ParentPageId;
+        page.IsCanvasLocked = viewPage.IsCanvasLocked;
         var checklistByParent = new Dictionary<string, HavenRichBlock>(StringComparer.Ordinal);
         foreach (var viewBlock in viewPage.Blocks)
         {
