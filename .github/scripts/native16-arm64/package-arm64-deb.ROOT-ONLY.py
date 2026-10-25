@@ -5,7 +5,7 @@ import argparse,datetime,hashlib,json,os,re,shutil,stat,subprocess,sys
 sys.path.insert(0,str(Path(__file__).resolve().parent/'chromium-native'))
 from browser_stage_guard import validate_browser_proof, validate_browser_stage, derive_browser_deps, derive_libc_floor, derive_provider_version
 from chromium_native_common import normalize_permissions
-p=argparse.ArgumentParser();p.add_argument('--publish',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--version',required=True);p.add_argument('--maintainer',required=True);p.add_argument('--build-provenance',type=Path,required=True);p.add_argument('--readme',type=Path,required=True);p.add_argument('--notices',type=Path,required=True);p.add_argument('--source-licence',type=Path,required=True);p.add_argument('--inference-stage',type=Path);p.add_argument('--browser-stage',type=Path);p.add_argument('--browser-proof',type=Path);p.add_argument('--source-dir',type=Path);p.add_argument('--source-pins',type=Path);p.add_argument('--ubuntu-inrelease',type=Path);p.add_argument('--ubuntu-keyring',type=Path);p.add_argument('--provider-cache',type=Path);args=p.parse_args();src=args.publish.resolve();out=args.output.resolve()
+p=argparse.ArgumentParser();p.add_argument('--rnote-native-receipt',type=Path);p.add_argument('--publish',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--version',required=True);p.add_argument('--maintainer',required=True);p.add_argument('--build-provenance',type=Path,required=True);p.add_argument('--readme',type=Path,required=True);p.add_argument('--notices',type=Path,required=True);p.add_argument('--source-licence',type=Path,required=True);p.add_argument('--inference-stage',type=Path);p.add_argument('--browser-stage',type=Path);p.add_argument('--browser-proof',type=Path);p.add_argument('--source-dir',type=Path);p.add_argument('--source-pins',type=Path);p.add_argument('--ubuntu-inrelease',type=Path);p.add_argument('--ubuntu-keyring',type=Path);p.add_argument('--provider-cache',type=Path);args=p.parse_args();src=args.publish.resolve();out=args.output.resolve()
 if out.exists():raise SystemExit('Refuse existing package output: choose a new directory')
 if not src.is_dir() or not args.notices.is_dir() or not all(x.is_file() for x in [args.build_provenance,args.readme,args.source_licence]):raise SystemExit('Missing genuine publish/provenance/README/notices/license input')
 subprocess.run(['dpkg','--validate-version',args.version],check=True)
@@ -14,6 +14,11 @@ provenance=json.loads(args.build_provenance.read_text())
 for k in ['source_head','source_patch_sha256','rid','self_contained','publish_exit_code','publish_directory']:
  if k not in provenance:raise SystemExit('Missing actual build provenance field: '+k)
 if provenance['rid']!='linux-arm64' or provenance['self_contained'] is not True or provenance['publish_exit_code']!=0 or Path(provenance['publish_directory']).resolve()!=src:raise SystemExit('Provenance does not attest this successful ARM64 self-contained publish')
+sys.path.insert(0,str(Path(__file__).resolve().parent/'rnote-native'))
+from rnote_native_stage import validate_stage as validate_rnote_stage, verify_package as verify_rnote_package
+rnote_receipt = validate_rnote_stage(Path(__file__).resolve().parents[3], src, args.rnote_native_receipt) if args.rnote_native_receipt else None
+if (src/'libcakeos_canvas_rnote_poc.so').exists() and rnote_receipt is None:raise SystemExit('Native Rnote library requires its verified source/dependency receipt')
+if rnote_receipt and rnote_receipt['source_head'] != provenance['source_head']:raise SystemExit('Rnote source differs from actual product build')
 # ---------------------------------------------------------------------------
 # Optional verified Chromium-native browser stage merge. When provided, every file
 # listed in the stage manifest must exist and match its sha256; otherwise the whole
@@ -117,6 +122,7 @@ if browser_stage:
     shutil.copytree(browser_stage,runtime/'browser',symlinks=True)
 for d in [stage/'DEBIAN',stage/'usr/bin',stage/'usr/share/applications',stage/'usr/share/doc/9to1-preview']:d.mkdir(parents=True,exist_ok=True)
 doc=stage/'usr/share/doc/9to1-preview';shutil.copy2(args.readme,doc/'PREVIEW-README.md');shutil.copy2(args.source_licence,doc/'LICENSE');shutil.copy2(args.build_provenance,doc/'source-and-build.json');shutil.copytree(args.notices,doc/'third-party-notices')
+if rnote_receipt:shutil.copyfile(args.rnote_native_receipt,doc/'rnote-native-stage.json')
 # Ship the (already existence-checked) read-only browser readiness preflight as
 # dependency guidance. It never installs/launches anything and reports
 # presence/classification only (runtime NOTRUN). It runs under the python3
@@ -128,6 +134,7 @@ if args.inference_stage:
 # Avoid duplicating dependency packages already guaranteed by the base Depends.
 _base_dep_names={'libc6','libssl3t64','libssl3','libicu78','libicu76','libicu74','libicu72','libicu70','libfontconfig1','libfreetype6','libx11-6','libxext6','libxrandr2','libxi6','libxcursor1','libice6','libsm6','libgl1','libegl1','libdbus-1-3','libgomp1','libasound2t64','libasound2','libgcc-s1','libstdc++6'}
 _browser_deps_filtered=[d for d in browser_deps if d.split(' (')[0] not in _base_dep_names]
+_rnote_deps_suffix = (', ' + ', '.join(rnote_receipt['inspection']['dependencies'])) if rnote_receipt else ''
 _browser_deps_suffix = (', ' + ', '.join(_browser_deps_filtered)) if _browser_deps_filtered else ''
 _gcc_dep = f"libgcc-s1 (>= {_browser_gcc_floor})" if _browser_gcc_floor else "libgcc-s1"
 _stdcpp_dep = f"libstdc++6 (>= {_browser_stdcpp_floor})" if _browser_stdcpp_floor else "libstdc++6"
@@ -153,7 +160,7 @@ Priority: optional
 Architecture: arm64
 Maintainer: {args.maintainer}
 Installed-Size: {installed_kb}
-Depends: libc6 (>= {libc_floor}){python_dep}, {_gcc_dep}, {_stdcpp_dep}, zlib1g, libssl3t64 | libssl3, libicu78 | libicu76 | libicu74 | libicu72 | libicu70, libfontconfig1, libfreetype6, libx11-6, libxext6, libxrandr2, libxi6, libxcursor1, libice6, libsm6, libgl1, libegl1, libdbus-1-3, libgomp1, libasound2t64 | libasound2{_browser_deps_suffix}
+Depends: libc6 (>= {libc_floor}){python_dep}, {_gcc_dep}, {_stdcpp_dep}, zlib1g, libssl3t64 | libssl3, libicu78 | libicu76 | libicu74 | libicu72 | libicu70, libfontconfig1, libfreetype6, libx11-6, libxext6, libxrandr2, libxi6, libxcursor1, libice6, libsm6, libgl1, libegl1, libdbus-1-3, libgomp1, libasound2t64 | libasound2{_browser_deps_suffix}{_rnote_deps_suffix}
 Recommends: fonts-dejavu-core, xdg-utils
 Suggests: libespeak-ng1
 Homepage: https://9to1.uk
@@ -196,7 +203,8 @@ allowed_sha={str(sb_path): browser_sandbox_sha} if allowed and browser_sandbox_s
 normalize_permissions(stage, allowed, allowed_sha)
 (stage/'usr/bin/9to1-preview').chmod(0o755);(runtime/'Haven').chmod(0o755)
 package=out/f'9to1-preview_{args.version}_arm64.deb';subprocess.run(['dpkg-deb','--build','--root-owner-group',str(stage),str(package)],check=True)
+rnote_package_proof = verify_rnote_package(package, rnote_receipt, args.rnote_native_receipt) if rnote_receipt else None
 fields=subprocess.check_output(['dpkg-deb','--field',str(package),'Package','Architecture','Version'],text=True)
 if 'Architecture: arm64' not in fields:raise SystemExit('Unexpected .deb architecture')
 digest=hashlib.sha256(package.read_bytes()).hexdigest();(out/'SHA256SUMS').write_text(digest+'  '+package.name+'\n');(out/'package-metadata.txt').write_text(fields);(out/'package-contents.txt').write_text(subprocess.check_output(['dpkg-deb','--contents',str(package)],text=True))
-receipt={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'package':str(package),'sha256':digest,'bytes':package.stat().st_size,'architecture':'arm64','publish_tree_manifest_sha256':inspection['tree_manifest_sha256'],'source_head':provenance['source_head'],'source_patch_sha256':provenance['source_patch_sha256'],'package_status':'ASSEMBLED_NOT_NATIVE_ACCEPTED','ARM_native_execution':'NOT RUN','installation':'NOT RUN','lesson_workflow':'NOT RUN','published':'NO','no_maintainer_scripts':True,'private_data_directory_default':'${XDG_CONFIG_HOME:-$HOME/.config}/9to1-preview','Windows_setup_flag_used':False,'inference':inference_summary,'effective_libc6_floor':libc_floor,'browser_static_proof':str(args.browser_proof) if args.browser_proof else None,'bundled_browser':browser_identity};(out/'package-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt,indent=2))
+receipt={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'package':str(package),'sha256':digest,'bytes':package.stat().st_size,'architecture':'arm64','publish_tree_manifest_sha256':inspection['tree_manifest_sha256'],'source_head':provenance['source_head'],'source_patch_sha256':provenance['source_patch_sha256'],'package_status':'ASSEMBLED_NOT_NATIVE_ACCEPTED','ARM_native_execution':'NOT RUN','installation':'NOT RUN','lesson_workflow':'NOT RUN','published':'NO','no_maintainer_scripts':True,'private_data_directory_default':'${XDG_CONFIG_HOME:-$HOME/.config}/9to1-preview','Windows_setup_flag_used':False,'inference':inference_summary,'effective_libc6_floor':libc_floor,'browser_static_proof':str(args.browser_proof) if args.browser_proof else None,'bundled_browser':browser_identity,'rnote_native':rnote_package_proof};(out/'package-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt,indent=2))
