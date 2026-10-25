@@ -28,9 +28,11 @@ public sealed class CanonicalContextTests
             var loadedRoot = Assert.IsAssignableFrom<Control>(root);
             loader.WireBindings(loadedRoot);
             vm.Attach(loadedRoot);
+            Assert.True(vm.IsEditMode);
             using var textOwner = new BoardsTextAndKeyboardOwner(loadedRoot, vm);
             var controls = loadedRoot.GetLogicalDescendants().OfType<Control>().ToArray();
             var pageTitle = Assert.Single(controls.OfType<TextBox>(), control => AutomationProperties.GetName(control) == "Page title");
+            Assert.Same(pageTitle, BoardsCuiControlFinder.FindByAutomationId<TextBox>(loadedRoot, "PageTitleBox"));
             pageTitle.Text = "Editable page heading";
             Assert.Equal("Editable page heading", document.Sections[0].Pages[0].Title);
             var alternating = Assert.Single(controls.OfType<CheckBox>(), control => control.Content?.ToString() == "Alternating rows");

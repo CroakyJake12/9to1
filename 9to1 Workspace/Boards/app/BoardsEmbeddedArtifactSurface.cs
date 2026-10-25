@@ -76,25 +76,28 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                 {
                     if (await _session.RevalidateAsync() && _session.IsPublicationCurrent)
                     {
-                        if (!surface.Children.Contains(_session.Content))
+                        var currentSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost") ?? surface;
+                        if (!currentSurface.Children.Contains(_session.Content))
                         {
-                            surface.Children.Clear();
-                            surface.Children.Add(_session.Content);
+                            currentSurface.Children.Clear();
+                            currentSurface.Children.Add(_session.Content);
                         }
                         return;
                     }
                 }
                 catch (Exception error)
                 {
-                    surface.Children.Remove(_session.Content);
-                    surface.Children.Clear();
+                    var currentSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost") ?? surface;
+                    currentSurface.Children.Remove(_session.Content);
+                    currentSurface.Children.Clear();
                     _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
                     viewModel.SetEmbeddedPageStatus(true,
                         "The linked artifact could not be revalidated: " + FirstLine(error.Message));
                     return;
                 }
-                surface.Children.Remove(_session.Content);
-                surface.Children.Clear();
+                var unavailableSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost") ?? surface;
+                unavailableSurface.Children.Remove(_session.Content);
+                unavailableSurface.Children.Clear();
                 _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
                 viewModel.SetEmbeddedPageStatus(true, "The linked artifact is unavailable at its pinned revision or current permissions. Reopen it from its owner to refresh access.");
                 return;

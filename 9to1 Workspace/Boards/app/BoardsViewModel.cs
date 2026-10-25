@@ -130,8 +130,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetEmbeddedPageStatus(bool unavailable, string message)
     {
-        Set("EmbeddedPageUnavailable", unavailable);
-        Set("EmbeddedPageMessage", message);
+        if (!Equals(Get("EmbeddedPageUnavailable"), unavailable))
+            Set("EmbeddedPageUnavailable", unavailable);
+        if (!Equals(Get("EmbeddedPageMessage"), message))
+            Set("EmbeddedPageMessage", message);
     }
 
     public void SetLandingData(IReadOnlyList<RecentBoardCard> boards, IReadOnlyList<RecentPageCard> pages)

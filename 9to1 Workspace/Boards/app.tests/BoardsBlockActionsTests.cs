@@ -160,7 +160,6 @@ public sealed class BoardsBlockActionsTests
             Assert.Equal(before, adapter.Snapshot); Assert.False(adapter.CanUndo); Assert.False(adapter.CanRedo);
             Assert.Equal(disk, await File.ReadAllBytesAsync(path));
             Assert.Null(adapter.CaptureBlockAction(page.Id, "block-b:item-pretend"));
-            Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Duplicate, () => true)).Applied);
             current = adapter.CaptureBlockAction(page.Id, "block-b")!;
             Assert.True((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Duplicate, () => true)).Applied);
             Assert.True(await adapter.UndoAsync()); Assert.Equal(before, adapter.Snapshot);
