@@ -38,3 +38,28 @@ superscript text runs. It was not evidence of an implemented LaTeX renderer.
 Use ordinary unhighlighted formatting for that representative sample; preserve
 intentional user highlights and separately verify actual LaTeX support before
 claiming it works.
+
+## Follow-up on the rendered Boards capture
+
+The owner requested these refinements after the first navy-layout render:
+
+- Make the selected-page accent marker slightly wider and taller.
+- Give section labels a larger type size than page labels.
+- Align checkboxes with their associated text.
+- Put a small, recognizable drag grip to the left of the plus, without its own
+  filled background. Make the plus slightly bolder and higher contrast. Preserve
+  actual drag, block actions, focus, and accessible hit targets.
+- Apply the updated shared Glow theme. Boards defaults to purple unless the
+  user's settings override it; retain the canonical per-app preference path.
+- Put the Boards app icon in the top-left position formerly occupied by the Board
+  title. The current Board name belongs in the sidebar selector shown by the
+  earlier mockup; retain renaming and live Board switching.
+- Improve icon accuracy and vector quality. Do not reuse unrelated symbols for
+  distinct actions or replace real vector icons with font-dependent glyphs.
+- Remove the oversized horizontal toolbar scroll rail while keeping every
+  command available at smaller widths through supported overflow/navigation.
+- Tables inherit the active Glow theme unless the user has explicitly overridden
+  table or cell appearance. Preserve intentional saved overrides.
+
+The referenced capture predates the shared Glow patch. That observation is not
+evidence that the subsequently integrated theme code has rendered correctly.
