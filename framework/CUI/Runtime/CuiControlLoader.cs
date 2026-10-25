@@ -33,6 +33,7 @@ public sealed partial class CuiControlLoader : IDisposable
     // Separate from load attempts: a rejected preflight deliberately preserves the current
     // operational frame. Only actual lineage retirement invalidates its awaited UI completions.
     private object _committedActionFrame = new();
+    private readonly Dictionary<TextBox, CuiTextSelectionRequest> _textSelectionRequests = new(ReferenceEqualityComparer.Instance);
     private readonly object _actionTasksGate = new();
     private readonly HashSet<Task> _pendingActionTasks = [];
     private const int MaximumRetainedActionTasks = 128;
@@ -367,6 +368,8 @@ public sealed partial class CuiControlLoader : IDisposable
             foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
             foreach (var control in _authoredControls.Keys.ToArray()) Attempt(() => DetachPresentation(control));
             _inputPresentation.Clear();
+            foreach (var request in _textSelectionRequests.Values) Attempt(request.Dispose);
+            _textSelectionRequests.Clear();
             _currentRepeatIdentity = null;
         }
         catch (Exception error) { AddDistinctFailure(failures, error); }
@@ -587,6 +590,8 @@ public sealed partial class CuiControlLoader : IDisposable
         _repeats.Clear();
         foreach (var control in _authoredControls.Keys.ToArray()) DetachPresentation(control);
         _controlThemeNames.Clear(); _controlThemeResources.Clear(); _appliedThemeKeys.Clear(); _themeNames.Clear(); _themeNames.Push("user_preference");
+        foreach (var request in _textSelectionRequests.Values) request.Dispose();
+        _textSelectionRequests.Clear();
         _authoredControls.Clear();
         _observedBindings.Clear();
         _inputPresentation.Clear();
@@ -1841,6 +1846,7 @@ public sealed partial class CuiControlLoader : IDisposable
         // Retire owned input presentation state first (unsubscribe focus/lostfocus/textchanged
         // handlers that close over this loader/control) so a retired control never fires.
         RetireInputPresentation(control);
+        if (control is TextBox input && _textSelectionRequests.Remove(input, out var selection)) selection.Dispose();
         // Retire an owned QueryViewport scope on the canonical teardown path (frame reload, close,
         // conditional/repeat retirement). Withdraw clears the typed source, inner context/dispatcher
         // and refresh callback without raising notifications, evaluating, or dispatching, so a
@@ -2474,6 +2480,14 @@ public sealed partial class CuiControlLoader : IDisposable
 
     private void ApplyAuthoredValue(Control control, string property, CuiValue value, CuiPropertyLevel level = CuiPropertyLevel.Instance)
     {
+        if (NormalizeProperty(property) == "textselection")
+        {
+            if (value is CuiBindingValue { Mode: CuiBindingMode.TwoWay })
+                throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+                    "TextSelection is a one-way typed navigation port.", value.Span));
+            SetTextSelection(control, ResolveObject(value), value.Span);
+            return;
+        }
         if (NormalizeProperty(property) == "formattedtext")
         {
             if (value is CuiBindingValue { Mode: CuiBindingMode.TwoWay })
@@ -2484,6 +2498,25 @@ public sealed partial class CuiControlLoader : IDisposable
         }
         if (value is CuiResourceValue resource) ApplyResourceProperty(control, property, resource, level);
         else if (ResolveValue(value) is { } literal) ApplyLiteralProperty(control, property, literal, value.Span, level);
+    }
+
+    private void SetTextSelection(Control control, object? value, CuiSourceSpan span)
+    {
+        if (control is not TextBox input || value is not null && value is not CuiTextSelection)
+            throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+                "TextSelection requires a text Input and an immutable CuiTextSelection request.", span));
+        var selection = (CuiTextSelection?)value;
+        if (selection is not null && (selection.RequestId < 1 || selection.Start < 0 || selection.Length < 0 ||
+            selection.TextSha256 is not { Length: 64 } || !selection.TextSha256.All(Uri.IsHexDigit)))
+            throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+                "TextSelection requires a positive request identity, nonnegative UTF-16 range and exact text SHA-256.", span));
+        if (!_textSelectionRequests.TryGetValue(input, out var pending))
+        {
+            var frame = _committedActionFrame;
+            _textSelectionRequests[input] = pending = new(input, () => !_disposed &&
+                ReferenceEquals(frame, _committedActionFrame) && _authoredControls.ContainsKey(input));
+        }
+        pending.Set(selection);
     }
 
     private static void SetFormattedText(Control control, object? value, CuiSourceSpan span)
@@ -3809,6 +3842,16 @@ public sealed partial class CuiControlLoader : IDisposable
         var alreadyApplying = !_applyingHostValues.Add(control);
         try
         {
+            if (NormalizeProperty(property) == "textselection")
+            {
+                if (binding.Mode == CuiBindingMode.TwoWay)
+                    throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+                        "TextSelection is a one-way typed navigation port.", span));
+                var found = TryResolveLocal(binding.Path, out var selection);
+                if (!found && context is not null) found = context.TryGetValue(binding.Path, out selection);
+                SetTextSelection(control, found ? selection : binding.Fallback, span);
+                return;
+            }
             if (NormalizeProperty(property) == "formattedtext")
             {
                 if (binding.Mode == CuiBindingMode.TwoWay)

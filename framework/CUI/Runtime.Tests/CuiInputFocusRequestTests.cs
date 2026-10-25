@@ -170,6 +170,76 @@ public sealed class CuiInputFocusRequestTests
         public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
         { calls.Add(command); return ValueTask.CompletedTask; }
     }
+    [Fact]
+    public async Task Exact_text_selection_navigates_after_attachment_and_unrelated_refresh_preserves_user_caret()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            const string text = "first\nsecond hit\nlast";
+            var model = new Model(); model.Set("Name", text);
+            model.Set("Range", CuiTextSelection.ForText(1, text, 13, 3));
+            using var loader = new CuiControlLoader(); loader.SetBindingContext(model);
+            var loaded = loader.LoadMarkup("""
+                <Container Type="Vertical Stack"><Input Type="Text" Value="Other input"/>
+                  <Input Type="Text" Value="{Binding Name}" Multiline="true" TextSelection="{Binding Range}"/>
+                </Container>
+                """);
+            Assert.Empty(loaded.Diagnostics); var root = Assert.IsType<CuiContainerControl>(loaded.Root);
+            loader.WireBindings(root);
+            var other = Assert.IsType<TextBox>(root.AuthoredChildren[0]); var input = Assert.IsType<TextBox>(root.AuthoredChildren[1]);
+            var window = new Window { Content = root, Width = 480, Height = 260 };
+            try
+            {
+                window.Show(); Pump(window);
+                Assert.True(input.IsFocused); Assert.Equal("hit", input.SelectedText); Assert.Equal(16, input.CaretIndex);
+                input.CaretIndex = input.SelectionStart = input.SelectionEnd = 2; other.Focus(); model.Notify(); Pump(window);
+                Assert.True(other.IsFocused); Assert.Equal(2, input.CaretIndex);
+                model.Set("Range", CuiTextSelection.ForText(2, text, 13, 3)); Pump(window);
+                Assert.True(input.IsFocused); Assert.Equal("hit", input.SelectedText);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Theory]
+    [InlineData("text-changed")]
+    [InlineData("withdrawn")]
+    [InlineData("disposed")]
+    [InlineData("disabled")]
+    [InlineData("reloaded")]
+    public async Task Deferred_text_selection_never_replays_into_a_changed_or_retired_editor(string scenario)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            const string text = "same source";
+            var model = new Model(); model.Set("Name", text); model.Set("Range", null);
+            using var loader = new CuiControlLoader(); loader.SetBindingContext(model);
+            var loaded = loader.LoadMarkup("""
+                <Container Type="Vertical Stack"><Input Type="Text" Value="Other input"/>
+                  <Input Type="Text" Value="{Binding Name}" TextSelection="{Binding Range}"/>
+                </Container>
+                """);
+            Assert.Empty(loaded.Diagnostics); var root = Assert.IsType<CuiContainerControl>(loaded.Root); loader.WireBindings(root);
+            var other = Assert.IsType<TextBox>(root.AuthoredChildren[0]); var input = Assert.IsType<TextBox>(root.AuthoredChildren[1]);
+            var window = new Window { Content = root, Width = 480, Height = 180 };
+            try
+            {
+                window.Show(); Pump(window); other.Focus();
+                model.Set("Range", CuiTextSelection.ForText(1, text, 5, 6));
+                if (scenario == "text-changed") model.Set("Name", "newer source");
+                else if (scenario == "withdrawn") model.Set("Range", null);
+                else if (scenario == "disposed") loader.Dispose();
+                else if (scenario == "reloaded") Assert.Empty(loader.LoadMarkup("<Input Type=\"Text\" Value=\"new scene\"/>").Diagnostics);
+                else input.IsEnabled = false;
+                Pump(window); Assert.True(other.IsFocused); Assert.False(input.IsFocused);
+                Assert.NotEqual("source", input.SelectedText);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
     private sealed class Model : ICuiWritableBindingContext, INotifyPropertyChanged
     {
         private readonly Dictionary<string, object?> _values = new() { ["Open"] = true, ["Request"] = false, ["Hidden"] = false, ["Allow"] = true, ["LayerOpacity"] = 1d, ["Name"] = "Original name" };

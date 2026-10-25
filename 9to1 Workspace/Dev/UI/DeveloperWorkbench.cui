@@ -77,7 +77,11 @@
         <Button id="dev-use-merged-recovered-draft" action="dev.use-merged-recovered-draft" content="Use merged draft" accessible-name="Use this merged draft against freshly read current source; review is required before saving" Interactive="{Binding CanUseMergedRecoveredDraft}" />
         <Button id="dev-reconcile-recovered-draft" action="dev.reconcile-recovered-draft" content="Use recovered draft against current source" accessible-name="Explicitly reconcile this retained draft against freshly read current source; review is still required before writing" Interactive="{Binding CanReconcileRecoveredDraft}" />
       </Container>
-      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" Interactive="{Binding CanEditSource}" />
+      <Container Type="Horizontal Stack" CellGap="8">
+        <Input id="dev-source-location" Type="Text" Value="{Binding SourceLocation}" placeholdertext="Line or line:column" accessible-name="Source line and optional column" />
+        <Button id="dev-go-to-source-location" action="dev.go-to-source-location" content="Go to" accessible-name="Go to line and column in the current source draft" Interactive="{Binding CanGoToSourceLocation}" />
+      </Container>
+      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" TextSelection="{Binding EditorTextSelection}" Multiline="true" Interactive="{Binding CanEditSource}" />
       <Container Type="Wrap">
         <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
         <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />

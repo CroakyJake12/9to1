@@ -84,6 +84,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private bool _active, _pending;
     private long _generation;
     private string _sourcePath = "", _searchQuery = "", _command = "", _testCommand = "";
+    private string _sourceLocation = "1";
+    private CuiTextSelection? _editorTextSelection;
+    private long _editorNavigationRequest;
     private string _stageTaskId = "", _stageId = "", _branchName = "";
     private string _files = "", _searchResults = "", _status = "", _processStatus = "", _processOutput = "";
     private bool _searchUseRegex, _searchMatchCase = true;
@@ -346,6 +349,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                         : $"{manualSource.Path}; manual source tab. Reviewed edits use the current Home write permission."
                     : _editor is null ? "Choose an existing registered source document." : $"{_editor.Document.RelativePath}; draft revision {_editor.DraftRevision}" + (_editor.IsDirty ? " — unsaved draft" : ""),
                 "DraftText" => _manual && _editor is null ? _manualDraftText : _editor?.DraftText ?? "",
+                "SourceLocation" => _sourceLocation, "EditorTextSelection" => _editorTextSelection,
+                "CanGoToSourceLocation" => IsActionAvailable("dev.go-to-source-location"),
                 "ReviewSummary" => _pass is null ? "Review before applying. Pass history is available for this open editor." : $"Pass {_pass.ChangeSetId:D}: {_pass.State}; before {_pass.BeforeSha256}; after {_pass.AfterSha256}" + (_pass.RevertsChangeSetId is { } inverse ? $"; reverts only pass {inverse:D}" : ""),
                 "BeforeText" => _manual ? _manualBeforeText : (_pass?.BeforeText ?? ""),
                 "AfterText" => _manual ? _manualAfterText : (_pass?.AfterText ?? ""),
@@ -379,7 +384,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         }
         return path is "CanStructuredSearch" or "SearchUseRegex" or "SearchMatchCase" or "ProjectSearchMatches" or
             "ProjectTitle" or "ProjectSummary" or "Files" or "SourcePath" or "SearchQuery" or "SearchResults" or
-            "EditorTitle" or "DraftText" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
+            "EditorTitle" or "DraftText" or "SourceLocation" or "EditorTextSelection" or "CanGoToSourceLocation" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
             "StageTaskId" or "StageId" or "BranchName" or "ProcessStatus" or "ProcessOutput" or "Status" or "CanOpenSource" or "CanPreview" or "CanApply" or "CanRevert" or
             "SourceTabs" or "SourceTabPinLabel" or "CanPinSourceTab" or "CanEditSource" or "SourceTabsStatus" or
             "ProjectEntries" or "ProjectFolder" or "ProjectExplorerStatus" or "ShowProjectExplorer" or "ShowLegacyFiles" or
@@ -403,7 +408,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             });
             return true;
         }
-        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "RecoveredMergedDraft" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
+        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
         long generation; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
         {
@@ -421,7 +426,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             StoreSelectedTab(); _sourcePath = text; break;
                         case "SearchQuery": if (!StringComparer.Ordinal.Equals(_searchQuery, text)) { _searchQuery = text; InvalidateProjectSearch(); } break;
                         case "RecoveredMergedDraft": UpdateRecoveryMerge(text); break;
+                        case "SourceLocation": _sourceLocation = text; break;
                         case "DraftText":
+                            _editorTextSelection = null; // Withdraw a queued jump before newer typing is published.
                             if (_manual && _editor is null)
                             {
                                 if (CurrentSourceTab() is null && text.Length != 0)
@@ -455,7 +462,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (command == "dev.reconcile-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && SelectedManualRecoveryCandidate() is not null;
             if (command == "dev.use-merged-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && SelectedManualRecoveryCandidate() is { MergedDraftText: not null };
             if (command is "dev.select-source-tab" or "dev.close-source-tab") return _sourceTabs.Count > 0;
-            if (command == "dev.toggle-source-tab-pin") return CurrentSourceTab() is not null;
+            if (command is "dev.toggle-source-tab-pin" or "dev.go-to-source-location") return CurrentSourceTab() is not null;
             if (command == "dev.open-project-entry") return _manualReader is not null && _projectEntries is not null;
             if (command == "dev.open-search-result") return _manualReader is not null && _structuredSearch?.Project == _project.Reference && _searchMatches.Count > 0;
             if (command == "dev.project-folder-up") return _projectEntries is not null && !string.IsNullOrEmpty(_projectFolder);
@@ -497,6 +504,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command == "dev.go-to-source-location") return DispatchSourceLocationAsync(cancellationToken);
         if (command is "dev.inspect-recovered-draft" or "dev.reconcile-recovered-draft" or "dev.use-merged-recovered-draft")
             return DispatchManualRecoveryConflictAsync(command, parameter, cancellationToken);
         long generation; string path, query, terminal, test, stageTask, stage, branch; DeveloperEditorSnapshot? editor; DeveloperSourceChangePass? pass;
@@ -629,6 +637,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                                 }
                                 else tab.Editor = value;
                                 _project = project; SelectTab(tab); published = true;
+                                if (searchSelection is not null) NavigateOpenedSearchMatch(searchSelection);
                                 _status = searchSelection is null ? "Complete source opened through its current owner. Other tabs retain their drafts and review state."
                                     : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
                             }).ConfigureAwait(false);
@@ -785,6 +794,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             _sourceTabs.Add(tab);
                         }
                         _project = project; SelectTab(tab);
+                        if (searchSelection is not null) NavigateOpenedSearchMatch(searchSelection);
                         _status = searchSelection is null ? "Manual source opened through the genuine Home read owner. Other tabs retain their drafts and review state."
                             : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
                     }).ConfigureAwait(false);
@@ -958,6 +968,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private void SelectTab(SourceTab tab)
     {
         _selectedSourceTab = tab.Id; _sourcePath = tab.Path; _pass = tab.Pass;
+        _editorTextSelection = null;
         _editor = tab.Editor;
         if (tab.Manual is { } state)
         {
@@ -967,6 +978,59 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             _manualDraftRevision = state.DraftRevision; _manualReviewRevision = state.ReviewRevision; _manualReviewed = state.Reviewed;
         }
     }
+    private string CurrentEditorText() => _manual ? _manualDraftText : _editor?.DraftText ?? "";
+
+    private void NavigateOpenedSearchMatch(SearchSelection selection)
+    {
+        var text = CurrentEditorText(); var match = selection.Match;
+        // Search observes saved source, while an existing tab may retain a different unsaved draft.
+        // Its offsets are usable only for exactly the text that produced that search observation.
+        if (match.CharacterOffset < 0 || match.Length < 0 || (long)match.CharacterOffset + match.Length > text.Length ||
+            !StringComparer.OrdinalIgnoreCase.Equals(DeveloperManualSourceEditOwner.Sha256(text), match.ContentSha256)) return;
+        _editorTextSelection = CuiTextSelection.ForText(checked(++_editorNavigationRequest), text, match.CharacterOffset, match.Length);
+    }
+
+    private ValueTask DispatchSourceLocationAsync(CancellationToken token)
+    {
+        long generation; Guid tabId; string location;
+        lock (_gate)
+        {
+            if (IsActionAvailable("dev.go-to-source-location") != true || CurrentSourceTab() is not { } tab)
+                throw new InvalidOperationException("Open a source document before navigating to a line.");
+            generation = _generation; tabId = tab.Id; location = _sourceLocation; _pending = true;
+        }
+        try
+        {
+            return new(_work.RunAsync(async original =>
+            {
+                original.BindPublicationGuard(() => IsCurrent(generation));
+                try
+                {
+                    token.ThrowIfCancellationRequested();
+                    await PublishAsync(original, () =>
+                    {
+                        if (CurrentSourceTab()?.Id != tabId) return;
+                        var text = CurrentEditorText();
+                        if (!DeveloperTextNavigation.TryResolve(text, location, out var offset, token))
+                        { _status = "Enter an existing line and optional column, such as 12 or 12:4. The current text and selection were preserved."; return; }
+                        _editorTextSelection = CuiTextSelection.ForText(checked(++_editorNavigationRequest), text, offset, 0);
+                        _status = "Moved to " + location + " in the current source draft.";
+                    }).ConfigureAwait(false);
+                }
+                catch (Exception error) { original.Retain(error); }
+                finally
+                {
+                    lock (_gate) _pending = false;
+                    if (IsCurrent(generation))
+                        try { await PublishAsync(original, () => { }).ConfigureAwait(false); }
+                        catch (Exception error) { original.Retain(error); }
+                    original.ThrowRetained();
+                }
+            }));
+        }
+        catch { lock (_gate) _pending = false; throw; }
+    }
+
     private SourceTab? FindCleanPreview(string group) => _sourceTabs.FirstOrDefault(tab =>
         tab.IsPreview && !tab.IsPinned && !IsTabDirty(tab) && StringComparer.Ordinal.Equals(tab.GroupId, group));
 

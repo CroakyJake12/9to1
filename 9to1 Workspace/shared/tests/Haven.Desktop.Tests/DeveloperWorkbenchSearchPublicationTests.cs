@@ -247,6 +247,67 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Go_to_line_uses_the_current_unsaved_editor_text_and_invalid_locations_preserve_selection()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            f.Tools.TextValue = "first\r\nsecond";
+            page = await SearchPublicationPage(f, reader.Owner);
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            Assert.True(page.TrySetValue("SourceLocation", "2:3"));
+            await page.DispatchAsync("dev.go-to-source-location", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out var actual));
+            var before = Assert.IsType<CuiTextSelection>(actual); Assert.Equal(9, before.Start); Assert.Equal(0, before.Length);
+            Assert.True(page.TrySetValue("SourceLocation", "900:1"));
+            await page.DispatchAsync("dev.go-to-source-location", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out actual)); Assert.Same(before, actual);
+            Assert.True(page.TrySetValue("DraftText", "new first\nnew second"));
+            Assert.True(page.TryGetValue("EditorTextSelection", out actual)); Assert.Null(actual);
+            page.TrySetValue("SourceLocation", "2:1"); await page.DispatchAsync("dev.go-to-source-location", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out actual));
+            var after = Assert.IsType<CuiTextSelection>(actual); Assert.Equal(10, after.Start); Assert.True(after.RequestId > before.RequestId);
+            Assert.NotEqual(before.TextSha256, after.TextSha256); Assert.Equal(0, f.Tools.WriteCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Opening_search_match_selects_its_actual_saved_range_but_never_offsets_a_different_live_draft()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string source = "line one\nsaved source target"; f.Tools.TextValue = source;
+            page = await SearchPublicationPage(f, reader.Owner);
+            var first = EnrollObservedSearchInput(page, f, "Main.cui", source);
+            await page.DispatchAsync("dev.open-search-result", first, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out var actual));
+            var range = Assert.IsType<CuiTextSelection>(actual);
+            Assert.Equal("source", source.Substring(range.Start, range.Length));
+            Assert.True(page.TrySetValue("DraftText", "a longer newer live draft"));
+            var second = EnrollObservedSearchInput(page, f, "Main.cui", source);
+            await page.DispatchAsync("dev.open-search-result", second, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out actual)); Assert.Null(actual);
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("a longer newer live draft", draft);
+            Assert.Single(NativeSourceTabs(page)); Assert.Equal(0, f.Tools.WriteCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));
