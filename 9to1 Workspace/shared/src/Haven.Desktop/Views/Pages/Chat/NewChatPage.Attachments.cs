@@ -388,6 +388,10 @@ public sealed partial class NewChatPage
             if (_originalDraftRetirementFlush is { } existing) return existing;
         Task? inFlightSend;
         lock (_originalSendGate) inFlightSend = _originalSendInFlight ? _originalSend : null;
+        // Already-published task follow-ups own accepted-versus-unsent outcomes too.
+        // Capture only predecessors; the flush itself is never part of this join.
+        if (CaptureNativeTaskFollowUpDraftJoin() is { } followUps)
+            inFlightSend = inFlightSend is null ? followUps : Task.WhenAll(inFlightSend, followUps);
         lock (_originalDraftGate)
             return _originalDraftRetirementFlush ??= AdmitOriginalDraftRetirementAsync(inFlightSend);
     }
@@ -437,7 +441,7 @@ public sealed partial class NewChatPage
         // live TextBox may already be detached/closed, and the mirror survives teardown and is
         // kept current by every real edit and every programmatic publication.
         await WriteOriginalDraftAsync(CaptureOriginalDraftMutation(
-            OriginalDraftInputOwner, CaptureUnsentDraftText(_originalComposerText, _scene.QueuedComposerMessages),
+            OriginalDraftInputOwner, CaptureUnsentDraftText(CaptureNativeTaskRetirementDraftText(), _scene.QueuedComposerMessages),
             _pendingAttachmentIds)).ConfigureAwait(false);
     }
 

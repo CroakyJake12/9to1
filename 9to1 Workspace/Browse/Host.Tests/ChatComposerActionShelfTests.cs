@@ -154,6 +154,52 @@ public sealed class ChatComposerActionShelfTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Native_scene_routes_the_task_submit_port_without_admitting_a_legacy_fifo_message()
+    {
+        using var scene = new ChatHavenScene();
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tasks = new NativeTaskPort(held.Task);
+        Task? submission = null;
+        try
+        {
+            await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            scene.ComposerSource.TaskActions = tasks;
+            scene.SetSending(true, true);
+            scene.Input.Text = "same task follow-up";
+            Assert.True(scene.ComposerView.Bindings.IsActionAvailable("composer.queue"));
+            Assert.True(scene.ComposerView.Bindings.IsActionAvailable("composer.steer"));
+            Assert.False(scene.ComposerView.Bindings.IsActionAvailable("composer.send"));
+            submission = scene.HandleComposerSendAsync().AsTask(); // Same path exposed to submit callers.
+            Assert.Same(held.Task, submission);
+            Assert.False(submission.IsCompleted);
+            Assert.Equal(1, tasks.Queues);
+            Assert.False(scene.HasQueuedComposerMessages);
+            await scene.ComposerView.Bindings.DispatchAsync("composer.steer", null);
+            Assert.Equal(1, tasks.Steers);
+            tasks.IsApplicable = false;
+            Assert.False(scene.ComposerView.Bindings.IsActionAvailable("composer.steer"));
+        }
+        finally
+        {
+            held.TrySetResult();
+            if (submission is not null) await submission;
+            await scene.StartComposerClose();
+            await scene.JoinComposerCloseAndReleaseAsync();
+        }
+    }
+    private sealed class NativeTaskPort(Task queue) : IChatComposerTaskActions
+    {
+        public bool IsApplicable { get; set; } = true;
+        public bool CanSteer => IsApplicable;
+        public bool CanQueue => IsApplicable;
+        public bool CanStop => IsApplicable;
+        public int Queues, Steers;
+        public ValueTask Steer() { Steers++; return ValueTask.CompletedTask; }
+        public ValueTask Queue() { Queues++; return new(queue); }
+        public ValueTask Stop() => ValueTask.CompletedTask;
+    }
+
     private sealed class Source : IChatComposerSource
     {
         public string Draft { get; set; } = "";

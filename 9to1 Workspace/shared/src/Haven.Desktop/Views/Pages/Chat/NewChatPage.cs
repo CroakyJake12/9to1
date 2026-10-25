@@ -1109,6 +1109,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // The shared composer's direct send path returns the SAME admitted send task the page runs,
         // instead of discarding SubmitCurrentInstructionAsync through the legacy event.
         _scene.ComposerDirectSend = _ => new ValueTask(SubmitCurrentInstructionAsync());
+        _scene.ComposerSource.TaskActions = new NativeTaskComposerActions(this);
         _scene.StopRequested += OnStopRequested;
         _composerInput.Invalidated += OnComposerEditCompleted;
         _scene.ResolveProblemsRequested += (_, _) =>
@@ -1189,27 +1190,28 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // draft write never inherits a presentation publication demand; restore/clear
         // publications are recorded as observed text rather than saved.
         var text = _composerInput.Text ?? string.Empty;
-        if (_suppressOriginalDraftSave)
+        OriginalDraftMutation? observedMutation = null;
+        lock (_originalDraftGate)
         {
-            // A programmatic publication (send clear, draft restore, recovery text) is observed
-            // so the next REAL change is compared against it, but it is never itself an edit.
-            _originalComposerText = text;
-        }
-        else if (!string.Equals(text, _originalComposerText, StringComparison.Ordinal))
-        {
-            _originalComposerText = text;
-            if (!_originalWork.IsRetiring)
+            if (_suppressOriginalDraftSave)
             {
-                Interlocked.Increment(ref _originalComposerRevision);
-                // A queue-while-sending clear is not a user deletion either: the queued text has
-                // NOT been sent, so the canonical draft must keep it instead of deleting it. The
-                // typed edit that produced it was already observed synchronously and saved, so
-                // this programmatic clear is only ever skipped, never treated as deletion.
-                var clearingForQueuedSend = string.IsNullOrWhiteSpace(text) && _scene.HasQueuedComposerMessages;
-                if (!clearingForQueuedSend)
-                    _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, text, _pendingAttachmentIds));
+                _originalComposerText = text;
+            }
+            else if (!string.Equals(text, _originalComposerText, StringComparison.Ordinal))
+            {
+                _originalComposerText = text;
+                if (!_originalWork.IsRetiring)
+                {
+                    Interlocked.Increment(ref _originalComposerRevision);
+                    // The legacy ordinary-chat FIFO still owns its unsent queued inputs.
+                    var clearingForQueuedSend = string.IsNullOrWhiteSpace(text) && _scene.HasQueuedComposerMessages;
+                    if (!clearingForQueuedSend)
+                        observedMutation = CaptureOriginalDraftMutation(OriginalDraftInputOwner, text, _pendingAttachmentIds);
+                }
             }
         }
+        // Metadata is serialized above; no actual draft/source callback runs beneath it.
+        if (observedMutation is not null) _ = EnqueueOriginalDraftMutationAsync(observedMutation);
         RunOriginalChatNotification(() => OnComposerEditCompletedOriginalBody(sender, e));
     }
 

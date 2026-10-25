@@ -12,6 +12,11 @@ internal sealed partial class ChatHavenScene
     /// </summary>
     internal Func<CancellationToken, ValueTask>? ComposerDirectSend;
 
+    private IChatComposerTaskActions? ActiveTaskComposer =>
+        _composerSource.TaskActions is { IsApplicable: true } actual ? actual : null;
+    private ValueTask SubmitTaskComposerAsync(IChatComposerTaskActions actual) => actual.CanQueue
+        ? actual.Queue() : ValueTask.FromException(new InvalidOperationException("Choose an available task action. The task draft has been retained."));
+
     /// <summary>True while at least one typed message is parked in the in-memory send queue.</summary>
     internal bool HasQueuedComposerMessages => _composerQueue?.HasQueuedComposerMessages ?? false;
 

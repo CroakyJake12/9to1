@@ -616,6 +616,7 @@ public sealed partial class ChatCloudPermissionCallerTests
     {
         private readonly Capture _capture = capture;
         public int Dispatches; public int StreamDisposals;
+        public IReadOnlyList<ModelDescriptor> AvailableModels = [];
         public bool RunApprovedOwnedFrame;
         public Task? OriginalDispose;
         public TaskCompletionSource? NextDisposeEntered = null;
@@ -624,7 +625,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         public Action? OriginalToolCallback = null;
         public TaskCompletionSource DisposeEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<bool> IsAvailableAsync(CancellationToken token) => Task.FromResult(true);
-        public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<ModelDescriptor>>([]);
+        public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) => Task.FromResult(AvailableModels);
         public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token) => throw new InvalidOperationException("No nonowned compatibility provider call");
         public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken token)
         {
@@ -691,6 +692,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         private readonly Dictionary<Guid, string> _rows = [];
         public Task<TaskExecutionSnapshot?>? OverrideRead = null;
         public bool RefuseSuspension;
+        public TaskCompletionSource? HeldFollowUpWrite;
+        public TaskCompletionSource FollowUpWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task? ContinuationWrite; public int ContinuationWriteCalls;
         public TaskCompletionSource OverrideReadEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task UpsertAsync(TaskExecutionSnapshot value, CancellationToken token)
@@ -700,8 +703,21 @@ public sealed partial class ChatCloudPermissionCallerTests
             { ContinuationWriteCalls++; return actual; }
             if (RefuseSuspension && value.State == TaskExecutionLifecycle.Suspended) throw new TaskExecutionRevisionConflictException(value.TaskId, value.PersistenceRevision - 1, value.PersistenceRevision);
             var before = _rows.TryGetValue(value.TaskId, out var json) ? JsonSerializer.Deserialize<TaskExecutionSnapshot>(json) : null;
+            if (value.Queue.Count > (before?.Queue.Count ?? 0) && HeldFollowUpWrite is { } held)
+            {
+                FollowUpWriteEntered.TrySetResult();
+                return CommitHeldFollowUpAsync(value, before?.PersistenceRevision ?? 0, held.Task);
+            }
             if (value.PersistenceRevision != (before?.PersistenceRevision ?? 0) + 1) throw new TaskExecutionRevisionConflictException(value.TaskId, value.PersistenceRevision - 1, before?.PersistenceRevision ?? 0);
             _rows[value.TaskId] = JsonSerializer.Serialize(value); return Task.CompletedTask;
+        }
+        private async Task CommitHeldFollowUpAsync(TaskExecutionSnapshot value, long beforeRevision, Task actual)
+        {
+            await actual.ConfigureAwait(false); // A genuinely admitted controlled commit acknowledges despite caller withdrawal.
+            var before = _rows.TryGetValue(value.TaskId, out var json) ? JsonSerializer.Deserialize<TaskExecutionSnapshot>(json) : null;
+            if (before?.PersistenceRevision != beforeRevision || value.PersistenceRevision != beforeRevision + 1)
+                throw new TaskExecutionRevisionConflictException(value.TaskId, beforeRevision, before?.PersistenceRevision ?? 0);
+            _rows[value.TaskId] = JsonSerializer.Serialize(value);
         }
         public Task<TaskExecutionSnapshot?> GetAsync(Guid id, CancellationToken token)
         {

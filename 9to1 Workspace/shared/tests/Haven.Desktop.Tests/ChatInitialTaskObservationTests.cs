@@ -9,6 +9,50 @@ namespace Haven.Desktop.Tests;
 /// catalogue, repositories and transport are controlled; no installed model/account/provider acceptance.</summary>
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [Theory]
+    [InlineData(TaskFollowUpMode.Queue)]
+    [InlineData(TaskFollowUpMode.Steer)]
+    public async Task Issued_live_initial_task_followup_uses_the_same_task_run_and_refuses_retired_or_foreign_observations(TaskFollowUpMode mode)
+    {
+        await using var rig = new Rig(temporary: false);
+        rig.Capture.AskDuringCapture = false;
+        rig.Client.RunApprovedOwnedFrame = true;
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.Client.OriginalDispose = held.Task;
+        var conversation = await PersistInitialTaskConversationAsync(rig);
+        var lease = await StartInitialTaskObservationAsync(rig.Service, rig, conversation, TestContext.Current.CancellationToken);
+        var producer = InitialHostedProducer(lease);
+        try
+        {
+            await rig.Client.DisposeEntered.Task.WaitAsync(TestContext.Current.CancellationToken);
+            Assert.True(rig.Service.CanSubmitObservedOriginalTaskFollowUp(lease));
+            var before = (await rig.Tasks.GetByContextAsync(conversation.Id, default))!;
+            var foreign = new ChatSessionService(rig.Conversations, rig.Client, new CapabilityPreflightService(), new Safety(),
+                new WorkspaceToolRuntime(rig.Workspace), new ComputerToolRuntime(new Computer()), taskCoordinator: rig.Tasks);
+            Assert.False(foreign.CanSubmitObservedOriginalTaskFollowUp(lease));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => foreign.SubmitObservedOriginalTaskFollowUpAsync(lease, "foreign instruction", mode, default));
+            var reply = await rig.Service.SubmitObservedOriginalTaskFollowUpAsync(lease, "use the existing source", mode, default);
+            Assert.Equal(before.TaskId, reply.Snapshot.TaskId);
+            Assert.Equal(before.ExecutionId, reply.Snapshot.ExecutionId);
+            Assert.Equal(conversation.Id, reply.Snapshot.ContextId);
+            Assert.Equal(mode, reply.Mode);
+            Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User);
+            if (mode == TaskFollowUpMode.Queue) Assert.Equal("use the existing source", Assert.Single(reply.Snapshot.Queue).Summary);
+            else Assert.NotNull(reply.Steer);
+            lease.RequestOriginalObservationRetirement();
+            Assert.False(rig.Service.CanSubmitObservedOriginalTaskFollowUp(lease));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Service.SubmitObservedOriginalTaskFollowUpAsync(lease, "do not resurrect", mode, default));
+            var after = (await rig.Tasks.GetAsync(before.TaskId, default))!;
+            Assert.Equal(reply.Snapshot.PersistenceRevision, after.PersistenceRevision);
+        }
+        finally
+        {
+            held.TrySetResult();
+            await lease.DetachAndDrainAsync();
+            _ = await Record.ExceptionAsync(() => producer);
+        }
+    }
+
     [Fact]
     public async Task Initial_host_projects_actual_user_and_permission_events_with_same_acknowledged_context()
     {
