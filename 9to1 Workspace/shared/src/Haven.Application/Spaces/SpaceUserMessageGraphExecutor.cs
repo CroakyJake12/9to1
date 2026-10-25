@@ -11,6 +11,7 @@ namespace Haven.Application;
 internal sealed class SpaceUserMessageGraphExecutor(string originalInput, OriginalSpaceCapturedContext? capturedContext = null) : IAutomationGraphNodeExecutor
 {
     private const int MaximumResults = 512;
+    private static readonly UTF8Encoding StrictUtf8 = new(false, true);
     private static readonly JsonSerializerOptions OutputJson = new(JsonSerializerDefaults.Web);
     private static readonly Regex NumericCandidates = new(@"[-+]?[0-9]+(?:[.,][0-9]+)*(?:[eE][-+]?[0-9]+)?",
         RegexOptions.CultureInvariant | RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100));
@@ -19,7 +20,7 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput, Origin
     public bool CanExecute(AutomationGraphNodeDefinition node) => node.Category == SpaceUserMessageGraph.Category &&
         node.ActionKey is SpaceUserMessageGraph.SourceType or SpaceUserMessageGraph.TruncateType or SpaceUserMessageGraph.OutputType or
             SpaceUserMessageGraph.ExtractNumbersType or SpaceUserMessageGraph.NumbersToTextType or SpaceUserMessageGraph.SearchWordsType or SpaceUserMessageGraph.MatchesToTextType or
-            SpaceUserMessageGraph.ParseJsonType or SpaceUserMessageGraph.SelectJsonType or SpaceUserMessageGraph.RenderJsonType or SpaceUserMessageGraph.JsonStringType or SpaceUserMessageGraph.RouteWordsType or SpaceUserMessageGraph.RouteJsonBooleanType or SpaceUserMessageGraph.AppendCapturedContextType or SpaceUserMessageGraph.MergeType;
+            SpaceUserMessageGraph.ParseJsonType or SpaceUserMessageGraph.SelectJsonType or SpaceUserMessageGraph.RenderJsonType or SpaceUserMessageGraph.JsonStringType or SpaceUserMessageGraph.RouteWordsType or SpaceUserMessageGraph.RouteJsonBooleanType or SpaceUserMessageGraph.NormalizeTextType or SpaceUserMessageGraph.AppendCapturedContextType or SpaceUserMessageGraph.MergeType;
     public Task<AutomationGraphNodeExecutionResult> ExecuteAsync(AutomationGraphNodeExecutionContext context, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
@@ -41,6 +42,8 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput, Origin
         if (!inputs[0].TryGetString(out var text) || text is null)
             return Task.FromResult(new AutomationGraphNodeExecutionResult(false, "Exactly one present string input is required."));
         if (text.Length > 131072) return Task.FromResult(new AutomationGraphNodeExecutionResult(false, "The derived string input exceeds its supported bound."));
+        if (context.Node.ActionKey == SpaceUserMessageGraph.NormalizeTextType)
+            return Task.FromResult(NormalizeText(text, context.Node.Parameters, token));
         if (context.Node.ActionKey == SpaceUserMessageGraph.AppendCapturedContextType)
         {
             var contextId = Guid.ParseExact(context.Node.Parameters["contextId"], "D");
@@ -75,6 +78,28 @@ internal sealed class SpaceUserMessageGraphExecutor(string originalInput, Origin
             return Task.FromResult(Result(text, "Applied the configured Unicode text-element limit."));
         }
         return Task.FromResult(new AutomationGraphNodeExecutionResult(true, "Produced derived request text.", text));
+    }
+    private static AutomationGraphNodeExecutionResult NormalizeText(string text, IReadOnlyDictionary<string, string> parameters, CancellationToken token)
+    {
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            _ = StrictUtf8.GetByteCount(text); // Reject unpaired surrogates even when preserving the Unicode form.
+            var normalized = parameters["unicodeForm"] switch
+            {
+                "preserve" => text,
+                "NFC" => text.Normalize(NormalizationForm.FormC),
+                "NFKC" => text.Normalize(NormalizationForm.FormKC),
+                _ => throw new InvalidOperationException("The compiled normalization form is unavailable.")
+            };
+            if (parameters["lineEndings"] == "LF") normalized = normalized.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
+            if (parameters["edgeWhitespace"] == "trim-ascii-space-tab-cr-lf") normalized = normalized.Trim(' ', '\t', '\r', '\n');
+            token.ThrowIfCancellationRequested();
+            return normalized.Length <= 131072 && StrictUtf8.GetByteCount(normalized) <= 131072
+                ? Result(normalized, "Applied explicit Unicode, CR/LF and ASCII edge-whitespace settings; no additional case folding or whitespace collapse occurred.")
+                : new(false, "The complete normalized text exceeds the supported 131072 UTF-8 bytes/characters; no excerpt was substituted.");
+        }
+        catch (ArgumentException) { return new(false, "Text normalization requires well-formed Unicode; invalid scalar sequences are not replaced."); }
     }
     private static AutomationGraphNodeExecutionResult Result(string text, string message) => new(true, message, text,
         TypedOutputs: new Dictionary<string, AutomationGraphValue> { ["out"] = AutomationGraphValue.FromString(text) });

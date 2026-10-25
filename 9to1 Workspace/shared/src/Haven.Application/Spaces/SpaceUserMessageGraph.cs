@@ -31,6 +31,7 @@ public sealed class SpaceUserMessageGraph
     public const string RouteWordsType = "spaces.user-message.route-words";
     public const string MergeType = "spaces.user-message.merge-selected";
     public const string RouteJsonBooleanType = "spaces.user-message.route-json-boolean";
+    public const string NormalizeTextType = "spaces.user-message.normalize-text";
     public const string AppendCapturedContextType = "spaces.user-message.append-captured-context";
     public const string CapabilityId = "spaces.user-message.derive";
     internal const string Category = "SpaceUserMessage";
@@ -38,6 +39,7 @@ public sealed class SpaceUserMessageGraph
     private readonly IReadOnlyDictionary<Guid, string> _types;
     private readonly Guid _output;
     private readonly IReadOnlyDictionary<Guid, Guid> _contextIds;
+    private readonly IReadOnlyDictionary<Guid, SpaceTextNormalizationTrace> _normalizations;
     private SpaceUserMessageGraph(Guid spaceId, long spaceRevision, AutomationGraphProjection projection,
         IReadOnlyDictionary<Guid, string> types, Guid output)
     {
@@ -46,6 +48,9 @@ public sealed class SpaceUserMessageGraph
             .Where(node => node.ActionKey == AppendCapturedContextType)
             .ToDictionary(node => node.Id, node => Guid.ParseExact(node.Parameters["contextId"], "D")));
         ReferencedContextIds = Array.AsReadOnly(_contextIds.Values.Distinct().Order().ToArray());
+        _normalizations = new ReadOnlyDictionary<Guid, SpaceTextNormalizationTrace>(projection.Definition.Nodes
+            .Where(node => node.ActionKey == NormalizeTextType).ToDictionary(node => node.Id,
+                node => new SpaceTextNormalizationTrace(node.Parameters["unicodeForm"], node.Parameters["lineEndings"], node.Parameters["edgeWhitespace"], false)));
     }
     public Guid SpaceId { get; }
     public long SpaceRevision { get; }
@@ -83,6 +88,8 @@ public sealed class SpaceUserMessageGraph
             [new("in", GraphPortDirection.Input, "string"), new("true", GraphPortDirection.Output, "string"), new("false", GraphPortDirection.Output, "string")]),
         Type(RouteJsonBooleanType, "{\"type\":\"object\",\"properties\":{\"pointer\":{\"type\":\"string\",\"maxLength\":512}},\"required\":[\"pointer\"],\"additionalProperties\":false}",
             [new("in", GraphPortDirection.Input, JsonDataType), new("true", GraphPortDirection.Output, JsonDataType), new("false", GraphPortDirection.Output, JsonDataType)]),
+        Type(NormalizeTextType, "{\"type\":\"object\",\"properties\":{\"unicodeForm\":{\"type\":\"string\",\"enum\":[\"preserve\",\"NFC\",\"NFKC\"]},\"lineEndings\":{\"type\":\"string\",\"enum\":[\"preserve\",\"LF\"]},\"edgeWhitespace\":{\"type\":\"string\",\"enum\":[\"preserve\",\"trim-ascii-space-tab-cr-lf\"]}},\"required\":[\"unicodeForm\",\"lineEndings\",\"edgeWhitespace\"],\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, "string"), new("out", GraphPortDirection.Output, "string")]),
         Type(AppendCapturedContextType, "{\"type\":\"object\",\"properties\":{\"contextId\":{\"type\":\"string\",\"minLength\":36,\"maxLength\":36}},\"required\":[\"contextId\"],\"additionalProperties\":false}",
             [new("in", GraphPortDirection.Input, "string"), new("out", GraphPortDirection.Output, "string")]),
         Type(MergeType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
@@ -90,7 +97,7 @@ public sealed class SpaceUserMessageGraph
     ];
     public static GraphCapabilityProfile Profile() => new(ProfileId,
         new HashSet<string>([SourceType, TruncateType, OutputType, ExtractNumbersType, NumbersToTextType, SearchWordsType, MatchesToTextType,
-            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType, RouteWordsType, RouteJsonBooleanType, AppendCapturedContextType, MergeType], StringComparer.Ordinal),
+            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType, RouteWordsType, RouteJsonBooleanType, NormalizeTextType, AppendCapturedContextType, MergeType], StringComparer.Ordinal),
         new HashSet<string>([CapabilityId], StringComparer.Ordinal));
     /// <summary>Author a node from the actual shared registered schema. This is draft
     /// data only; inserting it never activates a Space or starts a request.</summary>
@@ -101,6 +108,7 @@ public sealed class SpaceUserMessageGraph
             ?? throw new ArgumentException("No registered Space user-message node has this type.", nameof(typeId));
         return new(Guid.NewGuid(), typeId == SourceType ? "Event" : "Logic", typeId switch
         {
+            NormalizeTextType => "Normalize text (explicit Unicode and line endings)",
             SourceType => "Original user message", TruncateType => "Truncate text", OutputType => "Request text",
             ExtractNumbersType => "Extract numbers", NumbersToTextType => "Render numbers",
             SearchWordsType => "Search words or phrases", MatchesToTextType => "Render matches",
@@ -118,6 +126,8 @@ public sealed class SpaceUserMessageGraph
             {
                 TruncateType => new Dictionary<string, string>(StringComparer.Ordinal) { ["maximumTextElements"] = "1000" },
                 ExtractNumbersType => new Dictionary<string, string>(StringComparer.Ordinal) { ["locale"] = "invariant" },
+                NormalizeTextType => new Dictionary<string, string>(StringComparer.Ordinal)
+                    { ["unicodeForm"] = "NFC", ["lineEndings"] = "LF", ["edgeWhitespace"] = "preserve" },
                 AppendCapturedContextType => new Dictionary<string, string>(StringComparer.Ordinal) { ["contextId"] = "" },
                 SelectJsonType or RouteJsonBooleanType => new Dictionary<string, string>(StringComparer.Ordinal) { ["pointer"] = "" },
                 SearchWordsType or RouteWordsType => new Dictionary<string, string>(StringComparer.Ordinal)
@@ -192,6 +202,14 @@ public sealed class SpaceUserMessageGraph
                 if (node.Metadata.Count != 1 || !node.Metadata.TryGetValue("locale", out var locale) ||
                     locale is not ("invariant" or "en-US" or "de-DE" or "fr-FR"))
                     throw Invalid("Numeric extraction requires an explicit supported locale: invariant, en-US, de-DE or fr-FR.");
+                configuration = JsonSerializer.SerializeToElement(node.Metadata);
+            }
+            else if (node.TypeId == NormalizeTextType)
+            {
+                if (node.Metadata.Count != 3 || !node.Metadata.TryGetValue("unicodeForm", out var form) || form is not ("preserve" or "NFC" or "NFKC") ||
+                    !node.Metadata.TryGetValue("lineEndings", out var endings) || endings is not ("preserve" or "LF") ||
+                    !node.Metadata.TryGetValue("edgeWhitespace", out var whitespace) || whitespace is not ("preserve" or "trim-ascii-space-tab-cr-lf"))
+                    throw Invalid("Normalize text requires explicit Unicode preserve/NFC/NFKC, line endings preserve/LF and edge whitespace preserve/trim-ascii-space-tab-cr-lf. No additional case folding or non-ASCII whitespace trimming is applied.");
                 configuration = JsonSerializer.SerializeToElement(node.Metadata);
             }
             else if (node.TypeId == AppendCapturedContextType)
@@ -323,6 +341,7 @@ public sealed class SpaceUserMessageGraph
             throw Invalid(failed is null ? "The shared user-message graph did not produce its declared Output."
                 : _types[failed.NodeId] switch
                 {
+                    NormalizeTextType => "Normalize text requires well-formed Unicode and a complete derived value within 131072 UTF-8 bytes and characters. No replacement characters or truncated normalization are substituted.",
                     ParseJsonType => "Parse JSON requires strict valid JSON, unique decoded property names, no comments/trailing commas, at most 32 nested containers and a typed result within 262144 UTF-8 bytes.",
                     AppendCapturedContextType => "Append reviewed Space source requires its actual included captured source; missing or omitted bodies cannot be invented, and the whole derived value must fit 131072 UTF-8 bytes.",
                     RouteJsonBooleanType => "Route by JSON boolean requires one present true/false JSON value at its exact pointer; strings, numbers, null and missing values are not coerced.",
@@ -346,6 +365,8 @@ public sealed class SpaceUserMessageGraph
                 HasFlag(value, "moreResultsOmitted"), HasFlag(value, "hasUncertainty"))
             {
                 SelectedBranch = item.Branch,
+                TextNormalization = item.Status == AutomationGraphTraceStatus.Succeeded && _normalizations.TryGetValue(item.NodeId, out var normalization)
+                    ? normalization with { Changed = !StringComparer.Ordinal.Equals(item.Inputs?.Values.SingleOrDefault(), item.Output) } : null,
                 ContextSource = item.Status == AutomationGraphTraceStatus.Succeeded && _contextIds.TryGetValue(item.NodeId, out var contextId) &&
                     captured?.Items.SingleOrDefault(row => row.ContextId == contextId) is { } source
                         ? new(source.ContextId, source.OwnerAppId, Digest(source.Revision), Digest(source.Text)) : null
@@ -367,9 +388,14 @@ public sealed class SpaceUserMessageGraph
 public sealed record SpaceUserMessageGraphTrace(Guid NodeId, string TypeId, string State, int InputTextElements, int OutputTextElements,
     string OutputDataType = "string", string? OutputSha256 = null, bool MoreResultsOmitted = false, bool HasUncertainty = false)
 {
+    public SpaceTextNormalizationTrace? TextNormalization { get; init; }
     public string? SelectedBranch { get; init; }
     public SpaceUserMessageContextTrace? ContextSource { get; init; }
 }
+/// <summary>Content-free configured normalization semantics. ASCII edge trimming affects
+/// only U+0020, U+0009, U+000D and U+000A after the chosen Unicode form.
+/// No additional case folding or whitespace normalization is performed.</summary>
+public sealed record SpaceTextNormalizationTrace(string UnicodeForm, string LineEndings, string EdgeWhitespace, bool Changed);
 public sealed record SpaceUserMessageContextTrace(Guid ContextId, string OwnerAppId, string RevisionSha256, string BodySha256);
 public sealed record SpaceUserMessageGraphResult(Guid SpaceId, long SpaceRevision, Guid GraphId, long GraphRevision,
     Guid UserMessageId, string DerivedText, string InputSha256, string OutputSha256, int OmittedTextElements,

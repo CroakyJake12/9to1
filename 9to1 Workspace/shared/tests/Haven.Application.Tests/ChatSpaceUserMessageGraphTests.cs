@@ -28,7 +28,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Equal(3, result.Trace.Count);
         Assert.All(result.Trace, item => Assert.Equal("Succeeded", item.State));
         Assert.NotEqual(result.InputSha256, result.OutputSha256);
-        Assert.Equal(15, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
+        Assert.Equal(16, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
         Assert.Equal(2, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(CanonicalAutomationCoreNodes.ProfileId).Count);
     }
 
@@ -775,6 +775,100 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         var nodes = new[] { source, parse, select, render, output };
         return new(nodes, nodes.Zip(nodes.Skip(1), (from, to) => new SpaceLayoutEdge(Guid.NewGuid(), from.Id, "out", to.Id, "in")).ToArray())
             { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
+    }
+
+    [Theory]
+    [InlineData("preserve", "preserve", "preserve", "e\u0301\r\nＡ", "e\u0301\r\nＡ")]
+    [InlineData("NFC", "LF", "preserve", "e\u0301\r\nＡ\rB\u2028C", "é\nＡ\nB\u2028C")]
+    [InlineData("NFKC", "LF", "trim-ascii-space-tab-cr-lf", " \tＡ\u00a0e\u0301\r\n ", "A é")]
+    [InlineData("NFC", "LF", "trim-ascii-space-tab-cr-lf", "\t \u00a0Straße\u00a0 \r\n", "\u00a0Straße\u00a0")]
+    public async Task Space_graph_text_normalization_reaches_the_actual_request_and_keeps_original_history_and_explicit_semantics(
+        string form, string endings, string whitespace, string text, string expected)
+    {
+        var token = TestContext.Current.CancellationToken;
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Explicit text normalization", cancellationToken: token);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry), NormalizationLayout(form, endings, whitespace));
+        var rig = new GraphRequestRig(source, space.Id);
+        await rig.SendAsync(text);
+        Assert.Equal(expected, Assert.Single(Assert.Single(rig.Transport.Requests).Messages, message => message.Role == "user").Content);
+        Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        var actual = await RunGraph(NormalizationLayout(form, endings, whitespace), text);
+        var row = Assert.Single(actual.Trace, row => row.TypeId == SpaceUserMessageGraph.NormalizeTextType);
+        Assert.Equal(new SpaceTextNormalizationTrace(form, endings, whitespace, !StringComparer.Ordinal.Equals(text, expected)), row.TextNormalization);
+        Assert.Equal("string", row.OutputDataType);
+        Assert.Equal(0, actual.OmittedTextElements); // Only the Truncate node claims text-element truncation.
+        var safe = Assert.Single(rig.Events.Values, item => item.ComponentId == "spaces.user-message-graph").SafeMetadata!;
+        Assert.Contains("TextNormalization", safe["trace"], StringComparison.Ordinal);
+        Assert.DoesNotContain(text, safe["trace"], StringComparison.Ordinal);
+        files.Passed = true;
+    }
+
+    [Theory]
+    [InlineData("unicodeForm", "NFD")]
+    [InlineData("lineEndings", "system-default")]
+    [InlineData("edgeWhitespace", "all-unicode")]
+    [InlineData("caseFold", "current-culture")]
+    [InlineData("unicodeForm", "")]
+    public void Space_graph_text_normalization_rejects_implicit_or_unsupported_semantics_before_activation(string key, string value)
+    {
+        var layout = NormalizationLayout("NFC", "LF", "preserve");
+        var nodes = layout.Nodes.ToArray();
+        var metadata = new Dictionary<string, string>(nodes[1].Metadata) { [key] = value };
+        nodes[1] = nodes[1] with { Metadata = metadata };
+        var error = Assert.Throws<SpaceRequestPolicyBlockedException>(() => SpaceUserMessageGraph.Compile(Guid.NewGuid(), 1, layout with { Nodes = nodes }));
+        Assert.Equal("SPACE_USER_MESSAGE_GRAPH_INVALID", error.Code);
+    }
+
+    [Fact]
+    public async Task Space_graph_text_normalization_uses_the_compiled_settings_and_can_return_an_explicit_empty_derived_value()
+    {
+        var layout = NormalizationLayout("NFC", "preserve", "preserve");
+        var graph = SpaceUserMessageGraph.Compile(Guid.NewGuid(), 1, layout);
+        ((Dictionary<string, string>)layout.Nodes[1].Metadata)["unicodeForm"] = "NFKC";
+        var message = new ChatMessage(Guid.NewGuid(), Guid.NewGuid(), MessageRole.User, "e\u0301 Ａ", null, null, null, DateTimeOffset.UtcNow);
+        Assert.Equal("é Ａ", (await graph.ExecuteAsync(message, TestContext.Current.CancellationToken)).DerivedText);
+        Assert.Equal("e\u0301 Ａ", message.Content);
+        var empty = await RunGraph(NormalizationLayout("preserve", "LF", "trim-ascii-space-tab-cr-lf"), " \t\r\n ");
+        Assert.Equal("", empty.DerivedText);
+        Assert.True(Assert.Single(empty.Trace, row => row.TypeId == SpaceUserMessageGraph.NormalizeTextType).TextNormalization!.Changed);
+    }
+
+    [Theory]
+    [InlineData("unpaired-surrogate")]
+    [InlineData("utf8-limit")]
+    [InlineData("compatibility-expansion")]
+    public async Task Space_graph_text_normalization_refuses_invalid_or_oversized_complete_values_before_transport(string defect)
+    {
+        var text = defect switch
+        {
+            "unpaired-surrogate" => "private\ud800source",
+            "utf8-limit" => new string('\u4e00', 44000),
+            _ => new string('\ufdfa', 8192)
+        };
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Normalization failure", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry), NormalizationLayout(
+            defect == "compatibility-expansion" ? "NFKC" : "preserve", "preserve", "preserve"));
+        var rig = new GraphRequestRig(source, space.Id);
+        var error = await Record.ExceptionAsync(() => rig.SendAsync(text));
+        Assert.NotNull(error);
+        Assert.True(ContainsSpaceCode(error, "SPACE_USER_MESSAGE_GRAPH_INVALID"));
+        Assert.Empty(rig.Transport.Requests);
+        Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        Assert.DoesNotContain("private", error.ToString(), StringComparison.Ordinal);
+        files.Passed = true;
+    }
+
+    private static SpaceLayoutDocument NormalizationLayout(string form, string endings, string whitespace)
+    {
+        var source = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SourceType);
+        var normalize = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.NormalizeTextType) with
+        { Metadata = new Dictionary<string, string> { ["unicodeForm"] = form, ["lineEndings"] = endings, ["edgeWhitespace"] = whitespace } };
+        var output = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.OutputType);
+        return new([source, normalize, output],
+            [new(Guid.NewGuid(), source.Id, "out", normalize.Id, "in"), new(Guid.NewGuid(), normalize.Id, "out", output.Id, "in")])
+        { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
     }
 
     private static async Task<SpaceUserMessageGraphResult> RunGraph(SpaceLayoutDocument layout, string text)
