@@ -11,9 +11,10 @@ namespace Haven.Desktop.Services;
 internal static class UnifiedWorkspaceSessionProjection
 {
     internal static WorkspaceSessionSnapshot Merge(WorkspaceSessionSnapshot original, Guid windowId,
-        BrowseTabSessionProjection current, IReadOnlySet<Guid> previouslyManagedTabIds)
+        string currentProfileId, BrowseTabSessionProjection current, IReadOnlySet<Guid> previouslyManagedTabIds)
     {
         ArgumentNullException.ThrowIfNull(original);
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentProfileId);
         ArgumentNullException.ThrowIfNull(current);
         ArgumentNullException.ThrowIfNull(previouslyManagedTabIds);
         if (original.SchemaVersion != WorkspaceSessionSnapshot.CurrentSchemaVersion)
@@ -38,6 +39,20 @@ internal static class UnifiedWorkspaceSessionProjection
         DemandUnique(owningWindow.Layout.Panes.Select(pane => pane.Id), "owning window panes");
         var ownedIds = owningWindow.OrderedTabIds.ToHashSet();
         var currentIds = current.Tabs.Select(tab => tab.Id).ToHashSet();
+        var originalTabs = original.Tabs.ToDictionary(tab => tab.Id);
+        foreach (var tab in current.Tabs)
+        {
+            if (originalTabs.TryGetValue(tab.Id, out var retained))
+            {
+                if (UnifiedWorkspaceTabState.TryProject(retained, currentProfileId, out var retainedProjection) &&
+                    !StringComparer.Ordinal.Equals(tab.ProfileId, retainedProjection!.ProfileId))
+                    throw new InvalidDataException("An existing tab cannot change profile without an authorized profile migration.");
+            }
+            else if (!StringComparer.Ordinal.Equals(tab.ProfileId, currentProfileId))
+            {
+                throw new InvalidDataException("A new tab must use the owning window's current profile.");
+            }
+        }
         var paneTabIds = current.PaneTabIds ?? RestoreLegacyPanes(owningWindow, current.Tabs, current.SelectedTabId);
         if (paneTabIds.Count is not (0 or 2))
             throw new InvalidDataException("A Browse split must contain exactly two pane identities.");
@@ -84,7 +99,6 @@ internal static class UnifiedWorkspaceSessionProjection
             throw new InvalidDataException("A new tab identity cannot replace another window's tab.");
         var closedIds = previouslyManagedTabIds.Where(id => !currentIds.Contains(id)).ToHashSet();
         var deletedIds = closedIds.Where(id => !otherReferences.Contains(id)).ToHashSet();
-        var originalTabs = original.Tabs.ToDictionary(tab => tab.Id);
         var groups = original.Groups.ToList();
         if (current.Groups is { } projectedGroups)
             MergeGroupMetadata(groups, projectedGroups, current, owningWindow, original.Windows, windowId,

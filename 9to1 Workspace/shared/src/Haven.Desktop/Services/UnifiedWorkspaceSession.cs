@@ -173,7 +173,7 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                     cancellationToken.ThrowIfCancellationRequested();
                     if (owner._coordinator.IsFinalSnapshotSealed)
                         throw new InvalidOperationException("A projection cannot change after the final workspace capture.");
-                    var next = UnifiedWorkspaceSessionProjection.Merge(owner._snapshot, windowId, captured, ManagedIds);
+                    var next = UnifiedWorkspaceSessionProjection.Merge(owner._snapshot, windowId, ProfileId, captured, ManagedIds);
                     owner._snapshot = Detach(next);
                     ManagedIds = captured.Tabs.Select(tab => tab.Id).ToHashSet();
                     operation.Save = CloudflareOriginalExecutionGuard.InvokeOriginal(owner,
