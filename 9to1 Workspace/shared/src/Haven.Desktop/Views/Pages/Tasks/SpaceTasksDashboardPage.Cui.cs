@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
+using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
@@ -41,13 +42,19 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     }
     private void LoadOriginal()
     {
-        using var stream = typeof(SpaceTaskWorkspaceService).Assembly.GetManifestResourceStream("HavenOS.Apps.Spaces.UI.Tasks.SpaceTasksDashboard.cui")
-            ?? throw new InvalidDataException("The authored Tasks dashboard CUI is missing.");
-        using var reader = new StreamReader(stream);
-        var parser = new CuiRichParser();
-        var document = parser.Parse(reader.ReadToEnd(), "SpaceTasksDashboard.cui");
-        if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The authored Tasks dashboard CUI is invalid.");
+        // The authored details Toggle makes this a stateful document. The canonical
+        // build deliberately excludes stateful raw resources; consume its admitted V2
+        // semantics exactly like the shared composer, with no raw/V1 fallback.
+        const string source = "UI/Tasks/SpaceTasksDashboard.cui";
+        using var stream = typeof(SpaceTaskWorkspaceService).Assembly.GetManifestResourceStream(CuiCompiledArtifactCodec.ResourceLogicalName)
+            ?? throw new InvalidDataException("The compiled Tasks dashboard CUI bundle is missing.");
+        using var buffer = new MemoryStream(); stream.CopyTo(buffer);
+        var artifact = CuiCompiledArtifactCodec.ReadArtifact(buffer.ToArray());
+        CuiRuntimeCompatibility.ValidateArtifactHostSupport(artifact, CuiSourceSpan.At(source, 1, 1));
+        var compiled = artifact.Documents.SingleOrDefault(document => document.Source == source)
+            ?? throw new InvalidDataException("The admitted CUI bundle has no Tasks dashboard document.");
+        var document = compiled.Semantics.ToCuiDocument();
+        if (document.Components.Count == 0) throw new InvalidDataException("The compiled Tasks dashboard CUI is empty.");
         var appearance = CuiThemeScopeApplier.DetectAppearance();
         Resources.MergedDictionaries.Add(CuiSceneVisualResources.Create("Tasks", appearance));
         _loader = new CuiControlLoader();
