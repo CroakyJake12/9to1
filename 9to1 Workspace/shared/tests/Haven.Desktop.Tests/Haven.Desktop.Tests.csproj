@@ -40,7 +40,7 @@
     <!-- SAME maintained Memory owning rig; no Facts or alternate state/store graph. -->
     <Compile Include="../../../Assistants/Memory/Tests/AssistantOriginalMemoryTests.Rig.cs" Link="Assistants/Memory/AssistantOriginalMemoryTests.Rig.cs" />
     <!-- Build unblocker: supplies EphemeralUcmlSecrets referenced by the rig above. -->
-    <Compile Include="Assistants/Memory/EphemeralUcmlSecrets.cs" Link="Assistants/Memory/EphemeralUcmlSecrets.cs" />
+    <Compile Include="Assistants/Memory/EphemeralUcmlSecrets.cs" Link="Assistants/Memory/EphemeralUcmlSecrets.cs" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- SAME maintained Migration owning rig; no Facts or alternate state/store graph. -->
     <Compile Include="../../../Assistants/Migration/Tests/LegacySavedAgentMigrationTests.Rig.cs" Link="Assistants/Migration/LegacySavedAgentMigrationTests.Rig.cs" />
   </ItemGroup>
