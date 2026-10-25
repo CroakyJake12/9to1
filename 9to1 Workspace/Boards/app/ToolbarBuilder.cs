@@ -7,13 +7,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
-using Avalonia.LogicalTree;
 using Avalonia.Media;
 
 namespace CakeOS.Apps.Boards.App;
 
 public static class ToolbarBuilder
 {
+    private sealed record InsertMenuContext(Popup Popup, TextBox Search);
+
     private static readonly (string Name, string Hex)[] TextColors =
     [
         ("Black", "#FF111111"), ("Dark grey", "#FF5F6368"), ("Grey", "#FF9AA0A6"),
@@ -301,9 +302,9 @@ public static class ToolbarBuilder
     {
         var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", tooltip ?? "Insert a block (grouped menu with search)");
         var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
-        button.Tag = popup;
         var panel = new StackPanel { Orientation = Orientation.Vertical, MinWidth = 260 };
         var search = new TextBox { PlaceholderText = "Search blocks and styles…", Margin = new Thickness(0, 0, 0, 8) };
+        button.Tag = new InsertMenuContext(popup, search);
         Avalonia.Automation.AutomationProperties.SetName(search, "Search insert menu");
         var list = new StackPanel { Orientation = Orientation.Vertical };
         panel.Children.Add(search);
@@ -346,14 +347,14 @@ public static class ToolbarBuilder
     public static bool OpenInsertMenu(Control button)
     {
         ArgumentNullException.ThrowIfNull(button);
-        if (button.Tag is not Popup popup) return false;
-        var search = popup.Child?.GetLogicalDescendants().OfType<TextBox>().FirstOrDefault();
-        if (search is null) return false;
-        search.Text = string.Empty;
-        popup.Open();
-        search.Focus();
+        if (button.Tag is not InsertMenuContext context) return false;
+        context.Search.Text = string.Empty;
+        context.Popup.Open();
+        context.Search.Focus();
         return true;
     }
+
+    public static bool HasInsertMenu(Control button) => button.Tag is InsertMenuContext;
 
     private static void AddGroup(
         StackPanel list, string heading, IReadOnlyList<(string Label, string Tag)> entries,
