@@ -85,6 +85,7 @@
     <!-- Actual Spaces native composer + initial task observation tests share the existing
          canonical permission-caller fixture and its real nested Rig; keep the complete partial. -->
     <Compile Include="ChatCloudPermissionCallerTests.cs;ChatInitialTaskObservationTests.cs;NewChatInitialTaskObservationTests.cs" />
+    <Compile Include="CanonicalHostedResumeObservationTests.cs" />
     <!-- Canonical workspace-session projection and persistence coverage (same production types). -->
     <Compile Include="UnifiedWorkspaceSessionTests.cs;UnifiedWorkspaceSessionProjectionTests.cs" />
     <!-- Actual per-Space preference persistence coverage from the Spaces preference owner. -->
