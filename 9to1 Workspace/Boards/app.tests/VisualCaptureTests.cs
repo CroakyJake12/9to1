@@ -144,6 +144,7 @@ public sealed class VisualCaptureTests
             $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
         var horizontalInset = pageCard.Margin.Left + pageCard.Margin.Right;
         var widthDifference = editorScroll.Viewport.Width - pageCard.Bounds.Width;
+        Assert.Equal(new Thickness(16, 6, 14, 12), pageCard.Margin);
         Assert.True(horizontalInset > 0,
             $"The authored PageCard should retain its intentional inset margin; margin={pageCard.Margin}.");
         Assert.InRange(widthDifference, horizontalInset - 1, horizontalInset + 1);
@@ -154,15 +155,13 @@ public sealed class VisualCaptureTests
         Assert.True(pageCardOrigin.Value.X + pageCard.Bounds.Width <= editorScroll.Viewport.Width + 1,
             $"The page card is clipped by the editor viewport; origin={pageCardOrigin.Value}, card={pageCard.Bounds}, viewport={editorScroll.Viewport}.");
         Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
-        Assert.True(pageCard.Padding.Left + pageCard.Padding.Right > 0 &&
-            pageCard.Padding.Top + pageCard.Padding.Bottom > 0,
-            $"The authored PageCard should preserve its inner content inset; padding={pageCard.Padding}.");
+        Assert.Equal(new Thickness(20, 12), pageCard.Padding);
         Assert.Equal(new Thickness(0), pageCard.BorderThickness);
         Assert.True(pageCard.CornerRadius.TopLeft > 0,
             $"The authored PageCard should retain its rounded panel treatment; radius={pageCard.CornerRadius}.");
         var contentLayer = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "DocumentContentLayer")
             ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
-        Assert.Equal(new Thickness(76, 36), contentLayer.Margin);
+        Assert.Equal(new Thickness(76, 20), contentLayer.Margin);
         Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
         var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
             ?? throw new InvalidOperationException("Missing authored standalone TopBar. Runtime tree:\n" + tree);
