@@ -19,7 +19,7 @@ public sealed record DeveloperManualProcessObservation(DeveloperProjectReference
 /// declaration, separate explicit Home execution review, maintained original invocation/executor,
 /// actual terminal output and independent closes. Owns only its operations; global Files/Home
 /// providers remain borrowed and must drain after this owner.</summary>
-public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceService files,
+public sealed partial class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceService files,
     FilesDeveloperOriginalSourceSelection selections, IDeveloperProjectOriginalReadAdmissionSource reads,
     IDeveloperProjectOriginalManualExecutionAdmissionSource executions, IWorkspaceOriginalInvocationSource physical)
     : IAsyncDisposable
@@ -33,7 +33,8 @@ public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceServi
     private sealed class Operation
     {
         internal readonly CloudflareOriginalTaskLedger Sources = new();
-        internal Task<DeveloperManualProcessObservation> Driver = null!;
+        internal Task<ManualProcessOutcome> Driver = null!;
+        internal Task Projection = null!;
         internal CancellationTokenSource? Stop;
     }
     public void DemandExternalOriginalJoin()
@@ -56,12 +57,13 @@ public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceServi
             var operation = new Operation();
             operation.Sources.BindOriginalOwner(operation); operation.Sources.BindOriginalCallerCallback(originalCallerCallback);
             var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            operation.Driver = RunPublishedAsync(begin.Task, operation, project, selected, token);
-            _operations.Add(operation); begin.SetResult(); return operation.Driver;
+            operation.Driver = RunPublishedAsync(begin.Task, operation, project, new ConsoleRequest(selected), token);
+            var projection = ProjectConsoleAsync(operation.Driver, project, selected);
+            operation.Projection = projection; _operations.Add(operation); begin.SetResult(); return projection;
         }
     }
-    private async Task<DeveloperManualProcessObservation> RunPublishedAsync(Task begin, Operation operation,
-        DeveloperResolvedProject project, DeveloperRunTargetChoice selected, CancellationToken token)
+    private async Task<ManualProcessOutcome> RunPublishedAsync(Task begin, Operation operation,
+        DeveloperResolvedProject project, ManualRequest requestIdentity, CancellationToken token)
     {
         await begin.ConfigureAwait(false); using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(operation);
         var sources = operation.Sources;
@@ -81,9 +83,8 @@ public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceServi
                 var selection = await sources.AwaitAsync(sources.Invoke(() => selections.SelectOriginalRegisteredProjectAsync(configuration.StoreId, project, business))).ConfigureAwait(false);
                 read = await sources.CaptureOriginalAcquisitionAsync(() => reads.AcquireOriginalAsync(selection, business), actual => read = actual).ConfigureAwait(false);
                 var capture = await sources.AwaitAsync(sources.Invoke(() => selections.CaptureOriginalAsync(selection, read, business))).ConfigureAwait(false);
-                var binding = await sources.AwaitAsync(sources.Invoke(() => selections.CaptureOriginalManualExecutionAsync(selection, read, capture,
-                    selected.Configuration.Id, selected.Configuration.Revision, selected.DefinitionSha256, business))).ConfigureAwait(false);
-                execution = await sources.CaptureOriginalAcquisitionAsync(() => executions.AcquireOriginalManualExecutionAsync(binding, business), actual => execution = actual).ConfigureAwait(false);
+                var binding = await requestIdentity.CaptureAsync(selections, selection, read, capture, sources, business).ConfigureAwait(false);
+                execution = await sources.CaptureOriginalAcquisitionAsync(() => binding.AcquireAsync(executions, business), actual => execution = actual).ConfigureAwait(false);
                 operationId = execution.OperationId;
                 var fence = execution.OriginalFence;
                 if (physical is not IWorkspaceOriginalProcessStartEntryReleaseSource release)
@@ -127,8 +128,7 @@ public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceServi
             catch (Exception error) { cleanupCompleted = false; sources.Retain(error); }
         try { sources.Invoke(() => { operation.Stop?.Dispose(); return true; }); } catch (Exception error) { cleanupCompleted = false; sources.Retain(error); }
         await sources.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
-        return new(project.Reference, selected.Configuration.Id, selected.DefinitionSha256, operationId, result, outcome,
-            cleanupCompleted, Array.AsReadOnly(sources.OriginalErrors.ToArray()));
+        return new(operationId, result, outcome, cleanupCompleted, Array.AsReadOnly(sources.OriginalErrors.ToArray()));
     }
     public void RequestOriginalRetirement()
     {
@@ -175,6 +175,7 @@ public sealed class DeveloperManualProjectProcessOwner(NativeFilesWorkspaceServi
                 errors.AddRange(observed.OriginalErrors);
             }
             catch (Exception error) { errors.Add(error); }
+            try { await operation.Projection.ConfigureAwait(false); } catch (Exception error) { errors.Add(error); }
         }
         try { _retirement.Dispose(); } catch (Exception error) { errors.Add(error); }
         if (errors.Count != 0) throw new AggregateException("Original manual Run operations require inspection.", errors.Distinct<Exception>(ReferenceEqualityComparer.Instance));

@@ -307,19 +307,10 @@ public sealed class DeveloperTaskWorkspaceService(
                 if (!resolved.Succeeded || resolved.Value is null) return new(resolved.RequestId, null, resolved.Error);
                 if (resolved.Value.Repository is not { ProviderId: "git" })
                     return Fail<PreparedCall>(DeveloperOperationErrorCode.CapabilityUnavailable, "The selected root has no canonical Git provider binding.", project.RootId);
-                string[] arguments = operation switch
-                {
-                    DeveloperGitOperation.Status => ["status", "--porcelain=v1", "--branch"],
-                    DeveloperGitOperation.Diff => ["diff", "--no-ext-diff", "--no-textconv", "--"],
-                    DeveloperGitOperation.Branches => ["branch", "--list", "--no-color"],
-                    DeveloperGitOperation.CreateBranch => ["branch", "--", DemandBranch(branchName)],
-                    DeveloperGitOperation.SwitchBranch => ["switch", "--no-guess", "--", DemandBranch(branchName)],
-                    _ => throw new ArgumentOutOfRangeException(nameof(operation))
-                };
-                // Literal arguments delegate the existing registered command executor. No client
-                // fragment becomes syntax, and all actual permission/native-final fences still apply.
-                var command = (OperatingSystem.IsWindows() ? "& " : "") + "'git' '--no-pager' '-C' " + Quote(resolved.Value.Root.Location) + " " + string.Join(" ", arguments.Select(Quote));
-                return DeveloperOperationResult<PreparedCall>.Success(new(Call("run_command", ("command", command), ("timeout_seconds", 120)), "Inspect or update project source control"));
+                var prepared = DeveloperGitCommand.Prepare(resolved.Value, operation, branchName);
+                if (!prepared.Succeeded || prepared.Value is null) return new(prepared.RequestId, null, prepared.Error);
+                return DeveloperOperationResult<PreparedCall>.Success(new(Call("run_command", ("command", prepared.Value.Command),
+                    ("timeout_seconds", DeveloperGitCommand.TimeoutSeconds)), "Inspect or update project source control"));
             }, cancellationToken);
     }
 
@@ -731,14 +722,7 @@ public sealed class DeveloperTaskWorkspaceService(
         if (command.Length > 32_000 || command.IndexOf('\0') >= 0 || timeoutSeconds < 1 || timeoutSeconds > maximumTimeout)
             throw new ArgumentException("A bounded explicit command and supported timeout are required.", nameof(command));
     }
-    private static string DemandBranch(string? branch)
-    {
-        if (string.IsNullOrWhiteSpace(branch) || branch.Length > 256 || branch.StartsWith('-') ||
-            branch.Contains("..", StringComparison.Ordinal) || branch.Any(value => char.IsControl(value) || char.IsWhiteSpace(value) || "~^:?*[\\".Contains(value)))
-            throw new ArgumentException("A literal Git branch name is required.", nameof(branch));
-        return branch;
-    }
-    private static string Quote(string value) => "'" + value.Replace("'", OperatingSystem.IsWindows() ? "''" : "'\"'\"'", StringComparison.Ordinal) + "'";
+    private static string DemandBranch(string? branch) => DeveloperGitCommand.ValidateBranch(branch);
     private static DeveloperOperationResult<T> Fail<T>(DeveloperOperationErrorCode code, string message, Guid target) =>
         DeveloperOperationResult<T>.Failure(code, message, target.ToString("D"), retryable: false);
 }

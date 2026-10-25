@@ -742,6 +742,110 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
     }, canonicalSavedProject: true, manualRunCommand: "printf original > manual-started.txt");
 
     [LinuxPublicationFact]
+    public Task Manual_Git_status_without_Task_or_RunConfiguration_uses_actual_READ_Execute_and_process_output() => Run(async rig =>
+    {
+        Assert.Empty(rig.Saved.Project.RunConfigurationIds); Assert.Empty(rig.Saved.Workspace.RunConfigurations);
+        Assert.True(rig.ProcessOwner.SupportsGitInspection);
+        Assert.IsAssignableFrom<IDeveloperProjectOriginalManualGitAdmissionSource>(rig.Runs);
+        Assert.IsAssignableFrom<IDeveloperProjectOriginalManualGitSource>(rig.Selections);
+        // Fixture metadata creates a real unborn Git repository, without launching any
+        // unowned setup process. The product below runs the actual installed Git.
+        var git = Directory.CreateDirectory(Path.Combine(rig.ProjectRoot, ".git")).FullName;
+        Directory.CreateDirectory(Path.Combine(git, "objects")); Directory.CreateDirectory(Path.Combine(git, "refs", "heads"));
+        await File.WriteAllTextAsync(Path.Combine(git, "HEAD"), "ref: refs/heads/main\n", rig.Token);
+        await File.WriteAllTextAsync(Path.Combine(git, "config"), "[core]\nrepositoryformatversion = 0\nbare = false\n", rig.Token);
+        var result = await InspectGit(rig, DeveloperProjectGitInspectionKind.Status);
+        Assert.True(result.ProcessSucceeded, string.Join(Environment.NewLine, result.OriginalErrors));
+        Assert.Equal(rig.Saved.Repository!.BindingId, result.RepositoryBindingId); Assert.NotNull(result.OperationId);
+        Assert.Contains("seed.txt", result.Process!.StandardOutput); Assert.Equal(0, result.Process.ExitCode);
+        Assert.True(Assert.Single(result.PhysicalOutcome!.Effects).TerminalOutcomeKnown);
+        Assert.DoesNotContain(rig.Decisions, item => item.Scope.ActionName is HomeDeveloperProjectEditAdmissionSource.EditAction or HomeDeveloperProjectEditAdmissionSource.CreateAction);
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_Git_status_diff_branches_and_output_bound_use_same_executor_after_genuine_console_setup() => Run(async rig =>
+    {
+        var choice = Assert.Single(DeveloperRunConfigurationSelection.Observe(rig.Saved).Value!);
+        var setup = rig.Keep(rig.ProcessOwner.RunAsync(rig.Saved, choice, body => body(), rig.Token));
+        await rig.DecideNextAsync(setup, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.DecideNextAsync(setup, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        Assert.True((await setup).ProcessSucceeded); // Existing Console API/authority still owns setup.
+        await File.WriteAllTextAsync(rig.SeedPath, "changed Git source\n", rig.Token);
+        var status = await InspectGit(rig, DeveloperProjectGitInspectionKind.Status);
+        Assert.True(status.ProcessSucceeded); Assert.Contains("seed.txt", status.Process!.StandardOutput);
+        var diff = await InspectGit(rig, DeveloperProjectGitInspectionKind.Diff);
+        Assert.True(diff.ProcessSucceeded); Assert.Contains("+changed Git source", diff.Process!.StandardOutput);
+        var branches = await InspectGit(rig, DeveloperProjectGitInspectionKind.Branches);
+        Assert.True(branches.ProcessSucceeded); Assert.Contains("fixture-branch", branches.Process!.StandardOutput);
+        await File.WriteAllTextAsync(rig.SeedPath, new string('x', 1_100_000) + "\n", rig.Token);
+        var bounded = await InspectGit(rig, DeveloperProjectGitInspectionKind.Diff);
+        Assert.True(bounded.ProcessSucceeded); Assert.Contains("[output truncated]", bounded.Process!.StandardOutput);
+        Assert.True(bounded.Process.StandardOutput.Length <= 1_000_050); Assert.True(bounded.Process.StandardError.Length <= 1_000_050);
+        Assert.All(new[] { status, diff, branches, bounded }, value => { Assert.True(value.CleanupCompleted); Assert.Empty(value.OriginalErrors); Assert.Single(value.PhysicalOutcome!.Effects); });
+    }, canonicalSavedProject: true, manualRunCommand: "git init -q && git -c core.fsmonitor=false add -- seed.txt && git -c core.fsmonitor=false -c user.name=Fixture -c user.email=fixture@example.test -c commit.gpgsign=false commit -qm fixture && git branch -- fixture-branch");
+
+    [LinuxPublicationFact]
+    public Task Manual_Git_declined_execution_never_materializes_a_process_or_substitutes_READ_permission() => Run(async rig =>
+    {
+        var prepared = DeveloperGitCommand.Prepare(rig.Saved, DeveloperProjectGitInspectionKind.Status).Value!;
+        var operation = rig.Keep(rig.ProcessOwner.InspectGitAsync(rig.Saved, DeveloperProjectGitInspectionKind.Status, prepared.DefinitionSha256, body => body(), rig.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.DecideNextAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Decline);
+        var result = await operation;
+        Assert.False(result.ProcessSucceeded); Assert.Null(result.Process); Assert.Null(result.PhysicalOutcome); Assert.NotEmpty(result.OriginalErrors);
+        foreach (var error in result.OriginalErrors) { Assert.All(OriginalLeaves(error), cause => Assert.IsType<UnauthorizedAccessException>(cause)); rig.Expect(error); }
+        Assert.Single(rig.Decisions, item => item.Scope.ActionName == HomeDeveloperProjectReadAdmissionSource.ReadAction);
+        Assert.Single(rig.Decisions, item => item.Scope.ActionName == HomeDeveloperManualProjectExecutionAdmissionSource.RunAction);
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_Git_caller_cancellation_during_execution_review_is_retained_without_process_start() => Run(async rig =>
+    {
+        using var stop = CancellationTokenSource.CreateLinkedTokenSource(rig.Token);
+        var prepared = DeveloperGitCommand.Prepare(rig.Saved, DeveloperProjectGitInspectionKind.Status).Value!;
+        var operation = rig.Keep(rig.ProcessOwner.InspectGitAsync(rig.Saved, DeveloperProjectGitInspectionKind.Status, prepared.DefinitionSha256, body => body(), stop.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.ObservePendingAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction);
+        stop.Cancel(); var result = await operation.WaitAsync(TimeSpan.FromSeconds(5), rig.Token);
+        Assert.False(result.ProcessSucceeded); Assert.Null(result.Process); Assert.Null(result.PhysicalOutcome); Assert.NotEmpty(result.OriginalErrors);
+        foreach (var error in result.OriginalErrors) { Assert.All(OriginalLeaves(error), cause => Assert.IsAssignableFrom<OperationCanceledException>(cause)); rig.Expect(error); }
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
+    public Task Manual_Git_changed_saved_repository_after_accept_is_refused_by_actual_native_start_pin() => Run(async rig =>
+    {
+        var source = await rig.OpenRegisteredReadAsync(); var prepared = DeveloperGitCommand.Prepare(rig.Saved, DeveloperProjectGitInspectionKind.Status).Value!;
+        var binding = await rig.Keep(rig.Selections.CaptureOriginalManualGitAsync(source.Selection, source.Read, source.Capture,
+            DeveloperProjectGitInspectionKind.Status, prepared.DefinitionSha256, rig.Token));
+        var acquisition = rig.Keep(((IDeveloperProjectOriginalManualGitAdmissionSource)rig.Runs).AcquireOriginalManualGitAsync(binding, rig.Token));
+        var request = await rig.DecideNextAsync(acquisition, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        var admission = await acquisition; Assert.Null(admission.OriginalFence.OriginalAttempt); rig.AssertGenuineManualComposition(admission.OriginalFence);
+        var document = JsonNode.Parse(await File.ReadAllTextAsync(rig.SavedMetadataPath, rig.Token))!;
+        document["workspace"]!["sourceControlBindings"]![0]!["canonicalRepositoryId"] = "changed-after-genuine-accept";
+        await File.WriteAllTextAsync(rig.SavedMetadataPath, document.ToJsonString(), rig.Token);
+        var physical = Assert.IsAssignableFrom<IWorkspaceOriginalInvocationSource>(rig.Graph.GetRequiredService<IWorkspaceToolService>());
+        var invocation = rig.RetainInvocation(physical.AcquireOriginalInvocation(admission.OriginalFence));
+        await rig.RefusesAsync(() => invocation.Tools.RunProcessAsync(WorkspaceToolProcessRequestFactory.CreateOriginal(binding.CanonicalRoot, binding.Command, binding.TimeoutSeconds), rig.Token));
+        var outcome = await rig.Keep(invocation.CompleteOriginalAsync(false, rig.Token));
+        Assert.True(physical.ValidateOriginalOutcome(invocation, outcome)); Assert.True(outcome.KnownNoEffect);
+        Assert.All(outcome.Effects, effect => Assert.False(effect.Admitted)); admission.ObserveOriginalProcessOutcome(invocation, null, outcome);
+        await rig.CloseUnpublishedRunAsync(admission, request);
+    }, canonicalSavedProject: true);
+
+    private static async Task<DeveloperManualGitObservation> InspectGit(Rig rig, DeveloperProjectGitInspectionKind kind)
+    {
+        var prepared = DeveloperGitCommand.Prepare(rig.Saved, kind).Value!;
+        var operation = rig.Keep(rig.ProcessOwner.InspectGitAsync(rig.Saved, kind, prepared.DefinitionSha256, body => body(), rig.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        var request = await rig.DecideNextAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        var result = await operation;
+        Assert.Equal(kind, result.Operation); Assert.Equal(prepared.DefinitionSha256, result.DefinitionSha256);
+        Assert.Equal(result.ProcessSucceeded ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.Failed,
+            (await rig.Keep(rig.Home.Permissions.ReadRequestObservationAsync(request.RequestId, rig.Token)))!.State);
+        return result;
+    }
+
+    [LinuxPublicationFact]
     public Task Newly_registered_manual_project_can_review_save_then_run_its_first_console_declaration_without_a_Task() => Run(async rig =>
     {
         Assert.Empty(rig.Saved.Project.RunConfigurationIds);

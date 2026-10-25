@@ -72,9 +72,9 @@ public sealed class HomeManualProjectProcessFence : IWorkspaceToolFinalFence,
                 IAsyncDisposable? completion = null; IHomeLocalOperationLease? home = null;
                 return await CloudflareOriginalPartialEntryCustody.RunOriginalAsync<IAsyncDisposable?>(sources, async () =>
                 {
-                    native = await sources.CaptureOriginalAcquisitionAsync(() => _run.Files.AcquireOriginalManualExecutionPinAsync(_run.Binding, token),
+                    native = await sources.CaptureOriginalAcquisitionAsync(() => _run.Binding.AcquirePinAsync(_run.Files, token),
                         actual => native = actual).ConfigureAwait(false);
-                    sources.Invoke(() => { _run.Files.DemandOriginalManualExecutionPin(_run.Binding, native); return true; });
+                    sources.Invoke(() => { _run.Binding.DemandPin(_run.Files, native); return true; });
                     completion = await sources.CaptureOriginalAcquisitionAsync(() => _capability.AcquireCommitCompletionLeaseAsync(_broker, token),
                         actual => completion = actual).ConfigureAwait(false)
                         ?? throw new UnauthorizedAccessException("The original manual Run completion lease is unavailable.");
@@ -86,7 +86,7 @@ public sealed class HomeManualProjectProcessFence : IWorkspaceToolFinalFence,
                         !await sources.AwaitAsync(sources.Invoke(() => scopedHome.IsCurrentAsync(body => RunOriginalScopedSource(sources, body),
                             actual => RetainOriginalScopedTask(sources, actual), token))).ConfigureAwait(false))
                         throw new UnauthorizedAccessException("The held Home actor/claim changed before native Start.");
-                    sources.Invoke(() => { _run.Files.DemandOriginalManualExecutionPin(_run.Binding, native); return true; });
+                    sources.Invoke(() => { _run.Binding.DemandPin(_run.Files, native); return true; });
                     _run.DemandLive();
                     lock (_sync)
                     {
@@ -100,7 +100,7 @@ public sealed class HomeManualProjectProcessFence : IWorkspaceToolFinalFence,
                     var closes = new List<Func<ValueTask>>();
                     if (home is { } actualHome) closes.Add(actualHome.DisposeAsync);
                     if (completion is { } actualCompletion) closes.Add(actualCompletion.DisposeAsync);
-                    if (native is { } actualNative) closes.Add(() => new ValueTask(_run.Files.CloseOriginalManualExecutionPinAsync(_run.Binding, actualNative)));
+                    if (native is { } actualNative) closes.Add(() => new ValueTask(_run.Binding.ClosePinAsync(_run.Files, actualNative)));
                     return closes;
                 }).ConfigureAwait(false);
             }).ConfigureAwait(false);
@@ -128,7 +128,7 @@ public sealed class HomeManualProjectProcessFence : IWorkspaceToolFinalFence,
             root != CanonicalWorkspaceRoot || target != CanonicalWorkspaceRoot || sha != RequestSha256 ||
             !_capability.IsUncompletedClaim(_broker))
             throw new UnauthorizedAccessException("The exact manual Run command requires its SAME live Home entry and native root pin.");
-        _run.Files.DemandOriginalManualExecutionPin(_run.Binding, _entry.NativePin);
+        _run.Binding.DemandPin(_run.Files, _entry.NativePin);
     }
     public void DemandOriginalEffect(string root, WorkspaceToolEffectKind kind, string target, string sha)
     { lock (_sync) DemandPair(root, kind, target, sha); }
@@ -237,7 +237,7 @@ public sealed class HomeManualProjectProcessFence : IWorkspaceToolFinalFence,
             // completion/native-pin release before the process wait.
             var closes = new List<Task>();
             foreach (var close in new Func<ValueTask>[] { home.DisposeAsync, completion.DisposeAsync,
-                () => new ValueTask(owner._run.Files.CloseOriginalManualExecutionPinAsync(owner._run.Binding, nativePin)) })
+                () => new ValueTask(owner._run.Binding.ClosePinAsync(owner._run.Files, nativePin)) })
                 try { _ = _closing.Invoke(() => { var actual = close().AsTask(); closes.Add(actual); _ = _closing.Track(actual); return actual; }); }
                 catch (Exception cause) { _closing.Retain(cause); }
             foreach (var actual in closes)
