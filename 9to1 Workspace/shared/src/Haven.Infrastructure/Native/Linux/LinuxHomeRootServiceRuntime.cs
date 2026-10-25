@@ -114,7 +114,11 @@ public sealed class LinuxHomeRootServiceRuntime : IAsyncDisposable
                                 ? new LinuxHomeRootControlWire.Response(1, request.CorrelationId, true, null) { Activation = package,
                                     SignedDescriptor = Convert.FromBase64String(package.SignedDescriptorBase64), DescriptorPayload = Convert.FromBase64String(package.DescriptorPayloadBase64),
                                     PackageId = package.PackageId, CatalogueRevision = package.CatalogueRevision }
-                                : request.Command is "check-home" or "publish-listening" ? new LinuxHomeRootControlWire.Response(1, request.CorrelationId, true, null) { Listening = listening }
+                                : request.Command is "check-home" or "publish-listening" ? new LinuxHomeRootControlWire.Response(1, request.CorrelationId, true, null) { Listening = listening,
+                                    OriginalHomeProcess = new(controlled.ProcessId, "unix-euid:" + user.UserId.ToString(CultureInfo.InvariantCulture),
+                                        controlled.ProcessStartIdentity ?? throw new UnauthorizedAccessException("The actual Home process start identity is unavailable."),
+                                        "home", home.PackageId, Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(home))),
+                                        "sha256:" + home.ActivatedFiles.Single(value => value.RelativePath == home.EntrypointRelativePath).Sha256) }
                                 : new LinuxHomeRootControlWire.Response(1, request.CorrelationId, false, "OriginalLinuxCommandNotImplemented");
                         await WriteFrame(stream, response, token).ConfigureAwait(false);
                     }
@@ -289,6 +293,8 @@ public sealed class LinuxHomeRootServiceRuntime : IAsyncDisposable
 // framing; these detached records grant no installed role or launch authority.
 internal static class LinuxHomeRootControlWire
 {
+    internal sealed record ProcessWitness(int ProcessId, string OperatingSystemPrincipalId, string ProcessStartIdentity,
+        string AppId, string PackageId, string InstallationRevision, string ExecutableIdentity);
     internal sealed record Request(int SchemaVersion, Guid CorrelationId, string Command)
     { public string? PackageId { get; init; } public NativeWindowsHomeRootWire.Listening? Listening { get; init; } }
     internal sealed record Response(int SchemaVersion, Guid CorrelationId, bool Accepted, string? Reason)
@@ -300,5 +306,6 @@ internal static class LinuxHomeRootControlWire
         public byte[]? SignedDescriptor { get; init; }
         public byte[]? DescriptorPayload { get; init; }
         public NativeWindowsHomeRootWire.Listening? Listening { get; init; }
+        public ProcessWitness? OriginalHomeProcess { get; init; }
     }
 }

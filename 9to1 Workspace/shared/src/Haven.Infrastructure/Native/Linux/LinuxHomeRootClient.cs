@@ -12,7 +12,7 @@ namespace Haven.Infrastructure.Native.Linux;
 /// <summary>Home-side client for its actual registered Linux Root and controlled
 /// child channel. Root independently enforces publisher/activation/launch policy;
 /// metadata, UID, socket presence and this constructor confer no installed role.</summary>
-public sealed class LinuxHomeRootClient : IHomeNativeInstalledPeerOriginalActorVerifier,
+public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledProcessVerifier,
     IHomeNativeSessionHostVerifier, IInstalledApplicationOriginalScopedObservationProvider, IAsyncDisposable
 {
     public const string OriginalProviderId = "9to1.home.original-linux-root-installed";
@@ -163,6 +163,31 @@ public sealed class LinuxHomeRootClient : IHomeNativeInstalledPeerOriginalActorV
             descriptor.RequiredServiceIds.ToFrozenSet(StringComparer.Ordinal))
             { Roles = new[] { HomeNativeSessionHostRequirement.RequiredRole }.ToFrozenSet(StringComparer.Ordinal) };
     }
+    public ValueTask<bool> IsOriginalControlledProcessCurrentAsync(HomeNativeObservedPeer actualPeer,
+        AuthenticatedResourceActor originalActor, string actualKernelStartIdentity,
+        HomeNativeInstalledPeer originalVerifiedPeer, CancellationToken cancellationToken)
+        => new(Admit(body => body(), _ => { }, async (source, token) => {
+            // This initial bootstrap producer owns only its actual controlled Home.
+            // No caller-provided PID/app/actor tuple can admit another process.
+            if (_listening is null || _homeActivation is null || actualPeer.ProcessId != Environment.ProcessId ||
+                originalActor != _listening.Actor || string.IsNullOrWhiteSpace(actualKernelStartIdentity)) return false;
+            var verified = await Verify(source, actualPeer, originalActor, token).ConfigureAwait(false);
+            if (verified is null || !SameInstalledPeer(verified, originalVerifiedPeer)) return false;
+            var current = await Exchange(source, new(1, Guid.NewGuid(), "check-home"), token).ConfigureAwait(false);
+            var witness = current.OriginalHomeProcess;
+            if (current.Listening != _listening || witness is null || witness.ProcessId != actualPeer.ProcessId ||
+                witness.OperatingSystemPrincipalId != actualPeer.OperatingSystemPrincipalId ||
+                witness.ProcessStartIdentity != actualKernelStartIdentity || witness.AppId != verified.AppId ||
+                witness.PackageId != _homeActivation.PackageId || witness.InstallationRevision != verified.InstallationRevision ||
+                witness.ExecutableIdentity != verified.ExecutableIdentity) return false;
+            return originalActor == await Actor(source, token).ConfigureAwait(false) &&
+                _home is not null && _actualListening is not null && _home.IsCurrentOriginalRootListeningObservation(_actualListening);
+        }, cancellationToken));
+    private static bool SameInstalledPeer(HomeNativeInstalledPeer left, HomeNativeInstalledPeer right)
+        => left.AppId == right.AppId && left.InstalledApplicationId == right.InstalledApplicationId &&
+            left.InstallationRevision == right.InstallationRevision && left.ExecutableIdentity == right.ExecutableIdentity &&
+            left.AllowedServiceIds.SetEquals(right.AllowedServiceIds) && left.Roles.SetEquals(right.Roles);
+
     private async Task<AuthenticatedResourceActor> Actor(CanonicalSqliteOriginalSourceScope source, CancellationToken token)
         => await source.Read(() => (_profiles ?? throw new UnauthorizedAccessException("The SAME original Home profiles are not bound."))
             .GetCurrentWithinOriginalSourceAsync(source.Run, source.Retain, token)).ConfigureAwait(false)

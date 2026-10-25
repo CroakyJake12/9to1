@@ -109,5 +109,23 @@ public sealed class LinuxHomeRootServiceRuntimeTests
         await Assert.ThrowsAsync<AggregateException>(() => client.CloseAndDrainAsync()); Assert.False(File.Exists(endpoint));
     }
 
+    [LinuxFact]
+    public async Task Actual_kernel_start_metadata_and_copied_installed_tuple_cannot_replace_registered_Root_process_proof()
+    {
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var root = Path.Combine(Path.GetTempPath(), "unconfigured-root-proof-" + Guid.NewGuid().ToString("N"));
+        var endpoint = Path.Combine(root, "never-bound.sock");
+        await using var client = new LinuxHomeRootClient(endpoint, lifetime.Token);
+        var actualStart = HavenOS.Home.Core.HomeNativePeerObservation.ReadLinuxProcessStartMetadata(Environment.ProcessId);
+        Assert.StartsWith("linux-proc-start:", actualStart);
+        var peer = new Haven.Application.HomeNativeObservedPeer(Environment.ProcessId, "unix-euid:" + GetEuid());
+        var copiedActor = new Haven.Application.AuthenticatedResourceActor("unissued-actor", "unissued-profile", null, null, "unissued-revision");
+        var copiedInstalled = new Haven.Application.HomeNativeInstalledPeer("home", Guid.NewGuid(), "unissued-installation",
+            "unissued-executable", new HashSet<string> { "home.core" });
+        Assert.False(await client.IsOriginalControlledProcessCurrentAsync(peer, copiedActor, actualStart, copiedInstalled, lifetime.Token));
+        Assert.False(Directory.Exists(root)); // proof refusal creates no profile, socket, state or installed authority
+        Assert.Equal(actualStart, HavenOS.Home.Core.HomeNativePeerObservation.ReadLinuxProcessStartMetadata(Environment.ProcessId));
+    }
+
     [DllImport("libc", EntryPoint = "geteuid")] private static extern uint GetEuid();
 }

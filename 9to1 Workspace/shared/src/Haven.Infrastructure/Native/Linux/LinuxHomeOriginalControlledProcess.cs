@@ -149,17 +149,7 @@ internal sealed class LinuxHomeOriginalControlledProcess : IAsyncDisposable
     }
     private string ReadOriginalProcessStart()
     {
-        // No reusable public process-start parser exists in the maintained Linux
-        // platform; the llama equivalents are private provider implementation.
-        // The actual supervisor holds a pidfd and does not reap/recycle this PID.
-        var stat = File.ReadAllText("/proc/" + ProcessId.ToString(CultureInfo.InvariantCulture) + "/stat");
-        var close = stat.LastIndexOf(')');
-        if (stat.Length > 64 * 1024 || close < 0)
-            throw new InvalidDataException("The actual native child kernel process record is malformed.");
-        var fields = stat[(close + 1)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (fields.Length < 20 || !ulong.TryParse(fields[19], NumberStyles.None, CultureInfo.InvariantCulture, out var start) || start == 0)
-            throw new InvalidDataException("The actual native child start-time identity is unavailable.");
-        return "linux-proc-start:" + start.ToString(CultureInfo.InvariantCulture);
+        return HavenOS.Home.Core.HomeNativePeerObservation.ReadLinuxProcessStartMetadata(ProcessId);
     }
     internal Task CloseAndDrainAsync()
     {
