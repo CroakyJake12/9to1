@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using CakeOS.Apps.Boards.App;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -27,6 +28,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     private readonly Func<HomeDeepLink, CancellationToken, Task>? _prepareNavigation;
     private readonly Func<HomeArtifactReference, CancellationToken, Task<BoardEmbeddedArtifactReference?>>? _selectArtifact;
     private Func<HomeDeepLink, CancellationToken, Task<HomeDeepLink?>>? _selectBoardFolder;
+    private IBoardsHomeBoardCreationHost? _boardCreationHost;
+    private Func<ReadOnlyMemory<byte>>? _createBoardDraft;
     private readonly TaskCompletionSource<BoardEmbeddedArtifactReference?> _selection = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<HomeDeepLink?> _folderSelection = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly CuiControlLoader _loader = new();
@@ -134,6 +137,20 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         SetInitialQuery("files", "Files folder");
         RefreshBindings();
     }
+    internal void SetBoardCreationHost(IBoardsHomeBoardCreationHost host, Func<ReadOnlyMemory<byte>> createDraft)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentNullException.ThrowIfNull(host);
+        ArgumentNullException.ThrowIfNull(createDraft);
+        if (_active || _initialization is not null || _page is not null || _boardCreationHost is not null ||
+            _selectArtifact is not null || _selectBoardFolder is not null)
+            throw new InvalidOperationException("Bind the original Boards creation host before activating the Library page.");
+        if (!IsBoardsLibraryQuery())
+            throw new InvalidOperationException("Expose Board creation only on the filtered Home Files Boards Library page.");
+        _boardCreationHost = host;
+        _createBoardDraft = createDraft;
+        RefreshBindings();
+    }
     public bool TryGetValue(string path, out object? value) => _bindings.TryGetValue(path, out value);
     public bool TrySetValue(string path, object? value) => _bindings.TrySetValue(path, value);
     public bool TryGetItemValue(object item, string path, out object? value)
@@ -168,6 +185,11 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     public bool? IsActionAvailable(string command) => IsAlive && _active && !_busy && (command switch
     {
         "SearchLibrary" or "RefreshLibrary" => true,
+        "CreateHomeLibraryBoard" => CanCreateHomeLibraryBoard,
+        "RetryHomeLibraryBoardSettlement" => CanShowBoardCreationActions && _boardCreationHost?.CanRetryCreationSettlement == true,
+        "InspectHomeLibraryBoardCreation" => CanShowBoardCreationActions && _boardCreationHost?.CanInspectUnknownCreation == true,
+        "OpenRecordedHomeLibraryBoard" => CanShowBoardCreationActions && _boardCreationHost?.CanOpenRecordedBoard == true,
+        "RetryOpenHomeLibraryBoard" => CanShowBoardCreationActions && _boardCreationHost?.CanRetryOpenCreatedBoard == true,
         "NextLibraryPage" => _page?.HasMore == true && QueryInputsMatchCurrentPage(),
         "PreviousLibraryPage" => _query.Offset > 0 && QueryInputsMatchCurrentPage(),
         "OpenHomeLibraryArtifact" => _page?.Items.Count > 0,
@@ -190,6 +212,13 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
                     var offset = command == "NextLibraryPage" ? _query.Offset + _query.Limit :
                         command == "PreviousLibraryPage" ? Math.Max(0, _query.Offset - _query.Limit) : 0;
                     await SearchAsync(original, cancellationToken, offset); return;
+                }
+                if (command is "CreateHomeLibraryBoard" or "RetryHomeLibraryBoardSettlement" or
+                    "InspectHomeLibraryBoardCreation" or "OpenRecordedHomeLibraryBoard" or "RetryOpenHomeLibraryBoard")
+                {
+                    _busy = true; RefreshBindings();
+                    await RunBoardCreationActionAsync(command, original, cancellationToken);
+                    return;
                 }
                 var selected = _page?.Items.SingleOrDefault(item => ReferenceEquals(item.OpenLink, parameter));
                 if (selected is null) throw new UnauthorizedAccessException("Choose an actual item from the current Library page.");
@@ -273,6 +302,12 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
                             : "Opening the canonical notebook in Boards." : opened.Message;
                     });
             }
+            catch (Exception cause) when (IsBoardCreationAction(command))
+            {
+                if (original.IsAcceptedPublicationCurrent)
+                    original.RunAcceptedPublicationCallback(() => _status =
+                        "Home could not confirm the Board operation. Use the available recovery action before starting another Board. " + cause.Message);
+            }
             catch (Exception cause) when (_source?.IsExpectedRefusal(cause) == true)
             { ClearUnavailable(cause.Message); }
             catch
@@ -341,9 +376,64 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         _bindings.Set("CanToggleHomeLibraryPin", _selectArtifact is null && _selectBoardFolder is null && available && _page?.Succeeded == true);
         _bindings.Set("CanNextLibraryPage", available && queryMatches && _page?.HasMore == true);
         _bindings.Set("CanPreviousLibraryPage", available && queryMatches && _query.Offset > 0);
+        _bindings.Set("CanCreateHomeLibraryBoard", available && CanCreateHomeLibraryBoard);
+        _bindings.Set("CanRetryHomeLibraryBoardSettlement", available && CanShowBoardCreationActions && _boardCreationHost?.CanRetryCreationSettlement == true);
+        _bindings.Set("CanInspectHomeLibraryBoardCreation", available && CanShowBoardCreationActions && _boardCreationHost?.CanInspectUnknownCreation == true);
+        _bindings.Set("CanOpenRecordedHomeLibraryBoard", available && CanShowBoardCreationActions && _boardCreationHost?.CanOpenRecordedBoard == true);
+        _bindings.Set("CanRetryOpenHomeLibraryBoard", available && CanShowBoardCreationActions && _boardCreationHost?.CanRetryOpenCreatedBoard == true);
         _bindings.Set("LibraryPageSummary", _page is { Items.Count: > 0 } page
             ? $"{_query.Offset + 1}–{_query.Offset + page.Items.Count}" : "No matching authorised artifacts.");
         _loader.RefreshBindings();
+    }
+    private bool IsBoardsLibraryQuery() => StringComparer.Ordinal.Equals(Normalize(_ownerFilter.Text), "files") &&
+        StringComparer.OrdinalIgnoreCase.Equals(Normalize(_typeFilter.Text), "9to1 board document");
+    private bool CanShowBoardCreationActions => IsBoardsLibraryQuery() && _boardCreationHost is not null;
+    private bool CanCreateHomeLibraryBoard => CanShowBoardCreationActions &&
+        _boardCreationHost is { HasUnresolvedCreation: false } && _createBoardDraft is not null;
+    private static bool IsBoardCreationAction(string command) => command is "CreateHomeLibraryBoard" or
+        "RetryHomeLibraryBoardSettlement" or "InspectHomeLibraryBoardCreation" or
+        "OpenRecordedHomeLibraryBoard" or "RetryOpenHomeLibraryBoard";
+    private async Task RunBoardCreationActionAsync(string command, DesktopOriginalWorkLifetime.Original original,
+        CancellationToken caller)
+    {
+        var host = _boardCreationHost ?? throw new InvalidOperationException("The original Boards creation host is unavailable.");
+        caller.ThrowIfCancellationRequested();
+        await original.AwaitAsync(_admit(original.Token));
+        if (!original.IsAcceptedPublicationCurrent) return;
+        BoardsHomeBoardCreationResult result = command switch
+        {
+            "CreateHomeLibraryBoard" => await original.AwaitAsync(host.CreateAndOpenAsync(
+                (_createBoardDraft ?? throw new InvalidOperationException("The canonical Boards draft producer is unavailable."))(), original.Token)),
+            "RetryHomeLibraryBoardSettlement" => await original.AwaitAsync(host.RetryCreationSettlementAsync(original.Token)),
+            "InspectHomeLibraryBoardCreation" => await original.AwaitAsync(host.InspectUnknownCreationAsync(original.Token)),
+            "OpenRecordedHomeLibraryBoard" => await original.AwaitAsync(host.OpenRecordedBoardAsync(original.Token)),
+            "RetryOpenHomeLibraryBoard" => await original.AwaitAsync(host.RetryOpenCreatedBoardAsync(original.Token)),
+            _ => throw new InvalidOperationException("This Boards creation action is not owned by Home Library.")
+        };
+        await original.AwaitAsync(_admit(original.Token));
+        if (!original.IsAcceptedPublicationCurrent) return;
+        original.RunAcceptedPublicationCallback(() =>
+        {
+            _status = BoardCreationStatus(result);
+            RefreshBindings();
+        });
+    }
+    private static string BoardCreationStatus(BoardsHomeBoardCreationResult result)
+    {
+        var detail = string.IsNullOrWhiteSpace(result.Message) ? string.Empty : " " + result.Message;
+        return result.Outcome switch
+        {
+            BoardsHomeBoardCreationOutcome.OperationInProgress => "A Board creation or recovery action is already in progress.",
+            BoardsHomeBoardCreationOutcome.CancelledBeforeCreate => "Board creation was cancelled before a file was created.",
+            BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit => "The Board was not created." + detail,
+            BoardsHomeBoardCreationOutcome.HomeAuditPending => "The create audit is still pending. Retry Home confirmation; do not create another Board." + detail,
+            BoardsHomeBoardCreationOutcome.OutcomeUnknown => "The create outcome is uncertain. Check for the saved Board before starting another create." + detail,
+            BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit => "The saved Board was found, but its audit remains uncertain. Open the recorded Board to continue." + detail,
+            BoardsHomeBoardCreationOutcome.Opened => "The Board was created and opened." + detail,
+            BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning => "The Board was opened; a Home audit warning remains." + detail,
+            BoardsHomeBoardCreationOutcome.CreatedOpenFailed => "The Board was created, but opening failed. Retry opening the same Board." + detail,
+            _ => "The Board operation returned an unsupported result."
+        };
     }
     private sealed class Router(HomeLibraryDestinationPage owner) : IHomeDeepLinkRouter
     {

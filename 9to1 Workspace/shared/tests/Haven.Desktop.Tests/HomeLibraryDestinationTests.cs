@@ -5,6 +5,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CakeOS.Apps.Boards.App;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Core;
@@ -20,6 +21,41 @@ namespace Haven.Desktop.Tests;
 /// These verify real canonical CUI and domain routing, not production Notes/Home/native acceptance.</summary>
 public sealed class HomeLibraryDestinationTests
 {
+    [AvaloniaFact]
+    public async Task Empty_filtered_Boards_Library_uses_the_existing_create_and_audit_retry_host()
+    {
+        var index = new Index(Array.Empty<HomeArtifactReference>());
+        var page = Page(index, new(), (_, _) => true);
+        var host = new BoardCreationHost();
+        byte[] draft = [1, 2, 3, 4];
+        page.SetInitialQuery("files", "9to1 board document");
+        page.SetBoardCreationHost(host, () => draft);
+        Window? window = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page);
+            Assert.Empty(page.Current!.Items);
+            var create = FindAuthoredButton(page, "library-create-board");
+            create.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+
+            Assert.Equal(1, host.CreateCalls);
+            Assert.Equal(draft, host.CreatedDraft);
+            Assert.Contains("audit is still pending", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                control => CuiRuntimeIdentity.GetStableId(control) == "id:library-status").Text, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), button =>
+                CuiRuntimeIdentity.GetStableId(button) == "id:library-create-board");
+
+            FindAuthoredButton(page, "library-retry-board-audit").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(1, host.CreateCalls); // Recovery settled the same Home-owned attempt.
+            Assert.Equal(1, host.SettlementRetries);
+            Assert.Contains("created and opened", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                control => CuiRuntimeIdentity.GetStableId(control) == "id:library-status").Text, StringComparison.OrdinalIgnoreCase);
+        }
+        finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
+    }
+
     [AvaloniaFact]
     public async Task Folder_selection_returns_only_the_same_current_Home_link_and_disables_pin_mutation()
     {
@@ -199,6 +235,9 @@ public sealed class HomeLibraryDestinationTests
     private static HomeLibraryDestinationPage Page(Index index, Authorization authorization, Func<HomeDeepLink, Task, bool> queue,
         IHomeLibraryPreferences? preferences = null) =>
         new(router => new(index, authorization, router, preferences ?? new Preferences()), _ => Task.CompletedTask, queue);
+    private static Button FindAuthoredButton(HomeLibraryDestinationPage page, string authoredId) =>
+        Assert.Single(page.GetVisualDescendants().OfType<Button>(), item =>
+            CuiRuntimeIdentity.GetStableId(item) == "id:" + authoredId);
     // CUI Repeat instances have a keyed runtime identity below the authored ID; querying
     // Control.Name loses that distinction and is not the repeated-item identity contract.
     private static bool HasAuthoredIdentity(Control control, string authoredId) =>
@@ -242,6 +281,46 @@ public sealed class HomeLibraryDestinationTests
         public Task AddVersionAsync(ModeVersion version, CancellationToken token) => throw new NotSupportedException();
         public Task<IReadOnlyList<ModePermissionGrant>> GetGrantsAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
         public Task UpsertGrantAsync(ModePermissionGrant grant, CancellationToken token) => throw new NotSupportedException();
+    }
+    private sealed class BoardCreationHost : IBoardsHomeBoardCreationHost
+    {
+        internal int CreateCalls { get; private set; }
+        internal int SettlementRetries { get; private set; }
+        internal byte[] CreatedDraft { get; private set; } = [];
+        public bool CanRetryOpenCreatedBoard { get; private set; }
+        public bool CanRetryCreationSettlement { get; private set; }
+        public bool CanInspectUnknownCreation { get; private set; }
+        public bool CanOpenRecordedBoard { get; private set; }
+        public bool HasUnresolvedCreation { get; private set; }
+
+        public Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CreateCalls++;
+            CreatedDraft = validatedDraft.ToArray();
+            CanRetryCreationSettlement = true;
+            HasUnresolvedCreation = true;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.HomeAuditPending,
+                "HOME_AUDIT_PENDING", "The create audit is still pending."));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> RetryCreationSettlementAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            SettlementRetries++;
+            CanRetryCreationSettlement = false;
+            HasUnresolvedCreation = false;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.Opened,
+                "OPENED", "The Board is ready."));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.CreatedOpenFailed));
+        public Task<BoardsHomeBoardCreationResult> InspectUnknownCreationAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+        public Task<BoardsHomeBoardCreationResult> OpenRecordedBoardAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning));
     }
     private sealed class Index : IHomeArtifactSearchIndex
     {

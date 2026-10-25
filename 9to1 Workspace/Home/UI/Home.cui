@@ -140,6 +140,23 @@
                       <Button id="library-refresh" action="RefreshLibrary" Content="Refresh" IsEnabled="{Binding CanSearchLibrary, fallback=false}" />
                     </Container>
                     <Text id="library-status" Text="{Binding LibrarySummary}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Container Type="Wrap" CellGap="8">
+                      <If Condition="{Binding CanCreateHomeLibraryBoard}">
+                        <Button id="library-create-board" action="CreateHomeLibraryBoard" Content="New Board" AccessibleName="Create a new Board using Home and Files" />
+                      </If>
+                      <If Condition="{Binding CanRetryHomeLibraryBoardSettlement}">
+                        <Button id="library-retry-board-audit" action="RetryHomeLibraryBoardSettlement" Content="Retry Home confirmation" AccessibleName="Retry the pending Board creation audit" />
+                      </If>
+                      <If Condition="{Binding CanInspectHomeLibraryBoardCreation}">
+                        <Button id="library-inspect-board-create" action="InspectHomeLibraryBoardCreation" Content="Check saved Board" AccessibleName="Check the uncertain Board create outcome" />
+                      </If>
+                      <If Condition="{Binding CanOpenRecordedHomeLibraryBoard}">
+                        <Button id="library-open-recorded-board" action="OpenRecordedHomeLibraryBoard" Content="Open recorded Board" AccessibleName="Open the corroborated Board file" />
+                      </If>
+                      <If Condition="{Binding CanRetryOpenHomeLibraryBoard}">
+                        <Button id="library-retry-open-board" action="RetryOpenHomeLibraryBoard" Content="Retry opening Board" AccessibleName="Retry opening the same created Board" />
+                      </If>
+                    </Container>
                     <Container id="library-results" Type="Vertical Stack" CellGap="8" role="list" accessible-name="Authorised artifacts">
                       <Repeat id="home-library-rows" Panel="Vertical Stack" Source="{Binding LibraryRows}" As="artifact" Key="{Binding artifact.Key}">
                         <Container Type="Horizontal Stack" CellGap="8">
