@@ -127,9 +127,16 @@ public sealed partial class SpaceTasksDashboardOriginalWorkTests
         rig.Page.OriginalScene.Instruction.Text = "Actual source factory callback";
         Click(rig, rig.Page.OriginalScene.DelegateTask);
         await sourceEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        // Entry is deliberately signalled inside the source. The external test owner
+        // must first join the real CUI action and its returned page work, rather than
+        // race the still-active callback while asserting an external close.
+        await rig.Page.OriginalScene.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        _ = await ObserveAsync(Assert.IsAssignableFrom<Task>(rig.Page.ActualNewWork));
         Assert.IsType<InvalidOperationException>(refusal);
         Assert.Contains("source callback", refusal!.Message);
-        var close = rig.Page.CloseAndDrainAsync(); rig.RecordClose(close);
+        Task? externalClose = null;
+        ExecutionContext.Run(beforePage, _ => externalClose = rig.Page.CloseAndDrainAsync(), null);
+        var close = externalClose!; rig.RecordClose(close);
         Assert.NotNull(await ObserveAsync(close));
         Assert.True(close.IsFaulted);
         Assert.Null(rig.Page.Scene.Root);
