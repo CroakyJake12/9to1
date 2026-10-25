@@ -699,6 +699,7 @@ public sealed partial class App
         {
             internal HomeLibraryDestinationPage? Page;
             internal NativeHomeFilesLibrarySource? Source;
+            internal HavenOS.Files.NativeHost.FilesNativeBrowserService.BoardDocumentCreateOwner? Creator;
             internal NativeHomeFilesLibrarySource.NativeHomeFilesBoardCreateResult? Result;
             internal Task<BoardsHomeBoardCreationResult>? Driver;
             internal Task? OriginalSource, Navigation;
@@ -872,13 +873,15 @@ public sealed partial class App
             var physical = _services.GetRequiredService<IFilesOriginalBoardDocumentPhysicalOwner>();
             if (physical is not IFilesOriginalBoardDocumentCreatePhysicalOwner createPhysical)
                 throw new NotSupportedException("The actual existing Files physical owner has no original board-create port.");
-            var create = browser.CreateOriginalBoardDocumentCreateOwner(createPhysical);
             var approvals = _services.GetRequiredService<HomeNativeApprovalWindowOwner>();
             if (!approvals.IsBoundToOriginalComposition(_home)) throw new UnauthorizedAccessException("The actual Home review owner changed.");
             if (!browser.IsBoundToOriginalComposition(
                 _services.GetRequiredService<HavenOS.Files.NativeHost.NativeFilesWorkspaceAuthority>(),
                 _home.Profiles, _home.Resources, _services.GetRequiredService<ICompatibilityPackageContentSource>()))
                 throw new UnauthorizedAccessException("Board creation must borrow the actual Files/Home owner tuple.");
+            // Retain the actual issuer before any later page/source construction can fail.
+            // The browser returns the SAME issuer across picker sources in this window.
+            var create = state.Creator = browser.CreateOriginalBoardDocumentCreateOwner(createPhysical);
             bool Alive() => IsCurrent;
             void Parent(Action body) => (state.Page ?? throw new InvalidOperationException("The original folder-picker page is not retained."))
                 .InvokeOriginalSource(() => { DemandCurrent(); body(); });
@@ -898,6 +901,12 @@ public sealed partial class App
                 if (state.Page is { } page) try { await page.CloseAndDrainAsync(); } catch (Exception cause) { AddAppCause(failures, cause); }
                 else if (state.Source is { } source) try { await source.DisposeAsync(); } catch (Exception cause) { AddAppCause(failures, cause); }
             }
+            // The create owner retains its own claim/materialization/audit originals;
+            // source disposal alone cannot certify their drain. It is shared, so close
+            // it only after every retained page/source has independently drained.
+            foreach (var creator in states.Select(state => state.Creator).OfType<HavenOS.Files.NativeHost.FilesNativeBrowserService.BoardDocumentCreateOwner>()
+                .Distinct(ReferenceEqualityComparer.Instance))
+                try { await creator.CloseAndDrainAsync(); } catch (Exception cause) { AddAppCause(failures, cause); }
         }
 
         private HomeLibraryDestinationPage CreateHomeLibraryPage(BrowseAppContentRequest request, CuiThemePreferenceContext theme)
