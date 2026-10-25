@@ -175,7 +175,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                 _scene.SetRecent(rows, DemandRead); PublishScope(DemandRead);
                 _scene.SetStartAvailability(!_newWorkPending && _startNew is not null, !_newWorkPending && _openBlank is not null, DemandRead);
                 _scene.SetStatus(shown == TaskShownScope.AllTasks
-                    ? "Showing authorized tasks from up to 40 canonical candidates on this page." + (unavailable ? " Some contexts could not be shown." : "")
+                    ? "Showing authorized tasks on this page." + (unavailable ? " Some tasks could not be shown." : "")
                     : _startNew is null || _openBlank is null
                         ? "Some new-task actions are unavailable. Existing tasks can still be opened."
                         : "Showing up to 40 task conversations in this Space.", DemandRead);
