@@ -1110,6 +1110,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // instead of discarding SubmitCurrentInstructionAsync through the legacy event.
         _scene.ComposerDirectSend = _ => new ValueTask(SubmitCurrentInstructionAsync());
         _scene.ComposerSource.TaskActions = new NativeTaskComposerActions(this);
+        _scene.ComposerSource.ActionContextIdentity = () => CaptureOriginalConversationTarget();
         _scene.StopRequested += OnStopRequested;
         _composerInput.Invalidated += OnComposerEditCompleted;
         _scene.ResolveProblemsRequested += (_, _) =>

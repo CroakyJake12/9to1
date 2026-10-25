@@ -14,6 +14,8 @@ internal sealed partial class ChatHavenScene
     {
         private readonly ChatHavenScene _scene;
         internal IChatComposerTaskActions? TaskActions { get; set; }
+        internal Func<object?>? ActionContextIdentity { get; set; }
+        public object? ActionIdentity => ActionContextIdentity?.Invoke();
         private IChatComposerTaskActions? ActiveTask => TaskActions is { IsApplicable: true } actual ? actual : null;
         public HavenComposerSource(ChatHavenScene scene) => _scene = scene;
 

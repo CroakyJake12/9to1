@@ -119,7 +119,7 @@ public sealed class CuiActionShelfRuntimeTests
                 window.Show(); Pump(window); var front = Button(root, "front");
                 var point = front.TranslatePoint(new Point(28, 28), window)!.Value;
                 window.MouseMove(point); window.MouseDown(point, MouseButton.Left);
-                context.Replace(Item("stop")); Pump(window);
+                context.Replace(Item("a") with { ContextIdentity = Guid.NewGuid() }); Pump(window);
                 window.MouseUp(point, MouseButton.Left);
                 await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 Assert.Empty(context.Calls);
@@ -127,7 +127,7 @@ public sealed class CuiActionShelfRuntimeTests
                 Click(front);
                 var failure = await Assert.ThrowsAsync<IOException>(() => loader.WhenActionsIdleAsync().WaitAsync(Bound));
                 Assert.Same(exact, failure);
-                Assert.Equal(new[] { "app.stop" }, context.Calls);
+                Assert.Equal(new[] { "app.a" }, context.Calls);
             }
             finally { window.Close(); }
         }, CancellationToken.None);

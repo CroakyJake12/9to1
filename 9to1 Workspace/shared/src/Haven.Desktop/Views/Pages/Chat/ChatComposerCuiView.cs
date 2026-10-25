@@ -56,6 +56,7 @@ internal interface IChatComposerTaskActions
 /// </summary>
 public interface IChatComposerSource
 {
+    object? ActionIdentity => null;
     string Draft { get; set; }
     string Placeholder { get; }
     bool IsSending { get; }
@@ -127,8 +128,8 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     private IReadOnlyList<CuiActionShelfItem> EligibleShelfActions()
     {
         var actions = new List<CuiActionShelfItem>(4);
-        static CuiActionShelfItem Item(string id, string command, string label, string icon, string tooltip) =>
-            new(id, command, label, "avares://Haven/Assets/" + (icon == "send" ? "send" : "composer-" + icon) + ".svg", tooltip);
+        CuiActionShelfItem Item(string id, string command, string label, string icon, string tooltip) =>
+            new(id, command, label, "avares://Haven/Assets/" + (icon == "send" ? "send" : "composer-" + icon) + ".svg", tooltip, ContextIdentity: _source.ActionIdentity);
         if (_source.CanResume)
         {
             actions.Add(Item("resume", "composer.resume", "Resume", "resume", "Continue this same task from its approved continuation boundary"));
