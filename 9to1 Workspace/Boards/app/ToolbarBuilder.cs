@@ -39,45 +39,60 @@ public static class ToolbarBuilder
     public static void Rebuild(StackPanel host, BoardsViewModel vm)
     {
         ArgumentNullException.ThrowIfNull(host);
+        var responsiveToolbar = new WrapPanel { Orientation = Orientation.Horizontal, ItemSpacing = 4, LineSpacing = 4 };
+        Rebuild(responsiveToolbar, vm);
+        host.Children.Clear();
+        host.Children.Add(responsiveToolbar);
+    }
+
+    public static void Rebuild(WrapPanel host, BoardsViewModel vm)
+    {
+        ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(vm);
         host.Children.Clear();
 
-        // Toolbar controls stay on a single logical row. The authored ToolbarHost
-        // owns horizontal scrolling, so narrow windows keep every command reachable
-        // without wrapping the persistent toolbar into a second vertical band.
-        var bar = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 2) };
+        // The authored ToolbarHost is a horizontal CUI Wrap panel. Related commands
+        // stay grouped, the default-width toolbar remains one quiet row, and narrower
+        // windows wrap whole groups without introducing a persistent scrollbar.
         if (vm.IsDrawMode)
         {
-            BuildDrawToolbar(bar, vm);
-            host.Children.Add(bar);
+            BuildDrawToolbar(host, vm);
             return;
         }
-        bar.Children.Add(BuildStyleGallery(vm));
-        bar.Children.Add(Separator());
+        host.Children.Add(Group(BuildStyleGallery(vm), Separator()));
         var selected = vm.FindBlock(vm.SelectedBlockId);
         // B/I/U/S range commands and mixed-state labels are authored in Boards.cui.
-        bar.Children.Add(Toggle(vm, BoardsIcons.Subscript, "Subscript", "Toggle subscript",
-            selected?.Baseline == "subscript", async () => await vm.DispatchAsync("ToggleSub", null)));
-        bar.Children.Add(Toggle(vm, BoardsIcons.Superscript, "Superscript", "Toggle superscript",
-            selected?.Baseline == "superscript", async () => await vm.DispatchAsync("ToggleSup", null)));
-        bar.Children.Add(Separator());
-        bar.Children.Add(FontCombo(vm, selected));
-        bar.Children.Add(SizeCombo(vm, selected));
-        bar.Children.Add(ColorPopupButton(vm, "A", "Text colour", isHighlight: false));
-        bar.Children.Add(ColorPopupButton(vm, "H", "Highlight colour", isHighlight: true));
-        bar.Children.Add(Separator());
-        bar.Children.Add(Toggle(vm, BoardsIcons.BulletedList, "Bulleted list", "Toggle bulleted list",
-            selected?.Kind == "bulleted", async () => await vm.ConvertSelectedKindAsync("bulleted")));
-        bar.Children.Add(Toggle(vm, BoardsIcons.NumberedList, "Numbered list", "Toggle numbered list",
-            selected?.Kind == "numbered", async () => await vm.ConvertSelectedKindAsync("numbered")));
-        bar.Children.Add(AlignGroup(vm, selected));
-        bar.Children.Add(IndentButton(vm, BoardsIcons.ChevronLeft, "Decrease indent", () => vm.ShiftSelectedIndent(-1)));
-        bar.Children.Add(IndentButton(vm, BoardsIcons.ChevronRight, "Increase indent", () => vm.ShiftSelectedIndent(1)));
-        bar.Children.Add(Separator());
-        bar.Children.Add(DrawButton(vm));
-        bar.Children.Add(CreateInsertButton(vm));
-        ThemeApplier.ApplyToolbarInputSurface(bar);
-        host.Children.Add(bar);
+        host.Children.Add(Group(
+            Toggle(vm, BoardsIcons.Subscript, "Subscript", "Toggle subscript",
+                selected?.Baseline == "subscript", async () => await vm.DispatchAsync("ToggleSub", null)),
+            Toggle(vm, BoardsIcons.Superscript, "Superscript", "Toggle superscript",
+                selected?.Baseline == "superscript", async () => await vm.DispatchAsync("ToggleSup", null)),
+            Separator()));
+        host.Children.Add(Group(FontCombo(vm, selected), SizeCombo(vm, selected)));
+        host.Children.Add(Group(
+            ColorPopupButton(vm, "A", "Text colour", isHighlight: false),
+            ColorPopupButton(vm, "H", "Highlight colour", isHighlight: true),
+            Separator()));
+        host.Children.Add(Group(
+            Toggle(vm, BoardsIcons.BulletedList, "Bulleted list", "Toggle bulleted list",
+                selected?.Kind == "bulleted", async () => await vm.ConvertSelectedKindAsync("bulleted")),
+            Toggle(vm, BoardsIcons.NumberedList, "Numbered list", "Toggle numbered list",
+                selected?.Kind == "numbered", async () => await vm.ConvertSelectedKindAsync("numbered")),
+            Separator()));
+        host.Children.Add(Group(AlignGroup(vm, selected), Separator()));
+        host.Children.Add(Group(
+            IndentButton(vm, BoardsIcons.ChevronLeft, "Decrease indent", () => vm.ShiftSelectedIndent(-1)),
+            IndentButton(vm, BoardsIcons.ChevronRight, "Increase indent", () => vm.ShiftSelectedIndent(1)),
+            Separator()));
+        host.Children.Add(Group(DrawButton(vm), CreateInsertButton(vm)));
+        ThemeApplier.ApplyToolbarInputSurface(host);
+    }
+
+    private static StackPanel Group(params Control[] controls)
+    {
+        var group = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
+        foreach (var control in controls) group.Children.Add(control);
+        return group;
     }
 
     private static Control Separator()
@@ -422,10 +437,10 @@ public static class ToolbarBuilder
         }
     }
 
-    private static void BuildDrawToolbar(StackPanel bar, BoardsViewModel vm)
+    private static void BuildDrawToolbar(WrapPanel bar, BoardsViewModel vm)
     {
-        bar.Children.Add(DrawButton(vm));
-        bar.Children.Add(Separator());
+        bar.Children.Add(Group(DrawButton(vm), Separator()));
+        var tools = Group();
         foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
         {
             var button = new ToggleButton
@@ -441,9 +456,11 @@ public static class ToolbarBuilder
             ToolTip.SetTip(button, tool + " drawing tool");
             Avalonia.Automation.AutomationProperties.SetName(button, tool + " drawing tool");
             button.Click += (_, _) => vm.SetInkTool(tool);
-            bar.Children.Add(button);
+            tools.Children.Add(button);
         }
-        bar.Children.Add(Separator());
+        tools.Children.Add(Separator());
+        bar.Children.Add(tools);
+        var colors = Group();
         foreach (var (name, hex) in new[]
         {
             ("Black", "#FF111111"), ("Blue", "#FF1A73E8"), ("Red", "#FFD32F2F"),
@@ -467,9 +484,11 @@ public static class ToolbarBuilder
             ToolTip.SetTip(swatch, name + " ink");
             Avalonia.Automation.AutomationProperties.SetName(swatch, name + " ink");
             swatch.Click += (_, _) => vm.SetInkColor(hex);
-            bar.Children.Add(swatch);
+            colors.Children.Add(swatch);
         }
-        bar.Children.Add(Separator());
+        colors.Children.Add(Separator());
+        bar.Children.Add(colors);
+        var widths = Group();
         foreach (var width in new[] { 2d, 4d, 8d, 12d })
         {
             var stroke = new ToggleButton
@@ -482,17 +501,17 @@ public static class ToolbarBuilder
             ToolTip.SetTip(stroke, "Stroke width " + width.ToString("0"));
             Avalonia.Automation.AutomationProperties.SetName(stroke, "Stroke width " + width.ToString("0"));
             stroke.Click += (_, _) => vm.SetInkWidth(width);
-            bar.Children.Add(stroke);
+            widths.Children.Add(stroke);
         }
-        bar.Children.Add(Separator());
+        widths.Children.Add(Separator());
+        bar.Children.Add(widths);
         var undo = BoardsIcons.IconButton(BoardsIcons.Undo, "Undo drawing", "Undo the last drawing action");
         SetQuietToolbarControl(undo, selected: false, "Boards drawing toolbar action");
         undo.Click += async (_, _) => await vm.DispatchAsync("Undo", null);
         var redo = BoardsIcons.IconButton(BoardsIcons.Redo, "Redo drawing", "Redo the last drawing action");
         SetQuietToolbarControl(redo, selected: false, "Boards drawing toolbar action");
         redo.Click += async (_, _) => await vm.DispatchAsync("Redo", null);
-        bar.Children.Add(undo);
-        bar.Children.Add(redo);
+        var viewActions = Group(undo, redo);
         var zoomOut = new Button { Content = "Zoom −", Padding = new Thickness(7, 6), Margin = new Thickness(2, 0) };
         ToolTip.SetTip(zoomOut, "Zoom drawing out");
         Avalonia.Automation.AutomationProperties.SetName(zoomOut, "Zoom drawing out");
@@ -508,9 +527,10 @@ public static class ToolbarBuilder
         ToolTip.SetTip(reset, "Reset drawing view");
         Avalonia.Automation.AutomationProperties.SetName(reset, "Reset drawing view");
         reset.Click += async (_, _) => await vm.ResetInkViewAsync();
-        bar.Children.Add(zoomOut);
-        bar.Children.Add(zoomIn);
-        bar.Children.Add(reset);
+        viewActions.Children.Add(zoomOut);
+        viewActions.Children.Add(zoomIn);
+        viewActions.Children.Add(reset);
+        bar.Children.Add(viewActions);
     }
 
     private static void SetQuietToolbarControl(Control control, bool selected, string source)
