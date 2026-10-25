@@ -84,7 +84,7 @@ static int safe_relative(const char *value) {
 }
 int main(int argc,char **argv) {
     /* Fixed positional internal protocol; no public Root API forwards user argv. */
-    if(argc!=16 || strcmp(argv[1],"--original-home-v1")) { errno=EINVAL; fail("arguments"); }
+    if(argc!=16 || (strcmp(argv[1],"--original-home-v1") && strcmp(argv[1],"--original-selected-v1"))) { errno=EINVAL; fail("arguments"); }
     if(getuid()!=0 || geteuid()!=0 || getgid()!=0 || getegid()!=0) { errno=EPERM; fail("actual-root-required"); }
     unsigned long long chosen=number(argv[2]); if(!chosen || chosen>=UINT32_MAX) fail("target-uid");
     uid_t uid=(uid_t)chosen;
@@ -147,7 +147,7 @@ int main(int argc,char **argv) {
            snprintf(shown,sizeof(shown),"DISPLAY=%s",display)>=(int)sizeof(shown)) fail("bounded-child-environment");
         char *environment[]={runtime,home,login,"DOTNET_EnableDiagnostics=0","DOTNET_MULTILEVEL_LOOKUP=0","DOTNET_ROLL_FORWARD=Disable",
             !strcmp(session_type,"x11")?shown:"WAYLAND_DISPLAY=wayland-0",NULL};
-        char *arguments[]={"Haven.Home","--home-linux-root-control",(char *)endpoint,NULL};
+        char *arguments[]={"Haven.Application",!strcmp(argv[1],"--original-home-v1")?"--home-linux-root-control":"--home-linux-root-host",(char *)endpoint,NULL};
         fexecve(image,arguments,environment);
         int effect_errno=errno; write_exact(executed[1],&effect_errno,sizeof(effect_errno)); _exit(71);
     }

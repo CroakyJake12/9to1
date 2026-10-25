@@ -59,48 +59,24 @@ public sealed class LinuxHomeRootServiceRuntime : IAsyncDisposable
                 using var self = File.OpenHandle("/proc/self/exe", FileMode.Open, FileAccess.Read, FileShare.Read);
                 if (!LinuxOriginalDownloadPaths.ReadIdentity(rootImage).SameFile(LinuxOriginalDownloadPaths.ReadIdentity(self)))
                     throw new UnauthorizedAccessException("The actual registered service executable must be the SAME enrolled activated Root ELF.");
-                using var helper = code.OpenOriginalFile(root, "home-root-launcher");
-                using var entry = code.OpenOriginalFile(home, home.EntrypointRelativePath);
-                var helperIdentity = LinuxOriginalDownloadPaths.ReadIdentity(helper);
-                var entryIdentity = LinuxOriginalDownloadPaths.ReadIdentity(entry);
-                if ((helperIdentity.Mode & 0x1ff) != 0x1ed || (entryIdentity.Mode & 0x1ff) != 0x1ed)
-                    throw new UnauthorizedAccessException("The exact signed helper and Home native entrypoint must retain mode0755.");
                 using var endpoint = new OriginalEndpoint(configuration.ExistingControlDirectory, user.UserId);
-                _kernel.DemandOriginalCurrent(user); await code.DemandPinnedCurrentAsync(token).ConfigureAwait(false);
-                using var process = new Process { StartInfo = HelperStart(root, home, entryIdentity, user, endpoint.Path), EnableRaisingEvents = true };
-                if (!process.Start()) throw new IOException("The actual signed native child supervisor did not start.");
-                var errors = ReadBoundedErrors(process.StandardError, CancellationToken.None);
-                Task<string>? exit = null; Task? monitor = null;
-                Exception? runtimeFailure = null;
+                LinuxHomeOriginalControlledProcess? controlled = null;
+                Task? monitor = null; Exception? runtimeFailure = null;
                 CancellationToken startupToken = default;
                 try
                 {
-                    using (var actualSupervisorImage = File.OpenHandle("/proc/" + process.Id.ToString(CultureInfo.InvariantCulture) + "/exe", FileMode.Open, FileAccess.Read, FileShare.Read))
-                        if (!helperIdentity.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(actualSupervisorImage)))
-                            throw new UnauthorizedAccessException("The actual native supervisor must execute the SAME retained signed helper inode/version.");
-                    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token); deadline.CancelAfter(TimeSpan.FromSeconds(15));
+                    controlled = await LinuxHomeOriginalControlledProcess.CreateOriginalAsync(this, code, _kernel, user, root, home, endpoint.Path, token).ConfigureAwait(false);
+                    await controlled.ResumeOriginalAsync(token).ConfigureAwait(false);
+                    var exit = controlled.OriginalExit ?? throw new IOException("The SAME native controlled child exit observation is absent.");
+                    monitor = MonitorControlledChild(controlled, token);
+                    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token); deadline.CancelAfter(TimeSpan.FromSeconds(45));
                     startupToken = deadline.Token;
-                    var frame = await ReadLine(process.StandardOutput, deadline.Token).ConfigureAwait(false);
-                    var parts = frame.Split(':');
-                    if (parts.Length != 3 || parts[0] != "OriginalLinuxHomeChildV1" || !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var child) || child <= 0 ||
-                        parts[2] != user.UserId.ToString(CultureInfo.InvariantCulture))
-                        throw new UnauthorizedAccessException("The original native supervisor did not issue its actual held child/UID observation.");
-                    _kernel.DemandOriginalCurrent(user); await code.DemandPinnedCurrentAsync(token).ConfigureAwait(false);
-                    await process.StandardInput.WriteAsync("R".AsMemory(), deadline.Token).ConfigureAwait(false);
-                    await process.StandardInput.FlushAsync(deadline.Token).ConfigureAwait(false);
-                    if (await ReadLine(process.StandardOutput, deadline.Token).ConfigureAwait(false) != "OriginalLinuxHomeExecV1")
-                        throw new IOException("The original native helper did not confirm its SAME fd-exec effect.");
-                    deadline.CancelAfter(TimeSpan.FromSeconds(45));
-                    // The supervisor retains its child's pidfd and does not reap it
-                    // until this owner retires. PID recycling cannot create a peer.
-                    exit = ReadLine(process.StandardOutput, token);
-                    monitor = MonitorChild(user, process, exit, child, entryIdentity, token);
-                    using var accepted = await AcceptOriginalHome(endpoint.Listener, child, user, process, exit, deadline.Token).ConfigureAwait(false);
+                    using var accepted = await AcceptOriginalHome(endpoint.Listener, controlled.ProcessId, user, controlled.OriginalSupervisor, exit, deadline.Token).ConfigureAwait(false);
                     using var stream = new NetworkStream(accepted, ownsSocket: false);
                     var hello = await ReadFrame<LinuxHomeRootControlWire.Request>(stream, deadline.Token).ConfigureAwait(false);
                     if (hello is not { SchemaVersion: 1, Command: "hello-home" } || hello.CorrelationId == Guid.Empty)
                         throw new UnauthorizedAccessException("The original controlled Home must complete the bounded Root control protocol.");
-                    DemandChild(user, process, exit, child, entryIdentity);
+                    controlled.DemandOriginalCurrent();
                     await code.DemandPinnedCurrentAsync(token).ConfigureAwait(false);
                     await WriteFrame(stream, new LinuxHomeRootControlWire.Response(1, hello.CorrelationId, true, null)
                     { Activation = root, PackageId = home.PackageId, CatalogueRevision = home.CatalogueRevision,
@@ -117,7 +93,7 @@ public sealed class LinuxHomeRootServiceRuntime : IAsyncDisposable
                         }
                         if (request.SchemaVersion != 1 || request.CorrelationId == Guid.Empty)
                             throw new InvalidDataException("The original Root control command identity is invalid.");
-                        DemandChild(user, process, exit, child, entryIdentity);
+                        controlled.DemandOriginalCurrent();
                         await code.DemandPinnedCurrentAsync(token).ConfigureAwait(false);
                         var package = request.PackageId is null ? null : code.Packages.SingleOrDefault(value => value.PackageId == request.PackageId);
                         if (request.Command == "publish-listening")
@@ -152,47 +128,11 @@ public sealed class LinuxHomeRootServiceRuntime : IAsyncDisposable
                 {
                     var failures = new List<Exception>();
                     if (runtimeFailure is not null) failures.Add(runtimeFailure);
-                    var deliberateRetirement = lifetime.IsCancellationRequested || _retiring;
                     try { _stop.Cancel(); } catch (Exception cause) { failures.Add(cause); }
-                    try { process.StandardInput.Close(); } catch (Exception cause) { failures.Add(cause); }
-                    Task? wait = null;
-                    try { wait = process.WaitForExitAsync(CancellationToken.None); } catch (Exception cause) { failures.Add(cause); }
-                    if (wait is not null)
-                    {
-                        try { await wait.WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false); }
-                        catch (TimeoutException cause)
-                        {
-                            failures.Add(cause);
-                            try { process.Kill(entireProcessTree: false); } catch (Exception kill) { failures.Add(kill); }
-                            try { await wait.ConfigureAwait(false); } catch (Exception join) { failures.Add(join); }
-                        }
-                        catch (Exception cause) { failures.Add(cause); }
-                    }
-                    else
-                    {
-                        try { process.Kill(entireProcessTree: false); } catch (Exception cause) { failures.Add(cause); }
-                        try { await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
-                    }
-                    if (exit is not null)
-                        try
-                        {
-                            var actualExit = await exit.ConfigureAwait(false);
-                            if (!deliberateRetirement)
-                                failures.Add(new IOException("The actual native child lifetime ended without service retirement: " + actualExit));
-                        }
-                        catch (OperationCanceledException cause) when (token.IsCancellationRequested && cause.CancellationToken == token) { }
-                        catch (EndOfStreamException cause)
-                        { if (!deliberateRetirement && runtimeFailure is null) failures.Add(cause); }
-                        catch (Exception cause) { failures.Add(cause); }
+                    if (controlled is not null)
+                        try { await controlled.CloseAndDrainAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
                     if (monitor is not null)
                         try { await monitor.ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
-                    try
-                    {
-                        var diagnostic = await errors.ConfigureAwait(false);
-                        if (process.HasExited && process.ExitCode != 0)
-                            failures.Add(new IOException("The actual signed native supervisor refused or failed (exit " + process.ExitCode + "): " + diagnostic));
-                    }
-                    catch (Exception cause) { failures.Add(cause); }
                     if (failures.Count != 0) throw new AggregateException("Original Linux Root runtime/child retirement retained actual failures.", failures);
                 }
             }, linked.Token).ConfigureAwait(false);
@@ -202,35 +142,25 @@ public sealed class LinuxHomeRootServiceRuntime : IAsyncDisposable
         { _startup.TrySetCanceled(linked.Token); }
         catch (Exception cause) { _startup.TrySetException(cause); throw; }
     }
-    private async Task MonitorChild(LinuxHomeRegisteredRootServiceContext.InteractiveUser user, Process supervisor,
-        Task exit, int child, LinuxOriginalDownloadIdentity image, CancellationToken token)
+    private async Task MonitorControlledChild(LinuxHomeOriginalControlledProcess controlled, CancellationToken token)
     {
         try
         {
             while (!token.IsCancellationRequested)
-            { DemandChild(user, supervisor, exit, child, image); await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false); }
+            { controlled.DemandOriginalCurrent(); await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false); }
         }
         catch (OperationCanceledException cause) when (token.IsCancellationRequested && cause.CancellationToken == token) { }
         catch { _stop.Cancel(); throw; }
     }
 
-    private void DemandChild(LinuxHomeRegisteredRootServiceContext.InteractiveUser user, Process supervisor, Task exit, int child,
-        LinuxOriginalDownloadIdentity originalImage)
-    {
-        _kernel.DemandOriginalCurrent(user);
-        if (supervisor.HasExited || exit.IsCompleted) throw new UnauthorizedAccessException("The original controlled Home/supervisor lifetime retired.");
-        using var image = File.OpenHandle("/proc/" + child.ToString(CultureInfo.InvariantCulture) + "/exe", FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (!originalImage.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(image)))
-            throw new UnauthorizedAccessException("The actual controlled child's executable changed after fd-exec.");
-    }
-    private static ProcessStartInfo HelperStart(HomePackageOriginalInstalledActivationRecord root, HomePackageOriginalInstalledActivationRecord home,
+    internal static ProcessStartInfo HelperStart(HomePackageOriginalInstalledActivationRecord root, HomePackageOriginalInstalledActivationRecord home,
         LinuxOriginalDownloadIdentity image, LinuxHomeRegisteredRootServiceContext.InteractiveUser user, string endpoint)
     {
         var start = new ProcessStartInfo(Path.Combine(root.InstallationRoot, "home-root-launcher"))
         { UseShellExecute = false, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
             WorkingDirectory = root.InstallationRoot, CreateNoWindow = true };
         start.Environment.Clear();
-        foreach (var value in new[] { "--original-home-v1", user.UserId.ToString(CultureInfo.InvariantCulture), home.InstallationRoot, home.EntrypointRelativePath,
+        foreach (var value in new[] { home.AppId == "home" ? "--original-home-v1" : "--original-selected-v1", user.UserId.ToString(CultureInfo.InvariantCulture), home.InstallationRoot, home.EntrypointRelativePath,
             image.Inode.ToString(CultureInfo.InvariantCulture), image.DeviceMajor.ToString(CultureInfo.InvariantCulture), image.DeviceMinor.ToString(CultureInfo.InvariantCulture),
             image.Size.ToString(CultureInfo.InvariantCulture), image.ModifiedSeconds.ToString(CultureInfo.InvariantCulture), image.ModifiedNanos.ToString(CultureInfo.InvariantCulture),
             image.ChangedSeconds.ToString(CultureInfo.InvariantCulture), image.ChangedNanos.ToString(CultureInfo.InvariantCulture), endpoint, user.SessionType, user.Display ?? "" })
@@ -274,7 +204,7 @@ public sealed class LinuxHomeRootServiceRuntime : IAsyncDisposable
         await stream.FlushAsync(token).ConfigureAwait(false);
     }
 
-    private static async Task<string> ReadLine(StreamReader reader, CancellationToken token)
+    internal static async Task<string> ReadLine(StreamReader reader, CancellationToken token)
     {
         var result = new System.Text.StringBuilder(); var character = new char[1];
         while (result.Length <= 512)
@@ -285,7 +215,7 @@ public sealed class LinuxHomeRootServiceRuntime : IAsyncDisposable
         }
         throw new InvalidDataException("The original native control frame exceeds its bound.");
     }
-    private static async Task<string> ReadBoundedErrors(StreamReader reader, CancellationToken token)
+    internal static async Task<string> ReadBoundedErrors(StreamReader reader, CancellationToken token)
     {
         var buffer = new char[1024]; var result = new System.Text.StringBuilder(); int count;
         while ((count = await reader.ReadAsync(buffer, token).ConfigureAwait(false)) != 0)
