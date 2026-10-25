@@ -13,6 +13,7 @@ public sealed record FilesOriginalBoardDocumentWriteOutcome(bool Committed, Guid
 public sealed partial class FilesNativeBrowserService
 {
     private readonly object _boardDocumentWriteOwnerGate = new();
+    private readonly object _boardDocumentWriteOwnerCreationKey = new();
     private BoardDocumentWriteOwner? _boardDocumentWriteOwner;
 
     /// <summary>Bind one original Files issuer to its exact physical owner. The same issuer serves
@@ -30,7 +31,8 @@ public sealed partial class FilesNativeBrowserService
                 return existing;
             }
             var created = new BoardDocumentWriteOwner(this, actualPhysicalOwner,
-                _mutationBroker ?? throw new NotSupportedException("The original Home Files write broker is unavailable."));
+                _mutationBroker ?? throw new NotSupportedException("The original Home Files write broker is unavailable."),
+                _boardDocumentWriteOwnerCreationKey);
             _boardDocumentWriteOwner = created;
             return created;
         }
@@ -71,7 +73,6 @@ public sealed partial class FilesNativeBrowserService
             internal FilesOriginalReadSourceScope Source = null!;
             internal FilesNativeBrowserService Browser = null!;
             internal readonly object Gate = new();
-            internal bool CompletionAttempted;
         }
 
         private sealed record FilesPageOwner(NativeFilesWorkspace Workspace, AuthenticatedResourceActor Actor);
@@ -89,9 +90,15 @@ public sealed partial class FilesNativeBrowserService
         private bool _retiring;
         private Task? _close;
 
-        private BoardDocumentWriteOwner(FilesNativeBrowserService browser,
-            IFilesOriginalBoardDocumentPhysicalOwner physicalOwner, HomeResourceOperationBroker broker)
+        internal BoardDocumentWriteOwner(FilesNativeBrowserService browser,
+            IFilesOriginalBoardDocumentPhysicalOwner physicalOwner, HomeResourceOperationBroker broker,
+            object originalCreationKey)
         {
+            ArgumentNullException.ThrowIfNull(browser);
+            ArgumentNullException.ThrowIfNull(physicalOwner);
+            ArgumentNullException.ThrowIfNull(broker);
+            if (!ReferenceEquals(originalCreationKey, browser._boardDocumentWriteOwnerCreationKey))
+                throw new UnauthorizedAccessException("Create the original Files board writer through its owning browser.");
             _browser = browser; _physicalOwner = physicalOwner; _broker = broker;
             if (physicalOwner.OriginalBoardDocumentWriteSource is { } existing && !ReferenceEquals(existing, this))
                 throw new UnauthorizedAccessException("Another original Files board writer already owns the physical source.");
@@ -124,7 +131,11 @@ public sealed partial class FilesNativeBrowserService
             var errors = new List<Exception>();
             foreach (var save in saves)
                 try { await save.ConfigureAwait(false); }
-                catch (Exception error) { errors.AddRange(save.Exception?.InnerExceptions ?? new[] { error }); }
+                catch (Exception error)
+                {
+                    if (save.Exception is { } failure) errors.AddRange(failure.InnerExceptions);
+                    else errors.Add(error);
+                }
             lock (_gate)
                 foreach (var operation in _operations.Values)
                     CryptographicOperations.ZeroMemory(operation.Payload);
@@ -239,7 +250,9 @@ public sealed partial class FilesNativeBrowserService
                 {
                     Owner = this, Browser = _browser, Page = page, OriginalRow = row, OperationKey = key,
                     Workspace = original.Workspace, Actor = actor, SourceId = sourceId, SessionId = sessionId,
-                    ExpectedRevision = expectedRevision, ExpectedSha256 = NormalizeSha256(expectedSha256),
+                    ExpectedRevision = expectedRevision,
+                    ExpectedSha256 = NormalizeSha256(expectedSha256)
+                        ?? throw new InvalidDataException("The selected board save requires a valid SHA-256 digest."),
                     Payload = payload.ToArray(), PayloadSha256 = payloadHash, DocumentId = documentId,
                     NewRevisionId = Guid.NewGuid(), Lifetime = lifetime, Source = source
                 };
@@ -265,12 +278,12 @@ public sealed partial class FilesNativeBrowserService
                 if (cannotReplay) return new(false, null, "FILES_BOARD_WRITE_OUTCOME_UNKNOWN",
                     "Inspect or reopen the exact current Files revision; this operation cannot be replayed.", true);
 
-                var workspace = await source.Observe(() => _browser.workspaces.GetOriginalCurrentWithinSourceAsync(
+                var workspace = await source.Observe(() => _browser.OriginalBrowserWorkspaces.GetOriginalCurrentWithinSourceAsync(
                     operation.Page.StoreID, source, token)).ConfigureAwait(false);
                 if (workspace?.Actor != operation.Actor || !ReferenceEquals(workspace.Provider, operation.Workspace.Provider) ||
                     !ReferenceEquals(workspace.Directories, operation.Workspace.Directories) ||
                     !ReferenceEquals(workspace.Materializations, operation.Workspace.Materializations) ||
-                    await source.Observe(() => _browser.actors.GetCurrentAsync(token).AsTask()).ConfigureAwait(false) != operation.Actor)
+                    await source.Observe(() => _browser.OriginalBrowserActors.GetCurrentAsync(token).AsTask()).ConfigureAwait(false) != operation.Actor)
                     throw new UnauthorizedAccessException("The original Files/Home workspace or actor changed.");
                 if (!source.Invoke(operation.Lifetime)) throw new ObjectDisposedException("Original Home board session");
 
@@ -289,6 +302,8 @@ public sealed partial class FilesNativeBrowserService
                     operation.Page.StoreID, row.ParentId!.Value, token)).ConfigureAwait(false);
                 if (!parentResult.IsSuccess || parentResult.Value is not { Kind: HostedItemKind.Folder, CurrentRevisionId: { } parentRevision })
                     return new(false, null, "FilesParentUnavailable", "The selected Files parent folder is unavailable.", true);
+                var parentFolder = parentResult.Value
+                    ?? throw new InvalidDataException("The Files parent-folder result omitted its canonical row.");
 
                 var issuer = _browser._originalFolders?.BorrowOriginalItemReadIssuer()
                     ?? throw new NotSupportedException("The original Files board write issuer is unavailable.");
@@ -312,9 +327,9 @@ public sealed partial class FilesNativeBrowserService
                     return new(false, null, "FilesBoardAnchorUnavailable", "The current Files board has no unique registered content anchor.", true);
                 async ValueTask RequireWrite(CancellationToken ct)
                 {
-                    if (!source.Invoke(operation.Lifetime) || !_browser.resources.IsOriginalWriteContextForActor(
+                    if (!source.Invoke(operation.Lifetime) || !_browser.OriginalBrowserResources.IsOriginalWriteContextForActor(
                         operation.Actor, operation.WriteContext, "files.board.write", operation.Scopes) ||
-                        await source.Observe(() => _browser.resources.AuthorizeOriginalWriteForActorAsync(
+                        await source.Observe(() => _browser.OriginalBrowserResources.AuthorizeOriginalWriteForActorAsync(
                             operation.Actor, operation.WriteContext, "files.board.write", operation.Scopes, ct).AsTask()).ConfigureAwait(false) != operation.Actor)
                         throw new UnauthorizedAccessException("The current Home WRITE does not authorize this Files board revision.");
                 }
@@ -408,7 +423,7 @@ public sealed partial class FilesNativeBrowserService
                     if (claim.Disposition != HomeResourceClaimDisposition.Claimed || claim.Actor != operation.Actor)
                         throw new UnauthorizedAccessException("Home did not claim the same original Files board save.");
                     operation.Claimed = true;
-                    fence = await source.Observe(() => _browser.workspaces.CaptureBrowserCommitFenceWithinOriginalSourceAsync(
+                    fence = await source.Observe(() => _browser.OriginalBrowserWorkspaces.CaptureBrowserCommitFenceWithinOriginalSourceAsync(
                         workspace, _broker, capability, operation.Lifetime, source.OriginalSynchronousScope, source.RetainOriginalTask,
                         token, actual => operation.Fence = actual).AsTask()).ConfigureAwait(false);
                     var exactFence = fence ?? throw new InvalidOperationException("Home returned no retained Files commit fence.");
@@ -422,13 +437,14 @@ public sealed partial class FilesNativeBrowserService
                     operation.Validated = true;
                     var destination = IssueDestination(operation, originalBinding.DirectoryPath, row, expectedRevision,
                         operation.NewRevisionId, operation.DocumentId, operation.Payload.Length, operation.PayloadSha256);
-                    operation.Materialization = await source.Observe(() => _physicalOwner.MaterializeOriginalBoardDocumentWithinSourceAsync(
-                        destination, operation.Payload, source.OriginalSynchronousScope, source.RetainOriginalTask, token),
+                    operation.Materialization = await source.ObserveProduct(
+                        () => _physicalOwner.MaterializeOriginalBoardDocumentWithinSourceAsync(destination, operation.Payload,
+                            source.OriginalSynchronousScope, source.RetainOriginalTask, token),
                         actual => operation.Materialization = actual).ConfigureAwait(false);
                     if (!_physicalOwner.IsIssuedOriginalBoardDocumentMaterialization(operation.Materialization) ||
                         operation.Materialization.OriginalRecord is not { } materialized ||
                         materialized.FilesStoreId != operation.Page.StoreID || materialized.ParentFolderId != row.ParentId!.Value.Value ||
-                        materialized.FileId != row.Id.Value || materialized.ExpectedRevisionId != expectedRevision.Value ||
+                        materialized.FileId != row.Id.Value || materialized.ExpectedRevisionId != expectedRevision ||
                         materialized.NewRevisionId != operation.NewRevisionId || materialized.DocumentId != operation.DocumentId ||
                         materialized.SizeBytes != operation.Payload.Length ||
                         !string.Equals(NormalizeSha256(materialized.Sha256), NormalizeSha256(operation.PayloadSha256), StringComparison.Ordinal) ||
@@ -442,7 +458,7 @@ public sealed partial class FilesNativeBrowserService
                     await RequireWrite(token).ConfigureAwait(false);
 
                     var uploaded = new FilesUploadedContent(row.Id, row.ParentId, row.Name, row.ContentType,
-                        new(operation.NewRevisionId), expectedRevision, operation.Actor.ActorId, DateTimeOffset.UtcNow,
+                        new(operation.NewRevisionId), new(expectedRevision), operation.Actor.ActorId, DateTimeOffset.UtcNow,
                         operation.Payload.Length, operation.PayloadSha256, materialized.RelativeContentReference);
                     var guard = new FilesCommitAuthorityGuard(operation.Actor.ActorId, async ct =>
                     {
@@ -453,15 +469,16 @@ public sealed partial class FilesNativeBrowserService
                         return await source.Observe(() => exactFence.ValidateAsync(ct).AsTask()).ConfigureAwait(false);
                     });
                     var commit = workspace.Provider.CommitUploadedContentAsync(uploaded,
-                        [new(row.Id, expectedRevision), new(parentResult.Value.Id, parentRevision)],
+                        [new(row.Id, new(expectedRevision)), new(parentFolder.Id, parentRevision)],
                         operation.Page.StoreID, guard, token);
                     try { result = await source.Observe(() => commit).ConfigureAwait(false); }
                     catch when (commit.IsFaulted) { throw commit.Exception!; }
                     operation.ActualResult = result;
-                    if (result is { IsSuccess: true } && (result.Value.Id.Value != operation.NewRevisionId ||
-                        result.Value.ItemId != row.Id || result.Value.ParentRevisionId != expectedRevision))
+                    if (result is { IsSuccess: true, Value: { } committedRevision } &&
+                        (committedRevision.Id.Value != operation.NewRevisionId || committedRevision.ItemId != row.Id ||
+                         committedRevision.ParentRevisionId?.Value != expectedRevision))
                         throw new InvalidOperationException("Files returned a success receipt for another board revision; the effect is uncertain.");
-                    exactCommitReceipt = result is { IsSuccess: true };
+                    exactCommitReceipt = result is { IsSuccess: true, Value: { } };
                     operation.ExactCommitReceipt = exactCommitReceipt;
                     if (exactCommitReceipt)
                     {
