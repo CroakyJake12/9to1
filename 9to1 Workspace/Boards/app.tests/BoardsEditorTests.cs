@@ -158,7 +158,7 @@ public sealed class BoardsEditorTests
         foreach (var (command, property) in expected)
         {
             Assert.False(Assert.IsType<bool>(vm.Get(property)));
-            var action = TestUiThread.Run(() => vm.DispatchAsync(command, null));
+            var action = TestUiThread.Run(() => vm.DispatchAsync(command, null)).AsTask();
             PumpOnUi(action);
             await action;
             Assert.True(Assert.IsType<bool>(vm.Get(property)));
@@ -475,8 +475,8 @@ public sealed class BoardsEditorTests
             var errors = all.OfType<TextBlock>()
                 .Where(t => (t.Text ?? string.Empty).StartsWith("Invalid expression", StringComparison.Ordinal))
                 .ToArray();
-            var plot = all.OfType<Canvas>().SingleOrDefault(c =>
-                Avalonia.Automation.AutomationProperties.GetName(c) == "Graph plot");
+            var plot = all.OfType<Canvas>().SingleOrDefault(canvas =>
+                Avalonia.Automation.AutomationProperties.GetName(canvas) == "Graph plot");
             return (errors.Length, errors.Any(t => t.Text!.Contains("y = ???", StringComparison.Ordinal)),
                 all.OfType<Canvas>().Count(), plot?.ClipToBounds == true);
         });
@@ -527,7 +527,7 @@ public sealed class BoardsEditorTests
         {
             var formatButton = components.Single(component => component.Name == name);
             Assert.True(formatButton.Properties.TryGetValue("Selected", out var selected)
-                && selected is CuiBindingValue { Path: var path } && path == binding);
+            && selected is CuiBindingValue { Path: var bindingPath } && bindingPath == binding);
         }
         Assert.True(toolbarHost.Properties.TryGetValue("HorizontalScrolling", out var horizontalScrolling)
             && horizontalScrolling is CuiLiteralValue horizontalLiteral
@@ -552,9 +552,16 @@ public sealed class BoardsEditorTests
         var boardIdentity = components.Single(component => component.Name == "BoardIdentity");
         var boardIdentityNames = boardIdentity.DescendantsAndSelf().Select(component => component.Name).ToArray();
         Assert.True(Array.IndexOf(boardIdentityNames, "BoardTitleBox") < Array.IndexOf(boardIdentityNames, "SaveState"));
+        var addAction = components.Single(component => component.Name == "AddNewButton");
+        Assert.True(addAction.Properties.TryGetValue("Content", out var addContent)
+            && addContent is CuiLiteralValue { Value: "+ Add" });
+        Assert.True(addAction.Properties.TryGetValue("Foreground", out var addForeground)
+            && addForeground is CuiResourceValue { Key: "CuiAccentInkBrush" });
+        Assert.True(addAction.Properties.TryGetValue("FontSize", out var addFontSize)
+            && addFontSize is CuiLiteralValue { Value: "14" });
         var layoutToggle = components.Single(component => component.Name == "LayoutModeToggle");
         Assert.True(layoutToggle.Properties.TryGetValue("Checked", out var layoutChecked)
-            && layoutChecked is CuiBindingValue { Path: "IsFreeLayout", Mode: CakeOS.Cui.Language.CuiBindingMode.TwoWay });
+            && layoutChecked is CuiBindingValue { Path: "IsFreeLayout", Mode: CuiBindingMode.TwoWay });
         Assert.True(layoutToggle.Properties.TryGetValue("Interactive", out var layoutInteractive)
             && layoutInteractive is CuiBindingValue { Path: "CanChangeLayoutMode" });
         var layoutLabel = components.Single(component => component.Name == "LayoutModeLabel");
@@ -797,7 +804,7 @@ public sealed class BoardsEditorTests
         var section = session.Document.Sections[0];
         TestUiThread.Run(() => vm.OpenSectionIconPicker(section.Id));
 
-        var pending = TestUiThread.Run(() => vm.DispatchAsync("SuggestSectionIcon", null));
+        var pending = TestUiThread.Run(() => vm.DispatchAsync("SuggestSectionIcon", null)).AsTask();
         Assert.Equal(section.Title, await host.RequestedTitle.Task.WaitAsync(TimeSpan.FromSeconds(2)));
         TestUiThread.Run(vm.CloseSectionIconPicker);
         Assert.True(host.RequestToken.IsCancellationRequested);
@@ -826,7 +833,7 @@ public sealed class BoardsEditorTests
         var section = session.Document.Sections[0];
         TestUiThread.Run(() => vm.OpenSectionIconPicker(section.Id));
 
-        var pending = TestUiThread.Run(() => vm.DispatchAsync("SuggestSectionIcon", null));
+        var pending = TestUiThread.Run(() => vm.DispatchAsync("SuggestSectionIcon", null)).AsTask();
         await host.RequestedTitle.Task.WaitAsync(TimeSpan.FromSeconds(2));
         host.Completion.TrySetResult(new BoardsGeneratedSectionIconResult(
             [
@@ -841,13 +848,13 @@ public sealed class BoardsEditorTests
         Assert.Equal(3, Assert.IsAssignableFrom<IReadOnlyList<BoardsGeneratedSectionIconPreviewView>>(
             vm.Get("GeneratedSectionIconPreviews")).Count);
 
-        var colorChange = TestUiThread.Run(() => vm.DispatchAsync("ApplySectionIconColor", "#187B72"));
+        var colorChange = TestUiThread.Run(() => vm.DispatchAsync("ApplySectionIconColor", "#187B72")).AsTask();
         PumpOnUi(colorChange);
         await colorChange;
         Assert.Equal(3, Assert.IsAssignableFrom<IReadOnlyList<BoardsGeneratedSectionIconPreviewView>>(
             vm.Get("GeneratedSectionIconPreviews")).Count);
 
-        var apply = TestUiThread.Run(() => vm.DispatchAsync("ApplyGeneratedSectionIcon", "1"));
+        var apply = TestUiThread.Run(() => vm.DispatchAsync("ApplyGeneratedSectionIcon", "1")).AsTask();
         PumpOnUi(apply);
         await apply;
         Assert.Equal(HavenRichSectionIcons.Generated, section.IconKey);

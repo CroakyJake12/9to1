@@ -73,7 +73,7 @@
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
           <Container Type="Menu" Row="3" Margin="0 8 0 0">
-            <Button Type="Menu Item" Content="+ Add" Width="168" HorizontalAlignment="Center" Interactive="{Binding CanEdit}" FontWeight="Bold" AccessibleName="Add page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiAccentBrush}" Foreground="{Resource HavenAccentInkBrush}" BorderWidth="0" CornerRadius="18">
+            <Button Type="Menu Item" Content="+ Add" Width="168" HorizontalAlignment="Center" Interactive="{Binding CanEdit}" FontWeight="Bold" FontSize="14" AccessibleName="Add page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiAccentBrush}" Foreground="{Resource CuiAccentInkBrush}" BorderWidth="0" CornerRadius="18">
               <Button Type="Menu Item" Content="New page in this section" Action="AddPage" AccessibleName="Create a page in the current section" />
               <Button Type="Menu Item" Content="New section" Action="AddSection" AccessibleName="Create a new section in this Board" />
               <Button Type="Menu Item" Content="Attach existing Write document…" Action="AddWritePage" Interactive="{Binding CanAddWritePage}" AccessibleName="Attach an existing Write document as a page" />
