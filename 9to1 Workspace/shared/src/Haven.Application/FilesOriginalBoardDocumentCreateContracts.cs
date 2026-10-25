@@ -48,6 +48,7 @@ public enum FilesOriginalBoardDocumentCreateSettlementState
     OutcomeUnknown,
     HomeAuditPending,
     CommittedWithCleanupIssues,
+    CommittedWithUncertainAudit,
 }
 
 /// <summary>Recovery signal for a retained create operation. A committed receipt remains exact
@@ -68,6 +69,8 @@ public sealed class FilesOriginalBoardDocumentCreateSettlementException : IOExce
                 "Files and Home committed the board create, but one or more cleanup steps reported errors.",
             FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown =>
                 "The retained Files board create outcome is unknown. Do not replay it; reconcile the exact operation.",
+            FilesOriginalBoardDocumentCreateSettlementState.CommittedWithUncertainAudit =>
+                "The exact Files artifact is current, but Home retained an uncertain terminal outcome.",
             _ => "The retained Files board create did not commit.",
         }, cause)
     {
