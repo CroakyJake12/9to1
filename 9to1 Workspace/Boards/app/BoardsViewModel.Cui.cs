@@ -30,6 +30,10 @@ public sealed partial class BoardsViewModel
         Set("ContextCellVerticalIndex", IndexOf(ContextVerticalOptions, cellStyle?.AlignV));
         Set("ContextCellSurfaceIndex", Math.Max(0, Array.FindIndex(ContextSurfaces, surface => surface.Hex == cellStyle?.Background)));
         Set("ContextHasCell", cellKey is not null);
+        Set("ContextCanMoveRowUp", cellKey is not null && row > 0);
+        Set("ContextCanMoveRowDown", cellKey is not null && row < block!.TableRows - 1);
+        Set("ContextCanMoveColumnLeft", cellKey is not null && column > 0);
+        Set("ContextCanMoveColumnRight", cellKey is not null && column < block!.TableCols - 1);
         Set("ContextCellHint", cellKey is null ? "Focus a cell for cell tools." : $"Cell {cellKey}");
         var columnWidth = cellKey is not null && column < block!.ColumnWidths.Count
             ? block.ColumnWidths[column]
@@ -248,6 +252,10 @@ public sealed partial class BoardsViewModel
         {
             case "ContextAddRow" when block.Kind == "table": TableAddRow(block.Id); break;
             case "ContextDeleteRow" when block.Kind == "table": TableDelRow(block.Id); break;
+            case "ContextMoveRowUp" when TryGetContextCell(block, out var moveUpRow, out var moveUpColumn):
+                await MoveSelectedTableAxisAsync(block, moveUpRow, moveUpColumn, -1, rowAxis: true, cancellationToken); break;
+            case "ContextMoveRowDown" when TryGetContextCell(block, out var moveDownRow, out var moveDownColumn):
+                await MoveSelectedTableAxisAsync(block, moveDownRow, moveDownColumn, 1, rowAxis: true, cancellationToken); break;
             case "ContextRowShorter" when TryGetContextCell(block, out var shortRow, out _):
                 SetContextRowHeight(block, shortRow, -16); break;
             case "ContextRowTaller" when TryGetContextCell(block, out var tallRow, out _):
@@ -256,6 +264,10 @@ public sealed partial class BoardsViewModel
                 SetContextRowHeight(block, autoRow, null); break;
             case "ContextAddColumn" when block.Kind == "table": TableAddCol(block.Id); break;
             case "ContextDeleteColumn" when block.Kind == "table": TableDelCol(block.Id); break;
+            case "ContextMoveColumnLeft" when TryGetContextCell(block, out var moveLeftRow, out var moveLeftColumn):
+                await MoveSelectedTableAxisAsync(block, moveLeftRow, moveLeftColumn, -1, rowAxis: false, cancellationToken); break;
+            case "ContextMoveColumnRight" when TryGetContextCell(block, out var moveRightRow, out var moveRightColumn):
+                await MoveSelectedTableAxisAsync(block, moveRightRow, moveRightColumn, 1, rowAxis: false, cancellationToken); break;
             case "ContextColumnNarrower" when TryGetContextCell(block, out _, out var narrowColumn):
                 SetContextColumnWidth(block, narrowColumn, -24); break;
             case "ContextColumnWider" when TryGetContextCell(block, out _, out var wideColumn):
@@ -337,6 +349,45 @@ public sealed partial class BoardsViewModel
         {
             block.Divider!.Thickness = Math.Clamp(block.Divider.Thickness + delta, 1, 12); CommitViewEdit();
         }
+    }
+
+    private async Task MoveSelectedTableAxisAsync(RichBoardBlock block, int row, int column,
+        int delta, bool rowAxis, CancellationToken cancellationToken)
+    {
+        if (!RequireEditMode()) return;
+        if (_session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", "Table reordering requires the canonical Boards contract session.");
+            return;
+        }
+        var fromIndex = rowAxis ? row : column;
+        var toIndex = fromIndex + delta;
+        var epoch = Interlocked.Read(ref _tableSelectionEpoch);
+        bool IsOriginCurrent() => Interlocked.Read(ref _tableSelectionEpoch) == epoch;
+        bool moved;
+        try
+        {
+            moved = await adapter.MoveTableAxisAsync(SelectedPageId, block.Id, rowAxis,
+                fromIndex, toIndex, IsOriginCurrent, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            Set("StatusText", "Table reorder failed: " + FirstLine(error.Message));
+            return;
+        }
+        if (!moved)
+        {
+            Set("StatusText", "The table changed before it could be reordered. Select a cell and try again.");
+            return;
+        }
+
+        FocusCell(block.Id, rowAxis ? toIndex : row, rowAxis ? column : toIndex);
+        RefreshAfterEdit();
+        Set("StatusText", rowAxis ? "Table row moved." : "Table column moved.");
     }
 
     private void SetContextColumnWidth(RichBoardBlock block, int column, double? delta)

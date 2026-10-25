@@ -454,6 +454,48 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         finally { _mergeGate.Release(); }
     }
 
+    /// <summary>Reorders a stable table axis as one guarded, undoable document mutation.</summary>
+    public async ValueTask<bool> MoveTableAxisAsync(string pageId, string blockId, bool moveRow,
+        int fromIndex, int toIndex, Func<bool> originStillSelected, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(originStillSelected);
+        if (_disposed || string.IsNullOrWhiteSpace(pageId) || string.IsNullOrWhiteSpace(blockId) ||
+            fromIndex < 0 || toIndex < 0 || fromIndex == toIndex || !originStillSelected())
+            return false;
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            EnsureEditable();
+            if (!originStillSelected()) return false;
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var version = DocumentVersion;
+            bool Applicable(HavenRichNotes rich)
+            {
+                if (_disposed || !originStillSelected() || rich.Version != version) return false;
+                var page = rich.Sections.SelectMany(section => section.Pages)
+                    .FirstOrDefault(candidate => candidate.Id == pageId);
+                var table = page?.Blocks.FirstOrDefault(candidate => candidate.Id == blockId)?.Table;
+                if (table is null || table.Rows.Count == 0) return false;
+                if (moveRow) return fromIndex < table.Rows.Count && toIndex < table.Rows.Count;
+                var columnCount = table.Rows[0].Cells.Count;
+                return table.Rows.All(row => row.Cells.Count == columnCount) &&
+                    fromIndex < columnCount && toIndex < columnCount;
+            }
+            if (!Applicable(_real.Rich)) return false;
+            var moved = false;
+            var applied = await _real.MutateIfAsync(Applicable, rich =>
+            {
+                moved = moveRow
+                    ? HavenRichNotesOps.MoveTableRow(rich, pageId, blockId, fromIndex, toIndex)
+                    : HavenRichNotesOps.MoveTableColumn(rich, pageId, blockId, fromIndex, toIndex);
+            }, cancellationToken).ConfigureAwait(false);
+            if (!applied || !moved) return false;
+            RefreshView();
+            return true;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     public bool CanUndo => _real.CanUndo;
     public bool CanRedo => _real.CanRedo;
 

@@ -739,6 +739,22 @@ public static partial class HavenRichNotesOps
         return true;
     }
 
+    /// <summary>Moves a complete stable table row, including its cells and row sizing, to a new index.</summary>
+    public static bool MoveTableRow(HavenRichNotes notes, string pageId, string blockId, int fromIndex, int toIndex)
+    {
+        var table = RequireTable(notes, pageId, blockId);
+        if (fromIndex < 0 || fromIndex >= table.Rows.Count || toIndex < 0 || toIndex >= table.Rows.Count)
+            return false;
+        if (fromIndex == toIndex) return false;
+        while (table.RowHeights.Count < table.Rows.Count) table.RowHeights.Add(0);
+        var row = table.Rows[fromIndex];
+        table.Rows.RemoveAt(fromIndex);
+        table.Rows.Insert(toIndex, row);
+        MoveParallelValue(table.RowHeights, fromIndex, toIndex);
+        TouchNotes(notes);
+        return true;
+    }
+
     public static void InsertTableColumn(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
@@ -761,6 +777,37 @@ public static partial class HavenRichNotesOps
         if (index < table.ColumnWidths.Count) table.ColumnWidths.RemoveAt(index);
         TouchNotes(notes);
         return true;
+    }
+
+    /// <summary>Moves a complete stable table column, including every cell and its width, to a new index.</summary>
+    public static bool MoveTableColumn(HavenRichNotes notes, string pageId, string blockId, int fromIndex, int toIndex)
+    {
+        var table = RequireTable(notes, pageId, blockId);
+        if (table.Rows.Count == 0) return false;
+        var columnCount = table.Rows[0].Cells.Count;
+        if (fromIndex < 0 || fromIndex >= columnCount || toIndex < 0 || toIndex >= columnCount)
+            return false;
+        if (fromIndex == toIndex) return false;
+        if (table.Rows.Any(row => row.Cells.Count != columnCount))
+            throw new InvalidOperationException("Cannot reorder columns in a non-rectangular table.");
+        while (table.ColumnWidths.Count < columnCount) table.ColumnWidths.Add(0);
+        foreach (var row in table.Rows)
+        {
+            var cell = row.Cells[fromIndex];
+            row.Cells.RemoveAt(fromIndex);
+            row.Cells.Insert(toIndex, cell);
+        }
+        MoveParallelValue(table.ColumnWidths, fromIndex, toIndex);
+        TouchNotes(notes);
+        return true;
+    }
+
+    private static void MoveParallelValue(List<double> values, int fromIndex, int toIndex)
+    {
+        if (fromIndex >= values.Count) return;
+        var value = values[fromIndex];
+        values.RemoveAt(fromIndex);
+        values.Insert(Math.Min(toIndex, values.Count), value);
     }
 
     public static void SetColumnWidth(HavenRichNotes notes, string pageId, string blockId, int column, double width)

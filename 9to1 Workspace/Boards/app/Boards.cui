@@ -82,11 +82,15 @@
               <Text Text="Table" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0 0 4 0" />
               <Button Content="+ Row" Action="ContextAddRow" AccessibleName="Add table row" />
               <Button Content="− Row" Action="ContextDeleteRow" AccessibleName="Delete last table row" />
+              <Button Content="↑ Row" Action="ContextMoveRowUp" Interactive="{Binding ContextCanMoveRowUp}" AccessibleName="Move selected table row up" />
+              <Button Content="↓ Row" Action="ContextMoveRowDown" Interactive="{Binding ContextCanMoveRowDown}" AccessibleName="Move selected table row down" />
               <Button Content="Shorter row" Action="ContextRowShorter" AccessibleName="Shorten selected table row" Interactive="{Binding ContextHasCell}" />
               <Button Content="Taller row" Action="ContextRowTaller" AccessibleName="Heighten selected table row" Interactive="{Binding ContextHasCell}" />
               <Button Content="Auto height" Action="ContextRowAutoHeight" AccessibleName="Reset selected table row height to automatic" Interactive="{Binding ContextHasCell}" />
               <Button Content="+ Column" Action="ContextAddColumn" AccessibleName="Add table column" />
               <Button Content="− Column" Action="ContextDeleteColumn" AccessibleName="Delete last table column" />
+              <Button Content="← Column" Action="ContextMoveColumnLeft" Interactive="{Binding ContextCanMoveColumnLeft}" AccessibleName="Move selected table column left" />
+              <Button Content="→ Column" Action="ContextMoveColumnRight" Interactive="{Binding ContextCanMoveColumnRight}" AccessibleName="Move selected table column right" />
               <Button Content="Narrow column" Action="ContextColumnNarrower" AccessibleName="Narrow selected table column" Interactive="{Binding ContextHasCell}" />
               <Button Content="Widen column" Action="ContextColumnWider" AccessibleName="Widen selected table column" Interactive="{Binding ContextHasCell}" />
               <Button Content="Auto width" Action="ContextColumnAutoWidth" AccessibleName="Reset selected table column width to automatic" Interactive="{Binding ContextHasCell}" />
