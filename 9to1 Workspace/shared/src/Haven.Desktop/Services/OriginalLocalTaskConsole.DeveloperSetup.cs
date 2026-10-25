@@ -23,6 +23,13 @@ public static partial class OriginalLocalTaskConsole
         private HomeDeveloperManualProjectExecutionActionPolicySource? _setupManualRunPolicy;
         private HomeDeveloperManualProjectExecutionAdmissionSource? _setupManualRuns;
         private DeveloperManualProjectProcessOwner? _setupManualProcessOwner;
+        private DeveloperManualSourceReadOwner? _setupManualReader;
+        private sealed record ConsoleRunTargetReview(DeveloperResolvedProject Project, DeveloperRunConfigurationEditReview Review);
+        // View review references select these private records only. They are never Task/Files
+        // identities, a metadata write grant or a Home execution approval.
+        private readonly Dictionary<Guid, ConsoleRunTargetReview> _consoleRunTargetReviews = [];
+        private readonly HashSet<Guid> _consumedRunTargetReviews = [];
+        private readonly List<DeveloperRunConfigurationEditObservation> _consoleRunTargetOutcomes = [];
         private CancellationTokenSource? _manualConsoleRunStop;
         private FilesDeveloperOriginalSourceSelection? _setupSelections;
         private IDeveloperProjectOriginalPhysicalCaptureSource? _setupPhysical;
@@ -94,6 +101,7 @@ public static partial class OriginalLocalTaskConsole
             Resolve<HomeDeveloperProjectEditAdmissionSource>(original, value => _setupEdits = value);
             Resolve<HomeDeveloperManualProjectExecutionAdmissionSource>(original, value => _setupManualRuns = value);
             Resolve<DeveloperManualProjectProcessOwner>(original, value => _setupManualProcessOwner = value);
+            Resolve<DeveloperManualSourceReadOwner>(original, value => _setupManualReader = value);
             Resolve<HomeDeveloperProjectSetupJournal>(original, value => _setupJournal = value);
             Resolve<HomeDeveloperProjectSetupPermissionSource>(original, value => _setupPermissions = value);
             Resolve<FilesDeveloperOriginalSourceSelection>(original, value => _setupSelections = value);
@@ -164,6 +172,96 @@ public static partial class OriginalLocalTaskConsole
             if (_setupEdits is not null) AcquireClose(_setupEdits.CloseAndDrainOriginalEditsAsync, closes, failures);
             await JoinAll(closes, failures).ConfigureAwait(false);
             Throw(failures);
+        }
+
+        private async Task ReviewOriginalConsoleRunTargetAsync(DesktopOriginalWorkLifetime.Original original,
+            string argument, CancellationToken token)
+        {
+            var parts = argument.Split(' ', 8, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 8 || !Guid.TryParse(parts[0], out var workspace) || workspace == Guid.Empty ||
+                !Guid.TryParse(parts[1], out var project) || project == Guid.Empty || !Guid.TryParse(parts[2], out var root) || root == Guid.Empty ||
+                parts[5] is not ("new" or "edit") || !int.TryParse(parts[6], System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out var timeout))
+                throw new ArgumentException("Use project-target-review <workspace GUID> <project GUID> <root GUID> <repository binding ID or none> <target ID> <new or edit> <timeout seconds> <exact command>. IDs containing spaces require the native selector.");
+            var stored = await Acquire(original, () => _setupWorkspaceStore!.GetAsync(workspace, token)).ConfigureAwait(false);
+            if (!stored.Succeeded || stored.Value is null) throw new InvalidOperationException(JsonSerializer.Serialize(stored.Error));
+            var row = stored.Value.Projects.Single(value => value.ProjectId == project);
+            if (!row.RootIds.Contains(root)) throw new InvalidOperationException("The selected root is not part of that actual saved project.");
+            var reference = new DeveloperProjectReference(workspace, stored.Value.Revision, project, row.Revision, root, parts[3] == "none" ? null : parts[3]);
+            var resolved = await Acquire(original, () => _developer!.ResolveAsync(reference, token)).ConfigureAwait(false);
+            if (!resolved.Succeeded || resolved.Value is null) throw new InvalidOperationException(JsonSerializer.Serialize(resolved.Error));
+            string? before = null;
+            if (parts[5] == "edit")
+            {
+                var current = DeveloperRunConfigurationSelection.Observe(resolved.Value).Value?.SingleOrDefault(value => value.Configuration.Id == parts[4])
+                    ?? throw new InvalidOperationException("Select an actual existing target in this saved project before editing it.");
+                before = current.DefinitionSha256;
+            }
+            var prepared = DeveloperRunConfigurationEdit.Prepare(resolved.Value, parts[4], parts[7], timeout, before);
+            if (!prepared.Succeeded || prepared.Value is null) throw new InvalidOperationException(prepared.Error!.Message);
+            var reviewReference = Guid.NewGuid();
+            Scope(original, () =>
+            {
+                lock (_gate)
+                {
+                    if (_consoleRunTargetReviews.Count >= 128) throw new InvalidOperationException("Original target-review custody is full; no previous review was evicted.");
+                    _consoleRunTargetReviews.Add(reviewReference, new(resolved.Value, prepared.Value));
+                }
+                Write(new { targetReviewReference = reviewReference, declaration = prepared.Value.Summary,
+                    prepared.Value.BeforeDefinitionSha256, prepared.Value.AfterDefinitionSha256,
+                    note = "This reference selects a private declaration review only. project-target-save consumes it once, requests genuine registered Home READ and atomically preserves compatible recovery. Saving never starts a process." });
+            });
+        }
+
+        private void LaunchOriginalConsoleRunTargetSave(DesktopOriginalWorkLifetime.Original commandOriginal,
+            string argument, CancellationToken token)
+        {
+            var reviewReference = Ids(argument, 1)[0]; ConsoleRunTargetReview selected;
+            token.ThrowIfCancellationRequested();
+            lock (_gate)
+            {
+                if (!_consoleRunTargetReviews.TryGetValue(reviewReference, out selected!) || _consumedRunTargetReviews.Contains(reviewReference))
+                    throw new InvalidOperationException("Select a current unconsumed target review. A prior saved/uncertain operation is never replayed.");
+            }
+            Scope(commandOriginal, () =>
+            {
+                if (_setupManualReader is null || _setupWorkspaceStore is null)
+                    throw new InvalidOperationException("The original registered-project reader and canonical store are unavailable.");
+            });
+            _ = _work.RunAsync(async original =>
+            {
+                var actor = await Acquire(original, () => Home.Profiles.GetCurrentAsync(original.Token).AsTask()).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("The actual current Home profile is unavailable.");
+                if (!Guid.TryParse(actor.ProfileId, out var profile) || profile == Guid.Empty || actor.AccountId is not null || actor.OrganisationId is not null)
+                    throw new UnauthorizedAccessException("This bounded declaration owner requires the actual personal Home profile.");
+                var scope = new DeveloperDraftRecoveryScope(profile, Guid.Empty, Guid.Empty, Guid.Empty, IsManual: true);
+                // Ciphertext header/generation only. The actual source owner independently derives
+                // and checks the profile again after Home READ; no plaintext/key is fetched here.
+                var recovery = await Acquire(original, () => _setupWorkspaceStore!.GetDraftRecoveryAsync(selected.Project, scope, original.Token)).ConfigureAwait(false);
+                if (!recovery.Succeeded) throw new InvalidOperationException(recovery.Error!.Message);
+                var keys = Resolve<IProviderSecretStore>(original); var paths = Resolve<IAppPaths>(original);
+                var observed = await Acquire(original, () => _setupManualReader!.SaveReviewedRunConfigurationAsync(_setupWorkspaceStore!,
+                    _currentProjectExecution, keys, paths, selected.Project, selected.Review, recovery.Value?.Generation ?? 0,
+                    body => Scope(original, body), original.Token)).ConfigureAwait(false);
+                lock (_gate) _consoleRunTargetOutcomes.Add(observed); // Retain before any presentation callback can refuse.
+                Scope(original, () =>
+                {
+                    var saved = observed.OriginalStoreResult;
+                    Write(new { targetReviewReference = reviewReference, metadataSaved = saved?.Succeeded == true,
+                        project = saved?.Value?.Project.Reference, declaration = saved?.Value?.Configuration,
+                        recoveryGeneration = saved?.Value?.RecoveryGeneration, migratedRecovery = saved?.Value?.MigratedRecovery,
+                        error = saved?.Error, causes = observed.OriginalErrors.Select(cause => cause.ToString()).ToArray(),
+                        note = "No process was started and no Task was created. A saved target still requires separate project-run Home execution approval; failed or uncertain metadata is never automatically retried." });
+                });
+                foreach (var cause in observed.OriginalErrors) original.Retain(cause);
+                original.ThrowRetained();
+            }, _ =>
+            {
+                lock (_gate)
+                    if (!_consumedRunTargetReviews.Add(reviewReference)) throw new InvalidOperationException("This exact declaration review was already consumed.");
+            });
+            Write(new { targetSaveRequested = true, targetReviewReference = reviewReference,
+                note = "Display and explicitly decide the pending registered source READ in Home. The existing key/recovery and exact metadata revisions remain mandatory." });
         }
 
         private void LaunchOriginalManualProjectRun(DesktopOriginalWorkLifetime.Original commandOriginal,
