@@ -752,7 +752,11 @@ public sealed partial class FilesNativeBrowserService
                 throw new InvalidDataException("The original physical Files owner returned another board-create materialization.");
             await source.ObserveVoid(() => _physicalOwner.RevalidateOriginalBoardDocumentCreateWithinSourceAsync(
                 exactMaterialization, source.OriginalSynchronousScope, source.RetainOriginalTask, token)).ConfigureAwait(false);
-            await RequireWrite(token).ConfigureAwait(false);
+            // exactFence.ValidateAsync above retained the original Home state lock for the
+            // Files commit. Do not re-enter ResourceAuthorization here: its actor source reads
+            // that same Home store and would wait on our own retained lease. Begin and Claim
+            // already revalidated the exact write observation before the fence was acquired;
+            // the commit guard below continues validating that retained fence under Files CAS.
             var commit = new FilesUploadedContent(new(operation.FileId), currentFolder.Id, operation.DisplayName,
                 "application/vnd.9to1.board+json", new(operation.FileRevisionId), null, operation.Actor.ActorId,
                 DateTimeOffset.UtcNow, operation.Payload.LongLength, operation.PayloadHash,
