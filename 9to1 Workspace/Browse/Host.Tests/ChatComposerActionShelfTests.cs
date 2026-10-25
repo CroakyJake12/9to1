@@ -42,6 +42,18 @@ public sealed class ChatComposerActionShelfTests
     }
 
     [Fact]
+    public void Stopping_or_noninterruptible_work_cannot_advertise_queue_from_busy_state_alone()
+    {
+        var source = new Source { IsSending = true, Draft = "follow up", Stopping = true };
+        var bindings = new ChatComposerBindings(source);
+        Assert.False(bindings.IsActionAvailable("composer.queue"));
+        Assert.False(bindings.IsActionAvailable("composer.stop"));
+        Assert.True(bindings.TryGetValue("Composer.CanQueue", out var queue));
+        Assert.Equal(false, queue);
+        Assert.Equal("follow up", source.Draft);
+    }
+
+    [Fact]
     public async Task Queue_joins_the_existing_source_operation_once_and_returns_its_failure()
     {
         var original = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -110,6 +122,8 @@ public sealed class ChatComposerActionShelfTests
         public string Draft { get; set; } = "";
         public string Placeholder => "Message";
         public bool IsSending { get; set; }
+        public bool Stopping { get; set; }
+        public bool CanStop => IsSending && !Stopping;
         public bool IsSafetyLocked { get; set; }
         public bool HasAdd => true;
         public bool CanSend => !IsSafetyLocked && !string.IsNullOrWhiteSpace(Draft);
