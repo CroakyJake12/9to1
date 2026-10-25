@@ -38,12 +38,23 @@ public sealed partial class HomeCanonicalInstalledApplicationLaunchSource
             if (_originalMutation is null || current != _originalMutation || Actor != current.Actor)
                 throw new UnauthorizedAccessException("The original installed choice/actor/index/activation/listener changed after review.");
         }
+        // Called only after the producer independently proves ownership of the
+        // SAME completed raw launch task/acknowledgment. Syntax is not authority.
+        private static bool IsOriginalNativeStartIdentity(string identity)
+        {
+            if (identity.StartsWith("windows-filetime:", StringComparison.Ordinal)) return true;
+            const string linux = "linux-proc-start:";
+            return identity.StartsWith(linux, StringComparison.Ordinal) &&
+                ulong.TryParse(identity.AsSpan(linux.Length), System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out var start) && start != 0 &&
+                identity[linux.Length..] == start.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
         private (string Code, bool Applied) CaptureAcknowledgedDecisionAudit(ICanonicalInstalledApplicationLaunchAcknowledgment acknowledgment)
         {
             if (!ReferenceEquals(acknowledgment.OriginalIntent, intent))
                 throw new UnauthorizedAccessException("Another native launch acknowledgment cannot settle this action.");
             var applied = acknowledgment.Applied;
-            if (applied && (acknowledgment.ProcessId < 1 || !acknowledgment.ProcessStartIdentity.StartsWith("windows-filetime:", StringComparison.Ordinal) ||
+            if (applied && (acknowledgment.ProcessId < 1 || !IsOriginalNativeStartIdentity(acknowledgment.ProcessStartIdentity) ||
                 !acknowledgment.ExecutableIdentity.StartsWith("sha256:", StringComparison.Ordinal) || !IsDigest(acknowledgment.ExecutableIdentity[7..])))
                 throw new InvalidDataException("The actual controlled launch has no observed original PID/start/executable.");
             return (applied ? "HOME_INSTALLED_APPLICATION_LAUNCHED" : "HOME_INSTALLED_APPLICATION_NOT_LAUNCHED", applied);
