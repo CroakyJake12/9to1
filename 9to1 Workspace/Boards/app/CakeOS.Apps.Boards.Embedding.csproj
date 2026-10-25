@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="..\..\shared\src\Haven.Desktop\Assets\OwnerAppIcons\dark\boards.png" Link="Assets\OwnerAppIcons\dark\boards.png" />
-    <AvaloniaResource Include="..\..\shared\src\Haven.Desktop\Assets\OwnerAppIcons\light\boards.png" Link="Assets\OwnerAppIcons\light\boards.png" />
+    <EmbeddedResource Include="..\..\shared\src\Haven.Desktop\Assets\OwnerAppIcons\dark\boards.png" LogicalName="CakeOS.Apps.Boards.Embedding.Assets.OwnerAppIcons.dark.boards.png" />
+    <EmbeddedResource Include="..\..\shared\src\Haven.Desktop\Assets\OwnerAppIcons\light\boards.png" LogicalName="CakeOS.Apps.Boards.Embedding.Assets.OwnerAppIcons.light.boards.png" />
   </ItemGroup>
 
   <ItemGroup>

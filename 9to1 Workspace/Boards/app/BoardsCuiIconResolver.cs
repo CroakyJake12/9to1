@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Themes;
 using Haven.UI;
@@ -15,7 +14,7 @@ namespace CakeOS.Apps.Boards.App;
 public static class BoardsCuiIconResolver
 {
     private const string BoardsBrandSource = "ownerbrand:boards";
-    private const string BoardsBrandResourceRoot = "avares://CakeOS.Apps.Boards.Embedding/Assets/OwnerAppIcons/";
+    private const string BoardsBrandResourceRoot = "CakeOS.Apps.Boards.Embedding.Assets.OwnerAppIcons.";
     private static readonly HashSet<string> FilledSilhouetteKeys = new(StringComparer.OrdinalIgnoreCase)
     {
         "more", "grip", "align-left", "align-center", "align-right", "bulleted-list",
@@ -57,10 +56,11 @@ public static class BoardsCuiIconResolver
                 return true;
             }
 
-            var resourceUri = BoardsBrandResourceRoot + folder + "/boards.png";
+            var manifestName = BoardsBrandResourceRoot + folder + ".boards.png";
             try
             {
-                using var stream = AssetLoader.Open(new Uri(resourceUri, UriKind.Absolute));
+                using var stream = typeof(BoardsCuiIconResolver).Assembly.GetManifestResourceStream(manifestName)
+                    ?? throw new FileNotFoundException("The Boards owner-brand resource is missing from its embedding assembly.", manifestName);
                 bitmap = new Bitmap(stream);
                 BoardsBrandBitmaps.Add(folder, bitmap);
                 return true;
@@ -68,7 +68,7 @@ public static class BoardsCuiIconResolver
             catch (Exception exception) when (exception is FileNotFoundException or IOException
                                               or InvalidOperationException or ArgumentException)
             {
-                Trace.TraceWarning($"Unable to load packaged Boards brand resource '{resourceUri}': {exception.Message}");
+                Trace.TraceWarning($"Unable to load packaged Boards brand resource '{manifestName}': {exception.Message}");
                 bitmap = null;
                 return false;
             }

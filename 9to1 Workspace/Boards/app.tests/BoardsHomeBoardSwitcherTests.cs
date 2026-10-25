@@ -61,7 +61,9 @@ public sealed class BoardsHomeBoardSwitcherTests
             Assert.False(Find("BoardSwitcherAll").IsEnabled);
         });
 
-        await viewModel.DispatchAsync("NewBoard", null);
+        // Dispatch from the UI owner thread so the authored live bindings are
+        // refreshed synchronously, as they are for a real CUI menu action.
+        TestUiThread.Run(() => viewModel.DispatchAsync("NewBoard", null).GetAwaiter().GetResult());
 
         TestUiThread.Run(() =>
         {

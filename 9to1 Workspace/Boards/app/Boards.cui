@@ -9,7 +9,7 @@
       <Container padding="12 6" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="{Resource CuiBackgroundBrush}" BorderWidth="0">
         <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto Auto" CellGap="2">
           <Container Type="Grid" ColumnSizes="1fr Auto" Column="0" Row="0" ColumnSpan="2" CellGap="8">
-            <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Boards" />
+            <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
             <Text ID="SaveState" Column="1" Text="{Binding SaveStateText, fallback=Saved}" FontSize="11" VerticalAlignment="Center" Margin="0 0 8 0" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
           <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" Row="1" CellGap="4" VerticalAlignment="Center">
