@@ -194,6 +194,10 @@ public static class BlockRenderer
         button.Padding = new Thickness(0);
         button.HorizontalAlignment = HorizontalAlignment.Center;
         button.VerticalAlignment = VerticalAlignment.Top;
+        // The global button hover style scales controls slightly. These gutter
+        // targets share a fixed 32px slot, so scaling them changes their visible
+        // bounds and makes the control appear larger than its reserved geometry.
+        button.RenderTransform = Transform.Identity;
     }
 
 
