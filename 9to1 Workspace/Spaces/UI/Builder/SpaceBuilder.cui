@@ -128,6 +128,14 @@
             </Container>
           </Repeat>
         </Container>
+        <Container id="space-builder-memory-policy" Type="Vertical Stack" CellGap="6" IsVisible="{Binding builder.view.isAdvanced}">
+          <Text text="Memory policy" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Allow personal memory reads for this Space. The existing memory source still checks the current actor, source and separate permission before reading; parent policy or the Memory category may be more restrictive." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container Type="Horizontal Stack" CellGap="8" Interactive="{Binding builder.canEdit}">
+            <Input id="space-builder-memory-personal-read" Type="Switch" Checked="{Binding builder.memory.personalRead, mode=TwoWay}" Interactive="{Binding builder.canSetPersonalMemoryRead}" accessible-name="Allow personal memory reads" />
+            <Text text="Allow personal memory reads" foreground="{Resource CuiTextBrush}" />
+          </Container>
+        </Container>
         <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isAdvanced}">
           <Text text="Canonical context sources" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Choose a real Boards notebook through Home. Adding a read reference does not grant body access; using it requires a new original Home review and local inference. Current selection is not captured on this route. Up to 128 current notebooks are shown, newest first." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />

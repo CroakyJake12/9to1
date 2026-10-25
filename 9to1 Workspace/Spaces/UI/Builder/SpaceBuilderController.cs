@@ -97,6 +97,35 @@ public sealed class SpaceBuilderController
         return true;
     }
 
+    /// <summary>Requests the canonical Personal memory scope. The live memory source still
+    /// requires its independent current actor/source admission before reading any content.</summary>
+    public bool SetPersonalMemoryReadAllowed(bool allowed)
+    {
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var policy = _state.Draft.MemoryPolicy ?? new SpaceMemoryPolicy(
+                [SpaceMemoryScope.Conversation, SpaceMemoryScope.Space]);
+            var scopes = (policy.AllowedScopes ?? []).ToList();
+            var currentlyAllowed = scopes.Contains(SpaceMemoryScope.Personal);
+            if (currentlyAllowed == allowed) return true;
+            if (allowed) scopes.Add(SpaceMemoryScope.Personal);
+            else scopes.RemoveAll(scope => scope == SpaceMemoryScope.Personal);
+            var draft = _state.Draft with
+            {
+                MemoryPolicy = policy with { AllowedScopes = Array.AsReadOnly(scopes.ToArray()) }
+            };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = allowed
+                    ? "Personal memory reads are allowed by this Space policy when the current memory source also admits them. Save to persist."
+                    : "Personal memory reads are excluded by this Space policy. Other scopes and the memory source remain unchanged. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
     public SpaceBuilderPreview? PreviewDraft()
     {
         SpaceBuilderPreview? preview = null;

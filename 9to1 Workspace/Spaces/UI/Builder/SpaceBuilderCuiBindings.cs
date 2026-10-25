@@ -27,6 +27,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Func<CancellationToken, Task<IReadOnlyList<string>>>? _validateDraft;
     private readonly Action<Guid, bool>? _setContextIncluded;
     private readonly Action<ToolCapability, bool>? _setModelCapabilityRequired;
+    private readonly Action<bool>? _setPersonalMemoryReadAllowed;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
 
@@ -49,7 +50,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Func<SpaceBuilderPreview?>? previewDraft = null,
         Func<CancellationToken, Task<IReadOnlyList<string>>>? validateDraft = null,
         Action<Guid, bool>? setContextIncluded = null,
-        Action<ToolCapability, bool>? setModelCapabilityRequired = null)
+        Action<ToolCapability, bool>? setModelCapabilityRequired = null,
+        Action<bool>? setPersonalMemoryReadAllowed = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -68,6 +70,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _validateDraft = validateDraft;
         _setContextIncluded = setContextIncluded;
         _setModelCapabilityRequired = setModelCapabilityRequired;
+        _setPersonalMemoryReadAllowed = setPersonalMemoryReadAllowed;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -94,6 +97,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.instructions" => state.Draft.Instructions,
             "builder.model.defaultId" => state.Draft.ModelPolicy?.DefaultModelId ?? "",
             "builder.model.provider" => state.Draft.ModelPolicy?.ProviderConstraint ?? "",
+            "builder.memory.personalRead" => (state.Draft.MemoryPolicy?.AllowedScopes ??
+                [SpaceMemoryScope.Conversation, SpaceMemoryScope.Space]).Contains(SpaceMemoryScope.Personal),
             "builder.model.capabilities" => Enum.GetValues<ToolCapability>().Select(capability => new SpaceBuilderModelCapabilityRow
             {
                 id = capability.ToString(),
@@ -120,6 +125,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.hasContextReferences" => state.Draft.ContextReferences.Count != 0,
             "builder.canSetContextIncluded" => _isCurrent() && state.CanEdit && _setContextIncluded is not null,
             "builder.canSetModelCapability" => _isCurrent() && state.CanEdit && _setModelCapabilityRequired is not null,
+            "builder.canSetPersonalMemoryRead" => _isCurrent() && state.CanEdit && _setPersonalMemoryReadAllowed is not null,
             "builder.legacyFiles" => state.Draft.LegacyFiles.Select(reference => new { path = reference.Path, label = reference.DisplayName }).ToArray(),
             "builder.hasLegacyFiles" => state.Draft.LegacyFiles.Count != 0,
             "builder.inherit.sources" => state.Draft.Inheritance.Sources,
@@ -205,6 +211,12 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         if (field is not null && value is string text)
         {
             _edit(field.Value, text);
+            return true;
+        }
+        if (path == "builder.memory.personalRead" && value is bool personalAllowed &&
+            _setPersonalMemoryReadAllowed is not null)
+        {
+            _setPersonalMemoryReadAllowed(personalAllowed);
             return true;
         }
         SpaceBuilderField? policySwitch = path switch
