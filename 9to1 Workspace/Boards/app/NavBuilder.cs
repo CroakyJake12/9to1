@@ -254,13 +254,13 @@ public static class NavBuilder
         {
             if (e.Key == Key.Enter)
             {
-                await CommitAsync(save: true);
                 e.Handled = true;
+                await CommitAsync(save: true);
             }
             else if (e.Key == Key.Escape)
             {
-                await CommitAsync(save: false);
                 e.Handled = true;
+                await CommitAsync(save: false);
             }
         };
         box.LostFocus += async (_, _) => await CommitAsync(save: true);
