@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using CakeOS.Cui;
+using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 
 namespace CakeOS.Apps.Boards.App;
@@ -15,13 +16,17 @@ internal static class BlockGripCui
         var loader = new CuiControlLoader();
         loader.SetBindingContext(context);
         loader.SetActionDispatcher(context);
-        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BlockGripCui.cui");
-        if (!File.Exists(path))
+        (Control? Root, IReadOnlyList<CuiDiagnostic> Diagnostics) loaded;
+        try
+        {
+            loaded = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.BlockGripSourceName));
+        }
+        catch (Exception error)
         {
             loader.Dispose();
-            return Unavailable("The authored block actions are unavailable.");
+            return Unavailable(error.Message);
         }
-        var (root, diagnostics) = loader.LoadFile(path);
+        var (root, diagnostics) = loaded;
         if (root is null)
         {
             loader.Dispose();

@@ -19,10 +19,8 @@
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Controls\Avalonia.Controls.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Remote.Protocol\Avalonia.Remote.Protocol.csproj" />
-    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Themes.Fluent\Avalonia.Themes.Fluent.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Skia\Avalonia.Skia\Avalonia.Skia.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\HarfBuzz\Avalonia.HarfBuzz\Avalonia.HarfBuzz.csproj" />
-    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Fonts.Inter\Avalonia.Fonts.Inter.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Headless\Avalonia.Headless\Avalonia.Headless.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Windows\Avalonia.Win32\Avalonia.Win32.csproj" />
   </ItemGroup>
@@ -35,22 +33,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Boards.cui">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Include="GraphSliderCui.cui">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Include="BlockGripCui.cui">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
     <Content Include="PackageReadme.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\..\framework\CUI\vendor\Avalonia\licence.md" Link="licenses\Avalonia-LICENSE.md" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\..\framework\CUI\vendor\Avalonia\NOTICE.md" Link="licenses\Avalonia-NOTICE.md" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Fonts.Inter\Assets\OFL.txt" Link="licenses\Inter-OFL.txt" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <Import Project="..\..\..\framework\CUI\Compiler\buildTransitive\CakeOS.Cui.props" />
+  <Import Project="..\..\..\framework\CUI\Compiler\buildTransitive\CakeOS.Cui.targets" />
 </Project>

@@ -49,16 +49,7 @@ internal static class TestUiThread
             // process; the shared pump thread still owns all UI work below.
         }
         if (Application.Current is not null)
-        {
-            try
-            {
-                Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            }
-            catch (InvalidOperationException)
-            {
-                // Theme already registered by an earlier bootstrap.
-            }
-        }
+            CakeOS.Cui.Runtime.CuiNativeHost.InitialisePrimitiveTheme(Application.Current, "Boards");
         // Force UIThread ownership onto this thread before any test thread
         // proceeds: first touch binds Dispatcher.UIThread permanently.
         _ = Avalonia.Threading.Dispatcher.UIThread;

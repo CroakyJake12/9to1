@@ -1,0 +1,18 @@
+<Cui>
+  <Theme Name="user_preference">
+    <Page ID="BoardPropertiesPage">
+      <Container Type="Vertical Stack" Padding="20" CellGap="6" VerticalScrolling="True" Background="{Resource CuiPanelBrush}">
+        <Text Text="Board properties" FontSize="20" FontWeight="Bold" Margin="0 0 0 6" />
+        <Text Text="Title" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+        <Text Text="{Binding Title}" TextWrapping="Wrap" Margin="0 0 0 2" />
+        <Text Text="File" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+        <Text Text="{Binding File}" TextWrapping="Wrap" Margin="0 0 0 2" />
+        <Text Text="Location" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+        <Text Text="{Binding Location}" TextWrapping="Wrap" Margin="0 0 0 2" />
+        <Text Text="Size" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+        <Text Text="{Binding Size}" Margin="0 0 0 2" />
+        <Button Content="Close" Action="CloseProperties" AccessibleName="Close properties" HorizontalAlignment="Right" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>
