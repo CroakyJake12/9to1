@@ -104,7 +104,7 @@ internal sealed class BlockReorderPointer
         }
     }
 
-    private async void OnReleased(object? sender, PointerReleasedEventArgs e)
+    private void OnReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (!_pressed || !ReferenceEquals(_pointer, e.Pointer)) return;
         try
@@ -116,21 +116,49 @@ internal sealed class BlockReorderPointer
             StopAutoScroll();
             Cancel();
             if (wasDrag && destination is int index && target is not null && index != _sourceIndex)
-            {
-                _viewModel.FocusBlock(target.BlockId);
-                await _viewModel.DispatchCuiBlockMoveAsync(new BoardBlockMoveRequest(target, index));
-            }
+                _ = CommitReleasedMoveAsync(target, index);
         }
         catch (OperationCanceledException)
         {
-            Cancel();
-            _viewModel.Set("StatusText", "Block move was cancelled.");
+            CancelSafely();
+            ReportStatusSafely("Block move was cancelled.");
         }
         catch (Exception error)
         {
-            Cancel();
-            _viewModel.ReportBlockMoveFailure(error);
+            CancelSafely();
+            try { _viewModel.ReportBlockMoveFailure(error); }
+            catch { /* A status observer cannot throw back into pointer event dispatch. */ }
         }
+    }
+
+    private async Task CommitReleasedMoveAsync(BoardBlockActionTarget target, int destination)
+    {
+        try
+        {
+            _viewModel.FocusBlock(target.BlockId);
+            await _viewModel.DispatchCuiBlockMoveAsync(new BoardBlockMoveRequest(target, destination));
+        }
+        catch (OperationCanceledException)
+        {
+            ReportStatusSafely("Block move was cancelled.");
+        }
+        catch (Exception error)
+        {
+            try { _viewModel.ReportBlockMoveFailure(error); }
+            catch { /* A status observer cannot fault the released pointer task. */ }
+        }
+    }
+
+    private void ReportStatusSafely(string message)
+    {
+        try { _viewModel.Set("StatusText", message); }
+        catch { /* An error reporter cannot throw back into a pointer event dispatch. */ }
+    }
+
+    private void CancelSafely()
+    {
+        try { Cancel(); }
+        catch { /* Restore drag visuals best-effort; never escape a pointer-release callback. */ }
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
