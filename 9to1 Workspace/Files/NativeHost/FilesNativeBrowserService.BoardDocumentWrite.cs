@@ -495,6 +495,12 @@ public sealed partial class FilesNativeBrowserService
                                 "Files confirmed the new revision and Home recorded it, but an owner cleanup step reported an error.")
                             : new(false, null, "HomeAuditPending",
                                 "Files returned the new revision, but Home has not confirmed its terminal audit. Retry this same save request to settle the audit; it will not write again.");
+                    if (returnedFailure)
+                        return new(false, null,
+                            operation.AuditRecorded ? operation.ActualResult!.Error?.Code.ToString() ?? "FilesBoardWriteFailed" : "HomeAuditPending",
+                            operation.AuditRecorded ? operation.ActualResult!.Error?.Message ?? "Files rejected this board revision."
+                                : "Files rejected this board revision; Home has not confirmed its terminal audit. Retry the same request to settle the audit without writing again.",
+                            operation.ActualResult!.Error?.Code == FilesErrorCode.RevisionConflict);
                     if (operation.Claimed)
                         return new(false, null, "FilesWriteOutcomeUnknown",
                             "The original Files write or cleanup did not return a certain result. Do not replay; reopen the current Files revision.", true);
