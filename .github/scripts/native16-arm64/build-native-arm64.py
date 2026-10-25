@@ -39,6 +39,18 @@ try:
  tool=['-p:CuiUsePrebuiltCompiler=true','-p:CuiCompilerTaskAssembly='+str(task),'-p:AvaloniaBuildTasksLocation='+str(donortask)]
  run('app-restore',['dotnet','restore',appproj,'-r','linux-arm64','-p:SelfContained=true','-p:UseAppHost=true',*common,*props(appart),*tool])
  run('app-publish',['dotnet','publish',appproj,'-c','Release','-f','net10.0','-r','linux-arm64','--self-contained','true','--no-restore',*common,'-p:UseAppHost=true','-p:PublishSingleFile=false','-p:PublishTrimmed=false','-p:PublishReadyToRun=false','-p:DebugType=None','-p:DebugSymbols=false','-p:ProductDisplayName=9to1 Lesson Preview (Incomplete)','-o',str(pub),*props(appart),*tool])
+ # Native Root launcher is a normal auditable executable in the actual publish
+ # tree, never setuid/file-capability code. Admission still requires its exact
+ # membership in the owner's externally signed Root receipt/catalogue cohort.
+ native_launcher=root/'9to1 Workspace/shared/native/linux'
+ launcher_build=out/'home-root-launcher-build'
+ run('root-launcher-configure',['cmake','-S',str(native_launcher),'-B',str(launcher_build),'-DCMAKE_BUILD_TYPE=Release'])
+ run('root-launcher-build',['cmake','--build',str(launcher_build),'--parallel','1'])
+ launcher=launcher_build/'home-root-launcher'
+ if not launcher.is_file() or launcher.is_symlink():raise RuntimeError('Actual native Root launcher output missing')
+ import shutil
+ shutil.copyfile(launcher,pub/'home-root-launcher');(pub/'home-root-launcher').chmod(0o755)
+ receipt['native_root_launcher']={'source':str(native_launcher/'home-root-launcher.c'),'source_sha256':sha(native_launcher/'home-root-launcher.c'),'published_sha256':sha(pub/'home-root-launcher'),'privilege_mode':'ordinary0755-no-setuid-no-file-capabilities','production_admission':'REQUIRES_REAL_SIGNED_ROOT_COHORT'}
  shape=subprocess.run([sys.executable,str(infra/'verify-arm64-publish.READONLY.py'),str(pub)],capture_output=True,text=True);(evidence/'arm64-publish-shape.json').write_text(shape.stdout)
  if shape.returncode:raise RuntimeError('Actual native publish shape failed')
  inspected=json.loads(shape.stdout)
