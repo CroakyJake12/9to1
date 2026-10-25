@@ -2,6 +2,7 @@ using System.ComponentModel;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
+using Haven.Core;
 
 namespace HavenOS.Apps.Spaces.Builder;
 
@@ -20,8 +21,20 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Func<bool> _canGoBack;
     private readonly Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>> _sourceOptions;
     private readonly Func<bool> _canBrowseSources;
+    private readonly Action<SpaceBuilderEditorView>? _selectView;
+    private readonly Action<SpaceBuilderExpertSection>? _selectExpertSection;
+    private readonly Func<SpaceBuilderPreview?>? _previewDraft;
+    private readonly Func<CancellationToken, Task<IReadOnlyList<string>>>? _validateDraft;
+    private readonly Action<Guid, bool>? _setContextIncluded;
+    private readonly Action<ToolCapability, bool>? _setModelCapabilityRequired;
+    private readonly Action<bool>? _setPersonalMemoryReadAllowed;
+    private readonly Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? _setCapabilityOverride;
+    private readonly Func<int, SpaceExamplePair, SpaceExamplePair, bool>? _updateExamplePair;
+    private readonly Func<IReadOnlyList<SpaceBuilderFilesSourceOption>> _filesOptions;
+    private readonly Func<bool> _canBrowseFiles;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
+    private static readonly string[] CapabilityOverrideOptions = ["Inherit", "Enabled", "Disabled"];
 
     public SpaceBuilderCuiBindings(Func<SpaceBuilderState> state, Action<SpaceBuilderField, string> edit,
         Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> setCategory,
@@ -36,8 +49,18 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Action<SpaceCapabilityKind, string> detachCapability,
         Func<IReadOnlyList<Haven.Core.ExtensionSkillCatalogEntry>> installedSkills,
         Func<IReadOnlyList<Haven.Core.InstalledExtensionPackage>> installedPlugins,
-        Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent, Func<bool>? canGoBack,
-        Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>>? sourceOptions = null, Func<bool>? canBrowseSources = null)
+        Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent = null, Func<bool>? canGoBack = null,
+        Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>>? sourceOptions = null, Func<bool>? canBrowseSources = null,
+        Action<SpaceBuilderEditorView>? selectView = null, Action<SpaceBuilderExpertSection>? selectExpertSection = null,
+        Func<SpaceBuilderPreview?>? previewDraft = null,
+        Func<CancellationToken, Task<IReadOnlyList<string>>>? validateDraft = null,
+        Action<Guid, bool>? setContextIncluded = null,
+        Action<ToolCapability, bool>? setModelCapabilityRequired = null,
+        Action<bool>? setPersonalMemoryReadAllowed = null,
+        Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null,
+        Func<int, SpaceExamplePair, SpaceExamplePair, bool>? updateExamplePair = null,
+        Func<IReadOnlyList<SpaceBuilderFilesSourceOption>>? filesOptions = null,
+        Func<bool>? canBrowseFiles = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -50,6 +73,17 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _canGoBack = canGoBack ?? (() => false);
         _sourceOptions = sourceOptions ?? (() => []);
         _canBrowseSources = canBrowseSources ?? (() => false);
+        _selectView = selectView;
+        _selectExpertSection = selectExpertSection;
+        _previewDraft = previewDraft;
+        _validateDraft = validateDraft;
+        _setContextIncluded = setContextIncluded;
+        _setModelCapabilityRequired = setModelCapabilityRequired;
+        _setPersonalMemoryReadAllowed = setPersonalMemoryReadAllowed;
+        _setCapabilityOverride = setCapabilityOverride;
+        _updateExamplePair = updateExamplePair;
+        _filesOptions = filesOptions ?? (() => []);
+        _canBrowseFiles = canBrowseFiles ?? (() => false);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -74,6 +108,26 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.description" => state.Draft.Description,
             "builder.icon" => state.Draft.IconKey,
             "builder.instructions" => state.Draft.Instructions,
+            "builder.model.defaultId" => state.Draft.ModelPolicy?.DefaultModelId ?? "",
+            "builder.model.provider" => state.Draft.ModelPolicy?.ProviderConstraint ?? "",
+            "builder.memory.personalRead" => (state.Draft.MemoryPolicy?.AllowedScopes ??
+                [SpaceMemoryScope.Conversation, SpaceMemoryScope.Space]).Contains(SpaceMemoryScope.Personal),
+            "builder.examplePairs" => state.Draft.ExamplePairs.Select((pair, index) => new SpaceBuilderExamplePairRow
+            {
+                index = index,
+                key = index.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                user = pair.User,
+                assistant = pair.Assistant
+            }).ToArray(),
+            "builder.hasExamplePairs" => state.Draft.ExamplePairs.Count != 0,
+            "builder.canEditExamplePairs" => _isCurrent() && state.CanEdit && _updateExamplePair is not null,
+            "builder.model.capabilities" => Enum.GetValues<ToolCapability>().Select(capability => new SpaceBuilderModelCapabilityRow
+            {
+                id = capability.ToString(),
+                label = capability.ToString(),
+                required = (state.Draft.ModelPolicy?.RequiredCapabilities ?? []).Any(name =>
+                    Enum.TryParse<ToolCapability>(name, true, out var parsed) && parsed == capability)
+            }).ToArray(),
             "builder.context.sourceOnly" => state.Draft.ContextPolicy.SourceOnly,
             "builder.context.includeSelection" => state.Draft.ContextPolicy.IncludeCurrentSelection,
             "builder.context.webAccess" => (int)state.Draft.ContextPolicy.WebAccess,
@@ -81,15 +135,38 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.context.maximumRetrievedItems" => state.Draft.ContextPolicy.MaximumRetrievedItems?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             "builder.boardOptions" => _sourceOptions(),
             "builder.canBrowseSources" => _isCurrent() && state.CanEdit && !state.IsBusy && _canBrowseSources(),
-            "builder.contextReferences" => state.Draft.ContextReferences.Select(reference => new
+            "builder.filesOptions" => _filesOptions(),
+            "builder.canBrowseFiles" => _isCurrent() && state.CanEdit && !state.IsBusy && _canBrowseFiles(),
+            "builder.filesReferences" => state.Draft.ContextReferences
+                .Where(reference => reference.Kind == SpaceContextReferenceKind.File && reference.OwnerAppId == "files")
+                .Select(reference => new SpaceBuilderContextReferenceRow
+                {
+                    id = reference.ContextId.ToString("D"),
+                    label = _filesOptions().FirstOrDefault(option => option.Id == reference.CanonicalEntityId)?.Label ??
+                        ("Files / " + reference.CanonicalEntityId),
+                    revision = reference.RevisionToken ?? "Current revision",
+                    policy = reference.Permission == SpaceContextPermission.Read
+                        ? "Space read intent; Home authorization required" : reference.Permission.ToString(),
+                    included = reference.IncludedAutomatically
+                }).ToArray(),
+            "builder.contextReferences" => state.Draft.ContextReferences.Select((reference, index) => new SpaceBuilderContextReferenceRow
             {
                 id = reference.ContextId.ToString("D"),
+                order = index + 1,
+                canMoveUp = _isCurrent() && state.CanEdit && index > 0,
+                canMoveDown = _isCurrent() && state.CanEdit && index < state.Draft.ContextReferences.Count - 1,
+                moveUp = new(state.SpaceId, state.DraftRevision ?? -1, reference.ContextId, index),
+                moveDown = new(state.SpaceId, state.DraftRevision ?? -1, reference.ContextId, index),
                 label = _sourceOptions().FirstOrDefault(option => option.Id == reference.CanonicalEntityId)?.Label ??
                     (reference.OwnerAppId + " / " + reference.CanonicalEntityId),
                 revision = reference.RevisionToken ?? "Current version at read",
-                policy = reference.Permission + (reference.IncludedAutomatically ? "; included automatically" : "; not included automatically")
+                policy = reference.Permission.ToString(),
+                included = reference.IncludedAutomatically
             }).ToArray(),
             "builder.hasContextReferences" => state.Draft.ContextReferences.Count != 0,
+            "builder.canSetContextIncluded" => _isCurrent() && state.CanEdit && _setContextIncluded is not null,
+            "builder.canSetModelCapability" => _isCurrent() && state.CanEdit && _setModelCapabilityRequired is not null,
+            "builder.canSetPersonalMemoryRead" => _isCurrent() && state.CanEdit && _setPersonalMemoryReadAllowed is not null,
             "builder.legacyFiles" => state.Draft.LegacyFiles.Select(reference => new { path = reference.Path, label = reference.DisplayName }).ToArray(),
             "builder.hasLegacyFiles" => state.Draft.LegacyFiles.Count != 0,
             "builder.inherit.sources" => state.Draft.Inheritance.Sources,
@@ -99,13 +176,18 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.inherit.plugins" => state.Draft.Inheritance.Plugins,
             "builder.inherit.skills" => state.Draft.Inheritance.Skills,
             "builder.inherit.agents" => state.Draft.Inheritance.Agents,
-            "builder.capabilities" => state.Draft.CapabilityBindings.Select(b => new
+            "builder.capabilities" => state.Draft.CapabilityBindings.Select(b => new SpaceBuilderCapabilityRow
             {
                 id = b.CapabilityId,
                 kind = b.Kind.ToString(),
                 key = b.Kind.ToString() + ":" + b.CapabilityId,
-                version = b.VersionPin ?? "(unpinned)"
+                version = b.VersionPin ?? "(unpinned)",
+                versionPin = b.VersionPin,
+                policy = (int)b.Override,
+                policyLabel = b.Override.ToString()
             }).ToArray(),
+            "builder.capability.overrideOptions" => CapabilityOverrideOptions,
+            "builder.canSetCapabilityOverride" => _isCurrent() && state.CanEdit && _setCapabilityOverride is not null,
             "builder.hasNoCapabilities" => state.Draft.CapabilityBindings.Count == 0,
             "builder.installedSkills" => _installedSkills().Select(s => new
             {
@@ -131,10 +213,28 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.category.memory" => CategoryIndex(SpaceBuilderCategory.Memory),
             "builder.canEdit" => _isCurrent() && state.CanEdit,
             "builder.canSave" => _isCurrent() && state.CanSave,
+            "builder.canActivate" => _isCurrent() && state.CanActivate,
             "builder.canDiscard" => _isCurrent() && state.CanDiscard,
             "builder.canReload" => _isCurrent() && state.CanReload,
             "builder.canGoBack" => _isCurrent() && _canGoBack(),
             "builder.status" => state.StatusMessage,
+            "builder.view.isBasic" => state.EditorView == SpaceBuilderEditorView.Basic,
+            "builder.view.isAdvanced" => state.EditorView == SpaceBuilderEditorView.Advanced,
+            "builder.view.isExpert" => state.EditorView == SpaceBuilderEditorView.Expert,
+            "builder.expert.isDetails" => state.ExpertSection == SpaceBuilderExpertSection.Details,
+            "builder.expert.isHarness" => state.ExpertSection == SpaceBuilderExpertSection.HarnessLogic,
+            "builder.expert.isModel" => state.ExpertSection == SpaceBuilderExpertSection.ModelLogic,
+            "builder.expert.isUserMessage" => state.ExpertSection == SpaceBuilderExpertSection.UserMessageLogic,
+            "builder.expert.isFiles" => state.ExpertSection == SpaceBuilderExpertSection.Files,
+            "builder.hasExpertConfiguration" => state.HasExpertConfiguration,
+            "builder.graph.nodeCount" => state.Draft.LayoutDocument?.Nodes.Count ?? 0,
+            "builder.graph.edgeCount" => state.Draft.LayoutDocument?.Edges.Count ?? 0,
+            "builder.preview.exists" => state.Preview is not null,
+            "builder.preview.name" => state.Preview?.Name ?? string.Empty,
+            "builder.preview.description" => state.Preview?.Description ?? string.Empty,
+            "builder.preview.instructions" => state.Preview?.Instructions ?? string.Empty,
+            "builder.preview.notice" => state.Preview?.Notice ?? string.Empty,
+            "builder.validation.summary" => state.ValidationIssues.Count == 0 ? string.Empty : string.Join(" ", state.ValidationIssues),
             _ => null
         };
         return value is not null;
@@ -149,12 +249,20 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.description" => SpaceBuilderField.Description,
             "builder.icon" => SpaceBuilderField.IconKey,
             "builder.instructions" => SpaceBuilderField.Instructions,
+            "builder.model.defaultId" => SpaceBuilderField.DefaultModelId,
+            "builder.model.provider" => SpaceBuilderField.ProviderConstraint,
             "builder.context.maximumRetrievedItems" => SpaceBuilderField.MaximumRetrievedItems,
             _ => null
         };
         if (field is not null && value is string text)
         {
             _edit(field.Value, text);
+            return true;
+        }
+        if (path == "builder.memory.personalRead" && value is bool personalAllowed &&
+            _setPersonalMemoryReadAllowed is not null)
+        {
+            _setPersonalMemoryReadAllowed(personalAllowed);
             return true;
         }
         SpaceBuilderField? policySwitch = path switch
@@ -211,18 +319,73 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         return false;
     }
 
-    public bool TrySetItemValue(object item, string path, object? value) => false;
+    public bool TrySetItemValue(object item, string path, object? value)
+    {
+        if (!_isCurrent()) return false;
+        var state = _state();
+        if (!state.CanEdit) return false;
+        if (path == "included" && value is bool included && item is SpaceBuilderContextReferenceRow row &&
+            Guid.TryParseExact(row.id, "D", out var contextId) && _setContextIncluded is not null &&
+            state.Draft.ContextReferences.Any(reference => reference.ContextId == contextId && reference.IncludedAutomatically == row.included))
+        {
+            _setContextIncluded(contextId, included);
+            Refresh();
+            return true;
+        }
+        if (path == "required" && value is bool required && item is SpaceBuilderModelCapabilityRow modelRow &&
+            Enum.TryParse<ToolCapability>(modelRow.id, false, out var capability) && Enum.IsDefined(capability) &&
+            _setModelCapabilityRequired is not null &&
+            (state.Draft.ModelPolicy?.RequiredCapabilities ?? []).Any(name =>
+                Enum.TryParse<ToolCapability>(name, true, out var parsed) && parsed == capability) == modelRow.required)
+        {
+            _setModelCapabilityRequired(capability, required);
+            Refresh();
+            return true;
+        }
+        if (path == "policy" && item is SpaceBuilderCapabilityRow capabilityRow &&
+            Enum.TryParse<SpaceCapabilityKind>(capabilityRow.kind, false, out var kind) && Enum.IsDefined(kind) &&
+            value is int policyIndex && policyIndex is >= 0 and <= 2 && policyIndex != capabilityRow.policy &&
+            Enum.IsDefined((SpaceCapabilityOverride)policyIndex) && _setCapabilityOverride is not null &&
+            state.Draft.CapabilityBindings.Any(binding => binding.Kind == kind && binding.CapabilityId == capabilityRow.id &&
+                binding.Override == (SpaceCapabilityOverride)capabilityRow.policy && binding.VersionPin == capabilityRow.versionPin))
+        {
+            _setCapabilityOverride(kind, capabilityRow.id, (SpaceCapabilityOverride)policyIndex);
+            Refresh();
+            return true;
+        }
+        if (path is "user" or "assistant" && item is SpaceBuilderExamplePairRow exampleRow &&
+            value is string text && _updateExamplePair is not null && exampleRow.index >= 0 &&
+            exampleRow.index < state.Draft.ExamplePairs.Count)
+        {
+            var expected = state.Draft.ExamplePairs[exampleRow.index];
+            if (!StringComparer.Ordinal.Equals(expected.User, exampleRow.user) ||
+                !StringComparer.Ordinal.Equals(expected.Assistant, exampleRow.assistant)) return false;
+            var updated = path == "user" ? expected with { User = text } : expected with { Assistant = text };
+            if (!_updateExamplePair(exampleRow.index, expected, updated)) return false;
+            Refresh();
+            return true;
+        }
+        return false;
+    }
 
     public bool? IsActionAvailable(string command) => command switch
     {
         "space-builder.save" => _isCurrent() && _state().CanSave,
+        "space-builder.activate" => _isCurrent() && _state().CanActivate,
+        "space-builder.view.basic" or "space-builder.view.advanced" or "space-builder.view.expert" => _isCurrent(),
+        "space-builder.preview" or "space-builder.validate" => _isCurrent() && _state().IsLoaded && !_state().IsBusy,
+        "space-builder.expert.details" or "space-builder.expert.harness" or "space-builder.expert.model" or
+            "space-builder.expert.user-message" or "space-builder.expert.files" => _isCurrent(),
         "space-builder.discard" => _isCurrent() && _state().CanDiscard,
         "space-builder.reload" => _isCurrent() && _state().CanReload,
         "space-builder.back" => _isCurrent() && _canGoBack(),
         "space-builder.source.browse" or "space-builder.source.attach" => _isCurrent() && _state().CanEdit && !_state().IsBusy && _canBrowseSources(),
+        "space-builder.files.browse" or "space-builder.files.attach" => _isCurrent() && _state().CanEdit && !_state().IsBusy && _canBrowseFiles(),
         "space-builder.source.remove" or "space-builder.legacy-file.remove" => _isCurrent() && _state().CanEdit,
+        "space-builder.source.move-up" or "space-builder.source.move-down" => _isCurrent() && _state().CanEdit,
         "space-builder.capability.remove" => _isCurrent() && _state().CanEdit,
         "space-builder.skill.attach" or "space-builder.plugin.attach" => _isCurrent() && _state().CanEdit,
+        "space-builder.example.add" or "space-builder.example.remove" => _isCurrent() && _state().CanEdit,
         _ => null
     };
 
@@ -230,6 +393,44 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     {
         if (IsActionAvailable(command) != true)
             throw new InvalidOperationException("This Space Builder command is unavailable.");
+        if (command.StartsWith("space-builder.view.", StringComparison.Ordinal))
+        {
+            _selectView?.Invoke(command switch
+            {
+                "space-builder.view.basic" => SpaceBuilderEditorView.Basic,
+                "space-builder.view.advanced" => SpaceBuilderEditorView.Advanced,
+                "space-builder.view.expert" => SpaceBuilderEditorView.Expert,
+                _ => throw new InvalidOperationException("Unknown Builder view.")
+            });
+            Refresh();
+            return;
+        }
+        if (command == "space-builder.preview")
+        {
+            _previewDraft?.Invoke();
+            Refresh();
+            return;
+        }
+        if (command == "space-builder.validate")
+        {
+            if (_validateDraft is not null) await _validateDraft(cancellationToken);
+            Refresh();
+            return;
+        }
+        if (command.StartsWith("space-builder.expert.", StringComparison.Ordinal))
+        {
+            _selectExpertSection?.Invoke(command switch
+            {
+                "space-builder.expert.details" => SpaceBuilderExpertSection.Details,
+                "space-builder.expert.harness" => SpaceBuilderExpertSection.HarnessLogic,
+                "space-builder.expert.model" => SpaceBuilderExpertSection.ModelLogic,
+                "space-builder.expert.user-message" => SpaceBuilderExpertSection.UserMessageLogic,
+                "space-builder.expert.files" => SpaceBuilderExpertSection.Files,
+                _ => throw new InvalidOperationException("Unknown Expert section.")
+            });
+            Refresh();
+            return;
+        }
         if (command == "space-builder.capability.remove" && parameter is string compositeKey)
         {
             var parts = compositeKey.Split(':', 2);
@@ -241,4 +442,46 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         }
         await _dispatch(command, parameter, cancellationToken);
     }
+}
+
+public sealed class SpaceBuilderContextReferenceRow
+{
+    public string id { get; init; } = string.Empty;
+    public int order { get; init; }
+    public string label { get; init; } = string.Empty;
+    public string revision { get; init; } = string.Empty;
+    public string policy { get; init; } = string.Empty;
+    public bool included { get; init; }
+    public bool canMoveUp { get; init; }
+    public bool canMoveDown { get; init; }
+    public SpaceBuilderContextOrderRequest moveUp { get; init; } = new(Guid.Empty, -1, Guid.Empty, -1);
+    public SpaceBuilderContextOrderRequest moveDown { get; init; } = new(Guid.Empty, -1, Guid.Empty, -1);
+}
+
+public sealed record SpaceBuilderContextOrderRequest(Guid SpaceId, long DraftRevision, Guid ContextId, int ExpectedIndex);
+
+public sealed class SpaceBuilderModelCapabilityRow
+{
+    public string id { get; init; } = string.Empty;
+    public string label { get; init; } = string.Empty;
+    public bool required { get; init; }
+}
+
+public sealed class SpaceBuilderCapabilityRow
+{
+    public string id { get; init; } = string.Empty;
+    public string kind { get; init; } = string.Empty;
+    public string key { get; init; } = string.Empty;
+    public string version { get; init; } = string.Empty;
+    public string? versionPin { get; init; }
+    public int policy { get; init; }
+    public string policyLabel { get; init; } = string.Empty;
+}
+
+public sealed class SpaceBuilderExamplePairRow
+{
+    public int index { get; init; }
+    public string key { get; init; } = string.Empty;
+    public string user { get; init; } = string.Empty;
+    public string assistant { get; init; } = string.Empty;
 }

@@ -1,17 +1,62 @@
 <Cui id="spaces.builder" version="1">
   <Actions>
     <Action name="AttachBoardsSource" command="space-builder.source.attach" parameter="{Binding source.input}" />
+    <Action name="AttachFilesSource" command="space-builder.files.attach" parameter="{Binding file.input}" />
     <Action name="RemoveContextSource" command="space-builder.source.remove" parameter="{Binding context.id}" />
+    <Action name="MoveContextSourceUp" command="space-builder.source.move-up" parameter="{Binding context.moveUp}" />
+    <Action name="MoveContextSourceDown" command="space-builder.source.move-down" parameter="{Binding context.moveDown}" />
     <Action name="RemoveLegacyFile" command="space-builder.legacy-file.remove" parameter="{Binding legacy.path}" />
     <Action name="RemoveCapability" command="space-builder.capability.remove" parameter="{Binding cap.key}" />
     <Action name="AttachSkill" command="space-builder.skill.attach" parameter="{Binding skill.id}" />
     <Action name="AttachPlugin" command="space-builder.plugin.attach" parameter="{Binding plugin.id}" />
+    <Action name="RemoveSpaceExamplePair" command="space-builder.example.remove" parameter="{Binding example.key}" />
   </Actions>
   <Theme Name="user_preference">
     <Page id="space-builder-editor" role="main" accessible-name="Space Builder">
       <Container Type="Vertical Stack" Padding="24" CellGap="12" VerticalScrolling="True" HorizontalScrolling="False">
         <Text text="Space Builder" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-        <Text text="Basic, Advanced and Expert editing for one Space and revision. Advanced and Expert are not yet implemented." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Text text="Edit one Space configuration. Switch views without creating another Space or losing its graph." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Text text="Basic · core identity, instructions and capability availability" IsVisible="{Binding builder.view.isBasic}" foreground="{Resource CuiTextSoftBrush}" />
+        <Text text="Advanced · detailed source, inheritance and canonical capability policies" IsVisible="{Binding builder.view.isAdvanced}" foreground="{Resource CuiTextSoftBrush}" />
+        <Container Type="Horizontal Stack" CellGap="8" role="tablist" accessible-name="Space Builder views">
+          <Button id="space-builder-view-basic" content="Basic" action="space-builder.view.basic" Selected="{Binding builder.view.isBasic}" accessible-name="Basic view" />
+          <Button id="space-builder-view-advanced" content="Advanced" action="space-builder.view.advanced" Selected="{Binding builder.view.isAdvanced}" accessible-name="Advanced view" />
+          <Button id="space-builder-view-expert" content="Expert" action="space-builder.view.expert" Selected="{Binding builder.view.isExpert}" accessible-name="Expert view" />
+        </Container>
+        <Text id="space-builder-expert-active-hint" text="Expert configurations active · open Expert to inspect them" IsVisible="{Binding builder.hasExpertConfiguration}" foreground="{Resource CuiTextSoftBrush}" />
+        <Container id="space-builder-expert-view" Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isExpert}">
+          <Text text="Expert pages · same Space and draft revision" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Container Type="Wrap" CellGap="8" role="tablist" accessible-name="Expert pages">
+            <Button id="space-builder-expert-details" content="Details" action="space-builder.expert.details" Selected="{Binding builder.expert.isDetails}" />
+            <Button id="space-builder-expert-harness" content="Harness Logic" action="space-builder.expert.harness" Selected="{Binding builder.expert.isHarness}" />
+            <Button id="space-builder-expert-model" content="Model Logic" action="space-builder.expert.model" Selected="{Binding builder.expert.isModel}" />
+            <Button id="space-builder-expert-user-message" content="User Message Logic" action="space-builder.expert.user-message" Selected="{Binding builder.expert.isUserMessage}" />
+            <Button id="space-builder-expert-files" content="Files" action="space-builder.expert.files" Selected="{Binding builder.expert.isFiles}" />
+          </Container>
+          <Text id="space-builder-expert-details-panel" text="Space identity and core configuration are edited below. All changes remain on this Space draft." IsVisible="{Binding builder.expert.isDetails}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text id="space-builder-expert-harness-panel" text="Harness Logic · shared Space NodeEditor · draft graph changes are saved with this Space." IsVisible="{Binding builder.expert.isHarness}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text id="space-builder-expert-model-panel" text="Model Logic · shared Space NodeEditor · only registered and permitted node schemas can be activated." IsVisible="{Binding builder.expert.isModel}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text id="space-builder-expert-user-message-panel" text="User Message Logic · shared Space NodeEditor · source messages remain immutable; transformations require registered nodes." IsVisible="{Binding builder.expert.isUserMessage}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container id="space-builder-expert-files-panel" Type="Vertical Stack" CellGap="6" Active="{Binding builder.expert.isFiles}">
+            <Text text="Files references · stable Files identity and revision are stored on this Space." foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+            <Text text="A reference records Space read intent only. Browsing does not read file contents or grant Home access. At request time, Files checks its current read permission and may provide a bounded UTF-8 preview; unsupported, binary, unmaterialized or oversized files are omitted." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Button id="space-builder-browse-files-expert" content="Choose or refresh Files references" action="space-builder.files.browse" Interactive="{Binding builder.canBrowseFiles}" accessible-name="Choose canonical Files references" />
+            <Repeat id="space-builder-files-references" Source="{Binding builder.filesReferences}" As="context" Key="{Binding context.id}">
+              <Container Type="Horizontal Stack" CellGap="8">
+                <Text text="{Binding context.label}" foreground="{Resource CuiTextBrush}" />
+                <Text text="{Binding context.revision}" foreground="{Resource CuiTextSoftBrush}" />
+                <Text text="{Binding context.policy}" foreground="{Resource CuiTextSoftBrush}" />
+                <Button id="space-builder-remove-files-reference" content="Remove reference" action="RemoveContextSource" Interactive="{Binding builder.canEdit}" accessible-name="Remove this Files reference without deleting its file" />
+              </Container>
+            </Repeat>
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="6" IsVisible="{Binding builder.view.isExpert}">
+            <Text text="Draft graph nodes:" foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="space-builder-expert-node-count" text="{Binding builder.graph.nodeCount}" foreground="{Resource CuiTextSoftBrush}" />
+            <Text text="Connections:" foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="space-builder-expert-edge-count" text="{Binding builder.graph.edgeCount}" foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+        </Container>
         <Container Type="Vertical Stack" CellGap="8" Interactive="{Binding builder.canEdit}">
           <Text text="Name" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-name" Type="Text" Value="{Binding builder.name, mode=TwoWay}" accessible-name="Space name" />
@@ -22,7 +67,7 @@
           <Text text="Custom instructions" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-instructions" Type="Text" AcceptsReturn="True" MinHeight="120" Value="{Binding builder.instructions, mode=TwoWay}" accessible-name="Space custom instructions" />
         </Container>
-        <Container Type="Vertical Stack" CellGap="8" Interactive="{Binding builder.canEdit}">
+        <Container Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
           <Text text="Sources and privacy" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Policies are checked before request dispatch; unavailable original owners block the request. Saving does not grant permission, retrieve source bodies or enable outside web access." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Text text="Outside web access" foreground="{Resource CuiTextBrush}" />
@@ -82,9 +127,48 @@
           <Text text="Memory" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-memory" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.memory, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Memory category state" />
         </Container>
-        <Container Type="Vertical Stack" CellGap="8">
+        <Container id="space-builder-model-policy" Type="Vertical Stack" CellGap="6" Active="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
+          <Text text="Model routing override" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Optional exact model and provider IDs. Leave the model blank to use the current governed default. Activation checks configured IDs against the live catalogue. The default seeds model choice; a model selected in the current composer takes precedence while eligible." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="Default model ID" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-default-model-id" Type="Text" Value="{Binding builder.model.defaultId, mode=TwoWay}" accessible-name="Default model ID override" />
+          <Text text="Provider constraint" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-provider-constraint" Type="Text" Value="{Binding builder.model.provider, mode=TwoWay}" accessible-name="Model provider constraint" />
+          <Text text="Required model capabilities" foreground="{Resource CuiTextBrush}" />
+          <Text text="Requirements use the router's canonical capability catalog. Activation checks current availability, and the selected model is checked again before dispatch; this does not enable tools or grant access." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Repeat id="space-builder-model-capabilities" Source="{Binding builder.model.capabilities}" As="capability" Key="{Binding capability.id}">
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Input id="space-builder-model-capability-required" Type="Switch" Checked="{Binding capability.required, mode=TwoWay}" Interactive="{Binding builder.canSetModelCapability}" accessible-name="Require this model capability" />
+              <Text text="Require" foreground="{Resource CuiTextSoftBrush}" />
+              <Text text="{Binding capability.label}" foreground="{Resource CuiTextBrush}" />
+            </Container>
+          </Repeat>
+        </Container>
+        <Container id="space-builder-memory-policy" Type="Vertical Stack" CellGap="6" Active="{Binding builder.view.isAdvanced}">
+          <Text text="Memory policy" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Allow personal memory reads for this Space. The existing memory source still checks the current actor, source and separate permission before reading; parent policy or the Memory category may be more restrictive." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container Type="Horizontal Stack" CellGap="8" Interactive="{Binding builder.canEdit}">
+            <Input id="space-builder-memory-personal-read" Type="Switch" Checked="{Binding builder.memory.personalRead, mode=TwoWay}" Interactive="{Binding builder.canSetPersonalMemoryRead}" accessible-name="Allow personal memory reads" />
+            <Text text="Allow personal memory reads" foreground="{Resource CuiTextBrush}" />
+          </Container>
+        </Container>
+        <Container id="space-builder-example-pairs" Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isAdvanced}">
+          <Text text="Space examples" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Plain-text examples are included in the Space's current prompt configuration. They do not run tools, execute code or prove installed capabilities." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Repeat id="space-builder-example-pair-list" Source="{Binding builder.examplePairs}" As="example" Key="{Binding example.key}">
+            <Container id="space-builder-example-pair" Type="Vertical Stack" CellGap="4" Interactive="{Binding builder.canEditExamplePairs}">
+              <Text text="Example user prompt" foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="space-builder-example-user" Type="Text" AcceptsReturn="True" Value="{Binding example.user, mode=TwoWay}" Interactive="{Binding builder.canEditExamplePairs}" accessible-name="Space example user prompt" />
+              <Text text="Example response" foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="space-builder-example-assistant" Type="Text" AcceptsReturn="True" Value="{Binding example.assistant, mode=TwoWay}" Interactive="{Binding builder.canEditExamplePairs}" accessible-name="Space example response" />
+              <Button id="space-builder-example-remove" action="RemoveSpaceExamplePair" content="Remove example" Interactive="{Binding builder.canEdit}" accessible-name="Remove this Space example" />
+            </Container>
+          </Repeat>
+          <Button id="space-builder-example-add" content="Add example" action="space-builder.example.add" Interactive="{Binding builder.canEdit}" accessible-name="Add a Space prompt example" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isAdvanced}">
           <Text text="Canonical context sources" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-          <Text text="Choose a real Boards notebook through Home. Adding a read reference does not grant body access; using it requires a new original Home review and local inference. Current selection is not captured on this route. Up to 128 current notebooks are shown, newest first." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="Choose a real Boards notebook through Home. Adding a read reference does not grant body access; using it requires a new original Home review and local inference. Current selection is not captured on this route. Up to 128 current notebooks are shown, newest first. Move attached sources to set priority within this Space; inherited parent sources keep their own order." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Button id="space-builder-browse-boards" content="Choose or refresh Boards sources" action="space-builder.source.browse" Interactive="{Binding builder.canBrowseSources}" accessible-name="Choose canonical Boards sources" />
           <Repeat id="space-builder-boards-options" Source="{Binding builder.boardOptions}" As="source" Key="{Binding source.id}">
             <Container Type="Horizontal Stack" CellGap="8">
@@ -93,11 +177,28 @@
               <Button id="space-builder-attach-boards-source" content="Add source" action="AttachBoardsSource" Interactive="{Binding builder.canBrowseSources}" accessible-name="Add this canonical Boards source" />
             </Container>
           </Repeat>
+          <Text text="Files references" font-size="16" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Choose a current file from the original Files owner. This stores its canonical store, file, parent, revision and observed digest when available; it does not read content or grant Home access. At request time, Files checks current read permission and may provide a bounded UTF-8 preview; unsupported, binary, unmaterialized or oversized files are omitted." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Button id="space-builder-browse-files" content="Choose or refresh Files references" action="space-builder.files.browse" Interactive="{Binding builder.canBrowseFiles}" accessible-name="Choose canonical Files references" />
+          <Repeat id="space-builder-files-options" Source="{Binding builder.filesOptions}" As="file" Key="{Binding file.id}">
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Text text="{Binding file.label}" foreground="{Resource CuiTextBrush}" />
+              <Text text="{Binding file.location}" foreground="{Resource CuiTextSoftBrush}" />
+              <Text text="{Binding file.revision}" foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-builder-attach-files-source" content="Add reference" action="AttachFilesSource" Interactive="{Binding builder.canBrowseFiles}" accessible-name="Add this canonical Files reference" />
+            </Container>
+          </Repeat>
           <Repeat id="space-builder-context-references" Source="{Binding builder.contextReferences}" As="context" Key="{Binding context.id}">
             <Container Type="Horizontal Stack" CellGap="8">
-              <Text text="{Binding context.label}" foreground="{Resource CuiTextBrush}" />
-              <Text text="{Binding context.revision}" foreground="{Resource CuiTextSoftBrush}" />
-              <Text text="{Binding context.policy}" foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="space-builder-context-reference-label" text="{Binding context.label}" foreground="{Resource CuiTextBrush}" />
+              <Text id="space-builder-context-reference-revision" text="{Binding context.revision}" foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="space-builder-context-reference-policy" text="{Binding context.policy}" foreground="{Resource CuiTextSoftBrush}" />
+              <Text text="Priority" foreground="{Resource CuiTextSoftBrush}" />
+              <Text text="{Binding context.order}" foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="space-builder-context-included" Type="Switch" Checked="{Binding context.included, mode=TwoWay}" Interactive="{Binding builder.canSetContextIncluded}" accessible-name="Include this canonical source automatically" />
+              <Text text="Include automatically" foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-builder-source-move-up" content="Move up" action="MoveContextSourceUp" IsEnabled="{Binding context.canMoveUp}" accessible-name="Increase this source's context priority" />
+              <Button id="space-builder-source-move-down" content="Move down" action="MoveContextSourceDown" IsEnabled="{Binding context.canMoveDown}" accessible-name="Decrease this source's context priority" />
               <Button id="space-builder-remove-context-source" content="Remove reference" action="RemoveContextSource" Interactive="{Binding builder.canEdit}" accessible-name="Remove this source reference without deleting its notebook" />
             </Container>
           </Repeat>
@@ -137,12 +238,16 @@
         </Container>
         <Container Type="Vertical Stack" CellGap="4">
           <Text text="Attached capabilities" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-          <Text text="Canonical IDs and pinned versions. Attached references do not install or grant permissions." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="Canonical IDs and pinned versions. Policy values do not install or enable packages or grant owner permissions; ancestor restrictions still apply." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Repeat id="space-builder-capabilities" Source="{Binding builder.capabilities}" As="cap" Key="{Binding cap.key}">
             <Container id="space-builder-capability-row" Type="Horizontal Stack" CellGap="8">
               <Text id="space-builder-capability-kind" text="{Binding cap.kind}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-capability-id" text="{Binding cap.id}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-capability-version" text="{Binding cap.version}" foreground="{Resource CuiTextSoftBrush}" />
+              <Container Type="Horizontal Stack" CellGap="4" IsVisible="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
+                <Text text="Policy" foreground="{Resource CuiTextSoftBrush}" />
+                <Input id="space-builder-capability-policy" Type="Select" ItemsSource="{Binding builder.capability.overrideOptions}" SelectedIndex="{Binding cap.policy, mode=TwoWay}" Interactive="{Binding builder.canSetCapabilityOverride}" accessible-name="Canonical capability policy override" />
+              </Container>
               <Button id="space-builder-capability-remove" action="RemoveCapability" content="Remove" Interactive="{Binding builder.canEdit}" accessible-name="Remove attached capability" />
             </Container>
           </Repeat>
@@ -151,13 +256,24 @@
           </If>
         </Container>
         <Container Type="Wrap" CellGap="8">
+          <Button id="space-builder-preview" content="Preview" action="space-builder.preview" Interactive="{Binding builder.canEdit}" accessible-name="Preview this saved Space draft without running it" />
+          <Button id="space-builder-validate" content="Validate" action="space-builder.validate" Interactive="{Binding builder.canEdit}" accessible-name="Validate the current Space draft" />
           <If Condition="{Binding builder.canGoBack}">
             <Button id="space-builder-back" content="Back to Spaces" action="space-builder.back" Interactive="{Binding builder.canGoBack}" accessible-name="Back to Spaces" />
           </If>
           <Button id="space-builder-save" content="Save" action="space-builder.save" Interactive="{Binding builder.canSave}" accessible-name="Save Space Builder configuration" />
+          <Button id="space-builder-activate" content="Activate" action="space-builder.activate" Interactive="{Binding builder.canActivate}" accessible-name="Activate the saved Space configuration" />
           <Button id="space-builder-discard" content="Discard changes" action="space-builder.discard" Interactive="{Binding builder.canDiscard}" accessible-name="Discard unsaved changes and reload" />
           <Button id="space-builder-reload" content="Reload" action="space-builder.reload" Interactive="{Binding builder.canReload}" accessible-name="Reload saved Space Builder configuration" />
         </Container>
+        <Container Type="Vertical Stack" IsVisible="{Binding builder.preview.exists}" CellGap="4">
+          <Text text="Configuration preview · no live execution" font-size="16" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="{Binding builder.preview.name}" foreground="{Resource CuiTextBrush}" />
+          <Text text="{Binding builder.preview.description}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="{Binding builder.preview.instructions}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="{Binding builder.preview.notice}" role="status" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        </Container>
+        <Text id="space-builder-validation-summary" text="{Binding builder.validation.summary}" role="status" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
         <Text id="space-builder-status" text="{Binding builder.status}" role="status" accessible-name="Space Builder status" foreground="{Resource CuiTextSoftBrush}" />
       </Container>
     </Page>
