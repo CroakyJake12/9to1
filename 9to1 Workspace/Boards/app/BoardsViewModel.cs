@@ -185,7 +185,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool IsEditMode => _isEditMode;
     public bool CanEdit => _session is not IBoardSessionCapabilities { CanEdit: false };
     public bool CanToggleEditMode => CanEdit;
-    public bool CanSwitchBoard => CanEdit;
+    public bool CanSwitchBoard => CanEdit && _session is not IBoardSessionCapabilities { CanSwitchBoard: false };
+    public bool CanSaveAs => CanEdit && _session is not IBoardSessionCapabilities { CanSaveAs: false };
+    public bool CanCreateBoard => CanSwitchBoard;
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
     public bool IsLanding => Get("IsLanding") as bool? ?? false;
     public IReadOnlyList<RecentBoardCard> RecentBoardCards => _recentBoardCards;
@@ -244,6 +246,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             "OverflowMenu" or "BoardProperties" or "CloseWindow"))
         {
             Set("StatusText", "This board source is open read-only.");
+            return;
+        }
+        if ((!CanSwitchBoard && command is ("ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or "OpenBoard")) ||
+            (!CanSaveAs && command == "SaveAsBoard") ||
+            (!CanSwitchBoard && command == "NewBoard"))
+        {
+            Set("StatusText", "This board source does not grant that action.");
             return;
         }
         if (command == "ToggleEditView")

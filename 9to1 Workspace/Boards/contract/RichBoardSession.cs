@@ -20,6 +20,7 @@ public sealed class RichBoardSession : IAsyncDisposable
 
     private readonly JsonFileHavenBoardStore? _store;
     private readonly bool _readOnly;
+    private readonly Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask<bool>>? _externalSave;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Timer _autosaveTimer;
     private readonly TimeSpan _autosaveDelay = TimeSpan.FromMilliseconds(750);
@@ -28,10 +29,13 @@ public sealed class RichBoardSession : IAsyncDisposable
     private long _lastSavedRichVersion = -1;
     private bool _disposed;
 
-    private RichBoardSession(JsonFileHavenBoardStore? store, HavenBoardDocument document, string? filePath, bool readOnly = false)
+    private RichBoardSession(JsonFileHavenBoardStore? store, HavenBoardDocument document, string? filePath,
+        bool readOnly = false,
+        Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask<bool>>? externalSave = null)
     {
         _store = store;
         _readOnly = readOnly;
+        _externalSave = externalSave;
         Document = document;
         FilePath = filePath;
         _lastSavedRichVersion = document.RichNotes?.Version ?? -1;
@@ -96,6 +100,18 @@ public sealed class RichBoardSession : IAsyncDisposable
         return new RichBoardSession(null, EnsureRich(copy), filePath: null, readOnly: true);
     }
 
+    /// <summary>Creates an editable detached session whose only persistence authority is
+    /// the caller's explicit save callback. It never autosaves or writes to a path/store.</summary>
+    public static RichBoardSession OpenExternallyWritable(
+        HavenBoardDocument document,
+        Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask<bool>> save)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(save);
+        var copy = HavenBoardDocumentCodec.Deserialize(JsonSerializer.SerializeToUtf8Bytes(document, HistoryJson));
+        return new RichBoardSession(null, EnsureRich(copy), filePath: null, externalSave: save);
+    }
+
     private static HavenBoardDocument EnsureRich(HavenBoardDocument document)
     {
         if (document.RichNotes is not null)
@@ -122,7 +138,7 @@ public sealed class RichBoardSession : IAsyncDisposable
             HavenRichNotesValidator.Validate(Rich);
             HasUnsavedChanges = true;
             UpdateStatus("Editing…", hasUnsavedChanges: true);
-            _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
+            if (_externalSave is null) _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
         }
         finally
         {
@@ -149,7 +165,7 @@ public sealed class RichBoardSession : IAsyncDisposable
             HavenRichNotesValidator.Validate(Rich);
             HasUnsavedChanges = true;
             UpdateStatus("Editing…", hasUnsavedChanges: true);
-            _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
+            if (_externalSave is null) _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
             return true;
         }
         finally { _gate.Release(); }
@@ -198,7 +214,7 @@ public sealed class RichBoardSession : IAsyncDisposable
             RestoreRich(previous);
             HasUnsavedChanges = true;
             UpdateStatus("Undone — editing…", hasUnsavedChanges: true);
-            _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
+            if (_externalSave is null) _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
             return true;
         }
         finally
@@ -228,7 +244,7 @@ public sealed class RichBoardSession : IAsyncDisposable
             RestoreRich(next);
             HasUnsavedChanges = true;
             UpdateStatus("Redone — editing…", hasUnsavedChanges: true);
-            _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
+            if (_externalSave is null) _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
             return true;
         }
         finally
@@ -269,7 +285,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public Task RequestAutosaveAsync()
     {
         ThrowIfDisposed();
-        if (_readOnly) return Task.CompletedTask;
+        if (_readOnly || _externalSave is not null) return Task.CompletedTask;
         _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
         return Task.CompletedTask;
     }
@@ -278,7 +294,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public async Task FlushAsync()
     {
         ThrowIfDisposed();
-        if (_readOnly) return;
+        if (_readOnly || _externalSave is not null) return;
         await _gate.WaitAsync().ConfigureAwait(false);
         _gate.Release();
         // If a save is running, the gate above serialized after it; re-check dirtiness.
@@ -302,6 +318,7 @@ public sealed class RichBoardSession : IAsyncDisposable
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_externalSave is not null && !HasUnsavedChanges) return;
             await SaveCoreAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
@@ -314,7 +331,8 @@ public sealed class RichBoardSession : IAsyncDisposable
     public async Task SaveAsAsync(string path, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        if (_readOnly) throw new InvalidOperationException("This board source is open read-only and cannot be saved elsewhere.");
+        if (_readOnly || _externalSave is not null)
+            throw new InvalidOperationException("This board source cannot be saved to a different path.");
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -334,7 +352,8 @@ public sealed class RichBoardSession : IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         ThrowIfDisposed();
-        if (_readOnly) throw new InvalidOperationException("This board source is open read-only.");
+        if (_readOnly || _externalSave is not null)
+            throw new InvalidOperationException("This board source does not grant local attachment import access.");
         var info = new FileInfo(sourcePath);
         if (!info.Exists)
             throw new FileNotFoundException("Attachment source was not found.", sourcePath);
@@ -484,7 +503,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     private async Task SaveCoreAsync(CancellationToken cancellationToken, string? destination = null)
     {
         var targetPath = destination ?? FilePath;
-        if (targetPath is null)
+        if (targetPath is null && _externalSave is null)
             throw new InvalidOperationException("This board has no file path yet; use Save As first.");
         if (Document.RichNotes is null)
             throw new InvalidOperationException("This board has no rich notes to save.");
@@ -493,10 +512,23 @@ public sealed class RichBoardSession : IAsyncDisposable
         HavenRichNotesValidator.Validate(Document.RichNotes);
         var now = DateTimeOffset.UtcNow;
         var toSave = Document with { ModifiedUtc = now };
-        await (_store ?? throw new InvalidOperationException("This board session has no writable store."))
-            .SaveDocumentAtPathAsync(toSave, targetPath, cancellationToken).ConfigureAwait(false);
+        if (_externalSave is not null)
+        {
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(toSave, HistoryJson);
+            if (bytes.Length > HavenBoardDocumentCodec.MaximumDocumentBytes)
+                throw new InvalidDataException("The board exceeds the maximum document size for this source.");
+            _ = HavenBoardDocumentCodec.Deserialize(bytes);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await _externalSave(bytes, cancellationToken).ConfigureAwait(false))
+                throw new InvalidOperationException("The external source did not confirm this board revision.");
+        }
+        else
+        {
+            await (_store ?? throw new InvalidOperationException("This board session has no writable store."))
+                .SaveDocumentAtPathAsync(toSave, targetPath!, cancellationToken).ConfigureAwait(false);
+            FilePath = targetPath; // Publish the destination only after the actual store acknowledgement.
+        }
 
-        FilePath = targetPath; // Publish the destination only after the actual store acknowledgement.
         Document = toSave;
         _lastSavedRichVersion = capturedVersion;
         LastSavedUtc = now;
@@ -538,7 +570,7 @@ public sealed class RichBoardSession : IAsyncDisposable
         await _gate.WaitAsync().ConfigureAwait(false);
         try
         {
-            if (HasUnsavedChanges && FilePath is not null)
+            if (HasUnsavedChanges && _externalSave is null && FilePath is not null)
             {
                 try { await SaveCoreAsync(CancellationToken.None).ConfigureAwait(false); }
                 catch { UpdateStatus("Save on close failed", hasUnsavedChanges: true); }
