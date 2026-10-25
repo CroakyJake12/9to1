@@ -160,22 +160,26 @@ public sealed partial class DeveloperProjectWorkbenchPage
         }
         catch { lock (_gate) _pending = false; throw; }
     }
+    private void AdoptSavedProjectMetadata(DeveloperResolvedProject project, DeveloperDraftRecoveryScope scope,
+        long recoveryGeneration, long? cleanSessionGeneration)
+    {
+        StoreSelectedTab(); _project = project;
+        _manualRecoveryGeneration = recoveryGeneration; _manualRecoveryScope = scope;
+        if (cleanSessionGeneration is { } cleanGeneration) _cleanSessionGeneration = cleanGeneration;
+        _manualRecoveryRequested = null; _manualRecoverySerial++;
+        foreach (var tab in _sourceTabs)
+            if (tab.Manual is { } manual) tab.Manual = manual with { Reviewed = false, ReviewRevision = -1, After = "", AfterSha256 = "" };
+        if (CurrentSourceTab() is { } selected) SelectTab(selected);
+        _manualReviewed = false; _manualReviewRevision = -1; _manualAfterText = ""; _manualAfterSha256 = "";
+        _newFileReview = null; _runEditReview = null; _stageEditReview = null;
+        InvalidateProjectSearch(); _projectEntries = null;
+    }
     private void AdoptSavedRunTarget(DeveloperRunConfigurationEditResult saved)
     {
-        StoreSelectedTab();
-        _project = saved.Project;
-        _manualRecoveryGeneration = saved.RecoveryGeneration;
-        _manualRecoveryScope = saved.Scope;
-        if (saved.CleanSessionGeneration is { } cleanGeneration) _cleanSessionGeneration = cleanGeneration;
-        _manualRecoveryRequested = null; _manualRecoverySerial++; // Re-snapshot current live typing under the new header.
+        AdoptSavedProjectMetadata(saved.Project, saved.Scope, saved.RecoveryGeneration, saved.CleanSessionGeneration);
         _selectedRunTarget = DeveloperRunConfigurationSelection.Observe(_project).Value?.SingleOrDefault(value => value.Configuration.Id == saved.Configuration.Id);
         _runEditBeforeSha256 = DeveloperRunConfigurationSelection.Digest(saved.Configuration); _runEditExistingId = saved.Configuration.Id;
         _runEditId = saved.Configuration.Id; _runEditCommand = saved.Configuration.Command!;
         _runEditTimeout = (saved.Configuration.TimeoutSeconds ?? 120).ToString(CultureInfo.InvariantCulture); _runEditInputRevision++;
-        foreach (var tab in _sourceTabs)
-            if (tab.Manual is { } manual) tab.Manual = manual with { Reviewed = false, ReviewRevision = -1, After = "", AfterSha256 = "" };
-        if (CurrentSourceTab() is { } selected) SelectTab(selected); // Same owned tab/buffer/history, no source adoption.
-        _manualReviewed = false; _manualReviewRevision = -1; _manualAfterText = ""; _manualAfterSha256 = "";
-        _newFileReview = null; InvalidateProjectSearch(); _projectEntries = null;
     }
 }

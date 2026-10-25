@@ -927,6 +927,31 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
     }
 
     [LinuxPublicationFact]
+    public Task Newly_registered_manual_project_can_review_save_then_run_its_first_Test_stage_without_Task_or_launch_configuration() => Run(async rig =>
+    {
+        Assert.Empty(rig.Saved.Workspace.Tasks); Assert.Empty(rig.Saved.Workspace.RunConfigurations);
+        var graph = rig.Graph; var reader = new DeveloperManualSourceReadOwner(graph.GetRequiredService<NativeFilesWorkspaceService>(), rig.Selections, rig.Reads, rig.Kernel);
+        var review = DeveloperBuildStageEdit.Prepare(rig.Saved, "tests", "test", DeveloperBuildStageKind.Test,
+            "printf 'configured test stage'; printf done > configured-stage.txt", 20).Value!;
+        var update = rig.Keep(reader.SaveReviewedBuildStageAsync(rig.SavedStore, null, graph.GetRequiredService<IProviderSecretStore>(), graph.GetRequiredService<IAppPaths>(),
+            rig.Saved, review, 0, body => body(), rig.Token));
+        await rig.DecideNextAsync(update, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        var observed = await update; Assert.Empty(observed.OriginalErrors); Assert.NotNull(observed.OriginalStoreResult);
+        Assert.True(observed.OriginalStoreResult!.Succeeded, observed.OriginalStoreResult.Error?.Message); var saved = observed.OriginalStoreResult.Value!;
+        Assert.False(saved.MigratedRecovery); Assert.Equal(rig.Saved.Reference.ProjectRevision + 1, saved.Project.Reference.ProjectRevision);
+        Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "configured-stage.txt")));
+        Assert.DoesNotContain(rig.Decisions, decision => decision.Scope.ActionName == HomeDeveloperManualProjectExecutionAdmissionSource.RunAction);
+        var choice = Assert.Single(DeveloperSavedStageSelection.Observe(saved.Project).Value!);
+        var run = rig.Keep(rig.ProcessOwner.RunStageAsync(saved.Project, choice, body => body(), rig.Token));
+        await rig.DecideNextAsync(run, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.DecideNextAsync(run, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        var process = await run; Assert.True(process.ProcessSucceeded); Assert.Equal(DeveloperBuildStageKind.Test, process.StageKind);
+        Assert.Equal("configured test stage", process.Process!.StandardOutput); Assert.Equal("tests", process.SavedTaskId); Assert.Equal("test", process.StageId);
+        Assert.Equal("done", await File.ReadAllTextAsync(Path.Combine(rig.ProjectRoot, "configured-stage.txt"), rig.Token));
+        Assert.Empty(saved.Project.Workspace.RunConfigurations);
+    }, canonicalSavedProject: true);
+
+    [LinuxPublicationFact]
     public Task Newly_registered_manual_project_can_review_save_then_run_its_first_console_declaration_without_a_Task() => Run(async rig =>
     {
         Assert.Empty(rig.Saved.Project.RunConfigurationIds);

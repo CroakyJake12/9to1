@@ -345,6 +345,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetNewFileValue(path, out value)) return true;
             if (TryGetRunTargetValue(path, out value)) return true;
             if (TryGetRunEditValue(path, out value)) return true;
+            if (TryGetBuildStageEditValue(path, out value)) return true;
             if (TryGetCuiPropertyValue(path, out value)) return true;
             if (TryGetCuiChildrenValue(path, out value)) return true;
             if (TryGetCuiTextEditingValue(path, out value)) return true;
@@ -430,6 +431,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     }
     public bool TrySetValue(string path, object? value)
     {
+        if (path is "StageEditTaskId" or "StageEditStageId" or "StageEditCommand" or "StageEditTimeout") return SetBuildStageEditValue(path, value);
         if (path is "RunEditId" or "RunEditCommand" or "RunEditTimeout") return SetRunEditValue(path, value);
         if (path == "NewFileCuiTemplate") return SetNewFileTemplate(value);
         if (path == "SourceFindMatchCase")
@@ -516,6 +518,10 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (command == "dev.open-file-navigation-result") return _manualReader is not null && CurrentFileNavigationObservation() is { Result.Matches.Count: > 0 };
             if (command == "dev.file-navigation-previous") return CurrentFileNavigationObservation() is not null && _fileNavigationPage > 0;
             if (command == "dev.file-navigation-next") return CurrentFileNavigationObservation() is { } fileResults && fileResults.Result.Matches.Count > (_fileNavigationPage + 1) * FileNavigationPageSize;
+            if (command is "dev.new-compile-stage" or "dev.new-test-stage") return CanConfigureBuildStage();
+            if (command == "dev.edit-build-stage") return CanConfigureBuildStage() && CurrentStageEditChoice() is not null;
+            if (command == "dev.review-build-stage") return CanConfigureBuildStage() && PrepareBuildStageEdit().Succeeded;
+            if (command == "dev.save-build-stage") return CanConfigureBuildStage() && CurrentBuildStageEditReview();
             if (command == "dev.new-run-target") return CanConfigureRunTarget();
             if (command == "dev.edit-run-target") return CanConfigureRunTarget() && _selectedRunTarget is { } editable &&
                 DeveloperRunConfigurationSelection.Observe(_project).Value?.Any(choice => choice.SelectionKey == editable.SelectionKey) == true;
@@ -587,6 +593,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command is "dev.new-compile-stage" or "dev.new-test-stage" or "dev.edit-build-stage" or "dev.review-build-stage") return ConfigureBuildStage(command);
+        if (command == "dev.save-build-stage") return SaveBuildStageAsync(cancellationToken);
         if (command is "dev.new-run-target" or "dev.edit-run-target" or "dev.review-run-target") return ConfigureRunTarget(command);
         if (command == "dev.save-run-target") return SaveRunTargetAsync(cancellationToken);
         if (command == "dev.select-run-target") return SelectRunTarget(parameter);
