@@ -231,7 +231,21 @@ public sealed class SpaceUserMessageGraph
             .RunAsync(_projection.Definition, AutomationGraphRunMode.Real, token).ConfigureAwait(false);
         var output = run.Trace.SingleOrDefault(item => item.NodeId == _output);
         if (!run.Succeeded || output is not { Status: AutomationGraphTraceStatus.Succeeded, Output: not null })
-            throw Invalid("The shared user-message graph did not produce its declared Output.");
+        {
+            var failed = run.Trace.FirstOrDefault(item => item.Status == AutomationGraphTraceStatus.Failed);
+            // Node failure messages can contain arbitrary runtime/input text in the
+            // shared engine. Return an actionable static explanation for our JSON
+            // family without copying sample values or private field names into errors.
+            throw Invalid(failed is null ? "The shared user-message graph did not produce its declared Output."
+                : _types[failed.NodeId] switch
+                {
+                    ParseJsonType => "Parse JSON requires strict valid JSON, unique decoded property names, no comments/trailing commas and at most 32 nested containers.",
+                    SelectJsonType => "Select JSON requires one present value: check exact field names and existing zero-based array indices without leading zeros.",
+                    JsonStringType => "Read JSON string requires an actual string. Use Render JSON for objects, arrays, numbers, booleans or null.",
+                    RenderJsonType => "Render JSON could not produce supported request text within the 131072-character output bound.",
+                    _ => "The shared user-message graph did not produce its declared Output."
+                });
+        }
         var values = run.Trace.Where(item => item.TypedOutputs?.ContainsKey("out") == true)
             .ToDictionary(item => item.NodeId, item => item.TypedOutputs!["out"] with { JsonValue = item.TypedOutputs["out"].JsonValue?.Clone() });
         var trace = run.Trace.Select(item => new SpaceUserMessageGraphTrace(item.NodeId, _types[item.NodeId],

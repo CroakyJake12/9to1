@@ -305,6 +305,8 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     {
         var error = await Assert.ThrowsAsync<SpaceRequestPolicyBlockedException>(() => RunGraph(JsonMessageLayout("", SpaceUserMessageGraph.RenderJsonType), text));
         Assert.Equal("SPACE_USER_MESSAGE_GRAPH_INVALID", error.Code);
+        Assert.Contains("Parse JSON", error.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(text, error.Message, StringComparison.Ordinal);
     }
 
     [Theory]
