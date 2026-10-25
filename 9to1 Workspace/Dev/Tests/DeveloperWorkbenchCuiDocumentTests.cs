@@ -21,7 +21,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
             "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.preview-edit",
-            "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command",
+            "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.run-selected-target", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
@@ -189,6 +189,19 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         var source = Assert.Single(nodes, node => node.Name == "dev-new-file-source");
         Assert.Equal("Object", source.Type); Assert.True(source.TryGetLiteralAttribute("type", out var renderer)); Assert.Equal("ReadOnlyText", renderer);
         Assert.DoesNotContain(source.Properties.Keys, key => key.Equals("Value", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Saved_Run_targets_use_the_actual_selected_target_action_and_typed_observed_key()
+    {
+        var document = DeveloperWorkbenchCuiDocument.Load(); var nodes = Descendants(document.Components).ToArray();
+        var selector = Assert.Single(nodes, node => node.Name == "dev-select-run-target");
+        var reference = Assert.Single(selector.Actions.Values, action => action.Name == "dev.select-run-target");
+        Assert.Equal("target.SelectionKey", Assert.IsType<CuiBindingValue>(document.Actions[reference.Name].Parameter).Path);
+        var run = Assert.Single(nodes, node => node.Name == "dev-run-selected-target");
+        Assert.Contains(run.Actions.Values, action => action.Name == "dev.run-selected-target");
+        Assert.Contains(run.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
+            && property.Value is CuiBindingValue binding && binding.Path == "CanRunSelectedTarget");
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)

@@ -8,6 +8,7 @@
     <Action name="dev.go-to-cui-problem" command="dev.go-to-cui-problem" parameter="{Binding problem.SelectionKey}" />
     <Action name="dev.go-to-cui-element" command="dev.go-to-cui-element" parameter="{Binding element.SelectionKey}" />
     <Action name="dev.select-cui-property" command="dev.select-cui-property" parameter="{Binding property.SelectionKey}" />
+    <Action name="dev.select-run-target" command="dev.select-run-target" parameter="{Binding target.SelectionKey}" />
   </Actions>
   <Page>
     <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
@@ -148,6 +149,16 @@
       <Object type="ReadOnlyText" id="dev-pass-before" text="{Binding BeforeText}" font-family="monospace" min-height="100" accessible-name="Exact source before this pass" />
       <Text text="After this pass" font-size="18" />
       <Object type="ReadOnlyText" id="dev-pass-after" text="{Binding AfterText}" font-family="monospace" min-height="100" accessible-name="Exact proposed source after this pass" />
+      <Text text="Declared Run targets" font-size="18" />
+      <Text text="{Binding RunTargetsStatus}" text-wrapping="Wrap" accessible-name="Declared Run target availability and unsupported provider limits" />
+      <Repeat id="dev-run-targets" Source="{Binding RunTargets}" As="target" Key="{Binding target.SelectionKey}">
+        <Container Type="Vertical Stack" CellGap="4">
+          <Button id="dev-select-run-target" action="dev.select-run-target" content="{Binding target.Label}" Interactive="{Binding target.CanSelect}" accessible-name="{Binding target.Label}" />
+          <Text text="{Binding target.Details}" text-wrapping="Wrap" />
+        </Container>
+      </Repeat>
+      <Text text="{Binding SelectedRunTargetSummary}" text-wrapping="Wrap" accessible-name="Selected exact Run target and execution admission" />
+      <Button id="dev-run-selected-target" action="dev.run-selected-target" content="Run selected target" Interactive="{Binding CanRunSelectedTarget}" />
       <Input id="dev-terminal-command" placeholdertext="Explicit command in this project" accessible-name="Terminal command" Type="Text" Value="{Binding Command}" />
       <Button id="dev-terminal-run" action="dev.run-command" content="Run command" />
       <Input id="dev-test-command" placeholdertext="Explicit test command" accessible-name="Test command" Type="Text" Value="{Binding TestCommand}" />

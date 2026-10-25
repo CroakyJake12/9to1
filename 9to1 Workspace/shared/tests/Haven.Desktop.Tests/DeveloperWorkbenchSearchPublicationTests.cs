@@ -559,6 +559,48 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Declared_Run_target_selection_pins_configuration_and_preserves_real_command_observation_in_same_task()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            var configuration = ConfigureConsoleTarget(f); var project = Assert.Single(f.Store.Workspace.Projects);
+            var declarations = new List<DeveloperRunConfiguration> { configuration, configuration with { Id = "dependent", PreLaunchTaskIds = ["restore"] } };
+            f.Store.Workspace = f.Store.Workspace with { RunConfigurations = declarations, Projects = [project with { RunConfigurationIds = [configuration.Id, "dependent"] }] };
+            page = await SearchPublicationPage(f, reader.Owner);
+            object[] Choices()
+            {
+                Assert.True(page.TryGetValue("RunTargets", out var value)); return Assert.IsAssignableFrom<System.Collections.IEnumerable>(value).Cast<object>().ToArray();
+            }
+            string Key(string label)
+            {
+                var row = Assert.Single(Choices(), choice => (string)choice.GetType().GetProperty("Label")!.GetValue(choice)! == label);
+                return Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            }
+            Assert.False(page.IsActionAvailable("dev.run-selected-target"));
+            await page.DispatchAsync("dev.select-run-target", Key("console-target — console"), OriginalTestBodyToken);
+            Assert.True(page.IsActionAvailable("dev.run-selected-target")); Assert.Equal(0, f.Tools.ProcessCalls);
+            await page.DispatchAsync("dev.run-selected-target", null, OriginalTestBodyToken);
+            Assert.Equal(1, f.Tools.ProcessCalls); Assert.Equal(configuration.Id, page.OriginalDeveloperObservation!.RunConfigurationId);
+            Assert.Equal(DeveloperRunConfigurationSelection.Digest(configuration), page.OriginalDeveloperObservation.RunConfigurationDefinitionSha256);
+            Assert.Same(f.Tools.Process, page.OriginalDeveloperObservation.OriginalProcessResult);
+            var oldKey = Key("console-target — console"); declarations[0] = configuration with { Command = "echo changed after selection" };
+            Assert.False(page.IsActionAvailable("dev.run-selected-target")); Assert.NotEqual(oldKey, Key("console-target — console"));
+            await page.DispatchAsync("dev.select-run-target", Key("dependent — console"), OriginalTestBodyToken);
+            Assert.False(page.IsActionAvailable("dev.run-selected-target"));
+            Assert.True(page.TryGetValue("SelectedRunTargetSummary", out var summary)); Assert.Contains("prelaunch dependencies", Assert.IsType<string>(summary));
+            Assert.Equal(1, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));

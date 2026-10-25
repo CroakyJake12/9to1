@@ -807,6 +807,95 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         await f.Dev.CloseAndDrainAsync();
     }
 
+    [Fact]
+    public async Task Declared_console_target_uses_original_command_owner_and_preserves_actual_failed_process_result()
+    {
+        var f = await Fixture.CreateAsync(); var configuration = ConfigureConsoleTarget(f);
+        f.Tools.Process = new(7, "target stdout", "target stderr", TimeSpan.FromMilliseconds(5), false);
+        var digest = DeveloperRunConfigurationSelection.Digest(configuration); var context = f.Context();
+        var result = await f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, OriginalTestBodyToken);
+        Assert.True(result.Succeeded, result.Error?.Message); Assert.False(result.Value!.ProcessSucceeded);
+        Assert.Same(f.Tools.Process, result.Value.OriginalProcessResult); Assert.Equal(configuration.Id, result.Value.RunConfigurationId);
+        Assert.Equal(digest, result.Value.RunConfigurationDefinitionSha256); Assert.Equal(1, f.Owner.ExecuteCalls); Assert.Equal(1, f.Tools.ProcessCalls);
+        Assert.Equal(TimeSpan.FromSeconds(37), f.Tools.LastProcessRequest!.Timeout);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Live_identical_console_target_action_coalesces_without_starting_another_process()
+    {
+        var f = await Fixture.CreateAsync(); var configuration = ConfigureConsoleTarget(f); var context = f.Context();
+        var digest = DeveloperRunConfigurationSelection.Digest(configuration);
+        var first = await f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, OriginalTestBodyToken);
+        var duplicate = await f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, OriginalTestBodyToken);
+        Assert.True(first.Succeeded, first.Error?.Message); Assert.Same(first.Value, duplicate.Value); Assert.Equal(1, f.Tools.ProcessCalls);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Changed_console_definition_at_same_revision_refuses_before_preparation()
+    {
+        var f = await Fixture.CreateAsync(); var configuration = ConfigureConsoleTarget(f);
+        f.Store.Workspace = f.Store.Workspace with { RunConfigurations = [configuration with { Command = "echo substituted" }] };
+        var refused = await f.Dev.RunInspectedConfigurationAsync(f.Reference, f.Context(), configuration.Id, configuration.Revision,
+            DeveloperRunConfigurationSelection.Digest(configuration), OriginalTestBodyToken);
+        Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, refused.Error!.Code); Assert.Equal(0, f.Owner.PrepareCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Console_target_changed_during_permission_preparation_never_enters_the_tool_body()
+    {
+        var f = await Fixture.CreateAsync(); var configuration = ConfigureConsoleTarget(f);
+        f.Owner.OnPrepare = () => f.Store.Workspace = f.Store.Workspace with { RunConfigurations = [configuration with { Command = "echo changed during admission" }] };
+        await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.RunInspectedConfigurationAsync(f.Reference, f.Context(), configuration.Id, configuration.Revision,
+            DeveloperRunConfigurationSelection.Digest(configuration), OriginalTestBodyToken));
+        Assert.Equal(0, f.Owner.ExecuteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.CloseAndDrainAsync());
+    }
+
+    [Fact]
+    public async Task Unsupported_console_launch_features_never_request_original_preparation()
+    {
+        foreach (var feature in new[] { "arguments", "prelaunch", "preview", "missing-command" })
+        {
+            var f = await Fixture.CreateAsync(); var configuration = ConfigureConsoleTarget(f);
+            configuration = feature switch { "arguments" => configuration with { Arguments = ["argv"] },
+                "prelaunch" => configuration with { PreLaunchTaskIds = ["restore"] }, "preview" => configuration with { PreviewProviderId = "project.web" },
+                _ => configuration with { Command = null } };
+            f.Store.Workspace = f.Store.Workspace with { RunConfigurations = [configuration] };
+            var refused = await f.Dev.RunInspectedConfigurationAsync(f.Reference, f.Context(), configuration.Id, configuration.Revision,
+                DeveloperRunConfigurationSelection.Digest(configuration), OriginalTestBodyToken);
+            Assert.Equal(DeveloperOperationErrorCode.CapabilityUnavailable, refused.Error!.Code); Assert.Equal(0, f.Owner.PrepareCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+            await f.Dev.CloseAndDrainAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Reopened_generic_command_ack_cannot_claim_the_exact_declared_Run_target_or_replay_it()
+    {
+        var f = await Fixture.CreateAsync(); var configuration = ConfigureConsoleTarget(f); var context = f.Context();
+        var digest = DeveloperRunConfigurationSelection.Digest(configuration);
+        var original = await f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, OriginalTestBodyToken);
+        Assert.True(original.Succeeded, original.Error?.Message); Assert.Equal(1, f.Tools.ProcessCalls);
+        var reopened = new DeveloperTaskWorkspaceService(f.Store, new(f.ConversationSource, f.Containers), f.Tasks, f.Owner,
+            new(f.Tools, f.CheckpointStore), new Trust(true), f.Checkpoints, f.ConversationSource);
+        var current = f.Context() with { ActionId = context.ActionId };
+        var refused = await reopened.RunInspectedConfigurationAsync(f.Reference, current, configuration.Id, configuration.Revision, digest, OriginalTestBodyToken);
+        Assert.False(refused.Succeeded); Assert.Equal(DeveloperOperationErrorCode.PermissionRequired, refused.Error!.Code);
+        Assert.Contains("does not prove", refused.Error.Message); Assert.Null(refused.Value); Assert.Equal(1, f.Tools.ProcessCalls);
+        await reopened.CloseAndDrainAsync(); await f.Dev.CloseAndDrainAsync();
+    }
+
+    private static DeveloperRunConfiguration ConfigureConsoleTarget(Fixture fixture)
+    {
+        var project = Assert.Single(fixture.Store.Workspace.Projects); var root = Assert.Single(fixture.Store.Workspace.Roots);
+        var configuration = new DeveloperRunConfiguration("console-target", "Workspace", project.ProjectId.ToString("D"), "console", [],
+            root.RootId.ToString("D"), root.EnvironmentId, [], null) { Command = "echo declared target", TimeoutSeconds = 37 };
+        fixture.Store.Workspace = fixture.Store.Workspace with { Projects = [project with { RunConfigurationIds = [configuration.Id] }], RunConfigurations = [configuration] };
+        return configuration;
+    }
+
     private sealed class Fixture
     {
         public Store Store = null!; public Containers Containers = null!; public Tools Tools = new(); public Owner Owner = null!;
