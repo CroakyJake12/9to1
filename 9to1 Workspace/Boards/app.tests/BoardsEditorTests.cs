@@ -18,6 +18,22 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsEditorTests
 {
+    [Fact]
+    public void Toolbar_icon_mapping_uses_distinct_canonical_semantics()
+    {
+        Assert.Equal("grip", BoardsIcons.Grip);
+        Assert.Equal("strikethrough", BoardsIcons.Strikethrough);
+        Assert.Equal("subscript", BoardsIcons.Subscript);
+        Assert.Equal("superscript", BoardsIcons.Superscript);
+        Assert.Equal("align-left", BoardsIcons.AlignLeft);
+        Assert.Equal("align-center", BoardsIcons.AlignCenter);
+        Assert.Equal("align-right", BoardsIcons.AlignRight);
+        Assert.Equal("bulleted-list", BoardsIcons.BulletedList);
+        Assert.Equal("numbered-list", BoardsIcons.NumberedList);
+        Assert.Equal("image", BoardsIcons.Image);
+        Assert.Equal("paperclip", BoardsIcons.Attach);
+    }
+
     private static Task<T> OnUiThreadAsync<T>(Func<T> work) =>
         // All UI work funnels through the shared test UI thread: with Skia
         // registered, control trees are strictly thread-affine.

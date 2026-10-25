@@ -5,9 +5,14 @@ using Haven.UI;
 
 namespace CakeOS.Apps.Boards.App;
 
-/// <summary>Resolves the Boards-owned folder artwork used by authored CUI.</summary>
+/// <summary>Resolves authored CUI icon keys from Haven's maintained vector catalog.</summary>
 public static class BoardsCuiIconResolver
 {
+    private static readonly HashSet<string> FilledSilhouetteKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "more", "grip", "align-left", "align-center", "align-right", "bulleted-list",
+    };
+
     public static IImage? Resolve(string source, Control target)
     {
         if (!source.StartsWith("icon:", StringComparison.Ordinal)) return null;
@@ -57,10 +62,12 @@ public static class BoardsCuiIconResolver
                 writer.EndFigure(figure.Closed);
             }
         }
+        var filledSilhouette = FilledSilhouetteKeys.Contains(key.Trim());
         return new DrawingImage(new GeometryDrawing
         {
             Geometry = geometry,
-            Pen = new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round),
+            Brush = filledSilhouette ? brush : null,
+            Pen = filledSilhouette ? null : new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round),
         })
         {
             Viewbox = source.ViewBox is { } viewBox

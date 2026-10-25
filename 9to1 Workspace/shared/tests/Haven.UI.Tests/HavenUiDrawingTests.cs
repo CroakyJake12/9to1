@@ -74,6 +74,31 @@ public sealed class HavenUiDrawingTests
     }
 
     [Fact]
+    public void Board_editor_icon_keys_have_distinct_geometry_and_filled_controls_are_closed()
+    {
+        var distinctKeys = new[]
+        {
+            "grip", "strikethrough", "subscript", "superscript", "align-left", "align-center",
+            "align-right", "bulleted-list", "numbered-list", "image", "paperclip",
+        };
+        var signatures = distinctKeys.Select(GeometrySignature).ToArray();
+        Assert.Equal(distinctKeys.Length, signatures.Distinct(StringComparer.Ordinal).Count());
+
+        var grip = HavenIconCatalog.Resolve("grip");
+        Assert.Equal(6, grip.Path.Figures.Count);
+        Assert.All(grip.Path.Figures, figure => Assert.True(figure.Closed));
+        foreach (var key in new[] { "align-left", "align-center", "align-right", "bulleted-list" })
+            Assert.All(HavenIconCatalog.Resolve(key).Path.Figures, figure => Assert.True(figure.Closed));
+    }
+
+    private static string GeometrySignature(string key)
+    {
+        var geometry = HavenIconCatalog.Resolve(key);
+        return string.Join("|", geometry.Path.Figures.Select(figure =>
+            $"{figure.Start}:{figure.Closed}:{string.Join(";", figure.Segments.Select(segment => segment.ToString()))}"));
+    }
+
+    [Fact]
     public void Primary_button_text_uses_fixed_bright_content_token()
     {
         var button = new Button { Content = "Primary action", Variant = ButtonVariant.Primary };
