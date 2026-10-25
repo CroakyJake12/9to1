@@ -621,6 +621,7 @@ public sealed class HavenRichBoardV3Tests
                     var second = HavenRichNotesOps.AddGraphExpression(rich, pageId, block.Id, "y = x^2");
                     HavenRichNotesOps.UpdateGraphExpression(rich, pageId, block.Id, second.Id,
                         domainMin: -5, domainMax: 5);
+                    HavenRichNotesOps.AddGraphExpression(rich, pageId, block.Id, "y <= x^2");
                     HavenRichNotesOps.SetGraphViewport(rich, pageId, block.Id, new HavenRichGraphViewport
                         { XMin = -6, XMax = 6, YMin = -2, YMax = 2 });
                     HavenRichNotesOps.SetGraphOptions(rich, pageId, block.Id,
@@ -636,10 +637,15 @@ public sealed class HavenRichBoardV3Tests
             await using var reopened = await RichBoardSession.OpenAtPathAsync(store, path);
             var graph = reopened.Rich.Sections[0].Pages[0].Blocks
                 .First(b => b.Kind == HavenRichBlockKind.Graph).Graph!;
-            Assert.Equal(2, graph.Expressions.Count);
+            Assert.Equal(3, graph.Expressions.Count);
             Assert.Equal("y = sin(x)", graph.Expressions[0].Text);
             Assert.Equal("#FFFF0000", graph.Expressions[0].Color);
             Assert.Equal("y = x^2", graph.Expressions[1].Text);
+            Assert.Equal("y <= x^2", graph.Expressions[2].Text);
+            Assert.True(HavenGraphExpression.TryGetInequality(graph.Expressions[2].Text,
+                out var shadingBoundary, out var shadeAbove));
+            Assert.Equal("x^2", shadingBoundary);
+            Assert.False(shadeAbove);
             Assert.Equal(-5, graph.Expressions[1].DomainMin);
             Assert.Equal(-6, graph.Viewport.XMin);
             Assert.Equal("time", graph.XLabel);
@@ -665,6 +671,24 @@ public sealed class HavenRichBoardV3Tests
             Assert.Empty(reopened.Rich.Sections[0].Pages[0].Blocks
                 .First(b => b.Kind == HavenRichBlockKind.Graph).Graph!.Points);
         });
+    }
+
+    [Fact]
+    public void Graph_inequalities_resolve_boundary_and_shaded_side_without_evaluating_comparisons_as_curves()
+    {
+        Assert.True(HavenGraphExpression.TryGetInequality("y <= x^2", out var belowBoundary, out var belowAbove));
+        Assert.Equal("x^2", belowBoundary);
+        Assert.False(belowAbove);
+        Assert.True(HavenGraphExpression.TryGetInequality("x + 1 >= y", out var aboveBoundary, out var aboveAbove));
+        Assert.Equal("x + 1", aboveBoundary);
+        Assert.True(aboveAbove);
+        Assert.True(HavenGraphExpression.TryGetInequality("y > sin(x)", out var strictBoundary, out var strictAbove));
+        Assert.Equal("sin(x)", strictBoundary);
+        Assert.True(strictAbove);
+        Assert.False(HavenGraphExpression.TryGetInequality("y = x^2", out _, out _));
+        Assert.False(HavenGraphExpression.TryGetInequality("y < x < 2", out _, out _));
+        Assert.True(HavenGraphExpression.TryEvaluate(belowBoundary, 3, out var value));
+        Assert.Equal(9, value);
     }
 
     // ---------- Images / dividers ----------

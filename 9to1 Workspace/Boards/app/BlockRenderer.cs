@@ -928,7 +928,7 @@ public static class BlockRenderer
             Width = 260,
             Margin = new Thickness(0, 0, 8, 0),
         };
-        ToolTip.SetTip(text, "Graph expression, e.g. y = sin(x)");
+        ToolTip.SetTip(text, "Plot y = sin(x), or shade an inequality such as y ≤ x^2");
         AutomationProperties.SetName(text, "Graph expression");
         var color = new TextBox
         {
@@ -1080,18 +1080,22 @@ public static class BlockRenderer
         {
             if (!expr.Visible)
                 continue;
+            var isInequality = HavenGraphExpression.TryGetInequality(expr.Text, out var boundaryExpression, out var shadeAbove);
+            var plotExpression = isInequality ? boundaryExpression : expr.Text;
             var samples = HavenGraphExpression.Sample(
-                expr.Text, expr.DomainMin, expr.DomainMax, graph.XMin, graph.XMax, 200, variables);
+                plotExpression, expr.DomainMin, expr.DomainMax, graph.XMin, graph.XMax, 200, variables);
             if (samples.Count == 0)
             {
                 var mid = (graph.XMin + graph.XMax) / 2;
-                if (!HavenGraphExpression.TryEvaluate(expr.Text, mid, out _, variables))
+                if (!HavenGraphExpression.TryEvaluate(plotExpression, mid, out _, variables))
                     errors.Add("Invalid expression \"" + expr.Text + "\" — curve hidden.");
                 else
                     errors.Add("Expression \"" + expr.Text + "\" has no points in this viewport.");
                 continue;
             }
             var stroke = ParseBrushOrDefault(expr.Color, "#FF1A73E8");
+            if (isInequality)
+                AddGraphShading(canvas, samples, shadeAbove, expr.Color, graph, mapX, mapY);
             List<Point>? run = null;
             void flush()
             {
@@ -1136,6 +1140,44 @@ public static class BlockRenderer
             return wrap;
         }
         return canvas;
+    }
+
+    private static void AddGraphShading(Canvas canvas, IReadOnlyList<(double X, double Y)> samples,
+        bool shadeAbove, string colorText, RichGraphView graph, Func<double, double> mapX,
+        Func<double, double> mapY)
+    {
+        Color source;
+        try { source = Color.Parse(colorText); }
+        catch { source = Color.Parse("#FF1A73E8"); }
+        var fill = new SolidColorBrush(Color.FromArgb(48, source.R, source.G, source.B));
+        var run = new List<Point>();
+        void AddRegion()
+        {
+            if (run.Count < 2)
+            {
+                run.Clear();
+                return;
+            }
+            var edgeY = mapY(shadeAbove ? graph.YMax : graph.YMin);
+            var polygon = run.ToList();
+            polygon.Add(new Point(run[^1].X, edgeY));
+            polygon.Add(new Point(run[0].X, edgeY));
+            canvas.Children.Add(new Polygon { Points = polygon, Fill = fill });
+            run.Clear();
+        }
+
+        foreach (var (x, y) in samples)
+        {
+            var px = mapX(x);
+            var py = mapY(y);
+            if (!double.IsFinite(px) || !double.IsFinite(py) || py < -GraphHeight || py > GraphHeight * 2)
+            {
+                AddRegion();
+                continue;
+            }
+            run.Add(new Point(px, py));
+        }
+        AddRegion();
     }
 
     // ----- Attachment -----
