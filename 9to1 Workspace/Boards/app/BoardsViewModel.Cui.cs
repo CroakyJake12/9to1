@@ -40,7 +40,7 @@ public sealed partial class BoardsViewModel
         Set("ContextIsTable", block?.Kind == "table");
         Set("ContextIsImage", block?.Kind == "image");
         Set("ContextIsDivider", block?.Kind == "divider");
-        Set("ContextVisible", block?.Kind is "table" or "image" or "divider");
+        Set("ContextVisible", _isEditMode && (block?.Kind is "table" or "image" or "divider"));
         RefreshCuiBlockActions();
     }
 
@@ -56,7 +56,7 @@ public sealed partial class BoardsViewModel
         var index = blocks.FindIndex(block => block.Id == SelectedBlockId);
         var eligible = index >= 0 && !SelectedBlockId.Contains(':') &&
             blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph";
-        var available = eligible && _session is ContractSessionAdapter && !_blockActionBusy && BlockActionEditingAllowed();
+        var available = _isEditMode && eligible && _session is ContractSessionAdapter && !_blockActionBusy && BlockActionEditingAllowed();
         Set("CanManageSelectedBlock", available);
         Set("CanMoveBlockUp", available && index > 0);
         Set("CanMoveBlockDown", available && index < blocks.Count - 1);
@@ -106,6 +106,7 @@ public sealed partial class BoardsViewModel
 
     public bool TrySetValue(string path, object? value)
     {
+        if (!_isEditMode) return false;
         var key = path[(path.LastIndexOf('.') + 1)..];
         if (_syncing) return key.StartsWith("Context", StringComparison.Ordinal);
         var block = FindBlock(SelectedBlockId);
@@ -150,6 +151,7 @@ public sealed partial class BoardsViewModel
     {
         if (await DispatchCuiBlockActionAsync(command, cancellationToken)) return true;
         if (!command.StartsWith("Context", StringComparison.Ordinal)) return false;
+        if (!_isEditMode) { Set("StatusText", "View mode: switch to Edit to change this board."); return true; }
         cancellationToken.ThrowIfCancellationRequested();
         var block = FindBlock(SelectedBlockId);
         if (block is null) return true;

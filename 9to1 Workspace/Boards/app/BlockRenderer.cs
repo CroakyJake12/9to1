@@ -59,6 +59,7 @@ public static class BlockRenderer
         }
 
         host.Children.Add(BuildFreeformSection(vm, canvasBoxes ?? []));
+        vm.ApplyAuthoringState(host);
     }
 
     private static Control BuildEmptyPageHint(BoardsViewModel vm)
@@ -159,6 +160,7 @@ public static class BlockRenderer
             FontWeight = block.Bold || (style?.Bold == true) || isHeading ? FontWeight.Bold : FontWeight.Normal,
             FontStyle = block.Italic || (style?.Italic == true) ? FontStyle.Italic : FontStyle.Normal,
             AcceptsReturn = !isHeading,
+            IsReadOnly = !vm.IsEditMode,
             TextWrapping = TextWrapping.Wrap,
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
@@ -278,12 +280,14 @@ public static class BlockRenderer
             IsChecked = item.IsChecked,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 10, 0),
+            IsEnabled = vm.IsEditMode,
         };
         AutomationProperties.SetName(check, "Checklist item done");
         var text = new TextBox
         {
             Name = "chk_" + suffix,
             Text = item.Text ?? string.Empty,
+            IsReadOnly = !vm.IsEditMode,
             FontSize = 14,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Background = Brushes.Transparent,

@@ -20,6 +20,7 @@
           </Container>
           <Input id="BoardTitleBox" accessible-name="Board title" font-size="20" font-weight="SemiBold" vertical-alignment="Center" margin="12 0" Type="Text" ID="BoardTitleBox" Column="1" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" BorderWidth="0" />
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="2" CellGap="6">
+            <Button ID="EditViewToggle" Content="{Binding ModeLabel, fallback=Edit}" Action="ToggleEditView" AccessibleName="Switch between Edit and View mode" />
             <Text ID="SaveState" Text="{Binding SaveStateText, fallback=Saved}" FontSize="12" VerticalAlignment="Center" Margin="0 0 8 0" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
             <Button ID="ThemeButton" Content="Appearance" Action="ToggleTheme" AccessibleName="Toggle light or dark appearance" />
             <Container Type="Menu" ID="MoreMenu">
@@ -51,7 +52,7 @@
       </Container>
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
       <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
-        <Container Type="Vertical Stack" Row="0">
+        <Container Type="Vertical Stack" Row="0" Active="{Binding IsEditMode}">
           <Container Type="Wrap" CellGap="6" Padding="12 6" AccessibleName="Text formatting">
             <Button ID="RangeBold" Content="B" FontWeight="Bold" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" />
             <Button ID="RangeItalic" Content="I" FontStyle="Italic" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" />

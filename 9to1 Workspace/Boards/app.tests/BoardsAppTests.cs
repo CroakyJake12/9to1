@@ -118,6 +118,30 @@ public sealed class BoardsAppTests
     }
 
     [Fact]
+    public async Task View_mode_blocks_document_edits_and_edit_mode_restores_them()
+    {
+        var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/view-mode-test");
+        var viewModel = new BoardsViewModel(session);
+        var originalTitle = session.Document.Title;
+        var originalBlockCount = viewModel.PageBlocks.Count;
+
+        await viewModel.DispatchAsync("ToggleEditView", null);
+        Assert.False(viewModel.IsEditMode);
+        viewModel.EditText("BoardTitleBox", "must not be applied");
+        await viewModel.DispatchAsync("AddBlock", null);
+        Assert.Equal(originalTitle, session.Document.Title);
+        Assert.Equal(originalBlockCount, viewModel.PageBlocks.Count);
+        Assert.Contains("View mode", viewModel.Get("StatusText")?.ToString());
+
+        await viewModel.DispatchAsync("ToggleEditView", null);
+        Assert.True(viewModel.IsEditMode);
+        await viewModel.DispatchAsync("AddBlock", null);
+        Assert.Equal(originalBlockCount + 1, viewModel.PageBlocks.Count);
+        await session.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Boards_cui_extended_properties_apply()
     {
         var markup = """
