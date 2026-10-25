@@ -120,6 +120,26 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Reentrant_home_creation_dispatch_does_not_submit_a_second_create()
+    {
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(CreateNotesDocument("Pinned Board"),
+            (_, _) => ValueTask.FromResult(true));
+        await using (adapter)
+        {
+            var host = new BlockingBoardCreationHost();
+            var viewModel = new BoardsViewModel(adapter, homeBoardCreationHost: host);
+            var first = viewModel.DispatchAsync("NewBoard", null).AsTask();
+            await host.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await viewModel.DispatchAsync("NewBoard", null);
+            Assert.Equal(1, host.CreateCount);
+            Assert.Equal("A Board creation is already in progress.", viewModel.Get("StatusText"));
+            host.Complete();
+            await first.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal("New Board creation was canceled.", viewModel.Get("StatusText"));
+        }
+    }
+
+    [Fact]
     public async Task External_writable_session_requires_explicit_save_and_clears_only_after_acknowledgement()
     {
         var document = CreateNotesDocument("Home source");
@@ -520,6 +540,41 @@ public sealed class ContractAdapterTests
             _canOpenRecorded = false;
             return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning));
         }
+    }
+
+    private sealed class BlockingBoardCreationHost : IBoardsHomeBoardCreationHost
+    {
+        private readonly TaskCompletionSource<BoardsHomeBoardCreationResult> _result =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public int CreateCount { get; private set; }
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool CanRetryOpenCreatedBoard => false;
+        public bool CanRetryCreationSettlement => false;
+        public bool CanInspectUnknownCreation => false;
+        public bool CanOpenRecordedBoard => false;
+        public bool HasUnresolvedCreation => false;
+
+        public Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _ = HavenBoardDocumentCodec.Deserialize(validatedDraft);
+            CreateCount++;
+            Started.TrySetResult();
+            return _result.Task.WaitAsync(cancellationToken);
+        }
+
+        public void Complete() => _result.TrySetResult(
+            new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate));
+
+        public Task<BoardsHomeBoardCreationResult> RetryCreationSettlementAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+        public Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+        public Task<BoardsHomeBoardCreationResult> InspectUnknownCreationAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+        public Task<BoardsHomeBoardCreationResult> OpenRecordedBoardAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
     }
 
     [Fact]

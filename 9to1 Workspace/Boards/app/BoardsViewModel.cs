@@ -690,6 +690,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         ArgumentNullException.ThrowIfNull(result);
         switch (result.Outcome)
         {
+            case BoardsHomeBoardCreationOutcome.OperationInProgress:
+                Set("StatusText", "A Board operation is already in progress.");
+                break;
             case BoardsHomeBoardCreationOutcome.Opened:
                 break;
             case BoardsHomeBoardCreationOutcome.CancelledBeforeCreate:
