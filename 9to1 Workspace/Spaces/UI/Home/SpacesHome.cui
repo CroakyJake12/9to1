@@ -49,6 +49,8 @@
     <Action name="ToggleOverflow" command="spaces.toggle-space-overflow" />
     <Action name="MoveSelected" command="spaces.move" parameter="{Binding selection.id}" />
     <Action name="AddContext" command="spaces.add-context" parameter="{Binding selection.id}" />
+    <Action name="OpenSidebarTask" command="spaces.tasks.open" parameter="{Binding task.openIntent}" />
+    <Action name="ReviewSidebarTask" command="spaces.tasks.review" parameter="{Binding task.openIntent}" />
   </Actions>
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
@@ -132,10 +134,10 @@
                 <Button id="space-overflow-archive" action="ArchiveSelected" content="Archive Space" accessible-name="Archive selected Space" Interactive="{Binding selection.canEdit}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
               </Container>
             </If>
-            <Button id="space-new-chat" HorizontalContentAlignment="Stretch" action="NewChat" accessible-name="Start a new chat in this Space" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+            <Button id="space-new-chat" HorizontalContentAlignment="Stretch" action="NewChat" accessible-name="{Binding spaces.newConversationAccessibleLabel}" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Container Type="Horizontal Stack" CellGap="8">
                 <Image id="space-new-chat-icon" Source="icon:plus" Width="18" Height="18" VerticalAlignment="Center" />
-                <Text id="space-new-chat-label" text="New chat" font-size="14" />
+                <Text id="space-new-chat-label" text="{Binding spaces.newConversationLabel}" font-size="14" />
               </Container>
             </Button>
             <!--
@@ -152,6 +154,74 @@
                 </Container>
               </Button>
             </Repeat>
+            <If Condition="{Binding spaces.isTasksSpace}">
+              <Container id="space-task-sidebar" Type="Vertical Stack" CellGap="10" MinHeight="48" Background="{Resource CuiTransparentBrush}" accessible-name="Tasks sidebar">
+                <Container Type="Context Menu">
+                  <Button id="space-task-context-scope" Type="Menu Item" content="Shown Tasks" Interactive="{Binding spaces.canReadTasks}">
+                    <Button id="space-task-context-only" Type="Menu Item" content="Task Space Only" action="spaces.tasks.scope-only" ToggleType="Radio" Checked="{Binding spaces.taskSpaceOnly}" />
+                    <Button id="space-task-context-all" Type="Menu Item" content="All Tasks" action="spaces.tasks.scope-all" ToggleType="Radio" Checked="{Binding spaces.taskAll}" />
+                  </Button>
+                </Container>
+                <Container Type="Horizontal Stack" CellGap="6">
+                  <Text id="space-task-scope" text="{Binding spaces.taskScope}" font-weight="SemiBold" VerticalAlignment="Center" />
+                  <Container Type="Menu" Background="{Resource CuiTransparentBrush}">
+                    <Button id="space-task-options" Type="Menu Item" content="…" accessible-name="Task sidebar options" Tooltip="Task sidebar options">
+                      <Button Type="Menu Item" content="Shown Tasks" Interactive="{Binding spaces.canReadTasks}">
+                        <Button id="space-task-overflow-only" Type="Menu Item" content="Task Space Only" action="spaces.tasks.scope-only" ToggleType="Radio" Checked="{Binding spaces.taskSpaceOnly}" />
+                        <Button id="space-task-overflow-all" Type="Menu Item" content="All Tasks" action="spaces.tasks.scope-all" ToggleType="Radio" Checked="{Binding spaces.taskAll}" />
+                      </Button>
+                    </Button>
+                  </Container>
+                </Container>
+                <Button id="space-task-refresh" content="Refresh tasks" action="spaces.tasks.refresh" Interactive="{Binding spaces.canReadTasks}" />
+                <Repeat id="space-task-tiles" Source="{Binding spaces.taskRows}" As="task" Key="{Binding task.id}">
+                  <Container id="space-task-tile" Type="Vertical Stack" Padding="12" CellGap="6" Background="{Resource CuiPanelBrush}" BorderBrush="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="12" accessible-name="{Binding task.title}">
+                    <Button id="space-task-open" action="OpenSidebarTask" content="{Binding task.title}" Selected="{Binding task.isCurrent}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" MinHeight="40" accessible-name="{Binding task.openLabel}" Tooltip="{Binding task.title}" />
+                    <If Condition="{Binding task.completed}">
+                      <Button action="OpenSidebarTask" content="{Binding task.status}" foreground="{Resource CuiSuccessBrush}" font-weight="SemiBold" Tooltip="{Binding task.detail}" accessible-name="{Binding task.status}" Background="{Resource CuiTransparentBrush}" BorderWidth="0" />
+                    </If>
+                    <If Condition="!{Binding task.completed}">
+                      <If Condition="{Binding task.permission}">
+                        <Button action="OpenSidebarTask" content="{Binding task.status}" foreground="{Resource CuiInformationBrush}" font-weight="SemiBold" Tooltip="{Binding task.detail}" accessible-name="{Binding task.status}" Background="{Resource CuiTransparentBrush}" BorderWidth="0" />
+                        <Button id="space-task-review" action="ReviewSidebarTask" content="Review permission" accessible-name="Review this task’s actual permission request" />
+                      </If>
+                      <If Condition="!{Binding task.permission}">
+                        <Button action="OpenSidebarTask" content="{Binding task.status}" font-weight="SemiBold" Tooltip="{Binding task.detail}" accessible-name="{Binding task.status}" Background="{Resource CuiTransparentBrush}" BorderWidth="0" />
+                      </If>
+                    </If>
+                    <Text text="{Binding task.origin}" foreground="{Resource CuiTextSoftBrush}" font-size="12" TextWrapping="Wrap" />
+                    <Text text="{Binding task.summary}" TextWrapping="Wrap" />
+                    <Text text="{Binding task.progress}" foreground="{Resource CuiTextSoftBrush}" font-size="12" TextWrapping="Wrap" />
+                  </Container>
+                </Repeat>
+                <If Condition="!{Binding spaces.hasTaskRows}">
+                  <Text id="space-task-empty" text="No authorized tasks on this page." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                </If>
+                <Container Type="Horizontal Stack" CellGap="6">
+                  <Button id="space-task-previous" content="Previous" action="spaces.tasks.previous" Interactive="{Binding spaces.taskCanPrevious}" />
+                  <Button id="space-task-next" content="Next" action="spaces.tasks.next" Interactive="{Binding spaces.taskCanNext}" />
+                </Container>
+                <Text id="space-task-notice" text="{Binding spaces.taskNotice}" foreground="{Resource CuiTextSoftBrush}" font-size="12" TextWrapping="Wrap" role="status" />
+                <If Condition="{Binding spaces.taskReviewOpen}">
+                  <Container id="space-task-permission-popout" Type="Floating" Target="space-task-scope" Placement="Under" action="spaces.tasks.close-review">
+                    <Container Type="Vertical Stack" Width="400" MaxWidth="480" MaxHeight="500" VerticalScrolling="True" Padding="16" CellGap="8" Background="{Resource CuiPanelBrush}" BorderBrush="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="12" accessible-name="Review task permission">
+                      <Text text="{Binding spaces.taskReviewTitle}" font-weight="SemiBold" TextWrapping="Wrap" />
+                      <Text id="space-task-review-question" text="{Binding spaces.taskReviewQuestion}" font-weight="SemiBold" TextWrapping="Wrap" />
+                      <Text text="{Binding spaces.taskReviewRequester}" TextWrapping="Wrap" />
+                      <Text text="{Binding spaces.taskReviewProvider}" TextWrapping="Wrap" />
+                      <Text id="space-task-review-explanation" text="{Binding spaces.taskReviewExplanation}" TextWrapping="Wrap" />
+                      <Text id="space-task-review-status" text="{Binding spaces.taskReviewStatus}" TextWrapping="Wrap" role="status" />
+                      <Container Type="Wrap" CellGap="8">
+                        <Button id="space-task-review-allow" content="Allow this request" action="spaces.tasks.allow" Interactive="{Binding spaces.taskCanRespond}" />
+                        <Button id="space-task-review-deny" content="Deny" action="spaces.tasks.deny" Interactive="{Binding spaces.taskCanRespond}" />
+                        <Button id="space-task-review-close" content="Close" action="spaces.tasks.close-review" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </If>
+              </Container>
+            </If>
+            <If Condition="!{Binding spaces.isTasksSpace}">
             <Container id="space-recent-chats-heading-row" Type="Vertical Stack" Padding="8">
               <Text id="space-recent-chats-heading" text="{Binding spaces.conversationHistoryHeading}" font-size="12" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
               <If Condition="{Binding spaces.canSearchConversations}">
@@ -180,6 +250,7 @@
               <Container id="space-empty-history-row" Type="Vertical Stack" Padding="8" CellGap="8">
                 <Text id="space-conversations-empty" text="{Binding spaces.conversationHistoryEmpty}" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
               </Container>
+            </If>
             </If>
           </Container>
 

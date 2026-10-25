@@ -50,6 +50,15 @@ public sealed class SpaceTaskWorkspaceService(
         return ReadAuthorizedContextAsync(selection.TaskId, selection, token, originalSourceCallbackScope);
     }
 
+    /// <summary>Fresh owner-authorized read of one actual Task, issuing its exact current
+    /// selection without substituting a newer task sharing the same conversation.</summary>
+    public Task<AuthorizedTaskContextObservation> ReadTaskAsync(Guid taskId, CancellationToken token,
+        Action<Action>? originalSourceCallbackScope = null)
+    {
+        RequireId(taskId, nameof(taskId));
+        return ReadAuthorizedContextAsync(taskId, null, token, originalSourceCallbackScope);
+    }
+
     private async Task<AuthorizedTaskContextObservation> ReadAuthorizedContextAsync(Guid taskId,
         TaskContextSelection? selected, CancellationToken token, Action<Action>? scope)
     {

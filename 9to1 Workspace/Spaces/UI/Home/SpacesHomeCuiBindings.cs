@@ -73,6 +73,18 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             // The contextual Space sidebar is served by the owning native surface from the real
             // conversation store. The domain projection has no conversation authority, so it
             // truthfully reports none rather than inventing rows.
+            "spaces.isTasksSpace" => snapshot.Selection?.Id == Haven.Application.SpaceRegistry.TasksSpaceId,
+            "spaces.newConversationLabel" => snapshot.Selection?.Id == Haven.Application.SpaceRegistry.TasksSpaceId ? "New task" : "New chat",
+            "spaces.newConversationAccessibleLabel" => snapshot.Selection?.Id == Haven.Application.SpaceRegistry.TasksSpaceId ? "Start a new explicit task in this Space" : "Start a new chat in this Space",
+            "spaces.taskRows" => Array.Empty<object>(),
+            "spaces.hasTaskRows" => false,
+            "spaces.taskScope" => "Task Space Only",
+            "spaces.taskSpaceOnly" => true,
+            "spaces.taskAll" => false,
+            "spaces.taskReviewOpen" or "spaces.taskCanRespond" => false,
+            "spaces.taskReviewTitle" or "spaces.taskReviewQuestion" or "spaces.taskReviewRequester" or "spaces.taskReviewProvider" or "spaces.taskReviewExplanation" or "spaces.taskReviewStatus" => "",
+            "spaces.canReadTasks" or "spaces.taskCanNext" or "spaces.taskCanPrevious" => false,
+            "spaces.taskNotice" => "The Task observation owner is unavailable in this host.",
             "spaces.conversations" => Array.Empty<SpacesHomeConversationRow>(),
             "spaces.hasConversations" => false,
             "spaces.canSearchConversations" => false,

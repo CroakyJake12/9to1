@@ -30,12 +30,13 @@ public sealed partial class SpaceTaskWidgetPage
         var preferences = _composerPreferences;
         if (!Enum.IsDefined(mode) || preferences is null)
             return ValueTask.FromException(new InvalidOperationException("The actual Space preference owner is unavailable."));
-        long generation; lock (_gate) generation = _generation;
+        long generation; lock (_gate) { if (_viewCloseLease is not null) throw new InvalidOperationException("Abort Task view close preparation before editing its preference."); generation = _generation; }
         _work.RunSynchronous(original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
             InvokeOriginalSource(() =>
             {
+                lock (_gate) if (_viewCloseLease is not null) throw new InvalidOperationException("The Task view is preparing to close.");
                 preferences.SetSpaceSubmitMode(_composerPreferenceSpaceId,
                     mode == TaskFollowUpMode.Steer ? SpaceSubmitMode.Steer : SpaceSubmitMode.Queue);
                 return true;
@@ -63,7 +64,7 @@ public sealed partial class SpaceTaskWidgetPage
         }
         public string Placeholder => "Steer this task or queue a follow-up";
         public bool IsSending => false; // This port never submits a new conversation turn.
-        public bool IsSafetyLocked => false; // Each canonical command reauthorizes its own scope.
+        public bool IsSafetyLocked => page._viewCloseLease is not null; // View freeze only; canonical commands still reauthorize their own scope.
         public bool HasAdd => false;
         public bool HasSettings => false;
         public bool HasSendModePreference => page._composerPreferences is not null && page._active && !page._work.IsRetiring && page._observation?.Snapshot is not null;
