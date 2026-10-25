@@ -66,7 +66,7 @@ typedef struct {
 uint32_t cake_canvas_abi_version(void);
 /* ABI 3 describes the existing layouts/core bridge, not full Canvas acceptance.
  * These feature families expose selection export and read-only targeting only;
- * they do NOT promise keyed mutation or detached split-erase support. */
+ * they do NOT establish application/native acceptance. */
 uint32_t cake_canvas_selection_api_version(void);
 uint32_t cake_canvas_quick_erase_api_version(void);
 void* cake_canvas_engine_new(void);
@@ -113,6 +113,24 @@ CakeCanvasStatus cake_canvas_quick_erase_target(
  * values. Unknown/trashed keys fail; the original engine/history are untouched. */
 CakeCanvasStatus cake_canvas_export_selected_strokes(
     const void* handle, const uint64_t* keys, size_t count, CakeCanvasBuffer* out_buffer
+);
+
+/* Exact patched-donor keyed edits preserve actual store/history. Invalid/stale
+ * keys, unfinished gestures and unsettled render tasks refuse. Zero translation
+ * returns NO_CHANGE and preserves redo. Caller retains exclusive handle access. */
+uint32_t cake_canvas_stroke_mutation_api_version(void);
+CakeCanvasStatus cake_canvas_delete_stroke(void* handle, uint64_t key);
+CakeCanvasStatus cake_canvas_translate_stroke(void* handle, uint64_t key, double x, double y);
+
+/* Detached genuine SplitColliding proposal; original store/history never change.
+ * Samples are document coordinates, count2..1000000 and width1..500, with additional
+ * bounded entity/work/output admission. Both output buffers must be distinct and
+ * empty; failure clears both. Success returns native .rnote plus bounded schema1
+ * exact-retained-donor-penpath JSON, each released with buffer_release. */
+uint32_t cake_canvas_split_erase_api_version(void);
+CakeCanvasStatus cake_canvas_split_erase_candidate(
+    const void* handle, const CakeCanvasPointerSample* samples, size_t count, double width,
+    CakeCanvasBuffer* out_native, CakeCanvasBuffer* out_receipt
 );
 
 CakeCanvasStatus cake_canvas_set_stroke_tool(void* handle, uint32_t tool);

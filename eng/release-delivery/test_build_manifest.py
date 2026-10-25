@@ -87,13 +87,19 @@ def make_manifest(package_receipt, build_receipt, smoke_receipt, scope_evidence,
             native_proof.get("dependencies") == native.get("inspection", {}).get("dependencies") and
             native_proof.get("members", {}).get("opt/9to1-preview/libcakeos_canvas_rnote_poc.so") == native.get("inspection", {}).get("library"),
             "Package lacks its verified actual native drawing payload")
+    for label, member in (("licence", "usr/share/doc/9to1-preview/rnote-LICENSE-GPL-3.0-or-later.txt"),
+                          ("provenance", "usr/share/doc/9to1-preview/rnote-PROVENANCE.md")):
+        item = native.get(label, {})
+        require(item.get("identity") == identity(item.get("path", "")) and
+                native_proof.get("members", {}).get(member) == item.get("identity"), "Package omitted native " + label)
     native_source = native.get("corresponding_source", {})
     require(native_source.get("identity") == identity(native_source.get("path", "")), "Missing native corresponding-source/licence archive")
     require(source.get("source_commit") == revision, "Corresponding source belongs to another revision")
     source_file = Path(source_receipt).parent / source["archive"]
     require(source_file.parent.resolve() == Path(source_receipt).parent.resolve() and
             identity(source_file) == {k: source[k] for k in ("bytes", "sha256")}, "Missing/changed product corresponding source")
-    supporting = {"product_source": retained(source_file), "rnote_source": retained(native_source["path"])}
+    supporting = {"product_source": retained(source_file), "rnote_source": retained(native_source["path"]),
+                  "rnote_licence": retained(native["licence"]["path"]), "rnote_provenance": retained(native["provenance"]["path"])}
     for label, required, path in (("browser_source", bool(package.get("bundled_browser")), browser_source),
                                   ("engine_source", bool(package.get("inference")), engine_source)):
         require(not required or path is not None, "Bundled component requires retained " + label)
