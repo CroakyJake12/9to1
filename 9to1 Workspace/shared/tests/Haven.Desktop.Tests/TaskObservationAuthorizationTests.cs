@@ -9,6 +9,34 @@ namespace Haven.Desktop.Tests;
 public sealed partial class ChatCloudPermissionCallerTests
 {
     [Fact]
+    public async Task Task_observation_reopens_historical_own_task_after_authentication_renewal_without_renewing_command_admission()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig();
+        var task = await rig.Tasks.BeginAuthorizedAsync(Guid.NewGuid(), Guid.NewGuid(), "historical own task", TaskExecutionDurability.PersistedPlan, [], token);
+        var originalActor = rig.Actors.Current!;
+        rig.Actors.Current = originalActor with { AuthenticationRevision = "genuinely-current-renewed-session" };
+        // A fresh actual authority over the SAME task store models process reopening;
+        // no old private activation, provider or command lease is reconstructed.
+        var authority = new TaskRunPermissionAuthority(rig.Actors, new ProviderRegistry(rig.Provider),
+            new Configurations(), new Privacy(), new(new Permissions()), cloud: new ControlledCloudAdmission());
+        var cold = new TaskExecutionCoordinator(rig.TaskRows, rig.Events, admissionAuthority: authority);
+        var observed = await cold.ReadAuthorizedTaskObservationAsync(task.TaskId, token);
+        Assert.Equal(TaskObservationDisposition.Authorized, observed.Disposition);
+        Assert.Equal(task.TaskId, observed.Snapshot!.TaskId);
+        Assert.Equal(task.OwnerBinding, observed.Snapshot.OwnerBinding);
+        Assert.Equal(task.PersistenceRevision, observed.Snapshot.PersistenceRevision);
+        Assert.False(observed.HasCurrentCommandIdentity);
+        Assert.Single((await cold.ReadAuthorizedTaskPageAsync(10, null, token)).Tasks);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => cold.GetOriginalRunControlAvailabilityAsync(task.TaskId, task.ExecutionId, token));
+        rig.Actors.Current = rig.Actors.Current with { ActorId = "different-actual-owner" };
+        var denied = await cold.ReadAuthorizedTaskObservationAsync(task.TaskId, token);
+        Assert.Equal(TaskObservationDisposition.Denied, denied.Disposition); Assert.Null(denied.Snapshot);
+        Assert.Empty((await cold.ReadAuthorizedTaskPageAsync(10, null, token)).Tasks);
+        Assert.Equal(0, rig.Client.Dispatches);
+    }
+
+    [Fact]
     public async Task All_tasks_source_issues_exact_historical_selection_and_preserves_null_and_external_context_origins()
     {
         var token = TestContext.Current.CancellationToken;

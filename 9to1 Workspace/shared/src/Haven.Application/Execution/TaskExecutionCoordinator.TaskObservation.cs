@@ -24,7 +24,12 @@ public interface ITaskExecutionObservationCensus
 }
 
 public enum TaskObservationDisposition { Authorized, Denied, Missing, Unavailable }
-public sealed record TaskObservationReadResult(TaskObservationDisposition Disposition, TaskExecutionSnapshot? Snapshot);
+public sealed record TaskObservationReadResult(TaskObservationDisposition Disposition, TaskExecutionSnapshot? Snapshot)
+{
+    /// <summary>Presentation only: current binding identity permits asking the original
+    /// command owner for availability. It is never a command or continuation grant.</summary>
+    public bool HasCurrentCommandIdentity { get; init; }
+}
 
 /// <summary>Opaque paging position issued by this actual coordinator. It exposes no
 /// inaccessible task identity and grants no authority; every page is freshly authorized.</summary>
@@ -52,6 +57,7 @@ internal interface ITaskRunObservationAuthority
 {
     Task<TaskObservationPrincipal?> CaptureObservationPrincipalAsync(CancellationToken token);
     Task ValidateObservationPrincipalAsync(TaskObservationPrincipal principal, CancellationToken token);
+    bool HasCurrentCommandIdentity(TaskExecutionSnapshot snapshot, TaskObservationPrincipal principal);
     Task<TaskObservationDisposition> AuthorizeObservationAsync(TaskExecutionSnapshot snapshot, TaskObservationPrincipal principal, CancellationToken token);
 }
 
@@ -83,17 +89,36 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunObservationAuth
         lock (_sync)
         {
             if (_originalAdmissionSealed) return TaskObservationDisposition.Unavailable;
-            if (_owners.TryGetValue(snapshot.TaskId, out var owner) &&
-                (owner.Binding != binding || owner.Activation.IsSealed)) return TaskObservationDisposition.Denied;
+            if (_owners.TryGetValue(snapshot.TaskId, out var owner) && owner.Binding != binding)
+                return TaskObservationDisposition.Denied;
         }
         // A returned missing/different actor is a real denial. A faulted/canceled actor
         // source is NOT a denial and retains its full original failure payload.
-        if (principal.Actor != new AuthenticatedResourceActor(binding.ActorId, binding.ProfileId, binding.AccountId,
-                binding.OrganisationId, binding.AuthenticationRevision)) return TaskObservationDisposition.Denied;
-        // Preserve delegated-parent, activation and repeated fresh actor checks. A race
-        // or infrastructure error here aborts this page rather than becoming an empty list.
-        await ValidateTaskCommandAsync(snapshot, "task:observe-original-context", token).ConfigureAwait(false);
+        if (principal.Actor.ActorId != binding.ActorId || principal.Actor.ProfileId != binding.ProfileId ||
+            principal.Actor.AccountId != binding.AccountId || principal.Actor.OrganisationId != binding.OrganisationId)
+            return TaskObservationDisposition.Denied;
+        // Historical authentication revision is audit provenance for READS, as in the
+        // existing native reopening owner. No old command/admission lease is renewed.
+        // A child task additionally needs its genuine retained delegation owner; recorded
+        // parent links alone cannot reconstruct scope. Preserve its original validation.
+        if (snapshot.ParentDelegation is not null)
+        {
+            lock (_sync)
+                if (!_owners.TryGetValue(snapshot.TaskId, out var owner) || owner.Activation.IsSealed ||
+                    owner.Binding != binding || principal.Actor.AuthenticationRevision != binding.AuthenticationRevision)
+                    return TaskObservationDisposition.Unavailable;
+            await ValidateTaskCommandAsync(snapshot, "task:observe-original-context", token).ConfigureAwait(false);
+        }
+        await ((ITaskRunObservationAuthority)this).ValidateObservationPrincipalAsync(principal, token).ConfigureAwait(false);
         return TaskObservationDisposition.Authorized;
+    }
+    bool ITaskRunObservationAuthority.HasCurrentCommandIdentity(TaskExecutionSnapshot snapshot, TaskObservationPrincipal principal)
+    {
+        if (!ReferenceEquals(principal.Issuer, this) || snapshot.OwnerBinding is not { } binding ||
+            principal.Actor != new AuthenticatedResourceActor(binding.ActorId, binding.ProfileId, binding.AccountId,
+                binding.OrganisationId, binding.AuthenticationRevision)) return false;
+        lock (_sync) return !_originalAdmissionSealed &&
+            (!_owners.TryGetValue(snapshot.TaskId, out var owner) || !owner.Activation.IsSealed && owner.Binding == binding);
     }
 }
 
@@ -130,7 +155,9 @@ public sealed partial class TaskExecutionCoordinator
         if (current.TaskId != before.TaskId || current.ContextId != before.ContextId || current.ExecutionId != before.ExecutionId || current.OwnerBinding != before.OwnerBinding)
             throw new InvalidDataException("The task identity or owner changed during the actual observation read.");
         access = await stage.Await(() => authority.AuthorizeObservationAsync(current, principal, token)).ConfigureAwait(false);
-        return access == TaskObservationDisposition.Authorized ? new(access, current) : new(access, null);
+        return access == TaskObservationDisposition.Authorized
+            ? new(access, current) { HasCurrentCommandIdentity = authority.HasCurrentCommandIdentity(current, principal) }
+            : new(access, null);
     }
 
     public Task<TaskObservationPage> ReadAuthorizedTaskPageAsync(int maximumCandidates,
