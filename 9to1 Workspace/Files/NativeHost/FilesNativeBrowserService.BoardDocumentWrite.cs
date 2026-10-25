@@ -226,7 +226,7 @@ public sealed partial class FilesNativeBrowserService
                 throw new UnauthorizedAccessException("A current Home local profile is required for Files board saving.");
             lock (_gate)
             {
-                var currentOnPage = row.CurrentRevisionId?.ToString() == expectedRevision &&
+                var currentOnPage = HasExpectedRevision(row.CurrentRevisionId, expectedRevision) &&
                     NormalizeSha256(row.ContentHash) == NormalizeSha256(expectedSha256);
                 var followsCommittedSave = _latest.TryGetValue(sourceId, out var latest) &&
                     ReferenceEquals(latest.Page, page) && ReferenceEquals(latest.Row, row) && latest.Actor == actor &&
@@ -292,9 +292,9 @@ public sealed partial class FilesNativeBrowserService
                 if (!current.IsSuccess || current.Value is not { Kind: HostedItemKind.File } row ||
                     row.Id != operation.OriginalRow.Id || row.ParentId != operation.OriginalRow.ParentId ||
                     row.Name != operation.OriginalRow.Name || !IsBoardDocumentCandidate(row) ||
-                    row.CurrentRevisionId?.ToString() != operation.ExpectedRevision)
+                    !HasExpectedRevision(row.CurrentRevisionId, operation.ExpectedRevision))
                     return new(false, null, "FilesRevisionConflict", "The selected Files board changed. Reopen its current revision before saving.", true);
-                if (!Guid.TryParse(operation.ExpectedRevision, out var expectedRevision) ||
+                if (!Guid.TryParseExact(operation.ExpectedRevision, "D", out var expectedRevision) ||
                     NormalizeSha256(row.ContentHash) != operation.ExpectedSha256 || row.CurrentRevisionId?.Value != expectedRevision)
                     return new(false, null, "FilesRevisionConflict", "The selected Files board revision or content hash changed.", true);
                 if (row.ParentId is not { } selectedParent)
@@ -394,7 +394,7 @@ public sealed partial class FilesNativeBrowserService
                 if (!reviewedCurrent.IsSuccess || reviewedCurrent.Value is not { Kind: HostedItemKind.File } latestRow ||
                     latestRow.Id != operation.OriginalRow.Id || latestRow.ParentId != operation.OriginalRow.ParentId ||
                     latestRow.Name != operation.OriginalRow.Name || !IsBoardDocumentCandidate(latestRow) ||
-                    latestRow.CurrentRevisionId?.ToString() != operation.ExpectedRevision ||
+                    !HasExpectedRevision(latestRow.CurrentRevisionId, operation.ExpectedRevision) ||
                     NormalizeSha256(latestRow.ContentHash) != operation.ExpectedSha256)
                 {
                     lock (_gate)
@@ -641,6 +641,10 @@ public sealed partial class FilesNativeBrowserService
         private static string OperationKey(string sourceId, string revision, string hash, Guid documentId) =>
             sourceId + "\n" + revision + "\n" + hash + "\n" + documentId.ToString("D");
         private static bool IsSha256(string value) => NormalizeSha256(value) is not null;
+
+        private static bool HasExpectedRevision(FilesRevisionId? actual, string expected) =>
+            Guid.TryParseExact(expected, "D", out var parsed) && actual?.Value == parsed;
+
         private static string? NormalizeSha256(string? value)
         {
             if (value?.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) == true) value = value[7..];
