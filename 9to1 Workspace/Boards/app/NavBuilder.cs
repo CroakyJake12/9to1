@@ -153,7 +153,40 @@ public static class NavBuilder
             vm.RequestNavRebuild();
         };
         row.Children.Add(chevron);
-        var sectionIcon = BoardsIcons.Glyph(section.IconKey, 16, "Section icon", section.IconColor);
+        Control sectionIcon;
+        if (section.GeneratedIcon is { } generatedIcon)
+        {
+            var image = new Image
+            {
+                Width = 16,
+                Height = 16,
+                Stretch = Avalonia.Media.Stretch.Uniform,
+                Source = BoardsCuiIconResolver.CreateGeneratedIcon(generatedIcon,
+                    BoardsCuiIconResolver.SemanticBrush("section", colorOverride: section.IconColor)),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            BoardsCuiIconResolver.ObserveGeneratedIcon(image, generatedIcon, section.IconColor);
+            ToolTip.SetTip(image, "Generated section icon");
+            Avalonia.Automation.AutomationProperties.SetName(image, "Generated section icon");
+            sectionIcon = image;
+        }
+        else
+        {
+            var image = new Image
+            {
+                Source = BoardsCuiIconResolver.CreateSectionIcon(section.IconKey,
+                    BoardsCuiIconResolver.SemanticBrush(section.IconKey, colorOverride: section.IconColor)),
+                Width = 16,
+                Height = 16,
+                Stretch = Avalonia.Media.Stretch.Uniform,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+            };
+            BoardsCuiIconResolver.ObserveSemanticIcon(image, section.IconKey, section.IconColor);
+            Avalonia.Automation.AutomationProperties.SetName(image, "Section icon");
+            ToolTip.SetTip(image, "Section icon");
+            sectionIcon = image;
+        }
         Grid.SetColumn(sectionIcon, 1);
         row.Children.Add(sectionIcon);
         var title = new Button

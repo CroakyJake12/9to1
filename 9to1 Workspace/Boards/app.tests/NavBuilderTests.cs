@@ -99,7 +99,7 @@ public sealed class NavBuilderTests
 
         var allChoices = Assert.IsAssignableFrom<IReadOnlyList<BoardsSectionIconChoiceView>>(vm.Get("SectionIconPickerChoices"));
         Assert.Equal(BoardsIcons.SectionIconChoices.Count, allChoices.Count);
-        Assert.True(vm.TrySetValue("SectionIconPickerSearch", "stud"));
+        TestUiThread.Run(() => Assert.True(vm.TrySetValue("SectionIconPickerSearch", "stud")));
         var filtered = Assert.IsAssignableFrom<IReadOnlyList<BoardsSectionIconChoiceView>>(vm.Get("SectionIconPickerChoices"));
         Assert.Equal("study", Assert.Single(filtered).Key);
         await vm.DispatchAsync("ApplySectionIconChoice", "study");

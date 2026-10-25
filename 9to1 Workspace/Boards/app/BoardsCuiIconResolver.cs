@@ -7,6 +7,7 @@ using Avalonia.VisualTree;
 using Avalonia.Threading;
 using CakeOS.Cui.Themes;
 using Haven.UI;
+using CakeOS.Apps.Boards.Contract;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -26,6 +27,7 @@ public static class BoardsCuiIconResolver
     private static readonly object BoardsBrandBitmapGate = new();
     private static readonly ConditionalWeakTable<Image, BoardsBrandAppearanceObserver> BoardsBrandObservers = new();
     private static readonly ConditionalWeakTable<Image, BoardsSemanticIconObserver> BoardsSemanticIconObservers = new();
+    private static readonly ConditionalWeakTable<Image, BoardsGeneratedIconObserver> BoardsGeneratedIconObservers = new();
 
     public static IImage? Resolve(string source, Control target)
     {
@@ -47,6 +49,94 @@ public static class BoardsCuiIconResolver
 
     internal static void ObserveSemanticIcon(Image target, string key, string? colorOverride = null) =>
         BoardsSemanticIconObservers.GetValue(target, static control => new BoardsSemanticIconObserver(control)).Start(key, colorOverride);
+
+    internal static void ObserveGeneratedIcon(Image target, HavenRichSectionGeneratedIcon geometry,
+        string? colorOverride = null) =>
+        BoardsGeneratedIconObservers.GetValue(target, static control => new BoardsGeneratedIconObserver(control))
+            .Start(HavenRichSectionIconGeometry.Copy(geometry), colorOverride);
+
+    public static DrawingImage CreateGeneratedIcon(HavenRichSectionGeneratedIcon icon, IBrush brush)
+        => CreateGeneratedIcon(icon, brush, outline: false);
+
+    public static DrawingImage CreateSectionIcon(string key, IBrush brush)
+    {
+        ArgumentNullException.ThrowIfNull(brush);
+        HavenRichSectionGeneratedIcon? geometry = key switch
+        {
+            "boards" => SectionGeometry(
+                new HavenRichSectionIconRoundRect(3, 4, 18, 16, 1.5),
+                CutoutRect(8.5, 5.5, 0.9, 13), CutoutRect(14.6, 5.5, 0.9, 13),
+                CutoutRect(4.5, 8.1, 15, 0.8), CutoutRect(4.5, 12.1, 15, 0.8),
+                CutoutRect(4.5, 16.1, 15, 0.8)),
+            "file" => SectionGeometry(
+                new HavenRichSectionIconRoundRect(5, 3, 14, 18, 1.5),
+                CutoutRect(8, 9, 8, 0.9), CutoutRect(8, 12, 8, 0.9), CutoutRect(8, 15, 7, 0.9)),
+            "calendar" => SectionGeometry(
+                new HavenRichSectionIconRoundRect(4, 5, 16, 15, 2),
+                CutoutRect(4.8, 9.2, 14.4, 0.9), CutoutRect(7.2, 3, 0.9, 3.5),
+                CutoutRect(15.9, 3, 0.9, 3.5), CutoutRect(7, 12, 1.2, 1.2),
+                CutoutRect(11.4, 12, 1.2, 1.2), CutoutRect(15.8, 12, 1.2, 1.2),
+                CutoutRect(7, 15, 1.2, 1.2), CutoutRect(11.4, 15, 1.2, 1.2)),
+            _ => null,
+        };
+        if (geometry is null) return CreateIcon(key, brush);
+        return CreateGeneratedIcon(geometry, brush, outline: true);
+    }
+
+    private static HavenRichSectionGeneratedIcon SectionGeometry(params HavenRichSectionIconShape[] shapes) =>
+        new() { Shapes = [.. shapes] };
+
+    private static HavenRichSectionIconPolygon CutoutRect(double x, double y, double width, double height) =>
+        new([new(x, y), new(x + width, y), new(x + width, y + height), new(x, y + height)], IsCutout: true);
+
+    private static DrawingImage CreateGeneratedIcon(HavenRichSectionGeneratedIcon icon, IBrush brush, bool outline)
+    {
+        HavenRichSectionIconGeometry.Validate(icon);
+        ArgumentNullException.ThrowIfNull(brush);
+        Geometry? positive = null;
+        Geometry? cutouts = null;
+        foreach (var shape in icon.Shapes)
+        {
+            var isCutout = shape is HavenRichSectionIconPolygon { IsCutout: true };
+            var geometry = shape switch
+            {
+                HavenRichSectionIconRoundRect rect => new RectangleGeometry(
+                    new Rect(rect.X, rect.Y, rect.Width, rect.Height), rect.Radius, rect.Radius),
+                HavenRichSectionIconCircle circle => new EllipseGeometry(
+                    new Point(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius),
+                HavenRichSectionIconPolygon polygon => CreatePolygonGeometry(polygon),
+                _ => throw new InvalidOperationException("The section icon contains an unsupported shape.")
+            };
+            if (isCutout) cutouts = Combine(cutouts, geometry, GeometryCombineMode.Union);
+            else positive = Combine(positive, geometry, GeometryCombineMode.Union);
+        }
+        if (positive is null)
+            throw new InvalidOperationException("A generated icon must contain a visible shape.");
+        var combined = cutouts is null ? positive : new CombinedGeometry(GeometryCombineMode.Exclude, positive, cutouts);
+        return new DrawingImage(new GeometryDrawing
+        {
+            Geometry = combined,
+            Brush = brush,
+            Pen = outline ? new Pen(brush, 1.1, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round) : null
+        })
+        {
+            Viewbox = new Rect(0, 0, HavenRichSectionIconGeometry.ViewBoxSize, HavenRichSectionIconGeometry.ViewBoxSize)
+        };
+    }
+
+    private static Geometry Combine(Geometry? existing, Geometry next, GeometryCombineMode mode) =>
+        existing is null ? next : new CombinedGeometry(mode, existing, next);
+
+    private static StreamGeometry CreatePolygonGeometry(HavenRichSectionIconPolygon polygon)
+    {
+        var geometry = new StreamGeometry { FillRule = FillRule.EvenOdd };
+        using var writer = geometry.Open();
+        var first = polygon.Points[0];
+        writer.BeginFigure(new Point(first.X, first.Y), isFilled: true, isClosed: true);
+        foreach (var point in polygon.Points.Skip(1)) writer.LineTo(new Point(point.X, point.Y));
+        writer.EndFigure(isClosed: true);
+        return geometry;
+    }
 
     /// <summary>Color an icon by its action meaning, using the live CUI palette and contrast state.</summary>
     public static IBrush SemanticBrush(string key, Control? target = null, string? colorOverride = null)
@@ -422,7 +512,10 @@ public static class BoardsCuiIconResolver
             if (!_attached) return;
             try
             {
-                _target.Source = CreateIcon(_key, SemanticBrush(_key, _target, _colorOverride));
+                var brush = SemanticBrush(_key, _target, _colorOverride);
+                _target.Source = BoardsIcons.SectionIconChoices.Contains(_key, StringComparer.Ordinal)
+                    ? CreateSectionIcon(_key, brush)
+                    : CreateIcon(_key, brush);
             }
             catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
             {
@@ -430,6 +523,69 @@ public static class BoardsCuiIconResolver
                 if (_target.TryFindResource("CuiTextBrush", out var resource) && resource is IBrush brush)
                     _target.Source = CreateIcon(_key, brush);
             }
+        }
+    }
+
+    private sealed class BoardsGeneratedIconObserver
+    {
+        private readonly Image _target;
+        private HavenRichSectionGeneratedIcon? _geometry;
+        private string? _colorOverride;
+        private bool _attached;
+        private bool _started;
+        private int _refreshQueued;
+        private long _attachmentGeneration;
+
+        public BoardsGeneratedIconObserver(Image target) => _target = target;
+
+        public void Start(HavenRichSectionGeneratedIcon geometry, string? colorOverride)
+        {
+            _geometry = geometry;
+            _colorOverride = colorOverride;
+            if (!_started)
+            {
+                _started = true;
+                _target.AttachedToVisualTree += OnAttached;
+                _target.DetachedFromVisualTree += OnDetached;
+            }
+            if (_target.IsAttachedToVisualTree()) Attach();
+        }
+
+        private void OnAttached(object? sender, VisualTreeAttachmentEventArgs args) => Attach();
+
+        private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
+        {
+            _attached = false;
+            Interlocked.Increment(ref _attachmentGeneration);
+            BoardsTheme.Changed -= Refresh;
+        }
+
+        private void Attach()
+        {
+            if (_attached) BoardsTheme.Changed -= Refresh;
+            _attached = true;
+            Interlocked.Increment(ref _attachmentGeneration);
+            BoardsTheme.Changed += Refresh;
+            Refresh();
+        }
+
+        private void Refresh()
+        {
+            if (!Dispatcher.UIThread.CheckAccess())
+            {
+                var generation = Volatile.Read(ref _attachmentGeneration);
+                if (Interlocked.Exchange(ref _refreshQueued, 1) != 0) return;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Interlocked.Exchange(ref _refreshQueued, 0);
+                    if (!_attached || generation != Volatile.Read(ref _attachmentGeneration)) return;
+                    Refresh();
+                });
+                return;
+            }
+            if (!_attached || _geometry is null) return;
+            _target.Source = CreateGeneratedIcon(_geometry,
+                SemanticBrush("section", _target, _colorOverride));
         }
     }
 

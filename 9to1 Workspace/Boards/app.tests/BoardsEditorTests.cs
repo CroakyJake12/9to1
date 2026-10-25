@@ -69,7 +69,7 @@ public sealed class BoardsEditorTests
 
         foreach (var key in BoardsIcons.SectionIconChoices)
         {
-            var choice = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon(key, Brushes.White).Drawing);
+            var choice = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateSectionIcon(key, Brushes.White).Drawing);
             Assert.NotNull(choice.Brush);
             Assert.NotNull(choice.Pen);
         }
@@ -409,7 +409,7 @@ public sealed class BoardsEditorTests
         var expected = new[]
         {
             "TopBarLeft", "TopBarRight", "BoardsAppIcon", "UndoButton", "RedoButton", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors", "SuggestSectionIconButton", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -458,13 +458,25 @@ public sealed class BoardsEditorTests
         Assert.True(iconSearch.Properties.TryGetValue("WriteBack", out var searchWriteBack)
             && searchWriteBack is CuiLiteralValue { Value: "True" });
         var iconChoices = components.Single(component => component.Name == "SectionIconChoices");
-        Assert.True(iconChoices.Properties.TryGetValue("Source", out var iconChoicesSource)
-            && iconChoicesSource is CuiBindingValue { Path: "SectionIconPickerChoices" });
+        Assert.True(iconChoices.Repeat is { Source: CuiBindingValue { Path: "SectionIconPickerChoices" } });
         Assert.True(iconChoices.Properties.TryGetValue("Panel", out var iconChoicesPanel)
             && iconChoicesPanel is CuiLiteralValue { Value: "Wrap" });
         var iconColors = components.Single(component => component.Name == "SectionIconColors");
         Assert.True(iconColors.Properties.TryGetValue("Source", out var iconColorsSource)
             && iconColorsSource is CuiBindingValue { Path: "SectionIconPickerColors" });
+        var suggestion = components.Single(component => component.Name == "SuggestSectionIconButton");
+        Assert.True(suggestion.Properties.TryGetValue("Action", out var suggestionAction)
+            && suggestionAction is CuiLiteralValue { Value: "SuggestSectionIcon" });
+        Assert.True(suggestion.Properties.TryGetValue("IsEnabled", out var suggestionEnabled)
+            && suggestionEnabled is CuiBindingValue { Path: "CanSuggestSectionIcon" });
+        Assert.Contains("section name only", File.ReadAllText(path), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Board content is not sent", File.ReadAllText(path), StringComparison.Ordinal);
+        var generatedPreview = components.Single(component => component.Name == "GeneratedSectionIconPreviewImage");
+        Assert.True(generatedPreview.Properties.TryGetValue("Source", out var generatedPreviewSource)
+            && generatedPreviewSource is CuiBindingValue { Path: "GeneratedSectionIconPreview.Preview" });
+        var applyGenerated = components.Single(component => component.Name == "ApplyGeneratedSectionIconButton");
+        Assert.True(applyGenerated.Properties.TryGetValue("Action", out var applyGeneratedAction)
+            && applyGeneratedAction is CuiLiteralValue { Value: "ApplyGeneratedSectionIcon" });
         var overflow = components.Single(component => component.Name == "OverflowButton");
         Assert.True(overflow.Properties.TryGetValue("IconSource", out var overflowIcon)
             && overflowIcon is CuiLiteralValue { Value: "icon:more" });
