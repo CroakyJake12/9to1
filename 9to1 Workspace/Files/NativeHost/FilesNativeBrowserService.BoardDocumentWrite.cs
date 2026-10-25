@@ -311,7 +311,13 @@ public sealed partial class FilesNativeBrowserService
                     ?? throw new NotSupportedException("The original Files board write issuer is unavailable.");
                 operation.WriteContext = await source.Observe(() => issuer.CaptureOriginalBoardDocumentWriteAsync(
                     workspace, row, operation.Lifetime, source, token)).ConfigureAwait(false);
-                operation.Scopes = [new ResourceScope("files.item", row.Id.ToString(), operation.ExpectedRevision, ResourceAccess.Write)];
+                // The Home scope must be the exact revision token retained by the original
+                // Files read issuer. The user-facing lease carries a D-form Guid for CAS, while
+                // FilesRevisionId.ToString() is N-form; rebuilding the scope from that caller
+                // token made a valid selected revision fail its issuer equality check.
+                var writeContext = operation.WriteContext
+                    ?? throw new UnauthorizedAccessException("The original Files board-write observation is unavailable.");
+                operation.Scopes = [writeContext.OriginalScope];
                 operation.ParentRevisionId = parentRevision.Value;
 
                 var content = await source.Observe(() => workspace.Provider.GetCurrentArtifactContentForOriginalStoreAsync(
