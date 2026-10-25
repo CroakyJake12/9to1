@@ -8,7 +8,10 @@ namespace HavenOS.Home.Core;
 public sealed class HomeNotesActionPolicies : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
-        appId == HomeNotesResourceAdmissionSource.TargetAppId &&
-        actionId is HomeNotesResourceAdmissionSource.ReadAction or HomeNotesResourceAdmissionSource.SaveAction
+        (appId == HomeNotesResourceAdmissionSource.TargetAppId &&
+         actionId is HomeNotesResourceAdmissionSource.ReadAction or HomeNotesResourceAdmissionSource.SaveAction) ||
+        (appId == HomeNotesResourceAdmissionSource.WriteTargetAppId &&
+         actionId is HomeNotesResourceAdmissionSource.WriteLibraryReadAction or
+             HomeNotesResourceAdmissionSource.WriteReadAction or HomeNotesResourceAdmissionSource.WriteSaveAction)
             ? new(PermissionRisk.Routine, true, false, true) : null;
 }
