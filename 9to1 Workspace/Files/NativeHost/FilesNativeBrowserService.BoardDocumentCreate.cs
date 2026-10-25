@@ -653,11 +653,11 @@ public sealed partial class FilesNativeBrowserService
                 ?? throw new NotSupportedException("The original Files board create resolver is unavailable.");
             operation.WriteContext = await source.Observe(() => resolver.CaptureOriginalBoardDocumentCreateAsync(
                 workspace, currentFolder, operation.Lifetime, source, token)).ConfigureAwait(false);
-            operation.Scopes = [new ResourceScope("files.item", currentFolder.Id.ToString(), parentRevision.ToString(), ResourceAccess.Write)];
+            var writeContext = operation.WriteContext
+                ?? throw new UnauthorizedAccessException("The original Files board-create folder observation is unavailable.");
+            operation.Scopes = [writeContext.OriginalScope];
             async ValueTask RequireWrite(CancellationToken ct)
             {
-                var writeContext = operation.WriteContext
-                    ?? throw new UnauthorizedAccessException("The original Files board-create folder observation is unavailable.");
                 if (!source.Invoke(operation.Lifetime) || !_browser.OriginalBrowserResources.IsOriginalWriteContextForActor(
                     operation.Actor, writeContext, "files.board.create", operation.Scopes) ||
                     await source.Observe(() => _browser.OriginalBrowserResources.AuthorizeOriginalWriteForActorAsync(
@@ -696,8 +696,8 @@ public sealed partial class FilesNativeBrowserService
                 effect = "create-board-document"
             });
             operation.Arguments = arguments;
-            var approval = await source.Observe(() => _broker.AuthorizeForActorAsync(
-                operation.Actor, "files", "files.board.create", operation.Scopes, arguments,
+            var approval = await source.Observe(() => _broker.AuthorizeOriginalWriteForActorAsync(
+                operation.Actor, writeContext, "files", "files.board.create", operation.Scopes, arguments,
                 $"Create board ‘{operation.DisplayName}’ in the selected Files folder.", null,
                 operation.SessionId, token)).ConfigureAwait(false);
             operation.Approval = approval;
