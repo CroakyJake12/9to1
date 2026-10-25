@@ -70,7 +70,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                     throw new UnauthorizedAccessException("The selected writable board belongs to another original Home profile.");
                 }
                 var writeLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
-                IBoardsEmbeddedArtifactHost? embeddedOwner = null;
+                NativeCanvasBoardEmbeddedArtifactHost? embeddedOwner = null;
                 try
                 {
                     embeddedOwner = CreateEmbeddedArtifactHost(request, writeLifetime.Token);
@@ -97,7 +97,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                 throw new UnauthorizedAccessException("The selected rich board belongs to another original Home profile.");
             }
             var readLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
-            IBoardsEmbeddedArtifactHost? readEmbeddedOwner = null;
+            NativeCanvasBoardEmbeddedArtifactHost? readEmbeddedOwner = null;
             try
             {
                 readEmbeddedOwner = CreateEmbeddedArtifactHost(request, readLifetime.Token);
@@ -136,7 +136,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         catch { lifetime.Dispose(); throw; }
     }
 
-    private IBoardsEmbeddedArtifactHost CreateEmbeddedArtifactHost(
+    private NativeCanvasBoardEmbeddedArtifactHost CreateEmbeddedArtifactHost(
         BrowseAppContentRequest request, CancellationToken tabLifetime)
     {
         var writeOwner = new BoardEmbeddedWritePageOwner(_provider, _home, request.ProfileId,
