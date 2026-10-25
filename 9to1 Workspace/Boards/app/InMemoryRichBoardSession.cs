@@ -179,6 +179,29 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         MarkDirty();
         section.IconKey = iconKey;
         section.IconColor = normalizedColor;
+        section.GeneratedIcon = null;
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask SetSectionGeneratedIconAsync(string sectionId,
+        HavenRichSectionGeneratedIcon generatedIcon, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var section = Document.Sections.FirstOrDefault(candidate => candidate.Id == sectionId)
+            ?? throw new KeyNotFoundException("Section was not found.");
+        if (!HavenRichSectionIcons.IsSupportedColor(iconColor))
+            throw new ArgumentException("Section icon color must be null or a six-digit #RRGGBB value.", nameof(iconColor));
+        HavenRichSectionIconGeometry.Validate(generatedIcon);
+        var normalizedColor = iconColor?.ToUpperInvariant();
+        if (section.IconKey == HavenRichSectionIcons.Generated && section.IconColor == normalizedColor &&
+            HavenRichSectionIconGeometry.AreEqual(section.GeneratedIcon, generatedIcon))
+            return ValueTask.CompletedTask;
+        MarkDirty();
+        section.IconKey = HavenRichSectionIcons.Generated;
+        section.IconColor = normalizedColor;
+        section.GeneratedIcon = HavenRichSectionIconGeometry.Copy(generatedIcon);
         return ValueTask.CompletedTask;
     }
 

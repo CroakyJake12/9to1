@@ -21,6 +21,7 @@ internal static class Projector
             Title = s.Title,
             IconKey = s.IconKey,
             IconColor = s.IconColor,
+            GeneratedIcon = s.GeneratedIcon is null ? null : HavenRichSectionIconGeometry.Copy(s.GeneratedIcon),
             Pages = s.Pages.Select(page => ProjectPage(rich, page)).ToList()
         }).ToList();
     }
@@ -327,7 +328,7 @@ internal static class MergeDeltas
             if (!contractSections.TryGetValue(viewSection.Id, out var contractSection))
             {
                 contractSection = HavenRichNotesOps.ImportSection(rich, viewSection.Id, viewSection.Title);
-                HavenRichNotesOps.SetSectionIcon(rich, contractSection.Id, viewSection.IconKey, viewSection.IconColor);
+                ApplySectionIcon(rich, contractSection.Id, viewSection);
                 foreach (var viewPage in viewSection.Pages)
                     ImportPageTree(contractSection, viewPage);
                 continue;
@@ -336,8 +337,9 @@ internal static class MergeDeltas
                 viewSection.Title != baselineSection.Title)
                 HavenRichNotesOps.RenameSection(rich, contractSection.Id, viewSection.Title);
             if (baselineSections.TryGetValue(viewSection.Id, out baselineSection) &&
-                (viewSection.IconKey != baselineSection.IconKey || viewSection.IconColor != baselineSection.IconColor))
-                HavenRichNotesOps.SetSectionIcon(rich, contractSection.Id, viewSection.IconKey, viewSection.IconColor);
+                (viewSection.IconKey != baselineSection.IconKey || viewSection.IconColor != baselineSection.IconColor ||
+                 !HavenRichSectionIconGeometry.AreEqual(viewSection.GeneratedIcon, baselineSection.GeneratedIcon)))
+                ApplySectionIcon(rich, contractSection.Id, viewSection);
             MergePages(rich, contractSection, viewSection,
                 baselineSection?.Pages.ToDictionary(p => p.Id, StringComparer.Ordinal)
                 ?? new Dictionary<string, RichBoardPage>(StringComparer.Ordinal));
@@ -704,9 +706,21 @@ internal static class MergeDeltas
     private static void ImportSectionTree(HavenRichNotes rich, RichBoardSection viewSection)
     {
         var section = HavenRichNotesOps.ImportSection(rich, viewSection.Id, viewSection.Title);
-        HavenRichNotesOps.SetSectionIcon(rich, section.Id, viewSection.IconKey, viewSection.IconColor);
+        ApplySectionIcon(rich, section.Id, viewSection);
         foreach (var viewPage in viewSection.Pages)
             ImportPageTree(section, viewPage);
+    }
+
+    private static void ApplySectionIcon(HavenRichNotes rich, string sectionId, RichBoardSection viewSection)
+    {
+        if (viewSection.IconKey == HavenRichSectionIcons.Generated)
+        {
+            if (viewSection.GeneratedIcon is null)
+                throw new InvalidOperationException("A generated section icon requires validated geometry.");
+            HavenRichNotesOps.SetSectionGeneratedIcon(rich, sectionId, viewSection.GeneratedIcon, viewSection.IconColor);
+        }
+        else
+            HavenRichNotesOps.SetSectionIcon(rich, sectionId, viewSection.IconKey, viewSection.IconColor);
     }
 
     private static void ImportPageTree(HavenRichSection section, RichBoardPage viewPage)
