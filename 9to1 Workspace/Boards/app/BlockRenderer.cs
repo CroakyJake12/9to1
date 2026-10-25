@@ -468,7 +468,7 @@ public static class BlockRenderer
                 var cc = c;
                 var captured = block.Id;
                 box.TextChanged += (_, _) => vm.EditText($"cell_{captured}_{rr}_{cc}", box.Text ?? string.Empty);
-                box.GotFocus += (_, _) => vm.FocusBlock(captured);
+                box.GotFocus += (_, _) => vm.FocusCell(captured, rr, cc);
                 var frame = new Border
                 {
                     Child = box,

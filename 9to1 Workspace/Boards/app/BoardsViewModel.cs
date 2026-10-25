@@ -1723,13 +1723,19 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var rest = controlName["cell_".Length..].Split('_');
             if (rest.Length >= 3 &&
                 int.TryParse(rest[^2], out var row) && int.TryParse(rest[^1], out var col))
-            {
-                FocusBlock(string.Join("_", rest[..^2]));
-                SelectedCell = (string.Join("_", rest[..^2]), row, col);
-                RefreshCuiContext();
-                SelectionChanged?.Invoke();
-            }
+                FocusCell(string.Join("_", rest[..^2]), row, col);
         }
+    }
+
+    internal void FocusCell(string blockId, int row, int column)
+    {
+        var block = FindBlock(blockId);
+        if (block?.Kind != "table" || row < 0 || row >= block.TableRows || column < 0 || column >= block.TableCols)
+            return;
+        FocusBlock(blockId);
+        SelectedCell = (blockId, row, column);
+        RefreshCuiContext();
+        SelectionChanged?.Invoke();
     }
 
     /// <summary>Currently focused table cell, if any (block id, row, column).</summary>
