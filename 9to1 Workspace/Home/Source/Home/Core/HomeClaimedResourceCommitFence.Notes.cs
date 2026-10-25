@@ -14,21 +14,25 @@ public sealed partial class HomeClaimedResourceCommitFence
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken = default) =>
-        CaptureNotesSaveCoreAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability, originalActor, cancellationToken, null, null);
+        AuthenticatedResourceActor originalActor, string targetAppId = HomeNotesResourceAdmissionSource.TargetAppId,
+        string actionId = HomeNotesResourceAdmissionSource.SaveAction, CancellationToken cancellationToken = default) =>
+        CaptureNotesSaveCoreAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability, originalActor, targetAppId, actionId, cancellationToken, null, null);
 
     public static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesSaveWithinOriginalSourceAsync(
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
-        CaptureNotesSaveCoreAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability, originalActor, cancellationToken, scope, retain);
+        AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain,
+        string targetAppId = HomeNotesResourceAdmissionSource.TargetAppId,
+        string actionId = HomeNotesResourceAdmissionSource.SaveAction, CancellationToken cancellationToken = default) =>
+        CaptureNotesSaveCoreAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability, originalActor, targetAppId, actionId, cancellationToken, scope, retain);
 
     private static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesSaveCoreAsync(
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken, Action<Action>? originalScope, Action<Task>? retain)
+        AuthenticatedResourceActor originalActor, string targetAppId, string actionId,
+        CancellationToken cancellationToken, Action<Action>? originalScope, Action<Task>? retain)
     {
         ArgumentNullException.ThrowIfNull(broker); ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(profiles); ArgumentNullException.ThrowIfNull(ownership);
@@ -45,8 +49,9 @@ public sealed partial class HomeClaimedResourceCommitFence
         var scope = new ResourceScope(HomeNotesResourceAdmissionSource.ScopeKind, identity.StoreId.ToString("D"),
             originalIntent.StoreObservation.Revision, ResourceAccess.Write);
         if (admission is null || admission.Actor != originalActor ||
-            admission.Submission.Scope.TargetAppId != HomeNotesResourceAdmissionSource.TargetAppId ||
-            admission.Submission.Scope.ActionName != HomeNotesResourceAdmissionSource.SaveAction ||
+            !IsNotesAction(targetAppId, actionId, write: true) ||
+            admission.Submission.Scope.TargetAppId != targetAppId ||
+            admission.Submission.Scope.ActionName != actionId ||
             admission.Submission.Impact.ResourceBinding is not { SchemaVersion: 1 } binding ||
             binding.Scopes.Count != 1 || binding.Scopes[0] != scope ||
             originalCapability.Scopes.Count != 1 || originalCapability.Scopes[0] != scope)
@@ -87,21 +92,25 @@ public sealed partial class HomeClaimedResourceCommitFence
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken = default) =>
-        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, cancellationToken, null, null);
+        AuthenticatedResourceActor originalActor, string targetAppId = HomeNotesResourceAdmissionSource.TargetAppId,
+        string actionId = HomeNotesResourceAdmissionSource.ReadAction, CancellationToken cancellationToken = default) =>
+        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, targetAppId, actionId, cancellationToken, null, null);
 
     public static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadWithinOriginalSourceAsync(
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
-        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, cancellationToken, scope, retain);
+        AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain,
+        string targetAppId = HomeNotesResourceAdmissionSource.TargetAppId,
+        string actionId = HomeNotesResourceAdmissionSource.ReadAction, CancellationToken cancellationToken = default) =>
+        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, targetAppId, actionId, cancellationToken, scope, retain);
 
     private static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadCoreAsync(
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken, Action<Action>? originalScope, Action<Task>? retain)
+        AuthenticatedResourceActor originalActor, string targetAppId, string actionId,
+        CancellationToken cancellationToken, Action<Action>? originalScope, Action<Task>? retain)
     {
         ArgumentNullException.ThrowIfNull(broker); ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(profiles); ArgumentNullException.ThrowIfNull(ownership);
@@ -126,8 +135,9 @@ public sealed partial class HomeClaimedResourceCommitFence
         var scope = new ResourceScope(HomeNotesResourceAdmissionSource.ScopeKind, identity.StoreId.ToString("D"),
             originalRequest.StoreObservation.Revision, ResourceAccess.Read);
         if (admission is null || admission.Actor != originalActor ||
-            admission.Submission.Scope.TargetAppId != HomeNotesResourceAdmissionSource.TargetAppId ||
-            admission.Submission.Scope.ActionName != HomeNotesResourceAdmissionSource.ReadAction ||
+            !IsNotesAction(targetAppId, actionId, write: false) ||
+            admission.Submission.Scope.TargetAppId != targetAppId ||
+            admission.Submission.Scope.ActionName != actionId ||
             admission.Submission.Impact.ResourceBinding is not { SchemaVersion: 1 } binding ||
             binding.Scopes.Count != 1 || binding.Scopes[0] != scope ||
             originalCapability.Scopes.Count != 1 || originalCapability.Scopes[0] != scope)
@@ -141,22 +151,50 @@ public sealed partial class HomeClaimedResourceCommitFence
             var names = arguments.EnumerateObject().Select(value => value.Name).Order(StringComparer.Ordinal).ToArray();
             // Existing library requests retain their original four-key wire contract. History
             // selectors add exactly two reviewed fields; a digest alone cannot widen the read.
-            var expectedNames = originalRequest.Kind == NotesOriginalReadKind.LibrarySnapshot
-                ? new[] { "documentId", "operationId", "storeId", "storeRevision" }
-                : new[] { "documentId", "kind", "operationId", "storeId", "storeRevision", "versionId" };
-            if (!names.SequenceEqual(expectedNames) ||
-                arguments.GetProperty("operationId").GetGuid() != originalRequest.OperationId ||
-                arguments.GetProperty("storeId").GetGuid() != identity.StoreId ||
-                arguments.GetProperty("storeRevision").GetString() != scope.Revision)
+            JsonElement requestArguments = arguments;
+            if (targetAppId == HomeNotesResourceAdmissionSource.WriteTargetAppId)
+            {
+                if (originalRequest.Kind != NotesOriginalReadKind.LibrarySnapshot || originalRequest.VersionId is not null)
+                    return Deny();
+                if (actionId == HomeNotesResourceAdmissionSource.WriteLibraryReadAction)
+                {
+                    if (originalRequest.DocumentId is not null || !names.SequenceEqual(new[] { "documentId", "operationId", "storeId", "storeRevision" }))
+                        return Deny();
+                }
+                else
+                {
+                    if (actionId != HomeNotesResourceAdmissionSource.WriteReadAction || originalRequest.DocumentId is null ||
+                        !names.SequenceEqual(new[] { "expectedVersion", "request" }) ||
+                        arguments.GetProperty("expectedVersion").GetInt64() < 0 ||
+                        !arguments.GetProperty("request").TryGetProperty("documentId", out var selectedId) ||
+                        selectedId.GetGuid() != originalRequest.DocumentId.Value)
+                        return Deny();
+                    requestArguments = arguments.GetProperty("request");
+                    var requestNames = requestArguments.EnumerateObject().Select(value => value.Name)
+                        .Order(StringComparer.Ordinal).ToArray();
+                    if (!requestNames.SequenceEqual(new[] { "documentId", "operationId", "storeId", "storeRevision" }))
+                        return Deny();
+                }
+            }
+            else
+            {
+                var expectedNames = originalRequest.Kind == NotesOriginalReadKind.LibrarySnapshot
+                    ? new[] { "documentId", "operationId", "storeId", "storeRevision" }
+                    : new[] { "documentId", "kind", "operationId", "storeId", "storeRevision", "versionId" };
+                if (!names.SequenceEqual(expectedNames)) return Deny();
+            }
+            if (requestArguments.GetProperty("operationId").GetGuid() != originalRequest.OperationId ||
+                requestArguments.GetProperty("storeId").GetGuid() != identity.StoreId ||
+                requestArguments.GetProperty("storeRevision").GetString() != scope.Revision)
                 return Deny();
-            var document = arguments.GetProperty("documentId");
+            var document = requestArguments.GetProperty("documentId");
             if (originalRequest.DocumentId is { } requested ? document.ValueKind == JsonValueKind.Null ||
                 document.GetGuid() != requested : document.ValueKind != JsonValueKind.Null)
                 return Deny();
             if (originalRequest.Kind != NotesOriginalReadKind.LibrarySnapshot)
             {
-                var kind = arguments.GetProperty("kind");
-                var version = arguments.GetProperty("versionId");
+                var kind = requestArguments.GetProperty("kind");
+                var version = requestArguments.GetProperty("versionId");
                 if (kind.ValueKind != JsonValueKind.String ||
                     kind.GetString() != (originalRequest.Kind == NotesOriginalReadKind.VersionHistory ? "history" : "saved-version"))
                     return Deny();
@@ -172,6 +210,13 @@ public sealed partial class HomeClaimedResourceCommitFence
             originalCapability, originalActor, () => originalSource.IsIssuedOriginalLibraryReadRequest(originalRequest),
             originalScope, retain, cancellationToken);
     }
+
+    private static bool IsNotesAction(string targetAppId, string actionId, bool write) =>
+        targetAppId == HomeNotesResourceAdmissionSource.TargetAppId &&
+            actionId == (write ? HomeNotesResourceAdmissionSource.SaveAction : HomeNotesResourceAdmissionSource.ReadAction) ||
+        targetAppId == HomeNotesResourceAdmissionSource.WriteTargetAppId &&
+            (write ? actionId == HomeNotesResourceAdmissionSource.WriteSaveAction :
+                actionId is HomeNotesResourceAdmissionSource.WriteLibraryReadAction or HomeNotesResourceAdmissionSource.WriteReadAction);
 
     private static ValueTask<HomeClaimedResourceCommitFence?> CaptureOriginalNotesCoreAsync(HomeResourceOperationBroker broker,
         FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles, HomeResourceStoreOwnershipAuthority ownership,
