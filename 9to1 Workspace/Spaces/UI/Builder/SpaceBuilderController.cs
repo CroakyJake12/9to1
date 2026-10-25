@@ -240,6 +240,18 @@ public sealed class SpaceBuilderController
             catch (ArgumentException error) { issues.Add("Graph validation failed: " + error.Message); }
             if (layout.Nodes.Any(node => string.IsNullOrWhiteSpace(node.TypeId)))
                 issues.Add("The graph contains structural-only nodes without a registered TypeId; they cannot be activated.");
+            if (layout.Nodes.Count > 0)
+            {
+                if (snapshot.SpaceRevision is not { } revision || revision == long.MaxValue)
+                    issues.Add("The Space revision is unavailable for candidate graph validation.");
+                else
+                {
+                    try { _ = SpaceUserMessageGraph.Compile(snapshot.SpaceId, revision + 1, layout); }
+                    catch (Exception error) when (error is InvalidOperationException or ArgumentException or
+                        InvalidDataException or System.Text.Json.JsonException)
+                    { issues.Add("The user-message graph is not supported by the current registered executor: " + error.Message); }
+                }
+            }
         }
         if (issues.Count == 0)
             issues.Add(snapshot.HasUnsupportedActivationDependencies

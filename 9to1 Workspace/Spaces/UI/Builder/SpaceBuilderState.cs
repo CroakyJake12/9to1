@@ -101,8 +101,24 @@ public sealed record SpaceBuilderState(
         !string.IsNullOrWhiteSpace(Draft.ModelPolicy?.DefaultModelId) ||
         !string.IsNullOrWhiteSpace(Draft.ModelPolicy?.ProviderConstraint) || Draft.ModelPolicy?.RequiredCapabilities?.Count > 0 ||
         HasParentSpace;
-    public bool HasUnsupportedActivationDependencies => Draft.LayoutDocument is { Nodes.Count: > 0 } ||
+    public bool HasUnsupportedActivationDependencies => HasUnsupportedUserMessageGraph ||
         Draft.Shares.Count != 0 || Draft.GeneratedSurface is not null;
+    private bool HasUnsupportedUserMessageGraph
+    {
+        get
+        {
+            if (Draft.LayoutDocument is not { Nodes.Count: > 0 } layout) return false;
+            if (SpaceId == Guid.Empty || SpaceRevision is not { } revision || revision == long.MaxValue) return true;
+            try
+            {
+                _ = SpaceUserMessageGraph.Compile(SpaceId, revision + 1, layout);
+                return false;
+            }
+            catch (Exception error) when (error is InvalidOperationException or ArgumentException or
+                InvalidDataException or System.Text.Json.JsonException)
+            { return true; }
+        }
+    }
     public bool HasDeferredResourceReferences => Draft.ContextReferences.Count != 0 || Draft.LegacyFiles.Count != 0;
     public bool CanActivate => CanEdit && !IsBusy && !HasChanges && !HasConflict && HasPersistedDraft && DraftRevision is not null &&
         ActiveRevision is not null && DraftBaseActiveRevision == ActiveRevision && !HasUnsupportedActivationDependencies &&

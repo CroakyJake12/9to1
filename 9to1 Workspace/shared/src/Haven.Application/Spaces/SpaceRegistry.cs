@@ -323,10 +323,11 @@ public sealed partial class SpaceRegistry
                 !AncestryMatches(state.Spaces, id, validation.Ancestry))
                 throw new InvalidOperationException("A Space or ancestor changed after dependency validation; no active configuration was published.");
         }
-        // This host currently has no Space graph runtime/schema owner. Never interpret editor
-        // schemas or structural validity as proof that graph nodes can execute.
-        if (draft.LayoutDocument is { Nodes.Count: > 0 })
-            throw new InvalidOperationException("Activation is unavailable until the owning node-schema registry validates every graph node.");
+        // Pure candidate validation uses the same registered executor catalogue as request
+        // derivation. Recheck inside the atomic publication transaction against the exact
+        // Space revision that this activation will create.
+        if (draft.LayoutDocument is { Nodes.Count: > 0 } layout)
+            _ = SpaceUserMessageGraph.Compile(id, checked(current.Revision + 1), layout);
         if (draft.Shares.Count != 0 || draft.GeneratedSurface is not null)
             throw new InvalidOperationException("Activation is unavailable until the owning share or generated-surface service validates this draft.");
         if (validation is null && (draft.CapabilityBindings.Count != 0 ||

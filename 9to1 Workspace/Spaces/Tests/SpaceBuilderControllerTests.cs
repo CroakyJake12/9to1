@@ -50,6 +50,91 @@ public sealed class SpaceBuilderControllerTests
     }
 
     [Fact]
+    public async Task Registered_user_message_graph_activates_only_after_shared_compile_and_keeps_space_identity()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30)); var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Executable graph", cancellationToken: token);
+        var editor = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await editor.LoadAsync(token));
+        var layout = UserMessageGraph();
+        Assert.True(editor.SetLayoutDocument(layout));
+        Assert.True(await editor.SaveAsync(token));
+        Assert.True(editor.State.CanActivate);
+        Assert.True(await editor.ActivateAsync(token));
+
+        var active = (await registry.GetAsync(space.Id, token))!;
+        Assert.Null(active.DraftConfiguration);
+        Assert.Equal(space.Id, active.Id);
+        Assert.Equal(space.Revision + 1, active.Revision);
+        Assert.Equal(space.ActiveConfigurationRevision + 1, active.ActiveConfigurationRevision);
+        Assert.Equal(layout.GraphId, active.LayoutDocument!.GraphId);
+        Assert.Equal(SpaceLayoutRevisionState.Active, active.LayoutDocument.State);
+        var compiled = SpaceUserMessageGraph.Compile(active.Id, active.Revision, active.LayoutDocument);
+        Assert.Equal(active.Revision, compiled.SpaceRevision);
+        Assert.Equal(layout.GraphId, compiled.GraphId);
+
+        var rejectedSpace = await registry.CreateAsync("Unsupported graph", cancellationToken: token);
+        var rejected = new SpaceBuilderController(registry, rejectedSpace.Id);
+        Assert.True(await rejected.LoadAsync(token));
+        var unsupportedBase = UserMessageGraph();
+        var unsupportedLayout = unsupportedBase with
+        {
+            Nodes = unsupportedBase.Nodes.Select(node => node with { TypeId = "spaces.user-message.unknown" }).ToArray()
+        };
+        Assert.True(rejected.SetLayoutDocument(unsupportedLayout));
+        Assert.True(await rejected.SaveAsync(token));
+        Assert.False(rejected.State.CanActivate);
+        await Assert.ThrowsAsync<SpaceRequestPolicyBlockedException>(() => registry.ActivateDraftAsync(rejectedSpace.Id,
+            rejected.State.SpaceRevision!.Value, rejected.State.DraftRevision!.Value,
+            rejected.State.ActiveRevision!.Value, token));
+        var preserved = (await registry.GetAsync(rejectedSpace.Id, token))!;
+        Assert.Equal(rejectedSpace.ActiveConfigurationRevision, preserved.ActiveConfigurationRevision);
+        Assert.Null(preserved.LayoutDocument);
+        Assert.NotNull(preserved.DraftConfiguration);
+    }
+
+    private static SpaceLayoutDocument UserMessageGraph()
+    {
+        var source = Guid.NewGuid(); var truncate = Guid.NewGuid(); var output = Guid.NewGuid();
+        static SpaceLayoutPort Port(string id, SpaceLayoutPortDirection direction) => new(id, id, direction, "string", false);
+        return new SpaceLayoutDocument(
+            [
+                new(source, "Space User Message", "Source")
+                {
+                    TypeId = SpaceUserMessageGraph.SourceType,
+                    SchemaVersion = 1,
+                    Ports = [Port("out", SpaceLayoutPortDirection.Output)]
+                },
+                new(truncate, "Space User Message", "Truncate")
+                {
+                    TypeId = SpaceUserMessageGraph.TruncateType,
+                    SchemaVersion = 1,
+                    Ports = [Port("in", SpaceLayoutPortDirection.Input), Port("out", SpaceLayoutPortDirection.Output)],
+                    Metadata = new Dictionary<string, string>(StringComparer.Ordinal) { ["maximumTextElements"] = "256" }
+                },
+                new(output, "Space User Message", "Output")
+                {
+                    TypeId = SpaceUserMessageGraph.OutputType,
+                    SchemaVersion = 1,
+                    Ports = [Port("in", SpaceLayoutPortDirection.Input)]
+                }
+            ],
+            [
+                new(Guid.NewGuid(), source, "out", truncate, "in"),
+                new(Guid.NewGuid(), truncate, "out", output, "in")
+            ])
+        {
+            GraphId = Guid.NewGuid(),
+            SchemaVersion = SpaceLayoutDocument.CurrentSchemaVersion,
+            Revision = 1,
+            State = SpaceLayoutRevisionState.Draft,
+            ConnectionProfileId = SpaceUserMessageGraph.ProfileId
+        };
+    }
+
+    [Fact]
     public async Task Category_and_hidden_policy_survive_save_and_reopen()
     {
         using var files = new SpaceDetailsTestFiles();
