@@ -159,7 +159,7 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwnerTests
         void Scope(Action body)
         {
             body(); calls++;
-            Assert.Throws<InvalidOperationException>(() => rig.Owner.CloseAndDrainAsync());
+            Assert.Throws<InvalidOperationException>(() => { _ = rig.Owner.CloseAndDrainAsync(); });
         }
         await rig.Owner.MaterializeOriginalBoardDocumentWithinSourceAsync(rig.Destination, rig.Payload, Scope, rig.Retain, rig.Token);
         Assert.True(calls > 0); Assert.Null(rig.Owner.OriginalClose);
