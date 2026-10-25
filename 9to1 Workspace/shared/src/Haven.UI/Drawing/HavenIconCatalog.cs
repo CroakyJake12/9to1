@@ -83,7 +83,7 @@ public static class HavenIconCatalog
         "text" => Geometry(Line((5, 5), (19, 5)), Line((12, 5), (12, 20)), Line((8, 20), (16, 20))),
         "strikethrough" => Geometry(
             Line((17, 6), (15, 4), (8, 4), (5, 7), (5, 9), (8, 11), (15, 13), (18, 15), (18, 17), (15, 20), (8, 20), (5, 18)),
-            Line((4, 20), (20, 4))),
+            Line((4, 12), (20, 12))),
         "subscript" => Geometry(Line((5, 6), (13, 14)), Line((13, 6), (5, 14)),
             Line((16.5, 18), (18, 17), (18, 21)), Line((16.5, 21), (19.5, 21))),
         "superscript" => Geometry(Line((5, 10), (13, 18)), Line((13, 10), (5, 18)),
