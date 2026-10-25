@@ -129,14 +129,14 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.context.maximumRetrievedItems" => state.Draft.ContextPolicy.MaximumRetrievedItems?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             "builder.boardOptions" => _sourceOptions(),
             "builder.canBrowseSources" => _isCurrent() && state.CanEdit && !state.IsBusy && _canBrowseSources(),
-            "builder.contextReferences" => state.Draft.ContextReferences.Select((reference, index) => new
+            "builder.contextReferences" => state.Draft.ContextReferences.Select((reference, index) => new SpaceBuilderContextReferenceRow
             {
                 id = reference.ContextId.ToString("D"),
                 order = index + 1,
                 canMoveUp = _isCurrent() && state.CanEdit && index > 0,
                 canMoveDown = _isCurrent() && state.CanEdit && index < state.Draft.ContextReferences.Count - 1,
-                moveUp = new SpaceBuilderContextOrderRequest(state.SpaceId, state.DraftRevision ?? -1, reference.ContextId, index),
-                moveDown = new SpaceBuilderContextOrderRequest(state.SpaceId, state.DraftRevision ?? -1, reference.ContextId, index),
+                moveUp = new(state.SpaceId, state.DraftRevision ?? -1, reference.ContextId, index),
+                moveDown = new(state.SpaceId, state.DraftRevision ?? -1, reference.ContextId, index),
                 label = _sourceOptions().FirstOrDefault(option => option.Id == reference.CanonicalEntityId)?.Label ??
                     (reference.OwnerAppId + " / " + reference.CanonicalEntityId),
                 revision = reference.RevisionToken ?? "Current version at read",
@@ -426,10 +426,15 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
 public sealed class SpaceBuilderContextReferenceRow
 {
     public string id { get; init; } = string.Empty;
+    public int order { get; init; }
     public string label { get; init; } = string.Empty;
     public string revision { get; init; } = string.Empty;
     public string policy { get; init; } = string.Empty;
     public bool included { get; init; }
+    public bool canMoveUp { get; init; }
+    public bool canMoveDown { get; init; }
+    public SpaceBuilderContextOrderRequest moveUp { get; init; } = new(Guid.Empty, -1, Guid.Empty, -1);
+    public SpaceBuilderContextOrderRequest moveDown { get; init; } = new(Guid.Empty, -1, Guid.Empty, -1);
 }
 
 public sealed record SpaceBuilderContextOrderRequest(Guid SpaceId, long DraftRevision, Guid ContextId, int ExpectedIndex);

@@ -55,9 +55,24 @@ public sealed class SpaceBuilderCanonicalSourceTests
         Assert.True(editor.AttachContextReference(second, space.Revision));
         Assert.True(editor.SetField(SpaceBuilderField.MaximumRetrievedItems, "1"));
         var draftRevision = editor.State.DraftRevision!.Value;
-
-        Assert.True(editor.MoveContextReference(space.Id, draftRevision, second.ContextId, 1, -1));
-        Assert.False(editor.MoveContextReference(space.Id, draftRevision, second.ContextId, 1, -1)); // Stale position cannot reorder a different current source.
+        var bindings = new SpaceBuilderCuiBindings(() => editor.State, (_, _) => { }, (_, _) => { }, (_, _) => { },
+            () => [], () => [], (command, parameter, _) =>
+            {
+                if (parameter is SpaceBuilderContextOrderRequest request)
+                    editor.MoveContextReference(request.SpaceId, request.DraftRevision, request.ContextId,
+                        request.ExpectedIndex, command == "space-builder.source.move-up" ? -1 : 1);
+                return ValueTask.CompletedTask;
+            });
+        Assert.True(bindings.TryGetValue("builder.contextReferences", out var projected));
+        var rows = Assert.IsAssignableFrom<object[]>(projected);
+        var moveUp = Assert.IsType<SpaceBuilderContextReferenceRow>(rows[1]);
+        Assert.Equal(2, moveUp.order);
+        Assert.True(moveUp.canMoveUp);
+        Assert.False(moveUp.canMoveDown);
+        await bindings.DispatchAsync("space-builder.source.move-up", moveUp.moveUp, token);
+        Assert.Equal(second.ContextId, editor.State.Draft.ContextReferences[0].ContextId);
+        await bindings.DispatchAsync("space-builder.source.move-up", moveUp.moveUp, token);
+        Assert.Equal(second.ContextId, editor.State.Draft.ContextReferences[0].ContextId); // Stale index cannot reorder another current source.
         Assert.Empty((await registry.GetAsync(space.Id, token))!.ContextReferences ?? []); // Active policy is untouched before explicit activation.
         Assert.True(await editor.SaveAsync(token));
 
