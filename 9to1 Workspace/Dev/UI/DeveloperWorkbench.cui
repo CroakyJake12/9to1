@@ -98,9 +98,18 @@
       <Button id="dev-terminal-run" action="dev.run-command" content="Run command" />
       <Input id="dev-test-command" placeholdertext="Explicit test command" accessible-name="Test command" Type="Text" Value="{Binding TestCommand}" />
       <Button id="dev-test-run" action="dev.run-tests" content="Run tests" />
+      <Text text="Saved build stages" font-size="18" />
+      <Text text="{Binding SavedBuildStagesStatus}" text-wrapping="Wrap" accessible-name="Saved build stage availability" />
+      <Repeat id="dev-saved-build-stages" Source="{Binding SavedBuildStages}" As="stage" Key="{Binding stage.SelectionKey}">
+        <Container Type="Vertical Stack" CellGap="4">
+          <Button id="dev-select-build-stage" action="dev.select-build-stage" content="{Binding stage.Label}" accessible-name="{Binding stage.AccessibleName}" Interactive="{Binding stage.CanSelect}" />
+          <Text text="{Binding stage.Details}" text-wrapping="Wrap" />
+        </Container>
+      </Repeat>
+      <Text text="{Binding SelectedBuildStageSummary}" text-wrapping="Wrap" accessible-name="Selected saved stage command environment revision and dependencies" />
       <Input id="dev-stage-task" placeholdertext="Saved build task ID" accessible-name="Saved build task ID" Type="Text" Value="{Binding StageTaskId}" />
       <Input id="dev-stage-id" placeholdertext="Saved build stage ID" accessible-name="Saved build stage ID" Type="Text" Value="{Binding StageId}" />
-      <Button id="dev-build-stage" action="dev.run-stage" content="Run saved build stage" />
+      <Button id="dev-build-stage" action="dev.run-stage" content="Run selected saved stage" Interactive="{Binding CanRunSavedStage}" />
       <Input id="dev-branch-name" placeholdertext="Literal branch name" accessible-name="Git branch name" Type="Text" Value="{Binding BranchName}" />
       <Container Type="Wrap">
         <Button id="dev-create-branch" action="dev.create-branch" content="Create branch" />

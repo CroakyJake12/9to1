@@ -775,6 +775,38 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     private static bool Contains(Exception envelope, Exception actual) => ReferenceEquals(envelope, actual) ||
         envelope is AggregateException compound && compound.InnerExceptions.Any(value => Contains(value, actual));
 
+    [Fact]
+    public async Task Inspected_saved_stage_changed_at_same_revision_refuses_before_tool_preparation()
+    {
+        var f = await Fixture.CreateAsync(); var root = Assert.Single(f.Store.Workspace.Roots);
+        var stages = new List<DeveloperBuildStage> {
+            new("compile", DeveloperBuildStageKind.Compile, "Compile", [], "echo inspected", [], TimeSpan.FromSeconds(10)) };
+        var task = new DeveloperTaskDefinition("build", "Build", "user", root.EnvironmentId, root.RootId.ToString("D"), [], stages, true);
+        f.Store.Workspace = f.Store.Workspace with { Tasks = [task] };
+        var inspected = DeveloperTaskWorkspaceService.ComputeSavedTaskDefinitionSha256(task);
+        stages[0] = stages[0] with { Command = "echo not-inspected" };
+        var result = await f.Dev.RunInspectedStageAsync(f.Reference, f.Context(), "build", task.Revision, "compile", inspected, OriginalTestBodyToken);
+        Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, result.Error!.Code);
+        Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Owner.PrepareCalls);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Inspected_saved_stage_and_legacy_stage_entrypoint_use_the_same_original_command_owner()
+    {
+        var f = await Fixture.CreateAsync(); var root = Assert.Single(f.Store.Workspace.Roots);
+        var task = new DeveloperTaskDefinition("build", "Build", "user", root.EnvironmentId, root.RootId.ToString("D"), [],
+            [new("compile", DeveloperBuildStageKind.Compile, "Compile", [], "echo inspected", [], TimeSpan.FromSeconds(10))], true);
+        f.Store.Workspace = f.Store.Workspace with { Tasks = [task] };
+        var result = await f.Dev.RunInspectedStageAsync(f.Reference, f.Context(), "build", task.Revision, "compile",
+            DeveloperTaskWorkspaceService.ComputeSavedTaskDefinitionSha256(task).ToUpperInvariant(), OriginalTestBodyToken);
+        Assert.True(result.Succeeded, result.Error?.Message); Assert.Equal(1, f.Tools.ProcessCalls);
+        Assert.Equal(TimeSpan.FromSeconds(10), Assert.IsType<ProcessRequest>(f.Tools.LastProcessRequest).Timeout);
+        var legacy = await f.Dev.RunStageAsync(f.Reference, f.Context(), "build", task.Revision, "compile", OriginalTestBodyToken);
+        Assert.True(legacy.Succeeded, legacy.Error?.Message); Assert.Equal(2, f.Tools.ProcessCalls);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
     private sealed class Fixture
     {
         public Store Store = null!; public Containers Containers = null!; public Tools Tools = new(); public Owner Owner = null!;

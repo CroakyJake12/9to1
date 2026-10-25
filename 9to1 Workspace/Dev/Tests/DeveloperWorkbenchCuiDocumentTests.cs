@@ -17,7 +17,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command", "dev.run-tests",
             "dev.run-stage", "dev.create-branch", "dev.switch-branch",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin",
-            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result", "dev.inspect-recovered-draft", "dev.reconcile-recovered-draft", "dev.use-merged-recovered-draft", "dev.go-to-source-location"];
+            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result", "dev.inspect-recovered-draft", "dev.reconcile-recovered-draft", "dev.use-merged-recovered-draft", "dev.go-to-source-location", "dev.select-build-stage"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
         Assert.Equal(nodes.Length, nodes.Select(value => value.StableId).Distinct().Count());
     }
@@ -83,6 +83,18 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             Assert.Contains(original.Properties, pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)
                 && pair.Value is CuiLiteralValue type && type.Value == "ReadOnlyText");
         }
+    }
+
+    [Fact]
+    public void Saved_stage_choices_are_inspectable_and_Run_is_bound_to_real_selection_availability()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var picker = Assert.Single(nodes, value => value.Name == "dev-select-build-stage");
+        Assert.Contains(picker.Actions.Values, value => value.Name == "dev.select-build-stage");
+        var run = Assert.Single(nodes, value => value.Name == "dev-build-stage");
+        Assert.Contains(run.Actions.Values, value => value.Name == "dev.run-stage");
+        Assert.Contains(run.Properties, pair => pair.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
+            && pair.Value is CuiBindingValue binding && binding.Path == "CanRunSavedStage");
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)

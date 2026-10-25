@@ -308,6 +308,82 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Saved_stage_selection_only_inspects_current_root_and_explicit_Run_uses_the_canonical_command_owner()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            var root = Assert.Single(f.Store.Workspace.Roots);
+            var stage = new DeveloperBuildStage("compile", DeveloperBuildStageKind.Compile, "Compile", [], "echo configured-stage", [], TimeSpan.FromSeconds(10));
+            var task = new DeveloperTaskDefinition("build", "Build", "user", root.EnvironmentId, root.RootId.ToString("D"), [], [stage], true);
+            f.Store.Workspace = f.Store.Workspace with { Tasks = [task,
+                task with { TaskId = "foreign-root", WorkingDirectoryRootId = Guid.NewGuid().ToString("D") },
+                task with { TaskId = "foreign-environment", EnvironmentId = "other-environment" }] };
+            page = await SearchPublicationPage(f, reader.Owner);
+            Assert.True(page.TryGetValue("SavedBuildStages", out var choices));
+            var row = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(choices).Cast<object>());
+            var key = Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            await page.DispatchAsync("dev.select-build-stage", key, OriginalTestBodyToken);
+            Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Owner.ExecuteCalls);
+            Assert.True(page.TryGetValue("SelectedBuildStageSummary", out var summary));
+            Assert.Contains("echo configured-stage", Assert.IsType<string>(summary)); Assert.True(page.IsActionAvailable("dev.run-stage"));
+            await page.DispatchAsync("dev.run-stage", null, OriginalTestBodyToken);
+            Assert.Equal(1, f.Tools.ProcessCalls); Assert.Equal(1, f.Owner.ExecuteCalls);
+            var process = Assert.IsType<ProcessRequest>(f.Tools.LastProcessRequest);
+            Assert.Contains("configured-stage", process.Arguments); Assert.Equal(TimeSpan.FromSeconds(10), process.Timeout);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Changed_saved_stage_and_unfulfilled_dependencies_disable_Run_without_any_process_effect()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            var root = Assert.Single(f.Store.Workspace.Roots);
+            var stages = new List<DeveloperBuildStage> {
+                new("compile", DeveloperBuildStageKind.Compile, "Compile", [], "echo original", [], TimeSpan.FromSeconds(10)),
+                new("package", DeveloperBuildStageKind.Package, "Package", ["compile"], "echo package", [], TimeSpan.FromSeconds(10)) };
+            f.Store.Workspace = f.Store.Workspace with { Tasks = [new("build", "Build", "user", root.EnvironmentId, root.RootId.ToString("D"), [], stages, true)] };
+            page = await SearchPublicationPage(f, reader.Owner);
+            object[] Choices()
+            {
+                Assert.True(page.TryGetValue("SavedBuildStages", out var choices));
+                return Assert.IsAssignableFrom<System.Collections.IEnumerable>(choices).Cast<object>().ToArray();
+            }
+            string Key(string label)
+            {
+                var row = Assert.Single(Choices(), choice => (string)choice.GetType().GetProperty("Label")!.GetValue(choice)! == label);
+                return Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            }
+            var oldKey = Key("Build / Compile");
+            await page.DispatchAsync("dev.select-build-stage", oldKey, OriginalTestBodyToken); Assert.True(page.IsActionAvailable("dev.run-stage"));
+            stages[0] = stages[0] with { Command = "echo changed-after-selection" };
+            Assert.False(page.IsActionAvailable("dev.run-stage")); Assert.NotEqual(oldKey, Key("Build / Compile"));
+            await page.DispatchAsync("dev.select-build-stage", Key("Build / Package"), OriginalTestBodyToken);
+            Assert.False(page.IsActionAvailable("dev.run-stage"));
+            Assert.True(page.TryGetValue("SelectedBuildStageSummary", out var summary)); Assert.Contains("prerequisites", Assert.IsType<string>(summary));
+            // Existing explicit IDs remain a valid selection route, and capture the exact current definition.
+            page.TrySetValue("StageTaskId", "build"); page.TrySetValue("StageId", "compile");
+            Assert.True(page.IsActionAvailable("dev.run-stage")); Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Owner.ExecuteCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));

@@ -351,6 +351,16 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 "DraftText" => _manual && _editor is null ? _manualDraftText : _editor?.DraftText ?? "",
                 "SourceLocation" => _sourceLocation, "EditorTextSelection" => _editorTextSelection,
                 "CanGoToSourceLocation" => IsActionAvailable("dev.go-to-source-location"),
+                "SavedBuildStages" => SavedStageChoices(_project).Select(choice => new SavedStageItem(choice.SelectionKey,
+                    choice.Label, choice.Summary + (choice.UnavailableReason is { } reason ? "\n" + reason : ""),
+                    "Inspect saved stage " + choice.Label, !_pending)).ToArray(),
+                "SavedBuildStagesStatus" => SavedStageChoices(_project).Count == 0 ? "No saved build stages for this project root and environment."
+                    : "Choose a saved stage to inspect its exact command and dependencies.",
+                "SelectedBuildStageSummary" => _selectedSavedStage is not { } selectedStage ? "Choose a saved stage before running it."
+                    : selectedStage.Summary + "\n" + (_manual ? "Execution is unavailable in this project session."
+                        : !IsSelectedSavedStageCurrent(_project) ? selectedStage.UnavailableReason ?? "This definition changed. Select the current stage again."
+                        : "Run uses this selected definition through the current task and Home execution checks."),
+                "CanRunSavedStage" => IsActionAvailable("dev.run-stage"),
                 "ReviewSummary" => _pass is null ? "Review before applying. Pass history is available for this open editor." : $"Pass {_pass.ChangeSetId:D}: {_pass.State}; before {_pass.BeforeSha256}; after {_pass.AfterSha256}" + (_pass.RevertsChangeSetId is { } inverse ? $"; reverts only pass {inverse:D}" : ""),
                 "BeforeText" => _manual ? _manualBeforeText : (_pass?.BeforeText ?? ""),
                 "AfterText" => _manual ? _manualAfterText : (_pass?.AfterText ?? ""),
@@ -384,7 +394,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         }
         return path is "CanStructuredSearch" or "SearchUseRegex" or "SearchMatchCase" or "ProjectSearchMatches" or
             "ProjectTitle" or "ProjectSummary" or "Files" or "SourcePath" or "SearchQuery" or "SearchResults" or
-            "EditorTitle" or "DraftText" or "SourceLocation" or "EditorTextSelection" or "CanGoToSourceLocation" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
+            "EditorTitle" or "DraftText" or "SourceLocation" or "EditorTextSelection" or "CanGoToSourceLocation" or "SavedBuildStages" or "SavedBuildStagesStatus" or "SelectedBuildStageSummary" or "CanRunSavedStage" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
             "StageTaskId" or "StageId" or "BranchName" or "ProcessStatus" or "ProcessOutput" or "Status" or "CanOpenSource" or "CanPreview" or "CanApply" or "CanRevert" or
             "SourceTabs" or "SourceTabPinLabel" or "CanPinSourceTab" or "CanEditSource" or "SourceTabsStatus" or
             "ProjectEntries" or "ProjectFolder" or "ProjectExplorerStatus" or "ShowProjectExplorer" or "ShowLegacyFiles" or
@@ -443,7 +453,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             if (CurrentSourceTab() is { } editedTab) { editedTab.IsPinned = true; editedTab.IsPreview = false; }
                             StoreSelectedTab(); break;
                         case "Command": _command = text; break; case "TestCommand": _testCommand = text; break;
-                        case "StageTaskId": _stageTaskId = text; break; case "StageId": _stageId = text; break; case "BranchName": _branchName = text; break;
+                        case "StageTaskId": _stageTaskId = text; CaptureSelectedSavedStage(); break; case "StageId": _stageId = text; CaptureSelectedSavedStage(); break; case "BranchName": _branchName = text; break;
                     }
                 }
                 return true;
@@ -458,6 +468,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (command == "dev.select-build-stage") return SavedStageChoices(_project).Count != 0;
             if (command == "dev.inspect-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && _manualRecoveryCandidates.Count > 0;
             if (command == "dev.reconcile-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && SelectedManualRecoveryCandidate() is not null;
             if (command == "dev.use-merged-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && SelectedManualRecoveryCandidate() is { MergedDraftText: not null };
@@ -496,7 +507,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 "dev.apply-edit" => _editor?.PreparedChangeSetId is { } id && _pass?.ChangeSetId == id && _pass.State == DeveloperSourceChangeState.Reviewed,
                 "dev.revert-pass" => _editor is { IsDirty: false, LastAppliedChangeSetId: not null },
                 "dev.run-command" => !string.IsNullOrWhiteSpace(_command), "dev.run-tests" => !string.IsNullOrWhiteSpace(_testCommand),
-                "dev.run-stage" => !string.IsNullOrWhiteSpace(_stageTaskId) && !string.IsNullOrWhiteSpace(_stageId),
+                "dev.run-stage" => IsSelectedSavedStageCurrent(_project),
                 "dev.create-branch" or "dev.switch-branch" => !string.IsNullOrWhiteSpace(_branchName), _ => false
             };
         }
@@ -504,6 +515,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command == "dev.select-build-stage") return SelectSavedBuildStage(parameter);
         if (command == "dev.go-to-source-location") return DispatchSourceLocationAsync(cancellationToken);
         if (command is "dev.inspect-recovered-draft" or "dev.reconcile-recovered-draft" or "dev.use-merged-recovered-draft")
             return DispatchManualRecoveryConflictAsync(command, parameter, cancellationToken);
@@ -664,14 +676,15 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false);
                         return;
                     }
+                    var selectedStage = command == "dev.run-stage" ? DemandSelectedSavedStage(project, stageTask, stage) : null;
                     Task<DeveloperOperationResult<DeveloperActionObservation>> operation = RunTaskSourceAsync(original, project, context, () => command switch
                     {
                         "dev.tree" => _development.ListFilesAsync(project.Reference, context, cancellationToken: _businessToken),
                         "dev.search" => _development.SearchFilesAsync(project.Reference, context, query, cancellationToken: _businessToken),
                         "dev.run-command" => _development.RunTerminalAsync(project.Reference, context, terminal, cancellationToken: _businessToken),
                         "dev.run-tests" => _development.RunTestsAsync(project.Reference, context, test, cancellationToken: _businessToken),
-                        "dev.run-stage" => _development.RunStageAsync(project.Reference, context, stageTask,
-                            project.Workspace.Tasks.Single(value => value.TaskId == stageTask).Revision, stage, _businessToken),
+                        "dev.run-stage" => _development.RunInspectedStageAsync(project.Reference, context, stageTask,
+                            selectedStage!.TaskRevision, stage, selectedStage.DefinitionHash, _businessToken),
                         "dev.git-status" => _development.GitAsync(project.Reference, context, DeveloperGitOperation.Status, cancellationToken: _businessToken),
                         "dev.git-diff" => _development.GitAsync(project.Reference, context, DeveloperGitOperation.Diff, cancellationToken: _businessToken),
                         "dev.git-branches" => _development.GitAsync(project.Reference, context, DeveloperGitOperation.Branches, cancellationToken: _businessToken),
