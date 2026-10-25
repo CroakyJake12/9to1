@@ -28,7 +28,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Equal(3, result.Trace.Count);
         Assert.All(result.Trace, item => Assert.Equal("Succeeded", item.State));
         Assert.NotEqual(result.InputSha256, result.OutputSha256);
-        Assert.Equal(11, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
+        Assert.Equal(13, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
         Assert.Equal(2, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(CanonicalAutomationCoreNodes.ProfileId).Count);
     }
 
@@ -365,6 +365,147 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Empty(rig.Transport.Requests);
         Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
         files.Passed = true;
+    }
+
+    [Theory]
+    [InlineData("{\"mode\":\"structured\",\"prompt\":\"compile the project\"}", "true", "compile the project")]
+    [InlineData("ordinary non-JSON message", "false", "ordinary")]
+    public async Task Space_graph_branch_dispatch_skips_inactive_failing_nodes_and_joins_only_the_selected_value(string text, string branch, string expected)
+    {
+        var layout = ConditionalMessageLayout();
+        var message = new ChatMessage(Guid.NewGuid(), Guid.NewGuid(), MessageRole.User, text, null, null, null, DateTimeOffset.UtcNow);
+        var graph = SpaceUserMessageGraph.Compile(Guid.NewGuid(), 4, layout);
+        var result = await graph.ExecuteAsync(message, TestContext.Current.CancellationToken);
+
+        Assert.Equal(expected, result.DerivedText);
+        Assert.Equal(text, message.Content); Assert.Equal(message.Id, result.UserMessageId);
+        var route = Assert.Single(result.Trace, item => item.TypeId == SpaceUserMessageGraph.RouteWordsType);
+        Assert.Equal(branch, route.SelectedBranch);
+        var routed = Assert.Single(result.TypedNodePortOutputs[route.NodeId]);
+        Assert.Equal(branch, routed.Key); Assert.True(routed.Value.TryGetString(out var routedText)); Assert.Equal(text, routedText);
+        Assert.DoesNotContain(route.NodeId, result.TypedNodeOutputs.Keys); // No invented legacy "out" on a conditional node.
+        var merge = Assert.Single(result.Trace, item => item.TypeId == SpaceUserMessageGraph.MergeType);
+        Assert.Equal("Succeeded", merge.State);
+        if (branch == "false")
+        {
+            Assert.All(result.Trace.Where(item => item.TypeId is SpaceUserMessageGraph.ParseJsonType or SpaceUserMessageGraph.SelectJsonType or SpaceUserMessageGraph.JsonStringType), item =>
+            { Assert.Equal("Skipped", item.State); Assert.Equal(0, item.InputTextElements); Assert.Equal(0, item.OutputTextElements); Assert.DoesNotContain(item.NodeId, result.TypedNodePortOutputs.Keys); });
+            Assert.Equal(text.Length - expected.Length, result.OmittedTextElements);
+        }
+        else
+        {
+            Assert.Equal("Skipped", Assert.Single(result.Trace, item => item.TypeId == SpaceUserMessageGraph.TruncateType).State);
+            Assert.Equal(0, result.OmittedTextElements); // Inactive truncation never claims omissions.
+        }
+        Assert.DoesNotContain(text, JsonSerializer.Serialize(result.Trace), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("ordinal", "whole-word", "cat", "scatter", "false")]
+    [InlineData("ordinal-ignore-case", "whole-word", "cat", "CAT.", "true")]
+    [InlineData("ordinal", "whole-word", "cat", "cat\u0301", "false")]
+    [InlineData("ordinal", "whole-word", "cat", "𐐀cat", "false")]
+    [InlineData("ordinal", "substring", "cat", "scatter", "true")]
+    [InlineData("ordinal-ignore-case", "substring", "cat fish", "cat  fish", "false")]
+    public async Task Space_graph_branch_matching_keeps_explicit_literal_unicode_semantics(string comparison, string boundary, string query, string text, string branch)
+    {
+        var layout = DirectConditionalMessageLayout(comparison, boundary, query);
+        var result = await RunGraph(layout, text);
+        Assert.Equal(text, result.DerivedText);
+        Assert.Equal(branch, Assert.Single(result.Trace, item => item.TypeId == SpaceUserMessageGraph.RouteWordsType).SelectedBranch);
+        Assert.Equal(branch, Assert.Single(result.TypedNodePortOutputs[layout.Nodes[1].Id]).Key);
+    }
+
+    [Theory]
+    [InlineData("missing-branch")]
+    [InlineData("duplicate-branch")]
+    [InlineData("missing-merge")]
+    [InlineData("multiple-active-inputs")]
+    [InlineData("empty-merge")]
+    [InlineData("editable-branch")]
+    public void Space_graph_branch_admission_rejects_incomplete_or_ambiguous_flow(string defect)
+    {
+        var layout = DirectConditionalMessageLayout("ordinal", "whole-word", "cat");
+        if (defect == "missing-branch") layout = layout with { Edges = layout.Edges.Where((_, index) => index != 2).ToArray() };
+        if (defect == "duplicate-branch") layout = layout with { Edges = layout.Edges.Select((edge, index) => index == 2 ? edge with { FromPortId = "true" } : edge).ToArray() };
+        if (defect == "missing-merge") layout = layout with { Nodes = layout.Nodes.Where(node => node.TypeId != SpaceUserMessageGraph.MergeType).ToArray() };
+        if (defect == "editable-branch") layout = layout with { Edges = layout.Edges.Select((edge, index) => index == 1 ? edge with { Branch = "true" } : edge).ToArray() };
+        if (defect is "multiple-active-inputs" or "empty-merge")
+        {
+            // A merge cannot become an unconditional two-value join or an independent
+            // source just because the generic port permits multiple connections.
+            var source = layout.Nodes[0] with { Ports = [layout.Nodes[0].Ports[0] with { AllowsMultipleConnections = true }] };
+            layout = layout with { Nodes = [source, layout.Nodes[2], layout.Nodes[3]], Edges = defect == "empty-merge"
+                ? [new(Guid.NewGuid(), layout.Nodes[2].Id, "out", layout.Nodes[3].Id, "in")]
+                : [new(Guid.NewGuid(), source.Id, "out", layout.Nodes[2].Id, "in"), new(Guid.NewGuid(), source.Id, "out", layout.Nodes[2].Id, "in"),
+                    new(Guid.NewGuid(), layout.Nodes[2].Id, "out", layout.Nodes[3].Id, "in")] };
+        }
+        Assert.Throws<SpaceRequestPolicyBlockedException>(() => SpaceUserMessageGraph.Compile(Guid.NewGuid(), 1, layout));
+    }
+
+    [Theory]
+    [InlineData("{\"mode\":\"structured\",\"prompt\":\"compile the project\"}", "compile the project", "true")]
+    [InlineData("ordinary non-JSON message", "ordinary", "false")]
+    public async Task Space_graph_branch_real_request_sends_only_selected_derived_text_and_keeps_saved_original(string text, string expected, string branch)
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Conditional request", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry), ConditionalMessageLayout());
+        var rig = new GraphRequestRig(source, space.Id);
+        await rig.SendAsync(text);
+        Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        Assert.Equal(expected, Assert.Single(Assert.Single(rig.Transport.Requests).Messages, message => message.Role == "user").Content);
+        var trace = Assert.Single(rig.Events.Values, item => item.ComponentId == "spaces.user-message-graph").SafeMetadata!["trace"];
+        using var document = JsonDocument.Parse(trace);
+        Assert.Equal(branch, Assert.Single(document.RootElement.EnumerateArray(), item => item.GetProperty("TypeId").GetString() == SpaceUserMessageGraph.RouteWordsType)
+            .GetProperty("SelectedBranch").GetString());
+        Assert.DoesNotContain(text, trace, StringComparison.Ordinal);
+        files.Passed = true;
+    }
+
+    [Fact]
+    public async Task Space_graph_branch_selected_failure_blocks_actual_transport_without_falling_back_to_the_other_branch()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Conditional failure", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry), ConditionalMessageLayout());
+        var rig = new GraphRequestRig(source, space.Id);
+        const string text = "structured but not JSON";
+        var error = await Record.ExceptionAsync(() => rig.SendAsync(text));
+        Assert.NotNull(error); Assert.True(ContainsSpaceCode(error, "SPACE_USER_MESSAGE_GRAPH_INVALID"));
+        Assert.Empty(rig.Transport.Requests);
+        Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        files.Passed = true;
+    }
+
+    private static SpaceLayoutDocument DirectConditionalMessageLayout(string comparison, string boundary, string query)
+    {
+        var source = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SourceType);
+        var route = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.RouteWordsType) with { Metadata = new Dictionary<string, string>
+            { ["query"] = query, ["locale"] = "invariant", ["comparison"] = comparison, ["boundary"] = boundary } };
+        var merge = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.MergeType);
+        var output = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.OutputType);
+        return new([source, route, merge, output],
+            [new(Guid.NewGuid(), source.Id, "out", route.Id, "in"), new(Guid.NewGuid(), route.Id, "true", merge.Id, "in"),
+                new(Guid.NewGuid(), route.Id, "false", merge.Id, "in"), new(Guid.NewGuid(), merge.Id, "out", output.Id, "in")])
+            { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
+    }
+
+    private static SpaceLayoutDocument ConditionalMessageLayout()
+    {
+        var direct = DirectConditionalMessageLayout("ordinal", "whole-word", "structured");
+        var source = direct.Nodes[0]; var route = direct.Nodes[1]; var merge = direct.Nodes[2]; var output = direct.Nodes[3];
+        var parse = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.ParseJsonType);
+        var select = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SelectJsonType) with
+            { Metadata = new Dictionary<string, string> { ["pointer"] = "/prompt" } };
+        var text = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.JsonStringType);
+        var truncate = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.TruncateType) with
+            { Metadata = new Dictionary<string, string> { ["maximumTextElements"] = "8" } };
+        return direct with { Nodes = [source, route, parse, select, text, truncate, merge, output], Edges =
+            [new(Guid.NewGuid(), source.Id, "out", route.Id, "in"), new(Guid.NewGuid(), route.Id, "true", parse.Id, "in"),
+                new(Guid.NewGuid(), parse.Id, "out", select.Id, "in"), new(Guid.NewGuid(), select.Id, "out", text.Id, "in"),
+                new(Guid.NewGuid(), text.Id, "out", merge.Id, "in"), new(Guid.NewGuid(), route.Id, "false", truncate.Id, "in"),
+                new(Guid.NewGuid(), truncate.Id, "out", merge.Id, "in"), new(Guid.NewGuid(), merge.Id, "out", output.Id, "in")] };
     }
 
     private static SpaceLayoutDocument JsonMessageLayout(string pointer, string renderer)

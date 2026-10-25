@@ -28,6 +28,8 @@ public sealed class SpaceUserMessageGraph
     public const string RenderJsonType = "spaces.user-message.render-json";
     public const string JsonStringType = "spaces.user-message.json-string";
     public const string JsonDataType = "spaces.json-value.v1";
+    public const string RouteWordsType = "spaces.user-message.route-words";
+    public const string MergeType = "spaces.user-message.merge-selected";
     public const string CapabilityId = "spaces.user-message.derive";
     internal const string Category = "SpaceUserMessage";
     private readonly AutomationGraphProjection _projection;
@@ -65,11 +67,15 @@ public sealed class SpaceUserMessageGraph
         Type(RenderJsonType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
             [new("in", GraphPortDirection.Input, JsonDataType), new("out", GraphPortDirection.Output, "string")]),
         Type(JsonStringType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
-            [new("in", GraphPortDirection.Input, JsonDataType), new("out", GraphPortDirection.Output, "string")])
+            [new("in", GraphPortDirection.Input, JsonDataType), new("out", GraphPortDirection.Output, "string")]),
+        Type(RouteWordsType, "{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"locale\":{\"type\":\"string\",\"enum\":[\"invariant\"]},\"comparison\":{\"type\":\"string\",\"enum\":[\"ordinal\",\"ordinal-ignore-case\"]},\"boundary\":{\"type\":\"string\",\"enum\":[\"substring\",\"whole-word\"]}},\"required\":[\"query\",\"locale\",\"comparison\",\"boundary\"],\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, "string"), new("true", GraphPortDirection.Output, "string"), new("false", GraphPortDirection.Output, "string")]),
+        Type(MergeType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, "string", true), new("out", GraphPortDirection.Output, "string")])
     ];
     public static GraphCapabilityProfile Profile() => new(ProfileId,
         new HashSet<string>([SourceType, TruncateType, OutputType, ExtractNumbersType, NumbersToTextType, SearchWordsType, MatchesToTextType,
-            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType], StringComparer.Ordinal),
+            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType, RouteWordsType, MergeType], StringComparer.Ordinal),
         new HashSet<string>([CapabilityId], StringComparer.Ordinal));
     /// <summary>Author a node from the actual shared registered schema. This is draft
     /// data only; inserting it never activates a Space or starts a request.</summary>
@@ -85,11 +91,12 @@ public sealed class SpaceUserMessageGraph
             SearchWordsType => "Search words or phrases", MatchesToTextType => "Render matches",
             ParseJsonType => "Parse strict JSON (depth 32)", SelectJsonType => "Select JSON value",
             RenderJsonType => "Render compact JSON", JsonStringType => "Read JSON string",
+            RouteWordsType => "Route by words or phrases", MergeType => "Merge selected text",
             _ => throw new ArgumentException("This node has no authoring implementation.", nameof(typeId))
         })
         {
             TypeId = type.TypeId, SchemaVersion = type.Version,
-            Ports = type.Ports.Select(port => new SpaceLayoutPort(port.Key, port.DataType == "string" ? "Text" : port.DataType == NumbersDataType ? "Numbers" : port.DataType == JsonDataType ? "JSON" : "Matches",
+            Ports = type.Ports.Select(port => new SpaceLayoutPort(port.Key, port.Key is "true" or "false" ? port.Key == "true" ? "Match" : "No match" : port.DataType == "string" ? "Text" : port.DataType == NumbersDataType ? "Numbers" : port.DataType == JsonDataType ? "JSON" : "Matches",
                 port.Direction == GraphPortDirection.Input ? SpaceLayoutPortDirection.Input : SpaceLayoutPortDirection.Output,
                 port.DataType, port.Multiple)).ToArray(),
             Metadata = typeId switch
@@ -97,7 +104,7 @@ public sealed class SpaceUserMessageGraph
                 TruncateType => new Dictionary<string, string>(StringComparer.Ordinal) { ["maximumTextElements"] = "1000" },
                 ExtractNumbersType => new Dictionary<string, string>(StringComparer.Ordinal) { ["locale"] = "invariant" },
                 SelectJsonType => new Dictionary<string, string>(StringComparer.Ordinal) { ["pointer"] = "" },
-                SearchWordsType => new Dictionary<string, string>(StringComparer.Ordinal)
+                SearchWordsType or RouteWordsType => new Dictionary<string, string>(StringComparer.Ordinal)
                     { ["query"] = "word", ["locale"] = "invariant", ["comparison"] = "ordinal", ["boundary"] = "whole-word" },
                 _ => new Dictionary<string, string>(StringComparer.Ordinal)
             }
@@ -117,7 +124,12 @@ public sealed class SpaceUserMessageGraph
                 Ports = node.Ports.Select(port => new AutomationGraphPortDefinition(port.Key, port.Key,
                     port.Direction == GraphPortDirection.Input ? AutomationGraphPortDirection.Input : AutomationGraphPortDirection.Output,
                     port.DataType, port.Multiple)).ToArray()
-            }));
+            })
+        {
+            OutputBranches = type.TypeId == RouteWordsType
+                ? new Dictionary<string, string>(StringComparer.Ordinal) { ["true"] = "true", ["false"] = "false" }
+                : new Dictionary<string, string>(StringComparer.Ordinal)
+        });
 
     public static SpaceUserMessageGraph Compile(Guid spaceId, long spaceRevision, SpaceLayoutDocument layout)
     {
@@ -126,7 +138,7 @@ public sealed class SpaceUserMessageGraph
             layout.SchemaVersion != SpaceLayoutDocument.CurrentSchemaVersion || layout.Nodes is null || layout.Edges is null ||
             layout.Nodes.Count is < 2 or > SpaceLayoutDocument.MaximumNodes || layout.Edges.Count > SpaceLayoutDocument.MaximumEdges ||
             layout.Edges.Any(edge => edge is null || edge.Metadata is null || edge.Metadata.Count != 0 || !string.IsNullOrEmpty(edge.Branch)) ||
-            layout.Nodes.Any(node => node is null || node.Ports is null || node.Ports.Count > 2 || node.Metadata is null || node.Metadata.Count > 4))
+            layout.Nodes.Any(node => node is null || node.Ports is null || node.Ports.Count > 3 || node.Metadata is null || node.Metadata.Count > 4))
             throw Invalid("The Space graph needs bounded canonical identities and a supported schema.");
         // Snapshot only executable data. Unrelated editor comments/geometry are not copied
         // into a request, and bounds are checked before cloning editable collections.
@@ -166,7 +178,7 @@ public sealed class SpaceUserMessageGraph
                     throw Invalid("Select JSON requires one RFC 6901 pointer of at most 512 characters; empty selects the root, and only ~0/~1 escapes are supported.");
                 configuration = JsonSerializer.SerializeToElement(node.Metadata);
             }
-            else if (node.TypeId == SearchWordsType)
+            else if (node.TypeId is SearchWordsType or RouteWordsType)
             {
                 if (node.Metadata.Count != 4 || !node.Metadata.TryGetValue("query", out var query) || string.IsNullOrWhiteSpace(query) || query.Length > 256 ||
                     !node.Metadata.TryGetValue("locale", out var locale) || locale != "invariant" ||
@@ -195,15 +207,21 @@ public sealed class SpaceUserMessageGraph
         try { projection = new NodeGraphAutomationAdapter(schemas, Bindings()).Compile(graph); }
         catch (Exception cause) when (cause is InvalidDataException or ArgumentException)
         { throw Invalid("The shared graph validator rejected the typed connections or configuration.", cause); }
-        // This first executable family is deliberately a single fully connected chain. No
-        // discarded branch, orphan, cycle or disconnected output can look like success.
+        // One complete chain or one bounded conditional diamond. The trusted route
+        // port binding supplies branch labels; editable edges cannot invent routing.
+        // Degree constraints plus shared acyclic validation guarantee every branch
+        // rejoins the one merge before the one Output, with no orphan work or bypass.
         var source = nodes.Single(node => node.TypeId == SourceType).NodeId;
         var output = nodes.Single(node => node.TypeId == OutputType).NodeId;
-        if (layout.Edges.Any(edge => !string.IsNullOrEmpty(edge.Branch) || edge.Metadata is null || edge.Metadata.Count != 0) ||
-            layout.Edges.Count != nodes.Count - 1 || nodes.Any(node =>
-                layout.Edges.Count(edge => edge.ToNodeId == node.NodeId) != (node.NodeId == source ? 0 : 1) ||
-                layout.Edges.Count(edge => edge.FromNodeId == node.NodeId) != (node.NodeId == output ? 0 : 1)))
-            throw Invalid("User-message nodes must form one complete Source-to-Output chain.");
+        var routes = nodes.Where(node => node.TypeId == RouteWordsType).ToArray();
+        var merges = nodes.Where(node => node.TypeId == MergeType).ToArray();
+        if (routes.Length > 1 || merges.Length != routes.Length ||
+            layout.Edges.Count != nodes.Count - 1 + routes.Length || nodes.Any(node =>
+                layout.Edges.Count(edge => edge.ToNodeId == node.NodeId) != (node.NodeId == source ? 0 : node.TypeId == MergeType ? 2 : 1) ||
+                layout.Edges.Count(edge => edge.FromNodeId == node.NodeId) != (node.NodeId == output ? 0 : node.TypeId == RouteWordsType ? 2 : 1)) ||
+            routes.Any(route => layout.Edges.Where(edge => edge.FromNodeId == route.NodeId).Select(edge => edge.FromPortId)
+                .Order(StringComparer.Ordinal).SequenceEqual(new[] { "false", "true" }) == false))
+            throw Invalid("User-message nodes require one complete chain or one complete acyclic two-branch route/merge diamond.");
         var runner = new AutomationGraphRunner([new SpaceUserMessageGraphExecutor("")]);
         if (runner.Validate(projection.Definition).Count != 0) throw Invalid("The shared graph executor rejected this graph.");
         return new(spaceId, spaceRevision, projection, nodes.ToDictionary(node => node.NodeId, node => node.TypeId), output);
@@ -231,17 +249,38 @@ public sealed class SpaceUserMessageGraph
             .RunAsync(_projection.Definition, AutomationGraphRunMode.Real, token).ConfigureAwait(false);
         var output = run.Trace.SingleOrDefault(item => item.NodeId == _output);
         if (!run.Succeeded || output is not { Status: AutomationGraphTraceStatus.Succeeded, Output: not null })
-            throw Invalid("The shared user-message graph did not produce its declared Output.");
-        var values = run.Trace.Where(item => item.TypedOutputs?.ContainsKey("out") == true)
-            .ToDictionary(item => item.NodeId, item => item.TypedOutputs!["out"] with { JsonValue = item.TypedOutputs["out"].JsonValue?.Clone() });
-        var trace = run.Trace.Select(item => new SpaceUserMessageGraphTrace(item.NodeId, _types[item.NodeId],
-            item.Status.ToString(), item.Inputs?.Values.SingleOrDefault() is { } before ? TextElements(before) : TextElements(input.Content),
-            TextElements(item.Output ?? ""), values.GetValueOrDefault(item.NodeId)?.DataType ?? "string",
-            values.GetValueOrDefault(item.NodeId)?.JsonValue is { } value ? Digest(value.GetRawText()) : null,
-            HasFlag(values.GetValueOrDefault(item.NodeId), "moreResultsOmitted"), HasFlag(values.GetValueOrDefault(item.NodeId), "hasUncertainty"))).ToArray();
+        {
+            var failed = run.Trace.FirstOrDefault(item => item.Status == AutomationGraphTraceStatus.Failed);
+            // Node failure messages can contain arbitrary runtime/input text in the
+            // shared engine. Return an actionable static explanation for our JSON
+            // family without copying sample values or private field names into errors.
+            throw Invalid(failed is null ? "The shared user-message graph did not produce its declared Output."
+                : _types[failed.NodeId] switch
+                {
+                    ParseJsonType => "Parse JSON requires strict valid JSON, unique decoded property names, no comments/trailing commas, at most 32 nested containers and a typed result within 262144 UTF-8 bytes.",
+                    MergeType => "Merge selected text requires exactly one active typed value; zero or multiple active inputs cannot produce a request.",
+                    SelectJsonType => "Select JSON requires one present value: check exact field names and existing zero-based array indices without leading zeros.",
+                    JsonStringType => "Read JSON string requires an actual string. Use Render JSON for objects, arrays, numbers, booleans or null.",
+                    RenderJsonType => "Render JSON could not produce supported request text within the 131072-character output bound.",
+                    _ => "The shared user-message graph did not produce its declared Output."
+                });
+        }
+        var portValues = run.Trace.Where(item => item.TypedOutputs is not null).ToDictionary(item => item.NodeId,
+            item => (IReadOnlyDictionary<string, AutomationGraphValue>)new ReadOnlyDictionary<string, AutomationGraphValue>(
+                item.TypedOutputs!.ToDictionary(pair => pair.Key, pair => pair.Value with { JsonValue = pair.Value.JsonValue?.Clone() }, StringComparer.Ordinal)));
+        var values = portValues.Where(item => item.Value.ContainsKey("out")).ToDictionary(item => item.Key, item => item.Value["out"]);
+        var trace = run.Trace.Select(item =>
+        {
+            var value = portValues.GetValueOrDefault(item.NodeId)?.Values.SingleOrDefault();
+            return new SpaceUserMessageGraphTrace(item.NodeId, _types[item.NodeId], item.Status.ToString(),
+                item.Status == AutomationGraphTraceStatus.Skipped ? 0 : item.Inputs?.Values.SingleOrDefault() is { } before ? TextElements(before) : TextElements(input.Content),
+                TextElements(item.Output ?? ""), value?.DataType ?? "string", value?.JsonValue is { } json ? Digest(json.GetRawText()) : null,
+                HasFlag(value, "moreResultsOmitted"), HasFlag(value, "hasUncertainty")) { SelectedBranch = item.Branch };
+        }).ToArray();
         return new(SpaceId, SpaceRevision, GraphId, GraphRevision, input.Id, output.Output, Digest(input.Content),
             Digest(output.Output), trace.Where(item => item.TypeId == TruncateType).Sum(item => Math.Max(0, item.InputTextElements - item.OutputTextElements)), Array.AsReadOnly(trace))
-        { TypedNodeOutputs = new ReadOnlyDictionary<Guid, AutomationGraphValue>(values) };
+        { TypedNodeOutputs = new ReadOnlyDictionary<Guid, AutomationGraphValue>(values),
+            TypedNodePortOutputs = new ReadOnlyDictionary<Guid, IReadOnlyDictionary<string, AutomationGraphValue>>(portValues) };
     }
     private static bool HasFlag(AutomationGraphValue? value, string property) => value?.JsonValue is { ValueKind: JsonValueKind.Object } json &&
         json.TryGetProperty(property, out var flag) && flag.ValueKind == JsonValueKind.True;
@@ -252,13 +291,18 @@ public sealed class SpaceUserMessageGraph
 }
 
 public sealed record SpaceUserMessageGraphTrace(Guid NodeId, string TypeId, string State, int InputTextElements, int OutputTextElements,
-    string OutputDataType = "string", string? OutputSha256 = null, bool MoreResultsOmitted = false, bool HasUncertainty = false);
+    string OutputDataType = "string", string? OutputSha256 = null, bool MoreResultsOmitted = false, bool HasUncertainty = false)
+{
+    public string? SelectedBranch { get; init; }
+}
 public sealed record SpaceUserMessageGraphResult(Guid SpaceId, long SpaceRevision, Guid GraphId, long GraphRevision,
     Guid UserMessageId, string DerivedText, string InputSha256, string OutputSha256, int OmittedTextElements,
     IReadOnlyList<SpaceUserMessageGraphTrace> Trace)
 {
     /// <summary>Inspectable pure derived values for explicit previews. These can contain
     /// user data and are deliberately excluded from the content-free execution trace.</summary>
+    public IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, AutomationGraphValue>> TypedNodePortOutputs { get; init; } =
+        new ReadOnlyDictionary<Guid, IReadOnlyDictionary<string, AutomationGraphValue>>(new Dictionary<Guid, IReadOnlyDictionary<string, AutomationGraphValue>>());
     public IReadOnlyDictionary<Guid, AutomationGraphValue> TypedNodeOutputs { get; init; } =
         new ReadOnlyDictionary<Guid, AutomationGraphValue>(new Dictionary<Guid, AutomationGraphValue>());
 }
