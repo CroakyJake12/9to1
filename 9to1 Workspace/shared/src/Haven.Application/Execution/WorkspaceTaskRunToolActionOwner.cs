@@ -36,15 +36,14 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
     public bool IsIssuedOriginal(IWorkspaceToolFinalFence originalFence)
     {
         lock (_sync)
-        {
             if (originalFence is Fence original && _issued.Contains(original)) return true;
-            // Genuine manual (no-AI) Home fences are recognized only by the configured genuine Home
-            // issuer's private validator. No arbitrary fence can register itself, and no
-            // AlwaysAllow/TestFence workaround can fabricate membership.
-            var validator = _manualValidator?.Invoke();
-            return validator is not null && validator.IsIssuedOriginal(originalFence) ||
-                _manualProcessValidator?.Invoke().IsIssuedOriginal(originalFence) == true;
-        }
+        // The registry lock protects private Task membership only. Manual validators take
+        // their OWN fence locks, while the finite native body can recheck this authority
+        // beneath that fence. Invoke outside this lock to avoid the inverse lock order.
+        // Only the configured genuine Home issuers recognize their private originals.
+        var validator = _manualValidator?.Invoke();
+        return validator is not null && validator.IsIssuedOriginal(originalFence) ||
+            _manualProcessValidator?.Invoke().IsIssuedOriginal(originalFence) == true;
     }
     internal Task ValidateOriginalToolAsync(TaskRunAttemptAdmission original, string toolName, CancellationToken token) =>
         _tasks.ValidateOriginalToolAsync(original, toolName, token);
