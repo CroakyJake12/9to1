@@ -755,7 +755,7 @@ public sealed partial class App
                     var picker = new Window { Title = "Create board in Files", Width = 820, Height = 640, Content = state.Page };
                     var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                     picker.Closed += (_, _) => closed.TrySetResult();
-                    var shown = picker.ShowDialog(owner); Track(shown);
+                    var shown = picker.ShowDialog(owner); _ = Track(shown);
                     HomeDeepLink? folder;
                     try
                     {
@@ -771,7 +771,7 @@ public sealed partial class App
                     try
                     {
                         var original = state.Source.CreateInSelectedFolderAsync(folder, "New board.9to1board", request.ValidatedDraft, caller);
-                        state.OriginalSource = original; Track(original);
+                        state.OriginalSource = original; _ = Track(original);
                         state.Result = await original;
                     }
                     catch (UnauthorizedAccessException declinedBeforeClaim)
@@ -792,14 +792,14 @@ public sealed partial class App
                         if (state.Result is not { State: FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, SettlementAttempt: { } attempt })
                             return DescribeBoardCreation(state, "PendingOriginalSettlementRequired", "Retry settlement only for the retained pending Home audit.");
                         var retry = state.Source.RetryCreateSettlementAndPrepareAsync(attempt, caller);
-                        state.OriginalSource = retry; Track(retry); state.Result = await retry;
+                        state.OriginalSource = retry; _ = Track(retry); state.Result = await retry;
                     }
                     else if (request.Operation == BoardsHomeBoardCreationOperation.InspectOutcome)
                     {
                         if (state.Result is not { State: FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown, SettlementAttempt: { } attempt })
                             return DescribeBoardCreation(state, "UnknownOriginalOutcomeRequired", "Inspect only the retained unknown create outcome.");
                         var inspect = state.Source.ObserveCreateSettlementAsync(attempt, caller);
-                        state.OriginalSource = inspect; Track(inspect); state.Result = await inspect;
+                        state.OriginalSource = inspect; _ = Track(inspect); state.Result = await inspect;
                         return DescribeBoardCreation(state, "RecordedCreateObserved", "The recorded create was inspected. Open it separately through the current Files read review.");
                     }
                     else if (request.Operation is BoardsHomeBoardCreationOperation.RetryOpenExisting or BoardsHomeBoardCreationOperation.OpenRecordedExisting)
@@ -810,7 +810,7 @@ public sealed partial class App
                         if (!allowed || state.Result?.Receipt is not { } receipt)
                             return DescribeBoardCreation(state, "RecordedBoardSettlementRequired", "Complete the original audit or inspect its unknown outcome before opening the exact recorded board.");
                         var prepare = state.Source.PrepareCreatedBoardOpenAsync(receipt, caller);
-                        state.OriginalSource = prepare; Track(prepare);
+                        state.OriginalSource = prepare; _ = Track(prepare);
                         var prepared = await prepare;
                         state.Result = state.Result with { PreparedAddress = prepared };
                     }
@@ -831,7 +831,7 @@ public sealed partial class App
                 var priorTabs = _chrome!.State.Tabs.Select(tab => tab.Id).ToHashSet();
                 if (_workspace is null || !_workspace.TryQueueNavigationOriginal(new(origin.TabId, address, OpenInNewTab: true), settlement, out var navigation) || navigation is null)
                     return DescribeBoardCreation(state, "BoardOpenNotAdmitted", "The board exists. Retry opening this same created board.");
-                state.Navigation = navigation; Track(navigation);
+                state.Navigation = navigation; _ = Track(navigation);
                 await navigation; // actual admitted driver, including native initialization/publication
                 DemandCurrent();
                 var createdTabs = _chrome!.State.Tabs.Where(tab => !priorTabs.Contains(tab.Id)).ToArray();
