@@ -2,6 +2,7 @@ namespace CakeOS.Apps.Boards.App;
 
 public enum BoardsHomeBoardCreationOutcome
 {
+    OperationInProgress,
     CancelledBeforeCreate,
     CreateFailedBeforeCommit,
     HomeAuditPending,

@@ -170,33 +170,58 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         public bool CanRetryCreationSettlement => _creationSettlementPending;
         public bool CanInspectUnknownCreation => _creationOutcomeUnknown;
         public bool CanOpenRecordedBoard => _uncertainReceiptAvailable;
-        public bool HasUnresolvedCreation => _hasCreatedBoardPendingOpen || _creationSettlementPending ||
+        public bool HasUnresolvedCreation => HasUnresolvedState || Volatile.Read(ref _operationInProgress) != 0;
+        private volatile bool _hasCreatedBoardPendingOpen;
+        private volatile bool _creationSettlementPending;
+        private volatile bool _creationOutcomeUnknown;
+        private volatile bool _uncertainReceiptAvailable;
+        private volatile bool _openedWithAuditWarning;
+        private int _operationInProgress;
+
+        private bool HasUnresolvedState => _hasCreatedBoardPendingOpen || _creationSettlementPending ||
             _creationOutcomeUnknown || _uncertainReceiptAvailable || _openedWithAuditWarning;
-        private bool _hasCreatedBoardPendingOpen;
-        private bool _creationSettlementPending;
-        private bool _creationOutcomeUnknown;
-        private bool _uncertainReceiptAvailable;
-        private bool _openedWithAuditWarning;
+
+        private bool TryStartOperation() => Interlocked.CompareExchange(ref _operationInProgress, 1, 0) == 0;
+        private void EndOperation() => Volatile.Write(ref _operationInProgress, 0);
+
+        private BoardsHomeBoardCreationResult UnresolvedCreationResult() =>
+            new(_hasCreatedBoardPendingOpen ? BoardsHomeBoardCreationOutcome.CreatedOpenFailed :
+                _creationSettlementPending ? BoardsHomeBoardCreationOutcome.HomeAuditPending :
+                _uncertainReceiptAvailable ? BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit :
+                _openedWithAuditWarning ? BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning :
+                BoardsHomeBoardCreationOutcome.OutcomeUnknown,
+                Message: "A previous Board creation is still being resolved.");
+
+        private static BoardsHomeBoardCreationResult OperationInProgressResult() =>
+            new(BoardsHomeBoardCreationOutcome.OperationInProgress, "OperationInProgress",
+                "A Board operation is already in progress.");
 
         public async Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
             CancellationToken cancellationToken = default)
         {
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
-            linked.Token.ThrowIfCancellationRequested();
+            if (HasUnresolvedState) return UnresolvedCreationResult();
+            if (!TryStartOperation()) return OperationInProgressResult();
             try
             {
-                var result = await createAndOpen(request,
-                    new BoardsHomeBoardCreationRequest(validatedDraft, BoardsHomeBoardCreationOperation.Create), linked.Token).ConfigureAwait(false);
-                RecordCreationResult(result);
-                return result;
+                if (HasUnresolvedState) return UnresolvedCreationResult();
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+                linked.Token.ThrowIfCancellationRequested();
+                try
+                {
+                    var result = await createAndOpen(request,
+                        new BoardsHomeBoardCreationRequest(validatedDraft, BoardsHomeBoardCreationOperation.Create), linked.Token).ConfigureAwait(false);
+                    RecordCreationResult(result);
+                    return result;
+                }
+                catch
+                {
+                    // The callback may have crossed Files' commit boundary before failing.
+                    // Block duplicate creation until Home reconciles the same attempt.
+                    _creationOutcomeUnknown = true;
+                    throw;
+                }
             }
-            catch
-            {
-                // The callback may have crossed Files' commit boundary before failing.
-                // Block duplicate creation until Home reconciles the same attempt.
-                _creationOutcomeUnknown = true;
-                throw;
-            }
+            finally { EndOperation(); }
         }
 
         public async Task<BoardsHomeBoardCreationResult> RetryCreationSettlementAsync(
@@ -205,12 +230,17 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             if (!_creationSettlementPending)
                 return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown,
                     "NoPendingSettlement", "There is no retained Home audit settlement to retry.");
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
-            linked.Token.ThrowIfCancellationRequested();
-            var result = await createAndOpen(request,
-                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
-                    BoardsHomeBoardCreationOperation.RetrySettlement), linked.Token).ConfigureAwait(false);
-            return RecordSettlementResult(result);
+            if (!TryStartOperation()) return OperationInProgressResult();
+            try
+            {
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+                linked.Token.ThrowIfCancellationRequested();
+                var result = await createAndOpen(request,
+                    new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
+                        BoardsHomeBoardCreationOperation.RetrySettlement), linked.Token).ConfigureAwait(false);
+                return RecordSettlementResult(result);
+            }
+            finally { EndOperation(); }
         }
 
         public async Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(
@@ -219,12 +249,17 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             if (!_hasCreatedBoardPendingOpen)
                 return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown,
                     "NoPendingCreatedBoard", "There is no committed Board waiting to open.");
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
-            linked.Token.ThrowIfCancellationRequested();
-            var result = await createAndOpen(request,
-                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
-                    BoardsHomeBoardCreationOperation.RetryOpenExisting), linked.Token).ConfigureAwait(false);
-            return RecordOpenResult(result);
+            if (!TryStartOperation()) return OperationInProgressResult();
+            try
+            {
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+                linked.Token.ThrowIfCancellationRequested();
+                var result = await createAndOpen(request,
+                    new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
+                        BoardsHomeBoardCreationOperation.RetryOpenExisting), linked.Token).ConfigureAwait(false);
+                return RecordOpenResult(result);
+            }
+            finally { EndOperation(); }
         }
 
         public async Task<BoardsHomeBoardCreationResult> InspectUnknownCreationAsync(
@@ -233,12 +268,17 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             if (!_creationOutcomeUnknown)
                 return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown,
                     "NoUnknownAttempt", "There is no unresolved Board creation to inspect.");
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
-            linked.Token.ThrowIfCancellationRequested();
-            var result = await createAndOpen(request,
-                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
-                    BoardsHomeBoardCreationOperation.InspectOutcome), linked.Token).ConfigureAwait(false);
-            return RecordInspectionResult(result);
+            if (!TryStartOperation()) return OperationInProgressResult();
+            try
+            {
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+                linked.Token.ThrowIfCancellationRequested();
+                var result = await createAndOpen(request,
+                    new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
+                        BoardsHomeBoardCreationOperation.InspectOutcome), linked.Token).ConfigureAwait(false);
+                return RecordInspectionResult(result);
+            }
+            finally { EndOperation(); }
         }
 
         public async Task<BoardsHomeBoardCreationResult> OpenRecordedBoardAsync(
@@ -247,19 +287,25 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             if (!_uncertainReceiptAvailable)
                 return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown,
                     "NoRecordedReceipt", "There is no corroborated Board receipt to open.");
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
-            linked.Token.ThrowIfCancellationRequested();
-            var result = await createAndOpen(request,
-                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
-                    BoardsHomeBoardCreationOperation.OpenRecordedExisting), linked.Token).ConfigureAwait(false);
-            return RecordRecordedOpenResult(result);
+            if (!TryStartOperation()) return OperationInProgressResult();
+            try
+            {
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+                linked.Token.ThrowIfCancellationRequested();
+                var result = await createAndOpen(request,
+                    new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
+                        BoardsHomeBoardCreationOperation.OpenRecordedExisting), linked.Token).ConfigureAwait(false);
+                return RecordRecordedOpenResult(result);
+            }
+            finally { EndOperation(); }
         }
 
         private void RecordCreationResult(BoardsHomeBoardCreationResult result)
         {
             _hasCreatedBoardPendingOpen = result.Outcome == BoardsHomeBoardCreationOutcome.CreatedOpenFailed;
             _creationSettlementPending = result.Outcome == BoardsHomeBoardCreationOutcome.HomeAuditPending;
-            _creationOutcomeUnknown = result.Outcome == BoardsHomeBoardCreationOutcome.OutcomeUnknown;
+            _creationOutcomeUnknown = result.Outcome is BoardsHomeBoardCreationOutcome.OutcomeUnknown or
+                BoardsHomeBoardCreationOutcome.OperationInProgress;
             _uncertainReceiptAvailable = result.Outcome == BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit;
             _openedWithAuditWarning = result.Outcome == BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning;
         }
@@ -283,6 +329,10 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                 case BoardsHomeBoardCreationOutcome.Opened:
                 case BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit:
                     _creationSettlementPending = false; _creationOutcomeUnknown = false; _hasCreatedBoardPendingOpen = false; break;
+                case BoardsHomeBoardCreationOutcome.OperationInProgress:
+                    // The exact prior attempt remains pending; this response did
+                    // not replace it or authorize a new creation.
+                    break;
                 default:
                     // A settlement retry cannot be canceled before creation. Preserve
                     // the no-duplicate gate if Home returned an impossible outcome.
