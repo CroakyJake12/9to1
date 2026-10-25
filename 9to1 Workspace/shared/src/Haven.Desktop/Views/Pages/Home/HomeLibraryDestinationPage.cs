@@ -89,6 +89,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         "NextLibraryPage" => _page?.HasMore == true && QueryInputsMatchCurrentPage(),
         "PreviousLibraryPage" => _query.Offset > 0 && QueryInputsMatchCurrentPage(),
         "OpenHomeLibraryArtifact" => _page?.Items.Count > 0,
+        "ToggleHomeLibraryPin" => _page?.Items.Count > 0,
         _ => false
     });
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
@@ -102,7 +103,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (command != "OpenHomeLibraryArtifact")
+                if (command is "NextLibraryPage" or "PreviousLibraryPage" or "SearchLibrary" or "RefreshLibrary")
                 {
                     var offset = command == "NextLibraryPage" ? _query.Offset + _query.Limit :
                         command == "PreviousLibraryPage" ? Math.Max(0, _query.Offset - _query.Limit) : 0;
@@ -113,6 +114,21 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
                 _busy = true; RefreshBindings();
                 await original.AwaitAsync(_admit(original.Token));
                 if (!original.IsAcceptedPublicationCurrent) return;
+                if (command == "ToggleHomeLibraryPin")
+                {
+                    var result = await original.AwaitAsync(_library.SetPinnedAsync(selected.OwnerApp, selected.ArtifactId,
+                        !selected.IsPinned, original.Token));
+                    await original.AwaitAsync(_admit(original.Token));
+                    if (!original.IsAcceptedPublicationCurrent) return;
+                    if (result.Succeeded)
+                    {
+                        await SearchAsync(original, cancellationToken, _query.Offset);
+                        if (original.IsAcceptedPublicationCurrent) original.RunAcceptedPublicationCallback(() => _status = result.Message);
+                    }
+                    else if (original.IsAcceptedPublicationCurrent)
+                        original.RunAcceptedPublicationCallback(() => _status = result.Message);
+                    return;
+                }
                 _opening = original;
                 var opened = await original.AwaitAsync(_library.OpenAsync(selected.OwnerApp, selected.ArtifactId, original.Token));
                 await original.AwaitAsync(_admit(original.Token));
@@ -187,6 +203,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         _bindings.Set("LibrarySummary", summary);
         _bindings.Set("CanSearchLibrary", available);
         _bindings.Set("CanOpenHomeLibraryArtifact", available && _page?.Succeeded == true);
+        _bindings.Set("CanToggleHomeLibraryPin", available && _page?.Succeeded == true);
         _bindings.Set("CanNextLibraryPage", available && queryMatches && _page?.HasMore == true);
         _bindings.Set("CanPreviousLibraryPage", available && queryMatches && _query.Offset > 0);
         _bindings.Set("LibraryPageSummary", _page is { Items.Count: > 0 } page
