@@ -206,6 +206,70 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         finally { _mergeGate.Release(); }
     }
 
+    public async ValueTask<bool> ToggleBlockTextFormatAsync(string pageId, string blockId,
+        BoardTextFormat format, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        if (!Enum.IsDefined(format)) throw new ArgumentOutOfRangeException(nameof(format));
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var separator = blockId.IndexOf(':');
+            var contractBlockId = separator > 0 ? blockId[..separator] : blockId;
+            var actual = _real.Rich.Sections.SelectMany(section => section.Pages)
+                .FirstOrDefault(page => page.Id == pageId)?.Blocks.FirstOrDefault(block => block.Id == contractBlockId);
+            if (actual is null) return false;
+            if (separator > 0)
+            {
+                if (actual.Kind is not (HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList))
+                    return false;
+                var itemId = blockId[(separator + 1)..];
+                var item = actual.Items.FirstOrDefault(candidate => candidate.Id == itemId);
+                if (item is null) return false;
+                var enabled = format switch
+                {
+                    BoardTextFormat.Bold => item.Bold,
+                    BoardTextFormat.Italic => item.Italic,
+                    BoardTextFormat.Underline => item.Underline,
+                    BoardTextFormat.StrikeThrough => item.StrikeThrough,
+                    _ => throw new ArgumentOutOfRangeException(nameof(format))
+                };
+                await _real.MutateAsync(rich => HavenRichNotesOps.SetListItemFormatting(rich, pageId,
+                    contractBlockId, itemId,
+                    bold: format == BoardTextFormat.Bold ? !enabled : null,
+                    italic: format == BoardTextFormat.Italic ? !enabled : null,
+                    underline: format == BoardTextFormat.Underline ? !enabled : null,
+                    strike: format == BoardTextFormat.StrikeThrough ? !enabled : null), cancellationToken).ConfigureAwait(false);
+                RefreshView();
+                return true;
+            }
+            if (actual.Kind is not (HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading))
+                return false;
+
+            var block = new RichBoardBlock { Text = actual.PlainText, Runs = BoardTextRanges.Copy(actual.Runs) };
+            if (!BoardTextRanges.Matches(block)) return false;
+            List<HavenRichTextRun> changed;
+            if (block.Text.Length == 0)
+            {
+                var runs = block.Runs.Count == 0 ? new List<HavenRichTextRun> { new() } : block.Runs;
+                var enable = runs.Any(run => !BoardTextRanges.Enabled(run, format));
+                foreach (var run in runs) BoardTextRanges.Set(run, format, enable);
+                changed = BoardTextRanges.Copy(runs);
+            }
+            else
+            {
+                changed = BoardTextRanges.Toggle(block, 0, block.Text.Length, format);
+            }
+
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.SetBlockRuns(rich, pageId, contractBlockId, changed), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return true;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     private BoardBlockActionTarget? _issuedBlockAction;
     private string BlockActionStamp() => Convert.ToHexString(
         System.Security.Cryptography.SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(_view, Json)));
@@ -786,6 +850,36 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
                 id = HavenRichNotesOps.AddPage(rich, sectionId, title).Id, cancellationToken).ConfigureAwait(false);
             RefreshView();
             return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask RenameSectionAsync(string sectionId, string title,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.RenameSection(rich, sectionId, title), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask RenamePageAsync(string pageId, string title,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.RenamePage(rich, pageId, title), cancellationToken).ConfigureAwait(false);
+            RefreshView();
         }
         finally { _mergeGate.Release(); }
     }

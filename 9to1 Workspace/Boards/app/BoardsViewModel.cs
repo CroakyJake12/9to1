@@ -218,28 +218,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 RequestRebuild();
                 break;
             case "ToggleBold":
-                SelectedBlock().Bold = !SelectedBlock().Bold;
-                PushDocumentToBindings();
-                _session.MarkDirty();
-                RequestRebuild();
+                await ToggleSelectedBlockTextFormatAsync(BoardTextFormat.Bold, cancellationToken);
                 break;
             case "ToggleItalic":
-                SelectedBlock().Italic = !SelectedBlock().Italic;
-                PushDocumentToBindings();
-                _session.MarkDirty();
-                RequestRebuild();
+                await ToggleSelectedBlockTextFormatAsync(BoardTextFormat.Italic, cancellationToken);
                 break;
             case "ToggleUnderline":
-                SelectedBlock().Underline = !SelectedBlock().Underline;
-                PushDocumentToBindings();
-                _session.MarkDirty();
-                RequestRebuild();
+                await ToggleSelectedBlockTextFormatAsync(BoardTextFormat.Underline, cancellationToken);
                 break;
             case "ToggleStrike":
-                SelectedBlock().Strike = !SelectedBlock().Strike;
-                PushDocumentToBindings();
-                _session.MarkDirty();
-                RequestRebuild();
+                await ToggleSelectedBlockTextFormatAsync(BoardTextFormat.StrikeThrough, cancellationToken);
                 break;
             case "ToggleSub":
                 ToggleBaseline("subscript");
@@ -866,6 +854,35 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         finally { _textRangeBusy = false; if (!_textRangeDetached) RefreshTextRangeBindings(); }
     }
 
+    private async Task ToggleSelectedBlockTextFormatAsync(BoardTextFormat format,
+        CancellationToken cancellationToken)
+    {
+        var block = SelectedBlock();
+        if (_session is ContractSessionAdapter adapter)
+        {
+            if (!await adapter.ToggleBlockTextFormatAsync(CurrentPage().Id, block.Id, format, cancellationToken))
+            {
+                Set("StatusText", "Choose a paragraph or heading to format.");
+                return;
+            }
+            InvalidateTextRange();
+            RefreshAfterEdit();
+            return;
+        }
+
+        switch (format)
+        {
+            case BoardTextFormat.Bold: block.Bold = !block.Bold; break;
+            case BoardTextFormat.Italic: block.Italic = !block.Italic; break;
+            case BoardTextFormat.Underline: block.Underline = !block.Underline; break;
+            case BoardTextFormat.StrikeThrough: block.Strike = !block.Strike; break;
+            default: throw new ArgumentOutOfRangeException(nameof(format));
+        }
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
     // ----- Product navigation / selection / menus (visual pass) -----
 
     /// <summary>Raised when block/section/page selection changes (context UI refresh, no editor rebuild).</summary>
@@ -946,8 +963,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         RequestRebuild();
     }
 
-    public void RenameSection(string sectionId, string title)
+    public async Task RenameSectionAsync(string sectionId, string title)
     {
+        if (_session is ContractSessionAdapter adapter)
+        {
+            await adapter.RenameSectionAsync(sectionId, title);
+            PushDocumentToBindings();
+            NavRebuildRequested?.Invoke();
+            RequestRebuild();
+            return;
+        }
         var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
         if (section is null)
             return;
@@ -957,8 +982,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         NavRebuildRequested?.Invoke();
     }
 
-    public void RenamePage(string sectionId, string pageId, string title)
+    public async Task RenamePageAsync(string sectionId, string pageId, string title)
     {
+        if (_session is ContractSessionAdapter adapter)
+        {
+            await adapter.RenamePageAsync(pageId, title);
+            PushDocumentToBindings();
+            NavRebuildRequested?.Invoke();
+            RequestRebuild();
+            return;
+        }
         var page = _session.Document.Sections
             .FirstOrDefault(s => s.Id == sectionId)?.Pages.FirstOrDefault(p => p.Id == pageId);
         if (page is null)

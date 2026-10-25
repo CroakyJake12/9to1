@@ -151,6 +151,102 @@ public sealed class BoardsCreationAndInsertionTests
     }
 
     [Fact]
+    public async Task Adapter_page_and_section_renames_use_the_shared_undo_redo_history_and_persist()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "rename-history.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            var sectionId = string.Empty;
+            var pageId = string.Empty;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var viewModel = new BoardsViewModel(adapter);
+                sectionId = adapter.Document.Sections[0].Id;
+                pageId = adapter.Document.Sections[0].Pages[0].Id;
+
+                await viewModel.RenamePageAsync(sectionId, pageId, "Renamed page");
+                Assert.Equal("Renamed page", adapter.Document.Sections[0].Pages[0].Title);
+                await viewModel.DispatchAsync("Undo", null);
+                Assert.Equal("Start here", adapter.Document.Sections[0].Pages[0].Title);
+                Assert.Equal(pageId, viewModel.SelectedPageId);
+                await viewModel.DispatchAsync("Redo", null);
+                Assert.Equal("Renamed page", adapter.Document.Sections[0].Pages[0].Title);
+
+                await viewModel.RenameSectionAsync(sectionId, "Renamed section");
+                Assert.Equal("Renamed section", adapter.Document.Sections[0].Title);
+                await viewModel.DispatchAsync("Undo", null);
+                Assert.Equal("Notes", adapter.Document.Sections[0].Title);
+                await viewModel.DispatchAsync("Redo", null);
+                Assert.Equal("Renamed section", adapter.Document.Sections[0].Title);
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            Assert.Equal("Renamed section", reopened.Document.Sections.Single(section => section.Id == sectionId).Title);
+            Assert.Equal("Renamed page", reopened.Document.Sections.Single(section => section.Id == sectionId)
+                .Pages.Single(page => page.Id == pageId).Title);
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task Adapter_toolbar_block_formatting_undoes_each_action_and_persists_runs()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "toolbar-history.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            var pageId = string.Empty;
+            var blockId = string.Empty;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                pageId = adapter.Document.Sections[0].Pages[0].Id;
+                var block = adapter.Document.Sections[0].Pages[0].Blocks[0];
+                blockId = block.Id;
+                block.Text = "Formatting survives revisions";
+                adapter.MarkDirty();
+                await adapter.SaveAsync();
+
+                var viewModel = new BoardsViewModel(adapter);
+                await viewModel.DispatchAsync("ToggleBold", null);
+                await viewModel.DispatchAsync("ToggleItalic", null);
+                var runs = adapter.Document.Sections[0].Pages[0].Blocks[0].Runs;
+                Assert.All(runs, run => Assert.True(run.Bold && run.Italic));
+
+                await viewModel.DispatchAsync("Undo", null);
+                runs = adapter.Document.Sections[0].Pages[0].Blocks[0].Runs;
+                Assert.All(runs, run => Assert.True(run.Bold && !run.Italic));
+                await viewModel.DispatchAsync("Undo", null);
+                runs = adapter.Document.Sections[0].Pages[0].Blocks[0].Runs;
+                Assert.All(runs, run => Assert.False(run.Bold || run.Italic));
+
+                await viewModel.DispatchAsync("Redo", null);
+                await viewModel.DispatchAsync("Redo", null);
+                runs = adapter.Document.Sections[0].Pages[0].Blocks[0].Runs;
+                Assert.All(runs, run => Assert.True(run.Bold && run.Italic));
+                Assert.Equal("Formatting survives revisions", adapter.Document.Sections[0].Pages[0].Blocks[0].Text);
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var persisted = Assert.Single(reopened.Document.Sections.Single(section => section.Pages.Any(page => page.Id == pageId))
+                .Pages.Single(page => page.Id == pageId).Blocks, block => block.Id == blockId);
+            Assert.Equal("Formatting survives revisions", persisted.Text);
+            Assert.All(persisted.Runs, run => Assert.True(run.Bold && run.Italic));
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
     public async Task Creating_distinct_board_preserves_current_file_and_refuses_existing_target()
     {
         var root = TempDirectory();

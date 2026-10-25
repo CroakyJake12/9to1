@@ -224,7 +224,7 @@ public static class NavBuilder
         box.Focus();
         box.SelectAll();
         var done = false;
-        void Commit(bool save)
+        async Task CommitAsync(bool save)
         {
             if (done)
                 return;
@@ -232,30 +232,38 @@ public static class NavBuilder
             RenameActive = false;
             if (save)
             {
-                if (isSection)
-                    vm.RenameSection(sectionId, box.Text ?? string.Empty);
-                else if (pageId is not null)
-                    vm.RenamePage(sectionId, pageId, box.Text ?? string.Empty);
+                try
+                {
+                    if (isSection)
+                        await vm.RenameSectionAsync(sectionId, box.Text ?? string.Empty);
+                    else if (pageId is not null)
+                        await vm.RenamePageAsync(sectionId, pageId, box.Text ?? string.Empty);
+                }
+                catch (Exception error)
+                {
+                    vm.Set("StatusText", "Rename failed: " + error.Message.Split('\n', '\r')[0]);
+                    vm.RequestNavRebuild();
+                }
             }
             else
             {
                 vm.RequestNavRebuild();
             }
         }
-        box.KeyDown += (_, e) =>
+        box.KeyDown += async (_, e) =>
         {
             if (e.Key == Key.Enter)
             {
-                Commit(save: true);
                 e.Handled = true;
+                await CommitAsync(save: true);
             }
             else if (e.Key == Key.Escape)
             {
-                Commit(save: false);
                 e.Handled = true;
+                await CommitAsync(save: false);
             }
         };
-        box.LostFocus += (_, _) => Commit(save: true);
+        box.LostFocus += async (_, _) => await CommitAsync(save: true);
     }
 
     private static void AddMenuItem(ContextMenu menu, string header, Action tapped)
