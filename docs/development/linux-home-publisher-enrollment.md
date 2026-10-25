@@ -196,3 +196,30 @@ The isolated tests use genuine ELF files, real filesystem operations, actual
 canonical store/OS profile and ephemeral TEST-ONLY signers in memory. They write
 public DER only and never modify an OS trust store, start a service, execute the
 copied binaries or establish production publisher/installed-peer authority.
+
+## Recover an already published initial bundle
+
+Use `--home-recover-bootstrap` with the same options, original operation UUID,
+original stage leaf, exact retained plan and original signing inputs. Recovery
+checks the CURRENT canonical enrollment and retained per-package journal binding,
+then independently re-verifies every signed receipt, payload and runtime file in
+`active`, including its exact published permissions. It never chmods or renames
+anything and never starts a service/process. A complete exact bundle with the
+original `Validated` journal can settle the canonical metadata CAS. A complete
+already-settled bundle returns `alreadySettled: true` without a state rewrite;
+this covers loss of an actual successful settlement acknowledgement.
+
+An absent, altered or redirected bundle, changed plan/layout, different operation,
+mixed journal state or changed canonical package row is refused while preserving
+all existing state/artifacts. Recovery never adopts another bundle or repeats the
+initial effect. Exit2 retains the original operation for further owning recovery.
+Exit0 reports `LinuxBootstrapRecoverySettledRuntimeUnavailable`, with all runtime
+and installed-peer limitations unchanged. Existing malformed/missing OS-profile
+state is preserved, rather than being initialized as a new administrative profile.
+
+Focused failure controls use the existing actual-store persisted-write observer
+to lose a real successful settlement acknowledgement and a one-shot failing
+principal reader that otherwise delegates to the actual OS source. The second
+control fails the real profile commit guard after an actual filesystem publication,
+leaving the actual canonical journal pending. Neither fixture invents a successful
+actor, publisher, store result or controlled launch.

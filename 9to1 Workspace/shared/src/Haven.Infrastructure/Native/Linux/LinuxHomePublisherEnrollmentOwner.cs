@@ -27,6 +27,7 @@ public sealed class LinuxHomePublisherEnrollmentOwner
             : base("Publisher enrollment was committed but final source/profile currentness failed; retain the original operation for recovery.", cause)
         { KnownCommittedResult = committed; }
     }
+    private readonly FileHomeCoreStateStore _store;
     private readonly HomePackageDatabase _database;
     private readonly HomeLocalProfileIdentity _profiles;
     private readonly string _statePath;
@@ -37,7 +38,7 @@ public sealed class LinuxHomePublisherEnrollmentOwner
         ArgumentNullException.ThrowIfNull(sameProfiles);
         if (!sameStore.IsOriginalConfiguredFile(actualCanonicalStateFile) || !sameDatabase.HasOriginalProfileComposition(sameStore, sameProfiles))
             throw new UnauthorizedAccessException("Use the SAME configured canonical package store/database/OS profile.");
-        _database = sameDatabase; _profiles = sameProfiles;
+        _store = sameStore; _database = sameDatabase; _profiles = sameProfiles;
         _statePath = Path.GetFullPath(actualCanonicalStateFile);
     }
 
@@ -111,6 +112,14 @@ public sealed class LinuxHomePublisherEnrollmentOwner
         if (existingOperation is not null && (registry.UnknownFields is null ||
             !registry.UnknownFields.ContainsKey(HomePackageOriginalPublisherEnrollmentRecord.Field)))
             throw new UnauthorizedAccessException("Bootstrap activation requires the already-enrolled canonical publisher; it cannot establish initial trust.");
+        if (existingOperation is not null)
+        {
+            // Profile creation is an enrollment-only operation. An enrolled registry
+            // whose canonical profile disappeared is recovery input, never first-run.
+            var stateRead = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);
+            if (!stateRead.IsSuccess || stateRead.State!.Records.Count(record => record.RecordId == "home.local-profile") != 1)
+                throw new UnauthorizedAccessException("The enrolled machine's original canonical OS profile must already exist; preserve missing/corrupt state for recovery.");
+        }
         var principal = await new OperatingSystemPrincipalSource().GetPrincipalAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The actual administrative OS principal is unavailable.");
         var actor = await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false)
@@ -130,7 +139,7 @@ public sealed class LinuxHomePublisherEnrollmentOwner
                 retained.IssuerKeyId != enrollment.IssuerKeyId || retained.CatalogueSha256 != enrollment.CatalogueSha256 ||
                 retained.CatalogueRevision != enrollment.CatalogueRevision || retained.HomePackageId != enrollment.HomePackageId ||
                 retained.RootPackageId != enrollment.RootPackageId || retained.OriginalOsPrincipal != principal ||
-                retained.OriginalProfileId != actor.ProfileId || retained.OriginalSignedCatalogueBase64 != enrollment.OriginalSignedCatalogueBase64 ||
+                retained.OriginalProfileId != actor.ProfileId || retained.OriginalActorId != actor.ActorId || retained.OriginalSignedCatalogueBase64 != enrollment.OriginalSignedCatalogueBase64 ||
                 retained.SelectedPackageIds is null ||
                 !retained.SelectedPackageIds.Order(StringComparer.Ordinal).SequenceEqual(selected.Order(StringComparer.Ordinal)))
                 throw new UnauthorizedAccessException("A different existing publisher/catalogue/selection requires explicit owning recovery; enrollment never overwrites it.");

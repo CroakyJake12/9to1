@@ -17,7 +17,10 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
     public sealed record PackageLayout(string PackageId, string RelativeRoot, string SignedReceiptRelativePath, string CompletePayloadRelativePath);
     public sealed record Receipt(int SchemaVersion, string PackageId, string AppId, string Version,
         string Platform, string Abi, string EntrypointRelativePath, IReadOnlyList<HomePackageActivatedFile> Files);
-    public sealed record Result(Guid OperationId, string ActivePath, long RegistryRevision, IReadOnlyList<string> PackageIds);
+    public sealed record Result(Guid OperationId, string ActivePath, long RegistryRevision, IReadOnlyList<string> PackageIds)
+    { public bool AlreadySettled { get; init; } }
+    private sealed record JournalBinding(int SchemaVersion, string ActivationParent, string StageLeaf,
+        string PlanSha256, PackageLayout Layout, string SignedReceiptSha256, string PayloadSha256, string CatalogueRevision);
     public sealed class ActivationUnconfirmedException : IOException
     {
         public Guid OperationId { get; }
@@ -30,7 +33,12 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
     private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web)
     { MaxDepth = 24, UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow };
 
-    public async Task<Result> ActivateAsync(Request request, CancellationToken token)
+    public Task<Result> ActivateAsync(Request request, CancellationToken token) => RunAsync(request, recovery: false, token);
+    /// <summary>Inspect the exact original retained operation and already-published
+    /// bundle, then settle metadata only. Never repeats mode transitions or renames.</summary>
+    public Task<Result> RecoverAsync(Request request, CancellationToken token) => RunAsync(request, recovery: true, token);
+
+    private async Task<Result> RunAsync(Request request, bool recovery, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(request); ArgumentNullException.ThrowIfNull(sameEnrollmentOwner);
         Result? result = null;
@@ -40,8 +48,20 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
         {
             await sameEnrollmentOwner.WithinExistingEnrollmentAsync(request.SigningInputs, async (original, cancellation) =>
             {
-                if (original.Registry.Packages.Count != 0 || original.Registry.RecentOperations.Count != 0)
+                var operation = request.SigningInputs.OperationId.ToString("D");
+                if (!recovery && (original.Registry.Packages.Count != 0 || original.Registry.RecentOperations.Count != 0))
                     throw new UnauthorizedAccessException("This command only performs an initial bootstrap. Existing package/journal state requires its original owning recovery or lifecycle operation.");
+                if (recovery)
+                {
+                    var retained = original.Registry.RecentOperations;
+                    if (retained.Count != original.Enrollment.SelectedPackageIds.Count || retained.Any(value =>
+                        value.OperationId != operation || value.Action != "Install" ||
+                        value.IdempotencyKey != "linux.bootstrap:" + operation + ":" + value.PackageId ||
+                        value.State is not (HomePackageJournalState.Validated or HomePackageJournalState.Succeeded)) ||
+                        !retained.Select(value => value.PackageId).Order(StringComparer.Ordinal).SequenceEqual(original.Enrollment.SelectedPackageIds.Order(StringComparer.Ordinal)))
+                        throw new UnauthorizedAccessException("Recovery requires the exact original retained bootstrap operation and selected package cohort.");
+                    journalAttempted = true; // the existing operation remains unresolved on every refusal
+                }
                 var parent = Path.TrimEndingDirectorySeparator(Path.GetFullPath(request.ExistingActivationParent));
                 var stateDirectory = Path.GetDirectoryName(original.StatePath)!;
                 // Never expose state, public signing inputs, or an existing app/profile
@@ -58,11 +78,12 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                 var parentIdentity = LinuxOriginalDownloadPaths.ReadIdentity(parentHandle);
                 if ((parentIdentity.Mode & 0x1ff) != 0x1ed)
                     throw new UnauthorizedAccessException("The explicit code publication parent must already be root-owned mode0755; it is never adopted or chmodded.");
-                using var stageDirectory = LinuxOriginalDownloadPaths.OpenAt(parentHandle, request.StageLeaf,
+                var observedLeaf = recovery ? "active" : request.StageLeaf;
+                using var stageDirectory = LinuxOriginalDownloadPaths.OpenAt(parentHandle, observedLeaf,
                     LinuxOriginalDownloadPaths.DirectoryFlags(mutable: true));
-                var stagePath = Path.Combine(parent, request.StageLeaf);
+                var stagePath = Path.Combine(parent, observedLeaf);
                 LinuxOriginalDownloadPaths.DemandPath(stageDirectory, stagePath, directory: true);
-                LinuxOriginalDownloadPaths.DemandOwner(stageDirectory, 0, privateDirectory: true);
+                LinuxOriginalDownloadPaths.DemandOwner(stageDirectory, 0, privateDirectory: !recovery);
                 var stageIdentity = LinuxOriginalDownloadPaths.ReadIdentity(stageDirectory);
                 using var planParent = LinuxOriginalDownloadPaths.OpenAbsoluteDirectory(Path.GetDirectoryName(Path.GetFullPath(request.PlanPath))!, mutable: false);
                 var planBytes = ReadBounded(planParent, Path.GetDirectoryName(Path.GetFullPath(request.PlanPath))!, Path.GetFileName(request.PlanPath), 128 * 1024);
@@ -130,18 +151,54 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                 if (!stageIdentity.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(stageDirectory)))
                     throw new IOException("The original private bundle stage changed during signature validation.");
                 using var artifacts = LinuxHomePackageArtifactStore.ForVerifiedMachineActivation(parent);
+                var entrypoint = verified[0].Layout.RelativeRoot + "/" + verified[0].Receipt.EntrypointRelativePath;
+                if (recovery)
+                {
+                    using var published = artifacts.ValidatePublishedMachineCode(complete, entrypoint, cancellation);
+                    if ((LinuxOriginalDownloadPaths.ReadIdentity(published.Directory).Mode & 0x1ff) != 0x1ed)
+                        throw new UnauthorizedAccessException("Recovery requires the already-published readable machine-code bundle.");
+                    foreach (var value in verified)
+                    {
+                        var journal = original.Registry.RecentOperations.Single(item => item.PackageId == value.Layout.PackageId);
+                        if (journal.UnknownFields is not { } fields || !fields.TryGetValue("linux.original-bootstrap-publication.v1", out var retainedBinding))
+                            throw new UnauthorizedAccessException("The original operation has no retained bootstrap publication binding.");
+                        var binding = retainedBinding.Deserialize<JournalBinding>(Web);
+                        var expected = new JournalBinding(1, parent, request.StageLeaf, Digest(planBytes), value.Layout,
+                            value.Row.Descriptor.SignedInstallationReceiptSha256, value.Row.Descriptor.PayloadSha256, original.Enrollment.CatalogueRevision);
+                        if (binding != expected) throw new UnauthorizedAccessException("The original operation's parent, stage, plan, signed payload or layout differs; recovery never adopts another bundle.");
+                    }
+                    observedActive = stagePath;
+                    await original.DemandCurrentAsync().ConfigureAwait(false);
+                    var allSettled = original.Registry.RecentOperations.All(value => value.State == HomePackageJournalState.Succeeded);
+                    var allPending = original.Registry.RecentOperations.All(value => value.State == HomePackageJournalState.Validated);
+                    var recoveredPackages = verified.Select(value => InstalledEntry(value, original.Enrollment, stagePath, operation,
+                        original.Registry.RecentOperations.Single(item => item.PackageId == value.Layout.PackageId).StartedAtUtc)).ToArray();
+                    if (allSettled)
+                    {
+                        if (original.Registry.Packages.Count != recoveredPackages.Length || recoveredPackages.Any(expected =>
+                            !original.Registry.Packages.Any(actual => SameInstalledActivation(actual, expected))))
+                            throw new UnauthorizedAccessException("A settled operation must still identify its SAME current installed activation; recovery does not overwrite it.");
+                        result = new(request.SigningInputs.OperationId, stagePath, original.Registry.Revision,
+                            Array.AsReadOnly(recoveredPackages.Select(value => value.PackageId).ToArray())) { AlreadySettled = true };
+                        return;
+                    }
+                    if (!allPending || original.Registry.Packages.Count != 0)
+                        throw new UnauthorizedAccessException("Mixed or changed package/journal outcomes require explicit owning recovery.");
+                    var recovered = await original.SaveAsync(original.Registry with { Packages = recoveredPackages,
+                        RecentOperations = original.Registry.RecentOperations.Select(SettledJournal).ToArray() }, original.Registry.Revision, cancellation).ConfigureAwait(false);
+                    result = new(request.SigningInputs.OperationId, stagePath, recovered.Revision,
+                        Array.AsReadOnly(recoveredPackages.Select(value => value.PackageId).ToArray()));
+                    return;
+                }
                 if (artifacts.ObserveActive() is not null) throw new IOException("Initial publication refuses an existing active bundle.");
-                using var stage = artifacts.ValidateStage(request.StageLeaf, complete,
-                    verified[0].Layout.RelativeRoot + "/" + verified[0].Receipt.EntrypointRelativePath, cancellation);
-                var operation = request.SigningInputs.OperationId.ToString("D");
+                using var stage = artifacts.ValidateStage(request.StageLeaf, complete, entrypoint, cancellation);
                 var now = DateTimeOffset.UtcNow;
                 var journals = verified.Select(value => new HomePackageJournalEntry("linux.bootstrap:" + operation + ":" + value.Row.Descriptor.PackageId,
                     operation, value.Row.Descriptor.PackageId, "Install", HomePackageJournalState.Validated, now, null,
                     "LinuxBootstrapValidated", false, false, ["enrolled-publisher", "signed-receipt", "complete-payload"], [], [], [])
-                { UnknownFields = new(StringComparer.Ordinal) { ["linux.original-bootstrap-publication.v1"] = JsonSerializer.SerializeToElement(new {
-                    schemaVersion = 1, activationParent = parent, stageLeaf = request.StageLeaf, planSha256 = Digest(planBytes),
-                    layout = value.Layout, signedReceiptSha256 = value.Row.Descriptor.SignedInstallationReceiptSha256,
-                    payloadSha256 = value.Row.Descriptor.PayloadSha256, catalogueRevision = original.Enrollment.CatalogueRevision }) } }).ToArray();
+                { UnknownFields = new(StringComparer.Ordinal) { ["linux.original-bootstrap-publication.v1"] = JsonSerializer.SerializeToElement(new JournalBinding(1,
+                    parent, request.StageLeaf, Digest(planBytes), value.Layout, value.Row.Descriptor.SignedInstallationReceiptSha256,
+                    value.Row.Descriptor.PayloadSha256, original.Enrollment.CatalogueRevision)) } }).ToArray();
                 // A failed/unknown acknowledgement is never permission to retry effects.
                 journalAttempted = true;
                 var pending = await original.SaveAsync(original.Registry with { RecentOperations = journals }, original.Registry.Revision, cancellation).ConfigureAwait(false);
@@ -152,9 +209,7 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                 var publication = artifacts.Publish(stage, null, cancellation);
                 observedActive = publication.ActivePath;
                 var packages = verified.Select(value => InstalledEntry(value, original.Enrollment, publication.ActivePath, operation, now)).ToArray();
-                var settled = journals.Select(value => value with { State = HomePackageJournalState.Succeeded,
-                    CompletedAtUtc = DateTimeOffset.UtcNow, ResultCode = "LinuxBootstrapActivatedRuntimeUnavailable",
-                    SucceededSteps = value.SucceededSteps.Concat(["atomic-bundle-publication"]).ToArray(), SkippedSteps = ["root-service-not-started", "installed-peer-not-established"] }).ToArray();
+                var settled = journals.Select(SettledJournal).ToArray();
                 // Do not cancel settlement after the filesystem namespace changed.
                 var written = await original.SaveAsync(pending with { Packages = packages, RecentOperations = settled }, pending.Revision, CancellationToken.None).ConfigureAwait(false);
                 result = new(request.SigningInputs.OperationId, publication.ActivePath, written.Revision,
@@ -170,6 +225,19 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
         }
     }
 
+    private static HomePackageJournalEntry SettledJournal(HomePackageJournalEntry value) => value with {
+        State = HomePackageJournalState.Succeeded, CompletedAtUtc = DateTimeOffset.UtcNow,
+        ResultCode = "LinuxBootstrapActivatedRuntimeUnavailable", SucceededSteps = value.SucceededSteps.Concat(["atomic-bundle-publication"]).ToArray(),
+        SkippedSteps = ["root-service-not-started", "installed-peer-not-established"] };
+    private static bool SameInstalledActivation(HomePackageDatabaseEntry actual, HomePackageDatabaseEntry expected)
+    {
+        if (actual.PackageId != expected.PackageId || actual.AppId != expected.AppId || actual.InstalledVersion != expected.InstalledVersion ||
+            actual.InstallationState != HomePackageInstallState.Installed || actual.Compatibility != HomePackageCompatibility.HomeServiceUnavailable ||
+            actual.UnknownFields is not { } fields || !fields.TryGetValue(HomePackageOriginalInstalledActivationRecord.Field, out var retained)) return false;
+        var activation = retained.Deserialize<HomePackageOriginalInstalledActivationRecord>();
+        return activation is not null && JsonSerializer.Serialize(activation) ==
+            JsonSerializer.Serialize(expected.UnknownFields![HomePackageOriginalInstalledActivationRecord.Field].Deserialize<HomePackageOriginalInstalledActivationRecord>());
+    }
     private static HomePackageDatabaseEntry InstalledEntry(Verified value, HomePackageOriginalPublisherEnrollmentRecord enrollment,
         string activePath, string operation, DateTimeOffset verifiedAt)
     {
