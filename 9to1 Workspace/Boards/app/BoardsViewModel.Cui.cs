@@ -34,6 +34,11 @@ public sealed partial class BoardsViewModel
         Set("ContextTableBorderIndex", IndexOf(ContextBorderOptions, block?.TableStyle.BorderStyle));
         Set("ContextAlternatingRows", block?.TableStyle.AlternatingRows == true);
         Set("ContextImageAlignmentIndex", IndexOf(ContextHorizontalOptions, block?.Image?.Alignment));
+        Set("ContextImageKeepAspectRatio", block?.Image?.KeepAspectRatio != false);
+        Set("ContextImageFitMode", block?.Image?.FitMode ?? "contain");
+        Set("ContextImageCaption", block?.Image?.Caption ?? string.Empty);
+        Set("ContextImageAltText", block?.Image?.AltText ?? string.Empty);
+        Set("ContextImageLinkUri", block?.Image?.LinkUri ?? string.Empty);
         Set("ContextDividerStyleIndex", IndexOf(ContextDividerOptions, block?.Divider?.LineStyle));
         // Publish branch selection after its data, so a newly created Input has
         // the current selection on its first binding pass.
@@ -124,6 +129,22 @@ public sealed partial class BoardsViewModel
         if (_syncing) return key.StartsWith("Context", StringComparison.Ordinal);
         var block = FindBlock(SelectedBlockId);
         if (block is null) return false;
+        if (block.Kind == "image" && block.Image is { } image)
+        {
+            switch (key)
+            {
+                case "ContextImageCaption" when value is string caption:
+                    image.Caption = caption.Length <= 2048 ? caption : caption[..2048]; CommitViewEdit(); RefreshCuiContext(); return true;
+                case "ContextImageAltText" when value is string altText:
+                    image.AltText = altText.Length <= 2048 ? altText : altText[..2048]; CommitViewEdit(); RefreshCuiContext(); return true;
+                case "ContextImageLinkUri" when value is string link:
+                    image.LinkUri = link.Length <= 2048 ? link : link[..2048]; CommitViewEdit(); RefreshCuiContext(); return true;
+                case "ContextImageKeepAspectRatio" when value is bool keepAspect:
+                    image.KeepAspectRatio = keepAspect;
+                    if (keepAspect) image.Height = 0;
+                    CommitViewEdit(); RefreshCuiContext(); return true;
+            }
+        }
         bool SelectedOption(string[] options, out string result)
         {
             result = string.Empty;
@@ -180,7 +201,22 @@ public sealed partial class BoardsViewModel
             case "ContextRoundTable" when block.Kind == "table": block.TableStyle.CornerRadius = Math.Min(32, block.TableStyle.CornerRadius + 2); CommitViewEdit(); break;
             case "ContextImageNarrower" when block.Kind == "image" && block.Image is not null: ResizeImage(-40); break;
             case "ContextImageWider" when block.Kind == "image" && block.Image is not null: ResizeImage(40); break;
-            case "ContextImageNatural" when block.Kind == "image" && block.Image is not null: block.Image.Width = 0; CommitViewEdit(); break;
+            case "ContextImageNatural" when block.Kind == "image" && block.Image is not null:
+                block.Image.Width = 0; block.Image.Height = 0; block.Image.FitMode = "natural"; CommitViewEdit(); break;
+            case "ContextImageShorter" when block.Kind == "image" && block.Image is not null: ResizeImageHeight(-40); break;
+            case "ContextImageTaller" when block.Kind == "image" && block.Image is not null: ResizeImageHeight(40); break;
+            case "ContextImageRotateLeft" when block.Kind == "image" && block.Image is not null: RotateImage(-90); break;
+            case "ContextImageRotateRight" when block.Kind == "image" && block.Image is not null: RotateImage(90); break;
+            case "ContextImageCropLeft" when block.Kind == "image" && block.Image is not null: CropImage("left"); break;
+            case "ContextImageCropRight" when block.Kind == "image" && block.Image is not null: CropImage("right"); break;
+            case "ContextImageCropTop" when block.Kind == "image" && block.Image is not null: CropImage("top"); break;
+            case "ContextImageCropBottom" when block.Kind == "image" && block.Image is not null: CropImage("bottom"); break;
+            case "ContextImageResetCrop" when block.Kind == "image" && block.Image is not null:
+                block.Image.CropLeft = block.Image.CropTop = block.Image.CropRight = block.Image.CropBottom = 0;
+                CommitViewEdit(); break;
+            case "ContextImageCycleFit" when block.Kind == "image" && block.Image is not null:
+                block.Image.FitMode = block.Image.FitMode switch { "contain" => "cover", "cover" => "fill", "fill" => "natural", _ => "contain" };
+                CommitViewEdit(); break;
             case "ContextReplaceImage" when block.Kind == "image": await ReplaceImageAsync(block.Id); break;
             case "ContextRemoveImage" when block.Kind == "image": await DeleteBlockAsync(block.Id); break;
             case "ContextDividerThinner" when block.Kind == "divider" && block.Divider is not null: ResizeDivider(-1); break;
@@ -199,7 +235,36 @@ public sealed partial class BoardsViewModel
         void ResizeImage(double delta)
         {
             var current = block.Image!.Width > 0 ? block.Image.Width : 320;
-            block.Image.Width = Math.Clamp(current + delta, 40, 1600); CommitViewEdit();
+            block.Image.Width = Math.Clamp(current + delta, 40, 1600);
+            if (block.Image.FitMode == "natural") block.Image.FitMode = "contain";
+            CommitViewEdit();
+        }
+        void ResizeImageHeight(double delta)
+        {
+            var image = block.Image!;
+            image.KeepAspectRatio = false;
+            image.Height = Math.Clamp((image.Height > 0 ? image.Height : 240) + delta, 40, 1600);
+            CommitViewEdit();
+        }
+        void RotateImage(double delta)
+        {
+            var rotation = (block.Image!.RotationDegrees + delta) % 360;
+            block.Image.RotationDegrees = rotation;
+            CommitViewEdit();
+        }
+        void CropImage(string edge)
+        {
+            var image = block.Image!;
+            const double step = 0.05;
+            switch (edge)
+            {
+                case "left" when image.CropLeft + step <= 0.9 && image.CropLeft + step + image.CropRight < 1: image.CropLeft += step; break;
+                case "right" when image.CropRight + step <= 0.9 && image.CropRight + step + image.CropLeft < 1: image.CropRight += step; break;
+                case "top" when image.CropTop + step <= 0.9 && image.CropTop + step + image.CropBottom < 1: image.CropTop += step; break;
+                case "bottom" when image.CropBottom + step <= 0.9 && image.CropBottom + step + image.CropTop < 1: image.CropBottom += step; break;
+                default: Set("StatusText", "Image crop limit reached. Reset crop to reveal more of the source."); return;
+            }
+            CommitViewEdit();
         }
         void ResizeDivider(double delta)
         {

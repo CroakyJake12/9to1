@@ -106,8 +106,18 @@ internal static class Projector
                             MediaType = block.Image.MediaType,
                             DataBase64 = null,
                             Width = block.Image.Width,
+                            Height = block.Image.Height,
+                            KeepAspectRatio = block.Image.KeepAspectRatio,
+                            RotationDegrees = block.Image.RotationDegrees,
+                            CropLeft = block.Image.CropLeft,
+                            CropTop = block.Image.CropTop,
+                            CropRight = block.Image.CropRight,
+                            CropBottom = block.Image.CropBottom,
+                            FitMode = block.Image.FitMode,
                             Alignment = block.Image.Alignment.ToString().ToLowerInvariant(),
-                            AltText = block.Image.AltText
+                            AltText = block.Image.AltText,
+                            Caption = block.Image.Caption,
+                            LinkUri = block.Image.LinkUri
                         },
                         AttachmentId = block.Attachment?.Id,
                         AttachmentName = block.Attachment?.DisplayName,
@@ -771,8 +781,18 @@ internal static class MergeDeltas
                             MediaType = viewBlock.Image.MediaType,
                             DataBase64 = data,
                             Width = viewBlock.Image.Width,
+                            Height = viewBlock.Image.Height,
+                            KeepAspectRatio = viewBlock.Image.KeepAspectRatio,
+                            RotationDegrees = viewBlock.Image.RotationDegrees,
+                            CropLeft = viewBlock.Image.CropLeft,
+                            CropTop = viewBlock.Image.CropTop,
+                            CropRight = viewBlock.Image.CropRight,
+                            CropBottom = viewBlock.Image.CropBottom,
+                            FitMode = viewBlock.Image.FitMode,
                             Alignment = ParseAlignment(viewBlock.Image.Alignment),
-                            AltText = viewBlock.Image.AltText
+                            AltText = viewBlock.Image.AltText,
+                            Caption = viewBlock.Image.Caption,
+                            LinkUri = viewBlock.Image.LinkUri
                         }
                     };
                     page.Blocks.Add(created);
@@ -858,7 +878,11 @@ internal static class MergeDeltas
         var current = viewBlock.Image;
         var old = baselineBlock?.Image;
         if (old is null || current.DisplayName != old.DisplayName || current.MediaType != old.MediaType ||
-            current.Width != old.Width || current.Alignment != old.Alignment || current.AltText != old.AltText ||
+            current.Width != old.Width || current.Height != old.Height || current.KeepAspectRatio != old.KeepAspectRatio ||
+            current.RotationDegrees != old.RotationDegrees || current.CropLeft != old.CropLeft ||
+            current.CropTop != old.CropTop || current.CropRight != old.CropRight || current.CropBottom != old.CropBottom ||
+            current.FitMode != old.FitMode || current.Alignment != old.Alignment || current.AltText != old.AltText ||
+            current.Caption != old.Caption || current.LinkUri != old.LinkUri ||
             !string.IsNullOrEmpty(current.DataBase64))
         {
             HavenRichNotesOps.UpdateImage(rich, page.Id, contractBlock.Id, image =>
@@ -866,8 +890,18 @@ internal static class MergeDeltas
                 image.DisplayName = string.IsNullOrWhiteSpace(current.DisplayName) ? image.DisplayName : current.DisplayName;
                 image.MediaType = string.IsNullOrWhiteSpace(current.MediaType) ? image.MediaType : current.MediaType;
                 image.Width = current.Width;
+                image.Height = current.Height;
+                image.KeepAspectRatio = current.KeepAspectRatio;
+                image.RotationDegrees = current.RotationDegrees;
+                image.CropLeft = current.CropLeft;
+                image.CropTop = current.CropTop;
+                image.CropRight = current.CropRight;
+                image.CropBottom = current.CropBottom;
+                image.FitMode = current.FitMode;
                 image.Alignment = ParseAlignment(current.Alignment);
                 image.AltText = current.AltText ?? string.Empty;
+                image.Caption = current.Caption ?? string.Empty;
+                image.LinkUri = current.LinkUri ?? string.Empty;
                 if (!string.IsNullOrEmpty(current.DataBase64))
                 {
                     image.DataBase64 = current.DataBase64;
