@@ -26,6 +26,7 @@ public static class BlockRenderer
     private const double GraphHeight = 260;
     private const double BlockGutterTargetSize = 32;
     private const double QuietBlockGutterOpacity = 0.56;
+    private const double QuietInsertOpacity = 0.76;
 
     public static async Task RebuildAsync(StackPanel host, BoardsViewModel vm)
     {
@@ -106,7 +107,9 @@ public static class BlockRenderer
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
         // The first slot stays a compact, fixed target even when the content in
         // the row (especially a table) is much taller than an ordinary block.
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,Auto,*") };
+        // The drag grip sits before the insert action. Its 36px slot includes
+        // the 4px gap; both interactive targets remain fixed at 32px.
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("36,32,*") };
         Button? insert = null;
         Control? gripControl = null;
         if (vm.IsEditMode)
@@ -114,11 +117,9 @@ public static class BlockRenderer
             insert = ToolbarBuilder.CreateInsertButton(
                 vm, "Insert a block after this note", insertAfterBlockId) as Button
                 ?? throw new InvalidOperationException("The insert affordance must remain a button.");
-            ConfigureBlockGutterButton(insert);
-            insert.Margin = new Thickness(0, 0, 2, 0);
-            insert.Opacity = selected ? 1 : QuietBlockGutterOpacity;
-            Grid.SetColumn(insert, 0);
-            row.Children.Add(insert);
+            ConfigureBlockGutterButton(insert, insertAction: true);
+            insert.Margin = new Thickness(0);
+            insert.Opacity = selected ? 1 : QuietInsertOpacity;
 
             var grip = BlockGripCui.Build(vm, selectId);
             gripControl = grip;
@@ -128,10 +129,13 @@ public static class BlockRenderer
             grip.VerticalAlignment = VerticalAlignment.Top;
             grip.Opacity = selected ? 1 : QuietBlockGutterOpacity;
             if (grip.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.Name == "BlockGripToggle") is { } toggle)
-                ConfigureBlockGutterButton(toggle);
+                ConfigureBlockGutterButton(toggle, insertAction: false);
             grip.Margin = new Thickness(0, 0, 4, 0);
-            Grid.SetColumn(grip, 1);
+            Grid.SetColumn(grip, 0);
             row.Children.Add(grip);
+
+            Grid.SetColumn(insert, 1);
+            row.Children.Add(insert);
         }
         else
         {
@@ -139,14 +143,14 @@ public static class BlockRenderer
             // an edit command in the read-only surface.
             row.Children.Add(new Border
             {
-                Width = BlockGutterTargetSize,
+                Width = 36,
                 Height = BlockGutterTargetSize,
                 IsHitTestVisible = false,
                 Focusable = false,
             });
             var gripSlot = new Border
             {
-                Width = BlockGutterTargetSize + 4,
+                Width = BlockGutterTargetSize,
                 Height = BlockGutterTargetSize,
                 IsHitTestVisible = false,
                 Focusable = false,
@@ -171,7 +175,7 @@ public static class BlockRenderer
         void UpdateGutterEmphasis()
         {
             var opacity = selected || hovering || focused ? 1 : QuietBlockGutterOpacity;
-            if (insert is not null) insert.Opacity = opacity;
+            if (insert is not null) insert.Opacity = selected || hovering || focused ? 1 : QuietInsertOpacity;
             if (gripControl is not null) gripControl.Opacity = opacity;
         }
         border.PointerEntered += (_, _) => { hovering = true; UpdateGutterEmphasis(); };
@@ -183,7 +187,7 @@ public static class BlockRenderer
         return border;
     }
 
-    private static void ConfigureBlockGutterButton(Button button)
+    private static void ConfigureBlockGutterButton(Button button, bool insertAction)
     {
         // CUI's theme projection writes at a higher native value priority than
         // these ordinary Avalonia assignments. Record the compact geometry as
@@ -206,6 +210,18 @@ public static class BlockRenderer
             CuiPropertyLevel.Instance, geometrySource);
         CuiPropertyPresentation.Set(button, "BorderWidth", new Thickness(0),
             CuiPropertyLevel.Instance, geometrySource);
+        if (!insertAction)
+        {
+            var glyph = BuildBlockGripGlyph();
+            CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
+                CuiPropertyLevel.Instance, "Boards block drag grip surface");
+            CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
+                CuiPropertyLevel.Instance, "Boards block drag grip shape");
+            CuiPropertyPresentation.Set(button, "Content", glyph,
+                CuiPropertyLevel.Instance, "Boards block drag grip glyph");
+            button.Background = Brushes.Transparent;
+            button.Content = glyph;
+        }
 
         button.Width = BlockGutterTargetSize;
         button.Height = BlockGutterTargetSize;
@@ -216,6 +232,41 @@ public static class BlockRenderer
         button.Padding = new Thickness(0);
         button.HorizontalAlignment = HorizontalAlignment.Center;
         button.VerticalAlignment = VerticalAlignment.Top;
+        if (insertAction && button.Content is Image addGlyph)
+        {
+            addGlyph.Width = 18;
+            addGlyph.Height = 18;
+        }
+    }
+
+    private static Control BuildBlockGripGlyph()
+    {
+        var glyph = new Grid
+        {
+            Width = 10,
+            Height = 14,
+            ColumnDefinitions = new ColumnDefinitions("*,*"),
+            RowDefinitions = new RowDefinitions("*,*,*"),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        for (var row = 0; row < 3; row++)
+            for (var column = 0; column < 2; column++)
+            {
+                var dot = new Ellipse
+                {
+                    Width = 3,
+                    Height = 3,
+                    Fill = BoardsTheme.SecondaryTextBrush,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                Grid.SetRow(dot, row);
+                Grid.SetColumn(dot, column);
+                glyph.Children.Add(dot);
+            }
+        AutomationProperties.SetName(glyph, "Drag block handle");
+        return glyph;
     }
 
 
@@ -442,8 +493,17 @@ public static class BlockRenderer
             MaxWidth = 24,
             MaxHeight = 24,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, 4, 10, 0),
+            Margin = new Thickness(0, 0, 10, 0),
         };
+        const string checklistGeometrySource = "Boards checklist checkbox geometry";
+        CuiPropertyPresentation.Set(check, "Width", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "Height", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MinWidth", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MinHeight", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MaxWidth", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MaxHeight", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "Margin", new Thickness(0, 0, 10, 0),
+            CuiPropertyLevel.Instance, checklistGeometrySource);
         AutomationProperties.SetName(check, "Checklist item done");
         var text = new TextBox
         {
@@ -574,7 +634,10 @@ public static class BlockRenderer
                 var key = $"{r},{c}";
                 var isHeaderCell = block.TableStyle.HasHeaderRow && r == 0 ||
                     block.TableStyle.HasHeaderColumn && c == 0;
-                var headerBackground = BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FF353B46" : "#FFE8EBF0";
+                // Defaults follow the active CUI theme. Explicit cell and table
+                // colours below still win when the document carries an override.
+                var palette = BoardsTheme.SharedPalette;
+                var headerBackground = new SolidColorBrush(palette.AccentSoft);
                 block.CellSpans.TryGetValue(key, out var cellSpan);
                 if (cellSpan?.CoveredByCellId is not null) continue;
                 var rowSpan = Math.Clamp(cellSpan?.RowSpan ?? 1, 1, rows - r);
@@ -598,13 +661,15 @@ public static class BlockRenderer
                 if (cellStyle is not null && TryBrush(cellStyle.Background, out var cellBackground))
                     box.Background = cellBackground;
                 else if (isHeaderCell)
-                    box.Background = BoardsTheme.Brush(headerBackground);
+                    box.Background = headerBackground;
                 else if (block.TableStyle.AlternatingRows && r % 2 == 1)
-                    box.Background = BoardsTheme.Brush(BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FF2A2E34" : "#FFF7F8FA");
+                    box.Background = new SolidColorBrush(palette.Panel3);
                 if (cellStyle is not null && TryBrush(cellStyle.Foreground, out var cellForeground))
                     box.Foreground = cellForeground;
                 else
-                    box.Foreground = BoardsTheme.ContrastText(isHeaderCell ? headerBackground : cellStyle?.Background);
+                    box.Foreground = isHeaderCell
+                        ? BoardsTheme.ContrastText(headerBackground.Color.ToString())
+                        : BoardsTheme.ContrastText(cellStyle?.Background);
                 ThemeApplier.SetDocumentTextSurface(box, box.Background ?? Brushes.Transparent);
                 box.TextAlignment = ParseAlignment(cellStyle?.AlignH ?? "inherit");
                 box.VerticalAlignment = cellStyle?.AlignV switch

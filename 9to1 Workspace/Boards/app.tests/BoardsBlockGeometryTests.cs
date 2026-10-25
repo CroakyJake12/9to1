@@ -1,9 +1,12 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
+using Avalonia.Media;
 using CakeOS.Apps.Boards.Contract;
+using CakeOS.Cui.Themes;
 using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
@@ -46,6 +49,7 @@ public sealed class BoardsBlockGeometryTests
             Border Row(string id) => Assert.Single(host.GetLogicalDescendants().OfType<Border>(), border =>
                 border.Tag is BlockReorderRow row && row.BlockId == id);
             (double Height, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double Opacity,
+                int GripColumn, int InsertColumn, int GripDotCount, bool GripHasNoSurface, double AddGlyphSize,
                 string InsertLayout) MeasureRow(string id)
             {
                 var border = Row(id);
@@ -53,11 +57,18 @@ public sealed class BoardsBlockGeometryTests
                 var insert = Assert.Single(grid.Children.OfType<Button>(), button =>
                     AutomationProperties.GetName(button) == "Insert");
                 var gripButton = Assert.Single(border.GetLogicalDescendants().OfType<Button>(), button => button.Name == "BlockGripToggle");
+                var gripRoot = Assert.Single(grid.Children.Where(child =>
+                    child.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle")));
+                var glyph = Assert.IsType<Grid>(gripButton.Content);
+                var addGlyph = Assert.IsType<Image>(insert.Content);
                 var insertLayout = $"Width={insert.Width}, Height={insert.Height}, MinHeight={insert.MinHeight}, " +
                     $"MaxHeight={insert.MaxHeight}, Bounds={insert.Bounds}, Padding={insert.Padding}, " +
                     $"BorderThickness={insert.BorderThickness}, Margin={insert.Margin}";
                 return (border.Bounds.Height, insert.Bounds.Height, insert.Bounds.Top,
-                    gripButton.Bounds.Height, gripButton.Bounds.Top, insert.Opacity, insertLayout);
+                    gripButton.Bounds.Height, gripButton.Bounds.Top, insert.Opacity,
+                    Grid.GetColumn(gripRoot), Grid.GetColumn(insert), glyph.Children.OfType<Ellipse>().Count(),
+                    gripButton.Background is ISolidColorBrush gripBrush && gripBrush.Color.A == 0,
+                    addGlyph.Width, insertLayout);
             }
 
             var shortRow = MeasureRow("short-note");
@@ -78,6 +89,11 @@ public sealed class BoardsBlockGeometryTests
         Assert.True(actual.tallRow.InsertHeight == 32,
             $"Expected a 32px insert target beside a tall block; actual={actual.tallRow.InsertHeight}; {actual.tallRow.InsertLayout}.");
         Assert.Equal(32, actual.tallRow.GripHeight);
+        Assert.Equal(0, actual.tallRow.GripColumn);
+        Assert.Equal(1, actual.tallRow.InsertColumn);
+        Assert.Equal(6, actual.tallRow.GripDotCount);
+        Assert.True(actual.tallRow.GripHasNoSurface);
+        Assert.Equal(18, actual.tallRow.AddGlyphSize);
         Assert.InRange(actual.tallRow.InsertTop, 0, 2);
         Assert.InRange(actual.tallRow.GripTop, 0, 2);
         Assert.Equal(0.56, actual.shortRow.Opacity, precision: 2);
@@ -115,13 +131,16 @@ public sealed class BoardsBlockGeometryTests
             var textColumn = Grid.GetColumn(text);
             var columnDefinition = row.ColumnDefinitions[textColumn];
             var checkWidth = check.Bounds.Width;
+            var checkTop = check.Bounds.Top;
+            var textTop = text.Bounds.Top;
             window.Close();
             return (Gap: gap, TextHeight: textHeight, ColumnWidth: columnDefinition.Width, CheckWidth: checkWidth,
-                TextWrapping: text.TextWrapping);
+                CheckTop: checkTop, TextTop: textTop, TextWrapping: text.TextWrapping);
         });
 
         Assert.InRange(actual.Gap, 8, 12);
         Assert.Equal(24, actual.CheckWidth);
+        Assert.Equal(actual.TextTop, actual.CheckTop);
         Assert.True(actual.TextHeight > 36, $"Expected the long label to wrap; height={actual.TextHeight}.");
         Assert.Equal(GridUnitType.Star, actual.ColumnWidth.GridUnitType);
         Assert.Equal(Avalonia.Media.TextWrapping.Wrap, actual.TextWrapping);
@@ -151,10 +170,70 @@ public sealed class BoardsBlockGeometryTests
                 HasGrip: grid.GetLogicalDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle"));
         });
 
-        Assert.Equal(32, actual.Column.Value);
-        Assert.Equal(32, actual.FirstSlotWidth);
-        Assert.Equal(36, actual.SecondSlotWidth);
+        Assert.Equal(36, actual.Column.Value);
+        Assert.Equal(36, actual.FirstSlotWidth);
+        Assert.Equal(32, actual.SecondSlotWidth);
         Assert.False(actual.HasInsert);
         Assert.False(actual.HasGrip);
+    }
+
+    [Fact]
+    public async Task Table_defaults_follow_active_CUI_palette_and_keep_authored_cell_colours()
+    {
+        var priorMode = BoardsTheme.Mode;
+        var priorTheme = CuiSurfacePaletteCatalog.ActiveTheme;
+        try
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
+            BoardsTheme.SetMode(BoardsThemeMode.Dark);
+            await using var session = new InMemoryRichBoardSession();
+            await session.OpenAsync("memory://boards/table-active-theme");
+            var viewModel = new BoardsViewModel(session);
+            var block = new RichBoardBlock
+            {
+                Id = "theme-table",
+                Kind = "table",
+                TableRows = 2,
+                TableCols = 2,
+                TableStyle = new RichTableStyleView { HasHeaderRow = true, AlternatingRows = true },
+                TableCells = new Dictionary<string, string>
+                {
+                    ["0,0"] = "Header", ["0,1"] = "Header 2", ["1,0"] = "Alternate", ["1,1"] = "Authored",
+                },
+                CellStyles = new Dictionary<string, RichCellStyleView>
+                {
+                    ["1,1"] = new() { Background = "#FF123456" },
+                },
+            };
+            session.Document.Sections[0].Pages[0].Blocks.Clear();
+            session.Document.Sections[0].Pages[0].Blocks.Add(block);
+            var palette = BoardsTheme.SharedPalette;
+            var actual = TestUiThread.Run(() =>
+            {
+                var host = new StackPanel { Width = 680 };
+                BlockRenderer.Rebuild(host, viewModel, []);
+                var window = new Window { Width = 700, Height = 500, Content = host };
+                window.Show();
+                window.Measure(new Size(700, 500));
+                window.Arrange(new Rect(0, 0, 700, 500));
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                var cells = host.GetVisualDescendants().OfType<TextBox>()
+                    .Where(box => box.Name?.StartsWith("cell_theme-table_", StringComparison.Ordinal) == true)
+                    .ToDictionary(box => box.Name!, StringComparer.Ordinal);
+                var backgrounds = cells.ToDictionary(pair => pair.Key, pair =>
+                    ((Border)pair.Value.Parent!).Background, StringComparer.Ordinal);
+                window.Close();
+                return backgrounds;
+            });
+
+            Assert.Equal(palette.AccentSoft, Assert.IsType<SolidColorBrush>(actual["cell_theme-table_0_0"]).Color);
+            Assert.Equal(palette.Panel3, Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_0"]).Color);
+            Assert.Equal(Color.Parse("#FF123456"), Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_1"]).Color);
+        }
+        finally
+        {
+            BoardsTheme.SetMode(priorMode);
+            CuiSurfacePaletteCatalog.ActiveTheme = priorTheme;
+        }
     }
 }
