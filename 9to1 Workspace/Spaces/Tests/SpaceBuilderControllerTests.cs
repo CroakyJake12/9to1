@@ -323,6 +323,62 @@ public sealed class SpaceBuilderControllerTests
     }
 
     [Fact]
+    public async Task Owner_validation_checks_unsaved_projection_without_saving_or_publishing()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Active name", cancellationToken: token);
+        var editor = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await editor.LoadAsync(token));
+        Assert.True(editor.SetField(SpaceBuilderField.Name, "Unsaved candidate"));
+        var validator = new InspectingDraftValidator(registry);
+
+        var issues = await editor.ValidateDraftAsync(validator, body => body(), _ => { }, token);
+
+        Assert.Single(issues);
+        Assert.StartsWith("Draft structure and current", issues[0]);
+        Assert.Equal("Unsaved candidate", validator.ValidatedDraft!.Name);
+        var after = (await registry.GetAsync(space.Id, token))!;
+        Assert.Equal(space.Revision, after.Revision);
+        Assert.Equal(space.ActiveConfigurationRevision, after.ActiveConfigurationRevision);
+        Assert.Equal(space.DraftConfigurationRevision, after.DraftConfigurationRevision);
+        Assert.Null(after.DraftConfiguration);
+        Assert.Equal("Active name", after.Name);
+        Assert.Equal("Unsaved candidate", editor.State.Draft.Name);
+    }
+
+    [Fact]
+    public async Task Owner_validation_result_is_discarded_if_draft_changes_while_check_is_running()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Active name", cancellationToken: token);
+        var editor = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await editor.LoadAsync(token));
+        Assert.True(editor.SetField(SpaceBuilderField.Name, "First unsaved candidate"));
+        var validator = new InspectingDraftValidator(registry, hold: true);
+
+        var validationTask = editor.ValidateDraftAsync(validator, body => body(), _ => { }, token);
+        await validator.Started.Task.WaitAsync(token);
+        Assert.True(editor.SetField(SpaceBuilderField.Description, "Changed during validation"));
+        validator.Release.TrySetResult();
+        var issues = await validationTask;
+
+        Assert.Contains(issues, issue => issue.Contains("changed while validation was running", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("First unsaved candidate", validator.ValidatedDraft!.Name);
+        Assert.Equal("Changed during validation", editor.State.Draft.Description);
+        Assert.Contains("changed while validation was running", editor.State.ValidationIssues.Single(), StringComparison.OrdinalIgnoreCase);
+        var after = (await registry.GetAsync(space.Id, token))!;
+        Assert.Equal(space.Revision, after.Revision);
+        Assert.Null(after.DraftConfiguration);
+        Assert.Equal("Active name", after.Name);
+    }
+
+    [Fact]
     public async Task Parent_policy_change_after_validation_keeps_the_saved_draft_and_active_configuration()
     {
         using var files = new SpaceDetailsTestFiles();
@@ -363,6 +419,27 @@ public sealed class SpaceBuilderControllerTests
             await registry.RenameAsync(parentId, "Parent changed after validation", cancellationToken);
             return new(current.Id, current.Revision, current.DraftConfigurationRevision,
                 current.ActiveConfigurationRevision, ValidatedAncestry);
+        }
+    }
+
+    private sealed class InspectingDraftValidator(SpaceRegistry registry, bool hold = false)
+        : ISpaceDraftActivationValidator
+    {
+        public SpaceConfigurationDocument? ValidatedDraft { get; private set; }
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task<SpaceDraftActivationValidation> ValidateAsync(SpaceDefinition current,
+            SpaceConfigurationDocument draft, Action<Action> acquireOriginal, Action<Task> retainOriginal,
+            CancellationToken cancellationToken = default)
+        {
+            ValidatedDraft = draft;
+            Started.TrySetResult();
+            if (hold) await Release.Task.WaitAsync(cancellationToken);
+            var resolved = await new SpacePolicyResolver(registry).ResolveDraftAsync(current, draft,
+                acquireOriginal, retainOriginal, cancellationToken);
+            return new(current.Id, current.Revision, current.DraftConfigurationRevision,
+                current.ActiveConfigurationRevision, resolved.Ancestry);
         }
     }
 

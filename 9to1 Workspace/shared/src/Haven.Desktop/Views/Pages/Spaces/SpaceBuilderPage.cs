@@ -71,7 +71,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             DispatchAsync, CanMutate, () => _queueBack is not null,
             () => _boardsChoices, () => _boardsSource is not null && !_sourcePickerBusy,
             _controller.SelectEditorView, _controller.SelectExpertSection,
-            _controller.PreviewDraft, _controller.ValidateDraftAsync);
+            _controller.PreviewDraft, ValidateDraftWithOwnerAsync);
         _controller.StateChanged += OnStateChanged;
         Document = document;
         _contentGrid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
@@ -296,6 +296,19 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         : RunControllerAsync(cancellation => _controller.ActivateAsync(cancellation), token, refreshGraph: true);
     public Task<bool> DiscardChangesAsync(CancellationToken token = default) => RunControllerAsync(_controller.DiscardChangesAsync, token, refreshGraph: true);
     public Task<bool> ReloadAsync(CancellationToken token = default) => RunControllerAsync(_controller.LoadAsync, token, refreshGraph: true);
+
+    private async Task<IReadOnlyList<string>> ValidateDraftWithOwnerAsync(CancellationToken token)
+    {
+        if (_activationValidator is not { } validator)
+            return await _controller.ValidateDraftAsync(token).ConfigureAwait(false);
+
+        await RunControllerAsync(_ => Task.FromResult(true), token, originalOperation: async (own, retain, cancellation) =>
+        {
+            await _controller.ValidateDraftAsync(validator, own, retain, cancellation).ConfigureAwait(false);
+            return true;
+        }).ConfigureAwait(false);
+        return _controller.State.ValidationIssues;
+    }
 
     private Task<bool> RunControllerAsync(Func<CancellationToken, Task<bool>> operation, CancellationToken caller,
         bool refreshGraph = false,

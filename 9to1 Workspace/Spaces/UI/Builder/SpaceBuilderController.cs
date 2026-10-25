@@ -90,7 +90,13 @@ public sealed class SpaceBuilderController
         cancellationToken.ThrowIfCancellationRequested();
         SpaceBuilderState snapshot;
         long editVersion;
-        lock (_gate) { snapshot = _state; editVersion = _editVersion; }
+        lock (_gate)
+        {
+            if (!ReferenceEquals(_state.ValidationIssues, structural))
+                return ["The Space draft changed while local validation was finishing; validate the current edit again."];
+            snapshot = _state;
+            editVersion = _editVersion;
+        }
         List<string> issues = [];
         if (!snapshot.IsLoaded || snapshot.DraftRevision is not { } expectedRevision)
             issues.Add("Load the existing Space before validating its draft.");
@@ -150,6 +156,130 @@ public sealed class SpaceBuilderController
         var result = next.ValidationIssues;
         return result;
     }
+
+    /// <summary>Validates the current unsaved Builder projection with the same live owners used
+    /// by Activate. This is observation only: it neither saves the draft nor publishes the
+    /// returned validation snapshot as authority for a later activation.</summary>
+    public async Task<IReadOnlyList<string>> ValidateDraftAsync(ISpaceDraftActivationValidator validator,
+        Action<Action> acquireOriginal, Action<Task> retainOriginal, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(validator);
+        ArgumentNullException.ThrowIfNull(acquireOriginal);
+        ArgumentNullException.ThrowIfNull(retainOriginal);
+        var structural = await ValidateDraftAsync(cancellationToken).ConfigureAwait(false);
+        if (structural.Any(issue => !issue.StartsWith("Draft structure is valid", StringComparison.Ordinal)))
+            return structural;
+
+        SpaceBuilderState snapshot;
+        long editVersion;
+        lock (_gate) { snapshot = _state; editVersion = _editVersion; }
+        if (snapshot.HasUnsupportedActivationDependencies)
+            return structural; // The current host still has no graph/share/generated-surface owner.
+
+        try
+        {
+            Task<SpaceDefinition?>? initialRead = null;
+            acquireOriginal(() =>
+            {
+                initialRead = _registry.ReadExistingAsync(snapshot.SpaceId, cancellationToken);
+                retainOriginal(initialRead);
+            });
+            var current = await (initialRead ?? throw new InvalidOperationException("The Space validation read was not started in its original scope."))
+                .ConfigureAwait(false);
+            if (current is null || current.IsArchived || current.IsBuiltIn)
+                return PublishValidationIfCurrent(snapshot, editVersion, ["The user-created Space is unavailable or read-only."]);
+            if (!MatchesValidationSnapshot(current, snapshot))
+                return PublishValidationIfCurrent(snapshot, editVersion, ["The Space, saved draft or active revision changed before dependency validation; reload and validate again."]);
+
+            var candidate = ProjectDraft(current, snapshot.Draft, snapshot.Draft.LayoutDocument);
+            Task<SpaceDraftActivationValidation>? validationTask = null;
+            acquireOriginal(() =>
+            {
+                validationTask = validator.ValidateAsync(current, candidate, acquireOriginal, retainOriginal, cancellationToken);
+                retainOriginal(validationTask);
+            });
+            var validation = await (validationTask ?? throw new InvalidOperationException("The activation validator did not start in its original scope."))
+                .ConfigureAwait(false);
+            if (validation.SpaceId != snapshot.SpaceId || validation.SpaceRevision != snapshot.SpaceRevision ||
+                validation.DraftConfigurationRevision != snapshot.DraftRevision ||
+                validation.ActiveConfigurationRevision != snapshot.ActiveRevision || validation.Ancestry is null)
+                return PublishValidationIfCurrent(snapshot, editVersion, ["Dependency validation returned a different Space or revision; no validation result was applied."]);
+
+            Task<OriginalSpacePolicySnapshot>? lineageTask = null;
+            acquireOriginal(() =>
+            {
+                lineageTask = new SpacePolicyResolver(_registry).ResolveExistingAsync(snapshot.SpaceId,
+                    acquireOriginal, retainOriginal, cancellationToken);
+                retainOriginal(lineageTask);
+            });
+            var currentLineage = await (lineageTask ?? throw new InvalidOperationException("The current policy ancestry read was not started in its original scope."))
+                .ConfigureAwait(false);
+            var validatedAncestry = validation.Ancestry.Select(item => new OriginalSpacePolicyRevision(item.SpaceId, item.SpaceRevision));
+            if (!currentLineage.Lineage.Ancestors.SequenceEqual(validatedAncestry))
+                return PublishValidationIfCurrent(snapshot, editVersion, ["An ancestor policy changed while dependencies were checked; no validation result was applied."]);
+
+            Task<SpaceDefinition?>? finalRead = null;
+            acquireOriginal(() =>
+            {
+                finalRead = _registry.ReadExistingAsync(snapshot.SpaceId, cancellationToken);
+                retainOriginal(finalRead);
+            });
+            var after = await (finalRead ?? throw new InvalidOperationException("The final Space validation read was not started in its original scope."))
+                .ConfigureAwait(false);
+            if (after is null || !MatchesValidationSnapshot(after, snapshot))
+                return PublishValidationIfCurrent(snapshot, editVersion, ["The Space changed while dependencies were checked; no validation result was applied. Reload and validate again."]);
+
+            var success = snapshot.HasDeferredResourceReferences
+                ? "Draft structure and current model/installed Plugin/Skill dependencies validate. Resource availability and Home permission are checked when used."
+                : "Draft structure and current model/installed Plugin/Skill dependencies validate.";
+            return PublishValidationIfCurrent(snapshot, editVersion, [success]);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception error)
+        {
+            return PublishValidationIfCurrent(snapshot, editVersion,
+                ["Dependency validation failed; the active configuration and draft were left unchanged: " + error.Message]);
+        }
+    }
+
+    private IReadOnlyList<string> PublishValidationIfCurrent(SpaceBuilderState snapshot, long editVersion, IReadOnlyList<string> issues)
+    {
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (_editVersion != editVersion || _state.Draft != snapshot.Draft ||
+                _state.SpaceRevision != snapshot.SpaceRevision || _state.DraftRevision != snapshot.DraftRevision ||
+                _state.ActiveRevision != snapshot.ActiveRevision)
+                issues = ["The Space draft or revision changed while validation was running; validate the current edit again."];
+            next = _state = _state with
+            {
+                ValidationIssues = Array.AsReadOnly(issues.ToArray()),
+                StatusMessage = issues.Count == 1 && issues[0].StartsWith("Draft structure and current", StringComparison.Ordinal)
+                    ? issues[0] : $"Draft validation found {issues.Count} blocking issue(s)."
+            };
+        }
+        StateChanged?.Invoke(next);
+        return next.ValidationIssues;
+    }
+
+    private static bool MatchesValidationSnapshot(SpaceDefinition current, SpaceBuilderState snapshot) =>
+        current.Id == snapshot.SpaceId && current.Revision == snapshot.SpaceRevision &&
+        current.DraftConfigurationRevision == snapshot.DraftRevision &&
+        current.ActiveConfigurationRevision == snapshot.ActiveRevision &&
+        current.DraftBaseActiveRevision == snapshot.DraftBaseActiveRevision;
+
+    private static SpaceConfigurationDocument ProjectDraft(SpaceDefinition current, SpaceBuilderDraft draft,
+        SpaceLayoutDocument? layout) =>
+        (current.DraftConfiguration ?? SpaceConfigurationDocument.From(current)) with
+        {
+            Name = draft.Name, Description = draft.Description, IconKey = draft.IconKey,
+            Instructions = draft.Instructions, CapabilityCategoryPolicy = draft.CategoryPolicy,
+            CapabilityBindings = draft.CapabilityBindings, ContextPolicy = draft.ContextPolicy,
+            Inheritance = draft.Inheritance, ContextReferences = draft.ContextReferences.ToArray(),
+            Files = draft.LegacyFiles.ToArray(), LayoutDocument = layout, ModelPolicy = draft.ModelPolicy,
+            MemoryPolicy = draft.MemoryPolicy, ExamplePairs = draft.ExamplePairs.ToArray(),
+            Shares = draft.Shares.ToArray(), GeneratedSurface = draft.GeneratedSurface
+        };
 
     public bool SetField(SpaceBuilderField field, string? value)
     {
