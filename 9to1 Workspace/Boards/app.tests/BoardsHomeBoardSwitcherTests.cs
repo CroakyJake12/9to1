@@ -1,6 +1,4 @@
-using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.LogicalTree;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
@@ -35,16 +33,21 @@ public sealed class BoardsHomeBoardSwitcherTests
             return (uiLoader, control);
         });
 
-        Button Find(string name) => loadedRoot.GetLogicalDescendants().OfType<Button>()
-            .Single(button => AutomationProperties.GetName(button) == name);
+        Control Find(string id)
+        {
+            var authored = BoardsCuiControlFinder.FindByAutomationId<Control>(loadedRoot, id)
+                ?? throw new InvalidOperationException("Missing authored menu item " + id + ": " +
+                    BoardsCuiControlFinder.DescribeRuntimeTree(loadedRoot));
+            return authored is CuiContainerControl container ? container.Layout : authored;
+        }
 
         TestUiThread.Run(() =>
         {
             Assert.False(viewModel.CanSwitchBoard);
-            Assert.True(Find("Current Board and board actions").IsEnabled);
-            Assert.True(Find("Create a separate Board").IsEnabled);
-            Assert.False(Find("Open an existing Board").IsEnabled);
-            Assert.False(Find("Browse and switch Boards").IsEnabled);
+            Assert.True(Find("BoardSwitcher").IsEnabled);
+            Assert.True(Find("BoardSwitcherCreate").IsEnabled);
+            Assert.False(Find("BoardSwitcherOpen").IsEnabled);
+            Assert.False(Find("BoardSwitcherAll").IsEnabled);
         });
 
         await viewModel.DispatchAsync("NewBoard", null);
@@ -52,9 +55,9 @@ public sealed class BoardsHomeBoardSwitcherTests
         TestUiThread.Run(() =>
         {
             Assert.False(viewModel.CanCreateBoard);
-            Assert.True(Find("Current Board and board actions").IsEnabled);
-            Assert.False(Find("Create a separate Board").IsEnabled);
-            Assert.True(Find("Retry finishing the Board save").IsEnabled);
+            Assert.True(Find("BoardSwitcher").IsEnabled);
+            Assert.False(Find("BoardSwitcherCreate").IsEnabled);
+            Assert.True(Find("BoardSwitcherRetrySave").IsEnabled);
         });
         TestUiThread.Run(() =>
         {

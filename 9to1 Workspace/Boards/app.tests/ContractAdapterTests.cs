@@ -556,6 +556,7 @@ public sealed class ContractAdapterTests
         var page = notes.Sections[0].Pages[0];
         var block = HavenRichNotesOps.AddBlock(notes, page.Id, HavenRichBlockKind.Table);
         var table = block.Table!;
+        table.HasHeaderRow = false;
         var baselineWidth = table.Width;
         var baselineAlignment = table.Alignment;
         var baselineHeaderRow = table.HasHeaderRow;
