@@ -293,8 +293,10 @@ locator is not authority. The client requires the connected actualUID0 peer's
 SO_PEERPIDFD lifetime and actual `sd_pid_get_unit(peerPid)==9to1-root.service`.
 Cross-UID `/proc/RootPID/exe` access is unavailable to an ordinary user, so this
 specifically named physical service-lifetime observation claims no executable or
-installed proof. The full executable pin remains mandatory for existing Core
-accepted app/Home peers. The registered Root independently cold-verifies its own
+installed proof. The full direct executable pin remains the default for Core peers. The explicitly
+registered Linux Root verifier additionally binds actual pidfd/credentials/kernel
+start identity to Root's current protected controlled-image witness before and
+after dispatch; a permission error never selects that path. The registered Root independently cold-verifies its own
 signed executable/cohort and controls the actual Home child; no unknown Root or
 ordinary process gains authority merely by using the locator/UID/socket.
 
@@ -311,10 +313,29 @@ No fake installed GUID, alternate profile, second listener or session issuer is
 created. Root retires on unsolicited controlled Home loss, retaining actual child
 status and all cleanup failures; explicit registered service retirement is distinct.
 
-The implemented peer verifier admits this actual controlled Home only. Unknown
-selected applications remain denied until Root owns their real controlled launch
-producer and Home's original approval/write path is connected. Linux app launch,
-service unit installation/deployment, real signing inputs and native integration
-remain outstanding; these source changes do not claim runtime Ready or100%.
-Focused negative controls use actual failed socket connections and omitted source
-callbacks, preserving foreign endpoint files and creating no Home identity.
+The same Home Apps surface now composes the Linux Root client as an installed
+launch producer through `HomeCanonicalInstalledApplicationLaunchSource`. It
+accepts only current source-issued installed choices, requires the separate
+`home.apps.launch` review and held Home WRITE, prepares the signed native child,
+then resumes that exact retained child. The Root command accepts no UID, path or
+argv from Home: current logind evidence and the retained signed activation select
+them. Exact operation IDs retain uncertain outcomes; terminal Home audit waits for
+the raw dispatch and Root custody transfer. An unused paused preparation is closed;
+a resumed child remains owned by Root until actual service retirement.
+
+The helper's fixed `--home-linux-root-host` locator starts the actual compiled
+selected product. Its startup owner authenticates the registered Root and Root's
+private current child/Home witness, connects to that SAME Home Unix socket, and
+uses the existing `HomeNativeStartupSession` for compatibility and reviewed Core
+reads. The selected composition forwards Core over that actual session. It does
+not start another Home runtime/listener/lease or infer app-data permissions from
+compatibility. An unknown process, mismatched compiled product, missing signed
+helper, changed activation or unavailable Home review remains unavailable.
+
+Real signing inputs, service unit installation/deployment and actual privileged
+native runtime integration remain outstanding. No service/helper was executed by
+these source changes, and they claim neither runtime Ready nor release acceptance.
+Focused refusal tests use real Unix connections to an unregistered listener,
+actual kernel process-start metadata and unconfigured Apps; copied tuples create
+no Home identity. Positive signed fixtures remain isolated test evidence, not
+production publisher enrollment.

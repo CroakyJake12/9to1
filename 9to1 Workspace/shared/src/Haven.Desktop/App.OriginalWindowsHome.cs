@@ -36,6 +36,7 @@ public sealed partial class App
             var linuxRootClient = RetainOriginalLinuxRootClient(original);
             RetainOriginalNativeHomeStartup(original);
             PrepareOriginalInstalledHomeApps(rootClient);
+            PrepareOriginalInstalledHomeApps(linuxRootClient);
             OriginalAssistantPersonalDenHost? personalDen = null;
             NativeFilesWorkspaceService? files = null;
             NativeFilesWorkspaceAuthority? authority = null;
@@ -52,6 +53,7 @@ public sealed partial class App
                 protectedInstalledPeerVerifier: rootClient ?? (IHomeNativeInstalledPeerVerifier?)linuxRootClient,
                 originalResourceResolvers: OriginalWindowsDeveloperResolvers().Concat(OriginalInstalledHomeAppsResolvers()).Concat([_actualAssistantTaskContextWriteResolver!, _actualAssistantMemoryWriteResolver!, _actualAssistantCapabilityInitializationResolver!, _actualAssistantMiniComputerOperationResolver!, _actualAssistantMiniComputerIdentityResolver!, _actualAutomationLibraryWriteResolver!, _actualAutomationCreationGraphRegistry!, _actualAssistantAttachmentReadResolver!, _actualAssistantAttachmentImportResolver!, _actualAssistantAttachmentEgressResolver!, _actualGeneratedUiResolver!, notesResolver]),
                 originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new FilesOriginalBrowserDownloadActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAutomationCreationGraphPolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!, new HomeModelRouteActionPolicies(), new HomeNotesActionPolicies(), new global::HavenOS.Apps.Canvas.CanvasNativeActionPolicies()]),
+                originalBorrowedHomeStartupExpected: _actualLinuxNativeHomeStartupOwner is not null,
                 configureOriginalOwners: owners =>
                 {
                     // Resources and its broker now exist. The resolver slot above and

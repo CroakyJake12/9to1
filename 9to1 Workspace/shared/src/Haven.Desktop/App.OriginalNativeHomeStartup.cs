@@ -3,16 +3,18 @@ using System.Reflection;
 using Haven.Application;
 using Haven.Desktop.Services;
 using Haven.Infrastructure.Native.Windows;
+using Haven.Infrastructure.Native.Linux;
 using HavenOS.Home.Core;
 
 namespace Haven.Desktop;
 
 public sealed partial class App
 {
-    private sealed record OriginalNativeHomeLaunchLocators(string MachineStateFile);
+    private sealed record OriginalNativeHomeLaunchLocators(string MachineStateFile, string? LinuxRootEndpoint = null);
     private static readonly object OriginalNativeHomeLaunchGate = new();
     private static OriginalNativeHomeLaunchLocators? _originalNativeHomeLaunchLocators;
     private NativeWindowsHomeApplicationStartupOwner? _actualNativeHomeStartupOwner;
+    private LinuxHomeApplicationStartupOwner? _actualLinuxNativeHomeStartupOwner;
     private HomeNativeStartupObservation? _actualNativeHomeStartupObservation;
     private Task? _actualNativeHomeStart, _actualNativeHomeConnection, _actualNativeHomeInitialization;
     private Task? _actualNativeHomeDependencyClose, _actualSelectedNativeHomeClose;
@@ -20,6 +22,20 @@ public sealed partial class App
     internal static string[] CaptureOriginalNativeHomeLaunchLocators(string[] arguments)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        if (arguments.Any(value => value == "--home-linux-root-host"))
+        {
+            if (!OperatingSystem.IsLinux() || arguments.Length != 2 || arguments[0] != "--home-linux-root-host" ||
+                !Path.IsPathFullyQualified(arguments[1]) || System.Text.Encoding.UTF8.GetByteCount(arguments[1]) > 100)
+                throw new InvalidDataException("Use only the actual Linux Root's bounded selected-app endpoint locator.");
+            var linux = new OriginalNativeHomeLaunchLocators(string.Empty, Path.GetFullPath(arguments[1]));
+            lock (OriginalNativeHomeLaunchGate)
+            {
+                if (_originalNativeHomeLaunchLocators is { } oldLinux && oldLinux != linux)
+                    throw new InvalidOperationException("The original selected-app Root location cannot be replaced.");
+                _originalNativeHomeLaunchLocators = linux;
+            }
+            return [];
+        }
         if (!arguments.Any(value => value == "--home-root-host")) return arguments;
         if (!OperatingSystem.IsWindows() || arguments.Length != 4 ||
             arguments[0] != "--home-root-host" ||
@@ -54,32 +70,41 @@ public sealed partial class App
         OriginalNativeHomeLaunchLocators? location;
         lock (OriginalNativeHomeLaunchGate) location = _originalNativeHomeLaunchLocators;
         if (location is null) return;
-        if (_actualHomeRootClient is not null || _actualNativeHomeStartupOwner is not null)
+        if (_actualHomeRootClient is not null || _actualLinuxRootClient is not null ||
+            _actualNativeHomeStartupOwner is not null || _actualLinuxNativeHomeStartupOwner is not null)
             throw new InvalidOperationException("A process cannot borrow both controlled Home and selected-app Root identities.");
         _ = OriginalHomeRootSources();
+        if (location.LinuxRootEndpoint is { } linuxEndpoint)
+        {
+            _actualLinuxNativeHomeStartupOwner = new(linuxEndpoint, CaptureOriginalNativeHomeRequirements(typeof(App).Assembly), original.Token);
+            return;
+        }
         _actualNativeHomeStartupOwner = new(location.MachineStateFile,
             CaptureOriginalNativeHomeRequirements(typeof(App).Assembly), original.Token);
         original.DemandPublication();
     }
     private Task StartOriginalNativeHomeDependencyAsync(HomeNativeWindowsComposition sameHome)
     {
-        if (_actualNativeHomeStartupOwner is null) return StartOriginalHomeWithRootAsync(sameHome);
+        if (_actualNativeHomeStartupOwner is null && _actualLinuxNativeHomeStartupOwner is null) return StartOriginalHomeWithRootAsync(sameHome);
         lock (_actualHomeRootGate) return _actualNativeHomeStart ??= _originalAppWork.RunAsync(async original =>
         {
             var owner = _actualNativeHomeStartupOwner;
+            var linuxOwner = _actualLinuxNativeHomeStartupOwner;
             var sources = OriginalHomeRootSources();
             void DemandCurrent()
             {
                 original.DemandPublication();
-                if (owner is null || !ReferenceEquals(owner, _actualNativeHomeStartupOwner) ||
-                    !ReferenceEquals(sameHome, _actualWindowsHome) || _actualHomeRootClient is not null)
+                if (owner is null && linuxOwner is null || !ReferenceEquals(owner, _actualNativeHomeStartupOwner) ||
+                    !ReferenceEquals(linuxOwner, _actualLinuxNativeHomeStartupOwner) ||
+                    !ReferenceEquals(sameHome, _actualWindowsHome) || _actualHomeRootClient is not null || _actualLinuxRootClient is not null)
                     throw new UnauthorizedAccessException("The actual selected-app startup composition changed.");
             }
             void Scope(Action body) => AcquireOriginalAppSynchronous(original, () => sources.Invoke(() =>
                 { DemandCurrent(); body(); DemandCurrent(); return true; }));
             void Retain(Task raw) { _ = sources.Track(raw); }
             Task<HomeNativeStartupObservation>? connection = null;
-            try { Scope(() => { connection = owner!.ConnectWithinOriginalSourceAsync(Scope, Retain, original.Token);
+            try { Scope(() => { connection = linuxOwner is not null ? linuxOwner.ConnectWithinOriginalSourceAsync(Scope, Retain, original.Token)
+                : owner!.ConnectWithinOriginalSourceAsync(Scope, Retain, original.Token);
                 _actualNativeHomeConnection = connection; Retain(connection); }); }
             catch (Exception cause) { sources.Retain(cause); original.Retain(cause); }
             HomeNativeStartupObservation? observed = null;
@@ -94,8 +119,9 @@ public sealed partial class App
             if (!observed.CanStartNormally)
                 throw new InvalidOperationException(observed.Message + " Open the installed Home to complete the review or repair, then restart this app. App initialization has not been authorized.");
             Task? initialization = null;
-            try { Scope(() => { initialization = owner!.InitializeWithinOriginalSourceAsync(
-                _ => StartOriginalHomeWithRootAsync(sameHome), Scope, Retain, original.Token);
+            try { Scope(() => { initialization = linuxOwner is not null
+                ? linuxOwner.InitializeWithinOriginalSourceAsync((session, actor) => sameHome.StartOriginalBorrowedHomeAsync(session, actor), Scope, Retain, original.Token)
+                : owner!.InitializeWithinOriginalSourceAsync(_ => StartOriginalHomeWithRootAsync(sameHome), Scope, Retain, original.Token);
                 _actualNativeHomeInitialization = initialization; Retain(initialization); }); }
             catch (Exception cause) { sources.Retain(cause); original.Retain(cause); }
             if (initialization is not null)
@@ -112,8 +138,9 @@ public sealed partial class App
         // Preflight precedes even cached close access; capture the SAME actual
         // selected dependency before callbacks or any accepted await.
         DemandOriginalHomeRootRetirementJoin();
-        var sameStartup = _actualNativeHomeStartupOwner
-            ?? throw new InvalidOperationException("The actual selected native Home startup owner is absent.");
+        Func<Task> closeStartup = _actualLinuxNativeHomeStartupOwner is { } linuxStartup ? linuxStartup.CloseAndDrainOriginalAsync
+            : _actualNativeHomeStartupOwner is { } windowsStartup ? windowsStartup.CloseAndDrainOriginalAsync
+            : throw new InvalidOperationException("The actual selected native Home startup owner is absent.");
         if (!ReferenceEquals(home, _actualWindowsHome) || _actualHomeRootClient is not null)
             throw new UnauthorizedAccessException("The actual selected Home dependency tuple changed before close.");
         Task actual; TaskCompletionSource? begin = null;
@@ -142,7 +169,7 @@ public sealed partial class App
         {
             Task? raw = null;
             try { _originalAppWork.RunCloseCallback(() => sources.Invoke(() =>
-            { raw = sameStartup.CloseAndDrainOriginalAsync(); _actualNativeHomeDependencyClose = raw; _ = sources.Track(raw); return true; })); }
+            { raw = closeStartup(); _actualNativeHomeDependencyClose = raw; _ = sources.Track(raw); return true; })); }
             catch (Exception cause) { sources.Retain(cause); }
             if (raw is not null) try { await sources.AwaitAsync(raw).ConfigureAwait(false); }
                 catch (Exception cause) { sources.Capture(raw, cause); }

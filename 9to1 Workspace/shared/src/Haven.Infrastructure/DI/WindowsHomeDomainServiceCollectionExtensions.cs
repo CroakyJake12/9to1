@@ -73,7 +73,7 @@ public static class WindowsHomeDomainServiceCollectionExtensions
         services.AddSingleton(sameHome.Sessions); services.AddSingleton<IHomeCoreAuthorization>(sameHome.Sessions);
         services.AddSingleton((IHomeNativeInstalledPeerVerifier)sameHome.Services.GetService(typeof(IHomeNativeInstalledPeerVerifier))!);
         services.AddSingleton(sameHome.Runtime); services.AddSingleton(sameHome.Api);
-        services.AddSingleton<IHomeCoreApi>(sameHome.Api);
+        services.AddSingleton<IHomeCoreApi>(sameHome.OriginalConsumerApi);
         return services;
     }
 

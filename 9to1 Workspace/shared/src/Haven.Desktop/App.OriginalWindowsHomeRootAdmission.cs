@@ -167,6 +167,7 @@ public sealed partial class App
         _actualHomeRootRegistration?.DemandExternalOriginalJoin();
         _actualHomeRootClient?.DemandExternalOriginalJoin();
         _actualNativeHomeStartupOwner?.DemandExternalOriginalJoin();
+        _actualLinuxNativeHomeStartupOwner?.DemandExternalOriginalJoin();
         DemandOriginalInstalledHomeAppsJoin();
         if (_actualLinuxRootClient is { } linux) CloudflareOriginalExecutionGuard.DemandExternalJoin(linux);
     }
@@ -177,7 +178,7 @@ public sealed partial class App
         var home = _actualWindowsHome;
         if (_actualLinuxRootClient is not null) return JoinOriginalLinuxHomeThenRootAsync(home);
         var client = _actualHomeRootClient;
-        if (client is null) return _actualNativeHomeStartupOwner is null
+        if (client is null) return _actualNativeHomeStartupOwner is null && _actualLinuxNativeHomeStartupOwner is null
             ? home?.CloseAndDrainAsync() ?? Task.CompletedTask : JoinOriginalSelectedNativeHomeAfterBorrowersAsync(home);
         TaskCompletionSource? begin = null; Task actual;
         lock (_actualHomeRootGate)

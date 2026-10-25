@@ -27,6 +27,7 @@ public interface IHomeNativeStartupSession
 public sealed class HomeNativeStartupSession : IHomeNativeStartupSession, IAsyncDisposable
 {
     private readonly HomeUnixCoreClient _client;
+    private readonly Socket _originalSocket;
     private readonly HomeCompatibilityRequest _request;
     private readonly CancellationToken _originalConnectionLifetime;
     internal Func<Task>? AfterOriginalClientResponse { get; set; }
@@ -35,10 +36,12 @@ public sealed class HomeNativeStartupSession : IHomeNativeStartupSession, IAsync
     private Task? _close;
     private bool _closing;
     private string? _pendingRequest;
+    private readonly SemaphoreSlim _originalClientGate = new(1, 1);
+    private readonly List<Task> _originalCoreReads = [];
 
     private HomeNativeStartupSession(HomeUnixCoreClient client, HomeCompatibilityRequest request,
-        CancellationToken originalConnectionLifetime)
-    { _client = client; _request = request; _originalConnectionLifetime = originalConnectionLifetime; }
+        CancellationToken originalConnectionLifetime, Socket originalSocket)
+    { _client = client; _request = request; _originalConnectionLifetime = originalConnectionLifetime; _originalSocket = originalSocket; }
 
     public static async ValueTask<HomeNativeStartupSession?> AttachAsync(Socket originalConnectedSocket,
         IHomeNativeSessionHostVerifier verifier, HomeNativeSessionHostRequirement trustedHomeHost,
@@ -49,7 +52,7 @@ public sealed class HomeNativeStartupSession : IHomeNativeStartupSession, IAsync
         var request = Capture(trustedAppRequirements);
         var client = await HomeUnixCoreClient.AttachAsync(originalConnectedSocket, verifier, trustedHomeHost,
             originalConnectionLifetime, cancellationToken).ConfigureAwait(false);
-        return client is null ? null : new(client, request, originalConnectionLifetime);
+        return client is null ? null : new(client, request, originalConnectionLifetime, originalConnectedSocket);
     }
 
     /// <summary>Overlapping checks share the SAME original task and its first caller token.
@@ -74,7 +77,10 @@ public sealed class HomeNativeStartupSession : IHomeNativeStartupSession, IAsync
         await start.ConfigureAwait(false);
         try
         {
-        var original = await _client.GetCompatibilityAsync(_request, caller).ConfigureAwait(false);
+        await _originalClientGate.WaitAsync(caller).ConfigureAwait(false);
+        HomeNativeCoreApiResult<HomeCompatibilityResult> original;
+        try { original = await _client.GetCompatibilityAsync(_request, caller).ConfigureAwait(false); }
+        finally { _originalClientGate.Release(); }
         // Default-null owning-fixture checkpoint; normal composition never assigns it.
         if (AfterOriginalClientResponse is { } after) await after().ConfigureAwait(false);
         caller.ThrowIfCancellationRequested();
@@ -131,6 +137,61 @@ public sealed class HomeNativeStartupSession : IHomeNativeStartupSession, IAsync
         }
     }
 
+    // Actual connection-bound Core forwarding only. Passed caller metadata never
+    // replaces the server's private installed-peer/session identity or consent.
+    public Task<HomeNativeCoreApiResult<HomeCoreStateSnapshot>> ReadOriginalStateAsync(CancellationToken token)
+        => ReadOriginalCore(() => _client.GetStateAsync(token), token);
+    public Task<HomeNativeCoreApiResult<IReadOnlyList<HomeServiceDescriptor>>> ReadOriginalServicesAsync(CancellationToken token)
+        => ReadOriginalCore(() => _client.GetServicesAsync(token), token);
+    public Task<HomeNativeCoreApiResult<HomeServiceDescriptor>> ReadOriginalServiceAsync(string serviceId, CancellationToken token)
+        => ReadOriginalCore(() => _client.GetServiceAsync(serviceId, token), token);
+    public Task<HomeNativeCoreApiResult<HomeCompatibilityResult>> ReadOriginalCompatibilityAsync(HomeCompatibilityRequest request, CancellationToken token)
+    {
+        var frozen = Capture(request);
+        return ReadOriginalCore(() => _client.GetCompatibilityAsync(frozen, token), token);
+    }
+    public bool IsOriginalConnectionRetained
+    {
+        get
+        {
+            lock (_sync)
+            {
+                if (_closing || _close is not null || _originalConnectionLifetime.IsCancellationRequested) return false;
+                try { return !_originalSocket.SafeHandle.IsClosed && !(_originalSocket.Poll(0, SelectMode.SelectRead) && _originalSocket.Available == 0); }
+                catch (SocketException) { return false; }
+                catch (ObjectDisposedException) { return false; }
+            }
+        }
+    }
+    private Task<T> ReadOriginalCore<T>(Func<Task<T>> original, CancellationToken token)
+    {
+        var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); Task<T> actual;
+        lock (_sync)
+        {
+            ObjectDisposedException.ThrowIf(_closing, this); token.ThrowIfCancellationRequested();
+            _originalConnectionLifetime.ThrowIfCancellationRequested();
+            _originalCoreReads.RemoveAll(value => value.IsCompletedSuccessfully);
+            if (_originalCoreReads.Count >= 128) throw new InvalidOperationException("Unresolved original borrowed Core reads remain retained.");
+            actual = Read(); _originalCoreReads.Add(actual);
+        }
+        begin.SetResult(); return actual;
+        async Task<T> Read()
+        {
+            await begin.Task.ConfigureAwait(false);
+            await _originalClientGate.WaitAsync(token).ConfigureAwait(false);
+            try
+            {
+                lock (_sync) ObjectDisposedException.ThrowIf(_closing, this);
+                var value = await original().ConfigureAwait(false);
+                token.ThrowIfCancellationRequested(); _originalConnectionLifetime.ThrowIfCancellationRequested();
+                lock (_sync) ObjectDisposedException.ThrowIf(_closing, this);
+                return value;
+            }
+            catch { lock (_sync) _closing = true; throw; }
+            finally { _originalClientGate.Release(); }
+        }
+    }
+
     private HomeNativeStartupObservation Publish(HomeNativeStartupObservation observation, CancellationToken caller)
     {
         // Called under _sync: refuse a known retired original connection at publication.
@@ -163,8 +224,12 @@ public sealed class HomeNativeStartupSession : IHomeNativeStartupSession, IAsync
         catch (Exception error) { Add(failures, error); }
         try { if (originalCheck is not null) await originalCheck.ConfigureAwait(false); }
         catch (Exception error) { Add(failures, error); }
+        Task[] reads; lock (_sync) reads = _originalCoreReads.ToArray();
+        foreach (var original in reads)
+            try { await original.ConfigureAwait(false); } catch (Exception error) { Add(failures, error); }
         try { if (originalClose is not null) await originalClose.ConfigureAwait(false); }
         catch (Exception error) { Add(failures, error); }
+        try { _originalClientGate.Dispose(); } catch (Exception error) { Add(failures, error); }
         // Client cancellation errors are retained by reference, including caller-first errors.
         if (failures.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures.Count > 1) throw new AggregateException("Original startup check and client close failed.", failures);
