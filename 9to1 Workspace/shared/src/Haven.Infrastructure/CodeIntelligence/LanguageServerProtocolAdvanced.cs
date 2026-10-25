@@ -215,15 +215,19 @@ internal sealed partial class StdioLanguageServerClient : IAdvancedLanguageServe
         return output;
     }
 
-    private static LanguageServerWorkspaceEdit ParseWorkspaceEdit(JsonElement edit, string workspaceRoot)
+    internal static LanguageServerWorkspaceEdit ParseWorkspaceEdit(JsonElement edit, string workspaceRoot)
     {
         if (edit.ValueKind == JsonValueKind.Null) return new LanguageServerWorkspaceEdit([]);
         if (edit.ValueKind != JsonValueKind.Object) throw new InvalidOperationException("The language server returned a malformed WorkspaceEdit.");
         var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
         var documents = new Dictionary<string, List<LanguageServerTextEdit>>(comparer);
-        void Add(string uri, JsonElement edits)
+        var versions = new Dictionary<string, int?>(comparer);
+        void Add(string uri, JsonElement edits, int? version = null)
         {
             var relative = RelativePathFromUri(uri, workspaceRoot) ?? throw new InvalidOperationException("The language server attempted to edit a file outside the project root.");
+            if (versions.TryGetValue(relative, out var previousVersion) && previousVersion != version)
+                throw new InvalidOperationException("The language server returned contradictory versions for the same document edit.");
+            versions[relative] = version;
             if (!documents.TryGetValue(relative, out var list)) documents[relative] = list = [];
             list.AddRange(ParseTextEdits(edits));
             if (list.Count > 10_000) throw new InvalidOperationException("The language server returned too many edits for one file.");
@@ -240,11 +244,18 @@ internal sealed partial class StdioLanguageServerClient : IAdvancedLanguageServe
             {
                 if (change.ValueKind != JsonValueKind.Object || change.TryGetProperty("kind", out _)) throw new InvalidOperationException("Language-server file create/rename/delete operations are not applied automatically.");
                 if (!change.TryGetProperty("textDocument", out var document) || document.ValueKind != JsonValueKind.Object || !document.TryGetProperty("uri", out var uriElement) || uriElement.ValueKind != JsonValueKind.String || !change.TryGetProperty("edits", out var edits)) throw new InvalidOperationException("The language server returned a malformed TextDocumentEdit.");
-                Add(uriElement.GetString()!, edits);
+                int? version = null;
+                if (document.TryGetProperty("version", out var requestedVersion) && requestedVersion.ValueKind != JsonValueKind.Null)
+                {
+                    if (requestedVersion.ValueKind != JsonValueKind.Number || !requestedVersion.TryGetInt32(out var number))
+                        throw new InvalidOperationException("The language server returned a malformed document version.");
+                    version = number;
+                }
+                Add(uriElement.GetString()!, edits, version);
             }
         }
         if (documents.Count > 200) throw new InvalidOperationException("The language server attempted to edit too many project files at once.");
-        return new LanguageServerWorkspaceEdit(documents.Select(pair => new LanguageServerDocumentEdit(pair.Key, pair.Value)).ToArray());
+        return new LanguageServerWorkspaceEdit(documents.Select(pair => new LanguageServerDocumentEdit(pair.Key, pair.Value) { DocumentVersion = versions[pair.Key] }).ToArray());
     }
 
     private static IReadOnlyList<LanguageServerTextEdit> ParseTextEdits(JsonElement edits)

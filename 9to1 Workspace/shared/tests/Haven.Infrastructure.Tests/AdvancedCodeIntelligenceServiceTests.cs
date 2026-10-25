@@ -90,6 +90,94 @@ public sealed class AdvancedCodeIntelligenceServiceTests : IDisposable
         Assert.Equal("class", Assert.Single(semantics).TokenType);
     }
 
+    [Fact]
+    public async Task Rename_preview_preserves_real_files_until_explicit_apply_and_retains_complete_multifile_diff()
+    {
+        const string a = "class A { B value; }"; const string b = "class B { }";
+        var aPath = Path.Combine(_root, "A.cs"); var bPath = Path.Combine(_root, "B.cs");
+        await File.WriteAllTextAsync(aPath, a); await File.WriteAllTextAsync(bPath, b);
+        var client = FakeClient.Create();
+        client.BeforeRename = () =>
+        {
+            client.Rename = new([
+                new("A.cs", [new(new(new(0, 10), new(0, 11)), "Renamed")]) { DocumentVersion = client.OpenedVersion },
+                new("B.cs", [new(new(new(0, 6), new(0, 7)), "Renamed")]) ]);
+            return Task.CompletedTask;
+        };
+        var service = CreateService(() => client);
+        var preview = await service.PreviewRenameSymbolAsync(_root, "A.cs", a, new(0, 10), "Renamed", CancellationToken.None);
+        Assert.True(preview.IsApplicable); Assert.Equal("refactor.rename", preview.Kind); Assert.Equal(2, preview.Files.Count);
+        Assert.Equal(a, await File.ReadAllTextAsync(aPath)); Assert.Equal(b, await File.ReadAllTextAsync(bPath));
+        Assert.Equal(a, Assert.Single(preview.Files, file => file.RelativePath == "A.cs").BeforeContent);
+        Assert.Equal("class A { Renamed value; }", Assert.Single(preview.Files, file => file.RelativePath == "A.cs").AfterContent);
+        var applied = await service.ApplyCodeActionAsync(_root, preview, CancellationToken.None);
+        Assert.NotEqual(Guid.Empty, applied.TransactionId);
+        Assert.Equal("class A { Renamed value; }", await File.ReadAllTextAsync(aPath));
+        Assert.Equal("class Renamed { }", await File.ReadAllTextAsync(bPath));
+    }
+
+    [Theory]
+    [InlineData("primary-newer")]
+    [InlineData("secondary-versioned")]
+    public async Task Rename_preview_refuses_versions_not_proven_by_the_actual_open_document_session(string scenario)
+    {
+        const string a = "class A { B value; }"; const string b = "class B { }";
+        var aPath = Path.Combine(_root, "A.cs"); var bPath = Path.Combine(_root, "B.cs");
+        await File.WriteAllTextAsync(aPath, a); await File.WriteAllTextAsync(bPath, b);
+        var client = FakeClient.Create();
+        client.BeforeRename = () =>
+        {
+            client.Rename = new([new(scenario == "primary-newer" ? "A.cs" : "B.cs",
+                [new(new(new(0, 6), new(0, 7)), "Renamed")])
+                { DocumentVersion = scenario == "primary-newer" ? client.OpenedVersion + 1 : client.OpenedVersion }]);
+            return Task.CompletedTask;
+        };
+        await Assert.ThrowsAsync<InvalidOperationException>(() => CreateService(() => client)
+            .PreviewRenameSymbolAsync(_root, "A.cs", a, new(0, 10), "Renamed", CancellationToken.None));
+        Assert.Equal(a, await File.ReadAllTextAsync(aPath)); Assert.Equal(b, await File.ReadAllTextAsync(bPath));
+    }
+
+    [Fact]
+    public async Task Rename_preview_rechecks_saved_source_after_server_reply_and_never_rebases_stale_ranges()
+    {
+        const string before = "class A { }"; const string external = "// externally changed\nclass A { }";
+        var path = Path.Combine(_root, "A.cs"); await File.WriteAllTextAsync(path, before);
+        var client = FakeClient.Create();
+        client.Rename = new([new("A.cs", [new(new(new(0, 6), new(0, 7)), "Renamed")])]);
+        client.BeforeRename = () => File.WriteAllTextAsync(path, external);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => CreateService(() => client)
+            .PreviewRenameSymbolAsync(_root, "A.cs", before, new(0, 6), "Renamed", CancellationToken.None));
+        Assert.Equal(external, await File.ReadAllTextAsync(path));
+    }
+
+    [Fact]
+    public async Task Rename_preview_apply_refuses_later_file_changes_without_partial_multifile_mutation()
+    {
+        const string a = "class A { B value; }"; const string b = "class B { }";
+        var aPath = Path.Combine(_root, "A.cs"); var bPath = Path.Combine(_root, "B.cs");
+        await File.WriteAllTextAsync(aPath, a); await File.WriteAllTextAsync(bPath, b);
+        var client = FakeClient.Create(); client.Rename = new([
+            new("A.cs", [new(new(new(0, 10), new(0, 11)), "Renamed")]),
+            new("B.cs", [new(new(new(0, 6), new(0, 7)), "Renamed")]) ]);
+        var service = CreateService(() => client);
+        var preview = await service.PreviewRenameSymbolAsync(_root, "A.cs", a, new(0, 10), "Renamed", CancellationToken.None);
+        await File.WriteAllTextAsync(bPath, "class B { int external; }");
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ApplyCodeActionAsync(_root, preview, CancellationToken.None));
+        Assert.Equal(a, await File.ReadAllTextAsync(aPath)); Assert.Equal("class B { int external; }", await File.ReadAllTextAsync(bPath));
+    }
+
+    [Fact]
+    public async Task Cancelled_rename_preview_never_returns_a_mutation_proposal()
+    {
+        const string before = "class A { }"; var path = Path.Combine(_root, "A.cs"); await File.WriteAllTextAsync(path, before);
+        using var cancellation = new CancellationTokenSource(); var client = FakeClient.Create();
+        client.Rename = new([new("A.cs", [new(new(new(0, 6), new(0, 7)), "Renamed")])]);
+        client.BeforeRename = () => { cancellation.Cancel(); return Task.CompletedTask; };
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => CreateService(() => client)
+            .PreviewRenameSymbolAsync(_root, "A.cs", before, new(0, 6), "Renamed", cancellation.Token));
+        Assert.Equal(before, await File.ReadAllTextAsync(path));
+    }
+
     private AdvancedCodeIntelligenceService CreateService(Func<FakeClient> createClient)
     {
         var tools = new WorkspaceToolService();
@@ -126,7 +214,10 @@ public sealed class AdvancedCodeIntelligenceServiceTests : IDisposable
         public IReadOnlyList<CodeLocation> References { get; set; } = [];
         public IReadOnlyList<LanguageServerCompletion> Completions { get; set; } = [];
         public IReadOnlyList<CodeSemanticToken> SemanticTokens { get; set; } = [];
-        public Task OpenDocumentAsync(string documentUri, string languageId, string text, int version, CancellationToken cancellationToken) => Task.CompletedTask;
+        public int OpenedVersion { get; private set; }
+        public Func<Task>? BeforeRename { get; set; }
+        public Task OpenDocumentAsync(string documentUri, string languageId, string text, int version, CancellationToken cancellationToken)
+        { OpenedVersion = version; return Task.CompletedTask; }
         public Task<IReadOnlyList<CodeDiagnostic>> GetDiagnosticsAsync(string documentUri, string workspaceRoot, TimeSpan timeout, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<CodeDiagnostic>>([]);
         public Task<IReadOnlyList<CodeSymbol>> SearchWorkspaceSymbolsAsync(string query, string workspaceRoot, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<CodeSymbol>>([]);
         public Task<IReadOnlyList<LanguageServerTextEdit>> FormatDocumentAsync(string documentUri, int tabSize, bool insertSpaces, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<LanguageServerTextEdit>>([]);
@@ -134,7 +225,8 @@ public sealed class AdvancedCodeIntelligenceServiceTests : IDisposable
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
         public Task<IReadOnlyList<CodeLocation>> GetDefinitionAsync(string documentUri, CodePosition position, string workspaceRoot, CancellationToken cancellationToken) => Task.FromResult(Definitions);
         public Task<IReadOnlyList<CodeLocation>> FindReferencesAsync(string documentUri, CodePosition position, string workspaceRoot, bool includeDeclaration, CancellationToken cancellationToken) => Task.FromResult(References);
-        public Task<LanguageServerWorkspaceEdit> RenameSymbolAsync(string documentUri, CodePosition position, string newName, string workspaceRoot, CancellationToken cancellationToken) => Task.FromResult(Rename);
+        public async Task<LanguageServerWorkspaceEdit> RenameSymbolAsync(string documentUri, CodePosition position, string newName, string workspaceRoot, CancellationToken cancellationToken)
+        { if (BeforeRename is not null) await BeforeRename(); return Rename; }
         public Task<IReadOnlyList<LanguageServerCompletion>> GetCompletionsAsync(string documentUri, CodePosition position, CancellationToken cancellationToken) => Task.FromResult(Completions);
         public Task<IReadOnlyList<LanguageServerCodeAction>> GetCodeActionsAsync(string documentUri, CodeRange range, string workspaceRoot, CancellationToken cancellationToken) => Task.FromResult(Actions);
         public Task<IReadOnlyList<CodeSemanticToken>> GetSemanticTokensAsync(string documentUri, CancellationToken cancellationToken) => Task.FromResult(SemanticTokens);

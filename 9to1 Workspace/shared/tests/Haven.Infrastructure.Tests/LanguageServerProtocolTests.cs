@@ -20,6 +20,27 @@ namespace Haven.Infrastructure.Tests;
 /// </summary>
 public sealed class LanguageServerProtocolTests
 {
+    [Fact]
+    public void Workspace_edits_preserve_document_versions_in_the_typed_protocol_contract()
+    {
+        var root = Path.GetFullPath(Path.GetTempPath()); var uri = new Uri(Path.Combine(root, "versioned.cs")).AbsoluteUri;
+        var edit = JsonSerializer.SerializeToElement(new { documentChanges = new[] {
+            new { textDocument = new { uri, version = 7 }, edits = new[] {
+                new { range = new { start = new { line = 0, character = 0 }, end = new { line = 0, character = 1 } }, newText = "x" } } } } });
+        var parsed = StdioLanguageServerClient.ParseWorkspaceEdit(edit, root);
+        Assert.Equal(7, Assert.Single(parsed.Documents).DocumentVersion);
+    }
+
+    [Fact]
+    public void Workspace_edits_refuse_contradictory_versions_for_one_document()
+    {
+        var root = Path.GetFullPath(Path.GetTempPath()); var uri = new Uri(Path.Combine(root, "versioned.cs")).AbsoluteUri;
+        object Change(int version) => new { textDocument = new { uri, version }, edits = new[] {
+            new { range = new { start = new { line = 0, character = 0 }, end = new { line = 0, character = 1 } }, newText = "x" } } };
+        var edit = JsonSerializer.SerializeToElement(new { documentChanges = new[] { Change(1), Change(2) } });
+        Assert.Throws<InvalidOperationException>(() => StdioLanguageServerClient.ParseWorkspaceEdit(edit, root));
+    }
+
     /// <summary>
     /// Performs the codec round trips utf8 json using byte content length step owned by this component.
     /// </summary>

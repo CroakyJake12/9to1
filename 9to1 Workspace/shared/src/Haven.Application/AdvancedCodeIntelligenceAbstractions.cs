@@ -17,7 +17,11 @@ public sealed record LanguageServerCapabilities(
 }
 
 public sealed record CodeLocation(string Uri, string DisplayPath, CodeRange Range, bool IsInWorkspace);
-public sealed record LanguageServerDocumentEdit(string RelativePath, IReadOnlyList<LanguageServerTextEdit> Edits);
+public sealed record LanguageServerDocumentEdit(string RelativePath, IReadOnlyList<LanguageServerTextEdit> Edits)
+{
+    // Preserve the existing constructor/deconstruction and carry optional LSP edit-version evidence.
+    public int? DocumentVersion { get; init; }
+}
 public sealed record LanguageServerWorkspaceEdit(IReadOnlyList<LanguageServerDocumentEdit> Documents);
 public sealed record LanguageServerCompletion(
     string Label,
@@ -63,6 +67,11 @@ public interface IAdvancedCodeIntelligenceService
     Task<IReadOnlyList<CodeLocation>> GetDefinitionAsync(string workspaceRoot, string relativePath, string documentText, CodePosition position, CancellationToken cancellationToken);
     Task<IReadOnlyList<CodeLocation>> FindReferencesAsync(string workspaceRoot, string relativePath, string documentText, CodePosition position, CancellationToken cancellationToken);
     Task<CodeWorkspaceMutationResult> RenameSymbolAsync(string workspaceRoot, string relativePath, string documentText, CodePosition position, string newName, CancellationToken cancellationToken);
+    /// <summary>Returns a reviewable semantic rename with complete before/after file contents, never applies it.
+    /// Older providers remain explicitly unsupported; callers must not fall back to immediate rename.</summary>
+    Task<CodeActionProposal> PreviewRenameSymbolAsync(string workspaceRoot, string relativePath, string documentText, CodePosition position,
+        string newName, CancellationToken cancellationToken) => Task.FromException<CodeActionProposal>(
+            new NotSupportedException("This language provider does not support reviewable semantic rename proposals."));
     Task<IReadOnlyList<LanguageServerCompletion>> GetCompletionsAsync(string workspaceRoot, string relativePath, string documentText, CodePosition position, CancellationToken cancellationToken);
     Task<IReadOnlyList<CodeActionProposal>> GetCodeActionsAsync(string workspaceRoot, string relativePath, string documentText, CodeRange range, CancellationToken cancellationToken);
     Task<CodeWorkspaceMutationResult> ApplyCodeActionAsync(string workspaceRoot, CodeActionProposal action, CancellationToken cancellationToken);
