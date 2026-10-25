@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using Haven.Application;
+using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 
 namespace Haven.Desktop.Services;
