@@ -351,6 +351,15 @@ public sealed class ContractAdapterTests
             Assert.Null(split.Rows[0].Cells[1].CoveredByCellId);
             Assert.Equal(coveredId, split.Rows[0].Cells[1].Id);
             Assert.Equal("#FFE8F0FE", split.Rows[0].Cells[1].Background);
+            Assert.True(await adapter.UndoAsync());
+            var undoneSplit = await adapter.GetDetachedContractDocumentAsync();
+            var restoredMerge = undoneSplit.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.Equal(2, restoredMerge.Rows[0].Cells[0].ColumnSpan);
+            Assert.Equal(anchorId, restoredMerge.Rows[0].Cells[1].CoveredByCellId);
+            Assert.True(await adapter.RedoAsync());
+            splitDocument = await adapter.GetDetachedContractDocumentAsync();
+            split = splitDocument.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.Equal(1, split.Rows[0].Cells[0].ColumnSpan);
             Assert.True(viewModel.TryGetValue("ContextCanChangeTableStructure", out var canChangeStructure) && canChangeStructure is true);
             Assert.True(viewModel.TrySetValue("ContextHasHeaderRow", true));
             Assert.True(viewModel.TrySetValue("ContextHasHeaderColumn", true));
@@ -362,9 +371,16 @@ public sealed class ContractAdapterTests
             Assert.True(formatted.HasHeaderColumn);
             Assert.Equal(HavenRichAlignment.Center, formatted.Alignment);
             Assert.Equal(680, formatted.Width);
-            for (var undo = 0; undo < 5; undo++) Assert.True(await adapter.UndoAsync());
-            var undone = await adapter.GetDetachedContractDocumentAsync();
-            var undoneTable = undone.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.True(await adapter.UndoAsync());
+            var undoneFormatting = await adapter.GetDetachedContractDocumentAsync();
+            var undoneFormattingTable = undoneFormatting.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.False(undoneFormattingTable.HasHeaderRow);
+            Assert.False(undoneFormattingTable.HasHeaderColumn);
+            Assert.Equal(HavenRichAlignment.Left, undoneFormattingTable.Alignment);
+            Assert.Equal(640, undoneFormattingTable.Width);
+            Assert.True(await adapter.UndoAsync());
+            var undoneMerge = await adapter.GetDetachedContractDocumentAsync();
+            var undoneTable = undoneMerge.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
             Assert.Equal(2, undoneTable.Rows[0].Cells[0].ColumnSpan);
         }
     }

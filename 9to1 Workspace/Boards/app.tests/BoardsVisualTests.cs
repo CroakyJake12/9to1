@@ -5,9 +5,11 @@
 // THREADING: same single-delegate discipline as the other suites — everything
 // UI-related runs inside one TestUiThread.Run delegate per test.
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using CakeOS.Cui.Runtime;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
@@ -266,7 +268,7 @@ public sealed class BoardsVisualTests
                 var frame = Assert.Single(grid.Children);
                 var tableFrame = Flatten(host).OfType<Border>().Single(candidate => ReferenceEquals(candidate.Child, grid));
                 var editor = Assert.Single(Flatten(frame).OfType<TextBox>());
-                return (RowSpan: Grid.GetRowSpan(frame), ColumnSpan: Grid.GetColumnSpan(frame),
+                return (Host: host, RowSpan: Grid.GetRowSpan(frame), ColumnSpan: Grid.GetColumnSpan(frame),
                     TableWidth: tableFrame.Width, TableAlignment: tableFrame.HorizontalAlignment,
                     Text: editor.Text, Weight: editor.FontWeight);
             });
@@ -276,6 +278,31 @@ public sealed class BoardsVisualTests
             Assert.Equal(HorizontalAlignment.Center, result.TableAlignment);
             Assert.Equal("Merged title", result.Text);
             Assert.Equal(FontWeight.Bold, result.Weight);
+            // Piggyback on this existing visual test so the owner gets a real
+            // headless rendering of the merged editor without a separate run.
+            Ui(() =>
+            {
+                const int width = 960;
+                const int height = 560;
+                var window = new Window
+                {
+                    Width = width,
+                    Height = height,
+                    Background = Brushes.White,
+                    Content = result.Host,
+                };
+                window.Show();
+                window.Measure(new Size(width, height));
+                window.Arrange(new Rect(0, 0, width, height));
+                result.Host.Measure(new Size(width, height));
+                result.Host.Arrange(new Rect(0, 0, width, height));
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                var shot = Path.Combine(VisualCaptureTests.ShotsDirectory(), "merged-table-editor.png");
+                using var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new Vector(96, 96));
+                bitmap.Render(window);
+                bitmap.Save(shot);
+                window.Close();
+            });
         }
         finally { await session.DisposeAsync(); }
     }
