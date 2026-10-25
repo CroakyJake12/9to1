@@ -1,5 +1,7 @@
 <Cui id="spaces.chat.composer" version="1">
   <Actions>
+    <Action name="composer.submit" command="composer.submit" parameter="{Binding Event}" />
+    <Action name="composer.toggle-send-mode"><Toggle Target="SendModeOpen" /></Action>
     <Action name="composer.invoke-chip.Id" command="composer.invoke-chip" parameter="{Binding chip.Id}" />
     <Action name="composer.remove-chip.Id" command="composer.remove-chip" parameter="{Binding chip.Id}" />
     <Action name="composer.format.Bold" command="composer.format" parameter="Bold" />
@@ -22,6 +24,7 @@
     <Action name="composer.emoji-next" command="query.next" />
   </Actions>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
+  <Variable Type="bool" ID="SendModeOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
   <Container id="composer-surface" Type="Overlay Float" padding="12"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
@@ -37,7 +40,7 @@
     </Container>
 
     <Container id="input-column" Type="Vertical Stack" CellGap="4" MaxHeight="170">
-      <Input id="composer-input" Type="Text" AcceptsReturn="True" Value="{Binding Composer.Draft}"
+      <Input id="composer-input" Type="Text" AcceptsReturn="True" SubmitAction="composer.submit" Value="{Binding Composer.Draft}"
              placeholdertext="{Binding Composer.Placeholder}" embedded-input="true" BorderWidth="0"
              background="Transparent" padding="4" text-wrapping="Wrap" MinHeight="44" accessible-name="Message" />
     </Container>
@@ -61,6 +64,10 @@
                 accessible-name="Insert emoji" tooltip="Insert emoji" />
       </Container>
       <Container id="right-controls" Column="2" Type="Horizontal Stack" CellGap="6">
+        <Button id="send-mode-button" action="composer.toggle-send-mode" content="{Binding Composer.PreferredSendModeLabel}"
+                IsVisible="{Binding Composer.HasSendModePreference}" MinHeight="44" CornerRadius="22"
+                background="Transparent" Chromeless="true" accessible-name="Preferred Space send action"
+                tooltip="Enter uses this Space's saved action; Alt+Enter uses the opposite action once" />
         <Button id="settings-button" action="composer.settings" IsVisible="{Binding Composer.HasSettings}" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="Transparent" Chromeless="true" Selected="{Binding Composer.ShowSettings}"
                 accessible-name="Thread settings" tooltip="Choose allowed actions and response style">
@@ -114,6 +121,13 @@
         </Container>
       </Container>
     </Container>
+
+    <If Condition="{Binding Composer.HasSendModePreference}">
+      <Container id="send-mode-panel" Type="Horizontal Stack" CellGap="8" IsVisible="{Binding SendModeOpen}" accessible-name="Preferred Space send action choices">
+        <Button action="composer.prefer-steer" content="Steer" MinHeight="44" accessible-name="Use Steer by default in this Space" />
+        <Button action="composer.prefer-queue" content="Queue" MinHeight="44" accessible-name="Use Queue by default in this Space" />
+      </Container>
+    </If>
 
     <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">

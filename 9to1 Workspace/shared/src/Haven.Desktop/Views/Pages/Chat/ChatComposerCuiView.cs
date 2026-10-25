@@ -26,6 +26,19 @@ internal interface IChatComposerTaskActions
     bool CanQueue { get; }
     bool CanStop { get; }
     bool CanResume => false;
+    bool HasSendModePreference => false;
+    TaskFollowUpMode? PreferredSendMode => null;
+    bool CanSubmit => PreferredSendMode is { } mode && (mode == TaskFollowUpMode.Steer ? CanSteer : CanQueue);
+    ValueTask SetPreferredSendMode(TaskFollowUpMode mode) => ValueTask.FromException(new NotSupportedException("No Space preference owner is bound."));
+    ValueTask Submit(bool alternate)
+    {
+        if (PreferredSendMode is not { } mode)
+            return ValueTask.FromException(new InvalidOperationException("Choose Steer or Queue for this Space before using the send shortcut."));
+        var steer = alternate ? mode != TaskFollowUpMode.Steer : mode == TaskFollowUpMode.Steer;
+        if (steer ? !CanSteer : !CanQueue)
+            return ValueTask.FromException(new InvalidOperationException("The selected task submit action is unavailable. The draft was retained."));
+        return steer ? Steer() : Queue();
+    }
     ValueTask Resume() => ValueTask.FromException(new NotSupportedException("This task source has no original resume command."));
     ValueTask Steer();
     ValueTask Queue();
@@ -51,6 +64,10 @@ public interface IChatComposerSource
     bool IsSafetyLocked { get; }
     bool HasAdd { get; }
     bool HasSettings => true;
+    bool HasSendModePreference => false;
+    TaskFollowUpMode? PreferredSendMode => null;
+    bool CanSubmit => IsSending ? CanQueue : CanSend;
+    ValueTask SetPreferredSendMode(TaskFollowUpMode mode) => ValueTask.FromException(new NotSupportedException("No Space preference owner is bound."));
     bool HasFormatting => true;
     bool CanSteer => false;
     bool CanPause => false;
@@ -59,6 +76,8 @@ public interface IChatComposerSource
     bool IsEditing { get; }
     IReadOnlyList<ChatComposerChip> Chips { get; }
     ValueTask Send();
+    ValueTask Queue() => Send();
+    ValueTask Submit(bool alternate) => IsSending ? Queue() : Send();
     ValueTask Stop();
     ValueTask Steer() => ValueTask.FromException(new NotSupportedException("This source has no canonical task steering command."));
     ValueTask Pause() => ValueTask.FromException(new NotSupportedException("This source has no canonical task pause command."));
@@ -86,6 +105,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
     private readonly IChatComposerSource _source;
+    private readonly Func<object, bool>? _ownsSubmitSender;
     private bool _settingsOpen;
     private bool _emojiOpen;
     private bool _focused;
@@ -94,9 +114,10 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     // (which owns the query string + opaque cursor) backed by the typed ICuiPagedSource port exposed
     // below. No application C# page/query/selection cache exists here.
 
-    public ChatComposerBindings(IChatComposerSource source)
+    public ChatComposerBindings(IChatComposerSource source, Func<object, bool>? ownsSubmitSender = null)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
+        _ownsSubmitSender = ownsSubmitSender;
     }
 
     /// <summary>Observed focus on the real composer input; drives compact/expanded formatting.</summary>
@@ -141,6 +162,8 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return true;
             case "Composer.HasAdd": value = _source.HasAdd; return true;
             case "Composer.HasSettings": value = _source.HasSettings; return true;
+            case "Composer.HasSendModePreference": value = _source.HasSendModePreference; return true;
+            case "Composer.PreferredSendModeLabel": value = _source.PreferredSendMode?.ToString() ?? "Choose send action"; return true;
             case "Composer.CanSteer": value = _source.CanSteer; return true;
             case "Composer.CanPause": value = _source.CanPause; return true;
             case "Composer.CanResume": value = _source.CanResume; return true;
@@ -228,6 +251,8 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     {
         return command switch
         {
+            "composer.submit" => _source.CanSubmit,
+            "composer.prefer-steer" or "composer.prefer-queue" => _source.HasSendModePreference,
             "composer.send" => !_source.IsSending && _source.HasPendingMessage && _source.CanSend,
             "composer.queue" => _source.CanQueue,
             "composer.stop" => _source.CanStop,
@@ -245,10 +270,18 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     {
         switch (command)
         {
+            case "composer.submit" when parameter is CuiInputSubmitRequest request && _ownsSubmitSender?.Invoke(request.Sender) == true &&
+                request.Key == Avalonia.Input.Key.Enter && (request.Modifiers is CuiInputSubmitModifiers.None or CuiInputSubmitModifiers.Control or CuiInputSubmitModifiers.Alt) &&
+                _source.CanSubmit:
+                return _source.Submit(request.Alt);
+            case "composer.prefer-steer" when _source.HasSendModePreference:
+                return _source.SetPreferredSendMode(TaskFollowUpMode.Steer);
+            case "composer.prefer-queue" when _source.HasSendModePreference:
+                return _source.SetPreferredSendMode(TaskFollowUpMode.Queue);
             case "composer.send" when IsActionAvailable(command) == true:
-            case "composer.queue" when IsActionAvailable(command) == true:
-                // Both enter the existing source admission: its current run owns the FIFO.
                 return _source.Send();
+            case "composer.queue" when IsActionAvailable(command) == true:
+                return _source.Queue();
             case "composer.stop" when _source.CanStop:
                 return StopProjectedAsync();
             case "composer.steer" when _source.CanSteer:
@@ -257,7 +290,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return _source.Pause();
             case "composer.resume" when _source.CanResume:
                 return _source.Resume();
-            case "composer.send" or "composer.queue" or "composer.stop" or "composer.steer" or "composer.pause" or "composer.resume":
+            case "composer.submit" or "composer.prefer-steer" or "composer.prefer-queue" or "composer.send" or "composer.queue" or "composer.stop" or "composer.steer" or "composer.pause" or "composer.resume":
                 return ValueTask.FromException(new InvalidOperationException("This conversation action is no longer available."));
             case "composer.add":
                 return _source.Add();
@@ -519,7 +552,8 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
     internal ChatComposerCuiView(IChatComposerSource source, ICuiSceneReadiness readiness,
         string? owningAppId = null, CuiThemePreferenceContext? themePreference = null)
     {
-        _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)));
+        _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)),
+            sender => ReferenceEquals(sender, FindComposerTextBox()));
         _readiness = readiness ?? ChatComposerReadiness.Instance;
         var registry = new CuiControlRegistry();
         // Shared typed packaged-SVG image infrastructure for authored icon assets (e.g. the enlarged

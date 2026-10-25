@@ -1,10 +1,49 @@
 using Haven.Desktop.Views.Pages.Chat;
 using Avalonia.Threading;
+using Haven.Application;
+using Haven.Core;
+using Haven.Desktop.Services;
 
 namespace Haven.Desktop.Views.Pages.Tasks;
 
 public sealed partial class SpaceTaskWidgetPage
 {
+    private UserPreferencesService? _composerPreferences;
+    internal void BindOriginalComposerPreferences(UserPreferencesService actual)
+    {
+        ArgumentNullException.ThrowIfNull(actual);
+        _work.DemandAdmission();
+        lock (_gate)
+        {
+            if (_active) throw new InvalidOperationException("Bind the same-profile preference owner before task activation.");
+            if (_composerPreferences is not null && !ReferenceEquals(_composerPreferences, actual))
+                throw new InvalidOperationException("The task composer already borrows a different preference owner.");
+            _composerPreferences = actual;
+        }
+        _composerView.RefreshSurface();
+    }
+    private TaskFollowUpMode? PreferredTaskSubmitMode => _composerPreferences?.GetSpaceSubmitMode(_spaceId,
+        _spaceId == SpaceRegistry.ResearchSpaceId) switch
+        { SpaceSubmitMode.Steer => TaskFollowUpMode.Steer, SpaceSubmitMode.Queue => TaskFollowUpMode.Queue, _ => null };
+    private ValueTask SetTaskSubmitMode(TaskFollowUpMode mode)
+    {
+        var preferences = _composerPreferences;
+        if (!Enum.IsDefined(mode) || preferences is null)
+            return ValueTask.FromException(new InvalidOperationException("The actual Space preference owner is unavailable."));
+        long generation; lock (_gate) generation = _generation;
+        _work.RunSynchronous(original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
+            InvokeOriginalSource(() =>
+            {
+                preferences.SetSpaceSubmitMode(_spaceId,
+                    mode == TaskFollowUpMode.Steer ? SpaceSubmitMode.Steer : SpaceSubmitMode.Queue);
+                return true;
+            });
+            NotifyOriginal(original, generation);
+        });
+        return ValueTask.CompletedTask;
+    }
     /// <summary>Live typed port to the SAME widget's actual command originals. It owns no
     /// task, run, scheduler, continuation factory or cloned draft/availability state.</summary>
     private sealed class TaskComposerSource(SpaceTaskWidgetPage page) : IChatComposerSource
@@ -19,6 +58,17 @@ public sealed partial class SpaceTaskWidgetPage
         public bool IsSafetyLocked => false; // Each canonical command reauthorizes its own scope.
         public bool HasAdd => false;
         public bool HasSettings => false;
+        public bool HasSendModePreference => page._composerPreferences is not null && page._active && !page._work.IsRetiring && page._observation?.Snapshot is not null;
+        public TaskFollowUpMode? PreferredSendMode => page.PreferredTaskSubmitMode;
+        public bool CanSubmit => PreferredSendMode is { } mode && (mode == TaskFollowUpMode.Steer ? CanSteer : CanQueue);
+        public ValueTask SetPreferredSendMode(TaskFollowUpMode mode) => page.SetTaskSubmitMode(mode);
+        public ValueTask Submit(bool alternate)
+        {
+            if (PreferredSendMode is not { } mode)
+                return ValueTask.FromException(new InvalidOperationException("Choose Steer or Queue before using this Space's send shortcut."));
+            var steer = alternate ? mode != TaskFollowUpMode.Steer : mode == TaskFollowUpMode.Steer;
+            return steer ? Steer() : Send();
+        }
         public bool HasFormatting => false;
         public bool CanSend => false;
         public bool CanStop => page.IsActionAvailable("task.stop") == true;
