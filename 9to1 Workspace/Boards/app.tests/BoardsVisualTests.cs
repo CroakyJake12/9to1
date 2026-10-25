@@ -12,6 +12,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
 
@@ -321,6 +322,85 @@ public sealed class BoardsVisualTests
             Ui(() => Avalonia.Threading.Dispatcher.UIThread.RunJobs());
             vm.Dispose();
             await session.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Table_border_uses_active_accent_by_default_and_preserves_explicit_color_with_even_clip_radius()
+    {
+        var priorMode = Ui(() => BoardsTheme.Mode);
+        var priorTheme = Ui(() => CuiSurfacePaletteCatalog.ActiveTheme);
+        var vm = MemoryModel(out var session);
+        try
+        {
+            Ui(() =>
+            {
+                CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
+                BoardsTheme.SetMode(BoardsThemeMode.Dark);
+                var page = session.Document.Sections[0].Pages[0];
+                page.Blocks.Clear();
+                page.Blocks.Add(new RichBoardBlock
+                {
+                    Id = "default-accent-table", Kind = "table", TableRows = 1, TableCols = 1,
+                    TableStyle = new RichTableStyleView { CornerRadius = 8, BorderWidth = 2 },
+                });
+                page.Blocks.Add(new RichBoardBlock
+                {
+                    Id = "explicit-color-table", Kind = "table", TableRows = 1, TableCols = 1,
+                    TableStyle = new RichTableStyleView
+                    {
+                        CornerRadius = 8, BorderWidth = 2, BorderColor = "#FF4A6FA5",
+                    },
+                });
+            });
+
+            var actual = Ui(() =>
+            {
+                var host = new StackPanel { Width = 680 };
+                BlockRenderer.Rebuild(host, vm, []);
+                var window = new Window { Width = 700, Height = 500, Content = host };
+                window.Show();
+                window.Measure(new Size(700, 500));
+                window.Arrange(new Rect(0, 0, 700, 500));
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                static Color[] Colors(IBrush? brush) => brush switch
+                {
+                    ISolidColorBrush solid => [solid.Color],
+                    LinearGradientBrush gradient => gradient.GradientStops.Select(stop => stop.Color).ToArray(),
+                    _ => [],
+                };
+
+                var defaultFrame = Assert.Single(host.GetVisualDescendants().OfType<Border>(), border =>
+                    border.Name == "BoardTableFrame_default-accent-table");
+                var defaultClip = Assert.IsType<Border>(defaultFrame.Child);
+                var accentColors = Colors(BoardsTheme.AccentBrush);
+                var defaultColors = Colors(defaultFrame.BorderBrush);
+                var explicitFrame = Assert.Single(host.GetVisualDescendants().OfType<Border>(), border =>
+                    border.Name == "BoardTableFrame_explicit-color-table");
+                var explicitColor = Assert.IsType<SolidColorBrush>(explicitFrame.BorderBrush).Color;
+                window.Close();
+                return (AccentColors: accentColors, DefaultColors: defaultColors, ExplicitColor: explicitColor,
+                    OuterRadius: defaultFrame.CornerRadius.TopLeft, InnerRadius: defaultClip.CornerRadius.TopLeft,
+                    BorderWidth: defaultFrame.BorderThickness.Left, InnerClips: defaultClip.ClipToBounds);
+            });
+
+            Assert.NotEmpty(actual.AccentColors);
+            Assert.Equal(actual.AccentColors, actual.DefaultColors);
+            Assert.Equal(Color.Parse("#FF4A6FA5"), actual.ExplicitColor);
+            Assert.Equal(8, actual.OuterRadius);
+            Assert.Equal(actual.OuterRadius - actual.BorderWidth, actual.InnerRadius);
+            Assert.True(actual.InnerClips);
+        }
+        finally
+        {
+            vm.Dispose();
+            await session.DisposeAsync();
+            Ui(() =>
+            {
+                CuiSurfacePaletteCatalog.ActiveTheme = priorTheme;
+                BoardsTheme.SetMode(priorMode);
+            });
         }
     }
 
