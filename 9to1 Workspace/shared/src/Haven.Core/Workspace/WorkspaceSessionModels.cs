@@ -43,7 +43,23 @@ public sealed record WorkspaceWindowSnapshot(
     IReadOnlyList<Guid> OrderedTabIds,
     Guid? SelectedTabId,
     string? BoundsJson,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    /// <summary>Bounded, private-free recovery metadata for recently closed tabs in this window.</summary>
+    public IReadOnlyList<WorkspaceClosedTabSnapshot> RecentlyClosedTabs { get; init; } = [];
+}
+
+/// <summary>Recoverable tab identity and safe reopen metadata, not a live/open tab row.</summary>
+public sealed record WorkspaceClosedTabSnapshot(
+    Guid Id,
+    string Title,
+    string Address,
+    string ProfileId,
+    Guid? GroupId,
+    int Index,
+    string? EngineOverride,
+    bool IsPinned,
+    DateTimeOffset ClosedAt);
 
 public sealed record WorkspaceSessionSnapshot(
     int SchemaVersion,

@@ -102,21 +102,45 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                 cancellationToken.ThrowIfCancellationRequested();
                 var window = owner._snapshot.Windows.Single(item => item.Id == windowId);
                 var rows = owner._snapshot.Tabs.ToDictionary(tab => tab.Id);
+                var otherWindowReferences = owner._snapshot.Windows.Where(item => item.Id != windowId)
+                    .SelectMany(item => item.OrderedTabIds.Concat(item.Layout.Panes.Select(pane => pane.TabId))
+                        .Concat(item.SelectedTabId is { } selected ? [selected] : Array.Empty<Guid>())
+                        .Concat(item.RecentlyClosedTabs.Select(tab => tab.Id))).ToHashSet();
                 var projected = new List<BrowserTabState>();
                 foreach (var id in window.OrderedTabIds)
                     if (rows.TryGetValue(id, out var row) &&
                         UnifiedWorkspaceTabState.TryProject(row, ProfileId, out var tab)) projected.Add(tab!);
+                var openIds = projected.Select(tab => tab.Id).ToHashSet();
+                var closed = window.RecentlyClosedTabs
+                    .Where(tab => tab.Id != Guid.Empty && !window.OrderedTabIds.Contains(tab.Id) &&
+                        !openIds.Contains(tab.Id) && !otherWindowReferences.Contains(tab.Id))
+                    .TakeLast(25)
+                    .Select(tab =>
+                    {
+                        var profile = string.IsNullOrEmpty(tab.ProfileId) ? ProfileId : tab.ProfileId;
+                        var browserTab = new BrowserTabState(tab.Id, tab.Title, tab.Address,
+                            BrowserTabPrivacy.Standard, tab.GroupId?.ToString("D") ?? string.Empty, tab.ClosedAt)
+                        { ProfileId = profile, IsPinned = tab.IsPinned };
+                        var engine = Enum.TryParse<BrowseEngineKind>(tab.EngineOverride, ignoreCase: true, out var parsed) &&
+                            Enum.IsDefined(parsed) ? parsed : (BrowseEngineKind?)null;
+                        return new BrowseClosedTabProjection(browserTab, tab.Index, engine);
+                    }).ToArray();
                 // Load does not authorize deletion. Browse can refuse a restored
                 // row; only tabs it actually publishes in Save become managed.
                 return (BrowseTabSessionProjection?)new BrowseTabSessionProjection(Array.AsReadOnly(projected.ToArray()),
-                    projected.Any(tab => tab.Id == window.SelectedTabId) ? window.SelectedTabId : null);
+                    projected.Any(tab => tab.Id == window.SelectedTabId) ? window.SelectedTabId : null)
+                { ClosedTabs = Array.AsReadOnly(closed) };
             }));
 
         public Task SaveAsync(BrowseTabSessionProjection projection, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(projection);
             // Detach at admission so a producer cannot alter a queued save's IDs.
-            var captured = projection with { Tabs = Array.AsReadOnly(projection.Tabs.ToArray()) };
+            var captured = projection with
+            {
+                Tabs = Array.AsReadOnly(projection.Tabs.ToArray()),
+                ClosedTabs = Array.AsReadOnly(projection.ClosedTabs.ToArray())
+            };
             return owner.Admit(async operation =>
             {
                 await owner.OnUiAsync(operation, () =>
@@ -244,7 +268,8 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
         Windows = Array.AsReadOnly(snapshot.Windows.Select(window => window with
         {
             OrderedTabIds = Array.AsReadOnly(window.OrderedTabIds.ToArray()),
-            Layout = window.Layout with { Panes = Array.AsReadOnly(window.Layout.Panes.ToArray()) }
+            Layout = window.Layout with { Panes = Array.AsReadOnly(window.Layout.Panes.ToArray()) },
+            RecentlyClosedTabs = Array.AsReadOnly(window.RecentlyClosedTabs.ToArray())
         }).ToArray())
     };
 }

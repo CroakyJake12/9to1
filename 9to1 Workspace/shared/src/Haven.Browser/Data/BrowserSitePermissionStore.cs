@@ -8,8 +8,6 @@
  */
 
 using System.Text.Json;
-using System.Security.Cryptography;
-using System.Text;
 using Haven.Application;
 
 namespace Haven.Browser;
@@ -110,24 +108,22 @@ public sealed class BrowserSitePermissionStore : IDisposable
     public BrowserSitePermissionStore(IAppPaths paths) : this(paths, null, null) { }
 
     /// <summary>
-    /// Opens the existing legacy store for the current profile and a separate
-    /// deterministic store for each other profile. Existing decisions are never
-    /// copied between profiles or removed from the legacy store.
+    /// Opens the existing legacy store only for its durably recorded profile owner;
+    /// other identities use the same isolated root as their browser engine data.
     /// </summary>
     public BrowserSitePermissionStore(IAppPaths paths, string? profileId, string? currentProfileId)
     {
         ArgumentNullException.ThrowIfNull(paths);
         var dataDirectory = paths.DataDirectory;
-        if (profileId is not null && profileId.Length > 0 &&
-            !StringComparer.Ordinal.Equals(profileId, currentProfileId))
+        if (profileId is not null)
         {
-            if (string.IsNullOrWhiteSpace(profileId))
-                throw new InvalidDataException("A browser profile identity cannot be whitespace.");
-            var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(profileId))).ToLowerInvariant();
-            dataDirectory = Path.Combine(paths.BrowserProfileDirectory, "profiles", identity);
+            var profileDirectory = BrowserProfileStorage.ResolveProfileDirectory(paths, profileId);
+            if (!BrowserProfileStorage.OwnsLegacyRoot(paths, profileId)) dataDirectory = profileDirectory;
         }
         _path = Path.Combine(dataDirectory, "browser-site-permissions.json");
         _backupPath = _path + ".bak";
+        BrowserProfileStorage.DemandNotReparsePoint(_path);
+        BrowserProfileStorage.DemandNotReparsePoint(_backupPath);
         _data = Load();
     }
 

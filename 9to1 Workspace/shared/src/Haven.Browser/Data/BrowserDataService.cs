@@ -34,6 +34,10 @@ public sealed record BrowserTabState(Guid Id, string Title, string Address, Brow
     /// <summary>Null means an older/narrow producer did not project the canonical pin flag.</summary>
     public bool? IsPinned { get; init; }
 }
+
+/// <summary>A standard tab's safe reopen metadata; it is not an open browser session.</summary>
+public sealed record BrowserClosedTabState(BrowserTabState Tab, int Index, string? EngineOverride);
+
 /// <summary>
 /// Represents the durable, non-private Browse Research checkpoint restored across restarts.
 /// Mixed sessions containing private sources are intentionally never written to disk.
@@ -120,6 +124,8 @@ public sealed class BrowserDataService : IDisposable
     /// Gets or updates tabs, the bindable or domain state represented by this property.
     /// </summary>
     public IReadOnlyList<BrowserTabState> Tabs => _data.Tabs.OrderBy(item => item.UpdatedAt).ToArray();
+    /// <summary>Returns the bounded, private-free recently closed stack in oldest-first order.</summary>
+    public IReadOnlyList<BrowserClosedTabState> ClosedTabs => _data.ClosedTabs.ToArray();
     /// <summary>
     /// Gets or updates logins, the bindable or domain state represented by this property.
     /// </summary>
@@ -220,6 +226,34 @@ public sealed class BrowserDataService : IDisposable
             .OrderByDescending(item => item.UpdatedAt)
             .ToArray();
         return MutateAndSaveAsync(data => data with { Tabs = safeTabs }, cancellationToken);
+    }
+
+    /// <summary>Atomically saves the standalone tab list and its safe recently-closed stack.</summary>
+    public Task SaveSessionTabsAsync(IEnumerable<BrowserTabState> tabs,
+        IEnumerable<BrowserClosedTabState> recentlyClosedTabs, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(tabs);
+        ArgumentNullException.ThrowIfNull(recentlyClosedTabs);
+        var safeTabs = tabs.Where(item => item.Privacy != BrowserTabPrivacy.Private)
+            .Where(item => BrowserNativePages.IsStoredTabAddress(item.Address))
+            .GroupBy(item => item.Id)
+            .Select(group => group.OrderByDescending(item => item.UpdatedAt).First())
+            .OrderByDescending(item => item.UpdatedAt)
+            .ToArray();
+        var openIds = safeTabs.Select(item => item.Id).ToHashSet();
+        var seen = new HashSet<Guid>();
+        var safeClosedTabs = recentlyClosedTabs.Reverse()
+            .Where(item => item is not null && item.Tab is not null &&
+                item.Tab.Privacy == BrowserTabPrivacy.Standard && item.Tab.Id != Guid.Empty && item.Index >= 0 &&
+                !openIds.Contains(item.Tab.Id) &&
+                item.Tab.ProfileId is not null &&
+                (item.Tab.ProfileId.Length == 0 || !string.IsNullOrWhiteSpace(item.Tab.ProfileId)) &&
+                BrowserNativePages.IsStoredTabAddress(item.Tab.Address))
+            .Where(item => seen.Add(item.Tab.Id))
+            .Take(25)
+            .Reverse()
+            .ToArray();
+        return MutateAndSaveAsync(data => data with { Tabs = safeTabs, ClosedTabs = safeClosedTabs }, cancellationToken);
     }
 
     /// <summary>
@@ -420,17 +454,34 @@ public sealed class BrowserDataService : IDisposable
         if (data.SchemaVersion > CurrentSchemaVersion)
             throw new JsonException($"Browser data schema {data.SchemaVersion} is newer than supported schema {CurrentSchemaVersion}.");
 
+        var tabs = (data.Tabs ?? []).Where(item => item.Privacy != BrowserTabPrivacy.Private &&
+            BrowserNativePages.IsStoredTabAddress(item.Address)).ToArray();
+        var openIds = tabs.Select(item => item.Id).ToHashSet();
+
         return data with
         {
             SchemaVersion = CurrentSchemaVersion,
             Bookmarks = data.Bookmarks ?? [],
             History = (data.History ?? []).Take(2000).ToArray(),
-            Tabs = (data.Tabs ?? []).Where(item => item.Privacy != BrowserTabPrivacy.Private && BrowserNativePages.IsStoredTabAddress(item.Address)).ToArray(),
+            Tabs = tabs,
+            ClosedTabs = NormalizeClosedTabs(data.ClosedTabs ?? []).Where(item => !openIds.Contains(item.Tab.Id)).ToArray(),
             Logins = data.Logins ?? [],
             Extensions = data.Extensions ?? [],
             Settings = data.Settings ?? BrowserSettings.Default,
             Research = NormalizeResearch(data.Research ?? BrowserResearchSessionState.Empty)
         };
+    }
+
+    private static IReadOnlyList<BrowserClosedTabState> NormalizeClosedTabs(IEnumerable<BrowserClosedTabState> closedTabs)
+    {
+        var seen = new HashSet<Guid>();
+        return closedTabs.Reverse()
+            .Where(item => item is not null && item.Tab is not null && item.Tab.Privacy == BrowserTabPrivacy.Standard &&
+                item.Tab.Id != Guid.Empty && item.Index >= 0 && item.Tab.ProfileId is not null &&
+                (item.Tab.ProfileId.Length == 0 || !string.IsNullOrWhiteSpace(item.Tab.ProfileId)) &&
+                BrowserNativePages.IsStoredTabAddress(item.Tab.Address))
+            .Where(item => seen.Add(item.Tab.Id))
+            .Take(25).Reverse().ToArray();
     }
 
     private static BrowserResearchSessionState NormalizeResearch(BrowserResearchSessionState research)
@@ -602,6 +653,7 @@ public sealed class BrowserDataService : IDisposable
         IReadOnlyList<BrowserTabState> Tabs, IReadOnlyList<SavedLogin> Logins, IReadOnlyList<BrowserExtensionDefinition> Extensions,
         BrowserSettings Settings, BrowserResearchSessionState? Research = null, int SchemaVersion = CurrentSchemaVersion)
     {
+        public IReadOnlyList<BrowserClosedTabState> ClosedTabs { get; init; } = [];
         /// <summary>
         /// Gets or updates empty, the bindable or domain state represented by this property.
         /// </summary>

@@ -123,7 +123,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         _profilePaths = paths;
         _data = new BrowserDataService(paths);
         _tabSessionPersistence = tabSessionPersistence;
-        _permissionStores[homeProfileId] = new BrowserSitePermissionStore(paths);
+        _permissionStores[homeProfileId] = new BrowserSitePermissionStore(paths, homeProfileId, homeProfileId);
         _privateProfiles = new BrowserPrivateProfileManager(paths.BrowserProfileDirectory);
         _enginePreferences = new BrowseEnginePreferencesStore(paths);
         _enginePolicy = BrowseEngineSelectionPolicy.Restore(preferences);
@@ -136,6 +136,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     }
 
     public string StandardProfileDirectory { get; }
+    public bool HasUnassignedLegacyProfileData => Haven.Browser.BrowserProfileStorage.HasUnassignedLegacyData(_profilePaths);
     public event EventHandler<BrowseChromeSnapshot>? StateChanged;
     /// <summary>Raised only after ordinary unsaved-work preflight accepted retirement.
     /// Observers cannot prevent the original resources from being drained.</summary>
@@ -200,6 +201,11 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             chrome.NormalizeTabPlacement();
             chrome._selectedTabId = projected?.SelectedTabId is { } restoredSelection && chrome._tabs.Any(tab => tab.Id == restoredSelection)
                 ? restoredSelection : chrome._tabs.FirstOrDefault(tab => tab.IsHome)?.Id ?? chrome._tabs[0].Id;
+            if (chrome._data.Settings.RestoreTabs)
+            {
+                if (tabSessionPersistence is not null) chrome.RestoreClosedTabs(projected?.ClosedTabs ?? []);
+                else chrome.RestoreStandaloneClosedTabs();
+            }
             chrome._status = chrome._tabs[0].EngineState == BrowseEngineState.Ready
                 ? "Browse is ready."
                 : chrome._tabs[0].Status;
@@ -429,10 +435,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         tab.Session.Dispose();
         if (tab.Privacy == BrowserTabPrivacy.Private)
             await _privateProfiles.CleanupAsync(tab.Id, cancellationToken).ConfigureAwait(false);
+        RememberClosedTab(tab, index, engineOverride);
         await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
         _status = "Tab closed.";
         await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
-        RememberClosedTab(tab, index, engineOverride);
         return Publish();
         }
         catch (Exception error) { preparationFailure = error; throw; }
@@ -930,14 +936,20 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         // persists its current snapshot, otherwise that old commit can restore
         // a closed or replaced tab after the user action succeeds.
         if (_lastOriginalPageCommit is { } originalCommit) await originalCommit.ConfigureAwait(false);
-        await SaveTabProjectionAsync(CaptureStandardTabs(), PersistedSelectedTabId(), cancellationToken).ConfigureAwait(false);
+        var tabs = CaptureStandardTabs();
+        var openIds = tabs.Select(tab => tab.Id).ToHashSet();
+        await SaveTabProjectionAsync(tabs, PersistedSelectedTabId(), CaptureClosedTabs(openIds), cancellationToken).ConfigureAwait(false);
     }
     private Guid? PersistedSelectedTabId() => _tabs.Any(tab => tab.Id == _selectedTabId && tab.Privacy == BrowserTabPrivacy.Standard)
         ? _selectedTabId : null;
-    private Task SaveTabProjectionAsync(IReadOnlyList<BrowserTabState> tabs, Guid? selectedTabId, CancellationToken token)
+    private Task SaveTabProjectionAsync(IReadOnlyList<BrowserTabState> tabs, Guid? selectedTabId,
+        IReadOnlyList<BrowseClosedTabProjection> closedTabs, CancellationToken token)
     {
-        var original = _tabSessionPersistence is null ? _data.SaveTabsAsync(tabs, token)
-            : _tabSessionPersistence.SaveAsync(new(tabs, selectedTabId), token);
+        var original = _tabSessionPersistence is null
+            ? _data.SaveSessionTabsAsync(tabs, closedTabs.Select(item =>
+                new BrowserClosedTabState(item.Tab, item.Index, item.EngineOverride?.ToString())), token)
+            : _tabSessionPersistence.SaveAsync(new BrowseTabSessionProjection(tabs, selectedTabId)
+                { ClosedTabs = closedTabs }, token);
         if (original is null) throw new InvalidOperationException("The workspace owner supplied no original session save task.");
         RetainAppSource(original); return original;
     }

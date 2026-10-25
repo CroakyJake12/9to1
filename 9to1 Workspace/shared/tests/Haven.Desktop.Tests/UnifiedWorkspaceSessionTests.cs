@@ -47,6 +47,42 @@ public sealed class UnifiedWorkspaceSessionTests
     }
 
     [AvaloniaFact]
+    public async Task Recently_closed_tabs_load_and_reopen_through_the_canonical_window_owner()
+    {
+        var active = UnifiedWorkspaceTabState.Merge(null, Browser("Active"));
+        var closedId = Guid.NewGuid();
+        var closed = new WorkspaceClosedTabSnapshot(closedId, "Saved research", "https://research.example/",
+            "other-profile", null, 2, "Chromium", true, DateTimeOffset.UnixEpoch.AddDays(2));
+        var main = Window(WorkspaceWindowKind.Main, [active.Id]) with { RecentlyClosedTabs = [closed] };
+        var baseline = new WorkspaceSessionSnapshot(WorkspaceSessionSnapshot.CurrentSchemaVersion,
+            [active], [], [main], DateTimeOffset.UnixEpoch);
+        var repository = new Repository { Restored = baseline };
+        var coordinator = new WorkspaceSessionCoordinator(repository);
+        var session = new UnifiedWorkspaceSession(coordinator, await coordinator.LoadAsync(CancellationToken.None));
+        var port = session.OpenWindow(main.Id, "current-profile");
+
+        var loaded = await port.LoadAsync(CancellationToken.None)
+            ?? throw new InvalidOperationException("The existing session owner returned no projection.");
+        Assert.Equal(closedId, Assert.Single(loaded.ClosedTabs).Tab.Id);
+        Assert.Equal("other-profile", loaded.ClosedTabs[0].Tab.ProfileId);
+        await port.SaveAsync(loaded, CancellationToken.None);
+        Assert.Equal("Chromium", Assert.Single(repository.Writes[0].Windows.Single().RecentlyClosedTabs).EngineOverride);
+        await port.SaveAsync(new BrowseTabSessionProjection(
+            loaded.Tabs.Append(loaded.ClosedTabs[0].Tab).ToArray(), closedId), CancellationToken.None);
+        await session.SealAndDrainAsync();
+        await coordinator.SaveFinalSnapshotAndSealAsync(CancellationToken.None);
+
+        var final = repository.Writes[^1];
+        var window = Assert.Single(final.Windows);
+        Assert.Empty(window.RecentlyClosedTabs);
+        Assert.Contains(closedId, window.OrderedTabIds);
+        var reopened = final.Tabs.Single(tab => tab.Id == closedId);
+        Assert.True(UnifiedWorkspaceTabState.TryProject(reopened, "current-profile", out var projected));
+        Assert.Equal("https://research.example/", projected!.Address);
+        Assert.Equal("other-profile", projected!.ProfileId);
+    }
+
+    [AvaloniaFact]
     public async Task Held_actual_write_serializes_later_projection_and_drain_preserves_both_before_final_capture()
     {
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -48,6 +48,46 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
         Assert.Equal(beforeOther, JsonSerializer.Serialize(merged.Windows[1]));
     }
 
+    [Fact]
+    public void Recently_closed_profiles_are_bounded_and_round_trip_without_becoming_open_rows()
+    {
+        var open = Tab("Open"); var closedId = Guid.NewGuid();
+        var closed = new BrowseClosedTabProjection(
+            new(closedId, "Closed research", "https://research.example/", BrowserTabPrivacy.Standard,
+                string.Empty, DateTimeOffset.UnixEpoch.AddDays(2))
+            { ProfileId = "alternate-profile", IsPinned = true }, 3, BrowseEngineKind.Chromium);
+        var original = Session([open]);
+        var merged = Merge(original, Projection([Project(open)], open.Id) with { ClosedTabs = [closed] }, open.Id);
+        var window = Assert.Single(merged.Windows);
+        var recovery = Assert.Single(window.RecentlyClosedTabs);
+        Assert.Equal(closedId, recovery.Id); Assert.Equal("alternate-profile", recovery.ProfileId);
+        Assert.Equal("https://research.example/", recovery.Address); Assert.Equal(3, recovery.Index);
+        Assert.Equal("Chromium", recovery.EngineOverride); Assert.True(recovery.IsPinned);
+        Assert.Single(merged.Tabs); Assert.Equal(new[] { open.Id }, window.OrderedTabIds);
+
+        var serialized = JsonSerializer.Serialize(merged);
+        var restored = JsonSerializer.Deserialize<WorkspaceSessionSnapshot>(serialized)!;
+        Assert.Equal(serialized, JsonSerializer.Serialize(restored));
+        Assert.Equal(recovery, Assert.Single(Assert.Single(restored.Windows).RecentlyClosedTabs));
+    }
+
+    [Fact]
+    public void Recently_closed_private_rows_and_open_identity_collisions_are_refused()
+    {
+        var open = Tab("Open");
+        var closed = new BrowseClosedTabProjection(Project(open), 0, null);
+        var original = Session([open]);
+        var privateProjection = Projection([Project(open)], open.Id) with
+        { ClosedTabs = [closed with { Tab = closed.Tab with { Privacy = BrowserTabPrivacy.Private } }] };
+        Assert.Throws<InvalidDataException>(() => Merge(original, privateProjection, open.Id));
+        var collision = Projection([Project(open)], open.Id) with { ClosedTabs = [closed] };
+        Assert.Throws<InvalidDataException>(() => Merge(original, collision, open.Id));
+        var overCapacity = Enumerable.Range(0, 26).Select(index => closed with
+        { Tab = closed.Tab with { Id = Guid.NewGuid(), Title = "Closed " + index } }).ToArray();
+        Assert.Throws<InvalidDataException>(() => Merge(original,
+            Projection([Project(open)], open.Id) with { ClosedTabs = overCapacity }, open.Id));
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

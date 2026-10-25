@@ -80,6 +80,7 @@ public sealed partial class BrowseChrome
         if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab) ||
             snapshot.IsLoading || snapshot.Address is not { Scheme: "http" or "https" }) return;
         var originalTabState = CaptureStandardTabs();
+        var originalClosedTabState = CaptureClosedTabs(originalTabState.Select(item => item.Id).ToHashSet());
         lock (_nativeSourceGate)
         {
             if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab)) return;
@@ -89,7 +90,8 @@ public sealed partial class BrowseChrome
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             tab.HasOriginalCommittedPage = true;
             tab.ZoomPercent = 100;
-            var driver = PersistOriginalCommitAsync(start.Task, _lastOriginalPageCommit, snapshot, tab.Privacy, originalTabState, PersistedSelectedTabId());
+            var driver = PersistOriginalCommitAsync(start.Task, _lastOriginalPageCommit, snapshot, tab.Privacy,
+                originalTabState, originalClosedTabState, PersistedSelectedTabId());
             _lastOriginalPageCommit = driver;
             _originalNativeSources.Add(driver);
             try { Publish(); }
@@ -98,14 +100,15 @@ public sealed partial class BrowseChrome
         }
     }
     private async Task PersistOriginalCommitAsync(Task start, Task? previousOriginalCommit, BrowserSnapshot snapshot, Haven.Core.BrowserTabPrivacy privacy,
-        BrowserTabState[] originalTabState, Guid? selectedTabId)
+        BrowserTabState[] originalTabState, IReadOnlyList<BrowseClosedTabProjection> originalClosedTabState, Guid? selectedTabId)
     {
         await start.ConfigureAwait(false);
         if (previousOriginalCommit is not null) await previousOriginalCommit.ConfigureAwait(false);
         var originalVisit = _data.RecordVisitAsync(snapshot.Title, snapshot.Address!.ToString(), privacy == Haven.Core.BrowserTabPrivacy.Private, CancellationToken.None);
         lock (_nativeSourceGate) _originalNativeSources.Add(originalVisit);
         await originalVisit.ConfigureAwait(false);
-        var originalSession = SaveTabProjectionAsync(originalTabState, selectedTabId, CancellationToken.None);
+        var originalSession = SaveTabProjectionAsync(originalTabState, selectedTabId,
+            originalClosedTabState, CancellationToken.None);
         lock (_nativeSourceGate) _originalNativeSources.Add(originalSession);
         await originalSession.ConfigureAwait(false);
         if (!_nativeRetiring && !_disposed) Publish();

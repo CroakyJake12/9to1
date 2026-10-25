@@ -48,6 +48,37 @@ public sealed class BrowserDataServiceTests : IDisposable
         Assert.Equal(BrowserTabPrivacy.Standard, reloaded.Tabs[0].Privacy);
     }
 
+    [Fact]
+    public async Task SaveSessionTabsAtomicallyPersistsBoundedProfileSafeRecentlyClosedRows()
+    {
+        var open = new BrowserTabState(Guid.NewGuid(), "Open", "https://open.example/",
+            BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" };
+        var recent = Enumerable.Range(0, 26).Select(index => new BrowserClosedTabState(
+            new BrowserTabState(Guid.NewGuid(), "Closed " + index, "https://closed.example/" + index,
+                BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UnixEpoch.AddMinutes(index))
+            { ProfileId = "profile-" + index }, index, index == 25 ? "Chromium" : null)).ToList();
+        recent.Add(new(new BrowserTabState(Guid.NewGuid(), "Private", "https://private.example/",
+            BrowserTabPrivacy.Private, string.Empty, DateTimeOffset.UtcNow), 26, "Chromium"));
+        recent.Add(new(open, 27, "Gecko"));
+
+        using (var data = new BrowserDataService(_paths))
+        {
+            await data.SaveSessionTabsAsync([open, open with { Privacy = BrowserTabPrivacy.Private }], recent,
+                CancellationToken.None);
+            Assert.Single(data.Tabs);
+            Assert.Equal(25, data.ClosedTabs.Count);
+            Assert.Equal("Closed 1", data.ClosedTabs[0].Tab.Title);
+            Assert.Equal("profile-25", data.ClosedTabs[^1].Tab.ProfileId);
+            Assert.Equal("Chromium", data.ClosedTabs[^1].EngineOverride);
+            Assert.DoesNotContain(data.ClosedTabs, item => item.Tab.Id == open.Id || item.Tab.Privacy == BrowserTabPrivacy.Private);
+        }
+
+        using var reloaded = new BrowserDataService(_paths);
+        Assert.Single(reloaded.Tabs);
+        Assert.Equal("profile-25", reloaded.ClosedTabs[^1].Tab.ProfileId);
+        Assert.Equal("Chromium", reloaded.ClosedTabs[^1].EngineOverride);
+    }
+
     /// <summary>
     /// Performs the bookmark changes and vertical tab preference survive reload step owned by this component.
     /// </summary>
@@ -164,6 +195,7 @@ public sealed class BrowserDataServiceTests : IDisposable
         {
             var tab = Assert.Single(migrated.Tabs);
             Assert.Equal(standardId, tab.Id);
+            Assert.Empty(migrated.ClosedTabs); // Additive field remains compatible with old browser-data files.
         }
 
         File.WriteAllText(primary, """
