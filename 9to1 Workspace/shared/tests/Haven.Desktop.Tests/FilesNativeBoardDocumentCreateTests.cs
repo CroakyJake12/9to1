@@ -159,13 +159,17 @@ public sealed class FilesNativeBoardDocumentCreateTests
         }
         rig.BoardCreateAuditObserver.FailNextBoardCreateAudit = true;
 
-        var failure = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(
-            creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder, rig.Workspace.Actor,
+        var original = creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder, rig.Workspace.Actor,
                 "Audit retry", bytes, () => true, Review, "home-board-create-audit-retry",
-                body => body(), rig.Retain, rig.Token)));
+                body => body(), rig.Retain, rig.Token);
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(original));
         var pending = FindSettlement(failure);
 
         Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, pending.State);
+        Assert.True(creator.IsOriginalPendingAuditFailure(original, failure));
+        Assert.False(creator.IsOriginalPendingAuditFailure(original, new IOException("Controlled lost acknowledgment after the exact board-create audit was persisted.")));
+        Assert.False(creator.IsOriginalPendingAuditFailure(Task.FromException(failure), failure));
+        Assert.False(creator.IsOriginalPendingAuditFailure(original, new AggregateException(failure, new IOException("Unrelated sibling failure."))));
         var exactReceipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(pending.Receipt);
         var beforeObserve = await rig.ReadBytesAsync();
         var observed = await rig.Keep(creator.ObserveCreateSettlementWithinSourceAsync(
@@ -193,6 +197,49 @@ public sealed class FilesNativeBoardDocumentCreateTests
             token: rig.Token, expectedStoreId: exactReceipt.FilesStoreId));
         Assert.Single(final.Items, item => item.Id.Value == exactReceipt.FileId);
         Assert.Single(final.Items, item => item.Name == exactReceipt.DisplayName);
+        await creator.CloseAndDrainAsync();
+    }
+
+    [LinuxFact]
+    public async Task Unrecovered_original_audit_failure_still_fails_owner_drain_and_retains_one_committed_file()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var source = await rig.OpenBoardFolderAsync();
+        var creator = rig.Creator = rig.Browser.CreateOriginalBoardDocumentCreateOwner(rig.Physical);
+        rig.BoardCreateAuditObserver.FailNextBoardCreateAudit = true;
+        async Task Review(HomePermissionAuthorization request, CancellationToken token)
+        { Assert.True((await rig.Trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded); }
+        var original = creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder, rig.Workspace.Actor,
+            "Unrecovered audit", BoardBytes(Guid.NewGuid(), "Retain original audit"), () => true, Review, "unrecovered-audit",
+            body => body(), rig.Retain, rig.Token);
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(original));
+        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, FindSettlement(failure).State);
+        Assert.True(creator.IsOriginalPendingAuditFailure(original, failure));
+        var drain = await Assert.ThrowsAnyAsync<Exception>(() => creator.CloseAndDrainAsync());
+        Assert.Contains("Controlled lost acknowledgment", drain.ToString(), StringComparison.Ordinal);
+        var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, source.Folder.Id.Value,
+            token: rig.Token, expectedStoreId: rig.Workspace.Configuration.StoreId));
+        Assert.Single(page.Items, item => item.Name == "Unrecovered audit.9to1board");
+    }
+
+    [LinuxFact]
+    public async Task Unrelated_review_IO_is_not_an_original_decline_or_audit_and_still_fails_drain()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var source = await rig.OpenBoardFolderAsync();
+        var creator = rig.Creator = rig.Browser.CreateOriginalBoardDocumentCreateOwner(rig.Physical);
+        var failure = new IOException("Unrelated real review callback IO failure.");
+        var original = creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder, rig.Workspace.Actor,
+            "No board", BoardBytes(Guid.NewGuid(), "No effect"), () => true, (_, _) => Task.FromException(failure), "foreign-review-io",
+            body => body(), rig.Retain, rig.Token);
+        var observed = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(original));
+        Assert.False(creator.IsOriginalReviewRefusal(original, observed));
+        Assert.False(creator.IsOriginalPendingAuditFailure(original, observed));
+        var drain = await Assert.ThrowsAnyAsync<Exception>(() => creator.CloseAndDrainAsync());
+        Assert.Contains(failure.Message, drain.ToString(), StringComparison.Ordinal);
+        var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, source.Folder.Id.Value,
+            token: rig.Token, expectedStoreId: rig.Workspace.Configuration.StoreId));
+        Assert.Empty(page.Items);
     }
 
     [LinuxFact]
