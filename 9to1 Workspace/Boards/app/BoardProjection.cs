@@ -1118,6 +1118,24 @@ internal static class BoardTextRanges
     internal static List<HavenRichTextRun> Copy(IEnumerable<HavenRichTextRun> runs) => runs.Select(run => Copy(run)).ToList();
     internal static bool Matches(RichBoardBlock block) => block.Runs.Count == 0 ||
         string.Concat(block.Runs.Select(run => run.Text)) == block.Text;
+    internal static (List<HavenRichTextRun> Left, List<HavenRichTextRun> Right) SplitAt(
+        IReadOnlyList<HavenRichTextRun> runs, string text, int caretIndex)
+    {
+        if (runs.Count == 0) return ([], []);
+        if (!string.Equals(string.Concat(runs.Select(run => run.Text)), text, StringComparison.Ordinal))
+            return ([], []);
+        var left = new List<HavenRichTextRun>();
+        var right = new List<HavenRichTextRun>();
+        var offset = 0;
+        foreach (var run in runs)
+        {
+            var split = Math.Clamp(caretIndex - offset, 0, run.Text.Length);
+            if (split > 0) left.Add(Copy(run, run.Text[..split]));
+            if (split < run.Text.Length) right.Add(Copy(run, run.Text[split..]));
+            offset += run.Text.Length;
+        }
+        return (left, right);
+    }
     internal static bool Enabled(HavenRichTextRun run, BoardTextFormat format) => format switch
     {
         BoardTextFormat.Bold => run.Bold, BoardTextFormat.Italic => run.Italic,

@@ -122,6 +122,78 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Paragraph_split_and_merge_preserve_runs_undo_and_reopen()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "text-split-merge.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            string pageId;
+            string originalBlockId;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var page = adapter.Document.Sections[0].Pages[0];
+                pageId = page.Id;
+                var paragraph = page.Blocks.First(block => block.Kind == "paragraph");
+                originalBlockId = paragraph.Id;
+                paragraph.Text = "alphaBETAomega";
+                paragraph.Runs =
+                [
+                    new HavenRichTextRun { Text = "alpha" },
+                    new HavenRichTextRun { Text = "BETA", Bold = true, Foreground = "#FF345678" },
+                    new HavenRichTextRun { Text = "omega" },
+                ];
+                adapter.MarkDirty();
+                await adapter.SaveAsync();
+
+                var vm = new BoardsViewModel(adapter);
+                Assert.True(await vm.SplitTextBlockAtAsync(originalBlockId, 7));
+                var blocks = adapter.Document.Sections[0].Pages[0].Blocks;
+                Assert.Equal(new[] { "alphaBE", "TAomega" }, blocks.Select(block => block.Text));
+                Assert.Equal(new[] { "alpha", "BE" }, blocks[0].Runs.Select(run => run.Text));
+                Assert.Equal(new[] { "TA", "omega" }, blocks[1].Runs.Select(run => run.Text));
+                Assert.True(blocks[0].Runs[1].Bold);
+                Assert.True(blocks[1].Runs[0].Bold);
+
+                Assert.True(await adapter.UndoAsync());
+                blocks = adapter.Document.Sections[0].Pages[0].Blocks;
+                Assert.Single(blocks, block => block.Id == originalBlockId);
+                Assert.Equal("alphaBETAomega", blocks.Single(block => block.Id == originalBlockId).Text);
+                Assert.True(await adapter.RedoAsync());
+
+                var splitId = adapter.Document.Sections[0].Pages[0].Blocks[1].Id;
+                Assert.True(await vm.MergeTextBlockWithPreviousAsync(splitId));
+                blocks = adapter.Document.Sections[0].Pages[0].Blocks;
+                var merged = Assert.Single(blocks, block => block.Id == originalBlockId);
+                Assert.Equal("alphaBETAomega", merged.Text);
+                Assert.Equal(new[] { "alpha", "BE", "TA", "omega" }, merged.Runs.Select(run => run.Text));
+                Assert.True(merged.Runs[1].Bold && merged.Runs[2].Bold);
+                Assert.Equal("#FF345678", merged.Runs[2].Foreground);
+
+                Assert.True(await adapter.UndoAsync());
+                Assert.Equal(2, adapter.Document.Sections[0].Pages[0].Blocks.Count(block =>
+                    block.Kind is "paragraph" or "heading"));
+                Assert.True(await adapter.RedoAsync());
+                await adapter.SaveAsync();
+
+                await vm.DispatchAsync("ToggleEditView", null);
+                Assert.False(await vm.SplitTextBlockAtAsync(originalBlockId, 0));
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var saved = Assert.Single(reopened.Document.Sections[0].Pages.Single(page => page.Id == pageId).Blocks,
+                block => block.Id == originalBlockId);
+            Assert.Equal("alphaBETAomega", saved.Text);
+            Assert.Equal(new[] { "alpha", "BE", "TA", "omega" }, saved.Runs.Select(run => run.Text));
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
     public async Task Adapter_merge_preserves_contract_only_state()
     {
         var root = TempDirectory();

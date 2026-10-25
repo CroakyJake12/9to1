@@ -200,6 +200,32 @@ public static class BlockRenderer
         var captured = block.Id;
         box.TextChanged += (_, _) => vm.EditText("t_" + captured, box.Text ?? string.Empty);
         box.GotFocus += (_, _) => vm.FocusBlock(captured);
+        box.KeyDown += async (_, args) =>
+        {
+            if (!vm.IsEditMode) return;
+            if (args.Key == Key.Enter && (args.KeyModifiers.HasFlag(KeyModifiers.Control) ||
+                                          box.SelectionStart == box.SelectionEnd))
+            {
+                args.Handled = true;
+                if (box.SelectionStart != box.SelectionEnd)
+                {
+                    vm.Set("StatusText", "Collapse the selection before splitting this text block.");
+                    return;
+                }
+                await vm.SplitTextBlockAtAsync(captured, box.CaretIndex);
+            }
+            else if (args.Key == Key.Back && box.SelectionStart == box.SelectionEnd && box.CaretIndex == 0)
+            {
+                if (await vm.MergeTextBlockWithPreviousAsync(captured))
+                    args.Handled = true;
+            }
+        };
+        box.AttachedToVisualTree += (_, _) =>
+        {
+            if (!vm.TryConsumePendingTextFocus(vm.SelectedPageId, captured, out var caretIndex)) return;
+            box.Focus();
+            box.CaretIndex = Math.Clamp(caretIndex, 0, (box.Text ?? string.Empty).Length);
+        };
         vm.BindTextSelection(box, captured);
         shell.Children.Add(box);
         return shell;
