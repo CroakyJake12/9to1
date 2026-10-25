@@ -28,22 +28,6 @@ public sealed class VisualCaptureTests
         return dir;
     }
 
-    private static string FindBoardsCui()
-    {
-        var dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-        for (var i = 0; i < 12 && dir != null; i++)
-        {
-            var candidate = Path.Combine(dir.FullName, "9to1 Workspace", "Boards", "app", "Boards.cui");
-            if (File.Exists(candidate))
-                return candidate;
-            var direct = Path.Combine(dir.FullName, "Boards.cui");
-            if (File.Exists(direct))
-                return direct;
-            dir = dir.Parent;
-        }
-        throw new FileNotFoundException("Boards.cui was not found from the test output directory.");
-    }
-
     private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false, bool openStyleMenu = false) =>
         // Funnelled through the shared test UI thread like every other suite.
         TestUiThread.Run(() => CaptureOnUiThread(boardPath, width, height, shotName, dark, openStyleMenu));
@@ -63,32 +47,34 @@ public sealed class VisualCaptureTests
         var store = new JsonFileHavenBoardStore(storeRoot);
         var adapter = ContractSessionAdapter.OpenAsync(store, boardPath).GetAwaiter().GetResult();
         BoardsViewModel? viewModel = null;
+        CuiControlLoader? loader = null;
+        BoardInkInteractionController? inkInteraction = null;
+        BoardsTextAndKeyboardOwner? inputOwner = null;
         Window? window = null;
         try
         {
             viewModel = new BoardsViewModel(adapter);
 
-            var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+            loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
             loader.SetBindingContext(viewModel);
             loader.SetActionDispatcher(viewModel);
-            var (root, diagnostics) = loader.LoadFile(FindBoardsCui());
+            var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
             Assert.True(diagnostics.Count == 0, "CUI diagnostics: " + string.Join("; ", diagnostics));
             Assert.NotNull(root);
             loader.WireBindings(root);
             viewModel.Attach(root);
+            inputOwner = new BoardsTextAndKeyboardOwner(root, viewModel);
+            var inkOverlay = FindByAutomationId<Canvas>(root, "InkOverlayLayer");
+            Assert.NotNull(inkOverlay);
+            inkInteraction = new BoardInkInteractionController(inkOverlay!, viewModel);
 
             var host = FindByAutomationId<StackPanel>(root, "BlocksHost");
             Assert.NotNull(host);
             BlockRenderer.RebuildAsync(host, viewModel).GetAwaiter().GetResult();
             FillCombo(root, "StyleBox", viewModel.StyleList.Select(s => s.Name).ToList());
             FillCombo(root, "AddKindBox", ["Paragraph", "Checklist", "Table", "Graph", "Image"]);
-            // Mirror production shell wiring so shots show the real chrome.
+            // Render the same compiled CUI and dynamic surface owners as the app host.
             ThemeApplier.ApplyChrome(root);
-            var left = FindByAutomationId<StackPanel>(root, "TopBarLeft");
-            var right = FindByAutomationId<StackPanel>(root, "TopBarRight");
-            if (left is not null && right is not null)
-                ShellChrome.BuildTopBar(left, right, viewModel, onFileMenu: () => { }, onOverflow: () => { }, onTheme: () => { },
-                    onSaveState: state => state.Text = viewModel.Get("SaveStateText")?.ToString() ?? "Saved");
             var nav = FindByAutomationId<StackPanel>(root, "NavHost");
             if (nav is not null)
                 NavBuilder.Rebuild(nav, viewModel);
@@ -98,14 +84,16 @@ public sealed class VisualCaptureTests
             var context = FindByAutomationId<StackPanel>(root, "ContextHost");
             if (context is not null)
                 ContextPanels.Rebuild(context, viewModel);
+            inkInteraction.RenderAsync().GetAwaiter().GetResult();
 
         window = new Window
         {
             Width = width,
             Height = height,
             Content = root,
-            Background = Avalonia.Media.Brushes.White,
+            Background = BoardsTheme.AppBackgroundBrush,
         };
+        inputOwner.AttachWindow(window);
         window.Show();
         window.Measure(new Size(width, height));
         window.Arrange(new Rect(0, 0, width, height));
@@ -177,12 +165,18 @@ public sealed class VisualCaptureTests
             try
             {
                 window?.Close();
+                inputOwner?.Dispose();
+                if (inputOwner is not null) inputOwner.DrainAsync().GetAwaiter().GetResult();
+                inkInteraction?.Dispose();
+                if (inkInteraction is not null) inkInteraction.DrainAsync().GetAwaiter().GetResult();
 
                 // TextBox raises TextChanged through Dispatcher jobs. Drain those jobs while
                 // the view model's session is still alive, then detach static CUI handlers and
                 // durably merge/save any legitimate final edit before disposing the adapter.
                 Dispatcher.UIThread.RunJobs();
+                if (loader is not null) loader.WhenActionsIdleAsync().GetAwaiter().GetResult();
                 viewModel?.Detach();
+                loader?.Dispose();
                 adapter.SaveAsync().AsTask().GetAwaiter().GetResult();
             }
             finally
