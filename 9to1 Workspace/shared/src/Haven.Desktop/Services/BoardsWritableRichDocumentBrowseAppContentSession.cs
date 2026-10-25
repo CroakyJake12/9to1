@@ -13,6 +13,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
 {
     private readonly BrowseAppContentRequest _request;
     private readonly CancellationTokenSource _lifetime;
+    private readonly IBoardsEmbeddedArtifactHost? _embeddedHost;
     private readonly object _gate = new();
     private NativeHomeFilesBoardWriteLease? _lease;
     private BoardsWritablePresentation? _presentation;
@@ -24,12 +25,13 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
 
     internal BoardsWritableRichDocumentBrowseAppContentSession(BrowseAppContentRequest request,
         BoardsBrowseAppContentAddress address, NativeHomeFilesBoardWriteLease lease,
-        CancellationTokenSource lifetime)
+        CancellationTokenSource lifetime, IBoardsEmbeddedArtifactHost? embeddedHost = null)
     {
         _request = request ?? throw new ArgumentNullException(nameof(request));
         ArgumentNullException.ThrowIfNull(address);
         _lease = lease ?? throw new ArgumentNullException(nameof(lease));
         _lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
+        _embeddedHost = embeddedHost;
         if (!address.IsFilesDocument || !address.Writable || address.StoreId != lease.StoreId ||
             address.ParentFolderId != lease.ParentFolderId || address.FileId != lease.FileId ||
             address.RevisionId != lease.RevisionId || !StringComparer.Ordinal.Equals(request.ProfileId, lease.ProfileId))
@@ -85,7 +87,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             linked.Token.ThrowIfCancellationRequested();
             await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(true);
             var presentation = await BoardsWritablePresentation.OpenWritableDocumentAsync(
-                bytes, lease.SourceId, lease.RevisionId.ToString("D"), lease.SaveAsync, linked.Token);
+                bytes, lease.SourceId, lease.RevisionId.ToString("D"), lease.SaveAsync, linked.Token, _embeddedHost);
             try
             {
                 await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(true);
@@ -145,18 +147,39 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        BoardsWritablePresentation? presentation;
         lock (_gate)
         {
             if (_close is not null) return Task.FromResult(_close.IsCompletedSuccessfully);
             if (_initialization is { IsCompleted: false }) return Task.FromResult(false);
-            if (_presentation?.HasUnsavedChanges == true)
+            presentation = _presentation;
+        }
+        return presentation is null ? Task.FromResult(true) : PreparePresentationToCloseAsync(presentation, cancellationToken);
+    }
+
+    private async Task<bool> PreparePresentationToCloseAsync(BoardsWritablePresentation presentation, CancellationToken token)
+    {
+        Task<bool> nested;
+        if (Dispatcher.UIThread.CheckAccess()) nested = presentation.TryPrepareToCloseAsync(token);
+        else
+        {
+            var dispatch = Dispatcher.UIThread.InvokeAsync<Task<bool>>(
+                () => presentation.TryPrepareToCloseAsync(token)).GetTask();
+            nested = await dispatch.ConfigureAwait(false);
+        }
+        if (!await nested.ConfigureAwait(false)) return false;
+
+        lock (_gate)
+        {
+            if (!ReferenceEquals(_presentation, presentation) || _closing) return false;
+            if (presentation.HasUnsavedChanges)
             {
-                _presentation.ViewModel.Set("StatusText", "Save this Files board revision before closing.");
-                _presentation.ViewModel.RefreshCuiContext();
+                presentation.ViewModel.Set("StatusText", "Save this Files board revision before closing.");
+                presentation.ViewModel.RefreshCuiContext();
                 CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
-                return Task.FromResult(false);
+                return false;
             }
-            return Task.FromResult(true);
+            return true;
         }
     }
 
@@ -167,8 +190,6 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         {
             if (_close is not null) return _close;
             _closing = true;
-            try { _lifetime.Cancel(); }
-            catch { /* Cancellation is advisory; join the actual initialization below. */ }
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _close = CloseCoreAsync(start.Task);
             start.SetResult();
@@ -200,6 +221,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             await dispose.ConfigureAwait(false);
             _presentation = null;
         }
+        if (_embeddedHost is IAsyncDisposable embeddedOwner)
+            await embeddedOwner.DisposeAsync().ConfigureAwait(false);
         var lease = _lease;
         if (lease is not null)
         {
@@ -207,6 +230,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             _lease = null;
         }
         _published = false;
+        try { _lifetime.Cancel(); } catch { /* Presentation, owner and lease have drained. */ }
         _lifetime.Dispose();
     }
 }
