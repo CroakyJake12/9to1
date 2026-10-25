@@ -111,6 +111,14 @@
           <Text text="Memory" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-memory" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.memory, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Memory category state" />
         </Container>
+        <Container id="space-builder-model-policy" Type="Vertical Stack" CellGap="6" IsVisible="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
+          <Text text="Model routing override" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Optional exact model and provider IDs. Leave the model blank to use the current governed default. Activation checks configured IDs against the live catalogue. The default seeds model choice; a model selected in the current composer takes precedence while eligible." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="Default model ID" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-default-model-id" Type="Text" Value="{Binding builder.model.defaultId, mode=TwoWay}" accessible-name="Default model ID override" />
+          <Text text="Provider constraint" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-provider-constraint" Type="Text" Value="{Binding builder.model.provider, mode=TwoWay}" accessible-name="Model provider constraint" />
+        </Container>
         <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isAdvanced}">
           <Text text="Canonical context sources" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Choose a real Boards notebook through Home. Adding a read reference does not grant body access; using it requires a new original Home review and local inference. Current selection is not captured on this route. Up to 128 current notebooks are shown, newest first." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />

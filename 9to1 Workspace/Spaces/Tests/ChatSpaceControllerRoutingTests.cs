@@ -31,6 +31,7 @@ public sealed class ChatSpaceControllerRoutingTests
         internal string? SavedDraftContent { get; private set; }
         internal IReadOnlyList<Guid> SavedDraftAttachments { get; private set; } = [];
         internal MessageAttachment? NextAttachment { get; set; }
+        internal ChatSpaceModelInventory Inventory { get; set; } = new([Model("model-a"), Model("model-b")], "model-a");
 
         private static Conversation Record(Guid id, string title) =>
             new(id, HavenMode.Chat, ConversationKind.Chat, title, null, null, false, false,
@@ -63,8 +64,7 @@ public sealed class ChatSpaceControllerRoutingTests
         public Task<ChatSpaceModelInventory> GetModelInventoryAsync(CancellationToken cancellationToken)
         {
             Calls.Add(nameof(GetModelInventoryAsync));
-            return Task.FromResult(new ChatSpaceModelInventory(
-                [Model("model-a"), Model("model-b")], "model-a"));
+            return Task.FromResult(Inventory);
         }
 
         public Task<Conversation> CreateChatAsync(CancellationToken cancellationToken)
@@ -205,6 +205,52 @@ public sealed class ChatSpaceControllerRoutingTests
         Assert.Throws<ArgumentException>(() => controller.SelectModel(unknown.Name));
         // The refusal must leave the selection untouched rather than half-applied.
         Assert.Equal("model-a", controller.State.Composer.SelectedModelName);
+    }
+
+    [Fact]
+    public async Task Unavailable_space_default_keeps_draft_and_eligible_choices_for_explicit_override()
+    {
+        var (backend, controller) = await OpenAsync();
+        var id = backend.Seed(Guid.NewGuid(), "Space policy chat").Id;
+        backend.Inventory = new([Model("model-a"), Model("model-b")], null,
+            PreventImplicitFallback: true,
+            PolicyNotice: "The configured Space default is unavailable; no substitute was selected.");
+
+        await controller.OpenChatAsync(id);
+        controller.UpdateDraft("keep this draft");
+
+        Assert.Null(controller.State.Composer.SelectedModelName);
+        Assert.False(controller.State.Composer.CanSend);
+        Assert.Equal(2, controller.State.Models.Count);
+        Assert.Contains("no substitute was selected", controller.State.Status.Message, StringComparison.Ordinal);
+        Assert.Equal("keep this draft", controller.State.Composer.Draft);
+
+        controller.SelectModel("model-b");
+        Assert.Equal("model-b", controller.State.Composer.SelectedModelName);
+        Assert.True(controller.State.Composer.IsModelSelectionExplicit);
+        Assert.True(controller.State.Composer.CanSend);
+        await controller.SendAsync();
+        Assert.Equal("model-b", Assert.Single(backend.Sent).Model.Name);
+    }
+
+    [Fact]
+    public async Task Explicit_model_is_cleared_when_a_refresh_makes_it_ineligible()
+    {
+        var (backend, controller) = await OpenAsync();
+        var id = backend.Seed(Guid.NewGuid(), "Space policy chat").Id;
+        await controller.OpenChatAsync(id);
+        controller.SelectModel("model-b");
+        controller.UpdateDraft("retain this draft");
+        backend.Inventory = new([Model("model-a")], "model-a");
+
+        await controller.OpenChatAsync(id);
+
+        Assert.Equal(new[] { "model-a" }, controller.State.Models.Select(model => model.Name));
+        Assert.Null(controller.State.Composer.SelectedModelName);
+        Assert.False(controller.State.Composer.IsModelSelectionExplicit);
+        Assert.False(controller.State.Composer.CanSend);
+        Assert.Equal("retain this draft", controller.State.Composer.Draft);
+        Assert.Contains("no longer eligible", controller.State.Status.Message, StringComparison.Ordinal);
     }
 
     [Fact]

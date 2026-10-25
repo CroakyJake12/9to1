@@ -74,7 +74,9 @@ public sealed record ChatSpaceModelChoice(
 
 public sealed record ChatSpaceModelInventory(
     IReadOnlyList<ModelDescriptor> Models,
-    string? PreferredModelName = null);
+    string? PreferredModelName = null,
+    bool PreventImplicitFallback = false,
+    string? PolicyNotice = null);
 
 public sealed record ChatSpaceThreadSettings(
     ChatActionMode ActionMode,
@@ -101,7 +103,8 @@ public sealed record ChatSpaceComposer(
     bool IsSending,
     int SelectedModelIndex = -1,
     bool IsEditing = false,
-    Guid? EditingMessageId = null)
+    Guid? EditingMessageId = null,
+    bool IsModelSelectionExplicit = false)
 {
     public bool CanSend =>
         !string.IsNullOrWhiteSpace(SelectedModelName) &&

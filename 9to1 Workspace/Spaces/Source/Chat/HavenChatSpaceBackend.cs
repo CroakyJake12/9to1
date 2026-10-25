@@ -86,9 +86,47 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
     public async Task<ChatSpaceModelInventory> GetModelInventoryAsync(CancellationToken cancellationToken)
     {
         await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        if (registry is null) return await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
+
+        var policy = await new SpacePolicyResolver(registry).ResolveAsync(SpaceId, cancellationToken).ConfigureAwait(false);
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        var configured = policy.Model.DefaultModelId is not null || policy.Model.ProviderConstraint is not null ||
+            (policy.Model.RequiredCapabilities?.Count ?? 0) != 0 || policy.ModelsCategoryDisabled;
+        var candidates = result.Models;
+        if (policy.ModelsCategoryDisabled)
+            return new([], null, PreventImplicitFallback: true,
+                PolicyNotice: "Models are disabled by this Space or an ancestor policy.");
+
+        if (!string.IsNullOrWhiteSpace(policy.Model.ProviderConstraint) &&
+            !StringComparer.OrdinalIgnoreCase.Equals(policy.Model.ProviderConstraint, "ollama"))
+            return new([], null, PreventImplicitFallback: true,
+                PolicyNotice: $"This Chat Space's current model catalogue contains Ollama models only; provider '{policy.Model.ProviderConstraint}' is unavailable here.");
+
         var result = await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
         await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
-        return result;
+
+        var required = new List<ToolCapability>();
+        foreach (var name in policy.Model.RequiredCapabilities ?? [])
+        {
+            if (!Enum.TryParse<ToolCapability>(name, ignoreCase: true, out var capability) || !Enum.IsDefined(capability))
+                return new([], null, PreventImplicitFallback: true,
+                    PolicyNotice: $"The Space requires unsupported model capability '{name}'; no model was selected.");
+            required.Add(capability);
+        }
+        candidates = candidates.Where(model => required.All(model.Supports)).ToArray();
+        var preferred = string.IsNullOrWhiteSpace(policy.Model.DefaultModelId)
+            ? candidates.FirstOrDefault(model => StringComparer.OrdinalIgnoreCase.Equals(model.Name, result.PreferredModelName))?.Name
+            : candidates.FirstOrDefault(model =>
+                StringComparer.OrdinalIgnoreCase.Equals(model.Name, policy.Model.DefaultModelId) ||
+                StringComparer.OrdinalIgnoreCase.Equals("ollama:" + model.Name, policy.Model.DefaultModelId))?.Name;
+
+        var missingConfiguredDefault = !string.IsNullOrWhiteSpace(policy.Model.DefaultModelId) && preferred is null;
+        var notice = missingConfiguredDefault
+            ? $"The configured Space default model '{policy.Model.DefaultModelId}' is not currently eligible. Choose an eligible model or update the Space policy; no substitute was selected."
+            : configured && candidates.Length == 0
+                ? "No currently available model satisfies this Space's effective model policy."
+                : null;
+        return new(candidates, preferred, missingConfiguredDefault || configured && candidates.Length == 0, notice);
     }
 
     public async Task<Conversation> CreateChatAsync(CancellationToken cancellationToken)

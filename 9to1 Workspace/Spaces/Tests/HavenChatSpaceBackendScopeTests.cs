@@ -161,6 +161,86 @@ public sealed class HavenChatSpaceBackendScopeTests
     }
 
     [Fact]
+    public async Task Model_inventory_prefers_the_exact_inherited_space_default_from_current_eligible_models()
+    {
+        var rig = await Rig.CreateAsync();
+        var parent = await rig.Registry.CreateAsync("Model policy parent");
+        parent = await rig.Registry.UpdateAsync(parent with
+        {
+            ModelPolicy = new SpaceModelPolicy("ollama:local", [ToolCapability.Text.ToString()], "ollama")
+        }, parent.Revision);
+        var child = await rig.Registry.CreateAsync("Model policy child", null, parent.Id);
+        var backend = rig.For(await rig.ContextAsync(child.Id));
+        rig.InventoryRead = () => Task.FromResult(new ChatSpaceModelInventory([rig.Model], "unrelated-global-default"));
+
+        var inventory = await backend.GetModelInventoryAsync(default);
+
+        Assert.Equal(new[] { "local" }, inventory.Models.Select(model => model.Name));
+        Assert.Equal("local", inventory.PreferredModelName);
+        Assert.False(inventory.PreventImplicitFallback);
+        Assert.Null(inventory.PolicyNotice);
+    }
+
+    [Fact]
+    public async Task Missing_space_default_keeps_eligible_choices_but_prevents_silent_default_substitution()
+    {
+        var rig = await Rig.CreateAsync();
+        var current = (await rig.Registry.ReadExistingAsync(rig.Space.Id))!;
+        await rig.Registry.UpdateAsync(current with
+        {
+            ModelPolicy = new SpaceModelPolicy("not-installed", [ToolCapability.Text.ToString()], "ollama")
+        }, current.Revision);
+        rig.InventoryRead = () => Task.FromResult(new ChatSpaceModelInventory([rig.Model], "local"));
+
+        var inventory = await rig.Backend.GetModelInventoryAsync(default);
+
+        Assert.Equal(new[] { "local" }, inventory.Models.Select(model => model.Name));
+        Assert.Null(inventory.PreferredModelName);
+        Assert.True(inventory.PreventImplicitFallback);
+        var notice = Assert.IsType<string>(inventory.PolicyNotice);
+        Assert.Contains("not-installed", notice, StringComparison.Ordinal);
+        Assert.Contains("no substitute was selected", notice, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Non_ollama_provider_constraint_does_not_expose_the_local_catalogue_as_eligible()
+    {
+        var rig = await Rig.CreateAsync();
+        var current = (await rig.Registry.ReadExistingAsync(rig.Space.Id))!;
+        await rig.Registry.UpdateAsync(current with
+        {
+            ModelPolicy = new SpaceModelPolicy(null, null, "openai")
+        }, current.Revision);
+
+        var inventory = await rig.Backend.GetModelInventoryAsync(default);
+
+        Assert.Empty(inventory.Models);
+        Assert.Null(inventory.PreferredModelName);
+        Assert.True(inventory.PreventImplicitFallback);
+        Assert.Contains("Ollama models only", Assert.IsType<string>(inventory.PolicyNotice), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Disabled_model_category_does_not_query_the_provider_inventory()
+    {
+        var rig = await Rig.CreateAsync();
+        var current = (await rig.Registry.ReadExistingAsync(rig.Space.Id))!;
+        await rig.Registry.UpdateAsync(current with
+        {
+            CapabilityCategoryPolicy = new(Models: SpaceCapabilityCategoryState.Disabled)
+        }, current.Revision);
+        var queried = false;
+        rig.InventoryRead = () => { queried = true; throw new InvalidOperationException("Disabled model inventory must not be queried."); };
+
+        var inventory = await rig.Backend.GetModelInventoryAsync(default);
+
+        Assert.False(queried);
+        Assert.Empty(inventory.Models);
+        Assert.True(inventory.PreventImplicitFallback);
+        Assert.Contains("Models are disabled", Assert.IsType<string>(inventory.PolicyNotice), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Safety_read_checks_membership_again_after_the_service_returns()
     {
         var rig = await Rig.CreateAsync();

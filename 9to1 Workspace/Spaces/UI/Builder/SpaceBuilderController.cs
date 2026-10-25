@@ -170,6 +170,10 @@ public sealed class SpaceBuilderController
                 SpaceBuilderField.Description => _state.Draft with { Description = value },
                 SpaceBuilderField.IconKey => _state.Draft with { IconKey = value },
                 SpaceBuilderField.Instructions => _state.Draft with { Instructions = value },
+                SpaceBuilderField.DefaultModelId => _state.Draft with { ModelPolicy = (_state.Draft.ModelPolicy ?? new SpaceModelPolicy(null)) with
+                    { DefaultModelId = string.IsNullOrWhiteSpace(value) ? null : value.Trim() } },
+                SpaceBuilderField.ProviderConstraint => _state.Draft with { ModelPolicy = (_state.Draft.ModelPolicy ?? new SpaceModelPolicy(null)) with
+                    { ProviderConstraint = string.IsNullOrWhiteSpace(value) ? null : value.Trim() } },
                 SpaceBuilderField.MaximumRetrievedItems => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with
                     { MaximumRetrievedItems = string.IsNullOrWhiteSpace(value) ? null : int.Parse(value, System.Globalization.CultureInfo.InvariantCulture) } },
                 SpaceBuilderField.SourceOnly => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with { SourceOnly = ReadBoolean(value) } },
@@ -578,7 +582,7 @@ public sealed class SpaceBuilderController
 
 public enum SpaceBuilderField
 {
-    Name, Description, IconKey, Instructions,
+    Name, Description, IconKey, Instructions, DefaultModelId, ProviderConstraint,
     SourceOnly, IncludeCurrentSelection, WebAccess, MaximumRetrievedItems,
     InheritSources, InheritConnectedApps, InheritModelPolicy, InheritMemoryPolicy,
     InheritPlugins, InheritSkills, InheritAgents

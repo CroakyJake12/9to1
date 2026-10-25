@@ -67,6 +67,8 @@ public sealed class SpaceBuilderCuiTests
                 .Single(control => control.Name == id || AutomationProperties.GetAutomationId(control) == id);
             var name = Find<TextBox>("space-builder-name");
             Assert.NotNull(name);
+            Assert.NotNull(Find<TextBox>("space-builder-default-model-id"));
+            Assert.NotNull(Find<TextBox>("space-builder-provider-constraint"));
             Assert.NotNull(Find<Button>("space-builder-view-basic"));
             Assert.NotNull(Find<Button>("space-builder-view-advanced"));
             Assert.NotNull(Find<Button>("space-builder-view-expert"));

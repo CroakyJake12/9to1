@@ -129,19 +129,27 @@ public sealed partial class ChatSpaceController
                 if (inventory is not null)
                 {
                     _modelDescriptors = inventory.Models;
-                    var selected = ResolveSelectedModel(_state.Composer.SelectedModelName, inventory);
-                    next = Loaded(recent.Result, data, selected, "Chat Space ready", safety?.State == ConversationSafetyState.Locked);
+                    var prior = _state.Composer.IsModelSelectionExplicit ? _state.Composer.SelectedModelName : null;
+                    var selected = ResolveSelectedModel(prior, inventory);
+                    var selectionInvalidated = prior is not null && selected is null;
+                    var status = inventory.PolicyNotice ?? (selectionInvalidated
+                        ? "Your previously selected model is no longer eligible under this Space's current policy. Choose an eligible model."
+                        : "Chat Space ready");
+                    next = Loaded(recent.Result, data, selected, status,
+                        safety?.State == ConversationSafetyState.Locked, prior is not null && selected is not null);
                 }
                 else
                 {
                     _modelDescriptors = [];
-                    var selected = _state.Composer.SelectedModelName;
-                    next = Loaded(recent.Result, data, selected, "Model inventory unavailable", safety?.State == ConversationSafetyState.Locked);
+                    next = Loaded(recent.Result, data, null,
+                        modelFailure?.Message ?? "Model inventory unavailable", safety?.State == ConversationSafetyState.Locked,
+                        modelSelectionExplicit: false);
                 }
                 if (data is not null) _conversations[data.Conversation.Id] = data.Conversation;
                 if (preserveComposer)
                     next = next with { Composer = _state.Composer with
-                        { SelectedModelName = next.Composer.SelectedModelName, SelectedModelIndex = next.Composer.SelectedModelIndex } };
+                        { SelectedModelName = next.Composer.SelectedModelName, SelectedModelIndex = next.Composer.SelectedModelIndex,
+                            IsModelSelectionExplicit = next.Composer.IsModelSelectionExplicit } };
                 Volatile.Write(ref _state, next);
             }
             StateChanged?.Invoke(next);
@@ -167,7 +175,13 @@ public sealed partial class ChatSpaceController
     {
         var index = Array.FindIndex(_modelDescriptors.ToArray(), item => item.Name.Equals(modelName, StringComparison.OrdinalIgnoreCase));
         if (index < 0) throw new ArgumentException("Choose a model in the current governed inventory.", nameof(modelName));
-        return state with { Composer = state.Composer with { SelectedModelName = _modelDescriptors[index].Name, SelectedModelIndex = index } };
+        var selected = _modelDescriptors[index].Name;
+        return state with
+        {
+            Composer = state.Composer with { SelectedModelName = selected,
+                SelectedModelIndex = index, IsModelSelectionExplicit = true },
+            Status = new($"Explicit model selected for this composer: {selected}.", ChatSpaceStatusTone.Success, true)
+        };
     });
     public Task SaveDraftAsync(CancellationToken cancellationToken = default) => SaveCurrentDraftAsync(CurrentView(), cancellationToken);
     public async Task AddAttachmentAsync(string path, CancellationToken cancellationToken = default)
@@ -243,11 +257,13 @@ public sealed partial class ChatSpaceController
         Change(state =>
         {
             _conversations[id] = data.Result.Conversation;
-            var next = Loaded(recent.Result, data.Result, state.Composer.SelectedModelName, status, safety.Result.State == ConversationSafetyState.Locked);
+            var next = Loaded(recent.Result, data.Result, state.Composer.SelectedModelName, status,
+                safety.Result.State == ConversationSafetyState.Locked, state.Composer.IsModelSelectionExplicit);
             return preserveComposer ? next with { Composer = state.Composer with { IsSending = _turns.ContainsKey(id) } } : next;
         }, view);
     }
-    private ChatSpaceViewState Loaded(IReadOnlyList<Conversation> recent, ChatSpaceConversationData? data, string? model, string status, bool locked)
+    private ChatSpaceViewState Loaded(IReadOnlyList<Conversation> recent, ChatSpaceConversationData? data, string? model,
+        string status, bool locked, bool modelSelectionExplicit)
     {
         var conversation = data is null ? null : ChatSpaceProjection.Project(data);
         if (conversation is not null && _avatarResolver is not null)
@@ -266,13 +282,17 @@ public sealed partial class ChatSpaceController
                 item.UpdatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture), item.UpdatedAt, item.Id == conversation?.Id)).ToArray(),
             conversation, _modelDescriptors.Select(item => new ChatSpaceModelChoice(item.Name, item.Name,
                 $"{item.Family} · {item.ParameterSize} · {item.SizeLabel}", item.Capabilities)).ToArray(),
-            new(data?.Draft?.Content ?? string.Empty, pending, model, conversation is not null && _turns.ContainsKey(conversation.Id), modelIndex),
+            new(data?.Draft?.Content ?? string.Empty, pending, model, conversation is not null && _turns.ContainsKey(conversation.Id),
+                modelIndex, IsModelSelectionExplicit: modelSelectionExplicit),
             new(status, ChatSpaceStatusTone.Success, true), false, _state.Revision + 1, new ChatSpaceLayout("280px 1fr", "1fr", 1, 0, null), locked, _threadSettings, _dualModel, branchIndex);
     }
-    private static string? ResolveSelectedModel(string? current, ChatSpaceModelInventory inventory) =>
-        inventory.Models.FirstOrDefault(item => item.Name.Equals(current, StringComparison.OrdinalIgnoreCase))?.Name
-        ?? inventory.Models.FirstOrDefault(item => item.Name.Equals(inventory.PreferredModelName, StringComparison.OrdinalIgnoreCase))?.Name
-        ?? inventory.Models.FirstOrDefault()?.Name;
+    private static string? ResolveSelectedModel(string? explicitSelection, ChatSpaceModelInventory inventory)
+    {
+        if (!string.IsNullOrWhiteSpace(explicitSelection))
+            return inventory.Models.FirstOrDefault(item => item.Name.Equals(explicitSelection, StringComparison.OrdinalIgnoreCase))?.Name;
+        return inventory.Models.FirstOrDefault(item => item.Name.Equals(inventory.PreferredModelName, StringComparison.OrdinalIgnoreCase))?.Name
+            ?? (inventory.PreventImplicitFallback ? null : inventory.Models.FirstOrDefault()?.Name);
+    }
     private void Fail(Exception exception, View view) => Change(state => state with
     { IsLoading = false, Status = new(exception.Message, ChatSpaceStatusTone.Error, true) }, view);
 }

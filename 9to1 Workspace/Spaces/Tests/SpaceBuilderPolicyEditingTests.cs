@@ -36,6 +36,11 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.True(bindings.TrySetValue("builder.context.webAccess", (int)SpaceWebAccessPolicy.Disabled));
         Assert.True(bindings.TrySetValue("builder.context.sourceOnly", true));
         Assert.True(bindings.TrySetValue("builder.context.includeSelection", false));
+        Assert.True(bindings.TrySetValue("builder.model.defaultId", "ollama:configured-model-2"));
+        Assert.True(bindings.TrySetValue("builder.model.provider", "ollama"));
+        Assert.Equal("ollama:configured-model-2", editor.State.Draft.ModelPolicy!.DefaultModelId);
+        Assert.Equal("ollama", editor.State.Draft.ModelPolicy.ProviderConstraint);
+        Assert.Equal(new[] { "text" }, editor.State.Draft.ModelPolicy.RequiredCapabilities);
         foreach (var key in new[] { "sources", "apps", "models", "memory" })
             Assert.True(bindings.TrySetValue("builder.inherit." + key, true));
         foreach (var key in new[] { "plugins", "skills", "agents" })
@@ -48,12 +53,14 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.Equal(new SpaceContextPolicy(SpaceWebAccessPolicy.Disabled, true, false, 7), saved.DraftConfiguration!.ContextPolicy);
         Assert.Equal(new SpaceInheritancePolicy(true, true, true, true, false, false, false), saved.DraftConfiguration.Inheritance);
         Assert.Equal(JsonSerializer.Serialize(original.ModelPolicy), JsonSerializer.Serialize(saved.ModelPolicy));
+        Assert.Equal(new SpaceModelPolicy("ollama:configured-model-2", ["text"], "ollama"), saved.DraftConfiguration.ModelPolicy);
         Assert.Equal(JsonSerializer.Serialize(original.LayoutDocument), JsonSerializer.Serialize(saved.LayoutDocument));
         Assert.Equal(JsonSerializer.Serialize(original.CapabilityBindings), JsonSerializer.Serialize(saved.CapabilityBindings));
         var reopened = new SpaceBuilderController(files.OpenRegistry(), original.Id);
         Assert.True(await reopened.LoadAsync(token));
         Assert.Equal(saved.DraftConfiguration.ContextPolicy, reopened.State.Draft.ContextPolicy);
         Assert.Equal(saved.DraftConfiguration.Inheritance, reopened.State.Draft.Inheritance);
+        Assert.Equal(saved.DraftConfiguration.ModelPolicy, reopened.State.Draft.ModelPolicy);
         Assert.False(reopened.State.HasChanges);
         Assert.Equal(saved.ActiveConfigurationRevision, reopened.State.ActiveRevision); // Saved configuration is not activation.
     }

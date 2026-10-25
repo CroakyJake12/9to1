@@ -85,6 +85,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.description" => state.Draft.Description,
             "builder.icon" => state.Draft.IconKey,
             "builder.instructions" => state.Draft.Instructions,
+            "builder.model.defaultId" => state.Draft.ModelPolicy?.DefaultModelId ?? "",
+            "builder.model.provider" => state.Draft.ModelPolicy?.ProviderConstraint ?? "",
             "builder.context.sourceOnly" => state.Draft.ContextPolicy.SourceOnly,
             "builder.context.includeSelection" => state.Draft.ContextPolicy.IncludeCurrentSelection,
             "builder.context.webAccess" => (int)state.Draft.ContextPolicy.WebAccess,
@@ -178,6 +180,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.description" => SpaceBuilderField.Description,
             "builder.icon" => SpaceBuilderField.IconKey,
             "builder.instructions" => SpaceBuilderField.Instructions,
+            "builder.model.defaultId" => SpaceBuilderField.DefaultModelId,
+            "builder.model.provider" => SpaceBuilderField.ProviderConstraint,
             "builder.context.maximumRetrievedItems" => SpaceBuilderField.MaximumRetrievedItems,
             _ => null
         };
