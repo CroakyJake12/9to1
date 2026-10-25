@@ -66,6 +66,7 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     public Button DetailsToggle => Find<Button>("tasks-details-toggle");
     public Control RecentRows => Find<Control>("tasks-recent-rows");
     public long InstructionVersion => _instructionVersion;
+    internal Task WhenActionsIdleAsync() => _loader?.WhenActionsIdleAsync() ?? Task.CompletedTask;
     public event EventHandler<string>? DelegateRequested;
     public event EventHandler? NewBlankTaskRequested;
     public event EventHandler<SpaceTaskObservation>? RecentTaskRequested;
