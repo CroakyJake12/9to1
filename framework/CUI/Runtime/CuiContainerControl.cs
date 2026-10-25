@@ -17,6 +17,8 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
     internal bool InheritY { get; private set; }
     private readonly ScrollViewer _scroll = new();
     private bool _horizontalScrolling, _verticalScrolling;
+    private bool _horizontalOverflowArrows;
+    private CuiHorizontalOverflowControls? _horizontalOverflowControls;
     private bool _followAtEnd, _followingLatest = true;
     private Thickness _cellMargin;
     private readonly List<Border> _cells = [];
@@ -265,13 +267,38 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         if (horizontal is { } h) _horizontalScrolling = h;
         if (vertical is { } v) _verticalScrolling = v;
         var enabled = _horizontalScrolling || _verticalScrolling;
-        if (enabled && !ReferenceEquals(Child, _scroll)) { Child = null; _scroll.Content = Layout; Child = _scroll; }
+        if (_horizontalOverflowArrows && _horizontalOverflowControls is null)
+        {
+            // Retain the same materialised viewport/content while adding only
+            // its CUI-owned overlay controls; never create a second scroller.
+            if (ReferenceEquals(Child, _scroll)) Child = null;
+            _horizontalOverflowControls = new CuiHorizontalOverflowControls(this, _scroll);
+        }
+        Control scrollHost = _horizontalOverflowControls?.Host ?? (Control)_scroll;
+        if ((enabled || ReferenceEquals(_scroll.Content, Layout)) && !ReferenceEquals(Child, scrollHost))
+        {
+            Child = null;
+            if (!ReferenceEquals(_scroll.Content, Layout)) _scroll.Content = Layout;
+            Child = scrollHost;
+        }
+        _horizontalOverflowControls?.SetEnabled(_horizontalScrolling && _horizontalOverflowArrows, _verticalScrolling);
         // Keep a materialised presenter structurally stable. Clearing Content
         // can leave its visual child attached until the next renderer pass;
         // immediately assigning Layout elsewhere then gives it two parents.
         // Disabled axes measure normally and cannot consume wheel scrolling.
-        _scroll.HorizontalScrollBarVisibility = _horizontalScrolling ? Avalonia.Controls.Primitives.ScrollBarVisibility.Auto : Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled;
+        _scroll.HorizontalScrollBarVisibility = !_horizontalScrolling ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled
+            : _horizontalOverflowArrows ? Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden
+            : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
         _scroll.VerticalScrollBarVisibility = _verticalScrolling ? Avalonia.Controls.Primitives.ScrollBarVisibility.Auto : Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled;
+    }
+
+    /// <summary>Replace the horizontal rail with CUI directional overflow controls.
+    /// HorizontalScrolling still owns whether the native axis can scroll.</summary>
+    public void SetHorizontalOverflowArrows(bool enabled)
+    {
+        if (_horizontalOverflowArrows == enabled) return;
+        _horizontalOverflowArrows = enabled;
+        SetScrolling();
     }
 
     public void AddChild(Control child) => InsertAuthoredChild(AuthoredChildCount, child);
@@ -363,6 +390,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         _focusBrushSubscription?.Dispose(); _validationBrushSubscription?.Dispose(); _focusThicknessSubscription?.Dispose();
         _focusBrushSubscription = null; _validationBrushSubscription = null; _focusThicknessSubscription = null;
         _scroll.ScrollChanged -= OnScrollChanged;
+        _horizontalOverflowControls?.Dispose(); _horizontalOverflowControls = null;
         foreach (var (control, handler) in _placementHandlers) control.PropertyChanged -= handler;
         _placementHandlers.Clear();
         (Layout as IDisposable)?.Dispose();
