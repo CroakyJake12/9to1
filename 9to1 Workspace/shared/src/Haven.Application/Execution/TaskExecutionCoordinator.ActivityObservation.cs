@@ -7,8 +7,32 @@ namespace Haven.Application;
 public sealed record TaskRunActivityObservation(Guid TaskId, Guid ExecutionId, Guid ContextId,
     long PersistenceRevision, bool IsLive, DateTimeOffset ObservedAt);
 
+/// <summary>An invalidation hint from the SAME actual producer. It contains no status,
+/// revision, permission or data grant; consumers must perform a fresh authorized read.</summary>
+public sealed record TaskRunActivityInvalidation(Guid TaskId, Guid ExecutionId, Guid ContextId);
+
 public sealed partial class TaskExecutionCoordinator
 {
+    public event EventHandler<TaskRunActivityInvalidation>? RunActivityInvalidated;
+    internal void InvalidateOriginalRunActivity(TaskRunInvocationCustody original, CanonicalChatProcessProducer producer)
+    {
+        if (HasSealedOriginalProcessProducerAdmission || !ReferenceEquals(original.Issuer, this) ||
+            !ReferenceEquals(original.OriginalSelf, original) || !ReferenceEquals(original.OriginalProcessProducer, producer) ||
+            original.OriginalBinding is not { } binding || !_originalInvocations.TryGetValue(binding.TaskId, out var retained) ||
+            !ReferenceEquals(retained, original)) return;
+        var hint = new TaskRunActivityInvalidation(binding.TaskId, binding.ExecutionId, binding.ContextId);
+        if (RunActivityInvalidated is { } handlers)
+            foreach (EventHandler<TaskRunActivityInvalidation> handler in handlers.GetInvocationList())
+                try { handler(this, hint); }
+                catch (Exception observerFailure)
+                {
+                    // Match acknowledged snapshot observation isolation: a presentation
+                    // listener cannot change original provider/cleanup/Task outcomes.
+                    _observationFailures.Enqueue(new TaskObservationFailure(binding.TaskId, binding.ExecutionId,
+                        binding.PersistenceRevision, "run-activity-observer", observerFailure));
+                }
+    }
+
     public Task<TaskRunActivityObservation> ObserveOriginalRunActivityAsync(Guid taskId, Guid expectedExecutionId,
         CancellationToken cancellationToken) => StartOriginalProcessStage("observe-original-run-activity", cancellationToken, async token =>
     {

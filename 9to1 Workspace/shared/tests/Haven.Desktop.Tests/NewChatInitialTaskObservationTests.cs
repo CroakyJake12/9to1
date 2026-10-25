@@ -145,6 +145,9 @@ public sealed partial class ChatCloudPermissionCallerTests
         var drafts = new NativeComposerDraftStore();
         var page = CreateNativeComposerPage(rig, directory, drafts);
         Task? pausing = null, producer = null, resuming = null;
+        var invalidation = new TaskCompletionSource<TaskRunActivityInvalidation>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var listenerFailure = new IOException("actual activity subscriber failure must not change Pause or cleanup");
+        EventHandler<TaskRunActivityInvalidation>? activityChanged = null;
         try
         {
             await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10));
@@ -176,6 +179,13 @@ public sealed partial class ChatCloudPermissionCallerTests
             page.SetDraft("queued instruction to preserve");
             await bindings.DispatchAsync("composer.queue", null);
             page.SetDraft("Preserve this unsent instruction");
+            activityChanged = (_, hint) =>
+            {
+                if (hint.TaskId == initial.TaskId && hint.ExecutionId == initial.ExecutionId && hint.ContextId == initial.ContextId)
+                { invalidation.TrySetResult(hint); throw listenerFailure; }
+            };
+            rig.Tasks.RunActivityInvalidated += activityChanged;
+            Assert.True((await rig.Tasks.ObserveOriginalRunActivityAsync(initial.TaskId, initial.ExecutionId, token)).IsLive);
             Assert.True(bindings.IsActionAvailable("composer.pause"));
             Assert.False(bindings.IsActionAvailable("composer.resume"));
             pausing = bindings.DispatchAsync("composer.pause", null).AsTask();
@@ -191,6 +201,11 @@ public sealed partial class ChatCloudPermissionCallerTests
             providerRelease.SetResult(false);
             await rig.Client.DisposeEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
             Assert.False(pausing.IsCompleted);
+            var hint = await invalidation.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.Equal(initial.TaskId, hint.TaskId); Assert.Equal(initial.ExecutionId, hint.ExecutionId);
+            Assert.False((await rig.Tasks.ObserveOriginalRunActivityAsync(initial.TaskId, initial.ExecutionId, token)).IsLive);
+            Assert.Contains(rig.Tasks.ObservationFailures, failure => failure.ObservationStage == "run-activity-observer" &&
+                ReferenceEquals(failure.OriginalException, listenerFailure));
             disposal.SetResult();
             await pausing.WaitAsync(TimeSpan.FromSeconds(10));
             var ack = Assert.IsType<TaskRunOriginalRunControlResult>(page.CanonicalTaskPauseAcknowledgement);
@@ -234,6 +249,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             page.RequestRetirement();
             _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
             if (producer is not null) _ = await Record.ExceptionAsync(() => producer);
+            if (activityChanged is not null) rig.Tasks.RunActivityInvalidated -= activityChanged;
             withdrawalRegistration.Dispose();
             Directory.Delete(directory, true);
         }

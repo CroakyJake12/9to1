@@ -185,7 +185,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             {
                 original.DemandPublication();
                 if (!_subscribed)
-                    InvokeOriginalSource(() => { _canonical.SnapshotChanged += OnSnapshotChanged; _subscribed = true; return true; });
+                    InvokeOriginalSource(() => { _canonical.SnapshotChanged += OnSnapshotChanged; _canonical.RunActivityInvalidated += OnRunActivityInvalidated; _subscribed = true; return true; });
             }
             await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
             await original.AwaitAsync(_composerView.InitializeAsync(scope.Token)).ConfigureAwait(false);
@@ -266,6 +266,21 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             return;
         }
         // SAME real publication/read driver retained before the canonical callback returns.
+        _ = _work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation));
+            await RefreshOriginalAsync(original, generation, original.Token).ConfigureAwait(false);
+        });
+    }
+
+    private void OnRunActivityInvalidated(object? sender, TaskRunActivityInvalidation hint)
+    {
+        long generation;
+        lock (_gate)
+        {
+            if (!_active || _work.IsRetiring || hint.ContextId != _conversationId || hint.TaskId != _originalTaskId || hint.ExecutionId != _originalRunId) return;
+            generation = _generation;
+        }
         _ = _work.RunAsync(async original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation));
@@ -473,7 +488,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     {
         NativeCanonicalTaskSceneReadiness? readiness;
         lock (_gate) { _active = false; _generation++; readiness = _nativeReadinessOwner; }
-        if (_subscribed) { _canonical.SnapshotChanged -= OnSnapshotChanged; _subscribed = false; }
+        if (_subscribed) { _canonical.SnapshotChanged -= OnSnapshotChanged; _canonical.RunActivityInvalidated -= OnRunActivityInvalidated; _subscribed = false; }
         var failures = new List<Exception>();
         RequestOriginalResumeObservationRetirement(failures); // Request every observer, never the business producer.
         Task? nativeClose = null, hostClose = null;
