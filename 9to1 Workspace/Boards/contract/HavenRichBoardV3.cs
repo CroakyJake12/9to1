@@ -720,6 +720,8 @@ public static partial class HavenRichNotesOps
     public static void InsertTableRow(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
+        if (HasMergedCells(table))
+            throw new InvalidOperationException("Split merged cells before adding a table row.");
         var width = table.Rows[0].Cells.Count;
         var row = new HavenRichTableRow();
         for (var c = 0; c < width; c++)
@@ -732,6 +734,7 @@ public static partial class HavenRichNotesOps
     public static bool DeleteTableRow(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
+        if (HasMergedCells(table)) return false;
         if (table.Rows.Count <= 1 || index < 0 || index >= table.Rows.Count) return false;
         table.Rows.RemoveAt(index);
         if (index < table.RowHeights.Count) table.RowHeights.RemoveAt(index);
@@ -743,6 +746,7 @@ public static partial class HavenRichNotesOps
     public static bool MoveTableRow(HavenRichNotes notes, string pageId, string blockId, int fromIndex, int toIndex)
     {
         var table = RequireTable(notes, pageId, blockId);
+        if (HasMergedCells(table)) return false;
         if (fromIndex < 0 || fromIndex >= table.Rows.Count || toIndex < 0 || toIndex >= table.Rows.Count)
             return false;
         if (fromIndex == toIndex) return false;
@@ -758,6 +762,8 @@ public static partial class HavenRichNotesOps
     public static void InsertTableColumn(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
+        if (HasMergedCells(table))
+            throw new InvalidOperationException("Split merged cells before adding a table column.");
         var width = table.Rows[0].Cells.Count;
         if (width >= 50) throw new InvalidOperationException("Tables support at most 50 columns.");
         var at = Math.Clamp(index, 0, width);
@@ -770,6 +776,7 @@ public static partial class HavenRichNotesOps
     public static bool DeleteTableColumn(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
+        if (HasMergedCells(table)) return false;
         var width = table.Rows[0].Cells.Count;
         if (width <= 1 || index < 0 || index >= width) return false;
         foreach (var row in table.Rows)
@@ -783,6 +790,7 @@ public static partial class HavenRichNotesOps
     public static bool MoveTableColumn(HavenRichNotes notes, string pageId, string blockId, int fromIndex, int toIndex)
     {
         var table = RequireTable(notes, pageId, blockId);
+        if (HasMergedCells(table)) return false;
         if (table.Rows.Count == 0) return false;
         var columnCount = table.Rows[0].Cells.Count;
         if (fromIndex < 0 || fromIndex >= columnCount || toIndex < 0 || toIndex >= columnCount)
@@ -801,6 +809,97 @@ public static partial class HavenRichNotesOps
         TouchNotes(notes);
         return true;
     }
+
+    /// <summary>True only when the selected cell can absorb the adjacent blank column segment.</summary>
+    public static bool CanMergeTableCellRight(HavenRichNotes notes, string pageId, string blockId, int row, int column) =>
+        CanMergeTableCell(notes, pageId, blockId, row, column, mergeRight: true);
+
+    /// <summary>True only when the selected cell can absorb the adjacent blank row segment.</summary>
+    public static bool CanMergeTableCellDown(HavenRichNotes notes, string pageId, string blockId, int row, int column) =>
+        CanMergeTableCell(notes, pageId, blockId, row, column, mergeRight: false);
+
+    private static bool CanMergeTableCell(HavenRichNotes notes, string pageId, string blockId,
+        int row, int column, bool mergeRight)
+    {
+        var table = RequireTable(notes, pageId, blockId);
+        if (!TryGetTableCell(table, row, column, out var anchor) || anchor.CoveredByCellId is not null)
+            return false;
+        var lastRow = row + anchor.RowSpan;
+        var lastColumn = column + anchor.ColumnSpan;
+        if (lastRow > table.Rows.Count || lastColumn > table.Rows[0].Cells.Count)
+            return false;
+        if (mergeRight ? lastColumn >= table.Rows[0].Cells.Count : lastRow >= table.Rows.Count)
+            return false;
+
+        if (mergeRight)
+        {
+            for (var targetRow = row; targetRow < lastRow; targetRow++)
+                if (!CanAbsorb(table.Rows[targetRow].Cells[lastColumn], anchor.Id)) return false;
+        }
+        else
+        {
+            for (var targetColumn = column; targetColumn < lastColumn; targetColumn++)
+                if (!CanAbsorb(table.Rows[lastRow].Cells[targetColumn], anchor.Id)) return false;
+        }
+        return true;
+    }
+
+    private static bool CanAbsorb(HavenRichTableCell cell, string anchorId) =>
+        cell.CoveredByCellId is null && cell.Id != anchorId && cell.RowSpan == 1 && cell.ColumnSpan == 1 &&
+        cell.Text.Length == 0 && cell.Runs.Count == 0;
+
+    public static bool MergeTableCellRight(HavenRichNotes notes, string pageId, string blockId, int row, int column)
+    {
+        if (!CanMergeTableCellRight(notes, pageId, blockId, row, column)) return false;
+        var table = RequireTable(notes, pageId, blockId);
+        var anchor = table.Rows[row].Cells[column];
+        var targetColumn = column + anchor.ColumnSpan;
+        for (var targetRow = row; targetRow < row + anchor.RowSpan; targetRow++)
+            table.Rows[targetRow].Cells[targetColumn].CoveredByCellId = anchor.Id;
+        anchor.ColumnSpan++;
+        TouchNotes(notes);
+        return true;
+    }
+
+    public static bool MergeTableCellDown(HavenRichNotes notes, string pageId, string blockId, int row, int column)
+    {
+        if (!CanMergeTableCellDown(notes, pageId, blockId, row, column)) return false;
+        var table = RequireTable(notes, pageId, blockId);
+        var anchor = table.Rows[row].Cells[column];
+        var targetRow = row + anchor.RowSpan;
+        for (var targetColumn = column; targetColumn < column + anchor.ColumnSpan; targetColumn++)
+            table.Rows[targetRow].Cells[targetColumn].CoveredByCellId = anchor.Id;
+        anchor.RowSpan++;
+        TouchNotes(notes);
+        return true;
+    }
+
+    public static bool SplitTableCell(HavenRichNotes notes, string pageId, string blockId, int row, int column)
+    {
+        var table = RequireTable(notes, pageId, blockId);
+        if (!TryGetTableCell(table, row, column, out var anchor) || anchor.CoveredByCellId is not null ||
+            anchor.RowSpan == 1 && anchor.ColumnSpan == 1)
+            return false;
+        foreach (var covered in table.Rows.SelectMany(currentRow => currentRow.Cells)
+                     .Where(cell => string.Equals(cell.CoveredByCellId, anchor.Id, StringComparison.Ordinal)))
+            covered.CoveredByCellId = null;
+        anchor.RowSpan = 1;
+        anchor.ColumnSpan = 1;
+        TouchNotes(notes);
+        return true;
+    }
+
+    private static bool TryGetTableCell(HavenRichTable table, int row, int column, out HavenRichTableCell cell)
+    {
+        cell = null!;
+        if (row < 0 || row >= table.Rows.Count || column < 0 || column >= table.Rows[row].Cells.Count)
+            return false;
+        cell = table.Rows[row].Cells[column];
+        return true;
+    }
+
+    private static bool HasMergedCells(HavenRichTable table) => table.Rows.SelectMany(row => row.Cells)
+        .Any(cell => cell.CoveredByCellId is not null || cell.RowSpan > 1 || cell.ColumnSpan > 1);
 
     private static void MoveParallelValue(List<double> values, int fromIndex, int toIndex)
     {

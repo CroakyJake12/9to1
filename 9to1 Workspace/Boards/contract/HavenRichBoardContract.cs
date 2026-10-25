@@ -166,6 +166,10 @@ public sealed class HavenRichTableRow
 public sealed class HavenRichTableCell
 {
     public string Id { get; set; } = "cell-" + Guid.NewGuid().ToString("N")[..12];
+    public int RowSpan { get; set; } = 1;
+    public int ColumnSpan { get; set; } = 1;
+    /// <summary>Stable ID of the visible anchor cell when this structural slot is covered by a merge.</summary>
+    public string? CoveredByCellId { get; set; }
     public string Text { get; set; } = string.Empty;
     public List<HavenRichTextRun> Runs { get; set; } = [];
     public HavenRichAlignment AlignmentH { get; set; } = HavenRichAlignment.Inherit;
@@ -335,6 +339,7 @@ public static class HavenRichNotesValidator
                 throw new InvalidOperationException("Table rows must contain at least one cell.");
             if (block.Table.Rows.Any(row => row.Cells.Count != width))
                 throw new InvalidOperationException("Table rows must be rectangular.");
+            ValidateTableMerges(block.Table);
             if (block.Table.BorderWidth < 0 || block.Table.BorderWidth > 32)
                 throw new InvalidOperationException("Table border width is outside the supported range.");
             if (block.Table.CornerRadius < 0 || block.Table.CornerRadius > 128)
@@ -360,6 +365,56 @@ public static class HavenRichNotesValidator
             throw new InvalidOperationException("Block line spacing is outside the supported range.");
         if (block.SpaceBefore is < 0 or > 1000 || block.SpaceAfter is < 0 or > 1000)
             throw new InvalidOperationException("Block paragraph spacing is outside the supported range.");
+    }
+
+    private static void ValidateTableMerges(HavenRichTable table)
+    {
+        var rows = table.Rows.Count;
+        var columns = table.Rows[0].Cells.Count;
+        var cellsById = new Dictionary<string, (int Row, int Column, HavenRichTableCell Cell)>(StringComparer.Ordinal);
+        for (var row = 0; row < rows; row++)
+            for (var column = 0; column < columns; column++)
+            {
+                var cell = table.Rows[row].Cells[column];
+                RequireId(cell.Id, "Table cell");
+                if (!cellsById.TryAdd(cell.Id, (row, column, cell)))
+                    throw new InvalidOperationException($"Table cell ID '{cell.Id}' is duplicated.");
+                if (cell.Text is null || cell.Runs is null)
+                    throw new InvalidOperationException("Table cells must contain valid text and run collections.");
+                if (cell.RowSpan < 1 || cell.ColumnSpan < 1 || cell.RowSpan > rows || cell.ColumnSpan > columns)
+                    throw new InvalidOperationException("Table cell spans are outside the table dimensions.");
+                if (cell.CoveredByCellId is not null && (cell.RowSpan != 1 || cell.ColumnSpan != 1))
+                    throw new InvalidOperationException("Covered table slots cannot define their own spans.");
+            }
+
+        var coveredByAnchor = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (anchorId, entry) in cellsById)
+        {
+            var anchor = entry.Cell;
+            if (anchor.CoveredByCellId is not null) continue;
+            if (entry.Row + anchor.RowSpan > rows || entry.Column + anchor.ColumnSpan > columns)
+                throw new InvalidOperationException("A merged table cell extends outside the table.");
+            for (var row = entry.Row; row < entry.Row + anchor.RowSpan; row++)
+                for (var column = entry.Column; column < entry.Column + anchor.ColumnSpan; column++)
+                {
+                    if (row == entry.Row && column == entry.Column) continue;
+                    var covered = table.Rows[row].Cells[column];
+                    if (!string.Equals(covered.CoveredByCellId, anchorId, StringComparison.Ordinal))
+                        throw new InvalidOperationException("Merged table cells must cover one exact rectangular region.");
+                    coveredByAnchor.Add(covered.Id, anchorId);
+                }
+        }
+
+        foreach (var entry in cellsById.Values)
+        {
+            var cell = entry.Cell;
+            if (cell.CoveredByCellId is null) continue;
+            if (!cellsById.TryGetValue(cell.CoveredByCellId, out var anchor) ||
+                anchor.Cell.CoveredByCellId is not null ||
+                !coveredByAnchor.TryGetValue(cell.Id, out var expectedAnchor) ||
+                !string.Equals(expectedAnchor, cell.CoveredByCellId, StringComparison.Ordinal))
+                throw new InvalidOperationException("Covered table slots must belong to a valid merged anchor.");
+        }
     }
 
     private static void RequireId(string value, string label)
@@ -629,8 +684,17 @@ public static partial class HavenRichNotesOps
         foreach (var item in block.Items)
             item.Id = "item-" + Guid.NewGuid().ToString("N")[..12];
         if (block.Table is not null)
-            foreach (var cell in block.Table.Rows.SelectMany(r => r.Cells))
-                cell.Id = "cell-" + Guid.NewGuid().ToString("N")[..12];
+        {
+            var cells = block.Table.Rows.SelectMany(row => row.Cells).ToArray();
+            var cellIds = cells.ToDictionary(cell => cell.Id,
+                _ => "cell-" + Guid.NewGuid().ToString("N")[..12], StringComparer.Ordinal);
+            foreach (var cell in cells)
+            {
+                cell.Id = cellIds[cell.Id];
+                if (cell.CoveredByCellId is { } anchorId && cellIds.TryGetValue(anchorId, out var newAnchorId))
+                    cell.CoveredByCellId = newAnchorId;
+            }
+        }
         if (block.Image is not null)
             block.Image.Id = "img-" + Guid.NewGuid().ToString("N")[..12];
         if (block.Graph is not null)
