@@ -839,11 +839,11 @@ public static partial class HavenRichNotesOps
         return true;
     }
 
-    /// <summary>True only when the selected cell can absorb the adjacent blank column segment.</summary>
+    /// <summary>True when the adjacent unit cells can be reversibly covered by this cell.</summary>
     public static bool CanMergeTableCellRight(HavenRichNotes notes, string pageId, string blockId, int row, int column) =>
         CanMergeTableCell(notes, pageId, blockId, row, column, mergeRight: true);
 
-    /// <summary>True only when the selected cell can absorb the adjacent blank row segment.</summary>
+    /// <summary>True when the adjacent unit cells can be reversibly covered by this cell.</summary>
     public static bool CanMergeTableCellDown(HavenRichNotes notes, string pageId, string blockId, int row, int column) =>
         CanMergeTableCell(notes, pageId, blockId, row, column, mergeRight: false);
 
@@ -873,9 +873,10 @@ public static partial class HavenRichNotesOps
         return true;
     }
 
+    // Covered cell payloads remain in their stable slots while merged. Splitting
+    // therefore restores their text and formatting without a lossy backup format.
     private static bool CanAbsorb(HavenRichTableCell cell, string anchorId) =>
-        cell.CoveredByCellId is null && cell.Id != anchorId && cell.RowSpan == 1 && cell.ColumnSpan == 1 &&
-        cell.Text.Length == 0 && cell.Runs.Count == 0;
+        cell.CoveredByCellId is null && cell.Id != anchorId && cell.RowSpan == 1 && cell.ColumnSpan == 1;
 
     public static bool MergeTableCellRight(HavenRichNotes notes, string pageId, string blockId, int row, int column)
     {
