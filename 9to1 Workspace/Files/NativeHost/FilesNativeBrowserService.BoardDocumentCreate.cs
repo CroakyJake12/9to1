@@ -3,7 +3,6 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using CakeOS.Apps.Boards.Contract;
 using Haven.Application;
-using Haven.Infrastructure;
 using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
 
@@ -71,10 +70,7 @@ public sealed partial class FilesNativeBrowserService
             internal FilesOriginalBoardDocumentCreateAttempt Attempt = new();
             internal IReadOnlyList<Exception> CleanupFailures = Array.Empty<Exception>();
             internal bool Claimed, Validated, AuditRecorded, Retired, ExactCommitReceipt, ReconciledExactCommit;
-            internal Action<Action> Scope = null!;
-            internal Action<Task> Retain = null!;
             internal FilesOriginalReadSourceScope Source = null!;
-            internal readonly object Gate = new();
         }
 
         private sealed class Destination(BoardDocumentCreateOwner owner, CreateOperation operation)
@@ -141,15 +137,48 @@ public sealed partial class FilesNativeBrowserService
         {
             await start.ConfigureAwait(false);
             var errors = new List<Exception>();
-            foreach (var task in active)
-                try { await task.ConfigureAwait(false); }
-                catch (Exception error) { CanonicalSqliteOriginalStoreOwner.Capture(errors, task, error); }
             foreach (var task in settlements)
                 try { await task.ConfigureAwait(false); }
-                catch (Exception error) { CanonicalSqliteOriginalStoreOwner.Capture(errors, task, error); }
+                catch (Exception error) { CaptureTaskFailure(errors, task, error); }
+            foreach (var task in active)
+                try { await task.ConfigureAwait(false); }
+                catch (Exception error)
+                {
+                    if (!IsAuditOnlyFailureSettled(task, error))
+                        CaptureTaskFailure(errors, task, error);
+                }
             lock (_gate)
                 foreach (var operation in _operations.Values) CryptographicOperations.ZeroMemory(operation.Payload);
-            CanonicalSqliteOriginalStoreOwner.Throw(errors);
+            if (errors.Count != 0)
+                throw new AggregateException("Original Files board-create tasks did not settle cleanly.", errors);
+        }
+
+        private static void CaptureTaskFailure(List<Exception> errors, Task task, Exception observed)
+        {
+            if (task.Exception is { } aggregate) errors.AddRange(aggregate.InnerExceptions);
+            else errors.Add(observed);
+        }
+
+        private bool IsAuditOnlyFailureSettled(Task<FilesOriginalBoardDocumentCreateReceipt> original, Exception failure)
+        {
+            if (!OnlyHomeAuditPending(failure)) return false;
+            lock (_gate)
+            {
+                var operation = _operations.Values.FirstOrDefault(candidate => ReferenceEquals(candidate.Task, original));
+                if (operation?.SettlementTask is not { IsCompletedSuccessfully: true } settled) return false;
+                var result = settled.Result;
+                return result.CleanupFailures.Count == 0 &&
+                    result.State is FilesOriginalBoardDocumentCreateSettlementState.Committed or
+                        FilesOriginalBoardDocumentCreateSettlementState.NotCreated;
+            }
+        }
+
+        private static bool OnlyHomeAuditPending(Exception failure)
+        {
+            if (failure is FilesOriginalBoardDocumentCreateSettlementException
+                { State: FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending }) return true;
+            return failure is AggregateException { InnerExceptions.Count: > 0 } aggregate &&
+                aggregate.InnerExceptions.All(OnlyHomeAuditPending);
         }
 
         /// <summary>Creates one new canonical .9to1board file from the exact current selected
@@ -194,8 +223,7 @@ public sealed partial class FilesNativeBrowserService
                 Lifetime = originalLifetime, SessionId = sessionId, OperationKey = key,
                 DisplayName = name, PayloadHash = digest,
                 Payload = payload, DocumentId = document.DocumentId, FileId = Guid.NewGuid(),
-                FileRevisionId = Guid.NewGuid(), Scopes = [new("files.item", sameFolderRow.Id.ToString(), folderRevision.ToString(), ResourceAccess.Write)],
-                Scope = scope, Retain = retain
+                FileRevisionId = Guid.NewGuid(), Scopes = [new("files.item", sameFolderRow.Id.ToString(), folderRevision.ToString(), ResourceAccess.Write)]
             };
             var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
             originals.BindOriginalCallerCallback(scope);
@@ -253,16 +281,25 @@ public sealed partial class FilesNativeBrowserService
                 else actual = null!;
             }
             if (existingTask is not null) { retain(existingTask); return existingTask; }
-            try { operation.Source.Invoke(() => { operation.Source.RetainOriginalTask(actual); return true; }); }
-            finally { start.SetResult(); }
+            try { operation.Source.Invoke(() => { retain(actual); return true; }); }
+            catch (Exception registrationFailure)
+            {
+                // The owner already retains `actual` in _active. Fail its start gate so it
+                // settles without entering review or publication; never perform effects after
+                // the caller failed to retain the exact source task.
+                start.SetException(registrationFailure);
+                throw;
+            }
+            start.SetResult();
             return actual;
 
             async Task<FilesOriginalBoardDocumentCreateReceipt> Run(Task began)
             {
-                await began.ConfigureAwait(false);
-                var previous = _executing.Value; _executing.Value = operation;
+                var previous = _executing.Value;
                 try
                 {
+                    await began.ConfigureAwait(false);
+                    _executing.Value = operation;
                     var receipt = await originals.RunToOriginalSettlementAsync(() => ExecuteAsync(operation, presentReview, token)).ConfigureAwait(false);
                     lock (_gate) _receipts.Add(receipt, operation);
                     return receipt;
@@ -289,6 +326,7 @@ public sealed partial class FilesNativeBrowserService
             Task<FilesOriginalBoardDocumentCreateSettlementResult> recovery;
             lock (_gate)
             {
+                if (_retiring) throw new ObjectDisposedException(nameof(BoardDocumentCreateOwner));
                 if (operation.SettlementTask is { } existing && !existing.IsFaulted && !existing.IsCanceled)
                 { retain(existing); return existing; }
                 recovery = RetryCreateSettlementCoreAsync(operation, scope, retain, token);
