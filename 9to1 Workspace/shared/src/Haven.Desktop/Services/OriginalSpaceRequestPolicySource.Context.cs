@@ -92,7 +92,7 @@ internal sealed partial class OriginalSpaceRequestPolicySource
                 if (reference.Kind == SpaceContextReferenceKind.File && reference.OwnerAppId == "files")
                 {
                     var item = await ReadFilesContextAsync(owners, authority, reference, collection, custody, originals, token).ConfigureAwait(false);
-                    if (item is not null && collection.TryInclude(item)) custody.Add(item.Browser, item.Preview);
+                    if (item is not null && collection.TryInclude(item.Item)) custody.Add(item.Browser, item.Preview);
                     continue;
                 }
                 if (reference.Kind != SpaceContextReferenceKind.BoardPage || reference.OwnerAppId != "boards" ||
@@ -151,18 +151,18 @@ internal sealed partial class OriginalSpaceRequestPolicySource
             return null;
         }
         var availability = await originals.AwaitAsync(originals.Invoke(() => browser.ObserveOriginalHomeLibraryAvailabilityWithinSourceAsync(
-            authority.Actor, custody.IsBorrowed, custody.Own, custody.Retain, token))).ConfigureAwait(false);
+            authority.Actor, () => custody.IsBorrowed, custody.Own, custody.Retain, token))).ConfigureAwait(false);
         if (!browser.IsIssuedOriginalHomeLibraryAvailability(availability, authority.Actor) ||
             !availability.IsAvailable || availability.StoreId != storeId)
             throw Block("SPACE_CONTEXT_FILES_UNAVAILABLE", availability.Message);
 
         var selected = await originals.AwaitAsync(originals.Invoke(() => browser.ReadOriginalTextPreviewSelectionWithinSourceAsync(
             authority.Actor, storeId, new HostedItemId(parentFolderId), new HostedItemId(fileId),
-            new FilesRevisionId(revisionId), custody.IsBorrowed, custody.Own, custody.Retain, token))).ConfigureAwait(false);
+            new FilesRevisionId(revisionId), () => custody.IsBorrowed, custody.Own, custody.Retain, token))).ConfigureAwait(false);
         var row = selected.Row;
         if (selected.Page.StoreID != storeId || selected.Page.ParentID != parentFolderId || selected.Page.IsTrash ||
             row.Id.Value != fileId || row.ParentId?.Value != parentFolderId || row.Kind != HostedItemKind.File ||
-            row.CurrentRevisionId?.Value != revisionId)
+            row.CurrentRevisionId?.Value.Value != revisionId)
             throw Block("SPACE_CONTEXT_FILES_CHANGED", "The current Files row no longer matches the attached Space reference.");
 
         var observedDigest = NormalizeContextFilesDigest(row.ContentHash);
@@ -170,7 +170,7 @@ internal sealed partial class OriginalSpaceRequestPolicySource
             (observedDigest is null || !string.Equals(expectedDigest, observedDigest, StringComparison.Ordinal)))
             throw Block("SPACE_CONTEXT_FILES_CHANGED", "The current Files content digest no longer matches the attached Space reference.");
         var preview = await originals.AwaitAsync(originals.Invoke(() => browser.ReadOriginalTextPreviewWithinSourceAsync(
-            selected.Page, row, authority.Actor, custody.IsBorrowed, custody.Own, custody.Retain, token))).ConfigureAwait(false);
+            selected.Page, row, authority.Actor, () => custody.IsBorrowed, custody.Own, custody.Retain, token))).ConfigureAwait(false);
         if (!preview.Succeeded)
         {
             collection.OmitUnavailable(reference);
