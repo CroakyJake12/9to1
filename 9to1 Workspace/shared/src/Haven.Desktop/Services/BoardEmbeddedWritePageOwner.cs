@@ -425,9 +425,6 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             }
             catch (Exception error) { failures.Add(error); }
         }
-        try { await _retainedSources.ObserveAllOriginalTasksAsync().ConfigureAwait(false); }
-        catch (Exception error) { failures.Add(error); }
-        failures.AddRange(_retainedSources.OriginalErrors);
         OpeningCleanup[] openingCleanups;
         lock (_gate) openingCleanups = _openingCleanups.ToArray();
         foreach (var cleanup in openingCleanups)
@@ -439,6 +436,9 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             }
             catch (Exception error) { failures.Add(error); }
         }
+        try { await _retainedSources.ObserveAllOriginalTasksAsync().ConfigureAwait(false); }
+        catch (Exception error) { failures.Add(error); }
+        failures.AddRange(_retainedSources.OriginalErrors);
         if (failures.Count > 0) throw new AggregateException("Original embedded Write owner work did not settle cleanly.", failures);
     }
 
