@@ -327,7 +327,11 @@ public sealed partial class SpaceRegistry
         // derivation. Recheck inside the atomic publication transaction against the exact
         // Space revision that this activation will create.
         if (draft.LayoutDocument is { Nodes.Count: > 0 } layout)
-            _ = SpaceUserMessageGraph.Compile(id, checked(current.Revision + 1), layout);
+        {
+            var graph = SpaceUserMessageGraph.Compile(id, checked(current.Revision + 1), layout);
+            var effectiveCandidate = ResolveGraphCandidatePolicy(state.Spaces, current, draft);
+            graph.ValidateContextDependencies(effectiveCandidate);
+        }
         if (draft.Shares.Count != 0 || draft.GeneratedSurface is not null)
             throw new InvalidOperationException("Activation is unavailable until the owning share or generated-surface service validates this draft.");
         if (validation is null && (draft.CapabilityBindings.Count != 0 ||
@@ -1018,6 +1022,26 @@ public sealed partial class SpaceRegistry
             if (current.ParentSpaceId is not { } nextId) break;
             current = FindRequired(spaces, nextId);
         }
+    }
+
+    private static EffectiveSpacePolicy ResolveGraphCandidatePolicy(IReadOnlyList<SpaceDefinition> spaces,
+        SpaceDefinition current, SpaceConfigurationDocument draft)
+    {
+        // The SAME mutation snapshot supplies every active ancestor. No settings/body
+        // reads, grants or asynchronous resolver call are permitted inside this CAS.
+        var chain = new List<SpaceDefinition>();
+        var seen = new HashSet<Guid>();
+        var candidate = draft.ApplyTo(current with { DraftConfiguration = null });
+        while (true)
+        {
+            if (chain.Count >= 128 || !seen.Add(candidate.Id) || candidate.IsArchived)
+                throw new InvalidOperationException("The candidate graph requires an available bounded acyclic Space ancestry.");
+            chain.Add(candidate);
+            if (candidate.ParentSpaceId is not { } parentId) break;
+            candidate = FindRequired(spaces, parentId); // Active fields only; a parent's draft is not policy.
+        }
+        chain.Reverse();
+        return SpacePolicyResolver.ResolveKnownChain(chain, current.Id);
     }
 
     private static bool AncestryMatches(IReadOnlyList<SpaceDefinition> spaces, Guid spaceId,

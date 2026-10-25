@@ -289,10 +289,15 @@ public sealed class SpaceUserMessageGraph
     {
         ArgumentNullException.ThrowIfNull(policy);
         if (policy.SpaceId != SpaceId) throw Invalid("The graph context policy belongs to a different Space.");
+        // Match the deterministic item selection used by the actual context collector.
+        // Body-size availability remains with the original read owner at request time.
+        var requested = policy.Sources.Where(source => source.IncludedAutomatically)
+            .Take(Math.Min(policy.Context.MaximumRetrievedItems ?? OriginalSpaceContextBudget.MaximumSupportedItems,
+                OriginalSpaceContextBudget.MaximumSupportedItems)).ToArray();
         foreach (var id in ReferencedContextIds)
-            if (!policy.Sources.Any(source => source.ContextId == id && source.IncludedAutomatically &&
+            if (!requested.Any(source => source.ContextId == id &&
                 source.Permission is SpaceContextPermission.Read or SpaceContextPermission.ReadWrite))
-                throw Invalid("A configured graph source is outside the effective included read-permitted Space context.");
+                throw Invalid("A configured graph source is outside the effective included read-permitted retrieval allocation.");
     }
     private async Task<SpaceUserMessageGraphResult> ExecuteCoreAsync(ChatMessage input, OriginalSpaceCapturedContext? captured, CancellationToken token)
     {

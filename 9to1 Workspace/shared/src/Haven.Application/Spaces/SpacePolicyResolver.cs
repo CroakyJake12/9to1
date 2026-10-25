@@ -134,7 +134,7 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         }).ConfigureAwait(false);
     }
 
-    private static EffectiveSpacePolicy ResolveKnownChain(IReadOnlyList<SpaceDefinition> chain, Guid spaceId)
+    internal static EffectiveSpacePolicy ResolveKnownChain(IReadOnlyList<SpaceDefinition> chain, Guid spaceId)
     {
         var root = chain[0];
         var rootDisabled = DisabledKinds(root.CapabilityCategoryPolicy);
@@ -229,7 +229,16 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         var sources = new Dictionary<Guid, SpaceContextReference>();
         if (inheritance.Sources)
             foreach (var source in parent.Sources) sources[source.ContextId] = source;
-        foreach (var source in ReadableSources(child.ContextReferences)) sources[source.ContextId] = source;
+        foreach (var source in child.ContextReferences ?? [])
+        {
+            // The nearest explicit reference controls this Space's inclusion intent.
+            // Filtering denied/unknown rows before merging would resurrect the parent's
+            // readable row under the same ContextId. This is configuration only; actual
+            // body reads still require their original owning-app authorization.
+            if (source.Permission is SpaceContextPermission.Read or SpaceContextPermission.ReadWrite)
+                sources[source.ContextId] = source;
+            else sources.Remove(source.ContextId);
+        }
 
         var mergedModel = modelsDisabled
             ? model with { DefaultModelId = null }
