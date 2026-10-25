@@ -13,7 +13,6 @@ namespace Haven.Desktop.Services;
 internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeAppContentSession
 {
     private readonly BrowseAppContentRequest _request;
-    private readonly BoardsBrowseAppContentAddress _address;
     private readonly CancellationTokenSource _lifetime;
     private readonly object _gate = new();
     private NativeHomeFilesBoardReadLease? _lease;
@@ -26,7 +25,7 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
         CancellationTokenSource lifetime)
     {
         _request = request ?? throw new ArgumentNullException(nameof(request));
-        _address = address ?? throw new ArgumentNullException(nameof(address));
+        ArgumentNullException.ThrowIfNull(address);
         _lease = lease ?? throw new ArgumentNullException(nameof(lease));
         _lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
         if (!address.IsFilesDocument || address.StoreId != lease.StoreId || address.ParentFolderId != lease.ParentFolderId ||

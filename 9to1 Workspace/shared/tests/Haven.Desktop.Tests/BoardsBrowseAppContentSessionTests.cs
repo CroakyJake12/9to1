@@ -9,6 +9,7 @@ using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
+using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
 using HavenOS.Home.NativeUI;
 using Microsoft.Extensions.DependencyInjection;
