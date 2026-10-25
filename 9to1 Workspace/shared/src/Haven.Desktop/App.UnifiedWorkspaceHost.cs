@@ -805,9 +805,9 @@ public sealed partial class App
                 await settlement;
                 DemandCurrent(); caller.ThrowIfCancellationRequested();
                 var receiptToOpen = state.Result.Receipt ?? throw new InvalidDataException("The prepared Board address has no exact original Files receipt.");
-                var selected = BoardsBrowseAppContentAddress.Parse(address);
-                if (!selected.Writable || selected.StoreId != receiptToOpen.FilesStoreId || selected.ParentFolderId != receiptToOpen.ParentFolderId ||
-                    selected.FileId != receiptToOpen.FileId || selected.RevisionId != receiptToOpen.FilesCasRevisionId)
+                var selectedAddress = BoardsBrowseAppContentAddress.Parse(address);
+                if (!selectedAddress.Writable || selectedAddress.StoreId != receiptToOpen.FilesStoreId || selectedAddress.ParentFolderId != receiptToOpen.ParentFolderId ||
+                    selectedAddress.FileId != receiptToOpen.FileId || selectedAddress.RevisionId != receiptToOpen.FilesCasRevisionId)
                     throw new UnauthorizedAccessException("Publish only the writable Board address prepared from the exact retained Files receipt.");
                 var priorTabs = _chrome!.State.Tabs.Select(tab => tab.Id).ToHashSet();
                 if (_workspace is null || !_workspace.TryQueueNavigationOriginal(new(origin.TabId, address, OpenInNewTab: true), settlement, out var navigation) || navigation is null)
