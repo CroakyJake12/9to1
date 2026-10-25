@@ -1151,9 +1151,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         switch (controlName)
         {
             case "BoardTitleBox":
+                if (string.Equals(_session.Document.Title, text, StringComparison.Ordinal)) return;
                 _session.Document.Title = text;
                 Set("BoardTitle", text);
                 RefreshPageBreadcrumb();
+                _session.MarkDirty();
                 break;
             case "PageTitleBox":
             {
@@ -1164,6 +1166,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 Set("PageTitle", pageTitle);
                 RefreshPageBreadcrumb();
                 NavRebuildRequested?.Invoke();
+                _session.MarkDirty();
                 break;
             }
             case "NavSearchBox":
