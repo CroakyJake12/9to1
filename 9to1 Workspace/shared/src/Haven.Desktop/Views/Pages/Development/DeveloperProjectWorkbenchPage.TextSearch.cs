@@ -24,6 +24,8 @@ public sealed partial class DeveloperProjectWorkbenchPage
     {
         var previous = CurrentEditorText();
         var history = recordHistory ? CurrentDraftHistory() : null;
+        if (!StringComparer.Ordinal.Equals(previous, text) && CurrentSourceTab() is { } source)
+        { source.CuiAnalysis = null; source.CuiAnalysisText = null; }
         _editorTextSelection = null; InvalidateSourceFind();
         if (_manual && _editor is null)
         {

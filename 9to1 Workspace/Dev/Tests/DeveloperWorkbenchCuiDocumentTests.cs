@@ -20,7 +20,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
-            "dev.redo-source-edit", "dev.preview-edit",
+            "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];
@@ -132,6 +132,22 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             Assert.Contains(button.Actions.Values, action => action.Name == command);
             Assert.Contains(button.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
                 && property.Value is CuiBindingValue binding && binding.Path == availability);
+        }
+    }
+
+    [Fact]
+    public void Cui_draft_checks_problems_and_outline_use_actual_source_actions_and_observed_keys()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var check = Assert.Single(nodes, node => node.Name == "dev-analyze-cui-draft");
+        Assert.Contains(check.Actions.Values, action => action.Name == "dev.analyze-cui-draft");
+        Assert.Contains(check.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
+            && property.Value is CuiBindingValue binding && binding.Path == "CanAnalyzeCuiDraft");
+        foreach (var (id, command) in new[] { ("dev-go-to-cui-problem", "dev.go-to-cui-problem"), ("dev-go-to-cui-element", "dev.go-to-cui-element") })
+        {
+            var location = Assert.Single(nodes, node => node.Name == id);
+            var action = Assert.Single(location.Actions.Values, value => value.Name == command);
+            Assert.IsType<CuiBindingValue>(action.Parameter);
         }
     }
 
