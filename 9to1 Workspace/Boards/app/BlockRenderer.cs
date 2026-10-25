@@ -142,7 +142,7 @@ public static class BlockRenderer
     {
         foreach (var row in editor.GetVisualAncestors().OfType<Grid>())
         {
-            var button = row.Children.OfType<Button>().FirstOrDefault(candidate => candidate.Tag is Popup);
+            var button = row.Children.OfType<Button>().FirstOrDefault(ToolbarBuilder.HasInsertMenu);
             if (button is not null && ToolbarBuilder.OpenInsertMenu(button)) return true;
         }
         return false;
