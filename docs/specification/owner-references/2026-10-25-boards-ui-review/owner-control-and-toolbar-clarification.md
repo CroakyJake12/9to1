@@ -100,3 +100,43 @@ acceptance remain separate states.
 - Once the scrollbar is removed, reduce toolbar height to fit one comfortable
   button row plus padding; allow the document's flexible row to use the freed
   height instead of retaining empty toolbar space.
+
+## Subsequent live review: compact header and softer functional icons
+
+The latest owner requests supersede the earlier top-left brand position and
+intermediate layout labels above:
+
+- Put the remaining header actions on one line at roughly the File button's
+  height. Place the Boards app icon immediately right of File. Use 16–18px
+  undo/redo glyphs in comfortable 32px targets. Remove Appearance, retain its
+  settings through the shared menu, and replace More text with an accessible
+  three-dot icon. Remove the redundant breadcrumb.
+- Keep the Board name in the sidebar selector, with saved state underneath;
+  center the combined identity vertically with its icon and chevron.
+- Editing/Viewing and Vertical Stacking/Free Placement use the same switch
+  treatment, with reduced vertical and increased horizontal container padding.
+  Increase the label-to-switch gap and label weight. The native page placement
+  mode is distinct from the freeform object lock.
+- Make the Board name and Add page or section text bolder. Only the latter
+  action is a pill; do not turn ordinary controls into accented pills again.
+- Keep the toolbar one compact row with shadow-backed overflow arrows. Make
+  the document scrollbar visually thinner, expand the content panel to the
+  visible toolbar width, and slightly reduce its corner radius. Let the board
+  and sidebar fill the vertical space recovered from the header and toolbar.
+- Make the default purple surface warmer (less blue), with visible but soft
+  Glow gradients. Respect actual user overrides and retain the separate
+  Professional treatment; the surroundings are only slightly darker.
+- Use a custom bold vector check, with checked boxes filled in purple or the
+  user's accent. Reduce the checkbox/text gap slightly and preserve alignment,
+  disabled, focus, high-contrast and indeterminate states.
+- Place block drag and insert controls in the left margin, before the text/title
+  column. Reveal them only on hover or keyboard focus, not persistent selection.
+  Keep content/title alignment and accessible hit targets without moving text.
+- Icons should be softer and more colourful, matching the supplied toolbar
+  reference. Use meaning-specific colour sparingly and make each symbol
+  identify its actual action. Keep consistent optical sizes and silhouettes,
+  actual scoped theme/disabled updates, high-contrast legibility and hover labels.
+  Indent/de-indent need line-and-arrow glyphs, not unrelated navigation chevrons.
+
+These are implementation requirements, not claims that a screenshot, native
+runtime or full acceptance has passed. Earlier captures remain dated evidence.
