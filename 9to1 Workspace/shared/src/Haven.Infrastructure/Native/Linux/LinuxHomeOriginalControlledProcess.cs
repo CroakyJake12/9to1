@@ -27,6 +27,7 @@ internal sealed class LinuxHomeOriginalControlledProcess : IAsyncDisposable
     private bool _retiring, _resumeAttempted;
     internal bool IsOwnedBy(object issuer) => ReferenceEquals(_owner, issuer);
     internal int ProcessId { get; private set; }
+    internal bool HasOriginalResumeAttempt { get { lock (_gate) return _resumeAttempted; } }
     internal string? ProcessStartIdentity { get; private set; }
     internal string ExecutableIdentity => "sha256:" + _package.ActivatedFiles.Single(value => value.RelativePath == _package.EntrypointRelativePath).Sha256;
     internal Process OriginalSupervisor => _supervisor;

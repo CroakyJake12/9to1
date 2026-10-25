@@ -104,7 +104,7 @@ namespace HavenOS.Home.Apps
     }
 
     /// <summary>
-    /// Original-session package adapter, deliberately unregistered. It reuses the canonical
+    /// Original-session package adapter, registered only by a genuine platform package owner. It reuses the canonical
     /// database and actual Home resource/permission broker rather than maintaining another registry.
     /// A supplied port with no real root/transaction authority must refuse before effects.
     /// </summary>

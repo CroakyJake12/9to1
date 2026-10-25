@@ -199,6 +199,38 @@ public sealed class LinuxHomePublisherEnrollmentOwner
         }
         internal Task DemandCurrentAsync() => _demandCurrent();
         internal string StatePath => _owner._statePath;
+        internal async Task<HomeStateReadResult> ReadOriginalPackageStateAsync(CancellationToken token)
+        {
+            await DemandCurrentAsync().ConfigureAwait(false);
+            var read = await _owner._store.ReadAsync(token).ConfigureAwait(false);
+            await DemandCurrentAsync().ConfigureAwait(false);
+            if (!read.IsSuccess) return read;
+            var state = read.State ?? throw new InvalidDataException("The original package-state read has no retained canonical state.");
+            return HomeStateReadResult.Success(state with {
+                Records = Array.AsReadOnly(state.Records.Where(value => value.RecordId == HomePackageDatabase.RecordId)
+                    .Select(value => value with { Payload = value.Payload.Clone() }).ToArray()) });
+        }
+        internal async Task<HomeStateWriteResult> WriteOriginalPackageStateAsync(HomeCoreStateRecord record, long expectedRevision,
+            IHomeStateCommitActorGuard sameRootOperation, CancellationToken token)
+        {
+            if (record.RecordId != HomePackageDatabase.RecordId || record.RecordType != HomePackageDatabase.RecordType ||
+                record.SchemaVersion != HomePackageDatabase.CurrentSchemaVersion || record.Scope != HomeDataScope.DeviceLocal ||
+                record.Authority != HomeRecordAuthority.LocalCanonical || expectedRevision < 0 || expectedRevision == long.MaxValue ||
+                record.Revision != expectedRevision + 1) throw new UnauthorizedAccessException("Only the SAME original canonical package record/CAS may be written.");
+            var written = await _owner._store.WriteGuardedAsync(record, expectedRevision, Actor, new RootPackageCommitGuard(_guard, sameRootOperation), token).ConfigureAwait(false);
+            if (!written.IsSuccess) return written;
+            var state = written.State ?? throw new InvalidDataException("The actual package writer returned no retained canonical state.");
+            return HomeStateWriteResult.Success(state with { Records = Array.AsReadOnly(state.Records
+                .Where(value => value.RecordId == HomePackageDatabase.RecordId).Select(value => value with { Payload = value.Payload.Clone() }).ToArray()) });
+        }
+        private sealed class RootPackageCommitGuard(IHomeStateCommitActorGuard actualAdministrativeProfile, IHomeStateCommitActorGuard actualRootOperation)
+            : IHomeStateCommitActorGuard
+        {
+            public async ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor actor,
+                HomeStateCommitPhase phase, CancellationToken token)
+                => await actualAdministrativeProfile.CheckAsync(state, actor, phase, token).ConfigureAwait(false) &&
+                    await actualRootOperation.CheckAsync(state, actor, phase, token).ConfigureAwait(false);
+        }
     }
 
     private sealed class CommitGuard(ProtectedState state, Input certificate, Input catalogue,

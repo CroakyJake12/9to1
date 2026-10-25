@@ -14,7 +14,7 @@ public sealed partial class LinuxHomeRootClient : IHomeAppsFeatureSource, ICanon
     ICanonicalOriginalWriteSettlementPinOwner<ICanonicalInstalledApplicationLaunchIntent, ICanonicalInstalledApplicationLaunchAcknowledgment>
 {
     private sealed record AppsCursor(string Revision, HomeAppsQuery Query, int Offset);
-    private sealed record AppsView(string Revision, IReadOnlyList<InstalledApplicationReference> Rows);
+    private sealed record AppsView(string Revision, IReadOnlyList<InstalledApplicationReference> Rows, HomePackageDatabaseSnapshot? OriginalPackages);
     private readonly Dictionary<string, AppsCursor> _appsCursors = new(StringComparer.Ordinal);
     private readonly ConditionalWeakTable<HomeAppsSnapshot, AppsView> _appsSnapshots = new();
     private HomeAppsSnapshot? _currentAppsSnapshot;
@@ -28,8 +28,14 @@ public sealed partial class LinuxHomeRootClient : IHomeAppsFeatureSource, ICanon
         if (_listening is null || _launchHome is null || _connect?.IsCompletedSuccessfully != true)
             return new(string.Empty, HomeAppsDataState.Unavailable, [], null, null, false,
                 new("HomeApps.InstalledRootRequired", "The installed enrolled Root and actual Home listening session are required.", "HomeApps.Catalogue", true, true));
+        HomePackageDatabaseSnapshot? removalRegistry = null;
+        if (_packageLifecycleVersion == 1 && _packageService?.IsOriginalAvailable == true && _packageDeviceStore is { } packageStore)
+        {
+            var canonical = await source.Read(() => new HomePackageDatabase(packageStore).ReadAsync(caller)).ConfigureAwait(false);
+            removalRegistry = canonical.Succeeded ? canonical.Snapshot : null;
+        }
         var revision = source.Invoke(() => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
-        { Listening = _listening, Rows = rows.Select(row => new { row, Package = Fingerprint(_choices.GetValue(row, _ => throw new UnauthorizedAccessException("The actual installed choice is unavailable.")).Package) }).ToArray() }))));
+        { Listening = _listening, OriginalPackages = removalRegistry, Rows = rows.Select(row => new { row, Package = Fingerprint(_choices.GetValue(row, _ => throw new UnauthorizedAccessException("The actual installed choice is unavailable.")).Package) }).ToArray() }))));
         var offset = 0;
         if (actualQuery.PageToken is { } cursorToken)
         {
@@ -60,12 +66,13 @@ public sealed partial class LinuxHomeRootClient : IHomeAppsFeatureSource, ICanon
             if (!_choices.TryGetValue(row, out var choice)) throw new UnauthorizedAccessException("The SAME installed row/source choice is required.");
             return new HomePackageEntry(choice.Package.PackageId, choice.Package.AppId, row.Label, null, row.Version, null, null,
                 HomePackageInstallationState.Installed, HomePackageCompatibilityState.Unknown,
-                "Launch revalidates the actual protected runtime and requests individual Home approval.", null, null, null,
-                new[] { HomePackageAction.Launch }.ToFrozenSet(), "home");
+                "Home asks you to approve each action.", null, null, null,
+                (removalRegistry is not null && HomePackageOriginalRemovalChecks.Evaluate(removalRegistry, ParseDescriptor(choice.Package), _homePackageId!) is null
+                    ? new[] { HomePackageAction.Launch, HomePackageAction.Uninstall } : new[] { HomePackageAction.Launch }).ToFrozenSet(), "home");
         }).ToArray());
         var snapshot = new HomeAppsSnapshot(revision, packages.Length == 0 ? HomeAppsDataState.Empty : HomeAppsDataState.Available,
             Array.AsReadOnly(packages), filtered.Length, next, false);
-        lock (_gate) { _appsSnapshots.Add(snapshot, new(revision, rows)); _currentAppsSnapshot = snapshot; }
+        lock (_gate) { _appsSnapshots.Add(snapshot, new(revision, rows, removalRegistry)); _currentAppsSnapshot = snapshot; }
         return snapshot;
     }, token);
     private HomeCanonicalInstalledApplicationLaunchSource? _launchHome;
@@ -137,6 +144,7 @@ public sealed partial class LinuxHomeRootClient : IHomeAppsFeatureSource, ICanon
                 var packageId = row.OsApplicationId.StartsWith("9to1.package:", StringComparison.Ordinal) ? row.OsApplicationId[13..] : "";
                 if (!_packageIds.Contains(packageId, StringComparer.Ordinal)) continue;
                 var package = await ReadPackage(source, packageId, caller).ConfigureAwait(false);
+                if (!IsOriginalPackageInstalled(packageId)) continue;
                 if (package.AppId != row.StableLaunchIdentity || row.HomeProfileId != actor.ProfileId ||
                     row.Entrypoint != Path.Combine(package.InstallationRoot, package.EntrypointRelativePath)) continue;
                 if (ParseDescriptor(package).ComponentClass is not ("optional-app" or "mandatory-shared-core")) continue;
@@ -176,6 +184,7 @@ public sealed partial class LinuxHomeRootClient : IHomeAppsFeatureSource, ICanon
         var row = await source.Read(() => _registry.ResolveLaunchForActorWithinOriginalSourceAsync(choice.Row.ApplicationId,
             choice.Row.Revision, choice.Listening.Actor, source.Run, source.Retain, token).AsTask()).ConfigureAwait(false);
         var package = await ReadPackage(source, choice.Package.PackageId, token).ConfigureAwait(false);
+        if (!IsOriginalPackageInstalled(package.PackageId)) throw new UnauthorizedAccessException("The original package is removed or has an unresolved removal.");
         var listening = await Exchange(source, new(1, Guid.NewGuid(), "check-home"), token).ConfigureAwait(false);
         if (row != choice.Row || Fingerprint(package) != Fingerprint(choice.Package) || listening.Listening != choice.Listening ||
             choice.Listening.Actor != await Actor(source, token).ConfigureAwait(false)) throw new UnauthorizedAccessException("The actual Linux installed choice/actor/activation/listener changed.");
@@ -343,18 +352,20 @@ public sealed partial class LinuxHomeRootClient : IHomeAppsFeatureSource, ICanon
         {
             if (_launchDrain is not null) return _launchDrain;
             _launchRetiring = true; _launchHome?.RequestOriginalRetirement();
-            return _launchDrain = Drain(_launches.ToArray());
+            return _launchDrain = Drain(_launches.ToArray(), _appsRemovals.Values.Select(value => value.OriginalTask).ToArray());
         }
-        static async Task Drain(LaunchWork[] launches)
+        static async Task Drain(LaunchWork[] launches, Task[] removals)
         {
             var failures = new List<Exception>();
             foreach (var work in launches)
                 if (work.Driver is { } driver) try { await driver.ConfigureAwait(false); } catch (Exception cause) { failures.Add(driver.Exception ?? cause); }
+            foreach (var removal in removals) try { await removal.ConfigureAwait(false); } catch (Exception cause) { failures.Add(removal.Exception ?? cause); }
             if (failures.Count != 0) throw new AggregateException("Original Linux application launch parents remain failed or unsettled.", failures);
         }
     }
     public Task<HomePackageActionResult> ExecuteAsync(HomePackageActionRequest request, CancellationToken token)
     {
+        if (request.Action == HomePackageAction.Uninstall) return ExecuteOriginalOptionalRemoval(request, token);
         if (request.IdempotencyKey is not { Length: > 0 and <= 1024 })
             return Task.FromResult(AppsDecision(request, HomePackageOperationState.Rejected, "HomeApps.OperationRequired", "Refresh Apps before launching."));
         lock (_gate)
@@ -365,7 +376,7 @@ public sealed partial class LinuxHomeRootClient : IHomeAppsFeatureSource, ICanon
                 return known.OriginalTask;
             }
             token.ThrowIfCancellationRequested();
-            if (_launchRetiring || _appsOperations.Count >= 64) throw new InvalidOperationException("Settle the retained original Apps operations before another launch.");
+            if (_launchRetiring || _appsOperations.Count + _appsRemovals.Count >= 64 || _appsRemovals.ContainsKey(request.IdempotencyKey)) throw new InvalidOperationException("Settle the retained original Apps operations before another launch.");
             var snapshot = _currentAppsSnapshot;
             if (request.Action != HomePackageAction.Launch || request.RequestedVersion is not null || request.RequestedChannel is not null ||
                 snapshot is null || request.ExpectedRevision != snapshot.Revision || !_appsSnapshots.TryGetValue(snapshot, out var view))

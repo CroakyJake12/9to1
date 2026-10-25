@@ -3,6 +3,8 @@ using System.Runtime.Versioning;
 using System.Text.Json;
 using Haven.Infrastructure.Native.Linux;
 using HavenOS.Home.Apps;
+using HavenOS.Home.Core;
+using Haven.Application;
 using Xunit;
 
 namespace Haven.Infrastructure.Tests;
@@ -12,6 +14,31 @@ namespace Haven.Infrastructure.Tests;
 [SupportedOSPlatform("linux")]
 public sealed class LinuxHomePackageRemovalTests
 {
+    private sealed class LinuxFactAttribute : FactAttribute
+    { public LinuxFactAttribute() { if (!OperatingSystem.IsLinux()) Skip = "Requires actual Linux filesystem/process platform."; } }
+    [LinuxFact]
+    public async Task Unconnected_actual_Root_cannot_start_package_service_or_create_a_device_registry()
+    {
+        using var rig = new LinuxHomeBootstrapActivationOwnerTests.Rig();
+        var statePath = Path.Combine(rig.Root, "unchanged-user-state.json");
+        var store = new FileHomeCoreStateStore(statePath);
+        var profiles = new HomeLocalProfileIdentity(store, new OperatingSystemPrincipalSource());
+        var permissions = new HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService(store, (_, _) => null);
+        var resources = new ResourceAuthorizationService(profiles, []);
+        var local = new HomeLocalStoreOwnership(store, profiles, new HomeLocalStoreEvidenceRegistry([]), permissions);
+        var ownership = new HomeResourceStoreOwnershipAuthority(local, profiles);
+        var broker = new HomeResourceOperationBroker(resources, permissions);
+        await using var sessions = new HomeNativeCoreApiSessions(permissions, profiles,
+            new UnavailableHomeNativeInstalledPeerVerifier(), () => throw new InvalidOperationException("No local API was installed."));
+        var client = new LinuxHomeRootClient(Path.Combine(rig.Root, "unregistered-root.sock"), rig.Token);
+        var service = client.CreateOriginalPackageOperationsService(new(store, profiles, permissions, resources, ownership, broker), sessions);
+        Assert.Equal("packages", service.Descriptor.ServiceId);
+        await Assert.ThrowsAsync<PlatformNotSupportedException>(() => service.StartAsync(rig.Token));
+        Assert.False(((HomeNativePackageOperationsService)service).IsOriginalAvailable);
+        await service.StopAsync(); await client.CloseAndDrainAsync();
+        Assert.False(File.Exists(statePath)); Assert.False(File.Exists(rig.StatePath));
+        Assert.False(File.Exists(Path.Combine(rig.Root, "unregistered-root.sock")));
+    }
     private sealed class LinuxAdminFactAttribute : FactAttribute
     { public LinuxAdminFactAttribute() { if (!OperatingSystem.IsLinux() || GetEuid() != 0) Skip = "Requires actual Linux UID0 isolated signed-file fixture."; } }
     [LinuxAdminFact]
@@ -47,6 +74,34 @@ public sealed class LinuxHomePackageRemovalTests
         Assert.Null(HomePackageDatabase.ValidateOriginalProtectedSnapshot(captured));
         Assert.NotNull(HomePackageOriginalRemovalChecks.Evaluate(captured, optional, "home.pkg"));
         Assert.NotNull(HomePackageOriginalRemovalChecks.Evaluate(captured, optional, "home.pkg", "another-unissued-operation"));
+    }
+    [LinuxAdminFact]
+    public async Task Real_signed_bootstrap_cannot_adopt_removed_metadata_without_original_terminal_provenance()
+    {
+        using var rig = new LinuxHomeBootstrapActivationOwnerTests.Rig(includeNativeHelper: true, includeOptionalApp: true);
+        await rig.Enroll(); await rig.Owner.ActivateAsync(rig.Request(), rig.Token);
+        var beforeBytes = File.ReadAllBytes(rig.StatePath);
+        var original = (await rig.Database.ReadAsync(rig.Token)).Snapshot!;
+        var operation = original.RecentOperations.First().OperationId;
+        // Exact real protected baseline and retained signed cohort, observed only.
+        LinuxHomePackageRemovalWire.DemandOriginalCanonicalOutcomes(original, original.Packages, "home.pkg", operation);
+        var changed = original with { Packages = original.Packages.Select(value => value.PackageId == "optional.pkg"
+            ? value with { InstalledVersion = null, InstallationState = HomePackageInstallState.Available, Revision = value.Revision + 1 } : value).ToArray() };
+        Assert.Null(HomePackageDatabase.ValidateOriginalProtectedSnapshot(changed));
+        Assert.Throws<UnauthorizedAccessException>(() => LinuxHomePackageRemovalWire.DemandOriginalCanonicalOutcomes(changed, original.Packages, "home.pkg", operation));
+        var mandatoryChanged = original with { Packages = original.Packages.Select(value => value.PackageId == "home.pkg"
+            ? value with { InstalledVersion = null, InstallationState = HomePackageInstallState.Available, Revision = value.Revision + 1 } : value).ToArray() };
+        Assert.Throws<UnauthorizedAccessException>(() => LinuxHomePackageRemovalWire.DemandOriginalCanonicalOutcomes(mandatoryChanged, original.Packages, "home.pkg", operation));
+        var forgedJournal = new HomePackageJournalEntry("copied-idempotency", "unissued-operation", "optional.pkg", "Uninstall",
+            HomePackageJournalState.Succeeded, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow,
+            LinuxHomePackageRemovalWire.SuccessCode, false, true, [], [], [], []);
+        var terminalWithoutOriginalProof = original with { RecentOperations = original.RecentOperations.Append(forgedJournal).ToArray() };
+        Assert.Throws<UnauthorizedAccessException>(() => LinuxHomePackageRemovalWire.DemandOriginalCanonicalOutcomes(terminalWithoutOriginalProof, original.Packages, "home.pkg", operation));
+        Assert.Equal(beforeBytes, File.ReadAllBytes(rig.StatePath));
+        await rig.Owner.WithinSettledCodeAsync(rig.Request(), async (code, token) => {
+            await code.DemandPinnedCurrentAsync(token);
+            Assert.Equal(original.Packages.Count, code.OriginalInstalledEntries.Count);
+        }, rig.Token);
     }
     private static HomePackageArtifactDescriptor Descriptor(HomePackageDatabaseSnapshot registry, string package)
     {

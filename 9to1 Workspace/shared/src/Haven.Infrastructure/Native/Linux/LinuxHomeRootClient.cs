@@ -36,6 +36,8 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
     private NativeWindowsHomeRootWire.Listening? _listening;
     private HomePackageOriginalInstalledActivationRecord? _homeActivation;
     private string[] _packageIds = [];
+    private readonly Dictionary<string, bool> _originalPackageAvailability = new(StringComparer.Ordinal);
+    private int _packageLifecycleVersion;
     private string? _homePackageId, _catalogueRevision;
     private Task? _connect, _close;
     private bool _retiring, _channelFailed;
@@ -79,7 +81,9 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
                 ids is not { Length: >= 2 and <= 128 } || ids.Any(string.IsNullOrWhiteSpace) || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length ||
                 !ids.Contains(root.PackageId) || !ids.Contains(response.PackageId) || response.CatalogueRevision != root.CatalogueRevision)
                 throw new UnauthorizedAccessException("The actual registered Root did not issue its current canonical bootstrap identities.");
-            source.Run(() => { _packageIds = ids; _homePackageId = response.PackageId; _catalogueRevision = response.CatalogueRevision; });
+            source.Run(() => { _packageIds = ids; _homePackageId = response.PackageId; _catalogueRevision = response.CatalogueRevision;
+                _packageLifecycleVersion = response.PackageLifecycleVersion is 0 or 1 ? response.PackageLifecycleVersion
+                    : throw new UnauthorizedAccessException("The registered Root package lifecycle protocol is unsupported."); });
             var home = await ReadPackage(source, _homePackageId!, lifetime).ConfigureAwait(false);
             if (home.AppId != "home") throw new UnauthorizedAccessException("The actual Root must identify this controlled Home package.");
             DemandActualHomeImage(home);
@@ -99,6 +103,7 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
             foreach (var id in _packageIds)
             {
                 var package = await ReadPackage(source, id, lifetime).ConfigureAwait(false);
+                if (!IsOriginalPackageInstalled(package.PackageId)) continue;
                 applications.Add(new("9to1.package:" + package.PackageId, Path.Combine(package.InstallationRoot, package.EntrypointRelativePath),
                     package.AppId, package.Version, true) { StableLaunchIdentity = package.AppId });
             }
@@ -210,6 +215,9 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
         if (!_packageIds.Contains(id, StringComparer.Ordinal)) throw new UnauthorizedAccessException("Only the current Root's original selected package identities may be observed.");
         var response = await Exchange(source, new(1, Guid.NewGuid(), "inspect-package") { PackageId = id }, token).ConfigureAwait(false);
         var package = response.Activation ?? throw new UnauthorizedAccessException("The actual Root package observation is unavailable.");
+        if (_packageLifecycleVersion == 1 && response.PackageInstalled is null)
+            throw new UnauthorizedAccessException("The original Root did not identify current canonical package installation state.");
+        lock (_gate) _originalPackageAvailability[id] = _packageLifecycleVersion == 0 || response.PackageInstalled == true;
         if (package.SchemaVersion != 1 || package.PackageId != id || package.Platform != "linux" || package.CatalogueRevision != _catalogueRevision ||
             !Path.IsPathFullyQualified(package.InstallationRoot) || !HomePackageOriginalInstalledActivationRecord.SafeRelative(package.EntrypointRelativePath))
             throw new UnauthorizedAccessException("The actual current Root package identity/layout is inconsistent.");
@@ -220,6 +228,8 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
             throw new UnauthorizedAccessException("The actual Root activation must match its exact signed descriptor and runtime cohort.");
         return package;
     }
+    private bool IsOriginalPackageInstalled(string id)
+    { lock (_gate) return _originalPackageAvailability.GetValueOrDefault(id); }
     private static HomePackageArtifactDescriptor ParseDescriptor(HomePackageOriginalInstalledActivationRecord package)
         => HomePackageOriginalArtifactDescriptorParser.Parse(Convert.FromBase64String(package.SignedDescriptorBase64), Convert.FromBase64String(package.DescriptorPayloadBase64),
             package.CatalogueRevision, new(package.PackageId, HomePackageAction.Install, "linux.root.observation", package.Version, null, package.CatalogueRevision)).Descriptor;
@@ -271,8 +281,8 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
             actual = Drive(); _operations.Add(actual, source);
         }
         try { source.Run(() => retain(actual)); }
-        catch (Exception cause) { lock (_gate) _unexpected.Add(cause); throw; }
-        finally { begin.SetResult(); }
+        catch (Exception cause) { lock (_gate) _unexpected.Add(cause); begin.SetException(cause); throw; }
+        begin.SetResult();
         return actual;
         async Task<T> Drive()
         {
@@ -305,6 +315,7 @@ public sealed partial class LinuxHomeRootClient : IHomeNativeOriginalControlledP
         async Task Close()
         {
             var failures = new List<Exception>();
+            if (_packageService is not null) try { await _packageService.StopAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
             try { _lifetime.Cancel(); } catch (Exception cause) { failures.Add(cause); }
             try { _socket?.Dispose(); } catch (Exception cause) { failures.Add(cause); }
             KeyValuePair<Task, CanonicalSqliteOriginalSourceScope>[] original; lock (_gate) original = _operations.ToArray();

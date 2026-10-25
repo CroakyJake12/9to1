@@ -369,3 +369,39 @@ This command does not copy into systemd directories, register/enable/start a
 service, invoke the helper, or establish runtime Ready. Deployment remains a
 separate explicitly authorized packaging/administrative action after reviewing
 the exact artifact and its current activation provenance.
+
+## Optional installed app removal
+
+The controlled Linux Home composition now registers the canonical `packages`
+service using the same retained publisher catalogue, package database, dependency
+planner, original operation admission and per-action Home review. Apps offers
+**Remove** only for a current source-issued installed optional app whose canonical
+state permits removal. Mandatory core and packages still required by another app
+remain unavailable for removal. A running Root-owned app must be closed first.
+
+The action connects to that same authenticated Home Unix listener. The separate
+`9to1.Home.Core.Package/1` envelope carries removal intent and opaque operation
+IDs; `9to1.Home.Core.Read/1` remains read-only. Operation IDs cannot reconstruct a
+session, actor or review. Pre-effect continuation waits on the same manual Home
+approval. Once attempted, that original run permits observation/audit recovery,
+never another privileged dispatch.
+
+Root exposes only the existing canonical package record through its controlled
+Home channel. Its actual administrative profile and protected writer validate the
+exact original Pending reservation and matching known terminal CAS. Root refuses
+caller-selected paths/UIDs/argv or unrelated state writes. Successful removal
+unregisters the optional app, retains its app-owned files and the full immutable
+signed cohort/rollback bytes, and blocks future installed-peer/launch admission.
+Cold service admission accepts changed optional rows only with matching original
+protected terminal removal provenance; mandatory rows and the complete original
+signed code cohort remain checked. Pending/unknown operations quarantine that
+optional app and are never replayed at startup. An oversized canonical catalogue
+leaves package mutation unavailable within the existing bounded Root protocol.
+
+These are source implementations and focused refusal/signed-filesystem fixtures.
+No installed privileged removal or native service/helper execution was performed
+here. Unknown/pending outcomes remain retained; the general Apps presentation does
+not yet expose a cross-restart original removal recovery workflow. Install,
+update, repair and restoration of a removed app remain separate implementation
+gaps, not advertised actions. Actual publisher inputs, deployment, native runtime
+verification and independent release acceptance remain outstanding.
