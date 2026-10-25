@@ -70,4 +70,35 @@ public sealed class NavBuilderTests
             Assert.False(leafDisclosure.IsEnabled);
         });
     }
+
+    [Fact]
+    public async Task Section_context_menu_exposes_only_the_persistable_icon_and_color_choices()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(null);
+        var vm = new BoardsViewModel(session);
+        var section = session.Document.Sections[0];
+        await vm.SetSectionIconAsync(section.Id, "chat", "#187B72");
+        Assert.Equal("chat", section.IconKey);
+        Assert.Equal("#187B72", section.IconColor);
+
+        TestUiThread.Run(() =>
+        {
+            var nav = new StackPanel();
+            NavBuilder.Rebuild(nav, vm);
+            var header = Assert.IsType<Border>(nav.Children[0]);
+            var row = Assert.IsType<Grid>(header.Child);
+            var icon = Assert.IsType<Image>(row.Children[1]);
+            Assert.Equal("Section icon", Avalonia.Automation.AutomationProperties.GetName(icon));
+            var title = Assert.IsType<Button>(row.Children[2]);
+            var menu = Assert.IsType<ContextMenu>(title.ContextMenu);
+            var appearance = Assert.Single(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Icon and color"));
+            var iconMenu = Assert.Single(appearance.Items.OfType<MenuItem>(), item => Equals(item.Header, "Icon"));
+            var colorMenu = Assert.Single(appearance.Items.OfType<MenuItem>(), item => Equals(item.Header, "Color"));
+            Assert.Equal(BoardsIcons.SectionIconChoices.Count, iconMenu.Items.OfType<MenuItem>().Count());
+            Assert.Equal(BoardsIcons.SectionIconColors.Count + 1, colorMenu.Items.OfType<MenuItem>().Count());
+            Assert.Contains(iconMenu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Chat ✓"));
+            Assert.Contains(colorMenu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Teal ✓"));
+        });
+    }
 }

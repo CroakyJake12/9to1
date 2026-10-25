@@ -49,6 +49,13 @@ public static class BoardsIcons
     public const string Info = "info";
     public static IReadOnlyList<string> SectionIconChoices { get; } = Array.AsReadOnly(
         new[] { "boards", "section", "folder", "file", "chat", "study", "calendar", "target", "bookmark", "shield", "play" });
+    public static IReadOnlyList<(string Name, string Hex)> SectionIconColors { get; } = Array.AsReadOnly(
+        new (string Name, string Hex)[]
+        {
+            ("Violet", "#7026D9"), ("Blue", "#365DAB"), ("Teal", "#187B72"),
+            ("Green", "#337A4C"), ("Amber", "#9D6500"), ("Coral", "#A74349"),
+            ("Plum", "#794785"), ("Slate", "#52627A"),
+        });
 
     public static Control Glyph(string glyph, double size = 14, string? accessibleName = null, string? colorOverride = null)
     {
