@@ -79,7 +79,8 @@ public sealed class HavenUiDrawingTests
         var distinctKeys = new[]
         {
             "grip", "strikethrough", "subscript", "superscript", "align-left", "align-center",
-            "align-right", "bulleted-list", "numbered-list", "image", "paperclip",
+            "align-right", "bulleted-list", "numbered-list", "image", "paperclip", "edit",
+            "section", "table", "chart", "info",
         };
         var signatures = distinctKeys.Select(GeometrySignature).ToArray();
         Assert.Equal(distinctKeys.Length, signatures.Distinct(StringComparer.Ordinal).Count());

@@ -33,6 +33,11 @@ public sealed class BoardsEditorTests
         Assert.Equal("numbered-list", BoardsIcons.NumberedList);
         Assert.Equal("image", BoardsIcons.Image);
         Assert.Equal("paperclip", BoardsIcons.Attach);
+        Assert.Equal("edit", BoardsIcons.Edit);
+        Assert.Equal("section", BoardsIcons.Section);
+        Assert.Equal("table", BoardsIcons.Table);
+        Assert.Equal("chart", BoardsIcons.Chart);
+        Assert.Equal("info", BoardsIcons.Info);
     }
 
     [Fact]
