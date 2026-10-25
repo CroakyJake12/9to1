@@ -19,7 +19,7 @@ public sealed class CuiInputSubmitCompilationTests
 
         Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
         var input = Assert.Single(result.Output!.Components.Single().Children);
-        Assert.Equal("Submit", Assert.IsType<CakeOS.Cui.Language.CuiLiteralValue>(input.Properties["SubmitAction"].Value).Value);
+        Assert.Equal("Submit", Assert.IsType<CakeOS.Cui.CuiLiteralValue>(input.Properties["SubmitAction"].Value).Value);
     }
 
     [Theory]
