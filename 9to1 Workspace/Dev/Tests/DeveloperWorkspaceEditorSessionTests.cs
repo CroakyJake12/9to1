@@ -387,8 +387,8 @@ public sealed class DeveloperWorkspaceEditorSessionTests : IDisposable
         var results = await Task.WhenAll(
             store.SaveEditorSessionAsync(project, profile, 0, [First], First.RelativePath),
             other.SaveEditorSessionAsync(project, profile, 0, [Second], Second.RelativePath));
-        Assert.Single(results.Where(value => value.Succeeded));
-        Assert.Single(results.Where(value => value.Error?.Code == DeveloperOperationErrorCode.RevisionConflict));
+        Assert.Single(results, value => value.Succeeded);
+        Assert.Single(results, value => value.Error?.Code == DeveloperOperationErrorCode.RevisionConflict);
         var winner = results.Single(value => value.Succeeded).Value!;
         var read = await new FileDeveloperWorkspaceStore(_root).GetEditorSessionAsync(project, profile);
         Assert.True(read.Succeeded);
