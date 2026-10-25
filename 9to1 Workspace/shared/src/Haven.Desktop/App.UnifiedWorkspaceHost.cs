@@ -905,7 +905,7 @@ public sealed partial class App
             // source disposal alone cannot certify their drain. It is shared, so close
             // it only after every retained page/source has independently drained.
             foreach (var creator in states.Select(state => state.Creator).OfType<HavenOS.Files.NativeHost.FilesNativeBrowserService.BoardDocumentCreateOwner>()
-                .Distinct(ReferenceEqualityComparer.Instance))
+                .Distinct<HavenOS.Files.NativeHost.FilesNativeBrowserService.BoardDocumentCreateOwner>(ReferenceEqualityComparer.Instance))
                 try { await creator.CloseAndDrainAsync(); } catch (Exception cause) { AddAppCause(failures, cause); }
         }
 
