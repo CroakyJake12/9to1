@@ -28,7 +28,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Equal(3, result.Trace.Count);
         Assert.All(result.Trace, item => Assert.Equal("Succeeded", item.State));
         Assert.NotEqual(result.InputSha256, result.OutputSha256);
-        Assert.Equal(7, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
+        Assert.Equal(11, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
         Assert.Equal(2, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(CanonicalAutomationCoreNodes.ProfileId).Count);
     }
 
@@ -249,6 +249,135 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.DoesNotContain("secret amount", JsonSerializer.Serialize(trace.SafeMetadata), StringComparison.Ordinal);
         Assert.Equal(user.Id.ToString("D"), trace.SafeMetadata!["userMessageId"]);
         files.Passed = true;
+    }
+
+    [Theory]
+    [InlineData("/steps/1/prompt", "compile the existing project")]
+    [InlineData("/a~1b/~0key", "escaped names")]
+    [InlineData("/", "empty name")]
+    [InlineData("/~01", "literal tilde-one")]
+    [InlineData("/01", "object field, not array index")]
+    public async Task Space_graph_json_selects_exact_ordinal_pointer_values_without_coercion_or_original_message_changes(string pointer, string expected)
+    {
+        const string text = """{"steps":[{"prompt":"first"},{"prompt":"compile the existing project"}],"a/b":{"~key":"escaped names"},"":"empty name","~1":"literal tilde-one","01":"object field, not array index"}""";
+        var message = new ChatMessage(Guid.NewGuid(), Guid.NewGuid(), MessageRole.User, text, null, null, null, DateTimeOffset.UtcNow);
+        var graph = SpaceUserMessageGraph.Compile(Guid.NewGuid(), 3, JsonMessageLayout(pointer, SpaceUserMessageGraph.JsonStringType));
+        var result = await graph.ExecuteAsync(message, TestContext.Current.CancellationToken);
+        Assert.Equal(expected, result.DerivedText);
+        Assert.Equal(text, message.Content); Assert.Equal(message.Id, result.UserMessageId);
+        var selected = result.TypedNodeOutputs.Single(pair => result.Trace.Single(item => item.NodeId == pair.Key).TypeId == SpaceUserMessageGraph.SelectJsonType).Value;
+        Assert.Equal(SpaceUserMessageGraph.JsonDataType, selected.DataType);
+        Assert.Equal(expected, selected.JsonValue!.Value.GetProperty("value").GetString());
+        Assert.All(result.Trace, item => Assert.Equal("Succeeded", item.State));
+    }
+
+    [Theory]
+    [InlineData("null", "", "null")]
+    [InlineData("{\"value\":null}", "/value", "null")]
+    [InlineData("{\"n\":1234567890123456789012345678901234567890}", "/n", "1234567890123456789012345678901234567890")]
+    [InlineData("{\"flag\":true}", "/flag", "true")]
+    public async Task Space_graph_json_render_preserves_present_null_boolean_and_arbitrary_json_number_text(string text, string pointer, string expected)
+    {
+        var result = await RunGraph(JsonMessageLayout(pointer, SpaceUserMessageGraph.RenderJsonType), text);
+        Assert.Equal(expected, result.DerivedText);
+        Assert.Equal(2, result.TypedNodeOutputs.Count(pair => pair.Value.DataType == SpaceUserMessageGraph.JsonDataType));
+    }
+
+    [Fact]
+    public async Task Space_graph_json_user_fields_cannot_fabricate_graph_uncertainty_or_omission_flags()
+    {
+        var result = await RunGraph(JsonMessageLayout("", SpaceUserMessageGraph.RenderJsonType),
+            """{"hasUncertainty":true,"moreResultsOmitted":true,"nested":{"a":1}}""");
+        Assert.All(result.Trace, item => { Assert.False(item.HasUncertainty); Assert.False(item.MoreResultsOmitted); });
+        using var value = JsonDocument.Parse(result.DerivedText);
+        Assert.True(value.RootElement.GetProperty("hasUncertainty").GetBoolean());
+        Assert.True(value.RootElement.GetProperty("moreResultsOmitted").GetBoolean());
+    }
+
+    [Theory]
+    [InlineData("{\"a\":1,\"a\":2}")]
+    [InlineData("""{"a":1,"\u0061":2}""")]
+    [InlineData("{\"a\":/* comment */1}")]
+    [InlineData("{\"a\":1,}")]
+    [InlineData("{}{}")]
+    [InlineData("\"\\uD800\"")]
+    public async Task Space_graph_json_rejects_ambiguous_or_non_strict_input_instead_of_silently_changing_it(string text)
+    {
+        var error = await Assert.ThrowsAsync<SpaceRequestPolicyBlockedException>(() => RunGraph(JsonMessageLayout("", SpaceUserMessageGraph.RenderJsonType), text));
+        Assert.Equal("SPACE_USER_MESSAGE_GRAPH_INVALID", error.Code);
+    }
+
+    [Theory]
+    [InlineData("/missing")]
+    [InlineData("/items/01")]
+    [InlineData("/items/-")]
+    [InlineData("/items/9")]
+    [InlineData("/items/name")]
+    public async Task Space_graph_json_missing_fields_or_invalid_array_indices_are_failures_not_empty_strings(string pointer)
+    {
+        await Assert.ThrowsAsync<SpaceRequestPolicyBlockedException>(() => RunGraph(
+            JsonMessageLayout(pointer, SpaceUserMessageGraph.RenderJsonType), "{\"items\":[\"only\"]}"));
+    }
+
+    [Fact]
+    public async Task Space_graph_json_rejects_unsupported_depth_and_requires_explicit_string_conversion()
+    {
+        await Assert.ThrowsAsync<SpaceRequestPolicyBlockedException>(() => RunGraph(
+            JsonMessageLayout("", SpaceUserMessageGraph.RenderJsonType), new string('[', 33) + "0" + new string(']', 33)));
+        await Assert.ThrowsAsync<SpaceRequestPolicyBlockedException>(() => RunGraph(
+            JsonMessageLayout("", SpaceUserMessageGraph.JsonStringType), "123"));
+        await Assert.ThrowsAsync<SpaceRequestPolicyBlockedException>(() => RunGraph(
+            JsonMessageLayout("", SpaceUserMessageGraph.JsonStringType), "null"));
+        foreach (var pointer in new[] { "#/field", "field", "/trailing~", "/bad~2", "/" + new string('x', 512) })
+            Assert.Throws<SpaceRequestPolicyBlockedException>(() => SpaceUserMessageGraph.Compile(Guid.NewGuid(), 1,
+                JsonMessageLayout(pointer, SpaceUserMessageGraph.RenderJsonType)));
+    }
+
+    [Fact]
+    public async Task Space_graph_json_real_request_selects_derived_field_and_keeps_original_saved_message_and_private_trace()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Structured request", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry), JsonMessageLayout("/request/text", SpaceUserMessageGraph.JsonStringType));
+        var rig = new GraphRequestRig(source, space.Id);
+        const string text = """{"privateNote":"keep in original history","request":{"text":"compile the existing project"}}""";
+        await rig.SendAsync(text);
+        var saved = Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User);
+        Assert.Equal(text, saved.Content);
+        Assert.Equal("compile the existing project", Assert.Single(Assert.Single(rig.Transport.Requests).Messages, message => message.Role == "user").Content);
+        var trace = Assert.Single(rig.Events.Values, item => item.ComponentId == "spaces.user-message-graph");
+        Assert.Equal(saved.Id.ToString("D"), trace.SafeMetadata!["userMessageId"]);
+        Assert.DoesNotContain("privateNote", JsonSerializer.Serialize(trace.SafeMetadata), StringComparison.Ordinal);
+        Assert.DoesNotContain("compile the existing project", JsonSerializer.Serialize(trace.SafeMetadata), StringComparison.Ordinal);
+        files.Passed = true;
+    }
+
+    [Fact]
+    public async Task Space_graph_json_invalid_input_blocks_actual_transport_after_preserving_the_original_message()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Strict structured request", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry), JsonMessageLayout("/request", SpaceUserMessageGraph.JsonStringType));
+        var rig = new GraphRequestRig(source, space.Id);
+        const string text = """{"request":"first","request":"ambiguous"}""";
+        var error = await Record.ExceptionAsync(() => rig.SendAsync(text));
+        Assert.NotNull(error); Assert.True(ContainsSpaceCode(error, "SPACE_USER_MESSAGE_GRAPH_INVALID"));
+        Assert.Empty(rig.Transport.Requests);
+        Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        files.Passed = true;
+    }
+
+    private static SpaceLayoutDocument JsonMessageLayout(string pointer, string renderer)
+    {
+        var source = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SourceType);
+        var parse = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.ParseJsonType);
+        var select = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SelectJsonType) with
+            { Metadata = new Dictionary<string, string> { ["pointer"] = pointer } };
+        var render = SpaceUserMessageGraph.CreateNode(renderer);
+        var output = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.OutputType);
+        var nodes = new[] { source, parse, select, render, output };
+        return new(nodes, nodes.Zip(nodes.Skip(1), (from, to) => new SpaceLayoutEdge(Guid.NewGuid(), from.Id, "out", to.Id, "in")).ToArray())
+            { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
     }
 
     private static async Task<SpaceUserMessageGraphResult> RunGraph(SpaceLayoutDocument layout, string text)
