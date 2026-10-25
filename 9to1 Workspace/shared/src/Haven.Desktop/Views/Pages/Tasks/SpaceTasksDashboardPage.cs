@@ -134,8 +134,8 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                 _scene.SetRecent(rows, DemandRead);
                 _scene.SetStartAvailability(!_newWorkPending && _startNew is not null, !_newWorkPending && _openBlank is not null, DemandRead);
                 _scene.SetStatus(_startNew is null || _openBlank is null
-                    ? "Some new-task entrypoints are unconfigured. Existing tasks open with their recorded Task/Run; saved state is not a live worker witness."
-                    : "Up to 40 task conversations in this Space. Each tile opens the same task and run. Saved state does not establish live work or verification.", DemandRead);
+                    ? "Some new-task actions are unavailable. Existing tasks can still be opened."
+                    : "Showing up to 40 task conversations in this Space.", DemandRead);
             }).ConfigureAwait(false);
         }
         catch (Exception error)
@@ -144,7 +144,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             if (IsCurrent(generation))
             {
                 try { await DispatchOriginalAsync(original, () =>
-                    { lock (_gate) { if (_readSequence != sequence) return; } _scene.SetStatus("The actual Space task observation failed. Refresh before interpreting saved state or opening a task."); }).ConfigureAwait(false); }
+                    { lock (_gate) { if (_readSequence != sequence) return; } _scene.SetStatus("Tasks couldn’t refresh. Try again."); }).ConfigureAwait(false); }
                 catch (Exception publicationError) { original.Retain(publicationError); }
             }
             original.ThrowRetained();
@@ -185,7 +185,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                 original.Retain(error);
                 if (IsCurrent(generation))
                 {
-                    try { await DispatchOriginalAsync(original, () => _scene.SetStatus("The original task could not open. Refresh its identities; this did not create replacement work.")).ConfigureAwait(false); }
+                    try { await DispatchOriginalAsync(original, () => _scene.SetStatus("Couldn’t open this task. Refresh and try again.")).ConfigureAwait(false); }
                     catch (Exception publicationError) { original.Retain(publicationError); }
                 }
                 original.ThrowRetained();
@@ -226,7 +226,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                 {
                     original.DemandPublication();
                     if (clearInstruction) _scene.ClearInstruction(instructionVersion);
-                    _scene.SetStatus("The original new-work opener returned; this is not a durable task-completion witness.");
+                    _scene.SetStatus("Request handed to the task workspace.");
                 }).ConfigureAwait(false);
                 await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
             }
@@ -235,7 +235,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                 original.Retain(error);
                 if (IsCurrent(generation))
                 {
-                    try { await DispatchOriginalAsync(original, () => _scene.SetStatus("The actual new-work opener failed. Its original cause is retained; no task completion or retry is inferred.")).ConfigureAwait(false); }
+                    try { await DispatchOriginalAsync(original, () => _scene.SetStatus("Couldn’t open a task workspace.")).ConfigureAwait(false); }
                     catch (Exception publicationError) { original.Retain(publicationError); }
                 }
             }
