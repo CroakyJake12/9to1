@@ -138,7 +138,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             {
                 original.DemandPublication();
                 if (!_subscribed)
-                { _canonical.SnapshotChanged += OnSnapshotChanged; _subscribed = true; }
+                { _canonical.SnapshotChanged += OnSnapshotChanged; _canonical.RunActivityInvalidated += OnRunActivityInvalidated; _subscribed = true; }
             }
             await ReadOriginalPageAsync(original, generation, scope.Token).ConfigureAwait(false);
         });
@@ -266,6 +266,12 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             original.BindPublicationGuard(() => IsCurrent(generation));
             await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
         });
+    }
+    private void OnRunActivityInvalidated(object? sender, TaskRunActivityInvalidation hint)
+    {
+        lock (_gate) if (!_active || _work.IsRetiring || !_currentObservations.Any(row =>
+            row.Snapshot?.TaskId == hint.TaskId && row.Snapshot.ExecutionId == hint.ExecutionId && row.ContextId == hint.ContextId)) return;
+        _ = RefreshOriginalAsync(); // Hint is not state; the same source freshly authorizes and reads.
     }
     private void OnRefreshRequested(object? sender, EventArgs args)
     {
@@ -516,7 +522,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     private Task StopOriginalPresentationAsync()
     {
         lock (_gate) { _active = false; _generation++; }
-        if (_subscribed) { _canonical.SnapshotChanged -= OnSnapshotChanged; _subscribed = false; }
+        if (_subscribed) { _canonical.SnapshotChanged -= OnSnapshotChanged; _canonical.RunActivityInvalidated -= OnRunActivityInvalidated; _subscribed = false; }
         _scene.DelegateRequested -= OnDelegateRequested;
         _scene.NewBlankTaskRequested -= OnBlankRequested;
         _scene.RecentTaskRequested -= OnOpenRequested;

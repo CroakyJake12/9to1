@@ -226,7 +226,7 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
         catch (Exception cause)
         {
             lock (_gate) _admissionSealed = true;
-            Retain(cause, raw); ThrowRetained(); throw;
+            Retain(cause, raw); InvalidateActualActivity(); ThrowRetained(); throw;
         }
         finally { context.Active = false; ActiveOriginal.Value = previous; }
     }
@@ -262,6 +262,13 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
     internal void SealOriginalProcessAdmission()
     {
         lock (_gate) { _admissionSealed = true; _custody.MarkRetirementRequested(); }
+        InvalidateActualActivity();
+    }
+
+    private void InvalidateActualActivity()
+    {
+        if (_originalInvocation is { } original)
+            InvokeOriginal(() => { _owner.InvalidateOriginalRunActivity(original, this); return true; });
     }
 
     internal void InvokeOriginalCallback(Action body) => InvokeOriginal(() => { body(); return true; });
@@ -317,6 +324,7 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
                 _custody.RetainSource("process.outer-dispose", _dispose);
             }
         }
+        InvalidateActualActivity(); // The actual witness is withdrawn BEFORE cleanup acknowledges.
         stopStart?.SetResult(); disposeStart?.SetResult();
     }
 
@@ -362,6 +370,7 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
             }
             actual = _dispose;
         }
+        InvalidateActualActivity();
         start?.SetResult();
         return new(actual);
     }
