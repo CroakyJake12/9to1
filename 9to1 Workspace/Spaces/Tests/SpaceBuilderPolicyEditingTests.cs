@@ -33,7 +33,8 @@ public sealed class SpaceBuilderPolicyEditingTests
         var editor = new SpaceBuilderController(registry, original.Id);
         Assert.True(await editor.LoadAsync(token));
         var bindings = Bindings(editor, setModelCapabilityRequired: editor.SetModelCapabilityRequired,
-            setPersonalMemoryReadAllowed: editor.SetPersonalMemoryReadAllowed);
+            setPersonalMemoryReadAllowed: editor.SetPersonalMemoryReadAllowed,
+            setCapabilityOverride: editor.SetCapabilityOverride);
         Assert.True(bindings.TrySetValue("builder.context.webAccess", (int)SpaceWebAccessPolicy.Disabled));
         Assert.True(bindings.TrySetValue("builder.context.sourceOnly", true));
         Assert.True(bindings.TrySetValue("builder.context.includeSelection", false));
@@ -50,6 +51,12 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.True(bindings.TrySetValue("builder.memory.personalRead", true));
         Assert.True(bindings.TryGetValue("builder.memory.personalRead", out personalMemory));
         Assert.Equal(true, personalMemory);
+        Assert.True(bindings.TryGetValue("builder.capabilities", out var capabilityRows));
+        var attached = Assert.IsType<SpaceBuilderCapabilityRow>(Assert.Single(
+            Assert.IsAssignableFrom<object[]>(capabilityRows), item => ((SpaceBuilderCapabilityRow)item).key == "Plugin:keep"));
+        Assert.Equal((int)SpaceCapabilityOverride.Disabled, attached.policy);
+        Assert.True(bindings.TrySetItemValue(attached, "policy", (int)SpaceCapabilityOverride.Enabled));
+        Assert.False(bindings.TrySetItemValue(attached, "policy", (int)SpaceCapabilityOverride.Disabled)); // Stale row cannot restore the old policy.
         Assert.Equal("ollama:configured-model-2", editor.State.Draft.ModelPolicy!.DefaultModelId);
         Assert.Equal("ollama", editor.State.Draft.ModelPolicy.ProviderConstraint);
         Assert.Equal(new[] { "text", "Vision" }, editor.State.Draft.ModelPolicy.RequiredCapabilities);
@@ -71,12 +78,14 @@ public sealed class SpaceBuilderPolicyEditingTests
             saved.DraftConfiguration.MemoryPolicy!.AllowedScopes);
         Assert.Equal(JsonSerializer.Serialize(original.LayoutDocument), JsonSerializer.Serialize(saved.LayoutDocument));
         Assert.Equal(JsonSerializer.Serialize(original.CapabilityBindings), JsonSerializer.Serialize(saved.CapabilityBindings));
+        Assert.Equal(SpaceCapabilityOverride.Enabled, Assert.Single(saved.DraftConfiguration.CapabilityBindings).Override);
         var reopened = new SpaceBuilderController(files.OpenRegistry(), original.Id);
         Assert.True(await reopened.LoadAsync(token));
         Assert.Equal(saved.DraftConfiguration.ContextPolicy, reopened.State.Draft.ContextPolicy);
         Assert.Equal(saved.DraftConfiguration.Inheritance, reopened.State.Draft.Inheritance);
         Assert.Equal(saved.DraftConfiguration.ModelPolicy, reopened.State.Draft.ModelPolicy);
         Assert.Equal(saved.DraftConfiguration.MemoryPolicy!.AllowedScopes, reopened.State.Draft.MemoryPolicy!.AllowedScopes);
+        Assert.Equal(SpaceCapabilityOverride.Enabled, Assert.Single(reopened.State.Draft.CapabilityBindings).Override);
         Assert.False(reopened.State.HasChanges);
         Assert.Equal(saved.ActiveConfigurationRevision, reopened.State.ActiveRevision); // Saved configuration is not activation.
     }
@@ -231,10 +240,12 @@ public sealed class SpaceBuilderPolicyEditingTests
 
     private static SpaceBuilderCuiBindings Bindings(SpaceBuilderController editor, Func<bool>? isCurrent = null,
         Action<ToolCapability, bool>? setModelCapabilityRequired = null,
-        Action<bool>? setPersonalMemoryReadAllowed = null) =>
+        Action<bool>? setPersonalMemoryReadAllowed = null,
+        Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null) =>
         new(() => editor.State, (field, value) => editor.SetField(field, value),
             (category, value) => editor.SetCategoryState(category, value), (kind, id) => editor.DetachCapability(kind, id),
             () => [], () => [], (_, _, _) => ValueTask.CompletedTask, isCurrent,
             setModelCapabilityRequired: setModelCapabilityRequired,
-            setPersonalMemoryReadAllowed: setPersonalMemoryReadAllowed);
+            setPersonalMemoryReadAllowed: setPersonalMemoryReadAllowed,
+            setCapabilityOverride: setCapabilityOverride);
 }

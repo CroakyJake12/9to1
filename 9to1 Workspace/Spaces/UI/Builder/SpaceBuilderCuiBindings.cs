@@ -28,8 +28,10 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Action<Guid, bool>? _setContextIncluded;
     private readonly Action<ToolCapability, bool>? _setModelCapabilityRequired;
     private readonly Action<bool>? _setPersonalMemoryReadAllowed;
+    private readonly Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? _setCapabilityOverride;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
+    private static readonly string[] CapabilityOverrideOptions = ["Inherit", "Enabled", "Disabled"];
 
     public SpaceBuilderCuiBindings(Func<SpaceBuilderState> state, Action<SpaceBuilderField, string> edit,
         Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> setCategory,
@@ -51,7 +53,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Func<CancellationToken, Task<IReadOnlyList<string>>>? validateDraft = null,
         Action<Guid, bool>? setContextIncluded = null,
         Action<ToolCapability, bool>? setModelCapabilityRequired = null,
-        Action<bool>? setPersonalMemoryReadAllowed = null)
+        Action<bool>? setPersonalMemoryReadAllowed = null,
+        Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -71,6 +74,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _setContextIncluded = setContextIncluded;
         _setModelCapabilityRequired = setModelCapabilityRequired;
         _setPersonalMemoryReadAllowed = setPersonalMemoryReadAllowed;
+        _setCapabilityOverride = setCapabilityOverride;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -135,13 +139,18 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.inherit.plugins" => state.Draft.Inheritance.Plugins,
             "builder.inherit.skills" => state.Draft.Inheritance.Skills,
             "builder.inherit.agents" => state.Draft.Inheritance.Agents,
-            "builder.capabilities" => state.Draft.CapabilityBindings.Select(b => new
+            "builder.capabilities" => state.Draft.CapabilityBindings.Select(b => new SpaceBuilderCapabilityRow
             {
                 id = b.CapabilityId,
                 kind = b.Kind.ToString(),
                 key = b.Kind.ToString() + ":" + b.CapabilityId,
-                version = b.VersionPin ?? "(unpinned)"
+                version = b.VersionPin ?? "(unpinned)",
+                versionPin = b.VersionPin,
+                policy = (int)b.Override,
+                policyLabel = b.Override.ToString()
             }).ToArray(),
+            "builder.capability.overrideOptions" => CapabilityOverrideOptions,
+            "builder.canSetCapabilityOverride" => _isCurrent() && state.CanEdit && _setCapabilityOverride is not null,
             "builder.hasNoCapabilities" => state.Draft.CapabilityBindings.Count == 0,
             "builder.installedSkills" => _installedSkills().Select(s => new
             {
@@ -296,6 +305,17 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             Refresh();
             return true;
         }
+        if (path == "policy" && item is SpaceBuilderCapabilityRow capabilityRow &&
+            Enum.TryParse<SpaceCapabilityKind>(capabilityRow.kind, false, out var kind) && Enum.IsDefined(kind) &&
+            value is int policyIndex && policyIndex is >= 0 and <= 2 && policyIndex != capabilityRow.policy &&
+            Enum.IsDefined((SpaceCapabilityOverride)policyIndex) && _setCapabilityOverride is not null &&
+            state.Draft.CapabilityBindings.Any(binding => binding.Kind == kind && binding.CapabilityId == capabilityRow.id &&
+                binding.Override == (SpaceCapabilityOverride)capabilityRow.policy && binding.VersionPin == capabilityRow.versionPin))
+        {
+            _setCapabilityOverride(kind, capabilityRow.id, (SpaceCapabilityOverride)policyIndex);
+            Refresh();
+            return true;
+        }
         return false;
     }
 
@@ -386,4 +406,15 @@ public sealed class SpaceBuilderModelCapabilityRow
     public string id { get; init; } = string.Empty;
     public string label { get; init; } = string.Empty;
     public bool required { get; init; }
+}
+
+public sealed class SpaceBuilderCapabilityRow
+{
+    public string id { get; init; } = string.Empty;
+    public string kind { get; init; } = string.Empty;
+    public string key { get; init; } = string.Empty;
+    public string version { get; init; } = string.Empty;
+    public string? versionPin { get; init; }
+    public int policy { get; init; }
+    public string policyLabel { get; init; } = string.Empty;
 }

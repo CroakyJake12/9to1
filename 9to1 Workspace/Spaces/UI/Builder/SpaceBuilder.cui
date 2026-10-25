@@ -193,12 +193,16 @@
         </Container>
         <Container Type="Vertical Stack" CellGap="4">
           <Text text="Attached capabilities" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-          <Text text="Canonical IDs and pinned versions. Attached references do not install or grant permissions." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="Canonical IDs and pinned versions. Policy values do not install or enable packages or grant owner permissions; ancestor restrictions still apply." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Repeat id="space-builder-capabilities" Source="{Binding builder.capabilities}" As="cap" Key="{Binding cap.key}">
             <Container id="space-builder-capability-row" Type="Horizontal Stack" CellGap="8">
               <Text id="space-builder-capability-kind" text="{Binding cap.kind}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-capability-id" text="{Binding cap.id}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-capability-version" text="{Binding cap.version}" foreground="{Resource CuiTextSoftBrush}" />
+              <Container Type="Horizontal Stack" CellGap="4" IsVisible="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
+                <Text text="Policy" foreground="{Resource CuiTextSoftBrush}" />
+                <Input id="space-builder-capability-policy" Type="Select" ItemsSource="{Binding builder.capability.overrideOptions}" SelectedIndex="{Binding cap.policy, mode=TwoWay}" Interactive="{Binding builder.canSetCapabilityOverride}" accessible-name="Canonical capability policy override" />
+              </Container>
               <Button id="space-builder-capability-remove" action="RemoveCapability" content="Remove" Interactive="{Binding builder.canEdit}" accessible-name="Remove attached capability" />
             </Container>
           </Repeat>

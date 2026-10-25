@@ -72,7 +72,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             () => _boardsChoices, () => _boardsSource is not null && !_sourcePickerBusy,
             _controller.SelectEditorView, _controller.SelectExpertSection,
             _controller.PreviewDraft, ValidateDraftWithOwnerAsync, _controller.SetContextReferenceIncluded,
-            _controller.SetModelCapabilityRequired, _controller.SetPersonalMemoryReadAllowed);
+            _controller.SetModelCapabilityRequired, _controller.SetPersonalMemoryReadAllowed,
+            _controller.SetCapabilityOverride);
         _controller.StateChanged += OnStateChanged;
         Document = document;
         _contentGrid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };

@@ -673,6 +673,32 @@ public sealed class SpaceBuilderController
         return true;
     }
 
+    /// <summary>Sets the Space-local policy for an existing canonical capability binding.
+    /// Enabled only affects this policy merge; it cannot install, enable or authorize the owner.</summary>
+    public bool SetCapabilityOverride(SpaceCapabilityKind kind, string capabilityId, SpaceCapabilityOverride value)
+    {
+        if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+        if (!Enum.IsDefined(value)) throw new ArgumentOutOfRangeException(nameof(value));
+        if (string.IsNullOrWhiteSpace(capabilityId)) throw new ArgumentException("A canonical capability ID is required.", nameof(capabilityId));
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var current = _state.Draft.CapabilityBindings.SingleOrDefault(binding =>
+                binding.Kind == kind && binding.CapabilityId == capabilityId);
+            if (current is null) return false;
+            if (current.Override == value) return true;
+            var updated = _state.Draft.CapabilityBindings.Select(binding =>
+                binding.Kind == kind && binding.CapabilityId == capabilityId ? binding with { Override = value } : binding).ToArray();
+            var draft = _state.Draft with { CapabilityBindings = Array.AsReadOnly(updated) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = $"{kind} '{capabilityId}' policy is {value}. This does not change installation, owner state or permissions. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
     /// <summary>Removes a canonical capability binding from the draft. Does NOT uninstall
     /// or delete the global capability.</summary>
     public bool DetachCapability(SpaceCapabilityKind kind, string capabilityId)
