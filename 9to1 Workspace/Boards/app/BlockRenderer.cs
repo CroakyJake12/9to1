@@ -1162,14 +1162,21 @@ public static class BlockRenderer
 
         string? selectedId = null;
         Border? selectedBorder = null;
+        // The contract canvas starts at 1200×900 and expands as objects move.
+        // Size from persisted object bounds so saved content beyond the first
+        // viewport remains reachable after reopen instead of being clipped.
+        var canvasWidth = Math.Clamp(
+            Math.Max(1200, boxes.Select(box => box.X + box.Width + 40).DefaultIfEmpty(1200).Max()),
+            1200, 100000);
+        var canvasHeight = Math.Clamp(
+            Math.Max(900, boxes.Select(box => box.Y + box.Height + 40).DefaultIfEmpty(900).Max()),
+            900, 100000);
         var canvas = new Canvas
         {
             Name = "FreeformCanvas",
-            MinWidth = 240,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Height = 300,
+            Width = canvasWidth,
+            Height = canvasHeight,
             Background = BoardsTheme.CardBrush,
-            Margin = new Thickness(0, 4, 0, 4),
         };
         ToolTip.SetTip(canvas, "Drag a card; the move commits once on release");
         AutomationProperties.SetName(canvas, "Freeform canvas");
@@ -1262,7 +1269,17 @@ public static class BlockRenderer
             };
             canvas.Children.Add(border);
         }
-        shell.Children.Add(canvas);
+        var viewport = new ScrollViewer
+        {
+            Content = canvas,
+            Height = 360,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Margin = new Thickness(0, 4, 0, 4),
+        };
+        AutomationProperties.SetName(viewport, "Freeform canvas viewport");
+        shell.Children.Add(viewport);
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 0) };
         var addBox = new Button

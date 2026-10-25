@@ -22,6 +22,10 @@
   while retaining drawing in Edit. The View guard still blocks mutations. An
   adapter round-trip test covers lock persistence, stable coordinates, and ink;
   Root owns the build/test run for this branch.
+- Freeform offscreen reachability: **IMPLEMENTED, owning checks pending**. The
+  viewport now scrolls over the saved canvas extent computed from object bounds,
+  preserving positions beyond the initial screen area after reopen. A renderer
+  test covers an object beyond the prior fixed viewport; Root owns runtime checks.
 - Graph sliders: **IMPLEMENTED, owning checks pending**. Slider definitions use
   stable VariableIDs and validated name/range/step/default fields through the
   existing graph owner; the existing expression parser accepts slider variables.
