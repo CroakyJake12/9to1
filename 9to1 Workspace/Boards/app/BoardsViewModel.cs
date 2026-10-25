@@ -845,12 +845,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case "BoardTitleBox":
                 _session.Document.Title = text;
                 Set("BoardTitle", text);
+                RefreshPageBreadcrumb();
                 break;
             case "PageTitleBox":
             {
                 var pageTitle = text.Length <= 2048 ? text : text[..2048];
                 CurrentPage().Title = pageTitle;
                 Set("PageTitle", pageTitle);
+                RefreshPageBreadcrumb();
                 NavRebuildRequested?.Invoke();
                 break;
             }
@@ -2939,6 +2941,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("SectionListText", string.Join("  |  ", doc.Sections.Select(s => s.Title)));
             Set("PageListText", string.Join("  |  ", CurrentSection().Pages.Select(p => p.Title)));
             Set("PageTitle", page.Title);
+            RefreshPageBreadcrumb();
             Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock layout" : "Lock layout");
             Set("CanvasLockStatus", page.IsCanvasLocked ? "Layout locked · unlock to move boxes; drawing remains available." : "Layout unlocked");
             Set("HeadingText", heading?.Text ?? string.Empty);
@@ -2966,6 +2969,17 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         RefreshTextPresentations();
         RefreshTextRangeBindings();
+    }
+
+    private void RefreshPageBreadcrumb()
+    {
+        var boardTitle = string.IsNullOrWhiteSpace(_session.Document.Title)
+            ? "Untitled board"
+            : _session.Document.Title.Trim();
+        var pageTitle = string.IsNullOrWhiteSpace(CurrentPage().Title)
+            ? "Untitled page"
+            : CurrentPage().Title.Trim();
+        Set("PageBreadcrumb", $"Boards  ›  {boardTitle}  ›  {pageTitle}");
     }
 
     private RichBoardSection CurrentSection() =>
