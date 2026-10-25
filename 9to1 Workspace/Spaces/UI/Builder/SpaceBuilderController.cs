@@ -38,6 +38,9 @@ public sealed class SpaceBuilderController
         return true;
     }
 
+    public void SetActivationValidatorAvailable(bool available) =>
+        Change(state => state with { HasActivationValidator = available });
+
     /// <summary>Publishes one edit from the shared NodeEditor into this Space's unsaved Draft.
     /// The caller cannot write the registry directly; the normal same-revision Save path owns persistence.</summary>
     public bool SetLayoutDocument(SpaceLayoutDocument layout)
@@ -124,9 +127,15 @@ public sealed class SpaceBuilderController
                 issues.Add("The graph contains structural-only nodes without a registered TypeId; they cannot be activated.");
         }
         if (issues.Count == 0)
-            issues.Add(snapshot.HasUnverifiedDependencies
-                ? "Draft structure is valid. Registered node schemas, resource availability, permissions and model capabilities still require validation by their owning services before activation."
-                : "Draft structure is valid and ready for activation.");
+            issues.Add(snapshot.HasUnsupportedActivationDependencies
+                ? "Draft structure is valid, but this host has no executor or owner validator for its graph/share/generated-surface dependencies; activation remains blocked."
+                : snapshot.HasUnverifiedDependencies
+                    ? snapshot.HasActivationValidator
+                        ? "Draft structure is valid. Current model and installed Plugin/Skill dependencies will be checked by their owning services when you activate."
+                        : "Draft structure is valid, but its model, capability or inherited policy dependencies have no activation validator in this host."
+                    : snapshot.HasDeferredResourceReferences
+                        ? "Draft structure is valid. Resource references are syntax-checked only; current availability and Home permission are checked when the source is used."
+                        : "Draft structure is valid and ready for activation.");
         SpaceBuilderState next;
         lock (_gate)
         {
@@ -247,6 +256,7 @@ public sealed class SpaceBuilderController
                     ActiveRevision = space.ActiveConfigurationRevision, SpaceRevision = space.Revision,
                     DraftBaseActiveRevision = space.DraftBaseActiveRevision,
                     HasPersistedDraft = space.DraftConfiguration is not null,
+                    HasParentSpace = space.ParentSpaceId is not null,
                     Draft = _baseline, IsLoaded = true, IsReadOnly = space.IsBuiltIn,
                     HasChanges = false, HasConflict = false,
                     Preview = null, ValidationIssues = [],
@@ -325,7 +335,9 @@ public sealed class SpaceBuilderController
                     HasPersistedDraft = true,
                     Draft = draft, HasChanges = draft != _baseline, HasConflict = false,
                     Preview = null, ValidationIssues = [],
-                    StatusMessage = draft == _baseline ? "Space Builder draft saved. Activate to publish this validated configuration." : "Earlier changes saved. Your latest edits are still unsaved." };
+                    StatusMessage = draft == _baseline
+                        ? "Space Builder draft saved. Activate checks current model/capability dependencies; resource permissions are checked when used."
+                        : "Earlier changes saved. Your latest edits are still unsaved." };
             });
             return true;
         }
@@ -362,7 +374,21 @@ public sealed class SpaceBuilderController
     /// <summary>Publishes the already-saved Builder draft through SpaceRegistry's atomic
     /// active/draft CAS. The registry revalidates the configuration and rejects dependencies
     /// whose owning services are not available to this publication path.</summary>
-    public async Task<bool> ActivateAsync(CancellationToken cancellationToken = default)
+    public Task<bool> ActivateAsync(CancellationToken cancellationToken = default) =>
+        ActivateCoreAsync(null, null, null, cancellationToken);
+
+    public Task<bool> ActivateAsync(ISpaceDraftActivationValidator validator,
+        Action<Action> acquireOriginal, Action<Task> retainOriginal,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(validator);
+        ArgumentNullException.ThrowIfNull(acquireOriginal);
+        ArgumentNullException.ThrowIfNull(retainOriginal);
+        return ActivateCoreAsync(validator, acquireOriginal, retainOriginal, cancellationToken);
+    }
+
+    private async Task<bool> ActivateCoreAsync(ISpaceDraftActivationValidator? validator,
+        Action<Action>? acquireOriginal, Action<Task>? retainOriginal, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         SpaceBuilderState activating;
@@ -374,8 +400,12 @@ public sealed class SpaceBuilderController
         try
         {
             StateChanged?.Invoke(activating);
-            var activated = await _registry.ActivateDraftAsync(activating.SpaceId, activating.SpaceRevision!.Value,
-                activating.DraftRevision!.Value, activating.ActiveRevision!.Value, cancellationToken).ConfigureAwait(false);
+            var activated = validator is null
+                ? await _registry.ActivateDraftAsync(activating.SpaceId, activating.SpaceRevision!.Value,
+                    activating.DraftRevision!.Value, activating.ActiveRevision!.Value, cancellationToken).ConfigureAwait(false)
+                : await _registry.ActivateDraftAsync(activating.SpaceId, activating.SpaceRevision!.Value,
+                    activating.DraftRevision!.Value, activating.ActiveRevision!.Value, validator,
+                    acquireOriginal!, retainOriginal!, cancellationToken).ConfigureAwait(false);
             Change(state =>
             {
                 _baseline = SpaceBuilderDraft.From(activated);
@@ -392,7 +422,9 @@ public sealed class SpaceBuilderController
                     HasConflict = false,
                     Preview = null,
                     ValidationIssues = [],
-                    StatusMessage = $"Space configuration activated at revision {activated.ActiveConfigurationRevision}."
+                    StatusMessage = state.HasDeferredResourceReferences
+                        ? $"Space configuration activated at revision {activated.ActiveConfigurationRevision}. Resource availability and Home permission are checked when used."
+                        : $"Space configuration activated at revision {activated.ActiveConfigurationRevision}."
                 };
             });
             return true;
@@ -411,7 +443,7 @@ public sealed class SpaceBuilderController
         }
         catch (InvalidOperationException error)
         {
-            Change(state => state with { StatusMessage = "Space configuration was not activated: " + error.Message });
+            Change(state => state with { StatusMessage = "Space configuration was not activated; the active version and saved draft were preserved: " + error.Message });
             return false;
         }
         finally { Change(state => state with { IsSaving = false }); }

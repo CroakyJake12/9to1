@@ -19,6 +19,62 @@ public sealed record EffectiveSpacePolicy(
 /// <summary>Resolves inherited Space policy without granting capabilities or opening app data.</summary>
 public sealed class SpacePolicyResolver(SpaceRegistry registry)
 {
+    /// <summary>Resolves the exact effective policy a saved draft would publish without
+    /// writing it active. The returned lineage includes canonical ancestor revisions so the
+    /// publication transaction can reject a parent policy change after validation.</summary>
+    public async Task<(EffectiveSpacePolicy Policy, IReadOnlyList<SpaceActivationAncestryRevision> Ancestry)> ResolveDraftAsync(
+        SpaceDefinition current, SpaceConfigurationDocument draft, Action<Action> acquireOriginal,
+        Action<Task> retainOriginal, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(current);
+        ArgumentNullException.ThrowIfNull(draft);
+        ArgumentNullException.ThrowIfNull(acquireOriginal);
+        ArgumentNullException.ThrowIfNull(retainOriginal);
+        if (current.Id == Guid.Empty || current.Revision < 1 || current.ActiveConfigurationRevision < 1 ||
+            current.DraftConfigurationRevision < 1)
+            throw new SpaceRequestPolicyBlockedException("SPACE_DRAFT_IDENTITY_INVALID", "The candidate Space draft has invalid canonical identity or revisions.");
+
+        var originals = new CloudflareOriginalTaskLedger();
+        originals.BindOriginalCallerCallback(acquireOriginal);
+        return await originals.RunToOriginalSettlementAsync(async () =>
+        {
+            var chain = new List<SpaceDefinition>();
+            var seen = new HashSet<Guid>();
+            var id = current.Id;
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (chain.Count >= 128 || !seen.Add(id))
+                    throw new SpaceRequestPolicyBlockedException("SPACE_POLICY_ANCESTRY_INVALID", "The Space ancestry is cyclic or exceeds its explicit bound.");
+                var readTask = originals.Invoke(() =>
+                {
+                    var actual = registry.ReadExistingAsync(id, cancellationToken);
+                    retainOriginal(actual);
+                    return actual;
+                });
+                var stored = await originals.AwaitAsync(readTask).ConfigureAwait(false);
+                if (stored is null || stored.Id != id || stored.IsArchived)
+                    throw new SpaceRequestPolicyBlockedException("SPACE_POLICY_UNAVAILABLE", "The existing Space or a parent is unavailable.");
+                if (id == current.Id)
+                {
+                    if (stored.Revision != current.Revision ||
+                        stored.DraftConfigurationRevision != current.DraftConfigurationRevision ||
+                        stored.ActiveConfigurationRevision != current.ActiveConfigurationRevision ||
+                        stored.DraftBaseActiveRevision != current.DraftBaseActiveRevision)
+                        throw new SpaceRequestPolicyBlockedException("SPACE_DRAFT_CHANGED", "The saved Space draft changed before dependency validation.");
+                    stored = draft.ApplyTo(stored);
+                }
+                chain.Add(stored);
+                if (stored.ParentSpaceId is not { } parentId) break;
+                id = parentId;
+            }
+            chain.Reverse();
+            var policy = ResolveKnownChain(chain, current.Id);
+            var ancestry = Array.AsReadOnly(chain.Select(space => new SpaceActivationAncestryRevision(space.Id, space.Revision)).ToArray());
+            return (policy, ancestry);
+        }).ConfigureAwait(false);
+    }
+
     public async Task<EffectiveSpacePolicy> ResolveAsync(Guid spaceId, CancellationToken cancellationToken = default)
     {
         if (spaceId == Guid.Empty) throw new ArgumentException("A Space ID is required.", nameof(spaceId));

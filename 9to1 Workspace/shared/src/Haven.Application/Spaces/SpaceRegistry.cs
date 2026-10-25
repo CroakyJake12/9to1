@@ -263,7 +263,45 @@ public sealed partial class SpaceRegistry
     /// The supplied registry and draft revisions are checked in the same global-store mutation.</summary>
     public Task<SpaceDefinition> ActivateDraftAsync(Guid id, long expectedSpaceRevision,
         long expectedDraftRevision, long expectedActiveConfigurationRevision,
-        CancellationToken cancellationToken = default) => MutateAsync(state =>
+        CancellationToken cancellationToken = default) => ActivateDraftCoreAsync(id, expectedSpaceRevision,
+            expectedDraftRevision, expectedActiveConfigurationRevision, null, cancellationToken);
+
+    /// <summary>Validates current external dependencies through their owning services, then
+    /// publishes only if the same Space, draft, active configuration and policy ancestry remain
+    /// current in the registry transaction.</summary>
+    public async Task<SpaceDefinition> ActivateDraftAsync(Guid id, long expectedSpaceRevision,
+        long expectedDraftRevision, long expectedActiveConfigurationRevision,
+        ISpaceDraftActivationValidator validator, Action<Action> acquireOriginal,
+        Action<Task> retainOriginal, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(validator);
+        ArgumentNullException.ThrowIfNull(acquireOriginal);
+        ArgumentNullException.ThrowIfNull(retainOriginal);
+        var current = await ReadExistingAsync(id, cancellationToken).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"Space '{id}' was not found.");
+        if (current.Revision != expectedSpaceRevision)
+            throw new SpaceRevisionConflictException(id, expectedSpaceRevision, current.Revision);
+        if (current.DraftConfigurationRevision != expectedDraftRevision)
+            throw new SpaceDraftRevisionConflictException(id, expectedDraftRevision, current.DraftConfigurationRevision);
+        if (current.ActiveConfigurationRevision != expectedActiveConfigurationRevision ||
+            current.DraftBaseActiveRevision != current.ActiveConfigurationRevision)
+            throw new InvalidOperationException("The active Space configuration changed after this draft began; reload and reconcile before activation.");
+        var draft = current.DraftConfiguration ?? throw new InvalidOperationException("Save the Builder draft before activating it.");
+        Task<SpaceDraftActivationValidation>? actual = null;
+        acquireOriginal(() =>
+        {
+            actual = validator.ValidateAsync(current, draft, acquireOriginal, retainOriginal, cancellationToken);
+            retainOriginal(actual);
+        });
+        var validation = await (actual ?? throw new InvalidOperationException("The activation validator did not return its original task."))
+            .ConfigureAwait(false);
+        return await ActivateDraftCoreAsync(id, expectedSpaceRevision, expectedDraftRevision,
+            expectedActiveConfigurationRevision, validation, cancellationToken).ConfigureAwait(false);
+    }
+
+    private Task<SpaceDefinition> ActivateDraftCoreAsync(Guid id, long expectedSpaceRevision,
+        long expectedDraftRevision, long expectedActiveConfigurationRevision,
+        SpaceDraftActivationValidation? validation, CancellationToken cancellationToken) => MutateAsync(state =>
     {
         var current = FindRequired(state.Spaces, id);
         if (current.IsBuiltIn || current.IsArchived)
@@ -277,15 +315,25 @@ public sealed partial class SpaceRegistry
             throw new InvalidOperationException("The active Space configuration changed after this draft began; reload and reconcile before activation.");
         var draft = current.DraftConfiguration ?? throw new InvalidOperationException("Save the Builder draft before activating it.");
         ValidateConfiguration(current, draft, state.Spaces.Where(space => space.Id != id).ToArray());
-        // The current registry does not own node-schema or external dependency registries.
-        // Fail closed for configurations that require those checks rather than pretending they passed.
+        if (validation is not null)
+        {
+            if (validation.SpaceId != id || validation.SpaceRevision != expectedSpaceRevision ||
+                validation.DraftConfigurationRevision != expectedDraftRevision ||
+                validation.ActiveConfigurationRevision != expectedActiveConfigurationRevision ||
+                !AncestryMatches(state.Spaces, id, validation.Ancestry))
+                throw new InvalidOperationException("A Space or ancestor changed after dependency validation; no active configuration was published.");
+        }
+        // This host currently has no Space graph runtime/schema owner. Never interpret editor
+        // schemas or structural validity as proof that graph nodes can execute.
         if (draft.LayoutDocument is { Nodes.Count: > 0 })
             throw new InvalidOperationException("Activation is unavailable until the owning node-schema registry validates every graph node.");
-        if (draft.CapabilityBindings.Count != 0 || draft.ContextReferences.Count != 0 || draft.Files.Count != 0 ||
+        if (draft.Shares.Count != 0 || draft.GeneratedSurface is not null)
+            throw new InvalidOperationException("Activation is unavailable until the owning share or generated-surface service validates this draft.");
+        if (validation is null && (draft.CapabilityBindings.Count != 0 ||
             !string.IsNullOrWhiteSpace(draft.ModelPolicy?.DefaultModelId) ||
             !string.IsNullOrWhiteSpace(draft.ModelPolicy?.ProviderConstraint) ||
-            draft.ModelPolicy?.RequiredCapabilities?.Count > 0 || draft.Shares.Count != 0 || draft.GeneratedSurface is not null)
-            throw new InvalidOperationException("Activation is unavailable until owning resource, permission and model services validate this draft's dependencies.");
+            draft.ModelPolicy?.RequiredCapabilities?.Count > 0 || current.ParentSpaceId is not null))
+            throw new InvalidOperationException("Activation requires the current model and installed capability owners to validate this draft.");
 
         var nextActiveRevision = checked(current.ActiveConfigurationRevision + 1);
         var activated = draft.ApplyTo(current, activateLayout: true) with
@@ -915,8 +963,11 @@ public sealed partial class SpaceRegistry
             (!Enum.IsDefined(memory.DefaultScope) || memory.AllowedScopes?.Any(scope => !Enum.IsDefined(scope)) == true ||
              memory.AllowedScopes is { } allowed && !allowed.Contains(memory.DefaultScope)))
             throw new ArgumentException("Space memory policy is invalid.");
-        if (space.ModelPolicy?.RequiredCapabilities?.Any(string.IsNullOrWhiteSpace) == true)
-            throw new ArgumentException("Required model capabilities cannot be empty.");
+        if (space.ModelPolicy is { } modelPolicy &&
+            (modelPolicy.RequiredCapabilities?.Any(string.IsNullOrWhiteSpace) == true ||
+             modelPolicy.DefaultModelId is not null && string.IsNullOrWhiteSpace(modelPolicy.DefaultModelId) ||
+             modelPolicy.ProviderConstraint is not null && string.IsNullOrWhiteSpace(modelPolicy.ProviderConstraint)))
+            throw new ArgumentException("Model policy identifiers and required capabilities must be non-empty when supplied.");
         if (space.CapabilityBindings is null || space.CapabilityBindings.Any(binding => binding is null ||
                 string.IsNullOrWhiteSpace(binding.CapabilityId) || !Enum.IsDefined(binding.Kind) || !Enum.IsDefined(binding.Override)) ||
             space.CapabilityBindings.Select(binding => (binding.Kind, binding.CapabilityId)).Distinct().Count() != space.CapabilityBindings.Count)
@@ -934,6 +985,9 @@ public sealed partial class SpaceRegistry
             throw new ArgumentException("Space share grants must be valid and unique.");
         if (space.Inheritance is null || space.ExamplePairs is null || space.Files is null)
             throw new ArgumentException("Space configuration collections and inheritance policy are required.");
+        if (space.Files.Any(file => file is null || string.IsNullOrWhiteSpace(file.Path) ||
+            string.IsNullOrWhiteSpace(file.DisplayName) || !Enum.IsDefined(file.Permission)))
+            throw new ArgumentException("Space file references must have valid identifying metadata.");
         if (space.CapabilityCategoryPolicy is { } categoryPolicy &&
             (!Enum.IsDefined(categoryPolicy.Skills) || !Enum.IsDefined(categoryPolicy.Plugins) ||
              !Enum.IsDefined(categoryPolicy.Apps) || !Enum.IsDefined(categoryPolicy.Models) ||
@@ -959,6 +1013,28 @@ public sealed partial class SpaceRegistry
             if (current.ParentSpaceId is not { } nextId) break;
             current = FindRequired(spaces, nextId);
         }
+    }
+
+    private static bool AncestryMatches(IReadOnlyList<SpaceDefinition> spaces, Guid spaceId,
+        IReadOnlyList<SpaceActivationAncestryRevision> expected)
+    {
+        if (expected is null || expected.Count is < 1 or > 128 ||
+            expected.Any(revision => revision is null || revision.SpaceId == Guid.Empty || revision.SpaceRevision < 1)) return false;
+        var chain = new List<SpaceDefinition>();
+        var seen = new HashSet<Guid>();
+        var id = spaceId;
+        while (true)
+        {
+            if (chain.Count >= 128 || !seen.Add(id)) return false;
+            var current = spaces.SingleOrDefault(space => space.Id == id);
+            if (current is null || current.IsArchived) return false;
+            chain.Add(current);
+            if (current.ParentSpaceId is not { } parentId) break;
+            id = parentId;
+        }
+        chain.Reverse();
+        return chain.Count == expected.Count && chain.Select((space, index) =>
+            space.Id == expected[index].SpaceId && space.Revision == expected[index].SpaceRevision).All(matches => matches);
     }
 
     private static SpaceDefinition FindRequired(IReadOnlyList<SpaceDefinition> spaces, Guid id) =>

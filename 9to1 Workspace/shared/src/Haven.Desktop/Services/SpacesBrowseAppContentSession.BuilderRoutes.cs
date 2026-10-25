@@ -54,6 +54,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                     lock (_gate) _ownedBuilders.Add(page);
                     acquired = true;
                     page.BindOriginalBoardsContextSource(_services.GetRequiredService<OriginalSpaceRequestPolicySource>());
+                    page.BindOriginalActivationValidator(new OriginalSpaceDraftActivationValidator(_services, registry));
                     await page.ActivateAsync(token);
                 }
                 if (page.Show is not { IsCompletedSuccessfully: true } shown ||

@@ -19,6 +19,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     private readonly SpaceBuilderController _controller;
     private readonly SpaceRegistry _originalRegistry;
     private OriginalSpaceRequestPolicySource? _boardsSource;
+    private ISpaceDraftActivationValidator? _activationValidator;
     private IReadOnlyList<SpaceBuilderBoardsSourceOption> _boardsChoices = [];
     private long? _boardsChoicesRevision;
     private bool _sourcePickerBusy;
@@ -102,6 +103,15 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                 throw new InvalidOperationException("Bind the SAME original Space/Notes source once, before page activation.");
             _boardsSource = source;
         }
+    }
+
+    internal void BindOriginalActivationValidator(ISpaceDraftActivationValidator validator)
+    {
+        ArgumentNullException.ThrowIfNull(validator);
+        if (_activationValidator is not null && !ReferenceEquals(_activationValidator, validator))
+            throw new InvalidOperationException("The original Space activation validator cannot be replaced.");
+        _activationValidator = validator;
+        _controller.SetActivationValidatorAvailable(true);
     }
 
     private Task RunSourceChoiceAsync(ISpaceBuilderOriginalBoardsSourceChoice? choice, CancellationToken caller)
@@ -280,11 +290,16 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     }
 
     public Task<bool> SaveAsync(CancellationToken token = default) => RunControllerAsync(_controller.SaveAsync, token);
-    public Task<bool> ActivateAsync(CancellationToken token = default) => RunControllerAsync(_controller.ActivateAsync, token, refreshGraph: true);
+    public Task<bool> ActivateAsync(CancellationToken token = default) => _activationValidator is { } validator
+        ? RunControllerAsync(cancellation => _controller.ActivateAsync(cancellation), token, refreshGraph: true,
+            originalOperation: (own, retain, cancellation) => _controller.ActivateAsync(validator, own, retain, cancellation))
+        : RunControllerAsync(cancellation => _controller.ActivateAsync(cancellation), token, refreshGraph: true);
     public Task<bool> DiscardChangesAsync(CancellationToken token = default) => RunControllerAsync(_controller.DiscardChangesAsync, token, refreshGraph: true);
     public Task<bool> ReloadAsync(CancellationToken token = default) => RunControllerAsync(_controller.LoadAsync, token, refreshGraph: true);
 
-    private Task<bool> RunControllerAsync(Func<CancellationToken, Task<bool>> operation, CancellationToken caller, bool refreshGraph = false)
+    private Task<bool> RunControllerAsync(Func<CancellationToken, Task<bool>> operation, CancellationToken caller,
+        bool refreshGraph = false,
+        Func<Action<Action>, Action<Task>, CancellationToken, Task<bool>>? originalOperation = null)
     {
         lock (_gate)
         {
@@ -296,7 +311,12 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                 {
                     original.BindPublicationGuard(IsPresentationCurrent);
                     using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, original.Token);
-                    var result = await original.AwaitAsync(Source(() => operation(linked.Token))).ConfigureAwait(false);
+                    void Own(Action body) => Source(() => { body(); return true; });
+                    void Retain(Task actual) => _ = original.AwaitAsync(actual);
+                    var actual = Source(() => originalOperation is null
+                        ? operation(linked.Token)
+                        : originalOperation(Own, Retain, linked.Token));
+                    var result = await original.AwaitAsync(actual).ConfigureAwait(false);
                     if (result && refreshGraph)
                     {
                         var savedSpace = await original.AwaitAsync(Source(() => _originalRegistry.GetAsync(_controller.State.SpaceId, linked.Token))).ConfigureAwait(false);
@@ -304,12 +324,11 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                         if (savedSpace is null)
                             throw new InvalidOperationException("The Space disappeared while refreshing its saved draft.");
                         var draftSpace = ProjectCurrentDraft(savedSpace, state);
-                        if (draftSpace is not null)
-                            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
-                            {
-                                original.DemandPublication();
-                                _graphEditor?.ReloadDraft(draftSpace);
-                            }).GetTask()).ConfigureAwait(false);
+                        await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            original.DemandPublication();
+                            _graphEditor?.ReloadDraft(draftSpace);
+                        }).GetTask()).ConfigureAwait(false);
                     }
                     return result;
                 }
@@ -507,7 +526,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     internal SpaceLayoutDocument? CurrentGraphDraft => _graphEditor is null
         ? null : SpaceLayoutEditorAdapter.FromEditor(_graphEditor.Editor.Document, _controller.State.Draft.LayoutDocument);
 
-    private static SpaceDefinition? ProjectCurrentDraft(SpaceDefinition saved, SpaceBuilderState state)
+    private static SpaceDefinition ProjectCurrentDraft(SpaceDefinition saved, SpaceBuilderState state)
     {
         if (saved.Id != state.SpaceId || saved.Revision != state.SpaceRevision ||
             saved.DraftConfigurationRevision != state.DraftRevision ||

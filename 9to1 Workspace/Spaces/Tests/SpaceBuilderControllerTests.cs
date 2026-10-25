@@ -322,4 +322,48 @@ public sealed class SpaceBuilderControllerTests
         Assert.Null(editor.State.Preview); // every later edit clears stale preview output
     }
 
+    [Fact]
+    public async Task Parent_policy_change_after_validation_keeps_the_saved_draft_and_active_configuration()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var parent = await registry.CreateAsync("Parent", cancellationToken: token);
+        var child = await registry.CreateAsync("Child", null, parent.Id, token);
+        var draft = SpaceConfigurationDocument.From(child) with { Name = "Child draft" };
+        var savedDraft = await registry.SaveDraftAsync(child.Id, draft, child.Revision,
+            child.DraftConfigurationRevision, child.ActiveConfigurationRevision, token);
+        var validator = new ParentRacingActivationValidator(registry, parent.Id);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => registry.ActivateDraftAsync(savedDraft.Id,
+            savedDraft.Revision, savedDraft.DraftConfigurationRevision, savedDraft.ActiveConfigurationRevision,
+            validator, body => body(), _ => { }, token));
+
+        var unchangedChild = (await registry.GetAsync(child.Id, token))!;
+        var changedParent = (await registry.GetAsync(parent.Id, token))!;
+        Assert.Equal("Child", unchangedChild.Name);
+        Assert.Equal("Child draft", unchangedChild.DraftConfiguration!.Name);
+        var validatedParent = Assert.Single(validator.ValidatedAncestry.Where(revision => revision.SpaceId == parent.Id));
+        Assert.NotEqual(validatedParent.SpaceRevision, changedParent.Revision);
+    }
+
+    private sealed class ParentRacingActivationValidator(SpaceRegistry registry, Guid parentId)
+        : ISpaceDraftActivationValidator
+    {
+        public IReadOnlyList<SpaceActivationAncestryRevision> ValidatedAncestry { get; private set; } = [];
+
+        public async Task<SpaceDraftActivationValidation> ValidateAsync(SpaceDefinition current,
+            SpaceConfigurationDocument draft, Action<Action> acquireOriginal, Action<Task> retainOriginal,
+            CancellationToken cancellationToken = default)
+        {
+            var resolved = await new SpacePolicyResolver(registry).ResolveDraftAsync(current, draft,
+                acquireOriginal, retainOriginal, cancellationToken);
+            ValidatedAncestry = resolved.Ancestry;
+            await registry.RenameAsync(parentId, "Parent changed after validation", cancellationToken);
+            return new(current.Id, current.Revision, current.DraftConfigurationRevision,
+                current.ActiveConfigurationRevision, ValidatedAncestry);
+        }
+    }
+
 }

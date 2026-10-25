@@ -80,23 +80,28 @@ public sealed record SpaceBuilderState(
     public long? SpaceRevision { get; init; }
     public long? DraftBaseActiveRevision { get; init; }
     public bool HasPersistedDraft { get; init; }
+    public bool HasParentSpace { get; init; }
     public SpaceBuilderEditorView EditorView { get; init; } = SpaceBuilderEditorView.Basic;
     public SpaceBuilderExpertSection ExpertSection { get; init; } = SpaceBuilderExpertSection.Details;
     public SpaceBuilderPreview? Preview { get; init; }
     public IReadOnlyList<string> ValidationIssues { get; init; } = [];
+    public bool HasActivationValidator { get; init; }
     public bool IsBusy => IsLoading || IsSaving;
     public bool CanEdit => IsLoaded && !IsReadOnly && !IsLoading;
     public bool CanSave => CanEdit && !IsBusy && HasChanges && !HasConflict;
     public bool CanDiscard => IsLoaded && !IsBusy && (HasChanges || HasConflict);
     public bool CanReload => !IsBusy && !HasChanges;
     public bool HasActiveRevision => ActiveRevision is not null;
-    public bool HasUnverifiedDependencies => Draft.CapabilityBindings.Count != 0 || Draft.ContextReferences.Count != 0 ||
-        Draft.LegacyFiles.Count != 0 || Draft.LayoutDocument is { Nodes.Count: > 0 } ||
+    public bool HasUnverifiedDependencies => Draft.CapabilityBindings.Count != 0 ||
         !string.IsNullOrWhiteSpace(Draft.ModelPolicy?.DefaultModelId) ||
         !string.IsNullOrWhiteSpace(Draft.ModelPolicy?.ProviderConstraint) || Draft.ModelPolicy?.RequiredCapabilities?.Count > 0 ||
+        HasParentSpace;
+    public bool HasUnsupportedActivationDependencies => Draft.LayoutDocument is { Nodes.Count: > 0 } ||
         Draft.Shares.Count != 0 || Draft.GeneratedSurface is not null;
+    public bool HasDeferredResourceReferences => Draft.ContextReferences.Count != 0 || Draft.LegacyFiles.Count != 0;
     public bool CanActivate => CanEdit && !IsBusy && !HasChanges && !HasConflict && HasPersistedDraft && DraftRevision is not null &&
-        ActiveRevision is not null && DraftBaseActiveRevision == ActiveRevision && !HasUnverifiedDependencies;
+        ActiveRevision is not null && DraftBaseActiveRevision == ActiveRevision && !HasUnsupportedActivationDependencies &&
+        (!HasUnverifiedDependencies || HasActivationValidator);
     public bool HasExpertConfiguration => Draft.LayoutDocument is { } layout &&
         (layout.Nodes.Count != 0 || layout.Edges.Count != 0 || layout.Groups.Count != 0 || layout.Comments.Count != 0);
 }
