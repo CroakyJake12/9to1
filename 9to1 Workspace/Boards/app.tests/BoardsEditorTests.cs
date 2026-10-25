@@ -118,6 +118,8 @@ public sealed class BoardsEditorTests
         Assert.NotEqual(brushes.insert, brushes.table);
         Assert.NotEqual(brushes.insert, brushes.delete);
         Assert.NotEqual(brushes.table, brushes.delete);
+        Assert.Equal(Color.Parse("#FF238A5A"), brushes.insert);
+        Assert.Equal(Color.Parse("#FF596FCA"), brushes.table);
         var iconBackground = Color.Parse("#FF181521");
         Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.insert, iconBackground) >= 3d);
         Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.table, iconBackground) >= 3d);
