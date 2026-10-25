@@ -31,7 +31,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Service.StartObservedTaskComposerResumeAsync(initial, stale, token));
         Assert.Equal(original.Attempts.Count, (await rig.Tasks.GetAsync(original.TaskId, token))!.Attempts.Count);
         var copied = (TaskRunOriginalInitialChatObservationLease)typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(initial, null)!;
-        Assert.Throws<UnauthorizedAccessException>(() => rig.Service.GetObservedTaskComposerControlsAsync(copied, token));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => rig.Service.GetObservedTaskComposerControlsAsync(copied, token));
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var held = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         rig.Client.RunApprovedOwnedFrame = true;
