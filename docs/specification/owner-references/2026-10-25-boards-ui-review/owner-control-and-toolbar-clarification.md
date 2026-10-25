@@ -26,3 +26,15 @@ images are not claimed to be available as local files. The latest navy-shell
 clarification remains applicable. Home still owns shared profile/model/notification
 controls in embedded mode; standalone and Home use the same Boards implementation.
 The canonical specification and other explicit owner requirements remain in force.
+
+## Equation presentation clarification
+
+After viewing the newer capture, the owner said equations should appear inline
+like normal text with mathematical formatting, without a default yellow block.
+Highlights are an explicit user formatting choice, not an intrinsic LaTeX style.
+The observed yellow sample came from `VisualFixtures.BuildMathsAsync`: it assigned
+a `Key Formula` custom style with background `#FFFFF3C4` to a paragraph containing
+superscript text runs. It was not evidence of an implemented LaTeX renderer.
+Use ordinary unhighlighted formatting for that representative sample; preserve
+intentional user highlights and separately verify actual LaTeX support before
+claiming it works.
