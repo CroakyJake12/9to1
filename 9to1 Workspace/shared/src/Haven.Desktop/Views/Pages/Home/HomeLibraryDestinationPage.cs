@@ -92,6 +92,16 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         var actual = _work.RunAsync(original => SearchAsync(original, token, _query.Offset), actualTask => _initialization ??= actualTask);
         return ObserveActivationAsync(actual, _activationObservers.Token);
     }
+    internal void SetInitialQuery(string ownerApp, string artifactType)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentException.ThrowIfNullOrWhiteSpace(ownerApp);
+        ArgumentException.ThrowIfNullOrWhiteSpace(artifactType);
+        if (_active || _initialization is not null || _page is not null)
+            throw new InvalidOperationException("Set the initial Library filters before its first activation.");
+        _ownerFilter.Text = ownerApp;
+        _typeFilter.Text = artifactType;
+    }
     private static async Task ObserveActivationAsync(Task actual, CancellationToken retirement) =>
         await actual.WaitAsync(retirement).ConfigureAwait(false);
     internal void Deactivate() { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; }
