@@ -24,7 +24,7 @@ public sealed class TaskExecutionRepositoryTests : IDisposable
             {
                 TaskId = id, ContextId = context, Queue = [], Plan = [], LastCheckpointActionId = null,
                 State = index % 2 == 0 ? TaskExecutionLifecycle.Completed : TaskExecutionLifecycle.Cancelled,
-                CreatedAt = DateTimeOffset.UnixEpoch.AddDays(index), UpdatedAt = DateTimeOffset.UnixEpoch.AddDays(6 - index)
+                CreatedAt = DateTimeOffset.UnixEpoch.AddDays(-30 + index), UpdatedAt = DateTimeOffset.UnixEpoch.AddDays(-index)
             };
             rows.Add(row); await repository.UpsertAsync(row, CancellationToken.None);
         }

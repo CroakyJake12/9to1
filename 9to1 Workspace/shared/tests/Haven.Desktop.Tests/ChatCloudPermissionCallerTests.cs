@@ -687,9 +687,20 @@ public sealed partial class ChatCloudPermissionCallerTests
             public ValueTask DisposeAsync() => ValueTask.CompletedTask;
         }
     }
-    private sealed class TaskRows : ITaskExecutionRepository
+    private sealed class TaskRows : ITaskExecutionRepository, ITaskExecutionObservationCensus
     {
         private readonly Dictionary<Guid, string> _rows = [];
+        public Task<TaskObservationCandidatePage> ReadTaskCandidatesAsync(int maximumItems, Guid? afterTaskId, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            if (maximumItems is < 1 or > 100) throw new ArgumentOutOfRangeException(nameof(maximumItems));
+            if (afterTaskId == Guid.Empty) throw new ArgumentException("An actual cursor is required.", nameof(afterTaskId));
+            var keys = _rows.Keys.OrderBy(id => id.ToString("D"), StringComparer.Ordinal)
+                .Where(id => afterTaskId is null || StringComparer.Ordinal.Compare(id.ToString("D"), afterTaskId.Value.ToString("D")) > 0)
+                .Take(maximumItems + 1).ToArray();
+            var page = keys.Take(maximumItems).ToArray();
+            return Task.FromResult(new TaskObservationCandidatePage(page, keys.Length > maximumItems ? page[^1] : null));
+        }
         public Task<TaskExecutionSnapshot?>? OverrideRead = null;
         public bool RefuseSuspension;
         public TaskCompletionSource? HeldFollowUpWrite;
@@ -747,7 +758,9 @@ public sealed partial class ChatCloudPermissionCallerTests
     private sealed class Actors : IAuthenticatedResourceActorSource
     {
         public AuthenticatedResourceActor? Current = new("synthetic-task-owner", "synthetic-task-profile", null, null, "current-revision");
-        public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token) { token.ThrowIfCancellationRequested(); return ValueTask.FromResult(Current); }
+        public Task<AuthenticatedResourceActor?>? OriginalRead;
+        public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token)
+        { token.ThrowIfCancellationRequested(); return OriginalRead is { } original ? new(original) : ValueTask.FromResult(Current); }
     }
     private sealed class Provider : IModelProvider
     {
