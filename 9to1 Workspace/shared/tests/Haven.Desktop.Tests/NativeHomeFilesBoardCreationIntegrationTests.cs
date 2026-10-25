@@ -84,8 +84,39 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
             Assert.Equal(receipt.DocumentId, document.DocumentId);
             Assert.Equal("Created then read-refused", document.RichNotes!.Title);
             await rig.Keep(lease.DemandCurrentAsync(rig.Token));
+
+            var originalRevision = receipt.FilesCasRevisionId;
+            var originalLeaves = Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content");
+            var originalLeaf = Assert.Single(originalLeaves);
+            var originalPhysicalBytes = await File.ReadAllBytesAsync(originalLeaf, rig.Token);
+            var editedBytes = BoardBytes(receipt.DocumentId, "Saved through Home reviewed write");
+            var saved = await rig.Keep(lease.SaveAsync(lease.SourceId, originalRevision.ToString("D"),
+                editedBytes, rig.Token));
+            Assert.True(saved.Committed, saved.Message);
+            Assert.NotNull(saved.NewRevision);
+            var savedRevision = Guid.Parse(saved.NewRevision!);
+            Assert.NotEqual(originalRevision, savedRevision);
+            Assert.Equal(savedRevision, lease.RevisionId);
+            Assert.Equal(originalPhysicalBytes, await File.ReadAllBytesAsync(originalLeaf, rig.Token));
+            Assert.Equal(2, Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content").Length);
+            Assert.Equal(4, reads); // create, declined READ, accepted READ, reviewed WRITE.
         }
-        Assert.Single(await rig.ListBoardsAsync());
+        var currentReference = Assert.Single(await rig.Keep(rig.Library.SearchAsync(
+            new HomeLibraryQuery(OwnerApp: "files", ArtifactType: "9to1 board document"), rig.Token)));
+        var readToken = await rig.Keep(rig.Library.PrepareOriginalBoardReadAsync(currentReference.OpenLink, rig.Token))
+            ?? throw new InvalidOperationException("The current Home Library board row did not prepare a read.");
+        var currentRow = Assert.Single(await rig.ListBoardsAsync());
+        var reopened = rig.Read.TakePrepared(readToken, receipt.FilesStoreId, receipt.ParentFolderId,
+            receipt.FileId, currentRow.CurrentRevisionId!.Value.Value);
+        await using (reopened)
+        {
+            Assert.Equal(receipt.FileId, reopened.FileId);
+            Assert.Equal(currentRow.CurrentRevisionId!.Value.Value, reopened.RevisionId);
+            var updatedDocument = HavenBoardDocumentCodec.Deserialize(reopened.Bytes);
+            Assert.Equal(receipt.DocumentId, updatedDocument.DocumentId);
+            Assert.Equal("Saved through Home reviewed write", updatedDocument.RichNotes!.Title);
+            await rig.Keep(reopened.DemandCurrentAsync(rig.Token));
+        }
     }
 
     [LinuxFact]
@@ -168,6 +199,7 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
 
         internal string HomePath { get; }
         internal string DrivePath { get; }
+        internal string BoardsDirectory { get; private set; } = string.Empty;
         internal CancellationToken Token => _deadline.Token;
         internal NativeFilesWorkspace Workspace { get; private set; } = null!;
         internal FilesNativeBrowserService Browser { get; private set; } = null!;
@@ -175,6 +207,7 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         internal HomePermissionTrustService Trust { get; private set; } = null!;
         internal FailBoardCreateAuditStore Home { get; private set; } = null!;
         internal NativeHomeFilesBoardWriteSource Writes => _writes ?? throw new InvalidOperationException();
+        internal NativeHomeFilesBoardReadSource Read => _read ?? throw new InvalidOperationException();
         internal NativeHomeFilesLibrarySource Library => _library ?? throw new InvalidOperationException();
 
         internal void Retain(Task task) { lock (_gate) _retained.Add(task); }
@@ -226,6 +259,8 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
                 rig._writer = rig.Browser.CreateOriginalBoardDocumentWriteOwner(rig.Physical);
                 rig._read = new NativeHomeFilesBoardReadSource(rig.Browser, rig.Workspace.Actor);
                 rig._writes = new NativeHomeFilesBoardWriteSource(rig.Browser, rig._writer, rig.Workspace.Actor);
+                rig.BoardsDirectory = (await rig.Keep(rig.Workspace.Directories.ResolveProfileAsync(
+                    Guid.Parse(rig.Workspace.Actor.ProfileId), "boards", rig.Token))).Value!.DirectoryPath;
                 return rig;
             }
             catch { await rig.DisposeAsync(); throw; }

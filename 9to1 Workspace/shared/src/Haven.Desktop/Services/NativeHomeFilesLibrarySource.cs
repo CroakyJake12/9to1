@@ -320,7 +320,6 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 var cause = FindCreateSettlementFailure(error)!;
                 attempt = cause.Attempt;
                 settlement = new(cause.State, cause.Receipt, cause.CleanupFailures);
-                if (cause.State == FilesOriginalBoardDocumentCreateSettlementState.NotCreated) throw;
                 if (cause.State == FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending)
                 {
                     try
