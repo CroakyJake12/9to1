@@ -58,6 +58,18 @@ internal sealed class HomeNativeLinuxProcessBootstrap : IAsyncDisposable
     }
 
     internal Task OriginalStartTask => _start;
+    internal HomeNativeWindowsListeningLease CaptureOriginalListeningLease(HomeNativeServiceSession same)
+    {
+        lock (_sync)
+        {
+            if (_closing || _close is not null || !_start.IsCompletedSuccessfully || _lifetime.IsCancellationRequested ||
+                !ReferenceEquals(_original.Services, same.Services) || !ReferenceEquals(_original.Runtime, same.Runtime) ||
+                !ReferenceEquals(_original.Actors, same.Actors) || _host is null || _lease is null || !_lease.IsHeld)
+                throw new UnauthorizedAccessException("The SAME actual Linux bootstrap, listening host and held lease are required.");
+            return _host.CaptureOriginalListeningLease(_lease);
+        }
+    }
+
 
     private async Task StartOriginalAsync(Task begin)
     {

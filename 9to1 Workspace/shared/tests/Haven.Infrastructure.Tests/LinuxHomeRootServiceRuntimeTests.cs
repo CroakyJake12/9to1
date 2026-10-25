@@ -12,6 +12,8 @@ namespace Haven.Infrastructure.Tests;
 [SupportedOSPlatform("linux")]
 public sealed class LinuxHomeRootServiceRuntimeTests
 {
+    private sealed class LinuxFactAttribute : FactAttribute
+    { public LinuxFactAttribute() { if (!OperatingSystem.IsLinux()) Skip = "Requires actual Linux filesystem/socket APIs."; } }
     private sealed class LinuxAdminFactAttribute : FactAttribute
     { public LinuxAdminFactAttribute() { if (!OperatingSystem.IsLinux() || GetEuid() != 0) Skip = "Requires actual Linux UID0 isolated signed-file fixture."; } }
 
@@ -57,7 +59,7 @@ public sealed class LinuxHomeRootServiceRuntimeTests
         Assert.Same(failure, actual);
     }
 
-    [LinuxAdminFact]
+    [LinuxFact]
     public void Unissued_logind_record_cannot_create_an_original_active_user()
     {
         var kernel = new LinuxHomeRegisteredRootServiceContext();
@@ -65,7 +67,7 @@ public sealed class LinuxHomeRootServiceRuntimeTests
         Assert.Throws<UnauthorizedAccessException>(() => kernel.DemandOriginalCurrent(unissued));
     }
 
-    [LinuxAdminFact]
+    [LinuxFact]
     public async Task Ordinary_nonservice_process_does_not_start_or_mutate_the_configured_canonical_state()
     {
         var observed = new LinuxHomeRegisteredRootServiceContext().ObserveOriginalActiveUser();
@@ -80,5 +82,32 @@ public sealed class LinuxHomeRootServiceRuntimeTests
         Assert.False(startup.HasAcceptedOriginalHomeControl); Assert.NotNull(startup.MissingPrerequisite);
         Assert.False(File.Exists(rig.StatePath)); Assert.False(Directory.Exists(Path.Combine(rig.Root, "unregistered-control")));
     }
+    [LinuxFact]
+    public async Task Failed_real_Root_connection_preserves_foreign_endpoint_and_creates_no_Home_profile_or_installed_authority()
+    {
+        using var rig = new LinuxHomeBootstrapActivationOwnerTests.Rig();
+        var endpoint = Path.Combine(rig.Root, "foreign.sock"); File.WriteAllText(endpoint, "preserve unrelated file");
+        var userState = Path.Combine(rig.Root, "user-state.json");
+        var store = new HavenOS.Home.Core.FileHomeCoreStateStore(userState);
+        var profiles = new HavenOS.Home.Core.HomeLocalProfileIdentity(store, new HavenOS.Home.Core.OperatingSystemPrincipalSource());
+        var client = new LinuxHomeRootClient(endpoint, rig.Token);
+        client.BindOriginalHomeInventory(store, profiles, new(store, profiles, [client]));
+        await Assert.ThrowsAnyAsync<Exception>(() => client.ConnectOriginalWithinSourceAsync(body => body(), _ => { }, rig.Token));
+        await Assert.ThrowsAsync<AggregateException>(() => client.CloseAndDrainAsync());
+        Assert.Equal("preserve unrelated file", File.ReadAllText(endpoint)); Assert.False(File.Exists(userState));
+    }
+
+    [LinuxFact]
+    public async Task Omitted_original_client_callback_is_retained_before_connect_and_cannot_be_retried_as_healthy()
+    {
+        using var rig = new LinuxHomeBootstrapActivationOwnerTests.Rig();
+        var endpoint = Path.Combine(rig.Root, "not-created.sock");
+        var store = new HavenOS.Home.Core.FileHomeCoreStateStore(Path.Combine(rig.Root, "user-state.json"));
+        var profiles = new HavenOS.Home.Core.HomeLocalProfileIdentity(store, new HavenOS.Home.Core.OperatingSystemPrincipalSource());
+        var client = new LinuxHomeRootClient(endpoint, rig.Token); client.BindOriginalHomeInventory(store, profiles, new(store, profiles, [client]));
+        Assert.Throws<InvalidOperationException>(() => { _ = client.ConnectOriginalWithinSourceAsync(_ => { }, _ => { }, rig.Token); });
+        await Assert.ThrowsAsync<AggregateException>(() => client.CloseAndDrainAsync()); Assert.False(File.Exists(endpoint));
+    }
+
     [DllImport("libc", EntryPoint = "geteuid")] private static extern uint GetEuid();
 }

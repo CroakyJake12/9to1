@@ -33,6 +33,7 @@ public sealed partial class App
             var principal = new OperatingSystemPrincipalSource();
             var ordinary = RetainOriginalAssistantConversationProcess();
             var rootClient = RetainOriginalHomeRootClient(original);
+            var linuxRootClient = RetainOriginalLinuxRootClient(original);
             RetainOriginalNativeHomeStartup(original);
             PrepareOriginalInstalledHomeApps(rootClient);
             OriginalAssistantPersonalDenHost? personalDen = null;
@@ -48,7 +49,7 @@ public sealed partial class App
             // uses the genuine OS principal; CAKE login cannot substitute for this actor.
             _actualWindowsHome = new(new FileHomeCoreStateStore(Path.Combine(paths.DataDirectory, "Home", "state.json")),
                 principal, paths, new("9to1.home.desktop.v1"),
-                protectedInstalledPeerVerifier: rootClient,
+                protectedInstalledPeerVerifier: rootClient ?? (IHomeNativeInstalledPeerVerifier?)linuxRootClient,
                 originalResourceResolvers: OriginalWindowsDeveloperResolvers().Concat(OriginalInstalledHomeAppsResolvers()).Concat([_actualAssistantTaskContextWriteResolver!, _actualAssistantMemoryWriteResolver!, _actualAssistantCapabilityInitializationResolver!, _actualAssistantMiniComputerOperationResolver!, _actualAssistantMiniComputerIdentityResolver!, _actualAutomationLibraryWriteResolver!, _actualAutomationCreationGraphRegistry!, _actualAssistantAttachmentReadResolver!, _actualAssistantAttachmentImportResolver!, _actualAssistantAttachmentEgressResolver!, _actualGeneratedUiResolver!, notesResolver]),
                 originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new FilesOriginalBrowserDownloadActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAutomationCreationGraphPolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!, new HomeModelRouteActionPolicies(), new HomeNotesActionPolicies(), new global::HavenOS.Apps.Canvas.CanvasNativeActionPolicies()]),
                 configureOriginalOwners: owners =>
@@ -60,6 +61,7 @@ public sealed partial class App
                     var registered = CaptureOriginalHomeRootOwnerComponents(original, owners, rootClient,
                         new SiteNativeAuthoringSession(sites!, owners.Profiles, owners.Resources, owners.Broker))
                         .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    CaptureOriginalLinuxRootOwners(owners, linuxRootClient, registered);
                     registered.Add(typeof(HomeNotesResourceAdmissionSource), notesAdmission);
                     return registered;
                 },
@@ -101,6 +103,7 @@ public sealed partial class App
             _actualWindowsHome.Productivity.Engine.RegisterObjectHandler(new global::HavenOS.Apps.Canvas.CanvasInkObjectHandler());
             collection.AddHavenOwnedWindowsHomeDomain(_actualWindowsHome, paths, principal);
             RegisterOriginalHomeRootOwners(collection, _actualWindowsHome, rootClient);
+            RegisterOriginalLinuxRootOwners(collection, _actualWindowsHome, linuxRootClient);
             collection.AddSingleton(notesAdmission
                 ?? throw new InvalidOperationException("The SAME original Notes admission owner is unavailable."));
             collection.AddSingleton(notesEvidence);

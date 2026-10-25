@@ -61,6 +61,18 @@ public sealed partial class HomeNativeLinuxCoreHost : IAsyncDisposable
     public Task OriginalAcceptTask => _accept;
     public HomeNativeEndpointLocation Endpoint => _endpoint with { };
     public long RejectedConnectionCount => Interlocked.Read(ref _rejected);
+    internal HomeNativeWindowsListeningLease CaptureOriginalListeningLease(HomeNativeSessionLease actualLease)
+    {
+        lock (_gate)
+        {
+            if (_closing || _close is not null || _lifetime.IsCancellationRequested || !_listening.Task.IsCompletedSuccessfully ||
+                _accept.IsCompleted || !ReferenceEquals(_lease, actualLease) || !_lease.IsHeld || _custody is null)
+                throw new UnauthorizedAccessException("The SAME live original Linux host/listening owner and process lease are required.");
+            _custody.DemandCurrent();
+            return new(_lease.ProfileId, _lease.LeaseIdentity, _endpoint.SocketPath);
+        }
+    }
+
 
     private async Task AcceptOriginalAsync(Task start)
     {
