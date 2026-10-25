@@ -2105,7 +2105,8 @@ public static class BlockRenderer
             _dragging = false;
             _row.RenderTransform = _originalTransform;
             _originalTransform = null;
-            if (pointer?.Captured == handle) pointer.Capture(null);
+            if (pointer is not null && handle is not null && pointer.Captured == handle)
+                pointer.Capture(null);
         }
     }
 }

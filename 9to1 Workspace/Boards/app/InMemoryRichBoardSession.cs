@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Text.Json;
+using CakeOS.Apps.Boards.Contract;
 
 namespace CakeOS.Apps.Boards.App;
 
