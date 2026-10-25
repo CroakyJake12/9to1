@@ -63,42 +63,41 @@ public sealed class VisualCaptureTests
             Assert.NotNull(root);
             loader.WireBindings(root);
             viewModel.Attach(root);
-            inputOwner = new BoardsTextAndKeyboardOwner(root, viewModel);
-            var inkOverlay = FindByAutomationId<Canvas>(root, "InkOverlayLayer");
-            Assert.NotNull(inkOverlay);
-            inkInteraction = new BoardInkInteractionController(inkOverlay!, viewModel);
+            ThemeApplier.ApplyChrome(root);
+
+            // Compiled CUI realizes named template hosts only after the root is attached
+            // to a top-level and receives layout. Match the production mount lifecycle.
+            window = new Window
+            {
+                Width = width,
+                Height = height,
+                Content = root,
+                Background = BoardsTheme.AppBackgroundBrush,
+            };
+            window.Show();
+            window.Measure(new Size(width, height));
+            window.Arrange(new Rect(0, 0, width, height));
+            root.Measure(new Size(width, height));
+            root.Arrange(new Rect(0, 0, width, height));
+            Dispatcher.UIThread.RunJobs();
 
             var host = FindByAutomationId<StackPanel>(root, "BlocksHost");
             Assert.NotNull(host);
-            BlockRenderer.RebuildAsync(host, viewModel).GetAwaiter().GetResult();
-            FillCombo(root, "StyleBox", viewModel.StyleList.Select(s => s.Name).ToList());
-            FillCombo(root, "AddKindBox", ["Paragraph", "Checklist", "Table", "Graph", "Image"]);
-            // Render the same compiled CUI and dynamic surface owners as the app host.
-            ThemeApplier.ApplyChrome(root);
-            var nav = FindByAutomationId<StackPanel>(root, "NavHost");
-            if (nav is not null)
+            BlockRenderer.RebuildAsync(host!, viewModel).GetAwaiter().GetResult();
+            inputOwner = new BoardsTextAndKeyboardOwner(root, viewModel);
+            inputOwner.AttachWindow(window);
+            var inkOverlay = FindByAutomationId<Canvas>(root, "InkOverlayLayer");
+            Assert.NotNull(inkOverlay);
+            inkInteraction = new BoardInkInteractionController(inkOverlay!, viewModel);
+            if (FindByAutomationId<StackPanel>(root, "NavHost") is { } nav)
                 NavBuilder.Rebuild(nav, viewModel);
-            var toolbar = FindByAutomationId<StackPanel>(root, "ToolbarHost");
-            if (toolbar is not null)
+            if (FindByAutomationId<StackPanel>(root, "ToolbarHost") is { } toolbar)
                 ToolbarBuilder.Rebuild(toolbar, viewModel);
-            var context = FindByAutomationId<StackPanel>(root, "ContextHost");
-            if (context is not null)
-                ContextPanels.Rebuild(context, viewModel);
             inkInteraction.RenderAsync().GetAwaiter().GetResult();
-
-        window = new Window
-        {
-            Width = width,
-            Height = height,
-            Content = root,
-            Background = BoardsTheme.AppBackgroundBrush,
-        };
-        inputOwner.AttachWindow(window);
-        window.Show();
-        window.Measure(new Size(width, height));
-        window.Arrange(new Rect(0, 0, width, height));
-        root.Measure(new Size(width, height));
-        root.Arrange(new Rect(0, 0, width, height));
+            window.Measure(new Size(width, height));
+            window.Arrange(new Rect(0, 0, width, height));
+            root.Measure(new Size(width, height));
+            root.Arrange(new Rect(0, 0, width, height));
         if (openStyleMenu)
         {
             var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().FirstOrDefault(combo =>

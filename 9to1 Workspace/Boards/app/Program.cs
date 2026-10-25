@@ -192,9 +192,9 @@ internal sealed class BoardsApp : Application
                     _root = root;
                     _loader.WireBindings(root);
                     _viewModel.Attach(root);
-                    WireDynamicSurface(root);
+                    root.LayoutUpdated += WireDynamicSurfaceWhenReady;
                     window.Content = root;
-                    Console.WriteLine($"[CUI Boards] Root: {root.GetType().Name} — window rendered");
+                    Console.WriteLine($"[CUI Boards] Root: {root.GetType().Name} — awaiting mounted CUI layout");
                 }
                 else
                     window.Content = CreateFallbackUI(diagnostics.Count > 0
@@ -210,6 +210,14 @@ internal sealed class BoardsApp : Application
             window.Content = CreateFallbackUI("The Boards session is unavailable.");
 
         return window;
+    }
+
+    private void WireDynamicSurfaceWhenReady(object? sender, EventArgs e)
+    {
+        if (_root is null || FindByAutomationId<StackPanel>(_root, "BlocksHost") is null)
+            return;
+        _root.LayoutUpdated -= WireDynamicSurfaceWhenReady;
+        WireDynamicSurface(_root);
     }
 
     // ----- Dynamic surface: top bar, nav, toolbar, context, blocks -----
