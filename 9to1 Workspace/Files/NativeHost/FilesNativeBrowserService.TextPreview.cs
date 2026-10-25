@@ -205,7 +205,7 @@ public sealed partial class FilesNativeBrowserService
                 throw new UnauthorizedAccessException("The original Home READ no longer permits this Files preview.");
             await source.ObserveVoid(() => RevalidateOriginalHomeLibraryPageWithinSourceAsync(witness.Page,
                 witness.Actor, lifetime, scopeBody => source.Invoke(() => { scopeBody(); return true; }),
-                source.Retain, token)).ConfigureAwait(false);
+                source.RetainOriginalTask, token)).ConfigureAwait(false);
             var metadata = await source.Observe(() => current.Provider.GetForOriginalStoreAsync(
                 witness.Page.StoreID, witness.Row.Id, token)).ConfigureAwait(false);
             if (!metadata.IsSuccess || metadata.Value != witness.Row || !source.Invoke(lifetime))
