@@ -38,11 +38,14 @@ public sealed class SpaceTaskWorkspaceService(
 
     /// <summary>Resolves the EXACT issued Task/Run, including an older task sharing a
     /// context. Never substitutes GetByContext's latest task or creates a conversation.</summary>
+    public bool IsIssuedSelection(TaskContextSelection selection) => selection is not null &&
+        ReferenceEquals(selection.Issuer, this) && _selections.TryGetValue(selection, out _);
+
     public Task<AuthorizedTaskContextObservation> ReadSelectionAsync(TaskContextSelection selection,
         CancellationToken token, Action<Action>? originalSourceCallbackScope = null)
     {
         ArgumentNullException.ThrowIfNull(selection);
-        if (!ReferenceEquals(selection.Issuer, this) || !_selections.TryGetValue(selection, out _))
+        if (!IsIssuedSelection(selection))
             throw new UnauthorizedAccessException("This actual task-context source did not issue the selection.");
         return ReadAuthorizedContextAsync(selection.TaskId, selection, token, originalSourceCallbackScope);
     }
@@ -50,6 +53,7 @@ public sealed class SpaceTaskWorkspaceService(
     private async Task<AuthorizedTaskContextObservation> ReadAuthorizedContextAsync(Guid taskId,
         TaskContextSelection? selected, CancellationToken token, Action<Action>? scope)
     {
+        var commandIdentity = false;
         async Task<TaskExecutionSnapshot> ReadTask()
         {
             var result = await Join(() => canonical.ReadAuthorizedTaskObservationAsync(taskId, token), scope).ConfigureAwait(false);
@@ -60,6 +64,7 @@ public sealed class SpaceTaskWorkspaceService(
                 throw new InvalidDataException("The actual task owner returned an invalid observation.");
             if (selected is not null && (task.ExecutionId != selected.ExecutionId || task.ContextId != selected.ContextId || task.OwnerBinding != selected.OwnerBinding))
                 throw new InvalidOperationException("The selected original Task/Run or owner changed; refresh the Tasks list.");
+            commandIdentity = result.HasCurrentCommandIdentity;
             return task;
         }
         var before = await ReadTask().ConfigureAwait(false);
@@ -85,7 +90,7 @@ public sealed class SpaceTaskWorkspaceService(
             origin, currentConversation is not null, current.OwnerBinding!);
         if (selected is null) _selections.Add(issued, new object());
         return new(issued, currentConversation, space?.Revision, space?.Name, current,
-            TaskExecutionProjection.From(current));
+            TaskExecutionProjection.From(current)) { HasCurrentCommandIdentity = commandIdentity };
     }
 
     public async Task<FollowUpDecision> SubmitSelectedFollowUpAsync(TaskContextSelection selection,
@@ -297,6 +302,7 @@ public sealed record SpaceTaskObservation(
     Guid SpaceId, long SpaceRevision, Conversation Conversation, TaskExecutionSnapshot? Snapshot,
     TaskExecutionProjection? Projection, bool OriginalAttemptRetained) : ITaskContextObservation
 {
+    public bool HasCurrentCommandIdentity => Snapshot?.OwnerBinding is not null;
     public Guid ContextId => Conversation.Id;
     public Guid? OriginSpaceId => SpaceId;
     public long? OriginSpaceRevision => SpaceRevision;
@@ -319,6 +325,7 @@ public sealed record SpaceTaskObservation(
 /// <summary>Common detached presentation data; none of these fields is a read or command grant.</summary>
 public interface ITaskContextObservation
 {
+    bool HasCurrentCommandIdentity { get; }
     Guid ContextId { get; }
     Guid? OriginSpaceId { get; }
     long? OriginSpaceRevision { get; }
@@ -356,6 +363,7 @@ public sealed record AuthorizedTaskContextObservation(TaskContextSelection Selec
     Conversation? OriginalConversation, long? OriginSpaceRevision, string? OriginSpaceName,
     TaskExecutionSnapshot Snapshot, TaskExecutionProjection Projection) : ITaskContextObservation
 {
+    public bool HasCurrentCommandIdentity { get; init; }
     public Guid ContextId => Selection.ContextId;
     public Guid? OriginSpaceId => Selection.OriginSpaceId;
     public string Title => OriginalConversation?.Title ?? Snapshot.PromptSummary;
