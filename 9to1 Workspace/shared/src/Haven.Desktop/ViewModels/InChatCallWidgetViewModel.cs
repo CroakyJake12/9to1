@@ -412,6 +412,7 @@ public sealed class InChatCallWidgetViewModel : ObservableObject, IDisposable
 
         IsOpen = true;
         var startMuted = IsMuted;
+        var originalConversationId = _parentConversationId;
         Status = "Connecting…";
 
         try
@@ -424,7 +425,8 @@ public sealed class InChatCallWidgetViewModel : ObservableObject, IDisposable
                     VoiceName: SelectedVoice?.Name,
                     Effort: Effort,
                     VoiceProfileId: SelectedVoiceProfile?.Id,
-                    VoiceProfile: SelectedVoiceProfile),
+                    VoiceProfile: SelectedVoiceProfile,
+                    ConversationId: originalConversationId),
                 null,
                 CancellationToken.None);
 
