@@ -104,10 +104,10 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         await rig.SendAsync("Hello");
 
         var wire = Assert.Single(rig.Transport.Requests);
-        Assert.Equal("Hel", Assert.Single(wire.Messages.Where(message => message.Role == "user")).Content);
-        var persisted = Assert.Single(rig.Repository.Messages.Where(message => message.Role == MessageRole.User));
+        Assert.Equal("Hel", Assert.Single(wire.Messages, message => message.Role == "user").Content);
+        var persisted = Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User);
         Assert.Equal("Hello", persisted.Content);
-        var derivation = Assert.Single(rig.Events.Values.Where(item => item.ComponentId == "spaces.user-message-graph"));
+        var derivation = Assert.Single(rig.Events.Values, item => item.ComponentId == "spaces.user-message-graph");
         Assert.Equal(persisted.Id.ToString("D"), derivation.SafeMetadata!["userMessageId"]);
         Assert.Equal(space.Id.ToString("D"), derivation.SafeMetadata["spaceId"]);
         Assert.NotEqual(derivation.SafeMetadata["inputSha256"], derivation.SafeMetadata["outputSha256"]);
@@ -134,7 +134,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.NotNull(error);
         Assert.True(ContainsSpaceCode(error, "SPACE_POLICY_CHANGED"));
         Assert.Empty(rig.Transport.Requests);
-        Assert.Equal("Hello", Assert.Single(rig.Repository.Messages.Where(message => message.Role == MessageRole.User)).Content);
+        Assert.Equal("Hello", Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
         files.Passed = true;
     }
 
@@ -153,7 +153,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Equal(expected.Split('|'), extraction.Numbers.Select(number => number.InvariantValue));
         Assert.All(extraction.Numbers, number => Assert.Equal(number.RawText, text.Substring(number.StartUtf16, number.LengthUtf16)));
         Assert.Equal(SpaceUserMessageGraph.NumbersDataType,
-            Assert.Single(result.TypedNodeOutputs.Values.Where(value => value.DataType == SpaceUserMessageGraph.NumbersDataType)).DataType);
+            Assert.Single(result.TypedNodeOutputs.Values, value => value.DataType == SpaceUserMessageGraph.NumbersDataType).DataType);
         Assert.Contains(result.Trace, item => item.OutputDataType == SpaceUserMessageGraph.NumbersDataType);
         Assert.False(extraction.MoreResultsOmitted);
         if (locale == "fr-FR") Assert.True(extraction.HasUncertainty); // Space grouping can also separate tokens.
@@ -239,13 +239,13 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
 
         await rig.SendAsync("secret amount 12 and 3.5");
 
-        var user = Assert.Single(rig.Repository.Messages.Where(message => message.Role == MessageRole.User));
+        var user = Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User);
         Assert.Equal("secret amount 12 and 3.5", user.Content);
         var wire = Assert.Single(rig.Transport.Requests);
-        var extraction = JsonSerializer.Deserialize<SpaceNumberExtraction>(Assert.Single(wire.Messages.Where(message => message.Role == "user")).Content,
+        var extraction = JsonSerializer.Deserialize<SpaceNumberExtraction>(Assert.Single(wire.Messages, message => message.Role == "user").Content,
             new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
         Assert.Equal(new[] { "12", "3.5" }, extraction.Numbers.Select(number => number.InvariantValue));
-        var trace = Assert.Single(rig.Events.Values.Where(item => item.ComponentId == "spaces.user-message-graph"));
+        var trace = Assert.Single(rig.Events.Values, item => item.ComponentId == "spaces.user-message-graph");
         Assert.DoesNotContain("secret amount", JsonSerializer.Serialize(trace.SafeMetadata), StringComparison.Ordinal);
         Assert.Equal(user.Id.ToString("D"), trace.SafeMetadata!["userMessageId"]);
         files.Passed = true;
@@ -308,7 +308,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             _conversation = new(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Graph request", null, null,
                 false, false, now, now, SpaceId: spaceId);
             _model = new("space-policy-model", 1, "fixture", "fixture", "fixture", new HashSet<ToolCapability> { ToolCapability.Text }, now);
-            Transport = new(_model);
+            Transport = new(_model, new SpacePolicyProvider("fixture-provider"));
             _chat = new(Repository, Transport, new CapabilityPreflightService(), new Safety(),
                 new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()), executionEvents: Events);
             _chat.BindOriginalSpacePolicySource(source);
