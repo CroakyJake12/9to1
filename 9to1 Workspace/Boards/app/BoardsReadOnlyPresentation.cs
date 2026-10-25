@@ -38,6 +38,9 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         _session.GetDetachedContractDocumentAsync(cancellationToken);
     public BoardsViewModel ViewModel { get; }
     public Control Content { get; }
+    public Task WaitUntilReadyAsync(CancellationToken cancellationToken = default) =>
+        (_surfaceLifecycle ?? throw new InvalidOperationException("The Boards surface has not been initialized.")).WaitUntilReadyAsync(cancellationToken);
+    public Task DrainRenderingAsync() => _renderQueue?.DrainAsync() ?? Task.CompletedTask;
 
     public static async Task<BoardsReadOnlyPresentation> OpenReadOnlyDocumentAsync(
         ReadOnlyMemory<byte> verifiedDocument, CancellationToken ct = default)

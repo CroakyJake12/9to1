@@ -424,6 +424,7 @@ public sealed class BoardsEmbeddedSurfaceLifecycle : IDisposable
     private readonly Action _ready;
     private readonly EventHandler<VisualTreeAttachmentEventArgs> _attached;
     private readonly EventHandler _layoutUpdated;
+    private readonly TaskCompletionSource<bool> _readyCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private BoardsTextAndKeyboardOwner? _inputOwner;
     private BoardInkInteractionController? _inkInteraction;
     private bool _disposed;
@@ -441,6 +442,8 @@ public sealed class BoardsEmbeddedSurfaceLifecycle : IDisposable
     }
 
     public bool IsReady { get; private set; }
+    public Task WaitUntilReadyAsync(CancellationToken cancellationToken = default) =>
+        _readyCompletion.Task.WaitAsync(cancellationToken);
     public BoardInkInteractionController? InkInteraction => _inkInteraction;
 
     private void TryInitialize()
@@ -453,6 +456,7 @@ public sealed class BoardsEmbeddedSurfaceLifecycle : IDisposable
         _inputOwner = new BoardsTextAndKeyboardOwner(_root, _viewModel);
         _inkInteraction = new BoardInkInteractionController(ink, _viewModel);
         IsReady = true;
+        _readyCompletion.TrySetResult(true);
         _root.LayoutUpdated -= _layoutUpdated;
         _ready();
     }
@@ -469,6 +473,7 @@ public sealed class BoardsEmbeddedSurfaceLifecycle : IDisposable
         _disposed = true;
         _root.AttachedToVisualTree -= _attached;
         _root.LayoutUpdated -= _layoutUpdated;
+        if (!IsReady) _readyCompletion.TrySetCanceled();
         _inputOwner?.Dispose();
         _inkInteraction?.Dispose();
     }
