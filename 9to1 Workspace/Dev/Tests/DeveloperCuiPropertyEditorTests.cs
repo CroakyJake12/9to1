@@ -11,7 +11,7 @@ public sealed class DeveloperCuiPropertyEditorTests
     [InlineData('"')]
     public void Exact_literal_edit_preserves_comments_entities_quotes_spacing_and_other_source_characters(char quote)
     {
-        var prefix = "<Cui>\r\n<!-- keep & raw comment spelling -->\r\n<Page><Text id='title'  text = " + quote;
+        var prefix = "<Cui>\r\n<!-- keep & raw comment spelling -->\r\n<Page><Text id='title'  text=" + quote;
         const string original = "A &amp; B &quot;quoted&quot;";
         var suffix = quote + "  font-size='18' accessible-name='keep &amp; this' /></Page>\r\n</Cui>";
         var source = prefix + original + suffix;
