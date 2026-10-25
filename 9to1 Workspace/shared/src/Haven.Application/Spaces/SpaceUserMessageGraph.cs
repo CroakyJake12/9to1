@@ -30,6 +30,7 @@ public sealed class SpaceUserMessageGraph
     public const string JsonDataType = "spaces.json-value.v1";
     public const string RouteWordsType = "spaces.user-message.route-words";
     public const string MergeType = "spaces.user-message.merge-selected";
+    public const string RouteJsonBooleanType = "spaces.user-message.route-json-boolean";
     public const string CapabilityId = "spaces.user-message.derive";
     internal const string Category = "SpaceUserMessage";
     private readonly AutomationGraphProjection _projection;
@@ -70,12 +71,14 @@ public sealed class SpaceUserMessageGraph
             [new("in", GraphPortDirection.Input, JsonDataType), new("out", GraphPortDirection.Output, "string")]),
         Type(RouteWordsType, "{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"locale\":{\"type\":\"string\",\"enum\":[\"invariant\"]},\"comparison\":{\"type\":\"string\",\"enum\":[\"ordinal\",\"ordinal-ignore-case\"]},\"boundary\":{\"type\":\"string\",\"enum\":[\"substring\",\"whole-word\"]}},\"required\":[\"query\",\"locale\",\"comparison\",\"boundary\"],\"additionalProperties\":false}",
             [new("in", GraphPortDirection.Input, "string"), new("true", GraphPortDirection.Output, "string"), new("false", GraphPortDirection.Output, "string")]),
+        Type(RouteJsonBooleanType, "{\"type\":\"object\",\"properties\":{\"pointer\":{\"type\":\"string\",\"maxLength\":512}},\"required\":[\"pointer\"],\"additionalProperties\":false}",
+            [new("in", GraphPortDirection.Input, JsonDataType), new("true", GraphPortDirection.Output, JsonDataType), new("false", GraphPortDirection.Output, JsonDataType)]),
         Type(MergeType, "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}",
             [new("in", GraphPortDirection.Input, "string", true), new("out", GraphPortDirection.Output, "string")])
     ];
     public static GraphCapabilityProfile Profile() => new(ProfileId,
         new HashSet<string>([SourceType, TruncateType, OutputType, ExtractNumbersType, NumbersToTextType, SearchWordsType, MatchesToTextType,
-            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType, RouteWordsType, MergeType], StringComparer.Ordinal),
+            ParseJsonType, SelectJsonType, RenderJsonType, JsonStringType, RouteWordsType, RouteJsonBooleanType, MergeType], StringComparer.Ordinal),
         new HashSet<string>([CapabilityId], StringComparer.Ordinal));
     /// <summary>Author a node from the actual shared registered schema. This is draft
     /// data only; inserting it never activates a Space or starts a request.</summary>
@@ -91,25 +94,31 @@ public sealed class SpaceUserMessageGraph
             SearchWordsType => "Search words or phrases", MatchesToTextType => "Render matches",
             ParseJsonType => "Parse strict JSON (depth 32)", SelectJsonType => "Select JSON value",
             RenderJsonType => "Render compact JSON", JsonStringType => "Read JSON string",
-            RouteWordsType => "Route by words or phrases", MergeType => "Merge selected text",
+            RouteWordsType => "Route by words or phrases", RouteJsonBooleanType => "Route by JSON boolean", MergeType => "Merge selected text",
             _ => throw new ArgumentException("This node has no authoring implementation.", nameof(typeId))
         })
         {
             TypeId = type.TypeId, SchemaVersion = type.Version,
-            Ports = type.Ports.Select(port => new SpaceLayoutPort(port.Key, port.Key is "true" or "false" ? port.Key == "true" ? "Match" : "No match" : port.DataType == "string" ? "Text" : port.DataType == NumbersDataType ? "Numbers" : port.DataType == JsonDataType ? "JSON" : "Matches",
+            Ports = type.Ports.Select(port => new SpaceLayoutPort(port.Key, PortLabel(typeId, port),
                 port.Direction == GraphPortDirection.Input ? SpaceLayoutPortDirection.Input : SpaceLayoutPortDirection.Output,
                 port.DataType, port.Multiple)).ToArray(),
             Metadata = typeId switch
             {
                 TruncateType => new Dictionary<string, string>(StringComparer.Ordinal) { ["maximumTextElements"] = "1000" },
                 ExtractNumbersType => new Dictionary<string, string>(StringComparer.Ordinal) { ["locale"] = "invariant" },
-                SelectJsonType => new Dictionary<string, string>(StringComparer.Ordinal) { ["pointer"] = "" },
+                SelectJsonType or RouteJsonBooleanType => new Dictionary<string, string>(StringComparer.Ordinal) { ["pointer"] = "" },
                 SearchWordsType or RouteWordsType => new Dictionary<string, string>(StringComparer.Ordinal)
                     { ["query"] = "word", ["locale"] = "invariant", ["comparison"] = "ordinal", ["boundary"] = "whole-word" },
                 _ => new Dictionary<string, string>(StringComparer.Ordinal)
             }
         };
     }
+    private static string PortLabel(string typeId, GraphPortTemplate port) => port.Key switch
+    {
+        "true" => typeId == RouteJsonBooleanType ? "True" : "Match",
+        "false" => typeId == RouteJsonBooleanType ? "False" : "No match",
+        _ => port.DataType switch { "string" => "Text", NumbersDataType => "Numbers", JsonDataType => "JSON", _ => "Matches" }
+    };
     private static GraphNodeType Type(string id, string schema, IReadOnlyList<GraphPortTemplate> ports)
     {
         using var document = JsonDocument.Parse(schema);
@@ -126,7 +135,7 @@ public sealed class SpaceUserMessageGraph
                     port.DataType, port.Multiple)).ToArray()
             })
         {
-            OutputBranches = type.TypeId == RouteWordsType
+            OutputBranches = type.TypeId is RouteWordsType or RouteJsonBooleanType
                 ? new Dictionary<string, string>(StringComparer.Ordinal) { ["true"] = "true", ["false"] = "false" }
                 : new Dictionary<string, string>(StringComparer.Ordinal)
         });
@@ -172,10 +181,10 @@ public sealed class SpaceUserMessageGraph
                     throw Invalid("Numeric extraction requires an explicit supported locale: invariant, en-US, de-DE or fr-FR.");
                 configuration = JsonSerializer.SerializeToElement(node.Metadata);
             }
-            else if (node.TypeId == SelectJsonType)
+            else if (node.TypeId is SelectJsonType or RouteJsonBooleanType)
             {
                 if (node.Metadata.Count != 1 || !node.Metadata.TryGetValue("pointer", out var pointer) || !IsSupportedJsonPointer(pointer))
-                    throw Invalid("Select JSON requires one RFC 6901 pointer of at most 512 characters; empty selects the root, and only ~0/~1 escapes are supported.");
+                    throw Invalid("JSON selection or routing requires one RFC 6901 pointer of at most 512 characters; empty selects the root, and only ~0/~1 escapes are supported.");
                 configuration = JsonSerializer.SerializeToElement(node.Metadata);
             }
             else if (node.TypeId is SearchWordsType or RouteWordsType)
@@ -213,12 +222,12 @@ public sealed class SpaceUserMessageGraph
         // rejoins the one merge before the one Output, with no orphan work or bypass.
         var source = nodes.Single(node => node.TypeId == SourceType).NodeId;
         var output = nodes.Single(node => node.TypeId == OutputType).NodeId;
-        var routes = nodes.Where(node => node.TypeId == RouteWordsType).ToArray();
+        var routes = nodes.Where(node => node.TypeId is RouteWordsType or RouteJsonBooleanType).ToArray();
         var merges = nodes.Where(node => node.TypeId == MergeType).ToArray();
         if (routes.Length > 1 || merges.Length != routes.Length ||
             layout.Edges.Count != nodes.Count - 1 + routes.Length || nodes.Any(node =>
                 layout.Edges.Count(edge => edge.ToNodeId == node.NodeId) != (node.NodeId == source ? 0 : node.TypeId == MergeType ? 2 : 1) ||
-                layout.Edges.Count(edge => edge.FromNodeId == node.NodeId) != (node.NodeId == output ? 0 : node.TypeId == RouteWordsType ? 2 : 1)) ||
+                layout.Edges.Count(edge => edge.FromNodeId == node.NodeId) != (node.NodeId == output ? 0 : node.TypeId is RouteWordsType or RouteJsonBooleanType ? 2 : 1)) ||
             routes.Any(route => layout.Edges.Where(edge => edge.FromNodeId == route.NodeId).Select(edge => edge.FromPortId)
                 .Order(StringComparer.Ordinal).SequenceEqual(new[] { "false", "true" }) == false))
             throw Invalid("User-message nodes require one complete chain or one complete acyclic two-branch route/merge diamond.");
@@ -258,6 +267,7 @@ public sealed class SpaceUserMessageGraph
                 : _types[failed.NodeId] switch
                 {
                     ParseJsonType => "Parse JSON requires strict valid JSON, unique decoded property names, no comments/trailing commas, at most 32 nested containers and a typed result within 262144 UTF-8 bytes.",
+                    RouteJsonBooleanType => "Route by JSON boolean requires one present true/false JSON value at its exact pointer; strings, numbers, null and missing values are not coerced.",
                     MergeType => "Merge selected text requires exactly one active typed value; zero or multiple active inputs cannot produce a request.",
                     SelectJsonType => "Select JSON requires one present value: check exact field names and existing zero-based array indices without leading zeros.",
                     JsonStringType => "Read JSON string requires an actual string. Use Render JSON for objects, arrays, numbers, booleans or null.",
