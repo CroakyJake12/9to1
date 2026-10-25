@@ -2,7 +2,7 @@
 
 This is the operational companion to `AGENTS.md`. Product authority remains the
 [canonical specification](../specification/9to1-development-specification-v2.md)
-(SHA256 `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`),
+(current amended SHA256 `e1779d226848da492e926ab70e8d4722ad444476cfc91312bf5c2c067654fe81`; original attachment-derived baseline `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`),
 APP-AC-001–009, GOV-001–002 and later explicit owner decisions. Read the
 [22 October owner amendment](../specification/owner-references/2026-10-22-development-reliability/owner-correction.json).
 Mercury is revoked. Normal development uses actual supported Beam/Codex execution;

@@ -129,7 +129,7 @@ The [bounded source-comparison checkpoint](work/pc-worker/ONE-APP-IMPLEMENTATION
 
 ## Sole product authority
 
-Read [the attached canonical specification](docs/specification/9to1-development-specification-v2.md) before working on any surface. Its SHA-256 is `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`; [provenance](docs/specification/provenance.json) identifies the exact local owner attachment. Do not fetch or substitute a web version. Read the applicable full sections and dependencies, not only an implementation summary.
+Read [the attached canonical specification](docs/specification/9to1-development-specification-v2.md) before working on any surface. Its current amended SHA-256 is `e1779d226848da492e926ab70e8d4722ad444476cfc91312bf5c2c067654fe81`. The original attachment-derived baseline SHA-256 is `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`; [provenance](docs/specification/provenance.json) identifies the exact local owner attachment. Do not fetch or substitute a web version. Read the applicable full sections and dependencies, not only an implementation summary.
 
 This local specification is the ONLY product authority. Existing code, older specs, markdown, handoffs, comments, generated guides, worker messages and design-pack historical prose cannot override it. Later explicit owner decisions may amend it. Older compatibility names do not restore retired products. Preserve data and useful functionality while correcting implementations to the specification.
 
