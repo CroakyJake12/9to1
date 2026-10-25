@@ -106,6 +106,47 @@ public sealed class SpaceBuilderCanonicalSourceTests
     }
 
     [Fact]
+    public async Task Context_inclusion_toggle_changes_only_automatic_use_not_source_identity_or_permission()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30)); var token = deadline.Token;
+        var registry = files.OpenRegistry(); var space = await registry.CreateAsync("Context inclusion", cancellationToken: token);
+        var editor = new SpaceBuilderController(registry, space.Id); Assert.True(await editor.LoadAsync(token));
+        var original = Reference(); Assert.True(editor.AttachContextReference(original, space.Revision));
+        var bindings = new SpaceBuilderCuiBindings(() => editor.State,
+            (field, value) => editor.SetField(field, value),
+            (category, value) => editor.SetCategoryState(category, value),
+            (kind, id) => editor.DetachCapability(kind, id),
+            () => [], () => [], (_, _, _) => ValueTask.CompletedTask,
+            setContextIncluded: editor.SetContextReferenceIncluded);
+        Assert.True(bindings.TryGetValue("builder.contextReferences", out var rows));
+        var row = Assert.IsType<SpaceBuilderContextReferenceRow>(Assert.Single(Assert.IsAssignableFrom<object[]>(rows)));
+        Assert.True(row.included);
+
+        Assert.True(bindings.TrySetItemValue(row, "included", false));
+        var edited = Assert.Single(editor.State.Draft.ContextReferences);
+        Assert.Equal(original.ContextId, edited.ContextId);
+        Assert.Equal(original.Kind, edited.Kind);
+        Assert.Equal(original.OwnerAppId, edited.OwnerAppId);
+        Assert.Equal(original.CanonicalEntityId, edited.CanonicalEntityId);
+        Assert.Equal(original.RevisionToken, edited.RevisionToken);
+        Assert.Equal(original.Permission, edited.Permission);
+        Assert.False(edited.IncludedAutomatically);
+        Assert.False(bindings.TrySetItemValue(row, "included", true)); // Stale item is not admitted after draft refresh.
+
+        Assert.True(await editor.SaveAsync(token));
+        var reopened = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await reopened.LoadAsync(token));
+        var persisted = Assert.Single(reopened.State.Draft.ContextReferences);
+        Assert.Equal(original.ContextId, persisted.ContextId);
+        Assert.Equal(original.OwnerAppId, persisted.OwnerAppId);
+        Assert.Equal(original.CanonicalEntityId, persisted.CanonicalEntityId);
+        Assert.Equal(original.RevisionToken, persisted.RevisionToken);
+        Assert.Equal(SpaceContextPermission.Read, persisted.Permission);
+        Assert.False(persisted.IncludedAutomatically);
+    }
+
+    [Fact]
     public async Task Named_CUI_source_action_forwards_exact_original_token_and_reference_remove_parameters()
     {
         using var files = new SpaceDetailsTestFiles();

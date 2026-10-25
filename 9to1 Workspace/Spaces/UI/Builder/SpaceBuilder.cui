@@ -135,6 +135,8 @@
               <Text text="{Binding context.label}" foreground="{Resource CuiTextBrush}" />
               <Text text="{Binding context.revision}" foreground="{Resource CuiTextSoftBrush}" />
               <Text text="{Binding context.policy}" foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="space-builder-context-included" Type="Switch" Checked="{Binding context.included, mode=TwoWay}" Interactive="{Binding builder.canSetContextIncluded}" accessible-name="Include this canonical source automatically" />
+              <Text text="Include automatically" foreground="{Resource CuiTextSoftBrush}" />
               <Button id="space-builder-remove-context-source" content="Remove reference" action="RemoveContextSource" Interactive="{Binding builder.canEdit}" accessible-name="Remove this source reference without deleting its notebook" />
             </Container>
           </Repeat>

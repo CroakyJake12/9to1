@@ -24,6 +24,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Action<SpaceBuilderExpertSection>? _selectExpertSection;
     private readonly Func<SpaceBuilderPreview?>? _previewDraft;
     private readonly Func<CancellationToken, Task<IReadOnlyList<string>>>? _validateDraft;
+    private readonly Action<Guid, bool>? _setContextIncluded;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
 
@@ -44,7 +45,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Func<IReadOnlyList<SpaceBuilderBoardsSourceOption>>? sourceOptions = null, Func<bool>? canBrowseSources = null,
         Action<SpaceBuilderEditorView>? selectView = null, Action<SpaceBuilderExpertSection>? selectExpertSection = null,
         Func<SpaceBuilderPreview?>? previewDraft = null,
-        Func<CancellationToken, Task<IReadOnlyList<string>>>? validateDraft = null)
+        Func<CancellationToken, Task<IReadOnlyList<string>>>? validateDraft = null,
+        Action<Guid, bool>? setContextIncluded = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -61,6 +63,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _selectExpertSection = selectExpertSection;
         _previewDraft = previewDraft;
         _validateDraft = validateDraft;
+        _setContextIncluded = setContextIncluded;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -94,15 +97,17 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.context.maximumRetrievedItems" => state.Draft.ContextPolicy.MaximumRetrievedItems?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             "builder.boardOptions" => _sourceOptions(),
             "builder.canBrowseSources" => _isCurrent() && state.CanEdit && !state.IsBusy && _canBrowseSources(),
-            "builder.contextReferences" => state.Draft.ContextReferences.Select(reference => new
+            "builder.contextReferences" => state.Draft.ContextReferences.Select(reference => new SpaceBuilderContextReferenceRow
             {
                 id = reference.ContextId.ToString("D"),
                 label = _sourceOptions().FirstOrDefault(option => option.Id == reference.CanonicalEntityId)?.Label ??
                     (reference.OwnerAppId + " / " + reference.CanonicalEntityId),
                 revision = reference.RevisionToken ?? "Current version at read",
-                policy = reference.Permission + (reference.IncludedAutomatically ? "; included automatically" : "; not included automatically")
+                policy = reference.Permission.ToString(),
+                included = reference.IncludedAutomatically
             }).ToArray(),
             "builder.hasContextReferences" => state.Draft.ContextReferences.Count != 0,
+            "builder.canSetContextIncluded" => _isCurrent() && state.CanEdit && _setContextIncluded is not null,
             "builder.legacyFiles" => state.Draft.LegacyFiles.Select(reference => new { path = reference.Path, label = reference.DisplayName }).ToArray(),
             "builder.hasLegacyFiles" => state.Draft.LegacyFiles.Count != 0,
             "builder.inherit.sources" => state.Draft.Inheritance.Sources,
@@ -244,7 +249,18 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         return false;
     }
 
-    public bool TrySetItemValue(object item, string path, object? value) => false;
+    public bool TrySetItemValue(object item, string path, object? value)
+    {
+        if (path != "included" || item is not SpaceBuilderContextReferenceRow row ||
+            !Guid.TryParseExact(row.id, "D", out var contextId) || value is not bool included ||
+            !_isCurrent() || _setContextIncluded is null) return false;
+        var state = _state();
+        if (!state.CanEdit || !state.Draft.ContextReferences.Any(reference =>
+                reference.ContextId == contextId && reference.IncludedAutomatically == row.included)) return false;
+        _setContextIncluded(contextId, included);
+        Refresh();
+        return true;
+    }
 
     public bool? IsActionAvailable(string command) => command switch
     {
@@ -317,4 +333,13 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         }
         await _dispatch(command, parameter, cancellationToken);
     }
+}
+
+public sealed class SpaceBuilderContextReferenceRow
+{
+    public string id { get; init; } = string.Empty;
+    public string label { get; init; } = string.Empty;
+    public string revision { get; init; } = string.Empty;
+    public string policy { get; init; } = string.Empty;
+    public bool included { get; init; }
 }

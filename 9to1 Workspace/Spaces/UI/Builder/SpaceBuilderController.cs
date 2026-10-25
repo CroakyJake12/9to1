@@ -678,6 +678,33 @@ public sealed class SpaceBuilderController
         }
         StateChanged?.Invoke(next); return true;
     }
+
+    /// <summary>Controls whether an existing canonical source reference is included by default.
+    /// This does not change its owner, identity, revision or permission; the owning source still
+    /// performs fresh authorization before any body is read.</summary>
+    public bool SetContextReferenceIncluded(Guid contextId, bool included)
+    {
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var existing = _state.Draft.ContextReferences.SingleOrDefault(value => value.ContextId == contextId);
+            if (existing is null) return false;
+            if (existing.IncludedAutomatically == included) return true;
+            var rows = _state.Draft.ContextReferences
+                .Select(value => value.ContextId == contextId ? value with { IncludedAutomatically = included } : value)
+                .ToArray();
+            var draft = _state.Draft with { ContextReferences = Array.AsReadOnly(rows) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = included
+                    ? "Canonical source selected for automatic context. Its original owner still checks permission when used. Save to persist."
+                    : "Canonical source excluded from automatic context. The reference remains attached and its owner is unchanged. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
     public bool DetachLegacyFileReference(string path)
     {
         SpaceBuilderState next;
