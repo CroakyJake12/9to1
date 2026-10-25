@@ -76,6 +76,39 @@ public sealed class HomeNativeLinuxCoreHostTests
     }
 
     [LinuxFact]
+    public async Task Unframed_peer_close_does_not_leave_a_failed_original_in_the_retained_fault_budget()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var host = await rig.StartAsync();
+        using (var empty = await rig.ConnectAsync()) empty.Shutdown(SocketShutdown.Both);
+        using var next = await rig.ConnectAsync();
+        using var stream = new NetworkStream(next, ownsSocket: false);
+        await HomeUnixDiscoveryTransport.WriteFrameAsync(stream, JsonSerializer.SerializeToUtf8Bytes(
+            new HomeNativeDiscoveryRequest([new("home.core", 1, 0)])), rig.Token);
+        var reply = JsonSerializer.Deserialize<HomeNativeDiscoveryResponse>(await HomeUnixDiscoveryTransport.ReadFrameAsync(stream, rig.Token))!;
+        Assert.Null(reply.Snapshot);
+        await host.CloseAndDrainAsync().WaitAsync(rig.Token);
+        Assert.Equal(1, host.RejectedConnectionCount);
+    }
+
+    [LinuxFact]
+    public async Task Actual_idle_peer_deadline_is_a_rejection_and_leaves_the_listener_usable()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var host = await rig.StartAsync();
+        using var idle = await rig.ConnectAsync();
+        using (var waiting = new NetworkStream(idle, ownsSocket: false))
+            Assert.Equal(0, await waiting.ReadAsync(new byte[1], rig.Token));
+        Assert.Equal(1, host.RejectedConnectionCount);
+        using var next = await rig.ConnectAsync();
+        using var stream = new NetworkStream(next, ownsSocket: false);
+        await HomeUnixDiscoveryTransport.WriteFrameAsync(stream, JsonSerializer.SerializeToUtf8Bytes(
+            new HomeNativeDiscoveryRequest([new("home.core", 1, 0)])), rig.Token);
+        Assert.Null(JsonSerializer.Deserialize<HomeNativeDiscoveryResponse>(await HomeUnixDiscoveryTransport.ReadFrameAsync(stream, rig.Token))!.Snapshot);
+        Assert.False(host.OriginalAcceptTask.IsCompleted);
+    }
+
+    [LinuxFact]
     public async Task Existing_endpoint_collision_is_preserved_and_other_listener_stays_usable()
     {
         await using var rig = await Rig.CreateAsync();

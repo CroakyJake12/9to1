@@ -140,7 +140,8 @@ public sealed partial class HomeNativeLinuxCoreHost : IAsyncDisposable
             await entry.OriginalServe.ConfigureAwait(false);
         }
         catch (OperationCanceledException error) when (_lifetime.IsCancellationRequested && error.CancellationToken == _lifetime.Token) { }
-        catch (Exception cause) when (cause is UnauthorizedAccessException or InvalidDataException or JsonException)
+        catch (Exception cause) when (cause is UnauthorizedAccessException or InvalidDataException or JsonException or
+            HomeUnixCoreFirstFrameTimeoutException or HomeUnixCoreFirstFrameEndedException)
         {
             // An unknown/untrusted peer or malformed request is an ordinary rejection,
             // with no successful service response. Do not let unauthenticated traffic
