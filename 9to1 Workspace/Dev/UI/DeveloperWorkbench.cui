@@ -160,6 +160,12 @@
       <Button id="dev-add-cui-text-child" action="dev.add-cui-text-child" content="Add Text to draft" Interactive="{Binding CanAddCuiTextChild}" />
       <Text text="{Binding CuiTextChildStatus}" text-wrapping="Wrap" accessible-name="Add Text result" />
       <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" TextSelection="{Binding EditorTextSelection}" Multiline="true" Interactive="{Binding CanEditSource}" />
+      <Text text="{Binding LineEndingsStatus}" text-wrapping="Wrap" accessible-name="Current draft line endings" />
+      <Container Type="Wrap" CellGap="6">
+        <Button id="dev-check-line-endings" action="dev.check-line-endings" content="Check line endings" Interactive="{Binding CanCheckLineEndings}" />
+        <Button id="dev-use-lf-endings" action="dev.use-lf-endings" content="Use LF in draft" Interactive="{Binding CanUseLfEndings}" />
+        <Button id="dev-use-crlf-endings" action="dev.use-crlf-endings" content="Use CRLF in draft" Interactive="{Binding CanUseCrLfEndings}" />
+      </Container>
       <Container Type="Wrap">
         <Button id="dev-undo-source-edit" action="dev.undo-source-edit" content="Undo draft edit" accessible-name="Undo the last edit in this document; saving still requires review" Interactive="{Binding CanUndoSourceEdit}" />
         <Button id="dev-redo-source-edit" action="dev.redo-source-edit" content="Redo draft edit" accessible-name="Redo the next edit in this document; saving still requires review" Interactive="{Binding CanRedoSourceEdit}" />

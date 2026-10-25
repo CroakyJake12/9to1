@@ -797,6 +797,45 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Draft_line_ending_controls_convert_same_unsaved_document_with_undo_and_no_source_effects()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The established optional Home/Files fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string saved = "first\r\nsecond\nthird\rfourth";
+            const string lf = "first\nsecond\nthird\nfourth";
+            const string crlf = "first\r\nsecond\r\nthird\r\nfourth";
+            f.Tools.TextValue = saved; page = await SearchPublicationPage(f, reader.Owner);
+            page.TrySetValue("SourcePath", "Main.cs"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var tab = Assert.Single(NativeSourceTabs(page)); var reads = f.Tools.ReadCalls; var preparations = f.Owner.PrepareCalls;
+            await page.DispatchAsync("dev.check-line-endings", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("LineEndingsStatus", out var status)); Assert.Contains("Mixed line endings", Assert.IsType<string>(status));
+            await page.DispatchAsync("dev.use-lf-endings", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(lf, draft); Assert.True(page.HasUnsavedWork);
+            Assert.True(page.TryGetValue("LineEndingsStatus", out status)); Assert.Contains("Line endings: LF", Assert.IsType<string>(status));
+            Assert.False(page.IsActionAvailable("dev.use-lf-endings")); Assert.True(page.IsActionAvailable("dev.use-crlf-endings"));
+            Assert.False(page.IsActionAvailable("dev.apply-edit"));
+            await page.DispatchAsync("dev.use-crlf-endings", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(crlf, draft);
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(lf, draft);
+            Assert.True(page.TryGetValue("LineEndingsStatus", out status)); Assert.Contains("Draft changed", Assert.IsType<string>(status));
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(saved, draft);
+            await page.DispatchAsync("dev.redo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(lf, draft);
+            Assert.Same(tab, Assert.Single(NativeSourceTabs(page))); Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(preparations, f.Owner.PrepareCalls);
+            Assert.Equal(saved, f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private sealed class PreviewComponentReadiness : ICuiSceneReadiness
     {
         public bool HoldNext;
