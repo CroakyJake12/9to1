@@ -27,8 +27,18 @@
 #include <unistd.h>
 
 static pid_t owned_child=-1;
+static int child_exec_error=-1;
 static void fail(const char *message) {
-    int error=errno;
+    int error=errno?errno:EINVAL;
+    if(child_exec_error>=0) {
+        const char *cursor=(const char *)&error; size_t remaining=sizeof(error);
+        while(remaining) {
+            ssize_t count=write(child_exec_error,cursor,remaining);
+            if(count<0 && errno==EINTR) continue;
+            if(count<=0) break;
+            cursor+=count; remaining-=(size_t)count;
+        }
+    }
     if(owned_child>0) kill(owned_child,SIGKILL);
     dprintf(STDERR_FILENO,"RootControlledLaunchRefused:%s:%d\n",message,error);
     _exit(70);
@@ -111,6 +121,7 @@ int main(int argc,char **argv) {
     if(pipe2(ready,O_CLOEXEC) || pipe2(release,O_CLOEXEC) || pipe2(executed,O_CLOEXEC)) fail("original-pipes");
     pid_t child=fork(); if(child<0) fail("native-fork");
     if(!child) {
+        child_exec_error=executed[1];
         pid_t parent=getppid(); close(ready[0]); close(release[1]); close(executed[0]);
         /* Namespace ownership is Root, before dropping credentials. Ordinary host
          * same-UID processes lack ptrace capability in this distinct credential
@@ -163,18 +174,37 @@ int main(int argc,char **argv) {
     do { result=poll(&effect,1,15000); } while(result<0 && errno==EINTR);
     int effect_errno=0; ssize_t observed=result==1?read(executed[0],&effect_errno,sizeof(effect_errno)):-1; close(executed[0]);
     if(observed!=0) { kill(child,SIGKILL); errno=effect_errno; fail("fd-exec-unconfirmed"); }
+    /* EOF alone also occurs on pre-exec death. Require the actual current kernel
+     * executable to match the held signed image before reporting an exec. */
+    char actual_path[96];
+    if(snprintf(actual_path,sizeof(actual_path),"/proc/%ld/exe",(long)child)>=(int)sizeof(actual_path)) fail("post-exec-path");
+    int actual_image=open(actual_path,O_RDONLY|O_CLOEXEC);
+    struct stat actual_stat;
+    if(actual_image<0 || fstat(actual_image,&actual_stat) || actual_stat.st_ino!=before.st_ino || actual_stat.st_dev!=before.st_dev ||
+       actual_stat.st_size!=before.st_size || actual_stat.st_mtim.tv_sec!=before.st_mtim.tv_sec || actual_stat.st_mtim.tv_nsec!=before.st_mtim.tv_nsec ||
+       actual_stat.st_ctim.tv_sec!=before.st_ctim.tv_sec || actual_stat.st_ctim.tv_nsec!=before.st_ctim.tv_nsec) fail("actual-post-exec-image-required");
+    close(actual_image);
     if(dprintf(STDOUT_FILENO,"OriginalLinuxHomeExecV1\n")<0) fail("private-exec-observation");
     /* Do not reap/recycle the original numeric PID until this owner retires it.
      * The pidfd exit observation and stdin retirement are independent of child IO. */
     struct pollfd lifetime[2]={{.fd=child_pidfd,.events=POLLIN},{.fd=STDIN_FILENO,.events=POLLIN|POLLHUP}};
     do { result=poll(lifetime,2,-1); } while(result<0 && errno==EINTR);
     if(result<0) { kill(child,SIGKILL); fail("child-lifetime"); }
-    if(lifetime[0].revents&POLLIN) {
-        if(dprintf(STDOUT_FILENO,"OriginalLinuxHomeExitedV1\n")<0) fail("private-exit-observation");
+    int original_exit=(lifetime[0].revents&POLLIN)!=0;
+    if(original_exit) {
+        siginfo_t observed_exit; memset(&observed_exit,0,sizeof(observed_exit));
+        if(waitid(P_PID,child,&observed_exit,WEXITED|WNOWAIT)) fail("original-child-exit-status");
+        if(dprintf(STDOUT_FILENO,"OriginalLinuxHomeExitedV1:%d:%d\n",observed_exit.si_code,observed_exit.si_status)<0) fail("private-exit-observation");
         struct pollfd retirement={.fd=STDIN_FILENO,.events=POLLIN|POLLHUP};
         do { result=poll(&retirement,1,-1); } while(result<0 && errno==EINTR);
     } else kill(child,SIGKILL);
     int status; while(waitpid(child,&status,0)<0) { if(errno!=EINTR) fail("retained-child-reap"); }
     owned_child=-1;
-    close(child_pidfd); return 0;
+    close(child_pidfd);
+    if(original_exit) {
+        if(WIFEXITED(status)) return WEXITSTATUS(status);
+        if(WIFSIGNALED(status)) return 128+WTERMSIG(status);
+        return 70;
+    }
+    return 0;
 }
