@@ -173,6 +173,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public string InkColor { get; set; } = "#FF111111";
     public bool IsDrawMode { get; private set; }
     public bool IsEditMode => _isEditMode;
+    public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
     public bool IsLanding => Get("IsLanding") as bool? ?? false;
     public IReadOnlyList<RecentBoardCard> RecentBoardCards => _recentBoardCards;
     public IReadOnlyList<RecentPageCard> RecentPageCards => _recentPageCards;
@@ -401,6 +402,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 break;
             case "ToggleTheme":
                 ThemeToggleRequested?.Invoke();
+                break;
+            case "ToggleCanvasLock":
+                await ToggleCanvasLockAsync(cancellationToken);
                 break;
             case "AddInkDot":
                 AddInkStroke();
@@ -2417,9 +2421,29 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public bool SupportsFreeform => _session is ContractSessionAdapter;
 
-    public async Task AddCanvasBoxAsync()
+    public async Task ToggleCanvasLockAsync(CancellationToken cancellationToken = default)
     {
         if (!RequireEditMode()) return;
+        if (_session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", "Canvas layout locking needs the contract session");
+            return;
+        }
+        var locked = !CurrentPage().IsCanvasLocked;
+        await adapter.SetCanvasLockedAsync(SelectedPageId, locked, cancellationToken);
+        RefreshAfterEdit();
+    }
+
+    private bool RequireCanvasUnlocked()
+    {
+        if (!CurrentPage().IsCanvasLocked) return true;
+        Set("StatusText", "Canvas layout is locked. Unlock it to move or change boxes.");
+        return false;
+    }
+
+    public async Task AddCanvasBoxAsync()
+    {
+        if (!RequireEditMode() || !RequireCanvasUnlocked()) return;
         if (_session is not ContractSessionAdapter adapter)
         {
             Set("StatusText", "Freeform canvas needs the contract session");
@@ -2431,7 +2455,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task MoveCanvasBoxAsync(string objectId, double x, double y)
     {
-        if (!RequireEditMode()) return;
+        if (!RequireEditMode() || !RequireCanvasUnlocked()) return;
         if (_session is ContractSessionAdapter adapter)
             await adapter.MoveCanvasObjectAsync(SelectedPageId, objectId, x, y);
         RefreshAfterEdit();
@@ -2439,7 +2463,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task RemoveCanvasBoxAsync(string objectId)
     {
-        if (!RequireEditMode()) return;
+        if (!RequireEditMode() || !RequireCanvasUnlocked()) return;
         if (_session is ContractSessionAdapter adapter)
             await adapter.RemoveCanvasObjectAsync(SelectedPageId, objectId);
         RefreshAfterEdit();
@@ -2752,6 +2776,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("SectionListText", string.Join("  |  ", doc.Sections.Select(s => s.Title)));
             Set("PageListText", string.Join("  |  ", CurrentSection().Pages.Select(p => p.Title)));
             Set("PageTitle", page.Title);
+            Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock layout" : "Lock layout");
+            Set("CanvasLockStatus", page.IsCanvasLocked ? "Layout locked · unlock to move boxes; drawing remains available." : "Layout unlocked");
             Set("HeadingText", heading?.Text ?? string.Empty);
             Set("ParaText", para?.Text ?? string.Empty);
             Set("Check1Text", checks.Count > 0 ? checks[0].Text : string.Empty);

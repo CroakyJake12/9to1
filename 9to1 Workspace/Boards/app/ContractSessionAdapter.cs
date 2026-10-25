@@ -887,6 +887,21 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         finally { _mergeGate.Release(); }
     }
 
+    public async ValueTask SetCanvasLockedAsync(string pageId, bool locked,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.SetCanvasLocked(rich, pageId, locked), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     public async ValueTask RenameSectionAsync(string sectionId, string title,
         CancellationToken cancellationToken = default)
     {

@@ -1138,12 +1138,22 @@ public static class BlockRenderer
                 VerticalAlignment = VerticalAlignment.Center,
             });
         shell.Children.Add(header);
+        if (vm.IsCanvasLocked)
+            shell.Children.Add(new TextBlock
+            {
+                Text = "Layout locked · unlock to move boxes; drawing remains available.",
+                FontSize = 12,
+                Foreground = BoardsTheme.SecondaryTextBrush,
+                Margin = new Thickness(0, 0, 0, 4),
+            });
 
         if (boxes.Count == 0)
         {
             shell.Children.Add(new TextBlock
             {
-                Text = "No freeform objects yet — add a box to arrange ideas freely.",
+                Text = vm.IsCanvasLocked
+                    ? "No freeform objects yet — unlock the layout to add a box."
+                    : "No freeform objects yet — add a box to arrange ideas freely.",
                 FontSize = 13,
                 Foreground = BoardsTheme.SecondaryTextBrush,
                 Margin = new Thickness(0, 0, 0, 4),
@@ -1175,8 +1185,8 @@ public static class BlockRenderer
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(10),
-                IsHitTestVisible = vm.IsEditMode,
-                Focusable = vm.IsEditMode,
+                IsHitTestVisible = vm.IsEditMode && !vm.IsCanvasLocked,
+                Focusable = vm.IsEditMode && !vm.IsCanvasLocked,
             };
             border.Child = new TextBlock
             {
@@ -1195,6 +1205,7 @@ public static class BlockRenderer
             var dragOrigin = new Point();
             border.PointerPressed += (_, e) =>
             {
+                if (!vm.IsEditMode || vm.IsCanvasLocked) return;
                 dragging = true;
                 var position = e.GetPosition(canvas);
                 dragOffset = new Point(position.X - captured.X, position.Y - captured.Y);
@@ -1214,7 +1225,7 @@ public static class BlockRenderer
             };
             border.PointerMoved += (_, e) =>
             {
-                if (!dragging)
+                if (!dragging || vm.IsCanvasLocked)
                     return;
                 var position = e.GetPosition(canvas);
                 Canvas.SetLeft(border, Math.Max(0, position.X - dragOffset.X));
@@ -1234,6 +1245,7 @@ public static class BlockRenderer
             };
             border.KeyDown += async (_, e) =>
             {
+                if (!vm.IsEditMode || vm.IsCanvasLocked) return;
                 var step = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? 1 : 8;
                 var (dx, dy) = e.Key switch
                 {
@@ -1261,7 +1273,7 @@ public static class BlockRenderer
             Foreground = BoardsTheme.SecondaryTextBrush,
             FontSize = 13,
             Padding = new Thickness(8, 4),
-            IsVisible = vm.IsEditMode,
+            IsVisible = vm.IsEditMode && !vm.IsCanvasLocked,
         };
         ToolTip.SetTip(addBox, "Add a freeform box");
         Avalonia.Automation.AutomationProperties.SetName(addBox, "Add freeform box");
@@ -1275,7 +1287,7 @@ public static class BlockRenderer
             Foreground = BoardsTheme.SecondaryTextBrush,
             FontSize = 13,
             Padding = new Thickness(8, 4),
-            IsVisible = vm.IsEditMode,
+            IsVisible = vm.IsEditMode && !vm.IsCanvasLocked,
         };
         ToolTip.SetTip(removeBox, "Remove the selected box");
         Avalonia.Automation.AutomationProperties.SetName(removeBox, "Remove selected freeform box");
@@ -1287,7 +1299,7 @@ public static class BlockRenderer
         actions.Children.Add(removeBox);
         actions.Children.Add(new TextBlock
         {
-            Text = "Drag to move · arrow keys nudge",
+            Text = vm.IsCanvasLocked ? "Layout locked" : "Drag to move · arrow keys nudge",
             FontSize = 12,
             Foreground = BoardsTheme.SecondaryTextBrush,
             VerticalAlignment = VerticalAlignment.Center,
