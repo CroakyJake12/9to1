@@ -162,6 +162,57 @@ public sealed class CodeIntelligenceServiceTests : IDisposable
         Assert.Equal("// external edit\nclass C{ }\n", await File.ReadAllTextAsync(path));
     }
 
+    [Fact]
+    public void CapturedMSBuildOutputUsesMaintainedDecoderAndKeepsExactLocationsWithoutIOOrLanguageServer()
+    {
+        var absolute = Path.Combine(_root, "src", "NotOpened.cs");
+        var line = absolute + "(3,5,3,9): error CS1002: ; expected [sample.csproj]";
+        var report = ProductionCodeIntelligenceService.ParseCapturedBuildDiagnostics("build banner\r\n" + line + "\r\n" + line + "\n", _root);
+        var diagnostic = Assert.Single(report.Diagnostics);
+        Assert.Equal(Path.Combine("src", "NotOpened.cs"), diagnostic.RelativePath); Assert.Equal("CS1002", diagnostic.Code);
+        Assert.Equal(CodeDiagnosticSeverity.Error, diagnostic.Severity); Assert.Equal("; expected", diagnostic.Message);
+        Assert.Equal(new CodeRange(new(2, 4), new(2, 8)), diagnostic.Range);
+        Assert.Equal(1, report.UnmatchedLineCount); Assert.Equal(0, report.RejectedLineCount); Assert.False(report.Truncated);
+        Assert.False(File.Exists(absolute)); Assert.Equal(0, _servers.StartCount);
+    }
+
+    [Fact]
+    public void CapturedMSBuildOutputRejectsOverflowZeroReversedAndInvalidPathsButKeepsOtherReportedRows()
+    {
+        var output = "valid.cs(1,2): warning CS0168: unused\n" +
+            "bad.cs(999999999999999999999,1): error BAD: overflow\n" +
+            "bad.cs(0,1): error BAD: zero\n" + "bad.cs(2,5,1,2): error BAD: reversed\n" +
+            "bad\0.cs(1,1): error BAD: invalid path\n" + "other output format stays in terminal\n";
+        var report = ProductionCodeIntelligenceService.ParseCapturedBuildDiagnostics(output, _root);
+        var diagnostic = Assert.Single(report.Diagnostics); Assert.Equal("valid.cs", diagnostic.RelativePath);
+        Assert.Equal(CodeDiagnosticSeverity.Warning, diagnostic.Severity); Assert.Equal(new CodePosition(0, 1), diagnostic.Range.Start);
+        Assert.Equal(4, report.RejectedLineCount); Assert.Equal(1, report.UnmatchedLineCount); Assert.False(report.Truncated);
+    }
+
+    [Fact]
+    public void ExistingBuildServiceDecoderKeepsAllValidRowsWhileCapturedWorkbenchEntryIsBounded()
+    {
+        var rows = Enumerable.Range(0, 201).Select(index => $"src/{index}.cs(1,1): error TEST: reported").ToArray();
+        var output = string.Join("\n", rows.Concat([rows[0]]));
+        var original = ProductionCodeIntelligenceService.ParseBuildDiagnostics(output, _root);
+        Assert.Equal(202, original.Count); Assert.Equal(original[0], original[^1]);
+        var captured = ProductionCodeIntelligenceService.ParseCapturedBuildDiagnostics(output, _root);
+        Assert.Equal(200, captured.Diagnostics.Count); Assert.True(captured.Truncated);
+    }
+
+    [Fact]
+    public void CapturedMSBuildOutputBoundsRowsAndInputAndHonoursOriginalCancellation()
+    {
+        var output = string.Join("\n", Enumerable.Range(0, 201).Select(index => $"src/{index}.cs(1,1): error TEST: reported"));
+        var report = ProductionCodeIntelligenceService.ParseCapturedBuildDiagnostics(output, _root);
+        Assert.Equal(200, report.Diagnostics.Count); Assert.True(report.Truncated);
+        var longInput = ProductionCodeIntelligenceService.ParseCapturedBuildDiagnostics(new string('x', 2_100_000), _root);
+        Assert.Empty(longInput.Diagnostics); Assert.True(longInput.Truncated); Assert.Equal(1, longInput.RejectedLineCount);
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        Assert.Throws<OperationCanceledException>(() => { _ = ProductionCodeIntelligenceService.ParseCapturedBuildDiagnostics(output, _root, cancelled.Token); });
+        Assert.Equal(0, _servers.StartCount);
+    }
+
     /// <summary>
     /// Performs the dispose step owned by this component.
     /// </summary>

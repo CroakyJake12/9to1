@@ -106,9 +106,10 @@ public sealed partial class DeveloperProjectWorkbenchPage
                                 body => InvokeOriginalSource(() => { body(); return true; }), stop.Token))).ConfigureAwait(false);
                             // Preserve output/lifecycle before any presentation or cleanup failure.
                             lock (_gate) { OriginalManualRunObservation = observedManual; _originalManualRuns.Add(observedManual); }
+                            var manualProblems = await CaptureBuildProblemsAsync(original, project, observedManual, observedManual.Process).ConfigureAwait(false);
                             await PublishAsync(original, () =>
                             {
-                                _project = project;
+                                _project = project; _buildProblems = manualProblems;
                                 _processStatus = observedManual.ProcessSucceeded ? "Original manual console process exited 0 and its owners closed."
                                     : observedManual.Process is { } process ? $"Manual console process exited {process.ExitCode}; timed out: {process.TimedOut}. Inspect its outcome and lifecycle."
                                     : "No original process result proves this manual Run succeeded. Inspect the retained operation.";
@@ -128,9 +129,10 @@ public sealed partial class DeveloperProjectWorkbenchPage
                         project.Reference, context, selected.Configuration.Id, selected.Configuration.Revision, selected.DefinitionSha256, _businessToken), _businessToken);
                     var observed = DemandValue(await original.AwaitAsync(operation).ConfigureAwait(false));
                     OriginalDeveloperObservation = observed;
+                    var buildProblems = await CaptureBuildProblemsAsync(original, project, observed, observed.OriginalProcessResult).ConfigureAwait(false);
                     await PublishAsync(original, () =>
                     {
-                        _project = project; SetProcessObservation(observed);
+                        _project = project; SetProcessObservation(observed, buildProblems);
                         _status = observed.RequiresOutcomeInspection ? "The original Run outcome needs inspection and will not be replayed automatically."
                             : observed.ProcessSucceeded is true ? "The selected console target completed successfully in the existing task."
                             : observed.ProcessSucceeded is false ? "The selected console target failed or timed out. Inspect its actual output."

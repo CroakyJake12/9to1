@@ -54,6 +54,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                         lock (_gate) { OriginalManualGitObservation = observed; _originalManualGit.Add(observed); }
                         await PublishAsync(original, () =>
                         {
+                            _buildProblems = null;
                             _processStatus = observed.ProcessSucceeded ? "Git inspection finished."
                                 : observed.Process is { TimedOut: true } ? "Git timed out. Its output is kept below."
                                 : observed.Process is { } process ? $"Git exited with code {process.ExitCode}. Check the output below."

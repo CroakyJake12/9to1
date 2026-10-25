@@ -226,6 +226,13 @@
       </Container>
       <Button id="dev-stop-manual-run" action="dev.stop-manual-run" content="Stop command" Interactive="{Binding CanStopManualRun}" />
       <Text text="{Binding ProcessStatus}" text-wrapping="Wrap" accessible-name="Observed command exit and timeout" />
+      <Text text="Reported problems" font-size="18" />
+      <Text text="{Binding BuildProblemsStatus}" text-wrapping="Wrap" accessible-name="Reported build problems status and source limitations" />
+      <Container Type="Vertical Stack" max-height="240" VerticalScrolling="True" accessible-name="Reported command problems in .NET or MSBuild format">
+        <Repeat id="dev-build-problems" Source="{Binding BuildProblems}" As="problem" Key="{Binding problem.SelectionKey}">
+          <Button id="dev-open-build-problem" action="dev.open-build-problem" content="{Binding problem.Label}" accessible-name="{Binding problem.AccessibleName}" Interactive="{Binding problem.CanOpen}" horizontal-content-alignment="Left" />
+        </Repeat>
+      </Container>
       <Object type="ReadOnlyText" id="dev-terminal-output" text="{Binding ProcessOutput}" font-family="monospace" min-height="180" accessible-name="Actual standard output and error" />
       <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Development operation status" />
     </Container>
