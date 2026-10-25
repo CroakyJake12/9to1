@@ -604,6 +604,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     }
 
     public void RequestRetirement() => _work.RequestRetirement();
+    public Task? OriginalClose => _work.OriginalClose;
     public Task CloseAndDrainAsync() { DemandExternalOriginalRetirementJoin(); return _work.CloseAndDrainAsync(); }
     private Task StopOriginalPresentationAsync()
     {
