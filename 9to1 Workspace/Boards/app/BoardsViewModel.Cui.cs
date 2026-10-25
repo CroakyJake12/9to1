@@ -37,9 +37,11 @@ public sealed partial class BoardsViewModel
         Set("ContextCanMoveColumnLeft", cellKey is not null && !block!.HasMergedCells && column > 0);
         Set("ContextCanMoveColumnRight", cellKey is not null && !block!.HasMergedCells && column < block!.TableCols - 1);
         Set("ContextCanAddTableRow", block is { Kind: "table", TableRows: < 100 });
-        Set("ContextCanDeleteTableRow", block is { Kind: "table", HasMergedCells: false, TableRows: > 1 });
+        Set("ContextCanDeleteTableRow", block is { Kind: "table", TableRows: > 1 } &&
+            !TableEdgeIntersectsMerge(block!, rowEdge: true));
         Set("ContextCanAddTableColumn", block is { Kind: "table", TableCols: < 50 });
-        Set("ContextCanDeleteTableColumn", block is { Kind: "table", HasMergedCells: false, TableCols: > 1 });
+        Set("ContextCanDeleteTableColumn", block is { Kind: "table", TableCols: > 1 } &&
+            !TableEdgeIntersectsMerge(block!, rowEdge: false));
         Set("ContextCanChangeTableStructure", block is { Kind: "table", HasMergedCells: false });
         Set("ContextCanMergeCellRight", cellSpan?.CanMergeRight == true);
         Set("ContextCanMergeCellDown", cellSpan?.CanMergeDown == true);
@@ -81,6 +83,27 @@ public sealed partial class BoardsViewModel
         Set("ContextIsDivider", block?.Kind == "divider");
         Set("ContextVisible", _isEditMode && (block?.Kind is "table" or "image" or "divider"));
         RefreshCuiBlockActions();
+    }
+
+    private static bool TableEdgeIntersectsMerge(RichBoardBlock block, bool rowEdge)
+    {
+        if (block.Kind != "table") return true;
+        var row = block.TableRows - 1;
+        var column = block.TableCols - 1;
+        var edgeLength = rowEdge ? block.TableCols : block.TableRows;
+        var foundSpanData = false;
+        for (var index = 0; index < edgeLength; index++)
+        {
+            var key = rowEdge ? $"{row},{index}" : $"{index},{column}";
+            if (!block.CellSpans.TryGetValue(key, out var span)) continue;
+            foundSpanData = true;
+            if (span.CoveredByCellId is not null || span.RowSpan > 1 || span.ColumnSpan > 1)
+                return true;
+        }
+        // Older projections may not provide per-cell spans. If the table says
+        // it contains merges but the target edge cannot be inspected, refuse
+        // the destructive action rather than guess that it is safe.
+        return !foundSpanData && block.HasMergedCells;
     }
 
     private bool _blockActionBusy;

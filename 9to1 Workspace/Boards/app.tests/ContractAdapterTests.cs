@@ -392,8 +392,8 @@ public sealed class ContractAdapterTests
                 viewModel.FocusCell(blockId, 0, 0);
                 Assert.True(viewModel.TryGetValue("ContextCanAddTableRow", out var canAddRow) && canAddRow is true);
                 Assert.True(viewModel.TryGetValue("ContextCanAddTableColumn", out var canAddColumn) && canAddColumn is true);
-                Assert.True(viewModel.TryGetValue("ContextCanDeleteTableRow", out var canDeleteRow) && canDeleteRow is false);
-                Assert.True(viewModel.TryGetValue("ContextCanDeleteTableColumn", out var canDeleteColumn) && canDeleteColumn is false);
+                Assert.True(viewModel.TryGetValue("ContextCanDeleteTableRow", out var canDeleteRow) && canDeleteRow is true);
+                Assert.True(viewModel.TryGetValue("ContextCanDeleteTableColumn", out var canDeleteColumn) && canDeleteColumn is true);
 
                 await viewModel.DispatchAsync("ContextAddRow", null);
                 var rowAppendedDocument = await adapter.GetDetachedContractDocumentAsync();
@@ -441,6 +441,38 @@ public sealed class ContractAdapterTests
             Assert.Equal("Covered content", reopenedTable.Rows[0].Cells[1].Text);
             Assert.Equal(originalCellIds, reopenedTable.Rows.Take(originalRows)
                 .SelectMany(row => row.Cells.Take(originalColumns)).Select(cell => cell.Id));
+
+            var reopenedViewModel = new BoardsViewModel(reopened);
+            reopenedViewModel.FocusBlock(blockId);
+            reopenedViewModel.FocusCell(blockId, 0, 0);
+            Assert.True(reopenedViewModel.TryGetValue("ContextCanDeleteTableRow", out var reopenedCanDeleteRow) && reopenedCanDeleteRow is true);
+            Assert.True(reopenedViewModel.TryGetValue("ContextCanDeleteTableColumn", out var reopenedCanDeleteColumn) && reopenedCanDeleteColumn is true);
+            await reopenedViewModel.DispatchAsync("ContextDeleteRow", null);
+            var afterDeleteRowDocument = await reopened.GetDetachedContractDocumentAsync();
+            var afterDeleteRow = afterDeleteRowDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                .Single(candidate => candidate.Id == blockId).Table!;
+            Assert.Equal(originalRows, afterDeleteRow.Rows.Count);
+            Assert.Equal(originalColumns + 1, afterDeleteRow.Rows[0].Cells.Count);
+            Assert.Equal(2, afterDeleteRow.Rows[0].Cells[0].ColumnSpan);
+            await reopenedViewModel.DispatchAsync("ContextDeleteColumn", null);
+            var deletedEdgesDocument = await reopened.GetDetachedContractDocumentAsync();
+            var deletedEdges = deletedEdgesDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                .Single(candidate => candidate.Id == blockId).Table!;
+            Assert.Equal(originalRows, deletedEdges.Rows.Count);
+            Assert.Equal(originalColumns, deletedEdges.Rows[0].Cells.Count);
+            Assert.Equal(originalCellIds[0], deletedEdges.Rows[0].Cells[0].Id);
+            Assert.Equal(originalCellIds[1], deletedEdges.Rows[0].Cells[1].Id);
+            Assert.Equal(2, deletedEdges.Rows[0].Cells[0].ColumnSpan);
+            Assert.Equal(deletedEdges.Rows[0].Cells[0].Id, deletedEdges.Rows[0].Cells[1].CoveredByCellId);
+            Assert.True(await reopened.UndoAsync());
+            Assert.True(await reopened.UndoAsync());
+            var restoredEdgesDocument = await reopened.GetDetachedContractDocumentAsync();
+            var restoredEdges = restoredEdgesDocument.RichNotes!.Sections[0].Pages[0].Blocks
+                .Single(candidate => candidate.Id == blockId).Table!;
+            Assert.Equal(originalRows + 1, restoredEdges.Rows.Count);
+            Assert.Equal(originalColumns + 1, restoredEdges.Rows[0].Cells.Count);
+            Assert.Equal(2, restoredEdges.Rows[0].Cells[0].ColumnSpan);
+            await reopened.SaveAsync();
         }
         finally { DeleteDirectory(root); }
     }
