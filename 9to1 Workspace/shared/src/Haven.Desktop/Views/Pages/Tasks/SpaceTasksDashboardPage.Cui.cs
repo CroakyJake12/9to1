@@ -17,7 +17,7 @@ namespace Haven.Desktop.Views.Pages.Tasks;
 public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindingContext,
     ICuiActionDispatcher, ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
-    private readonly CuiControlLoader _loader;
+    private CuiControlLoader? _loader;
     private readonly Action<Action> _ownCallback;
     private readonly Action _demandWrite;
     private readonly Guid _spaceId;
@@ -26,9 +26,21 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     private long _instructionVersion;
     private bool _busy, _canDelegate, _canBlank, _retired;
     private Task? _close;
+    private Exception? _loadFailure;
     public SpaceTasksDashboardCuiScene(Guid spaceId, Action<Action> ownCallback, Action demandWrite)
     {
         _spaceId = spaceId; _ownCallback = ownCallback; _demandWrite = demandWrite;
+    }
+    internal void Initialize()
+    {
+        Dispatcher.UIThread.VerifyAccess(); _demandWrite();
+        if (_loadFailure is { } prior) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(prior).Throw();
+        if (Root is not null) return;
+        try { LoadOriginal(); }
+        catch (Exception cause) { _loadFailure = cause; throw; }
+    }
+    private void LoadOriginal()
+    {
         using var stream = typeof(SpaceTaskWorkspaceService).Assembly.GetManifestResourceStream("HavenOS.Apps.Spaces.UI.Tasks.SpaceTasksDashboard.cui")
             ?? throw new InvalidDataException("The authored Tasks dashboard CUI is missing.");
         using var reader = new StreamReader(stream);
@@ -156,9 +168,12 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     {
         // Page-owned work has already joined. Retain both the accepted action cohort and
         // the loader's actual terminal cohort before releasing the authored root.
-        await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
-        await Dispatcher.UIThread.InvokeAsync(_loader.Dispose).GetTask().ConfigureAwait(false);
-        await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
+        if (_loader is { } loader)
+        {
+            await loader.WhenActionsIdleAsync().ConfigureAwait(false);
+            await Dispatcher.UIThread.InvokeAsync(loader.Dispose).GetTask().ConfigureAwait(false);
+            await loader.WhenActionsIdleAsync().ConfigureAwait(false);
+        }
         await Dispatcher.UIThread.InvokeAsync(() => { Content = null; Root = null; }).GetTask().ConfigureAwait(false);
     }
 }

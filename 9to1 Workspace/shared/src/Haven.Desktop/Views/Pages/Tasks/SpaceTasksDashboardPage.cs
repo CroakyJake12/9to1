@@ -92,6 +92,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         {
             original.BindPublicationGuard(() => IsCurrent(generation));
             using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
+            await DispatchOriginalAsync(original, _scene.Initialize).ConfigureAwait(false);
             original.DemandPublication();
             lock (_gate)
             {
