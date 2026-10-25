@@ -126,6 +126,8 @@ public static class CuiThemeResourceApplier
         SetBrush("CuiInputSurfaceBrush", input);
         SetBrush("CuiSuccessBrush", success);
         SetBrush("CuiInformationBrush", information);
+        SetBrush("CuiAttentionBrush", palette.Attention);
+        SetBrush("CuiAttentionBorderBrush", palette.AttentionBorder);
 
         // === Aliased names for backward compatibility ===
         SetBrush("StrokeBrush", palette.LineStrong);
@@ -232,6 +234,8 @@ public static class CuiThemeResourceApplier
         resources["CuiInputSurfaceBrush"] = new SolidColorBrush(InputSurface(palette));
         resources["CuiSuccessBrush"] = new SolidColorBrush(Color.Parse(isDark ? "#FF76D7A0" : "#FF147A48"));
         resources["CuiInformationBrush"] = new SolidColorBrush(palette.AccentSecondary);
+        resources["CuiAttentionBrush"] = new SolidColorBrush(palette.Attention);
+        resources["CuiAttentionBorderBrush"] = new SolidColorBrush(palette.AttentionBorder);
         resources["CuiControlRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale)));
         resources["CuiCardRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BaseCardRadius * expression.CardRadiusScale)));
         resources["CuiPopupRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BasePopupRadius * expression.PopupRadiusScale)));
@@ -510,6 +514,8 @@ public static class CuiThemeResourceApplier
             ("HavenStateHoverBrush", "CuiButtonHoverBrush"),
             ("HavenStatePressedBrush", "CuiButtonPressedBrush"),
             ("HavenStateSelectedBrush", "CuiSelectionBrush"),
+            ("HavenAttentionBrush", "CuiAttentionBrush"),
+            ("HavenAttentionBorderBrush", "CuiAttentionBorderBrush"),
             ("HavenAccentForegroundBrush", "CuiAccentForegroundBrush"),
             ("HavenTextBrush", "CuiTextBrush"), ("HavenTextSoftBrush", "CuiTextSoftBrush"),
             ("HavenTextPrimaryBrush", "CuiTextBrush"), ("HavenTextSecondaryBrush", "CuiTextSoftBrush"),
