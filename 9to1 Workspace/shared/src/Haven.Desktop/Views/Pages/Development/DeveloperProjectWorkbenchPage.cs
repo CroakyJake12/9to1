@@ -42,6 +42,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private readonly bool _manual;
     private readonly DeveloperManualSourceReadOwner? _manualReader;
     private readonly DeveloperManualSourceEditOwner? _manualEditor;
+    private readonly DeveloperManualProjectProcessOwner? _manualProcessOwner;
     private readonly FileDeveloperWorkspaceStore? _editorSessionStore;
     private readonly FilesDeveloperOriginalCurrentProjectExecutionBridge? _editorSessionExecution;
     private bool _cleanSessionLoaded, _cleanSessionBlocked;
@@ -195,10 +196,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     }
 
     /// <summary>Manual (no-AI) workbench admission. It opens a resolved saved project by its real
-    /// stored identity with no Task/Run/context/model and no generation. Reads/search are confined
-    /// file observations over the actual project root; source edits and process execution are NOT
-    /// offered here (they require a separate current authorized Task/execution authority and fail
-    /// closed). The same compiled-CUI workbench document and host are used.</summary>
+    /// stored identity with no Task/Run/context/model and no generation. Reads, source writes and
+    /// declared console Run each require their genuine separately composed Home/Files owners.
+    /// The same compiled-CUI workbench document and host are used.</summary>
     internal DeveloperProjectWorkbenchPage(DeveloperTaskWorkspaceService development, TaskExecutionCoordinator canonical,
         DeveloperResolvedProject actualProject, ICuiSceneReadiness? readiness,
         Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> resolveOriginalDocument,
@@ -210,12 +210,14 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         FileDeveloperWorkspaceStore? editorSessionStore = null,
         FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
         IProviderSecretStore? originalRecoveryKeys = null,
-        IAppPaths? originalRecoveryPaths = null)
+        IAppPaths? originalRecoveryPaths = null,
+        DeveloperManualProjectProcessOwner? manualProcessOwner = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
         _project = actualProject ?? throw new ArgumentNullException(nameof(actualProject));
-        // Manual admission: no Task/Run/context. The real saved project identity IS the admission.
+        // No Task/Run/context is fabricated. Saved identity selects a project; each read,
+        // write and console Run still requires its genuine independent Home admission.
         _taskId = Guid.Empty; _runId = Guid.Empty; _contextId = Guid.Empty;
         if (readiness is null && createOriginalReadinessChild is null) throw new ArgumentNullException(nameof(readiness));
         _readiness = readiness!;
@@ -224,6 +226,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _businessToken = explicitBusinessCancellationToken;
         _manual = true;
         _manualReader = manualReader ?? throw new ArgumentNullException(nameof(manualReader));
+        _manualProcessOwner = manualProcessOwner;
         _manualEditor = manualEditor; // Optional: without it manual preview/apply fail closed (genuine owners unconfigured).
         _manualRecoveryKeys = originalRecoveryKeys;
         _manualRecoveryPaths = originalRecoveryPaths;
@@ -487,9 +490,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     {
         lock (_gate)
         {
-            if (!_active || _work.IsRetiring || _pending) return false;
+            if (!_active || _work.IsRetiring) return false;
+            if (command == "dev.stop-manual-run") return _manualRunStop is not null && !_manualRunStop.IsCancellationRequested;
+            if (_pending) return false;
             if (command == "dev.select-run-target") return DeveloperRunConfigurationSelection.Observe(_project) is { Succeeded: true, Value.Count: > 0 };
-            if (command == "dev.run-selected-target") return !_manual && IsSelectedRunTargetCurrent(_project);
+            if (command == "dev.run-selected-target") return (!_manual || _manualProcessOwner is not null) && IsSelectedRunTargetCurrent(_project);
             if (command == "dev.review-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && HasNewFileSlot(_newFileName) && DeveloperNewSourceFile.Prepare(_newFileName, _newFileCuiTemplate).Succeeded;
             if (command == "dev.create-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && CurrentNewFileReview();
             if (command == "dev.select-cui-property") return CurrentCuiPropertyInspection()?.Properties.Take(100).Any(property => property.CanEdit) == true;
@@ -551,6 +556,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     {
         if (command == "dev.select-run-target") return SelectRunTarget(parameter);
         if (command == "dev.run-selected-target") return RunSelectedTargetAsync(cancellationToken);
+        if (command == "dev.stop-manual-run") return StopManualRun();
         if (command is "dev.review-new-source-file" or "dev.create-new-source-file") return DispatchNewSourceFileAsync(command, cancellationToken);
         if (command == "dev.select-cui-property") return SelectCuiProperty(parameter);
         if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);
@@ -1323,6 +1329,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _demandOriginalDocumentSourceJoin(); // Pure actual Files resolver guard; never global source retirement.
         _readinessChildGuard?.DemandExternalOriginalRetirementJoin();
         _taskRecoveryOwner?.DemandExternalOriginalJoin();
+        _manualProcessOwner?.DemandExternalOriginalJoin();
     }
     public void RequestRetirement() => _work.RequestRetirement();
     public Task CloseAndDrainAsync() { DemandExternalOriginalRetirementJoin(); return _work.CloseAndDrainAsync(); }

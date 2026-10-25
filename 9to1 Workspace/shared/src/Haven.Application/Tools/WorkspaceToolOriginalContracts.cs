@@ -49,6 +49,9 @@ public interface IWorkspaceOriginalInvocationSource : IWorkspaceToolService
 {
     IWorkspaceOriginalInvocation AcquireOriginalInvocation(IWorkspaceToolFinalFence originalFence);
     bool IsIssuedOriginal(IWorkspaceOriginalInvocation originalInvocation);
+    /// <summary>Exact private invocation/final-fence provenance. Older implementations remain
+    /// unsupported; a genuine outcome from another operation never completes this manual Run.</summary>
+    bool IsIssuedOriginalForFence(IWorkspaceOriginalInvocation originalInvocation, IWorkspaceToolFinalFence sameFence) => false;
     bool ValidateOriginalOutcome(IWorkspaceOriginalInvocation originalInvocation, WorkspaceToolPhysicalOutcome originalOutcome);
 }
 
