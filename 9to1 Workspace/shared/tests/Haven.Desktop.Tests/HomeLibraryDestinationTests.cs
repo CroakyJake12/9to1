@@ -115,6 +115,7 @@ public sealed class HomeLibraryDestinationTests
             var pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "home-library-toggle-pin");
             pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
             var pinned = Assert.Single(page.Current!.Items);
+            Assert.Equal(index.Rows.Single().ArtifactId, pinned.ArtifactId);
             Assert.True(pinned.IsPinned); Assert.True(preferences.IsPinned("boards", pinned.ArtifactId));
             Assert.True(authorization.Reads >= 2); // Search and the fresh pin action both recheck current read access.
             Assert.Single(index.Rows); // Pinning a reference never creates a copied artifact.
