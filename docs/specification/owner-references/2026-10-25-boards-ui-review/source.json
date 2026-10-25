@@ -1,0 +1,11 @@
+{
+  "source": "owner-uploaded attachment",
+  "filename": "Boards_UI_Design_Review.pdf",
+  "received_at": "2026-10-25T14:56:46.990981+00:00",
+  "bytes": 337641,
+  "sha256": "ddd25dcd0eefae7fc85520c70d69a25635efab679af617d8db08dfc665de3f01",
+  "status": "REFERENCE_REVIEWED_IMPLEMENTATION_IN_PROGRESS",
+  "canonical_spec_replaced": false,
+  "full_acceptance_resumed": false,
+  "current_ui_validation": "Pending affected source and runtime checks; document supplies historical visual evidence only"
+}
