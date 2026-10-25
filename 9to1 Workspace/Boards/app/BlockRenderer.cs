@@ -489,7 +489,7 @@ public static class BlockRenderer
         CuiPropertyPresentation.Set(check, "MinHeight", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
         CuiPropertyPresentation.Set(check, "MaxWidth", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
         CuiPropertyPresentation.Set(check, "MaxHeight", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "Margin", new Thickness(0, ChecklistCheckboxFirstLineOffset, 10, 0),
+        CuiPropertyPresentation.Set(check, "Margin", new Thickness(0, ChecklistCheckboxFirstLineOffset, ChecklistCheckboxTextGap, 0),
             CuiPropertyLevel.Instance, checklistGeometrySource);
         AutomationProperties.SetName(check, "Checklist item done");
         var text = new TextBox
