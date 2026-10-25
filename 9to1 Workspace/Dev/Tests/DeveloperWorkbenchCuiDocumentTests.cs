@@ -104,6 +104,22 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
     }
 
     [Fact]
+    public void Saved_stage_authoring_has_separate_review_save_and_execution_actions()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        foreach (var name in new[] { "new-compile-stage", "new-test-stage", "edit-build-stage", "review-build-stage", "save-build-stage" })
+        {
+            var button = Assert.Single(nodes, node => node.Name == "dev-" + name);
+            Assert.Contains(button.Actions.Values, action => action.Name == "dev." + name);
+        }
+        var save = Assert.Single(nodes, node => node.Name == "dev-save-build-stage");
+        Assert.Contains(save.Properties.Values, value => value is CuiBindingValue binding && binding.Path == "CanSaveBuildStage");
+        var reviewed = Assert.Single(nodes, node => node.Name == "dev-stage-edit-review");
+        Assert.Equal("Object", reviewed.Type); Assert.Contains(reviewed.Properties.Values, value => value is CuiBindingValue binding && binding.Path == "StageEditReview");
+        var run = Assert.Single(nodes, node => node.Name == "dev-build-stage"); Assert.Contains(run.Actions.Values, action => action.Name == "dev.run-stage");
+    }
+
+    [Fact]
     public void Maintained_document_parses_and_exposes_all_real_project_editor_and_command_actions()
     {
         var document = DeveloperWorkbenchCuiDocument.Load();
@@ -118,7 +134,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
             "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.preview-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.add-cui-text-child", "dev.move-cui-text-up", "dev.move-cui-text-down", "dev.remove-cui-text", "dev.check-line-endings", "dev.use-lf-endings", "dev.use-crlf-endings", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.new-run-target", "dev.edit-run-target", "dev.review-run-target", "dev.save-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
-            "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.open-build-problem", "dev.create-branch",
+            "dev.run-tests", "dev.select-build-stage", "dev.new-compile-stage", "dev.new-test-stage", "dev.edit-build-stage", "dev.review-build-stage", "dev.save-build-stage", "dev.run-stage", "dev.open-build-problem", "dev.create-branch",
             "dev.switch-branch"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
         Assert.Equal(nodes.Length, nodes.Select(value => value.StableId).Distinct().Count());

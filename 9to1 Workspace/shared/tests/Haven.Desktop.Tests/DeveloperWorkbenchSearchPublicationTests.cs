@@ -1223,7 +1223,55 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
-    private static async Task<DeveloperProjectWorkbenchPage> ManualFileNavigationPage(Fixture fixture, ActualReaderFixture reader)
+    [AvaloniaFact]
+    public async Task Manual_stage_authoring_reviews_saves_same_project_then_runs_only_after_separate_permission()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine Home/Files/kernel fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(true); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            page = await ManualFileNavigationPage(f, reader, configureMetadata: true);
+            page.TrySetValue("SourcePath", "seed.txt"); var open = page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(open); await open; var tab = Assert.Single(NativeSourceTabs(page));
+            await page.DispatchAsync("dev.new-compile-stage", null, OriginalTestBodyToken);
+            page.TrySetValue("StageEditTaskId", "build"); page.TrySetValue("StageEditStageId", "compile");
+            page.TrySetValue("StageEditCommand", "printf 'native configured stage'; printf built > native-configured.txt"); page.TrySetValue("StageEditTimeout", "20");
+            Assert.False(page.IsActionAvailable("dev.save-build-stage"));
+            await page.DispatchAsync("dev.review-build-stage", null, OriginalTestBodyToken); Assert.True(page.IsActionAvailable("dev.save-build-stage"));
+            page.TrySetValue("StageEditTimeout", "25"); Assert.False(page.IsActionAvailable("dev.save-build-stage"));
+            await page.DispatchAsync("dev.review-build-stage", null, OriginalTestBodyToken);
+            var save = page.DispatchAsync("dev.save-build-stage", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(save); await save;
+            var saved = Assert.IsType<DeveloperBuildStageEditObservation>(typeof(DeveloperProjectWorkbenchPage).GetProperty("OriginalBuildStageEdit")!.GetValue(page));
+            Assert.True(saved.OriginalStoreResult!.Succeeded, saved.OriginalStoreResult.Error?.Message); Assert.Empty(saved.OriginalErrors);
+            var current = saved.OriginalStoreResult.Value!.Project;
+            Assert.False(File.Exists(Path.Combine(current.Root.Location, "native-configured.txt")));
+            Assert.True(page.IsActionAvailable("dev.run-stage")); Assert.Same(tab, Assert.Single(NativeSourceTabs(page)));
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("existing independent source\n", draft);
+            var run = page.DispatchAsync("dev.run-stage", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(run); await reader.AcceptExecute(run); await run;
+            Assert.True(page.TryGetValue("ProcessOutput", out var output)); Assert.Contains("native configured stage", Assert.IsType<string>(output));
+            Assert.Equal("built", await File.ReadAllTextAsync(Path.Combine(current.Root.Location, "native-configured.txt"), OriginalTestBodyToken));
+            Assert.True(page.IsActionAvailable("dev.edit-build-stage")); await page.DispatchAsync("dev.edit-build-stage", null, OriginalTestBodyToken);
+            page.TrySetValue("StageEditCommand", "printf 'edited stage'; printf edited > native-configured.txt");
+            await page.DispatchAsync("dev.review-build-stage", null, OriginalTestBodyToken);
+            var editSave = page.DispatchAsync("dev.save-build-stage", null, OriginalTestBodyToken).AsTask(); await reader.AcceptRead(editSave); await editSave;
+            var edited = Assert.IsType<DeveloperBuildStageEditObservation>(typeof(DeveloperProjectWorkbenchPage).GetProperty("OriginalBuildStageEdit")!.GetValue(page));
+            Assert.True(edited.OriginalStoreResult!.Succeeded); Assert.Equal(2, edited.OriginalStoreResult.Value!.Task.Revision);
+            Assert.Contains("edited stage", Assert.Single(edited.OriginalStoreResult.Value.Task.Stages).Command!);
+            Assert.Equal("built", await File.ReadAllTextAsync(Path.Combine(current.Root.Location, "native-configured.txt"), OriginalTestBodyToken));
+            Assert.Same(tab, Assert.Single(NativeSourceTabs(page)));
+            Assert.Equal(Guid.Empty, SearchPublicationField("_taskId").GetValue(page)); Assert.Equal(0, f.Owner.ExecuteCalls);
+            Assert.Equal(0, f.Tools.ReadCalls); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    private static async Task<DeveloperProjectWorkbenchPage> ManualFileNavigationPage(Fixture fixture, ActualReaderFixture reader, bool configureMetadata = false)
     {
         await fixture.Dev.CloseAndDrainAsync();
         fixture.Dev = new(reader.SavedStore!, new(fixture.ConversationSource, fixture.Containers), fixture.Tasks, fixture.Owner, new(fixture.Tools));
@@ -1232,14 +1280,15 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var constructor = typeof(DeveloperProjectWorkbenchPage).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
             .Single(value => value.GetParameters().Length == 16 && value.GetParameters()[9].ParameterType == typeof(DeveloperManualSourceReadOwner));
         var page = (DeveloperProjectWorkbenchPage)constructor.Invoke([fixture.Dev, fixture.Tasks, reader.Saved!, new SearchPublicationNoReadiness(), unused,
-            (Action)(() => { }), OriginalTestBodyToken, null, null, reader.Owner, null, null, null, null, null, reader.ProcessOwner]);
+            (Action)(() => { }), OriginalTestBodyToken, null, null, reader.Owner, null, configureMetadata ? reader.SavedStore : null, null,
+            configureMetadata ? reader.Keys : null, configureMetadata ? reader.Paths : null, reader.ProcessOwner]);
         SearchPublicationField("_active").SetValue(page, true); // Command component only; no native frame witness.
         return page;
     }
 
     private sealed record ActualReaderFixture(DeveloperManualSourceReadOwner Owner, IAsyncDisposable Lifetime,
         DeveloperResolvedProject? Saved, FileDeveloperWorkspaceStore? SavedStore, Func<Task, Task> AcceptRead, Func<Task, Task> ObserveRead,
-        DeveloperManualProjectProcessOwner ProcessOwner, Func<Task, Task> AcceptExecute);
+        DeveloperManualProjectProcessOwner ProcessOwner, Func<Task, Task> AcceptExecute, IProviderSecretStore? Keys, IAppPaths? Paths);
     private static async Task<ActualReaderFixture> ActualOptionalReaderFixture(bool canonicalSavedProject = false, bool savedStages = false)
     {
         var type = typeof(Haven.Desktop.Tests.FilesDeveloperOriginalSourcePublicationTests)
@@ -1281,7 +1330,9 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             return new(reader, (IAsyncDisposable)rig,
                 canonicalSavedProject ? (DeveloperResolvedProject)type.GetProperty("Saved", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(rig)! : null,
                 canonicalSavedProject ? (FileDeveloperWorkspaceStore)type.GetProperty("SavedStore", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(rig)! : null,
-                AcceptRead, ObserveRead, (DeveloperManualProjectProcessOwner)Required(typeof(DeveloperManualProjectProcessOwner)), AcceptExecute);
+                AcceptRead, ObserveRead, (DeveloperManualProjectProcessOwner)Required(typeof(DeveloperManualProjectProcessOwner)), AcceptExecute,
+                canonicalSavedProject ? (IProviderSecretStore)Required(typeof(IProviderSecretStore)) : null,
+                canonicalSavedProject ? (IAppPaths)Required(typeof(IAppPaths)) : null);
         }
         catch { await ((IAsyncDisposable)rig).DisposeAsync(); throw; }
     }

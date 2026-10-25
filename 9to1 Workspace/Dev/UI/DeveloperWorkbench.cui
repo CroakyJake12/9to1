@@ -224,6 +224,21 @@
         </Container>
       </Repeat>
       <Text text="{Binding SelectedBuildStageSummary}" text-wrapping="Wrap" accessible-name="Selected saved stage command environment revision and dependencies" />
+      <Text text="Configure a Compile or Test stage" font-size="18" />
+      <Text text="{Binding StageEditStatus}" text-wrapping="Wrap" />
+      <Container Type="Wrap" CellGap="6">
+        <Button id="dev-new-compile-stage" action="dev.new-compile-stage" content="New Compile task" Interactive="{Binding CanConfigureBuildStage}" />
+        <Button id="dev-new-test-stage" action="dev.new-test-stage" content="New Test task" Interactive="{Binding CanConfigureBuildStage}" />
+        <Button id="dev-edit-build-stage" action="dev.edit-build-stage" content="Edit selected stage" Interactive="{Binding CanEditBuildStage}" />
+      </Container>
+      <Text text="{Binding StageEditKind}" accessible-name="Stage kind" />
+      <Input id="dev-stage-edit-task" Type="Text" Value="{Binding StageEditTaskId}" accessible-name="Stable saved task ID" Interactive="{Binding CanConfigureBuildStage}" />
+      <Input id="dev-stage-edit-id" Type="Text" Value="{Binding StageEditStageId}" accessible-name="Stable stage ID" Interactive="{Binding CanConfigureBuildStage}" />
+      <Input id="dev-stage-edit-command" Type="Text" Value="{Binding StageEditCommand}" accessible-name="Exact stage command; saving does not execute" Interactive="{Binding CanConfigureBuildStage}" />
+      <Input id="dev-stage-edit-timeout" Type="Text" Value="{Binding StageEditTimeout}" accessible-name="Stage timeout in seconds from 1 to 900" Interactive="{Binding CanConfigureBuildStage}" />
+      <Button id="dev-review-build-stage" action="dev.review-build-stage" content="Review stage" Interactive="{Binding CanReviewBuildStage}" />
+      <Object id="dev-stage-edit-review" type="ReadOnlyText" text="{Binding StageEditReview}" accessible-name="Reviewed stage declaration and recovery migration" />
+      <Button id="dev-save-build-stage" action="dev.save-build-stage" content="Save reviewed stage" Interactive="{Binding CanSaveBuildStage}" />
       <Input id="dev-stage-task" placeholdertext="Saved build task ID" accessible-name="Saved build task ID" Type="Text" Value="{Binding StageTaskId}" />
       <Input id="dev-stage-id" placeholdertext="Saved build stage ID" accessible-name="Saved build stage ID" Type="Text" Value="{Binding StageId}" />
       <Button id="dev-build-stage" action="dev.run-stage" content="Run selected saved stage" Interactive="{Binding CanRunSavedStage}" />

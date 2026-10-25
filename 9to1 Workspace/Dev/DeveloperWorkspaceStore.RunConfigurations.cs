@@ -9,31 +9,75 @@ public sealed record DeveloperRunConfigurationEditResult(DeveloperResolvedProjec
 
 public sealed partial class FileDeveloperWorkspaceStore
 {
-    /// <summary>One reviewed Run declaration and its compatible recovery/layout migration under
+    public async Task<DeveloperOperationResult<DeveloperRunConfigurationEditResult>> SaveReviewedRunConfigurationAsync(
+        DeveloperResolvedProject project, DeveloperRunConfigurationEditReview reviewed, DeveloperDraftRecoveryScope actualManualScope,
+        long expectedRecoveryGeneration, Func<CancellationToken, Task<byte[]>> readRequiredOriginalProtectedKey,
+        Func<CancellationToken, Task> revalidateOriginalSource, CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(reviewed);
+        var result = await SaveReviewedProjectMetadataAsync(project, new ReviewedRunDeclaration(reviewed), actualManualScope,
+            expectedRecoveryGeneration, readRequiredOriginalProtectedKey, revalidateOriginalSource, token).ConfigureAwait(false);
+        if (!result.Succeeded || result.Value is not { } saved) return new(result.RequestId, null, result.Error);
+        return new(result.RequestId, new(saved.Project,
+            saved.Project.Workspace.RunConfigurations.Single(value => value.Id == reviewed.Configuration.Id), saved.Scope,
+            saved.RecoveryGeneration, saved.CleanSessionGeneration, saved.MigratedRecovery), null);
+    }
+    private sealed record ReviewedMetadataEditResult(DeveloperResolvedProject Project, DeveloperDraftRecoveryScope Scope,
+        long RecoveryGeneration, long? CleanSessionGeneration, bool MigratedRecovery);
+    private abstract class ReviewedProjectMetadata
+    {
+        internal abstract bool IsCurrent(DeveloperResolvedProject project);
+        internal abstract DeveloperResolvedProject Apply(DeveloperResolvedProject canonical);
+    }
+    private sealed class ReviewedRunDeclaration(DeveloperRunConfigurationEditReview value) : ReviewedProjectMetadata
+    {
+        internal override bool IsCurrent(DeveloperResolvedProject project) => DeveloperRunConfigurationEdit.IsCurrent(project, value);
+        internal override DeveloperResolvedProject Apply(DeveloperResolvedProject canonical)
+        {
+            var configuration = DeveloperRunConfigurationSelection.Capture(value.Configuration);
+            var ids = canonical.Project.RunConfigurationIds.Contains(configuration.Id, StringComparer.Ordinal)
+                ? canonical.Project.RunConfigurationIds.ToArray() : canonical.Project.RunConfigurationIds.Append(configuration.Id).ToArray();
+            var declarations = canonical.Workspace.RunConfigurations.ToList(); var position = declarations.FindIndex(row => row.Id == configuration.Id);
+            if (position < 0) declarations.Add(configuration); else declarations[position] = configuration;
+            return AdvanceReviewedMetadata(canonical, canonical.Project with { RunConfigurationIds = Array.AsReadOnly(ids) },
+                canonical.Workspace with { RunConfigurations = Array.AsReadOnly(declarations.ToArray()) });
+        }
+    }
+    private static DeveloperResolvedProject AdvanceReviewedMetadata(DeveloperResolvedProject canonical,
+        DeveloperProject editedProject, DeveloperWorkspace editedWorkspace)
+    {
+        var nextProject = editedProject with { Revision = checked(canonical.Project.Revision + 1) };
+        var nextWorkspace = editedWorkspace with { Revision = checked(canonical.Workspace.Revision + 1), ModifiedAt = DateTimeOffset.UtcNow,
+            Projects = Array.AsReadOnly(canonical.Workspace.Projects.Select(value => value.ProjectId == nextProject.ProjectId ? nextProject : value).ToArray()) };
+        var nextReference = canonical.Reference with { WorkspaceRevision = nextWorkspace.Revision, ProjectRevision = nextProject.Revision };
+        return new(nextReference, nextWorkspace, nextProject, canonical.Root, canonical.Repository);
+    }
+
+    /// <summary>One typed reviewed project declaration and its compatible recovery/layout migration under
     /// the SAME cross-process lock and atomic document writer. Only the actual manual partition's
     /// protected key may enter. A foreign/old affected recovery refuses the entire update. No
     /// plaintext fallback, separate store, source write or execution grant is manufactured.</summary>
-    public async Task<DeveloperOperationResult<DeveloperRunConfigurationEditResult>> SaveReviewedRunConfigurationAsync(
-        DeveloperResolvedProject project, DeveloperRunConfigurationEditReview reviewed, DeveloperDraftRecoveryScope actualManualScope,
+    private async Task<DeveloperOperationResult<ReviewedMetadataEditResult>> SaveReviewedProjectMetadataAsync(
+        DeveloperResolvedProject project, ReviewedProjectMetadata reviewed, DeveloperDraftRecoveryScope actualManualScope,
         long expectedRecoveryGeneration, Func<CancellationToken, Task<byte[]>> readRequiredOriginalProtectedKey,
         Func<CancellationToken, Task> revalidateOriginalSource, CancellationToken token = default)
     {
         ArgumentNullException.ThrowIfNull(reviewed); ArgumentNullException.ThrowIfNull(readRequiredOriginalProtectedKey);
         ArgumentNullException.ThrowIfNull(revalidateOriginalSource);
         if (!ValidEditorProject(project) || !ValidRecoveryScope(actualManualScope) || !actualManualScope.IsManual || expectedRecoveryGeneration < 0 ||
-            !DeveloperRunConfigurationEdit.IsCurrent(project, reviewed))
-            return EditorFailure<DeveloperRunConfigurationEditResult>(DeveloperOperationErrorCode.InvalidInput,
-                "Review the exact current saved project and console declaration before saving metadata.", project.Reference.WorkspaceId);
+            !reviewed.IsCurrent(project))
+            return EditorFailure<ReviewedMetadataEditResult>(DeveloperOperationErrorCode.InvalidInput,
+                "Review the exact current saved project declaration before saving metadata.", project.Reference.WorkspaceId);
         var acquired = await AcquireWriteLockAsync(project.Reference.WorkspaceId, token).ConfigureAwait(false);
-        if (acquired.Error is not null) return CopyEditorError<DeveloperRunConfigurationEditResult>(acquired.Error);
+        if (acquired.Error is not null) return CopyEditorError<ReviewedMetadataEditResult>(acquired.Error);
         await using var writeLock = acquired.Lock!;
         try
         {
             var loaded = await ReadEditorDocumentAsync(project.Reference.WorkspaceId, token).ConfigureAwait(false);
-            if (!loaded.Succeeded) return CopyEditorError<DeveloperRunConfigurationEditResult>(loaded.Error!);
+            if (!loaded.Succeeded) return CopyEditorError<ReviewedMetadataEditResult>(loaded.Error!);
             var document = loaded.Value!;
-            if (!SameEditorWorkspace(document.Workspace, project) || !DeveloperRunConfigurationEdit.IsCurrent(project, reviewed))
-                return EditorConflict<DeveloperRunConfigurationEditResult>(project.Reference.WorkspaceId);
+            if (!SameEditorWorkspace(document.Workspace, project) || !reviewed.IsCurrent(project))
+                return EditorConflict<ReviewedMetadataEditResult>(project.Reference.WorkspaceId);
             // Derive the write from this privately deserialized canonical document, not
             // caller-owned IReadOnlyList implementations that could change during key IO.
             var canonical = new DeveloperResolvedProject(project.Reference, document.Workspace,
@@ -41,33 +85,24 @@ public sealed partial class FileDeveloperWorkspaceStore
                 document.Workspace.Roots.Single(value => value.RootId == project.Reference.RootId),
                 project.Reference.RepositoryBindingId is { } repositoryId
                     ? document.Workspace.SourceControlBindings.Single(value => value.BindingId == repositoryId) : null);
-            if (!DeveloperRunConfigurationEdit.IsCurrent(canonical, reviewed))
-                return EditorConflict<DeveloperRunConfigurationEditResult>(project.Reference.WorkspaceId);
+            if (!reviewed.IsCurrent(canonical))
+                return EditorConflict<ReviewedMetadataEditResult>(project.Reference.WorkspaceId);
             var recoveries = (document.DraftRecoveries ?? []).ToArray();
             var affected = recoveries.Where(value => value.ProjectReference.ProjectId == project.Reference.ProjectId).ToArray();
             if (affected.Any(value => !SameRecoveryKey(value, project.Reference, actualManualScope) ||
                 value.ProjectStamp != EditorProjectStamp(canonical)))
-                return EditorFailure<DeveloperRunConfigurationEditResult>(DeveloperOperationErrorCode.RevisionConflict,
+                return EditorFailure<ReviewedMetadataEditResult>(DeveloperOperationErrorCode.RevisionConflict,
                     "Another profile, Task, root, repository or earlier project has protected drafts here. No declaration or recovery was changed. Open that recovery in its owning context before changing this project's targets.", project.Reference.WorkspaceId);
             var old = affected.SingleOrDefault();
             if ((old?.Generation ?? 0) != expectedRecoveryGeneration || old?.Generation == long.MaxValue)
-                return EditorFailure<DeveloperRunConfigurationEditResult>(DeveloperOperationErrorCode.RevisionConflict,
+                return EditorFailure<ReviewedMetadataEditResult>(DeveloperOperationErrorCode.RevisionConflict,
                     "Protected recovery changed after this page observed it. The exact prior document was preserved; reopen before saving the target.", project.Reference.WorkspaceId);
             await revalidateOriginalSource(token).ConfigureAwait(false);
-            var configuration = DeveloperRunConfigurationSelection.Capture(reviewed.Configuration);
-            var ids = canonical.Project.RunConfigurationIds.Contains(configuration.Id, StringComparer.Ordinal)
-                ? canonical.Project.RunConfigurationIds.ToArray() : canonical.Project.RunConfigurationIds.Append(configuration.Id).ToArray();
-            var nextProject = canonical.Project with { RunConfigurationIds = Array.AsReadOnly(ids), Revision = checked(canonical.Project.Revision + 1) };
-            var declarations = canonical.Workspace.RunConfigurations.ToList(); var position = declarations.FindIndex(value => value.Id == configuration.Id);
-            if (position < 0) declarations.Add(configuration); else declarations[position] = configuration;
-            var nextWorkspace = canonical.Workspace with { Revision = checked(canonical.Workspace.Revision + 1), ModifiedAt = DateTimeOffset.UtcNow,
-                Projects = Array.AsReadOnly(canonical.Workspace.Projects.Select(value => value.ProjectId == nextProject.ProjectId ? nextProject : value).ToArray()),
-                RunConfigurations = Array.AsReadOnly(declarations.ToArray()) };
-            var nextReference = project.Reference with { WorkspaceRevision = nextWorkspace.Revision, ProjectRevision = nextProject.Revision };
-            var next = new DeveloperResolvedProject(nextReference, nextWorkspace, nextProject, canonical.Root, canonical.Repository);
+            var next = reviewed.Apply(canonical);
+            var nextWorkspace = next.Workspace; var nextReference = next.Reference;
             if (!ValidEditorProject(next) || nextWorkspace.Validate() is { })
-                return EditorFailure<DeveloperRunConfigurationEditResult>(DeveloperOperationErrorCode.InvalidInput,
-                    "The reviewed console target did not produce valid canonical project metadata.", project.Reference.WorkspaceId);
+                return EditorFailure<ReviewedMetadataEditResult>(DeveloperOperationErrorCode.InvalidInput,
+                    "The reviewed declaration did not produce valid canonical project metadata.", project.Reference.WorkspaceId);
             DeveloperDraftRecoverySnapshot? migrated = null;
             if (old is not null)
             {
@@ -87,27 +122,27 @@ public sealed partial class FileDeveloperWorkspaceStore
             var updated = document with { Workspace = nextWorkspace, EditorSessions = Array.AsReadOnly(sessions),
                 DraftRecoveries = Array.AsReadOnly(recoveries) };
             if (JsonSerializer.SerializeToUtf8Bytes(updated, JsonOptions).Length > 1024 * 1024)
-                return EditorFailure<DeveloperRunConfigurationEditResult>(DeveloperOperationErrorCode.CapabilityUnavailable,
+                return EditorFailure<ReviewedMetadataEditResult>(DeveloperOperationErrorCode.CapabilityUnavailable,
                     "The complete target and migrated recovery exceed the native document bound. No prior state was removed.", project.Reference.WorkspaceId);
             token.ThrowIfCancellationRequested(); await revalidateOriginalSource(token).ConfigureAwait(false);
             // Preserve exact CAS semantics even if a foreign/raw writer ignored our lock during
             // key-owner I/O: compare the actual full document again before its atomic replacement.
             var current = await ReadEditorDocumentAsync(project.Reference.WorkspaceId, token).ConfigureAwait(false);
             if (!current.Succeeded || JsonSerializer.Serialize(current.Value, JsonOptions) != JsonSerializer.Serialize(document, JsonOptions))
-                return EditorConflict<DeveloperRunConfigurationEditResult>(project.Reference.WorkspaceId);
+                return EditorConflict<ReviewedMetadataEditResult>(project.Reference.WorkspaceId);
             await WriteEditorDocumentAsync(GetWorkspacePath(project.Reference.WorkspaceId), updated, token).ConfigureAwait(false);
             var clean = sessions.SingleOrDefault(value => SameEditorKey(value, actualManualScope.ProfileId, nextReference));
-            return DeveloperOperationResult<DeveloperRunConfigurationEditResult>.Success(new(next, configuration, actualManualScope,
+            return DeveloperOperationResult<ReviewedMetadataEditResult>.Success(new(next, actualManualScope,
                 migrated?.Generation ?? 0, clean?.Generation, migrated is not null));
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
         catch (Exception error) when (error is CryptographicException or FormatException or InvalidDataException)
         {
-            return EditorFailure<DeveloperRunConfigurationEditResult>(DeveloperOperationErrorCode.StorageUnavailable,
+            return EditorFailure<ReviewedMetadataEditResult>(DeveloperOperationErrorCode.StorageUnavailable,
                 "The original protected recovery key/header/payload could not be verified. No target or recovery was replaced; keep the live draft and recover its original context/key before retrying.", project.Reference.WorkspaceId);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or CryptographicException or FormatException or ArgumentException or OverflowException)
-        { return StorageFailure<DeveloperRunConfigurationEditResult>(project.Reference.WorkspaceId, error); }
+        { return StorageFailure<ReviewedMetadataEditResult>(project.Reference.WorkspaceId, error); }
     }
 
     private static DeveloperCleanEditorSession MigrateRunEditSession(DeveloperResolvedProject before, DeveloperResolvedProject after,

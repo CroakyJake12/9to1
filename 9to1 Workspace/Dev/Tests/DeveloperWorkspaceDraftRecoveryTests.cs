@@ -687,6 +687,9 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
             var reviewed = DeveloperRunConfigurationEdit.Prepare(project, "run", "printf not-yet", 25).Value!;
             Assert.False((await store.SaveReviewedRunConfigurationAsync(project, reviewed, scope, 1,
                 _ => throw new InvalidOperationException("No key request can pass an admitted Start pin."), RevalidateRunMetadata, token)).Succeeded);
+            var stageReview = DeveloperBuildStageEdit.Prepare(project, "build", "compile", DeveloperBuildStageKind.Compile, "printf not-yet", 25).Value!;
+            Assert.False((await store.SaveReviewedBuildStageAsync(project, stageReview, scope, 1,
+                _ => throw new InvalidOperationException("No stage key request can pass an admitted Start pin."), RevalidateRunMetadata, token)).Succeeded);
             Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project), token));
         }
         finally { pin.Dispose(); }
@@ -729,6 +732,96 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
         }
         using var after = store.AcquireOriginalRunMetadataReadPin(project.Reference.WorkspaceId);
         store.DemandOriginalRunMetadataReadPin(project.Reference.WorkspaceId, after);
+    }
+
+    [Fact]
+    public async Task Reviewed_first_stage_uses_same_store_CAS_without_requesting_absent_recovery_key()
+    {
+        var (store, project) = await CreateAsync(); var scope = ManualScope(); var keyReads = 0;
+        var reviewed = DeveloperBuildStageEdit.Prepare(project, "build", "compile", DeveloperBuildStageKind.Compile, "printf stage", 20).Value!;
+        var saved = await store.SaveReviewedBuildStageAsync(project, reviewed, scope, 0,
+            _ => { keyReads++; throw new InvalidOperationException("No recovery means no key request."); }, RevalidateRunMetadata, RunEditToken);
+        Assert.True(saved.Succeeded, saved.Error?.Message); Assert.Equal(0, keyReads); Assert.False(saved.Value!.MigratedRecovery);
+        Assert.Equal(project.Reference.ProjectRevision + 1, saved.Value.Project.Reference.ProjectRevision);
+        Assert.Equal(project.Reference.WorkspaceRevision + 1, saved.Value.Project.Reference.WorkspaceRevision);
+        Assert.Equal("compile", saved.Value.StageId); Assert.Equal("printf stage", Assert.Single(saved.Value.Task.Stages).Command);
+        Assert.Null(Assert.Single(DeveloperSavedStageSelection.Observe(saved.Value.Project).Value!).UnavailableReason);
+        Assert.Empty(saved.Value.Project.Workspace.RunConfigurations); Assert.Equal(project.Root, saved.Value.Project.Root);
+        var bytes = await File.ReadAllBytesAsync(PathFor(project), RunEditToken);
+        Assert.False((await store.SaveReviewedBuildStageAsync(project, reviewed, scope, 0,
+            _ => throw new InvalidOperationException("Stale declaration cannot request a key."), RevalidateRunMetadata, RunEditToken)).Succeeded);
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(PathFor(project), RunEditToken));
+    }
+
+    [Fact]
+    public async Task Reviewed_stage_migrates_same_encrypted_payload_and_layout_and_edit_reauthenticates_again()
+    {
+        var (store, project) = await CreateAsync(); var scope = ManualScope(); var payload = Payload();
+        var original = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, payload, _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, RunEditToken)).Succeeded);
+        var tabs = new[] { new DeveloperCleanEditorTab("readme.md", new string('b', 64), true, false, "right") };
+        Assert.True((await store.SaveEditorSessionAsync(project, scope.ProfileId, 0, tabs, tabs[0].RelativePath, RunEditToken)).Succeeded);
+        var review = DeveloperBuildStageEdit.Prepare(project, "tests", "test", DeveloperBuildStageKind.Test, "printf tested", 20).Value!;
+        byte[]? supplied = null;
+        var created = await store.SaveReviewedBuildStageAsync(project, review, scope, 1,
+            _ => Task.FromResult(supplied = _key.ToArray()), RevalidateRunMetadata, RunEditToken);
+        Assert.True(created.Succeeded, created.Error?.Message); var first = created.Value!; Assert.True(first.MigratedRecovery);
+        Assert.All(supplied!, value => Assert.Equal(0, value));
+        var snapshot = (await store.GetDraftRecoveryAsync(first.Project, scope, RunEditToken)).Value!;
+        Assert.Equal(2, snapshot.Generation); Assert.NotEqual(original.ProjectStamp, snapshot.ProjectStamp); Assert.NotEqual(original.ProtectedPayload, snapshot.ProtectedPayload);
+        Assert.Equal(payload.Tabs.ToArray(), FileDeveloperWorkspaceStore.UnprotectDraftRecovery(first.Project, scope, snapshot, _key).Tabs.ToArray());
+        Assert.Throws<UnauthorizedAccessException>(() => { _ = FileDeveloperWorkspaceStore.UnprotectDraftRecovery(first.Project, scope, original, _key); });
+        var layout = (await store.GetEditorSessionAsync(first.Project, scope.ProfileId, RunEditToken)).Value!;
+        Assert.Equal(tabs, layout.Tabs); Assert.Equal(2, layout.Generation); Assert.Equal(first.Project.Reference, layout.ProjectReference);
+        var edit = DeveloperBuildStageEdit.Prepare(first.Project, "tests", "test", DeveloperBuildStageKind.Test, "printf edited", 30,
+            DeveloperTaskWorkspaceService.ComputeSavedTaskDefinitionSha256(first.Task), "test").Value!;
+        var edited = await store.SaveReviewedBuildStageAsync(first.Project, edit, scope, 2,
+            _ => Task.FromResult(_key.ToArray()), RevalidateRunMetadata, RunEditToken);
+        Assert.True(edited.Succeeded, edited.Error?.Message); Assert.Equal(2, edited.Value!.Task.Revision); Assert.Equal(3, edited.Value.RecoveryGeneration);
+        Assert.Equal("printf edited", Assert.Single(edited.Value.Task.Stages).Command);
+        var later = (await store.GetDraftRecoveryAsync(edited.Value.Project, scope, RunEditToken)).Value!;
+        Assert.Equal(payload.Tabs.ToArray(), FileDeveloperWorkspaceStore.UnprotectDraftRecovery(edited.Value.Project, scope, later, _key).Tabs.ToArray());
+        var metadata = await File.ReadAllTextAsync(PathFor(project), RunEditToken); Assert.DoesNotContain(payload.Tabs[0].DraftText, metadata); Assert.DoesNotContain(Convert.ToBase64String(_key), metadata);
+    }
+
+    [Theory]
+    [InlineData("foreign-profile")]
+    [InlineData("foreign-task")]
+    [InlineData("wrong-key")]
+    [InlineData("stale-generation")]
+    public async Task Reviewed_stage_foreign_or_unverifiable_recovery_preserves_exact_prior_document(string refusal)
+    {
+        var (store, project) = await CreateAsync(); var scope = ManualScope();
+        var savedScope = refusal == "foreign-profile" ? scope with { ProfileId = Guid.NewGuid() }
+            : refusal == "foreign-task" ? scope with { TaskId = Guid.NewGuid(), ExecutionId = Guid.NewGuid(), ContextId = Guid.NewGuid(), IsManual = false } : scope;
+        var original = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, savedScope, 1, Payload(), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, RunEditToken)).Succeeded);
+        var before = await File.ReadAllBytesAsync(PathFor(project), RunEditToken); var keyReads = 0;
+        var review = DeveloperBuildStageEdit.Prepare(project, "build", "compile", DeveloperBuildStageKind.Compile, "printf refused", 20).Value!;
+        var observed = await store.SaveReviewedBuildStageAsync(project, review, scope, refusal == "stale-generation" ? 0 : 1,
+            _ => { keyReads++; return Task.FromResult(refusal == "wrong-key" ? RandomNumberGenerator.GetBytes(32) : _key.ToArray()); }, RevalidateRunMetadata, RunEditToken);
+        Assert.False(observed.Succeeded); Assert.Equal(refusal == "wrong-key" ? 1 : 0, keyReads);
+        Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project), RunEditToken));
+        Assert.Equal(Payload().Tabs.ToArray(), FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, savedScope,
+            (await store.GetDraftRecoveryAsync(project, savedScope, RunEditToken)).Value!, _key).Tabs.ToArray());
+    }
+
+    [Fact]
+    public async Task Reviewed_stage_does_not_overwrite_raw_document_change_during_original_key_IO()
+    {
+        var (store, project) = await CreateAsync(); var scope = ManualScope();
+        var original = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, original, 0, RunEditToken)).Succeeded);
+        var review = DeveloperBuildStageEdit.Prepare(project, "build", "compile", DeveloperBuildStageKind.Compile, "printf refused", 20).Value!;
+        byte[] external = [];
+        var observed = await store.SaveReviewedBuildStageAsync(project, review, scope, 1, async _ =>
+        {
+            var document = JsonNode.Parse(await File.ReadAllTextAsync(PathFor(project), RunEditToken))!;
+            document["workspace"]!["revision"] = project.Workspace.Revision + 1;
+            external = Encoding.UTF8.GetBytes(document.ToJsonString()); await File.WriteAllBytesAsync(PathFor(project), external, RunEditToken);
+            return _key.ToArray();
+        }, RevalidateRunMetadata, RunEditToken);
+        Assert.False(observed.Succeeded); Assert.Equal(external, await File.ReadAllBytesAsync(PathFor(project), RunEditToken));
     }
 
     private sealed class ImpostorMetadataTransition : IDeveloperProjectOriginalMetadataTransition
