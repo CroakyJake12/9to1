@@ -88,6 +88,9 @@ internal static class UnifiedWorkspaceSessionProjection
         var deletedIds = closedIds.Where(id => !otherReferences.Contains(id)).ToHashSet();
         var originalTabs = original.Tabs.ToDictionary(tab => tab.Id);
         var groups = original.Groups.ToList();
+        if (current.Groups is { } projectedGroups)
+            MergeGroupMetadata(groups, projectedGroups, current, owningWindow, original.Windows, windowId,
+                ownedIds, otherReferences, deletedIds);
         var mergedTabs = new Dictionary<Guid, TabSessionSnapshot>();
         foreach (var tab in current.Tabs)
         {
@@ -175,6 +178,61 @@ internal static class UnifiedWorkspaceSessionProjection
             throw new InvalidDataException("The new group identity conflicts with an existing group.");
         groups.Add(new(id, name, false, Array.Empty<Guid>()));
         return id;
+    }
+
+    private static void MergeGroupMetadata(List<TabGroupSnapshot> groups,
+        IReadOnlyList<BrowseTabGroupProjection> projectedGroups, BrowseTabSessionProjection current,
+        WorkspaceWindowSnapshot owningWindow, IReadOnlyList<WorkspaceWindowSnapshot> windows, Guid windowId,
+        IReadOnlySet<Guid> ownedIds, IReadOnlySet<Guid> otherReferences, IReadOnlySet<Guid> deletedIds)
+    {
+        DemandUnique(projectedGroups.Select(group => group.Id), "projected groups");
+        var currentTabs = current.Tabs.ToDictionary(tab => tab.Id);
+        var closedGroupIds = current.ClosedTabs.Select(item => Guid.TryParse(item.Tab.Group, out var groupId)
+            ? groupId : Guid.Empty).Where(id => id != Guid.Empty).ToHashSet();
+        var previousClosedGroupIds = owningWindow.RecentlyClosedTabs.Where(tab => tab.GroupId.HasValue)
+            .Select(tab => tab.GroupId!.Value).ToHashSet();
+        var otherWindowGroupIds = windows.Where(window => window.Id != windowId)
+            .SelectMany(window => window.RecentlyClosedTabs.Where(tab => tab.GroupId.HasValue).Select(tab => tab.GroupId!.Value))
+            .ToHashSet();
+        var touchedGroupIds = groups.Where(group => group.OrderedTabIds.Any(ownedIds.Contains) ||
+            previousClosedGroupIds.Contains(group.Id) || closedGroupIds.Contains(group.Id))
+            .Select(group => group.Id).ToHashSet();
+        var externalGroupIds = groups.Where(group => group.OrderedTabIds.Any(otherReferences.Contains))
+            .Select(group => group.Id).Concat(otherWindowGroupIds).ToHashSet();
+
+        foreach (var group in projectedGroups)
+        {
+            var name = group.Name?.Trim() ?? string.Empty;
+            if (group.Id == Guid.Empty || name.Length is < 1 or > 64 || name.Any(char.IsControl) ||
+                group.OrderedTabIds is null || group.OrderedTabIds.Distinct().Count() != group.OrderedTabIds.Count ||
+                group.OrderedTabIds.Any(id => !currentTabs.TryGetValue(id, out var tab) ||
+                    !Guid.TryParse(tab.Group, out var tabGroupId) || tabGroupId != group.Id))
+                throw new InvalidDataException("A tab group projection contains invalid identity, name, or membership.");
+            var actualMembers = current.Tabs.Where(tab => Guid.TryParse(tab.Group, out var tabGroupId) && tabGroupId == group.Id)
+                .Select(tab => tab.Id).ToHashSet();
+            if (!actualMembers.SetEquals(group.OrderedTabIds))
+                throw new InvalidDataException("A tab group must list every current member in its canonical order.");
+            var memberTabs = group.OrderedTabIds.Select(id => currentTabs[id]).ToArray();
+            if (memberTabs.Skip(1).Any(tab => !StringComparer.Ordinal.Equals(tab.ProfileId, memberTabs[0].ProfileId) ||
+                tab.Privacy != BrowserTabPrivacy.Standard))
+                throw new InvalidDataException("A tab group cannot cross profile or privacy ownership.");
+            if (externalGroupIds.Contains(group.Id) || groups.Any(existing => existing.Id == group.Id && !touchedGroupIds.Contains(group.Id)))
+                throw new InvalidDataException("A tab group owned by another window cannot be changed here.");
+            var index = groups.FindIndex(existing => existing.Id == group.Id);
+            var updated = index >= 0
+                ? groups[index] with { Name = name, IsCollapsed = group.IsCollapsed }
+                : new TabGroupSnapshot(group.Id, name, group.IsCollapsed, Array.Empty<Guid>());
+            if (index >= 0) groups[index] = updated; else groups.Add(updated);
+            touchedGroupIds.Add(group.Id);
+        }
+
+        var retainedClosedGroups = closedGroupIds;
+        groups.RemoveAll(group => touchedGroupIds.Contains(group.Id) &&
+            !projectedGroups.Any(projected => projected.Id == group.Id) && !retainedClosedGroups.Contains(group.Id) &&
+            !group.OrderedTabIds.Any(id => ownedIds.Contains(id) && !currentTabs.ContainsKey(id) && !deletedIds.Contains(id)));
+        // Group identities cannot be borrowed or reassigned from a different window.
+        if (projectedGroups.Any(group => groups.All(existing => existing.Id != group.Id)))
+            throw new InvalidDataException("A projected group identity was not retained by the owning window.");
     }
 
     private static IReadOnlyList<Guid> RestoreLegacyPanes(WorkspaceWindowSnapshot window,

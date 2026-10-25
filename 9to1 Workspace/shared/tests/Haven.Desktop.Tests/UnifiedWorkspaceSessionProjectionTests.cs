@@ -218,6 +218,49 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
     }
 
     [Fact]
+    public void Canonical_group_metadata_updates_existing_guid_and_order_without_replacing_other_windows()
+    {
+        var groupId = Guid.NewGuid();
+        var a = Tab("A") with { GroupId = groupId }; var b = Tab("B") with { GroupId = groupId };
+        var original = Session([a, b]) with { Groups = [new(groupId, "Research", false, [a.Id, b.Id])] };
+        var projection = Projection([Project(b) with { Group = groupId.ToString("D") },
+            Project(a) with { Group = groupId.ToString("D") }], b.Id) with
+        { Groups = [new(groupId, "Project notes", true, [b.Id, a.Id])] };
+
+        var merged = Merge(original, projection, a.Id, b.Id);
+
+        var group = Assert.Single(merged.Groups);
+        Assert.Equal(groupId, group.Id); Assert.Equal("Project notes", group.Name); Assert.True(group.IsCollapsed);
+        Assert.Equal(new[] { b.Id, a.Id }, group.OrderedTabIds);
+        Assert.All(merged.Tabs, tab => Assert.Equal(groupId, tab.GroupId));
+    }
+
+    [Fact]
+    public void Group_mutation_refuses_cross_window_membership_stale_names_and_profile_or_privacy_mixing()
+    {
+        var groupId = Guid.NewGuid(); var a = Tab("A") with { GroupId = groupId };
+        var b = Tab("B") with { GroupId = groupId }; var original = Session([a, b]) with
+        { Groups = [new(groupId, "Research", false, [a.Id, b.Id])] };
+        var foreignWindow = Window([b.Id], WorkspaceWindowKind.Normal);
+        var shared = original with { Windows = [original.Windows[0], foreignWindow] };
+        var mutation = Projection([Project(a) with { Group = groupId.ToString("D") },
+            Project(b) with { Group = groupId.ToString("D") }], a.Id) with
+        { Groups = [new(groupId, "Renamed", true, [a.Id, b.Id])] };
+        Assert.Throws<InvalidDataException>(() => Merge(shared, mutation, a.Id, b.Id));
+
+        var mismatched = mutation with { Groups = [new(groupId, "Research", true, [a.Id])] };
+        Assert.Throws<InvalidDataException>(() => Merge(original, mismatched, a.Id, b.Id));
+        var mixedProfile = Project(b) with { Group = groupId.ToString("D"), ProfileId = "other-profile" };
+        Assert.Throws<InvalidDataException>(() => Merge(original, Projection([
+            Project(a) with { Group = groupId.ToString("D") }, mixedProfile], a.Id) with
+        { Groups = [new(groupId, "Research", false, [a.Id, b.Id])] }, a.Id, b.Id));
+        var privateMember = Project(b) with { Group = groupId.ToString("D"), Privacy = BrowserTabPrivacy.Private };
+        Assert.Throws<InvalidDataException>(() => Merge(original, Projection([
+            Project(a) with { Group = groupId.ToString("D") }, privateMember], a.Id) with
+        { Groups = [new(groupId, "Research", false, [a.Id, b.Id])] }, a.Id, b.Id));
+    }
+
+    [Fact]
     public void New_group_name_has_stable_identity_and_membership_can_move_without_erasing_other_members()
     {
         var oldId = Guid.NewGuid(); var a = Tab("A") with { GroupId = oldId }; var unseen = Tab("Unseen") with { GroupId = oldId };

@@ -53,6 +53,9 @@ public sealed record BrowseTabSnapshot(
     public bool IsHome { get; init; }
     public bool IsPinned { get; init; }
     public bool IsCloseable { get; init; } = true;
+    public Guid? GroupId { get; init; }
+    public string GroupName { get; init; } = string.Empty;
+    public bool IsGroupCollapsed { get; init; }
 }
 
 public sealed record BrowseSecuritySnapshot(
@@ -85,6 +88,7 @@ public sealed record BrowseChromeSnapshot(
     public IReadOnlyList<Guid> PaneTabIds { get; init; } = [];
     public Haven.Core.SplitOrientation SplitOrientation { get; init; } = Haven.Core.SplitOrientation.Vertical;
     public double PrimaryPaneRatio { get; init; } = 0.5;
+    public IReadOnlyList<BrowseTabGroupProjection> Groups { get; init; } = [];
     public BrowseTabSnapshot SelectedTab => Tabs.Single(tab => tab.Id == SelectedTabId);
 }
 
@@ -108,6 +112,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private readonly BrowserRecoveryLimiter _recovery = new(3, TimeSpan.FromMinutes(1));
     private readonly List<TabRuntime> _tabs = [];
     private readonly List<Guid> _paneTabIds = [];
+    private readonly List<BrowseTabGroupProjection> _tabGroups = [];
     private Haven.Core.SplitOrientation _splitOrientation = Haven.Core.SplitOrientation.Vertical;
     private double _primaryPaneRatio = 0.5;
     private IReadOnlyList<BrowserDownloadRecord> _downloads = [];
@@ -203,6 +208,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 var home = AppContentAddress.Parse(chrome._data.Settings.HomePage);
                 await chrome.AddRuntimeAsync(Guid.NewGuid(), "New tab", home, BrowserTabPrivacy.Standard, string.Empty, cancellationToken).ConfigureAwait(false);
             }
+
+            chrome.RestoreTabGroups(projected?.Groups);
 
             chrome.NormalizeTabPlacement();
             chrome._selectedTabId = projected?.SelectedTabId is { } restoredSelection && chrome._tabs.Any(tab => tab.Id == restoredSelection)
@@ -971,7 +978,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 new BrowserClosedTabState(item.Tab, item.Index, item.EngineOverride?.ToString())), token)
             : _tabSessionPersistence.SaveAsync(new BrowseTabSessionProjection(tabs, selectedTabId)
                 { ClosedTabs = closedTabs, PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()),
-                    SplitOrientation = _splitOrientation, PrimaryPaneRatio = _primaryPaneRatio }, token);
+                    SplitOrientation = _splitOrientation, PrimaryPaneRatio = _primaryPaneRatio,
+                    Groups = Array.AsReadOnly(CaptureTabGroups().ToArray()) }, token);
         if (original is null) throw new InvalidOperationException("The workspace owner supplied no original session save task.");
         RetainAppSource(original); return original;
     }
@@ -984,7 +992,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             tab.Id, tab.Title, tab.Address, tab.Privacy, tab.EngineState,
             tab.CanGoBack, tab.CanGoForward, tab.IsLoading, tab.Status)
             { Engine = tab.Engine, NativePage = tab.NativePage, ProfileId = tab.ProfileId, IconKey = tab.IconKey,
-                IsHome = tab.IsHome, IsPinned = tab.IsPinned, IsCloseable = !tab.IsHome }).ToArray();
+                IsHome = tab.IsHome, IsPinned = tab.IsPinned, IsCloseable = !tab.IsHome,
+                GroupId = TryGetGroupId(tab.Group, out var groupId) ? groupId : null,
+                GroupName = GroupFor(tab.Group)?.Name ?? string.Empty,
+                IsGroupCollapsed = GroupFor(tab.Group)?.IsCollapsed ?? false }).ToArray();
         var security = SecurityFor(selected);
         return new BrowseChromeSnapshot(
             tabs,
@@ -1008,7 +1019,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         {
             PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()),
             SplitOrientation = _splitOrientation,
-            PrimaryPaneRatio = _primaryPaneRatio
+            PrimaryPaneRatio = _primaryPaneRatio,
+            Groups = Array.AsReadOnly(CaptureTabGroups().ToArray())
         };
     }
 
@@ -1218,7 +1230,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         public List<IBrowseEngineTab> PendingHosts { get; } = [];
         public Dictionary<IBrowseEngineTab, Task> PendingHostCloses { get; } = new(ReferenceEqualityComparer.Instance);
         public BrowserTabPrivacy Privacy { get; } = privacy;
-        public string Group { get; } = group;
+        public string Group { get; set; } = group;
         public BrowserSessionService Session { get; } = session;
         public BrowseEngineKind Engine { get; set; } = engine;
         public BrowserNativePage NativePage { get; set; }

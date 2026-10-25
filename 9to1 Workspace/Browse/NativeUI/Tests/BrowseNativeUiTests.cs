@@ -712,6 +712,7 @@ public sealed partial class BrowseNativeUiTests
     private sealed class MemoryTabSessionPersistence : IBrowseTabSessionPersistence
     {
         private BrowseTabSessionProjection? _stored;
+        public MemoryTabSessionPersistence(BrowseTabSessionProjection? initial = null) => _stored = initial;
         public Task<BrowseTabSessionProjection?> LoadAsync(CancellationToken token) => Task.FromResult(_stored);
         public Task SaveAsync(BrowseTabSessionProjection projection, CancellationToken token)
         { _stored = projection; return Task.CompletedTask; }
