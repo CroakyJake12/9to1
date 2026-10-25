@@ -141,10 +141,10 @@ public sealed class SpaceBuilderController
         {
             if (_editVersion != editVersion || _state.Draft != snapshot.Draft)
                 issues = ["The Space draft changed while validation was running; validate the current draft again."];
-            var result = Array.AsReadOnly(issues.ToArray());
-            var status = result.Count == 1 && result[0].StartsWith("Draft structure is valid", StringComparison.Ordinal)
-                ? result[0] : $"Draft validation found {result.Count} blocking issue(s).";
-            next = _state = _state with { ValidationIssues = result, StatusMessage = status };
+            var publishedIssues = Array.AsReadOnly(issues.ToArray());
+            var status = publishedIssues.Count == 1 && publishedIssues[0].StartsWith("Draft structure is valid", StringComparison.Ordinal)
+                ? publishedIssues[0] : $"Draft validation found {publishedIssues.Count} blocking issue(s).";
+            next = _state = _state with { ValidationIssues = publishedIssues, StatusMessage = status };
         }
         StateChanged?.Invoke(next);
         var result = next.ValidationIssues;
