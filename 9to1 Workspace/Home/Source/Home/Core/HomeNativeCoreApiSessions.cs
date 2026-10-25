@@ -51,8 +51,16 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
         cancellationToken.ThrowIfCancellationRequested();
         lock (_admissionGate) if (_closing) return null;
         if (!OperatingSystem.IsLinux()) return null;
-        return await AcceptOriginalAsync(new OriginalChannel(originalAcceptedSocket), originalHeldHomeLease,
-            originalConnectionLifetime, cancellationToken).ConfigureAwait(false);
+        var channel = new OriginalChannel(originalAcceptedSocket);
+        var transferred = false;
+        try
+        {
+            var result = await AcceptOriginalAsync(channel, originalHeldHomeLease,
+                originalConnectionLifetime, cancellationToken).ConfigureAwait(false);
+            transferred = result is not null;
+            return result;
+        }
+        finally { if (!transferred) channel.Dispose(); }
     }
 
     /// <summary>Trusted Windows accepting composition only. Credentials are observed from THIS connected server pipe.</summary>
@@ -319,16 +327,19 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
     }
 
     /// <summary>Private physical channel custody only. No observed-peer DTO or external observer callback is admitted.</summary>
-    private sealed class OriginalChannel
+    private sealed class OriginalChannel : IDisposable
     {
         private readonly Socket? _unix;
         private readonly NamedPipeServerStream? _windows;
-        internal OriginalChannel(Socket original) { _unix = original; }
+        private readonly HomeNativeLinuxPeerProcess? _process;
+        internal OriginalChannel(Socket original)
+        { _unix = original; _process = HomeNativePeerObservation.RetainAcceptedUnixProcess(original); }
         internal OriginalChannel(NamedPipeServerStream original) { _windows = original; }
         internal bool IsWindows => _windows is not null;
         internal HomeNativeObservedPeer? Observe() => _windows is not null
             ? HomeNativePeerObservation.FromConnectedWindowsPipe(_windows)
-            : _unix is not null ? HomeNativePeerObservation.FromAcceptedUnixSocket(_unix) : null;
+            : _unix is not null ? _process?.Observe() : null;
+        public void Dispose() => _process?.Dispose();
     }
 
     private sealed record Operation(Context Context, string Target, string RequestId, HomeCallerIdentity Caller);
@@ -381,6 +392,7 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
             try { _lifetime.Cancel(); } catch (Exception error) { failures.Add(error); }
             try { await Gate.WaitAsync().ConfigureAwait(false); Gate.Release(); }
             catch (Exception error) { Add(failures, error, null); }
+            try { Channel.Dispose(); } catch (Exception error) { Add(failures, error, null); }
             try { _lifetime.Dispose(); } catch (Exception error) { Add(failures, error, null); }
             Throw(null, failures);
         }

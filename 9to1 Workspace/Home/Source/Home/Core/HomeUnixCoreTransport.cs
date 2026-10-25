@@ -59,9 +59,21 @@ public static class HomeUnixCoreTransport
             else
             {
             var initial = HomeUnixCoreProtocol.ReadRequest(first);
-            session = await sessions.AcceptUnixAsync(originalAcceptedSocket, originalHeldLease,
-                lifetime.Token, lifetime.Token).ConfigureAwait(false)
-                ?? throw new UnauthorizedAccessException("Original installed Home Core session is unavailable.");
+            try
+            {
+                session = await sessions.AcceptUnixAsync(originalAcceptedSocket, originalHeldLease,
+                    lifetime.Token, lifetime.Token).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("Original installed Home Core session is unavailable.");
+            }
+            catch (HomeNativePeerProcessUnavailableException cause)
+            {
+                // Availability-only failure contains no service data or authority.
+                // Local Home startup remains usable on older supported kernels.
+                var unavailable = new HomeNativeCoreApiResult<object>(new(false,
+                    HomeNativePeerProcessUnavailableException.Code, cause.Message), null);
+                await HomeUnixDiscoveryTransport.WriteFrameAsync(stream, HomeUnixCoreProtocol.Payload(initial, unavailable), lifetime.Token).ConfigureAwait(false);
+                return;
+            }
             var frames = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(1)
             {
                 SingleReader = true, SingleWriter = true, FullMode = BoundedChannelFullMode.Wait,
