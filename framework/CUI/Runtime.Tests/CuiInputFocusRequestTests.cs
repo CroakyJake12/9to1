@@ -218,7 +218,7 @@ public sealed class CuiInputFocusRequestTests
             using var loader = new CuiControlLoader(); loader.SetBindingContext(model);
             var loaded = loader.LoadMarkup("""
                 <Container Type="Vertical Stack"><Input Type="Text" Value="Other input"/>
-                  <Input Type="Text" Value="{Binding Name}" TextSelection="{Binding Range}"/>
+                  <Input Type="Text" Value="{Binding Name}" Interactive="{Binding Allow}" TextSelection="{Binding Range}"/>
                 </Container>
                 """);
             Assert.Empty(loaded.Diagnostics); var root = Assert.IsType<CuiContainerControl>(loaded.Root); loader.WireBindings(root);
@@ -232,8 +232,9 @@ public sealed class CuiInputFocusRequestTests
                 else if (scenario == "withdrawn") model.Set("Range", null);
                 else if (scenario == "disposed") loader.Dispose();
                 else if (scenario == "reloaded") Assert.Empty(loader.LoadMarkup("<Input Type=\"Text\" Value=\"new scene\"/>").Diagnostics);
-                else input.IsEnabled = false;
+                else model.Set("Allow", false);
                 Pump(window); Assert.True(other.IsFocused); Assert.False(input.IsFocused);
+                if (scenario == "disabled") Assert.False(input.IsEffectivelyEnabled);
                 Assert.NotEqual("source", input.SelectedText);
             }
             finally { window.Close(); }
