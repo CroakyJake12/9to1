@@ -764,6 +764,17 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         row = (uint)index < (uint)_tabRows.Length ? _tabRows[index] : null;
         return row is not null && IsCurrentTabTarget(row.Target);
     }
+    public bool TryGetCurrentTabRow(string stableKey, out TabRow? row)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        row = _tabRows.FirstOrDefault(item => StringComparer.Ordinal.Equals(item.Key, stableKey));
+        return row is not null && IsCurrentTabTarget(row.Target);
+    }
+    public bool IsCurrentTabRow(TabRow row)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        return _tabRows.Any(item => ReferenceEquals(item, row)) && IsCurrentTabTarget(row.Target);
+    }
     public ValueTask ReorderTabRowsAsync(TabRow source, TabRow target, bool beforeTarget, CancellationToken token = default)
     {
         Dispatcher.UIThread.VerifyAccess();
