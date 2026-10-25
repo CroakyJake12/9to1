@@ -105,6 +105,8 @@
               <Input Type="Select" Width="96" AccessibleName="Cell horizontal alignment" ItemsSource="{Binding ContextHorizontalOptions}" SelectedIndex="{Binding ContextCellHorizontalIndex}" Interactive="{Binding ContextHasCell}" />
               <Input Type="Select" Width="96" AccessibleName="Cell vertical alignment" ItemsSource="{Binding ContextVerticalOptions}" SelectedIndex="{Binding ContextCellVerticalIndex}" Interactive="{Binding ContextHasCell}" />
               <Button Content="Bold" Action="ContextCellBold" AccessibleName="Toggle selected cell bold" Interactive="{Binding ContextHasCell}" />
+              <Button Content="Italic" Action="ContextCellItalic" AccessibleName="Toggle selected cell italic" Interactive="{Binding ContextHasCell}" />
+              <Input Type="Select" Width="110" AccessibleName="Selected cell fill" ItemsSource="{Binding ContextSurfaceNames}" SelectedIndex="{Binding ContextCellSurfaceIndex}" Interactive="{Binding ContextHasCell}" />
               <Text Text="Style" VerticalAlignment="Center" FontWeight="SemiBold" Margin="8 0 4 0" />
               <Input Type="Select" Width="110" AccessibleName="Table background" ItemsSource="{Binding ContextSurfaceNames}" SelectedIndex="{Binding ContextTableSurfaceIndex}" />
               <Input Type="Select" Width="96" AccessibleName="Table border style" ItemsSource="{Binding ContextBorderOptions}" SelectedIndex="{Binding ContextTableBorderIndex}" />

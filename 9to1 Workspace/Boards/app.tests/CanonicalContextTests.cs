@@ -22,7 +22,7 @@ public sealed class CanonicalContextTests
         {
             using var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
             loader.SetBindingContext(vm); loader.SetActionDispatcher(vm);
-            var (root, diagnostics) = loader.LoadFile(FindSource());
+            var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
             Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             Assert.NotNull(root);
             loader.WireBindings(root);
@@ -43,6 +43,20 @@ public sealed class CanonicalContextTests
             addRow.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             Assert.Equal(3, table.TableRows);
             Assert.Equal(2, table.TableCols);
+            vm.FocusCell(table.Id, 1, 1);
+            Assert.True(vm.TryGetValue("ContextHasCell", out var hasCell) && hasCell is true);
+            var widen = Assert.Single(controls.OfType<Button>(), control => AutomationProperties.GetName(control) == "Widen selected table column");
+            widen.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(184, table.ColumnWidths[1]);
+            var taller = Assert.Single(controls.OfType<Button>(), control => AutomationProperties.GetName(control) == "Heighten selected table row");
+            taller.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(80, table.RowHeights[1]);
+            var italic = Assert.Single(controls.OfType<Button>(), control => AutomationProperties.GetName(control) == "Toggle selected cell italic");
+            italic.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Assert.True(table.CellStyles["1,1"].Italic);
+            var cellFill = Assert.Single(controls.OfType<ComboBox>(), control => AutomationProperties.GetName(control) == "Selected cell fill");
+            cellFill.SelectedIndex = 3;
+            Assert.Equal("#FFFFF3C4", table.CellStyles["1,1"].Background);
             Assert.Same(document, session.Document);
             Assert.Equal(table.Id, vm.SelectedBlockId);
         });
@@ -69,15 +83,5 @@ public sealed class CanonicalContextTests
         using var cancellation = new CancellationTokenSource(); cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => vm.DispatchAsync("ContextAddRow", null, cancellation.Token).AsTask());
         Assert.Equal(before, session.Snapshot);
-    }
-
-    private static string FindSource()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
-        {
-            var path = Path.Combine(directory.FullName, "9to1 Workspace", "Boards", "app", "Boards.cui");
-            if (File.Exists(path)) return path;
-        }
-        throw new FileNotFoundException("The actual native Boards.cui source was not found.");
     }
 }

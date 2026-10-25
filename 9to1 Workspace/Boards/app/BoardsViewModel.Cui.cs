@@ -28,6 +28,7 @@ public sealed partial class BoardsViewModel
         Set("ContextSurfaceNames", ContextSurfaceNames);
         Set("ContextCellHorizontalIndex", IndexOf(ContextHorizontalOptions, cellStyle?.AlignH));
         Set("ContextCellVerticalIndex", IndexOf(ContextVerticalOptions, cellStyle?.AlignV));
+        Set("ContextCellSurfaceIndex", Math.Max(0, Array.FindIndex(ContextSurfaces, surface => surface.Hex == cellStyle?.Background)));
         Set("ContextHasCell", cellKey is not null);
         Set("ContextCellHint", cellKey is null ? "Focus a cell for cell tools." : $"Cell {cellKey}");
         var columnWidth = cellKey is not null && column < block!.ColumnWidths.Count
@@ -173,6 +174,15 @@ public sealed partial class BoardsViewModel
                 var cellKey = $"{verticalRow},{verticalColumn}";
                 var cellStyle = block.CellStyles.TryGetValue(cellKey, out var existing) ? existing : block.CellStyles[cellKey] = new RichCellStyleView();
                 cellStyle.AlignV = vertical; CommitViewEdit(); break;
+            case "ContextCellSurfaceIndex" when TryGetContextCell(block, out var fillRow, out var fillColumn):
+                if (!SelectedOption(ContextSurfaceNames, out var cellSurface)) return false;
+                var selectedSurface = ContextSurfaces.First(surface => surface.Name == cellSurface);
+                var fillKey = $"{fillRow},{fillColumn}";
+                var fillStyle = block.CellStyles.TryGetValue(fillKey, out var currentFill)
+                    ? currentFill
+                    : block.CellStyles[fillKey] = new RichCellStyleView();
+                fillStyle.Background = selectedSurface.Hex;
+                CommitViewEdit(); RequestRebuild(); break;
             case "ContextTableSurfaceIndex" when block.Kind == "table":
                 if (value is not int surfaceIndex || surfaceIndex < 0 || surfaceIndex >= ContextSurfaces.Length) return false;
                 block.TableStyle.Background = ContextSurfaces[surfaceIndex].Hex; CommitViewEdit(); break;
@@ -222,6 +232,8 @@ public sealed partial class BoardsViewModel
             case "ContextColumnAutoWidth" when TryGetContextCell(block, out _, out var autoColumn):
                 SetContextColumnWidth(block, autoColumn, null); break;
             case "ContextCellBold" when TryGetContextCell(block, out var row, out var column): ToggleCellBold(block.Id, row, column); break;
+            case "ContextCellItalic" when TryGetContextCell(block, out var italicRow, out var italicColumn):
+                ToggleCuiCellItalic(block, italicRow, italicColumn); break;
             case "ContextRoundTable" when block.Kind == "table": block.TableStyle.CornerRadius = Math.Min(32, block.TableStyle.CornerRadius + 2); CommitViewEdit(); break;
             case "ContextImageNarrower" when block.Kind == "image" && block.Image is not null: ResizeImage(-40); break;
             case "ContextImageWider" when block.Kind == "image" && block.Image is not null: ResizeImage(40); break;
@@ -312,6 +324,20 @@ public sealed partial class BoardsViewModel
                 ? (delta.Value < 0 ? 112 : 184)
                 : Math.Clamp(current + delta.Value, 80, 1600);
         }
+        CommitViewEdit();
+        RequestRebuild();
+        RefreshCuiContext();
+    }
+
+    private void ToggleCuiCellItalic(RichBoardBlock block, int row, int column)
+    {
+        if (!RequireEditMode() || block.Kind != "table" || row < 0 || row >= block.TableRows || column < 0 || column >= block.TableCols)
+            return;
+        var key = $"{row},{column}";
+        var style = block.CellStyles.TryGetValue(key, out var current)
+            ? current
+            : block.CellStyles[key] = new RichCellStyleView();
+        style.Italic = !style.Italic;
         CommitViewEdit();
         RequestRebuild();
         RefreshCuiContext();
