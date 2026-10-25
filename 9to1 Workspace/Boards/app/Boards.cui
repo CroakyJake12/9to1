@@ -31,7 +31,6 @@
               <Input ID="EditViewToggle" Type="Switch" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
             </Container>
             <Button ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
-            <Text ID="PageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Current Board, section and page" />
             <Button ID="ThemeButton" Content="Appearance" Action="ToggleTheme" AccessibleName="Toggle light or dark appearance" />
             <Container Type="Menu" ID="MoreMenu">
               <Button Type="Menu Item" ID="OverflowButton" Content="More" AccessibleName="More board actions">
@@ -80,7 +79,7 @@
       </Container>
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
       <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
-        <Container Type="Grid" Row="0" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiPanel2Brush}" BorderWidth="0" Padding="8 6" Margin="12 8" CornerRadius="14">
+        <Container Type="Grid" Row="0" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiPanel2Brush}" BorderWidth="0" Padding="8 4" Margin="12 4" CornerRadius="14">
           <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="0" VerticalAlignment="Center" AccessibleName="Text formatting">
             <Button ID="RangeBold" Content="B" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
             <Button ID="RangeItalic" Content="I" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" FontStyle="Italic" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic" />
