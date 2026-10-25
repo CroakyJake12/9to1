@@ -223,3 +223,63 @@ principal reader that otherwise delegates to the actual OS source. The second
 control fails the real profile commit guard after an actual filesystem publication,
 leaving the actual canonical journal pending. Neither fixture invents a successful
 actor, publisher, store result or controlled launch.
+
+## Registered Linux Root cold service implementation
+
+The explicit `--home-root-service` entry is separate from ordinary GUI startup.
+It consumes the same activation options above, plus `--control-directory` for an
+existing protected root-owned directory with user traversal (normally0711), and
+requires the already-settled canonical bootstrap. Startup never performs recovery,
+enrollment, installation or registration. It requires the actual process's
+`sd_pid_get_unit` to be `9to1-root.service`, effectiveUID0, and its actual
+`/proc/self/exe` inode to match the signed activated Root entrypoint.
+
+The active local desktop user comes from actual logind session APIs, never HOME,
+USER, SUDO_UID, service arguments or caller JSON. Exactly one active, non-remote
+`user` graphical session (x11/wayland) is supported; absent/ambiguous/unsuitable
+sessions remain unavailable. The administrative machine profile remains Root's
+profile. Home runs under the real desktop login UID and keeps its own existing
+OS-local profile/lease; installation metadata never impersonates that actor.
+
+The Root signed receipt must include `home-root-launcher`, a native0755 executable
+built from `shared/native/linux/home-root-launcher.c`. The maintained ARM build
+compiles it with CMake and copies it into the actual publish tree before shape
+verification/provenance/packaging. The packager must include its exact hash in the
+real externally signed Root runtime cohort. Merely copying the helper into a
+preview package does not satisfy publisher admission. It is never setuid and is
+never granted file capabilities.
+
+The managed runtime retains the original verified code cohort through its child
+and Root control lifetime. It starts the exact signed native supervisor with an
+empty environment and fixed arguments derived only from the current logind user
+and held signed Home entrypoint. The native supervisor owns fork/namespace/group/
+UID changes outside the CLR, verifies the held image inode/device/size/timestamps,
+uses openat2/fexecve (no shell/PATH), and permanently drops all real/effective/saved
+UID/GID IDs and supplementary groups to the actual OS account. It disables core
+dumps and new privileges, closes inherited descriptors, provides a bounded private
+supervisor protocol, retains a pidfd and keeps exited child PIDs unreaped until
+Root retirement. Root rechecks actual kernel peer UID/PID and current executable
+before accepting the controlled Home connection.
+
+A fresh user namespace owned by Root isolates the child's credential namespace
+from ordinary host same-UID ptrace/process_vm access, including across exec's
+dumpability reset. Namespace support and mapping must actually succeed; no weaker
+launch fallback exists. The child remains the real user's host filesystem UID.
+The service monitors the original active login and controlled process, revoking
+the command lifetime if either changes. The fixed Root protocol currently supports
+controlled Home hello, current package inspection and Home-lifetime checks. It
+refuses unsupported mutations and does not accept caller-selected UID/path/argv.
+
+No service is installed or started by this source change. A real protected unit
+and real signed activation are still deployment prerequisites. The Home-side Linux
+Root client/listening publication and selected application launch producer are the
+next composition slice; the cold service does not advertise that these exist.
+`LinuxRootOriginalHomeControlAccepted` describes only the actual child control
+handshake, never Home Core or Root runtime Ready. A missing helper/session/unit or
+uncompleted child protocol remains a visible failure/unavailable result.
+
+The native CMake refusal test runs the helper with no original protocol arguments,
+which refuses before UID/group/namespace/fork operations. Native compilation and
+that refusal run require a separately admitted actual Root check. The current
+source work has not executed a helper, changed privileges, registered/started a
+service or established a production signing/enrollment/controlled-launch result.

@@ -195,7 +195,7 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
         Assert.Equal(before, File.ReadAllBytes(rig.StatePath)); Assert.Equal(Mode700, File.GetUnixFileMode(rig.Stage));
     }
 
-    private sealed class Rig : IDisposable
+    internal sealed class Rig : IDisposable
     {
         private readonly RSA _signer = RSA.Create(3072);
         private readonly X509Certificate2 _certificate;

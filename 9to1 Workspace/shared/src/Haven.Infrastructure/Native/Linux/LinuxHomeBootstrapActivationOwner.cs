@@ -38,7 +38,59 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
     /// bundle, then settle metadata only. Never repeats mode transitions or renames.</summary>
     public Task<Result> RecoverAsync(Request request, CancellationToken token) => RunAsync(request, recovery: true, token);
 
-    private async Task<Result> RunAsync(Request request, bool recovery, CancellationToken token)
+    internal Task<Result> WithinSettledCodeAsync(Request request,
+        Func<PublishedCode, CancellationToken, Task> originalRuntime, CancellationToken token)
+        => RunAsync(request, recovery: true, token, originalRuntime ?? throw new ArgumentNullException(nameof(originalRuntime)));
+
+    internal sealed class PublishedCode
+    {
+        private readonly LinuxHomePackageArtifactStore _artifacts;
+        private readonly LinuxHomePackageArtifactStore.ValidatedStage _stage;
+        private readonly Func<Task> _source;
+        private bool _closed;
+        internal IReadOnlyList<HomePackageOriginalInstalledActivationRecord> Packages { get; }
+        internal PublishedCode(LinuxHomePackageArtifactStore artifacts, LinuxHomePackageArtifactStore.ValidatedStage stage,
+            IReadOnlyList<HomePackageOriginalInstalledActivationRecord> packages, Func<Task> source)
+        { _artifacts = artifacts; _stage = stage; Packages = packages; _source = source; }
+        internal async Task DemandCurrentAsync(CancellationToken token)
+        {
+            ObjectDisposedException.ThrowIf(_closed, this); await _source().ConfigureAwait(false);
+            using var current = _artifacts.ValidatePublishedMachineCode(_stage.Files, _stage.Entrypoint, token);
+            if (!_stage.Identity.SameReadVersion(current.Identity) || _stage.FileIdentities.Any(pair =>
+                !current.FileIdentities.TryGetValue(pair.Key, out var actual) || !pair.Value.SameReadVersion(actual)))
+                throw new UnauthorizedAccessException("The original retained published code cohort changed during Root runtime.");
+        }
+        internal async Task DemandPinnedCurrentAsync(CancellationToken token)
+        {
+            ObjectDisposedException.ThrowIf(_closed, this); await _source().ConfigureAwait(false);
+            LinuxOriginalDownloadPaths.DemandPath(_stage.Directory, _stage.StagePath, true);
+            if (!_stage.Identity.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(_stage.Directory)))
+                throw new UnauthorizedAccessException("The retained published machine-code root changed.");
+            foreach (var file in _stage.Files)
+            {
+                token.ThrowIfCancellationRequested();
+                using var held = LinuxOriginalDownloadPaths.OpenAt(_stage.Directory, file.RelativePath, 0x80000UL | 0x800UL);
+                LinuxOriginalDownloadPaths.DemandPath(held, Path.Combine(_stage.StagePath, file.RelativePath), false);
+                if (!_stage.FileIdentities[file.RelativePath].SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(held)))
+                    throw new UnauthorizedAccessException("The retained already-hashed publisher code cohort changed.");
+            }
+        }
+        internal SafeFileHandle OpenOriginalFile(HomePackageOriginalInstalledActivationRecord package, string relative)
+        {
+            ObjectDisposedException.ThrowIf(_closed, this);
+            if (!Packages.Any(value => ReferenceEquals(value, package)) ||
+                !package.ActivatedFiles.Any(value => value.RelativePath == relative))
+                throw new UnauthorizedAccessException("The same original signed runtime-cohort file is required.");
+            var path = Path.Combine(package.InstallationRoot, relative);
+            var held = LinuxOriginalDownloadPaths.OpenAt(_stage.Directory, Path.GetRelativePath(Path.GetDirectoryName(package.InstallationRoot)!, path), 0x80000UL | 0x800UL);
+            try { LinuxOriginalDownloadPaths.DemandPath(held, path, false); return held; }
+            catch { held.Dispose(); throw; }
+        }
+        internal void Close() => _closed = true;
+    }
+
+    private async Task<Result> RunAsync(Request request, bool recovery, CancellationToken token,
+        Func<PublishedCode, CancellationToken, Task>? originalRuntime = null)
     {
         ArgumentNullException.ThrowIfNull(request); ArgumentNullException.ThrowIfNull(sameEnrollmentOwner);
         Result? result = null;
@@ -180,8 +232,18 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                             throw new UnauthorizedAccessException("A settled operation must still identify its SAME current installed activation; recovery does not overwrite it.");
                         result = new(request.SigningInputs.OperationId, stagePath, original.Registry.Revision,
                             Array.AsReadOnly(recoveredPackages.Select(value => value.PackageId).ToArray())) { AlreadySettled = true };
+                        if (originalRuntime is not null)
+                        {
+                            var packages = recoveredPackages.Select(value => value.UnknownFields![HomePackageOriginalInstalledActivationRecord.Field]
+                                .Deserialize<HomePackageOriginalInstalledActivationRecord>()!).ToArray();
+                            var code = new PublishedCode(artifacts, published, Array.AsReadOnly(packages), original.DemandCurrentAsync);
+                            try { await originalRuntime(code, cancellation).ConfigureAwait(false); }
+                            finally { code.Close(); }
+                        }
                         return;
                     }
+                    if (originalRuntime is not null)
+                        throw new UnauthorizedAccessException("Root runtime requires an already-settled original bootstrap; service startup never performs installer recovery.");
                     if (!allPending || original.Registry.Packages.Count != 0)
                         throw new UnauthorizedAccessException("Mixed or changed package/journal outcomes require explicit owning recovery.");
                     var recovered = await original.SaveAsync(original.Registry with { Packages = recoveredPackages,
@@ -217,7 +279,7 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
             }, token).ConfigureAwait(false);
             return result ?? throw new InvalidOperationException("The original activation operation did not complete.");
         }
-        catch (Exception cause) when (journalAttempted)
+        catch (Exception cause) when (journalAttempted && originalRuntime is null)
         {
             if (cause is LinuxHomePackageArtifactStore.PublicationUncertainException uncertain)
                 observedActive = uncertain.ObservedPublication.ActivePath;
