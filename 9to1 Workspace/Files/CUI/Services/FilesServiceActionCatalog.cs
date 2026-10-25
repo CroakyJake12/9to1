@@ -18,6 +18,7 @@ public static class FilesServiceActionCatalog
 		new("Purge", "item ID and expected revision", "structured operation result", ["files.purge"], FilesRiskLevel.Destructive, false, true, "item; impact count must be previewed"),
 		Mutate("Restore", "item ID", "restored item metadata", "item"),
 		Mutate("SaveBoardDocument", "selected .9to1board file ID, expected revision, document ID, bounded payload size and SHA-256", "new immutable Files revision", "selected board revision history", FilesRiskLevel.Elevated),
+		Mutate("CreateBoardDocument", "selected current folder, display name, document ID, bounded payload size and SHA-256", "new canonical .9to1board file and first immutable revision", "new board file", FilesRiskLevel.Elevated),
 		Mutate("Upload", "destination folder, source and explicit conflict policy", "durable transfer job", "source and destination", FilesRiskLevel.Elevated),
 		Mutate("Download", "item ID and destination", "durable transfer job", "item and destination", FilesRiskLevel.Elevated),
 		Read("Transfer.Get", "transfer ID", "transfer state"),

@@ -11,10 +11,12 @@ namespace Haven.Infrastructure.Native.Linux;
 /// from the bound Files issuer's registered anchor; no path is inferred from an ID.
 /// This owner performs no metadata mutation or Home approval. Every physical effect
 /// has the issuer's raw current Files/Home claim fence. Old bytes are never touched.</summary>
-public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoardDocumentPhysicalOwner, IAsyncDisposable
+public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoardDocumentPhysicalOwner,
+    IFilesOriginalBoardDocumentCreatePhysicalOwner, IAsyncDisposable
 {
     private readonly object _gate = new();
     private IFilesOriginalBoardDocumentWriteSource? _issuer;
+    private IFilesOriginalBoardDocumentCreateSource? _createIssuer;
     private readonly ConditionalWeakTable<IFilesOriginalBoardDocumentWriteDestination, Pin> _issued = new();
     private readonly List<Pin> _pins = [];
     private readonly List<Exception> _unexpected = [];
@@ -23,6 +25,7 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoar
     private bool _retiring;
     private Task? _close;
     public IFilesOriginalBoardDocumentWriteSource? OriginalBoardDocumentWriteSource { get { lock (_gate) return _issuer; } }
+    public IFilesOriginalBoardDocumentCreateSource? OriginalBoardDocumentCreateSource { get { lock (_gate) return _createIssuer; } }
     public Task? OriginalClose { get { lock (_gate) return _close; } }
 
     private sealed class Held(IDisposable actual) : IAsyncDisposable
@@ -45,6 +48,7 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoar
         internal readonly FilesOriginalBoardDocumentPhysicalOwner Owner = owner;
         public IFilesOriginalBoardDocumentWriteDestination OriginalDestination { get; } = destination;
         internal FilesOriginalBoardDocumentWriteDescription Description = null!;
+        internal FilesOriginalBoardDocumentCreateDescription? CreateDescription;
         internal FilesOriginalBoardDocumentMaterializationRecord Record = null!;
         public FilesOriginalBoardDocumentMaterializationRecord OriginalRecord => Record;
         public string RelativeContentReference => Record.RelativeContentReference;
@@ -79,6 +83,18 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoar
             if (_issuer is not null && !ReferenceEquals(_issuer, sameSource))
                 throw new UnauthorizedAccessException("The original Files board-write issuer cannot be replaced.");
             _issuer = sameSource;
+        }
+    }
+
+    public void BindOriginalBoardDocumentCreateSource(IFilesOriginalBoardDocumentCreateSource sameSource)
+    {
+        ArgumentNullException.ThrowIfNull(sameSource);
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(_retiring, this);
+            if (_createIssuer is not null && !ReferenceEquals(_createIssuer, sameSource))
+                throw new UnauthorizedAccessException("The original Files board-create issuer cannot be replaced.");
+            _createIssuer = sameSource;
         }
     }
 
@@ -121,6 +137,20 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoar
         return pin.Driver;
     }
 
+    public Task<IFilesOriginalBoardDocumentMaterialization> MaterializeOriginalBoardDocumentCreateWithinSourceAsync(
+        IFilesOriginalBoardDocumentCreateDestination originalDestination, ReadOnlyMemory<byte> originalValidatedPayload,
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(originalDestination);
+        lock (_gate)
+        {
+            if (_createIssuer is null || !_createIssuer.IsIssuedOriginalBoardDocumentCreateDestination(originalDestination))
+                throw new UnauthorizedAccessException("Use the same private Files board-create destination.");
+        }
+        return MaterializeOriginalBoardDocumentWithinSourceAsync(originalDestination, originalValidatedPayload,
+            scope, retain, cancellationToken);
+    }
+
     private async Task<IFilesOriginalBoardDocumentMaterialization> Materialize(Pin pin, Task start, Guid documentId,
         string sha, CancellationToken token)
     {
@@ -131,13 +161,29 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoar
             source.RunProductive(() =>
             {
                 token.ThrowIfCancellationRequested();
-                var issuer = _issuer ?? throw new UnauthorizedAccessException("Bind the actual Files board-write issuer first.");
-                if (!issuer.IsIssuedOriginalBoardDocumentWriteDestination(pin.OriginalDestination))
-                    throw new UnauthorizedAccessException("The actual Files owner did not issue this board destination.");
-                pin.Description = issuer.GetOriginalBoardDocumentWriteDescription(pin.OriginalDestination) with { };
+                if (pin.OriginalDestination is IFilesOriginalBoardDocumentCreateDestination createDestination)
+                {
+                    var createIssuer = _createIssuer ?? throw new UnauthorizedAccessException("Bind the actual Files board-create issuer first.");
+                    if (!createIssuer.IsIssuedOriginalBoardDocumentCreateDestination(createDestination))
+                        throw new UnauthorizedAccessException("The actual Files owner did not issue this board-create destination.");
+                    var create = createIssuer.GetOriginalBoardDocumentCreateDescription(createDestination) with { };
+                    pin.CreateDescription = create;
+                    pin.Description = new(create.DirectoryPath, create.FilesStoreId, create.ParentFolderId,
+                        create.FileId, Guid.Empty, create.NewRevisionId, create.DocumentId,
+                        create.RelativeContentReference, create.PayloadBytes, create.PayloadSha256, create.OriginalActor);
+                }
+                else
+                {
+                    var issuer = _issuer ?? throw new UnauthorizedAccessException("Bind the actual Files board-write issuer first.");
+                    if (!issuer.IsIssuedOriginalBoardDocumentWriteDestination(pin.OriginalDestination))
+                        throw new UnauthorizedAccessException("The actual Files owner did not issue this board destination.");
+                    pin.Description = issuer.GetOriginalBoardDocumentWriteDescription(pin.OriginalDestination) with { };
+                }
                 var description = pin.Description;
                 if (description.FilesStoreId == Guid.Empty || description.ParentFolderId == Guid.Empty || description.FileId == Guid.Empty ||
-                    description.ExpectedRevisionId == Guid.Empty || description.NewRevisionId == Guid.Empty || description.DocumentId != documentId ||
+                    (pin.CreateDescription is null && description.ExpectedRevisionId == Guid.Empty) ||
+                    (pin.CreateDescription is not null && description.ExpectedRevisionId != Guid.Empty) ||
+                    description.NewRevisionId == Guid.Empty || description.DocumentId != documentId ||
                     description.NewRevisionId == description.ExpectedRevisionId || description.PayloadBytes != pin.Payload!.Length ||
                     !sha.Equals(description.PayloadSha256, StringComparison.OrdinalIgnoreCase) ||
                     description.RelativeContentReference != ".9to1-board-" + description.NewRevisionId.ToString("N") + ".content" ||
@@ -191,6 +237,20 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoar
         => originalMaterialization is Pin pin && ReferenceEquals(pin.Owner, this) &&
             _issued.TryGetValue(pin.OriginalDestination, out var actual) && ReferenceEquals(actual, pin);
 
+    public bool IsIssuedOriginalBoardDocumentCreateMaterialization(IFilesOriginalBoardDocumentMaterialization originalMaterialization)
+        => IsIssuedOriginalBoardDocumentMaterialization(originalMaterialization) &&
+            originalMaterialization.OriginalDestination is IFilesOriginalBoardDocumentCreateDestination destination &&
+            _createIssuer is { } issuer && issuer.IsIssuedOriginalBoardDocumentCreateDestination(destination);
+
+    public Task RevalidateOriginalBoardDocumentCreateWithinSourceAsync(
+        IFilesOriginalBoardDocumentMaterialization originalMaterialization, Action<Action> scope,
+        Action<Task> retain, CancellationToken cancellationToken)
+    {
+        if (!IsIssuedOriginalBoardDocumentCreateMaterialization(originalMaterialization))
+            throw new UnauthorizedAccessException("Revalidate the same privately issued Files board-create materialization.");
+        return RevalidateOriginalBoardDocumentWithinSourceAsync(originalMaterialization, scope, retain, cancellationToken);
+    }
+
     public void DemandOriginalBoardDocumentCommit(IFilesOriginalBoardDocumentMaterialization originalMaterialization)
     {
         var pin = Require(originalMaterialization);
@@ -199,6 +259,23 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoar
             DemandNewAdmission();
             if (pin.Retiring || !pin.Ready || !pin.Driver.IsCompletedSuccessfully)
                 throw new UnauthorizedAccessException("The original completed physical board receipt retired or is unavailable.");
+        }
+        var owners = _rawCommitOwners ??= new(ReferenceEqualityComparer.Instance);
+        owners.TryGetValue(this, out var depth); owners[this] = depth + 1;
+        try { DemandPhysical(pin); DemandPublished(pin); }
+        finally { if (depth == 0) owners.Remove(this); else owners[this] = depth; }
+    }
+
+    public void DemandOriginalBoardDocumentCreateCommit(IFilesOriginalBoardDocumentMaterialization originalMaterialization)
+    {
+        var pin = Require(originalMaterialization);
+        if (!IsIssuedOriginalBoardDocumentCreateMaterialization(pin))
+            throw new UnauthorizedAccessException("The same privately issued Files board-create materialization is required.");
+        lock (_gate)
+        {
+            DemandNewAdmission();
+            if (pin.Retiring || !pin.Ready || !pin.Driver.IsCompletedSuccessfully)
+                throw new UnauthorizedAccessException("The original completed physical board-create receipt retired or is unavailable.");
         }
         var owners = _rawCommitOwners ??= new(ReferenceEqualityComparer.Instance);
         owners.TryGetValue(this, out var depth); owners[this] = depth + 1;
@@ -272,11 +349,23 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwner : IFilesOriginalBoar
         LinuxOriginalDownloadPaths.DemandOwner(pin.Parent!, pin.Uid);
         if (!pin.ParentIdentity.SamePermissions(LinuxOriginalDownloadPaths.ReadIdentity(pin.Parent!)))
             throw new UnauthorizedAccessException("The original registered Files anchor changed identity or permissions.");
-        var issuer = _issuer ?? throw new UnauthorizedAccessException("The original Files issuer is unavailable.");
-        if (!issuer.IsIssuedOriginalBoardDocumentWriteDestination(pin.OriginalDestination) ||
-            issuer.GetOriginalBoardDocumentWriteDescription(pin.OriginalDestination) != pin.Description)
-            throw new UnauthorizedAccessException("The original Files board destination, actor, parent or revision changed.");
-        issuer.DemandOriginalFilesBoardDocumentCommit(pin.OriginalDestination);
+        if (pin.CreateDescription is { } create)
+        {
+            var issuer = _createIssuer ?? throw new UnauthorizedAccessException("The original Files board-create issuer is unavailable.");
+            if (pin.OriginalDestination is not IFilesOriginalBoardDocumentCreateDestination destination ||
+                !issuer.IsIssuedOriginalBoardDocumentCreateDestination(destination) ||
+                issuer.GetOriginalBoardDocumentCreateDescription(destination) != create)
+                throw new UnauthorizedAccessException("The original Files board-create folder, actor or identity changed.");
+            issuer.DemandOriginalFilesBoardDocumentCreateCommit(destination);
+        }
+        else
+        {
+            var issuer = _issuer ?? throw new UnauthorizedAccessException("The original Files issuer is unavailable.");
+            if (!issuer.IsIssuedOriginalBoardDocumentWriteDestination(pin.OriginalDestination) ||
+                issuer.GetOriginalBoardDocumentWriteDescription(pin.OriginalDestination) != pin.Description)
+                throw new UnauthorizedAccessException("The original Files board destination, actor, parent or revision changed.");
+            issuer.DemandOriginalFilesBoardDocumentCommit(pin.OriginalDestination);
+        }
     }
     private static void DemandPublished(Pin pin)
     {
