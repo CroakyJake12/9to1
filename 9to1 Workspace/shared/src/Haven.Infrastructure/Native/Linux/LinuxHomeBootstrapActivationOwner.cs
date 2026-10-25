@@ -234,9 +234,9 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                             Array.AsReadOnly(recoveredPackages.Select(value => value.PackageId).ToArray())) { AlreadySettled = true };
                         if (originalRuntime is not null)
                         {
-                            var packages = recoveredPackages.Select(value => value.UnknownFields![HomePackageOriginalInstalledActivationRecord.Field]
+                            var runtimePackages = recoveredPackages.Select(value => value.UnknownFields![HomePackageOriginalInstalledActivationRecord.Field]
                                 .Deserialize<HomePackageOriginalInstalledActivationRecord>()!).ToArray();
-                            var code = new PublishedCode(artifacts, published, Array.AsReadOnly(packages), original.DemandCurrentAsync);
+                            var code = new PublishedCode(artifacts, published, Array.AsReadOnly(runtimePackages), original.DemandCurrentAsync);
                             try { await originalRuntime(code, cancellation).ConfigureAwait(false); }
                             finally { code.Close(); }
                         }
