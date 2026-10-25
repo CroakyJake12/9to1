@@ -803,11 +803,12 @@ public static class BlockRenderer
         cols = Math.Clamp(cols, 1, 50);
 
         var tableCornerRadius = new CornerRadius(Math.Clamp(block.TableStyle.CornerRadius, 0, 16));
+        var tableBorderWidth = Math.Clamp(block.TableStyle.BorderWidth > 0 ? block.TableStyle.BorderWidth : 1, 0.5, 8);
         var tableBorder = new Border
         {
             Name = "BoardTableFrame_" + block.Id,
             BorderBrush = TableBorderBrush(block),
-            BorderThickness = new Thickness(Math.Clamp(block.TableStyle.BorderWidth > 0 ? block.TableStyle.BorderWidth : 1, 0.5, 8)),
+            BorderThickness = new Thickness(tableBorderWidth),
             CornerRadius = tableCornerRadius,
             Margin = new Thickness(0, 4, 0, 4),
             Width = block.TableStyle.Width > 0 ? block.TableStyle.Width : double.NaN,
@@ -929,7 +930,7 @@ public static class BlockRenderer
         tableBorder.Child = new Border
         {
             Name = "BoardTableClip_" + block.Id,
-            CornerRadius = tableCornerRadius,
+            CornerRadius = new CornerRadius(Math.Max(0, tableCornerRadius.TopLeft - tableBorderWidth)),
             ClipToBounds = true,
             Child = grid,
         };
@@ -1936,7 +1937,7 @@ public static class BlockRenderer
     private static IBrush TableBorderBrush(RichBoardBlock block) =>
         TryBrush(block.TableStyle.BorderColor, out var brush) && brush is not null
             ? brush
-            : BoardsTheme.BorderBrush;
+            : BoardsTheme.AccentBrush;
 
     /// <summary>Checklist view ids are "parentId:itemId"; plain ids map to themselves with '_' separators.</summary>
     private static string NameSuffix(string viewId) => viewId.Replace(':', '_');
