@@ -162,6 +162,43 @@ public sealed class SpaceLayoutEditorAdapterTests
     }
 
     [Fact]
+    public void User_message_palette_edits_json_pointer_in_the_same_validated_space_draft()
+    {
+        var (page, space, latestDraft) = NewPage();
+        using (page)
+        {
+            Add(page, SpaceUserMessageGraph.SourceType);
+            Add(page, SpaceUserMessageGraph.ParseJsonType);
+            Add(page, SpaceUserMessageGraph.SelectJsonType);
+            Add(page, SpaceUserMessageGraph.JsonStringType);
+            Add(page, SpaceUserMessageGraph.OutputType);
+
+            var nodes = page.Editor.Document.Nodes.ToDictionary(node => node.TypeId, StringComparer.Ordinal);
+            page.Editor.SelectNode(nodes[SpaceUserMessageGraph.SelectJsonType].Id);
+            var pointer = Assert.Single(page.NodeConfigurationInputs,
+                pair => pair.Key.EndsWith(".pointer", StringComparison.Ordinal)).Value;
+            Assert.Equal(string.Empty, pointer.Text);
+            pointer.Text = "/display/name";
+            Assert.Equal("/display/name", Assert.Single(page.Editor.Document.Nodes,
+                node => node.TypeId == SpaceUserMessageGraph.SelectJsonType).Metadata["pointer"]);
+
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.SourceType].Id, "out",
+                nodes[SpaceUserMessageGraph.ParseJsonType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.ParseJsonType].Id, "out",
+                nodes[SpaceUserMessageGraph.SelectJsonType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.SelectJsonType].Id, "out",
+                nodes[SpaceUserMessageGraph.JsonStringType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.JsonStringType].Id, "out",
+                nodes[SpaceUserMessageGraph.OutputType].Id, "in"));
+
+            Assert.NotNull(latestDraft());
+            var compiled = SpaceUserMessageGraph.Compile(space.Id, space.Revision, latestDraft()!);
+            Assert.Equal(space.Id, compiled.SpaceId);
+            Assert.Equal(space.Revision, compiled.SpaceRevision);
+        }
+    }
+
+    [Fact]
     public async Task Builder_sample_preview_runs_the_current_draft_and_reports_truncation_without_changing_active_space()
     {
         var now = DateTimeOffset.UtcNow;
