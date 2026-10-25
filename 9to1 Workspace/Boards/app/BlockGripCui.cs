@@ -63,7 +63,8 @@ internal static class BlockGripCui
             for (var blockIndex = 0; blockIndex < blocks.Count; blockIndex++)
                 if (blocks[blockIndex].Id == blockId) { index = blockIndex; break; }
             var eligible = index >= 0 && !blockId.Contains(':') &&
-                blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph";
+                blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
+                    "checklist" or "bulleted" or "numbered";
             var target = eligible && viewModel.Session is ContractSessionAdapter adapter
                 ? adapter.CaptureBlockAction(_pageId, _blockId)
                 : null;
