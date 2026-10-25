@@ -214,6 +214,15 @@
             <Button id="BrowseMoveTabRightButton" action="MoveTabRight" AccessibleName="Move selected tab right within its section" Interactive="{Binding Can.MoveTabRight}">Move right</Button>
           </Container>
           <Text FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap">Pinned tabs stay before other tabs. Unpin to show the close button, or use Close selected tab.</Text>
+          <Text Text="Split view" FontWeight="Bold" />
+          <Container Type="Wrap" CellGap="4">
+            <Button id="BrowseToggleSplitViewButton" action="9to1.Browse.ToggleSplitView" Interactive="{Binding Can.ToggleSplitView}" AccessibleName="{Binding ToggleSplitLabel}">Split view</Button>
+            <Button id="BrowseFocusSplitPrimaryButton" action="9to1.Browse.FocusSplitPrimary" Interactive="{Binding Can.FocusSplitPrimary}" AccessibleName="{Binding SplitPrimaryLabel}">Left pane</Button>
+            <Button id="BrowseFocusSplitSecondaryButton" action="9to1.Browse.FocusSplitSecondary" Interactive="{Binding Can.FocusSplitSecondary}" AccessibleName="{Binding SplitSecondaryLabel}">Right pane</Button>
+            <Button id="BrowseSwapSplitPanesButton" action="9to1.Browse.SwapSplitPanes" Interactive="{Binding Can.SwapSplitPanes}">Swap panes</Button>
+            <Button id="BrowseCloseSplitViewButton" action="9to1.Browse.CloseSplitView" Interactive="{Binding Can.CloseSplitView}">Close split</Button>
+          </Container>
+          <Button id="BrowseRetrySplitLayoutButton" action="9to1.Browse.SaveSplitViewLayout" IsVisible="{Binding HasUnsavedSplitViewLayout}" Interactive="{Binding Can.SaveSplitViewLayout}">Retry saving split layout</Button>
           <Button id="BrowseRetryTabPlacementButton" action="9to1.Browse.SaveTabPlacement" IsVisible="{Binding HasUnsavedTabPlacement}" Interactive="{Binding Can.SaveTabPlacement}">Retry saving tab layout</Button>
           <Container Type="Wrap" CellGap="4">
             <Button id="BrowsePrivateTabButton" action="9to1.Browse.NewPrivateTab" Interactive="{Binding Can.NewPrivateTab}">Private tab</Button>

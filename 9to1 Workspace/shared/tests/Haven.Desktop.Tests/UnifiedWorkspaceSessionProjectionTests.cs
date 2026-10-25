@@ -161,6 +161,25 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
     }
 
     [Fact]
+    public void Browse_split_projection_persists_two_same_profile_panes_and_rejects_invalid_references()
+    {
+        var a = Tab("A"); var b = Tab("B"); var original = Session([a, b]);
+        var paneIds = new[] { b.Id, a.Id };
+        var split = Projection([Project(a), Project(b)], b.Id) with { PaneTabIds = paneIds };
+        var merged = Merge(original, split, a.Id, b.Id);
+        var layout = merged.Windows[0].Layout;
+        Assert.Equal(WorkspaceLayoutKind.Split, layout.Kind);
+        Assert.Equal(paneIds, layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
+        Assert.Equal(b.Id, merged.Windows[0].SelectedTabId);
+
+        var crossProfile = split with
+        { Tabs = [Project(a), Project(b) with { ProfileId = "different-profile" }] };
+        Assert.Throws<InvalidDataException>(() => Merge(original, crossProfile, a.Id, b.Id));
+        Assert.Throws<InvalidDataException>(() => Merge(original,
+            split with { PaneTabIds = [a.Id, Guid.NewGuid()] }, a.Id, b.Id));
+    }
+
+    [Fact]
     public void Single_pane_tracks_selection_without_replacing_its_identity_and_private_selection_is_not_persisted()
     {
         var a = Tab("A"); var b = Tab("B"); var original = Session([a, b]);

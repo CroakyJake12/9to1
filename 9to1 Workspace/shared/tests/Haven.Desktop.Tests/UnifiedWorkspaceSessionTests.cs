@@ -11,6 +11,37 @@ namespace Haven.Desktop.Tests;
 public sealed class UnifiedWorkspaceSessionTests
 {
     [AvaloniaFact]
+    public async Task Browse_split_panes_restore_and_round_trip_through_the_existing_window_layout()
+    {
+        var first = UnifiedWorkspaceTabState.Merge(null, Browser("First"));
+        var second = UnifiedWorkspaceTabState.Merge(null, Browser("Second"));
+        var window = Window(WorkspaceWindowKind.Main, [first.Id, second.Id]) with
+        {
+            SelectedTabId = second.Id,
+            Layout = new WorkspaceLayoutSnapshot(Guid.NewGuid(), WorkspaceLayoutKind.Split,
+                SplitOrientation.Horizontal, 0.5,
+                [new(Guid.NewGuid(), first.Id, 0), new(Guid.NewGuid(), second.Id, 1)])
+        };
+        var repository = new Repository
+        {
+            Restored = new(WorkspaceSessionSnapshot.CurrentSchemaVersion, [first, second], [], [window], DateTimeOffset.UnixEpoch)
+        };
+        var coordinator = new WorkspaceSessionCoordinator(repository);
+        var session = new UnifiedWorkspaceSession(coordinator, await coordinator.LoadAsync(CancellationToken.None));
+        var port = session.OpenWindow(window.Id, "profile");
+
+        var loaded = await port.LoadAsync(CancellationToken.None);
+        Assert.Equal(new[] { first.Id, second.Id }, loaded!.PaneTabIds);
+        await port.SaveAsync(loaded with { PaneTabIds = [second.Id, first.Id] }, CancellationToken.None);
+        var saved = repository.Writes[^1].Windows.Single();
+        Assert.Equal(WorkspaceLayoutKind.Split, saved.Layout.Kind);
+        Assert.Equal(new[] { second.Id, first.Id }, saved.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
+        Assert.Equal(window.Layout.Panes.Select(pane => pane.Id).OrderBy(id => id),
+            saved.Layout.Panes.Select(pane => pane.Id).OrderBy(id => id));
+        await session.SealAndDrainAsync();
+    }
+
+    [AvaloniaFact]
     public async Task First_projection_keeps_unopened_windows_and_unrepresentable_rows_in_canonical_writer()
     {
         var first = Row("home", "{}");

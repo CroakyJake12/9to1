@@ -82,6 +82,7 @@ public sealed record BrowseChromeSnapshot(
     string PopupStatus,
     string Status)
 {
+    public IReadOnlyList<Guid> PaneTabIds { get; init; } = [];
     public BrowseTabSnapshot SelectedTab => Tabs.Single(tab => tab.Id == SelectedTabId);
 }
 
@@ -104,6 +105,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private readonly IBrowserAutomationService? _automation;
     private readonly BrowserRecoveryLimiter _recovery = new(3, TimeSpan.FromMinutes(1));
     private readonly List<TabRuntime> _tabs = [];
+    private readonly List<Guid> _paneTabIds = [];
     private IReadOnlyList<BrowserDownloadRecord> _downloads = [];
     private Guid _selectedTabId;
     private string _popupStatus = "No popup request.";
@@ -205,6 +207,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             {
                 if (tabSessionPersistence is not null) chrome.RestoreClosedTabs(projected?.ClosedTabs ?? []);
                 else chrome.RestoreStandaloneClosedTabs();
+                if (tabSessionPersistence is not null && projected?.PaneTabIds is { Count: 2 } panes &&
+                    panes[0] != panes[1] && panes.All(id => chrome._tabs.Any(tab => tab.Id == id &&
+                        tab.Privacy == BrowserTabPrivacy.Standard && StringComparer.Ordinal.Equals(tab.ProfileId, homeProfileId))))
+                    chrome._paneTabIds.AddRange(panes);
             }
             chrome._status = chrome._tabs[0].EngineState == BrowseEngineState.Ready
                 ? "Browse is ready."
@@ -360,6 +366,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         var privacy = isPrivate ? BrowserTabPrivacy.Private : BrowserTabPrivacy.Standard;
         var home = _internalContentFactory is not null ? NewTabAddress : AppContentAddress.Parse(_data.Settings.HomePage);
         var tab = await AddRuntimeAsync(Guid.NewGuid(), isPrivate ? "Private tab" : "New tab", home, privacy, string.Empty, cancellationToken).ConfigureAwait(false);
+        _paneTabIds.Clear();
         _selectedTabId = tab.Id;
         _status = isPrivate
             ? "Private tab opened. History, permissions, downloads, and tab state are not persisted by Browse."
@@ -374,6 +381,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
         _selectedTabId = tab.Id;
+        if (_paneTabIds.Count == 2 && !_paneTabIds.Contains(tab.Id)) _paneTabIds.Clear();
         if (tab.EngineState == BrowseEngineState.Crashed)
             _status = "This tab's web renderer crashed. Recovery is available.";
         else
@@ -404,6 +412,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         BrowseEngineKind? engineOverride = _enginePolicy.TabOverrides.TryGetValue(tab.Id, out var explicitEngine) ? explicitEngine : null;
         await ReleaseContentAsync(tab).ConfigureAwait(false);
         _tabs.Remove(tab);
+        _paneTabIds.Remove(tab.Id);
+        if (_paneTabIds.Count < 2) _paneTabIds.Clear();
         _enginePolicy.SetTabOverride(tab.Id, null);
         if (_tabs.Count == 0)
         {
@@ -949,7 +959,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             ? _data.SaveSessionTabsAsync(tabs, closedTabs.Select(item =>
                 new BrowserClosedTabState(item.Tab, item.Index, item.EngineOverride?.ToString())), token)
             : _tabSessionPersistence.SaveAsync(new BrowseTabSessionProjection(tabs, selectedTabId)
-                { ClosedTabs = closedTabs }, token);
+                { ClosedTabs = closedTabs, PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()) }, token);
         if (original is null) throw new InvalidOperationException("The workspace owner supplied no original session save task.");
         RetainAppSource(original); return original;
     }
@@ -982,7 +992,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             selected.FindQuery,
             selected.ZoomPercent,
             _popupStatus,
-            _status);
+            _status) { PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()) };
     }
 
     private static BrowseSecuritySnapshot SecurityFor(TabRuntime tab) =>

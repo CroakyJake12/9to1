@@ -6,6 +6,78 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeOwnershipTests
 {
     [Fact]
+    public async Task Split_view_uses_existing_same_profile_tab_owners_and_persists_focus_and_close()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
+        var profile = "split-profile";
+        var session = new TabSessionFixture(new BrowseTabSessionProjection([
+            new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty,
+                DateTimeOffset.UtcNow) { ProfileId = profile },
+            new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty,
+                DateTimeOffset.UtcNow) { ProfileId = profile }
+        ], firstId));
+        await using var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: profile,
+            tabSessionPersistence: session);
+        var originalHosts = factory.Hosts.ToArray();
+        Assert.Equal(2, originalHosts.Length);
+
+        Assert.True(chrome.CanSplitSelectedTab);
+        await chrome.ToggleSplitViewAsync();
+        Assert.Equal(new[] { firstId, secondId }, chrome.State.PaneTabIds);
+        Assert.Equal(originalHosts.Length, factory.Hosts.Count);
+        Assert.Equal(new[] { firstId, secondId }, session.Saves[^1].PaneTabIds);
+
+        await chrome.FocusSplitPaneAsync(secondId);
+        Assert.Equal(secondId, chrome.State.SelectedTabId);
+        Assert.Equal(new[] { firstId, secondId }, session.Saves[^1].PaneTabIds);
+        await chrome.SwapSplitPanesAsync();
+        Assert.Equal(new[] { secondId, firstId }, chrome.State.PaneTabIds);
+        Assert.Equal(secondId, chrome.State.SelectedTabId);
+        await chrome.CloseSplitViewAsync();
+        Assert.Empty(chrome.State.PaneTabIds);
+        Assert.Equal(2, chrome.State.Tabs.Count);
+        Assert.Equal(originalHosts.Length, factory.Hosts.Count);
+    }
+
+    [Fact]
+    public async Task Split_view_rejects_tabs_owned_by_another_profile()
+    {
+        var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
+        var session = new TabSessionFixture(new BrowseTabSessionProjection([
+            new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty,
+                DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty,
+                DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
+        ], firstId));
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile-a",
+            tabSessionPersistence: session);
+        Assert.False(chrome.CanSplitSelectedTab);
+        await chrome.ToggleSplitViewAsync();
+        Assert.Empty(chrome.State.PaneTabIds);
+        Assert.Contains("this profile", chrome.State.Status);
+    }
+
+    [Fact]
+    public async Task Split_view_does_not_join_two_tabs_from_a_noncurrent_profile()
+    {
+        var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
+        var session = new TabSessionFixture(new BrowseTabSessionProjection([
+            new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty,
+                DateTimeOffset.UtcNow) { ProfileId = "profile-b" },
+            new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty,
+                DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
+        ], firstId));
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile-a",
+            tabSessionPersistence: session);
+        Assert.False(chrome.CanSplitSelectedTab);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => chrome.ToggleSplitViewAsync());
+        Assert.Empty(chrome.State.PaneTabIds);
+    }
+
+    [Fact]
     public async Task Address_navigation_resolves_site_engine_without_reloading_old_site_or_changing_tab_id()
     {
         var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory(includeGecko: true);

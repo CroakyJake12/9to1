@@ -15,6 +15,43 @@ namespace HavenOS.Apps.Browse.Tests;
 
 public sealed partial class BrowseNativeUiTests
 {
+    [AvaloniaFact]
+    public async Task Split_view_buttons_render_both_original_engine_views_and_focus_without_recreation()
+    {
+        var factory = new FixtureFactory(); var paths = new Paths();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: "current-profile");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            await Click(window, workspace, Find(window, "BrowseNewTabButton")); Layout();
+            var tabs = chrome.State.Tabs.ToArray(); Assert.Equal(2, tabs.Length);
+            await Click(window, workspace, Find(window, "BrowseMoreButton")); Layout();
+            var split = Find(window, "BrowseToggleSplitViewButton");
+            Assert.True(split.IsEnabled);
+            await Click(window, workspace, split); Layout();
+            Assert.Equal(new[] { tabs[1].Id, tabs[0].Id }, chrome.State.PaneTabIds);
+            var views = factory.Hosts.Select(host => host.OriginalNativeView).ToArray();
+            Assert.Equal(2, views.Length);
+            Assert.All(views, view => Assert.True(view.IsEffectivelyVisible));
+            var parents = views.Select(view => Assert.IsType<Grid>(view.Parent)).Distinct().ToArray();
+            Assert.Single(parents);
+            Assert.Equal(2, Grid.GetColumn(views[0])); Assert.Equal(0, Grid.GetColumn(views[1]));
+            var before = factory.Hosts.Count;
+            await Click(window, workspace, Find(window, "BrowseFocusSplitSecondaryButton")); Layout();
+            Assert.Equal(tabs[0].Id, chrome.State.SelectedTabId);
+            Assert.Equal(before, factory.Hosts.Count);
+            await Retire(window);
+
+            void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
     [AvaloniaTheory]
     [InlineData(1440, 920)]
     [InlineData(1280, 520)]

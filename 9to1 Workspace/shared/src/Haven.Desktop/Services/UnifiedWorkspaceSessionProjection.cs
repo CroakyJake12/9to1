@@ -33,12 +33,15 @@ internal static class UnifiedWorkspaceSessionProjection
         DemandUnique(current.ClosedTabs.Select(item => item.Tab.Id), "recently closed tabs");
         if (current.ClosedTabs.Count > 25)
             throw new InvalidDataException("The recently closed tab list exceeds its bounded recovery capacity.");
-
         var owningWindow = original.Windows.SingleOrDefault(window => window.Id == windowId)
             ?? throw new InvalidDataException("The owning window must be seeded before merging its projection.");
         DemandUnique(owningWindow.Layout.Panes.Select(pane => pane.Id), "owning window panes");
         var ownedIds = owningWindow.OrderedTabIds.ToHashSet();
         var currentIds = current.Tabs.Select(tab => tab.Id).ToHashSet();
+        var paneTabIds = current.PaneTabIds ?? RestoreLegacyPanes(owningWindow, current.Tabs, current.SelectedTabId);
+        if (paneTabIds.Count is not (0 or 2))
+            throw new InvalidDataException("A Browse split must contain exactly two pane identities.");
+        DemandUnique(paneTabIds, "split pane tabs");
         var closedTabIds = current.ClosedTabs.Select(item => item.Tab.Id).ToHashSet();
         if (closedTabIds.Overlaps(currentIds))
             throw new InvalidDataException("A tab cannot be both open and recently closed in the same window.");
@@ -46,6 +49,12 @@ internal static class UnifiedWorkspaceSessionProjection
             throw new InvalidDataException("Managed tab identities must belong to the original owning window.");
         if (current.SelectedTabId is { } selected && !currentIds.Contains(selected))
             throw new InvalidDataException("The selected tab must belong to the non-private projection.");
+        if (paneTabIds.Count == 2 && (paneTabIds.Any(id => !currentIds.Contains(id)) ||
+            current.SelectedTabId is not { } focused || !paneTabIds.Contains(focused) ||
+            paneTabIds.Any(id => current.Tabs.Single(tab => tab.Id == id).Privacy != BrowserTabPrivacy.Standard ||
+                !StringComparer.Ordinal.Equals(current.Tabs.Single(tab => tab.Id == id).ProfileId,
+                    current.Tabs.Single(tab => tab.Id == paneTabIds[0]).ProfileId))))
+            throw new InvalidDataException("Split panes must be open standard tabs in the same profile, with focus inside the split.");
 
         var otherReferences = original.Windows.Where(window => window.Id != windowId)
             .SelectMany(WindowReferences).ToHashSet();
@@ -96,19 +105,30 @@ internal static class UnifiedWorkspaceSessionProjection
             return group with { OrderedTabIds = ReadOnly(Overlay(retained, projected)) };
         }).ToArray();
 
-        var remainingPanes = owningWindow.Layout.Panes.Where(pane => !closedIds.Contains(pane.TabId)).ToArray();
         var layout = owningWindow.Layout;
-        if (layout.Kind == WorkspaceLayoutKind.Split && remainingPanes.Length >= 2)
-            layout = layout with { Panes = ReadOnly(remainingPanes) };
+        if (paneTabIds.Count == 2)
+        {
+            var existingPaneIds = owningWindow.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.Id).ToArray();
+            var panes = paneTabIds.Select((tabId, order) => new WorkspacePaneSnapshot(
+                order < existingPaneIds.Length ? existingPaneIds[order] : StableId(windowId, "pane-" + order), tabId, order)).ToArray();
+            layout = layout with { Kind = WorkspaceLayoutKind.Split, Orientation = SplitOrientation.Horizontal,
+                PrimaryRatio = double.IsFinite(layout.PrimaryRatio) ? Math.Clamp(layout.PrimaryRatio,
+                    WorkspaceLayoutSnapshot.MinimumPaneRatio, WorkspaceLayoutSnapshot.MaximumPaneRatio) : 0.5,
+                Panes = ReadOnly(panes) };
+        }
         else
         {
             // A single pane must show the persisted selection. Reuse its identity
             // when switching tabs or collapsing a split, instead of fabricating a layout.
-            var panes = current.SelectedTabId is { } primary
-                ? new[] { remainingPanes.FirstOrDefault() is { } pane
-                    ? pane with { TabId = primary, Order = 0 }
-                    : new WorkspacePaneSnapshot(StableId(windowId, "primary-pane"), primary, 0) }
-                : [];
+            WorkspacePaneSnapshot[] panes;
+            if (current.SelectedTabId is { } primary)
+            {
+                var existing = owningWindow.Layout.Panes.FirstOrDefault(pane => pane.TabId == primary) ??
+                    owningWindow.Layout.Panes.OrderBy(pane => pane.Order).FirstOrDefault();
+                panes = [existing is { } pane ? pane with { TabId = primary, Order = 0 } :
+                    new WorkspacePaneSnapshot(StableId(windowId, "primary-pane"), primary, 0)];
+            }
+            else panes = [];
             layout = layout with { Kind = WorkspaceLayoutKind.Single, Panes = ReadOnly(panes) };
         }
         var latestUpdate = current.Tabs.Select(tab => tab.UpdatedAt).Append(owningWindow.UpdatedAt).Max();
@@ -148,6 +168,17 @@ internal static class UnifiedWorkspaceSessionProjection
             throw new InvalidDataException("The new group identity conflicts with an existing group.");
         groups.Add(new(id, name, false, Array.Empty<Guid>()));
         return id;
+    }
+
+    private static IReadOnlyList<Guid> RestoreLegacyPanes(WorkspaceWindowSnapshot window,
+        IReadOnlyList<BrowserTabState> tabs, Guid? selectedTabId)
+    {
+        if (window.Layout.Kind != WorkspaceLayoutKind.Split || window.Layout.Panes.Count != 2) return [];
+        var paneIds = window.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId).ToArray();
+        var rows = tabs.Where(tab => paneIds.Contains(tab.Id)).ToArray();
+        return paneIds[0] != paneIds[1] && rows.Length == 2 && selectedTabId is { } selected && paneIds.Contains(selected) &&
+            rows.All(tab => tab.Privacy == BrowserTabPrivacy.Standard &&
+                StringComparer.Ordinal.Equals(tab.ProfileId, rows[0].ProfileId)) ? paneIds : [];
     }
 
     // Keep unseen rows as anchors, fill represented slots in the current order,
