@@ -213,6 +213,8 @@ public static class BlockRenderer
         if (!insertAction)
         {
             var glyph = BoardsIcons.Glyph(BoardsIcons.Grip, 14, "Drag block handle");
+            CuiPropertyPresentation.Set(button, "Chromeless", true,
+                CuiPropertyLevel.Instance, "Boards block drag grip interaction");
             CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
                 CuiPropertyLevel.Instance, "Boards block drag grip surface");
             CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
