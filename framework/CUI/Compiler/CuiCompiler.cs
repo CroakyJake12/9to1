@@ -177,9 +177,10 @@ public sealed class CuiCompiler
         var stateful = document.Variables.Count > 0
             || document.Actions.Values.Any(action => action.LocalTarget is not null)
             || document.Effects.Count > 0;
-        var requiresQueryViewport = DocumentUsesQueryViewport(document);
+        var requiresQueryViewport = DocumentUsesRuntimeScope(document, "QueryViewport");
+        var requiresActionShelf = DocumentUsesRuntimeScope(document, "ActionShelf");
         var effectiveMetadata = options.Metadata;
-        if (stateful || requiresQueryViewport)
+        if (stateful || requiresQueryViewport || requiresActionShelf)
         {
             // Stateful documents (document-root local variables or pure-local actions) require the
             // distinct stateful ABI and V2 compiled transport. The ABI is derived from typed
@@ -199,6 +200,8 @@ public sealed class CuiCompiler
                 capabilities.Add(CuiRuntimeCompatibility.DeclarativeEffectsCapability);
             if (requiresQueryViewport)
                 capabilities.Add(CuiRuntimeCompatibility.QueryViewportCapability);
+            if (requiresActionShelf)
+                capabilities.Add(CuiRuntimeCompatibility.ActionShelfCapability);
             effectiveMetadata = new CuiCompilationMetadata(
                 options.Metadata.LanguageVersion,
                 stateful ? CuiCompiledArtifactCodec.V2RuntimeAbiVersion : options.Metadata.RuntimeAbiVersion,
@@ -214,38 +217,38 @@ public sealed class CuiCompiler
     }
 
     /// <summary>True if any component/template route in the document (component tree, definition
-    /// bodies, template content, else-children/closure) contains a QueryViewport container. This
+    /// bodies, template content, else-children/closure) contains the requested registered runtime scope. This
     /// drives declaration of the <c>query-viewport</c> capability for both stateful and stateless
     /// query documents.</summary>
-    private static bool DocumentUsesQueryViewport(CuiDocument document)
+    private static bool DocumentUsesRuntimeScope(CuiDocument document, string scopeType)
     {
         foreach (var component in document.Components)
-            if (ComponentUsesQueryViewport(component))
+            if (ComponentUsesRuntimeScope(component, scopeType))
                 return true;
         foreach (var template in document.Templates.Values)
             if (template?.Content is not null)
                 foreach (var component in template.Content)
-                    if (ComponentUsesQueryViewport(component))
+                    if (ComponentUsesRuntimeScope(component, scopeType))
                         return true;
         return false;
     }
 
     /// <summary>Recursively tests a component (and its children/else-children closure) for a
     /// QueryViewport container: either a component whose native type is QueryViewport, or a
-    /// Container whose authored Type literal is QueryViewport. List/Repeat template bodies live in
+    /// Container whose authored Type literal names that scope. List/Repeat template bodies live in
     /// the document template table and are covered separately.</summary>
-    private static bool ComponentUsesQueryViewport(CuiComponent component)
+    private static bool ComponentUsesRuntimeScope(CuiComponent component, string scopeType)
     {
         foreach (var node in component.DescendantsAndSelf())
         {
-            if (string.Equals(node.Type, "QueryViewport", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(node.Type, scopeType, StringComparison.OrdinalIgnoreCase))
                 return true;
             if (string.Equals(node.Type, "Container", StringComparison.OrdinalIgnoreCase))
             {
                 var typeValue = node.Properties
                     .FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value;
                 if (typeValue is CuiLiteralValue literal
-                    && string.Equals(literal.Value, "QueryViewport", StringComparison.OrdinalIgnoreCase))
+                    && string.Equals(literal.Value, scopeType, StringComparison.OrdinalIgnoreCase))
                     return true;
             }
         }
@@ -704,11 +707,12 @@ public sealed class CuiCompiler
             // A custom Definition has no built-in descriptor, but registered literal
             // types still apply. Do not let reuse turn an invalid number/bool into output.
             // The authored QueryViewport typed source is a scoped runtime port, not a native element
-            // property, so it is allowed only on a QueryViewport container.
-            var isQueryViewportSource = declaredType is not null
-                && declaredType.Value.Equals("QueryViewport", StringComparison.OrdinalIgnoreCase)
+            // property, so it is allowed only on these registered scope containers.
+            var isRuntimeScopeSource = declaredType is not null
+                && (declaredType.Value.Equals("QueryViewport", StringComparison.OrdinalIgnoreCase) ||
+                    declaredType.Value.Equals("ActionShelf", StringComparison.OrdinalIgnoreCase))
                 && property.Name.Equals("Source", StringComparison.OrdinalIgnoreCase);
-            if (!isQueryViewportSource && element is not null && !_registry.SupportsProperty(element, declaredType?.Value, property))
+            if (!isRuntimeScopeSource && element is not null && !_registry.SupportsProperty(element, declaredType?.Value, property))
             {
                 diagnostics.Error("CUIC013", $"Property '{property.Name}' is not allowed on '{component.Type}'.", value.Span);
                 continue;

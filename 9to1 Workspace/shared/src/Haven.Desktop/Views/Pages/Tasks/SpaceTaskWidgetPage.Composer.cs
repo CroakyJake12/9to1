@@ -76,7 +76,11 @@ public sealed partial class SpaceTaskWidgetPage
         public string StopTooltip => "Ask the owning service to stop this same task and retain its recorded work";
         public bool CanSteer => page.IsActionAvailable("task.steer") == true;
         public bool CanQueue => page.IsActionAvailable("task.queue") == true;
-        public bool CanPause => page.IsActionAvailable("task.pause") == true;
+        public bool CanPause => !IsPassPaused && page.IsActionAvailable("task.pause") == true;
+        public bool IsPassPaused => page.AcknowledgedOriginalRunControl is { Kind: TaskRunOriginalRunControlKind.Pause,
+            Disposition: TaskRunOriginalRunControlDisposition.Suspended } ack &&
+            page._observation?.Snapshot is { State: TaskExecutionLifecycle.Suspended } current &&
+            current.TaskId == ack.CanonicalTaskContext.TaskId && current.ExecutionId == ack.CanonicalTaskContext.ExecutionId;
         public bool CanResume => page.IsActionAvailable("task.resume-original") == true;
         public bool IsEditing => false;
         public IReadOnlyList<ChatComposerChip> Chips => [];

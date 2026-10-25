@@ -25,6 +25,7 @@ internal sealed partial class ChatHavenScene
         public bool CanStop => ActiveTask is { } task ? task.CanStop : _scene._isSending;
         public bool CanSteer => ActiveTask?.CanSteer == true;
         public bool CanPause => ActiveTask?.CanPause == true;
+        public bool IsPassPaused => ActiveTask?.IsPassPaused == true;
         public bool CanResume => ActiveTask?.CanResume == true;
         public bool HasSendModePreference => ActiveTask?.HasSendModePreference == true;
         public TaskFollowUpMode? PreferredSendMode => ActiveTask?.PreferredSendMode;

@@ -366,7 +366,18 @@ public sealed partial class NewChatPage
         public bool CanSteer => page.CanSubmitNativeTaskFollowUp();
         public bool CanQueue => page.CanSubmitNativeTaskFollowUp();
         public bool CanStop => page.CanStopNativeComposerTask();
-        public bool CanPause => page.CanPauseNativeComposerTask();
+        public bool CanPause => !IsPassPaused && page.CanPauseNativeComposerTask();
+        public bool IsPassPaused
+        {
+            get
+            {
+                var target = page.CaptureOriginalConversationTarget();
+                lock (page._originalSendGate) return !page._nativeTaskResumeAdmissions.Contains(target) &&
+                    page.CanonicalTaskPauseAcknowledgement is { Disposition: TaskRunOriginalRunControlDisposition.Suspended } ack &&
+                    page._nativeTaskControls.TryGetValue(target, out var controls) &&
+                    controls.CanonicalTaskContext.PersistenceRevision == ack.CanonicalTaskContext.PersistenceRevision;
+            }
+        }
         public ValueTask Pause() => new(page.PauseNativeComposerTaskAsync());
         public bool HasSendModePreference => page._conversation.SpaceId is { } space && space != Guid.Empty &&
             !page._safetyLocked && page.CurrentTaskComposerPresentation()?.Owner.CanSubmitFollowUp == true;

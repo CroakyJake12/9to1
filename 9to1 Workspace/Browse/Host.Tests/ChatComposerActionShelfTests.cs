@@ -7,6 +7,7 @@ using Avalonia.VisualTree;
 using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Haven.Desktop.Views.Pages.Tasks;
 using Haven.Application;
 using Haven.Core;
@@ -108,7 +109,7 @@ public sealed class ChatComposerActionShelfTests
     }
 
     [AvaloniaFact]
-    public async Task Shared_authored_shelf_removes_inactive_controls_and_retains_live_stop_and_queue()
+    public async Task Shared_authored_shelf_overlaps_actual_eligible_commands_and_browsing_preserves_draft()
     {
         var source = new Source();
         var view = new ChatComposerCuiView(source);
@@ -118,22 +119,36 @@ public sealed class ChatComposerActionShelfTests
         {
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Refresh();
-            Assert.Null(Find("send-button"));
-            Assert.Null(Find("stop-button"));
-            Assert.Null(Find("queue-button"));
+            Assert.False(Find("send-button")?.IsVisible ?? false);
             source.Draft = "next message";
             Refresh();
-            Assert.NotNull(Find("send-button"));
-            Assert.Null(Find("stop-button"));
+            var front = Find("send-button")!;
+            Assert.True(front.IsVisible);
+            Assert.Equal("Send, 1 of 1", AutomationProperties.GetName(front));
+            Assert.False(Find("action-shelf-next")?.IsVisible ?? false);
             source.IsSending = true;
             Refresh();
-            Assert.Null(Find("send-button"));
-            Assert.Equal("Stop current response", AutomationProperties.GetName(Find("stop-button")!));
-            Assert.Equal("Queue message", AutomationProperties.GetName(Find("queue-button")!));
+            Assert.Equal("Cancel response, 1 of 2", AutomationProperties.GetName(front));
+            var rear = Find("action-shelf-next")!;
+            Assert.True(rear.IsVisible);
+            Assert.Equal("Show Queue, next action", AutomationProperties.GetName(rear));
+            Assert.Equal(56, front.Bounds.Width);
+            var frontPoint = front.TranslatePoint(default, window)!.Value;
+            var rearPoint = rear.TranslatePoint(default, window)!.Value;
+            Assert.Equal(14, rearPoint.X - frontPoint.X, 3);
+            Assert.Equal(frontPoint.Y, rearPoint.Y, 3);
+            Assert.Equal(0, source.Stops);
+            rear.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, rear));
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            Refresh();
+            Assert.Equal("Queue, 2 of 2", AutomationProperties.GetName(front));
+            Assert.Equal("next message", source.Draft);
+            Assert.Equal(0, source.Sends);
+            Assert.Equal(0, source.Stops);
             source.IsSafetyLocked = true;
             Refresh();
-            Assert.Null(Find("queue-button"));
-            Assert.NotNull(Find("stop-button"));
+            Assert.Equal("Cancel response, 1 of 1", AutomationProperties.GetName(front));
+            Assert.False(rear.IsVisible);
         }
         finally
         {

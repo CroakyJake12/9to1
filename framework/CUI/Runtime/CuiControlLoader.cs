@@ -298,6 +298,13 @@ public sealed partial class CuiControlLoader : IDisposable
         // (a non-scoped/global action) does routing fall back to the scene/app dispatcher.
         var dispatcher = !isLocal ? invocation.Owner ?? ScopedDispatcherFor(control) ?? _actionDispatcher : _actionDispatcher;
         if (!isLocal && dispatcher is null) return;
+        // Capture the exact front identity synchronously, before async admission or a host
+        // callback can replace it. A stale physical press is cancelled, never retargeted.
+        if (dispatcher is CuiActionShelf shelf && invocation.Command == CuiActionShelf.ActivateCommand)
+        {
+            if (!shelf.TryCaptureActivation(out var activation)) return;
+            invocation = invocation with { Parameter = activation, LiveParameter = null };
+        }
 
         if (control is MenuItem && !control.IsEffectivelyEnabled) return;
         if (contextMenuOwner is not null && (!contextMenuOwner.IsEffectivelyEnabled ||
@@ -1171,7 +1178,7 @@ public sealed partial class CuiControlLoader : IDisposable
             parameter = ResolveObject(definition.Parameter);
         var liveParameter = definition.Parameter as CuiBindingValue;
         return new CuiActionInvocation(definition.Command, parameter, _bindingContext, liveParameter, false,
-            _actionDispatcher as CuiQueryViewport, definition.Sets ?? Array.Empty<CuiSetDirective>(), definition.ResultTarget);
+            (_actionDispatcher is CuiQueryViewport or CuiActionShelf ? _actionDispatcher : null), definition.Sets ?? Array.Empty<CuiSetDirective>(), definition.ResultTarget);
     }
 
     /// <summary>Dispatches an effect-invoked action through the same admitted/retained pipeline as a
@@ -1486,10 +1493,10 @@ public sealed partial class CuiControlLoader : IDisposable
                 // retired viewport can never refresh a newer frame.
                 ICuiBindingContext? viewportPreviousContext = null;
                 ICuiActionDispatcher? viewportPreviousDispatcher = null;
-                CuiQueryViewport? activeViewport = null;
+                var hasRuntimeScope = false;
                 if (control is CuiQueryViewport viewport)
                 {
-                    activeViewport = viewport;
+                    hasRuntimeScope = true;
                     viewport.InnerContext = _bindingContext;
                     viewport.InnerDispatcher = _actionDispatcher;
                     var mountGeneration = _loadGeneration;
@@ -1502,6 +1509,21 @@ public sealed partial class CuiControlLoader : IDisposable
                     _bindingContext = viewport;
                     _actionDispatcher = viewport;
                 }
+                if (control is CuiActionShelf shelf)
+                {
+                    hasRuntimeScope = true;
+                    shelf.InnerContext = _bindingContext;
+                    shelf.InnerDispatcher = _actionDispatcher;
+                    var mountGeneration = _loadGeneration;
+                    shelf.RefreshHost = () =>
+                    {
+                        if (IsLoadAttemptCurrent(mountGeneration)) OnBindingPropertyChanged(null);
+                    };
+                    viewportPreviousContext = _bindingContext;
+                    viewportPreviousDispatcher = _actionDispatcher;
+                    _bindingContext = shelf;
+                    _actionDispatcher = shelf;
+                }
                 try
                 {
                     foreach (var child in component.Children.Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child)))
@@ -1512,7 +1534,7 @@ public sealed partial class CuiControlLoader : IDisposable
                 }
                 finally
                 {
-                    if (activeViewport is not null)
+                    if (hasRuntimeScope)
                     {
                         _bindingContext = viewportPreviousContext;
                         _actionDispatcher = viewportPreviousDispatcher;
@@ -1959,6 +1981,7 @@ public sealed partial class CuiControlLoader : IDisposable
         // and refresh callback without raising notifications, evaluating, or dispatching, so a
         // retained old viewport cannot evaluate its old source or refresh a newer frame.
         if (control is CuiQueryViewport retiredViewport) retiredViewport.Withdraw();
+        if (control is CuiActionShelf retiredShelf) retiredShelf.Withdraw();
         CuiLayoutProperties.Detach(control);
         CuiLifecycleProperties.Detach(control);
         CuiPropertyPresentation.Detach(control);
@@ -2476,6 +2499,12 @@ public sealed partial class CuiControlLoader : IDisposable
                 ApplyQueryViewportSource(sourceViewport, value, component.Span);
                 continue;
             }
+            if (control is CuiActionShelf sourceShelf && propName.Equals("Source", StringComparison.OrdinalIgnoreCase))
+            {
+                if (value is CuiBindingValue binding) ApplyLiveBinding(sourceShelf, "Source", binding, component.Span);
+                else SetActionShelfSource(sourceShelf, ResolveObject(value), component.Span);
+                continue;
+            }
             if (_controlRegistry.TryResolveElement(component.Type, out var element) && !_controlRegistry.SupportsProperty(element, resolvedObjectType, descriptor))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"CUI property '{propName}' is not supported on {component.Type}.", value.Span));
             // Type selects the native lowering of core polymorphic elements.
@@ -2533,6 +2562,14 @@ public sealed partial class CuiControlLoader : IDisposable
                 "CUIR079", CuiDiagnosticSeverity.Error,
                 $"CUI QueryViewport Source must resolve to an ICuiPagedSource; got '{source.GetType().Name}'.", span));
         viewport.Source = (ICuiPagedSource?)source;
+    }
+
+    private static void SetActionShelfSource(CuiActionShelf shelf, object? source, CuiSourceSpan span)
+    {
+        if (source is not null && source is not IReadOnlyList<CuiActionShelfItem>)
+            throw new CuiRuntimeLoadException(new("CUIR079", CuiDiagnosticSeverity.Error,
+                "ActionShelf Source must resolve to a bounded typed command list.", span));
+        shelf.Source = (IReadOnlyList<CuiActionShelfItem>?)source;
     }
 
     private void ApplyDirective(Control control, string normalizedName, CuiValue value, CuiSourceSpan span)
@@ -3665,7 +3702,7 @@ public sealed partial class CuiControlLoader : IDisposable
             input.Tag = route.Value;
             _actionInvocations[control] = new CuiActionInvocation(submitDefinition.Command, null, _bindingContext,
                 submitDefinition.Parameter as CuiBindingValue, OriginOnly: true,
-                _actionDispatcher as CuiQueryViewport, submitDefinition.Sets ?? Array.Empty<CuiSetDirective>(),
+                (_actionDispatcher is CuiQueryViewport or CuiActionShelf ? _actionDispatcher : null), submitDefinition.Sets ?? Array.Empty<CuiSetDirective>(),
                 submitDefinition.ResultTarget);
             return;
         }
@@ -3720,7 +3757,7 @@ public sealed partial class CuiControlLoader : IDisposable
         // frame's controls are cleaned up with their invocations and cannot adopt a new/global owner.
         var sets = boundDefinition?.Sets ?? Array.Empty<CuiSetDirective>();
         _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null,
-            _actionDispatcher as CuiQueryViewport, sets, boundDefinition?.ResultTarget);
+            (_actionDispatcher is CuiQueryViewport or CuiActionShelf ? _actionDispatcher : null), sets, boundDefinition?.ResultTarget);
     }
 
     /// <summary>Resolve the nearest authored QueryViewport scope ancestor of a control, if any. The
@@ -3735,6 +3772,7 @@ public sealed partial class CuiControlLoader : IDisposable
         while (current is not null)
         {
             if (current is CuiQueryViewport viewport) return viewport;
+            if (current is CuiActionShelf shelf) return shelf;
             current = current.GetVisualParent();
         }
         return null;
@@ -3973,6 +4011,14 @@ public sealed partial class CuiControlLoader : IDisposable
                     throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR080", CuiDiagnosticSeverity.Error,
                         "QueryViewport Source is a one-way typed runtime port.", span));
                 SetQueryViewportSource(vp, context.TryGetValue(binding.Path, out var source) ? source : binding.Fallback, span);
+                return;
+            }
+            if (control is CuiActionShelf shelf && NormalizeProperty(property) == "source")
+            {
+                if (binding.Mode == CuiBindingMode.TwoWay)
+                    throw new CuiRuntimeLoadException(new("CUIR080", CuiDiagnosticSeverity.Error,
+                        "ActionShelf Source is a one-way typed command port.", span));
+                SetActionShelfSource(shelf, context.TryGetValue(binding.Path, out var source) ? source : binding.Fallback, span);
                 return;
             }
             if (NormalizeProperty(property) == "itemssource")

@@ -1,5 +1,7 @@
 <Cui id="spaces.chat.composer" version="1">
   <Actions>
+    <Action name="shelf.activate" command="shelf.activate" />
+    <Action name="shelf.next" command="shelf.next" />
     <Action name="composer.submit" command="composer.submit" parameter="{Binding Event}" />
     <Action name="composer.toggle-send-mode"><Toggle Target="SendModeOpen" /></Action>
     <Action name="composer.invoke-chip.Id" command="composer.invoke-chip" parameter="{Binding chip.Id}" />
@@ -74,50 +76,32 @@
           <Image Source="avares://Haven/Assets/composer-settings.svg" Width="24" Height="24" />
         </Button>
         <Button id="cancel-edit-button" action="composer.cancel-edit" content="Cancel" MinHeight="44" IsVisible="{Binding Composer.IsEditing}" accessible-name="Cancel editing" />
-        <Container id="conversation-actions" Type="Horizontal Stack" CellGap="4" MaxWidth="220"
-                   HorizontalScrolling="True" VerticalScrolling="False" accessible-name="Conversation actions">
-          <If Condition="{Binding Composer.CanResume}">
-            <Button id="resume-button" action="composer.resume" Width="44" Height="44" Padding="6" CornerRadius="22"
-                    background="{Resource CuiAccentPrimaryBrush}" accessible-name="Resume task"
-                    tooltip="Continue this same task from its approved checkpoint">
-              <Image Source="avares://Haven/Assets/composer-resume.svg" Width="24" Height="24" />
+        <!-- Deliberate wrap-around browsing. Runtime owns identity/position; CUI owns geometry.
+             56px front-left +14px rear extension. No rear or dots for one eligible command. -->
+        <Container id="conversation-actions" Type="ActionShelf" Source="{Binding Composer.ActionShelf}"
+                   Width="70" Height="68" accessible-name="Conversation actions">
+          <Layer ZIndex="0">
+            <Button id="action-shelf-next" action="shelf.next" IsVisible="{Binding Shelf.HasNext}"
+                    Width="56" Height="56" TranslateX="14" Padding="8" CornerRadius="28"
+                    HorizontalAlignment="Left" VerticalAlignment="Top"
+                    background="{Resource CuiAccentPrimaryBrush}" accessible-name="{Binding Shelf.RearAnnouncement}"
+                    tooltip="{Binding Shelf.RearAnnouncement}">
+              <Image Source="{Binding Shelf.RearIcon}" Width="28" Height="28" />
             </Button>
-          </If>
-          <If Condition="{Binding Composer.CanSteer}">
-            <Button id="steer-button" action="composer.steer" Width="44" Height="44" Padding="6" CornerRadius="22"
-                    background="{Resource CuiAccentPrimaryBrush}" accessible-name="Steer task"
-                    tooltip="Send this instruction to the current task">
-              <Image Source="avares://Haven/Assets/composer-steer.svg" Width="24" Height="24" />
+          </Layer>
+          <Layer ZIndex="1">
+            <Button id="send-button" action="shelf.activate" IsVisible="{Binding Shelf.HasFront}"
+                    Width="56" Height="56" Padding="8" CornerRadius="28"
+                    HorizontalAlignment="Left" VerticalAlignment="Top"
+                    background="{Resource CuiAccentPrimaryBrush}" accessible-name="{Binding Shelf.FrontAnnouncement}"
+                    tooltip="{Binding Shelf.FrontTooltip}">
+              <Image Source="{Binding Shelf.FrontIcon}" Width="28" Height="28" />
             </Button>
-          </If>
-          <If Condition="{Binding Composer.CanPause}">
-            <Button id="pause-button" action="composer.pause" Width="44" Height="44" Padding="6" CornerRadius="22"
-                    background="Transparent" Chromeless="true" accessible-name="Pause task"
-                    tooltip="Pause this task at an approved continuation boundary">
-              <Image Source="avares://Haven/Assets/composer-pause.svg" Width="24" Height="24" />
-            </Button>
-          </If>
-          <If Condition="{Binding Composer.CanStop}">
-            <Button id="stop-button" action="composer.stop" Width="44" Height="44" Padding="6" CornerRadius="22"
-                    background="{Resource CuiAccentPrimaryBrush}" accessible-name="{Binding Composer.StopAccessibleName}"
-                    tooltip="{Binding Composer.StopTooltip}">
-              <Image Source="avares://Haven/Assets/composer-stop.svg" Width="24" Height="24" />
-            </Button>
-          </If>
-          <If Condition="{Binding Composer.CanQueue}">
-            <Button id="queue-button" action="composer.queue" Width="44" Height="44" Padding="6" CornerRadius="22"
-                    background="Transparent" Chromeless="true" accessible-name="Queue message"
-                    tooltip="Queue this message after the active response">
-              <Image Source="avares://Haven/Assets/composer-queue.svg" Width="24" Height="24" />
-            </Button>
-          </If>
-          <If Condition="{Binding Composer.ShowSend}">
-            <Button id="send-button" action="composer.send" Width="44" Height="44" Padding="6" CornerRadius="22"
-                    background="{Resource CuiAccentPrimaryBrush}" Interactive="{Binding Composer.CanSend}"
-                    accessible-name="{Binding Composer.SendAccessibleName}" tooltip="{Binding Composer.SendTooltip}">
-              <Image Source="avares://Haven/Assets/send.svg" Width="24" Height="24" />
-            </Button>
-          </If>
+          </Layer>
+          <Layer ZIndex="2" Interactive="false">
+            <Text id="action-shelf-position" text="{Binding Shelf.Dots}" IsVisible="{Binding Shelf.IsNavigating}"
+                  font-size="9" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+          </Layer>
         </Container>
       </Container>
     </Container>

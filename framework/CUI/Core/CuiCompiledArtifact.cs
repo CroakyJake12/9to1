@@ -64,6 +64,7 @@ public static class CuiCompiledArtifactCodec
     /// runtime requirement independent of local-state Variables/Toggle, so a query-only document can
     /// never evade the admission gate by omitting the capability string.</summary>
     public const string QueryViewportCapability = "query-viewport";
+    public const string ActionShelfCapability = "action-shelf";
 
     /// <summary>Semantic feature capability for declarative auto-invocation effects. It is derived
     /// from the actual typed semantics (a non-empty document-root Effects block), so a stripped
@@ -239,38 +240,40 @@ public static class CuiCompiledArtifactCodec
             foreach (var variable in semantics.Variables.Values)
                 if (variable is not null && !string.IsNullOrEmpty(variable.Selection))
                     required.Add(LocalStateRandomSelectCapability);
-        if (ContainsQueryViewport(semantics))
+        if (ContainsRuntimeScope(semantics, "QueryViewport"))
             required.Add(QueryViewportCapability);
+        if (ContainsRuntimeScope(semantics, "ActionShelf"))
+            required.Add(ActionShelfCapability);
         if (semantics.Effects is { Count: > 0 })
             required.Add(DeclarativeEffectsCapability);
         return required;
     }
 
     /// <summary>True if any component/template route in the typed semantics (component tree,
-    /// definition bodies, template content, else-children/closure) contains a QueryViewport scope.</summary>
-    private static bool ContainsQueryViewport(CuiV2Semantics semantics)
+    /// definition bodies, template content, else-children/closure) contains the requested registered runtime scope.</summary>
+    private static bool ContainsRuntimeScope(CuiV2Semantics semantics, string scopeType)
     {
         if (semantics.Components is not null)
             foreach (var component in semantics.Components)
-                if (ComponentUsesQueryViewport(component))
+                if (ComponentUsesRuntimeScope(component, scopeType))
                     return true;
         if (semantics.Templates is not null)
             foreach (var template in semantics.Templates.Values)
                 if (template?.Content is not null)
                     foreach (var component in template.Content)
-                        if (ComponentUsesQueryViewport(component))
+                        if (ComponentUsesRuntimeScope(component, scopeType))
                             return true;
         return false;
     }
 
     /// <summary>Recursively tests a typed V2 component (and its children/else-children closure) for
-    /// a QueryViewport container: either a component whose native type is QueryViewport, or a
-    /// Container whose authored Type literal is QueryViewport. List/Repeat template bodies live in
+    /// a registered scope: either a component whose native type is that scope, or a
+    /// Container whose authored Type literal names that scope. List/Repeat template bodies live in
     /// the semantics template table and are covered separately.</summary>
-    private static bool ComponentUsesQueryViewport(CuiV2Component component)
+    private static bool ComponentUsesRuntimeScope(CuiV2Component component, string scopeType)
     {
         if (component is null) return false;
-        if (string.Equals(component.Type, "QueryViewport", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(component.Type, scopeType, StringComparison.OrdinalIgnoreCase))
             return true;
         if (string.Equals(component.Type, "Container", StringComparison.OrdinalIgnoreCase)
             && component.Properties is not null)
@@ -279,16 +282,16 @@ public static class CuiCompiledArtifactCodec
                 .FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value;
             if (typeValue is not null
                 && string.Equals(typeValue.Kind, CuiV2ValueKind.Literal, StringComparison.Ordinal)
-                && string.Equals(typeValue.LiteralValue, "QueryViewport", StringComparison.OrdinalIgnoreCase))
+                && string.Equals(typeValue.LiteralValue, scopeType, StringComparison.OrdinalIgnoreCase))
                 return true;
         }
         if (component.Children is not null)
             foreach (var child in component.Children)
-                if (ComponentUsesQueryViewport(child))
+                if (ComponentUsesRuntimeScope(child, scopeType))
                     return true;
         if (component.ElseChildren is not null)
             foreach (var child in component.ElseChildren)
-                if (ComponentUsesQueryViewport(child))
+                if (ComponentUsesRuntimeScope(child, scopeType))
                     return true;
         return false;
     }
