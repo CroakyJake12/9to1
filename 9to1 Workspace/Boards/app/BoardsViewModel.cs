@@ -68,6 +68,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("ModeLabel", _isEditMode ? "Edit" : "View");
         Set("RecentBoardsLoaded", false);
         Set("CanAddWritePage", CanAddWritePage);
+        RefreshHomeBoardCreationAvailability();
         _session.StatusChanged += (_, status) =>
         {
             Set("StatusText", status);
@@ -269,7 +270,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         if ((!CanSwitchBoard && command is ("ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or "OpenBoard")) ||
             (!CanSaveAs && command == "SaveAsBoard") ||
-            (!CanSwitchBoard && command == "NewBoard" && _homeBoardCreationHost is null))
+            (!CanSwitchBoard && command == "NewBoard" && (_homeBoardCreationHost is null || _homeBoardCreationHost.CanRetryOpenCreatedBoard)))
         {
             Set("StatusText", "This board source does not grant that action.");
             return;
@@ -297,6 +298,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case "NewBoard":
                 if (_homeBoardCreationHost is null) NewBoardRequested?.Invoke();
                 else await CreateAndOpenHomeBoardAsync(cancellationToken);
+                break;
+            case "RetryOpenCreatedBoard":
+                await RetryOpenCreatedHomeBoardAsync(cancellationToken);
                 break;
             case "NewMenu":
                 NewMenuRequested?.Invoke();
@@ -528,9 +532,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             _ = HavenBoardDocumentCodec.Deserialize(bytes);
             if (bytes.Length > HavenBoardDocumentCodec.MaximumDocumentBytes)
                 throw new InvalidDataException("The new Board draft exceeds the supported document size.");
-            var opened = await host.CreateAndOpenAsync(bytes.ToArray(), cancellationToken);
-            if (!opened)
-                Set("StatusText", "New Board creation was canceled.");
+            var result = await host.CreateAndOpenAsync(bytes.ToArray(), cancellationToken);
+            ApplyHomeBoardCreationResult(result);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -538,13 +541,69 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         catch (Exception error)
         {
-            Set("StatusText", "New Board failed: " + FirstLine(error.Message));
+            Set("StatusText", "Board creation or opening was interrupted. Check the Boards Library before creating another Board. " + FirstLine(error.Message));
         }
+        finally { RefreshHomeBoardCreationAvailability(); }
+    }
+
+    private async Task RetryOpenCreatedHomeBoardAsync(CancellationToken cancellationToken)
+    {
+        var host = _homeBoardCreationHost;
+        if (host is null || !host.CanRetryOpenCreatedBoard)
+        {
+            Set("StatusText", "There is no committed Board waiting to open.");
+            RefreshHomeBoardCreationAvailability();
+            return;
+        }
+        try
+        {
+            var result = await host.RetryOpenCreatedBoardAsync(cancellationToken);
+            ApplyHomeBoardCreationResult(result);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            Set("StatusText", "Could not open the created Board. Retry remains available. " + FirstLine(error.Message));
+        }
+        finally { RefreshHomeBoardCreationAvailability(); }
+    }
+
+    private void ApplyHomeBoardCreationResult(BoardsHomeBoardCreationResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        switch (result.Outcome)
+        {
+            case BoardsHomeBoardCreationOutcome.Opened:
+                break;
+            case BoardsHomeBoardCreationOutcome.CancelledBeforeCreate:
+                Set("StatusText", "New Board creation was canceled.");
+                break;
+            case BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit:
+                Set("StatusText", "New Board was not created: " + FirstLine(result.Message ?? result.Code ?? "Files did not commit the artifact."));
+                break;
+            case BoardsHomeBoardCreationOutcome.CreatedOpenFailed:
+                Set("StatusText", "Board created, opening failed. Retry opens the same Board." +
+                    (string.IsNullOrWhiteSpace(result.Message) ? string.Empty : " " + FirstLine(result.Message)));
+                break;
+            default:
+                Set("StatusText", "Board creation returned an unsupported result. Check the Boards Library before creating another Board.");
+                break;
+        }
+        RefreshHomeBoardCreationAvailability();
+    }
+
+    private void RefreshHomeBoardCreationAvailability()
+    {
+        Set("CanCreateBoard", CanCreateBoard && _homeBoardCreationHost?.CanRetryOpenCreatedBoard != true);
+        Set("CanRetryHomeBoardOpen", _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
     }
 
     private static bool AllowedWhileViewing(string command) => command is
         "OpenRecentBoard" or "OpenRecentPage" or
-        "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or
+        "NewBoard" or "RetryOpenCreatedBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or
         "FileMenu" or "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ToggleTheme" or
         "SelectSection1" or "SelectSection2" or "SelectPage1" or "SelectPage2" or "ToggleEditView";
 

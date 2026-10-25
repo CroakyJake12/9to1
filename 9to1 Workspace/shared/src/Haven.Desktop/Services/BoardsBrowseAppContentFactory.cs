@@ -22,13 +22,13 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
     private readonly CuiThemePreferenceContext? _theme;
     private readonly Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? _takePreparedBoardRead;
     private readonly Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? _takePreparedBoardWrite;
-    private readonly Func<BrowseAppContentRequest, ReadOnlyMemory<byte>, CancellationToken, Task<bool>>? _createAndOpenBoard;
+    private readonly Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? _createAndOpenBoard;
     private BoardsBrowseAppContentFactory(IServiceProvider provider, HomeNativeWindowsComposition home,
         CancellationToken appLifetime, CancellationToken hostLifetime, Func<bool> reduceMotion,
         CuiThemePreferenceContext? theme,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? takePreparedBoardRead,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite,
-        Func<BrowseAppContentRequest, ReadOnlyMemory<byte>, CancellationToken, Task<bool>>? createAndOpenBoard)
+        Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? createAndOpenBoard)
     { _provider = provider; _home = home; _appLifetime = appLifetime; _hostLifetime = hostLifetime;
         _reduceMotion = reduceMotion; _theme = theme; _takePreparedBoardRead = takePreparedBoardRead;
         _takePreparedBoardWrite = takePreparedBoardWrite; _createAndOpenBoard = createAndOpenBoard; }
@@ -39,7 +39,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         CuiThemePreferenceContext? actualThemePreference = null,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? takePreparedBoardRead = null,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite = null,
-        Func<BrowseAppContentRequest, ReadOnlyMemory<byte>, CancellationToken, Task<bool>>? createAndOpenBoard = null)
+        Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? createAndOpenBoard = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(actualReduceMotion);
@@ -162,16 +162,43 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
     }
 
     private sealed class HomeBoardCreationHost(
-        Func<BrowseAppContentRequest, ReadOnlyMemory<byte>, CancellationToken, Task<bool>> createAndOpen,
+        Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>> createAndOpen,
         BrowseAppContentRequest request,
         CancellationToken tabLifetime) : IBoardsHomeBoardCreationHost
     {
-        public async Task<bool> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+        public bool CanRetryOpenCreatedBoard => _hasCreatedBoardPendingOpen;
+        private bool _hasCreatedBoardPendingOpen;
+
+        public async Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
             CancellationToken cancellationToken = default)
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
             linked.Token.ThrowIfCancellationRequested();
-            return await createAndOpen(request, validatedDraft, linked.Token).ConfigureAwait(false);
+            var result = await createAndOpen(request,
+                new BoardsHomeBoardCreationRequest(validatedDraft, RetryOpenExisting: false), linked.Token).ConfigureAwait(false);
+            _hasCreatedBoardPendingOpen = result.Outcome == BoardsHomeBoardCreationOutcome.CreatedOpenFailed;
+            return result;
+        }
+
+        public async Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(
+            CancellationToken cancellationToken = default)
+        {
+            if (!_hasCreatedBoardPendingOpen)
+                return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit,
+                    "NoPendingCreatedBoard", "There is no committed Board waiting to open.");
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+            linked.Token.ThrowIfCancellationRequested();
+            var result = await createAndOpen(request,
+                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty, RetryOpenExisting: true), linked.Token).ConfigureAwait(false);
+            if (result.Outcome == BoardsHomeBoardCreationOutcome.Opened)
+                _hasCreatedBoardPendingOpen = false;
+            else
+            {
+                _hasCreatedBoardPendingOpen = true;
+                if (result.Outcome != BoardsHomeBoardCreationOutcome.CreatedOpenFailed)
+                    result = result with { Outcome = BoardsHomeBoardCreationOutcome.CreatedOpenFailed };
+            }
+            return result;
         }
     }
 }
