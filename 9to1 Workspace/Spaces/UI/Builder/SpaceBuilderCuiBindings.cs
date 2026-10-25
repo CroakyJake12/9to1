@@ -2,6 +2,7 @@ using System.ComponentModel;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
+using Haven.Core;
 
 namespace HavenOS.Apps.Spaces.Builder;
 
@@ -25,6 +26,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Func<SpaceBuilderPreview?>? _previewDraft;
     private readonly Func<CancellationToken, Task<IReadOnlyList<string>>>? _validateDraft;
     private readonly Action<Guid, bool>? _setContextIncluded;
+    private readonly Action<ToolCapability, bool>? _setModelCapabilityRequired;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
 
@@ -46,7 +48,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Action<SpaceBuilderEditorView>? selectView = null, Action<SpaceBuilderExpertSection>? selectExpertSection = null,
         Func<SpaceBuilderPreview?>? previewDraft = null,
         Func<CancellationToken, Task<IReadOnlyList<string>>>? validateDraft = null,
-        Action<Guid, bool>? setContextIncluded = null)
+        Action<Guid, bool>? setContextIncluded = null,
+        Action<ToolCapability, bool>? setModelCapabilityRequired = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -64,6 +67,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _previewDraft = previewDraft;
         _validateDraft = validateDraft;
         _setContextIncluded = setContextIncluded;
+        _setModelCapabilityRequired = setModelCapabilityRequired;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -90,6 +94,13 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.instructions" => state.Draft.Instructions,
             "builder.model.defaultId" => state.Draft.ModelPolicy?.DefaultModelId ?? "",
             "builder.model.provider" => state.Draft.ModelPolicy?.ProviderConstraint ?? "",
+            "builder.model.capabilities" => Enum.GetValues<ToolCapability>().Select(capability => new SpaceBuilderModelCapabilityRow
+            {
+                id = capability.ToString(),
+                label = capability.ToString(),
+                required = (state.Draft.ModelPolicy?.RequiredCapabilities ?? []).Any(name =>
+                    Enum.TryParse<ToolCapability>(name, true, out var parsed) && parsed == capability)
+            }).ToArray(),
             "builder.context.sourceOnly" => state.Draft.ContextPolicy.SourceOnly,
             "builder.context.includeSelection" => state.Draft.ContextPolicy.IncludeCurrentSelection,
             "builder.context.webAccess" => (int)state.Draft.ContextPolicy.WebAccess,
@@ -108,6 +119,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             }).ToArray(),
             "builder.hasContextReferences" => state.Draft.ContextReferences.Count != 0,
             "builder.canSetContextIncluded" => _isCurrent() && state.CanEdit && _setContextIncluded is not null,
+            "builder.canSetModelCapability" => _isCurrent() && state.CanEdit && _setModelCapabilityRequired is not null,
             "builder.legacyFiles" => state.Draft.LegacyFiles.Select(reference => new { path = reference.Path, label = reference.DisplayName }).ToArray(),
             "builder.hasLegacyFiles" => state.Draft.LegacyFiles.Count != 0,
             "builder.inherit.sources" => state.Draft.Inheritance.Sources,
@@ -251,15 +263,28 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
 
     public bool TrySetItemValue(object item, string path, object? value)
     {
-        if (path != "included" || item is not SpaceBuilderContextReferenceRow row ||
-            !Guid.TryParseExact(row.id, "D", out var contextId) || value is not bool included ||
-            !_isCurrent() || _setContextIncluded is null) return false;
+        if (!_isCurrent() || value is not bool enabled) return false;
         var state = _state();
-        if (!state.CanEdit || !state.Draft.ContextReferences.Any(reference =>
-                reference.ContextId == contextId && reference.IncludedAutomatically == row.included)) return false;
-        _setContextIncluded(contextId, included);
-        Refresh();
-        return true;
+        if (!state.CanEdit) return false;
+        if (path == "included" && item is SpaceBuilderContextReferenceRow row &&
+            Guid.TryParseExact(row.id, "D", out var contextId) && _setContextIncluded is not null &&
+            state.Draft.ContextReferences.Any(reference => reference.ContextId == contextId && reference.IncludedAutomatically == row.included))
+        {
+            _setContextIncluded(contextId, enabled);
+            Refresh();
+            return true;
+        }
+        if (path == "required" && item is SpaceBuilderModelCapabilityRow modelRow &&
+            Enum.TryParse<ToolCapability>(modelRow.id, false, out var capability) && Enum.IsDefined(capability) &&
+            _setModelCapabilityRequired is not null &&
+            (state.Draft.ModelPolicy?.RequiredCapabilities ?? []).Any(name =>
+                Enum.TryParse<ToolCapability>(name, true, out var parsed) && parsed == capability) == modelRow.required)
+        {
+            _setModelCapabilityRequired(capability, enabled);
+            Refresh();
+            return true;
+        }
+        return false;
     }
 
     public bool? IsActionAvailable(string command) => command switch
@@ -342,4 +367,11 @@ public sealed class SpaceBuilderContextReferenceRow
     public string revision { get; init; } = string.Empty;
     public string policy { get; init; } = string.Empty;
     public bool included { get; init; }
+}
+
+public sealed class SpaceBuilderModelCapabilityRow
+{
+    public string id { get; init; } = string.Empty;
+    public string label { get; init; } = string.Empty;
+    public bool required { get; init; }
 }

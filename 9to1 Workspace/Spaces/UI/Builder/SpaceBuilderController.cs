@@ -1,4 +1,5 @@
 using Haven.Application;
+using Haven.Core;
 
 namespace HavenOS.Apps.Spaces.Builder;
 
@@ -64,6 +65,33 @@ public sealed class SpaceBuilderController
             _editVersion++;
             next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
                 StatusMessage = "Expert graph changes are in the Space draft. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
+    /// <summary>Sets a real model capability requirement. The same canonical enum is checked
+    /// against the live model catalogue at activation and against the selected model at dispatch.</summary>
+    public bool SetModelCapabilityRequired(ToolCapability capability, bool required)
+    {
+        if (!Enum.IsDefined(capability)) throw new ArgumentOutOfRangeException(nameof(capability));
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var policy = _state.Draft.ModelPolicy ?? new SpaceModelPolicy(null);
+            var names = (policy.RequiredCapabilities ?? []).ToList();
+            var matches = names.Where(name => Enum.TryParse<ToolCapability>(name, true, out var parsed) && parsed == capability).ToArray();
+            if (required && matches.Length != 0 || !required && matches.Length == 0) return true;
+            names.RemoveAll(name => Enum.TryParse<ToolCapability>(name, true, out var parsed) && parsed == capability);
+            if (required) names.Add(capability.ToString());
+            var updated = policy with { RequiredCapabilities = Array.AsReadOnly(names.ToArray()) };
+            var draft = _state.Draft with { ModelPolicy = updated };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = required
+                    ? $"Model capability '{capability}' is required by this Space. Activation and selected-model checks use the live catalogue. Save to persist."
+                    : $"Model capability '{capability}' is no longer required by this Space. Save to persist." };
         }
         StateChanged?.Invoke(next);
         return true;

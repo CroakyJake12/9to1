@@ -118,6 +118,15 @@
           <Input id="space-builder-default-model-id" Type="Text" Value="{Binding builder.model.defaultId, mode=TwoWay}" accessible-name="Default model ID override" />
           <Text text="Provider constraint" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-provider-constraint" Type="Text" Value="{Binding builder.model.provider, mode=TwoWay}" accessible-name="Model provider constraint" />
+          <Text text="Required model capabilities" foreground="{Resource CuiTextBrush}" />
+          <Text text="Requirements use the router's canonical capability catalog. Activation checks current availability, and the selected model is checked again before dispatch; this does not enable tools or grant access." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Repeat id="space-builder-model-capabilities" Source="{Binding builder.model.capabilities}" As="capability" Key="{Binding capability.id}">
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Input id="space-builder-model-capability-required" Type="Switch" Checked="{Binding capability.required, mode=TwoWay}" Interactive="{Binding builder.canSetModelCapability}" accessible-name="Require this model capability" />
+              <Text text="Require" foreground="{Resource CuiTextSoftBrush}" />
+              <Text text="{Binding capability.label}" foreground="{Resource CuiTextBrush}" />
+            </Container>
+          </Repeat>
         </Container>
         <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isAdvanced}">
           <Text text="Canonical context sources" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />

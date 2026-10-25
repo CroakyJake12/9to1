@@ -32,15 +32,21 @@ public sealed class SpaceBuilderPolicyEditingTests
         }, original.Revision, token);
         var editor = new SpaceBuilderController(registry, original.Id);
         Assert.True(await editor.LoadAsync(token));
-        var bindings = Bindings(editor);
+        var bindings = Bindings(editor, setModelCapabilityRequired: editor.SetModelCapabilityRequired);
         Assert.True(bindings.TrySetValue("builder.context.webAccess", (int)SpaceWebAccessPolicy.Disabled));
         Assert.True(bindings.TrySetValue("builder.context.sourceOnly", true));
         Assert.True(bindings.TrySetValue("builder.context.includeSelection", false));
         Assert.True(bindings.TrySetValue("builder.model.defaultId", "ollama:configured-model-2"));
         Assert.True(bindings.TrySetValue("builder.model.provider", "ollama"));
+        Assert.True(bindings.TryGetValue("builder.model.capabilities", out var capabilityItems));
+        var vision = Assert.IsType<SpaceBuilderModelCapabilityRow>(Assert.Single(
+            Assert.IsAssignableFrom<object[]>(capabilityItems), item => ((SpaceBuilderModelCapabilityRow)item).id == "Vision"));
+        Assert.False(vision.required);
+        Assert.True(bindings.TrySetItemValue(vision, "required", true));
+        Assert.False(bindings.TrySetItemValue(vision, "required", false)); // Stale repeat item cannot undo the edit.
         Assert.Equal("ollama:configured-model-2", editor.State.Draft.ModelPolicy!.DefaultModelId);
         Assert.Equal("ollama", editor.State.Draft.ModelPolicy.ProviderConstraint);
-        Assert.Equal(new[] { "text" }, editor.State.Draft.ModelPolicy.RequiredCapabilities);
+        Assert.Equal(new[] { "text", "Vision" }, editor.State.Draft.ModelPolicy.RequiredCapabilities);
         foreach (var key in new[] { "sources", "apps", "models", "memory" })
             Assert.True(bindings.TrySetValue("builder.inherit." + key, true));
         foreach (var key in new[] { "plugins", "skills", "agents" })
@@ -53,7 +59,7 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.Equal(new SpaceContextPolicy(SpaceWebAccessPolicy.Disabled, true, false, 7), saved.DraftConfiguration!.ContextPolicy);
         Assert.Equal(new SpaceInheritancePolicy(true, true, true, true, false, false, false), saved.DraftConfiguration.Inheritance);
         Assert.Equal(JsonSerializer.Serialize(original.ModelPolicy), JsonSerializer.Serialize(saved.ModelPolicy));
-        Assert.Equal(new SpaceModelPolicy("ollama:configured-model-2", ["text"], "ollama"), saved.DraftConfiguration.ModelPolicy);
+        Assert.Equal(new SpaceModelPolicy("ollama:configured-model-2", ["text", "Vision"], "ollama"), saved.DraftConfiguration.ModelPolicy);
         Assert.Equal(JsonSerializer.Serialize(original.LayoutDocument), JsonSerializer.Serialize(saved.LayoutDocument));
         Assert.Equal(JsonSerializer.Serialize(original.CapabilityBindings), JsonSerializer.Serialize(saved.CapabilityBindings));
         var reopened = new SpaceBuilderController(files.OpenRegistry(), original.Id);
@@ -213,8 +219,10 @@ public sealed class SpaceBuilderPolicyEditingTests
         }, token);
     }
 
-    private static SpaceBuilderCuiBindings Bindings(SpaceBuilderController editor, Func<bool>? isCurrent = null) =>
+    private static SpaceBuilderCuiBindings Bindings(SpaceBuilderController editor, Func<bool>? isCurrent = null,
+        Action<ToolCapability, bool>? setModelCapabilityRequired = null) =>
         new(() => editor.State, (field, value) => editor.SetField(field, value),
             (category, value) => editor.SetCategoryState(category, value), (kind, id) => editor.DetachCapability(kind, id),
-            () => [], () => [], (_, _, _) => ValueTask.CompletedTask, isCurrent);
+            () => [], () => [], (_, _, _) => ValueTask.CompletedTask, isCurrent,
+            setModelCapabilityRequired: setModelCapabilityRequired);
 }
