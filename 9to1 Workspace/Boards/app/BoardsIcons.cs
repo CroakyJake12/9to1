@@ -57,6 +57,14 @@ public static class BoardsIcons
             ("Plum", "#794785"), ("Slate", "#52627A"),
         });
 
+    public static string SectionIconLabel(string key) => key switch
+    {
+        "boards" => "Boards", "section" => "Section", "folder" => "Folder", "file" => "Document",
+        "chat" => "Chat", "study" => "Study", "calendar" => "Calendar", "target" => "Target",
+        "bookmark" => "Bookmark", "shield" => "Shield", "play" => "Play",
+        _ => throw new ArgumentOutOfRangeException(nameof(key), key, "Unknown section icon choice."),
+    };
+
     public static Control Glyph(string glyph, double size = 14, string? accessibleName = null, string? colorOverride = null)
     {
         var icon = new Image

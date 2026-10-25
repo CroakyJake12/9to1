@@ -2,15 +2,18 @@
   <Actions>
     <Action name="OpenRecentBoard" command="OpenRecentBoard" parameter="{Binding board.Target}" />
     <Action name="OpenRecentPage" command="OpenRecentPage" parameter="{Binding page.Target}" />
-    <Action name="SetVerticalLayout" command="SetLayoutMode" parameter="Locked" />
-    <Action name="SetFreeLayout" command="SetLayoutMode" parameter="Unlocked" />
+    <Action name="ApplySectionIconChoice" command="ApplySectionIconChoice" parameter="{Binding icon.Key}" />
+    <Action name="ApplySectionIconColor" command="ApplySectionIconColor" parameter="{Binding color.Hex}" />
+    <Action name="UseThemeSectionIconColor" command="UseThemeSectionIconColor" />
+    <Action name="CloseSectionIconPicker" command="CloseSectionIconPicker" />
   </Actions>
   <Page>
     <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
       <!-- Top document bar: file actions, title, save state, global actions -->
-      <Container padding="12 2" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="{Resource CuiShellMaterial}" BorderWidth="0">
+      <Container padding="12 2" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="Transparent" BorderWidth="0">
         <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto" CellGap="2">
           <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" Row="0" CellGap="8" VerticalAlignment="Center">
+            <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
             <Container Type="Menu" ID="FileMenu">
               <Button Type="Menu Item" ID="FileMenuButton" Content="File" Interactive="{Binding CanEdit}" AccessibleName="Board file menu">
                 <Button Type="Menu Item" Content="Open…" Action="OpenBoard" />
@@ -20,18 +23,17 @@
                 <Button Type="Menu Item" Content="Exit" Action="CloseWindow" />
               </Button>
             </Container>
-            <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
             <Button Type="Menu Item" ID="UndoButton" IconSource="icon:undo" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Undo" Interactive="{Binding IsEditMode}" AccessibleName="Undo" Tooltip="Undo" />
             <Button Type="Menu Item" ID="RedoButton" IconSource="icon:redo" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" Tooltip="Redo" />
           </Container>
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" Row="0" CellGap="6" VerticalAlignment="Center">
-            <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="8" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 2" CornerRadius="10">
+            <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="8" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 0" CornerRadius="10">
               <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
               <Input ID="EditViewToggle" Type="Switch" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
             </Container>
-            <Container Type="Horizontal Stack" ID="LayoutModeToggleGroup" CellGap="4" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 2" CornerRadius="10" AccessibleName="Page layout mode">
-              <Button ID="VerticalLayoutToggle" Content="Vertical Stacking" Action="SetVerticalLayout" Selected="{Binding IsVerticalLayout}" Interactive="{Binding CanChangeLayoutMode}" FontSize="12" FontWeight="SemiBold" Padding="8 2" AccessibleName="Use vertical stacking" Tooltip="Keep blocks in vertical document flow" />
-              <Button ID="FreeLayoutToggle" Content="Free Placement" Action="SetFreeLayout" Selected="{Binding IsFreeLayout}" Interactive="{Binding CanChangeLayoutMode}" FontSize="12" FontWeight="SemiBold" Padding="8 2" AccessibleName="Use free placement" Tooltip="Unlock spatial placement for page blocks" />
+            <Container Type="Horizontal Stack" ID="LayoutModeToggleGroup" CellGap="8" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 0" CornerRadius="10" AccessibleName="Page layout mode">
+              <Text ID="LayoutModeLabel" Text="{Binding LayoutModeLabel}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input ID="LayoutModeToggle" Type="Switch" Checked="{Binding IsFreeLayout, mode=TwoWay}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="{Binding LayoutModeAccessibleName}" />
             </Container>
             <Container Type="Menu" ID="MoreMenu">
               <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" AccessibleName="More board actions" Tooltip="More">
@@ -45,7 +47,7 @@
         </Container>
       </Container>
       <!-- Left navigation: search, sections/pages (built in code), add actions -->
-      <Container padding="16 18" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="{Resource CuiShellMaterial}" BorderWidth="0">
+      <Container padding="16 18" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="Transparent" BorderWidth="0">
         <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="12">
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="icon:boards" Width="20" Height="20" VerticalAlignment="Center" AccessibleName="Current Board" />
@@ -70,7 +72,7 @@
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
           <Container Type="Menu" Row="3" Margin="0 8 0 0">
-            <Button Type="Menu Item" Content="+ Add page or section" Interactive="{Binding CanEdit}" FontWeight="SemiBold" AccessibleName="Add a page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiPanel2Brush}" BorderWidth="0" CornerRadius="18">
+            <Button Type="Menu Item" Content="+ Add" Interactive="{Binding CanEdit}" FontWeight="Bold" AccessibleName="Add page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiAccentBrush}" Foreground="{Resource HavenAccentInkBrush}" BorderWidth="0" CornerRadius="18">
               <Button Type="Menu Item" Content="New page in this section" Action="AddPage" AccessibleName="Create a page in the current section" />
               <Button Type="Menu Item" Content="New section" Action="AddSection" AccessibleName="Create a new section in this Board" />
               <Button Type="Menu Item" Content="Attach existing Write document…" Action="AddWritePage" Interactive="{Binding CanAddWritePage}" AccessibleName="Attach an existing Write document as a page" />
@@ -94,7 +96,7 @@
           <Container Type="Overlay" Column="1" Width="1" Height="20" VerticalAlignment="Center" Margin="6 0" Background="{Resource CuiLineBrush}" />
           <Container Type="Horizontal Stack" CellGap="4" ID="ToolbarHost" Column="2" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False" />
         </Container>
-        <Container Type="Vertical Stack" ID="ContextHost" Row="1" Active="{Binding ContextVisible}" Padding="12 6" Background="{Resource CuiWorkspaceMaterial}">
+        <Container Type="Vertical Stack" ID="ContextHost" Row="1" Active="{Binding ContextVisible}" Padding="12 6" Background="Transparent">
           <If Condition="{Binding ContextIsTable}">
             <Container Type="Wrap" CellGap="4">
               <Text Text="Table" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0 0 4 0" />
@@ -183,10 +185,10 @@
             </Container>
           </If>
         </Container>
-        <Container horizontalalignment="Stretch" cornerradius="22" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Row="2" Background="{Resource CuiSurfaceMaterial}" BorderWidth="0">
+        <Container horizontalalignment="Stretch" cornerradius="22" padding="20 12" margin="6 12 14 12" Type="Overlay" ID="PageCard" Row="2" Background="{Resource CuiSurfaceMaterial}" BorderWidth="0">
           <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
             <Container Type="Grid" ID="PageSurface">
-              <Container margin="76 36" Type="Vertical Stack" ID="DocumentContentLayer">
+              <Container margin="76 20" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
                 <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />
@@ -201,7 +203,7 @@
           </Container>
         </Container>
       </Container>
-      <Container Type="Vertical Stack" ID="LandingHost" Row="1" Column="1" Active="{Binding IsLanding}" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Padding="32 28" Background="{Resource CuiWorkspaceMaterial}" CellGap="12">
+      <Container Type="Vertical Stack" ID="LandingHost" Row="1" Column="1" Active="{Binding IsLanding}" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Padding="32 28" Background="Transparent" CellGap="12">
         <Text Text="Your boards" FontSize="30" FontWeight="Bold" />
         <Text Text="Open a saved workspace or create a new board." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
         <Container Type="Wrap" CellGap="8">
@@ -247,6 +249,51 @@
           </Container>
         </If>
         <If Condition="{Binding HasNoRecentPages}"><Text Text="Pages you open will appear here." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></If>
+      </Container>
+      <Container Type="Overlay" ID="SectionIconPickerBackdrop" Row="1" Column="0" ColumnSpan="2" Active="{Binding IsSectionIconPickerOpen}" Background="#88000000" BorderWidth="0">
+        <Container Type="Overlay" ID="SectionIconPickerPanel" Width="520" Height="620" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{Resource CuiFloatingSurfaceMaterial}" Padding="18" CornerRadius="18" BorderWidth="0">
+          <Container Type="Grid" RowSizes="Auto Auto Auto 1fr Auto" CellGap="10">
+            <Container Type="Horizontal Stack" Row="0" CellGap="8" VerticalAlignment="Center">
+              <Container Type="Vertical Stack" CellGap="2" HorizontalAlignment="Stretch">
+                <Text Text="Section icon and color" FontSize="19" FontWeight="SemiBold" />
+                <Text Text="{Binding SectionIconPickerTitle}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Section being customized" />
+              </Container>
+              <Button Row="0" Content="Close" Action="CloseSectionIconPicker" AccessibleName="Close section appearance picker" Tooltip="Close" />
+            </Container>
+            <Input ID="SectionIconPickerSearch" Row="1" Type="Text" Value="{Binding SectionIconPickerSearch}" WriteBack="True" PlaceholderText="Search icons" AccessibleName="Search section icons by name" Padding="10 8" Background="{Resource CuiPanel2Brush}" BorderWidth="0" CornerRadius="10" />
+            <Container Type="Vertical Stack" Row="2" CellGap="4">
+              <Text Text="Icon color" FontWeight="SemiBold" />
+              <Container Type="Wrap" CellGap="5" Role="group" AccessibleName="Section icon colors">
+                <Button Content="Theme" Action="UseThemeSectionIconColor" Selected="{Binding SectionIconPickerHasThemeColor}" AccessibleName="Use the current theme color" Tooltip="Follow the active theme" />
+                <Repeat ID="SectionIconColors" Source="{Binding SectionIconPickerColors}" As="color" Key="{Binding color.Hex}" Panel="Wrap">
+                  <Button Action="ApplySectionIconColor" Selected="{Binding color.IsSelected}" AccessibleName="{Binding color.AccessibleName}" Tooltip="{Binding color.Name}" Padding="6 4">
+                    <Container Type="Horizontal Stack" CellGap="5" VerticalAlignment="Center">
+                      <Container Type="Overlay" Width="14" Height="14" CornerRadius="7" Background="{Binding color.Preview}" />
+                      <Text Text="{Binding color.Name}" FontSize="11" VerticalAlignment="Center" />
+                    </Container>
+                  </Button>
+                </Repeat>
+              </Container>
+            </Container>
+            <Container Type="Overlay" Row="3" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
+              <Container Type="Vertical Stack" CellGap="6">
+                <Text Text="Choose an icon" FontWeight="SemiBold" />
+                <If Condition="{Binding HasSectionIconPickerChoices}">
+                  <Repeat ID="SectionIconChoices" Source="{Binding SectionIconPickerChoices}" As="icon" Key="{Binding icon.Key}" Panel="Wrap">
+                    <Button Action="ApplySectionIconChoice" Selected="{Binding icon.IsSelected}" AccessibleName="{Binding icon.AccessibleName}" Tooltip="{Binding icon.Label}" Width="88" Height="68" Padding="5">
+                      <Container Type="Vertical Stack" CellGap="3" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Image Source="{Binding icon.Preview}" Width="22" Height="22" HorizontalAlignment="Center" AccessibleName="{Binding icon.AccessibleName}" />
+                        <Text Text="{Binding icon.Label}" FontSize="11" TextWrapping="Wrap" HorizontalAlignment="Center" />
+                      </Container>
+                    </Button>
+                  </Repeat>
+                </If>
+                <Else><Text Text="No icons match that search." Foreground="{Resource CuiTextSoftBrush}" /></Else>
+              </Container>
+            </Container>
+            <Text Row="4" Text="Icon choices are built in. Color remains readable against the active theme." FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </Container>
+        </Container>
       </Container>
     </Container>
   </Page>

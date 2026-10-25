@@ -4,6 +4,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using Avalonia.Threading;
 using CakeOS.Cui.Themes;
 using Haven.UI;
 using System.Diagnostics;
@@ -18,7 +19,7 @@ public static class BoardsCuiIconResolver
     private const string BoardsBrandResourceRoot = "CakeOS.Apps.Boards.Embedding.Assets.OwnerAppIcons.";
     private static readonly HashSet<string> FilledSilhouetteKeys = new(StringComparer.OrdinalIgnoreCase)
     {
-        "more", "grip", "section", "boards", "folder", "file", "chat", "study", "calendar",
+        "more", "grip", "section", "folder", "chat", "study",
         "target", "bookmark", "shield", "play", "align-left", "align-center", "align-right", "bulleted-list",
     };
     private static readonly Dictionary<string, Bitmap> BoardsBrandBitmaps = new(StringComparer.Ordinal);
@@ -245,6 +246,9 @@ public static class BoardsCuiIconResolver
         private readonly Image _target;
         private IDisposable? _subscription;
         private bool _started;
+        private bool _attached;
+        private int _refreshQueued;
+        private long _attachmentGeneration;
 
         public BoardsBrandAppearanceObserver(Image target) => _target = target;
 
@@ -261,6 +265,8 @@ public static class BoardsCuiIconResolver
 
         private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
         {
+            _attached = false;
+            Interlocked.Increment(ref _attachmentGeneration);
             _subscription?.Dispose();
             _subscription = null;
         }
@@ -268,6 +274,8 @@ public static class BoardsCuiIconResolver
         private void Attach()
         {
             _subscription?.Dispose();
+            _attached = true;
+            Interlocked.Increment(ref _attachmentGeneration);
             _subscription = _target.GetResourceObservable("CuiAppearance").Subscribe(this);
             Refresh();
         }
@@ -277,7 +285,13 @@ public static class BoardsCuiIconResolver
         public void OnError(Exception error)
         {
             Trace.TraceError($"Boards brand image appearance subscription failed: {error.Message}");
-            _target.Source = ResolveBoardsVectorFallback(_target) as IImage;
+            if (Dispatcher.UIThread.CheckAccess())
+                _target.Source = ResolveBoardsVectorFallback(_target);
+            else
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (_attached) _target.Source = ResolveBoardsVectorFallback(_target);
+                });
         }
 
         public void OnCompleted()
@@ -288,6 +302,19 @@ public static class BoardsCuiIconResolver
 
         private void Refresh()
         {
+            if (!Dispatcher.UIThread.CheckAccess())
+            {
+                var generation = Volatile.Read(ref _attachmentGeneration);
+                if (Interlocked.Exchange(ref _refreshQueued, 1) != 0) return;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Interlocked.Exchange(ref _refreshQueued, 0);
+                    if (!_attached || generation != Volatile.Read(ref _attachmentGeneration)) return;
+                    Refresh();
+                });
+                return;
+            }
+            if (!_attached) return;
             try
             {
                 _target.Source = ResolveBoardsBrandImage(_target);
@@ -315,6 +342,8 @@ public static class BoardsCuiIconResolver
         private bool _started;
         private bool _attached;
         private bool _observingEnabled;
+        private int _refreshQueued;
+        private long _attachmentGeneration;
 
         public BoardsSemanticIconObserver(Image target) => _target = target;
 
@@ -349,6 +378,7 @@ public static class BoardsCuiIconResolver
 
         private void Detach()
         {
+            _attachmentGeneration++;
             foreach (var subscription in _subscriptions) subscription.Dispose();
             _subscriptions.Clear();
             if (_attached) BoardsTheme.Changed -= OnThemeChanged;
@@ -377,6 +407,19 @@ public static class BoardsCuiIconResolver
 
         private void Refresh()
         {
+            if (!Dispatcher.UIThread.CheckAccess())
+            {
+                var generation = Volatile.Read(ref _attachmentGeneration);
+                if (Interlocked.Exchange(ref _refreshQueued, 1) != 0) return;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Interlocked.Exchange(ref _refreshQueued, 0);
+                    if (!_attached || generation != Volatile.Read(ref _attachmentGeneration)) return;
+                    Refresh();
+                });
+                return;
+            }
+            if (!_attached) return;
             try
             {
                 _target.Source = CreateIcon(_key, SemanticBrush(_key, _target, _colorOverride));

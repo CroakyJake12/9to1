@@ -201,7 +201,7 @@ public static class NavBuilder
                 _pendingRename = (true, section.Id, null);
                 vm.RequestNavRebuild();
             });
-            menu.Items.Add(BuildSectionAppearanceMenu(vm, section));
+            AddMenuItem(menu, "Icon and color…", () => vm.OpenSectionIconPicker(section.Id));
             AddMenuItem(menu, "Duplicate", async () => await vm.DuplicateSectionAsync(section.Id));
             AddMenuItem(menu, "Move up", async () => await vm.MoveSectionAsync(section.Id, -1));
             AddMenuItem(menu, "Move down", async () => await vm.MoveSectionAsync(section.Id, 1));
@@ -222,75 +222,6 @@ public static class NavBuilder
             CuiPropertyLevel.Instance, "Boards section row shape");
         return header;
     }
-
-    private static MenuItem BuildSectionAppearanceMenu(BoardsViewModel vm, RichBoardSection section)
-    {
-        var appearance = new MenuItem { Header = "Icon and color" };
-        var icons = new MenuItem { Header = "Icon" };
-        foreach (var key in BoardsIcons.SectionIconChoices)
-        {
-            var label = SectionIconLabel(key);
-            var selected = string.Equals(section.IconKey, key, StringComparison.Ordinal);
-            var item = new MenuItem
-            {
-                Header = selected ? label + " ✓" : label,
-                Icon = BoardsIcons.Glyph(key, 16, label, section.IconColor),
-            };
-            Avalonia.Automation.AutomationProperties.SetName(item, $"Use {label} section icon");
-            item.Click += async (_, _) => await vm.SetSectionIconAsync(section.Id, key, section.IconColor);
-            icons.Items.Add(item);
-        }
-
-        var colors = new MenuItem { Header = "Color" };
-        var themeColor = new MenuItem
-        {
-            Header = section.IconColor is null ? "Use theme color ✓" : "Use theme color",
-            Icon = BoardsIcons.Glyph(section.IconKey, 16, "Theme color"),
-        };
-        Avalonia.Automation.AutomationProperties.SetName(themeColor, "Use the current theme color for this section icon");
-        themeColor.Click += async (_, _) => await vm.SetSectionIconAsync(section.Id, section.IconKey, null);
-        colors.Items.Add(themeColor);
-        foreach (var (name, hex) in BoardsIcons.SectionIconColors)
-        {
-            var selected = string.Equals(section.IconColor, hex, StringComparison.OrdinalIgnoreCase);
-            var swatch = new Border
-            {
-                Width = 14,
-                Height = 14,
-                CornerRadius = new CornerRadius(7),
-                Background = new SolidColorBrush(Color.Parse(hex)),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            var item = new MenuItem
-            {
-                Header = selected ? name + " ✓" : name,
-                Icon = swatch,
-            };
-            Avalonia.Automation.AutomationProperties.SetName(item, $"Use {name} for this section icon");
-            item.Click += async (_, _) => await vm.SetSectionIconAsync(section.Id, section.IconKey, hex);
-            colors.Items.Add(item);
-        }
-
-        appearance.Items.Add(icons);
-        appearance.Items.Add(colors);
-        return appearance;
-    }
-
-    private static string SectionIconLabel(string key) => key switch
-    {
-        "boards" => "Boards",
-        "section" => "Section",
-        "folder" => "Folder",
-        "file" => "Document",
-        "chat" => "Chat",
-        "study" => "Study",
-        "calendar" => "Calendar",
-        "target" => "Target",
-        "bookmark" => "Bookmark",
-        "shield" => "Shield",
-        "play" => "Play",
-        _ => throw new ArgumentOutOfRangeException(nameof(key), key, "Unknown section icon choice."),
-    };
 
     private static Control BuildPageRow(
         StackPanel host, BoardsViewModel vm, RichBoardSection section, RichBoardPage page,

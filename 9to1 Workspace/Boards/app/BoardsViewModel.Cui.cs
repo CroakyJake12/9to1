@@ -214,9 +214,25 @@ public sealed partial class BoardsViewModel
             SetEditMode(editMode);
             return true;
         }
+        if (key == "IsFreeLayout" && value is bool freePlacement)
+        {
+            if (!CanChangeLayoutMode) return false;
+            _ = SetLayoutModeAsync(freePlacement
+                ? HavenRichPageLayoutModes.Unlocked
+                : HavenRichPageLayoutModes.Locked);
+            return true;
+        }
         if (key == "LandingSearchQuery")
         {
             SetLandingSearch(value as string);
+            return true;
+        }
+        if (key == "SectionIconPickerSearch" && value is string sectionIconSearch &&
+            _sectionIconPickerSectionId is not null && _isEditMode)
+        {
+            _sectionIconSearchText = sectionIconSearch.Length <= 120 ? sectionIconSearch : sectionIconSearch[..120];
+            Set("SectionIconPickerSearch", _sectionIconSearchText);
+            RefreshSectionIconPickerChoices();
             return true;
         }
         if (!_isEditMode) return false;
