@@ -286,7 +286,7 @@ public sealed class HomeDeveloperManualProjectExecutionAdmissionSource :
 public sealed class HomeDeveloperManualProjectExecutionActionPolicySource : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) => appId == "dev" && actionId == HomeDeveloperManualProjectExecutionAdmissionSource.RunAction
-        ? new(HomePermissionRisk.High, false, false, RequiresPerActionApproval: true) : null;
+        ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, false, false, RequiresPerActionApproval: true) : null;
 }
 public sealed class HomeDeveloperManualProjectExecutionResourceResolver(Func<HomeDeveloperManualProjectExecutionAdmissionSource> source)
     : ICanonicalResourceAccessResolver

@@ -120,6 +120,9 @@ public static partial class OriginalLocalTaskConsole
         {
             // Seal new setup admission now. The same permission's final completion
             // still reads its live journal/source/scope/outcome/READ dependencies.
+            if (_setupManualProcessOwner is not null)
+                try { CleanupCallback(_setupManualProcessOwner.RequestOriginalRetirement); }
+                catch (Exception cause) { Capture(failures, null, cause); }
             if (_setupPermissions is not null)
                 try { CleanupCallback(_setupPermissions.RequestOriginalSetupRetirement); }
                 catch (Exception cause) { Capture(failures, null, cause); }

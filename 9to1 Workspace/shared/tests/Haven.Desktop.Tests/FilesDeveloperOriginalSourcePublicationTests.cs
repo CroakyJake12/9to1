@@ -689,6 +689,30 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
     }, canonicalSavedProject: true, manualRunCommand: "printf started > manual-started.txt");
 
     [LinuxPublicationFact]
+    public Task Manual_Run_retirement_stops_the_original_process_before_its_declared_timeout_and_preserves_cancellation() => Run(async rig =>
+    {
+        var choice = Assert.Single(DeveloperRunConfigurationSelection.Observe(rig.Saved).Value!);
+        var operation = rig.Keep(rig.ProcessOwner.RunAsync(rig.Saved, choice, body => body(), rig.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.DecideNextAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        var started = Path.Combine(rig.ProjectRoot, "manual-started.txt"); var deadline = Stopwatch.StartNew();
+        while (!File.Exists(started) && deadline.Elapsed < TimeSpan.FromSeconds(5)) await Task.Delay(10, rig.Token);
+        Assert.True(File.Exists(started)); Assert.False(operation.IsCompleted);
+        rig.ProcessOwner.RequestOriginalRetirement();
+        var observed = await operation.WaitAsync(TimeSpan.FromSeconds(5), rig.Token);
+        Assert.False(observed.ProcessSucceeded); Assert.NotEmpty(observed.OriginalErrors);
+        Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "manual-finished.txt")));
+        Assert.NotNull(observed.PhysicalOutcome); Assert.False(observed.PhysicalOutcome!.KnownNoEffect);
+        Assert.Contains(observed.PhysicalOutcome.Effects, effect => effect.Kind == WorkspaceToolEffectKind.ProcessStart && effect.Admitted);
+        foreach (var error in observed.OriginalErrors)
+        {
+            Assert.All(OriginalLeaves(error), cause => Assert.IsAssignableFrom<OperationCanceledException>(cause));
+            rig.Expect(error); // Only these exact observed cancellations are expected at owner drain.
+        }
+        Assert.Throws<InvalidOperationException>(() => rig.ProcessOwner.RunAsync(rig.Saved, choice, body => body(), rig.Token));
+    }, canonicalSavedProject: true, manualRunCommand: "printf started > manual-started.txt; sleep 20; printf finished > manual-finished.txt");
+
+    [LinuxPublicationFact]
     public Task Manual_Run_cannot_adopt_changed_saved_definition_after_explicit_accept() => Run(async rig =>
     {
         var source = await rig.OpenRegisteredReadAsync();
