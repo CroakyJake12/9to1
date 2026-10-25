@@ -323,7 +323,7 @@ public sealed class BoardsEditorTests
         var expected = new[]
         {
             "TopBarLeft", "TopBarRight", "BoardsAppIcon", "BoardTitleBox", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "BlocksHost",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "BlocksHost", "AbsoluteBlocksHost",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -331,14 +331,16 @@ public sealed class BoardsEditorTests
             .ToArray();
         Assert.Equal(expected.Length, components.Length);
         var toolbarHost = components.Single(component => component.Name == "ToolbarHost");
+        Assert.True(toolbarHost.Properties.TryGetValue("Type", out var toolbarType)
+            && toolbarType is CuiLiteralValue { Value: "Horizontal Stack" });
         Assert.True(toolbarHost.Properties.TryGetValue("HorizontalScrolling", out var horizontalScrolling)
             && horizontalScrolling is CuiLiteralValue horizontalLiteral
-            && bool.TryParse(horizontalLiteral.Value, out var horizontalEnabled) && !horizontalEnabled);
+            && bool.TryParse(horizontalLiteral.Value, out var horizontalEnabled) && horizontalEnabled);
+        Assert.True(toolbarHost.Properties.TryGetValue("HorizontalOverflowArrows", out var arrows)
+            && arrows is CuiLiteralValue { Value: "True" });
         Assert.True(toolbarHost.Properties.TryGetValue("VerticalScrolling", out var verticalScrolling)
             && verticalScrolling is CuiLiteralValue verticalLiteral
             && bool.TryParse(verticalLiteral.Value, out var verticalEnabled) && !verticalEnabled);
-        Assert.True(toolbarHost.Properties.TryGetValue("Orientation", out var toolbarOrientation)
-            && toolbarOrientation is CuiLiteralValue { Value: "Horizontal" });
         var boardSwitcher = components.Single(component => component.Name == "BoardSwitcher");
         Assert.True(boardSwitcher.Properties.TryGetValue("IconSource", out var boardIcon)
             && boardIcon is CuiLiteralValue { Value: "icon:chevron-down" });
@@ -366,17 +368,19 @@ public sealed class BoardsEditorTests
                   <Container Type="Vertical Stack">
                     <Input Type="Text" ID="BoardTitleBox" Value="Title" />
                     <Container Type="Vertical Stack" ID="NavHost" />
-                    <Container Type="Wrap" Orientation="Horizontal" ID="ToolbarHost" />
+                    <Container Type="Horizontal Stack" ID="ToolbarHost" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False" />
                     <Container Type="Vertical Stack" ID="ContextHost" />
                     <Container Type="Vertical Stack" ID="BlocksHost" />
+                    <Container Type="Absolute" ID="AbsoluteBlocksHost" />
                   </Container>
                 </Cui>
                 """,
                 "boards-host-lookup.cui").Root);
             return FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "BlocksHost") is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "NavHost") is { LayoutType: "Vertical Stack" }
-                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Wrap", Layout: WrapPanel }
+                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Horizontal Stack", Layout: StackPanel }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ContextHost") is { LayoutType: "Vertical Stack" }
+                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "AbsoluteBlocksHost") is { LayoutType: "Absolute", Layout: Canvas }
                 && FindByAutomationId<TextBox>(root, "BoardTitleBox") is not null;
         });
         Assert.True(found);
