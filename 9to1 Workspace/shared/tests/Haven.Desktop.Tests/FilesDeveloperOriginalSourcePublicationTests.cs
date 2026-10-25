@@ -611,6 +611,7 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
     [LinuxPublicationFact]
     public Task Manual_editor_CREATE_refuses_empty_file_appearing_after_review_without_requesting_overwrite() => Run(async rig =>
     {
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This interference fixture changes actual Linux file modes.");
         var owner = ManualEditor(rig);
         var preview = rig.Keep(owner.PreviewCreateAsync(rig.Saved, Target, rig.Token));
         await rig.DecideNextAsync(preview, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept); await preview;
