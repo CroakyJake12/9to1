@@ -40,6 +40,37 @@ public sealed class AdvancedCodeIntelligenceService(
         return await ApplyPreparedAsync(root, $"Rename symbol to {trimmed}", prepared, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<CodeActionProposal> PreviewRenameSymbolAsync(string workspaceRoot, string relativePath, string documentText,
+        CodePosition position, string newName, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(newName);
+        var trimmed = newName.Trim();
+        if (trimmed.Length > 256 || trimmed.Any(char.IsControl)) throw new ArgumentException("The new symbol name is invalid.", nameof(newName));
+        var (root, path) = Resolve(workspaceRoot, relativePath);
+        await RequireSavedDocumentAsync(path, documentText, cancellationToken).ConfigureAwait(false);
+        var prepared = await WithOpenedServerAsync(root, path, documentText, async (server, uri, openedVersion, token) =>
+        {
+            var edit = await server.RenameSymbolAsync(uri, position, trimmed, root, token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            await RequireSavedDocumentAsync(path, documentText, token).ConfigureAwait(false);
+            var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            foreach (var document in edit.Documents)
+            {
+                if (document.DocumentVersion is not { } version) continue;
+                var target = workspaceTools.ResolveWorkspacePath(root, document.RelativePath);
+                if (!comparer.Equals(target, path) || version != openedVersion)
+                    throw new InvalidOperationException("A versioned rename edit does not match the document opened in this language-server session. Refresh the preview.");
+            }
+            var files = await PrepareWorkspaceEditAsync(root, edit, token).ConfigureAwait(false);
+            await RequireSavedDocumentAsync(path, documentText, token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            return Array.AsReadOnly(files.ToArray());
+        }, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Guid.NewGuid(), $"Rename symbol to {trimmed}", "refactor.rename", true, prepared,
+            prepared.Count == 0 ? "The rename produced no file changes." : null);
+    }
+
     public async Task<IReadOnlyList<LanguageServerCompletion>> GetCompletionsAsync(string workspaceRoot, string relativePath, string documentText, CodePosition position, CancellationToken cancellationToken)
     {
         var (root, path) = Resolve(workspaceRoot, relativePath);
@@ -86,7 +117,11 @@ public sealed class AdvancedCodeIntelligenceService(
         return await WithServerAsync(root, path, documentText, (server, uri, token) => server.GetSemanticTokensAsync(uri, token), cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<T> WithServerAsync<T>(string root, string path, string documentText, Func<IAdvancedLanguageServerClient, string, CancellationToken, Task<T>> action, CancellationToken cancellationToken)
+    private Task<T> WithServerAsync<T>(string root, string path, string documentText, Func<IAdvancedLanguageServerClient, string, CancellationToken, Task<T>> action, CancellationToken cancellationToken) =>
+        WithOpenedServerAsync(root, path, documentText, (server, uri, _, token) => action(server, uri, token), cancellationToken);
+
+    private async Task<T> WithOpenedServerAsync<T>(string root, string path, string documentText,
+        Func<IAdvancedLanguageServerClient, string, int, CancellationToken, Task<T>> action, CancellationToken cancellationToken)
     {
         if (RuntimeSafetyState.IsSafeMode) throw new InvalidOperationException($"Advanced language-server features are disabled in crash-loop recovery safe mode. {RuntimeSafetyState.Reason}");
         var definition = await configurations.FindForPathAsync(path, cancellationToken).ConfigureAwait(false) ?? throw new NotSupportedException("No enabled language server is configured for this file type.");
@@ -94,8 +129,10 @@ public sealed class AdvancedCodeIntelligenceService(
         await using var server = await languageServers.StartAsync(definition, root, cancellationToken).ConfigureAwait(false);
         if (server is not IAdvancedLanguageServerClient advanced) throw new NotSupportedException("The configured language-server client does not expose 9to1's advanced protocol features.");
         var uri = StdioLanguageServerClient.ToDocumentUri(path);
-        await server.OpenDocumentAsync(uri, definition.LanguageId, documentText, 1, cancellationToken).ConfigureAwait(false);
-        return await action(advanced, uri, cancellationToken).ConfigureAwait(false);
+        const int openedVersion = 1; // Issued by this fresh, exclusively owned session; it is never changed here.
+        await server.OpenDocumentAsync(uri, definition.LanguageId, documentText, openedVersion, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await action(advanced, uri, openedVersion, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<IReadOnlyList<CodeFileMutation>> PrepareWorkspaceEditAsync(string root, LanguageServerWorkspaceEdit workspaceEdit, CancellationToken cancellationToken)

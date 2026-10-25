@@ -475,6 +475,67 @@ public sealed class DeveloperCodeIntelligenceSurfaceTests
         Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, unprepared.Error!.Code); Assert.Equal(0, language.ApplyCalls);
     }
 
+    [Fact]
+    public async Task Semantic_rename_preview_never_mutates_and_uses_the_existing_immutable_Home_gated_apply()
+    {
+        var files = new List<CodeFileMutation> { new("Sample.cs", "before", "after"), new("Helper.cs", "class Before {}", "class After {}") };
+        var language = new RecordingAdvancedService { Capabilities = LanguageServerCapabilities.None with { Rename = true },
+            Proposal = new(Guid.NewGuid(), "Rename symbol", "refactor.rename", true, files, null) };
+        var gate = new RecordingMutationGate(new(DeveloperAuthorizationDecision.Denied, null, "Review required."));
+        var surface = new DeveloperCodeIntelligenceSurface(language, gate); var document = QueryDocument();
+        var preview = await surface.PreviewRenameSymbolAsync(document, "before", new(0, 0), "After");
+        Assert.True(preview.Succeeded, preview.Error?.Message); Assert.True(preview.Value!.IsApplicable);
+        Assert.Equal(2, preview.Value.Files.Count); Assert.Equal(1, language.RenamePreviewCalls);
+        Assert.Equal(0, language.LegacyRenameCalls); Assert.Equal(0, language.ApplyCalls); Assert.Equal(0, gate.AuthorizeCalls);
+        files[0] = new("unreviewed.cs", "", "unreviewed");
+        var denied = await surface.ApplyCodeActionAsync(document, preview.Value, "user:1");
+        Assert.Equal(DeveloperOperationErrorCode.PermissionDenied, denied.Error!.Code); Assert.Equal(0, language.ApplyCalls);
+        gate.Authorization = new(DeveloperAuthorizationDecision.Granted, "grant:reviewed", null);
+        var accepted = await surface.ApplyCodeActionAsync(document, preview.Value with { Files = files }, "user:1");
+        Assert.True(accepted.Succeeded, accepted.Error?.Message); Assert.Equal(1, language.ApplyCalls);
+        Assert.Equal(new[] { "Sample.cs", "Helper.cs" }, language.Applied!.Select(file => file.RelativePath));
+        Assert.Equal("after", language.Applied![0].AfterContent); Assert.Equal(0, language.LegacyRenameCalls);
+    }
+
+    [Fact]
+    public async Task Legacy_provider_without_preview_is_explicitly_unavailable_and_never_uses_immediate_rename()
+    {
+        var language = new LegacyRenameProvider();
+        var gate = new RecordingMutationGate(new(DeveloperAuthorizationDecision.Granted, "grant", null));
+        var result = await new DeveloperCodeIntelligenceSurface(language, gate)
+            .PreviewRenameSymbolAsync(QueryDocument(), "source", new(0, 0), "After");
+        Assert.False(result.Succeeded); Assert.Equal(DeveloperOperationErrorCode.CapabilityUnavailable, result.Error!.Code);
+        Assert.Contains("reviewable", result.Error.Message); Assert.Equal(0, language.LegacyRenameCalls); Assert.Equal(0, gate.AuthorizeCalls);
+    }
+
+    [Fact]
+    public async Task Cancelled_rename_preview_reply_cannot_leave_an_applicable_prepared_mutation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var language = new RecordingAdvancedService { Capabilities = LanguageServerCapabilities.None with { Rename = true },
+            BeforeRenamePreview = () => { cancellation.Cancel(); return Task.CompletedTask; } };
+        var gate = new RecordingMutationGate(new(DeveloperAuthorizationDecision.Granted, "grant", null));
+        var surface = new DeveloperCodeIntelligenceSurface(language, gate); var document = QueryDocument();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => surface.PreviewRenameSymbolAsync(document, "source", new(0, 0), "After", cancellation.Token));
+        var attempted = await surface.ApplyCodeActionAsync(document, language.Proposal, "user:1");
+        Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, attempted.Error!.Code);
+        Assert.Equal(0, language.ApplyCalls); Assert.Equal(0, gate.AuthorizeCalls); Assert.Equal(0, language.LegacyRenameCalls);
+    }
+
+    private sealed class LegacyRenameProvider : IAdvancedCodeIntelligenceService
+    {
+        public int LegacyRenameCalls { get; private set; }
+        public Task<LanguageServerCapabilities> GetCapabilitiesAsync(string root, string path, CancellationToken token) => Task.FromResult(LanguageServerCapabilities.None with { Rename = true });
+        public Task<IReadOnlyList<CodeLocation>> GetDefinitionAsync(string root, string path, string text, CodePosition position, CancellationToken token) => throw new NotSupportedException();
+        public Task<IReadOnlyList<CodeLocation>> FindReferencesAsync(string root, string path, string text, CodePosition position, CancellationToken token) => throw new NotSupportedException();
+        public Task<CodeWorkspaceMutationResult> RenameSymbolAsync(string root, string path, string text, CodePosition position, string name, CancellationToken token)
+        { LegacyRenameCalls++; throw new InvalidOperationException("Immediate rename must never be used for preview."); }
+        public Task<IReadOnlyList<LanguageServerCompletion>> GetCompletionsAsync(string root, string path, string text, CodePosition position, CancellationToken token) => throw new NotSupportedException();
+        public Task<IReadOnlyList<CodeActionProposal>> GetCodeActionsAsync(string root, string path, string text, CodeRange range, CancellationToken token) => throw new NotSupportedException();
+        public Task<CodeWorkspaceMutationResult> ApplyCodeActionAsync(string root, CodeActionProposal action, CancellationToken token) => throw new NotSupportedException();
+        public Task<IReadOnlyList<CodeSemanticToken>> GetSemanticTokensAsync(string root, string path, string text, CancellationToken token) => throw new NotSupportedException();
+    }
+
     private static DeveloperCodeDocument QueryDocument() => new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "hosted:sample",
         Path.GetFullPath(Path.GetTempPath()), "Sample.cs", 1);
 
@@ -536,7 +597,13 @@ public sealed class DeveloperCodeIntelligenceSurfaceTests
         { QueryCalls++; if (BeforeRead is not null) await BeforeRead(); return []; }
         public async Task<IReadOnlyList<CodeLocation>> FindReferencesAsync(string root, string path, string text, CodePosition position, CancellationToken ct)
         { QueryCalls++; if (BeforeRead is not null) await BeforeRead(); return []; }
-        public Task<CodeWorkspaceMutationResult> RenameSymbolAsync(string root, string path, string text, CodePosition position, string name, CancellationToken ct) => throw new NotSupportedException();
+        public int LegacyRenameCalls { get; private set; }
+        public int RenamePreviewCalls { get; private set; }
+        public Func<Task>? BeforeRenamePreview { get; set; }
+        public Task<CodeWorkspaceMutationResult> RenameSymbolAsync(string root, string path, string text, CodePosition position, string name, CancellationToken ct)
+        { LegacyRenameCalls++; throw new NotSupportedException(); }
+        public async Task<CodeActionProposal> PreviewRenameSymbolAsync(string root, string path, string text, CodePosition position, string name, CancellationToken ct)
+        { RenamePreviewCalls++; if (BeforeRenamePreview is not null) await BeforeRenamePreview(); return Proposal; }
         public async Task<IReadOnlyList<LanguageServerCompletion>> GetCompletionsAsync(string root, string path, string text, CodePosition position, CancellationToken ct)
         { QueryCalls++; if (BeforeRead is not null) await BeforeRead(); return []; }
         public async Task<IReadOnlyList<CodeActionProposal>> GetCodeActionsAsync(string root, string path, string text, CodeRange range, CancellationToken ct)

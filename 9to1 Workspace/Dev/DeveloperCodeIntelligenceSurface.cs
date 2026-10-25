@@ -133,38 +133,47 @@ public sealed class DeveloperCodeIntelligenceSurface
             var proposals = await _languageService.GetCodeActionsAsync(
                 document.WorkspaceRoot, document.RelativePath, currentText, range, cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
-            // The same detached edit payload is both returned for display and retained for
-            // Home authorization/application; provider-owned lists cannot change that scope.
-            var capturedProposals = Array.AsReadOnly(proposals.Select(proposal => proposal with
-                { Files = Array.AsReadOnly(proposal.Files.ToArray()) }).ToArray());
-            if (capturedProposals.Any(static proposal => proposal.Files.Any(file =>
-                    file is null || file.RelativePath is null || file.BeforeContent is null || file.AfterContent is null)))
-                return Failure<IReadOnlyList<CodeActionProposal>>(DeveloperOperationErrorCode.CapabilityUnavailable,
-                    "The language service returned an incomplete workspace edit.", document.FileId.ToString("D"), requestId);
-            var applicableProposals = capturedProposals.Where(static proposal => proposal.IsApplicable).ToArray();
-            if (capturedProposals.Any(static proposal => proposal.Id == Guid.Empty) ||
-                capturedProposals.Select(static proposal => proposal.Id).Distinct().Count() != capturedProposals.Count)
-                return Failure<IReadOnlyList<CodeActionProposal>>(DeveloperOperationErrorCode.CapabilityUnavailable,
-                    "The language service returned ambiguous code-action identities.", document.FileId.ToString("D"), requestId);
-            lock (_preparedActionsGate)
-            {
-                ExpirePreparedActions();
-                if (capturedProposals.Any(proposal => _applyingActions.Contains(proposal.Id) ||
-                    _preparedActions.ContainsKey(proposal.Id)))
-                    return Failure<IReadOnlyList<CodeActionProposal>>(DeveloperOperationErrorCode.CapabilityUnavailable,
-                        "The language service reused a code-action identity that is still active; request fresh proposals.",
-                        document.FileId.ToString("D"), requestId);
-                foreach (var proposal in applicableProposals)
-                    if (!_preparedActions.TryAdd(proposal.Id, new PreparedCodeAction(document, proposal, DateTimeOffset.UtcNow)))
-                        return Failure<IReadOnlyList<CodeActionProposal>>(DeveloperOperationErrorCode.CapabilityUnavailable,
-                            "The language service reused a code-action identity; request fresh proposals.",
-                            document.FileId.ToString("D"), requestId);
-                TrimPreparedActions();
-            }
-            return DeveloperOperationResult<IReadOnlyList<CodeActionProposal>>.Success(capturedProposals, requestId);
+            return RetainPreparedActions(document, proposals, requestId, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception exception) { return MapFailure<IReadOnlyList<CodeActionProposal>>(exception, document, requestId); }
+    }
+
+    private DeveloperOperationResult<IReadOnlyList<CodeActionProposal>> RetainPreparedActions(DeveloperCodeDocument document,
+        IReadOnlyList<CodeActionProposal> proposals, Guid requestId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // The same detached edit payload is both returned for display and retained for
+        // Home authorization/application; provider-owned lists cannot change that scope.
+        var capturedProposals = Array.AsReadOnly(proposals.Select(proposal => proposal with
+            { Files = Array.AsReadOnly(proposal.Files.ToArray()) }).ToArray());
+        if (capturedProposals.Any(static proposal => proposal.Files.Any(file =>
+                file is null || file.RelativePath is null || file.BeforeContent is null || file.AfterContent is null)))
+            return Failure<IReadOnlyList<CodeActionProposal>>(DeveloperOperationErrorCode.CapabilityUnavailable,
+                "The language service returned an incomplete workspace edit.", document.FileId.ToString("D"), requestId);
+        cancellationToken.ThrowIfCancellationRequested();
+        var applicableProposals = capturedProposals.Where(static proposal => proposal.IsApplicable).ToArray();
+        if (capturedProposals.Any(static proposal => proposal.Id == Guid.Empty) ||
+            capturedProposals.Select(static proposal => proposal.Id).Distinct().Count() != capturedProposals.Count)
+            return Failure<IReadOnlyList<CodeActionProposal>>(DeveloperOperationErrorCode.CapabilityUnavailable,
+                "The language service returned ambiguous code-action identities.", document.FileId.ToString("D"), requestId);
+        lock (_preparedActionsGate)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ExpirePreparedActions();
+            if (capturedProposals.Any(proposal => _applyingActions.Contains(proposal.Id) ||
+                _preparedActions.ContainsKey(proposal.Id)))
+                return Failure<IReadOnlyList<CodeActionProposal>>(DeveloperOperationErrorCode.CapabilityUnavailable,
+                    "The language service reused a code-action identity that is still active; request fresh proposals.",
+                    document.FileId.ToString("D"), requestId);
+            foreach (var proposal in applicableProposals)
+                if (!_preparedActions.TryAdd(proposal.Id, new PreparedCodeAction(document, proposal, DateTimeOffset.UtcNow)))
+                    return Failure<IReadOnlyList<CodeActionProposal>>(DeveloperOperationErrorCode.CapabilityUnavailable,
+                        "The language service reused a code-action identity; request fresh proposals.",
+                        document.FileId.ToString("D"), requestId);
+            TrimPreparedActions();
+        }
+        return DeveloperOperationResult<IReadOnlyList<CodeActionProposal>>.Success(capturedProposals, requestId);
     }
 
     public async Task<DeveloperOperationResult<DeveloperWorkspaceMutationReceipt>> ApplyCodeActionAsync(
@@ -305,15 +314,55 @@ public sealed class DeveloperCodeIntelligenceSurface
         ReadAsync(document,
             (target, token) => _languageService.GetSemanticTokensAsync(target.WorkspaceRoot, target.RelativePath, currentText, token), cancellationToken, capability => capability.SemanticTokens, "semantic tokens");
 
+    /// <summary>Prepare the maintained language provider's semantic rename for review. The SAME
+    /// immutable proposal custody and Home-gated ApplyCodeActionAsync own any later mutation.</summary>
+    public async Task<DeveloperOperationResult<CodeActionProposal>> PreviewRenameSymbolAsync(DeveloperCodeDocument document,
+        string currentText, Haven.Core.CodePosition position, string newName, CancellationToken cancellationToken = default)
+    {
+        var requestId = Guid.NewGuid();
+        if (document is null || document.Validate() is { } || currentText is null || position is null ||
+            position.Line < 0 || position.Character < 0 || string.IsNullOrWhiteSpace(newName) ||
+            newName.Trim().Length > 256 || newName.Any(char.IsControl))
+            return Failure<CodeActionProposal>(DeveloperOperationErrorCode.InvalidInput,
+                "A current code document, source position and valid new symbol name are required.", document?.FileId.ToString("D") ?? "", requestId);
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var capabilities = await _languageService.GetCapabilitiesAsync(document.WorkspaceRoot, document.RelativePath, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!capabilities.Rename)
+                return Failure<CodeActionProposal>(DeveloperOperationErrorCode.CapabilityUnavailable,
+                    "The active language provider does not support symbol rename.", document.FileId.ToString("D"), requestId);
+            CodeActionProposal proposal;
+            try
+            {
+                proposal = await _languageService.PreviewRenameSymbolAsync(document.WorkspaceRoot, document.RelativePath,
+                    currentText, position, newName, cancellationToken).ConfigureAwait(false);
+            }
+            catch (NotSupportedException unavailable)
+            { return Failure<CodeActionProposal>(DeveloperOperationErrorCode.CapabilityUnavailable, unavailable.Message, document.FileId.ToString("D"), requestId); }
+            cancellationToken.ThrowIfCancellationRequested();
+            var retained = RetainPreparedActions(document, [proposal], requestId, cancellationToken);
+            if (!retained.Succeeded)
+            {
+                var error = retained.Error!;
+                return DeveloperOperationResult<CodeActionProposal>.Failure(error.Code, error.Message, error.TargetId, error.Recoverable, error.Retryable, requestId);
+            }
+            return DeveloperOperationResult<CodeActionProposal>.Success(retained.Value![0], requestId);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception error) { return MapFailure<CodeActionProposal>(error, document, requestId); }
+    }
+
     /// <summary>
-    /// Rename is intentionally unavailable until the shared LSP contract can return a reviewable edit proposal
-    /// before applying it. The current service's RenameSymbolAsync applies the transaction immediately.
+    /// Immediate rename remains unavailable on this compatibility entry point. Use the typed
+    /// PreviewRenameSymbolAsync path and the existing Home-gated proposal apply operation.
     /// </summary>
     public DeveloperOperationResult<DeveloperWorkspaceMutationReceipt> RenameSymbolRequiresPreview(
         DeveloperCodeDocument document) =>
         DeveloperOperationResult<DeveloperWorkspaceMutationReceipt>.Failure(
             DeveloperOperationErrorCode.CapabilityUnavailable,
-            "Rename is blocked until the language-service contract exposes a reviewable workspace-edit preview for Home approval.",
+            "Use PreviewRenameSymbolAsync to review the real workspace edit before requesting Home-approved application.",
             document?.FileId.ToString("D") ?? string.Empty);
 
     private async Task<DeveloperOperationResult<T>> ReadAsync<T>(
