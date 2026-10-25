@@ -62,13 +62,13 @@ public static class ToolbarBuilder
         host.Children.Add(Group(BuildStyleGallery(vm), Separator()));
         var selected = vm.FindBlock(vm.SelectedBlockId);
         // B/I/U/S range commands and mixed-state labels are authored in Boards.cui.
+        host.Children.Add(Group(FontCombo(vm, selected), SizeCombo(vm, selected)));
         host.Children.Add(Group(
             Toggle(vm, BoardsIcons.Subscript, "Subscript", "Toggle subscript",
-                selected?.Baseline == "subscript", async () => await vm.DispatchAsync("ToggleSub", null)),
+                selected?.Baseline == "subscript", async () => await vm.DispatchAsync("ToggleSub", null), iconSize: 18),
             Toggle(vm, BoardsIcons.Superscript, "Superscript", "Toggle superscript",
-                selected?.Baseline == "superscript", async () => await vm.DispatchAsync("ToggleSup", null)),
+                selected?.Baseline == "superscript", async () => await vm.DispatchAsync("ToggleSup", null), iconSize: 18),
             Separator()));
-        host.Children.Add(Group(FontCombo(vm, selected), SizeCombo(vm, selected)));
         host.Children.Add(Group(
             ColorPopupButton(vm, "A", "Text colour", isHighlight: false),
             ColorPopupButton(vm, "H", "Highlight colour", isHighlight: true),
@@ -110,7 +110,7 @@ public static class ToolbarBuilder
 
     private static ToggleButton Toggle(
         BoardsViewModel vm, string glyph, string name, string tip, bool active, Func<Task> tapped,
-        bool textFallback = false)
+        bool textFallback = false, double iconSize = 15)
     {
         var toggle = new ToggleButton
         {
@@ -130,7 +130,7 @@ public static class ToolbarBuilder
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
             }
-            : BoardsIcons.Glyph(glyph, 15, name);
+            : BoardsIcons.Glyph(glyph, iconSize, name);
         ToolTip.SetTip(toggle, tip);
         Avalonia.Automation.AutomationProperties.SetName(toggle, name);
         toggle.Click += async (_, _) => await tapped();
