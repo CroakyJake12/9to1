@@ -139,6 +139,10 @@ public static class HomeUnixCoreTransport
         "GetServices" => HomeUnixCoreProtocol.Payload(request, await session.GetServicesAsync(token).ConfigureAwait(false)),
         "GetService" => HomeUnixCoreProtocol.Payload(request, await session.GetServiceAsync(request.ServiceId!, token).ConfigureAwait(false)),
         "GetCompatibility" => HomeUnixCoreProtocol.Payload(request, await session.GetCompatibilityAsync(request.Compatibility!, token).ConfigureAwait(false)),
+        "BeginPackageRemoval" => HomeUnixCoreProtocol.Payload(request, await session.BeginPackageRemovalAsync(request.PackageRequest!, token).ConfigureAwait(false)),
+        "ContinuePackageRemoval" => HomeUnixCoreProtocol.Payload(request, await session.ContinuePackageRemovalAsync(request.PackageOperationId!, token).ConfigureAwait(false)),
+        "ObservePackageRemoval" => HomeUnixCoreProtocol.Payload(request, await session.ObservePackageRemovalAsync(request.PackageOperationId!, token).ConfigureAwait(false)),
+        "RecoverPackageRemoval" => HomeUnixCoreProtocol.Payload(request, await session.RecoverPackageRemovalAsync(request.PackageOperationId!, token).ConfigureAwait(false)),
         _ => throw new InvalidDataException("Unsupported Home Core operation."),
     };
 

@@ -62,6 +62,7 @@ public sealed partial class LinuxHomeRootServiceRuntime : IAsyncDisposable
                 using var endpoint = new OriginalEndpoint(configuration.ExistingControlDirectory, user.UserId);
                 LinuxHomeOriginalControlledProcess? controlled = null;
                 OriginalSelectedApplications? selectedApplications = null;
+                OriginalPackageRemovalController? packageRemoval = null;
                 Task? monitor = null; Exception? runtimeFailure = null;
                 CancellationToken startupToken = default;
                 try
@@ -81,9 +82,11 @@ public sealed partial class LinuxHomeRootServiceRuntime : IAsyncDisposable
                     await code.DemandPinnedCurrentAsync(token).ConfigureAwait(false);
                     await WriteFrame(stream, new LinuxHomeRootControlWire.Response(1, hello.CorrelationId, true, null)
                     { Activation = root, PackageId = home.PackageId, CatalogueRevision = home.CatalogueRevision,
-                        PackageIds = code.Packages.Select(value => value.PackageId).ToArray() }, deadline.Token).ConfigureAwait(false);
+                        PackageIds = code.Packages.Select(value => value.PackageId).ToArray(), PackageLifecycleVersion = 1 }, deadline.Token).ConfigureAwait(false);
                     NativeWindowsHomeRootWire.Listening? listening = null;
                     selectedApplications = new(this, code, _kernel, user, root, home, controlled, () => listening, endpoint.Listener, endpoint.Path, token);
+                    packageRemoval = new(code, _kernel, user, controlled, () => listening, selectedApplications);
+                    selectedApplications.BindOriginalPackageAvailability(packageRemoval.IsOriginalPackageAvailableAsync);
                     var selectedPeerServer = selectedApplications.StartOriginalPeerServer();
                     _startup.TrySetResult(new(true, null));
                     while (!token.IsCancellationRequested)
@@ -112,13 +115,15 @@ public sealed partial class LinuxHomeRootServiceRuntime : IAsyncDisposable
                                 throw new UnauthorizedAccessException("Only the SAME controlled Home's current original actor/listening lease may be published.");
                             listening = actual;
                         }
-                        var selectedResponse = await selectedApplications.HandleAsync(request, listening, token).ConfigureAwait(false);
-                        var response = selectedResponse ?? (request.SchemaVersion != 1 || request.CorrelationId == Guid.Empty
+                        var packageResponse = await packageRemoval.HandleAsync(request, token).ConfigureAwait(false);
+                        var selectedResponse = packageResponse is null ? await selectedApplications.HandleAsync(request, listening, token).ConfigureAwait(false) : null;
+                        var response = packageResponse ?? selectedResponse ?? (request.SchemaVersion != 1 || request.CorrelationId == Guid.Empty
                             ? throw new InvalidDataException("The original Root control command identity is invalid.")
                             : request.Command == "inspect-package" && package is not null
                                 ? new LinuxHomeRootControlWire.Response(1, request.CorrelationId, true, null) { Activation = package,
                                     SignedDescriptor = Convert.FromBase64String(package.SignedDescriptorBase64), DescriptorPayload = Convert.FromBase64String(package.DescriptorPayloadBase64),
-                                    PackageId = package.PackageId, CatalogueRevision = package.CatalogueRevision }
+                                    PackageId = package.PackageId, CatalogueRevision = package.CatalogueRevision,
+                                    PackageInstalled = await packageRemoval.IsOriginalPackageAvailableAsync(package.PackageId, token).ConfigureAwait(false) }
                                 : request.Command is "check-home" or "publish-listening" ? new LinuxHomeRootControlWire.Response(1, request.CorrelationId, true, null) { Listening = listening,
                                     OriginalHomeProcess = new(controlled.ProcessId, "unix-euid:" + user.UserId.ToString(CultureInfo.InvariantCulture),
                                         controlled.ProcessStartIdentity ?? throw new UnauthorizedAccessException("The actual Home process start identity is unavailable."),
@@ -138,6 +143,8 @@ public sealed partial class LinuxHomeRootServiceRuntime : IAsyncDisposable
                     var failures = new List<Exception>();
                     if (runtimeFailure is not null) failures.Add(runtimeFailure);
                     try { _stop.Cancel(); } catch (Exception cause) { failures.Add(cause); }
+                    if (packageRemoval is not null)
+                        try { await packageRemoval.CloseAndDrainAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
                     if (selectedApplications is not null)
                         try { await selectedApplications.CloseAndDrainAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
                     if (controlled is not null)
@@ -304,7 +311,9 @@ internal static class LinuxHomeRootControlWire
         string AppId, string PackageId, string InstallationRevision, string ExecutableIdentity);
     internal sealed record Request(int SchemaVersion, Guid CorrelationId, string Command)
     { public string? PackageId { get; init; } public NativeWindowsHomeRootWire.Listening? Listening { get; init; }
-      public NativeWindowsHomeRootWire.SelectedChoice? SelectedChoice { get; init; } public int ProcessId { get; init; } }
+      public NativeWindowsHomeRootWire.SelectedChoice? SelectedChoice { get; init; } public int ProcessId { get; init; }
+      public LinuxHomePackageRemovalWire.Open? PackageRemoval { get; init; } public string? PackageOperationId { get; init; }
+      public HomeCoreStateRecord? PackageRecord { get; init; } public long ExpectedPackageRevision { get; init; } }
     internal sealed record Response(int SchemaVersion, Guid CorrelationId, bool Accepted, string? Reason)
     {
         public string? PackageId { get; init; }
@@ -317,5 +326,11 @@ internal static class LinuxHomeRootControlWire
         public ProcessWitness? OriginalHomeProcess { get; init; }
         public NativeWindowsHomeRootWire.SelectedChoice? SelectedChoice { get; init; }
         public NativeWindowsHomeRootWire.SelectedWitness? SelectedWitness { get; init; }
+        public int PackageLifecycleVersion { get; init; }
+        public bool? PackageInstalled { get; init; }
+        public HomeStateReadResult? PackageState { get; init; }
+        public HomeStateWriteResult? PackageWrite { get; init; }
+        public string? PackageOperationId { get; init; }
+        public LinuxHomePackageRemovalWire.Outcome? PackageRemovalOutcome { get; init; }
     }
 }

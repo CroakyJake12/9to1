@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Text.Json;
 using Haven.Application;
+using HavenOS.Home.Apps;
 
 namespace HavenOS.Home.Core;
 
@@ -62,11 +63,19 @@ public sealed class HomeUnixCoreClient : IAsyncDisposable
         return RequestAsync<HomeCompatibilityResult>("GetCompatibility", null,
             request with { RequiredServices = request.RequiredServices.Select(row => row with { }).ToArray() }, token);
     }
+    public Task<HomeNativeCoreApiResult<HomeNativePackageOperationSnapshot>> BeginPackageRemovalAsync(HomePackageActionRequest original, CancellationToken token = default)
+        => RequestAsync<HomeNativePackageOperationSnapshot>("BeginPackageRemoval", null, null, token, original with { }, null);
+    public Task<HomeNativeCoreApiResult<HomeNativePackageOperationSnapshot>> ContinuePackageRemovalAsync(string originalOperationId, CancellationToken token = default)
+        => RequestAsync<HomeNativePackageOperationSnapshot>("ContinuePackageRemoval", null, null, token, null, originalOperationId);
+    public Task<HomeNativeCoreApiResult<HomeNativePackageOperationSnapshot>> ObservePackageRemovalAsync(string originalOperationId, CancellationToken token = default)
+        => RequestAsync<HomeNativePackageOperationSnapshot>("ObservePackageRemoval", null, null, token, null, originalOperationId);
+    public Task<HomeNativeCoreApiResult<HomeNativePackageOperationSnapshot>> RecoverPackageRemovalAsync(string originalOperationId, CancellationToken token = default)
+        => RequestAsync<HomeNativePackageOperationSnapshot>("RecoverPackageRemoval", null, null, token, null, originalOperationId);
     private Task<HomeNativeCoreApiResult<T>> RequestAsync<T>(string operation, string? serviceId,
-        HomeCompatibilityRequest? compatibility, CancellationToken caller)
+        HomeCompatibilityRequest? compatibility, CancellationToken caller, HomePackageActionRequest? packageRequest = null, string? packageOperationId = null)
     {
-        var request = new HomeUnixCoreRequest(HomeUnixCoreProtocol.Version, Guid.NewGuid().ToString("N"), operation,
-            serviceId, compatibility);
+        var request = new HomeUnixCoreRequest(packageRequest is not null || packageOperationId is not null ? HomeUnixCoreProtocol.PackageVersion : HomeUnixCoreProtocol.Version,
+            Guid.NewGuid().ToString("N"), operation, serviceId, compatibility, packageRequest, packageOperationId);
         var payload = HomeUnixCoreProtocol.Payload(request); // Frozen before any await.
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         lock (_sync)

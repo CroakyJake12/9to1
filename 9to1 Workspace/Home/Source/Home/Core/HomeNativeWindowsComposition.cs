@@ -87,7 +87,8 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         string? linuxDulcheExecutableSha256 = null,
         HomeDulcheCapabilityObservation? dulcheCapabilityObservation = null,
         HomeNativePreferenceBinding? configuredNativePreferences = null,
-        bool originalBorrowedHomeStartupExpected = false)
+        bool originalBorrowedHomeStartupExpected = false,
+        Func<HomeNativeWindowsOwnerComponents, HomeNativeCoreApiSessions, IHomeCoreService>? configureOriginalPackageService = null)
     {
         _originalBorrowedHomeExpected = originalBorrowedHomeStartupExpected;
         StateStore = originalStateStore ?? throw new ArgumentNullException(nameof(originalStateStore));
@@ -165,7 +166,9 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
                 new HomeDulchePackagedModelEvidenceSource());
         }
         var dulcheRuntime = new HomeDulcheRuntimeService(dulcheSource);
-        Runtime = new([new HomeCoreStateService(StateStore), permissionsService, Productivity, dulcheRuntime], Sessions);
+        var packageService = configureOriginalPackageService?.Invoke(new(StateStore, Profiles, Permissions, Resources, Ownership, Broker), Sessions);
+        Runtime = new(new IHomeCoreService[] { new HomeCoreStateService(StateStore), permissionsService, Productivity, dulcheRuntime }
+            .Concat(packageService is null ? [] : new[] { packageService }), Sessions);
         Api = api = new(Runtime, Sessions, Profiles);
         if (_originalBorrowedHomeExpected) _originalBorrowedApi = new BorrowedCoreApi(this);
         var components = new Dictionary<Type, object>

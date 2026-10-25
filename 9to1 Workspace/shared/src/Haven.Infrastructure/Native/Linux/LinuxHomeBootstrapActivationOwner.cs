@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text.Json;
 using HavenOS.Home.Apps;
+using HavenOS.Home.Core;
 using Microsoft.Win32.SafeHandles;
 
 namespace Haven.Infrastructure.Native.Linux;
@@ -47,15 +48,21 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
         private readonly LinuxHomePackageArtifactStore _artifacts;
         private readonly LinuxHomePackageArtifactStore.ValidatedStage _stage;
         private readonly Func<Task> _source;
+        private readonly Func<CancellationToken, Task<HomeStateReadResult>> _readPackageState;
+        private readonly Func<HomeCoreStateRecord, long, IHomeStateCommitActorGuard, CancellationToken, Task<HomeStateWriteResult>> _writePackageState;
         private bool _closed;
         internal IReadOnlyList<HomePackageOriginalInstalledActivationRecord> Packages { get; }
+        internal IReadOnlyList<HomePackageDatabaseEntry> OriginalInstalledEntries { get; }
         internal string OriginalMachineStatePath { get; }
         internal string OriginalPlanSha256 { get; }
         internal PublishedCode(LinuxHomePackageArtifactStore artifacts, LinuxHomePackageArtifactStore.ValidatedStage stage,
-            IReadOnlyList<HomePackageOriginalInstalledActivationRecord> packages, Func<Task> source,
-            string originalMachineStatePath, string originalPlanSha256)
-        { _artifacts = artifacts; _stage = stage; Packages = packages; _source = source;
-            OriginalMachineStatePath = originalMachineStatePath; OriginalPlanSha256 = originalPlanSha256; }
+            IReadOnlyList<HomePackageOriginalInstalledActivationRecord> packages, IReadOnlyList<HomePackageDatabaseEntry> originalInstalledEntries, Func<Task> source,
+            string originalMachineStatePath, string originalPlanSha256,
+            Func<CancellationToken, Task<HomeStateReadResult>> readPackageState,
+            Func<HomeCoreStateRecord, long, IHomeStateCommitActorGuard, CancellationToken, Task<HomeStateWriteResult>> writePackageState)
+        { _artifacts = artifacts; _stage = stage; Packages = packages; OriginalInstalledEntries = originalInstalledEntries; _source = source;
+            OriginalMachineStatePath = originalMachineStatePath; OriginalPlanSha256 = originalPlanSha256;
+            _readPackageState = readPackageState; _writePackageState = writePackageState; }
         internal async Task DemandCurrentAsync(CancellationToken token)
         {
             ObjectDisposedException.ThrowIf(_closed, this); await _source().ConfigureAwait(false);
@@ -90,6 +97,11 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
             try { LinuxOriginalDownloadPaths.DemandPath(held, path, false); return held; }
             catch { held.Dispose(); throw; }
         }
+        internal Task<HomeStateReadResult> ReadOriginalPackageStateAsync(CancellationToken token)
+        { ObjectDisposedException.ThrowIf(_closed, this); return _readPackageState(token); }
+        internal Task<HomeStateWriteResult> WriteOriginalPackageStateAsync(HomeCoreStateRecord record, long expectedRevision,
+            IHomeStateCommitActorGuard originalRootGuard, CancellationToken token)
+        { ObjectDisposedException.ThrowIf(_closed, this); return _writePackageState(record, expectedRevision, originalRootGuard, token); }
         internal void Close() => _closed = true;
     }
 
@@ -109,7 +121,9 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                     throw new UnauthorizedAccessException("This command only performs an initial bootstrap. Existing package/journal state requires its original owning recovery or lifecycle operation.");
                 if (recovery)
                 {
-                    var retained = original.Registry.RecentOperations;
+                    var retained = originalRuntime is null ? original.Registry.RecentOperations
+                        : Array.AsReadOnly(original.Registry.RecentOperations.Where(value => value.OperationId == operation && value.Action == "Install" &&
+                            value.IdempotencyKey == "linux.bootstrap:" + operation + ":" + value.PackageId).ToArray());
                     if (retained.Count != original.Enrollment.SelectedPackageIds.Count || retained.Any(value =>
                         value.OperationId != operation || value.Action != "Install" ||
                         value.IdempotencyKey != "linux.bootstrap:" + operation + ":" + value.PackageId ||
@@ -215,7 +229,7 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                         throw new UnauthorizedAccessException("Recovery requires the already-published readable machine-code bundle.");
                     foreach (var value in verified)
                     {
-                        var journal = original.Registry.RecentOperations.Single(item => item.PackageId == value.Layout.PackageId);
+                        var journal = original.Registry.RecentOperations.Single(item => item.PackageId == value.Layout.PackageId && item.OperationId == operation && item.Action == "Install");
                         if (journal.UnknownFields is not { } fields || !fields.TryGetValue("linux.original-bootstrap-publication.v1", out var retainedBinding))
                             throw new UnauthorizedAccessException("The original operation has no retained bootstrap publication binding.");
                         var binding = retainedBinding.Deserialize<JournalBinding>(Web);
@@ -225,13 +239,16 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                     }
                     observedActive = stagePath;
                     await original.DemandCurrentAsync().ConfigureAwait(false);
-                    var allSettled = original.Registry.RecentOperations.All(value => value.State == HomePackageJournalState.Succeeded);
-                    var allPending = original.Registry.RecentOperations.All(value => value.State == HomePackageJournalState.Validated);
+                    var bootstrapJournal = original.Registry.RecentOperations.Where(value => value.OperationId == operation && value.Action == "Install").ToArray();
+                    var allSettled = bootstrapJournal.All(value => value.State == HomePackageJournalState.Succeeded);
+                    var allPending = bootstrapJournal.All(value => value.State == HomePackageJournalState.Validated);
                     var recoveredPackages = verified.Select(value => InstalledEntry(value, original.Enrollment, stagePath, operation,
-                        original.Registry.RecentOperations.Single(item => item.PackageId == value.Layout.PackageId).StartedAtUtc)).ToArray();
+                        bootstrapJournal.Single(item => item.PackageId == value.Layout.PackageId).StartedAtUtc)).ToArray();
                     if (allSettled)
                     {
-                        if (original.Registry.Packages.Count != recoveredPackages.Length || recoveredPackages.Any(expected =>
+                        if (originalRuntime is not null)
+                            LinuxHomePackageRemovalWire.DemandOriginalCanonicalOutcomes(original.Registry, recoveredPackages, original.Enrollment.HomePackageId, operation);
+                        else if (original.Registry.Packages.Count != recoveredPackages.Length || recoveredPackages.Any(expected =>
                             !original.Registry.Packages.Any(actual => SameInstalledActivation(actual, expected))))
                             throw new UnauthorizedAccessException("A settled operation must still identify its SAME current installed activation; recovery does not overwrite it.");
                         result = new(request.SigningInputs.OperationId, stagePath, original.Registry.Revision,
@@ -240,7 +257,8 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                         {
                             var runtimePackages = recoveredPackages.Select(value => value.UnknownFields![HomePackageOriginalInstalledActivationRecord.Field]
                                 .Deserialize<HomePackageOriginalInstalledActivationRecord>()!).ToArray();
-                            var code = new PublishedCode(artifacts, published, Array.AsReadOnly(runtimePackages), original.DemandCurrentAsync, original.StatePath, Digest(planBytes));
+                            var code = new PublishedCode(artifacts, published, Array.AsReadOnly(runtimePackages), Array.AsReadOnly(recoveredPackages), original.DemandCurrentAsync, original.StatePath, Digest(planBytes),
+                                original.ReadOriginalPackageStateAsync, original.WriteOriginalPackageStateAsync);
                             try { await originalRuntime(code, cancellation).ConfigureAwait(false); }
                             finally { code.Close(); }
                         }

@@ -31,6 +31,15 @@ public sealed partial class LinuxHomeRootServiceRuntime
         private readonly object _gate = new();
         private readonly Dictionary<Guid, Selection> _operations = [];
         private bool _retiring;
+        private Func<string, CancellationToken, Task<bool>>? _packageAvailable;
+        internal void BindOriginalPackageAvailability(Func<string, CancellationToken, Task<bool>> original)
+        { lock (_gate) { if (_packageAvailable is not null) throw new InvalidOperationException("Bind the same canonical package availability once."); _packageAvailable = original; } }
+        private async Task DemandPackageAvailable(string package, CancellationToken token)
+        {
+            var current = _packageAvailable ?? throw new UnauthorizedAccessException("The original canonical package owner is not bound.");
+            if (!await current(package, token).ConfigureAwait(false)) throw new UnauthorizedAccessException("The original package is removed or its canonical outcome is pending.");
+        }
+
         private readonly CancellationTokenSource _peerStop = CancellationTokenSource.CreateLinkedTokenSource(originalServiceLifetime);
         private Task? _peerServer;
         internal Task StartOriginalPeerServer() { lock (_gate) return _peerServer ??= ServePeers(); }
@@ -57,6 +66,7 @@ public sealed partial class LinuxHomeRootServiceRuntime
                         if (request is null) continue;
                         if (request is not { SchemaVersion: 1, Command: "observe-home-for-selected" } || request.CorrelationId == Guid.Empty)
                             throw new UnauthorizedAccessException("Use only the bounded source-owned selected-app Home observation.");
+                        await DemandPackageAvailable(selected.Package.PackageId, deadline.Token).ConfigureAwait(false);
                         selected.Child!.DemandOriginalCurrent(); originalHome.DemandOriginalCurrent();
                         kernel.DemandOriginalCurrent(user); await code.DemandPinnedCurrentAsync(deadline.Token).ConfigureAwait(false);
                         var listening = currentListening();
@@ -92,6 +102,7 @@ public sealed partial class LinuxHomeRootServiceRuntime
                 lock (_gate) actual = _operations.Values.SingleOrDefault(value => value.Child?.ProcessId == request.ProcessId &&
                     value.Witness is not null && !value.Retired);
                 if (actual is null) return new(1, request.CorrelationId, true, null);
+                if (_packageAvailable is null || !await _packageAvailable(actual.Package.PackageId, token).ConfigureAwait(false)) return new(1, request.CorrelationId, true, null);
                 actual.Child!.DemandOriginalCurrent();
                 return new(1, request.CorrelationId, true, null) { SelectedChoice = actual.Choice, SelectedWitness = actual.Witness, Activation = actual.Package };
             }
@@ -102,6 +113,7 @@ public sealed partial class LinuxHomeRootServiceRuntime
                 throw new UnauthorizedAccessException("Only the same actual Home listening lease may issue an installed selected-app choice.");
             var package = code.Packages.SingleOrDefault(value => value.PackageId == choice.PackageId && value.AppId == choice.AppId)
                 ?? throw new UnauthorizedAccessException("The selected app is not in the same retained signed activation.");
+            if (request.Command != "release-selected-application") await DemandPackageAvailable(package.PackageId, token).ConfigureAwait(false);
             var descriptor = HomePackageOriginalArtifactDescriptorParser.Parse(Convert.FromBase64String(package.SignedDescriptorBase64),
                 Convert.FromBase64String(package.DescriptorPayloadBase64), package.CatalogueRevision,
                 new(package.PackageId, HomePackageAction.Install, "linux.root.selected", package.Version, null, package.CatalogueRevision)).Descriptor;
@@ -173,6 +185,36 @@ public sealed partial class LinuxHomeRootServiceRuntime
                     try { await child.CloseAndDrainAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
                 if (failures.Count != 0) throw new AggregateException("The original selected launch and child cleanup retained actual failures.", failures);
             }
+        }
+        internal bool HasLiveOriginalPackageChild(string packageId)
+        {
+            lock (_gate)
+            {
+                foreach (var selection in _operations.Values.Where(value => value.Package.PackageId == packageId && !value.Retired))
+                {
+                    if (selection.Child is not { HasOriginalResumeAttempt: true } child) continue;
+                    var exit = child.OriginalExit;
+                    if (exit is null || !exit.IsCompleted) return true;
+                    // A failed original exit reader is not proof that the child stopped.
+                    var frame = exit.GetAwaiter().GetResult();
+                    if (!frame.StartsWith("OriginalLinuxHomeExitedV1:", StringComparison.Ordinal))
+                        throw new InvalidDataException("The original selected child exit observation is invalid.");
+                }
+                return false;
+            }
+        }
+        internal async Task RetireOriginalPackageChildrenAsync(string packageId)
+        {
+            Selection[] all;
+            lock (_gate)
+            {
+                if (HasLiveOriginalPackageChild(packageId)) throw new InvalidOperationException("Close the running app before removing it.");
+                all = _operations.Values.Where(value => value.Package.PackageId == packageId && !value.Retired).ToArray();
+                foreach (var item in all) item.Retired = true;
+            }
+            var failures = new List<Exception>();
+            foreach (var item in all) try { await Close(item).ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
+            if (failures.Count != 0) throw new AggregateException("Original package child retirement retained actual failures.", failures);
         }
         internal async Task CloseAndDrainAsync()
         {

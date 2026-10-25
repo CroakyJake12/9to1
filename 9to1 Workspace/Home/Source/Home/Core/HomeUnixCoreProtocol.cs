@@ -1,18 +1,22 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using HavenOS.Home.Apps;
 
 namespace HavenOS.Home.Core;
 
 /// <summary>Versioned read envelope. Correlation and permission-request IDs are observations,
 /// never caller, actor, lease, grant or installed-package authority.</summary>
 public sealed record HomeUnixCoreRequest(string Protocol, string RequestId, string Operation,
-    string? ServiceId = null, HomeCompatibilityRequest? Compatibility = null);
+    string? ServiceId = null, HomeCompatibilityRequest? Compatibility = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] HomePackageActionRequest? PackageRequest = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? PackageOperationId = null);
 public sealed record HomeUnixCoreResponse(string Protocol, string RequestId, string Operation,
     string Code, JsonElement Result);
 
 internal static class HomeUnixCoreProtocol
 {
     internal const string Version = "9to1.Home.Core.Read/1";
+    internal const string PackageVersion = "9to1.Home.Core.Package/1";
     internal const int MaximumMessageBytes = 64 * 1024;
     internal static readonly JsonSerializerOptions Json = new()
     {
@@ -27,11 +31,23 @@ internal static class HomeUnixCoreProtocol
     }
     internal static HomeUnixCoreRequest ReadRequest(byte[] payload)
     {
-        UniqueObject(payload, ["Protocol", "RequestId", "Operation", "ServiceId", "Compatibility"]);
+        UniqueObject(payload, ["Protocol", "RequestId", "Operation", "ServiceId", "Compatibility", "PackageRequest", "PackageOperationId"]);
         var value = JsonSerializer.Deserialize<HomeUnixCoreRequest>(payload, Json)
             ?? throw new InvalidDataException("Home Core request is absent.");
-        if (value.Protocol != Version || !Correlation(value.RequestId))
+        if (value.Protocol is not (Version or PackageVersion) || !Correlation(value.RequestId))
             throw new InvalidDataException("Home Core protocol or correlation is invalid.");
+        if (value.Protocol == PackageVersion)
+        {
+            if (value.ServiceId is not null || value.Compatibility is not null) throw new InvalidDataException("Package protocol cannot carry read arguments.");
+            if (value.Operation == "BeginPackageRemoval" && value.PackageOperationId is null && value.PackageRequest is { Action: HomePackageAction.Uninstall } removal &&
+                HomePackageArtifactSelection.Identifier(removal.PackageId) && HomePackageArtifactSelection.Text(removal.IdempotencyKey, 128) &&
+                removal.ExpectedRevision is { Length: > 0 and <= 1024 } && removal.RequestedChannel is null && removal.RequestedVersion is null) return value;
+            if (value.Operation is "ContinuePackageRemoval" or "ObservePackageRemoval" or "RecoverPackageRemoval" &&
+                value.PackageRequest is null && Correlation(value.PackageOperationId)) return value;
+            throw new InvalidDataException("Original package operation arguments are invalid.");
+        }
+        if (value.PackageRequest is not null || value.PackageOperationId is not null)
+            throw new InvalidDataException("The read protocol cannot carry package mutations.");
         switch (value.Operation)
         {
             case "GetState" or "GetServices" when value.ServiceId is null && value.Compatibility is null: break;
@@ -49,14 +65,14 @@ internal static class HomeUnixCoreProtocol
         UniqueObject(payload, ["Protocol", "RequestId", "Operation", "Code", "Result"]);
         var value = JsonSerializer.Deserialize<HomeUnixCoreResponse>(payload, Json)
             ?? throw new InvalidDataException("Home Core reply is absent.");
-        if (value.Protocol != Version || value.RequestId != request.RequestId || value.Operation != request.Operation ||
+        if (value.Protocol != request.Protocol || value.RequestId != request.RequestId || value.Operation != request.Operation ||
             value.Code != "HomeCoreReply" || value.Result.ValueKind != JsonValueKind.Object)
             throw new InvalidDataException("Home Core reply does not match the original request.");
         return value;
     }
     internal static byte[] Payload<T>(HomeUnixCoreRequest request, HomeNativeCoreApiResult<T> result)
     {
-        var value = new HomeUnixCoreResponse(Version, request.RequestId, request.Operation, "HomeCoreReply",
+        var value = new HomeUnixCoreResponse(request.Protocol, request.RequestId, request.Operation, "HomeCoreReply",
             JsonSerializer.SerializeToElement(result, Json));
         var payload = JsonSerializer.SerializeToUtf8Bytes(value, Json);
         if (payload.Length is 0 or > MaximumMessageBytes)
