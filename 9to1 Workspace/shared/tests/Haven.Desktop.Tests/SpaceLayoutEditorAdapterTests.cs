@@ -234,6 +234,29 @@ public sealed class SpaceLayoutEditorAdapterTests
         }
     }
 
+    [Fact]
+    public void Registered_node_enum_settings_select_only_values_from_the_schema()
+    {
+        var (page, _, _) = NewPage();
+        using (page)
+        {
+            Add(page, SpaceUserMessageGraph.SearchWordsType);
+            var search = Assert.Single(page.Editor.Document.Nodes, node => node.TypeId == SpaceUserMessageGraph.SearchWordsType);
+            page.Editor.SelectNode(search.Id);
+
+            var comparison = page.NodeConfigurationOptions.Where(option => option.Key == "comparison").ToArray();
+            Assert.Equal(new[] { "ordinal", "ordinal-ignore-case" }, comparison.Select(option => option.Value).ToArray());
+            Assert.Single(comparison, option => option.Value == "ordinal" && option.Button.Accessibility.Selected);
+            var ignoreCase = Assert.Single(comparison, option => option.Value == "ordinal-ignore-case");
+            ignoreCase.Button.Invoke();
+
+            Assert.Equal("ordinal-ignore-case", Assert.Single(page.Editor.Document.Nodes,
+                node => node.Id == search.Id).Metadata["comparison"]);
+            Assert.True(ignoreCase.Button.Accessibility.Selected);
+            Assert.Single(comparison, option => option.Button.Accessibility.Selected);
+        }
+    }
+
     private static void Add(SpaceLayoutEditorPage page, string typeId) =>
         Assert.Single(page.UserMessagePalette, entry => entry.TypeId == typeId).Button.Invoke();
 

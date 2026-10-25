@@ -97,6 +97,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     private readonly Action<SpaceLayoutDocument>? _onDraftChanged;
     private readonly List<(HavenButton Button, string TypeId, EventHandler Handler)> _userMessagePalette = [];
     private readonly List<(HavenInput Input, EventHandler Handler)> _configurationInputs = [];
+    private readonly List<(HavenButton Button, Guid NodeId, string Key, string Value, EventHandler Handler)> _configurationOptionButtons = [];
     private readonly Container _configurationInspector;
     private readonly CancellationTokenSource _pageLifetime = new();
     private SpaceDefinition _space;
@@ -266,6 +267,8 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     {
         foreach (var (input, handler) in _configurationInputs) input.TextChanged -= handler;
         _configurationInputs.Clear();
+        foreach (var (button, _, _, _, handler) in _configurationOptionButtons) button.Invoked -= handler;
+        _configurationOptionButtons.Clear();
         foreach (var child in _configurationInspector.Children.ToArray()) _configurationInspector.Remove(child);
         var node = selectedIds.Count == 1
             ? Editor.Document.Nodes.SingleOrDefault(candidate => candidate.Id == selectedIds.Single())
@@ -295,10 +298,42 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
             var type = property.Value.TryGetProperty("type", out var propertyType) && propertyType.ValueKind == System.Text.Json.JsonValueKind.String
                 ? propertyType.GetString() : "value";
             var labelText = key + (required.Contains(key) ? " (required)" : "");
-            if (property.Value.TryGetProperty("enum", out var enumValues) && enumValues.ValueKind == System.Text.Json.JsonValueKind.Array)
-                labelText += " · " + string.Join(" / ", enumValues.EnumerateArray().Select(value => value.ToString()));
             var label = new HavenText(labelText) { Level = TextLevel.Caption };
             _configurationInspector.Add(label);
+            if (property.Value.TryGetProperty("enum", out var enumValues) && enumValues.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                var currentValue = node.Metadata.GetValueOrDefault(key, string.Empty);
+                foreach (var enumValue in enumValues.EnumerateArray())
+                {
+                    var value = enumValue.ValueKind == System.Text.Json.JsonValueKind.String
+                        ? enumValue.GetString() ?? string.Empty : enumValue.ToString();
+                    var selected = string.Equals(value, currentValue, StringComparison.Ordinal);
+                    var button = ActionButton($"Spaces.Layout.NodeConfiguration.{node.Id:D}.{key}.{value}",
+                        selected ? "check" : "circle", value, selected ? ButtonVariant.Secondary : ButtonVariant.Tertiary);
+                    button.SetState(HavenElementState.Selected, selected);
+                    button.Accessibility.AccessibleName = $"{key}: {value}";
+                    button.Accessibility.Description = selected ? "Current registered value." : "Select this registered value.";
+                    EventHandler handler = (_, _) =>
+                    {
+                        Editor.UpdateNode(node.Id, current =>
+                        {
+                            var metadata = new Dictionary<string, string>(current.Metadata, StringComparer.Ordinal) { [key] = value };
+                            return current with { Metadata = metadata };
+                        });
+                        foreach (var option in _configurationOptionButtons.Where(option => option.NodeId == node.Id && option.Key == key))
+                        {
+                            var isSelected = string.Equals(option.Value, value, StringComparison.Ordinal);
+                            option.Button.Variant = isSelected ? ButtonVariant.Secondary : ButtonVariant.Tertiary;
+                            option.Button.SetState(HavenElementState.Selected, isSelected);
+                            option.Button.Accessibility.Description = isSelected ? "Current registered value." : "Select this registered value.";
+                        }
+                    };
+                    button.Invoked += handler;
+                    _configurationOptionButtons.Add((button, node.Id, key, value, handler));
+                    _configurationInspector.Add(button);
+                }
+                continue;
+            }
             var input = new HavenInput { Name = $"Spaces.Layout.NodeConfiguration.{node.Id:D}.{key}", Placeholder = type };
             input.Accessibility.AccessibleName = labelText;
             input.Text = node.Metadata.GetValueOrDefault(key, string.Empty);
@@ -317,6 +352,8 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
 
     internal IReadOnlyDictionary<string, HavenInput> NodeConfigurationInputs => _configurationInputs
         .ToDictionary(pair => pair.Input.Name ?? string.Empty, pair => pair.Input, StringComparer.Ordinal);
+    internal IReadOnlyList<(HavenButton Button, string Key, string Value)> NodeConfigurationOptions =>
+        _configurationOptionButtons.Select(option => (option.Button, option.Key, option.Value)).ToArray();
 
     private void OnDeleteSelection(object? sender, EventArgs e) => Editor.DeleteSelection();
     private void OnResetView(object? sender, EventArgs e) => Editor.ResetViewport();
@@ -464,6 +501,8 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         _pageLifetime.Cancel();
         foreach (var (input, handler) in _configurationInputs) input.TextChanged -= handler;
         _configurationInputs.Clear();
+        foreach (var (button, _, _, _, handler) in _configurationOptionButtons) button.Invoked -= handler;
+        _configurationOptionButtons.Clear();
         foreach (var (button, _, handler) in _userMessagePalette) button.Invoked -= handler;
         _previewButton.Invoked -= OnPreviewSample;
         DeleteSelection.Invoked -= OnDeleteSelection;
