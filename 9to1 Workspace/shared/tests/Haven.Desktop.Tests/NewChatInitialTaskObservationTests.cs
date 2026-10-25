@@ -43,7 +43,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             producer = InitialHostedProducer(lease);
             Assert.True(rig.Service.IsIssuedOriginalTaskObservation(lease));
             Assert.True(rig.Service.CanSubmitObservedOriginalTaskFollowUp(lease));
-            var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, default))!;
+            var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, TestContext.Current.CancellationToken))!;
             page.SetDraft("accepted follow-up");
             var bindings = page.OriginalTaskComposer.Bindings;
             Assert.True(bindings.IsActionAvailable("composer.queue"));
@@ -62,7 +62,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             await command.WaitAsync(TimeSpan.FromSeconds(10));
             await close.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.NotNull(page.CanonicalTaskFollowUp);
-            var actual = (await rig.Tasks.GetByContextAsync(initial.ContextId, default))!;
+            var actual = (await rig.Tasks.GetByContextAsync(initial.ContextId, TestContext.Current.CancellationToken))!;
             Assert.Equal(initial.TaskId, actual.TaskId);
             Assert.Equal(initial.ExecutionId, actual.ExecutionId);
             Assert.Equal("accepted follow-up", Assert.Single(actual.Queue).Summary);

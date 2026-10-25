@@ -108,12 +108,12 @@ public sealed partial class ChatCloudPermissionCallerTests
         {
             await rig.Client.DisposeEntered.Task.WaitAsync(TestContext.Current.CancellationToken);
             Assert.True(rig.Service.CanSubmitObservedOriginalTaskFollowUp(lease));
-            var before = (await rig.Tasks.GetByContextAsync(conversation.Id, default))!;
+            var before = (await rig.Tasks.GetByContextAsync(conversation.Id, TestContext.Current.CancellationToken))!;
             var foreign = new ChatSessionService(rig.Conversations, rig.Client, new CapabilityPreflightService(), new Safety(),
                 new WorkspaceToolRuntime(rig.Workspace), new ComputerToolRuntime(new Computer()), taskCoordinator: rig.Tasks);
             Assert.False(foreign.CanSubmitObservedOriginalTaskFollowUp(lease));
-            await Assert.ThrowsAsync<InvalidOperationException>(() => foreign.SubmitObservedOriginalTaskFollowUpAsync(lease, "foreign instruction", mode, default));
-            var reply = await rig.Service.SubmitObservedOriginalTaskFollowUpAsync(lease, "use the existing source", mode, default);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => foreign.SubmitObservedOriginalTaskFollowUpAsync(lease, "foreign instruction", mode, TestContext.Current.CancellationToken));
+            var reply = await rig.Service.SubmitObservedOriginalTaskFollowUpAsync(lease, "use the existing source", mode, TestContext.Current.CancellationToken);
             Assert.Equal(before.TaskId, reply.Snapshot.TaskId);
             Assert.Equal(before.ExecutionId, reply.Snapshot.ExecutionId);
             Assert.Equal(conversation.Id, reply.Snapshot.ContextId);
@@ -123,8 +123,8 @@ public sealed partial class ChatCloudPermissionCallerTests
             else Assert.NotNull(reply.Steer);
             lease.RequestOriginalObservationRetirement();
             Assert.False(rig.Service.CanSubmitObservedOriginalTaskFollowUp(lease));
-            await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Service.SubmitObservedOriginalTaskFollowUpAsync(lease, "do not resurrect", mode, default));
-            var after = (await rig.Tasks.GetAsync(before.TaskId, default))!;
+            await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Service.SubmitObservedOriginalTaskFollowUpAsync(lease, "do not resurrect", mode, TestContext.Current.CancellationToken));
+            var after = (await rig.Tasks.GetAsync(before.TaskId, TestContext.Current.CancellationToken))!;
             Assert.Equal(reply.Snapshot.PersistenceRevision, after.PersistenceRevision);
         }
         finally
