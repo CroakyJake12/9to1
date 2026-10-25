@@ -26,6 +26,14 @@ public static class BoardsCuiDocuments
         return registry;
     }
 
+    /// <summary>Creates a loader with the Boards-owned palette and accent identity.</summary>
+    public static CuiControlLoader CreateLoader()
+    {
+        var loader = new CuiControlLoader(CreateControlRegistry());
+        loader.SetSurface("Boards", "app.boards");
+        return loader;
+    }
+
     public static CuiDocument Load(string sourceName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceName);

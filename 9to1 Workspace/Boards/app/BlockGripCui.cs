@@ -13,7 +13,7 @@ internal static class BlockGripCui
     public static Control Build(BoardsViewModel viewModel, string blockId)
     {
         var context = new BlockGripContext(viewModel, blockId);
-        var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+        var loader = BoardsCuiDocuments.CreateLoader();
         loader.SetBindingContext(context);
         loader.SetActionDispatcher(context);
         (Control? Root, IReadOnlyList<CuiDiagnostic> Diagnostics) loaded;
