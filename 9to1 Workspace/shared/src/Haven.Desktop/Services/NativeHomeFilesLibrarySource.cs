@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Browser;
@@ -474,12 +475,12 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 throw new InvalidDataException("The created board's current Files parent or store changed before it could be opened.");
             storeRevision ??= page.StoreRevision;
             pages.Add(page);
-            foreach (var row in page.Items)
+            foreach (var listedRow in page.Items)
             {
-                if (row.Id.Value != receipt.FileId) continue;
+                if (listedRow.Id.Value != receipt.FileId) continue;
                 if (createdRow is not null)
                     throw new InvalidDataException("The original Files folder repeated the created board identity.");
-                createdRow = row; createdPage = page;
+                createdRow = listedRow; createdPage = page;
             }
             cursor = page.Next;
             if (cursor is not null && (cursor.StoreID != receipt.FilesStoreId || cursor.StoreRevision != storeRevision ||
@@ -493,13 +494,13 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         await source.AwaitAsync(source.Invoke(() => createOwner.RevalidateCreatedBoardWithinSourceAsync(
             receipt, Own, Retain, token))).ConfigureAwait(false);
         await RequireOwnerAsync(source, token).ConfigureAwait(false);
-        var row = createdRow ?? throw new FileNotFoundException("The created board is not visible in its current Files parent.");
+        var selectedRow = createdRow ?? throw new FileNotFoundException("The created board is not visible in its current Files parent.");
         var pageForRow = createdPage!;
-        if (row.Kind != HostedItemKind.File || row.ParentId?.Value != receipt.ParentFolderId ||
-            row.CurrentRevisionId?.Value.Value != receipt.FilesCasRevisionId ||
-            row.CurrentRevisionId?.Value.Value != receipt.FileRevisionId || row.SizeBytes != receipt.SizeBytes ||
-            !StringComparer.OrdinalIgnoreCase.Equals(row.ContentHash, receipt.ContentSha256) ||
-            !FilesNativeBrowserService.IsBoardDocumentCandidate(row))
+        if (selectedRow.Kind != HostedItemKind.File || selectedRow.ParentId?.Value != receipt.ParentFolderId ||
+            selectedRow.CurrentRevisionId?.Value != receipt.FilesCasRevisionId ||
+            selectedRow.CurrentRevisionId?.Value != receipt.FileRevisionId || selectedRow.SizeBytes != receipt.SizeBytes ||
+            !StringComparer.OrdinalIgnoreCase.Equals(selectedRow.ContentHash, receipt.ContentSha256) ||
+            !FilesNativeBrowserService.IsBoardDocumentCandidate(selectedRow))
             throw new UnauthorizedAccessException("The current Files row no longer matches the exact created board receipt.");
 
         var boardRead = _boardRead ?? throw new NotSupportedException("The original Home Files board reader is unavailable.");
@@ -508,7 +509,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         var transferred = false;
         try
         {
-            readLease = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedAsync(pageForRow, row,
+            readLease = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedAsync(pageForRow, selectedRow,
                 _alive, _ownerCurrent, Own, Retain, source, token))).ConfigureAwait(false);
             if (!readLease.IsOpen || readLease.StoreId != receipt.FilesStoreId || readLease.ParentFolderId != receipt.ParentFolderId ||
                 readLease.FileId != receipt.FileId || readLease.RevisionId != receipt.FilesCasRevisionId)
@@ -521,7 +522,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
             var presentReview = _boardWriteReview ?? throw new NotSupportedException("The original Home Board write review is unavailable.");
             var originalScope = _boardWriteScope ?? throw new NotSupportedException("The original Home Board write scope is unavailable.");
             var retain = _boardWriteRetain ?? throw new NotSupportedException("The original Home Board write task owner is unavailable.");
-            preparedWrite = writer.RegisterPrepared(pageForRow, row, readLease, _alive, presentReview,
+            preparedWrite = writer.RegisterPrepared(pageForRow, selectedRow, readLease, _alive, presentReview,
                 "home-library-created-board:" + receipt.FileId.ToString("D"), originalScope, retain);
             var address = BoardsBrowseAppContentAddress.ForWritableFile(receipt.FilesStoreId, receipt.ParentFolderId,
                 receipt.FileId, readLease.RevisionId, preparedWrite.Value);
