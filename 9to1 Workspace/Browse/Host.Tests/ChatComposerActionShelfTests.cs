@@ -69,6 +69,23 @@ public sealed class ChatComposerActionShelfTests
     }
 
     [AvaloniaFact]
+    public async Task Stop_projects_actual_retirement_and_preserves_the_original_source_failure()
+    {
+        var failure = new IOException("original stop admission failed");
+        var source = new Source { IsSending = true, Draft = "keep", StopFailure = failure };
+        var bindings = new ChatComposerBindings(source);
+        var refreshes = 0;
+        bindings.PropertyChanged += (_, _) => refreshes++;
+        var actual = await Assert.ThrowsAsync<IOException>(() => bindings.DispatchAsync("composer.stop", null).AsTask());
+        Assert.Same(failure, actual);
+        Assert.Equal(1, source.Stops);
+        Assert.True(refreshes > 0);
+        Assert.False(bindings.IsActionAvailable("composer.stop"));
+        Assert.False(bindings.IsActionAvailable("composer.queue"));
+        Assert.Equal("keep", source.Draft);
+    }
+
+    [AvaloniaFact]
     public async Task Shared_authored_shelf_removes_inactive_controls_and_retains_live_stop_and_queue()
     {
         var source = new Source();
@@ -132,8 +149,14 @@ public sealed class ChatComposerActionShelfTests
         public Task Operation { get; set; } = Task.CompletedTask;
         public int Sends;
         public int Stops;
+        public Exception? StopFailure;
         public ValueTask Send() { Sends++; return new(Operation); }
-        public ValueTask Stop() { Stops++; return ValueTask.CompletedTask; }
+        public ValueTask Stop()
+        {
+            Stops++;
+            Stopping = true;
+            return StopFailure is null ? ValueTask.CompletedTask : ValueTask.FromException(StopFailure);
+        }
         public ValueTask Add() => ValueTask.CompletedTask;
         public ValueTask OpenSettings() => ValueTask.CompletedTask;
         public ValueTask CloseSettings() => ValueTask.CompletedTask;

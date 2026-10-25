@@ -259,14 +259,22 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
 
     private async ValueTask StopProjectedAsync()
     {
+        Exception? sourceFailure = null;
         try { await _source.Stop().ConfigureAwait(false); }
-        finally
+        catch (Exception error) { sourceFailure = error; }
+        try
         {
             // Cancellation admission can settle before the active producer acknowledges it.
             // Re-read the same live source now so retired Stop/Queue controls withdraw even
             // if no further stream event arrives. This does not assert producer completion.
             await Dispatcher.UIThread.InvokeAsync(Refresh).GetTask().ConfigureAwait(false);
         }
+        catch (Exception projectionFailure) when (sourceFailure is not null)
+        {
+            throw new AggregateException("The original stop and its projection both failed.", sourceFailure, projectionFailure);
+        }
+        if (sourceFailure is not null)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(sourceFailure).Throw();
     }
 
     private async ValueTask ApplyActionModeAsync(string mode)
