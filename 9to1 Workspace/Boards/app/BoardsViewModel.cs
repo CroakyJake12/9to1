@@ -774,6 +774,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private void RefreshHomeBoardCreationAvailability()
     {
         Set("CanOpenBoardMenu", CanOpenBoardMenu);
+        Set("CanSwitchBoard", CanSwitchBoard);
         Set("CanCreateBoard", CanCreateBoard);
         Set("CanRetryHomeBoardOpen", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
         Set("CanRetryBoardCreationSettlement", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryCreationSettlement == true);
