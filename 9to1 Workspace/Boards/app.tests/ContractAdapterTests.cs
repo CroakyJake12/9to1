@@ -38,6 +38,33 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Failed_post_commit_open_exposes_retry_for_the_same_created_board()
+    {
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(CreateNotesDocument("Pinned Board"),
+            (_, _) => ValueTask.FromResult(true));
+        await using (adapter)
+        {
+            var host = new RetainedFailedOpenBoardCreationHost();
+            var viewModel = new BoardsViewModel(adapter, homeBoardCreationHost: host);
+            await viewModel.DispatchAsync("NewBoard", null);
+
+            Assert.Equal(1, host.CreateCount);
+            Assert.True(host.CanRetryOpenCreatedBoard);
+            Assert.Equal("Board created, opening failed. Retry opens the same Board.", viewModel.Get("StatusText"));
+            Assert.True(viewModel.TryGetValue("CanRetryHomeBoardOpen", out var available) && available is true);
+            Assert.False(viewModel.TryGetValue("CanCreateBoard", out var canCreate) && canCreate is true);
+
+            await viewModel.DispatchAsync("RetryOpenCreatedBoard", null);
+
+            Assert.Equal(1, host.CreateCount);
+            Assert.Equal(1, host.RetryCount);
+            Assert.False(host.CanRetryOpenCreatedBoard);
+            Assert.True(viewModel.TryGetValue("CanRetryHomeBoardOpen", out available) && available is false);
+            Assert.Equal("Pinned Board", adapter.Document.Title);
+        }
+    }
+
+    [Fact]
     public async Task External_writable_session_requires_explicit_save_and_clears_only_after_acknowledgement()
     {
         var document = CreateNotesDocument("Home source");
@@ -277,13 +304,49 @@ public sealed class ContractAdapterTests
     private sealed class DecliningBoardCreationHost : IBoardsHomeBoardCreationHost
     {
         public ReadOnlyMemory<byte>? Draft { get; private set; }
+        public bool CanRetryOpenCreatedBoard => false;
 
-        public Task<bool> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+        public Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             Draft = validatedDraft.ToArray();
-            return Task.FromResult(false);
+            return Task.FromResult(new BoardsHomeBoardCreationResult(
+                BoardsHomeBoardCreationOutcome.CancelledBeforeCreate));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(
+                BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "NoPendingOpen"));
+    }
+
+    private sealed class RetainedFailedOpenBoardCreationHost : IBoardsHomeBoardCreationHost
+    {
+        private Guid _createdDocumentId;
+        public int CreateCount { get; private set; }
+        public int RetryCount { get; private set; }
+        public bool CanRetryOpenCreatedBoard { get; private set; }
+
+        public Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CreateCount++;
+            _createdDocumentId = HavenBoardDocumentCodec.Deserialize(validatedDraft).DocumentId;
+            CanRetryOpenCreatedBoard = true;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(
+                BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "RouteUnavailable"));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Assert.NotEqual(Guid.Empty, _createdDocumentId);
+            RetryCount++;
+            CanRetryOpenCreatedBoard = false;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.Opened));
         }
     }
 
