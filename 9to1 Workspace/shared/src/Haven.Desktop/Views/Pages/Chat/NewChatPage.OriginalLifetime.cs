@@ -340,6 +340,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             Attempt(() => _scene.DualSecondModelChosen -= OnDualSecondModelChosen);
             Attempt(() => Scene.InputSubmitted -= OnInputSubmitted);
             Attempt(() => Scene.PointerPressedOutside -= OnOriginalPointerPressedOutside);
+            Attempt(() => RetireNativeTaskPermissionWatches(all: true));
             RequestAllOriginalInitialTaskStops(failures); // Observation stop only, never Task business stop.
             foreach (var mount in _originalGeneratedMounts.ToArray())
                 Attempt(() => CaptureOriginalGeneratedStop(mount)); // Start all actual child stops before page originals join.

@@ -85,6 +85,68 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Task_permission_native_composer_observes_external_actual_response_without_automatic_resume_and_retires_its_watch()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var hub = new ExecutionEventHub(new ObservationEventRows());
+        await using var rig = new Rig(temporary: false, originalEvents: hub);
+        var offered = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        rig.Client.AvailableModels = [offered];
+        var directory = Path.Combine(Path.GetTempPath(), "native-permission-publication-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var drafts = new NativeComposerDraftStore();
+        var page = CreateNativeComposerPage(rig, directory, drafts);
+        ExecutionEvent? decisionPublication = null;
+        EventHandler<ExecutionEvent> observed = (_, value) =>
+        { if (value.SafeMetadata?.GetValueOrDefault("permissionPhase") == "decision") decisionPublication = value; };
+        hub.Published += observed;
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10), token);
+            page.ConfigureTaskMode(); page.SelectModel(offered);
+            await page.SubmitOriginalInstructionAsync("Keep this actual task suspended until explicit resume");
+            var sending = (Task)typeof(NewChatPage).GetField("_originalSend", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+            await sending.WaitAsync(TimeSpan.FromSeconds(10), token);
+            await JoinNativePermissionRefreshesAsync(page, token);
+            var waiting = Assert.IsType<ChatCanonicalPermissionWaitingObservation>(page.CanonicalPermissionWaiting);
+            var bindings = page.OriginalTaskComposer.Bindings;
+            Assert.False(bindings.IsActionAvailable("composer.resume"));
+            await rig.Owner.ApproveOriginalAsync(waiting.PermissionRequest.Id, token); // Another genuine response surface.
+            await JoinNativePermissionRefreshesAsync(page, token);
+            Assert.Null(page.CanonicalPermissionWaiting);
+            Assert.True(bindings.IsActionAvailable("composer.resume"));
+            var same = (await rig.Tasks.GetByContextAsync(page.ConversationId, token))!;
+            Assert.Equal(waiting.CanonicalTaskContext.TaskId, same.TaskId);
+            Assert.Equal(waiting.CanonicalTaskContext.ExecutionId, same.ExecutionId);
+            Assert.Equal(TaskExecutionLifecycle.Suspended, same.State); Assert.Empty(same.Attempts);
+            Assert.Equal(0, rig.Client.Dispatches); Assert.Equal(0, rig.Workspace.Effects);
+            page.SetDraft("retain the unsent draft after permission response");
+            var last = page.ActualNativePermissionRefresh;
+            page.RequestRetirement(); await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.NotNull(decisionPublication);
+            Assert.True(hub.TryPublish(decisionPublication! with { EventId = Guid.NewGuid() }));
+            Assert.Same(last, page.ActualNativePermissionRefresh);
+            Assert.Equal("retain the unsent draft after permission response", drafts.Last?.Content);
+        }
+        finally
+        {
+            page.RequestRetirement(); await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10), token);
+            hub.Published -= observed; Directory.Delete(directory, true);
+        }
+    }
+    private static async Task JoinNativePermissionRefreshesAsync(NewChatPage page, CancellationToken token)
+    {
+        for (var index = 0; index < 8; index++)
+        {
+            var actual = Assert.IsAssignableFrom<Task>(page.ActualNativePermissionRefresh);
+            await actual.WaitAsync(TimeSpan.FromSeconds(10), token);
+            if (ReferenceEquals(actual, page.ActualNativePermissionRefresh)) return;
+        }
+        throw new InvalidOperationException("Actual native permission refresh originals did not settle.");
+    }
+
     [Fact]
     public async Task Actual_completion_admitted_before_pause_keeps_its_original_completion_acknowledgement()
     {
