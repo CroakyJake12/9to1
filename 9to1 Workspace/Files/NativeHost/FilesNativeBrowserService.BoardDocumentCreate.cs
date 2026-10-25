@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using CakeOS.Apps.Boards.Contract;
 using Haven.Application;
+using Haven.Infrastructure;
 using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
 
@@ -252,7 +253,7 @@ public sealed partial class FilesNativeBrowserService
                 else actual = null!;
             }
             if (existingTask is not null) { retain(existingTask); return existingTask; }
-            try { operation.Source.Run(() => retain(actual)); }
+            try { operation.Source.Invoke(() => { operation.Source.RetainOriginalTask(actual); return true; }); }
             finally { start.SetResult(); }
             return actual;
 
@@ -266,7 +267,12 @@ public sealed partial class FilesNativeBrowserService
                     lock (_gate) _receipts.Add(receipt, operation);
                     return receipt;
                 }
-                finally { CryptographicOperations.ZeroMemory(operation.Payload); _executing.Value = previous; }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(operation.Payload);
+                    operation.Retired = true;
+                    _executing.Value = previous;
+                }
             }
         }
 
