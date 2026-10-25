@@ -83,11 +83,12 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
         => Run(async rig =>
         {
             var before = await rig.BytesAsync();
-            var profiles = rig.Graph!.GetRequiredService<IAuthenticatedResourceActorSource>();
+            var graph = Assert.IsAssignableFrom<IServiceProvider>(rig.Graph);
+            var profiles = graph.GetRequiredService<IAuthenticatedResourceActorSource>();
             async Task<bool> Current(CancellationToken token) =>
                 await profiles.GetCurrentAsync(token) == rig.Workspace.Actor;
             var source = new NativeHomeFilesLibrarySource(rig.Browser, rig.Workspace.Actor,
-                rig.Graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true);
+                graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true);
             try
             {
                 var rows = await rig.Keep(source.SearchAsync(new HomeLibraryQuery(), rig.Token));
@@ -219,10 +220,11 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
         {
             var uploaded = await rig.UploadAsync("revision-notes.md", Encoding.UTF8.GetBytes("# Revision\nActual original text."));
             var before = await rig.BytesAsync();
-            var profiles = rig.Graph!.GetRequiredService<IAuthenticatedResourceActorSource>();
+            var graph = Assert.IsAssignableFrom<IServiceProvider>(rig.Graph);
+            var profiles = graph.GetRequiredService<IAuthenticatedResourceActorSource>();
             async Task<bool> Current(CancellationToken token) => await profiles.GetCurrentAsync(token) == rig.Workspace.Actor;
             var source = new NativeHomeFilesLibrarySource(rig.Browser, rig.Workspace.Actor,
-                rig.Graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true);
+                graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true);
             try
             {
                 var library = source.CreateService(new UnusedLibraryRouter());

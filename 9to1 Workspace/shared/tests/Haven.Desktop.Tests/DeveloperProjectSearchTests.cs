@@ -11,7 +11,7 @@ public sealed class DeveloperProjectSearchTests
     public void Literal_default_is_case_sensitive_and_keeps_one_actual_match_per_line()
     {
         var matcher = new DeveloperProjectSearchMatcher("alpha", new());
-        var rows = matcher.MatchText("src/main.cui", "alpha alpha\r\nALPHA\rbeta alpha\n", 201);
+        var rows = matcher.MatchText("src/main.cui", "alpha alpha\r\nALPHA\rbeta alpha\n", 201, token: TestContext.Current.CancellationToken);
         Assert.Equal(2, rows.Count);
         Assert.Equal(new[] { 1, 3 }, rows.Select(value => value.LineNumber));
         Assert.Equal(new[] { 1, 6 }, rows.Select(value => value.ColumnNumber));
@@ -26,7 +26,7 @@ public sealed class DeveloperProjectSearchTests
     {
         var matcher = new DeveloperProjectSearchMatcher("alpha", new(MatchCase: false));
         var text = "🔎 ALPHA\nalpha";
-        var rows = matcher.MatchText("notes.cui", text, 201);
+        var rows = matcher.MatchText("notes.cui", text, 201, token: TestContext.Current.CancellationToken);
         Assert.Equal(2, rows.Count); Assert.Equal(4, rows[0].ColumnNumber); // UTF16 editor coordinates
         Assert.Equal("ALPHA", text.Substring(rows[0].CharacterOffset, rows[0].Length));
         Assert.Equal("alpha", text.Substring(rows[1].CharacterOffset, rows[1].Length));
@@ -36,7 +36,7 @@ public sealed class DeveloperProjectSearchTests
     {
         var matcher = new DeveloperProjectSearchMatcher(@"^item-[0-9]+$", new(UseRegex: true, MatchCase: false));
         var text = "item-7\r\nITEM-42\nitem-x\nother item-8";
-        var rows = matcher.MatchText("data.txt", text, 201);
+        var rows = matcher.MatchText("data.txt", text, 201, token: TestContext.Current.CancellationToken);
         Assert.Equal(new[] { "item-7", "ITEM-42" }, rows.Select(row => text.Substring(row.CharacterOffset, row.Length)));
         Assert.Equal(new[] { 1, 2 }, rows.Select(row => row.LineNumber));
     }
@@ -46,7 +46,7 @@ public sealed class DeveloperProjectSearchTests
         Assert.Throws<ArgumentException>(() => new DeveloperProjectSearchMatcher("[", new(UseRegex: true)));
         Assert.Throws<ArgumentException>(() => new DeveloperProjectSearchMatcher("^", new(UseRegex: true)));
         var matcher = new DeveloperProjectSearchMatcher("(?=needle)", new(UseRegex: true));
-        Assert.Throws<ArgumentException>(() => matcher.MatchText("a.cui", "needle", 201));
+        Assert.Throws<ArgumentException>(() => matcher.MatchText("a.cui", "needle", 201, token: TestContext.Current.CancellationToken));
         Assert.Throws<ArgumentException>(() => new DeveloperProjectSearchMatcher(" ", new()));
         Assert.Throws<ArgumentException>(() => new DeveloperProjectSearchMatcher(new string('x', 4001), new()));
     }
@@ -55,17 +55,17 @@ public sealed class DeveloperProjectSearchTests
     {
         var matcher = new DeveloperProjectSearchMatcher("needle", new());
         var text = string.Join('\n', Enumerable.Range(0, 400).Select(i => "needle " + i));
-        var rows = matcher.MatchText("many.txt", text, 201);
+        var rows = matcher.MatchText("many.txt", text, 201, token: TestContext.Current.CancellationToken);
         Assert.Equal(201, rows.Count); Assert.Equal(201, rows[^1].LineNumber);
-        Assert.Equal(1, new DeveloperProjectSearchMatcher("needle", new()).MatchText("many.txt", text, 1).Count);
-        Assert.Throws<ArgumentOutOfRangeException>(() => matcher.MatchText("many.txt", text, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => matcher.MatchText("many.txt", text, 202));
+        Assert.Single(new DeveloperProjectSearchMatcher("needle", new()).MatchText("many.txt", text, 1, token: TestContext.Current.CancellationToken));
+        Assert.Throws<ArgumentOutOfRangeException>(() => matcher.MatchText("many.txt", text, 0, token: TestContext.Current.CancellationToken));
+        Assert.Throws<ArgumentOutOfRangeException>(() => matcher.MatchText("many.txt", text, 202, token: TestContext.Current.CancellationToken));
     }
     [Fact]
     public void Preview_is_bounded_near_real_match_while_legacy_line_prefix_is_preserved()
     {
         var text = new string('a', 6000) + "needle" + new string('b', 6000);
-        var row = Assert.Single(new DeveloperProjectSearchMatcher("needle", new()).MatchText("long.cui", text, 201));
+        var row = Assert.Single(new DeveloperProjectSearchMatcher("needle", new()).MatchText("long.cui", text, 201, token: TestContext.Current.CancellationToken));
         Assert.Equal(6001, row.ColumnNumber); Assert.Equal(6, row.Length);
         Assert.Contains("needle", row.Preview); Assert.InRange(row.Preview.Length, 1, 242);
         Assert.Equal(4096, row.LineText.Length); Assert.Equal(new string('a', 4096), row.LineText);
@@ -81,6 +81,6 @@ public sealed class DeveloperProjectSearchTests
     public void Catastrophic_regex_is_bounded_by_real_dotnet_timeout()
     {
         var matcher = new DeveloperProjectSearchMatcher("^(a+)+$", new(UseRegex: true));
-        Assert.Throws<RegexMatchTimeoutException>(() => matcher.MatchText("slow.txt", new string('a', 100_000) + "!", 201));
+        Assert.Throws<RegexMatchTimeoutException>(() => matcher.MatchText("slow.txt", new string('a', 100_000) + "!", 201, token: TestContext.Current.CancellationToken));
     }
 }

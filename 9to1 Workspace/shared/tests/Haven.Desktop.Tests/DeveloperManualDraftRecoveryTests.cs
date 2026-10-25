@@ -23,19 +23,19 @@ public sealed class DeveloperManualDraftRecoveryTests : IDisposable
         {
             Assert.False(requiresExistingKey); calls++;
             return Task.FromResult(FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Draft("first draft"), _key));
-        });
+        }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.True(first.Succeeded, first.Error?.Message);
         var stale = await store.PrepareAndSaveDraftRecoveryAsync(project, scope, 0, (_, _) =>
-        { calls++; throw new InvalidOperationException("A stale writer must not touch its original key owner."); });
+        { calls++; throw new InvalidOperationException("A stale writer must not touch its original key owner."); }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, stale.Error!.Code); Assert.Equal(1, calls);
         var anotherTask = new DeveloperDraftRecoveryScope(scope.ProfileId, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         var second = await store.PrepareAndSaveDraftRecoveryAsync(project, anotherTask, 0, (requiresExistingKey, _) =>
         {
             Assert.True(requiresExistingKey); // A different task cannot reset the shared profile/workspace key.
             return Task.FromResult(FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, anotherTask, 1, Draft("another task"), _key));
-        });
+        }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.True(second.Succeeded, second.Error?.Message);
-        Assert.Equal(first.Value, (await store.GetDraftRecoveryAsync(project, scope)).Value);
+        Assert.Equal(first.Value, (await store.GetDraftRecoveryAsync(project, scope, cancellationToken: TestContext.Current.CancellationToken)).Value);
     }
 
     [Fact]
@@ -44,8 +44,8 @@ public sealed class DeveloperManualDraftRecoveryTests : IDisposable
         var (store, project) = await CreateAsync(); var scope = Manual(Guid.NewGuid());
         var older = Draft("older complete draft"); var newer = Draft("newer unsaved typing");
         var snapshot = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, older, _key);
-        Assert.True((await store.SaveDraftRecoveryAsync(project, snapshot, 0)).Succeeded);
-        var read = await new FileDeveloperWorkspaceStore(_root).GetDraftRecoveryAsync(project, scope);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, snapshot, 0, cancellationToken: TestContext.Current.CancellationToken)).Succeeded);
+        var read = await new FileDeveloperWorkspaceStore(_root).GetDraftRecoveryAsync(project, scope, cancellationToken: TestContext.Current.CancellationToken);
         var recovered = FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, scope, read.Value!, _key);
         Assert.True(DeveloperProjectWorkbenchPage.SameManualRecoveryPayload(older, recovered));
         Assert.False(DeveloperProjectWorkbenchPage.SameManualRecoveryPayload(newer, recovered));
@@ -53,7 +53,7 @@ public sealed class DeveloperManualDraftRecoveryTests : IDisposable
         var taskScope = new DeveloperDraftRecoveryScope(scope.ProfileId, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         Assert.ThrowsAny<CryptographicException>(() => FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, taskScope,
             snapshot with { Scope = taskScope }, _key)); // Manual ciphertext cannot borrow a real Task partition.
-        Assert.Empty((await store.GetAsync(project.Reference.WorkspaceId)).Value!.OpenEditors);
+        Assert.Empty((await store.GetAsync(project.Reference.WorkspaceId, cancellationToken: TestContext.Current.CancellationToken)).Value!.OpenEditors);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public sealed class DeveloperManualDraftRecoveryTests : IDisposable
         var store = new FileDeveloperWorkspaceStore(_root);
         var root = new DeveloperWorkspaceRoot(Guid.NewGuid(), Path.GetFullPath(Path.GetTempPath()));
         var project = new DeveloperProject(Guid.NewGuid(), "cui-app", "Example", [root.RootId], "CUI", null, "cui", ["linux"], [], [], [], null);
-        var created = await store.CreateAsync(DeveloperWorkspace.Create([root]) with { Projects = [project] });
+        var created = await store.CreateAsync(DeveloperWorkspace.Create([root]) with { Projects = [project] }, TestContext.Current.CancellationToken);
         Assert.True(created.Succeeded, created.Error?.Message); var workspace = created.Value!;
         return (store, new(new(workspace.WorkspaceId, workspace.Revision, project.ProjectId, project.Revision, root.RootId), workspace, project, root, null));
     }
