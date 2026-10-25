@@ -46,6 +46,27 @@ public sealed class CuiThemeRolePresentationTests
         if (reduceMotion) Assert.Equal(TimeSpan.Zero, resources["CuiButtonMotionDuration"]);
     }
 
+    [Theory]
+    [InlineData(CuiAppearance.Dark)]
+    [InlineData(CuiAppearance.SuperDark)]
+    public void Glow_action_ink_contrasts_with_every_gradient_stop_in_both_dark_appearances(CuiAppearance appearance)
+    {
+        foreach (var accent in new[] { "#2864D7", "#FAE342", "#D64B25" })
+        {
+            var resources = new ResourceDictionary();
+            CuiThemeResourceApplier.ApplyToResources(resources,
+                CuiSurfacePaletteCatalog.For("Boards", appearance, CuiTheme.Glow, accent));
+            foreach (var role in new[] { "Primary", "Secondary", "Tertiary", "Negative" })
+                foreach (var state in new[] { "", "Hover", "Pressed" })
+                {
+                    var ink = Assert.IsAssignableFrom<ISolidColorBrush>(resources[$"CuiAccent{role}{state}ForegroundBrush"]).Color;
+                    if (role != "Tertiary" || state != "") Assert.Equal(Colors.White, ink);
+                    var fill = Assert.IsAssignableFrom<IGradientBrush>(resources[$"CuiAccent{role}{state}Brush"]);
+                    Assert.All(fill.GradientStops, stop => Assert.True(CuiContrast.Ratio(ink, stop.Color) >= 4.5));
+                }
+        }
+    }
+
     [Fact]
     public async Task Authored_roles_react_and_text_actions_keep_focus_without_a_pill()
     {
