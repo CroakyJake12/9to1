@@ -89,7 +89,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         BoardsExternalSaveCallback save,
         CancellationToken ct = default,
         IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null,
-        bool standaloneChrome = false)
+        bool standaloneChrome = false,
+        IBoardsHomeBoardCreationHost? homeBoardCreationHost = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceId);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceRevision);
@@ -167,7 +168,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             return await Dispatcher.UIThread.InvokeAsync<BoardsWritablePresentation>(() =>
             {
                 ct.ThrowIfCancellationRequested();
-                var viewModel = new BoardsViewModel(session, embeddedArtifactHost);
+        var viewModel = new BoardsViewModel(session, embeddedArtifactHost, homeBoardCreationHost);
                 viewModel.SetLanding(false);
                 if (!standaloneChrome) viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Ready to edit");

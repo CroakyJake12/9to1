@@ -53,6 +53,8 @@ public sealed partial class BoardsViewModel
         Set("ContextRowHeightLabel", rowHeight > 0
             ? $"Row {row + 1}: {rowHeight:0} px"
             : cellKey is null ? "Select a cell" : $"Row {row + 1}: Auto");
+        Set("ContextColumnWidthDraft", columnWidth);
+        Set("ContextRowHeightDraft", rowHeight);
         Set("ContextTableSurfaceIndex", Math.Max(0, Array.FindIndex(ContextSurfaces, surface => surface.Hex == block?.TableStyle.Background)));
         Set("ContextTableBorderIndex", IndexOf(ContextBorderOptions, block?.TableStyle.BorderStyle));
         Set("ContextAlternatingRows", block?.TableStyle.AlternatingRows == true);
@@ -192,6 +194,12 @@ public sealed partial class BoardsViewModel
         {
             switch (key)
             {
+                case "ContextColumnWidthDraft" when TryGetContextCell(block, out _, out _) &&
+                    TryReadDimension(value, out var widthDraft) && double.IsFinite(widthDraft) && widthDraft is >= 0 and <= 5000:
+                    Set(key, widthDraft); return true;
+                case "ContextRowHeightDraft" when TryGetContextCell(block, out _, out _) &&
+                    TryReadDimension(value, out var heightDraft) && double.IsFinite(heightDraft) && heightDraft is >= 0 and <= 5000:
+                    Set(key, heightDraft); return true;
                 case "ContextHasHeaderRow" when value is bool hasHeaderRow:
                     block.TableStyle.HasHeaderRow = hasHeaderRow; CommitViewEdit(); RefreshCuiContext(); return true;
                 case "ContextHasHeaderColumn" when value is bool hasHeaderColumn:
@@ -262,6 +270,18 @@ public sealed partial class BoardsViewModel
         RefreshCuiContext(); return true;
     }
 
+    private static bool TryReadDimension(object? value, out double dimension)
+    {
+        switch (value)
+        {
+            case double number: dimension = number; return true;
+            case decimal number: dimension = (double)number; return true;
+            case int number: dimension = number; return true;
+            case long number: dimension = number; return true;
+            default: dimension = 0; return false;
+        }
+    }
+
     public bool TrySetItemValue(object item, string path, object? value) => false;
 
     private async ValueTask<bool> DispatchCuiContextAsync(string command, CancellationToken cancellationToken)
@@ -286,6 +306,8 @@ public sealed partial class BoardsViewModel
                 SetContextRowHeight(block, tallRow, 16); break;
             case "ContextRowAutoHeight" when TryGetContextCell(block, out var autoRow, out _):
                 SetContextRowHeight(block, autoRow, null); break;
+            case "ContextApplyCellDimensions" when TryGetContextCell(block, out var dimensionRow, out var dimensionColumn):
+                ApplyContextCellDimensions(block, dimensionRow, dimensionColumn); break;
             case "ContextAddColumn" when block.Kind == "table": TableAddCol(block.Id); break;
             case "ContextDeleteColumn" when block.Kind == "table": TableDelCol(block.Id); break;
             case "ContextMoveColumnLeft" when TryGetContextCell(block, out var moveLeftRow, out var moveLeftColumn):
@@ -484,6 +506,30 @@ public sealed partial class BoardsViewModel
         CommitViewEdit();
         RequestRebuild();
         RefreshCuiContext();
+    }
+
+    private void ApplyContextCellDimensions(RichBoardBlock block, int row, int column)
+    {
+        if (!RequireEditMode() || block.Kind != "table" || row < 0 || row >= block.TableRows ||
+            column < 0 || column >= block.TableCols)
+            return;
+        if (!TryReadDimension(Get("ContextColumnWidthDraft"), out var width) ||
+            !TryReadDimension(Get("ContextRowHeightDraft"), out var height) ||
+            !double.IsFinite(width) || !double.IsFinite(height) || width is < 0 or > 5000 || height is < 0 or > 5000 ||
+            width is > 0 and < 80 || height is > 0 and < 32)
+        {
+            Set("StatusText", "Use 0 for automatic sizing, or a column width of 80–5000 px and row height of 32–5000 px.");
+            return;
+        }
+
+        while (block.ColumnWidths.Count <= column) block.ColumnWidths.Add(0);
+        while (block.RowHeights.Count <= row) block.RowHeights.Add(0);
+        block.ColumnWidths[column] = width;
+        block.RowHeights[row] = height;
+        CommitViewEdit();
+        RequestRebuild();
+        RefreshCuiContext();
+        Set("StatusText", "Selected table row height and column width applied.");
     }
 
     private void SetContextTableWidth(RichBoardBlock block, double? delta)

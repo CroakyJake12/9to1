@@ -12,6 +12,7 @@
 
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Input;
 using CakeOS.Cui;
@@ -25,6 +26,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 {
     private readonly IRichBoardSession _session;
     private readonly IBoardsEmbeddedArtifactHost? _embeddedArtifactHost;
+    private readonly IBoardsHomeBoardCreationHost? _homeBoardCreationHost;
     private readonly Dictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
     private string _selectedSectionId = "section-1";
     private string _selectedPageId = "page-1";
@@ -55,10 +57,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
     private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
 
-    public BoardsViewModel(IRichBoardSession session, IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null)
+    public BoardsViewModel(IRichBoardSession session, IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null,
+        IBoardsHomeBoardCreationHost? homeBoardCreationHost = null)
     {
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _embeddedArtifactHost = embeddedArtifactHost;
+        _homeBoardCreationHost = homeBoardCreationHost;
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
         Set("ModeLabel", _isEditMode ? "Edit" : "View");
@@ -197,7 +201,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool CanToggleEditMode => CanEdit;
     public bool CanSwitchBoard => CanEdit && _session is not IBoardSessionCapabilities { CanSwitchBoard: false };
     public bool CanSaveAs => CanEdit && _session is not IBoardSessionCapabilities { CanSaveAs: false };
-    public bool CanCreateBoard => CanSwitchBoard;
+    public bool CanCreateBoard => CanSwitchBoard || CanEdit && _homeBoardCreationHost is not null;
     public bool CanAddWritePage => _embeddedArtifactHost is not null && CanEdit && _isEditMode;
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
     public string SelectedPageType => CurrentPage().PageType;
@@ -265,7 +269,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         if ((!CanSwitchBoard && command is ("ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or "OpenBoard")) ||
             (!CanSaveAs && command == "SaveAsBoard") ||
-            (!CanSwitchBoard && command == "NewBoard"))
+            (!CanSwitchBoard && command == "NewBoard" && _homeBoardCreationHost is null))
         {
             Set("StatusText", "This board source does not grant that action.");
             return;
@@ -291,7 +295,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         switch (command)
         {
             case "NewBoard":
-                NewBoardRequested?.Invoke();
+                if (_homeBoardCreationHost is null) NewBoardRequested?.Invoke();
+                else await CreateAndOpenHomeBoardAsync(cancellationToken);
                 break;
             case "NewMenu":
                 NewMenuRequested?.Invoke();
@@ -504,6 +509,36 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                     RequestRebuild();
                 }
                 break;
+        }
+    }
+
+    private async Task CreateAndOpenHomeBoardAsync(CancellationToken cancellationToken)
+    {
+        var host = _homeBoardCreationHost;
+        if (host is null)
+        {
+            NewBoardRequested?.Invoke();
+            return;
+        }
+        try
+        {
+            var draft = HavenBoardDocumentCodec.CreateNew();
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(draft,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            _ = HavenBoardDocumentCodec.Deserialize(bytes);
+            if (bytes.Length > HavenBoardDocumentCodec.MaximumDocumentBytes)
+                throw new InvalidDataException("The new Board draft exceeds the supported document size.");
+            var opened = await host.CreateAndOpenAsync(bytes.ToArray(), cancellationToken);
+            if (!opened)
+                Set("StatusText", "New Board creation was canceled.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            Set("StatusText", "New Board failed: " + FirstLine(error.Message));
         }
     }
 
