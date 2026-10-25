@@ -43,6 +43,11 @@ public sealed class HavenRichPage
     public BoardEmbeddedArtifactReference? EmbeddedArtifact { get; set; }
     public int Order { get; set; }
     public bool IsCanvasLocked { get; set; }
+    /// <summary>
+    /// Flow placement policy for native blocks. Legacy documents omit this
+    /// property and therefore retain the safe vertical-flow default.
+    /// </summary>
+    public string LayoutMode { get; set; } = HavenRichPageLayoutModes.Locked;
     public double CanvasWidth { get; set; } = 1200;
     public double CanvasHeight { get; set; } = 900;
     public List<HavenRichBlock> Blocks { get; set; } = [new HavenRichBlock()];
@@ -57,6 +62,29 @@ public static class HavenRichPageTypes
     public const string Native = "Native";
     public const string Write = "Write";
     public const string Canvas = "Canvas";
+}
+
+/// <summary>Canonical native page layout modes persisted in rich board documents.</summary>
+public static class HavenRichPageLayoutModes
+{
+    public const string Locked = "Locked";
+    public const string Unlocked = "Unlocked";
+    public static bool IsSupported(string? value) => value is Locked or Unlocked;
+}
+
+/// <summary>Persisted placement semantics for a native block.</summary>
+public static class HavenRichBlockLayouts
+{
+    public const string Flow = "Flow";
+    public const string Absolute = "Absolute";
+    public static bool IsSupported(string? value) => value is Flow or Absolute;
+}
+
+/// <summary>Bounds for persisted native block placement geometry.</summary>
+public static class HavenRichBlockLayoutGeometry
+{
+    public const double CoordinateLimit = 100_000;
+    public const int ZOrderLimit = 100_000;
 }
 
 public enum HavenRichBlockKind
@@ -77,6 +105,13 @@ public sealed class HavenRichBlock
     public string Id { get; set; } = "block-" + Guid.NewGuid().ToString("N")[..12];
     public HavenRichBlockKind Kind { get; set; } = HavenRichBlockKind.Paragraph;
     public int Order { get; set; }
+    /// <summary>Flow blocks remain in document order; Absolute blocks use their persisted page geometry.</summary>
+    public string Layout { get; set; } = HavenRichBlockLayouts.Flow;
+    public double X { get; set; }
+    public double Y { get; set; }
+    public double Width { get; set; } = 320;
+    public double Height { get; set; } = 120;
+    public int ZOrder { get; set; }
     public string StyleId { get; set; } = "normal";
     public string PlainText { get; set; } = string.Empty;
     public List<HavenRichTextRun> Runs { get; set; } = [];
@@ -267,6 +302,11 @@ public static class HavenRichNotesValidator
                     throw new InvalidOperationException($"Page ID '{page.Id}' is duplicated in the board.");
                 if (string.IsNullOrWhiteSpace(page.Title))
                     throw new InvalidOperationException("Rich board pages must have non-empty titles.");
+                if (!HavenRichPageLayoutModes.IsSupported(page.LayoutMode))
+                    throw new InvalidOperationException($"Page layout mode '{page.LayoutMode}' is not supported.");
+                if (page.PageType != HavenRichPageTypes.Native &&
+                    page.LayoutMode != HavenRichPageLayoutModes.Locked)
+                    throw new InvalidOperationException("Only Native Board pages can enable free placement.");
                 ValidatePageArtifact(page);
                 var blockIds = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var block in page.Blocks)
@@ -335,6 +375,16 @@ public static class HavenRichNotesValidator
 
     private static void ValidateBlock(HavenRichBlock block)
     {
+        if (!HavenRichBlockLayouts.IsSupported(block.Layout))
+            throw new InvalidOperationException($"Block layout '{block.Layout}' is not supported.");
+        if (!double.IsFinite(block.X) || !double.IsFinite(block.Y) ||
+            Math.Abs(block.X) > HavenRichBlockLayoutGeometry.CoordinateLimit ||
+            Math.Abs(block.Y) > HavenRichBlockLayoutGeometry.CoordinateLimit ||
+            !double.IsFinite(block.Width) || !double.IsFinite(block.Height) ||
+            block.Width is <= 0 or > HavenRichBlockLayoutGeometry.CoordinateLimit ||
+            block.Height is <= 0 or > HavenRichBlockLayoutGeometry.CoordinateLimit ||
+            Math.Abs((long)block.ZOrder) > HavenRichBlockLayoutGeometry.ZOrderLimit)
+            throw new InvalidOperationException("Block placement geometry is outside the supported range.");
         if (block.Kind == HavenRichBlockKind.Table)
         {
             if (block.Table is null || block.Table.Rows.Count == 0)
@@ -554,6 +604,69 @@ public static partial class HavenRichNotesOps
         if (page.IsCanvasLocked == locked) return;
         page.IsCanvasLocked = locked;
         Touch(notes);
+    }
+
+    /// <summary>Changes placement capability without converting blocks or changing their saved geometry.</summary>
+    public static void SetPageLayoutMode(HavenRichNotes notes, string pageId, string layoutMode)
+    {
+        var page = RequirePage(notes, pageId);
+        if (page.PageType != HavenRichPageTypes.Native)
+            throw new InvalidOperationException("Layout mode applies only to Native Board pages.");
+        if (!HavenRichPageLayoutModes.IsSupported(layoutMode))
+            throw new ArgumentOutOfRangeException(nameof(layoutMode), layoutMode, "Unsupported page layout mode.");
+        if (page.LayoutMode == layoutMode) return;
+        page.LayoutMode = layoutMode;
+        Touch(notes);
+    }
+
+    /// <summary>Explicitly places or repositions a block in page coordinates.</summary>
+    public static void PlaceBlock(
+        HavenRichNotes notes, string pageId, string blockId,
+        double x, double y, double width, double height, int zOrder)
+    {
+        var page = RequirePage(notes, pageId);
+        if (page.PageType != HavenRichPageTypes.Native)
+            throw new InvalidOperationException("Free placement applies only to Native Board pages.");
+        if (page.LayoutMode != HavenRichPageLayoutModes.Unlocked)
+            throw new InvalidOperationException("Free placement is available only in Unlocked layout mode.");
+        if (page.IsCanvasLocked)
+            throw new InvalidOperationException("The page layout lock prevents block placement.");
+        ValidateBlockPlacement(x, y, width, height, zOrder);
+        var block = RequireBlock(notes, pageId, blockId);
+        if (block.Layout == HavenRichBlockLayouts.Absolute &&
+            block.X == x && block.Y == y && block.Width == width && block.Height == height && block.ZOrder == zOrder)
+            return;
+        block.Layout = HavenRichBlockLayouts.Absolute;
+        block.X = x;
+        block.Y = y;
+        block.Width = width;
+        block.Height = height;
+        block.ZOrder = zOrder;
+        Touch(notes);
+    }
+
+    /// <summary>Explicitly returns an absolute block to ordered flow while retaining its last geometry.</summary>
+    public static void SetBlockFlowLayout(HavenRichNotes notes, string pageId, string blockId)
+    {
+        var page = RequirePage(notes, pageId);
+        if (page.PageType != HavenRichPageTypes.Native)
+            throw new InvalidOperationException("Block placement applies only to Native Board pages.");
+        var block = RequireBlock(notes, pageId, blockId);
+        if (block.Layout == HavenRichBlockLayouts.Flow) return;
+        block.Layout = HavenRichBlockLayouts.Flow;
+        Touch(notes);
+    }
+
+    private static void ValidateBlockPlacement(double x, double y, double width, double height, int zOrder)
+    {
+        if (!double.IsFinite(x) || !double.IsFinite(y) ||
+            Math.Abs(x) > HavenRichBlockLayoutGeometry.CoordinateLimit ||
+            Math.Abs(y) > HavenRichBlockLayoutGeometry.CoordinateLimit ||
+            !double.IsFinite(width) || !double.IsFinite(height) ||
+            width is <= 0 or > HavenRichBlockLayoutGeometry.CoordinateLimit ||
+            height is <= 0 or > HavenRichBlockLayoutGeometry.CoordinateLimit ||
+            Math.Abs((long)zOrder) > HavenRichBlockLayoutGeometry.ZOrderLimit)
+            throw new ArgumentOutOfRangeException(nameof(width), "Block placement geometry is outside the supported range.");
     }
 
     private static HavenRichPage AddPageWithoutTouch(HavenRichSection section, string? title)
