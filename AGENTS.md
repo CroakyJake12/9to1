@@ -1,7 +1,7 @@
 ## Boards UI review reference — 25 October 2026
 
 Read [the retained Boards review and applicability notes](docs/specification/owner-references/2026-10-25-boards-ui-review/review-notes.md)
-when changing Boards presentation. Recheck historical observations against the current app;
+when changing Boards presentation. Also read [the later owner visual clarification](docs/specification/owner-references/2026-10-25-boards-ui-review/owner-visual-clarification.md). Recheck historical observations against the current app;
 the canonical specification and explicit owner decisions retain priority. Keep Home global
 controls shared and standalone/embedded Boards on the same implementation.
 
