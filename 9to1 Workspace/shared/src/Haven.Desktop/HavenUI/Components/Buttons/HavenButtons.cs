@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Haven.Desktop.HavenUI.Tokens;
+using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 
 namespace Haven.Desktop.HavenUI.Components;
 
@@ -18,11 +20,16 @@ public abstract class HavenButtonBase : Button
     private Point _touchOrigin;
     private bool _suppressNextClick;
 
-    protected HavenButtonBase(string visualClass)
+    protected HavenButtonBase(string visualClass, CuiAccentRole accentRole = CuiAccentRole.None)
     {
         Theme = HavenControlThemeResolver.For(typeof(Button));
         Classes.Add("havenButton");
         Classes.Add(visualClass);
+        // Typed actions opt into the shared CUI hierarchy. The built-in level
+        // allows authored definitions, instances and scoped overlays to win.
+        if (accentRole != CuiAccentRole.None)
+            CuiPropertyPresentation.Set(this, "AccentRole", accentRole,
+                CuiPropertyLevel.BuiltIn, "CUI typed action role", 1);
         _bounceTimer = new DispatcherTimer { Interval = HavenUiMotion.ButtonBounce };
         _bounceTimer.Tick += (_, _) =>
         {
@@ -112,31 +119,31 @@ public sealed class HavenButton : HavenButtonBase
 /// <summary>The dominant filled action from slide 3.</summary>
 public sealed class HavenPrimaryButton : HavenButtonBase
 {
-    public HavenPrimaryButton() : base("havenPrimary") { }
+    public HavenPrimaryButton() : base("havenPrimary", CuiAccentRole.Primary) { }
 }
 
 /// <summary>The warm filled secondary action from slide 3.</summary>
 public sealed class HavenSecondaryButton : HavenButtonBase
 {
-    public HavenSecondaryButton() : base("havenSecondary") { }
+    public HavenSecondaryButton() : base("havenSecondary", CuiAccentRole.Secondary) { }
 }
 
 /// <summary>The subdued action that morphs into the bright hover fill.</summary>
 public sealed class HavenTertiaryButton : HavenButtonBase
 {
-    public HavenTertiaryButton() : base("havenTertiary") { }
+    public HavenTertiaryButton() : base("havenTertiary", CuiAccentRole.Tertiary) { }
 }
 
 /// <summary>The immediate destructive action from slide 3.</summary>
 public sealed class HavenNegativeButton : HavenButtonBase
 {
-    public HavenNegativeButton() : base("havenNegative") { }
+    public HavenNegativeButton() : base("havenNegative", CuiAccentRole.Negative) { }
 }
 
 /// <summary>The borderless text action from slide 3.</summary>
 public sealed class HavenTextButton : HavenButtonBase
 {
-    public HavenTextButton() : base("havenText") { }
+    public HavenTextButton() : base("havenText", CuiAccentRole.Text) { }
 }
 
 /// <summary>A circular icon-only action with the same glow and bounce contract.</summary>
