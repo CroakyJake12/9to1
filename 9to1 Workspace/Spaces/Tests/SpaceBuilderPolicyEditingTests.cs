@@ -101,9 +101,12 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.Equal(JsonSerializer.Serialize(original.ExamplePairs), JsonSerializer.Serialize(saved.ExamplePairs));
         Assert.Equal("ollama:configured-model-2", saved.DraftConfiguration.ModelPolicy!.DefaultModelId);
         Assert.Equal("ollama", saved.DraftConfiguration.ModelPolicy.ProviderConstraint);
-        Assert.Equal(new[] { "text", "Vision" }, saved.DraftConfiguration.ModelPolicy.RequiredCapabilities.ToArray());
-        Assert.Equal(new[] { SpaceMemoryScope.Conversation, SpaceMemoryScope.Space, SpaceMemoryScope.Personal },
-            saved.DraftConfiguration.MemoryPolicy!.AllowedScopes);
+        var draftRequiredCapabilities = saved.DraftConfiguration.ModelPolicy.RequiredCapabilities;
+        Assert.NotNull(draftRequiredCapabilities);
+        Assert.Equal(new[] { "text", "Vision" }, draftRequiredCapabilities.ToArray());
+        var draftMemoryScopes = Assert.IsType<SpaceMemoryPolicy>(saved.DraftConfiguration.MemoryPolicy).AllowedScopes;
+        Assert.NotNull(draftMemoryScopes);
+        Assert.Equal(new[] { SpaceMemoryScope.Conversation, SpaceMemoryScope.Space, SpaceMemoryScope.Personal }, draftMemoryScopes.ToArray());
         var savedExample = Assert.Single(saved.DraftConfiguration.ExamplePairs);
         Assert.Equal("Updated prompt", savedExample.User);
         Assert.Equal("Updated response", savedExample.Assistant);
