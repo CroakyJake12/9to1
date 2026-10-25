@@ -1,11 +1,60 @@
 using Haven.Application;
 using Haven.Core;
+using HavenOS.Apps.Spaces.Tasks;
+using System.Reflection;
 using Xunit;
 
 namespace Haven.Desktop.Tests;
 
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [Fact]
+    public async Task All_tasks_source_issues_exact_historical_selection_and_preserves_null_and_external_context_origins()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig();
+        rig.Conversations.Current = rig.Conversation;
+        var first = await rig.Tasks.BeginAuthorizedAsync(rig.Conversation.Id, Guid.NewGuid(), "historical task", TaskExecutionDurability.PersistedPlan, [], token);
+        _ = await rig.Tasks.BeginAuthorizedAsync(rig.Conversation.Id, Guid.NewGuid(), "new task sharing the original context", TaskExecutionDurability.PersistedPlan, [], token);
+        var external = await rig.Tasks.BeginAuthorizedAsync(Guid.NewGuid(), Guid.NewGuid(), "external app task", TaskExecutionDurability.PersistedPlan, [], token);
+        var settings = new ObservationReadOnlySettings();
+        var registry = new SpaceRegistry(settings);
+        var source = new SpaceTaskWorkspaceService(registry, rig.Conversations, rig.Tasks);
+        var page = await source.ReadAllTasksPageAsync(10, null, token);
+        Assert.Equal(3, page.Tasks.Count);
+        var historical = Assert.Single(page.Tasks, row => row.Snapshot.TaskId == first.TaskId);
+        var selected = await source.ReadSelectionAsync(historical.Selection, token);
+        Assert.Equal(first.TaskId, selected.Snapshot.TaskId);
+        Assert.Equal(first.ExecutionId, selected.Snapshot.ExecutionId);
+        Assert.Equal(rig.Conversation.Id, selected.ContextId);
+        Assert.Equal(HavenMode.Studio, selected.OriginalConversation!.Mode);
+        Assert.Null(selected.OriginSpaceId);
+        var appTask = Assert.Single(page.Tasks, row => row.Snapshot.TaskId == external.TaskId);
+        Assert.Null(appTask.OriginalConversation); Assert.Null(appTask.OriginSpaceId);
+        Assert.Equal(external.ContextId, appTask.ContextId);
+        Assert.Equal("external app task", appTask.Title);
+        Assert.False(appTask.HasObservedLiveExecution);
+        var other = new SpaceTaskWorkspaceService(registry, rig.Conversations, rig.Tasks);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => other.ReadSelectionAsync(historical.Selection, token));
+        var copied = (TaskContextSelection)typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(historical.Selection, null)!;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => source.ReadSelectionAsync(copied, token));
+        rig.Conversations.Current = rig.Conversation with { SpaceId = SpaceRegistry.TasksSpaceId };
+        await Assert.ThrowsAsync<InvalidOperationException>(() => source.ReadSelectionAsync(historical.Selection, token));
+        Assert.Equal(0, rig.Conversations.Writes); Assert.Equal(0, settings.Reads);
+        Assert.Equal(0, rig.Client.Dispatches);
+    }
+
+    private sealed class ObservationReadOnlySettings : IVersionedSettingsStore
+    {
+        public int Reads;
+        public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class
+        { token.ThrowIfCancellationRequested(); Reads++; return Task.FromResult<T?>(null); }
+        public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class => throw new NotSupportedException();
+        public Task RemoveAsync(string key, CancellationToken token) => throw new NotSupportedException();
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => throw new NotSupportedException();
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest value, CancellationToken token) => throw new NotSupportedException();
+    }
+
     [Fact]
     public async Task Task_observation_pages_actual_owned_tasks_by_exact_identity_without_changing_their_origin_or_latest_context()
     {
