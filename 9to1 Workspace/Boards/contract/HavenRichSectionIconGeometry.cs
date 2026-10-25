@@ -87,18 +87,19 @@ public static class HavenRichSectionIconGeometry
     public static HavenRichSectionGeneratedIcon Copy(HavenRichSectionGeneratedIcon icon)
     {
         ArgumentNullException.ThrowIfNull(icon);
+        static HavenRichSectionIconShape CopyShape(HavenRichSectionIconShape shape) => shape switch
+        {
+            HavenRichSectionIconRoundRect rect => new HavenRichSectionIconRoundRect(
+                rect.X, rect.Y, rect.Width, rect.Height, rect.Radius),
+            HavenRichSectionIconCircle circle => new HavenRichSectionIconCircle(
+                circle.CenterX, circle.CenterY, circle.Radius),
+            HavenRichSectionIconPolygon polygon => new HavenRichSectionIconPolygon(
+                [.. polygon.Points], polygon.IsCutout),
+            _ => throw new InvalidOperationException("Generated icon contains an unsupported shape type.")
+        };
         return new HavenRichSectionGeneratedIcon
         {
-            Shapes = icon.Shapes.Select(shape => shape switch
-            {
-                HavenRichSectionIconRoundRect rect => new HavenRichSectionIconRoundRect(
-                    rect.X, rect.Y, rect.Width, rect.Height, rect.Radius),
-                HavenRichSectionIconCircle circle => new HavenRichSectionIconCircle(
-                    circle.CenterX, circle.CenterY, circle.Radius),
-                HavenRichSectionIconPolygon polygon => new HavenRichSectionIconPolygon(
-                    [.. polygon.Points], polygon.IsCutout),
-                _ => throw new InvalidOperationException("Generated icon contains an unsupported shape type.")
-            }).ToList()
+            Shapes = icon.Shapes.Select(CopyShape).ToList()
         };
     }
 
