@@ -765,7 +765,7 @@ public sealed partial class App
                     var theme = _homeTheme ?? throw new InvalidOperationException("The actual Home theme owner is absent.");
                     state.Page ??= state.Source.CreateBoardFolderPickerPage(token => AdmitHomeAsync(origin, token), theme.Context);
                     var owner = TopLevel.GetTopLevel(this) as Window ?? throw new InvalidOperationException("The actual Home window is unavailable.");
-                    var picker = new Window { Title = "Create board in Files", Width = 820, Height = 640, Content = state.Page };
+                    var picker = new Window { Title = "Create board", Width = 760, Height = 560, Content = state.Page, Background = Avalonia.Media.Brushes.Transparent };
                     var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                     picker.Closed += (_, _) => closed.TrySetResult();
                     var shown = picker.ShowDialog(owner); _ = Track(shown);

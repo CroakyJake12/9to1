@@ -99,7 +99,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         var loaded = _loader.TryLoad(document with { Components = [themeScope] });
         if (loaded.Root is null || loaded.Diagnostics.Any(value => value.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The canonical Home Library fragment could not be loaded.");
-        _loader.WireBindings(loaded.Root); Content = loaded.Root; RefreshBindings();
+        _loader.WireBindings(loaded.Root); Content = loaded.Root;
+        _bindings.Set("IsLibraryBrowseMode", _selectBoardFolder is null && _selectArtifact is null);
+        RefreshBindings();
     }
     internal bool IsAlive => !_work.IsRetiring;
     internal HomeLibraryPage? Current => _page;
@@ -134,6 +136,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             throw new InvalidOperationException("Choose folder selection mode before the Library page is activated.");
         _selectBoardFolder = selectCurrentFolder;
         _bindings.Set("IsBoardFolderSelection", true);
+        _bindings.Set("IsLibraryBrowseMode", false);
         _status = "Choose the configured Boards folder. The folder row is checked again by its original Files owner.";
         SetInitialQuery("files", "Files folder");
         RefreshBindings();
