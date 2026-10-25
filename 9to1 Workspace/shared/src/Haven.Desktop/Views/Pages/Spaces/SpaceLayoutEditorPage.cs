@@ -403,9 +403,18 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
             {
                 var value = result.TypedNodeOutputs.GetValueOrDefault(item.NodeId);
                 var typed = value?.JsonValue is { } json ? " · value=" + json.GetRawText() : string.Empty;
+                if (result.TypedNodePortOutputs.GetValueOrDefault(item.NodeId) is { Count: > 0 } portValues)
+                {
+                    var ports = string.Join(", ", portValues.OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                        .Select(pair => $"{pair.Key}:{pair.Value.DataType}" +
+                            (pair.Value.JsonValue is { } portJson ? "=" + portJson.GetRawText() : string.Empty)));
+                    typed += " · typed port outputs=" + ports;
+                }
+                var branch = item.SelectedBranch is { Length: > 0 } selectedBranch
+                    ? $" · selected branch={selectedBranch}; inactive branch={(selectedBranch == "true" ? "false" : "true")}" : string.Empty;
                 var flags = item.MoreResultsOmitted ? " · more results omitted" : string.Empty;
                 if (item.HasUncertainty) flags += " · numeric uncertainty";
-                return $"{item.TypeId}: {item.State}; {item.InputTextElements} → {item.OutputTextElements} text elements; {item.OutputDataType}; SHA-256 {item.OutputSha256 ?? "unavailable"}{flags}{typed}";
+                return $"{item.TypeId}: {item.State}; {item.InputTextElements} → {item.OutputTextElements} text elements; {item.OutputDataType}; SHA-256 {item.OutputSha256 ?? "unavailable"}{branch}{flags}{typed}";
             })));
         }
         catch (OperationCanceledException) when (_pageLifetime.IsCancellationRequested)

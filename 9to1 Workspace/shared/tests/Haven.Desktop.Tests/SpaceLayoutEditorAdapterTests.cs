@@ -272,6 +272,33 @@ public sealed class SpaceLayoutEditorAdapterTests
         }
     }
 
+    [Theory]
+    [InlineData(true, "compile the project", "false")]
+    [InlineData(false, "explain the project", "true")]
+    public async Task Builder_sample_preview_shows_actual_json_boolean_branch_and_skipped_alternative(
+        bool chooseRequest, string expectedOutput, string inactiveBranch)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var layout = ConditionalJsonBooleanLayout();
+        var space = new SpaceDefinition(Guid.NewGuid(), "Conditional preview", "", "space", SpaceKind.General,
+            false, false, null, "", SpaceThinkingMode.Default, [], [], null, now, now, LayoutDocument: layout);
+        var draftUpdates = 0;
+        using var page = new SpaceLayoutEditorPage(space, _ => draftUpdates++);
+        var sample = $"{{\"useRequest\":{chooseRequest.ToString().ToLowerInvariant()},\"request\":\"compile the project\",\"fallback\":\"explain the project\"}}";
+        page.PreviewSampleInput.Text = sample;
+        var revision = space.ActiveConfigurationRevision;
+
+        await page.PreviewSampleAsync();
+
+        Assert.Equal(revision, space.ActiveConfigurationRevision);
+        Assert.Equal(0, draftUpdates);
+        Assert.Contains(expectedOutput, page.PreviewOutput.Content, StringComparison.Ordinal);
+        Assert.Contains($"selected branch={(chooseRequest ? "true" : "false")}", page.PreviewTrace.Content, StringComparison.Ordinal);
+        Assert.Contains($"inactive branch={inactiveBranch}", page.PreviewTrace.Content, StringComparison.Ordinal);
+        Assert.Contains($"typed port outputs={(chooseRequest ? "true" : "false")}:{SpaceUserMessageGraph.JsonDataType}=", page.PreviewTrace.Content, StringComparison.Ordinal);
+        Assert.Contains($"{SpaceUserMessageGraph.JsonStringType}: Skipped", page.PreviewTrace.Content, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Registered_node_enum_settings_select_only_values_from_the_schema()
     {
@@ -297,6 +324,33 @@ public sealed class SpaceLayoutEditorAdapterTests
 
     private static void Add(SpaceLayoutEditorPage page, string typeId) =>
         Invoke(Assert.Single(page.UserMessagePalette, entry => entry.TypeId == typeId).Button);
+
+    private static SpaceLayoutDocument ConditionalJsonBooleanLayout()
+    {
+        var source = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SourceType);
+        var parse = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.ParseJsonType);
+        var route = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.RouteJsonBooleanType) with
+        { Metadata = new Dictionary<string, string> { ["pointer"] = "/useRequest" } };
+        var request = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SelectJsonType) with
+        { Metadata = new Dictionary<string, string> { ["pointer"] = "/request" } };
+        var fallback = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SelectJsonType) with
+        { Metadata = new Dictionary<string, string> { ["pointer"] = "/fallback" } };
+        var requestText = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.JsonStringType);
+        var fallbackText = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.JsonStringType);
+        var merge = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.MergeType);
+        var output = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.OutputType);
+        return new([source, parse, route, request, requestText, fallback, fallbackText, merge, output],
+            [new(Guid.NewGuid(), source.Id, "out", parse.Id, "in"),
+                new(Guid.NewGuid(), parse.Id, "out", route.Id, "in"),
+                new(Guid.NewGuid(), route.Id, "true", request.Id, "in"),
+                new(Guid.NewGuid(), request.Id, "out", requestText.Id, "in"),
+                new(Guid.NewGuid(), requestText.Id, "out", merge.Id, "in"),
+                new(Guid.NewGuid(), route.Id, "false", fallback.Id, "in"),
+                new(Guid.NewGuid(), fallback.Id, "out", fallbackText.Id, "in"),
+                new(Guid.NewGuid(), fallbackText.Id, "out", merge.Id, "in"),
+                new(Guid.NewGuid(), merge.Id, "out", output.Id, "in")])
+        { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
+    }
 
     private static void Invoke(Button button)
     {
