@@ -321,12 +321,20 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
         async Task<T> RunAsync(Task gate)
         {
             await gate.ConfigureAwait(false);
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _appLifetime, _tabLifetime);
-            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-            DemandAlive();
-            var result = await body(linked.Token).ConfigureAwait(false);
-            lock (_gate) _operations.Remove(actual!);
-            return result;
+            try
+            {
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _appLifetime, _tabLifetime);
+                using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+                DemandAlive();
+                return await body(linked.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                // Retained chooser/session collections own cleanup that refused. Keep the
+                // task joined until it settles, then remove its faulted observation so a
+                // later successful owner drain can be retried cleanly.
+                lock (_gate) _operations.Remove(actual!);
+            }
         }
     }
 
