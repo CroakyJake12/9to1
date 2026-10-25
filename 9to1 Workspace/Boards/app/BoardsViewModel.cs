@@ -2100,7 +2100,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var section = _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId);
         if (section is null) return;
         var targetTitle = section.Title;
-        var targetDocumentId = _session.Document.DocumentId;
+        var targetSession = _session;
+        var targetDocument = _session.Document;
+        var targetSection = section;
         var targetPageId = SelectedPageId;
         var targetEpoch = Volatile.Read(ref _sectionIconPickerEpoch);
         var operationCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -2118,9 +2120,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var result = await _sectionIconGenerationHost.GenerateAsync(targetTitle, operationCancellation.Token);
             operationCancellation.Token.ThrowIfCancellationRequested();
             if (_disposed || !_isEditMode || targetEpoch != Volatile.Read(ref _sectionIconPickerEpoch) ||
-                _session.Document.DocumentId != targetDocumentId || SelectedPageId != targetPageId ||
+                !ReferenceEquals(_session, targetSession) ||
+                !ReferenceEquals(_session.Document, targetDocument) || SelectedPageId != targetPageId ||
                 _sectionIconPickerSectionId != sectionId ||
-                !_session.Document.Sections.Any(item => item.Id == sectionId &&
+                !_session.Document.Sections.Any(item => ReferenceEquals(item, targetSection) && item.Id == sectionId &&
                     string.Equals(item.Title, targetTitle, StringComparison.Ordinal)))
             {
                 Set("StatusText", "The section changed while its icon was being created. Try again.");

@@ -86,6 +86,7 @@ public sealed class BoardsSectionIconSuggestionService : IBoardsSectionIconGener
             SystemPrompt,
             Options: new GenerationOptions(0.2, 4096, 0)
             {
+                RequestedContextConstraints = new ModelRequestContextConstraints(AllowPersistentMemoryRead: false),
                 RequestedRoutingConstraints = new ModelRequestRoutingConstraints(AllowFallback: false)
             })
         {
