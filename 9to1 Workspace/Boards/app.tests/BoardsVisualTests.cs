@@ -107,7 +107,7 @@ public sealed class BoardsVisualTests
 
             var authoredTextCommands = Ui(() =>
             {
-                using var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+                using var loader = BoardsCuiDocuments.CreateLoader();
                 loader.SetBindingContext(vm);
                 loader.SetActionDispatcher(vm);
                 var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));

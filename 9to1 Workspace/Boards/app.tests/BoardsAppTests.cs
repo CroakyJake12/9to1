@@ -124,7 +124,7 @@ public sealed class BoardsAppTests
 
         var (root, diagnostics) = await OnUiThreadAsync(() =>
         {
-            var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+            var loader = BoardsCuiDocuments.CreateLoader();
             loader.SetBindingContext(viewModel);
             loader.SetActionDispatcher(viewModel);
             return loader.LoadFile(path);
@@ -151,7 +151,7 @@ public sealed class BoardsAppTests
 
         var found = await OnUiThreadAsync(() =>
         {
-            var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+            var loader = BoardsCuiDocuments.CreateLoader();
             loader.SetBindingContext(viewModel);
             loader.SetActionDispatcher(viewModel);
             var root = Assert.IsAssignableFrom<Control>(loader.LoadMarkup(
@@ -313,7 +313,7 @@ public sealed class BoardsAppTests
             """;
         var (acceptsReturn, wrapping, weight, style, hasDecorations, left, top) = await OnUiThreadAsync(() =>
         {
-            var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+            var loader = BoardsCuiDocuments.CreateLoader();
             var (root, diagnostics) = loader.LoadMarkup(markup, "boards-ext.cui");
             Assert.True(diagnostics.Count == 0, $"Diagnostics: {string.Join("; ", diagnostics.Select(d => d.ToString()))}");
             var panel = Assert.IsType<CuiContainerControl>(root);
@@ -347,7 +347,7 @@ public sealed class BoardsAppTests
     {
         var layout = await OnUiThreadAsync(() =>
         {
-            var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+            var loader = BoardsCuiDocuments.CreateLoader();
             var (loaded, diagnostics) = loader.LoadMarkup(
                 """
                 <Cui>
@@ -390,7 +390,7 @@ public sealed class BoardsAppTests
             // live bindings so the test stays deterministic under headless.
             await OnUiThreadAsync(() =>
             {
-                var hostLoader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+                var hostLoader = BoardsCuiDocuments.CreateLoader();
                 var host = Assert.IsAssignableFrom<Control>(hostLoader.LoadMarkup(
                     """
                     <Cui>
@@ -448,7 +448,7 @@ public sealed class BoardsAppTests
         // Minimal host so Attach() can subscribe without the full Boards.cui tree.
         return OnUiThreadAsync(() =>
         {
-            var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+            var loader = BoardsCuiDocuments.CreateLoader();
             loader.SetBindingContext(viewModel);
             loader.SetActionDispatcher(viewModel);
             var root = loader.LoadMarkup(

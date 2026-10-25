@@ -178,7 +178,7 @@ internal sealed class BoardsApp : Application
         {
             try
             {
-                _loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+                _loader = BoardsCuiDocuments.CreateLoader();
                 _loader.SetBindingContext(_viewModel);
                 _loader.SetActionDispatcher(_viewModel);
                 var document = BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName);
@@ -641,7 +641,7 @@ internal sealed class BoardsApp : Application
             properties.Set("Location", string.IsNullOrEmpty(path) ? "—" : path);
             properties.Set("Size", BlockRenderer.FormatBytes(size));
             properties.On("CloseProperties", _ => dialog.Close());
-            using var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+            using var loader = BoardsCuiDocuments.CreateLoader();
             loader.SetBindingContext(properties); loader.SetActionDispatcher(properties);
             var (content, diagnostics) = loader.TryLoad(
                 BoardsCuiDocuments.Load(BoardsCuiDocuments.BoardPropertiesSourceName));
@@ -950,7 +950,7 @@ internal sealed class BoardsApp : Application
     {
         // An explicit CUI failure surface never substitutes for the board or
         // reports successful application readiness after a rejected document.
-        _loader?.Dispose(); _loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+        _loader?.Dispose(); _loader = BoardsCuiDocuments.CreateLoader();
         var diagnostic = new CuiViewModel(); diagnostic.Set("Failure",message);
         _loader.SetBindingContext(diagnostic);
         var (root, diagnostics) = _loader.TryLoad(

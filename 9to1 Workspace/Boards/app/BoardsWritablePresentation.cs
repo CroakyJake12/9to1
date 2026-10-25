@@ -173,7 +173,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
                 if (!standaloneChrome) viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Ready to edit");
                 viewModel.Set("SaveStateText", "Saved source revision");
-                loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+                loader = BoardsCuiDocuments.CreateLoader();
                 loader.SetBindingContext(viewModel);
                 loader.SetActionDispatcher(viewModel);
                 var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));

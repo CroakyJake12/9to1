@@ -34,24 +34,13 @@ public static class BoardsTheme
 {
     public static BoardsThemeMode Mode { get; private set; } = BoardsThemeMode.Light;
 
-    /// <summary>Boards uses the shared deep-blue workspace surfaces with its own registered accent.</summary>
+    /// <summary>Boards uses its owner-resolved semantic palette for surfaces, actions and icons.</summary>
     public static CuiPalette SharedPalette
     {
         get
         {
             var appearance = Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright;
-            var theme = CuiSurfacePaletteCatalog.ActiveTheme;
-            var shell = CuiSurfacePaletteCatalog.For("Browse", appearance, theme);
-            var identity = CuiSurfacePaletteCatalog.For("Boards", appearance, theme);
-            return shell with
-            {
-                Accent = identity.Accent,
-                AccentSecondary = identity.AccentSecondary,
-                AccentStrong = identity.AccentStrong,
-                AccentSoft = identity.AccentSoft,
-                AccentInk = identity.AccentInk,
-                AccentBorder = identity.AccentBorder,
-            };
+            return CuiSurfacePaletteCatalog.For("Boards", appearance, CuiSurfacePaletteCatalog.ActiveTheme);
         }
     }
 

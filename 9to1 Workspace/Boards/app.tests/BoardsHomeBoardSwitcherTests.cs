@@ -22,7 +22,7 @@ public sealed class BoardsHomeBoardSwitcherTests
         var viewModel = new BoardsViewModel(adapter, homeBoardCreationHost: host);
         var (loader, loadedRoot) = TestUiThread.Run(() =>
         {
-            var uiLoader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+            var uiLoader = BoardsCuiDocuments.CreateLoader();
             uiLoader.SetBindingContext(viewModel);
             uiLoader.SetActionDispatcher(viewModel);
             var (root, diagnostics) = uiLoader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
