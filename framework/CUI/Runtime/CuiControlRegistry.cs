@@ -49,6 +49,7 @@ public sealed class CuiControlRegistry
         // it owns the query string + opaque cursor in the runtime and exposes one window to authored
         // child bindings, while all data filtering/pagination stays behind a typed ICuiPagedSource.
         RegisterControlType("QueryViewport", _ => new CuiQueryViewport());
+        RegisterControlType("ActionShelf", _ => new CuiActionShelf());
     }
 
     /// <summary>Resolve host-owned, bounded image identities without opening arbitrary files or network locations.</summary>

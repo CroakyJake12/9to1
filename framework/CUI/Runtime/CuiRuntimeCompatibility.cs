@@ -46,6 +46,7 @@ public static class CuiRuntimeCompatibility
     /// source port, query/cursor window state, generic paging commands). A host advertising this
     /// capability can execute bounded paged query documents.</summary>
     public const string QueryViewportCapability = "query-viewport";
+    public const string ActionShelfCapability = "action-shelf";
 
     /// <summary>Capability name for declarative auto-invocation effects (document-root Effects
     /// blocks that dispatch a named action on a rising-edge condition). A host that does not
@@ -65,6 +66,7 @@ public static class CuiRuntimeCompatibility
         LocalStateToggleCapability,
         LocalStateRandomSelectCapability,
         QueryViewportCapability,
+        ActionShelfCapability,
         DeclarativeEffectsCapability,
     };
 

@@ -26,6 +26,7 @@ internal interface IChatComposerTaskActions
     bool CanQueue { get; }
     bool CanStop { get; }
     bool CanPause => false;
+    bool IsPassPaused => false;
     bool CanResume => false;
     bool HasSendModePreference => false;
     TaskFollowUpMode? PreferredSendMode => null;
@@ -73,6 +74,7 @@ public interface IChatComposerSource
     bool HasFormatting => true;
     bool CanSteer => false;
     bool CanPause => false;
+    bool IsPassPaused => false;
     bool CanResume => false;
     bool CanSend { get; }
     bool IsEditing { get; }
@@ -122,6 +124,32 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         _ownsSubmitSender = ownsSubmitSender;
     }
 
+    private IReadOnlyList<CuiActionShelfItem> EligibleShelfActions()
+    {
+        var actions = new List<CuiActionShelfItem>(4);
+        static CuiActionShelfItem Item(string id, string command, string label, string icon, string tooltip) =>
+            new(id, command, label, "avares://Haven/Assets/" + (icon == "send" ? "send" : "composer-" + icon) + ".svg", tooltip);
+        if (_source.CanResume)
+        {
+            actions.Add(Item("resume", "composer.resume", "Resume", "resume", "Continue this same task from its approved continuation boundary"));
+            return actions; // End Pass requires its own genuine terminal owner; no filler.
+        }
+        if (_source.IsPassPaused) return actions; // Inspection is not an available continuation.
+        if (_source.CanSteer)
+            actions.Add(Item("steer", "composer.steer", "Steer", "steer", "Send this instruction to the current task"));
+        if (_source.CanPause)
+            actions.Add(Item("pause", "composer.pause", "Stop", "stop", "Request a supported resumable pause; wait for the task owner's acknowledgement"));
+        else if (_source.CanStop)
+            actions.Add(Item("cancel", "composer.stop", "Cancel response", "stop", _source.StopTooltip));
+        if (_source.CanQueue)
+            actions.Add(Item("queue", "composer.queue", "Queue", "queue", "Queue this instruction without replacing the current pass"));
+        if (!_source.IsSending && _source.HasPendingMessage && _source.CanSend)
+            actions.Insert(0, Item("send", "composer.send", _source.IsEditing ? "Update message" : "Send", "send",
+                _source.IsEditing ? "Update the message being edited" : "Send message"));
+        // Voice is added only when the same-session capture owner can actually acquire it.
+        return actions;
+    }
+
     /// <summary>Observed focus on the real composer input; drives compact/expanded formatting.</summary>
     internal bool IsFocused
     {
@@ -144,6 +172,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         value = null;
         switch (path)
         {
+            case "Composer.ActionShelf": value = EligibleShelfActions(); return true;
             case "Composer.Draft":
                 value = _source.Draft;
                 return true;
