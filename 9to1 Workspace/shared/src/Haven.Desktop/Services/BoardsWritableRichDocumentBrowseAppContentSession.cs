@@ -10,7 +10,8 @@ namespace Haven.Desktop.Services;
 
 /// <summary>An editable rich Boards surface whose only persistence action is the selected
 /// Home Files revision callback. The exact file lease remains alive through tab retirement.</summary>
-internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrowseNativeAppContentSession
+internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrowseNativeAppContentSession,
+    IBrowseAppContentClosePreparationParticipant
 {
     private readonly BrowseAppContentRequest _request;
     private readonly CancellationTokenSource _lifetime;
@@ -19,6 +20,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     private NativeHomeFilesBoardWriteLease? _lease;
     private BoardsWritablePresentation? _presentation;
     private Task? _initialization, _close;
+    private Task<IBrowseAppContentClosePreparation?>? _preparationTask;
+    private ClosePreparation? _prepared;
     private Task? _titleRefresh;
     private int _titleVersion;
     private string _title = "Boards — Files document";
@@ -145,42 +148,153 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
 
     private static string FormatTitle(string? title) => title is { Length: > 0 } ? title + " — Boards" : "Boards";
 
-    public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
+    public bool SupportsReversibleClosePreparation => true;
+
+    public async Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        BoardsWritablePresentation? presentation;
-        lock (_gate)
-        {
-            if (_close is not null) return Task.FromResult(_close.IsCompletedSuccessfully);
-            if (_initialization is { IsCompleted: false }) return Task.FromResult(false);
-            presentation = _presentation;
-        }
-        return presentation is null ? Task.FromResult(true) : PreparePresentationToCloseAsync(presentation, cancellationToken);
+        var preparation = await PrepareCloseAsync(cancellationToken).ConfigureAwait(false);
+        if (preparation is null) return false;
+        await preparation.AbortAsync().ConfigureAwait(false);
+        return true;
     }
 
-    private async Task<bool> PreparePresentationToCloseAsync(BoardsWritablePresentation presentation, CancellationToken token)
+    public Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
     {
-        Task<bool> nested;
-        if (Dispatcher.UIThread.CheckAccess()) nested = presentation.TryPrepareToCloseAsync(token);
-        else
-        {
-            var dispatch = Dispatcher.UIThread.InvokeAsync<Task<bool>>(
-                () => presentation.TryPrepareToCloseAsync(token)).GetTask();
-            nested = await dispatch.ConfigureAwait(false);
-        }
-        if (!await nested.ConfigureAwait(false)) return false;
-
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         lock (_gate)
         {
-            if (!ReferenceEquals(_presentation, presentation) || _closing) return false;
+            if (_close is not null || _closing) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
+            if (_prepared is { } prepared) return Task.FromResult<IBrowseAppContentClosePreparation?>(prepared);
+            if (_preparationTask is { IsCompleted: false }) return _preparationTask;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _preparationTask = PrepareDriverAsync(start.Task, cancellationToken);
+            start.SetResult();
+            return _preparationTask;
+        }
+    }
+
+    private async Task<IBrowseAppContentClosePreparation?> PrepareDriverAsync(Task start, CancellationToken token)
+    {
+        await start.ConfigureAwait(false);
+        var initialization = OriginalInitialization;
+        if (initialization is null) return null;
+        try { await initialization.ConfigureAwait(false); }
+        catch { return CreateFailedInitializationPreparation(); }
+        token.ThrowIfCancellationRequested();
+        var presentation = _presentation;
+        if (presentation is null) return CreateFailedInitializationPreparation();
+        var dispatch = Dispatcher.UIThread.InvokeAsync<Task<IBoardsPresentationClosePreparation?>>(
+            () => presentation.PrepareToCloseAsync(token)).GetTask();
+        var actual = await dispatch.ConfigureAwait(false);
+        var nested = await actual.ConfigureAwait(false);
+        if (nested is null) return null;
+        if (token.IsCancellationRequested)
+        {
+            await AwaitOnUiAsync(nested.AbortAsync).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+        }
+        var preparation = new ClosePreparation(this, presentation, nested);
+        var accepted = false;
+        lock (_gate)
+        {
+            if (!_closing && ReferenceEquals(_presentation, presentation) && nested.IsCurrent &&
+                !presentation.HasUnsavedChanges)
+            {
+                _prepared = preparation;
+                accepted = true;
+            }
+        }
+        if (!accepted)
+        {
             if (presentation.HasUnsavedChanges)
             {
                 presentation.ViewModel.Set("StatusText", "Save this Files board revision before closing.");
                 CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
-                return false;
             }
-            return true;
+            await AwaitOnUiAsync(nested.AbortAsync).ConfigureAwait(false);
+            return null;
         }
+        return preparation;
+    }
+
+    private IBrowseAppContentClosePreparation? CreateFailedInitializationPreparation()
+    {
+        var preparation = new ClosePreparation(this, null, null);
+        lock (_gate)
+        {
+            if (_closing) return null;
+            _prepared = preparation;
+        }
+        return preparation;
+    }
+
+    private Task BeginAcceptedClose(ClosePreparation preparation)
+    {
+        lock (_gate)
+        {
+            if (preparation.Accepted) return _close ?? throw new InvalidOperationException("The accepted Boards close is absent.");
+            if (!preparation.IsCurrent) throw new InvalidOperationException("The original Boards close preparation is no longer current.");
+            preparation.MarkAccepted();
+            _closing = true;
+            _published = false;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _close = CloseCoreAsync(start.Task);
+            start.SetResult();
+            return _close;
+        }
+    }
+
+    private sealed class ClosePreparation(BoardsWritableRichDocumentBrowseAppContentSession owner,
+        BoardsWritablePresentation? presentation, IBoardsPresentationClosePreparation? nested)
+        : IBrowseAppContentClosePreparation
+    {
+        private bool _accepted, _aborted;
+        private Task? _abort;
+        internal bool Accepted => _accepted;
+        public IBrowseAppContentSession Session => owner;
+        public bool IsCurrent => !_accepted && !_aborted && !owner._closing && !owner._lifetime.IsCancellationRequested &&
+            ReferenceEquals(owner._prepared, this) && (nested is null || nested.IsCurrent) &&
+            (presentation is null || ReferenceEquals(owner._presentation, presentation));
+
+        public Task AbortAsync()
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(owner);
+            lock (owner._gate)
+            {
+                if (_abort is not null) return _abort;
+                if (_accepted) return Task.FromException(new InvalidOperationException("An accepted Boards close cannot be aborted."));
+                if (_aborted) return Task.CompletedTask;
+                return _abort = AbortCoreAsync();
+            }
+        }
+
+        private async Task AbortCoreAsync()
+        {
+            if (nested is not null) await AwaitOnUiAsync(nested.AbortAsync).ConfigureAwait(false);
+            lock (owner._gate)
+            {
+                if (!IsCurrent && !ReferenceEquals(owner._prepared, this))
+                    throw new InvalidOperationException("The original Boards preparation is no longer current.");
+                if (ReferenceEquals(owner._prepared, this)) owner._prepared = null;
+                _aborted = true;
+            }
+        }
+
+        public Task BeginClose()
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(owner);
+            Dispatcher.UIThread.VerifyAccess();
+            return owner.BeginAcceptedClose(this);
+        }
+
+        internal void MarkAccepted() => _accepted = true;
+    }
+
+    private static async Task AwaitOnUiAsync(Func<Task> action)
+    {
+        var dispatch = Dispatcher.UIThread.InvokeAsync<Task>(action).GetTask();
+        var actual = await dispatch.ConfigureAwait(false);
+        await actual.ConfigureAwait(false);
     }
 
     public Task CloseAndDrainAsync()
@@ -189,6 +303,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         lock (_gate)
         {
             if (_close is not null) return _close;
+            if (_initialization is { IsCompletedSuccessfully: true })
+                throw new InvalidOperationException("Prepare the original Boards presentation before retirement.");
             _closing = true;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _close = CloseCoreAsync(start.Task);
@@ -203,6 +319,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         var initialization = OriginalInitialization;
         if (initialization is not null)
             try { await initialization.ConfigureAwait(false); } catch { /* Preserve OriginalInitialization; finish deterministic cleanup. */ }
+        if (_prepared?.Nested is { } nested)
+            await nested.CommitAsync().ConfigureAwait(false);
         Task? titleRefresh;
         lock (_gate) titleRefresh = _titleRefresh;
         if (titleRefresh is not null)
@@ -230,7 +348,10 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             _lease = null;
         }
         _published = false;
-        try { _lifetime.Cancel(); } catch { /* Presentation, owner and lease have drained. */ }
-        _lifetime.Dispose();
+        var lifetimeFailures = new List<Exception>();
+        try { _lifetime.Cancel(); } catch (Exception error) { lifetimeFailures.Add(error); }
+        try { _lifetime.Dispose(); } catch (Exception error) { lifetimeFailures.Add(error); }
+        if (lifetimeFailures.Count != 0)
+            throw new AggregateException("The original writable Boards tab lifetime did not retire cleanly.", lifetimeFailures);
     }
 }
