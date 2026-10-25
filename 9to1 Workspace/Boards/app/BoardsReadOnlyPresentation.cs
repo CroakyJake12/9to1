@@ -30,7 +30,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         ViewModel = viewModel;
         _loader = loader;
         Content = content;
-        _embeddedArtifacts = new BoardsEmbeddedArtifactSurface(embeddedArtifactHost, viewModel);
+        _embeddedArtifacts = new BoardsEmbeddedArtifactSurface(embeddedArtifactHost, viewModel, content);
     }
 
     private readonly byte[] _documentBytes;
@@ -115,9 +115,8 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     private async Task RenderAsync()
     {
         if (_disposed || _surfaceLifecycle?.IsReady != true) return;
-        var blocks = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "BlocksHost");
-        if (blocks is null) return;
-        await BlockRenderer.RebuildAsync(blocks, ViewModel);
+        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "BlocksHost") is { } blocks)
+            await BlockRenderer.RebuildAsync(blocks, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "NavHost") is { } nav)
             NavBuilder.Rebuild(nav, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)

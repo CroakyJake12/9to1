@@ -3,6 +3,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -263,7 +264,9 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _dispatch = dispatch ?? (command => viewModel.DispatchAsync(command, null).AsTask());
         _titleBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "BoardTitleBox");
-        _pageTitleBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "PageTitleBox");
+        _pageTitleBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "PageTitleBox") ??
+            root.GetLogicalDescendants().OfType<TextBox>()
+                .FirstOrDefault(box => AutomationProperties.GetName(box) == "Page title");
         _searchBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "NavSearchBox");
         if (_titleBox is not null)
         {

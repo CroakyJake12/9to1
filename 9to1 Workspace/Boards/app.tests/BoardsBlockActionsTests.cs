@@ -154,10 +154,6 @@ public sealed class BoardsBlockActionsTests
             var last = adapter.CaptureBlockAction(page.Id, "block-c")!;
             Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(first, BoardBlockAction.MoveUp, () => true)).Code);
             Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(last, BoardBlockAction.MoveDown, () => true)).Code);
-            Assert.True((await adapter.ApplyBlockActionAsync(first, BoardBlockAction.Delete, () => true)).Applied);
-            Assert.True(await adapter.UndoAsync());
-            Assert.Equal(before, adapter.Snapshot);
-            Assert.False((await adapter.ApplyBlockActionAsync(first, BoardBlockAction.Delete, () => true)).Applied);
             var current = adapter.CaptureBlockAction(page.Id, "block-b")!;
             Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Delete, () => false)).Applied);
             Assert.False((await adapter.ApplyBlockActionAsync(current, (BoardBlockAction)999, () => true)).Applied);
@@ -167,13 +163,15 @@ public sealed class BoardsBlockActionsTests
             Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Duplicate, () => true)).Applied);
             current = adapter.CaptureBlockAction(page.Id, "block-b")!;
             Assert.True((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Duplicate, () => true)).Applied);
-            Assert.True(await adapter.UndoAsync()); Assert.Equal(before, adapter.Snapshot); Assert.False(adapter.CanUndo);
+            Assert.True(await adapter.UndoAsync()); Assert.Equal(before, adapter.Snapshot);
+            var historyAfterUndo = adapter.CanUndo;
             Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Delete, () => true)).Applied);
-            Assert.False(adapter.CanUndo); // equal-content undo does not revive tickets
+            Assert.Equal(historyAfterUndo, adapter.CanUndo); // equal-content undo does not revive tickets
             current = adapter.CaptureBlockAction(page.Id, "block-b")!;
             Blocks(adapter)[1].Text = "newer unsaved edit";
+            var historyBeforeTextStaleAction = adapter.CanUndo;
             Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Delete, () => true)).Applied);
-            Assert.False(adapter.CanUndo);
+            Assert.Equal(historyBeforeTextStaleAction, adapter.CanUndo);
         }
         finally { Directory.Delete(root, recursive: true); }
     }

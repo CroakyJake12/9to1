@@ -61,7 +61,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         ViewModel = viewModel;
         _loader = loader;
         Content = content;
-        _embeddedArtifacts = new BoardsEmbeddedArtifactSurface(embeddedArtifactHost, viewModel);
+        _embeddedArtifacts = new BoardsEmbeddedArtifactSurface(embeddedArtifactHost, viewModel, content);
     }
 
     public string SourceId { get; }

@@ -1,5 +1,6 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 
@@ -14,6 +15,8 @@ public static class BoardsCuiControlFinder
         ArgumentNullException.ThrowIfNull(root);
         ArgumentException.ThrowIfNullOrWhiteSpace(automationId);
         if (TryMatch<T>(root, automationId, out var found)) return found;
+        foreach (var child in root.GetLogicalDescendants().OfType<Control>())
+            if (TryMatch<T>(child, automationId, out found)) return found;
         foreach (var child in root.GetVisualDescendants().OfType<Control>())
             if (TryMatch<T>(child, automationId, out found)) return found;
         return null;
