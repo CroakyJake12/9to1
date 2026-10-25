@@ -31,9 +31,15 @@ public static class HomeUnixCoreTransport
         try
         {
             stream = new NetworkStream(originalAcceptedSocket, ownsSocket: false);
-            using var firstDeadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
-            firstDeadline.CancelAfter(TimeSpan.FromSeconds(5));
-            var first = await HomeUnixDiscoveryTransport.ReadFrameAsync(stream, firstDeadline.Token).ConfigureAwait(false);
+            using var firstClock = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using var firstDeadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token, firstClock.Token);
+            byte[] first;
+            try { first = await HomeUnixDiscoveryTransport.ReadFrameAsync(stream, firstDeadline.Token).ConfigureAwait(false); }
+            catch (OperationCanceledException error) when (error.CancellationToken == firstDeadline.Token && firstClock.IsCancellationRequested)
+            { throw new TimeoutException("Home Core first frame deadline exceeded.", error); }
+            catch (OperationCanceledException error) when (error.CancellationToken == firstDeadline.Token &&
+                !firstClock.IsCancellationRequested && lifetime.IsCancellationRequested)
+            { throw new OperationCanceledException("Original Home connection ended before its first frame.", error, lifetime.Token); }
             bool core;
             try { core = HomeUnixCoreProtocol.HasProtocol(first); }
             catch (JsonException) { core = false; } // Same legacy invalid-request response.
