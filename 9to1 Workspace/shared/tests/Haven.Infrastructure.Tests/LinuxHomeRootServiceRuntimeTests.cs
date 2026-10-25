@@ -185,5 +185,36 @@ public sealed class LinuxHomeRootServiceRuntimeTests
         finally { listener.Dispose(); File.Delete(path); }
     }
 
+    [LinuxFact]
+    public async Task Borrowed_original_composition_cannot_start_a_second_Home_or_fabricate_current_Core_before_authenticated_attachment()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "h-borrowed-" + Guid.NewGuid().ToString("N"));
+        var state = Path.Combine(path, "state.json");
+        var home = new HavenOS.Home.Core.HomeNativeWindowsComposition(new(state),
+            new HavenOS.Home.Core.OperatingSystemPrincipalSource(), new OriginalPaths(path), new("9to1.borrowed.fixture"),
+            originalBorrowedHomeStartupExpected: true);
+        try
+        {
+            Assert.NotSame(home.Api, home.OriginalConsumerApi);
+            Assert.Throws<UnauthorizedAccessException>(() => { _ = home.StartOriginalAsync(); });
+            Assert.Null(home.OriginalStartTask);
+            Assert.All(home.Runtime.Current.Services, service => Assert.False(service.IsAvailable));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => home.OriginalConsumerApi.GetStateAsync(new("copied-caller", "copied-app", "copied-session")));
+            Assert.False(File.Exists(state));
+            await home.CloseAndDrainAsync();
+            Assert.False(File.Exists(state));
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    }
+    private sealed class OriginalPaths(string root) : Haven.Application.IAppPaths
+    {
+        public string DataDirectory => root;
+        public string DatabasePath => Path.Combine(root, "database");
+        public string BrowserProfileDirectory => Path.Combine(root, "browser");
+        public string AttachmentsDirectory => Path.Combine(root, "attachments");
+        public string LogsDirectory => Path.Combine(root, "logs");
+        public string LegacyStatePath => Path.Combine(root, "legacy");
+    }
+
     [DllImport("libc", EntryPoint = "geteuid")] private static extern uint GetEuid();
 }
