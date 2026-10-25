@@ -143,7 +143,7 @@ public sealed class BoardsBlockGeometryTests
 
         Assert.InRange(actual.Gap, 8, 12);
         Assert.Equal(24, actual.CheckWidth);
-        Assert.Equal(actual.TextTop, actual.CheckTop);
+        Assert.Equal(actual.TextTop + 7, actual.CheckTop);
         Assert.True(actual.TextHeight > 36, $"Expected the long label to wrap; height={actual.TextHeight}.");
         Assert.Equal(GridUnitType.Star, actual.ColumnWidth.GridUnitType);
         Assert.Equal(Avalonia.Media.TextWrapping.Wrap, actual.TextWrapping);
@@ -246,24 +246,25 @@ public sealed class BoardsBlockGeometryTests
                     .Where(box => box.Name?.StartsWith("cell_", StringComparison.Ordinal) == true)
                     .ToDictionary(box => box.Name!, StringComparer.Ordinal);
                 var cellsByAppearance = cells.ToDictionary(pair => pair.Key, pair =>
-                    (Background: ((Border)pair.Value.Parent!).Background, Foreground: pair.Value.Foreground),
+                    (Background: ColorOf(((Border)pair.Value.Parent!).Background),
+                        Foreground: ColorOf(pair.Value.Foreground)),
                     StringComparer.Ordinal);
+                var tableText = ColorOf(BoardsTheme.ContrastText("#FF654321"));
+                var cellText = ColorOf(BoardsTheme.ContrastText("#FF222222"));
                 window.Close();
-                return cellsByAppearance;
+                return (Cells: cellsByAppearance, TableText: tableText, CellText: cellText);
             });
 
-            Assert.Equal(palette.AccentSoft, Assert.IsType<SolidColorBrush>(actual["cell_theme-table_0_0"].Background).Color);
-            Assert.Equal(palette.Panel3, Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_0"].Background).Color);
-            Assert.Equal(Color.Parse("#FF123456"), Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_1"].Background).Color);
-            Assert.Equal(Color.Parse("#FFAABBCC"), Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_1"].Foreground).Color);
+            Assert.Equal<Color?>(palette.AccentSoft, actual.Cells["cell_theme-table_0_0"].Background);
+            Assert.Equal<Color?>(palette.Panel3, actual.Cells["cell_theme-table_1_0"].Background);
+            Assert.Equal<Color?>(Color.Parse("#FF123456"), actual.Cells["cell_theme-table_1_1"].Background);
+            Assert.Equal<Color?>(Color.Parse("#FFAABBCC"), actual.Cells["cell_theme-table_1_1"].Foreground);
 
-            Assert.Equal(Color.Parse("#FF654321"), Assert.IsType<SolidColorBrush>(actual["cell_override-table_0_0"].Background).Color);
-            Assert.Equal(Color.Parse("#FF654321"), Assert.IsType<SolidColorBrush>(actual["cell_override-table_1_0"].Background).Color);
-            Assert.Equal(Color.Parse("#FF222222"), Assert.IsType<SolidColorBrush>(actual["cell_override-table_1_1"].Background).Color);
-            var tableText = Assert.IsType<SolidColorBrush>(BoardsTheme.ContrastText("#FF654321")).Color;
-            var cellText = Assert.IsType<SolidColorBrush>(BoardsTheme.ContrastText("#FF222222")).Color;
-            Assert.Equal(tableText, Assert.IsType<SolidColorBrush>(actual["cell_override-table_0_0"].Foreground).Color);
-            Assert.Equal(cellText, Assert.IsType<SolidColorBrush>(actual["cell_override-table_1_1"].Foreground).Color);
+            Assert.Equal<Color?>(Color.Parse("#FF654321"), actual.Cells["cell_override-table_0_0"].Background);
+            Assert.Equal<Color?>(Color.Parse("#FF654321"), actual.Cells["cell_override-table_1_0"].Background);
+            Assert.Equal<Color?>(Color.Parse("#FF222222"), actual.Cells["cell_override-table_1_1"].Background);
+            Assert.Equal(actual.TableText, actual.Cells["cell_override-table_0_0"].Foreground);
+            Assert.Equal(actual.CellText, actual.Cells["cell_override-table_1_1"].Foreground);
         }
         finally
         {
@@ -271,4 +272,6 @@ public sealed class BoardsBlockGeometryTests
             CuiSurfacePaletteCatalog.ActiveTheme = priorTheme;
         }
     }
+
+    private static Color? ColorOf(IBrush? brush) => brush is ISolidColorBrush solid ? solid.Color : null;
 }

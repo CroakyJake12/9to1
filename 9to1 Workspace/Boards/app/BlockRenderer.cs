@@ -27,6 +27,7 @@ public static class BlockRenderer
     private const double BlockGutterTargetSize = 32;
     private const double QuietBlockGutterOpacity = 0.56;
     private const double QuietInsertOpacity = 0.76;
+    private const double ChecklistCheckboxFirstLineOffset = 7;
 
     public static async Task RebuildAsync(StackPanel host, BoardsViewModel vm)
     {
@@ -462,7 +463,7 @@ public static class BlockRenderer
             MaxWidth = 24,
             MaxHeight = 24,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, 0, 10, 0),
+            Margin = new Thickness(0, ChecklistCheckboxFirstLineOffset, 10, 0),
         };
         const string checklistGeometrySource = "Boards checklist checkbox geometry";
         CuiPropertyPresentation.Set(check, "Width", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
@@ -471,7 +472,7 @@ public static class BlockRenderer
         CuiPropertyPresentation.Set(check, "MinHeight", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
         CuiPropertyPresentation.Set(check, "MaxWidth", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
         CuiPropertyPresentation.Set(check, "MaxHeight", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "Margin", new Thickness(0, 0, 10, 0),
+        CuiPropertyPresentation.Set(check, "Margin", new Thickness(0, ChecklistCheckboxFirstLineOffset, 10, 0),
             CuiPropertyLevel.Instance, checklistGeometrySource);
         AutomationProperties.SetName(check, "Checklist item done");
         var text = new TextBox
