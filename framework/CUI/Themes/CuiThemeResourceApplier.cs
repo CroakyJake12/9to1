@@ -386,11 +386,14 @@ public static class CuiThemeResourceApplier
         }
         foreach (var role in new[] { "Primary", "Secondary", "Tertiary" })
         {
+            var softInk = palette.AccentSecondary;
+            if (role == "Tertiary" && glow && resources["CuiAccentTertiaryBrush"] is IGradientBrush subdued)
+                foreach (var stop in subdued.GradientStops)
+                    softInk = CuiContrast.EnsureForegroundContrast(softInk, stop.Color, 4.5);
             resources[$"CuiAccent{role}ForegroundBrush"] = role == "Tertiary" && glow
-                ? new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.AccentSecondary, palette.Panel, 4.5))
-                : resources["CuiAccentForegroundBrush"];
-            resources[$"CuiAccent{role}HoverForegroundBrush"] = resources["CuiAccentForegroundBrush"];
-            resources[$"CuiAccent{role}PressedForegroundBrush"] = resources["CuiAccentForegroundBrush"];
+                ? new SolidColorBrush(softInk) : glow ? Brushes.White : resources["CuiAccentForegroundBrush"];
+            resources[$"CuiAccent{role}HoverForegroundBrush"] = glow ? Brushes.White : resources["CuiAccentForegroundBrush"];
+            resources[$"CuiAccent{role}PressedForegroundBrush"] = glow ? Brushes.White : resources["CuiAccentForegroundBrush"];
             var gradient = role switch
             {
                 "Primary" => palette.AccentPalette.Primary,
@@ -408,6 +411,12 @@ public static class CuiThemeResourceApplier
             resources[$"CuiAccent{role}PressedBrush"] = CreateGradientBrush(glow
                 ? ReadableActionGradient(Shift(gradient, Colors.White, .12))
                 : Shift(gradient, palette.AccentStrong, .18));
+            if (settings.HighContrast)
+                foreach (var state in new[] { "", "Hover", "Pressed" })
+                {
+                    resources[$"CuiAccent{role}{state}Brush"] = resources["CuiPanelBrush"];
+                    resources[$"CuiAccent{role}{state}ForegroundBrush"] = resources["CuiTextBrush"];
+                }
             // Both global and scoped resources publish the same accent colours.
             var colour = gradient.Middle;
             resources[$"CuiAccent{role}GlowColor"] = WithAlpha(colour, 0x70);
@@ -426,8 +435,8 @@ public static class CuiThemeResourceApplier
         resources["CuiAccentTextPressedForegroundBrush"] = resources["CuiAccentTextHoverForegroundBrush"];
         var negative = CuiAccentGradient.Horizontal(Color.Parse("#CF2537"), Color.Parse("#C82132"), Color.Parse("#A91629"));
         resources["CuiAccentNegativeBrush"] = CreateGradientBrush(negative);
-        resources["CuiAccentNegativeHoverBrush"] = CreateGradientBrush(Shift(negative, Color.Parse("#F54758"), .28));
-        resources["CuiAccentNegativePressedBrush"] = CreateGradientBrush(Shift(negative, Color.Parse("#F54758"), .4));
+        resources["CuiAccentNegativeHoverBrush"] = CreateGradientBrush(ReadableActionGradient(Shift(negative, Color.Parse("#F54758"), .28)));
+        resources["CuiAccentNegativePressedBrush"] = CreateGradientBrush(ReadableActionGradient(Shift(negative, Color.Parse("#F54758"), .4)));
         foreach (var state in new[] { "", "Hover", "Pressed" })
         {
             resources[$"CuiAccentNegative{state}ForegroundBrush"] = settings.HighContrast ? resources["CuiTextBrush"] : Brushes.White;
