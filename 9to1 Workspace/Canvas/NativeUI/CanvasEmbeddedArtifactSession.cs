@@ -18,6 +18,10 @@ public sealed record CanvasEmbeddedArtifactTarget(Guid ArtifactId, Guid Expected
 /// <summary>Container-level editing affordance only; Edit never grants a Canvas/Home permission.</summary>
 public enum CanvasEmbeddedArtifactMode { View, Edit }
 
+/// <summary>Limits the actual owner launcher surface to the operation requested by the
+/// containing Board's Select or Create action.</summary>
+public enum CanvasEmbeddedArtifactChoiceMode { SelectExisting, CreateNew, SelectOrCreate }
+
 /// <summary>Retained same-Canvas-app view opened against one exact canonical owner revision.
 /// The returned view includes Canvas' existing Home approval surface and uses its existing
 /// Files owner, editor, mutation intents, and close/drain lifecycle.</summary>
@@ -81,4 +85,57 @@ public sealed class CanvasEmbeddedArtifactSession
 
     /// <summary>Retire the exact Canvas view and its owned native children. Home and Files remain borrowed.</summary>
     public Task CloseAndDrainAsync() => _owner.CloseAndDrainAsync();
+}
+
+/// <summary>Retained same-Canvas-owner launcher used to choose or create a Board reference.
+/// Selection returns only stable Canvas owner identity; Files row/store/revision details remain
+/// private and are rechecked by this same owner before a Board publishes the reference.</summary>
+public sealed class CanvasEmbeddedArtifactChoiceSession
+{
+    private readonly CanvasHostSurface _owner;
+    private CanvasEmbeddedArtifactChoiceSession(CanvasHostSurface owner, CanvasEmbeddedArtifactChoiceMode mode)
+    { _owner = owner; Mode = mode; }
+
+    public Control View => _owner;
+    public CanvasEmbeddedArtifactChoiceMode Mode { get; }
+    public bool IsAlive => _owner.IsAlive;
+    public Task<CanvasEmbeddedArtifactTarget?> Choice => _owner.EmbeddedChoice;
+
+    /// <summary>Show the actual Canvas launch/controller surface in reference-choice mode.
+    /// Its rows are current Files metadata rows, and its create action retains Canvas' existing
+    /// Home reviewed request path.</summary>
+    public static async Task<CanvasEmbeddedArtifactChoiceSession> OpenAsync(
+        CanvasHostSurface sameCanvasOwner, CanvasEmbeddedArtifactChoiceMode mode,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(sameCanvasOwner);
+        Dispatcher.UIThread.VerifyAccess();
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        var session = new CanvasEmbeddedArtifactChoiceSession(sameCanvasOwner, mode);
+        await sameCanvasOwner.InitializeEmbeddedChooserAsync(mode, cancellationToken);
+        return session;
+    }
+
+    /// <summary>Revalidate the same owner-issued choice against the current original actor,
+    /// Files store, canonical item revision and Canvas app revision. This reads metadata only.</summary>
+    public Task RevalidateAsync(CanvasEmbeddedArtifactTarget choice, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(choice);
+        if (!IsAlive) throw new ObjectDisposedException(nameof(CanvasEmbeddedArtifactChoiceSession));
+        return _owner.RevalidateEmbeddedChoiceAsync(choice, cancellationToken);
+    }
+
+    public Task<CanvasHostSurface.ClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
+    {
+        if (!IsAlive) return Task.FromResult<CanvasHostSurface.ClosePreparation?>(null);
+        return _owner.PrepareCloseAsync(cancellationToken);
+    }
+
+    /// <summary>Resolve an unanswered picker as cancelled, then drain the same owner and all
+    /// children. The returned choice is never converted into an authorization grant.</summary>
+    public Task CloseAndDrainAsync()
+    {
+        _owner.CancelEmbeddedChoice();
+        return _owner.CloseAndDrainAsync();
+    }
 }

@@ -108,6 +108,70 @@ public sealed class CanvasHostLaunchTests
     }
 
     [Fact]
+    public async Task Embedded_choice_uses_the_current_Canvas_row_and_separates_select_from_create()
+    {
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
+        await native.Dispatch<bool>(async () =>
+        {
+            await using var fixture = await Fixture.CreateAsync();
+            var fileId = await fixture.SeedCatalogueArtifactAsync("Board canvas");
+            var current = await fixture.Workspace.Provider.GetForOriginalStoreAsync(
+                fixture.Workspace.Configuration.StoreId, fileId, default);
+            Assert.True(current.IsSuccess);
+            var artifact = await fixture.Workspace.Provider.GetArtifactAsync(fileId);
+            Assert.True(artifact.IsSuccess);
+
+            using var process = new CancellationTokenSource();
+            var owner = new CanvasHostSurface(fixture.Services, process.Token, null);
+            Window? window = null;
+            try
+            {
+                var selection = await CanvasEmbeddedArtifactChoiceSession.OpenAsync(
+                    owner, CanvasEmbeddedArtifactChoiceMode.SelectExisting, process.Token);
+                var shownWindow = new Window { Content = selection.View, Width = 1200, Height = 800 };
+                window = shownWindow;
+                shownWindow.Show();
+                await UntilAsync(() => Find(shownWindow, "canvas-launch").IsEffectivelyVisible);
+                Assert.False(Find(shownWindow, "canvas-create").IsEffectivelyVisible);
+                var choose = Assert.Single(Cards(shownWindow), button => button.Content is string text && text == "Select this Canvas");
+                Click(choose);
+                var target = await selection.Choice;
+                var selectedTarget = Assert.IsType<CanvasEmbeddedArtifactTarget>(target);
+                Assert.Equal(Guid.Parse(artifact.Value!.ArtifactId), selectedTarget.ArtifactId);
+                await owner.LatestOriginalCommand!;
+                await selection.RevalidateAsync(selectedTarget);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => selection.RevalidateAsync(
+                    new(selectedTarget.ArtifactId, Guid.NewGuid())));
+            }
+            finally
+            {
+                await owner.CloseAndDrainAsync();
+                window?.Close();
+            }
+
+            var createOwner = new CanvasHostSurface(fixture.Services, process.Token, null);
+            Window? createWindow = null;
+            try
+            {
+                var create = await CanvasEmbeddedArtifactChoiceSession.OpenAsync(
+                    createOwner, CanvasEmbeddedArtifactChoiceMode.CreateNew, process.Token);
+                var shownCreateWindow = new Window { Content = create.View, Width = 1200, Height = 800 };
+                createWindow = shownCreateWindow;
+                shownCreateWindow.Show();
+                await UntilAsync(() => Find(shownCreateWindow, "canvas-launch").IsEffectivelyVisible);
+                Assert.True(Find(shownCreateWindow, "canvas-create").IsEffectivelyVisible);
+                Assert.False(Find(shownCreateWindow, "canvas-launch-cards").IsEffectivelyVisible);
+            }
+            finally
+            {
+                await createOwner.CloseAndDrainAsync();
+                createWindow?.Close();
+            }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Actual_authored_scene_changes_view_only_on_reported_publication_and_keeps_pending_or_failed_entry_at_start()
     {
         // This exercises the real embedded scene and native controls through a scripted typed
@@ -118,9 +182,9 @@ public sealed class CanvasHostLaunchTests
             using var stream = typeof(CanvasHostWindow).Assembly.GetManifestResourceStream("HavenOS.Apps.Canvas.UI.CanvasHost.cui")!;
             using var reader = new StreamReader(stream);
             var model = new CuiViewModel();
-            foreach (var key in new[] { "CanResume", "CanReturnStart", "CanOpen", "CanWrite", "CanSearch", "CanNavigate", "HasRetainedCanvas", "HasNoDocuments" })
+            foreach (var key in new[] { "CanResume", "CanReturnStart", "CanOpen", "CanWrite", "CanCreate", "CanBrowse", "CanSelect", "CanSearch", "CanNavigate", "HasRetainedCanvas", "HasNoDocuments", "IsStandalone" })
                 model.Set(key, true);
-            foreach (var key in new[] { "HasNoRetainedCanvas", "HasPendingRequest", "HasMoreDocuments", "CanPage", "CanFinish", "CanSetup", "CanReviewWorkspace" })
+            foreach (var key in new[] { "HasNoRetainedCanvas", "HasPendingRequest", "HasMoreDocuments", "CanPage", "CanFinish", "CanSetup", "CanReviewWorkspace", "IsEmbeddedChooser" })
                 model.Set(key, false);
             model.Set("Canvases", Array.Empty<object>());
             model.Set("OpenedName", "Revision canvas");
@@ -216,6 +280,7 @@ public sealed class CanvasHostLaunchTests
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "canvas-launch-" + Guid.NewGuid().ToString("N"));
         private ServiceProvider _services = null!;
+        internal IServiceProvider Services => _services;
         private CanvasHostWindow? _window;
         private readonly List<Exception> _expectedFailures = [];
         private bool _expectedCloseRefusal;

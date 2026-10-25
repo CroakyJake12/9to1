@@ -258,6 +258,15 @@ public sealed partial class CanvasHostSurface : ContentControl
             variables["ShowWorkspace"] = showWorkspace with { Value = "True" };
             document = document with { Variables = variables };
         }
+        else if (_embeddedChooser)
+        {
+            var variables = new Dictionary<string, CuiVariableDeclaration>(document.Variables, StringComparer.Ordinal);
+            if (!variables.TryGetValue("ShowStart", out var showStart) || !variables.TryGetValue("ShowWorkspace", out var showWorkspace))
+                throw new InvalidDataException("The Canvas host CUI has no embedded chooser presentation state.");
+            variables["ShowStart"] = showStart with { Value = "True" };
+            variables["ShowWorkspace"] = showWorkspace with { Value = "False" };
+            document = document with { Variables = variables };
+        }
         _sceneInitialization = Original(() => _shell.ShowAsync(new("canvas", "Canvas", "Canvas", document, _model, new Actions(this), new HostReadiness(this))
         { ThemePreference = _themePreference, IsPublicationCurrent = () => !_closed && !_lifetime.IsCancellationRequested }, ct));
         await _originalWork.ObserveOriginalAsync(_sceneInitialization);
@@ -336,24 +345,37 @@ public sealed partial class CanvasHostSurface : ContentControl
         var retained = HasRetainedCanvas();
         _model.Set("HasRetainedCanvas", retained);
         _model.Set("HasNoRetainedCanvas", !retained);
-        var standalone = _embeddedTarget is null;
+        var standalone = _embeddedTarget is null && !_embeddedChooser;
+        var chooser = _embeddedChooser;
+        var canBrowse = standalone || chooser &&
+            (_embeddedChoiceMode is CanvasEmbeddedArtifactChoiceMode.SelectExisting or CanvasEmbeddedArtifactChoiceMode.SelectOrCreate);
+        _model.Set("IsStandalone", standalone);
+        _model.Set("IsEmbeddedChooser", chooser);
         _model.Set("CanReturnStart", standalone && idle && noPending);
         _model.Set("CanResume", idle && noPending && retained);
         _model.Set("OpenedName", _opened?.Artifact.DisplayName ?? "Canvas");
         _model.Set("HasPendingRequest", !noPending || _requestUncertain);
-        _model.Set("CanSearch", standalone && idle && noPending);
+        _model.Set("CanBrowse", canBrowse && idle && noPending);
+        _model.Set("CanSearch", canBrowse && idle && noPending);
         _model.Set("HasNoDocuments", _documents.Length == 0);
         _model.Set("HasMoreDocuments", _nextPage is not null);
         _launchRows = _documents.Select(item => new CanvasLaunchRow(item)).ToArray();
         _model.Set("Canvases", _launchRows);
-        _model.Set("CanNavigate", standalone && idle && noPending);
-        _model.Set("CanSetup", standalone && idle && _ready && _configuration is null && noPending);
-        _model.Set("CanWrite", standalone && idle && WriteAvailable() && noPending);
+        _model.Set("CanNavigate", canBrowse && idle && noPending);
+        _model.Set("CanSetup", (standalone || chooser) && idle && _ready && _configuration is null && noPending);
+        var choiceAllowsCreate = !chooser ||
+            (_embeddedChoiceMode is CanvasEmbeddedArtifactChoiceMode.CreateNew or CanvasEmbeddedArtifactChoiceMode.SelectOrCreate);
+        var choiceAllowsSelect = !chooser ||
+            (_embeddedChoiceMode is CanvasEmbeddedArtifactChoiceMode.SelectExisting or CanvasEmbeddedArtifactChoiceMode.SelectOrCreate);
+        var choicePending = !_embeddedChoice.Task.IsCompleted;
+        _model.Set("CanWrite", (standalone || chooser) && choiceAllowsCreate && (!chooser || choicePending) && idle && WriteAvailable() && noPending);
+        _model.Set("CanCreate", (standalone || chooser) && choiceAllowsCreate && (!chooser || choicePending) && idle && WriteAvailable() && noPending);
         _model.Set("CanFinish", idle && !noPending);
-        _model.Set("CanReviewWorkspace", standalone && idle && _ready && _workspace is null && _configuration is not null && noPending);
+        _model.Set("CanReviewWorkspace", (standalone || chooser) && idle && _ready && _workspace is null && _configuration is not null && noPending);
         _model.Set("CanPrevious", idle && _selected > 0); _model.Set("CanNext", idle && _selected + 1 < _documents.Length);
         _model.Set("CanOpen", standalone && idle && _documents.Length > 0 && noPending);
-        _model.Set("CanPage", standalone && idle && _nextPage is not null && noPending);
+        _model.Set("CanSelect", chooser && choiceAllowsSelect && choicePending && idle && _documents.Length > 0 && noPending);
+        _model.Set("CanPage", canBrowse && idle && _nextPage is not null && noPending);
         _model.Set("SelectedName", _documents.Length == 0 ? "No document selected" : _documents[_selected].Name);
     }
     private void SetStatus(string message) => Original(() => { _model.Set("Status", message); return true; });
@@ -389,7 +411,9 @@ public sealed partial class CanvasHostSurface : ContentControl
                 throw new InvalidOperationException("This Canvas revision changed; reopen it.");
         });
         var strokeOwner = _stroke!;
-        var allowEmbeddedMutation = _embeddedTarget is null || _embeddedMutationsAllowed;
+        var allowEmbeddedMutation = _embeddedChooser
+            ? false
+            : _embeddedTarget is null || _embeddedMutationsAllowed;
         CanvasNativeInkContext? ink = allowEmbeddedMutation
             ? new(fileId, opened.CasRevisionId, opened.Artifact.ArtifactId, opened.Artifact.RevisionId,
                 () => WriteAvailable() && _pendingRequest is null && _pendingAudit is null && _pendingBeginAudit is null && !_requestUncertain,
@@ -595,9 +619,9 @@ public sealed partial class CanvasHostSurface : ContentControl
     private async Task DispatchOriginalAsync(string action, object? parameter, CancellationToken ct, NoEffectReadProof? proof)
     {
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-        if (_busy || _closed || parameter is not null && action != "canvas.host.openItem")
+        if (_busy || _closed || parameter is not null && action is not ("canvas.host.openItem" or "canvas.host.selectItem"))
             throw new InvalidOperationException("This Canvas action is unavailable.");
-        var startOnly = action is "canvas.host.openItem" or "canvas.host.open" or "canvas.host.create" or
+        var startOnly = action is "canvas.host.openItem" or "canvas.host.selectItem" or "canvas.host.open" or "canvas.host.create" or
             "canvas.host.search" or "canvas.host.page" or "canvas.host.previous" or "canvas.host.next" or
             "canvas.host.setup" or "canvas.host.reviewOwnership";
         if (startOnly && _launchSurface?.IsEffectivelyVisible != true ||
@@ -607,9 +631,22 @@ public sealed partial class CanvasHostSurface : ContentControl
         // CUI passes the actual row from this current Files listing. A caller
         // cannot turn an arbitrary path, ID or stale row into an open command.
         var selectedRow = parameter as CanvasLaunchRow;
-        if (action == "canvas.host.openItem" && (selectedRow is null ||
+        if ((action is "canvas.host.openItem" or "canvas.host.selectItem") && (selectedRow is null ||
             !_launchRows.Any(row => ReferenceEquals(row, selectedRow))))
             throw new InvalidOperationException("Choose a Canvas from the current Files listing.");
+        if (action == "canvas.host.selectItem" && !_embeddedChooser)
+            throw new InvalidOperationException("Canvas selection is available only in the owning embedded chooser.");
+        if (_embeddedChooser && action == "canvas.host.selectItem" &&
+            _embeddedChoiceMode == CanvasEmbeddedArtifactChoiceMode.CreateNew)
+            throw new InvalidOperationException("This embedded Canvas chooser is only accepting a new Canvas creation.");
+        if (_embeddedChooser && action == "canvas.host.openItem")
+            throw new InvalidOperationException("An embedded Canvas chooser cannot open a pre-existing document for editing.");
+        if (_embeddedChooser && action == "canvas.host.create" &&
+            _embeddedChoiceMode == CanvasEmbeddedArtifactChoiceMode.SelectExisting)
+            throw new InvalidOperationException("This embedded Canvas chooser is only accepting an existing Canvas selection.");
+        if (_embeddedChooser && (action is "canvas.host.create" or "canvas.host.selectItem") && _embeddedChoice.Task.IsCompleted)
+            throw new InvalidOperationException("This embedded Canvas choice has already been completed or cancelled.");
+        CanvasEmbeddedArtifactTarget? completedEmbeddedChoice = null;
         _busy = true; RefreshBindings();
         try
         {
@@ -671,6 +708,8 @@ public sealed partial class CanvasHostSurface : ContentControl
                 finally { _pendingDisposable?.Dispose(); _pendingDisposable = null; }
                 await FinishAuditAsync(CancellationToken.None);
                 await OpenAsync(committed.FileId, committed.Opened, ct);
+                if (_embeddedChooser)
+                    completedEmbeddedChoice = PrepareEmbeddedCreationChoice(committed.Opened, committed.FileId);
             }
             else if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain) throw new InvalidOperationException("Finish the captured Home request first.");
             else if (action == "canvas.host.start")
@@ -698,6 +737,11 @@ public sealed partial class CanvasHostSurface : ContentControl
             else if (action == "canvas.host.open" && _documents.Length > 0) await OpenAsync(_documents[_selected].Id, await Original(() => _files!.OpenAsync(_documents[_selected].Id, ct)), ct, proof);
             else if (action == "canvas.host.openItem" && selectedRow is not null)
                 await OpenAsync(selectedRow.Item.Id, await Original(() => _files!.OpenAsync(selectedRow.Item.Id, ct)), ct, proof);
+            else if (action == "canvas.host.selectItem" && selectedRow is not null)
+            {
+                completedEmbeddedChoice = await SelectEmbeddedArtifactAsync(selectedRow, ct);
+                SetStatus("The current Canvas reference is ready for the containing Board.");
+            }
             else if (action == "canvas.host.create" && WriteAvailable())
             {
                 if (!_model.TryGetValue("NewName", out var value) || string.IsNullOrWhiteSpace(value?.ToString()))
@@ -746,6 +790,7 @@ public sealed partial class CanvasHostSurface : ContentControl
         }
         catch (Exception error) { SetStatus(error.Message); throw; }
         finally { _busy = false; RefreshBindings(); }
+        if (completedEmbeddedChoice is not null) CompleteEmbeddedChoice(completedEmbeddedChoice);
     }
     private sealed class Actions(CanvasHostSurface owner) : ICuiResultReportingDispatcher
     {

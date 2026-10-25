@@ -35,6 +35,15 @@ public sealed class CanvasEmbeddedArtifactTests
             var unrelated = await bridge.CreateAsync(CanvasArtifact.Create("Unrelated canvas"));
             access.ReadScopes.Clear();
 
+            var storeId = (await provider.GetStoreEvidenceAsync()).StoreId;
+            var metadata = await bridge.ResolveEmbeddedArtifactMetadataAsync(selected.FileId, storeId, selected.Revision.Id);
+            Assert.Equal(artifact.ArtifactId, metadata.ArtifactId);
+            Assert.Equal(artifact.RevisionId, metadata.ArtifactRevisionId);
+            Assert.Empty(access.ReadScopes);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.ResolveEmbeddedArtifactMetadataAsync(
+                selected.FileId, storeId, new FilesRevisionId(Guid.NewGuid())));
+            Assert.Empty(access.ReadScopes);
+
             var opened = await bridge.OpenEmbeddedArtifactAsync(artifact.ArtifactId, artifact.RevisionId);
             Assert.Equal(selected.FileId, opened.FileId);
             Assert.Equal(artifact.ArtifactId, opened.Opened.Artifact.ArtifactId);
@@ -54,6 +63,9 @@ public sealed class CanvasEmbeddedArtifactTests
             var updated = editor.GetArtifactSnapshot();
             var saved = await bridge.SaveAsync(opened.FileId, updated, opened.Opened.CasRevisionId,
                 opened.Opened.StoreId, actor.Actor);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.ResolveEmbeddedArtifactMetadataAsync(
+                selected.FileId, storeId, selected.Revision.Id));
+            Assert.Empty(access.ReadScopes);
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 bridge.OpenEmbeddedArtifactAsync(artifact.ArtifactId, artifact.RevisionId));
             var reopened = await bridge.OpenEmbeddedArtifactAsync(artifact.ArtifactId, updated.RevisionId);
