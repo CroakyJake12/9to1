@@ -28,13 +28,13 @@
             <Button Type="Menu Item" ID="RedoButton" IconSource="icon:redo" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" Tooltip="Redo" />
           </Container>
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" Row="0" CellGap="6" VerticalAlignment="Center">
-            <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="8" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 0" CornerRadius="10">
+            <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="6" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="8 0" CornerRadius="10">
               <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-              <Input ID="EditViewToggle" Type="Switch" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
+              <Input ID="EditViewToggle" Type="Switch" Padding="0" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
             </Container>
-            <Container Type="Horizontal Stack" ID="LayoutModeToggleGroup" CellGap="8" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="12 0" CornerRadius="10" AccessibleName="Page layout mode">
+            <Container Type="Horizontal Stack" ID="LayoutModeToggleGroup" CellGap="6" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="8 0" CornerRadius="10" AccessibleName="Page layout mode">
               <Text ID="LayoutModeLabel" Text="{Binding LayoutModeLabel}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-              <Input ID="LayoutModeToggle" Type="Switch" Checked="{Binding IsFreeLayout, mode=TwoWay}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="{Binding LayoutModeAccessibleName}" />
+              <Input ID="LayoutModeToggle" Type="Switch" Padding="0" Checked="{Binding IsFreeLayout, mode=TwoWay}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="{Binding LayoutModeAccessibleName}" />
             </Container>
             <Container Type="Menu" ID="MoreMenu">
               <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" AccessibleName="More board actions" Tooltip="More">
@@ -53,7 +53,7 @@
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="icon:boards" Width="20" Height="20" VerticalAlignment="Center" AccessibleName="Current Board" />
             <Container Type="Vertical Stack" ID="BoardIdentity" Column="1" CellGap="0" VerticalAlignment="Center">
-              <Input id="BoardTitleBox" accessible-name="Board title" font-size="15" font-weight="Bold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
+              <Input id="BoardTitleBox" width="160" max-width="160" accessible-name="Board title" font-size="15" font-weight="Bold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
               <Text ID="SaveState" Text="{Binding SaveStateText, fallback=Saved}" FontSize="11" VerticalAlignment="Center" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
             <Container Type="Menu" ID="BoardSwitcherMenu" Column="2">
@@ -73,7 +73,7 @@
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
           <Container Type="Menu" Row="3" Margin="0 8 0 0">
-            <Button Type="Menu Item" Content="+ Add" Interactive="{Binding CanEdit}" FontWeight="Bold" AccessibleName="Add page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiAccentBrush}" Foreground="{Resource HavenAccentInkBrush}" BorderWidth="0" CornerRadius="18">
+            <Button Type="Menu Item" Content="+ Add" Width="168" HorizontalAlignment="Center" Interactive="{Binding CanEdit}" FontWeight="Bold" AccessibleName="Add page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiAccentBrush}" Foreground="{Resource HavenAccentInkBrush}" BorderWidth="0" CornerRadius="18">
               <Button Type="Menu Item" Content="New page in this section" Action="AddPage" AccessibleName="Create a page in the current section" />
               <Button Type="Menu Item" Content="New section" Action="AddSection" AccessibleName="Create a new section in this Board" />
               <Button Type="Menu Item" Content="Attach existing Write document…" Action="AddWritePage" Interactive="{Binding CanAddWritePage}" AccessibleName="Attach an existing Write document as a page" />

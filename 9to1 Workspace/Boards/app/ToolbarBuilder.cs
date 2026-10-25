@@ -9,6 +9,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using CakeOS.Cui.Runtime;
+using System.Globalization;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -140,41 +141,93 @@ public static class ToolbarBuilder
 
     private static Control FontCombo(BoardsViewModel vm, RichBoardBlock? selected)
     {
-        var combo = new ComboBox { Width = 108, Margin = new Thickness(4, 0) };
+        var combo = new ComboBox
+        {
+            Width = 132,
+            IsEditable = true,
+            FontSize = 12,
+            FontWeight = FontWeight.SemiBold,
+            Margin = new Thickness(4, 0),
+        };
         ToolTip.SetTip(combo, "Font family");
         Avalonia.Automation.AutomationProperties.SetName(combo, "Font family");
-        combo.ItemsSource = FontFamilies.Select(f => new ComboBoxItem { Content = f }).ToList();
+        combo.ItemsSource = FontFamilies;
         var current = string.IsNullOrEmpty(selected?.FontFamily) ? "Default" : selected!.FontFamily;
-        combo.SelectedItem = combo.ItemsSource.Cast<ComboBoxItem>()
-            .FirstOrDefault(i => (string?)i.Content == current);
+        var targetBlock = vm.SelectedBlockId;
+        combo.SelectedItem = FontFamilies.FirstOrDefault(f => string.Equals(f, current, StringComparison.Ordinal));
+        combo.Text = current;
+        void ApplyTypedFont()
+        {
+            if (!string.Equals(vm.SelectedBlockId, targetBlock, StringComparison.Ordinal)) return;
+            var family = (combo.Text ?? string.Empty).Trim();
+            if (family.Length > 100 || family.Any(char.IsControl))
+            {
+                combo.Text = string.IsNullOrWhiteSpace(selected?.FontFamily) ? "Default" : selected!.FontFamily;
+                return;
+            }
+            vm.SetSelectedFontFamily(string.Equals(family, "Default", StringComparison.OrdinalIgnoreCase)
+                ? string.Empty : family);
+        }
         combo.SelectionChanged += (_, _) =>
         {
-            if (combo.SelectedItem is ComboBoxItem item && (string?)item.Content is string family)
+            if (combo.SelectedItem is string family && string.Equals(vm.SelectedBlockId, targetBlock, StringComparison.Ordinal))
                 vm.SetSelectedFontFamily(family == "Default" ? string.Empty : family);
         };
+        combo.KeyDown += (_, args) =>
+        {
+            if (args.Key != Avalonia.Input.Key.Enter) return;
+            ApplyTypedFont();
+            args.Handled = true;
+        };
+        combo.LostFocus += (_, _) => ApplyTypedFont();
         return combo;
     }
 
     private static Control SizeCombo(BoardsViewModel vm, RichBoardBlock? selected)
     {
-        var combo = new ComboBox { Width = 72, Margin = new Thickness(0, 0, 4, 0) };
+        var combo = new ComboBox
+        {
+            Width = 76,
+            IsEditable = true,
+            FontSize = 12,
+            FontWeight = FontWeight.SemiBold,
+            Margin = new Thickness(0, 0, 4, 0),
+        };
         ToolTip.SetTip(combo, "Font size");
         Avalonia.Automation.AutomationProperties.SetName(combo, "Font size");
-        combo.ItemsSource = FontSizes.Select(s => new ComboBoxItem { Content = s.ToString("0") }).ToList();
+        combo.ItemsSource = FontSizes.Select(s => s.ToString("0", CultureInfo.InvariantCulture)).ToArray();
         var current = selected?.FontSize > 0 ? selected!.FontSize : 14;
-        ComboBoxItem? best = null;
-        foreach (var item in combo.ItemsSource.Cast<ComboBoxItem>())
+        var currentText = current.ToString("0.##", CultureInfo.InvariantCulture);
+        var targetBlock = vm.SelectedBlockId;
+        combo.SelectedItem = combo.ItemsSource.Cast<string>()
+            .FirstOrDefault(value => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var size)
+                                     && Math.Abs(size - current) < 0.01);
+        combo.Text = currentText;
+        void ApplyTypedSize()
         {
-            if (double.TryParse((string?)item.Content, out var size) && size <= current)
-                best = item;
+            if (!string.Equals(vm.SelectedBlockId, targetBlock, StringComparison.Ordinal)) return;
+            if (double.TryParse(combo.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var size) &&
+                double.IsFinite(size) && size is >= 8 and <= 96)
+            {
+                vm.SetSelectedFontSize(size);
+                return;
+            }
+            var active = vm.FindBlock(targetBlock)?.FontSize ?? current;
+            combo.Text = (active > 0 ? active : 14).ToString("0.##", CultureInfo.InvariantCulture);
         }
-        combo.SelectedItem = best;
         combo.SelectionChanged += (_, _) =>
         {
-            if (combo.SelectedItem is ComboBoxItem item &&
-                double.TryParse((string?)item.Content, out var size))
+            if (combo.SelectedItem is string value && string.Equals(vm.SelectedBlockId, targetBlock, StringComparison.Ordinal) &&
+                double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var size))
                 vm.SetSelectedFontSize(size);
         };
+        combo.KeyDown += (_, args) =>
+        {
+            if (args.Key != Avalonia.Input.Key.Enter) return;
+            ApplyTypedSize();
+            args.Handled = true;
+        };
+        combo.LostFocus += (_, _) => ApplyTypedSize();
         return combo;
     }
 

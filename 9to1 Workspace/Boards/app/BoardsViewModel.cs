@@ -3868,7 +3868,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public void SetSelectedFontFamily(string family)
     {
         if (!RequireEditMode()) return;
-        SelectedBlock().FontFamily = family ?? string.Empty;
+        var normalized = (family ?? string.Empty).Trim();
+        if (normalized.Length > 100 || normalized.Any(char.IsControl)) return;
+        var block = SelectedBlock();
+        if (string.Equals(block.FontFamily, normalized, StringComparison.Ordinal)) return;
+        block.FontFamily = normalized;
         PushDocumentToBindings();
         _session.MarkDirty();
         RequestRebuild();
@@ -3876,8 +3880,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetSelectedFontSize(double size)
     {
-        if (!RequireEditMode()) return;
-        SelectedBlock().FontSize = Math.Clamp(size, 8, 96);
+        if (!RequireEditMode() || !double.IsFinite(size)) return;
+        var normalized = Math.Clamp(size, 8, 96);
+        var block = SelectedBlock();
+        if (Math.Abs(block.FontSize - normalized) < 0.001) return;
+        block.FontSize = normalized;
         PushDocumentToBindings();
         _session.MarkDirty();
         RequestRebuild();

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia;
+using Avalonia.Media;
 using CakeOS.Apps.Boards.App;
 using Xunit;
 
@@ -109,5 +110,28 @@ public sealed class NavBuilderTests
         await vm.DispatchAsync("CloseSectionIconPicker", null);
         Assert.False(vm.Get("IsSectionIconPickerOpen") as bool?);
         vm.Dispose();
+    }
+
+    [Fact]
+    public async Task Navigation_page_icon_uses_the_filled_file_family()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(null);
+        var vm = new BoardsViewModel(session);
+
+        TestUiThread.Run(() =>
+        {
+            var nav = new StackPanel();
+            NavBuilder.Rebuild(nav, vm);
+            var pageRow = Assert.IsType<Border>(nav.Children.OfType<Border>().Skip(1).Single());
+            var grid = Assert.IsType<Grid>(pageRow.Child);
+            var icon = Assert.Single(grid.Children.OfType<Image>());
+            Assert.Equal("Page icon", Avalonia.Automation.AutomationProperties.GetName(icon));
+            var drawing = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(icon.Source).Drawing);
+            Assert.NotNull(drawing.Brush);
+            Assert.NotNull(drawing.Pen); // The section-family file silhouette retains its authored fold and text lines.
+        });
+
+        TestUiThread.Run(vm.Dispose);
     }
 }

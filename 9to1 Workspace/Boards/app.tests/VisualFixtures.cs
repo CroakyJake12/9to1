@@ -81,7 +81,6 @@ internal static class VisualFixtures
             table.Table.Rows[2].Cells[0].Text = "45°";
             table.Table.Rows[2].Cells[1].Text = "√2/2";
             table.Table.Rows[2].Cells[2].Text = "√2/2";
-            table.Table.BorderColor = "#FF4A6FA5";
             table.Table.BorderWidth = 1;
             table.Table.BorderStyle = HavenRichBorderStyle.Solid;
             table.Table.CornerRadius = 6;
