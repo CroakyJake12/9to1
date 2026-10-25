@@ -246,8 +246,11 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     private async Task RenderAsync()
     {
         if (_disposed || _surfaceLifecycle?.IsReady != true) return;
-        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "BlocksHost") is not { } blocks) return;
-        await BlockRenderer.RebuildAsync(blocks, ViewModel);
+        // The authored page has mutually exclusive native and embedded content
+        // hosts. BlocksHost is absent while Write/Canvas is selected, so it
+        // cannot guard rendering of the embedded owner surface.
+        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "BlocksHost") is { } blocks)
+            await BlockRenderer.RebuildAsync(blocks, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "NavHost") is { } nav)
             NavBuilder.Rebuild(nav, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
