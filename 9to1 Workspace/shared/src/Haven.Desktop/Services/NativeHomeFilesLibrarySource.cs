@@ -1,5 +1,8 @@
 using System.Runtime.CompilerServices;
+using CakeOS.Cui.Themes;
 using Haven.Application;
+using Haven.Browser;
+using Haven.Desktop.Views.Pages.Home;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home;
@@ -14,9 +17,19 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
 {
     // Native target metadata only, not a page, content read, permission or navigation grant.
     internal sealed record OriginalOpenTarget(Guid StoreId, Guid FolderId, Guid? FileId = null, Guid? RevisionId = null);
+    internal sealed record NativeHomeFilesBoardCreateResult(
+        FilesOriginalBoardDocumentCreateSettlementState State,
+        FilesOriginalBoardDocumentCreateAttempt? SettlementAttempt,
+        FilesOriginalBoardDocumentCreateReceipt? Receipt,
+        HomeDeepLink? OpenLink,
+        AppContentAddress? PreparedAddress,
+        IReadOnlyList<Exception> CleanupFailures,
+        string? OpenFailureCode = null,
+        string? OpenFailureMessage = null);
     private sealed record Entry(HomeArtifactReference View, FilesNativeBrowserPage Page, HostedItemMetadata Row);
     private sealed record Operation(Task Task, CancellationToken Token);
     private readonly FilesNativeBrowserService _browser;
+    private readonly FilesNativeBrowserService.BoardDocumentCreateOwner? _boardCreate;
     private readonly NativeHomeFilesBoardReadSource? _boardRead;
     private readonly NativeHomeFilesBoardWriteSource? _boardWrite;
     private readonly Func<HomePermissionAuthorization, CancellationToken, Task>? _boardWriteReview;
@@ -41,18 +54,30 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         Action<Action> parent, Func<bool> alive, NativeHomeFilesBoardReadSource? boardRead = null,
         NativeHomeFilesBoardWriteSource? boardWrite = null,
         Func<HomePermissionAuthorization, CancellationToken, Task>? boardWriteReview = null,
-        Action<Action>? boardWriteScope = null, Action<Task>? boardWriteRetain = null)
-    { _browser = browser; _boardRead = boardRead; _boardWrite = boardWrite; _actor = actor; _home = home;
+        Action<Action>? boardWriteScope = null, Action<Task>? boardWriteRetain = null,
+        FilesNativeBrowserService.BoardDocumentCreateOwner? boardCreate = null)
+    { _browser = browser; _boardCreate = boardCreate; _boardRead = boardRead; _boardWrite = boardWrite; _actor = actor; _home = home;
         _ownerCurrent = ownerCurrent; _parent = parent; _alive = alive; _boardWriteReview = boardWriteReview;
         _boardWriteScope = boardWriteScope; _boardWriteRetain = boardWriteRetain; }
     internal bool HasWritableBoardSource => _boardWrite is not null && _boardWriteReview is not null &&
         _boardWriteScope is not null && _boardWriteRetain is not null;
+    internal bool HasBoardCreateSource => _boardCreate is not null && _boardRead is not null &&
+        _boardWrite is not null && _boardWriteReview is not null && _boardWriteScope is not null && _boardWriteRetain is not null;
     public string? AvailabilityNotice => _boardRead is null || !_browser.HasOriginalBoardDocumentReadOwner
         ? "Files shows folder and supported raw text/code references from its current metadata. Text preview requires an existing local content anchor."
         : HasWritableBoardSource
             ? "Files shows current folders, supported text/code references and .9to1board documents. Boards opens the exact selected Files revision; saving requests fresh Home review and creates a new immutable revision."
             : "Files shows current folders, supported text/code references and .9to1board documents. Board documents open read-only from their exact selected Files revision; text preview requires an existing local content anchor.";
     public HomeLibraryService CreateService(IHomeDeepLinkRouter router) => new(this, this, router, new HomeCoreLibraryPreferences(_home));
+    internal HomeLibraryDestinationPage CreateBoardFolderPickerPage(Func<CancellationToken, Task> admit,
+        CuiThemePreferenceContext? theme = null)
+    {
+        if (!HasBoardCreateSource) throw new NotSupportedException("The original Home Files board-create route is unavailable.");
+        var page = new HomeLibraryDestinationPage(router => CreateService(router), admit,
+            (_, _) => false, this, theme);
+        page.SetFolderSelectionMode(SelectBoardCreateFolderAsync);
+        return page;
+    }
     public Task RevalidateAsync(CancellationToken token) => RunAsync(async (source, caller) =>
     { await RequireOwnerAsync(source, caller).ConfigureAwait(false); return true; }, token);
     public void DemandExternalOriginalJoin() => CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
@@ -242,8 +267,269 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
             }
         }, token);
 
+    /// <summary>Accepts only the current Home Library link for the configured Boards folder.
+    /// The returned link is metadata, not a folder grant; create rechecks the exact private row.</summary>
+    internal Task<HomeDeepLink?> SelectBoardCreateFolderAsync(HomeDeepLink link, CancellationToken token) =>
+        RunAsync<HomeDeepLink?>(async (source, caller) =>
+        {
+            if (!HasBoardCreateSource || link.OwnerApp != "files" || link.Action != "open" ||
+                link.TargetRouteId != "files.folder" || !_entries.TryGetValue(link.ObjectId, out var entry) ||
+                !ReferenceEquals(entry.View.OpenLink, link) || entry.Row.Kind != HostedItemKind.Folder ||
+                !await IsCurrentAsync(entry, source, caller).ConfigureAwait(false)) return null;
+            var canCreate = await source.AwaitAsync(source.Invoke(() => _boardCreate!.CanCreateInFolderWithinSourceAsync(
+                entry.Page, entry.Row, _actor, _alive, Own, Retain, caller))).ConfigureAwait(false);
+            await RequireOwnerAsync(source, caller).ConfigureAwait(false);
+            return canCreate ? link : null;
+        }, token);
+
+    /// <summary>Creates in the exact selected configured Boards root. A terminal Files receipt
+    /// is returned even when later read/address preparation fails, so Home can retry opening the
+    /// same created artifact without repeating the creation effect.</summary>
+    internal Task<NativeHomeFilesBoardCreateResult> CreateInSelectedFolderAsync(HomeDeepLink selectedFolder,
+        string displayName, ReadOnlyMemory<byte> validatedDocument, CancellationToken token) =>
+        RunAsync(async (source, caller) =>
+        {
+            if (!HasBoardCreateSource || selectedFolder.OwnerApp != "files" || selectedFolder.Action != "open" ||
+                selectedFolder.TargetRouteId != "files.folder" || !_entries.TryGetValue(selectedFolder.ObjectId, out var entry) ||
+                !ReferenceEquals(entry.View.OpenLink, selectedFolder) || entry.Row.Kind != HostedItemKind.Folder ||
+                !await IsCurrentAsync(entry, source, caller).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("Choose the current configured Boards folder from this Home Library session.");
+
+            var createOwner = _boardCreate!;
+            var eligible = await source.AwaitAsync(source.Invoke(() => createOwner.CanCreateInFolderWithinSourceAsync(
+                entry.Page, entry.Row, _actor, _alive, Own, Retain, caller))).ConfigureAwait(false);
+            await RequireOwnerAsync(source, caller).ConfigureAwait(false);
+            if (!eligible)
+                throw Refuse("BoardFolderUnavailable", "The selected folder is not the current configured Boards folder.");
+
+            // The Files owner performs its own exact row/store/revision check and separately
+            // obtains files.board.create review/claim before any durable create effect.
+            var attempt = default(FilesOriginalBoardDocumentCreateAttempt?);
+            FilesOriginalBoardDocumentCreateSettlementResult settlement;
+            try
+            {
+                var createTask = StartSettlementAwareTask(source, retain => createOwner.CreateBoardDocumentWithinSourceAsync(
+                    entry.Page, entry.Row, _actor, displayName, validatedDocument, _alive, _boardWriteReview!,
+                    "home-library-board-create:" + entry.Row.Id.Value.ToString("D"), Own, retain, caller));
+                var receipt = await createTask.ConfigureAwait(false);
+                settlement = new(FilesOriginalBoardDocumentCreateSettlementState.Committed, receipt, []);
+            }
+            catch (Exception error) when (FindCreateSettlementFailure(error) is not null)
+            {
+                var cause = FindCreateSettlementFailure(error)!;
+                attempt = cause.Attempt;
+                settlement = new(cause.State, cause.Receipt, cause.CleanupFailures);
+                if (cause.State == FilesOriginalBoardDocumentCreateSettlementState.NotCreated) throw;
+                if (cause.State == FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending)
+                {
+                    try
+                    {
+                        var retryTask = StartSettlementAwareTask(source, retain => createOwner.RetryCreateSettlementWithinSourceAsync(
+                            attempt, Own, retain, caller), cancellationIsPending: true);
+                        settlement = await retryTask.ConfigureAwait(false);
+                    }
+                    catch (Exception retryError) when (FindCreateSettlementFailure(retryError) is { } retryFailure)
+                    {
+                        settlement = new(retryFailure.State, retryFailure.Receipt, retryFailure.CleanupFailures);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Preserve the owner-issued attempt when the observer cancels while
+                        // terminal Home audit is still pending; only an audit-only retry may resume it.
+                        settlement = new(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending,
+                            null, cause.CleanupFailures);
+                    }
+                }
+            }
+            if (settlement.Receipt is { } selectedReceipt &&
+                (selectedReceipt.FilesStoreId != entry.Page.StoreID || selectedReceipt.ParentFolderId != entry.Row.Id.Value))
+                throw new InvalidDataException("The original Files create settlement names another store or selected parent folder.");
+            return await FinishCreatedBoardWithinSourceAsync(source, createOwner, settlement, attempt,
+                CancellationToken.None).ConfigureAwait(false);
+        }, token);
+
+    internal Task<NativeHomeFilesBoardCreateResult> RetryCreateSettlementAndPrepareAsync(
+        FilesOriginalBoardDocumentCreateAttempt sameAttempt, CancellationToken token) =>
+        RunAsync(async (source, caller) =>
+        {
+            var owner = _boardCreate ?? throw new NotSupportedException("The original Files board-create owner is unavailable.");
+            FilesOriginalBoardDocumentCreateSettlementResult settlement;
+            try
+            {
+                var retryTask = StartSettlementAwareTask(source, retain => owner.RetryCreateSettlementWithinSourceAsync(
+                    sameAttempt, Own, retain, caller), cancellationIsPending: true);
+                settlement = await retryTask.ConfigureAwait(false);
+            }
+            catch (Exception retryError) when (FindCreateSettlementFailure(retryError) is { } retryFailure)
+            { settlement = new(retryFailure.State, retryFailure.Receipt, retryFailure.CleanupFailures); }
+            catch (OperationCanceledException)
+            { settlement = new(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, null, []); }
+            return await FinishCreatedBoardWithinSourceAsync(source, owner, settlement, sameAttempt, caller).ConfigureAwait(false);
+        }, token);
+
+    private async Task<NativeHomeFilesBoardCreateResult> FinishCreatedBoardWithinSourceAsync(
+        CloudflareOriginalTaskLedger source, FilesNativeBrowserService.BoardDocumentCreateOwner owner,
+        FilesOriginalBoardDocumentCreateSettlementResult settlement,
+        FilesOriginalBoardDocumentCreateAttempt? attempt, CancellationToken token)
+    {
+        var receipt = settlement.Receipt;
+        if (receipt is null || settlement.State is FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending or
+            FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown or
+            FilesOriginalBoardDocumentCreateSettlementState.NotCreated)
+            return new(settlement.State, attempt, null, null, null, settlement.CleanupFailures);
+        if (!owner.IsIssuedCreateReceipt(receipt) || receipt.OriginalActor != _actor ||
+            receipt.FilesStoreId == Guid.Empty || receipt.ParentFolderId == Guid.Empty ||
+            receipt.DocumentId == Guid.Empty || receipt.FileId == Guid.Empty || receipt.FilesCasRevisionId == Guid.Empty ||
+            receipt.FileRevisionId == Guid.Empty || string.IsNullOrWhiteSpace(receipt.OwningAppRevisionId))
+            throw new InvalidDataException("The original Files board-create receipt is not issued by this Home Files owner.");
+
+        var link = new HomeDeepLink(HomeRoute.Library, "files",
+            receipt.FilesStoreId.ToString("D") + "/" + receipt.FileId.ToString("D"), "open", "files.board");
+        try
+        {
+            var address = await PrepareCreatedBoardOpenWithinSourceAsync(source, owner, receipt, token).ConfigureAwait(false);
+            return new(settlement.State, attempt, receipt, link, address, settlement.CleanupFailures);
+        }
+        catch (Exception openFailure)
+        {
+            // Creation is terminal. Preserve the exact receipt/attempt for retry-open; never
+            // report a precommit failure or retry the create effect.
+            return new(settlement.State, attempt, receipt, link, null, settlement.CleanupFailures,
+                openFailure is OperationCanceledException ? "CreatedOpenCanceled" : "CreatedOpenFailed",
+                "The board was created, but its rich editor could not be opened. Retry opening this same created board.");
+        }
+    }
+
+    internal Task<AppContentAddress> PrepareCreatedBoardOpenAsync(FilesOriginalBoardDocumentCreateReceipt receipt,
+        CancellationToken token) => RunAsync(async (source, caller) =>
+        {
+            var owner = _boardCreate ?? throw new NotSupportedException("The original Files board-create owner is unavailable.");
+            if (!owner.IsIssuedCreateReceipt(receipt) || receipt.OriginalActor != _actor)
+                throw new UnauthorizedAccessException("Retry opening only the exact Files board-create receipt from this Home owner.");
+            return await PrepareCreatedBoardOpenWithinSourceAsync(source, owner, receipt, caller).ConfigureAwait(false);
+        }, token);
+
+    private async Task<AppContentAddress> PrepareCreatedBoardOpenWithinSourceAsync(CloudflareOriginalTaskLedger source,
+        FilesNativeBrowserService.BoardDocumentCreateOwner createOwner,
+        FilesOriginalBoardDocumentCreateReceipt receipt, CancellationToken token)
+    {
+        await source.AwaitAsync(source.Invoke(() => createOwner.RevalidateCreatedBoardWithinSourceAsync(
+            receipt, Own, Retain, token))).ConfigureAwait(false);
+        await RequireOwnerAsync(source, token).ConfigureAwait(false);
+
+        FilesNativeBrowserCursor? cursor = null;
+        var offsets = new HashSet<string>(StringComparer.Ordinal);
+        var pages = new List<FilesNativeBrowserPage>();
+        HostedItemMetadata? createdRow = null;
+        FilesNativeBrowserPage? createdPage = null;
+        string? storeRevision = null;
+        do
+        {
+            var page = await source.AwaitAsync(source.Invoke(() => _browser.ListOriginalHomeLibraryFolderPageWithinSourceAsync(
+                _actor, receipt.FilesStoreId, receipt.ParentFolderId, "", cursor, _alive, Own, Retain, token))).ConfigureAwait(false);
+            if (page.StoreID != receipt.FilesStoreId || page.ParentID != receipt.ParentFolderId || page.IsTrash ||
+                storeRevision is not null && page.StoreRevision != storeRevision)
+                throw new InvalidDataException("The created board's current Files parent or store changed before it could be opened.");
+            storeRevision ??= page.StoreRevision;
+            pages.Add(page);
+            foreach (var row in page.Items)
+            {
+                if (row.Id.Value != receipt.FileId) continue;
+                if (createdRow is not null)
+                    throw new InvalidDataException("The original Files folder repeated the created board identity.");
+                createdRow = row; createdPage = page;
+            }
+            cursor = page.Next;
+            if (cursor is not null && (cursor.StoreID != receipt.FilesStoreId || cursor.StoreRevision != storeRevision ||
+                cursor.ParentID != receipt.ParentFolderId || cursor.OriginalActor != _actor || cursor.IsTrash ||
+                cursor.Search != "" || !offsets.Add(cursor.Offset)))
+                throw new InvalidDataException("The created board's Files cursor changed or repeated.");
+        } while (cursor is not null && createdRow is null);
+
+        foreach (var page in pages)
+            await source.AwaitAsync(source.Invoke(() => ValidatePageAsync(page, token))).ConfigureAwait(false);
+        await source.AwaitAsync(source.Invoke(() => createOwner.RevalidateCreatedBoardWithinSourceAsync(
+            receipt, Own, Retain, token))).ConfigureAwait(false);
+        await RequireOwnerAsync(source, token).ConfigureAwait(false);
+        var row = createdRow ?? throw new FileNotFoundException("The created board is not visible in its current Files parent.");
+        var pageForRow = createdPage!;
+        if (row.Kind != HostedItemKind.File || row.ParentId?.Value != receipt.ParentFolderId ||
+            row.CurrentRevisionId?.Value.Value != receipt.FilesCasRevisionId ||
+            row.CurrentRevisionId?.Value.Value != receipt.FileRevisionId || row.SizeBytes != receipt.SizeBytes ||
+            !StringComparer.OrdinalIgnoreCase.Equals(row.ContentHash, receipt.ContentSha256) ||
+            !FilesNativeBrowserService.IsBoardDocumentCandidate(row))
+            throw new UnauthorizedAccessException("The current Files row no longer matches the exact created board receipt.");
+
+        var boardRead = _boardRead ?? throw new NotSupportedException("The original Home Files board reader is unavailable.");
+        NativeHomeFilesBoardReadLease? readLease = null;
+        Guid? preparedWrite = null;
+        var transferred = false;
+        try
+        {
+            readLease = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedAsync(pageForRow, row,
+                _alive, _ownerCurrent, Own, Retain, source, token))).ConfigureAwait(false);
+            if (!readLease.IsOpen || readLease.StoreId != receipt.FilesStoreId || readLease.ParentFolderId != receipt.ParentFolderId ||
+                readLease.FileId != receipt.FileId || readLease.RevisionId != receipt.FilesCasRevisionId)
+                throw new UnauthorizedAccessException("The Home read lease differs from the exact created Files revision.");
+            var document = HavenBoardDocumentCodec.Deserialize(readLease.Bytes);
+            if (document.DocumentId != receipt.DocumentId)
+                throw new InvalidDataException("The created board bytes do not match the Files owner's canonical document identity.");
+
+            var writer = _boardWrite ?? throw new NotSupportedException("The original Home Files board writer is unavailable.");
+            var presentReview = _boardWriteReview ?? throw new NotSupportedException("The original Home Board write review is unavailable.");
+            var originalScope = _boardWriteScope ?? throw new NotSupportedException("The original Home Board write scope is unavailable.");
+            var retain = _boardWriteRetain ?? throw new NotSupportedException("The original Home Board write task owner is unavailable.");
+            preparedWrite = writer.RegisterPrepared(pageForRow, row, readLease, _alive, presentReview,
+                "home-library-created-board:" + receipt.FileId.ToString("D"), originalScope, retain);
+            var address = BoardsBrowseAppContentAddress.ForWritableFile(receipt.FilesStoreId, receipt.ParentFolderId,
+                receipt.FileId, readLease.RevisionId, preparedWrite.Value);
+            preparedWrite = null;
+            readLease = null; // Ownership transferred into the registered Home writable lease.
+            transferred = true;
+            return address;
+        }
+        finally
+        {
+            if (!transferred && readLease is not null) await readLease.DisposeAsync().ConfigureAwait(false);
+            if (preparedWrite is { } id && _boardWrite is { } write) await write.DiscardPreparedAsync(id).ConfigureAwait(false);
+        }
+    }
+
     private Task ValidatePageAsync(FilesNativeBrowserPage page, CancellationToken token) =>
         _browser.RevalidateOriginalHomeLibraryPageWithinSourceAsync(page, _actor, _alive, Own, Retain, token);
+    private static FilesOriginalBoardDocumentCreateSettlementException? FindCreateSettlementFailure(Exception error)
+    {
+        if (error is FilesOriginalBoardDocumentCreateSettlementException settlement) return settlement;
+        if (error is AggregateException aggregate)
+        {
+            foreach (var inner in aggregate.InnerExceptions)
+                if (FindCreateSettlementFailure(inner) is { } found) return found;
+        }
+        return error.InnerException is { } cause ? FindCreateSettlementFailure(cause) : null;
+    }
+    private static Task<T> StartSettlementAwareTask<T>(CloudflareOriginalTaskLedger source,
+        Func<Action<Task>, Task<T>> start, bool cancellationIsPending = false)
+    {
+        ArgumentNullException.ThrowIfNull(source); ArgumentNullException.ThrowIfNull(start);
+        Task<T>? actual = null;
+        source.Invoke(() => { actual = start(task => source.Track(ObserveCreateSettlementAsync(task, cancellationIsPending))); return true; });
+        return actual ?? throw new InvalidOperationException("The original Files board-create owner returned no retained operation.");
+    }
+    private static async Task ObserveCreateSettlementAsync(Task actual, bool cancellationIsPending)
+    {
+        try { await actual.ConfigureAwait(false); }
+        catch (Exception error) when (FindCreateSettlementFailure(error) is not null)
+        {
+            // The caller awaits the exact task and converts only the owner's typed outcome to
+            // data. This successful wrapper preserves source custody without making a known
+            // settlement state poison the enclosing Home Library source operation.
+        }
+        catch (OperationCanceledException) when (cancellationIsPending)
+        {
+            // The exact audit attempt remains owner-retained and the caller reports pending;
+            // cancellation never causes the create effect to be replayed.
+        }
+    }
     private void DemandOwner() { if (!_alive()) throw new ObjectDisposedException(nameof(NativeHomeFilesLibrarySource)); }
     private async Task RequireOwnerAsync(CloudflareOriginalTaskLedger source, CancellationToken token)
     {
