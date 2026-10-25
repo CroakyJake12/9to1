@@ -99,7 +99,9 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.NotNull(savedMemoryScopes);
         Assert.Equal(originalMemoryScopes.ToArray(), savedMemoryScopes.ToArray());
         Assert.Equal(JsonSerializer.Serialize(original.ExamplePairs), JsonSerializer.Serialize(saved.ExamplePairs));
-        Assert.Equal(new SpaceModelPolicy("ollama:configured-model-2", ["text", "Vision"], "ollama"), saved.DraftConfiguration.ModelPolicy);
+        Assert.Equal("ollama:configured-model-2", saved.DraftConfiguration.ModelPolicy!.DefaultModelId);
+        Assert.Equal("ollama", saved.DraftConfiguration.ModelPolicy.ProviderConstraint);
+        Assert.Equal(new[] { "text", "Vision" }, saved.DraftConfiguration.ModelPolicy.RequiredCapabilities.ToArray());
         Assert.Equal(new[] { SpaceMemoryScope.Conversation, SpaceMemoryScope.Space, SpaceMemoryScope.Personal },
             saved.DraftConfiguration.MemoryPolicy!.AllowedScopes);
         var savedExample = Assert.Single(saved.DraftConfiguration.ExamplePairs);

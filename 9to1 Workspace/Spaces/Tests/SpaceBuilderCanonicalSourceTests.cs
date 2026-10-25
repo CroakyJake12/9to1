@@ -175,7 +175,7 @@ public sealed class SpaceBuilderCanonicalSourceTests
                 window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 Button Find(string id) => root.GetVisualDescendants().OfType<Button>().Single(button =>
                     button.Name == id || AutomationProperties.GetAutomationId(button) == id);
-                var options = Assert.IsAssignableFrom<object[]>(GetBinding("builder.boardOptions"));
+                var options = Assert.IsAssignableFrom<IReadOnlyList<SpaceBuilderBoardsSourceOption>>(GetBinding("builder.boardOptions"));
                 Assert.Single(options);
                 var matchingAdds = root.GetVisualDescendants().OfType<Button>().Where(button =>
                     button.Name == "space-builder-attach-boards-source" ||
