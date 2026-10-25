@@ -291,13 +291,20 @@ public sealed class SpaceUserMessageGraph
         if (policy.SpaceId != SpaceId) throw Invalid("The graph context policy belongs to a different Space.");
         // Match the deterministic item selection used by the actual context collector.
         // Body-size availability remains with the original read owner at request time.
-        var requested = policy.Sources.Where(source => source.IncludedAutomatically)
-            .Take(Math.Min(policy.Context.MaximumRetrievedItems ?? OriginalSpaceContextBudget.MaximumSupportedItems,
-                OriginalSpaceContextBudget.MaximumSupportedItems)).ToArray();
+        var requested = GetConfiguredContextCandidates(policy);
         foreach (var id in ReferencedContextIds)
-            if (!requested.Any(source => source.ContextId == id &&
-                source.Permission is SpaceContextPermission.Read or SpaceContextPermission.ReadWrite))
+            if (!requested.Any(source => source.ContextId == id))
                 throw Invalid("A configured graph source is outside the effective included read-permitted retrieval allocation.");
+    }
+    /// <summary>Configured metadata candidates only. Neither this list nor a chosen
+    /// ContextId grants a body read; the original source still authorizes actual use.</summary>
+    public static IReadOnlyList<SpaceContextReference> GetConfiguredContextCandidates(EffectiveSpacePolicy policy)
+    {
+        ArgumentNullException.ThrowIfNull(policy);
+        return Array.AsReadOnly(policy.Sources.Where(source => source.IncludedAutomatically)
+            .Take(Math.Min(policy.Context.MaximumRetrievedItems ?? OriginalSpaceContextBudget.MaximumSupportedItems,
+                OriginalSpaceContextBudget.MaximumSupportedItems))
+            .Where(source => source.Permission is SpaceContextPermission.Read or SpaceContextPermission.ReadWrite).ToArray());
     }
     private async Task<SpaceUserMessageGraphResult> ExecuteCoreAsync(ChatMessage input, OriginalSpaceCapturedContext? captured, CancellationToken token)
     {
