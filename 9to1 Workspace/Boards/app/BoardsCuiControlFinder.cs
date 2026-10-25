@@ -13,9 +13,9 @@ public static class BoardsCuiControlFinder
     {
         ArgumentNullException.ThrowIfNull(root);
         ArgumentException.ThrowIfNullOrWhiteSpace(automationId);
-        if (TryMatch(root, automationId, out var found)) return found;
+        if (TryMatch<T>(root, automationId, out var found)) return found;
         foreach (var child in root.GetVisualDescendants().OfType<Control>())
-            if (TryMatch(child, automationId, out found)) return found;
+            if (TryMatch<T>(child, automationId, out found)) return found;
         return null;
     }
 
