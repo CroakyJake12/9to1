@@ -36,7 +36,7 @@ public sealed class StrataLoopbackProviderSettingsTests
         Assert.DoesNotContain("POST", fixture.Methods);
 
         await fixture.ViewModel.TestCommand.ExecuteAsync(item);
-        Assert.Single(fixture.Methods.Where(method => method == "POST"));
+        Assert.Single(fixture.Methods, method => method == "POST");
         // The fixture intentionally returns no tool call. A successful connection must not
         // turn that failed explicit capability probe into a claim that tools are supported.
         Assert.False(item.IsHealthy);

@@ -42,7 +42,7 @@
               <Container id="message-body-stack" Type="Vertical Stack" CellGap="6">
                 <Text text="{Binding message.SpeakerLabel}" font-weight="SemiBold" />
               <Object Type="Markdown" id="message-content" Text="{Binding message.Content}" AccessibleName="Message content" />
-              <If Condition="{Binding message.IsStreaming}">
+              <If Condition="{Binding message.HasProgress}">
                 <Text text="{Binding message.ProgressLabel}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Message progress" />
               </If>
               <If Condition="{Binding message.HasThinking}">

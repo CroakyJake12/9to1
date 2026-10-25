@@ -293,8 +293,20 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
         var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
         return Admit(source, async () =>
         {
-            // Reobserving the SAME submission never repeats its graph effect.
-            GraphPublishProcess? existing; lock (session.Gate) existing = session.Publication;
+            // Reobserving the SAME unresolved or successful submission never
+            // repeats its graph effect. A definitive refusal is different: it
+            // has no graph effect to recover, so the user may explicitly submit
+            // the still-current draft again and receive a fresh Home review.
+            GraphPublishProcess? existing; lock (session.Gate)
+            {
+                existing = session.Publication;
+                if (existing is { Driver.IsCompletedSuccessfully: true } &&
+                    existing.Driver.GetAwaiter().GetResult().Kind == CanonicalAutomationGraphPublicationCompletionKind.DeclinedBeforeEffect)
+                {
+                    session.Publication = null;
+                    existing = null;
+                }
+            }
             if (existing is null)
             {
                 await source.Read(() => RevalidateOriginalSavedGraphReadWithinSourceAsync(session.OriginalRead,

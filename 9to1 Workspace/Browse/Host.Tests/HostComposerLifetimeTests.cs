@@ -143,7 +143,9 @@ public sealed class HostComposerLifetimeTests
             // Async action settlement returns the real admitted source operation.
             _ = view.Bindings.DispatchAsync("composer.send", null, CancellationToken.None);
             Assert.Equal(1, source.SendCount);
+            source.IsSending = true;
             _ = view.Bindings.DispatchAsync("composer.stop", null, CancellationToken.None);
+            source.IsSending = false;
             Assert.Equal(1, source.StopCount);
             _ = view.Bindings.DispatchAsync("composer.format", "Bold", CancellationToken.None);
             Assert.Equal(1, source.FormatCount);
@@ -808,7 +810,7 @@ public sealed class HostComposerLifetimeTests
     [AvaloniaFact]
     public async Task Real_send_button_click_settles_actual_loader_snapshot()
     {
-        var source = new HeldOperationSource();
+        var source = new HeldOperationSource { Draft = "draft" };
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();
@@ -855,7 +857,7 @@ public sealed class HostComposerLifetimeTests
     [AvaloniaFact]
     public async Task Faulted_source_operation_retains_its_real_fault_through_loader()
     {
-        var source = new HeldOperationSource();
+        var source = new HeldOperationSource { Draft = "draft" };
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();
@@ -1024,7 +1026,7 @@ public sealed class HostComposerLifetimeTests
     [AvaloniaFact]
     public async Task Held_send_close_withdraws_late_input_and_releases_only_after_ack()
     {
-        var source = new HeldOperationSource();
+        var source = new HeldOperationSource { Draft = "draft" };
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();
@@ -1081,7 +1083,7 @@ public sealed class HostComposerLifetimeTests
     [AvaloniaFact]
     public async Task Faulted_held_send_close_retains_input_and_same_failed_close()
     {
-        var source = new HeldOperationSource();
+        var source = new HeldOperationSource { Draft = "draft" };
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();

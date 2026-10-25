@@ -32,7 +32,7 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     {
         "chat.new", "chat.open", "chat.select-model", "chat.switch-branch",
         "chat.branch", "chat.regenerate", "chat.attach", "chat.remove-attachment",
-        "chat.send", "chat.clear-search", "chat.update-draft",
+        "chat.send", "chat.stop", "chat.clear-search", "chat.update-draft",
         "chat.copy", "chat.delete", "chat.forget", "chat.edit", "chat.cancel-edit",
         "chat.set-action-mode", "chat.set-response-mode",
         "chat.toggle-dual", "chat.select-second-model", "chat.select-dual-mode"
@@ -42,6 +42,7 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     private readonly Func<string, object?, CancellationToken, ValueTask> _dispatch;
     private readonly Func<ChatSpaceViewState> _state;
     private readonly Func<ChatSpaceViewState, ChatSpaceViewState, bool> _isCurrent;
+    private readonly Func<bool>? _canStop;
     private ChatSpaceViewState _snapshot = ChatSpaceViewState.Empty;
     private string _recentSearchQuery = string.Empty;
     private long _revision;
@@ -50,11 +51,13 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     public ChatSpaceCuiBindings(
         Func<ChatSpaceViewState> state,
         Func<string, object?, CancellationToken, ValueTask> dispatch,
-        Func<ChatSpaceViewState, ChatSpaceViewState, bool>? isCurrent = null)
+        Func<ChatSpaceViewState, ChatSpaceViewState, bool>? isCurrent = null,
+        Func<bool>? canStop = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _isCurrent = isCurrent ?? ((expected, actual) => ReferenceEquals(expected, actual));
+        _canStop = canStop;
         _values.PropertyChanged += (_, args) => PropertyChanged?.Invoke(this, args);
         Refresh();
     }
@@ -189,6 +192,7 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
         return command switch
         {
             "chat.send" => !snapshot.IsSafetyLocked && snapshot.Composer.CanSend,
+            "chat.stop" => _canStop?.Invoke() == true,
             "chat.copy" => snapshot.Conversation is not null,
             "chat.delete" => snapshot.Conversation is not null && !snapshot.Composer.IsSending,
             "chat.forget" => snapshot.Conversation is not null && !snapshot.IsSafetyLocked && !snapshot.Composer.IsSending,
@@ -249,6 +253,7 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
                 "ToolActivities" => message.ToolActivities,
                 "Thinking" => message.Thinking,
                 "IsStreaming" => message.IsStreaming,
+                "HasProgress" => message.HasProgress,
                 "ProgressLabel" => message.ProgressLabel,
                 _ => null
             };

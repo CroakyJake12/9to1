@@ -30,6 +30,9 @@ public interface IChatComposerSource
     string Draft { get; set; }
     string Placeholder { get; }
     bool IsSending { get; }
+    bool CanStop => IsSending;
+    bool HasPendingMessage => !string.IsNullOrWhiteSpace(Draft);
+    bool CanQueue => IsSending && CanStop && HasPendingMessage && CanSend && !IsEditing;
     bool IsSafetyLocked { get; }
     bool HasAdd { get; }
     bool CanSend { get; }
@@ -110,6 +113,15 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             case "Composer.CanSend":
                 value = _source.CanSend;
                 return true;
+            case "Composer.ShowSend":
+                value = !_source.IsSending && _source.HasPendingMessage;
+                return true;
+            case "Composer.CanQueue":
+                value = _source.CanQueue;
+                return true;
+            case "Composer.CanStop":
+                value = _source.CanStop;
+                return true;
             case "Composer.IsEditing":
                 value = _source.IsEditing;
                 return true;
@@ -186,7 +198,9 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     {
         return command switch
         {
-            "composer.send" => _source.CanSend,
+            "composer.send" => !_source.IsSending && _source.HasPendingMessage && _source.CanSend,
+            "composer.queue" => _source.CanQueue,
+            "composer.stop" => _source.CanStop,
             "composer.add" => _source.HasAdd,
             "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => true,
             "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => true,
@@ -198,10 +212,14 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     {
         switch (command)
         {
-            case "composer.send":
+            case "composer.send" when IsActionAvailable(command) == true:
+            case "composer.queue" when IsActionAvailable(command) == true:
+                // Both enter the existing source admission: its current run owns the FIFO.
                 return _source.Send();
-            case "composer.stop":
-                return _source.Stop();
+            case "composer.stop" when _source.CanStop:
+                return StopProjectedAsync();
+            case "composer.send" or "composer.queue" or "composer.stop":
+                return ValueTask.FromException(new InvalidOperationException("This conversation action is no longer available."));
             case "composer.add":
                 return _source.Add();
             case "composer.settings":
@@ -237,6 +255,26 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             default:
                 return ValueTask.FromException(new InvalidOperationException($"Chat composer CUI command '{command}' is not owned by the shared composer."));
         }
+    }
+
+    private async ValueTask StopProjectedAsync()
+    {
+        Exception? sourceFailure = null;
+        try { await _source.Stop().ConfigureAwait(false); }
+        catch (Exception error) { sourceFailure = error; }
+        try
+        {
+            // Cancellation admission can settle before the active producer acknowledges it.
+            // Re-read the same live source now so retired Stop/Queue controls withdraw even
+            // if no further stream event arrives. This does not assert producer completion.
+            await Dispatcher.UIThread.InvokeAsync(Refresh).GetTask().ConfigureAwait(false);
+        }
+        catch (Exception projectionFailure) when (sourceFailure is not null)
+        {
+            throw new AggregateException("The original stop and its projection both failed.", sourceFailure, projectionFailure);
+        }
+        if (sourceFailure is not null)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(sourceFailure).Throw();
     }
 
     private async ValueTask ApplyActionModeAsync(string mode)

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Haven.Application;
 using Haven.Core;
 using HavenOS.Apps.Spaces.Chat;
@@ -96,6 +97,215 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         Assert.Equal("New unsent draft", controller.State.Composer.Draft);
         Assert.False(controller.State.Composer.IsSending);
         Assert.Equal(ChatSpaceStatusTone.Error, controller.State.Status.Tone);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task User_stop_marks_assistant_activity_stopped_and_retains_any_partial_text(bool emitPartial)
+    {
+        var backend = new ControlledBackend { AcceptInputBeforeStream = true, EmitAssistantBeforeWait = true, EmitPartialBeforeWait = emitPartial };
+        var id = backend.Seed("Assistant Main", withBranch: true);
+        var controller = new ChatSpaceController(backend);
+        await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Continue the saved work");
+        var sending = controller.SendAsync();
+        await backend.SendEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.True(controller.StopActiveResponse());
+        Assert.False(controller.StopActiveResponse());
+        Assert.False(controller.CanStopActiveResponse);
+        await sending;
+
+        var stopped = Assert.Single(controller.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+        Assert.Equal(emitPartial ? "A real streamed partial" : string.Empty, stopped.Content);
+        Assert.False(stopped.IsStreaming);
+        Assert.Equal(emitPartial ? "Stopped · partial response" : "Stopped", stopped.ProgressLabel);
+        Assert.Contains(emitPartial ? "partial text was saved" : "Response stopped", controller.State.Status.Message);
+        Assert.Equal(ChatSpaceStatusTone.Neutral, controller.State.Status.Tone);
+        if (emitPartial) Assert.Contains("accepted user message remains saved", controller.State.Status.Message);
+        Assert.False(controller.State.Composer.IsSending);
+        var reopened = new ChatSpaceController(backend);
+        await reopened.OpenChatAsync(id);
+        Assert.Equal(id, reopened.State.Conversation?.Id);
+        if (emitPartial)
+        {
+            var persisted = Assert.Single(backend.PartialWrites);
+            Assert.Equal(id, persisted.Conversation);
+            Assert.Equal(Assert.Single(backend.Data[id].Branches).Id, persisted.Branch);
+            Assert.Equal(JsonValueKind.True, persisted.Message.Metadata["isPartial"].ValueKind);
+            Assert.Equal("Stopped", persisted.Message.Metadata["responseState"].GetString());
+            var restored = Assert.Single(reopened.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+            Assert.Equal(stopped.Id, restored.Id);
+            Assert.Equal("A real streamed partial", restored.Content);
+            Assert.Equal("model-a", restored.ModelName);
+            Assert.Equal("Assistant Main", restored.SpeakerLabel);
+            Assert.False(restored.IsStreaming);
+            Assert.Equal("Stopped · partial response", restored.ProgressLabel);
+        }
+        else
+        {
+            Assert.Empty(backend.PartialWrites);
+            Assert.Empty(reopened.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+        }
+    }
+
+    [Fact]
+    public async Task Explicit_stop_before_input_acceptance_recovers_the_draft_without_an_orphan_assistant_message()
+    {
+        var backend = new ControlledBackend { EmitAssistantBeforeWait = true, EmitPartialBeforeWait = true };
+        var id = backend.Seed("Assistant Main", withBranch: true);
+        var controller = new ChatSpaceController(backend);
+        await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Continue the saved work");
+        var sending = controller.SendAsync();
+        await backend.SendEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(controller.StopActiveResponse());
+        await sending;
+
+        var partial = Assert.Single(controller.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+        Assert.Equal("A real streamed partial", partial.Content);
+        Assert.False(partial.IsStreaming);
+        Assert.Equal("Stopped · partial response", partial.ProgressLabel);
+        Assert.Contains("Response stopped before the user input was accepted", controller.State.Status.Message);
+        Assert.Equal(ChatSpaceStatusTone.Neutral, controller.State.Status.Tone);
+        Assert.Contains("draft content was recovered", controller.State.Status.Message);
+        Assert.Equal("Continue the saved work", controller.State.Composer.Draft);
+        Assert.Empty(backend.Data[id].Messages);
+        Assert.Empty(backend.PartialWrites);
+        Assert.Equal(0, backend.PartialPersistenceAttempts);
+    }
+
+    [Fact]
+    public async Task Accepted_input_with_partial_store_failure_reports_both_truths_without_replay_or_draft_recovery()
+    {
+        var backend = new ControlledBackend { AcceptInputBeforeStream = true, EmitAssistantBeforeWait = true,
+            EmitPartialBeforeWait = true, FailPartialPersistence = true };
+        var id = backend.Seed("Assistant Main", withBranch: true);
+        var controller = new ChatSpaceController(backend);
+        await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Accepted once");
+        using var stop = new CancellationTokenSource();
+        var sending = controller.SendAsync(stop.Token);
+        await backend.SendEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(backend.AcceptedBeforeStreaming);
+        controller.UpdateDraft("Queued follow-up");
+        await controller.SendAsync();
+        controller.UpdateDraft("A newer unsent draft");
+
+        stop.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => sending);
+
+        Assert.Single(backend.Sent);
+        Assert.Contains(backend.Data[id].Messages, message => message.Role == MessageRole.User && message.Content == "Accepted once");
+        Assert.Empty(backend.PartialWrites);
+        Assert.Equal(1, backend.PartialPersistenceAttempts);
+        Assert.Equal("A newer unsent draft\n\nQueued follow-up", controller.State.Composer.Draft);
+        Assert.Equal("A newer unsent draft\n\nQueued follow-up", backend.Data[id].Draft?.Content);
+        Assert.DoesNotContain("Accepted once", controller.State.Composer.Draft);
+        Assert.Contains("partial text remains visible here but could not be saved", controller.State.Status.Message);
+        Assert.Equal("Interrupted · partial response", Assert.Single(controller.State.Conversation!.Messages,
+            message => message.Role == MessageRole.Assistant).ProgressLabel);
+        Assert.Equal(ChatSpaceStatusTone.Error, controller.State.Status.Tone);
+        Assert.Contains("accepted user message remains saved and will not be replayed automatically", controller.State.Status.Message);
+        Assert.DoesNotContain("draft content was recovered", controller.State.Status.Message);
+        Assert.Equal("A real streamed partial", Assert.Single(controller.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant)).Content);
+    }
+
+    [Fact]
+    public async Task Accepted_input_with_successful_partial_store_reopens_once_without_replaying_the_user_message()
+    {
+        var backend = new ControlledBackend { AcceptInputBeforeStream = true, EmitAssistantBeforeWait = true, EmitPartialBeforeWait = true };
+        var id = backend.Seed("Assistant Main", withBranch: true);
+        var controller = new ChatSpaceController(backend);
+        await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Accepted once");
+        using var stop = new CancellationTokenSource();
+        var sending = controller.SendAsync(stop.Token);
+        await backend.SendEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        stop.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => sending);
+
+        Assert.Single(backend.Sent);
+        Assert.Equal(1, backend.PartialPersistenceAttempts);
+        Assert.Equal("Interrupted", Assert.Single(backend.PartialWrites).Message.Metadata["responseState"].GetString());
+        Assert.Equal(1, backend.Data[id].Messages.Count(message => message.Role == MessageRole.User && message.Content == "Accepted once"));
+        Assert.Equal(1, backend.Data[id].Messages.Count(message => message.Role == MessageRole.Assistant && message.Content == "A real streamed partial"));
+        Assert.Contains("partial text was saved", controller.State.Status.Message);
+        Assert.Contains("accepted user message remains saved and will not be replayed automatically", controller.State.Status.Message);
+        Assert.Equal(ChatSpaceStatusTone.Neutral, controller.State.Status.Tone);
+        Assert.DoesNotContain("Accepted once", controller.State.Composer.Draft);
+
+        var reopened = new ChatSpaceController(backend);
+        await reopened.OpenChatAsync(id);
+        Assert.Equal(id, reopened.State.Conversation?.Id);
+        Assert.Equal(2, reopened.State.Conversation!.Messages.Count);
+        Assert.Single(reopened.State.Conversation.Messages, message => message.Role == MessageRole.Assistant && message.ProgressLabel == "Interrupted · partial response");
+    }
+
+    [Fact]
+    public async Task User_stop_action_cancels_the_active_request_and_persists_its_partial_reply()
+    {
+        var backend = new ControlledBackend { AcceptInputBeforeStream = true, EmitAssistantBeforeWait = true, EmitPartialBeforeWait = true };
+        var id = backend.Seed("Assistant Main", withBranch: true);
+        var controller = new ChatSpaceController(backend);
+        await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Stop me after the first delta");
+        var sending = controller.SendAsync();
+        await backend.SendEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.True(controller.StopActiveResponse());
+        await sending;
+
+        Assert.Single(backend.Sent);
+        Assert.Single(backend.PartialWrites);
+        Assert.Equal("Stopped · partial response", Assert.Single(controller.State.Conversation!.Messages,
+            message => message.Role == MessageRole.Assistant).ProgressLabel);
+        Assert.False(controller.State.Composer.IsSending);
+    }
+
+    [Fact]
+    public async Task Stop_before_backend_dispatch_recovers_the_original_draft_without_sending()
+    {
+        var backend = new ControlledBackend { HoldFirstDraftSave = true };
+        var id = backend.Seed("Assistant Main", withBranch: true);
+        var controller = new ChatSpaceController(backend);
+        await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Keep this unsubmitted input");
+        var sending = controller.SendAsync();
+        await backend.FirstDraftSaveEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.True(controller.StopActiveResponse());
+        await sending;
+
+        Assert.Empty(backend.Sent);
+        Assert.Equal("Keep this unsubmitted input", controller.State.Composer.Draft);
+        Assert.Equal("Keep this unsubmitted input", backend.Data[id].Draft?.Content);
+        Assert.Contains("Response stopped before the user input was accepted", controller.State.Status.Message);
+        Assert.Empty(backend.PartialWrites);
+        Assert.False(controller.State.Composer.IsSending);
+    }
+
+    [Fact]
+    public async Task Cancellation_during_post_completion_refresh_does_not_persist_a_completed_reply_as_partial()
+    {
+        using var cancelOnCompletion = new CancellationTokenSource();
+        var backend = new ControlledBackend { EmitAssistantBeforeWait = true, EmitPartialBeforeWait = true,
+            CompleteResponseBeforeReturn = true, CancelOnCompletion = cancelOnCompletion };
+        var id = backend.Seed("Assistant Main", withBranch: true);
+        var controller = new ChatSpaceController(backend);
+        await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Question");
+        var sending = controller.SendAsync(cancelOnCompletion.Token);
+        await backend.SendEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        backend.ReleaseSend.TrySetResult();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => sending);
+
+        Assert.Empty(backend.PartialWrites);
+        var visible = Assert.Single(controller.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+        Assert.Equal("The complete answer", visible.Content);
+        Assert.False(visible.IsStreaming);
+        Assert.Contains("response completed", controller.State.Status.Message);
     }
 
     [Fact]
@@ -263,6 +473,14 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         public bool FailGeneration { get; init; }
         public bool AcceptBeforeFailure { get; init; }
         public bool EmitPreflightFailure { get; init; }
+        public bool EmitAssistantBeforeWait { get; init; }
+        public bool EmitPartialBeforeWait { get; init; }
+        public bool FailPartialPersistence { get; init; }
+        public bool HoldFirstDraftSave { get; init; }
+        public bool AcceptInputBeforeStream { get; init; }
+        public bool AcceptedBeforeStreaming { get; private set; }
+        public bool CompleteResponseBeforeReturn { get; init; }
+        public CancellationTokenSource? CancelOnCompletion { get; init; }
         public int Creates { get; private set; }
         private bool _sent;
         public TaskCompletionSource CreateEntered { get; } = Signal();
@@ -270,15 +488,23 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         public TaskCompletionSource RegenerateEntered { get; } = Signal();
         public TaskCompletionSource ReleaseRegenerate { get; } = Signal();
         public List<(Guid Conversation, IReadOnlyList<Guid> Attachments)> DraftWrites { get; } = [];
+        public List<(Guid Conversation, Guid Branch, ChatMessage Message)> PartialWrites { get; } = [];
+        public int PartialPersistenceAttempts { get; private set; }
         public TaskCompletionSource SendEntered { get; } = Signal();
         public TaskCompletionSource ReleaseSend { get; } = Signal();
+        public TaskCompletionSource FirstDraftSaveEntered { get; } = Signal();
+        public TaskCompletionSource ReleaseFirstDraftSave { get; } = Signal();
+        private int _draftSaveCalls;
         public Func<Guid, Task<ConversationSafetySnapshot>> Safety { get; set; } = id => Task.FromResult(Active(id));
         public Func<Guid, Guid?, string, Task<MessageAttachment>> Import { get; set; } = (_, _, _) => throw new NotSupportedException();
-        public Guid Seed(string title)
+        public Guid Seed(string title, bool withBranch = false)
         {
             var now = DateTimeOffset.UtcNow; var id = Guid.NewGuid();
+            ConversationBranch[] branches = withBranch
+                ? [new ConversationBranch(Guid.NewGuid(), id, null, null, "Main", ConversationBranchReason.Root, true, now, now)]
+                : [];
             Data[id] = new(new(id, HavenMode.Chat, ConversationKind.Chat, title, null, null, false, false, now, now,
-                SpaceId: SpaceRegistry.ChatSpaceId), [], [], [], null);
+                SpaceId: SpaceRegistry.ChatSpaceId), [], [], branches, null);
             return id;
         }
         public Task<IReadOnlyList<Conversation>> GetRecentChatsAsync(int limit, CancellationToken cancellationToken) =>
@@ -291,26 +517,73 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
             if (HoldCreation) await ReleaseCreate.Task.WaitAsync(cancellationToken);
             return Data[Seed("New")].Conversation;
         }
-        public Task<ChatSpaceConversationData> GetConversationAsync(Guid conversationId, CancellationToken cancellationToken) =>
-            _sent && FailReadAfterSend ? Task.FromException<ChatSpaceConversationData>(new IOException("Refresh unavailable")) : Task.FromResult(Data[conversationId]);
-        public Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid conversationId, CancellationToken cancellationToken) => Safety(conversationId);
-        public Task SaveDraftAsync(Guid conversationId, Guid? branchId, string content, IReadOnlyList<Guid> attachmentIds, CancellationToken cancellationToken)
+        public Task<ChatSpaceConversationData> GetConversationAsync(Guid conversationId, CancellationToken cancellationToken)
         {
+            if (cancellationToken.IsCancellationRequested) return Task.FromCanceled<ChatSpaceConversationData>(cancellationToken);
+            return _sent && FailReadAfterSend ? Task.FromException<ChatSpaceConversationData>(new IOException("Refresh unavailable")) : Task.FromResult(Data[conversationId]);
+        }
+        public Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid conversationId, CancellationToken cancellationToken) => Safety(conversationId);
+        public async Task SaveDraftAsync(Guid conversationId, Guid? branchId, string content, IReadOnlyList<Guid> attachmentIds, CancellationToken cancellationToken)
+        {
+            var call = Interlocked.Increment(ref _draftSaveCalls);
+            if (HoldFirstDraftSave && call == 1)
+            {
+                FirstDraftSaveEntered.TrySetResult();
+                await ReleaseFirstDraftSave.Task.WaitAsync(cancellationToken);
+            }
             DraftWrites.Add((conversationId, attachmentIds.ToArray()));
             Data[conversationId] = Data[conversationId] with { Draft = new(conversationId, branchId, content, "[]", DateTimeOffset.UtcNow) };
-            return Task.CompletedTask;
         }
         public Task<MessageAttachment> ImportAttachmentAsync(Guid conversationId, Guid? branchId, string path, CancellationToken cancellationToken) => Import(conversationId, branchId, path);
         public Task RemoveAttachmentAsync(Guid conversationId, Guid? branchId, Guid attachmentId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task PersistStoppedPartialAsync(Guid conversationId, Guid branchId, ChatMessage acceptedInput, ChatMessage message, CancellationToken cancellationToken)
+        {
+            PartialPersistenceAttempts++;
+            if (FailPartialPersistence) return Task.FromException(new IOException("Controlled persistence failure"));
+            var current = Data[conversationId];
+            if (acceptedInput.ConversationId != conversationId || acceptedInput.Role != MessageRole.User ||
+                current.Messages.LastOrDefault(item => item.Role == MessageRole.User) != acceptedInput ||
+                !current.Branches.Any(branch => branch.Id == branchId && branch.IsCurrent))
+                throw new InvalidOperationException("The original branch is no longer current.");
+            if (current.Messages.Any(existing => existing.Id == message.Id))
+                throw new InvalidOperationException("The message ID already exists.");
+            PartialWrites.Add((conversationId, branchId, message));
+            Data[conversationId] = current with { Messages = current.Messages.Append(message).ToArray() };
+            return Task.CompletedTask;
+        }
         public async Task SendAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken)
         {
             Sent.Add(request); DraftAtSend.Add(Data[request.Conversation.Id].Draft?.Content);
             var user = new ChatMessage(Guid.NewGuid(), request.Conversation.Id, MessageRole.User, request.Prompt, null, null, null, DateTimeOffset.UtcNow);
             // The presentation event alone never asserts that the original store accepted input.
             progress?.Report(ChatStreamEvent.User(user));
+            if (AcceptInputBeforeStream && request.InputAccepted is { } acceptBeforeStream)
+            {
+                await acceptBeforeStream(user, cancellationToken);
+                AcceptedBeforeStreaming = true;
+                Data[request.Conversation.Id] = Data[request.Conversation.Id] with
+                    { Messages = Data[request.Conversation.Id].Messages.Append(user).ToArray() };
+            }
+            Guid? responseId = null;
+            if (EmitAssistantBeforeWait)
+            {
+                responseId = Guid.NewGuid();
+                progress?.Report(ChatStreamEvent.AssistantStarted(responseId.Value, request.Model.Name, "Assistant Main"));
+                if (EmitPartialBeforeWait)
+                    progress?.Report(ChatStreamEvent.AssistantDelta(responseId.Value, "A real streamed partial"));
+            }
             SendEntered.TrySetResult(); await ReleaseSend.Task.WaitAsync(cancellationToken);
             if (AcceptBeforeFailure && request.InputAccepted is { } accepted) await accepted(user, cancellationToken);
             if (FailGeneration) throw new IOException("Generation failed after the input event");
+            if (CompleteResponseBeforeReturn)
+            {
+                var completed = new ChatMessage(responseId ?? Guid.NewGuid(), request.Conversation.Id, MessageRole.Assistant,
+                    "The complete answer", "Assistant Main", request.Model.Name, null, DateTimeOffset.UtcNow);
+                progress?.Report(ChatStreamEvent.AssistantCompleted(completed));
+                _sent = true;
+                CancelOnCompletion?.Cancel();
+                return;
+            }
             if (EmitPreflightFailure) progress?.Report(ChatStreamEvent.Preflight(new(false, [], [new(ToolCapability.Vision, "Vision support is required")], null)));
             _sent = true;
         }

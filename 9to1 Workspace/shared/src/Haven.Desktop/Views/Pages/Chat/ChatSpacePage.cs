@@ -50,7 +50,8 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         _bindings = new ChatSpaceCuiBindings(
             () => _controller.State,
             DispatchAsync,
-            (expected, actual) => ReferenceEquals(expected, actual));
+            (expected, actual) => ReferenceEquals(expected, actual),
+            () => _controller.CanStopActiveResponse);
         _controller.StateChanged += OnControllerStateChanged;
         // This page is the scene's binding context, so the CUI reconciler subscribes to THIS
         // event. Forwarding the projection's own notification is what makes a republished
@@ -61,7 +62,8 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         // The shared canonical composer is mounted into the authored `composer-mount` slot below.
         ChatComposerCuiView? composerView = null;
         composerView = new ChatComposerCuiView(new ChatSpaceComposerSource(
-            () => _controller.State, DispatchAsync, () => composerView!.Input));
+            () => _controller.State, DispatchAsync, () => composerView!.Input,
+            () => _controller.CanStopActiveResponse));
         _composerView = composerView;
         var controlRegistry = new CuiControlRegistry();
         controlRegistry.BindAuthoredControl("composer-mount", _ => _composerView);
@@ -245,9 +247,9 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.SendAsync(token))).ConfigureAwait(false);
                 break;
             case "chat.stop":
-                // The Chat Space domain does not expose an in-flight response cancellation. Fail
-                // honestly rather than reporting a successful no-op stop.
-                throw new InvalidOperationException("Chat Space does not support stopping an in-flight response.");
+                if (!_controller.StopActiveResponse())
+                    throw new InvalidOperationException("There is no active Chat Space response to stop.");
+                break;
             case "chat.invoke-chip":
                 // Chat Space chips are persisted attachments; they are not invokable capabilities.
                 throw new InvalidOperationException("Chat Space attachments are not invokable chips.");
