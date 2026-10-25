@@ -64,14 +64,24 @@ internal sealed partial class OriginalSpaceRequestPolicySource(IServiceProvider 
         await DemandAuthorityAsync(input.Owners, input.Authority, originals, token).ConfigureAwait(false);
         var current = await ReadPolicyAsync(input.Owners, input.SpaceId, originals, token).ConfigureAwait(false);
         if (!current.Lineage.Equals(input.Snapshot.Lineage)) throw Block("SPACE_POLICY_CHANGED", "The Space or an ancestor changed before dispatch.");
+        if (current.UserMessageGraph?.Sha256 != input.Snapshot.UserMessageGraph?.Sha256)
+            throw Block("SPACE_GRAPH_CHANGED", "The original active user-message graph changed before dispatch.");
         await DemandVersionPinsAsync(current, originals, token).ConfigureAwait(false);
         if (input.Context is { } context)
             await context.RevalidateAsync(originals, token).ConfigureAwait(false);
         await DemandAuthorityAsync(input.Owners, input.Authority, originals, token).ConfigureAwait(false);
     }
-    private Task<OriginalSpacePolicySnapshot> ReadPolicyAsync(Owners owners, Guid id, CloudflareOriginalTaskLedger originals, CancellationToken token) =>
-        originals.AwaitAsync(originals.Invoke(() => new SpacePolicyResolver(owners.Spaces).ResolveExistingAsync(id,
-            body => originals.Invoke(() => { body(); return true; }), task => originals.Track(task), token)));
+    private async Task<OriginalSpacePolicySnapshot> ReadPolicyAsync(Owners owners, Guid id, CloudflareOriginalTaskLedger originals, CancellationToken token)
+    {
+        var policy = await originals.AwaitAsync(originals.Invoke(() => new SpacePolicyResolver(owners.Spaces).ResolveExistingAsync(id,
+            body => originals.Invoke(() => { body(); return true; }), task => originals.Track(task), token))).ConfigureAwait(false);
+        var active = await originals.AwaitAsync(originals.Invoke(() => owners.Spaces.ReadExistingAsync(id, token))).ConfigureAwait(false);
+        if (active is null || active.Id != id || active.IsArchived || active.Revision != policy.Lineage.Ancestors[^1].Revision)
+            throw Block("SPACE_GRAPH_REVISION_CHANGED", "The active Space graph changed during its original policy capture.");
+        if (active.LayoutDocument is not { } layout || layout.Nodes.Count == 0 && layout.Edges.Count == 0) return policy;
+        var graph = SpaceUserMessageGraph.Compile(id, active.Revision, layout);
+        return new(policy.Policy, policy.Lineage, policy.CapturedContext, graph);
+    }
 
     private async Task<Authority> ReadAuthorityAsync(Owners owners, CloudflareOriginalTaskLedger originals, CancellationToken token)
     {

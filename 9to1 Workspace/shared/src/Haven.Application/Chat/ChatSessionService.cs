@@ -1062,6 +1062,26 @@ public sealed partial class ChatSessionService(
         // into a newly closed corpus. The explicit current user prompt is still included below.
         var selectedHistory = originalSpacePolicy?.Snapshot.Policy.Context.SourceOnly == true
             ? Array.Empty<ChatMessage>() : history;
+        var userMessageDerivation = await DeriveOriginalSpaceUserMessageAsync(originalSpacePolicy, conversation,
+            userMessage, ordinaryOriginal, originalCustody, cancellationToken).ConfigureAwait(false);
+        if (userMessageDerivation is not null)
+        {
+            originalWirePrompt = OriginalAttachmentUserPrompt(userMessageDerivation.DerivedText, originalAttachmentContext);
+            PublishBoundEvent(new ExecutionEvent(Guid.NewGuid(), execution.OperationId, Guid.NewGuid(), promptActionId,
+                ExecutionOrigin.Haven, ExecutionActionType.Planning, ExecutionActionStatus.Completed,
+                "Derived current user-message request", null,
+                $"{userMessageDerivation.OmittedTextElements} Unicode text element(s) omitted by the active graph.",
+                "spaces.user-message-graph", DateTimeOffset.UtcNow, SafeMetadata: new Dictionary<string, string>
+                {
+                    ["spaceId"] = userMessageDerivation.SpaceId.ToString("D"),
+                    ["spaceRevision"] = userMessageDerivation.SpaceRevision.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["graphId"] = userMessageDerivation.GraphId.ToString("D"),
+                    ["graphRevision"] = userMessageDerivation.GraphRevision.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["userMessageId"] = userMessageDerivation.UserMessageId.ToString("D"),
+                    ["inputSha256"] = userMessageDerivation.InputSha256, ["outputSha256"] = userMessageDerivation.OutputSha256,
+                    ["trace"] = System.Text.Json.JsonSerializer.Serialize(userMessageDerivation.Trace)
+                }));
+        }
         var contextMessages = ChatContextWindow.Build(selectedHistory, contextBudget);
         var requestMessages = contextMessages
             .Where(message => message.Role is MessageRole.User or MessageRole.Assistant)
@@ -1076,7 +1096,7 @@ public sealed partial class ChatSessionService(
         {
             requestMessages.Add(new OllamaMessage("user", originalWirePrompt, images));
         }
-        else if (images is { Count: > 0 } || originalAttachmentContext is not null)
+        else if (images is { Count: > 0 } || originalAttachmentContext is not null || userMessageDerivation is not null)
         {
             requestMessages[^1] = new OllamaMessage("user", originalWirePrompt, images);
         }
