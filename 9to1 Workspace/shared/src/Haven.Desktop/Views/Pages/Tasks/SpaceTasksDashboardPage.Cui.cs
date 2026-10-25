@@ -124,7 +124,7 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
         };
         return path is "id" or "observation" or "title" or "openLabel" or "accessibleName" or "status" or "completed" or "summary" or "observationText" or "checkpoint" or "identity";
     }
-    private static string Status(SpaceTaskObservation row) => row.Snapshot?.State switch
+    private static string Status(SpaceTaskObservation row) => row.HasObservedLiveExecution ? $"Working · observed {row.Activity!.ObservedAt.LocalDateTime:g}" : row.Snapshot?.State switch
     {
         TaskExecutionLifecycle.Completed => "Completed · not verified",
         TaskExecutionLifecycle.Blocked => "Blocked · inspect the recorded reason",
