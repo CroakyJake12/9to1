@@ -245,6 +245,28 @@ internal sealed class NewChatOriginalInitialTaskObservation
         return actual!; // The caller prepublishes, enrolls and joins this SAME actual command Task.
     }
 
+    private TaskRunOriginalInitialChatObservationLease RequireComposerLease()
+    {
+        TaskRunOriginalInitialChatObservationLease lease;
+        lock (_gate) lease = _lease ?? throw new InvalidOperationException("No original task identity is retained.");
+        DemandIssued(lease); return lease;
+    }
+    internal Task<TaskRunOriginalRunControlAvailability?> AcquireActualComposerControls(CancellationToken token)
+    {
+        Task<TaskRunOriginalRunControlAvailability?>? actual = null;
+        InvokePhysicalSource(() => actual = _source.GetObservedTaskComposerControlsAsync(RequireComposerLease(), token));
+        return actual!;
+    }
+    internal Task<TaskRunOriginalResumeObservationLease> AcquireActualComposerResume(TaskRunOriginalRunControlAvailability observed, CancellationToken token)
+    {
+        Task<TaskRunOriginalResumeObservationLease>? actual = null;
+        InvokePhysicalSource(() => actual = _source.StartObservedTaskComposerResumeAsync(RequireComposerLease(), observed, token));
+        return actual!;
+    }
+    internal bool IsIssuedComposerResume(TaskRunOriginalResumeObservationLease actual) =>
+        _source.IsIssuedObservedTaskComposerResume(RequireComposerLease(), actual);
+    internal void DemandComposerSourceJoin() => _source.DemandExternalObservedTaskComposerJoin(RequireComposerLease());
+
     internal void CaptureActualStopDriver(Task actual)
     {
         lock (_gate) _actualStopDriver = actual; // Owning page publishes whole command BEFORE its callbacks.

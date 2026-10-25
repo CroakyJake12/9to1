@@ -25,6 +25,8 @@ internal interface IChatComposerTaskActions
     bool CanSteer { get; }
     bool CanQueue { get; }
     bool CanStop { get; }
+    bool CanResume => false;
+    ValueTask Resume() => ValueTask.FromException(new NotSupportedException("This task source has no original resume command."));
     ValueTask Steer();
     ValueTask Queue();
     ValueTask Stop();

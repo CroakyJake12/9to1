@@ -82,6 +82,7 @@ public sealed partial class NewChatPage
                     _originalPresentationGeneration != target.Generation) return;
                 await original.AwaitAsync(InvokeOriginalChatUiAsync(() => current.Owner.InvokeOriginalPresentationCallback(() => SetProjectionStatus(
                     result.RequiresInspection ? "Task stop needs inspection of its original work." : "Task stop was recorded by its original owner."))));
+                if (original.IsPublicationCurrent) await RefreshNativeTaskControlsAsync(original, current).ConfigureAwait(false);
             }
             catch (Exception cause)
             {
@@ -107,6 +108,7 @@ public sealed partial class NewChatPage
     private void DemandOriginalInitialTaskExternalJoins()
     {
         foreach (var original in CaptureOriginalInitialTaskPresentations()) original.Owner.DemandExternalClose();
+        foreach (var observer in CaptureNativeTaskResumeObservers()) observer.DemandExternalClose();
     }
     private void CaptureOriginalInitialTaskStop(NewChatOriginalInitialTaskObservation actual)
     {
@@ -122,6 +124,7 @@ public sealed partial class NewChatPage
     private void RequestAllOriginalInitialTaskStops(List<Exception> failures)
     {
         foreach (var original in CaptureOriginalInitialTaskPresentations()) CaptureOriginalInitialTaskStop(original.Owner);
+        foreach (var observer in CaptureNativeTaskResumeObservers()) CaptureNativeTaskResumeRetirement(observer);
         lock (_originalSendGate)
             foreach (var cause in _originalInitialTaskStopCauses) AddOriginalGeneratedCause(failures, cause);
     }
@@ -140,6 +143,7 @@ public sealed partial class NewChatPage
             }
             catch (Exception cause) { CaptureOriginalGeneratedCauses(failures, actual, cause); }
         }
+        await JoinNativeTaskResumeRetirementAsync(failures).ConfigureAwait(false);
     }
 
     private async Task FinishOriginalInitialTaskObservationAsync(NewChatOriginalInitialTaskObservation actual)
@@ -157,6 +161,10 @@ public sealed partial class NewChatPage
         if (close is not null)
             try { await original.AwaitAsync(close).ConfigureAwait(false); }
             catch (Exception cause) { original.Capture(close, cause); }
+        OriginalInitialTaskPresentation? retained;
+        lock (_originalSendGate) retained = _currentOriginalInitialTaskPresentation;
+        if (retained is not null && ReferenceEquals(retained.Owner, actual) && original.IsPublicationCurrent)
+            await RefreshNativeTaskControlsAsync(original, retained).ConfigureAwait(false);
         // FinishOriginalSend still runs independently. Retained cleanup denies healthy
         // page-original pruning and remains in the existing sticky fault budget.
     }

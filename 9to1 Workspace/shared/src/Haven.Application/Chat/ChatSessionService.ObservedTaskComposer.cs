@@ -26,6 +26,7 @@ public sealed partial class ChatSessionService
         var context = sameObservation.CurrentAcknowledgedContext
             ?? throw new InvalidOperationException("The original producer has not acknowledged its Task/Run.");
         var coordinator = sameObservation.Original.Coordinator;
+        await safety.EnsureMayActAsync(context.ContextId, "chat.task-follow-up", commandCancellationToken).ConfigureAwait(false);
         var current = await coordinator.GetAsync(context.TaskId, commandCancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException("The original task is unavailable.");
         if (current.ContextId != sameObservation.ConversationId || current.ExecutionId != context.ExecutionId ||
@@ -39,4 +40,49 @@ public sealed partial class ChatSessionService
             throw new InvalidDataException("The actual follow-up reply belongs to a different Task/Run/context.");
         return reply; // Actual durable ACK, not a statement that a steer was applied.
     }
+    private (TaskExecutionCoordinator Owner, ProviderExecutionContext Context) RequireObservedTaskComposerIdentity(
+        TaskRunOriginalInitialChatObservationLease sameObservation)
+    {
+        if (!IsIssuedOriginalTaskObservation(sameObservation) || !ReferenceEquals(sameObservation.Original.Coordinator, taskCoordinator))
+            throw new UnauthorizedAccessException("The same Chat owner did not issue this task identity.");
+        var context = sameObservation.CurrentAcknowledgedContext
+            ?? throw new InvalidOperationException("No canonical task identity was acknowledged by this original input.");
+        if (context.ContextId != sameObservation.ConversationId)
+            throw new InvalidDataException("The original task context changed.");
+        return (sameObservation.Original.Coordinator, context);
+    }
+    public Task<TaskRunOriginalRunControlAvailability?> GetObservedTaskComposerControlsAsync(
+        TaskRunOriginalInitialChatObservationLease sameObservation, CancellationToken token)
+    {
+        var same = RequireObservedTaskComposerIdentity(sameObservation);
+        return ReadAsync();
+        async Task<TaskRunOriginalRunControlAvailability?> ReadAsync() => !same.Owner.HasCommandAuthority ? null :
+            await same.Owner.GetOriginalRunControlAvailabilityAsync(same.Context.TaskId, same.Context.ExecutionId, token).ConfigureAwait(false);
+    }
+    public async Task<TaskRunOriginalResumeObservationLease> StartObservedTaskComposerResumeAsync(
+        TaskRunOriginalInitialChatObservationLease sameObservation, TaskRunOriginalRunControlAvailability observed,
+        CancellationToken observationToken)
+    {
+        ArgumentNullException.ThrowIfNull(observed);
+        var same = RequireObservedTaskComposerIdentity(sameObservation);
+        await safety.EnsureMayActAsync(same.Context.ContextId, "chat.resume", observationToken).ConfigureAwait(false);
+        var current = await same.Owner.GetOriginalRunControlAvailabilityAsync(same.Context.TaskId, same.Context.ExecutionId, observationToken).ConfigureAwait(false);
+        if (current.CanonicalTaskContext != observed.CanonicalTaskContext ||
+            current.CanonicalTaskContext.ContextId != sameObservation.ConversationId ||
+            !(current.CanResumeUnstartedOriginal || current.CanResumeOriginalToolCheckpoint || current.CanResumeColdOriginal))
+            throw new InvalidOperationException("The original task continuation changed or is unavailable. Refresh its controls.");
+        return await same.Owner.StartObservedOriginalRunResumeAsync(same.Context.TaskId, same.Context.ExecutionId, observationToken).ConfigureAwait(false);
+    }
+    public bool IsIssuedObservedTaskComposerResume(TaskRunOriginalInitialChatObservationLease sameObservation,
+        TaskRunOriginalResumeObservationLease resume)
+    {
+        if (!IsIssuedOriginalTaskObservation(sameObservation) || !ReferenceEquals(sameObservation.Original.Coordinator, taskCoordinator)) return false;
+        var context = sameObservation.CurrentAcknowledgedContext;
+        return context is not null && sameObservation.Original.Coordinator.IsIssuedOriginalRunResumeObservation(resume) &&
+            resume.CanonicalTaskContext.TaskId == context.TaskId && resume.CanonicalTaskContext.ExecutionId == context.ExecutionId &&
+            resume.CanonicalTaskContext.ContextId == sameObservation.ConversationId;
+    }
+    public void DemandExternalObservedTaskComposerJoin(TaskRunOriginalInitialChatObservationLease sameObservation) =>
+        RequireObservedTaskComposerIdentity(sameObservation).Owner.DemandExternalOriginalProcessJoin();
+
 }
