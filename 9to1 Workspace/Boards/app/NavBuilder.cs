@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using CakeOS.Cui.Runtime;
 
 namespace CakeOS.Apps.Boards.App;
 
