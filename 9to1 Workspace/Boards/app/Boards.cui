@@ -52,10 +52,14 @@
             <Text Text="Boards" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
           </Container>
           <Container Type="Menu" ID="BoardSwitcherMenu" Row="1">
-            <Button Type="Menu Item" ID="BoardSwitcher" Content="{Binding BoardTitle, fallback=Your boards}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Current Board and board actions" HorizontalAlignment="Stretch">
+            <Button Type="Menu Item" ID="BoardSwitcher" Content="{Binding BoardTitle, fallback=Your boards}" Interactive="{Binding CanOpenBoardMenu}" AccessibleName="Current Board and board actions" HorizontalAlignment="Stretch">
               <Button Type="Menu Item" Content="New Board…" Action="NewBoard" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
               <Button Type="Menu Item" Content="Open Board…" Action="OpenBoard" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open an existing Board" />
               <Button Type="Menu Item" Content="All Boards…" Action="ShowLanding" Interactive="{Binding CanSwitchBoard}" AccessibleName="Browse and switch Boards" />
+              <Button Type="Menu Item" Content="Retry opening created Board" Action="RetryOpenCreatedBoard" Interactive="{Binding CanRetryHomeBoardOpen}" AccessibleName="Retry opening the same created Board" />
+              <Button Type="Menu Item" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" AccessibleName="Retry finishing the Board save" />
+              <Button Type="Menu Item" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
+              <Button Type="Menu Item" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
             </Button>
           </Container>
           <Input id="NavSearchBox" Row="2" accessible-name="Search sections and pages" placeholdertext="Search pages" margin="0 0 4 0" Type="Text" ID="NavSearchBox" />

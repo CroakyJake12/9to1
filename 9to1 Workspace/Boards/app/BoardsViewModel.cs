@@ -217,6 +217,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool CanEdit => _session is not IBoardSessionCapabilities { CanEdit: false };
     public bool CanToggleEditMode => CanEdit;
     public bool CanSwitchBoard => CanEdit && _session is not IBoardSessionCapabilities { CanSwitchBoard: false };
+    public bool CanOpenBoardMenu => CanSwitchBoard || CanCreateBoard ||
+        _homeBoardCreationHost is { } host &&
+        (host.CanRetryOpenCreatedBoard || host.CanRetryCreationSettlement ||
+         host.CanInspectUnknownCreation || host.CanOpenRecordedBoard);
     public bool CanSaveAs => CanEdit && _session is not IBoardSessionCapabilities { CanSaveAs: false };
     public bool CanCreateBoard => CanSwitchBoard || CanEdit && _homeBoardCreationHost is not null &&
         !_homeCreationOperationInProgress && !_homeBoardCreationHost.HasUnresolvedCreation;
@@ -767,6 +771,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private void RefreshHomeBoardCreationAvailability()
     {
+        Set("CanOpenBoardMenu", CanOpenBoardMenu);
         Set("CanCreateBoard", CanCreateBoard);
         Set("CanRetryHomeBoardOpen", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
         Set("CanRetryBoardCreationSettlement", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryCreationSettlement == true);
