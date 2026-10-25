@@ -16,7 +16,7 @@ public sealed class DeveloperCuiDraftPreviewTests
         Assert.True(preview.Succeeded, string.Join(Environment.NewLine, preview.Diagnostics));
         var page = Assert.Single(preview.Document!.Components); Assert.Equal("page", page.AuthoredId);
         var title = Assert.Single(Assert.Single(page.Children).Children);
-        Assert.True(title.TryGetLiteralAttribute("Text", out var value)); Assert.Equal("New CUI page", value);
+        Assert.True(title.TryGetLiteralAttribute("text", out var value)); Assert.Equal("New CUI page", value);
     }
 
     [Fact]
