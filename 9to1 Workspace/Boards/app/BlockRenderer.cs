@@ -26,6 +26,7 @@ public static class BlockRenderer
     private const double GraphHeight = 260;
     private const double BlockGutterTargetSize = 32;
     private const double ChecklistCheckboxFirstLineOffset = 7;
+    private const double ChecklistCheckboxTextGap = 6;
 
     public static async Task RebuildAsync(StackPanel host, BoardsViewModel vm)
     {
@@ -478,7 +479,7 @@ public static class BlockRenderer
             MaxWidth = 24,
             MaxHeight = 24,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, ChecklistCheckboxFirstLineOffset, 10, 0),
+            Margin = new Thickness(0, ChecklistCheckboxFirstLineOffset, ChecklistCheckboxTextGap, 0),
         };
         const string checklistGeometrySource = "Boards checklist checkbox geometry";
         CuiPropertyPresentation.Set(check, "Width", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
