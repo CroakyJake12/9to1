@@ -68,7 +68,7 @@
       </Container>
       <Container id="canvas-active-workspace" accessible-name="Canvas editor" Type="Grid" RowSizes="Auto 1fr" Row="0" Column="0" Active="{Binding ShowWorkspace}">
         <Container Type="Horizontal Stack" CellGap="8" padding="12,8">
-          <Button id="canvas-return-start" content="All canvases" accessible-name="Return to Canvas start without closing this document" action="ShowCanvasStart" Interactive="{Binding CanReturnStart}" />
+          <Button id="canvas-return-start" content="All canvases" accessible-name="Return to Canvas start without closing this document" action="ShowCanvasStart" Active="{Binding CanReturnStart}" Interactive="{Binding CanReturnStart}" />
         </Container>
         <Container Type="Vertical Stack" Row="1" margin="24" Active="{Binding HasNoRetainedCanvas}">
           <Text text="This Canvas is no longer available. Return to your canvases to reopen its current version." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
