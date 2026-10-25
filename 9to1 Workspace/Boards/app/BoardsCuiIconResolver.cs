@@ -102,8 +102,12 @@ public static class BoardsCuiIconResolver
             {
                 HavenRichSectionIconRoundRect rect => new RectangleGeometry(
                     new Rect(rect.X, rect.Y, rect.Width, rect.Height), rect.Radius, rect.Radius),
-                HavenRichSectionIconCircle circle => new EllipseGeometry(
-                    new Point(circle.CenterX, circle.CenterY), circle.Radius, circle.Radius),
+                HavenRichSectionIconCircle circle => new EllipseGeometry
+                {
+                    Center = new Point(circle.CenterX, circle.CenterY),
+                    RadiusX = circle.Radius,
+                    RadiusY = circle.Radius,
+                },
                 HavenRichSectionIconPolygon polygon => CreatePolygonGeometry(polygon),
                 _ => throw new InvalidOperationException("The section icon contains an unsupported shape.")
             };
@@ -129,10 +133,11 @@ public static class BoardsCuiIconResolver
 
     private static StreamGeometry CreatePolygonGeometry(HavenRichSectionIconPolygon polygon)
     {
-        var geometry = new StreamGeometry { FillRule = FillRule.EvenOdd };
+        var geometry = new StreamGeometry();
         using var writer = geometry.Open();
+        writer.SetFillRule(FillRule.EvenOdd);
         var first = polygon.Points[0];
-        writer.BeginFigure(new Point(first.X, first.Y), isFilled: true, isClosed: true);
+        writer.BeginFigure(new Point(first.X, first.Y), isFilled: true);
         foreach (var point in polygon.Points.Skip(1)) writer.LineTo(new Point(point.X, point.Y));
         writer.EndFigure(isClosed: true);
         return geometry;
