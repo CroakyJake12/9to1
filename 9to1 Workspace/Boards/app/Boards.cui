@@ -91,8 +91,8 @@
               <Button Content="− Column" Action="ContextDeleteColumn" Interactive="{Binding ContextCanChangeTableStructure}" AccessibleName="Delete last table column" />
               <Button Content="← Column" Action="ContextMoveColumnLeft" Interactive="{Binding ContextCanMoveColumnLeft}" AccessibleName="Move selected table column left" />
               <Button Content="→ Column" Action="ContextMoveColumnRight" Interactive="{Binding ContextCanMoveColumnRight}" AccessibleName="Move selected table column right" />
-              <Button Content="Merge →" Action="ContextMergeCellRight" Interactive="{Binding ContextCanMergeCellRight}" AccessibleName="Merge selected table cell with blank cell to the right" />
-              <Button Content="Merge ↓" Action="ContextMergeCellDown" Interactive="{Binding ContextCanMergeCellDown}" AccessibleName="Merge selected table cell with blank cell below" />
+              <Button Content="Merge →" Action="ContextMergeCellRight" Interactive="{Binding ContextCanMergeCellRight}" AccessibleName="Merge selected table cell with adjacent cell to the right; split restores covered content" Tooltip="Covered cell content stays recoverable when you split the merge" />
+              <Button Content="Merge ↓" Action="ContextMergeCellDown" Interactive="{Binding ContextCanMergeCellDown}" AccessibleName="Merge selected table cell with adjacent cell below; split restores covered content" Tooltip="Covered cell content stays recoverable when you split the merge" />
               <Button Content="Split cell" Action="ContextSplitCell" Interactive="{Binding ContextCanSplitCell}" AccessibleName="Split selected merged table cell" />
               <Button Content="Narrow column" Action="ContextColumnNarrower" AccessibleName="Narrow selected table column" Interactive="{Binding ContextHasCell}" />
               <Button Content="Widen column" Action="ContextColumnWider" AccessibleName="Widen selected table column" Interactive="{Binding ContextHasCell}" />
