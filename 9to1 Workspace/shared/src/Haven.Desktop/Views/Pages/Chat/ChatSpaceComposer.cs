@@ -15,15 +15,18 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
     private readonly Func<ChatSpaceViewState> _state;
     private readonly Func<string, object?, CancellationToken, ValueTask> _dispatch;
     private readonly Func<IChatComposerInputPort?>? _inputPort;
+    private readonly Func<bool>? _canStop;
 
     public ChatSpaceComposerSource(
         Func<ChatSpaceViewState> state,
         Func<string, object?, CancellationToken, ValueTask> dispatch,
-        Func<IChatComposerInputPort?>? inputPort = null)
+        Func<IChatComposerInputPort?>? inputPort = null,
+        Func<bool>? canStop = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _inputPort = inputPort;
+        _canStop = canStop;
     }
 
     private ChatSpaceViewState Snapshot => _state();
@@ -40,6 +43,8 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
 
     public string Placeholder => "Ask Haven anything";
     public bool IsSending => Snapshot.Composer.IsSending;
+    public bool CanStop => _canStop?.Invoke() == true;
+    public bool HasPendingMessage => !string.IsNullOrWhiteSpace(Draft) || Snapshot.Composer.Attachments.Count > 0;
     public bool IsSafetyLocked => Snapshot.IsSafetyLocked;
     public bool HasAdd => !Snapshot.IsSafetyLocked;
     public bool CanSend => !Snapshot.IsLoading && !Snapshot.IsSafetyLocked && Snapshot.Composer.CanSend;

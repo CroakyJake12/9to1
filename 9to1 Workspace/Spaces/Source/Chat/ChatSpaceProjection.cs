@@ -39,7 +39,7 @@ public static class ChatSpaceProjection
                 message.Role == MessageRole.Assistant,
                 null,
                 false,
-                null,
+                ReadResponseProgressLabel(message),
                 message.Role == MessageRole.User)).ToArray();
         var branches = data.Branches
             .OrderBy(item => item.CreatedAt)
@@ -65,6 +65,28 @@ public static class ChatSpaceProjection
         catch (JsonException)
         {
             return [];
+        }
+    }
+
+    private static string? ReadResponseProgressLabel(ChatMessage message)
+    {
+        if (message.Role != MessageRole.Assistant) return null;
+        try
+        {
+            var metadata = message.Metadata;
+            if (!metadata.TryGetValue("responseState", out var state) || state.ValueKind != JsonValueKind.String ||
+                !metadata.TryGetValue("isPartial", out var partial) || partial.ValueKind != JsonValueKind.True)
+                return null;
+            return state.GetString() switch
+            {
+                "Stopped" => "Stopped · partial response",
+                "Interrupted" => "Interrupted · partial response",
+                _ => null
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 
