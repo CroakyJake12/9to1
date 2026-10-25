@@ -59,6 +59,7 @@ internal sealed class NativeHomeFilesBoardReadSource(FilesNativeBrowserService b
     private readonly ConcurrentDictionary<Guid, NativeHomeFilesBoardReadLease> _prepared = new();
     private readonly object _originalReadGate = new();
     private readonly HashSet<Task> _originalReads = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Task, CancellationToken?> _originalReadTokens = new(ReferenceEqualityComparer.Instance);
     internal sealed record ReadOutcome(NativeHomeFilesBoardReadLease? Lease, Exception? Refusal);
 
     internal async Task<NativeHomeFilesBoardReadLease> ReadSelectedAsync(FilesNativeBrowserPage page,
@@ -99,9 +100,9 @@ internal sealed class NativeHomeFilesBoardReadSource(FilesNativeBrowserService b
             originals.Invoke(() => {
                 acquired = browser.ReadOriginalBoardDocumentWithinSourceAsync(page, row,
                     actor, lifetime, withinOriginalSource, task => {
-                        RetainOriginalRead(task); retainOriginalTask(ObserveOriginalRead(task));
+                        RetainOriginalRead(task, token); retainOriginalTask(ObserveOriginalRead(task));
                     }, token);
-                RetainOriginalRead(acquired); return true;
+                RetainOriginalRead(acquired, token); return true;
             });
         }
         catch (Exception cause) { admissionFailure = cause; }
@@ -135,19 +136,35 @@ internal sealed class NativeHomeFilesBoardReadSource(FilesNativeBrowserService b
         }
     }
 
-    private void RetainOriginalRead(Task actual)
+    private void RetainOriginalRead(Task actual, CancellationToken token)
     {
         lock (_originalReadGate)
         {
             PruneOriginalReads();
             _originalReads.Add(actual);
+            if (!_originalReadTokens.TryGetValue(actual, out var captured)) _originalReadTokens.Add(actual, token);
+            else if (captured != token) _originalReadTokens[actual] = null; // no ambiguous cancellation fallback
         }
     }
     private void PruneOriginalReads()
     {
-        foreach (var task in _originalReads.Where(task => task.IsCompletedSuccessfully)) task.GetAwaiter().GetResult();
-        _originalReads.RemoveWhere(task => task.IsCompletedSuccessfully || task.IsFaulted &&
-            browser.IsOriginalBoardDocumentReadRefusal(task, task.Exception!));
+        var settled = new List<Task>();
+        foreach (var task in _originalReads)
+        {
+            if (task.IsCompletedSuccessfully) { task.GetAwaiter().GetResult(); settled.Add(task); }
+            else if (task.IsFaulted && browser.IsOriginalBoardDocumentReadRefusal(task, task.Exception!)) settled.Add(task);
+            else if (task.IsCanceled)
+                try { task.GetAwaiter().GetResult(); }
+                catch (Exception cause) { if (IsOriginalReadCancellation(task, cause)) settled.Add(task); }
+        }
+        foreach (var task in settled) { _originalReads.Remove(task); _originalReadTokens.Remove(task); }
+    }
+    private bool IsOriginalReadCancellation(Task actual, Exception cause)
+    {
+        lock (_originalReadGate)
+            return actual.IsCanceled && cause is OperationCanceledException cancelled &&
+                _originalReadTokens.TryGetValue(actual, out var captured) && captured is { } token &&
+                token.IsCancellationRequested && cancelled.CancellationToken == token;
     }
     private async Task ObserveOriginalRead(Task actual)
     {
@@ -216,7 +233,8 @@ internal sealed class NativeHomeFilesBoardReadSource(FilesNativeBrowserService b
         Task[] original; lock (_originalReadGate) original = _originalReads.ToArray();
         foreach (var task in original)
             try { await task.ConfigureAwait(false); }
-            catch (Exception cause) { if (!browser.IsOriginalBoardDocumentReadRefusal(task, cause)) failures.Add(task.Exception ?? cause); }
+            catch (Exception cause)
+            { if (!IsOriginalReadCancellation(task, cause) && !browser.IsOriginalBoardDocumentReadRefusal(task, cause)) failures.Add(task.Exception ?? cause); }
         if (failures.Count != 0) throw new AggregateException("The original Files board reads/prepared leases retained failures.", failures);
     }
 }
