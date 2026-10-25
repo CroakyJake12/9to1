@@ -757,8 +757,11 @@ public sealed partial class ChatCloudPermissionCallerTests
     private sealed class RemediationRows : IRemediationRepository
     {
         public readonly Dictionary<Guid, RemediationRequest> Rows = []; public int Writes;
+        public Task<RemediationRequest?>? OriginalRead;
+        public TaskCompletionSource OriginalReadEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task UpsertAsync(RemediationRequest value, CancellationToken token) { token.ThrowIfCancellationRequested(); Writes++; Rows[value.Id] = value; return Task.CompletedTask; }
-        public Task<RemediationRequest?> GetAsync(Guid id, CancellationToken token) => Task.FromResult(Rows.GetValueOrDefault(id));
+        public Task<RemediationRequest?> GetAsync(Guid id, CancellationToken token)
+        { if (OriginalRead is { } actual) { OriginalReadEntered.TrySetResult(); return actual; } return Task.FromResult(Rows.GetValueOrDefault(id)); }
         public Task<IReadOnlyList<RemediationRequest>> GetWaitingAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<RemediationRequest>>(Rows.Values.Where(value => value.State is RemediationState.Waiting or RemediationState.InProgress).ToArray());
     }
     private sealed class Events : IExecutionEventSink

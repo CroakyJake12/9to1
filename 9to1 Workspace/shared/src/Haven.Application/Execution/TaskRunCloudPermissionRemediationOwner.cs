@@ -431,6 +431,9 @@ public sealed partial class TaskRunCloudPermissionRemediationOwner : IAsyncDispo
                 (!record.Continuation.IsCompletedSuccessfully || record.ContinuationLease is not { SuccessfullyClosed: true } ||
                  _continuationOperations.Any(value => ReferenceEquals(value.Binding, record) && (!value.Published.IsCompletedSuccessfully || !value.Runner.IsCompletedSuccessfully))))
                 throw new InvalidOperationException("Live, failed or unknown original continuation custody cannot retire.");
+            _originalReviews.RemoveAll(static work => work.Healthy);
+            if (_originalReviews.Any(work => ReferenceEquals(work.Binding, record)))
+                throw new InvalidOperationException("Original permission reviews must settle successfully before their request retires.");
             _source.RetireResolvedOriginalRequest(record.Original);
             if (record.ContinuationLease is { } lease) _continuationLeases.Remove(lease);
             _requests.Remove(record.Original); _ids.Remove(record.Id);
@@ -462,6 +465,7 @@ public sealed partial class TaskRunCloudPermissionRemediationOwner : IAsyncDispo
             _closing = true; completion = new(TaskCreationOptions.RunContinuationsAsynchronously); _close = completion.Task;
             originals = _requests.Values.SelectMany(value => new Task?[] { value.Publication, value.Approval, value.Denial, value.Decision, value.Callback, value.RequestEvent, value.DecisionEvent, value.Continuation })
                 .Where(value => value is not null).Cast<Task>()
+                .Concat(_originalReviews.SelectMany(value => new Task[] { value.Driver }.Concat(value.Sources)))
                 .Concat(_continuationOperations.SelectMany(value => new[] { value.Published, value.Runner }))
                 .Distinct<Task>(ReferenceEqualityComparer.Instance).ToArray();
         }

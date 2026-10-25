@@ -114,6 +114,13 @@ internal sealed partial class TaskRunInvocationCustody
                 _originalPermissionPublication ?? throw new InvalidOperationException("The actual publication Task is unavailable."),
                 OriginalPermissionOwner ?? throw new InvalidOperationException("The actual permission owner is unavailable."));
     }
+    internal (TaskRunCloudPermissionRequiredException Ask, Task<RemediationRequest> Publication,
+        TaskRunCloudPermissionRemediationOwner Owner)? TryReadOriginalPublishedPermission()
+    {
+        lock (_gate) return _originalPermissionCause is not null &&
+            _originalPermissionPublication is { IsCompletedSuccessfully: true } && OriginalPermissionOwner is not null
+            ? (_originalPermissionCause, _originalPermissionPublication, OriginalPermissionOwner) : null;
+    }
     internal bool CanReturnPublishedPermissionRefusal(TaskExecutionSnapshot? acknowledged)
     {
         lock (_gate)
