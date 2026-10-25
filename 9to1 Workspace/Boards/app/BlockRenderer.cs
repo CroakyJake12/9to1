@@ -112,7 +112,8 @@ public static class BlockRenderer
         if (vm.IsEditMode)
         {
             insert = ToolbarBuilder.CreateInsertButton(
-                vm, "Insert a block after this note", insertAfterBlockId);
+                vm, "Insert a block after this note", insertAfterBlockId) as Button
+                ?? throw new InvalidOperationException("The insert affordance must remain a button.");
             ConfigureBlockGutterButton(insert);
             insert.Margin = new Thickness(0, 0, 2, 0);
             insert.Opacity = selected ? 1 : QuietBlockGutterOpacity;
