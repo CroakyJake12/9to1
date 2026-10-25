@@ -140,3 +140,29 @@ intermediate layout labels above:
 
 These are implementation requirements, not claims that a screenshot, native
 runtime or full acceptance has passed. Earlier captures remain dated evidence.
+
+## Latest owner refinement and test-copy request
+
+After reviewing the combined render, the owner requests:
+
+- Place the Boards app icon **before File** (supersedes the earlier right-of-File
+  position). Lower the Editing container's vertical padding further and use the
+  same switch system for Vertical Stacking / Free Placement.
+- Keep the workspace Glow continuous through the sidebar and header. Nested
+  local gradients must not create a hard rectangular seam; preserve the distinct
+  page and toolbar surface gradients.
+- Shorten the bottom action's visible text to **+ Add**, with a substantially
+  brighter accent background and bold text. Keep its accessible name and real
+  page/section menu actions.
+- Reduce the toolbar-to-page gap and the top inset above the page title, retaining
+  full toolbar/page width alignment, comfortable controls and the margin gutter.
+- Deliver a genuine test version to the existing ARM64 Linux laptop path **after
+  all Boards changes discussed in this thread are implemented**, not merely this
+  last group. This is an explicit request for a test copy, not full acceptance or
+  a waiver of build, custody and privacy checks. Label exact source, known
+  limitations and any native/GNOME checks not run. Preserve earlier baselines.
+
+The requested live generated section icons remain distinct from built-in icons
+or name-based recommendations. A fixed searchable palette does not fulfil the
+live generation requirement. Keep that remaining requirement explicit until a
+real model route, safe persisted representation and rendering are implemented.
