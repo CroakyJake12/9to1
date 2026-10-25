@@ -112,6 +112,60 @@ public sealed partial class BrowseNativeOwnershipTests
         Assert.Equal("keep existing default-profile data", await File.ReadAllTextAsync(legacyData));
     }
 
+    [Fact]
+    public async Task Site_permissions_are_profile_scoped_and_legacy_decisions_stay_with_current_profile()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        const string currentProfile = "permission-profile-current";
+        const string otherProfile = "permission-profile-other";
+        var legacyOrigin = new Uri("https://legacy.example/");
+        var currentOrigin = new Uri("https://one.example/");
+        var otherOrigin = new Uri("https://one.example/");
+        using (var legacy = new BrowserSitePermissionStore(paths))
+            await legacy.SetDecisionAsync(legacyOrigin, BrowserSitePermissionKind.Camera,
+                BrowserSitePermissionDecision.Deny, default);
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var currentId = Guid.NewGuid(); var otherId = Guid.NewGuid();
+        var projection = new BrowseTabSessionProjection([
+            new(currentId, "Current profile", currentOrigin.AbsoluteUri, BrowserTabPrivacy.Standard,
+                string.Empty, DateTimeOffset.UtcNow) { ProfileId = currentProfile },
+            new(otherId, "Other profile", otherOrigin.AbsoluteUri, BrowserTabPrivacy.Standard,
+                string.Empty, DateTimeOffset.UtcNow) { ProfileId = otherProfile }
+        ], currentId);
+
+        await using (var chrome = await BrowseChrome.CreateAsync(paths, factory,
+            homeProfileId: currentProfile, tabSessionPersistence: new TabSessionFixture(projection)))
+        {
+            await chrome.SetPermissionAsync(BrowserSitePermissionKind.Camera, BrowserSitePermissionDecision.Allow);
+            Assert.Equal(BrowserSitePermissionDecision.Allow, chrome.ObserveOriginPermission(currentId,
+                chrome.ObserveOriginalEngine(currentId)!, currentOrigin, BrowserSitePermissionKind.Camera));
+            Assert.Contains(chrome.State.Permissions, permission => permission.Origin == "https://legacy.example");
+
+            await chrome.SelectTabAsync(otherId);
+            Assert.Equal(BrowserSitePermissionDecision.Ask, chrome.ObserveOriginPermission(otherId,
+                chrome.ObserveOriginalEngine(otherId)!, otherOrigin, BrowserSitePermissionKind.Camera));
+            Assert.Empty(chrome.State.Permissions);
+            await chrome.SetPermissionAsync(BrowserSitePermissionKind.Camera, BrowserSitePermissionDecision.Deny);
+            await chrome.SelectTabAsync(currentId);
+            Assert.Equal(BrowserSitePermissionDecision.Allow, chrome.ObserveOriginPermission(currentId,
+                chrome.ObserveOriginalEngine(currentId)!, currentOrigin, BrowserSitePermissionKind.Camera));
+            Assert.Contains(chrome.State.Permissions, permission => permission.Origin == "https://legacy.example" &&
+                permission.Decision == BrowserSitePermissionDecision.Deny);
+        }
+
+        await using var restarted = await BrowseChrome.CreateAsync(paths, factory,
+            homeProfileId: currentProfile, tabSessionPersistence: new TabSessionFixture(projection));
+        Assert.Equal(BrowserSitePermissionDecision.Allow, restarted.ObserveOriginPermission(currentId,
+            restarted.ObserveOriginalEngine(currentId)!, currentOrigin, BrowserSitePermissionKind.Camera));
+        Assert.Contains(restarted.State.Permissions, permission => permission.Origin == "https://legacy.example" &&
+            permission.Decision == BrowserSitePermissionDecision.Deny);
+        await restarted.SelectTabAsync(otherId);
+        Assert.Equal(BrowserSitePermissionDecision.Deny, restarted.ObserveOriginPermission(otherId,
+            restarted.ObserveOriginalEngine(otherId)!, otherOrigin, BrowserSitePermissionKind.Camera));
+        Assert.DoesNotContain(restarted.State.Permissions, permission => permission.Origin == "https://legacy.example");
+    }
+
     private sealed class TabSessionFixture(BrowseTabSessionProjection? projection) : IBrowseTabSessionPersistence
     {
         public List<BrowseTabSessionProjection> Saves { get; } = [];
