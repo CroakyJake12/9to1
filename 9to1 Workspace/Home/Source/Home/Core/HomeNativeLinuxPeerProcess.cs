@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
@@ -16,18 +17,21 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
     private readonly SafeFileHandle _pid;
     private readonly SafeFileHandle? _executable;
     private readonly ImageIdentity _image;
+    internal string OriginalStartIdentity { get; }
     private readonly object _gate = new();
     private bool _closed;
     private HomeNativeLinuxPeerProcess(Socket socket, HomeNativeObservedPeer peer,
-        SafeFileHandle pid, SafeFileHandle? executable, ImageIdentity image)
-    { _socket = socket; _peer = peer; _pid = pid; _executable = executable; _image = image; }
+        SafeFileHandle pid, SafeFileHandle? executable, ImageIdentity image, string originalStartIdentity)
+    { _socket = socket; _peer = peer; _pid = pid; _executable = executable; _image = image; OriginalStartIdentity = originalStartIdentity; }
 
-    internal static HomeNativeLinuxPeerProcess? Capture(Socket socket) => Capture(socket, requireImage: true);
-    internal static HomeNativeLinuxPeerProcess? CaptureKernelServiceLifetime(Socket socket) => Capture(socket, requireImage: false);
-    private static HomeNativeLinuxPeerProcess? Capture(Socket socket, bool requireImage)
+    internal static HomeNativeLinuxPeerProcess? Capture(Socket socket) => Capture(socket, requireImage: true, rootServiceOnly: false);
+    internal static HomeNativeLinuxPeerProcess? CaptureKernelServiceLifetime(Socket socket) => Capture(socket, requireImage: false, rootServiceOnly: true);
+    internal static HomeNativeLinuxPeerProcess? CaptureControlledLifetime(Socket socket)
+        => Capture(socket, requireImage: false, rootServiceOnly: false);
+    private static HomeNativeLinuxPeerProcess? Capture(Socket socket, bool requireImage, bool rootServiceOnly)
     {
         var peer = HomeNativePeerObservation.FromAcceptedUnixSocket(socket);
-        if (peer is null || !requireImage && peer.OperatingSystemPrincipalId != "unix-euid:0") return null;
+        if (peer is null || rootServiceOnly && peer.OperatingSystemPrincipalId != "unix-euid:0") return null;
         // SO_PEERPIDFD binds to the process that actually established THIS socket,
         // unlike pidfd_open(observed numeric PID) after an asynchronous gap.
         uint size = 4;
@@ -46,9 +50,13 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
         {
             if (size != 4) throw new IOException("The connected Home peer pidfd has an unsupported kernel shape.");
             if (!Alive(pid)) return null;
+            string startIdentity;
+            try { startIdentity = ReadStartMetadata(peer.ProcessId); }
+            catch (Exception cause) when (cause is FileNotFoundException or DirectoryNotFoundException) { return null; }
+            catch (IOException) when (!Alive(pid)) { return null; }
             if (!requireImage)
             {
-                var serviceLifetime = new HomeNativeLinuxPeerProcess(socket, peer, pid, null, default);
+                var serviceLifetime = new HomeNativeLinuxPeerProcess(socket, peer, pid, null, default, startIdentity);
                 if (serviceLifetime.Observe() is null) return null;
                 pid = null!; return serviceLifetime;
             }
@@ -57,7 +65,7 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
             catch (IOException) when (!Alive(pid)) { return null; }
             var identity = ReadImage(executable);
             if ((identity.Mode & 0xf000) != 0x8000) throw new IOException("The running Home peer image is not a regular executable inode.");
-            var held = new HomeNativeLinuxPeerProcess(socket, peer, pid, executable, identity);
+            var held = new HomeNativeLinuxPeerProcess(socket, peer, pid, executable, identity, startIdentity);
             if (held.Observe() is null) return null;
             executable = null; pid = null!; // exact descriptors transfer only after full capture/currentness
             return held;
@@ -71,6 +79,9 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
         {
             ObjectDisposedException.ThrowIf(_closed, this);
             if (!Alive(_pid) || HomeNativePeerObservation.FromAcceptedUnixSocket(_socket) != _peer) return null;
+            try { if (ReadStartMetadata(_peer.ProcessId) != OriginalStartIdentity) return null; }
+            catch (Exception cause) when (cause is FileNotFoundException or DirectoryNotFoundException) { return null; }
+            catch (IOException) when (!Alive(_pid)) { return null; }
             if (_executable is null) return _peer; // lifetime/credentials only, never an executable/installed observation
             SafeFileHandle actual;
             try { actual = File.OpenHandle($"/proc/{_peer.ProcessId}/exe", FileMode.Open, FileAccess.Read, FileShare.Read); }
@@ -79,6 +90,18 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
             using (actual)
                 return _image == ReadImage(_executable) && _image == ReadImage(actual) && Alive(_pid) ? _peer : null;
         }
+    }
+
+    internal static string ReadStartMetadata(int processId)
+    {
+        if (!OperatingSystem.IsLinux() || processId <= 0) throw new ArgumentException("An actual Linux process ID is required.");
+        var text = File.ReadAllText("/proc/" + processId.ToString(CultureInfo.InvariantCulture) + "/stat");
+        var close = text.LastIndexOf(')');
+        if (close < 0 || text.Length > 64 * 1024) throw new InvalidDataException("The Linux process record is invalid.");
+        var fields = text[(close + 1)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (fields.Length < 20 || !ulong.TryParse(fields[19], NumberStyles.None, CultureInfo.InvariantCulture, out var start) || start == 0)
+            throw new InvalidDataException("The actual kernel process start identity is unavailable.");
+        return "linux-proc-start:" + start.ToString(CultureInfo.InvariantCulture);
     }
 
     private readonly record struct ImageIdentity(ulong Inode, uint Major, uint Minor, ushort Mode, uint Uid,

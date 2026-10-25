@@ -17,6 +17,7 @@ public static class HomeNativePeerObservation
         internal OriginalUnixProcess(HomeNativeLinuxPeerProcess actual, bool executableObserved = true)
         { _actual = actual; HasObservedExecutable = executableObserved; }
         public bool HasObservedExecutable { get; }
+        public string OriginalProcessStartIdentity => _actual.OriginalStartIdentity;
         public HomeNativeObservedPeer? ObserveCurrent() => _actual.Observe();
         public void Dispose() => _actual.Dispose();
     }
@@ -34,6 +35,10 @@ public static class HomeNativePeerObservation
         var actual = HomeNativeLinuxPeerProcess.CaptureKernelServiceLifetime(connected);
         return actual is null ? null : new(actual, executableObserved: false);
     }
+
+    /// <summary>Detached kernel metadata only; callers need their own held process
+    /// custody and registered platform proof. This is never process authority.</summary>
+    public static string ReadLinuxProcessStartMetadata(int processId) => HomeNativeLinuxPeerProcess.ReadStartMetadata(processId);
 
     // Same SO_PEERCRED observer, with actual connected-process custody for owning
     // accepting paths. The detached public record remains discovery metadata only.

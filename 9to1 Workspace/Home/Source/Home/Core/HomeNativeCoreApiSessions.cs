@@ -51,7 +51,7 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
         cancellationToken.ThrowIfCancellationRequested();
         lock (_admissionGate) if (_closing) return null;
         if (!OperatingSystem.IsLinux()) return null;
-        var channel = new OriginalChannel(originalAcceptedSocket);
+        var channel = new OriginalChannel(originalAcceptedSocket, _verifier is IHomeNativeOriginalControlledProcessVerifier);
         var transferred = false;
         try
         {
@@ -90,7 +90,8 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
         var observed = originalChannel.Observe();
         if (observed is null) return null;
         var peer = Copy(await originalVerifier.VerifyForActorAsync(observed, actor, cancellationToken).ConfigureAwait(false));
-        if (peer is null || await _actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor)
+        if (peer is null || !await VerifyOriginalControlledImageAsync(originalVerifier, originalChannel, observed, actor, peer, cancellationToken).ConfigureAwait(false) ||
+            originalChannel.Observe() != observed || await _actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor)
             return null;
         var context = new Context(originalChannel, originalHeldHomeLease, actor, observed, peer,
             originalConnectionLifetime);
@@ -174,7 +175,9 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
         { return false; }
         if (observed is null || observed != context.Observed) return false;
         var peer = Copy(await originalVerifier.VerifyForActorAsync(observed, context.Actor, token).ConfigureAwait(false));
-        return peer is not null && SameOwner(peer, context.Peer) && !context.Closed &&
+        return peer is not null && SameOwner(peer, context.Peer) &&
+            await VerifyOriginalControlledImageAsync(originalVerifier, context.Channel, observed, context.Actor, peer, token).ConfigureAwait(false) &&
+            context.Channel.Observe() == observed && !context.Closed &&
             !context.Lifetime.IsCancellationRequested && context.Lease.IsHeld &&
             await _actors.GetCurrentAsync(token).ConfigureAwait(false) == context.Actor &&
             !context.Closed && !context.Lifetime.IsCancellationRequested && context.Lease.IsHeld;
@@ -292,6 +295,14 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
         }
     }
 
+    private static async ValueTask<bool> VerifyOriginalControlledImageAsync(IHomeNativeInstalledPeerOriginalActorVerifier verifier,
+        OriginalChannel channel, HomeNativeObservedPeer observed, AuthenticatedResourceActor actor, HomeNativeInstalledPeer peer, CancellationToken token)
+    {
+        if (channel.IsWindows || verifier is not IHomeNativeOriginalControlledProcessVerifier owner) return true;
+        return channel.OriginalStartIdentity is { Length: > 0 } start &&
+            await owner.IsOriginalControlledProcessCurrentAsync(observed, actor, start, peer, token).ConfigureAwait(false);
+    }
+
     private static HomeNativeCoreApiResult<T> Refused<T>(string code, string message) =>
         new(new(false, code, message, default, false), null);
     private static bool Valid(AuthenticatedResourceActor? actor) => actor is not null && Text(actor.ActorId) &&
@@ -332,8 +343,10 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
         private readonly Socket? _unix;
         private readonly NamedPipeServerStream? _windows;
         private readonly HomeNativeLinuxPeerProcess? _process;
-        internal OriginalChannel(Socket original)
-        { _unix = original; _process = HomeNativePeerObservation.RetainAcceptedUnixProcess(original); }
+        internal OriginalChannel(Socket original, bool originalControlledImageOwner)
+        { _unix = original; _process = originalControlledImageOwner ? HomeNativeLinuxPeerProcess.CaptureControlledLifetime(original)
+            : HomeNativePeerObservation.RetainAcceptedUnixProcess(original); }
+        internal string? OriginalStartIdentity => _process?.OriginalStartIdentity;
         internal OriginalChannel(NamedPipeServerStream original) { _windows = original; }
         internal bool IsWindows => _windows is not null;
         internal HomeNativeObservedPeer? Observe() => _windows is not null
