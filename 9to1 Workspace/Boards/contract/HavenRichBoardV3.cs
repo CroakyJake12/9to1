@@ -202,9 +202,21 @@ public sealed class HavenRichGraphPoint
     public string Label { get; set; } = string.Empty;
 }
 
+/// <summary>Persisted slider definition; the current value remains per-view-session.</summary>
+public sealed class HavenRichGraphSlider
+{
+    public string VariableId { get; set; } = "variable-" + Guid.NewGuid().ToString("N")[..12];
+    public string Name { get; set; } = "a";
+    public double Minimum { get; set; } = -5;
+    public double Maximum { get; set; } = 5;
+    public double Step { get; set; } = 0.1;
+    public double DefaultValue { get; set; }
+}
+
 /// <summary>First-class graphing block: expressions and viewport persist as data, never as an image.</summary>
 public sealed class HavenRichGraph
 {
+    public string GraphId { get; set; } = "graph-" + Guid.NewGuid().ToString("N")[..12];
     public List<HavenRichGraphExpression> Expressions { get; set; } = [new HavenRichGraphExpression()];
     public HavenRichGraphViewport Viewport { get; set; } = new();
     public bool ShowGrid { get; set; } = true;
@@ -212,6 +224,7 @@ public sealed class HavenRichGraph
     public string XLabel { get; set; } = "x";
     public string YLabel { get; set; } = "y";
     public List<HavenRichGraphPoint> Points { get; set; } = [];
+    public List<HavenRichGraphSlider> Sliders { get; set; } = [];
 }
 
 public static class HavenRichGraphValidator
@@ -219,6 +232,8 @@ public static class HavenRichGraphValidator
     public static void Validate(HavenRichGraph graph)
     {
         ArgumentNullException.ThrowIfNull(graph);
+        if (string.IsNullOrWhiteSpace(graph.GraphId) || graph.GraphId.Length > 128)
+            throw new InvalidOperationException("GraphID must contain 1 to 128 characters.");
         if (graph.Expressions.Count > 32)
             throw new InvalidOperationException("Graphs support at most 32 expressions.");
         var ids = new HashSet<string>(StringComparer.Ordinal);
@@ -235,6 +250,30 @@ public static class HavenRichGraphValidator
             if (expression.DomainMin.HasValue && expression.DomainMax.HasValue &&
                 expression.DomainMin.Value >= expression.DomainMax.Value)
                 throw new InvalidOperationException("Graph domain minimum must be below the maximum.");
+        }
+        if (graph.Sliders.Count > 16)
+            throw new InvalidOperationException("Graphs support at most 16 sliders.");
+        var sliderIds = new HashSet<string>(StringComparer.Ordinal);
+        var variableNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var reservedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "x", "pi", "e", "sin", "cos", "tan", "sqrt", "abs", "exp", "ln", "log" };
+        foreach (var slider in graph.Sliders)
+        {
+            if (string.IsNullOrWhiteSpace(slider.VariableId) || slider.VariableId.Length > 128 || !sliderIds.Add(slider.VariableId))
+                throw new InvalidOperationException("Graph VariableIDs must be unique and contain 1 to 128 characters.");
+            if (string.IsNullOrWhiteSpace(slider.Name) || slider.Name.Length > 16 ||
+                !char.IsAsciiLetter(slider.Name[0]) || slider.Name.Any(character => !char.IsAsciiLetter(character)) ||
+                reservedNames.Contains(slider.Name) || !variableNames.Add(slider.Name))
+                throw new InvalidOperationException("Graph slider names must be unique letters and cannot replace x, constants, or functions.");
+            if (!double.IsFinite(slider.Minimum) || !double.IsFinite(slider.Maximum) ||
+                !double.IsFinite(slider.Step) || !double.IsFinite(slider.DefaultValue) ||
+                slider.Minimum >= slider.Maximum || slider.Step <= 0 ||
+                slider.DefaultValue < slider.Minimum || slider.DefaultValue > slider.Maximum ||
+                Math.Abs((slider.DefaultValue - slider.Minimum) / slider.Step -
+                    Math.Round((slider.DefaultValue - slider.Minimum) / slider.Step)) > 1e-9 ||
+                (slider.Maximum - slider.Minimum) / slider.Step > 10_000 ||
+                slider.Maximum - slider.Minimum > 1e9)
+                throw new InvalidOperationException("Graph slider range, step, or default value is invalid.");
         }
         var viewport = graph.Viewport;
         if (!double.IsFinite(viewport.XMin) || !double.IsFinite(viewport.XMax) ||
@@ -260,11 +299,12 @@ public static class HavenRichGraphValidator
 /// </summary>
 public static class HavenGraphExpression
 {
-    public static bool TryEvaluate(string expression, double x, out double value)
+    public static bool TryEvaluate(string expression, double x, out double value,
+        IReadOnlyDictionary<string, double>? variables = null)
     {
         try
         {
-            value = new Parser(StripFunctionPrefix(expression), x).Parse();
+            value = new Parser(StripFunctionPrefix(expression), x, variables).Parse();
             if (!double.IsFinite(value))
             {
                 value = double.NaN;
@@ -295,7 +335,7 @@ public static class HavenGraphExpression
     /// <summary>Samples an expression across a range; non-finite samples are omitted (curve breaks).</summary>
     public static List<(double X, double Y)> Sample(
         string expression, double? domainMin, double? domainMax,
-        double rangeMin, double rangeMax, int count)
+        double rangeMin, double rangeMax, int count, IReadOnlyDictionary<string, double>? variables = null)
     {
         var body = StripFunctionPrefix(expression);
         var result = new List<(double X, double Y)>();
@@ -305,13 +345,13 @@ public static class HavenGraphExpression
             var x = rangeMin + ((rangeMax - rangeMin) * i / (count - 1));
             if (domainMin.HasValue && x < domainMin.Value) continue;
             if (domainMax.HasValue && x > domainMax.Value) continue;
-            if (TryEvaluate(body, x, out var y))
+            if (TryEvaluate(body, x, out var y, variables))
                 result.Add((x, y));
         }
         return result;
     }
 
-    private sealed class Parser(string source, double x)
+    private sealed class Parser(string source, double x, IReadOnlyDictionary<string, double>? variables)
     {
         private int _index;
 
@@ -389,6 +429,12 @@ public static class HavenGraphExpression
             if (name == "x") return x;
             if (name == "pi") return Math.PI;
             if (name == "e") return Math.E;
+            if (variables is not null)
+            {
+                foreach (var pair in variables)
+                    if (string.Equals(pair.Key, name, StringComparison.OrdinalIgnoreCase))
+                        return pair.Value;
+            }
             if (name.Length == 0) throw new FormatException();
             if (!Take('(')) throw new FormatException();
             var arg = AddSubtract();
@@ -913,13 +959,15 @@ public static partial class HavenRichNotesOps
         var graph = RequireGraph(notes, pageId, blockId);
         var candidate = new HavenRichGraph
         {
+            GraphId = graph.GraphId,
             Expressions = graph.Expressions,
             Viewport = viewport,
             ShowGrid = graph.ShowGrid,
             ShowAxes = graph.ShowAxes,
             XLabel = graph.XLabel,
             YLabel = graph.YLabel,
-            Points = graph.Points
+            Points = graph.Points,
+            Sliders = graph.Sliders
         };
         HavenRichGraphValidator.Validate(candidate);
         graph.Viewport = viewport;
@@ -964,6 +1012,37 @@ public static partial class HavenRichNotesOps
         if (showAxes.HasValue) graph.ShowAxes = showAxes.Value;
         if (xLabel is not null) graph.XLabel = xLabel;
         if (yLabel is not null) graph.YLabel = yLabel;
+        TouchNotes(notes);
+    }
+
+    public static void SetGraphSliders(HavenRichNotes notes, string pageId, string blockId,
+        IReadOnlyList<HavenRichGraphSlider> sliders)
+    {
+        ArgumentNullException.ThrowIfNull(sliders);
+        var graph = RequireGraph(notes, pageId, blockId);
+        var candidateSliders = sliders.Select(slider => new HavenRichGraphSlider
+        {
+            VariableId = slider.VariableId,
+            Name = slider.Name.Trim(),
+            Minimum = slider.Minimum,
+            Maximum = slider.Maximum,
+            Step = slider.Step,
+            DefaultValue = slider.DefaultValue,
+        }).ToList();
+        var candidate = new HavenRichGraph
+        {
+            GraphId = graph.GraphId,
+            Expressions = graph.Expressions,
+            Viewport = graph.Viewport,
+            ShowGrid = graph.ShowGrid,
+            ShowAxes = graph.ShowAxes,
+            XLabel = graph.XLabel,
+            YLabel = graph.YLabel,
+            Points = graph.Points,
+            Sliders = candidateSliders,
+        };
+        HavenRichGraphValidator.Validate(candidate);
+        graph.Sliders = candidateSliders;
         TouchNotes(notes);
     }
 

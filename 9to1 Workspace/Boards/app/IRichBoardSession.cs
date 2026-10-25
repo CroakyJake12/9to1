@@ -26,6 +26,7 @@ public sealed class RichBoardSection
 public sealed class RichBoardPage
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Untitled page";
     public List<RichBoardBlock> Blocks { get; set; } = [];
     public double InkPanX { get; set; }
@@ -134,7 +135,9 @@ public sealed class RichDividerView
 /// <summary>Editable graph state surfaced to the editor (never a flattened image).</summary>
 public sealed class RichGraphView
 {
+    public string GraphId { get; set; } = "graph-" + Guid.NewGuid().ToString("N")[..12];
     public List<RichGraphExpressionView> Expressions { get; set; } = [];
+    public List<RichGraphSliderView> Sliders { get; set; } = [];
     public double XMin { get; set; } = -10;
     public double XMax { get; set; } = 10;
     public double YMin { get; set; } = -10;
@@ -144,6 +147,16 @@ public sealed class RichGraphView
     public string XLabel { get; set; } = "x";
     public string YLabel { get; set; } = "y";
     public List<RichGraphPointView> Points { get; set; } = [];
+}
+
+public sealed class RichGraphSliderView
+{
+    public string VariableId { get; set; } = string.Empty;
+    public string Name { get; set; } = "a";
+    public double Minimum { get; set; } = -5;
+    public double Maximum { get; set; } = 5;
+    public double Step { get; set; } = 0.1;
+    public double DefaultValue { get; set; }
 }
 
 public sealed class RichGraphExpressionView

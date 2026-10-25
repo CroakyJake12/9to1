@@ -11,6 +11,91 @@ public sealed class HavenRichBoardV3Tests
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
+    [Fact]
+    public async Task Nested_pages_keep_stable_ancestry_and_reject_cycles_across_reopen()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var path = Path.Combine(root, "hierarchy.9to1board");
+            string rootPageId;
+            string childPageId = string.Empty;
+            string grandchildPageId = string.Empty;
+            await using (var session = await RichBoardSession.CreateNewAsync(store, "Hierarchy"))
+            {
+                await session.SaveAsAsync(path);
+                var section = session.Rich.Sections[0];
+                rootPageId = section.Pages[0].Id;
+                await session.MutateAsync(rich =>
+                {
+                    childPageId = HavenRichNotesOps.AddSubpage(rich, section.Id, rootPageId, "Child").Id;
+                    grandchildPageId = HavenRichNotesOps.AddSubpage(rich, section.Id, childPageId, "Grandchild").Id;
+                    Assert.Throws<InvalidOperationException>(() =>
+                        HavenRichNotesOps.SetPageParent(rich, rootPageId, grandchildPageId));
+                    var otherSection = HavenRichNotesOps.AddSection(rich, "Other section");
+                    Assert.Throws<KeyNotFoundException>(() =>
+                        HavenRichNotesOps.SetPageParent(rich, rootPageId, otherSection.Pages[0].Id));
+                });
+                await session.SaveAsync();
+            }
+
+            await using var reopened = await RichBoardSession.OpenAtPathAsync(store, path);
+            var pages = reopened.Rich.Sections[0].Pages;
+            Assert.Equal(rootPageId, pages.Single(page => page.Id == childPageId).ParentPageId);
+            Assert.Equal(childPageId, pages.Single(page => page.Id == grandchildPageId).ParentPageId);
+
+            string copiedSectionId = string.Empty;
+            await reopened.MutateAsync(rich => copiedSectionId =
+                HavenRichNotesOps.DuplicateSection(rich, rich.Sections[0].Id).Id);
+            var copiedPages = reopened.Rich.Sections.Single(section => section.Id == copiedSectionId).Pages;
+            var copiedChild = Assert.Single(copiedPages, page => page.Title == "Child");
+            var copiedGrandchild = Assert.Single(copiedPages, page => page.Title == "Grandchild");
+            Assert.NotEqual(childPageId, copiedChild.Id);
+            Assert.NotEqual(grandchildPageId, copiedGrandchild.Id);
+            Assert.Equal(copiedChild.Id, copiedGrandchild.ParentPageId);
+
+            await reopened.MutateAsync(rich => Assert.True(HavenRichNotesOps.RemovePage(rich, childPageId)));
+            Assert.Equal(rootPageId, reopened.Rich.Sections[0].Pages.Single(page => page.Id == grandchildPageId).ParentPageId);
+        });
+    }
+
+    [Fact]
+    public async Task Graph_slider_definitions_persist_and_drive_existing_expression_evaluator()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var path = Path.Combine(root, "graph-slider.9to1board");
+            var slider = new HavenRichGraphSlider
+            {
+                VariableId = "variable-a", Name = "a", Minimum = -2, Maximum = 6, Step = 0.5, DefaultValue = 1.5
+            };
+            await using (var session = await RichBoardSession.CreateNewAsync(store, "Graph slider"))
+            {
+                await session.SaveAsAsync(path);
+                var pageId = session.Rich.Sections[0].Pages[0].Id;
+                string blockId = string.Empty;
+                await session.MutateAsync(rich =>
+                {
+                    var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Graph);
+                    blockId = block.Id;
+                    HavenRichNotesOps.SetGraphSliders(rich, pageId, blockId, [slider]);
+                    HavenRichNotesOps.UpdateGraphExpression(rich, pageId, blockId,
+                        block.Graph!.Expressions[0].Id, text: "y = 2a + x");
+                });
+                await session.SaveAsync();
+                Assert.True(HavenGraphExpression.TryEvaluate("y = 2a + x", 3, out var y,
+                    new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase) { ["a"] = 1.5 }));
+                Assert.Equal(6, y);
+            }
+
+            await using var reopened = await RichBoardSession.OpenAtPathAsync(store, path);
+            var graph = reopened.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Graph!;
+            var persisted = Assert.Single(graph.Sliders);
+            Assert.Equal("variable-a", persisted.VariableId);
+            Assert.Equal("a", persisted.Name);
+            Assert.Equal(1.5, persisted.DefaultValue);
+        });
+    }
+
     // ---------- Runs: baseline + formatting ----------
 
     [Fact]

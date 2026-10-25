@@ -133,13 +133,16 @@ public static class BlockRenderer
         // No visible header: blocks read as document content. Management lives
         // in the block context menu (right-click) and the contextual strip.
         var shell = new StackPanel { Orientation = Orientation.Vertical };
-        var menu = new ContextMenu();
-        var delete = new MenuItem { Header = "Delete block" };
-        Avalonia.Automation.AutomationProperties.SetName(delete, "Delete block");
-        var captured = block.Id;
-        delete.Click += async (_, _) => await vm.DeleteBlockAsync(captured);
-        menu.Items.Add(delete);
-        shell.ContextMenu = menu;
+        if (vm.IsEditMode)
+        {
+            var menu = new ContextMenu();
+            var delete = new MenuItem { Header = "Delete block" };
+            Avalonia.Automation.AutomationProperties.SetName(delete, "Delete block");
+            var captured = block.Id;
+            delete.Click += async (_, _) => await vm.DeleteBlockAsync(captured);
+            menu.Items.Add(delete);
+            shell.ContextMenu = menu;
+        }
         if (!string.IsNullOrEmpty(block.AttachmentId))
             shell.Children.Add(BuildAttachmentRow(vm, block));
         return shell;
@@ -259,6 +262,7 @@ public static class BlockRenderer
             Padding = new Thickness(28, 4, 8, 4),
             HorizontalAlignment = HorizontalAlignment.Left,
         };
+        add.IsVisible = vm.IsEditMode;
         ToolTip.SetTip(add, "Add a checklist item");
         AutomationProperties.SetName(add, "Add checklist item");
         add.Click += async (_, _) => await vm.AddChecklistItemAsync(parentKey);
@@ -280,7 +284,6 @@ public static class BlockRenderer
             IsChecked = item.IsChecked,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 10, 0),
-            IsEnabled = vm.IsEditMode,
         };
         AutomationProperties.SetName(check, "Checklist item done");
         var text = new TextBox
@@ -308,6 +311,7 @@ public static class BlockRenderer
             Padding = new Thickness(6, 2),
             VerticalAlignment = VerticalAlignment.Center,
             Opacity = 0,
+            IsVisible = vm.IsEditMode,
         };
         ToolTip.SetTip(erase, "Remove this item");
         AutomationProperties.SetName(erase, "Remove checklist item");
@@ -599,9 +603,20 @@ public static class BlockRenderer
     private static Control BuildGraph(BoardsViewModel vm, RichBoardBlock block)
     {
         var shell = BlockShell(vm, block);
-        var graph = block.Graph ?? new RichGraphView();
+        var graph = vm.GetGraphForRendering(block.Id) ?? new RichGraphView();
         // Rendered plot dominates; editing lives in chips + collapsed settings.
-        shell.Children.Add(BuildGraphCanvas(graph));
+        var graphVariables = vm.GetGraphSliderValues(block.Id);
+        var graphCanvas = BuildGraphCanvas(graph, graphVariables);
+        shell.Children.Add(graphCanvas);
+        var capturedBlock = block.Id;
+        var nav = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
+        AddSmallButton(nav, "◀", "Pan graph left", () => vm.GraphPanZoom(capturedBlock, -0.2, 0, 1));
+        AddSmallButton(nav, "▶", "Pan graph right", () => vm.GraphPanZoom(capturedBlock, 0.2, 0, 1));
+        AddSmallButton(nav, "▲", "Pan graph up", () => vm.GraphPanZoom(capturedBlock, 0, 0.2, 1));
+        AddSmallButton(nav, "▼", "Pan graph down", () => vm.GraphPanZoom(capturedBlock, 0, -0.2, 1));
+        AddSmallButton(nav, "+", "Zoom graph in", () => vm.GraphPanZoom(capturedBlock, 0, 0, 1.5));
+        AddSmallButton(nav, "−", "Zoom graph out", () => vm.GraphPanZoom(capturedBlock, 0, 0, 1 / 1.5));
+        shell.Children.Add(nav);
         var chips = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 2) };
         foreach (var expr in graph.Expressions)
             chips.Children.Add(BuildGraphChip(vm, block.Id, expr));
@@ -617,12 +632,12 @@ public static class BlockRenderer
         };
         ToolTip.SetTip(add, "Add a graph expression");
         AutomationProperties.SetName(add, "Add graph expression");
-        var capturedBlock = block.Id;
         add.Click += (_, _) => vm.GraphAddExpression(capturedBlock);
         chips.Children.Add(add);
+        chips.IsVisible = vm.IsEditMode;
         shell.Children.Add(chips);
 
-        if (graph.Expressions.Count == 0)
+        if (vm.IsEditMode && graph.Expressions.Count == 0)
             shell.Children.Add(new TextBlock
             {
                 Text = "Add an expression such as y = sin(x).",
@@ -637,10 +652,63 @@ public static class BlockRenderer
             IsExpanded = false,
             Margin = new Thickness(0, 2, 0, 0),
             HorizontalAlignment = HorizontalAlignment.Stretch,
+            IsVisible = vm.IsEditMode,
         };
         var panel = new StackPanel { Orientation = Orientation.Vertical };
         foreach (var expr in graph.Expressions)
             panel.Children.Add(BuildGraphExpressionRow(vm, block.Id, expr));
+
+        if (vm.IsEditMode)
+        {
+            foreach (var slider in graph.Sliders)
+                panel.Children.Add(BuildGraphSliderEditor(vm, block.Id, slider));
+            var addSlider = new Button { Content = "+ Slider", Margin = new Thickness(0, 4, 0, 4) };
+            ToolTip.SetTip(addSlider, "Add a variable slider to this graph");
+            AutomationProperties.SetName(addSlider, "Add graph slider");
+            addSlider.Click += (_, _) => vm.AddGraphSlider(block.Id);
+            panel.Children.Add(addSlider);
+        }
+        else
+        {
+            foreach (var sliderDefinition in graph.Sliders)
+            {
+                var sliderRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+                var value = vm.GetGraphSliderValues(block.Id).GetValueOrDefault(sliderDefinition.Name, sliderDefinition.DefaultValue);
+                var label = new TextBlock
+                {
+                    Text = $"{sliderDefinition.Name} = {value:0.##}", Width = 76,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                var runtimeSlider = new Slider
+                {
+                    Minimum = sliderDefinition.Minimum,
+                    Maximum = sliderDefinition.Maximum,
+                    Value = value,
+                    Width = 220,
+                    TickFrequency = sliderDefinition.Step,
+                    IsSnapToTickEnabled = true,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                ToolTip.SetTip(runtimeSlider, $"View-only value for {sliderDefinition.Name}");
+                AutomationProperties.SetName(runtimeSlider, $"Graph variable {sliderDefinition.Name}");
+                runtimeSlider.ValueChanged += (_, args) =>
+                {
+                    vm.SetGraphSliderValue(block.Id, sliderDefinition.VariableId, args.NewValue);
+                    label.Text = $"{sliderDefinition.Name} = {args.NewValue:0.##}";
+                    var updated = BuildGraphCanvas(graph, vm.GetGraphSliderValues(block.Id));
+                    var currentIndex = shell.Children.IndexOf(graphCanvas);
+                    if (currentIndex >= 0)
+                    {
+                        shell.Children.RemoveAt(currentIndex);
+                        shell.Children.Insert(currentIndex, updated);
+                        graphCanvas = updated;
+                    }
+                };
+                sliderRow.Children.Add(label);
+                sliderRow.Children.Add(runtimeSlider);
+                shell.Children.Add(sliderRow);
+            }
+        }
 
         var viewport = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 4) };
         AddViewportField(vm, viewport, capturedBlock, "XMin", graph.XMin);
@@ -654,14 +722,6 @@ public static class BlockRenderer
         viewport.Children.Add(apply);
         panel.Children.Add(viewport);
 
-        var nav = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        AddSmallButton(nav, "◀", "Pan graph left", () => vm.GraphPanZoom(capturedBlock, -0.2, 0, 1));
-        AddSmallButton(nav, "▶", "Pan graph right", () => vm.GraphPanZoom(capturedBlock, 0.2, 0, 1));
-        AddSmallButton(nav, "▲", "Pan graph up", () => vm.GraphPanZoom(capturedBlock, 0, 0.2, 1));
-        AddSmallButton(nav, "▼", "Pan graph down", () => vm.GraphPanZoom(capturedBlock, 0, -0.2, 1));
-        AddSmallButton(nav, "+", "Zoom graph in", () => vm.GraphPanZoom(capturedBlock, 0, 0, 1.5));
-        AddSmallButton(nav, "−", "Zoom graph out", () => vm.GraphPanZoom(capturedBlock, 0, 0, 1 / 1.5));
-        panel.Children.Add(nav);
         settings.Content = panel;
         shell.Children.Add(settings);
         return shell;
@@ -777,6 +837,51 @@ public static class BlockRenderer
         return row;
     }
 
+    private static Control BuildGraphSliderEditor(BoardsViewModel vm, string blockId, RichGraphSliderView slider)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+        TextBox Field(string text, double width, string accessibleName)
+        {
+            var input = new TextBox { Text = text, Width = width, Margin = new Thickness(0, 0, 5, 0) };
+            AutomationProperties.SetName(input, accessibleName);
+            return input;
+        }
+        var name = Field(slider.Name, 42, "Graph slider variable name");
+        var minimum = Field(slider.Minimum.ToString("G"), 76, "Graph slider minimum");
+        var maximum = Field(slider.Maximum.ToString("G"), 76, "Graph slider maximum");
+        var step = Field(slider.Step.ToString("G"), 76, "Graph slider step");
+        var defaultValue = Field(slider.DefaultValue.ToString("G"), 76, "Graph slider default value");
+        ToolTip.SetTip(name, "Variable used in expressions, e.g. a");
+        ToolTip.SetTip(minimum, "Minimum value");
+        ToolTip.SetTip(maximum, "Maximum value");
+        ToolTip.SetTip(step, "Slider step");
+        ToolTip.SetTip(defaultValue, "Saved default value");
+        void Commit()
+        {
+            if (double.TryParse(minimum.Text, out var min) && double.TryParse(maximum.Text, out var max) &&
+                double.TryParse(step.Text, out var increment) && double.TryParse(defaultValue.Text, out var initial))
+                vm.ConfigureGraphSlider(blockId, slider.VariableId, name.Text ?? string.Empty,
+                    min, max, increment, initial);
+        }
+        name.LostFocus += (_, _) => Commit();
+        minimum.LostFocus += (_, _) => Commit();
+        maximum.LostFocus += (_, _) => Commit();
+        step.LostFocus += (_, _) => Commit();
+        defaultValue.LostFocus += (_, _) => Commit();
+        var remove = new Button { Content = "Remove", Padding = new Thickness(6, 2) };
+        ToolTip.SetTip(remove, "Remove this slider definition");
+        AutomationProperties.SetName(remove, $"Remove graph slider {slider.Name}");
+        remove.Click += (_, _) => vm.RemoveGraphSlider(blockId, slider.VariableId);
+        row.Children.Add(new TextBlock { Text = "Variable", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 5, 0) });
+        row.Children.Add(name);
+        row.Children.Add(minimum);
+        row.Children.Add(maximum);
+        row.Children.Add(step);
+        row.Children.Add(defaultValue);
+        row.Children.Add(remove);
+        return row;
+    }
+
     private static void AddViewportField(BoardsViewModel vm, Panel parent, string blockId, string field, double value)
     {
         parent.Children.Add(new TextBlock
@@ -798,7 +903,7 @@ public static class BlockRenderer
         parent.Children.Add(box);
     }
 
-    private static Control BuildGraphCanvas(RichGraphView graph)
+    private static Control BuildGraphCanvas(RichGraphView graph, IReadOnlyDictionary<string, double>? variables = null)
     {
         var canvas = new Canvas
         {
@@ -858,11 +963,11 @@ public static class BlockRenderer
             if (!expr.Visible)
                 continue;
             var samples = HavenGraphExpression.Sample(
-                expr.Text, expr.DomainMin, expr.DomainMax, graph.XMin, graph.XMax, 200);
+                expr.Text, expr.DomainMin, expr.DomainMax, graph.XMin, graph.XMax, 200, variables);
             if (samples.Count == 0)
             {
                 var mid = (graph.XMin + graph.XMax) / 2;
-                if (!HavenGraphExpression.TryEvaluate(expr.Text, mid, out _))
+                if (!HavenGraphExpression.TryEvaluate(expr.Text, mid, out _, variables))
                     errors.Add("Invalid expression \"" + expr.Text + "\" — curve hidden.");
                 else
                     errors.Add("Expression \"" + expr.Text + "\" has no points in this viewport.");
@@ -969,6 +1074,7 @@ public static class BlockRenderer
         ToolTip.SetTip(remove, "Detach the attachment");
         Avalonia.Automation.AutomationProperties.SetName(remove, "Detach attachment");
         remove.Click += async (_, _) => await vm.RemoveAttachmentAsync(captured);
+        remove.IsVisible = vm.IsEditMode;
         actions.Children.Add(open);
         actions.Children.Add(remove);
         row.Children.Add(actions);
@@ -1052,6 +1158,8 @@ public static class BlockRenderer
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(10),
+                IsHitTestVisible = vm.IsEditMode,
+                Focusable = vm.IsEditMode,
             };
             border.Child = new TextBlock
             {
@@ -1136,6 +1244,7 @@ public static class BlockRenderer
             Foreground = BoardsTheme.SecondaryTextBrush,
             FontSize = 13,
             Padding = new Thickness(8, 4),
+            IsVisible = vm.IsEditMode,
         };
         ToolTip.SetTip(addBox, "Add a freeform box");
         Avalonia.Automation.AutomationProperties.SetName(addBox, "Add freeform box");
@@ -1149,6 +1258,7 @@ public static class BlockRenderer
             Foreground = BoardsTheme.SecondaryTextBrush,
             FontSize = 13,
             Padding = new Thickness(8, 4),
+            IsVisible = vm.IsEditMode,
         };
         ToolTip.SetTip(removeBox, "Remove the selected box");
         Avalonia.Automation.AutomationProperties.SetName(removeBox, "Remove selected freeform box");

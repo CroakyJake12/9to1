@@ -33,6 +33,7 @@ public sealed class HavenRichSection
 public sealed class HavenRichPage
 {
     public string Id { get; set; } = "page-" + Guid.NewGuid().ToString("N")[..12];
+    public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Page 1";
     public int Order { get; set; }
     public double CanvasWidth { get; set; } = 1200;
@@ -226,6 +227,8 @@ public static class HavenRichNotesValidator
         if (notes.Sections.Count == 0)
             throw new InvalidOperationException("Rich board must contain at least one section.");
         HavenRichStyles.ValidateStyles(notes);
+        var allPageIds = new HashSet<string>(StringComparer.Ordinal);
+        var allGraphIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var section in notes.Sections)
         {
             RequireId(section.Id, "Section");            if (string.IsNullOrWhiteSpace(section.Title))
@@ -236,6 +239,8 @@ public static class HavenRichNotesValidator
             foreach (var page in section.Pages)
             {
                 RequireId(page.Id, "Page");
+                if (!allPageIds.Add(page.Id))
+                    throw new InvalidOperationException($"Page ID '{page.Id}' is duplicated in the board.");
                 if (string.IsNullOrWhiteSpace(page.Title))
                     throw new InvalidOperationException("Rich board pages must have non-empty titles.");
                 var blockIds = new HashSet<string>(StringComparer.Ordinal);
@@ -244,6 +249,8 @@ public static class HavenRichNotesValidator
                     RequireId(block.Id, "Block");
                     if (!blockIds.Add(block.Id))
                         throw new InvalidOperationException($"Block ID '{block.Id}' is duplicated on page '{page.Title}'.");
+                    if (block.Graph is not null && !allGraphIds.Add(block.Graph.GraphId))
+                        throw new InvalidOperationException($"GraphID '{block.Graph.GraphId}' is duplicated in the board.");
                     ValidateBlock(block);
                 }
 
@@ -257,6 +264,21 @@ public static class HavenRichNotesValidator
                             Math.Abs(point.X) > InkCoordinateLimit || Math.Abs(point.Y) > InkCoordinateLimit)
                             throw new InvalidOperationException("Ink coordinates are outside the supported finite range.");
                     }
+                }
+            }
+
+            var pagesById = section.Pages.ToDictionary(page => page.Id, StringComparer.Ordinal);
+            foreach (var page in section.Pages)
+            {
+                var seen = new HashSet<string>(StringComparer.Ordinal) { page.Id };
+                var parentId = page.ParentPageId;
+                while (parentId is not null)
+                {
+                    if (!pagesById.TryGetValue(parentId, out var parent))
+                        throw new InvalidOperationException($"Page '{page.Title}' has a missing or cross-section parent.");
+                    if (!seen.Add(parent.Id))
+                        throw new InvalidOperationException($"Page hierarchy contains a cycle at '{parent.Title}'.");
+                    parentId = parent.ParentPageId;
                 }
             }
         }
@@ -341,6 +363,52 @@ public static partial class HavenRichNotesOps
         return page;
     }
 
+    public static HavenRichPage AddSubpage(HavenRichNotes notes, string sectionId, string parentPageId, string? title = null)
+    {
+        var section = RequireSection(notes, sectionId);
+        _ = section.Pages.FirstOrDefault(page => page.Id == parentPageId)
+            ?? throw new KeyNotFoundException("Parent page was not found in the selected section.");
+        var page = AddPageWithoutTouch(section, title);
+        page.ParentPageId = parentPageId;
+        Touch(notes);
+        return page;
+    }
+
+    /// <summary>Changes a page's parent while keeping its stable ID and rejecting cycles/cross-section links.</summary>
+    public static void SetPageParent(HavenRichNotes notes, string pageId, string? parentPageId)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var section = notes.Sections.FirstOrDefault(candidate => candidate.Pages.Any(page => page.Id == pageId))
+            ?? throw new KeyNotFoundException("Rich board page was not found.");
+        var page = section.Pages.Single(item => item.Id == pageId);
+        if (parentPageId is not null)
+        {
+            _ = section.Pages.FirstOrDefault(item => item.Id == parentPageId)
+                ?? throw new KeyNotFoundException("Parent page was not found in the selected section.");
+            for (var ancestor = parentPageId; ancestor is not null; )
+            {
+                if (ancestor == pageId)
+                    throw new InvalidOperationException("A page cannot be nested beneath itself or its descendant.");
+                ancestor = section.Pages.First(item => item.Id == ancestor).ParentPageId;
+            }
+        }
+        if (page.ParentPageId == parentPageId) return;
+        page.ParentPageId = parentPageId;
+        Touch(notes);
+    }
+
+    private static HavenRichPage AddPageWithoutTouch(HavenRichSection section, string? title)
+    {
+        var page = new HavenRichPage
+        {
+            Title = string.IsNullOrWhiteSpace(title) ? $"Page {section.Pages.Count + 1}" : title.Trim(),
+            Order = section.Pages.Count
+        };
+        section.Pages.Add(page);
+        NormalizePages(section);
+        return page;
+    }
+
     public static void RenameSection(HavenRichNotes notes, string sectionId, string title)
     {
         RequireSection(notes, sectionId).Title =
@@ -379,6 +447,9 @@ public static partial class HavenRichNotesOps
             return false;
         if (section.Pages.Count <= 1)
             return false;
+        var removedPage = section.Pages.Single(page => page.Id == pageId);
+        foreach (var child in section.Pages.Where(page => page.ParentPageId == pageId))
+            child.ParentPageId = removedPage.ParentPageId;
         var removed = section.Pages.RemoveAll(p => p.Id == pageId) > 0;
         if (removed)
         {
@@ -422,8 +493,17 @@ public static partial class HavenRichNotesOps
     private static void FreshSectionIds(HavenRichSection section)
     {
         section.Id = "sec-" + Guid.NewGuid().ToString("N")[..12];
+        var pageIds = section.Pages.ToDictionary(page => page.Id,
+            _ => "page-" + Guid.NewGuid().ToString("N")[..12], StringComparer.Ordinal);
         foreach (var page in section.Pages)
+        {
+            var oldId = page.Id;
+            var oldParent = page.ParentPageId;
             FreshPageIds(page);
+            page.Id = pageIds[oldId];
+            page.ParentPageId = oldParent is not null && pageIds.TryGetValue(oldParent, out var parentId)
+                ? parentId : null;
+        }
     }
 
     private static void FreshPageIds(HavenRichPage page)
@@ -449,8 +529,13 @@ public static partial class HavenRichNotesOps
         if (block.Image is not null)
             block.Image.Id = "img-" + Guid.NewGuid().ToString("N")[..12];
         if (block.Graph is not null)
+        {
+            block.Graph.GraphId = "graph-" + Guid.NewGuid().ToString("N")[..12];
             foreach (var expression in block.Graph.Expressions)
                 expression.Id = "expr-" + Guid.NewGuid().ToString("N")[..12];
+            foreach (var slider in block.Graph.Sliders)
+                slider.VariableId = "variable-" + Guid.NewGuid().ToString("N")[..12];
+        }
         if (block.Attachment is not null)
             block.Attachment.Id = "att-" + Guid.NewGuid().ToString("N")[..12];
     }
