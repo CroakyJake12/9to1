@@ -62,6 +62,7 @@ public sealed class ContractAdapterTests
             await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
             var sectionId = adapter.Document.Sections[0].Id;
             var originalPageId = adapter.Document.Sections[0].Pages[0].Id;
+            var originalPageCount = adapter.Document.Sections[0].Pages.Count;
             var otherSectionId = await adapter.AddSectionAsync("Other section");
             var otherPageId = adapter.Document.Sections.Single(section => section.Id == otherSectionId).Pages[0].Id;
             var host = new DelayedCanvasChoiceHost();
@@ -73,7 +74,7 @@ public sealed class ContractAdapterTests
             host.CompleteCreate();
             await create;
 
-            Assert.Equal(2, adapter.Document.Sections[0].Pages.Count);
+            Assert.Equal(originalPageCount, adapter.Document.Sections[0].Pages.Count);
             Assert.True(viewModel.TryGetValue("CanLinkCreatedEmbeddedPage", out var canLink) && canLink is false);
             Assert.Contains("original Board page changed", viewModel.Get("StatusText")?.ToString() ?? string.Empty,
                 StringComparison.OrdinalIgnoreCase);
@@ -83,6 +84,7 @@ public sealed class ContractAdapterTests
             await viewModel.DispatchAsync("LinkCreatedEmbeddedPage", null);
 
             Assert.Equal(1, host.CreateCount);
+            Assert.Equal(originalPageCount + 1, adapter.Document.Sections[0].Pages.Count);
             var linked = Assert.Single(adapter.Document.Sections[0].Pages,
                 page => page.EmbeddedArtifact == host.CreatedReference);
             Assert.Equal(HavenRichPageTypes.Canvas, linked.PageType);
@@ -428,6 +430,8 @@ public sealed class ContractAdapterTests
         var table = block.Table!;
         var baselineWidth = table.Width;
         var baselineAlignment = table.Alignment;
+        var baselineHeaderRow = table.HasHeaderRow;
+        var baselineHeaderColumn = table.HasHeaderColumn;
         table.Rows[0].Cells[0].Text = "Heading";
         table.Rows[0].Cells[1].Background = "#FFE8F0FE";
         var anchorId = table.Rows[0].Cells[0].Id;
@@ -492,13 +496,13 @@ public sealed class ContractAdapterTests
             Assert.True(await adapter.UndoAsync());
             var undoneHeaderColumn = await adapter.GetDetachedContractDocumentAsync();
             var undoneHeaderColumnTable = undoneHeaderColumn.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
-            Assert.False(undoneHeaderColumnTable.HasHeaderColumn);
-            Assert.True(undoneHeaderColumnTable.HasHeaderRow);
+            Assert.Equal(baselineHeaderColumn, undoneHeaderColumnTable.HasHeaderColumn);
+            Assert.Equal(baselineHeaderRow, undoneHeaderColumnTable.HasHeaderRow);
             Assert.True(await adapter.UndoAsync());
             var undoneHeaderRow = await adapter.GetDetachedContractDocumentAsync();
             var undoneHeaderRowTable = undoneHeaderRow.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
-            Assert.False(undoneHeaderRowTable.HasHeaderRow);
-            Assert.False(undoneHeaderRowTable.HasHeaderColumn);
+            Assert.Equal(baselineHeaderRow, undoneHeaderRowTable.HasHeaderRow);
+            Assert.Equal(baselineHeaderColumn, undoneHeaderRowTable.HasHeaderColumn);
             Assert.Equal(baselineAlignment, undoneHeaderRowTable.Alignment);
             Assert.Equal(baselineWidth, undoneHeaderRowTable.Width);
             Assert.True(await adapter.UndoAsync());

@@ -74,7 +74,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _homeBoardCreationHost = homeBoardCreationHost;
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
-        Set("ModeLabel", _isEditMode ? "Edit" : "View");
+        Set("ModeLabel", _isEditMode ? "Editing" : "Viewing");
+        Set("ModeToggleAccessibleName", _isEditMode ? "Switch to Viewing mode" : "Switch to Editing mode");
         Set("RecentBoardsLoaded", false);
         Set("EmbeddedPageUnavailable", false);
         Set("EmbeddedPageMessage", string.Empty);
@@ -591,13 +592,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         RefreshHomeBoardCreationAvailability();
         try
         {
-            var draft = HavenBoardDocumentCodec.CreateNew();
-            var bytes = JsonSerializer.SerializeToUtf8Bytes(draft,
-                new JsonSerializerOptions(JsonSerializerDefaults.Web));
-            _ = HavenBoardDocumentCodec.Deserialize(bytes);
-            if (bytes.Length > HavenBoardDocumentCodec.MaximumDocumentBytes)
-                throw new InvalidDataException("The new Board draft exceeds the supported document size.");
-            var result = await host.CreateAndOpenAsync(bytes.ToArray(), cancellationToken);
+            var draftBytes = CreateNewBoardDraftBytes();
+            var result = await host.CreateAndOpenAsync(draftBytes.ToArray(), cancellationToken);
             ApplyHomeBoardCreationResult(result);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -609,6 +605,18 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("StatusText", "Unable to confirm whether this Board was saved. Creating another is disabled while Home checks.");
         }
         finally { _homeCreationOperationInProgress = false; RefreshHomeBoardCreationAvailability(); }
+    }
+
+    /// <summary>Builds the canonical, bounded, validated blank Board document for an owner-reviewed create flow.</summary>
+    public static ReadOnlyMemory<byte> CreateNewBoardDraftBytes()
+    {
+        var draft = HavenBoardDocumentCodec.CreateNew();
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(draft,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        _ = HavenBoardDocumentCodec.Deserialize(bytes);
+        if (bytes.Length > HavenBoardDocumentCodec.MaximumDocumentBytes)
+            throw new InvalidDataException("The new Board draft exceeds the supported document size.");
+        return bytes;
     }
 
     private async Task RetryOpenCreatedHomeBoardAsync(CancellationToken cancellationToken)
@@ -789,7 +797,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("IsEditMode", enabled);
         RefreshEmbeddedPageLinkState();
         Set("ShowNativeAuthoring", ShowNativeAuthoring);
-        Set("ModeLabel", enabled ? "Edit" : "View");
+        Set("ModeLabel", enabled ? "Editing" : "Viewing");
+        Set("ModeToggleAccessibleName", enabled ? "Switch to Viewing mode" : "Switch to Editing mode");
         if (!enabled) InvalidateTextRange();
         ApplyAuthoringState(_attachedRoot);
         RefreshTextRangeBindings();
@@ -3492,6 +3501,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             RefreshPageBreadcrumb();
             Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock layout" : "Lock layout");
             Set("CanvasLockStatus", page.IsCanvasLocked ? "Layout locked · unlock to move boxes; drawing remains available." : "Layout unlocked");
+            Set("CanvasLockAccessibleName", page.IsCanvasLocked
+                ? "Unlock freeform box positions; drawing remains available"
+                : "Lock freeform box positions; drawing remains available");
             Set("HeadingText", heading?.Text ?? string.Empty);
             Set("ParaText", para?.Text ?? string.Empty);
             Set("Check1Text", checks.Count > 0 ? checks[0].Text : string.Empty);
