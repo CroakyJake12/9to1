@@ -108,8 +108,23 @@ public sealed partial class CanonicalProjectContextStoreReadOwnerTests
             var delivery = await rig.Keep(graph.Writer.StartOriginalGraphPublicationWithinSourceAsync(session, session.LocalRevision,
                 GraphPublicationKind.SaveDraft, rig.Scope, rig.Retain, rig.Token));
             Assert.True(graph.Writer.IsIssuedOriginalGraphPublicationObservation(delivery));
-            var completion = rig.Keep(delivery.WaitOriginalCompletionAsync(rig.Token));
+            var declinedCompletion = rig.Keep(delivery.WaitOriginalCompletionAsync(rig.Token));
+            var declinedReview = await graph.Wait(declinedCompletion, "automations.graph.save-draft");
+            Assert.True((await rig.Keep(graph.Permissions.DecideAsync(declinedReview.RequestId, HomeApprovalChoice.Decline,
+                cancellationToken: rig.Token))).Succeeded);
+            Assert.Equal(CanonicalAutomationGraphPublicationCompletionKind.DeclinedBeforeEffect, (await declinedCompletion).Kind);
+            await rig.Keep(delivery.CloseAndDrainOriginalAsync());
+
+            // A definitive no-effect refusal may be explicitly retried against
+            // the same editor draft, but it receives new operation and Home
+            // review identities. Uncertain/in-flight outcomes remain pinned.
+            var retry = await rig.Keep(graph.Writer.StartOriginalGraphPublicationWithinSourceAsync(session, session.LocalRevision,
+                GraphPublicationKind.SaveDraft, rig.Scope, rig.Retain, rig.Token));
+            Assert.NotEqual(delivery.OperationId, retry.OperationId);
+            Assert.NotEqual(delivery.GraphOperationId, retry.GraphOperationId);
+            var completion = rig.Keep(retry.WaitOriginalCompletionAsync(rig.Token));
             var graphReview = await graph.Accept(completion, "automations.graph.save-draft");
+            Assert.NotEqual(declinedReview.RequestId, graphReview);
             var bindingReview = await graph.Wait(completion, HomeCanonicalAutomationDefinitionWriteSource.BindGraphDraftAction);
             Assert.NotEqual(graphReview, bindingReview.RequestId);
             // Home graph publication alone has not rebound or rewritten the SQL row.
@@ -120,9 +135,9 @@ public sealed partial class CanonicalProjectContextStoreReadOwnerTests
             Assert.True((await rig.Keep(graph.Permissions.DecideAsync(bindingReview.RequestId, HomeApprovalChoice.Accept,
                 cancellationToken: rig.Token))).Succeeded);
             var done = await completion;
-            Assert.True(delivery.IsIssuedOriginalCompletion(done));
+            Assert.True(retry.IsIssuedOriginalCompletion(done));
             Assert.Equal(CanonicalAutomationGraphPublicationCompletionKind.SavedDisabled, done.Kind);
-            await rig.Keep(delivery.CloseAndDrainOriginalAsync());
+            await rig.Keep(retry.CloseAndDrainOriginalAsync());
             var saved = await graph.Select(reservation.AutomationId);
             Assert.Equal(reservation.AutomationId, saved.Row.Value.Id);
             Assert.Equal(new AutomationDefinitionGraphBinding(reservation.GraphId, 2, null), saved.Row.Value.GraphBinding);
