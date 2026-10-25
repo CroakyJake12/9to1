@@ -234,8 +234,8 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
         var first = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload("first complete draft"), _key);
         var second = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload("second complete draft"), _key);
         var results = await Task.WhenAll(store.SaveDraftRecoveryAsync(project, first, 0), other.SaveDraftRecoveryAsync(project, second, 0));
-        Assert.Single(results.Where(value => value.Succeeded));
-        Assert.Single(results.Where(value => value.Error?.Code == DeveloperOperationErrorCode.RevisionConflict));
+        Assert.Single(results, value => value.Succeeded);
+        Assert.Single(results, value => value.Error?.Code == DeveloperOperationErrorCode.RevisionConflict);
         Assert.Equal(results.Single(value => value.Succeeded).Value,
             (await new FileDeveloperWorkspaceStore(_root).GetDraftRecoveryAsync(project, scope)).Value);
     }
