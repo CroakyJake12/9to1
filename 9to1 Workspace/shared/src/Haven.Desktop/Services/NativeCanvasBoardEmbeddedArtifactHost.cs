@@ -171,7 +171,8 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
             await route.CloseAndDrainAsync().ConfigureAwait(false);
             var reference = new BoardEmbeddedArtifactReference("canvas", selected.ArtifactId,
                 new BoardEmbeddedArtifactRevision(null, selected.ExpectedRevisionId));
-            return reference.Validate();
+            reference.Validate();
+            return reference;
         }
         catch (Exception error)
         {
@@ -224,7 +225,7 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
                 if (primary is not null) failures.Insert(0, primary);
                 if (choice is not null && !accepted)
                 {
-                    var retained = new RetainedCanvasChooser(route, lifetime, choice, surface!, dialog, dialogTask, preparation);
+                    var retained = new RetainedCanvasChooser(route, lifetime, choice, dialog, dialogTask, preparation);
                     lock (_gate) _retainedChoosers.Add(retained);
                 }
                 throw new AggregateException("Canvas chooser operation or its original owner cleanup failed.", failures);
@@ -651,8 +652,7 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
 
     private sealed class RetainedCanvasChooser(NativeCanvasDesktopRoute route,
         CancellationTokenSource lifetime, CanvasEmbeddedArtifactChoiceSession choice,
-        CanvasHostSurface surface, Window? dialog, Task? dialogTask,
-        CanvasHostSurface.ClosePreparation? preparation)
+        Window? dialog, Task? dialogTask, CanvasHostSurface.ClosePreparation? preparation)
     {
         private readonly SemaphoreSlim _gate = new(1, 1);
         private CanvasHostSurface.ClosePreparation? _preparation = preparation;

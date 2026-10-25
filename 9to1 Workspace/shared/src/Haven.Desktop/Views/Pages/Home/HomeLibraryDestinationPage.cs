@@ -18,7 +18,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
     private sealed record LibraryRow(string Key, string DisplayName, string OwnerApp, string ArtifactType,
-        string LastModified, string Location, string Owner, string? SharedBy, bool IsPinned, HomeDeepLink Target);
+        string LastModified, string? Location, string? Owner, string? SharedBy, bool IsPinned, HomeDeepLink Target);
 
     private readonly HomeLibraryService _library;
     private readonly IHomeOriginalLibrarySource? _source;
@@ -50,7 +50,12 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     private bool _active, _busy, _stopped;
     private string _status = "Browse authorised references from your apps.";
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    private event PropertyChangedEventHandler? _bindingPropertyChanged;
+    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+    {
+        add => _bindingPropertyChanged += value;
+        remove => _bindingPropertyChanged -= value;
+    }
 
     internal HomeLibraryDestinationPage(Func<IHomeDeepLinkRouter, HomeLibraryService> create,
         Func<CancellationToken, Task> admit, Func<HomeDeepLink, Task, bool> queue,
@@ -60,7 +65,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     {
         Dispatcher.UIThread.VerifyAccess(); _admit = admit; _queue = queue; _source = ownedSource;
         _prepareNavigation = prepareNavigation; _selectArtifact = selectArtifact;
-        _bindings.PropertyChanged += (_, args) => PropertyChanged?.Invoke(this, args);
+        _bindings.PropertyChanged += (_, args) => _bindingPropertyChanged?.Invoke(this, args);
         if (_selectArtifact is not null) _status = "Choose a Write document to embed. The selected reference does not grant content access.";
         _work = new(StopAsync, CleanupAsync); _library = create(new Router(this));
         var document = HomeCuiSurface.LoadDefault().Document;
