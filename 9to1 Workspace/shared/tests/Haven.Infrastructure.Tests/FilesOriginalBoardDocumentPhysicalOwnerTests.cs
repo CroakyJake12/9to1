@@ -165,9 +165,50 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwnerTests
         Assert.True(calls > 0); Assert.Null(rig.Owner.OriginalClose);
     }
 
+    [LinuxFact]
+    public async Task New_board_create_publishes_one_create_only_payload_and_rejects_retired_folder_witness()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var created = await rig.Owner.MaterializeOriginalBoardDocumentCreateWithinSourceAsync(
+            rig.CreateDestination, rig.Payload, Run, rig.Retain, rig.Token);
+        Assert.True(rig.Owner.IsIssuedOriginalBoardDocumentCreateMaterialization(created));
+        await using var foreignOwner = new FilesOriginalBoardDocumentPhysicalOwner();
+        Assert.False(foreignOwner.IsIssuedOriginalBoardDocumentCreateMaterialization(created));
+        Assert.Equal(Guid.Empty, created.OriginalRecord.ExpectedRevisionId);
+        Assert.Equal(rig.CreateDescription.FileId, created.OriginalRecord.FileId);
+        Assert.Equal(rig.CreateDescription.ParentFolderId, created.OriginalRecord.ParentFolderId);
+        Assert.Equal(rig.Payload, File.ReadAllBytes(rig.CreatePath));
+        Assert.Equal(rig.OldBytes, File.ReadAllBytes(rig.OldPath));
+        Assert.Equal(rig.CreateDescription.DocumentId,
+            HavenBoardDocumentCodec.Deserialize(File.ReadAllBytes(rig.CreatePath)).DocumentId);
+        await rig.Owner.RevalidateOriginalBoardDocumentCreateWithinSourceAsync(created, Run, rig.Retain, rig.Token);
+        rig.Owner.DemandOriginalBoardDocumentCreateCommit(created);
+        rig.ClaimCurrent = false;
+        Assert.Throws<UnauthorizedAccessException>(() => rig.Owner.DemandOriginalBoardDocumentCreateCommit(created));
+        Assert.Equal(rig.Payload, File.ReadAllBytes(rig.CreatePath));
+        Assert.Equal(rig.OldBytes, File.ReadAllBytes(rig.OldPath));
+    }
+
+    [LinuxFact]
+    public async Task Board_create_does_not_publish_when_home_folder_claim_retires_during_staging()
+    {
+        await using var rig = await Rig.CreateAsync(); rig.ExpectFault = true;
+        rig.BeforeDemand = () =>
+        {
+            var stage = Directory.EnumerateFiles(rig.Anchor, "*.tmp").SingleOrDefault();
+            if (stage is not null && new FileInfo(stage).Length > 0) rig.ClaimCurrent = false;
+        };
+        await Assert.ThrowsAnyAsync<Exception>(() => rig.Owner.MaterializeOriginalBoardDocumentCreateWithinSourceAsync(
+            rig.CreateDestination, rig.Payload, Run, rig.Retain, rig.Token));
+        Assert.False(File.Exists(rig.CreatePath));
+        Assert.Equal(rig.OldBytes, File.ReadAllBytes(rig.OldPath));
+        Assert.NotEmpty(Directory.EnumerateFiles(rig.Anchor, "*.tmp"));
+    }
+
     private static void Run(Action body) => body();
     private static string Digest(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     private sealed class Destination : IFilesOriginalBoardDocumentWriteDestination { }
+    private sealed class CreateDestination : IFilesOriginalBoardDocumentCreateDestination { }
     private sealed class ForeignSource : IFilesOriginalBoardDocumentWriteSource
     {
         public bool IsIssuedOriginalBoardDocumentWriteDestination(IFilesOriginalBoardDocumentWriteDestination destination) => false;
@@ -176,15 +217,18 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwnerTests
         public void DemandOriginalFilesBoardDocumentCommit(IFilesOriginalBoardDocumentWriteDestination destination)
             => throw new UnauthorizedAccessException("No original Files/Home claim.");
     }
-    private sealed class Rig : IFilesOriginalBoardDocumentWriteSource, IAsyncDisposable
+    private sealed class Rig : IFilesOriginalBoardDocumentWriteSource, IFilesOriginalBoardDocumentCreateSource, IAsyncDisposable
     {
         internal string Root { get; } = Directory.CreateTempSubdirectory("files-board-bytes-").FullName;
         internal string Anchor => Path.Combine(Root, "registered-anchor");
         internal string OldPath => Path.Combine(Anchor, "existing.9to1board");
         internal string NewPath => Path.Combine(Anchor, Description.RelativeContentReference);
+        internal string CreatePath => Path.Combine(Anchor, CreateDescription.RelativeContentReference);
         internal FilesOriginalBoardDocumentPhysicalOwner Owner = new();
         internal Destination Destination = new();
+        internal CreateDestination CreateDestination = new();
         internal FilesOriginalBoardDocumentWriteDescription Description = null!;
+        internal FilesOriginalBoardDocumentCreateDescription CreateDescription = null!;
         internal byte[] Payload = [], OldBytes = [];
         internal bool ClaimCurrent = true, ExpectFault;
         internal Action? BeforeDemand;
@@ -207,7 +251,12 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwnerTests
                 var next = Guid.NewGuid();
                 rig.Description = new(rig.Anchor, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), next,
                     documentId, ".9to1-board-" + next.ToString("N") + ".content", rig.Payload.Length, Digest(rig.Payload), actor);
+                var createRevision = Guid.NewGuid();
+                rig.CreateDescription = new(rig.Anchor, rig.Description.FilesStoreId, rig.Description.ParentFolderId,
+                    Guid.NewGuid(), createRevision, documentId,
+                    ".9to1-board-" + createRevision.ToString("N") + ".content", rig.Payload.Length, Digest(rig.Payload), actor);
                 rig.Owner.BindOriginalBoardDocumentWriteSource(rig);
+                rig.Owner.BindOriginalBoardDocumentCreateSource(rig);
                 return rig;
             }
             catch { await rig.DisposeAsync(); throw; }
@@ -230,6 +279,17 @@ public sealed class FilesOriginalBoardDocumentPhysicalOwnerTests
         {
             BeforeDemand?.Invoke();
             if (!ReferenceEquals(original, Destination) || !ClaimCurrent) throw new UnauthorizedAccessException("Original Files/Home fixture fence retired.");
+        }
+        public bool IsIssuedOriginalBoardDocumentCreateDestination(IFilesOriginalBoardDocumentCreateDestination original)
+            => ReferenceEquals(original, CreateDestination);
+        public FilesOriginalBoardDocumentCreateDescription GetOriginalBoardDocumentCreateDescription(
+            IFilesOriginalBoardDocumentCreateDestination original)
+            => ReferenceEquals(original, CreateDestination) ? CreateDescription : throw new UnauthorizedAccessException("Foreign original folder selection.");
+        public void DemandOriginalFilesBoardDocumentCreateCommit(IFilesOriginalBoardDocumentCreateDestination original)
+        {
+            BeforeDemand?.Invoke();
+            if (!ReferenceEquals(original, CreateDestination) || !ClaimCurrent)
+                throw new UnauthorizedAccessException("Original Files/Home create-folder fixture fence retired.");
         }
         public async ValueTask DisposeAsync()
         {

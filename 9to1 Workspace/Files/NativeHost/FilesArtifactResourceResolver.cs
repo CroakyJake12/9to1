@@ -136,7 +136,8 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         ReferenceEquals(write.Original.Issuer, this) && !write.Original.IsRetired && write.Original.Actor == actor &&
         scope.Access == ResourceAccess.Write && scope == write.OriginalScope &&
         (actionId == "canvas.file.save" && write.Original.Action == "canvas.file.open" ||
-         actionId == "files.board.write" && write.Original.Action == "files.board.read");
+         actionId == "files.board.write" && write.Original.Action == "files.board.read" ||
+         actionId == "files.board.create" && write.Original.Action == "files.board.create");
 
     public async ValueTask<ResourceAccessDecision> EvaluateOriginalWriteAsync(IOriginalCanonicalWriteContext context,
         AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken cancellationToken)
@@ -184,6 +185,8 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
             && originalProvider is DurableDriveProvider && originalStoreId is not null;
         var boardDocumentWrite = actionId == "files.board.write" && scope.Access == ResourceAccess.Write
             && originalProvider is DurableDriveProvider && originalStoreId is not null;
+        var boardDocumentCreate = actionId == "files.board.create" && scope.Access == ResourceAccess.Write
+            && originalProvider is DurableDriveProvider && originalStoreId is not null;
         var mailAttachmentRead = actionId == "mail.attachment.read" && scope.Access == ResourceAccess.Read
             && originalProvider is DurableDriveProvider && originalStoreId is not null;
         var ownerApp = actionId switch
@@ -196,7 +199,7 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         };
         if ((sitesWrite || pictureImport) && scope.Access != ResourceAccess.Write) return Deny("FilesActionInvalid");
         if ((pictureExport || pictureCopy) && scope.Access is not (ResourceAccess.Read or ResourceAccess.Write)) return Deny("FilesActionInvalid");
-        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !textPreviewRead && !boardDocumentRead && !boardDocumentWrite && !folderRead && !browserRead && !browserWrite && !trashRead && !trashRestore && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
+        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !textPreviewRead && !boardDocumentRead && !boardDocumentWrite && !boardDocumentCreate && !folderRead && !browserRead && !browserWrite && !trashRead && !trashRestore && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
             return Deny("FilesActionInvalid");
         var provider = originalProvider ?? await _providers(actor, cancellationToken).ConfigureAwait(false);
         if (provider is null) return Deny("FilesProviderUnauthorised");
@@ -247,6 +250,8 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesDestinationInvalid");
         if (mediaRead || packageRead || mailAttachmentRead || textPreviewRead || boardDocumentRead) return item.Kind == HostedItemKind.File
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesMediaSourceInvalid");
+        if (boardDocumentCreate) return item.Kind == HostedItemKind.Folder
+            ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesDestinationInvalid");
         if (boardDocumentWrite) return FilesNativeBrowserService.IsBoardDocumentCandidate(item)
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesBoardDocumentInvalid");
         var creating = actionId.EndsWith(".create", StringComparison.Ordinal);
