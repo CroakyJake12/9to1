@@ -769,23 +769,26 @@ public sealed partial class App
                         return new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "NoRetainedBoardCreate", "There is no retained board creation to resume.");
                     if (request.Operation == BoardsHomeBoardCreationOperation.RetrySettlement)
                     {
-                        if (state.Result?.SettlementAttempt is not { } attempt)
-                            return DescribeBoardCreation(state, "NoOriginalSettlementAttempt", "The retained outcome requires its original owning recovery.");
+                        if (state.Result is not { State: FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, SettlementAttempt: { } attempt })
+                            return DescribeBoardCreation(state, "PendingOriginalSettlementRequired", "Retry settlement only for the retained pending Home audit.");
                         var retry = state.Source.RetryCreateSettlementAndPrepareAsync(attempt, caller);
                         state.OriginalSource = retry; Track(retry); state.Result = await retry;
                     }
                     else if (request.Operation == BoardsHomeBoardCreationOperation.InspectOutcome)
                     {
-                        if (state.Result?.SettlementAttempt is not { } attempt)
-                            return DescribeBoardCreation(state, "NoOriginalSettlementAttempt", "The retained outcome requires its original owning recovery.");
+                        if (state.Result is not { State: FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown, SettlementAttempt: { } attempt })
+                            return DescribeBoardCreation(state, "UnknownOriginalOutcomeRequired", "Inspect only the retained unknown create outcome.");
                         var inspect = state.Source.ObserveCreateSettlementAsync(attempt, caller);
                         state.OriginalSource = inspect; Track(inspect); state.Result = await inspect;
                         return DescribeBoardCreation(state, "RecordedCreateObserved", "The recorded create was inspected. Open it separately through the current Files read review.");
                     }
                     else if (request.Operation is BoardsHomeBoardCreationOperation.RetryOpenExisting or BoardsHomeBoardCreationOperation.OpenRecordedExisting)
                     {
-                        if (state.Result?.Receipt is not { } receipt)
-                            return DescribeBoardCreation(state, "RecordedBoardReceiptRequired", "Inspect or settle the original operation before opening its exact recorded artifact.");
+                        var allowed = request.Operation == BoardsHomeBoardCreationOperation.RetryOpenExisting
+                            ? state.Result?.State is FilesOriginalBoardDocumentCreateSettlementState.Committed or FilesOriginalBoardDocumentCreateSettlementState.CommittedWithCleanupIssues
+                            : state.Result?.State == FilesOriginalBoardDocumentCreateSettlementState.CommittedWithUncertainAudit;
+                        if (!allowed || state.Result?.Receipt is not { } receipt)
+                            return DescribeBoardCreation(state, "RecordedBoardSettlementRequired", "Complete the original audit or inspect its unknown outcome before opening the exact recorded board.");
                         var prepare = state.Source.PrepareCreatedBoardOpenAsync(receipt, caller);
                         state.OriginalSource = prepare; Track(prepare);
                         var prepared = await prepare;
@@ -800,16 +803,21 @@ public sealed partial class App
                 var settlement = state.OriginalSource ?? throw new InvalidOperationException("The original Files preparation source is absent.");
                 await settlement;
                 DemandCurrent(); caller.ThrowIfCancellationRequested();
+                var receiptToOpen = state.Result.Receipt ?? throw new InvalidDataException("The prepared Board address has no exact original Files receipt.");
+                var selected = BoardsBrowseAppContentAddress.Parse(address);
+                if (!selected.Writable || selected.StoreId != receiptToOpen.FilesStoreId || selected.ParentFolderId != receiptToOpen.ParentFolderId ||
+                    selected.FileId != receiptToOpen.FileId || selected.RevisionId != receiptToOpen.FilesCasRevisionId)
+                    throw new UnauthorizedAccessException("Publish only the writable Board address prepared from the exact retained Files receipt.");
                 var priorTabs = _chrome!.State.Tabs.Select(tab => tab.Id).ToHashSet();
                 if (_workspace is null || !_workspace.TryQueueNavigationOriginal(new(origin.TabId, address, OpenInNewTab: true), settlement, out var navigation) || navigation is null)
-                    return new(BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "BoardOpenNotAdmitted", "The board exists. Retry opening this same created board.");
+                    return DescribeBoardCreation(state, "BoardOpenNotAdmitted", "The board exists. Retry opening this same created board.");
                 state.Navigation = navigation; Track(navigation);
                 await navigation; // actual admitted driver, including native initialization/publication
                 DemandCurrent();
                 var createdTabs = _chrome!.State.Tabs.Where(tab => !priorTabs.Contains(tab.Id)).ToArray();
                 var published = createdTabs.Length == 1 ? _chrome.ObserveOriginalAppContent(createdTabs[0].Id) : null;
-                if (published is not IBrowseNativeAppContentSession { IsPublicationCurrent: true } || published.Address != address)
-                    return new(BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "BoardPublicationNotCurrent", "The board exists, but its actual rich session was not published. Retry the same board.");
+                if (published is not BoardsWritableRichDocumentBrowseAppContentSession { IsPublicationCurrent: true } || published.Address != address)
+                    return DescribeBoardCreation(state, "BoardPublicationNotCurrent", "The board exists, but its exact writable rich session was not published. Retry the same board.");
                 state.Opened = true;
                 var warning = state.Result.State != FilesOriginalBoardDocumentCreateSettlementState.Committed || state.Result.CleanupFailures.Count != 0;
                 return new(warning ? BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning : BoardsHomeBoardCreationOutcome.Opened,
@@ -820,8 +828,8 @@ public sealed partial class App
             catch (Exception cause)
             {
                 state.UnknownFailure = cause;
-                if (state.Result?.Receipt is not null)
-                    return new(BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "CreatedBoardOpenFailed", "The board exists. Retry opening the same recorded board; it will not be created again.");
+                if (state.Result is not null)
+                    return DescribeBoardCreation(state, "RetainedBoardOperationFailed", "The original outcome is retained. Resume only its permitted audit, inspection or exact recorded open.");
                 return state.CreateDispatched
                     ? new(BoardsHomeBoardCreationOutcome.OutcomeUnknown, "BoardCreateOutcomeUnconfirmed", "The original create outcome is retained. Inspect or settle it; do not create it again.")
                     : new(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit, "BoardCreateNotStarted", "The board was not created: " + cause.Message);
