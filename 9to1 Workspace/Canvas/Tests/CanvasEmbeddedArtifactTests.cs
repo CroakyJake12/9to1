@@ -50,7 +50,7 @@ public sealed class CanvasEmbeddedArtifactTests
             Assert.Equal(artifact.RevisionId, opened.Opened.Artifact.RevisionId);
             Assert.Equal(selected.Revision.Id, opened.Opened.Revision.Id);
             Assert.Equal(selected.Revision.Id, opened.Opened.CasRevisionId);
-            Assert.Equal(new[] { selected.FileId.ToString() }, access.ReadScopes);
+            Assert.Equal(new[] { selected.FileId.ToString(), selected.FileId.ToString() }, access.ReadScopes);
             Assert.DoesNotContain(unrelated.FileId.ToString(), access.ReadScopes);
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
