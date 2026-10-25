@@ -1,0 +1,13 @@
+{
+  "schema": "9to1.owner-amendment/v1",
+  "recorded_date": "2026-10-25",
+  "source_date": "2026-10-22",
+  "authority": "Direct owner request to incorporate extra UI requirements, stacking is intentional, historical observations may be stale",
+  "original_file": "9to1-ui-reference-comparison-2026-10-22.html",
+  "bytes": 2623000,
+  "sha256": "6b9d3e8db8b0061816c2dd0b0949291fe4a9b71e58074fa4756d5a00bd2556ca",
+  "requirements": "requirements.md",
+  "status": "REQUIREMENTS_RECORDED_IMPLEMENTATION_IN_PROGRESS",
+  "full_independent_acceptance": "PAUSED",
+  "report_simulation_is_runtime_evidence": false
+}

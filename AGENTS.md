@@ -1,3 +1,11 @@
+## Latest UI requirement amendment — 25 October 2026
+
+Read [the adopted UI report requirements](docs/specification/owner-references/2026-10-25-ui-report/requirements.md).
+Send-button stacking is an intended contextual shelf feature, not a layout bug.
+Preserve the exact approved orders and genuine runtime acknowledgements. The
+report's old screenshots/defect observations may be stale; recheck current code
+and rendering before reopening them. Proposals are distinct from owner decisions.
+
 ## Latest owner priority — 25 October 2026
 
 Finish implementation of Spaces, Home/Haven, Build and Boards first; these must support

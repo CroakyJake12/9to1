@@ -16935,3 +16935,16 @@ Queue only work or acceptance affected by an unresolved public-behaviour, compat
 - DEC-012 — Study: evidence weighting, confidence thresholds and review intervals; source-policy defaults; concrete per-platform performance budgets; subject topic-tree editing and specialised maths/code/essay question-widget details. Study Home/subject composition and mode-selector density are visual refinements within the mandatory learning workflows.
 
 - DEC-013 — Shared layout refinements: Chat Group/Project list composition; exact type-selector/Tab View/voice pill/Summary arrangements; final Action Graph shortcut location; Assistant navigation structure; Research panel/tile geometry. Apply supplied mockups or references and existing CUI conventions without changing confirmed identity, scope, behaviour or permissions. No unapproved proposal grants an extra product or capability.
+
+
+## Owner UI amendment — 25 October 2026
+
+The owner has adopted the additional owner-approved design requirements in the
+[22 October UI report amendment](owner-references/2026-10-25-ui-report/requirements.md).
+This includes the intentionally stacked contextual composer action shelf, its
+exact scenario orders and truthful Stop/Resume/End Pass semantics, neutral
+selected-tab default unless explicitly overridden, and the refined surface
+hierarchy. The amendment distinguishes approved requirements from proposals.
+Its old screenshots and observations are historical; check the current build
+before treating them as current defects. Recording the report is not proof of
+implementation or acceptance.
