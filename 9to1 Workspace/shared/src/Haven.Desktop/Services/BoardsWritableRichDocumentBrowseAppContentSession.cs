@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.App;
 using System.ComponentModel;
+using Haven.Application;
 using Haven.Core;
 using HavenOS.Apps.Browse;
 
@@ -175,7 +176,6 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             if (presentation.HasUnsavedChanges)
             {
                 presentation.ViewModel.Set("StatusText", "Save this Files board revision before closing.");
-                presentation.ViewModel.RefreshCuiContext();
                 CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
                 return false;
             }
