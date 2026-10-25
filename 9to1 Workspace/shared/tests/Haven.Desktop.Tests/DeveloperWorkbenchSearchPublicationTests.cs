@@ -465,6 +465,54 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Cui_draft_problems_and_outline_navigate_exact_current_source_and_withdraw_after_edits()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string saved = "<Cui>\n<Page>\n<Button id=\"go\"><ActionEvent Type=\"UnknownEvent\" /></Button>\n</Page>\n</Cui>";
+            f.Tools.TextValue = saved; page = await SearchPublicationPage(f, reader.Owner);
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var reads = f.Tools.ReadCalls; var preparations = f.Owner.PrepareCalls;
+            await page.DispatchAsync("dev.analyze-cui-draft", null, OriginalTestBodyToken);
+            object[] Rows(string binding)
+            {
+                Assert.True(page.TryGetValue(binding, out var value)); return Assert.IsAssignableFrom<System.Collections.IEnumerable>(value).Cast<object>().ToArray();
+            }
+            string Key(object row) => Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            string Label(object row) => Assert.IsType<string>(row.GetType().GetProperty("Label")!.GetValue(row));
+            var problem = Assert.Single(Rows("CuiDraftProblems"), row => Label(row).Contains("CUIE001", StringComparison.Ordinal));
+            var component = Assert.Single(Rows("CuiDraftOutline"), row => Label(row).Contains("go — Button", StringComparison.Ordinal));
+            var oldProblemKey = Key(problem); var oldComponentKey = Key(component);
+            await page.DispatchAsync("dev.go-to-cui-element", oldComponentKey, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out var selection));
+            Assert.Equal(DeveloperManualSourceEditOwner.Sha256(saved), Assert.IsType<CuiTextSelection>(selection).TextSha256);
+            Assert.True(page.TryGetValue("SourceLocation", out var location)); Assert.StartsWith("3:", Assert.IsType<string>(location));
+            await page.DispatchAsync("dev.go-to-cui-problem", oldProblemKey, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("CuiDraftAnalysisStatus", out var status)); Assert.Contains("do not resolve imports", Assert.IsType<string>(status));
+            Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(preparations, f.Owner.PrepareCalls);
+            page.TrySetValue("DraftText", "<Cui />");
+            Assert.Empty(Rows("CuiDraftProblems")); Assert.Empty(Rows("CuiDraftOutline"));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => page.DispatchAsync("dev.go-to-cui-problem", oldProblemKey, OriginalTestBodyToken).AsTask());
+            await page.DispatchAsync("dev.analyze-cui-draft", null, OriginalTestBodyToken);
+            Assert.Empty(Rows("CuiDraftProblems")); Assert.Empty(Rows("CuiDraftOutline"));
+            Assert.True(page.IsActionAvailable("dev.analyze-cui-draft"));
+            Assert.True(page.TryGetValue("CuiDraftAnalysisStatus", out status)); Assert.Contains("0 syntax/action problems", Assert.IsType<string>(status));
+            page.TrySetValue("SourcePath", "Other.cs"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            Assert.False(page.IsActionAvailable("dev.analyze-cui-draft"));
+            Assert.True(page.TryGetValue("CuiDraftAnalysisStatus", out status)); Assert.Contains("configured toolchain", Assert.IsType<string>(status));
+            Assert.Equal(saved, f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));

@@ -66,6 +66,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         public string GroupId = "default";
         public DeveloperDraftHistory? DraftHistory;
         public string? DraftHistoryBasis;
+        public DeveloperCuiSourceObservation? CuiAnalysis;
+        public string? CuiAnalysisText;
+        public long CuiAnalysisRevision;
     }
     private sealed record ManualTabState(string Draft, string Baseline, string Before, string After,
         string BeforeSha256, string AfterSha256, long DraftRevision, long ReviewRevision, bool Reviewed);
@@ -334,6 +337,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             // Preserve source/outcome evidence in its actual owner; a withdrawn binding cannot disclose it.
             if (!_active || _work.IsRetiring) { value = null; return false; }
             if (TryGetManualRecoveryConflictValue(path, out value)) return true;
+            if (TryGetCuiAnalysisValue(path, out value)) return true;
             value = path switch
             {
                 "ProjectTitle" => _project.Project.Name,
@@ -478,6 +482,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (command == "dev.analyze-cui-draft") return CurrentSourceTab() is { } source && DeveloperCuiSourceAnalysis.Supports(source.Path, CurrentEditorText());
+            if (command == "dev.go-to-cui-problem") return CurrentCuiAnalysis() is { Problems.Count: > 0 };
+            if (command == "dev.go-to-cui-element") return CurrentCuiAnalysis() is { Outline.Count: > 0 };
             if (command == "dev.undo-source-edit") return CurrentDraftHistory()?.CanUndo(CurrentEditorText()) == true;
             if (command == "dev.redo-source-edit") return CurrentDraftHistory()?.CanRedo(CurrentEditorText()) == true;
             if (command is "dev.find-next-source" or "dev.find-previous-source" or "dev.replace-all-source")
@@ -530,6 +537,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command == "dev.analyze-cui-draft") return DispatchCuiAnalysisAsync(cancellationToken);
+        if (command is "dev.go-to-cui-problem" or "dev.go-to-cui-element") return DispatchCuiSourceNavigationAsync(command, parameter, cancellationToken);
         if (command is "dev.undo-source-edit" or "dev.redo-source-edit") return DispatchDraftHistoryAsync(command, cancellationToken);
         if (command is "dev.find-next-source" or "dev.find-previous-source" or "dev.replace-source-match" or "dev.replace-all-source")
             return DispatchSourceFindAsync(command, cancellationToken);

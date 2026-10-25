@@ -5,6 +5,8 @@
     <Action name="dev.close-source-tab" command="dev.close-source-tab" parameter="{Binding item.SelectionKey}" />
     <Action name="dev.open-search-result" command="dev.open-search-result" parameter="{Binding searchHit.SelectionKey}" />
     <Action name="dev.inspect-recovered-draft" command="dev.inspect-recovered-draft" parameter="{Binding recovered.SelectionKey}" />
+    <Action name="dev.go-to-cui-problem" command="dev.go-to-cui-problem" parameter="{Binding problem.SelectionKey}" />
+    <Action name="dev.go-to-cui-element" command="dev.go-to-cui-element" parameter="{Binding element.SelectionKey}" />
   </Actions>
   <Page>
     <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
@@ -94,6 +96,20 @@
         <Button id="dev-replace-all-source" action="dev.replace-all-source" content="Replace all in draft" Interactive="{Binding CanFindSourceText}" />
       </Container>
       <Text text="{Binding SourceFindStatus}" text-wrapping="Wrap" accessible-name="Current draft find and replace result" />
+      <Button id="dev-analyze-cui-draft" action="dev.analyze-cui-draft" content="Check CUI draft" Interactive="{Binding CanAnalyzeCuiDraft}" />
+      <Text text="{Binding CuiDraftAnalysisStatus}" text-wrapping="Wrap" accessible-name="CUI draft syntax checks and component outline availability" />
+      <Container Type="Vertical Stack" max-height="200" VerticalScrolling="True" accessible-name="CUI draft Problems">
+        <Repeat id="dev-cui-problems" Source="{Binding CuiDraftProblems}" As="problem" Key="{Binding problem.SelectionKey}">
+          <Button id="dev-go-to-cui-problem" action="dev.go-to-cui-problem" accessible-name="{Binding problem.AccessibleName}" Interactive="{Binding problem.CanNavigate}" horizontal-content-alignment="Left">
+            <Text text="{Binding problem.Label}" text-wrapping="Wrap" />
+          </Button>
+        </Repeat>
+      </Container>
+      <Container Type="Vertical Stack" max-height="200" VerticalScrolling="True" accessible-name="CUI draft component outline">
+        <Repeat id="dev-cui-outline" Source="{Binding CuiDraftOutline}" As="element" Key="{Binding element.SelectionKey}">
+          <Button id="dev-go-to-cui-element" action="dev.go-to-cui-element" content="{Binding element.Label}" accessible-name="{Binding element.AccessibleName}" Interactive="{Binding element.CanNavigate}" horizontal-content-alignment="Left" />
+        </Repeat>
+      </Container>
       <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" TextSelection="{Binding EditorTextSelection}" Multiline="true" Interactive="{Binding CanEditSource}" />
       <Container Type="Wrap">
         <Button id="dev-undo-source-edit" action="dev.undo-source-edit" content="Undo draft edit" accessible-name="Undo the last edit in this document; saving still requires review" Interactive="{Binding CanUndoSourceEdit}" />
