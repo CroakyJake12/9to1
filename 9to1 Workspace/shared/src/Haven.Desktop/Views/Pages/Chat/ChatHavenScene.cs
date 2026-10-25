@@ -792,6 +792,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     /// legacy Send button. Preserves empty-composer Stop and FIFO queue semantics.</summary>
     public void HandleComposerSend()
     {
+        if (ActiveTaskComposer is { } task) { _ = SubmitTaskComposerAsync(task); return; }
         EnsureQueuedSendingEnabled();
         if (_composerQueue is not null)
             _composerQueue.HandleSendInvokedAsync();
@@ -804,6 +805,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     /// -composer Stop and FIFO queued drafts keep their exact existing behavior.</summary>
     public ValueTask HandleComposerSendAsync()
     {
+        if (ActiveTaskComposer is { } task) return SubmitTaskComposerAsync(task);
         EnsureQueuedSendingEnabled();
         if (_composerQueue is not null)
             return _composerQueue.HandleSendInvokedAsync();

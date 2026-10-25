@@ -223,6 +223,28 @@ internal sealed class NewChatOriginalInitialTaskObservation
         }
     }
 
+    internal bool CanSubmitFollowUp
+    {
+        get
+        {
+            lock (_gate) return !IsPresentationRetiring && _lease is { } lease &&
+                _source.CanSubmitObservedOriginalTaskFollowUp(lease);
+        }
+    }
+    internal Task<FollowUpDecision> AcquireActualFollowUp(string instruction, TaskFollowUpMode mode, CancellationToken token)
+    {
+        Task<FollowUpDecision>? actual = null;
+        InvokePhysicalSource(() =>
+        {
+            TaskRunOriginalInitialChatObservationLease lease;
+            lock (_gate) lease = _lease ?? throw new InvalidOperationException("No actual initial task observation is retained.");
+            if (IsPresentationRetiring) throw new InvalidOperationException("This task observation has retired.");
+            DemandIssued(lease);
+            actual = _source.SubmitObservedOriginalTaskFollowUpAsync(lease, instruction, mode, token);
+        });
+        return actual!; // The caller prepublishes, enrolls and joins this SAME actual command Task.
+    }
+
     internal void CaptureActualStopDriver(Task actual)
     {
         lock (_gate) _actualStopDriver = actual; // Owning page publishes whole command BEFORE its callbacks.

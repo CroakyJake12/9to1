@@ -19,6 +19,17 @@ namespace Haven.Desktop.Views.Pages.Chat;
 /// <summary>One authored composer chip (capability/Agent/Skill/resource or persisted attachment).</summary>
 public sealed record ChatComposerChip(string Id, string Label, bool Invokable);
 
+internal interface IChatComposerTaskActions
+{
+    bool IsApplicable { get; }
+    bool CanSteer { get; }
+    bool CanQueue { get; }
+    bool CanStop { get; }
+    ValueTask Steer();
+    ValueTask Queue();
+    ValueTask Stop();
+}
+
 /// <summary>
 /// The single shared canonical composer's data source. Each real consumer (the Haven Chat native
 /// scene and the ChatSpace CUI host) supplies a live implementation; no composer state is cloned.

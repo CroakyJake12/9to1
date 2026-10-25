@@ -13,6 +13,8 @@ internal sealed partial class ChatHavenScene
     internal sealed class HavenComposerSource : IChatComposerSource
     {
         private readonly ChatHavenScene _scene;
+        internal IChatComposerTaskActions? TaskActions { get; set; }
+        private IChatComposerTaskActions? ActiveTask => TaskActions is { IsApplicable: true } actual ? actual : null;
         public HavenComposerSource(ChatHavenScene scene) => _scene = scene;
 
         public string Draft { get => _scene.Input.Text; set => _scene.Input.Text = value ?? string.Empty; }
@@ -20,14 +22,27 @@ internal sealed partial class ChatHavenScene
         public bool IsSending => _scene._isSending;
         public bool IsSafetyLocked => _scene._safetyLocked;
         public bool HasAdd { get; set; } = true;
-        public bool CanSend => !_scene._safetyLocked &&
+        public bool CanStop => ActiveTask is { } task ? task.CanStop : _scene._isSending;
+        public bool CanSteer => ActiveTask?.CanSteer == true;
+        public bool CanQueue => ActiveTask is { } task ? task.CanQueue :
+            _scene._isSending && !_scene._safetyLocked && !string.IsNullOrWhiteSpace(_scene.Input.Text);
+        public string StopAccessibleName => ActiveTask is null ? "Stop current response" : "Stop task";
+        public string StopTooltip => ActiveTask is null ? "Stop the active response" : "Ask the owning service to stop this same task";
+        public bool CanSend => ActiveTask is null && !_scene._safetyLocked &&
             (_scene._isSending || (_scene._modelAvailable &&
                 (!string.IsNullOrWhiteSpace(_scene.Input.Text) || _scene.HasQueuedComposerMessages)));
         public bool IsEditing => false;
         public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
 
         public ValueTask Send() => _scene.HandleComposerSendAsync();
-        public ValueTask Stop() { _scene.StopRequested?.Invoke(_scene, EventArgs.Empty); return ValueTask.CompletedTask; }
+        public ValueTask Steer() => ActiveTask is { CanSteer: true } task ? task.Steer() :
+            ValueTask.FromException(new InvalidOperationException("There is no current task that can receive this instruction."));
+        public ValueTask Stop()
+        {
+            if (ActiveTask is { } task) return task.CanStop ? task.Stop() :
+                ValueTask.FromException(new InvalidOperationException("The current task cannot be stopped from this observation."));
+            _scene.StopRequested?.Invoke(_scene, EventArgs.Empty); return ValueTask.CompletedTask;
+        }
         public ValueTask Add() { _scene.ShowAddMenu(); return ValueTask.CompletedTask; }
         public ValueTask OpenSettings() { _scene.OpenComposerSettings(); return ValueTask.CompletedTask; }
         public ValueTask CloseSettings() => ValueTask.CompletedTask;

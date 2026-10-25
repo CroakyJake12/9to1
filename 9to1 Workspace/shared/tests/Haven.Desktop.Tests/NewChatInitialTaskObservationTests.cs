@@ -4,6 +4,8 @@ using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Chat;
 using Xunit;
+using Avalonia.Headless.XUnit;
+using Haven.Desktop.Events;
 
 namespace Haven.Desktop.Tests;
 
@@ -11,6 +13,136 @@ namespace Haven.Desktop.Tests;
 // owning inputs. This managed UI-child journey does not instantiate a native page.
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Native_task_followup_held_ack_then_retirement_retires_only_the_accepted_draft(bool newerTyping)
+    {
+        await using var rig = new Rig(temporary: false);
+        rig.Capture.AskDuringCapture = false;
+        rig.Client.RunApprovedOwnedFrame = true;
+        var offered = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        rig.Client.AvailableModels = [offered];
+        var providerDisposal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.Client.OriginalDispose = providerDisposal.Task;
+        var directory = Path.Combine(Path.GetTempPath(), "native-task-composer-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var drafts = new NativeComposerDraftStore();
+        NewChatPage? page = null;
+        Task? command = null, close = null, producer = null;
+        try
+        {
+            page = CreateNativeComposerPage(rig, directory, drafts);
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            page.ConfigureTaskMode();
+            page.SelectModel(offered);
+            await page.SubmitOriginalInstructionAsync("Review the existing task");
+            await rig.Client.DisposeEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var lease = NativeComposerIssuedLease(page);
+            producer = InitialHostedProducer(lease);
+            Assert.True(rig.Service.IsIssuedOriginalTaskObservation(lease));
+            Assert.True(rig.Service.CanSubmitObservedOriginalTaskFollowUp(lease));
+            var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, default))!;
+            page.SetDraft("accepted follow-up");
+            var bindings = page.OriginalTaskComposer.Bindings;
+            Assert.True(bindings.IsActionAvailable("composer.queue"));
+            Assert.True(bindings.IsActionAvailable("composer.steer"));
+            Assert.False(bindings.IsActionAvailable("composer.send"));
+            rig.TaskRows.HeldFollowUpWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            command = bindings.DispatchAsync("composer.queue", null).AsTask();
+            await rig.TaskRows.FollowUpWriteEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(command.IsCompleted);
+            Assert.False(bindings.IsActionAvailable("composer.queue"));
+            if (newerTyping) page.SetDraft("newer unsent draft");
+            page.RequestRetirement();
+            close = page.CloseAndDrainAsync();
+            Assert.False(close.IsCompleted);
+            rig.TaskRows.HeldFollowUpWrite.SetResult(); // Genuine controlled durable ACK after withdrawal.
+            await command.WaitAsync(TimeSpan.FromSeconds(10));
+            await close.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.NotNull(page.CanonicalTaskFollowUp);
+            var actual = (await rig.Tasks.GetByContextAsync(initial.ContextId, default))!;
+            Assert.Equal(initial.TaskId, actual.TaskId);
+            Assert.Equal(initial.ExecutionId, actual.ExecutionId);
+            Assert.Equal("accepted follow-up", Assert.Single(actual.Queue).Summary);
+            Assert.Equal(newerTyping ? "newer unsent draft" : "", drafts.Last?.Content ?? "");
+            Assert.Equal(1, rig.Conversations.Messages.Count(message => message.Role == MessageRole.User));
+            Assert.False(providerDisposal.Task.IsCanceled);
+        }
+        finally
+        {
+            rig.TaskRows.HeldFollowUpWrite?.TrySetResult();
+            providerDisposal.TrySetResult();
+            if (command is not null) _ = await Record.ExceptionAsync(() => command);
+            if (page is not null)
+            {
+                page.RequestRetirement();
+                _ = await Record.ExceptionAsync(() => close ??= page.CloseAndDrainAsync());
+            }
+            if (producer is not null) _ = await Record.ExceptionAsync(() => producer);
+            Directory.Delete(directory, true);
+        }
+    }
+
+    private static TaskRunOriginalInitialChatObservationLease NativeComposerIssuedLease(NewChatPage page)
+    {
+        var presentation = typeof(NewChatPage).GetField("_currentOriginalInitialTaskPresentation", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+        var owner = (NewChatOriginalInitialTaskObservation)presentation.GetType().GetProperty("Owner")!.GetValue(presentation)!;
+        return InitialUiCapturedLease(owner) ?? throw new InvalidOperationException("No actual source-issued lease was captured.");
+    }
+    private static NewChatPage CreateNativeComposerPage(Rig rig, string directory, NativeComposerDraftStore drafts)
+    {
+        var paths = NativeComposerProxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? directory : Path.Combine(directory, name));
+        var local = new GenUiLocalActionRegistry(); var instances = new GenUiInstanceStore();
+        return new(new HavenEventBus(), rig.Conversations, rig.Client, rig.Service, new Safety(),
+            NativeComposerProxy<IConversationVersioningService>((name, _) => throw new InvalidOperationException("Unexpected versioning: " + name)),
+            new UserPreferencesService(paths),
+            new GenerativeUiEventRouter([], new NativeComposerAudit(), instances), instances,
+            new CalculatorTemplateRuntime(local, instances), new StructuredFormTemplateRuntime(local, instances),
+            new ChoicePromptTemplateRuntime(local), new ChecklistTemplateRuntime(local, instances), new DataGridTemplateRuntime(local),
+            new CardDeckTemplateRuntime(local, instances), new GraphTemplateRuntime(local), new TaskListTemplateRuntime(local),
+            new DashboardTemplateRuntime(local), new AssessmentTemplateRuntime(local), new WorkflowTemplateRuntime(local),
+            new CustomTemplateRuntime(local, instances), conversationProduction: drafts.Source);
+    }
+    private sealed class NativeComposerDraftStore
+    {
+        internal ConversationDraft? Last;
+        private readonly Dictionary<Guid, ConversationBranch> _branches = [];
+        internal IConversationProductionRepository Source { get; }
+        internal NativeComposerDraftStore() => Source = NativeComposerProxy<IConversationProductionRepository>((name, args) => name switch
+        {
+            "GetCurrentBranchAsync" => Task.FromResult<ConversationBranch?>(_branches.GetValueOrDefault((Guid)args![0]!)),
+            "EnsureRootBranchAsync" => Task.FromResult(Root((Guid)args![0]!)),
+            "GetDraftAsync" => Task.FromResult(Last),
+            "SaveDraftAsync" => Save((ConversationDraft)args![0]!),
+            "DeleteDraftAsync" => Delete(),
+            _ => throw new InvalidOperationException("Unexpected draft operation: " + name)
+        });
+        private ConversationBranch Root(Guid conversation)
+        {
+            if (_branches.TryGetValue(conversation, out var branch)) return branch;
+            return _branches[conversation] = new(Guid.NewGuid(), conversation, null, null, "Main", ConversationBranchReason.Root, true, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
+        }
+        private Task Save(ConversationDraft value) { Last = value; return Task.CompletedTask; }
+        private Task Delete() { Last = null; return Task.CompletedTask; }
+    }
+    private sealed class NativeComposerAudit : IGenUiEventAuditSink
+    {
+        public ValueTask RecordAsync(GenUiEvent value, GenUiActionResult result, CancellationToken token) =>
+            ValueTask.FromException(new InvalidOperationException("No generated UI event was requested."));
+    }
+    private static T NativeComposerProxy<T>(Func<string, object?[]?, object?> call) where T : class
+    {
+        var actual = DispatchProxy.Create<T, NativeComposerIo>();
+        ((NativeComposerIo)(object)actual).Call = call; return actual;
+    }
+    public class NativeComposerIo : DispatchProxy
+    {
+        public Func<string, object?[]?, object?> Call = null!;
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) => Call(targetMethod!.Name, args);
+    }
+
     [Fact]
     public async Task Tasks_ui_observation_retires_while_same_business_disposal_and_Task_Run_remain_owned()
     {
