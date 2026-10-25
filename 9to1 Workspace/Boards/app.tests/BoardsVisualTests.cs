@@ -269,6 +269,8 @@ public sealed class BoardsVisualTests
                 var frame = Assert.Single(grid.Children);
                 var tableFrame = Flatten(host).OfType<Border>().Single(candidate => ReferenceEquals(candidate.Child, grid));
                 var editor = Assert.Single(Flatten(frame).OfType<TextBox>());
+                Assert.Contains(Flatten(host).OfType<TextBox>(), box => box.Text == "Merged title");
+                Assert.Contains(Flatten(host).OfType<Button>(), button => Equals(button.Content, "+ Box"));
                 return (Host: host, TableFrame: tableFrame, RowSpan: Grid.GetRowSpan(frame), ColumnSpan: Grid.GetColumnSpan(frame),
                     TableWidth: tableFrame.Width, TableAlignment: tableFrame.HorizontalAlignment,
                     Text: editor.Text, Weight: editor.FontWeight);
@@ -282,8 +284,6 @@ public sealed class BoardsVisualTests
             // This renderer intentionally appends the freeform surface after
             // native blocks, so the full editor contains both regions. The
             // component image below isolates the real table frame for review.
-            Assert.Contains(Flatten(result.Host).OfType<TextBox>(), box => box.Text == "Merged title");
-            Assert.Contains(Flatten(result.Host).OfType<Button>(), button => Equals(button.Content, "+ Box"));
             // Capture the actual rendered table frame. The full Board editor
             // also contains the freeform canvas, which can otherwise dominate
             // a small headless viewport and hide the table under test.
