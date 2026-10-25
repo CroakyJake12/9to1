@@ -10,6 +10,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui;
@@ -20,6 +21,22 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsEditorTests
 {
+    private sealed class DeferredSectionIconHost : IBoardsSectionIconGenerationHost
+    {
+        public TaskCompletionSource<string> RequestedTitle { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<BoardsGeneratedSectionIconResult> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool CanGenerate => true;
+        public CancellationToken RequestToken { get; private set; }
+
+        public Task<BoardsGeneratedSectionIconResult> GenerateAsync(string sectionTitle,
+            CancellationToken cancellationToken = default)
+        {
+            RequestToken = cancellationToken;
+            RequestedTitle.TrySetResult(sectionTitle);
+            return Completion.Task; // Deliberately ignores cancellation to exercise the VM's stale-result fence.
+        }
+    }
+
     [Fact]
     public void Boards_brand_fallback_remains_an_outline_with_visible_catalog_details()
     {
@@ -409,7 +426,7 @@ public sealed class BoardsEditorTests
         var expected = new[]
         {
             "TopBarLeft", "TopBarRight", "BoardsAppIcon", "UndoButton", "RedoButton", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors", "SuggestSectionIconButton", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors", "SuggestSectionIconButton", "GeneratedSectionIconOptions", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -465,18 +482,20 @@ public sealed class BoardsEditorTests
         Assert.True(iconColors.Properties.TryGetValue("Source", out var iconColorsSource)
             && iconColorsSource is CuiBindingValue { Path: "SectionIconPickerColors" });
         var suggestion = components.Single(component => component.Name == "SuggestSectionIconButton");
-        Assert.True(suggestion.Properties.TryGetValue("Action", out var suggestionAction)
-            && suggestionAction is CuiLiteralValue { Value: "SuggestSectionIcon" });
+        Assert.True(suggestion.TryGetLiteralAttribute("action", out var suggestionAction)
+            && suggestionAction == "SuggestSectionIcon");
         Assert.True(suggestion.Properties.TryGetValue("IsEnabled", out var suggestionEnabled)
             && suggestionEnabled is CuiBindingValue { Path: "CanSuggestSectionIcon" });
         Assert.Contains("section name only", File.ReadAllText(path), StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Board content is not sent", File.ReadAllText(path), StringComparison.Ordinal);
         var generatedPreview = components.Single(component => component.Name == "GeneratedSectionIconPreviewImage");
         Assert.True(generatedPreview.Properties.TryGetValue("Source", out var generatedPreviewSource)
-            && generatedPreviewSource is CuiBindingValue { Path: "GeneratedSectionIconPreview.Preview" });
+            && generatedPreviewSource is CuiBindingValue { Path: "generated.Preview" });
+        var generatedOptions = components.Single(component => component.Name == "GeneratedSectionIconOptions");
+        Assert.True(generatedOptions.Repeat is { Source: CuiBindingValue { Path: "GeneratedSectionIconPreviews" } });
         var applyGenerated = components.Single(component => component.Name == "ApplyGeneratedSectionIconButton");
-        Assert.True(applyGenerated.Properties.TryGetValue("Action", out var applyGeneratedAction)
-            && applyGeneratedAction is CuiLiteralValue { Value: "ApplyGeneratedSectionIcon" });
+        Assert.True(applyGenerated.TryGetLiteralAttribute("action", out var applyGeneratedAction)
+            && applyGeneratedAction == "ApplyGeneratedSectionIcon");
         var overflow = components.Single(component => component.Name == "OverflowButton");
         Assert.True(overflow.Properties.TryGetValue("IconSource", out var overflowIcon)
             && overflowIcon is CuiLiteralValue { Value: "icon:more" });
@@ -676,4 +695,94 @@ public sealed class BoardsEditorTests
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
     }
+
+    [Fact]
+    public async Task Closing_picker_cancels_and_discards_late_suggestion_without_persisting()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(null);
+        var host = new DeferredSectionIconHost();
+        var vm = new BoardsViewModel(session, sectionIconGenerationHost: host);
+        var section = session.Document.Sections[0];
+        TestUiThread.Run(() => vm.OpenSectionIconPicker(section.Id));
+
+        var pending = TestUiThread.Run(() => vm.DispatchAsync("SuggestSectionIcon", null));
+        Assert.Equal(section.Title, await host.RequestedTitle.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+        TestUiThread.Run(vm.CloseSectionIconPicker);
+        Assert.True(host.RequestToken.IsCancellationRequested);
+        host.Completion.TrySetResult(new BoardsGeneratedSectionIconResult(
+            [new HavenRichSectionGeneratedIcon
+            {
+                Shapes = [new HavenRichSectionIconRoundRect(3, 3, 18, 18, 3)]
+            }], "provider", "model"));
+
+        PumpOnUi(pending);
+        await pending;
+        Assert.Null(section.GeneratedIcon);
+        Assert.False(vm.Get("HasGeneratedSectionIconPreview") as bool? ?? false);
+        TestUiThread.Run(vm.Dispose);
+    }
+
+    [Fact]
+    public async Task Generated_icon_stays_preview_only_until_choice_is_applied_then_survives_reopen()
+    {
+        InMemoryRichBoardSession.ClearStore();
+        var path = "memory://boards/generated-icon-" + Guid.NewGuid().ToString("N");
+        var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(path);
+        var host = new DeferredSectionIconHost();
+        var vm = new BoardsViewModel(session, sectionIconGenerationHost: host);
+        var section = session.Document.Sections[0];
+        TestUiThread.Run(() => vm.OpenSectionIconPicker(section.Id));
+
+        var pending = TestUiThread.Run(() => vm.DispatchAsync("SuggestSectionIcon", null));
+        await host.RequestedTitle.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        host.Completion.TrySetResult(new BoardsGeneratedSectionIconResult(
+            [
+                new HavenRichSectionGeneratedIcon { Shapes = [new HavenRichSectionIconRoundRect(3, 3, 18, 18, 3)] },
+                new HavenRichSectionGeneratedIcon { Shapes = [new HavenRichSectionIconCircle(12, 12, 9)] },
+                new HavenRichSectionGeneratedIcon { Shapes = [new HavenRichSectionIconPolygon(
+                    [new(12, 2), new(21, 20), new(3, 20)])] }
+            ], "provider", "model"));
+        PumpOnUi(pending);
+        await pending;
+        Assert.Null(section.GeneratedIcon); // Suggestions never persist by themselves.
+        Assert.Equal(3, Assert.IsAssignableFrom<IReadOnlyList<BoardsGeneratedSectionIconPreviewView>>(
+            vm.Get("GeneratedSectionIconPreviews")).Count);
+
+        var colorChange = TestUiThread.Run(() => vm.DispatchAsync("ApplySectionIconColor", "#187B72"));
+        PumpOnUi(colorChange);
+        await colorChange;
+        Assert.Equal(3, Assert.IsAssignableFrom<IReadOnlyList<BoardsGeneratedSectionIconPreviewView>>(
+            vm.Get("GeneratedSectionIconPreviews")).Count);
+
+        var apply = TestUiThread.Run(() => vm.DispatchAsync("ApplyGeneratedSectionIcon", "1"));
+        PumpOnUi(apply);
+        await apply;
+        Assert.Equal(HavenRichSectionIcons.Generated, section.IconKey);
+        Assert.Equal("#187B72", section.IconColor);
+        Assert.Single(section.GeneratedIcon!.Shapes);
+        Assert.IsType<HavenRichSectionIconCircle>(section.GeneratedIcon.Shapes[0]);
+        await session.SaveAsync();
+        TestUiThread.Run(vm.Dispose);
+        await session.DisposeAsync();
+
+        await using var reopened = new InMemoryRichBoardSession();
+        await reopened.OpenAsync(path);
+        var reopenedSection = reopened.Document.Sections.Single(item => item.Id == section.Id);
+        Assert.Equal(HavenRichSectionIcons.Generated, reopenedSection.IconKey);
+        Assert.IsType<HavenRichSectionIconCircle>(Assert.Single(reopenedSection.GeneratedIcon!.Shapes));
+    }
+
+    private static void PumpOnUi(Task task) => TestUiThread.Run(() =>
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (!task.IsCompleted && DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(1);
+        }
+        Dispatcher.UIThread.RunJobs();
+        if (!task.IsCompleted) throw new TimeoutException("The Boards UI action did not complete on its dispatcher.");
+    });
 }
