@@ -322,8 +322,8 @@ public sealed class BoardsEditorTests
 
         var expected = new[]
         {
-            "TopBarLeft", "TopBarRight", "BoardsAppIcon", "BoardTitleBox", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "VerticalLayoutToggle", "FreeLayoutToggle",
+            "TopBarLeft", "TopBarRight", "BoardsAppIcon", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "VerticalLayoutToggle", "FreeLayoutToggle", "OverflowButton",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -349,6 +349,13 @@ public sealed class BoardsEditorTests
         var boardTitle = components.Single(component => component.Name == "BoardTitleBox");
         Assert.True(boardTitle.Properties.TryGetValue("Value", out var boardTitleValue)
             && boardTitleValue is CuiBindingValue { Path: "BoardTitle" });
+        var topBarLeft = components.Single(component => component.Name == "TopBarLeft");
+        var topBarLeftNames = topBarLeft.DescendantsAndSelf().Select(component => component.Name).ToArray();
+        Assert.True(Array.IndexOf(topBarLeftNames, "FileMenu") < Array.IndexOf(topBarLeftNames, "BoardsAppIcon")
+            && Array.IndexOf(topBarLeftNames, "BoardsAppIcon") < Array.IndexOf(topBarLeftNames, "UndoButton"));
+        var boardIdentity = components.Single(component => component.Name == "BoardIdentity");
+        var boardIdentityNames = boardIdentity.DescendantsAndSelf().Select(component => component.Name).ToArray();
+        Assert.True(Array.IndexOf(boardIdentityNames, "BoardTitleBox") < Array.IndexOf(boardIdentityNames, "SaveState"));
         var verticalLayout = components.Single(component => component.Name == "VerticalLayoutToggle");
         Assert.True(verticalLayout.Properties.TryGetValue("Selected", out var verticalSelected)
             && verticalSelected is CuiBindingValue { Path: "IsVerticalLayout" });
@@ -357,6 +364,15 @@ public sealed class BoardsEditorTests
         var freeLayout = components.Single(component => component.Name == "FreeLayoutToggle");
         Assert.True(freeLayout.Properties.TryGetValue("Selected", out var freeSelected)
             && freeSelected is CuiBindingValue { Path: "IsFreeLayout" });
+        Assert.True(verticalLayout.Properties.TryGetValue("Content", out var verticalLabel)
+            && verticalLabel is CuiLiteralValue { Value: "Vertical Stacking" });
+        Assert.True(freeLayout.Properties.TryGetValue("Content", out var freeLabel)
+            && freeLabel is CuiLiteralValue { Value: "Free Placement" });
+        var overflow = components.Single(component => component.Name == "OverflowButton");
+        Assert.True(overflow.Properties.TryGetValue("IconSource", out var overflowIcon)
+            && overflowIcon is CuiLiteralValue { Value: "icon:more" });
+        Assert.DoesNotContain(document.Components.SelectMany(c => c.DescendantsAndSelf()),
+            component => component.Name == "ThemeButton");
         var appIcon = components.Single(component => component.Name == "BoardsAppIcon");
         Assert.True(appIcon.Properties.TryGetValue("Source", out var appIconSource)
             && appIconSource is CuiLiteralValue { Value: "ownerbrand:boards" });
