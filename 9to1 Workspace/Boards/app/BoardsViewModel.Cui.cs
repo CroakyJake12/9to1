@@ -56,6 +56,11 @@ public sealed partial class BoardsViewModel
         Set("ContextTableSurfaceIndex", Math.Max(0, Array.FindIndex(ContextSurfaces, surface => surface.Hex == block?.TableStyle.Background)));
         Set("ContextTableBorderIndex", IndexOf(ContextBorderOptions, block?.TableStyle.BorderStyle));
         Set("ContextAlternatingRows", block?.TableStyle.AlternatingRows == true);
+        Set("ContextHasHeaderRow", block?.TableStyle.HasHeaderRow == true);
+        Set("ContextHasHeaderColumn", block?.TableStyle.HasHeaderColumn == true);
+        Set("ContextTableAlignmentIndex", IndexOf(ContextHorizontalOptions, block?.TableStyle.Alignment));
+        Set("ContextTableWidthLabel", block is { Kind: "table" } tableBlock && tableBlock.TableStyle.Width > 0
+            ? $"Table width: {tableBlock.TableStyle.Width:0} px" : "Table width: Auto");
         Set("ContextImageAlignmentIndex", IndexOf(ContextHorizontalOptions, block?.Image?.Alignment));
         Set("ContextImageKeepAspectRatio", block?.Image?.KeepAspectRatio != false);
         Set("ContextImageFitMode", block?.Image?.FitMode ?? "contain");
@@ -183,6 +188,16 @@ public sealed partial class BoardsViewModel
         if (_syncing) return key.StartsWith("Context", StringComparison.Ordinal);
         var block = FindBlock(SelectedBlockId);
         if (block is null) return false;
+        if (block.Kind == "table")
+        {
+            switch (key)
+            {
+                case "ContextHasHeaderRow" when value is bool hasHeaderRow:
+                    block.TableStyle.HasHeaderRow = hasHeaderRow; CommitViewEdit(); RefreshCuiContext(); return true;
+                case "ContextHasHeaderColumn" when value is bool hasHeaderColumn:
+                    block.TableStyle.HasHeaderColumn = hasHeaderColumn; CommitViewEdit(); RefreshCuiContext(); return true;
+            }
+        }
         if (block.Kind == "image" && block.Image is { } image)
         {
             switch (key)
@@ -233,6 +248,9 @@ public sealed partial class BoardsViewModel
             case "ContextAlternatingRows" when block.Kind == "table":
                 if (value is not bool alternating) return false;
                 block.TableStyle.AlternatingRows = alternating; CommitViewEdit(); break;
+            case "ContextTableAlignmentIndex" when block.Kind == "table":
+                if (!SelectedOption(ContextHorizontalOptions, out var tableAlignment)) return false;
+                block.TableStyle.Alignment = tableAlignment; CommitViewEdit(); break;
             case "ContextImageAlignmentIndex" when block.Kind == "image":
                 if (!SelectedOption(ContextHorizontalOptions, out var alignment)) return false;
                 SetImageAlignment(block.Id, alignment); break;
@@ -289,6 +307,9 @@ public sealed partial class BoardsViewModel
                 SetContextColumnWidth(block, wideColumn, 24); break;
             case "ContextColumnAutoWidth" when TryGetContextCell(block, out _, out var autoColumn):
                 SetContextColumnWidth(block, autoColumn, null); break;
+            case "ContextTableNarrower" when block.Kind == "table": SetContextTableWidth(block, -40); break;
+            case "ContextTableWider" when block.Kind == "table": SetContextTableWidth(block, 40); break;
+            case "ContextTableAutoWidth" when block.Kind == "table": SetContextTableWidth(block, null); break;
             case "ContextCellBold" when TryGetContextCell(block, out var row, out var column): ToggleCellBold(block.Id, row, column); break;
             case "ContextCellItalic" when TryGetContextCell(block, out var italicRow, out var italicColumn):
                 ToggleCuiCellItalic(block, italicRow, italicColumn); break;
@@ -458,6 +479,17 @@ public sealed partial class BoardsViewModel
                 ? (delta.Value < 0 ? 112 : 184)
                 : Math.Clamp(current + delta.Value, 80, 1600);
         }
+        CommitViewEdit();
+        RequestRebuild();
+        RefreshCuiContext();
+    }
+
+    private void SetContextTableWidth(RichBoardBlock block, double? delta)
+    {
+        if (!RequireEditMode() || block.Kind != "table") return;
+        block.TableStyle.Width = delta.HasValue
+            ? Math.Clamp((block.TableStyle.Width > 0 ? block.TableStyle.Width : 640) + delta.Value, 160, 5000)
+            : 0;
         CommitViewEdit();
         RequestRebuild();
         RefreshCuiContext();

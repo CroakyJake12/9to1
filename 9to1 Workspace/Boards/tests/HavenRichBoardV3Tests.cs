@@ -460,8 +460,11 @@ public sealed class HavenRichBoardV3Tests
                     var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Table);
                     blockId = block.Id;
                     var table = block.Table!;
+                    Assert.True(HavenRichNotesOps.DeleteTableRow(rich, pageId, block.Id, 2));
+                    Assert.True(HavenRichNotesOps.DeleteTableColumn(rich, pageId, block.Id, 2));
                     anchorId = table.Rows[0].Cells[0].Id;
                     table.Rows[0].Cells[0].Text = "Title";
+                    table.Rows[0].Cells[1].Text = string.Empty;
                     table.Rows[0].Cells[1].Background = "#FFE8F0FE";
                     originalCellIds = table.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id).ToArray();
                 });
@@ -538,7 +541,9 @@ public sealed class HavenRichBoardV3Tests
                     HavenRichNotesOps.SetColumnWidth(rich, pageId, block.Id, 0, 220);
                     HavenRichNotesOps.SetTableStyle(rich, pageId, block.Id,
                         background: "#FFFFFFFF", borderColor: "#FF1A73E8", borderWidth: 2,
-                        borderStyle: HavenRichBorderStyle.Solid, cornerRadius: 8, alternatingRows: true);
+                        borderStyle: HavenRichBorderStyle.Solid, cornerRadius: 8, alternatingRows: true,
+                        hasHeaderRow: true, hasHeaderColumn: true, width: 720,
+                        alignment: HavenRichAlignment.Center);
                     var cellId = block.Table.Rows[1].Cells[1].Id;
                     HavenRichNotesOps.UpdateTableCell(rich, pageId, block.Id, cellId, "x²");
                     HavenRichNotesOps.SetCellStyle(rich, pageId, block.Id, cellId,
@@ -562,6 +567,10 @@ public sealed class HavenRichBoardV3Tests
             Assert.Equal(HavenRichBorderStyle.Solid, table.BorderStyle);
             Assert.Equal(8, table.CornerRadius);
             Assert.True(table.AlternatingRows);
+            Assert.True(table.HasHeaderRow);
+            Assert.True(table.HasHeaderColumn);
+            Assert.Equal(720, table.Width);
+            Assert.Equal(HavenRichAlignment.Center, table.Alignment);
             Assert.Equal(220, table.ColumnWidths[0]);
             var cell = table.Rows[1].Cells[1];
             Assert.Equal("x2", cell.Text);

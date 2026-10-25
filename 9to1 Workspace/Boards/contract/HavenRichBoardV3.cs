@@ -937,7 +937,9 @@ public static partial class HavenRichNotesOps
 
     public static void SetTableStyle(HavenRichNotes notes, string pageId, string blockId,
         string? background = null, string? borderColor = null, double? borderWidth = null,
-        HavenRichBorderStyle? borderStyle = null, double? cornerRadius = null, bool? alternatingRows = null)
+        HavenRichBorderStyle? borderStyle = null, double? cornerRadius = null, bool? alternatingRows = null,
+        bool? hasHeaderRow = null, bool? hasHeaderColumn = null, double? width = null,
+        HavenRichAlignment? alignment = null)
     {
         var table = RequireTable(notes, pageId, blockId);
         if (background is not null) table.Background = background;
@@ -954,6 +956,19 @@ public static partial class HavenRichNotesOps
             table.CornerRadius = cornerRadius.Value;
         }
         if (alternatingRows.HasValue) table.AlternatingRows = alternatingRows.Value;
+        if (hasHeaderRow.HasValue) table.HasHeaderRow = hasHeaderRow.Value;
+        if (hasHeaderColumn.HasValue) table.HasHeaderColumn = hasHeaderColumn.Value;
+        if (width.HasValue)
+        {
+            if (!double.IsFinite(width.Value) || width.Value is < 0 or > 5000)
+                throw new ArgumentOutOfRangeException(nameof(width));
+            table.Width = width.Value;
+        }
+        if (alignment.HasValue)
+        {
+            if (!Enum.IsDefined(alignment.Value)) throw new ArgumentOutOfRangeException(nameof(alignment));
+            table.Alignment = alignment.Value;
+        }
         TouchNotes(notes);
     }
 

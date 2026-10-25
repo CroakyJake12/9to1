@@ -141,12 +141,17 @@ public sealed class HavenRichTable
     public HavenRichBorderStyle BorderStyle { get; set; } = HavenRichBorderStyle.Inherit;
     public double CornerRadius { get; set; }
     public bool AlternatingRows { get; set; }
+    public bool HasHeaderRow { get; set; }
+    public bool HasHeaderColumn { get; set; }
+    /// <summary>Explicit table width in device-independent pixels; zero lets the containing page size it.</summary>
+    public double Width { get; set; }
+    public HavenRichAlignment Alignment { get; set; } = HavenRichAlignment.Inherit;
     public List<double> ColumnWidths { get; set; } = [];
     public List<double> RowHeights { get; set; } = [];
 
     public static HavenRichTable Create(int rows, int columns)
     {
-        var table = new HavenRichTable();
+        var table = new HavenRichTable { HasHeaderRow = true };
         for (var r = 0; r < Math.Clamp(rows, 1, 100); r++)
         {
             var row = new HavenRichTableRow();
@@ -344,6 +349,9 @@ public static class HavenRichNotesValidator
                 throw new InvalidOperationException("Table border width is outside the supported range.");
             if (block.Table.CornerRadius < 0 || block.Table.CornerRadius > 128)
                 throw new InvalidOperationException("Table corner radius is outside the supported range.");
+            if (!double.IsFinite(block.Table.Width) || block.Table.Width is < 0 or > 5000 ||
+                !Enum.IsDefined(block.Table.Alignment))
+                throw new InvalidOperationException("Table width or alignment is outside the supported range.");
             if (block.Table.ColumnWidths.Any(w => w is < 0 or > 5000) || block.Table.RowHeights.Any(h => h is < 0 or > 5000))
                 throw new InvalidOperationException("Table track sizes are outside the supported range.");
         }

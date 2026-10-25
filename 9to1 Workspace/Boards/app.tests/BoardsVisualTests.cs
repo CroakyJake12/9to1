@@ -6,6 +6,8 @@
 // UI-related runs inside one TestUiThread.Run delegate per test.
 
 using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
 
@@ -216,6 +218,12 @@ public sealed class BoardsVisualTests
                 TableRows = 2,
                 TableCols = 2,
                 HasMergedCells = true,
+                TableStyle = new RichTableStyleView
+                {
+                    Width = 420,
+                    Alignment = "center",
+                    HasHeaderRow = true
+                },
                 TableCells = new Dictionary<string, string>
                 {
                     ["0,0"] = "Merged title", ["0,1"] = string.Empty,
@@ -237,11 +245,16 @@ public sealed class BoardsVisualTests
                 var grid = Flatten(host).OfType<Grid>().Single(candidate =>
                     candidate.RowDefinitions.Count == 2 && candidate.ColumnDefinitions.Count == 2);
                 var frame = Assert.Single(grid.Children);
-                return (grid, frame);
+                var tableFrame = Flatten(host).OfType<Border>().Single(candidate => ReferenceEquals(candidate.Child, grid));
+                var editor = Assert.Single(Flatten(frame).OfType<TextBox>());
+                return (grid, frame, tableFrame, editor);
             });
             Assert.Equal(2, Grid.GetRowSpan(result.frame));
             Assert.Equal(2, Grid.GetColumnSpan(result.frame));
-            Assert.Contains(Flatten(result.frame).OfType<TextBox>(), box => box.Text == "Merged title");
+            Assert.Equal(420, result.tableFrame.Width);
+            Assert.Equal(HorizontalAlignment.Center, result.tableFrame.HorizontalAlignment);
+            Assert.Equal("Merged title", result.editor.Text);
+            Assert.Equal(FontWeight.Bold, result.editor.FontWeight);
         }
         finally { await session.DisposeAsync(); }
     }

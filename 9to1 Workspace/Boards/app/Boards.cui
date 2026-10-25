@@ -99,6 +99,14 @@
               <Button Content="Auto width" Action="ContextColumnAutoWidth" AccessibleName="Reset selected table column width to automatic" Interactive="{Binding ContextHasCell}" />
               <Text Text="{Binding ContextColumnWidthLabel}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Selected table column width" />
               <Text Text="{Binding ContextRowHeightLabel}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Selected table row height" />
+              <Text Text="Table width" VerticalAlignment="Center" FontWeight="SemiBold" Margin="8 0 4 0" />
+              <Button Content="Narrower" Action="ContextTableNarrower" AccessibleName="Narrow table" />
+              <Button Content="Wider" Action="ContextTableWider" AccessibleName="Widen table" />
+              <Button Content="Auto" Action="ContextTableAutoWidth" AccessibleName="Reset table width to automatic" />
+              <Text Text="{Binding ContextTableWidthLabel}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Table width" />
+              <Input Type="Select" Width="100" AccessibleName="Table alignment" ItemsSource="{Binding ContextHorizontalOptions}" SelectedIndex="{Binding ContextTableAlignmentIndex}" />
+              <Input Type="Checkbox" Content="Header row" Checked="{Binding ContextHasHeaderRow}" />
+              <Input Type="Checkbox" Content="Header column" Checked="{Binding ContextHasHeaderColumn}" />
               <Text Text="Cell" VerticalAlignment="Center" FontWeight="SemiBold" Margin="8 0 4 0" />
               <Input Type="Select" Width="96" AccessibleName="Cell horizontal alignment" ItemsSource="{Binding ContextHorizontalOptions}" SelectedIndex="{Binding ContextCellHorizontalIndex}" Interactive="{Binding ContextHasCell}" />
               <Input Type="Select" Width="96" AccessibleName="Cell vertical alignment" ItemsSource="{Binding ContextVerticalOptions}" SelectedIndex="{Binding ContextCellVerticalIndex}" Interactive="{Binding ContextHasCell}" />
