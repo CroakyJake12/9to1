@@ -224,6 +224,12 @@ public interface IRichBoardSession : IAsyncDisposable
     ValueTask<bool> RedoAsync(CancellationToken cancellationToken = default);
 }
 
+/// <summary>Optional session capability contract for immutable embedded document views.</summary>
+public interface IBoardSessionCapabilities
+{
+    bool CanEdit { get; }
+}
+
 
 public enum BoardTextMark { Unavailable, Off, On, Mixed }
 public enum BoardTextFormat { Bold, Italic, Underline, StrikeThrough }
