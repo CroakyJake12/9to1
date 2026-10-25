@@ -133,6 +133,32 @@ public sealed class BoardsEditorTests
     }
 
     [Fact]
+    public async Task Range_formatting_controls_expose_live_active_formatting_state()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(null);
+        var vm = new BoardsViewModel(session);
+        var expected = new (string Command, string Property)[]
+        {
+            ("ToggleBold", "RangeBoldSelected"),
+            ("ToggleItalic", "RangeItalicSelected"),
+            ("ToggleUnderline", "RangeUnderlineSelected"),
+            ("ToggleStrike", "RangeStrikeSelected"),
+        };
+
+        foreach (var (command, property) in expected)
+        {
+            Assert.False(vm.Get(property) as bool? ?? false);
+            var action = TestUiThread.Run(() => vm.DispatchAsync(command, null));
+            PumpOnUi(action);
+            await action;
+            Assert.True(vm.Get(property) as bool? ?? false);
+        }
+
+        TestUiThread.Run(vm.Dispose);
+    }
+
+    [Fact]
     public void Authored_CUI_icon_resolves_from_the_real_Boards_scoped_palette()
     {
         var result = TestUiThread.Run(() =>
@@ -432,7 +458,7 @@ public sealed class BoardsEditorTests
         var expected = new[]
         {
             "TopBarLeft", "TopBarRight", "BoardsAppIcon", "UndoButton", "RedoButton", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors", "SuggestSectionIconButton", "GeneratedSectionIconOptions", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors", "SuggestSectionIconButton", "GeneratedSectionIconOptions", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -442,6 +468,16 @@ public sealed class BoardsEditorTests
         var toolbarHost = components.Single(component => component.Name == "ToolbarHost");
         Assert.True(toolbarHost.Properties.TryGetValue("Type", out var toolbarType)
             && toolbarType is CuiLiteralValue { Value: "Horizontal Stack" });
+        foreach (var (name, binding) in new[]
+                 {
+                     ("RangeBold", "RangeBoldSelected"), ("RangeItalic", "RangeItalicSelected"),
+                     ("RangeUnderline", "RangeUnderlineSelected"), ("RangeStrike", "RangeStrikeSelected")
+                 })
+        {
+            var formatButton = components.Single(component => component.Name == name);
+            Assert.True(formatButton.Properties.TryGetValue("Selected", out var selected)
+                && selected is CuiBindingValue { Path: var path } && path == binding);
+        }
         Assert.True(toolbarHost.Properties.TryGetValue("HorizontalScrolling", out var horizontalScrolling)
             && horizontalScrolling is CuiLiteralValue horizontalLiteral
             && bool.TryParse(horizontalLiteral.Value, out var horizontalEnabled) && horizontalEnabled);
