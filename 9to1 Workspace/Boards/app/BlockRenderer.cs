@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -23,6 +24,8 @@ public static class BlockRenderer
 {
     private const double GraphWidth = 420;
     private const double GraphHeight = 260;
+    private const double BlockGutterTargetSize = 32;
+    private const double QuietBlockGutterOpacity = 0.56;
 
     public static async Task RebuildAsync(StackPanel host, BoardsViewModel vm)
     {
@@ -101,20 +104,29 @@ public static class BlockRenderer
         BoardsViewModel vm, string selectId, Control inner, string insertAfterBlockId, int blockIndex, StackPanel host)
     {
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*") };
+        // The first slot stays a compact, fixed target even when the content in
+        // the row (especially a table) is much taller than an ordinary block.
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,Auto,*") };
         Control? gripControl = null;
+        var insert = ToolbarBuilder.CreateInsertButton(
+            vm, "Insert a block after this note", insertAfterBlockId);
+        ConfigureBlockGutterButton(insert);
+        insert.Margin = new Thickness(0, 0, 2, 0);
+        insert.Opacity = selected ? 1 : QuietBlockGutterOpacity;
+        Grid.SetColumn(insert, 0);
+        row.Children.Add(insert);
         if (vm.IsEditMode)
         {
-            var insert = ToolbarBuilder.CreateInsertButton(
-                vm, "Insert a block after this note", insertAfterBlockId);
-            insert.Margin = new Thickness(0, 2, 2, 0);
-            insert.Opacity = selected ? 1 : 0.65;
-            Grid.SetColumn(insert, 0);
-            row.Children.Add(insert);
-
             var grip = BlockGripCui.Build(vm, selectId);
             gripControl = grip;
-            grip.Margin = new Thickness(0, 2, 4, 0);
+            grip.MinWidth = BlockGutterTargetSize;
+            grip.MinHeight = BlockGutterTargetSize;
+            grip.HorizontalAlignment = HorizontalAlignment.Left;
+            grip.VerticalAlignment = VerticalAlignment.Top;
+            grip.Opacity = selected ? 1 : QuietBlockGutterOpacity;
+            if (grip.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.Name == "BlockGripToggle") is { } toggle)
+                ConfigureBlockGutterButton(toggle);
+            grip.Margin = new Thickness(0, 0, 4, 0);
             Grid.SetColumn(grip, 1);
             row.Children.Add(grip);
         }
@@ -130,9 +142,34 @@ public static class BlockRenderer
             Background = Brushes.Transparent,
         };
         border.Tag = new BlockReorderRow(selectId, blockIndex);
+        var hovering = false;
+        var focused = false;
+        void UpdateGutterEmphasis()
+        {
+            var opacity = selected || hovering || focused ? 1 : QuietBlockGutterOpacity;
+            insert.Opacity = opacity;
+            if (gripControl is not null) gripControl.Opacity = opacity;
+        }
+        border.PointerEntered += (_, _) => { hovering = true; UpdateGutterEmphasis(); };
+        border.PointerExited += (_, _) => { hovering = false; UpdateGutterEmphasis(); };
+        border.AddHandler(InputElement.GotFocusEvent, (_, _) => { focused = true; UpdateGutterEmphasis(); }, RoutingStrategies.Bubble);
+        border.AddHandler(InputElement.LostFocusEvent, (_, _) => { focused = false; UpdateGutterEmphasis(); }, RoutingStrategies.Bubble);
         if (gripControl is not null)
             BlockReorderPointer.Attach(gripControl, host, vm, selectId, blockIndex);
         return border;
+    }
+
+    private static void ConfigureBlockGutterButton(Button button)
+    {
+        button.Width = BlockGutterTargetSize;
+        button.Height = BlockGutterTargetSize;
+        button.MinWidth = BlockGutterTargetSize;
+        button.MinHeight = BlockGutterTargetSize;
+        button.MaxWidth = BlockGutterTargetSize;
+        button.MaxHeight = BlockGutterTargetSize;
+        button.Padding = new Thickness(0);
+        button.HorizontalAlignment = HorizontalAlignment.Center;
+        button.VerticalAlignment = VerticalAlignment.Top;
     }
 
 
@@ -341,18 +378,21 @@ public static class BlockRenderer
 
     private static Control BuildChecklistRow(BoardsViewModel vm, RichBoardBlock item)
     {
-        var row = new StackPanel
+        var row = new Grid
         {
-            Orientation = Orientation.Horizontal,
+            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
             Margin = new Thickness(Math.Max(0, item.Level) * 16, 3, 0, 3),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         var suffix = NameSuffix(item.Id);
         var check = new CheckBox
         {
             Name = "done_" + suffix,
             IsChecked = item.IsChecked,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 10, 0),
+            MinWidth = 24,
+            MinHeight = 24,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 4, 10, 0),
         };
         AutomationProperties.SetName(check, "Checklist item done");
         var text = new TextBox
@@ -361,10 +401,12 @@ public static class BlockRenderer
             Text = item.Text ?? string.Empty,
             IsReadOnly = !vm.IsEditMode,
             FontSize = 14,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Top,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
-            Padding = new Thickness(2, 4),
+            Padding = new Thickness(0, 4),
             FontWeight = item.Bold ? FontWeight.Bold : FontWeight.Normal,
             FontStyle = item.Italic ? FontStyle.Italic : FontStyle.Normal,
             Foreground = item.IsChecked ? BoardsTheme.SecondaryTextBrush : BoardsTheme.TextBrush,
@@ -385,6 +427,8 @@ public static class BlockRenderer
         };
         ToolTip.SetTip(erase, "Remove this item");
         AutomationProperties.SetName(erase, "Remove checklist item");
+        erase.VerticalAlignment = VerticalAlignment.Top;
+        erase.Margin = new Thickness(0, 2, 0, 0);
         var viewId = item.Id;
         check.IsCheckedChanged += (_, _) => vm.EditCheck("done_" + suffix, check.IsChecked == true);
         text.TextChanged += (_, _) => vm.EditText("chk_" + suffix, text.Text ?? string.Empty);
@@ -419,6 +463,9 @@ public static class BlockRenderer
             }
         };
         erase.Click += async (_, _) => await vm.DeleteBlockAsync(viewId);
+        Grid.SetColumn(check, 0);
+        Grid.SetColumn(text, 1);
+        Grid.SetColumn(erase, 2);
         row.Children.Add(check);
         row.Children.Add(text);
         row.Children.Add(erase);
