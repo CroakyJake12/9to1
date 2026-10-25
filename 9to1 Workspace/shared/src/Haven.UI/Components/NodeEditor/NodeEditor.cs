@@ -242,6 +242,27 @@ public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCo
         return node.Id;
     }
 
+    /// <summary>Adds an already typed node from an owning application's registered schema.
+    /// The complete identity, ports and metadata enter the document as one undoable edit.</summary>
+    public Guid AddNode(NodeEditorNode typedNode, double x, double y)
+    {
+        ArgumentNullException.ThrowIfNull(typedNode);
+        if (typedNode.Id == Guid.Empty || _document.Nodes.Any(node => node.Id == typedNode.Id))
+            throw new ArgumentException("A typed node needs a new stable identity.", nameof(typedNode));
+        var node = typedNode with
+        {
+            X = x,
+            Y = y,
+            Ports = typedNode.Ports?.ToArray() ?? [],
+            Metadata = typedNode.Metadata is null
+                ? new Dictionary<string, string>(StringComparer.Ordinal)
+                : new Dictionary<string, string>(typedNode.Metadata, StringComparer.Ordinal)
+        };
+        SetDocument(WithContent([.. _document.Nodes, node], _document.Edges), true);
+        _selected.Clear(); _selectedEdges.Clear(); _selected.Add(node.Id); RaiseSelectionChanged();
+        return node.Id;
+    }
+
     public bool UpdateNode(Guid nodeId, Func<NodeEditorNode, NodeEditorNode> update)
     {
         ArgumentNullException.ThrowIfNull(update);

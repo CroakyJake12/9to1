@@ -91,14 +91,9 @@ internal static class SpaceLayoutEditorAdapter
 
 internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
 {
-    private static readonly IReadOnlyList<NodeEditorPort> LogicPorts =
-    [
-        new("in", "In", NodeEditorPortDirection.Input, "flow", false),
-        new("out", "Out", NodeEditorPortDirection.Output, "flow", true)
-    ];
-
     private readonly SpaceRegistry _registry;
     private readonly Action<SpaceLayoutDocument>? _onDraftChanged;
+    private readonly List<(HavenButton Button, string TypeId, EventHandler Handler)> _userMessagePalette = [];
     private SpaceDefinition _space;
     private bool _disposed;
     private bool _saving;
@@ -128,24 +123,23 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         header.SetValue(HavenProperties.Row, 0);
         header.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         header.SetValue(HavenProperties.Gap, HavenLength.Px(8));
-        var title = new HavenText($"{space.Name} · layout and additional logic") { Level = TextLevel.H1 };
+        var title = new HavenText($"{space.Name} · user-message logic") { Level = TextLevel.H1 };
         title.SetValue(HavenProperties.Width, HavenLength.Fr(1));
-        AddLogic = ActionButton("Spaces.Layout.AddLogic", "plus", "Add logic");
-        AddTrigger = ActionButton("Spaces.Layout.AddTrigger", "zap", "Trigger");
-        AddCondition = ActionButton("Spaces.Layout.AddCondition", "git-branch", "Add condition");
-        AddEvent = ActionButton("Spaces.Layout.AddEvent", "bell", "Event");
-        AddApp = ActionButton("Spaces.Layout.AddApp", "grid", "App");
-        AddFiles = ActionButton("Spaces.Layout.AddFiles", "folder", "Files");
         DeleteSelection = ActionButton("Spaces.Layout.Delete", "trash", "Delete selected");
         ResetView = ActionButton("Spaces.Layout.ResetView", "maximize", "Reset view");
         Save = ActionButton("Spaces.Layout.Save", "save", onDraftChanged is null ? "Save layout" : "Validate graph", ButtonVariant.Primary);
         header.Add(title);
-        header.Add(AddLogic);
-        header.Add(AddTrigger);
-        header.Add(AddCondition);
-        header.Add(AddEvent);
-        header.Add(AddApp);
-        header.Add(AddFiles);
+        var profile = SpaceUserMessageGraph.Profile();
+        foreach (var schema in SpaceUserMessageGraph.Types().Where(type => profile.AllowedNodeTypes.Contains(type.TypeId)))
+        {
+            var prototype = SpaceUserMessageGraph.CreateNode(schema.TypeId);
+            var button = ActionButton("Spaces.Layout.Add." + schema.TypeId, "plus", "Add " + prototype.Title);
+            var typeId = schema.TypeId;
+            EventHandler handler = (_, _) => AddRegisteredUserMessageNode(typeId);
+            button.Invoked += handler;
+            _userMessagePalette.Add((button, typeId, handler));
+            header.Add(button);
+        }
         header.Add(DeleteSelection);
         header.Add(ResetView);
         header.Add(Save);
@@ -165,7 +159,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         root.Add(Editor);
 
         Status = new HavenText(Editor.Document.Nodes.Count == 0
-            ? "Add logic nodes, connect their ports, then save."
+            ? "Add registered nodes, connect their typed ports, then validate the graph."
             : $"Loaded {Editor.Document.Nodes.Count} nodes and {Editor.Document.Edges.Count} connections.")
         { Name = "Spaces.Layout.Status", Level = TextLevel.Caption };
         Status.SetValue(HavenProperties.Row, 2);
@@ -178,12 +172,6 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         AutomationProperties.SetAutomationId(Scene, "HavenSpaceLayoutEditorScene");
         Content = Scene;
 
-        AddLogic.Invoked += OnAddLogic;
-        AddTrigger.Invoked += OnAddTrigger;
-        AddCondition.Invoked += OnAddCondition;
-        AddEvent.Invoked += OnAddEvent;
-        AddApp.Invoked += OnAddApp;
-        AddFiles.Invoked += OnAddFiles;
         DeleteSelection.Invoked += OnDeleteSelection;
         ResetView.Invoked += OnResetView;
         Save.Invoked += OnSave;
@@ -193,12 +181,8 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     internal HavenSceneControl Scene { get; }
     internal NodeEditor Editor { get; }
     internal HavenText Status { get; }
-    internal HavenButton AddLogic { get; }
-    internal HavenButton AddTrigger { get; }
-    internal HavenButton AddCondition { get; }
-    internal HavenButton AddEvent { get; }
-    internal HavenButton AddApp { get; }
-    internal HavenButton AddFiles { get; }
+    internal IReadOnlyList<(HavenButton Button, string TypeId)> UserMessagePalette =>
+        _userMessagePalette.Select(item => (item.Button, item.TypeId)).ToArray();
     internal HavenButton DeleteSelection { get; }
     internal HavenButton ResetView { get; }
     internal HavenButton Save { get; }
@@ -219,37 +203,12 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         finally { _suppressDraftChange = false; }
     }
 
-    private void OnAddLogic(object? sender, EventArgs e) => AddNode(new NodeEditorTemplate(
-        "Logic",
-        "Logic placeholder",
-        "Structural only; an installed Logic schema is required before activation.",
-        LogicPorts));
-
-    private void OnAddTrigger(object? sender, EventArgs e) => AddNode(new NodeEditorTemplate(
-        "Trigger", "Trigger placeholder", "Structural only; a registered trigger schema is required before activation.",
-        [new("out", "Out", NodeEditorPortDirection.Output, "flow", true)]));
-
-    private void OnAddCondition(object? sender, EventArgs e) => AddNode(new NodeEditorTemplate(
-        "Condition",
-        "Condition placeholder",
-        "Structural only; a registered condition schema is required before activation.",
-        [
-            new("in", "In", NodeEditorPortDirection.Input, "flow", false),
-            new("true", "True", NodeEditorPortDirection.Output, "flow", true),
-            new("false", "False", NodeEditorPortDirection.Output, "flow", true)
-        ]));
-
-    private void OnAddEvent(object? sender, EventArgs e) => AddStructuralCategory("Event");
-    private void OnAddApp(object? sender, EventArgs e) => AddStructuralCategory("App");
-    private void OnAddFiles(object? sender, EventArgs e) => AddStructuralCategory("Files");
-
-    private void AddStructuralCategory(string category) => AddNode(new NodeEditorTemplate(category,
-        category + " placeholder", $"Structural only; a registered {category} schema is required before activation.", LogicPorts));
-
-    private void AddNode(NodeEditorTemplate template)
+    private void AddRegisteredUserMessageNode(string typeId)
     {
+        var canonical = SpaceUserMessageGraph.CreateNode(typeId);
+        var node = SpaceLayoutEditorAdapter.ToEditor(new SpaceLayoutDocument([canonical], [])).Nodes.Single();
         var offset = Editor.Document.Nodes.Count * 28d;
-        Editor.AddNode(template, 60d + offset, 70d + offset);
+        Editor.AddNode(node, 60d + offset, 70d + offset);
     }
 
     private void OnDeleteSelection(object? sender, EventArgs e) => Editor.DeleteSelection();
@@ -284,8 +243,10 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         {
             if (_onDraftChanged is not null)
             {
-                _onDraftChanged(SpaceLayoutEditorAdapter.FromEditor(Editor.Document, _space.LayoutDocument));
-                Status.Content = $"Graph is structurally valid and remains in the unsaved Space draft: {Editor.Document.Nodes.Count} nodes, {Editor.Document.Edges.Count} connections.";
+                var layout = SpaceLayoutEditorAdapter.FromEditor(Editor.Document, _space.LayoutDocument);
+                _ = SpaceUserMessageGraph.Compile(_space.Id, _space.Revision, layout);
+                _onDraftChanged(layout);
+                Status.Content = $"Registered user-message graph is valid and remains in the unsaved Space draft: {Editor.Document.Nodes.Count} nodes, {Editor.Document.Edges.Count} connections.";
             }
             else
             {
@@ -317,12 +278,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        AddLogic.Invoked -= OnAddLogic;
-        AddTrigger.Invoked -= OnAddTrigger;
-        AddCondition.Invoked -= OnAddCondition;
-        AddEvent.Invoked -= OnAddEvent;
-        AddApp.Invoked -= OnAddApp;
-        AddFiles.Invoked -= OnAddFiles;
+        foreach (var (button, _, handler) in _userMessagePalette) button.Invoked -= handler;
         DeleteSelection.Invoked -= OnDeleteSelection;
         ResetView.Invoked -= OnResetView;
         Save.Invoked -= OnSave;
