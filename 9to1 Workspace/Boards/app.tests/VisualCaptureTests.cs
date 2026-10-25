@@ -151,12 +151,14 @@ public sealed class VisualCaptureTests
         Assert.True(pageCard.Bounds.Width - editorScroll.Viewport.Width >= 12,
             $"The document viewport did not retain its native scrollbar gutter inside the full-width panel (panel={pageCard.Bounds.Width}, viewport={editorScroll.Viewport.Width}).");
         Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
+        Assert.Equal(new Thickness(16, 6, 14, 12), pageCard.Margin);
+        Assert.Equal(new Thickness(20, 12), pageCard.Padding);
         Assert.Equal(new Thickness(0), pageCard.BorderThickness);
         Assert.True(pageCard.CornerRadius.TopLeft > 0,
             $"The authored PageCard should retain its rounded panel treatment; radius={pageCard.CornerRadius}.");
         var contentLayer = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "DocumentContentLayer")
             ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
-        Assert.Equal(new Thickness(76, 36), contentLayer.Margin);
+        Assert.Equal(new Thickness(76, 20), contentLayer.Margin);
         Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
         var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
             ?? throw new InvalidOperationException("Missing authored standalone TopBar. Runtime tree:\n" + tree);
