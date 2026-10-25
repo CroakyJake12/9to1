@@ -112,7 +112,7 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness : ICuiSceneReadi
             throw new UnauthorizedAccessException("The original Task actor changed during Home compatibility observation.");
         var after = await ReadActualContextAsync(original, token);
         DemandActorBinding(after, actor);
-        if (before.SpaceRevision != after.SpaceRevision || before.Snapshot?.OwnerBinding != after.Snapshot?.OwnerBinding)
+        if (before.OriginSpaceRevision != after.OriginSpaceRevision || before.Snapshot?.OwnerBinding != after.Snapshot?.OwnerBinding)
             throw new InvalidOperationException("The original Task context or owner changed during native compatibility observation.");
         if (await ReadActualActorAsync(original, token) != actor)
             throw new UnauthorizedAccessException("The original Task actor changed before readiness publication.");
@@ -143,7 +143,7 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness : ICuiSceneReadi
             throw new UnauthorizedAccessException("The canonical Task actor changed during same-process Home observation.");
         var after = await ReadActualContextAsync(original, token);
         DemandActorBinding(after, actor);
-        if (before.SpaceRevision != after.SpaceRevision || before.Snapshot?.OwnerBinding != after.Snapshot?.OwnerBinding)
+        if (before.OriginSpaceRevision != after.OriginSpaceRevision || before.Snapshot?.OwnerBinding != after.Snapshot?.OwnerBinding)
             throw new InvalidOperationException("The SAME original Task context/owner changed during Home observation.");
         if (await ReadActualActorAsync(original, token) != actor)
             throw new UnauthorizedAccessException("The canonical Task actor changed before native publication.");
@@ -164,20 +164,21 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness : ICuiSceneReadi
             string.IsNullOrWhiteSpace(actor.AuthenticationRevision))) throw new InvalidDataException("The current Task actor has no real profile/authentication binding.");
         return actor;
     }
-    private async Task<SpaceTaskObservation> ReadActualContextAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    private async Task<ITaskContextObservation> ReadActualContextAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
         DemandOriginal(original, token);
         void OwnRawSource(Action callback) => AcquireActualSource(original, () =>
         { DemandOriginal(original, token); callback(); return true; });
-        var actual = AcquireActualSource(original, () => _source.ReadAsync(_spaceId, _contextId, token, OwnRawSource));
+        var actual = AcquireActualSource(original, () => _page.ReadOriginalTaskContextAsync(token, OwnRawSource));
         var current = await original.AwaitAsync(actual).ConfigureAwait(false);
         DemandOriginal(original, token);
-        if (current.SpaceId != _spaceId || current.Conversation.Id != _contextId || current.Conversation.Mode != HavenMode.Tasks ||
+        if (current.OriginSpaceId != (_spaceId == Guid.Empty ? null : _spaceId) || current.ContextId != _contextId ||
+            _page.OriginalTaskSelection is null && current.OriginalConversation?.Mode != HavenMode.Tasks ||
             current.Snapshot?.TaskId != _taskId || current.Snapshot?.ExecutionId != _runId)
             throw new InvalidOperationException("A different original Task/Run/context now occupies the native view.");
         return current;
     }
-    private static void DemandActorBinding(SpaceTaskObservation observation, AuthenticatedResourceActor actor)
+    private static void DemandActorBinding(ITaskContextObservation observation, AuthenticatedResourceActor actor)
     {
         // Historical/unstarted records without owner provenance remain observation only.
         // Compare the saved stable owner identity, as the maintained portable reopening owner does.

@@ -804,6 +804,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         public Task<IReadOnlyList<ChatMessage>>? OverrideHistory = null;
         public Task<Conversation?> GetAsync(Guid id, CancellationToken token) { Reads++; return Task.FromResult(Current?.Id == id ? Current : null); }
         public Task<IReadOnlyList<Conversation>> GetRecentAsync(HavenMode? mode, int count, CancellationToken token) => Task.FromResult<IReadOnlyList<Conversation>>(Current is null ? [] : [Current]);
+        public Task<IReadOnlyList<Conversation>> GetBySpaceAsync(Guid spaceId, int limit, CancellationToken token)
+        { token.ThrowIfCancellationRequested(); return Task.FromResult<IReadOnlyList<Conversation>>(Current?.SpaceId == spaceId ? new[] { Current! }.Take(limit).ToArray() : []); }
         public Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token) => OverrideHistory
             ?? Task.FromResult<IReadOnlyList<ChatMessage>>(Messages.Where(value => value.ConversationId == id).ToArray());
         public Task UpsertConversationAsync(Conversation value, CancellationToken token) { Writes++; Current = value; return Task.CompletedTask; }

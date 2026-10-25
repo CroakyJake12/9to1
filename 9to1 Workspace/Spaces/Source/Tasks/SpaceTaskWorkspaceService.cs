@@ -86,11 +86,28 @@ public sealed class SpaceTaskWorkspaceService(
         var current = await ReadTask().ConfigureAwait(false); // Fresh actual principal after context reads.
         if (current.ExecutionId != before.ExecutionId || current.ContextId != before.ContextId || current.OwnerBinding != before.OwnerBinding)
             throw new InvalidOperationException("The original task owner changed during context observation.");
+        TaskRunActivityObservation? activity = null;
+        if (commandIdentity && current.State == TaskExecutionLifecycle.Running &&
+            current.Attempts.LastOrDefault() is { State: TaskRunAttemptState.Admitted or TaskRunAttemptState.Running } attempt)
+        {
+            var admission = await Join(() => canonical.TryGetIssuedAttemptAsync(current.TaskId, current.ExecutionId, attempt.Id, token), scope).ConfigureAwait(false);
+            if (admission is not null)
+            {
+                if (admission.Snapshot.TaskId != current.TaskId || admission.Snapshot.ExecutionId != current.ExecutionId ||
+                    admission.Snapshot.ContextId != current.ContextId || admission.AttemptId != attempt.Id)
+                    throw new InvalidDataException("A different actual task attempt was returned for this selection.");
+                var observed = await Join(() => canonical.ObserveOriginalRunActivityAsync(current.TaskId, current.ExecutionId, token), scope).ConfigureAwait(false);
+                if (observed.TaskId != current.TaskId || observed.ExecutionId != current.ExecutionId || observed.ContextId != current.ContextId)
+                    throw new InvalidDataException("The actual activity witness belongs to a different original task.");
+                current = await ReadTask().ConfigureAwait(false);
+                if (observed.PersistenceRevision == current.PersistenceRevision) activity = observed;
+            }
+        }
         var issued = selected ?? new TaskContextSelection(this, current.TaskId, current.ExecutionId, current.ContextId,
             origin, currentConversation is not null, current.OwnerBinding!);
         if (selected is null) _selections.Add(issued, new object());
         return new(issued, currentConversation, space?.Revision, space?.Name, current,
-            TaskExecutionProjection.From(current)) { HasCurrentCommandIdentity = commandIdentity };
+            TaskExecutionProjection.From(current)) { HasCurrentCommandIdentity = commandIdentity, Activity = activity };
     }
 
     public async Task<FollowUpDecision> SubmitSelectedFollowUpAsync(TaskContextSelection selection,
@@ -367,10 +384,15 @@ public sealed record AuthorizedTaskContextObservation(TaskContextSelection Selec
     public Guid ContextId => Selection.ContextId;
     public Guid? OriginSpaceId => Selection.OriginSpaceId;
     public string Title => OriginalConversation?.Title ?? Snapshot.PromptSummary;
-    // A saved state supplies no producer or active-source witness.
-    public TaskRunActivityObservation? Activity => null;
-    public bool HasObservedLiveExecution => false;
-    public string ExecutionObservation => $"Saved task: {Snapshot.State}. Current execution is not established by this observation.";
+    // A saved state supplies no producer or active-source witness. Only the actual
+    // current source observation, scoped to this exact revision, can establish activity.
+    public TaskRunActivityObservation? Activity { get; init; }
+    public bool HasObservedLiveExecution => Activity is { IsLive: true } live && Snapshot.State == TaskExecutionLifecycle.Running &&
+        live.TaskId == Snapshot.TaskId && live.ExecutionId == Snapshot.ExecutionId && live.ContextId == ContextId &&
+        live.PersistenceRevision == Snapshot.PersistenceRevision;
+    public string ExecutionObservation => HasObservedLiveExecution
+        ? $"Live original execution observed at {Activity!.ObservedAt:O}; recorded task: {Snapshot.State}."
+        : $"Saved task: {Snapshot.State}. Current execution is not established by this observation.";
     public string RecoveryObservation => Snapshot.RecoveryObservation is { } recovery
         ? $"{recovery.ReasonCode}; iterator {recovery.IteratorOutcome}; settlement {recovery.SettlementOutcome}. This does not authorize replay."
         : "No recovery observation is recorded. Provider continuation requires its original owner.";

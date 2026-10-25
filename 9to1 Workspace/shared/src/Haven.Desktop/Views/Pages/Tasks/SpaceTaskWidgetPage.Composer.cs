@@ -22,8 +22,8 @@ public sealed partial class SpaceTaskWidgetPage
         }
         _composerView.RefreshSurface();
     }
-    private TaskFollowUpMode? PreferredTaskSubmitMode => _composerPreferences?.GetSpaceSubmitMode(_spaceId,
-        _spaceId == SpaceRegistry.ResearchSpaceId) switch
+    private TaskFollowUpMode? PreferredTaskSubmitMode => _composerPreferences?.GetSpaceSubmitMode(_composerPreferenceSpaceId,
+        _composerPreferenceSpaceId == SpaceRegistry.ResearchSpaceId) switch
         { SpaceSubmitMode.Steer => TaskFollowUpMode.Steer, SpaceSubmitMode.Queue => TaskFollowUpMode.Queue, _ => null };
     private ValueTask SetTaskSubmitMode(TaskFollowUpMode mode)
     {
@@ -36,7 +36,7 @@ public sealed partial class SpaceTaskWidgetPage
             original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
             InvokeOriginalSource(() =>
             {
-                preferences.SetSpaceSubmitMode(_spaceId,
+                preferences.SetSpaceSubmitMode(_composerPreferenceSpaceId,
                     mode == TaskFollowUpMode.Steer ? SpaceSubmitMode.Steer : SpaceSubmitMode.Queue);
                 return true;
             });

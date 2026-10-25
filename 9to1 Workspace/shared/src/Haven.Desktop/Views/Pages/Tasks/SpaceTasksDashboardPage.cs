@@ -27,6 +27,15 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     private readonly Func<SpaceTaskObservation, Task> _openExisting;
     private readonly Func<string, Task>? _startNew;
     private readonly Func<Task>? _openBlank;
+    private readonly UserPreferencesService? _preferences;
+    private readonly Func<AuthorizedTaskContextObservation, Task>? _openAuthorized;
+    private TaskShownScope _shownScope;
+    private TaskObservationPageCursor? _pageCursor, _nextCursor;
+    private readonly List<TaskObservationPageCursor?> _previousCursors = [];
+    private IReadOnlyList<ITaskContextObservation> _currentObservations = [];
+    private bool _navigationPending;
+    internal Task? ActualScopeChange { get; private set; }
+    internal Task? ActualPageNavigation { get; private set; }
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly SpaceTasksDashboardCuiScene _scene;
     private readonly object _gate = new();
@@ -58,7 +67,27 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         _scene.NewBlankTaskRequested += OnBlankRequested;
         _scene.RecentTaskRequested += OnOpenRequested;
         _scene.RefreshRequested += OnRefreshRequested;
+        _scene.ScopeRequested += OnScopeRequested;
+        _scene.PageRequested += OnPageRequested;
     }
+
+    public SpaceTasksDashboardPage(SpaceTaskWorkspaceService source, TaskExecutionCoordinator canonical,
+        Guid actualSpaceId, Func<SpaceTaskObservation, Task> openExistingTask,
+        Func<string, Task>? startExplicitNewTask, Func<Task>? openBlankTask,
+        UserPreferencesService actualPreferences, Func<AuthorizedTaskContextObservation, Task> openAuthorizedTask)
+        : this(source, canonical, actualSpaceId, openExistingTask, startExplicitNewTask, openBlankTask)
+    {
+        _preferences = actualPreferences ?? throw new ArgumentNullException(nameof(actualPreferences));
+        _openAuthorized = openAuthorizedTask ?? throw new ArgumentNullException(nameof(openAuthorizedTask));
+        _shownScope = actualSpaceId == SpaceRegistry.TasksSpaceId ? actualPreferences.ShownTasks : TaskShownScope.TaskSpaceOnly;
+    }
+
+    public IReadOnlyList<ITaskContextObservation> CurrentObservations => _currentObservations;
+    public TaskShownScope ShownScope => _shownScope;
+    private bool CanChangeScope => _spaceId == SpaceRegistry.TasksSpaceId && _preferences is not null && _openAuthorized is not null;
+    private void PublishScope(Action? guard = null) => _scene.SetScope(_shownScope, CanChangeScope,
+        _source.HasAuthorizedTaskCensus, !_navigationPending && _nextCursor is not null,
+        !_navigationPending && _previousCursors.Count != 0, guard);
 
     public SpaceTasksDashboardCuiScene Scene { get; }
     internal SpaceTasksDashboardCuiScene OriginalScene => _scene;
@@ -116,26 +145,40 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     }
     private async Task ReadOriginalPageAsync(DesktopOriginalWorkLifetime.Original original, long generation, CancellationToken token)
     {
-        long sequence; lock (_gate) sequence = ++_readSequence;
+        long sequence; TaskShownScope shown; TaskObservationPageCursor? cursor;
+        lock (_gate) { sequence = ++_readSequence; shown = _shownScope; cursor = _pageCursor; }
         try
         {
             original.DemandPublication();
-            var rows = await original.AwaitAsync(InvokePhysicalSource(() => _source.ReadPageAsync(_spaceId, 40, token, OwnNestedOriginalSource))).ConfigureAwait(false);
+            IReadOnlyList<ITaskContextObservation> rows;
+            TaskObservationPageCursor? next = null;
+            bool unavailable = false;
+            if (shown == TaskShownScope.AllTasks)
+            {
+                if (!CanChangeScope) throw new InvalidOperationException("The actual All Tasks opening owner is unavailable.");
+                var page = await original.AwaitAsync(InvokePhysicalSource(() => _source.ReadAllTasksPageAsync(40, cursor, token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                rows = page.Tasks; next = page.Next; unavailable = page.HasUnavailableContexts;
+            }
+            else rows = await original.AwaitAsync(InvokePhysicalSource(() => _source.ReadPageAsync(_spaceId, 40, token, OwnNestedOriginalSource))).ConfigureAwait(false);
             await DispatchOriginalAsync(original, () =>
             {
                 original.DemandPublication();
-                lock (_gate) { if (_readSequence != sequence) return; }
-                _observations = rows; // Capture actual source observations before presentation callbacks.
+                lock (_gate) { if (_readSequence != sequence || shown != _shownScope) return; }
+                _currentObservations = rows;
+                _observations = rows.OfType<SpaceTaskObservation>().ToArray(); // Preserve the legacy Space-only API.
+                _nextCursor = next;
                 void DemandRead()
                 {
                     original.DemandPublication();
-                    lock (_gate) if (_readSequence != sequence) throw new InvalidOperationException("The original dashboard read was superseded.");
+                    lock (_gate) if (_readSequence != sequence || shown != _shownScope) throw new InvalidOperationException("The original dashboard read was superseded.");
                 }
-                _scene.SetRecent(rows, DemandRead);
+                _scene.SetRecent(rows, DemandRead); PublishScope(DemandRead);
                 _scene.SetStartAvailability(!_newWorkPending && _startNew is not null, !_newWorkPending && _openBlank is not null, DemandRead);
-                _scene.SetStatus(_startNew is null || _openBlank is null
-                    ? "Some new-task actions are unavailable. Existing tasks can still be opened."
-                    : "Showing up to 40 task conversations in this Space.", DemandRead);
+                _scene.SetStatus(shown == TaskShownScope.AllTasks
+                    ? "Showing authorized tasks from up to 40 canonical candidates on this page." + (unavailable ? " Some contexts could not be shown." : "")
+                    : _startNew is null || _openBlank is null
+                        ? "Some new-task actions are unavailable. Existing tasks can still be opened."
+                        : "Showing up to 40 task conversations in this Space.", DemandRead);
             }).ConfigureAwait(false);
         }
         catch (Exception error)
@@ -144,11 +187,62 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             if (IsCurrent(generation))
             {
                 try { await DispatchOriginalAsync(original, () =>
-                    { lock (_gate) { if (_readSequence != sequence) return; } _scene.SetStatus("Tasks couldn’t refresh. Try again."); }).ConfigureAwait(false); }
+                    {
+                        lock (_gate) { if (_readSequence != sequence || shown != _shownScope) return; }
+                        _currentObservations = []; _observations = []; _nextCursor = null;
+                        _scene.SetRecent([]); PublishScope();
+                        _scene.SetStatus(error is UnauthorizedAccessException ? "The current profile cannot show this task context. Refresh after checking your profile."
+                            : "Tasks couldn’t refresh. Try again.");
+                    }).ConfigureAwait(false); }
                 catch (Exception publicationError) { original.Retain(publicationError); }
             }
             original.ThrowRetained();
         }
+    }
+    private void OnScopeRequested(object? sender, TaskShownScope shown)
+    {
+        if (!CanChangeScope || !Enum.IsDefined(shown) || shown == TaskShownScope.AllTasks && !_source.HasAuthorizedTaskCensus)
+            throw new InvalidOperationException("This actual task display scope is unavailable.");
+        long generation; lock (_gate) generation = _generation;
+        ActualScopeChange = _work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
+            // The SAME profile preference owner saves a display choice only.
+            InvokePhysicalSource(() => { _preferences!.SetShownTasks(shown); return true; });
+            await DispatchOriginalAsync(original, () =>
+            {
+                original.DemandPublication();
+                lock (_gate) { _shownScope = shown; _pageCursor = null; _nextCursor = null; _previousCursors.Clear(); _readSequence++; }
+                _currentObservations = []; _observations = []; _scene.SetRecent([]); PublishScope();
+            }).ConfigureAwait(false);
+            await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
+        });
+    }
+    private void OnPageRequested(object? sender, bool next)
+    {
+        long generation; lock (_gate) generation = _generation;
+        ActualPageNavigation = _work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
+            lock (_gate)
+            {
+                if (_navigationPending || _shownScope != TaskShownScope.AllTasks || next && _nextCursor is null || !next && _previousCursors.Count == 0)
+                    throw new InvalidOperationException("This actual task page is unavailable.");
+                _navigationPending = true;
+                if (next) { _previousCursors.Add(_pageCursor); _pageCursor = _nextCursor; }
+                else { _pageCursor = _previousCursors[^1]; _previousCursors.RemoveAt(_previousCursors.Count - 1); }
+            }
+            try
+            {
+                await DispatchOriginalAsync(original, () => PublishScope()).ConfigureAwait(false);
+                await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                lock (_gate) _navigationPending = false;
+                if (IsCurrent(generation)) await DispatchOriginalAsync(original, () => PublishScope()).ConfigureAwait(false);
+            }
+        });
     }
     private void OnSnapshotChanged(object? sender, TaskExecutionSnapshot snapshot)
     {
@@ -161,24 +255,39 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
         });
     }
-    private void OnRefreshRequested(object? sender, EventArgs args) => _ = RefreshOriginalAsync();
-    private void OnOpenRequested(object? sender, SpaceTaskObservation captured)
+    private void OnRefreshRequested(object? sender, EventArgs args)
     {
-        if (!_observations.Any(row => ReferenceEquals(row, captured))) throw new InvalidOperationException("This task tile changed before opening.");
-        var contextId = captured.Conversation.Id;
+        // An explicit refresh starts a new census and discards any previous actor's
+        // opaque paging positions. Snapshot-driven refreshes keep the current page.
+        lock (_gate) { _pageCursor = null; _nextCursor = null; _previousCursors.Clear(); _readSequence++; }
+        PublishScope();
+        _ = RefreshOriginalAsync();
+    }
+    private void OnOpenRequested(object? sender, ITaskContextObservation captured)
+    {
+        if (!_currentObservations.Any(row => ReferenceEquals(row, captured))) throw new InvalidOperationException("This task tile changed before opening.");
+        var contextId = captured.ContextId;
         long generation; lock (_gate) generation = _generation;
         _ = _work.RunAsync(async original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
             try
             {
-                var current = await original.AwaitAsync(InvokePhysicalSource(() => _source.ReadAsync(_spaceId, contextId, original.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
-                if (current.Snapshot?.TaskId != captured.Snapshot?.TaskId || current.Snapshot?.ExecutionId != captured.Snapshot?.ExecutionId)
-                    throw new InvalidOperationException("The recorded Task/Run changed; refresh this dashboard before opening it.");
-                original.DemandPublication();
-                // The genuine shell callback receives SAME observed identities; it must not call
-                // ConfigureTaskMode/Submit to reopen, create a new task, or relabel this result.
-                await original.AwaitAsync(InvokePhysicalSource(() => _openExisting(current))).ConfigureAwait(false);
+                if (captured is AuthorizedTaskContextObservation selected)
+                {
+                    var current = await original.AwaitAsync(InvokePhysicalSource(() => _source.ReadSelectionAsync(selected.Selection, original.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                    original.DemandPublication();
+                    var open = _openAuthorized ?? throw new InvalidOperationException("The genuine same-context task opener is unavailable.");
+                    await original.AwaitAsync(InvokePhysicalSource(() => open(current))).ConfigureAwait(false);
+                }
+                else
+                {
+                    var current = await original.AwaitAsync(InvokePhysicalSource(() => _source.ReadAsync(_spaceId, contextId, original.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                    if (current.Snapshot?.TaskId != captured.Snapshot?.TaskId || current.Snapshot?.ExecutionId != captured.Snapshot?.ExecutionId)
+                        throw new InvalidOperationException("The recorded Task/Run changed; refresh this dashboard before opening it.");
+                    original.DemandPublication();
+                    await original.AwaitAsync(InvokePhysicalSource(() => _openExisting(current))).ConfigureAwait(false);
+                }
             }
             catch (Exception error)
             {
@@ -287,6 +396,8 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         _scene.NewBlankTaskRequested -= OnBlankRequested;
         _scene.RecentTaskRequested -= OnOpenRequested;
         _scene.RefreshRequested -= OnRefreshRequested;
+        _scene.ScopeRequested -= OnScopeRequested;
+        _scene.PageRequested -= OnPageRequested;
         return InvokePhysicalSource(() => Dispatcher.UIThread.InvokeAsync(() =>
             InvokePhysicalSource(() => { _scene.RequestRetirement(); return true; })).GetTask());
     }
