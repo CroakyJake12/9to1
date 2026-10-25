@@ -41,6 +41,10 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
         set => _dispatch("chat.update-draft", value ?? string.Empty, CancellationToken.None);
     }
 
+    public object? ActionIdentity
+    {
+        get { var state = Snapshot; return (state.Conversation?.Id, state.Conversation?.CurrentBranchId); }
+    }
     public string Placeholder => "Ask Haven anything";
     public bool IsSending => Snapshot.Composer.IsSending;
     public bool CanStop => _canStop?.Invoke() == true;

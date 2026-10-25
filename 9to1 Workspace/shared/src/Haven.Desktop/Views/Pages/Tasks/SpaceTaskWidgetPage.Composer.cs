@@ -48,6 +48,14 @@ public sealed partial class SpaceTaskWidgetPage
     /// task, run, scheduler, continuation factory or cloned draft/availability state.</summary>
     private sealed class TaskComposerSource(SpaceTaskWidgetPage page) : IChatComposerSource
     {
+        public object? ActionIdentity
+        {
+            get
+            {
+                lock (page._gate) return (page._spaceId, page._conversationId,
+                    page._observation?.Snapshot?.TaskId, page._observation?.Snapshot?.ExecutionId);
+            }
+        }
         public string Draft
         {
             get { lock (page._gate) return page._instruction; }
