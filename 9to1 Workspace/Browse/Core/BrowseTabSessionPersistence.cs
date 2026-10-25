@@ -7,6 +7,8 @@ namespace HavenOS.Apps.Browse;
 /// <summary>A projection into the existing canonical workspace session, not a new
 /// rich persistence schema. Private tabs and private selection are excluded.</summary>
 public sealed record BrowseClosedTabProjection(BrowserTabState Tab, int Index, BrowseEngineKind? EngineOverride);
+/// <summary>Projection of an existing canonical group. The GUID is its identity; ordered member IDs remain the workspace owner's data.</summary>
+public sealed record BrowseTabGroupProjection(Guid Id, string Name, bool IsCollapsed, IReadOnlyList<Guid> OrderedTabIds);
 
 public sealed record BrowseTabSessionProjection(IReadOnlyList<BrowserTabState> Tabs, Guid? SelectedTabId)
 {
@@ -16,6 +18,8 @@ public sealed record BrowseTabSessionProjection(IReadOnlyList<BrowserTabState> T
     public IReadOnlyList<Guid>? PaneTabIds { get; init; }
     public SplitOrientation? SplitOrientation { get; init; }
     public double? PrimaryPaneRatio { get; init; }
+    /// <summary>Null means an older producer omitted group metadata; an empty list explicitly removes this window's groups.</summary>
+    public IReadOnlyList<BrowseTabGroupProjection>? Groups { get; init; }
 }
 
 /// <summary>The shared host adapts its existing WorkspaceSessionSnapshot owner.

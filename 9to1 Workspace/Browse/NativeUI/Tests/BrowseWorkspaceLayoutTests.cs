@@ -16,6 +16,45 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeUiTests
 {
     [AvaloniaFact]
+    public async Task Collapsed_group_keeps_its_selected_tab_and_actions_current_until_expanded()
+    {
+        var first = Guid.NewGuid(); var second = Guid.NewGuid(); var groupId = Guid.NewGuid();
+        var stamp = DateTimeOffset.UtcNow;
+        var projection = new BrowseTabSessionProjection([
+            new(first, "First", "https://first.example/", BrowserTabPrivacy.Standard, groupId.ToString("D"), stamp) { ProfileId = "profile" },
+            new(second, "Second", "https://second.example/", BrowserTabPrivacy.Standard, groupId.ToString("D"), stamp) { ProfileId = "profile" }
+        ], second) { Groups = [new(groupId, "Research", true, [first, second])] };
+        var persistence = new MemoryTabSessionPersistence(projection);
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), homeProfileId: "profile", tabSessionPersistence: persistence);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            Assert.Equal(new[] { second }, Rows(workspace).Select(row => Guid.Parse(row.Key)));
+            Assert.Equal("Research", Assert.Single(chrome.State.Groups).Name);
+            await Click(window, workspace, Find(window, "BrowseMoreButton")); Layout();
+            await Click(window, workspace, Find(window, "BrowseToggleTabGroupCollapsedButton")); Layout();
+            Assert.Equal(new[] { first, second }, Rows(workspace).Select(row => Guid.Parse(row.Key)));
+            var firstRow = Assert.Single(Rows(workspace), row => row.Key == first.ToString("D"));
+            await Click(window, workspace, TabButton(window, workspace, firstRow.Key)); Layout();
+            await Click(window, workspace, Find(window, "BrowseToggleTabGroupCollapsedButton")); Layout();
+            Assert.Equal(new[] { first }, Rows(workspace).Select(row => Guid.Parse(row.Key)));
+            Assert.Equal(first, chrome.State.SelectedTabId);
+            Assert.True(workspace.IsActionAvailable("9to1.Browse.CloseTab") == true);
+            await Click(window, workspace, Find(window, "BrowseCloseTabButton")); Layout();
+            Assert.Equal(new[] { second }, chrome.State.Tabs.Select(tab => tab.Id));
+            Assert.Equal(second, chrome.State.SelectedTabId);
+            Assert.Equal(groupId, Assert.Single(chrome.State.Groups).Id);
+            await Retire(window);
+
+            void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
     public async Task Dragging_a_current_tab_row_reorders_its_stable_id_without_selecting_or_recreating_it()
     {
         var factory = new FixtureFactory();

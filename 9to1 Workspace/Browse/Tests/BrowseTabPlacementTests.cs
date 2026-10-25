@@ -7,6 +7,39 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeOwnershipTests
 {
     [Fact]
+    public async Task Canonical_tab_groups_keep_guid_membership_order_name_and_collapse_state_through_operations()
+    {
+        var session = new TabSessionFixture(new([], null) { Groups = [] });
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile",
+            tabSessionPersistence: session);
+        var first = (await chrome.NewTabAsync(false)).SelectedTabId;
+        var second = (await chrome.NewTabAsync(false)).SelectedTabId;
+        var third = (await chrome.NewTabAsync(false)).SelectedTabId;
+        await chrome.CreateTabGroupAsync("Research");
+        var group = Assert.Single(chrome.State.Groups);
+        var stableId = group.Id;
+        Assert.Equal(new[] { first, third }, group.OrderedTabIds);
+
+        await chrome.SelectTabAsync(second);
+        Assert.True(chrome.CanMoveSelectedTabToGroup(stableId));
+        await chrome.MoveSelectedTabToGroupAsync(stableId);
+        await chrome.RenameTabGroupAsync(stableId, "Project notes");
+        await chrome.SetTabGroupCollapsedAsync(stableId, true);
+        Assert.Equal(stableId, Assert.Single(chrome.State.Groups).Id);
+        Assert.Equal("Project notes", Assert.Single(chrome.State.Groups).Name);
+        Assert.True(Assert.Single(chrome.State.Groups).IsCollapsed);
+        Assert.Equal(new[] { first, second, third }, Assert.Single(chrome.State.Groups).OrderedTabIds);
+        Assert.All(chrome.State.Tabs.Where(tab => tab.GroupId == stableId), tab =>
+        { Assert.Equal("Project notes", tab.GroupName); Assert.True(tab.IsGroupCollapsed); });
+        Assert.Equal(new[] { first, second, third }, session.Saves[^1].Groups!.Single().OrderedTabIds);
+
+        await chrome.DissolveTabGroupAsync(stableId);
+        Assert.Empty(chrome.State.Groups);
+        Assert.All(chrome.State.Tabs, tab => Assert.Null(tab.GroupId));
+        Assert.Empty(session.Saves[^1].Groups!);
+    }
+
+    [Fact]
     public async Task Stable_id_reorder_moves_before_or_after_a_target_without_crossing_private_owner()
     {
         await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths());

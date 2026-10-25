@@ -43,9 +43,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private readonly List<Task> _originalCommands = [], _originalOperations = [], _originalNotifications = [], _originalUiOperations = [];
     private BrowseChromeSnapshot _snapshot;
     private TabRow[] _tabRows = [];
+    private TabGroupRow[] _tabGroupRows = [];
     private SavedEntryRow[] _bookmarkRows = [], _historyRows = [], _downloadRows = [];
     private long _savedEpoch;
     private long _rowEpoch;
+    private long _groupRowEpoch;
+    private string _groupName = "Research";
     private string _address, _find = string.Empty, _historyQuery = string.Empty, _status;
     private bool _addressDraft, _busy, _ready, _disposed, _toolsOpen, _profileMenuOpen, _manageUsersOpen;
     private volatile bool _retiring;
@@ -71,7 +74,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
         _originalActionAvailability = originalActionAvailability ?? throw new ArgumentNullException(nameof(originalActionAvailability));
         _snapshot = _chrome.State; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
-        IssueCurrentRows(); IssueSavedEntryRows(); IssuePendingDownloadRows(); _chrome.StateChanged += OnChromeStateChanged;
+        IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows(); _chrome.StateChanged += OnChromeStateChanged;
         _chrome.RetirementStarted += OnChromeRetirementStarted;
     }
     public static CuiDocument LoadDocument()
@@ -104,6 +107,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         value = path switch
         {
             "Tabs" => _tabRows,
+            "TabGroups" => _tabGroupRows,
+            "GroupName" => _groupName,
+            "CanManageTabGroups" => _chrome.CanManageTabGroups,
+            "CanCreateTabGroup" => _chrome.CanCreateTabGroup && !string.IsNullOrWhiteSpace(_groupName),
+            "CanUngroupSelectedTab" => _chrome.CanUngroupSelectedTab,
             "SelectedTabTarget" => _tabRows.FirstOrDefault(row => row.Selected)?.Target,
             "PinTabLabel" => selected.IsPinned ? "Unpin selected tab" : "Pin selected tab",
             "TabPinned" => selected.IsPinned,
@@ -234,6 +242,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 _historyQuery = historyText;
                 IssueSavedEntryRows();
                 break;
+            case "GroupName":
+                if (value is not string groupName || groupName.Length > 64 || groupName.Any(char.IsControl)) return false;
+                _groupName = groupName;
+                break;
             case "RecordHistory":
             case "RestoreTabs":
                 if (value is not bool enabled) return false;
@@ -296,6 +308,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.MoveTabRight" => _chrome.CanMoveTab(tab.Id, 1),
             "9to1.Browse.SaveTabPlacement" => _chrome.HasUnsavedTabPlacement,
             "9to1.Browse.ReorderTab" => _ready && !_busy && !_retiring && !_disposed,
+            "9to1.Browse.CreateTabGroup" => _chrome.CanCreateTabGroup && !string.IsNullOrWhiteSpace(_groupName),
+            "9to1.Browse.UngroupSelectedTab" => _chrome.CanUngroupSelectedTab,
+            "9to1.Browse.JoinSelectedTabToGroup" => _chrome.CanManageTabGroups,
+            "9to1.Browse.RenameTabGroup" or "9to1.Browse.ToggleTabGroupCollapsed" or "9to1.Browse.DissolveTabGroup" =>
+                _chrome.CanManageTabGroups && _tabGroupRows.Length > 0,
             "9to1.Browse.ToggleSplitView" => _chrome.HasSplitView || _chrome.CanSplitSelectedTab,
             "9to1.Browse.ToggleSplitOrientation" => _chrome.HasSplitView,
             "9to1.Browse.WidenPrimaryPane" => _chrome.CanWidenPrimaryPane,
@@ -359,6 +376,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             (parameter is not TabReorderSelection reorder || !ReferenceEquals(reorder.Owner, this) ||
              !IsCurrentTabTarget(reorder.Source) || !IsCurrentTabTarget(reorder.Target)))
         { _status = "The tab rows changed. Drag their current rows again."; Changed(); return ValueTask.CompletedTask; }
+        if ((command is "9to1.Browse.JoinSelectedTabToGroup" or "9to1.Browse.RenameTabGroup" or
+            "9to1.Browse.ToggleTabGroupCollapsed" or "9to1.Browse.DissolveTabGroup") && !IsCurrentGroupTarget(parameter))
+        { _status = "The tab group changed. Use its current row controls."; Changed(); return ValueTask.CompletedTask; }
         if (command == "9to1.Browse.CloseTabRow" &&
             !_chrome.State.Tabs.Any(tab => tab.Id == ((TabSelection)parameter!).TabId && tab.IsCloseable))
             return ValueTask.CompletedTask;
@@ -454,6 +474,20 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     await Operation(() => _chrome.MoveTabRelativeAsync(reorderTarget.Source.TabId, reorderTarget.Target.TabId,
                         reorderTarget.BeforeTarget, token));
                     break;
+                case "9to1.Browse.CreateTabGroup":
+                    await Operation(() => _chrome.CreateTabGroupAsync(_groupName, token)); break;
+                case "9to1.Browse.JoinSelectedTabToGroup":
+                    await Operation(() => _chrome.MoveSelectedTabToGroupAsync(((TabGroupSelection)parameter!).GroupId, token)); break;
+                case "9to1.Browse.RenameTabGroup":
+                    await Operation(() => _chrome.RenameTabGroupAsync(((TabGroupSelection)parameter!).GroupId, _groupName, token)); break;
+                case "9to1.Browse.ToggleTabGroupCollapsed":
+                    var groupTarget = (TabGroupSelection)parameter!;
+                    var groupState = _snapshot.Groups.First(group => group.Id == groupTarget.GroupId);
+                    await Operation(() => _chrome.SetTabGroupCollapsedAsync(groupTarget.GroupId, !groupState.IsCollapsed, token)); break;
+                case "9to1.Browse.DissolveTabGroup":
+                    await Operation(() => _chrome.DissolveTabGroupAsync(((TabGroupSelection)parameter!).GroupId, token)); break;
+                case "9to1.Browse.UngroupSelectedTab":
+                    await Operation(() => _chrome.UngroupSelectedTabAsync(token)); break;
                 case "9to1.Browse.SelectTab":
                     if (!IsCurrentTabTarget(parameter)) { _status = "The tab row changed before selection; select its current row again."; break; }
                     var selectedTarget = (TabSelection)parameter!;
@@ -586,7 +620,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         Dispatcher.UIThread.VerifyAccess();
         if (_retiring || _disposed) return;
         if (_snapshot.SelectedTabId != snapshot.SelectedTabId || _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage) _find = snapshot.FindQuery;
-        _snapshot = snapshot; IssueCurrentRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
+        _snapshot = snapshot; IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
         if (!_addressDraft) _address = snapshot.SelectedTab.Address.ToString();
         _status = snapshot.Status; Changed();
     }
@@ -738,10 +772,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     private sealed record TabSelection(BrowseNativeWorkspace Owner, Guid TabId, long Epoch, bool IsPinned, string PlacementStamp);
     private sealed record TabReorderSelection(BrowseNativeWorkspace Owner, TabSelection Source, TabSelection Target, bool BeforeTarget);
+    private sealed record TabGroupSelection(BrowseNativeWorkspace Owner, Guid GroupId, long Epoch);
+    public sealed record TabGroupRow(object Target, string Key, string Name, string Summary, bool IsCollapsed, bool CanJoinSelected);
     private void IssueCurrentRows()
     {
-        var actualRows = _snapshot.Tabs.Select(tab => (tab.Id, Key: tab.Id.ToString("D"),
-            Label: (tab.IsPinned ? "Pinned · " : string.Empty) + tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
+        var actualRows = _snapshot.Tabs.Where(tab => !tab.IsGroupCollapsed || tab.Id == _snapshot.SelectedTabId)
+            .Select(tab => (tab.Id, Key: tab.Id.ToString("D"),
+            Label: (tab.IsPinned ? "Pinned · " : string.Empty) + (tab.GroupName.Length > 0 ? tab.GroupName + " · " : string.Empty) + tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
             Description: tab.Title + " · " + (tab.Address.IsWeb
                 ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
                 : tab.IsHome ? "Home" : tab.Address.Authority),
@@ -755,9 +792,22 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _tabRows = actualRows.Select(row => new TabRow(new TabSelection(this, row.Id, epoch, row.Pinned, placementStamp), row.Key, row.Label, row.Selected)
             { Description = row.Description, CanClose = row.CanClose }).ToArray();
     }
+    private void IssueGroupRows()
+    {
+        var actual = _snapshot.Groups.Where(group => group.OrderedTabIds.Count > 0)
+            .Select(group => (group.Id, group.Name, group.IsCollapsed, Count: group.OrderedTabIds.Count)).ToArray();
+        var epoch = checked(++_groupRowEpoch);
+        _tabGroupRows = actual.Select(group => new TabGroupRow(
+            new TabGroupSelection(this, group.Id, epoch), group.Id.ToString("D"), group.Name,
+            group.Count + (group.Count == 1 ? " tab" : " tabs") + (group.IsCollapsed ? " · collapsed" : string.Empty),
+            group.IsCollapsed, _chrome.CanMoveSelectedTabToGroup(group.Id))).ToArray();
+    }
     private bool IsCurrentTabTarget(object? parameter) => parameter is TabSelection target &&
         ReferenceEquals(target.Owner, this) && target.Epoch == _rowEpoch &&
         _tabRows.Any(row => ReferenceEquals(row.Target, target)) && _chrome.State.Tabs.Any(tab => tab.Id == target.TabId);
+    private bool IsCurrentGroupTarget(object? parameter) => parameter is TabGroupSelection target &&
+        ReferenceEquals(target.Owner, this) && target.Epoch == _groupRowEpoch &&
+        _tabGroupRows.Any(row => ReferenceEquals(row.Target, target)) && _chrome.State.Groups.Any(group => group.Id == target.GroupId);
     public bool TryGetCurrentTabRow(int index, out TabRow? row)
     {
         Dispatcher.UIThread.VerifyAccess();
@@ -802,7 +852,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (TryGetDownloadDestinationItem(item, path, out value)) return true;
         if (TryGetPendingDownloadItem(item, path, out value)) return true;
         value = null;
-        if (item is TabRow row && _tabRows.Any(current => ReferenceEquals(current, row)))
+        if (item is TabGroupRow group && _tabGroupRows.Any(current => ReferenceEquals(current, group)))
+            value = path switch { "Key" => group.Key, "Name" => group.Name, "Summary" => group.Summary,
+                "Target" => group.Target, "IsCollapsed" => group.IsCollapsed, "CanJoinSelected" => group.CanJoinSelected,
+                "CollapseLabel" => group.IsCollapsed ? "Expand " + group.Name : "Collapse " + group.Name, _ => null };
+        else if (item is TabRow row && _tabRows.Any(current => ReferenceEquals(current, row)))
             value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,
                 "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label, _ => null };
         else if (item is SavedEntryRow saved && _bookmarkRows.Concat(_historyRows).Concat(_downloadRows).Any(current => ReferenceEquals(current, saved)))

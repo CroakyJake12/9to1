@@ -5,6 +5,10 @@
     <Action name="ToggleTabPinned" command="9to1.Browse.ToggleTabPinned" parameter="{Binding SelectedTabTarget}" />
     <Action name="MoveTabLeft" command="9to1.Browse.MoveTabLeft" parameter="{Binding SelectedTabTarget}" />
     <Action name="MoveTabRight" command="9to1.Browse.MoveTabRight" parameter="{Binding SelectedTabTarget}" />
+    <Action name="JoinTabGroup" command="9to1.Browse.JoinSelectedTabToGroup" parameter="{Binding group.Target}" />
+    <Action name="RenameTabGroup" command="9to1.Browse.RenameTabGroup" parameter="{Binding group.Target}" />
+    <Action name="ToggleTabGroupCollapsed" command="9to1.Browse.ToggleTabGroupCollapsed" parameter="{Binding group.Target}" />
+    <Action name="DissolveTabGroup" command="9to1.Browse.DissolveTabGroup" parameter="{Binding group.Target}" />
     <Action name="OpenBookmark" command="9to1.Browse.OpenBookmark" parameter="{Binding bookmark.Target}" />
     <Action name="RemoveBookmark" command="9to1.Browse.RemoveBookmark" parameter="{Binding bookmark.Target}" />
     <Action name="OpenHistory" command="9to1.Browse.OpenHistory" parameter="{Binding visit.Target}" />
@@ -214,6 +218,25 @@
             <Button id="BrowseMoveTabRightButton" action="MoveTabRight" AccessibleName="Move selected tab right within its section" Interactive="{Binding Can.MoveTabRight}">Move right</Button>
           </Container>
           <Text FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap">Pinned tabs stay before other tabs. Unpin to show the close button, or use Close selected tab.</Text>
+          <Text Text="Tab groups" FontWeight="Bold" />
+          <Input Type="Text" id="BrowseTabGroupNameInput" Value="{Binding GroupName, Mode=TwoWay}" Interactive="{Binding CanManageTabGroups}" AccessibleName="Tab group name" />
+          <Container Type="Wrap" CellGap="4">
+            <Button id="BrowseCreateTabGroupButton" action="9to1.Browse.CreateTabGroup" Interactive="{Binding Can.CreateTabGroup}" AccessibleName="Group selected tab with another tab in this profile">Create group</Button>
+            <Button id="BrowseUngroupSelectedTabButton" action="9to1.Browse.UngroupSelectedTab" Interactive="{Binding Can.UngroupSelectedTab}">Ungroup selected tab</Button>
+          </Container>
+          <Repeat Source="{Binding TabGroups}" As="group" Key="{Binding group.Key}">
+            <Container Type="Vertical Stack" CellGap="4" Padding="8 6" CornerRadius="8" Background="{Resource CuiInputSurfaceBrush}">
+              <Text Text="{Binding group.Name}" FontWeight="Bold" />
+              <Text Text="{Binding group.Summary}" FontSize="12" Color="{Resource CuiTextSoftBrush}" />
+              <Container Type="Wrap" CellGap="4">
+                <Button id="BrowseJoinTabGroupButton" action="JoinTabGroup" Interactive="{Binding group.CanJoinSelected}">Move selected here</Button>
+                <Button id="BrowseRenameTabGroupButton" action="RenameTabGroup" Interactive="{Binding Can.RenameTabGroup}">Rename</Button>
+                <Button id="BrowseToggleTabGroupCollapsedButton" action="ToggleTabGroupCollapsed" Text="{Binding group.CollapseLabel}" Interactive="{Binding Can.ToggleTabGroupCollapsed}" />
+                <Button id="BrowseDissolveTabGroupButton" action="DissolveTabGroup" Interactive="{Binding Can.DissolveTabGroup}">Dissolve</Button>
+              </Container>
+            </Container>
+          </Repeat>
+          <Text Text="Collapsed groups keep their selected tab available; expanding a group restores its other tabs to the strip." FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Text Text="Split view" FontWeight="Bold" />
           <Container Type="Wrap" CellGap="4">
             <Button id="BrowseToggleSplitViewButton" action="9to1.Browse.ToggleSplitView" Interactive="{Binding Can.ToggleSplitView}" AccessibleName="{Binding ToggleSplitLabel}">Split view</Button>

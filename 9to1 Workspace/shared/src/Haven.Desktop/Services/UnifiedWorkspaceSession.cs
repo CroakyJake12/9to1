@@ -136,6 +136,13 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                     panes.Any(id => !projected.Any(tab => tab.Id == id && tab.Privacy == BrowserTabPrivacy.Standard &&
                         StringComparer.Ordinal.Equals(tab.ProfileId, ProfileId))))
                     panes = [];
+                var groupIds = projected.Select(tab => Guid.TryParse(tab.Group, out var groupId) ? groupId : Guid.Empty)
+                    .Where(id => id != Guid.Empty).Concat(closed.Select(tab => Guid.TryParse(tab.Tab.Group, out var groupId)
+                        ? groupId : Guid.Empty)).Where(id => id != Guid.Empty).ToHashSet();
+                var groups = owner._snapshot.Groups.Where(group => groupIds.Contains(group.Id))
+                    .Select(group => new BrowseTabGroupProjection(group.Id, group.Name, group.IsCollapsed,
+                        Array.AsReadOnly(group.OrderedTabIds.Where(openIds.Contains).ToArray())))
+                    .ToArray();
                 // Load does not authorize deletion. Browse can refuse a restored
                 // row; only tabs it actually publishes in Save become managed.
                 return (BrowseTabSessionProjection?)new BrowseTabSessionProjection(Array.AsReadOnly(projected.ToArray()),
@@ -143,7 +150,8 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                 {
                     ClosedTabs = Array.AsReadOnly(closed), PaneTabIds = Array.AsReadOnly(panes),
                     SplitOrientation = panes.Length == 2 ? window.Layout.Orientation : null,
-                    PrimaryPaneRatio = panes.Length == 2 ? window.Layout.PrimaryRatio : null
+                    PrimaryPaneRatio = panes.Length == 2 ? window.Layout.PrimaryRatio : null,
+                    Groups = Array.AsReadOnly(groups)
                 };
             }));
 
@@ -155,7 +163,9 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
             {
                 Tabs = Array.AsReadOnly(projection.Tabs.ToArray()),
                 ClosedTabs = Array.AsReadOnly(projection.ClosedTabs.ToArray()),
-                PaneTabIds = projection.PaneTabIds is null ? null : Array.AsReadOnly(projection.PaneTabIds.ToArray())
+                PaneTabIds = projection.PaneTabIds is null ? null : Array.AsReadOnly(projection.PaneTabIds.ToArray()),
+                Groups = projection.Groups is null ? null : Array.AsReadOnly(projection.Groups.Select(group => group with
+                    { OrderedTabIds = Array.AsReadOnly(group.OrderedTabIds.ToArray()) }).ToArray())
             };
             return owner.Admit(async operation =>
             {
