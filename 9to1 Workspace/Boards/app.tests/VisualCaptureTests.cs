@@ -100,29 +100,40 @@ public sealed class VisualCaptureTests
             window.Arrange(new Rect(0, 0, width, height));
             root.Measure(new Size(width, height));
             root.Arrange(new Rect(0, 0, width, height));
-        if (openStyleMenu)
-        {
-            var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().FirstOrDefault(combo =>
-                Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
-            Assert.NotNull(styleMenu);
-            Assert.Equal(viewModel.StyleList.Count, styleMenu.Items.Count);
-            foreach (var name in new[] { "Header 4", "Header 5", "Header 6" })
-                Assert.Contains(styleMenu.Items.Cast<ComboBoxItem>(), item =>
-                    item.Content is TextBlock preview && preview.Text == name);
-            styleMenu.Focus();
-            Assert.True(styleMenu.IsFocused, "The style menu must be keyboard-focusable.");
-            window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, " ");
-            Dispatcher.UIThread.RunJobs();
-            Assert.True(styleMenu.IsDropDownOpen, "Space should open the focused style menu.");
-        }
-        var pageCard = BoardsCuiControlFinder.FindByAutomationId<Border>(root, "PageCard");
-        Assert.NotNull(pageCard);
+            var shotPath = Path.Combine(ShotsDirectory(), shotName);
+            using (var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new Vector(96, 96)))
+            {
+                bitmap.Render(window);
+                bitmap.Save(shotPath);
+            }
+
+            if (openStyleMenu)
+            {
+                var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().FirstOrDefault(combo =>
+                    Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
+                Assert.NotNull(styleMenu);
+                Assert.Equal(viewModel.StyleList.Count, styleMenu.Items.Count);
+                foreach (var name in new[] { "Header 4", "Header 5", "Header 6" })
+                    Assert.Contains(styleMenu.Items.Cast<ComboBoxItem>(), item =>
+                        item.Content is TextBlock preview && preview.Text == name);
+                styleMenu.Focus();
+                Assert.True(styleMenu.IsFocused, "The style menu must be keyboard-focusable.");
+                window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, " ");
+                Dispatcher.UIThread.RunJobs();
+                Assert.True(styleMenu.IsDropDownOpen, "Space should open the focused style menu.");
+            }
+
+        var tree = BoardsCuiControlFinder.DescribeRuntimeTree(root);
+        var pageCard = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "PageCard")
+            ?? throw new InvalidOperationException("Missing authored PageCard. Runtime tree:\n" + tree);
         Assert.True(root.Bounds.Width >= width - 1,
             $"The CUI root only measured {root.Bounds.Width}px of the {width}px capture.");
-        var navPane = BoardsCuiControlFinder.FindByAutomationId<Border>(root, "NavPane");
-        Assert.NotNull(navPane);
-        var editorScroll = BoardsCuiControlFinder.FindByAutomationId<ScrollViewer>(root, "EditorScroll");
-        Assert.NotNull(editorScroll);
+        var navPane = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "NavPane")
+            ?? throw new InvalidOperationException("Missing authored NavPane. Runtime tree:\n" + tree);
+        var editorScrollHost = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "EditorScroll")
+            ?? throw new InvalidOperationException("Missing authored EditorScroll host. Runtime tree:\n" + tree);
+        var editorScroll = editorScrollHost.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()
+            ?? throw new InvalidOperationException("The authored EditorScroll host did not create its CUI-owned ScrollViewer. Runtime tree:\n" + tree);
         Assert.True(editorScroll.Bounds.Width > width * 0.70,
             $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
         var widthDifference = Math.Abs(pageCard.Bounds.Width - editorScroll.Viewport.Width);
@@ -140,16 +151,11 @@ public sealed class VisualCaptureTests
         object? accent = null;
         Assert.True(Avalonia.Application.Current?.TryGetResource("CuiAccentBrush", null, out accent) == true);
         Assert.IsType<Avalonia.Media.LinearGradientBrush>(accent);
-        var topBar = BoardsCuiControlFinder.FindByAutomationId<Border>(root, "TopBar");
-        Assert.NotNull(topBar);
+        var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
+            ?? throw new InvalidOperationException("Missing authored TopBar. Runtime tree:\n" + tree);
         Assert.Same(accent, topBar.BorderBrush);
         Assert.NotEmpty(host.Children);
 
-        var pixelSize = new PixelSize(width, height);
-        using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
-        bitmap.Render(window);
-        var shotPath = Path.Combine(ShotsDirectory(), shotName);
-        bitmap.Save(shotPath);
         if (openStyleMenu)
         {
             window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, "Escape");
