@@ -14,6 +14,9 @@ public sealed record DeveloperCuiPropertyInspection(Guid Id, string RelativePath
     string ComponentType, IReadOnlyList<DeveloperCuiInspectableProperty> Properties, string? UnavailableReason)
 {
     public bool CanAddTextChild { get; init; }
+    public bool CanRemoveText { get; init; }
+    public bool CanMoveTextUp { get; init; }
+    public bool CanMoveTextDown { get; init; }
 }
 public sealed record DeveloperCuiPropertyChange(string Text, string? Error = null);
 
@@ -128,8 +131,13 @@ public static partial class DeveloperCuiPropertyEditor
                 : attribute.Value.Length > MaximumPropertyCharacters ? "This literal exceeds the bounded property editor limit." : null;
             properties.Add(new(attribute.Name.LocalName, attribute.Value, descriptor.LanguageType, reason is null, reason));
         }
+        var textContext = TextChildEditingContext(document, selectedComponent, target);
+        var canMoveUp = textContext is { Index: > 0 } up && SimpleLiteralText(up.Parent.Children[up.Index - 1], up.Elements[up.Index - 1]);
+        var canMoveDown = textContext is { } down && down.Index + 1 < down.Parent.Children.Count &&
+            SimpleLiteralText(down.Parent.Children[down.Index + 1], down.Elements[down.Index + 1]);
         return new(new(Guid.NewGuid(), path, hash, authoredId, selectedComponent.Type, Array.AsReadOnly(properties.ToArray()), null)
-            { CanAddTextChild = SupportsTextChild(selectedComponent) && IsBasicAuthoringContext(document, selectedComponent) }, target)
+            { CanAddTextChild = SupportsTextChild(selectedComponent) && IsBasicAuthoringContext(document, selectedComponent),
+                CanRemoveText = textContext is not null, CanMoveTextUp = canMoveUp, CanMoveTextDown = canMoveDown }, target)
             { Component = selectedComponent, Document = document };
     }
 

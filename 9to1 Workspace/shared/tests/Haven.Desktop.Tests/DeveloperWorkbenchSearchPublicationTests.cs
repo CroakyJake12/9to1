@@ -798,6 +798,66 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     }
 
     [AvaloniaFact]
+    public async Task Cui_Text_move_remove_share_actual_compilation_preview_draft_undo_and_no_source_write()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The established optional Home/Files fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string prefix = "<Cui>\r\n<Page id='page'><Container id='box' Type='Vertical Stack'>\r\n";
+            const string first = "<Text id='first' text='First &amp; fixed' />";
+            const string between = "\r\n<!-- keep this comment in place -->\r\n";
+            const string second = "<Text id='second' text='Second' />";
+            const string suffix = "\r\n</Container></Page>\r\n</Cui>";
+            const string saved = prefix + first + between + second + suffix;
+            const string moved = prefix + second + between + first + suffix;
+            const string removed = prefix + second + between + suffix;
+            f.Tools.TextValue = saved; page = await SearchPublicationPage(f, reader.Owner, new PreviewComponentReadiness());
+            await page.ActivateAsync(OriginalTestBodyToken); page.TrySetValue("SourcePath", "Main.cui");
+            await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var tab = Assert.Single(NativeSourceTabs(page)); var reads = f.Tools.ReadCalls; var preparations = f.Owner.PrepareCalls;
+            async Task SelectFirst()
+            {
+                await page.DispatchAsync("dev.analyze-cui-draft", null, OriginalTestBodyToken);
+                Assert.True(page.TryGetValue("CuiDraftOutline", out var outline));
+                var row = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(outline).Cast<object>(),
+                    item => ((string)item.GetType().GetProperty("Label")!.GetValue(item)!).Contains("first — Text", StringComparison.Ordinal));
+                await page.DispatchAsync("dev.go-to-cui-element", row.GetType().GetProperty("SelectionKey")!.GetValue(row), OriginalTestBodyToken);
+            }
+            await SelectFirst(); Assert.False(page.IsActionAvailable("dev.move-cui-text-up")); Assert.True(page.IsActionAvailable("dev.move-cui-text-down"));
+            await page.DispatchAsync("dev.move-cui-text-down", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(moved, draft); Assert.True(page.HasUnsavedWork);
+            Assert.False(page.IsActionAvailable("dev.remove-cui-text")); Assert.False(page.IsActionAvailable("dev.apply-edit"));
+            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            var slot = Assert.IsType<ContentControl>(SearchPublicationField("_cuiPreviewSlot").GetValue(page));
+            var scene = Assert.IsType<CuiSceneHost>(slot.Content);
+            Assert.Equal(new[] { "second", "first" }, Assert.IsAssignableFrom<Control>(scene.Content).GetVisualDescendants().OfType<TextBlock>()
+                .Where(node => node.Name is "first" or "second").Select(node => node.Name).ToArray());
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(saved, draft);
+            await page.DispatchAsync("dev.redo-source-edit", null, OriginalTestBodyToken);
+            await SelectFirst(); Assert.True(page.IsActionAvailable("dev.move-cui-text-up")); Assert.True(page.IsActionAvailable("dev.remove-cui-text"));
+            await page.DispatchAsync("dev.remove-cui-text", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(removed, draft);
+            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            scene = Assert.IsType<CuiSceneHost>(slot.Content);
+            Assert.DoesNotContain(Assert.IsAssignableFrom<Control>(scene.Content).GetVisualDescendants().OfType<TextBlock>(), node => node.Name == "first");
+            Assert.Contains(Assert.IsAssignableFrom<Control>(scene.Content).GetVisualDescendants().OfType<TextBlock>(), node => node.Name == "second");
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(moved, draft);
+            await page.DispatchAsync("dev.redo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(removed, draft);
+            Assert.Same(tab, Assert.Single(NativeSourceTabs(page))); Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(preparations, f.Owner.PrepareCalls);
+            Assert.Equal(saved, f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Draft_line_ending_controls_convert_same_unsaved_document_with_undo_and_no_source_effects()
     {
         Assert.SkipWhen(!OperatingSystem.IsLinux(), "The established optional Home/Files fixture requires Linux.");
