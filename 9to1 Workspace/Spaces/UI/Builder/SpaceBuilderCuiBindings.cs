@@ -29,6 +29,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Action<ToolCapability, bool>? _setModelCapabilityRequired;
     private readonly Action<bool>? _setPersonalMemoryReadAllowed;
     private readonly Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? _setCapabilityOverride;
+    private readonly Func<int, SpaceExamplePair, SpaceExamplePair, bool>? _updateExamplePair;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
     private static readonly string[] CapabilityOverrideOptions = ["Inherit", "Enabled", "Disabled"];
@@ -54,7 +55,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Action<Guid, bool>? setContextIncluded = null,
         Action<ToolCapability, bool>? setModelCapabilityRequired = null,
         Action<bool>? setPersonalMemoryReadAllowed = null,
-        Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null)
+        Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null,
+        Func<int, SpaceExamplePair, SpaceExamplePair, bool>? updateExamplePair = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -75,6 +77,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _setModelCapabilityRequired = setModelCapabilityRequired;
         _setPersonalMemoryReadAllowed = setPersonalMemoryReadAllowed;
         _setCapabilityOverride = setCapabilityOverride;
+        _updateExamplePair = updateExamplePair;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -103,6 +106,15 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.model.provider" => state.Draft.ModelPolicy?.ProviderConstraint ?? "",
             "builder.memory.personalRead" => (state.Draft.MemoryPolicy?.AllowedScopes ??
                 [SpaceMemoryScope.Conversation, SpaceMemoryScope.Space]).Contains(SpaceMemoryScope.Personal),
+            "builder.examplePairs" => state.Draft.ExamplePairs.Select((pair, index) => new SpaceBuilderExamplePairRow
+            {
+                index = index,
+                key = index.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                user = pair.User,
+                assistant = pair.Assistant
+            }).ToArray(),
+            "builder.hasExamplePairs" => state.Draft.ExamplePairs.Count != 0,
+            "builder.canEditExamplePairs" => _isCurrent() && state.CanEdit && _updateExamplePair is not null,
             "builder.model.capabilities" => Enum.GetValues<ToolCapability>().Select(capability => new SpaceBuilderModelCapabilityRow
             {
                 id = capability.ToString(),
@@ -316,6 +328,18 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             Refresh();
             return true;
         }
+        if (path is "user" or "assistant" && item is SpaceBuilderExamplePairRow exampleRow &&
+            value is string text && _updateExamplePair is not null && exampleRow.index >= 0 &&
+            exampleRow.index < state.Draft.ExamplePairs.Count)
+        {
+            var expected = state.Draft.ExamplePairs[exampleRow.index];
+            if (!StringComparer.Ordinal.Equals(expected.User, exampleRow.user) ||
+                !StringComparer.Ordinal.Equals(expected.Assistant, exampleRow.assistant)) return false;
+            var updated = path == "user" ? expected with { User = text } : expected with { Assistant = text };
+            if (!_updateExamplePair(exampleRow.index, expected, updated)) return false;
+            Refresh();
+            return true;
+        }
         return false;
     }
 
@@ -334,6 +358,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         "space-builder.source.remove" or "space-builder.legacy-file.remove" => _isCurrent() && _state().CanEdit,
         "space-builder.capability.remove" => _isCurrent() && _state().CanEdit,
         "space-builder.skill.attach" or "space-builder.plugin.attach" => _isCurrent() && _state().CanEdit,
+        "space-builder.example.add" or "space-builder.example.remove" => _isCurrent() && _state().CanEdit,
         _ => null
     };
 
@@ -417,4 +442,12 @@ public sealed class SpaceBuilderCapabilityRow
     public string? versionPin { get; init; }
     public int policy { get; init; }
     public string policyLabel { get; init; } = string.Empty;
+}
+
+public sealed class SpaceBuilderExamplePairRow
+{
+    public int index { get; init; }
+    public string key { get; init; } = string.Empty;
+    public string user { get; init; } = string.Empty;
+    public string assistant { get; init; } = string.Empty;
 }

@@ -6,6 +6,7 @@
     <Action name="RemoveCapability" command="space-builder.capability.remove" parameter="{Binding cap.key}" />
     <Action name="AttachSkill" command="space-builder.skill.attach" parameter="{Binding skill.id}" />
     <Action name="AttachPlugin" command="space-builder.plugin.attach" parameter="{Binding plugin.id}" />
+    <Action name="RemoveSpaceExamplePair" command="space-builder.example.remove" parameter="{Binding example.key}" />
   </Actions>
   <Theme Name="user_preference">
     <Page id="space-builder-editor" role="main" accessible-name="Space Builder">
@@ -135,6 +136,20 @@
             <Input id="space-builder-memory-personal-read" Type="Switch" Checked="{Binding builder.memory.personalRead, mode=TwoWay}" Interactive="{Binding builder.canSetPersonalMemoryRead}" accessible-name="Allow personal memory reads" />
             <Text text="Allow personal memory reads" foreground="{Resource CuiTextBrush}" />
           </Container>
+        </Container>
+        <Container id="space-builder-example-pairs" Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isAdvanced}">
+          <Text text="Space examples" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Plain-text examples are included in the Space's current prompt configuration. They do not run tools, execute code or prove installed capabilities." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Repeat id="space-builder-example-pair-list" Source="{Binding builder.examplePairs}" As="example" Key="{Binding example.key}">
+            <Container id="space-builder-example-pair" Type="Vertical Stack" CellGap="4" Interactive="{Binding builder.canEditExamplePairs}">
+              <Text text="Example user prompt" foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="space-builder-example-user" Type="Text" AcceptsReturn="True" Value="{Binding example.user, mode=TwoWay}" Interactive="{Binding builder.canEditExamplePairs}" accessible-name="Space example user prompt" />
+              <Text text="Example response" foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="space-builder-example-assistant" Type="Text" AcceptsReturn="True" Value="{Binding example.assistant, mode=TwoWay}" Interactive="{Binding builder.canEditExamplePairs}" accessible-name="Space example response" />
+              <Button id="space-builder-example-remove" action="RemoveSpaceExamplePair" content="Remove example" Interactive="{Binding builder.canEdit}" accessible-name="Remove this Space example" />
+            </Container>
+          </Repeat>
+          <Button id="space-builder-example-add" content="Add example" action="space-builder.example.add" Interactive="{Binding builder.canEdit}" accessible-name="Add a Space prompt example" />
         </Container>
         <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isAdvanced}">
           <Text text="Canonical context sources" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />

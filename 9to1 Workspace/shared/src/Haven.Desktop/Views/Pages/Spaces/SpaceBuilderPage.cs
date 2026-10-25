@@ -73,7 +73,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             _controller.SelectEditorView, _controller.SelectExpertSection,
             _controller.PreviewDraft, ValidateDraftWithOwnerAsync, _controller.SetContextReferenceIncluded,
             _controller.SetModelCapabilityRequired, _controller.SetPersonalMemoryReadAllowed,
-            _controller.SetCapabilityOverride);
+            _controller.SetCapabilityOverride, TryUpdateExamplePair);
         _controller.StateChanged += OnStateChanged;
         Document = document;
         _contentGrid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
@@ -355,6 +355,26 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private async ValueTask DispatchAsync(string command, object? parameter, CancellationToken token)
     {
+        if (command == "space-builder.example.add" || command == "space-builder.example.remove")
+        {
+            lock (_gate)
+            {
+                if (!CanMutate()) throw new InvalidOperationException("This Space draft cannot be edited now.");
+                _work.RunSynchronous(original =>
+                {
+                    original.BindPublicationGuard(IsPresentationCurrent);
+                    original.DemandPublication();
+                    var accepted = Source(() => command == "space-builder.example.add"
+                        ? _controller.AddExamplePair()
+                        : parameter is string key && int.TryParse(key, System.Globalization.NumberStyles.None,
+                            System.Globalization.CultureInfo.InvariantCulture, out var index) &&
+                          _controller.State.Draft.ExamplePairs.ElementAtOrDefault(index) is { } expected &&
+                          _controller.RemoveExamplePair(index, expected));
+                    if (accepted) _editEpoch++;
+                });
+            }
+            return;
+        }
         if (command == "space-builder.source.browse") { await RunSourceChoiceAsync(null, token).ConfigureAwait(false); return; }
         if (command == "space-builder.source.attach" && parameter is ISpaceBuilderOriginalBoardsSourceChoice sourceChoice)
         { await RunSourceChoiceAsync(sourceChoice, token).ConfigureAwait(false); return; }
@@ -471,6 +491,23 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             _ => throw new InvalidOperationException("This Space Builder command is not owned by this page.")
         };
         await actual.ConfigureAwait(false);
+    }
+
+    private bool TryUpdateExamplePair(int index, SpaceExamplePair expected, SpaceExamplePair updated)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate()) return false;
+            var accepted = false;
+            _work.RunSynchronous(original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                original.DemandPublication();
+                accepted = Source(() => _controller.UpdateExamplePair(index, expected, updated));
+                if (accepted) _editEpoch++;
+            });
+            return accepted;
+        }
     }
 
     private Task<T> RunExtensionReadAsync<T>(string resourceKind,

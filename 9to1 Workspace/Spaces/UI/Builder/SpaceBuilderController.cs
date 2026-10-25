@@ -126,6 +126,64 @@ public sealed class SpaceBuilderController
         return true;
     }
 
+    /// <summary>Adds a plain-data prompt/response example to the same Space draft.</summary>
+    public bool AddExamplePair()
+    {
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var pairs = _state.Draft.ExamplePairs.Append(new SpaceExamplePair(string.Empty, string.Empty)).ToArray();
+            var draft = _state.Draft with { ExamplePairs = Array.AsReadOnly(pairs) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = "Add a user prompt and example response. Example text is saved as Space configuration data." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
+    /// <summary>Updates one example only if the list row still matches its displayed draft snapshot.</summary>
+    public bool UpdateExamplePair(int index, SpaceExamplePair expected, SpaceExamplePair updated)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        ArgumentNullException.ThrowIfNull(updated);
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit || index < 0 || index >= _state.Draft.ExamplePairs.Count ||
+                _state.Draft.ExamplePairs[index] != expected) return false;
+            if (expected == updated) return true;
+            var pairs = _state.Draft.ExamplePairs.ToArray();
+            pairs[index] = updated;
+            var draft = _state.Draft with { ExamplePairs = Array.AsReadOnly(pairs) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = "Space example updated. Save to persist; it does not run or execute the example text." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
+    /// <summary>Removes one displayed example row without changing any other pair.</summary>
+    public bool RemoveExamplePair(int index, SpaceExamplePair expected)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit || index < 0 || index >= _state.Draft.ExamplePairs.Count ||
+                _state.Draft.ExamplePairs[index] != expected) return false;
+            var pairs = _state.Draft.ExamplePairs.Where((_, current) => current != index).ToArray();
+            var draft = _state.Draft with { ExamplePairs = Array.AsReadOnly(pairs) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = "Space example removed from the draft. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
     public SpaceBuilderPreview? PreviewDraft()
     {
         SpaceBuilderPreview? preview = null;

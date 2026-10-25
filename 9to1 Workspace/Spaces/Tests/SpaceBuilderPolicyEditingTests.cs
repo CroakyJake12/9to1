@@ -27,6 +27,7 @@ public sealed class SpaceBuilderPolicyEditingTests
         {
             ContextPolicy = new(MaximumRetrievedItems: 7),
             ModelPolicy = new("configured-model", ["text"], "configured-provider"),
+            ExamplePairs = [new("Original prompt", "Original example response")],
             LayoutDocument = new([new(Guid.NewGuid(), "Harness", "Keep authored logic")], []),
             CapabilityBindings = [new("keep", SpaceCapabilityKind.Plugin, SpaceCapabilityOverride.Disabled, "1")]
         }, original.Revision, token);
@@ -34,7 +35,8 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.True(await editor.LoadAsync(token));
         var bindings = Bindings(editor, setModelCapabilityRequired: (capability, required) => editor.SetModelCapabilityRequired(capability, required),
             setPersonalMemoryReadAllowed: allowed => editor.SetPersonalMemoryReadAllowed(allowed),
-            setCapabilityOverride: (kind, id, value) => editor.SetCapabilityOverride(kind, id, value));
+            setCapabilityOverride: (kind, id, value) => editor.SetCapabilityOverride(kind, id, value),
+            updateExamplePair: editor.UpdateExamplePair);
         Assert.True(bindings.TrySetValue("builder.context.webAccess", (int)SpaceWebAccessPolicy.Disabled));
         Assert.True(bindings.TrySetValue("builder.context.sourceOnly", true));
         Assert.True(bindings.TrySetValue("builder.context.includeSelection", false));
@@ -57,6 +59,19 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.Equal((int)SpaceCapabilityOverride.Disabled, attached.policy);
         Assert.True(bindings.TrySetItemValue(attached, "policy", (int)SpaceCapabilityOverride.Enabled));
         Assert.False(bindings.TrySetItemValue(attached, "policy", (int)SpaceCapabilityOverride.Disabled)); // Stale row cannot restore the old policy.
+        Assert.True(bindings.TryGetValue("builder.examplePairs", out var exampleItems));
+        var example = Assert.IsType<SpaceBuilderExamplePairRow>(Assert.Single(Assert.IsAssignableFrom<object[]>(exampleItems)));
+        Assert.True(bindings.TrySetItemValue(example, "user", "Updated prompt"));
+        Assert.False(bindings.TrySetItemValue(example, "assistant", "Stale response")); // A stale row cannot overwrite a newer edit.
+        Assert.True(bindings.TryGetValue("builder.examplePairs", out exampleItems));
+        example = Assert.IsType<SpaceBuilderExamplePairRow>(Assert.Single(Assert.IsAssignableFrom<object[]>(exampleItems)));
+        Assert.True(bindings.TrySetItemValue(example, "assistant", "Updated response"));
+        Assert.True(editor.AddExamplePair());
+        var emptyExample = new SpaceExamplePair(string.Empty, string.Empty);
+        var addedExample = new SpaceExamplePair("Second prompt", "Second response");
+        Assert.True(editor.UpdateExamplePair(1, emptyExample, addedExample));
+        Assert.True(editor.RemoveExamplePair(1, addedExample));
+        Assert.Single(editor.State.Draft.ExamplePairs);
         Assert.Equal("ollama:configured-model-2", editor.State.Draft.ModelPolicy!.DefaultModelId);
         Assert.Equal("ollama", editor.State.Draft.ModelPolicy.ProviderConstraint);
         Assert.Equal(new[] { "text", "Vision" }, editor.State.Draft.ModelPolicy.RequiredCapabilities);
@@ -73,9 +88,13 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.Equal(new SpaceInheritancePolicy(true, true, true, true, false, false, false), saved.DraftConfiguration.Inheritance);
         Assert.Equal(JsonSerializer.Serialize(original.ModelPolicy), JsonSerializer.Serialize(saved.ModelPolicy));
         Assert.Equal(JsonSerializer.Serialize(original.MemoryPolicy), JsonSerializer.Serialize(saved.MemoryPolicy));
+        Assert.Equal(JsonSerializer.Serialize(original.ExamplePairs), JsonSerializer.Serialize(saved.ExamplePairs));
         Assert.Equal(new SpaceModelPolicy("ollama:configured-model-2", ["text", "Vision"], "ollama"), saved.DraftConfiguration.ModelPolicy);
         Assert.Equal(new[] { SpaceMemoryScope.Conversation, SpaceMemoryScope.Space, SpaceMemoryScope.Personal },
             saved.DraftConfiguration.MemoryPolicy!.AllowedScopes);
+        var savedExample = Assert.Single(saved.DraftConfiguration.ExamplePairs);
+        Assert.Equal("Updated prompt", savedExample.User);
+        Assert.Equal("Updated response", savedExample.Assistant);
         Assert.Equal(JsonSerializer.Serialize(original.LayoutDocument), JsonSerializer.Serialize(saved.LayoutDocument));
         Assert.Equal(JsonSerializer.Serialize(original.CapabilityBindings), JsonSerializer.Serialize(saved.CapabilityBindings));
         Assert.Equal(SpaceCapabilityOverride.Enabled, Assert.Single(saved.DraftConfiguration.CapabilityBindings).Override);
@@ -85,6 +104,8 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.Equal(saved.DraftConfiguration.Inheritance, reopened.State.Draft.Inheritance);
         Assert.Equal(saved.DraftConfiguration.ModelPolicy, reopened.State.Draft.ModelPolicy);
         Assert.Equal(saved.DraftConfiguration.MemoryPolicy!.AllowedScopes, reopened.State.Draft.MemoryPolicy!.AllowedScopes);
+        Assert.Equal("Updated prompt", Assert.Single(reopened.State.Draft.ExamplePairs).User);
+        Assert.Equal("Updated response", Assert.Single(reopened.State.Draft.ExamplePairs).Assistant);
         Assert.Equal(SpaceCapabilityOverride.Enabled, Assert.Single(reopened.State.Draft.CapabilityBindings).Override);
         Assert.False(reopened.State.HasChanges);
         Assert.Equal(saved.ActiveConfigurationRevision, reopened.State.ActiveRevision); // Saved configuration is not activation.
@@ -242,11 +263,13 @@ public sealed class SpaceBuilderPolicyEditingTests
     private static SpaceBuilderCuiBindings Bindings(SpaceBuilderController editor, Func<bool>? isCurrent = null,
         Action<ToolCapability, bool>? setModelCapabilityRequired = null,
         Action<bool>? setPersonalMemoryReadAllowed = null,
-        Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null) =>
+        Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null,
+        Func<int, SpaceExamplePair, SpaceExamplePair, bool>? updateExamplePair = null) =>
         new(() => editor.State, (field, value) => editor.SetField(field, value),
             (category, value) => editor.SetCategoryState(category, value), (kind, id) => editor.DetachCapability(kind, id),
             () => [], () => [], (_, _, _) => ValueTask.CompletedTask, isCurrent,
             setModelCapabilityRequired: setModelCapabilityRequired,
             setPersonalMemoryReadAllowed: setPersonalMemoryReadAllowed,
-            setCapabilityOverride: setCapabilityOverride);
+            setCapabilityOverride: setCapabilityOverride,
+            updateExamplePair: updateExamplePair);
 }
