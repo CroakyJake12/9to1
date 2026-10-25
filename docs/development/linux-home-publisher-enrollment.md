@@ -97,3 +97,102 @@ recorded controlled application launches. A listening Home socket, enrollment
 row, valid signature or compiled package does not independently establish native
 caller or installed-application authority. Full independent/native acceptance
 remains paused; this command has not been run against production state here.
+
+## Explicit initial code activation after enrollment
+
+`--home-activate-bootstrap` consumes the SAME existing canonical enrollment and
+explicit public certificate/catalogue inputs. It cannot enroll a publisher or
+initialize a missing machine profile. This command handles an initial empty
+package/journal only. It does not perform updates, Root service registration,
+authenticated peer enrollment, controlled launch or runtime Ready.
+
+The administrative packager first prepares a root-owned, mode0700 stage below an
+existing protected root-owned mode0755 code parent. All ancestors must be
+root-owned and protected from unprivileged replacement. The code parent must be
+disjoint from the private canonical state directory, public signing inputs and
+plan. Nothing here extracts an archive, runs a script, adopts a directory or
+changes the parent/state permissions. Existing `active` entries are preserved.
+
+The explicit plan is bounded JSON, separate from the code parent:
+
+```json
+{
+  "schemaVersion": 1,
+  "packages": [
+    { "packageId": "home.pkg", "relativeRoot": "home", "signedReceiptRelativePath": "receipt.json", "completePayloadRelativePath": "payload.bin" },
+    { "packageId": "root.pkg", "relativeRoot": "root", "signedReceiptRelativePath": "receipt.json", "completePayloadRelativePath": "payload.bin" }
+  ]
+}
+```
+
+Its package IDs must equal the enrolled selection; every mandatory package and
+signed dependency must be selected. Component classes use the existing lifecycle
+values; Home and Root must be `mandatory-shared-core`. Versions and dependency
+bounds use the existing strict SemVer policy (`1.0.0`, not opaque `1`). Cycles,
+missing dependencies and unsupported classes are refused before effects.
+
+Each descriptor's `signedInstallationReceiptSha256` hashes its exact receipt
+envelope, signed with the already enrolled publisher's RSA-PSS/SHA256 key through
+the same version1 envelope used for catalogue/descriptors. Its receipt payload is:
+
+```json
+{
+  "schemaVersion": 1,
+  "packageId": "home.pkg", "appId": "home", "version": "1.0.0",
+  "platform": "linux", "abi": "arm64", "entrypointRelativePath": "app",
+  "files": [ { "relativePath": "app", "bytes": 1234, "sha256": "EXACT_64_HEX_SHA256" } ]
+}
+```
+
+`files` covers every extracted runtime file, excluding receipt and complete
+payload themselves to avoid self-hash cycles. Descriptor `payloadSha256` and
+`payloadBytes` bind the separate complete payload artifact. The complete physical
+cohort is runtime files plus the receipt plus the full payload. Extra entries,
+symlinks, hardlinks, foreign ownership and writable foreign permissions are
+refused using retained descriptors/openat2/statx. Every executable runtime file
+must be native ELF64 for the signed x64/arm64 ABI; scripts and unknown ABIs are
+refused. Entrypoints must already have owner-execute permission. Receipt and full
+payload artifacts must be non-executable. There are at most4096 complete files
+and8GiB across the whole bundle.
+
+After checking every signature and every actual byte, activation reserves one
+entry per package in the existing canonical journal, retaining the original
+operation ID, stage/parent/layout, plan hash and signed receipt/payload hashes.
+Only this explicit verified machine-code mode makes code directories0755 and
+signed artifacts0644 (native executable files0755). The ordinary physical store's
+private0700 default is unchanged. No keys, state, profile data or credentials are
+made public. One `renameat2(RENAME_NOREPLACE)` publishes the complete stage as
+`active`; the SAME canonical metadata CAS then records actual activated paths and
+settles the journal. Packages explicitly retain `HomeServiceUnavailable`.
+
+Example invocation for an administrator/packager with real signing inputs (the
+example does not create trust or provide a signer):
+
+```sh
+/absolute/path/to/Haven.Desktop --home-activate-bootstrap \
+  --machine-state /absolute/private-machine-state/canonical.json \
+  --publisher-certificate /absolute/inputs/publisher-public.cer \
+  --publisher-sha256 EXACT_DER_CERTIFICATE_SHA256 \
+  --signed-catalogue /absolute/inputs/catalogue.signed.json \
+  --catalogue-sha256 EXACT_SIGNED_ENVELOPE_SHA256 \
+  --issuer-key-id OWNER_CONFIGURED_ISSUER --abi arm64 \
+  --operation-id ORIGINAL_OPERATION_UUID \
+  --select home.pkg --select root.pkg \
+  --activation-parent /absolute/root-owned-code-parent \
+  --stage-leaf prepared --plan /absolute/inputs/plan.json
+```
+
+Exit0 reports `LinuxBootstrapCodeActivatedRuntimeUnavailable`, never Ready.
+Exit2 (`LinuxBootstrapActivationUnconfirmed`) means a canonical journal write
+was attempted or publication occurred but its complete outcome could not be
+confirmed. Retain its original operation ID, journal, stage/active directories
+and administrative inputs for owning recovery; do not delete artifacts or
+redispatch it as a fresh install. Existing package/journal state is deliberately
+refused by this initial-bootstrap command. Exit1 occurs before journal/effects.
+Cross-store recovery/update/uninstall and actual Root service/installed-peer/
+controlled-launch composition remain subsequent implementation work.
+
+The isolated tests use genuine ELF files, real filesystem operations, actual
+canonical store/OS profile and ephemeral TEST-ONLY signers in memory. They write
+public DER only and never modify an OS trust store, start a service, execute the
+copied binaries or establish production publisher/installed-peer authority.

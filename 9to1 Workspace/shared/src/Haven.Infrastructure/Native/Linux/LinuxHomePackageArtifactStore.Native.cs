@@ -29,6 +29,12 @@ public sealed partial class LinuxHomePackageArtifactStore
         if (RenameAt2(parent, stage, parent, active, exchange ? 2u : 1u) != 0)
             throw new Win32Exception(Marshal.GetLastPInvokeError(), "Atomic package directory publication refused; no rename fallback is permitted.");
     }
+    private static void SetCodeMode(SafeFileHandle held, uint mode)
+    {
+        if (Fchmod(held, mode) != 0) throw new Win32Exception(Marshal.GetLastPInvokeError(), "Set verified machine-code permissions.");
+    }
+    [DllImport("libc", EntryPoint = "fchmod", SetLastError = true)]
+    private static extern int Fchmod(SafeFileHandle descriptor, uint mode);
     [DllImport("libc", EntryPoint = "flock", SetLastError = true)]
     private static extern int Flock(SafeFileHandle descriptor, int operation);
     [DllImport("libc", EntryPoint = "renameat2", SetLastError = true)]

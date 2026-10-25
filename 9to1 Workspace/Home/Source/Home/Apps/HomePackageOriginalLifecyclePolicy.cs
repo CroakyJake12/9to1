@@ -95,6 +95,9 @@ internal sealed class HomePackageOriginalLifecyclePolicy : IHomePackageOriginalL
     // not change precedence. Opaque product versions, partial versions, wildcards,
     // coercion and alternate range syntaxes remain unsupported, never guessed.
     public bool TrySatisfyOriginalVersion(string actualVersion, HomePackageDependency requiredRange, out bool satisfies)
+        => TrySatisfyVersionCore(actualVersion, requiredRange, out satisfies);
+
+    internal static bool TrySatisfyVersionCore(string actualVersion, HomePackageDependency requiredRange, out bool satisfies)
     {
         satisfies = false;
         if (requiredRange is null || !HomePackageArtifactSelection.Identifier(requiredRange.PackageId) ||
@@ -172,4 +175,12 @@ internal sealed class HomePackageOriginalLifecyclePolicy : IHomePackageOriginalL
         }
         return left.Prerelease.Length.CompareTo(right.Prerelease.Length);
     }
+}
+
+/// <summary>The maintained package version policy, exposed as a pure comparison only.
+/// A successful comparison grants no publisher, installation or execution authority.</summary>
+public static class HomePackageOriginalVersionChecks
+{
+    public static bool TrySatisfy(string actualVersion, HomePackageDependency requiredRange, out bool satisfies)
+        => HomePackageOriginalLifecyclePolicy.TrySatisfyVersionCore(actualVersion, requiredRange, out satisfies);
 }

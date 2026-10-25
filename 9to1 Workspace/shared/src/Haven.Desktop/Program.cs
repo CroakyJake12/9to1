@@ -31,6 +31,11 @@ internal static class Program
     public static void Main(string[] args)
     {
 #if !ANDROID
+        if (Services.LinuxHomeBootstrapActivationCommand.IsInvocation(args))
+        {
+            Environment.ExitCode = Services.LinuxHomeBootstrapActivationCommand.Run(args, Console.Out, Console.Error);
+            return;
+        }
         if (Services.LinuxHomePublisherEnrollmentCommand.IsInvocation(args))
         {
             Environment.ExitCode = Services.LinuxHomePublisherEnrollmentCommand.Run(args, Console.Out, Console.Error);

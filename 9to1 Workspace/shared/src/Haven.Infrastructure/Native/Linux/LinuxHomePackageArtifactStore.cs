@@ -26,12 +26,22 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
     private readonly SafeFileHandle _directory;
     private readonly object _gate = new();
     private bool _closed;
+    private readonly bool _machineArtifacts;
 
     public LinuxHomePackageArtifactStore(string existingPrivatePackageDirectory)
+        : this(existingPrivatePackageDirectory, machineArtifacts: false) { }
+
+    // Available only to the verified administrative bootstrap owner in this assembly.
+    // The public/private store behavior remains unchanged.
+    internal static LinuxHomePackageArtifactStore ForVerifiedMachineActivation(string existingDirectory)
+        => new(existingDirectory, machineArtifacts: true);
+    private LinuxHomePackageArtifactStore(string existingPrivatePackageDirectory, bool machineArtifacts)
     {
         _path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(existingPrivatePackageDirectory));
+        _machineArtifacts = machineArtifacts;
+        if (machineArtifacts) LinuxHomePublisherEnrollmentOwner.DemandProtectedMachineDirectory(_path);
         _uid = LinuxOriginalDownloadPaths.CurrentUid();
-        _root = LinuxOriginalDownloadPaths.RetainRoot(_path, requirePrivate: true);
+        _root = LinuxOriginalDownloadPaths.RetainRoot(_path, requirePrivate: !machineArtifacts);
         try { _directory = _root.OpenDirectory(_path, mutable: true); }
         catch { _root.Dispose(); throw; }
     }
@@ -53,11 +63,11 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
         internal readonly LinuxHomePackageArtifactStore Owner;
         internal readonly string Leaf;
         internal readonly SafeFileHandle Directory;
-        internal readonly LinuxOriginalDownloadIdentity Identity;
+        internal LinuxOriginalDownloadIdentity Identity;
         internal readonly HomePackageActivatedFile[] Files;
         internal readonly string Entrypoint;
         internal readonly Dictionary<string, LinuxOriginalDownloadIdentity> FileIdentities;
-        internal bool Closed, Published;
+        internal bool Closed, Published, MachineReadable;
         public string StagePath => System.IO.Path.Combine(Owner._path, Leaf);
         internal ValidatedStage(LinuxHomePackageArtifactStore owner, string leaf, SafeFileHandle directory,
             LinuxOriginalDownloadIdentity identity, HomePackageActivatedFile[] files, string entrypoint,
@@ -143,6 +153,8 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
             if (!ReferenceEquals(stage.Owner, this) || stage.Closed || stage.Published ||
                 expectedActive is not null && !ReferenceEquals(expectedActive.Owner, this))
                 throw new UnauthorizedAccessException("The same live original stage/active owner is required.");
+            if (_machineArtifacts && !stage.MachineReadable)
+                throw new UnauthorizedAccessException("Machine artifact publication requires the completed verified read-only code transition.");
             Publication? outcome = null;
             try
             {
@@ -201,7 +213,7 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
         try
         {
             LinuxOriginalDownloadPaths.DemandPath(held, Path.Combine(_path, leaf), directory: true);
-            LinuxOriginalDownloadPaths.DemandOwner(held, _uid, privateDirectory: true);
+            LinuxOriginalDownloadPaths.DemandOwner(held, _uid, privateDirectory: !_machineArtifacts);
             return held;
         }
         catch { held.Dispose(); throw; }
@@ -234,7 +246,7 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
                     try
                     {
                         LinuxOriginalDownloadPaths.DemandPath(child, entry, directory: true);
-                        LinuxOriginalDownloadPaths.DemandOwner(child, _uid, privateDirectory: true);
+                        LinuxOriginalDownloadPaths.DemandOwner(child, _uid, privateDirectory: !_machineArtifacts);
                         heldDirectories.Add((child, entry, LinuxOriginalDownloadPaths.ReadIdentity(child)));
                     }
                     catch { child.Dispose(); throw; }
@@ -287,13 +299,53 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
         finally { foreach (var child in heldDirectories.AsEnumerable().Reverse()) child.Handle.Dispose(); }
     }
 
+    // Call ONLY after the existing enrollment owner verified every signed receipt,
+    // payload and exact runtime cohort. Never apply to credentials, state or a shell.
+    internal void MakeVerifiedCodeReadable(ValidatedStage stage)
+    {
+        lock (_gate)
+        {
+            DemandCurrent();
+            if (!_machineArtifacts || !ReferenceEquals(stage.Owner, this) || stage.Closed || stage.Published || stage.MachineReadable)
+                throw new UnauthorizedAccessException("The same live machine-code stage is required.");
+            using var publicationLock = LockDirectory(_directory);
+            LinuxOriginalDownloadPaths.DemandPath(stage.Directory, stage.StagePath, directory: true);
+            if (!stage.Identity.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(stage.Directory)))
+                throw new IOException("The verified machine-code stage changed.");
+            _ = ValidateFiles(stage.Directory, stage.Leaf, stage.Files, stage.Entrypoint, stage.FileIdentities, CancellationToken.None);
+            foreach (var file in stage.Files)
+            {
+                using var held = LinuxOriginalDownloadPaths.OpenAt(stage.Directory, file.RelativePath, 0x80000UL | 0x800UL);
+                var before = LinuxOriginalDownloadPaths.ReadIdentity(held);
+                if (!stage.FileIdentities[file.RelativePath].SameReadVersion(before)) throw new IOException("The verified code file changed before mode transition.");
+                SetCodeMode(held, (before.Mode & 0x49) != 0 ? 0x1edu : 0x1a4u); // 0755 executable, otherwise 0644
+                stage.FileIdentities[file.RelativePath] = LinuxOriginalDownloadPaths.ReadIdentity(held);
+                LinuxOriginalDownloadPaths.Flush(held);
+            }
+            foreach (var relative in stage.Files.SelectMany(value => ParentDirectories(value.RelativePath)).Distinct(StringComparer.Ordinal))
+            {
+                using var held = LinuxOriginalDownloadPaths.OpenAt(stage.Directory, relative, LinuxOriginalDownloadPaths.DirectoryFlags(mutable: true));
+                SetCodeMode(held, 0x1ed); LinuxOriginalDownloadPaths.Flush(held);
+            }
+            SetCodeMode(stage.Directory, 0x1ed); LinuxOriginalDownloadPaths.Flush(stage.Directory);
+            stage.Identity = LinuxOriginalDownloadPaths.ReadIdentity(stage.Directory);
+            _ = ValidateFiles(stage.Directory, stage.Leaf, stage.Files, stage.Entrypoint, stage.FileIdentities, CancellationToken.None);
+            DemandCurrent(); stage.MachineReadable = true;
+        }
+    }
+
     private static IEnumerable<string> ParentDirectories(string relative)
     {
         var parent = Path.GetDirectoryName(relative);
         while (!string.IsNullOrEmpty(parent)) { yield return parent; parent = Path.GetDirectoryName(parent); }
     }
     private static bool IsDigest(string value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
-    private void DemandCurrent() { ObjectDisposedException.ThrowIf(_closed, this); _root.DemandCurrent(); }
+    private void DemandCurrent()
+    {
+        ObjectDisposedException.ThrowIf(_closed, this);
+        if (_machineArtifacts) LinuxHomePublisherEnrollmentOwner.DemandProtectedMachineDirectory(_path);
+        _root.DemandCurrent();
+    }
     public void Dispose()
     {
         lock (_gate) { if (_closed) return; _closed = true; _directory.Dispose(); _root.Dispose(); }
