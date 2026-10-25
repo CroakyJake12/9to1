@@ -2516,7 +2516,7 @@ public sealed partial class CuiControlLoader : IDisposable
             }
             if (control is CuiActionShelf sourceShelf && propName.Equals("Source", StringComparison.OrdinalIgnoreCase))
             {
-                if (value is CuiBindingValue binding) ApplyLiveBinding(sourceShelf, "Source", binding, component.Span);
+                if (value is CuiBindingValue shelfSourceBinding) ApplyLiveBinding(sourceShelf, "Source", shelfSourceBinding, component.Span);
                 else SetActionShelfSource(sourceShelf, ResolveObject(value), component.Span);
                 continue;
             }
