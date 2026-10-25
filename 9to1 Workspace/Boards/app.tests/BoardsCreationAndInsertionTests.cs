@@ -1,6 +1,7 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
 
@@ -53,6 +54,37 @@ public sealed class BoardsCreationAndInsertionTests
         Assert.Equal(result.InitialPages + 1, result.PageCount);
         Assert.Equal(result.InitialSections + 1, result.SectionCount);
         Assert.Equal(1, boardRequests);
+    }
+
+    [Fact]
+    public async Task Freeform_viewport_reaches_saved_objects_beyond_the_initial_canvas_bounds()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/freeform-viewport-bounds");
+        var viewModel = new BoardsViewModel(session);
+        var dimensions = TestUiThread.Run(() =>
+        {
+            var host = new StackPanel();
+            BlockRenderer.Rebuild(host, viewModel,
+            [
+                new CanvasBoxView
+                {
+                    Id = "far-object", Kind = "Text", Text = "Saved offscreen",
+                    X = 1480, Y = 1080, Width = 220, Height = 140,
+                }
+            ]);
+            var viewport = Assert.Single(host.GetLogicalDescendants().OfType<ScrollViewer>(),
+                control => AutomationProperties.GetName(control) == "Freeform canvas viewport");
+            var canvas = Assert.IsType<Canvas>(viewport.Content);
+            return (CanvasWidth: canvas.Width, CanvasHeight: canvas.Height, ViewportHeight: viewport.Height,
+                Horizontal: viewport.HorizontalScrollBarVisibility, Vertical: viewport.VerticalScrollBarVisibility);
+        });
+
+        Assert.Equal(1740, dimensions.CanvasWidth);
+        Assert.Equal(1260, dimensions.CanvasHeight);
+        Assert.Equal(360, dimensions.ViewportHeight);
+        Assert.Equal(ScrollBarVisibility.Auto, dimensions.Horizontal);
+        Assert.Equal(ScrollBarVisibility.Auto, dimensions.Vertical);
     }
 
     [Fact]
