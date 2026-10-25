@@ -14,6 +14,7 @@ using HavenOS.Home.Core;
 using HavenOS.Home.NativeUI;
 using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.ExceptionServices;
 
 namespace Haven.Desktop.Services;
 
@@ -34,6 +35,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
     private readonly object _gate = new();
     private readonly List<Task> _operations = [];
     private readonly List<EmbeddedWriteSession> _sessions = [];
+    private readonly List<OpeningCleanup> _openingCleanups = [];
     private Control? _owningControl;
     private AuthenticatedResourceActor? _actor;
     private CuiSceneAvailability? _observed;
@@ -95,7 +97,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
                 (review, reviewToken) => PresentReviewAsync(approvals, review.Authorization, reviewToken),
                 OriginalScope, RetainOriginalTask, lifetime.Token, allowWrites: mode == BoardEmbeddedArtifactMode.Edit);
             page = await CreateWritePageAsync(repository, reference.ArtifactId, token).ConfigureAwait(false);
-            await page.InitializeAsync(token).ConfigureAwait(false);
+            await AwaitOnUiAsync(() => page.InitializeAsync(token)).ConfigureAwait(false);
             if (page.Document is not { } opened || opened.Id != reference.ArtifactId || opened.Version != expectedVersion)
                 throw new IOException("The selected Write document changed from its pinned Notes version.");
             await RevalidateAsync(originals, token).ConfigureAwait(false);
@@ -106,13 +108,22 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             page = null; repository = null; lifetime = null!;
             return (IBoardsEmbeddedArtifactSession)session;
         }
-        catch
+        catch (Exception openError)
         {
-            if (page is not null)
-                try { await page.CloseAndDrainAsync().ConfigureAwait(false); } catch { }
-            if (repository is not null)
-                try { await repository.DisposeAsync().ConfigureAwait(false); } catch { }
-            lifetime.Dispose();
+            var cleanup = new OpeningCleanup(page, repository, lifetime);
+            lock (_gate) _openingCleanups.Add(cleanup);
+            page = null; repository = null; lifetime = null!;
+            try
+            {
+                await cleanup.DrainAsync().ConfigureAwait(false);
+                lock (_gate) _openingCleanups.Remove(cleanup);
+            }
+            catch (Exception cleanupError)
+            {
+                throw new AggregateException("The embedded Write open failed and its original page/repository cleanup remains retained.",
+                    openError, cleanupError);
+            }
+            ExceptionDispatchInfo.Capture(openError).Throw();
             throw;
         }
     }, ct);
@@ -156,12 +167,13 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             Task? dialogTask = null;
             try
             {
-                var activation = await Dispatcher.UIThread.InvokeAsync(() =>
+                var activationDispatch = Dispatcher.UIThread.InvokeAsync<Task>(() =>
                 {
                     dialogTask = dialog.ShowDialog(windowOwner);
                     shown = true;
                     return page.ActivateAsync(token);
-                }).GetTask().ConfigureAwait(false);
+                }).GetTask();
+                var activation = await activationDispatch.ConfigureAwait(false);
                 await activation.ConfigureAwait(false);
                 var selectedTask = page.Selection;
                 var completed = await Task.WhenAny(selectedTask, dialogTask!).WaitAsync(token).ConfigureAwait(false);
@@ -303,10 +315,24 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
 
     private void ParentScope(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
     { DemandOwnerCurrent(); body(); return true; });
-    private void OriginalScope(Action<Action> body)
+    private void OriginalScope(Action body)
     {
         ArgumentNullException.ThrowIfNull(body);
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { DemandOwnerCurrent(); body(); return true; });
+    }
+
+    private static async Task AwaitOnUiAsync(Func<Task> action)
+    {
+        var dispatch = Dispatcher.UIThread.InvokeAsync<Task>(action).GetTask();
+        var actual = await dispatch.ConfigureAwait(false);
+        await actual.ConfigureAwait(false);
+    }
+
+    private static async Task<T> AwaitOnUiAsync<T>(Func<Task<T>> action)
+    {
+        var dispatch = Dispatcher.UIThread.InvokeAsync<Task<T>>(action).GetTask();
+        var actual = await dispatch.ConfigureAwait(false);
+        return await actual.ConfigureAwait(false);
     }
     private void RetainOriginalTask(Task actual)
     {
@@ -402,11 +428,58 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
         try { await _retainedSources.ObserveAllOriginalTasksAsync().ConfigureAwait(false); }
         catch (Exception error) { failures.Add(error); }
         failures.AddRange(_retainedSources.OriginalErrors);
+        OpeningCleanup[] openingCleanups;
+        lock (_gate) openingCleanups = _openingCleanups.ToArray();
+        foreach (var cleanup in openingCleanups)
+        {
+            try
+            {
+                await cleanup.DrainAsync().ConfigureAwait(false);
+                lock (_gate) _openingCleanups.Remove(cleanup);
+            }
+            catch (Exception error) { failures.Add(error); }
+        }
         if (failures.Count > 0) throw new AggregateException("Original embedded Write owner work did not settle cleanly.", failures);
     }
 
     private void Remove(EmbeddedWriteSession session)
     { lock (_gate) _sessions.Remove(session); }
+
+    private sealed class OpeningCleanup(WritePage? page, NotesOriginalWriteWorkspaceRepository? repository,
+        CancellationTokenSource lifetime)
+    {
+        private WritePage? _page = page;
+        private NotesOriginalWriteWorkspaceRepository? _repository = repository;
+        private CancellationTokenSource? _lifetime = lifetime;
+        private bool _pageDrained;
+        private readonly SemaphoreSlim _gate = new(1, 1);
+
+        public async Task DrainAsync()
+        {
+            await _gate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (!_pageDrained && _page is not null)
+                {
+                    await AwaitOnUiAsync(() => _page.CloseAndDrainAsync()).ConfigureAwait(false);
+                    _pageDrained = true;
+                    _page = null;
+                }
+                if (_repository is not null)
+                {
+                    await _repository.DisposeAsync().ConfigureAwait(false);
+                    _repository = null;
+                }
+                if (_lifetime is not null)
+                {
+                    _lifetime.Cancel();
+                    _lifetime.Dispose();
+                    _lifetime = null;
+                }
+            }
+            finally { _gate.Release(); }
+        }
+    }
 
     private sealed class EmbeddedWriteSession(BoardEmbeddedWritePageOwner owner, WritePage page,
         NotesOriginalWriteWorkspaceRepository repository, BoardEmbeddedArtifactReference openedReference,
@@ -414,6 +487,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
     {
         private readonly object _sync = new();
         private bool _prepared, _closed;
+        private bool _pageDrained, _repositoryDisposed, _lifetimeDisposed;
         private Task? _close;
 
         public Control Content => page;
@@ -441,7 +515,8 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
         {
             lock (_sync) { if (_closed) return true; _prepared = false; }
             if (!IsPublicationCurrent) return false;
-            var prepared = await page.PrepareToCloseAsync("Save embedded Write page before closing", ct).ConfigureAwait(false);
+            var prepared = await AwaitOnUiAsync(() => page.PrepareToCloseAsync(
+                "Save embedded Write page before closing", ct)).ConfigureAwait(false);
             lock (_sync) _prepared = prepared;
             return prepared;
         }
@@ -460,11 +535,32 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
 
         private async Task CloseCoreAsync()
         {
-            await page.CloseAndDrainAsync().ConfigureAwait(false);
-            await repository.DisposeAsync().ConfigureAwait(false);
-            lifetime.Cancel(); lifetime.Dispose();
-            lock (_sync) _closed = true;
-            owner.Remove(this);
+            try
+            {
+                if (!_pageDrained)
+                {
+                    await AwaitOnUiAsync(() => page.CloseAndDrainAsync()).ConfigureAwait(false);
+                    _pageDrained = true;
+                }
+                if (!_repositoryDisposed)
+                {
+                    await repository.DisposeAsync().ConfigureAwait(false);
+                    _repositoryDisposed = true;
+                }
+                if (!_lifetimeDisposed)
+                {
+                    lifetime.Cancel();
+                    lifetime.Dispose();
+                    _lifetimeDisposed = true;
+                }
+                lock (_sync) _closed = true;
+                owner.Remove(this);
+            }
+            catch
+            {
+                lock (_sync) _close = null;
+                throw;
+            }
         }
 
         public async ValueTask DisposeAsync()
