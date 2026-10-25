@@ -245,7 +245,8 @@ public sealed class SpaceBuilderCanonicalSourceTests
             (category, value) => editor.SetCategoryState(category, value), (kind, id) => editor.DetachCapability(kind, id),
             () => [], () => [], (command, parameter, _) => { calls.Add((command, parameter)); return ValueTask.CompletedTask; },
             () => true, () => false, () => [option], () => true,
-            filesOptions: () => [fileOption], canBrowseFiles: () => true);
+            filesOptions: () => [fileOption], canBrowseFiles: () => true,
+            selectView: view => editor.SelectEditorView(view));
         await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
@@ -256,7 +257,11 @@ public sealed class SpaceBuilderCanonicalSourceTests
             try
             {
                 window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
-                await bindings.DispatchAsync("space-builder.view.advanced", null, token);
+                var advancedView = root.GetVisualDescendants().OfType<Button>().Single(button =>
+                    button.Name == "space-builder-view-advanced" ||
+                    AutomationProperties.GetAutomationId(button) == "space-builder-view-advanced");
+                advancedView.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
+                Assert.Equal(SpaceBuilderEditorView.Advanced, editor.State.EditorView);
                 window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 // The authored Builder is vertically scrollable. Realized repeat rows below the
                 // initial viewport are absent from the visual tree until their section is brought
