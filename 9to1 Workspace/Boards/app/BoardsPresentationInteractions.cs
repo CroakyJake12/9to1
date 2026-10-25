@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
+using CakeOS.Cui.Runtime;
 using System.Collections.Concurrent;
 
 namespace CakeOS.Apps.Boards.App;
@@ -271,8 +272,8 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
         _root = root ?? throw new ArgumentNullException(nameof(root));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _dispatch = dispatch ?? (command => viewModel.DispatchAsync(command, null).AsTask());
-        _titleBox = FindByAutomationId<TextBox>(root, "BoardTitleBox");
-        _searchBox = FindByAutomationId<TextBox>(root, "NavSearchBox");
+        _titleBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "BoardTitleBox");
+        _searchBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "NavSearchBox");
         if (_titleBox is not null)
         {
             _titleChanged = (_, _) => viewModel.EditText("BoardTitleBox", _titleBox.Text ?? string.Empty);
@@ -335,14 +336,6 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
             if (pending.Length == 0) return;
             await Task.WhenAll(pending).ConfigureAwait(false);
         }
-    }
-
-    private static T? FindByAutomationId<T>(Control root, string id) where T : Control
-    {
-        if (root is T candidate && AutomationProperties.GetAutomationId(candidate) == id) return candidate;
-        foreach (var child in root.GetVisualDescendants().OfType<Control>())
-            if (child is T control && AutomationProperties.GetAutomationId(control) == id) return control;
-        return null;
     }
 
     public void Dispose()
@@ -463,8 +456,8 @@ public sealed class BoardsEmbeddedSurfaceLifecycle : IDisposable
     private void TryInitialize()
     {
         if (_disposed || IsReady || !_root.IsAttachedToVisualTree()) return;
-        if (FindByAutomationId<StackPanel>(_root, "BlocksHost") is null ||
-            FindByAutomationId<Canvas>(_root, "InkOverlayLayer") is not { } ink)
+        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(_root, "BlocksHost") is null ||
+            BoardsCuiControlFinder.FindByAutomationId<Canvas>(_root, "InkOverlayLayer") is not { } ink)
             return;
 
         _inputOwner = new BoardsTextAndKeyboardOwner(_root, _viewModel);
@@ -490,11 +483,4 @@ public sealed class BoardsEmbeddedSurfaceLifecycle : IDisposable
         _inkInteraction?.Dispose();
     }
 
-    private static T? FindByAutomationId<T>(Control root, string id) where T : Control
-    {
-        if (root is T candidate && AutomationProperties.GetAutomationId(candidate) == id) return candidate;
-        foreach (var child in root.GetVisualDescendants().OfType<Control>())
-            if (child is T control && AutomationProperties.GetAutomationId(control) == id) return control;
-        return null;
-    }
 }

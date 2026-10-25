@@ -894,21 +894,7 @@ internal sealed class BoardsApp : Application
     // ----- Tree helpers -----
 
     private static T? FindByAutomationId<T>(Control root, string automationId) where T : Control
-    {
-        if (string.Equals(root.Name, automationId, StringComparison.Ordinal)
-            || string.Equals(AutomationProperties.GetAutomationId(root), automationId, StringComparison.Ordinal))
-        {
-            if (root is T match) return match;
-            if (root is CuiContainerControl container && container.Layout is T layout) return layout;
-        }
-        foreach (var child in LogicalChildren(root))
-        {
-            var found = FindByAutomationId<T>(child, automationId);
-            if (found is not null)
-                return found;
-        }
-        return null;
-    }
+        => BoardsCuiControlFinder.FindByAutomationId<T>(root, automationId);
 
     private static T? FindByName<T>(Control root, string name) where T : Control
     {

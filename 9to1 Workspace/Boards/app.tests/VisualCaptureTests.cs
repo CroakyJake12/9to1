@@ -81,17 +81,19 @@ public sealed class VisualCaptureTests
             root.Arrange(new Rect(0, 0, width, height));
             Dispatcher.UIThread.RunJobs();
 
-            var host = FindByAutomationId<StackPanel>(root, "BlocksHost");
-            Assert.NotNull(host);
+            var host = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "BlocksHost");
+            Assert.True(host is not null,
+                "Compiled CUI did not expose its BlocksHost StackPanel after mount. Runtime tree:\n" +
+                BoardsCuiControlFinder.DescribeRuntimeTree(root));
             BlockRenderer.RebuildAsync(host!, viewModel).GetAwaiter().GetResult();
             inputOwner = new BoardsTextAndKeyboardOwner(root, viewModel);
             inputOwner.AttachWindow(window);
-            var inkOverlay = FindByAutomationId<Canvas>(root, "InkOverlayLayer");
+            var inkOverlay = BoardsCuiControlFinder.FindByAutomationId<Canvas>(root, "InkOverlayLayer");
             Assert.NotNull(inkOverlay);
             inkInteraction = new BoardInkInteractionController(inkOverlay!, viewModel);
-            if (FindByAutomationId<StackPanel>(root, "NavHost") is { } nav)
+            if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "NavHost") is { } nav)
                 NavBuilder.Rebuild(nav, viewModel);
-            if (FindByAutomationId<StackPanel>(root, "ToolbarHost") is { } toolbar)
+            if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "ToolbarHost") is { } toolbar)
                 ToolbarBuilder.Rebuild(toolbar, viewModel);
             inkInteraction.RenderAsync().GetAwaiter().GetResult();
             window.Measure(new Size(width, height));
@@ -113,13 +115,13 @@ public sealed class VisualCaptureTests
             Dispatcher.UIThread.RunJobs();
             Assert.True(styleMenu.IsDropDownOpen, "Space should open the focused style menu.");
         }
-        var pageCard = FindByAutomationId<Border>(root, "PageCard");
+        var pageCard = BoardsCuiControlFinder.FindByAutomationId<Border>(root, "PageCard");
         Assert.NotNull(pageCard);
         Assert.True(root.Bounds.Width >= width - 1,
             $"The CUI root only measured {root.Bounds.Width}px of the {width}px capture.");
-        var navPane = FindByAutomationId<Border>(root, "NavPane");
+        var navPane = BoardsCuiControlFinder.FindByAutomationId<Border>(root, "NavPane");
         Assert.NotNull(navPane);
-        var editorScroll = FindByAutomationId<ScrollViewer>(root, "EditorScroll");
+        var editorScroll = BoardsCuiControlFinder.FindByAutomationId<ScrollViewer>(root, "EditorScroll");
         Assert.NotNull(editorScroll);
         Assert.True(editorScroll.Bounds.Width > width * 0.70,
             $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
@@ -131,14 +133,14 @@ public sealed class VisualCaptureTests
         Assert.Equal(new Thickness(0), pageCard.Padding);
         Assert.Equal(new Thickness(0), pageCard.BorderThickness);
         Assert.Equal(new CornerRadius(0), pageCard.CornerRadius);
-        var contentLayer = FindByAutomationId<StackPanel>(root, "DocumentContentLayer");
+        var contentLayer = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "DocumentContentLayer");
         Assert.NotNull(contentLayer);
         Assert.Equal(new Thickness(40, 32), contentLayer.Margin);
         Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
         object? accent = null;
         Assert.True(Avalonia.Application.Current?.TryGetResource("CuiAccentBrush", null, out accent) == true);
         Assert.IsType<Avalonia.Media.LinearGradientBrush>(accent);
-        var topBar = FindByAutomationId<Border>(root, "TopBar");
+        var topBar = BoardsCuiControlFinder.FindByAutomationId<Border>(root, "TopBar");
         Assert.NotNull(topBar);
         Assert.Same(accent, topBar.BorderBrush);
         Assert.NotEmpty(host.Children);
@@ -190,58 +192,6 @@ public sealed class VisualCaptureTests
             if (Avalonia.Application.Current is not null)
                 Avalonia.Application.Current.RequestedThemeVariant =
                     Avalonia.Styling.ThemeVariant.Light;
-        }
-    }
-
-    private static void FillCombo(Control root, string automationId, IReadOnlyList<string> items)
-    {
-        var combo = FindByAutomationId<ComboBox>(root, automationId);
-        if (combo is null)
-            return;
-        combo.ItemsSource = items.Select(text => new ComboBoxItem { Content = text }).ToList();
-        if (items.Count > 0)
-            combo.SelectedIndex = 0;
-    }
-
-    private static T? FindByAutomationId<T>(Control root, string automationId) where T : Control
-    {
-        if (root is T match && string.Equals(
-                Avalonia.Automation.AutomationProperties.GetAutomationId(root), automationId, StringComparison.Ordinal))
-            return match;
-        foreach (var child in LogicalChildren(root))
-        {
-            var found = FindByAutomationId<T>(child, automationId);
-            if (found is not null)
-                return found;
-        }
-        return null;
-    }
-
-    private static IEnumerable<Control> LogicalChildren(Control control)
-    {
-        if (control is Panel panel)
-        {
-            foreach (var child in panel.Children)
-                if (child is Control c)
-                    yield return c;
-        }
-        else if (control is Decorator decorator && decorator.Child is Control decChild)
-        {
-            yield return decChild;
-        }
-        else if (control is ContentControl cc && cc.Content is Control ccChild)
-        {
-            yield return ccChild;
-        }
-        else if (control is ItemsControl ic)
-        {
-            foreach (var item in ic.Items)
-                if (item is Control icChild)
-                    yield return icChild;
-        }
-        else if (control is ScrollViewer scroller && scroller.Content is Control scChild)
-        {
-            yield return scChild;
         }
     }
 

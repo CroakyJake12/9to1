@@ -1,9 +1,7 @@
 using System.Text.Json;
 using Avalonia;
-using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
 
@@ -223,23 +221,15 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     private async Task RenderAsync()
     {
         if (_disposed || _surfaceLifecycle?.IsReady != true) return;
-        if (FindByAutomationId<StackPanel>(Content, "BlocksHost") is not { } blocks) return;
+        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "BlocksHost") is not { } blocks) return;
         await BlockRenderer.RebuildAsync(blocks, ViewModel);
-        if (FindByAutomationId<StackPanel>(Content, "NavHost") is { } nav)
+        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "NavHost") is { } nav)
             NavBuilder.Rebuild(nav, ViewModel);
-        if (FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
+        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
         ViewModel.RefreshCuiContext();
-        if (FindByAutomationId<Canvas>(Content, "InkOverlayLayer") is { } ink)
+        if (BoardsCuiControlFinder.FindByAutomationId<Canvas>(Content, "InkOverlayLayer") is { } ink)
             await (_surfaceLifecycle!.InkInteraction?.RenderAsync() ?? BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel));
-    }
-
-    private static T? FindByAutomationId<T>(Control root, string id) where T : Control
-    {
-        if (root is T candidate && AutomationProperties.GetAutomationId(candidate) == id) return candidate;
-        foreach (var child in root.GetVisualDescendants().OfType<Control>())
-            if (child is T control && AutomationProperties.GetAutomationId(control) == id) return control;
-        return null;
     }
 
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);

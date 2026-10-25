@@ -43,9 +43,10 @@ public sealed class EmbeddedPresentationLifecycleTests
         content.Arrange(new Rect(0, 0, 1200, 800));
         for (var attempt = 0; attempt < 4; attempt++) Dispatcher.UIThread.RunJobs();
 
-        var blocks = content.GetVisualDescendants().OfType<StackPanel>().SingleOrDefault(panel =>
-            Avalonia.Automation.AutomationProperties.GetAutomationId(panel) == "BlocksHost");
-        Assert.NotNull(blocks);
+        var blocks = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(content, "BlocksHost");
+        Assert.True(blocks is not null,
+            "Mounted embedded CUI did not expose BlocksHost. Runtime tree:\n" +
+            BoardsCuiControlFinder.DescribeRuntimeTree(content));
         Assert.NotEmpty(blocks!.Children);
         Assert.Contains(content.GetVisualDescendants().OfType<TextBox>(), box => box.Text == expectedText);
         return window;
