@@ -49,9 +49,13 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
         private readonly Func<Task> _source;
         private bool _closed;
         internal IReadOnlyList<HomePackageOriginalInstalledActivationRecord> Packages { get; }
+        internal string OriginalMachineStatePath { get; }
+        internal string OriginalPlanSha256 { get; }
         internal PublishedCode(LinuxHomePackageArtifactStore artifacts, LinuxHomePackageArtifactStore.ValidatedStage stage,
-            IReadOnlyList<HomePackageOriginalInstalledActivationRecord> packages, Func<Task> source)
-        { _artifacts = artifacts; _stage = stage; Packages = packages; _source = source; }
+            IReadOnlyList<HomePackageOriginalInstalledActivationRecord> packages, Func<Task> source,
+            string originalMachineStatePath, string originalPlanSha256)
+        { _artifacts = artifacts; _stage = stage; Packages = packages; _source = source;
+            OriginalMachineStatePath = originalMachineStatePath; OriginalPlanSha256 = originalPlanSha256; }
         internal async Task DemandCurrentAsync(CancellationToken token)
         {
             ObjectDisposedException.ThrowIf(_closed, this); await _source().ConfigureAwait(false);
@@ -236,7 +240,7 @@ public sealed class LinuxHomeBootstrapActivationOwner(LinuxHomePublisherEnrollme
                         {
                             var runtimePackages = recoveredPackages.Select(value => value.UnknownFields![HomePackageOriginalInstalledActivationRecord.Field]
                                 .Deserialize<HomePackageOriginalInstalledActivationRecord>()!).ToArray();
-                            var code = new PublishedCode(artifacts, published, Array.AsReadOnly(runtimePackages), original.DemandCurrentAsync);
+                            var code = new PublishedCode(artifacts, published, Array.AsReadOnly(runtimePackages), original.DemandCurrentAsync, original.StatePath, Digest(planBytes));
                             try { await originalRuntime(code, cancellation).ConfigureAwait(false); }
                             finally { code.Close(); }
                         }

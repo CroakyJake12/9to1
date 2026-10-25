@@ -339,3 +339,33 @@ Focused refusal tests use real Unix connections to an unregistered listener,
 actual kernel process-start metadata and unconfigured Apps; copied tuples create
 no Home identity. Positive signed fixtures remain isolated test evidence, not
 production publisher enrollment.
+
+
+## Reviewable registered Root unit artifact
+
+`--home-export-root-unit` is an explicit administrative export command. Pass the
+same exact already-settled activation/signing options accepted by
+`--home-root-service`, plus `--artifact-output` (an existing private root-owned
+review directory) and `--artifact-id` (a new nonempty GUID). The machine-state path
+in the resulting unit comes from the actual retained canonical store; it is not
+substituted by output metadata. The same externally signed Root cohort must
+contain the executable native helper. No pending activation is recovered here.
+
+```text
+<activated-root-ELF> --home-export-root-unit <same explicit settled activation options> --control-directory <existing protected traversable directory> --artifact-output <existing private review directory> --artifact-id <new GUID>
+```
+
+The exporter creates `root-unit-<artifact-id>/9to1-root.service` and
+`provenance.json`, with mode0700 on the bundle and0600 on its files. It retains
+actual original file descriptors, verifies complete bytes/hashes/read versions,
+and never overwrites existing artifacts. A collision is refused; an uncertain
+post-create failure retains the partial bundle for review. Systemd output
+locations are rejected. The unit uses literal argv (no shell, environment or
+specifier expansion), `Type=simple`, and `Restart=no`; missing actual login/Root
+prerequisites remain unavailable. It contains public signing-input paths/hashes,
+no signing key or credential. It is not enabled for automatic startup.
+
+This command does not copy into systemd directories, register/enable/start a
+service, invoke the helper, or establish runtime Ready. Deployment remains a
+separate explicitly authorized packaging/administrative action after reviewing
+the exact artifact and its current activation provenance.

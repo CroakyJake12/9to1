@@ -31,6 +31,11 @@ internal static class Program
     public static void Main(string[] args)
     {
 #if !ANDROID
+        if (Services.LinuxHomeRootServiceUnitArtifactCommand.IsInvocation(args))
+        {
+            Environment.ExitCode = Services.LinuxHomeRootServiceUnitArtifactCommand.Run(args, Console.Out, Console.Error);
+            return;
+        }
         if (Services.LinuxHomeRootServiceCommand.IsInvocation(args))
         {
             Environment.ExitCode = Services.LinuxHomeRootServiceCommand.Run(args, Console.Out, Console.Error);
