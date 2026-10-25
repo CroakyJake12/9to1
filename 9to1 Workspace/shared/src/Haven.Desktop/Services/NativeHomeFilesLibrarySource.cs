@@ -69,7 +69,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 foreach (var page in _entries.Values.Select(entry => entry.Page).Distinct<FilesNativeBrowserPage>(ReferenceEqualityComparer.Instance))
                     await source.AwaitAsync(source.Invoke(() => ValidatePageAsync(page, caller))).ConfigureAwait(false);
                 await RequireOwnerAsync(source, caller).ConfigureAwait(false);
-                return _entries.Values.Select(entry => entry.View).ToArray();
+                return ProjectEntries(query.Text);
             }
             _entries.Clear(); _query = null;
             var available = await source.AwaitAsync(source.Invoke(() =>
@@ -139,8 +139,19 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 await source.AwaitAsync(source.Invoke(() => ValidatePageAsync(page, caller))).ConfigureAwait(false);
             await RequireOwnerAsync(source, caller).ConfigureAwait(false);
             _query = identity;
-            return _entries.Values.Select(entry => entry.View).ToArray();
+            return ProjectEntries(query.Text);
         }, token);
+
+    private IReadOnlyList<HomeArtifactReference> ProjectEntries(string? searchText)
+    {
+        var query = searchText?.Trim();
+        return _entries.Values.Select(entry => entry.View).Where(item => string.IsNullOrEmpty(query) ||
+            item.DisplayName.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            item.ArtifactType.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            item.Location.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            item.Owner.Contains(query, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+    }
+
     public Task<HomeArtifactReference?> GetByIdAsync(string app, string id, CancellationToken token) =>
         RunAsync<HomeArtifactReference?>(async (source, caller) => app == "files" && _entries.TryGetValue(id, out var entry) &&
             await IsCurrentAsync(entry, source, caller).ConfigureAwait(false) ? entry.View : null, token);

@@ -8,13 +8,18 @@ using Haven.Application;
 using Haven.Desktop.Services;
 using HavenOS.Home;
 using HavenOS.Home.Core;
+using System.ComponentModel;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
 /// <summary>Host adapter for the SAME canonical Home Library and shared domain/index owner.
 /// The host keeps page work/navigation custody; Notes and Home remain the canonical owners.</summary>
-internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
+internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBindingContext, ICuiActionDispatcher,
+    ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
+    private sealed record LibraryRow(string Key, string DisplayName, string OwnerApp, string ArtifactType,
+        string LastModified, string Location, string Owner, string? SharedBy, bool IsPinned, HomeDeepLink Target);
+
     private readonly HomeLibraryService _library;
     private readonly IHomeOriginalLibrarySource? _source;
     private readonly Func<CancellationToken, Task> _admit;
@@ -36,6 +41,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     // admitted query remains owned by _work and is still joined before the page detaches.
     private readonly CancellationTokenSource _activationObservers = new();
     private HomeLibraryPage? _page;
+    private LibraryRow[] _rows = [];
     private HomeLibraryQuery _query = new(Limit: 25);
     private DesktopOriginalWorkLifetime.Original? _opening;
     private Task? _initialization;
@@ -43,6 +49,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     private long _generation;
     private bool _active, _busy, _stopped;
     private string _status = "Browse authorised references from your apps.";
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     internal HomeLibraryDestinationPage(Func<IHomeDeepLinkRouter, HomeLibraryService> create,
         Func<CancellationToken, Task> admit, Func<HomeDeepLink, Task, bool> queue,
@@ -52,6 +60,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     {
         Dispatcher.UIThread.VerifyAccess(); _admit = admit; _queue = queue; _source = ownedSource;
         _prepareNavigation = prepareNavigation; _selectArtifact = selectArtifact;
+        _bindings.PropertyChanged += (_, args) => PropertyChanged?.Invoke(this, args);
         if (_selectArtifact is not null) _status = "Choose a Write document to embed. The selected reference does not grant content access.";
         _work = new(StopAsync, CleanupAsync); _library = create(new Router(this));
         var document = HomeCuiSurface.LoadDefault().Document;
@@ -61,7 +70,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
             [fragment], scope.Condition, scope.List, scope.Span, scope.DefaultTheme, scope.Repeat,
             scope.ElseChildren, scope.Groups, scope.IsDefinition, scope.PropertyRegion);
         if (theme is not null) _loader.SetThemePreferenceContext(theme);
-        _loader.SetActionDispatcher(this); _loader.SetBindingContext(_bindings);
+        _loader.SetActionDispatcher(this); _loader.SetBindingContext(this);
         _loader.BindAuthoredControl("library-search", _ => _search);
         _loader.BindAuthoredControl("library-owner-filter", _ => _ownerFilter);
         _loader.BindAuthoredControl("library-type-filter", _ => _typeFilter);
@@ -102,6 +111,29 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         _ownerFilter.Text = ownerApp;
         _typeFilter.Text = artifactType;
     }
+    public bool TryGetValue(string path, out object? value) => _bindings.TryGetValue(path, out value);
+    public bool TrySetValue(string path, object? value) => _bindings.TrySetValue(path, value);
+    public bool TryGetItemValue(object item, string path, out object? value)
+    {
+        value = null;
+        if (item is not LibraryRow row || !_rows.Any(current => ReferenceEquals(current, row))) return false;
+        value = path.ToLowerInvariant() switch
+        {
+            "key" => row.Key,
+            "displayname" => row.DisplayName,
+            "ownerapp" => row.OwnerApp,
+            "artifacttype" => row.ArtifactType,
+            "lastmodified" => row.LastModified,
+            "location" => row.Location,
+            "owner" => row.Owner,
+            "sharedby" => row.SharedBy,
+            "ispinned" => row.IsPinned,
+            "target" => row.Target,
+            _ => null
+        };
+        return value is not null;
+    }
+    public bool TrySetItemValue(object item, string path, object? value) => false;
     private static async Task ObserveActivationAsync(Task actual, CancellationToken retirement) =>
         await actual.WaitAsync(retirement).ConfigureAwait(false);
     internal void Deactivate() { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; }
@@ -236,7 +268,10 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     {
         var available = _active && IsAlive && !_busy;
         var queryMatches = QueryInputsMatchCurrentPage();
-        _bindings.Set("LibraryRows", NativeHomeArtifactLibrarySource.ProjectRows(_page));
+        _rows = _page?.Items.Select(item => new LibraryRow(item.OwnerApp + "/" + item.ArtifactId,
+            item.DisplayName, item.OwnerApp, item.ArtifactType, item.LastModified.ToLocalTime().ToString("g"),
+            item.Location, item.Owner, item.SharedBy, item.IsPinned, item.OpenLink)).ToArray() ?? [];
+        _bindings.Set("LibraryRows", _rows);
         var notice = _page?.Succeeded == true ? _source?.AvailabilityNotice : null;
         var summary = string.IsNullOrWhiteSpace(notice) ? _status : _status + " " + notice;
         if (_page is not null && !queryMatches) summary += " Search to apply the changed filters.";
