@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using CakeOS.Apps.Boards.Contract;
@@ -18,8 +19,14 @@ namespace Haven.Desktop.Tests;
 
 public sealed class FilesNativeBoardDocumentCreateTests
 {
-    private sealed class LinuxFactAttribute : FactAttribute
-    { public LinuxFactAttribute() { if (!OperatingSystem.IsLinux()) Skip = "Requires the actual Linux create-only Files publisher."; } }
+    public sealed class LinuxFactAttribute : FactAttribute
+    {
+        public LinuxFactAttribute([CallerFilePath] string? sourceFilePath = null, [CallerLineNumber] int sourceLineNumber = 0)
+            : base(sourceFilePath, sourceLineNumber)
+        {
+            if (!OperatingSystem.IsLinux()) Skip = "Requires the actual Linux create-only Files publisher.";
+        }
+    }
 
     [LinuxFact]
     public async Task Reviewed_new_board_publishes_and_reopens_the_exact_current_files_revision()
@@ -83,16 +90,19 @@ public sealed class FilesNativeBoardDocumentCreateTests
         var bytes = BoardBytes(Guid.NewGuid(), "Must not be created");
         var before = await rig.ReadBytesAsync();
         var staleActor = rig.Workspace.Actor with { AuthenticationRevision = rig.Workspace.Actor.AuthenticationRevision + ":stale" };
-        var wrongActor = Record.Exception(() => _ = creator.CreateBoardDocumentWithinSourceAsync(
-            source.Page, source.Folder, staleActor, "Stale actor", bytes, () => true,
-            (_, _) => Task.CompletedTask, "stale-actor", body => body(), rig.Retain, rig.Token));
+        var wrongActor = Record.Exception(() =>
+        {
+            _ = creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder, staleActor,
+                "Stale actor", bytes, () => true, (_, _) => Task.CompletedTask, "stale-actor",
+                body => body(), rig.Retain, rig.Token);
+        });
         Assert.NotNull(wrongActor);
         AssertUnauthorized(wrongActor!);
 
         var retired = false;
         async Task RevokeAfterReview(HomePermissionAuthorization request, CancellationToken token)
         {
-            Assert.True((await rig.Trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept,
+            Assert.True((await rig!.Trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept,
                 cancellationToken: token)).Succeeded);
             retired = true;
         }
@@ -194,10 +204,13 @@ public sealed class FilesNativeBoardDocumentCreateTests
         var before = await rig.ReadBytesAsync();
         var reviewCount = 0;
         var registrationFailure = new InvalidOperationException("Controlled source task retention failure.");
-        var thrown = Record.Exception(() => creator.CreateBoardDocumentWithinSourceAsync(source.Page,
-            source.Folder, rig.Workspace.Actor, "Must not start", BoardBytes(Guid.NewGuid(), "No side effect"),
-            () => true, (_, _) => { reviewCount++; return Task.CompletedTask; }, "retain-failure",
-            body => body(), _ => throw registrationFailure, rig.Token));
+        var thrown = Record.Exception(() =>
+        {
+            _ = creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder, rig.Workspace.Actor,
+                "Must not start", BoardBytes(Guid.NewGuid(), "No side effect"), () => true,
+                (_, _) => { reviewCount++; return Task.CompletedTask; }, "retain-failure",
+                body => body(), _ => throw registrationFailure, rig.Token);
+        });
 
         Assert.Same(registrationFailure, thrown);
         var closeFailure = await Assert.ThrowsAnyAsync<Exception>(() => creator.CloseAndDrainAsync());
@@ -339,6 +352,7 @@ public sealed class FilesNativeBoardDocumentCreateTests
         internal HomePermissionTrustService Trust { get; private set; } = null!;
         internal FailBoardCreateAuditStore FailingHomeStore { get; private set; } = null!;
         internal void Retain(Task actual) { lock (_gate) _retained.Add(actual); }
+        internal Task Keep(Task actual) { Retain(actual); return actual; }
         internal Task<T> Keep<T>(Task<T> actual) { Retain(actual); return actual; }
         internal async Task<(byte[] Home, byte[] Drive)> ReadBytesAsync() =>
             (await File.ReadAllBytesAsync(_homePath, Token), await File.ReadAllBytesAsync(_drivePath, Token));
