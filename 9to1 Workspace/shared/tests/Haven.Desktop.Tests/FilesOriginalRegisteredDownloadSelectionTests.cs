@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Runtime.ExceptionServices;
 using CakeOS.Apps.Boards.Contract;
 using Haven.Application;
+using Haven.Application.Compatibility;
 using Haven.Desktop.Services;
 using Haven.Infrastructure.Native.Linux;
 using HavenOS.Home;
