@@ -18,7 +18,7 @@ public sealed class BoardsSectionIconSuggestionService : IBoardsSectionIconGener
     private const string SystemPrompt = """
         Create one small, filled, rounded vector icon for a 9to1 Boards section.
         Return exactly one JSON object and no markdown or explanation, with this schema:
-        {"shapes":[{"kind":"roundRect","x":3,"y":3,"width":18,"height":18,"radius":3}]}
+        {"icons":[{"shapes":[{"kind":"roundRect","x":3,"y":3,"width":18,"height":18,"radius":3}]}]}
         A shape may be one of:
         - roundRect: x, y, width, height, radius
         - circle: cx, cy, radius
@@ -29,6 +29,9 @@ public sealed class BoardsSectionIconSuggestionService : IBoardsSectionIconGener
         user, so use overlap and cutout polygons for clear negative space. Prefer a recognizable
         centered silhouette with moderate corner rounding. Do not return SVG, paths, colors, strokes,
         text, URLs, scripts, external assets, comments, or properties outside the schema.
+        Return three visually distinct alternatives when possible, and never return more than three.
+        Each icon has its own 12-shape and 64-polygon-vertex limits. The complete response must be
+        small enough to fit an 8 KiB JSON envelope.
         """;
 
     private readonly IProviderModelClient _models;
@@ -76,12 +79,21 @@ public sealed class BoardsSectionIconSuggestionService : IBoardsSectionIconGener
 
         var modelKey = before.ProviderId + ":" + before.ModelId;
         var prompt = $"Create a filled section icon representing this section name: {JsonSerializer.Serialize(title)}";
-        var response = await _models.CompleteAsync(new OllamaChatRequest(
+        var request = new OllamaChatRequest(
             modelKey,
             [new OllamaMessage("user", prompt)],
             EffortLevel.Medium,
             SystemPrompt,
-            Options: new GenerationOptions(0.2, 4096, 0)), token).ConfigureAwait(false);
+            Options: new GenerationOptions(0.2, 4096, 0)
+            {
+                RequestedRoutingConstraints = new ModelRequestRoutingConstraints(AllowFallback: false)
+            })
+        {
+            ReasoningId = before.SelectedReasoningId,
+            ReasoningTargetProviderId = before.ProviderId,
+            ReasoningTargetModelName = before.ModelId,
+        };
+        var response = await _models.CompleteAsync(request, token).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
         DemandCurrent(token);
 
@@ -93,7 +105,7 @@ public sealed class BoardsSectionIconSuggestionService : IBoardsSectionIconGener
         return new BoardsGeneratedSectionIconResult(ParseResponse(response), before.ProviderId, before.ModelId);
     }
 
-    internal static HavenRichSectionGeneratedIcon ParseResponse(string response)
+    internal static IReadOnlyList<HavenRichSectionGeneratedIcon> ParseResponse(string response)
     {
         ArgumentNullException.ThrowIfNull(response);
         if (Encoding.UTF8.GetByteCount(response) is 0 or > MaximumResponseBytes)
@@ -108,31 +120,37 @@ public sealed class BoardsSectionIconSuggestionService : IBoardsSectionIconGener
                 MaxDepth = 8,
             });
             var root = document.RootElement;
-            RequireObjectProperties(root, "shapes");
-            if (!root.TryGetProperty("shapes", out var rawShapes) || rawShapes.ValueKind != JsonValueKind.Array)
-                throw new InvalidDataException("The model response must contain a shapes array.");
-
-            var shapes = new List<HavenRichSectionIconShape>();
-            foreach (var rawShape in rawShapes.EnumerateArray())
+            RequireObjectProperties(root, "icons");
+            if (!root.TryGetProperty("icons", out var rawIcons) || rawIcons.ValueKind != JsonValueKind.Array ||
+                rawIcons.GetArrayLength() is < 1 or > 3)
+                throw new InvalidDataException("The model response must contain one to three icon alternatives.");
+            var candidates = new List<HavenRichSectionGeneratedIcon>(rawIcons.GetArrayLength());
+            foreach (var rawIcon in rawIcons.EnumerateArray())
             {
-                if (shapes.Count == HavenRichSectionIconGeometry.MaximumShapes)
-                    throw new InvalidDataException("The model returned too many icon shapes.");
-                if (rawShape.ValueKind != JsonValueKind.Object || !rawShape.TryGetProperty("kind", out var kindValue) ||
-                    kindValue.ValueKind != JsonValueKind.String)
-                    throw new InvalidDataException("Each generated icon shape must have a known kind.");
-
-                shapes.Add(kindValue.GetString() switch
+                RequireObjectProperties(rawIcon, "shapes");
+                if (!rawIcon.TryGetProperty("shapes", out var rawShapes) || rawShapes.ValueKind != JsonValueKind.Array)
+                    throw new InvalidDataException("Each icon alternative must contain a shapes array.");
+                var shapes = new List<HavenRichSectionIconShape>();
+                foreach (var rawShape in rawShapes.EnumerateArray())
                 {
-                    "roundRect" => ParseRoundRect(rawShape),
-                    "circle" => ParseCircle(rawShape),
-                    "polygon" => ParsePolygon(rawShape),
-                    _ => throw new InvalidDataException("The model returned an unsupported icon primitive."),
-                });
+                    if (shapes.Count == HavenRichSectionIconGeometry.MaximumShapes)
+                        throw new InvalidDataException("The model returned too many icon shapes.");
+                    if (rawShape.ValueKind != JsonValueKind.Object || !rawShape.TryGetProperty("kind", out var kindValue) ||
+                        kindValue.ValueKind != JsonValueKind.String)
+                        throw new InvalidDataException("Each generated icon shape must have a known kind.");
+                    shapes.Add(kindValue.GetString() switch
+                    {
+                        "roundRect" => ParseRoundRect(rawShape),
+                        "circle" => ParseCircle(rawShape),
+                        "polygon" => ParsePolygon(rawShape),
+                        _ => throw new InvalidDataException("The model returned an unsupported icon primitive."),
+                    });
+                }
+                var icon = new HavenRichSectionGeneratedIcon { Shapes = shapes };
+                HavenRichSectionIconGeometry.Validate(icon);
+                candidates.Add(HavenRichSectionIconGeometry.Copy(icon));
             }
-
-            var icon = new HavenRichSectionGeneratedIcon { Shapes = shapes };
-            HavenRichSectionIconGeometry.Validate(icon);
-            return HavenRichSectionIconGeometry.Copy(icon);
+            return Array.AsReadOnly(candidates.ToArray());
         }
         catch (JsonException exception)
         {
@@ -213,7 +231,8 @@ public sealed class BoardsSectionIconSuggestionService : IBoardsSectionIconGener
         StringComparer.Ordinal.Equals(before.RouteId, after.RouteId) && before.RouteRevision == after.RouteRevision &&
         StringComparer.Ordinal.Equals(before.ProviderId, after.ProviderId) &&
         StringComparer.Ordinal.Equals(before.ModelId, after.ModelId) &&
-        before.IsLocal == after.IsLocal && before.LocalityKnown == after.LocalityKnown;
+        before.IsLocal == after.IsLocal && before.LocalityKnown == after.LocalityKnown &&
+        StringComparer.Ordinal.Equals(before.SelectedReasoningId, after.SelectedReasoningId);
 
     private void DemandCurrent(CancellationToken token)
     {

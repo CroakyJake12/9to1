@@ -26,7 +26,7 @@ namespace CakeOS.Apps.Boards.App;
 
 public sealed record BoardsSectionIconChoiceView(string Key, string Label, IImage Preview, bool IsSelected);
 public sealed record BoardsSectionIconColorChoiceView(string Name, string Hex, IBrush Preview, bool IsSelected);
-public sealed record BoardsGeneratedSectionIconPreviewView(IImage Preview, string ModelLabel);
+public sealed record BoardsGeneratedSectionIconPreviewView(string Index, IImage Preview, string ModelLabel);
 
 public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiRepeatItemBindingContext, INotifyPropertyChanged
@@ -39,8 +39,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private string _sectionIconSearchText = string.Empty;
     private IReadOnlyList<BoardsSectionIconChoiceView> _sectionIconPickerChoices = [];
     private IReadOnlyList<BoardsSectionIconColorChoiceView> _sectionIconPickerColors = [];
-    private HavenRichSectionGeneratedIcon? _generatedSectionIconPreview;
+    private IReadOnlyList<HavenRichSectionGeneratedIcon> _generatedSectionIconPreviews = [];
     private bool _sectionIconSuggestionInProgress;
+    private readonly object _sectionIconSuggestionGate = new();
+    private CancellationTokenSource? _sectionIconSuggestionCancellation;
+    private long _sectionIconPickerEpoch;
     private readonly Dictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
     private string _selectedSectionId = "section-1";
     private string _selectedPageId = "page-1";
@@ -111,6 +114,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("CanSuggestSectionIcon", _sectionIconGenerationHost?.CanGenerate == true);
         Set("IsSectionIconSuggestionInProgress", false);
         Set("HasGeneratedSectionIconPreview", false);
+        Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
         Set("SectionIconSuggestionModel", string.Empty);
         RefreshEmbeddedPageLinkState();
         RefreshHomeBoardCreationAvailability();
@@ -430,8 +434,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case "SuggestSectionIcon":
                 await SuggestSectionIconAsync(cancellationToken);
                 break;
-            case "ApplyGeneratedSectionIcon":
-                await ApplyGeneratedSectionIconAsync(cancellationToken);
+            case "ApplyGeneratedSectionIcon" when parameter is string generatedIndex:
+                await ApplyGeneratedSectionIconAsync(generatedIndex, cancellationToken);
                 break;
             case "ApplySectionIconChoice" when parameter is string iconKey && _sectionIconPickerSectionId is { } iconSectionId:
                 var iconSection = _session.Document.Sections.FirstOrDefault(item => item.Id == iconSectionId);
@@ -905,6 +909,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             return;
         }
         if (_isEditMode == enabled) return;
+        CancelSectionIconSuggestion();
         if (!enabled) CloseSectionIconPicker();
         _isEditMode = enabled;
         if (enabled)
@@ -1288,6 +1293,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         if (_disposed) return;
         _disposed = true;
+        CancelSectionIconSuggestion();
         Detach();
     }
 
@@ -1940,6 +1946,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
         if (section is null)
             return;
+        CancelSectionIconSuggestion();
         InvalidateTableSelection();
         _selectedSectionId = section.Id;
         var page = section.Pages.FirstOrDefault();
@@ -1960,6 +1967,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var page = section?.Pages.FirstOrDefault(p => p.Id == pageId);
         if (section is null || page is null)
             return;
+        CancelSectionIconSuggestion();
         InvalidateTableSelection();
         _selectedSectionId = section.Id;
         _selectedPageId = page.Id;
@@ -1986,6 +1994,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public async Task RenameSectionAsync(string sectionId, string title)
     {
         if (!RequireEditMode()) return;
+        CancelSectionIconSuggestion();
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.RenameSectionAsync(sectionId, title);
@@ -2040,8 +2049,6 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private async Task<bool> SetSectionIconColorAsync(RichBoardSection section, string? iconColor,
         CancellationToken cancellationToken)
     {
-        if (section.GeneratedIcon is null)
-            return await SetSectionIconAsync(section.Id, section.IconKey, iconColor, cancellationToken);
         if (!RequireEditMode()) return false;
         if (iconColor is not null && (iconColor.Length != 7 || iconColor[0] != '#' ||
             !iconColor.Skip(1).All(Uri.IsHexDigit)))
@@ -2049,14 +2056,30 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("StatusText", "Choose an available section icon color.");
             return false;
         }
+        var pendingCandidates = _generatedSectionIconPreviews;
+        var preserveCandidates = pendingCandidates.Count > 0 && !_sectionIconSuggestionInProgress;
         try
         {
-            await _session.SetSectionGeneratedIconAsync(section.Id,
-                HavenRichSectionIconGeometry.Copy(section.GeneratedIcon), iconColor, cancellationToken);
-            if (_sectionIconPickerSectionId == section.Id) RefreshSectionIconPickerChoices();
-            PushDocumentToBindings();
-            NavRebuildRequested?.Invoke();
-            RequestRebuild();
+            if (section.GeneratedIcon is null)
+            {
+                if (!await SetSectionIconAsync(section.Id, section.IconKey, iconColor, cancellationToken))
+                    return false;
+            }
+            else
+            {
+                await _session.SetSectionGeneratedIconAsync(section.Id,
+                    HavenRichSectionIconGeometry.Copy(section.GeneratedIcon), iconColor, cancellationToken);
+                if (_sectionIconPickerSectionId == section.Id) RefreshSectionIconPickerChoices();
+                PushDocumentToBindings();
+                NavRebuildRequested?.Invoke();
+                RequestRebuild();
+            }
+            if (preserveCandidates && _sectionIconPickerSectionId == section.Id && _isEditMode)
+            {
+                _generatedSectionIconPreviews = pendingCandidates;
+                Set("HasGeneratedSectionIconPreview", true);
+                RefreshSectionIconPickerChoices();
+            }
             return true;
         }
         catch (OperationCanceledException) { throw; }
@@ -2077,6 +2100,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var section = _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId);
         if (section is null) return;
         var targetTitle = section.Title;
+        var targetDocumentId = _session.Document.DocumentId;
+        var targetPageId = SelectedPageId;
+        var targetEpoch = Volatile.Read(ref _sectionIconPickerEpoch);
+        var operationCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        lock (_sectionIconSuggestionGate)
+            _sectionIconSuggestionCancellation = operationCancellation;
         _sectionIconSuggestionInProgress = true;
         Set("IsSectionIconSuggestionInProgress", true);
         Set("CanSuggestSectionIcon", false);
@@ -2086,27 +2115,37 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             // The host receives only this title, never Board or page content. The preview is
             // detached and remains ephemeral until the user explicitly applies it.
-            var result = await _sectionIconGenerationHost.GenerateAsync(targetTitle, cancellationToken);
-            HavenRichSectionIconGeometry.Validate(result.Geometry);
-            if (_disposed || !_isEditMode || _sectionIconPickerSectionId != sectionId ||
+            var result = await _sectionIconGenerationHost.GenerateAsync(targetTitle, operationCancellation.Token);
+            operationCancellation.Token.ThrowIfCancellationRequested();
+            if (_disposed || !_isEditMode || targetEpoch != Volatile.Read(ref _sectionIconPickerEpoch) ||
+                _session.Document.DocumentId != targetDocumentId || SelectedPageId != targetPageId ||
+                _sectionIconPickerSectionId != sectionId ||
                 !_session.Document.Sections.Any(item => item.Id == sectionId &&
                     string.Equals(item.Title, targetTitle, StringComparison.Ordinal)))
             {
                 Set("StatusText", "The section changed while its icon was being created. Try again.");
                 return;
             }
-            _generatedSectionIconPreview = HavenRichSectionIconGeometry.Copy(result.Geometry);
+            _generatedSectionIconPreviews = Array.AsReadOnly(result.Candidates
+                .Select(HavenRichSectionIconGeometry.Copy).ToArray());
+            if (_generatedSectionIconPreviews.Count is < 1 or > 3)
+                throw new InvalidDataException("The icon suggestion returned an invalid number of options.");
+            foreach (var candidate in _generatedSectionIconPreviews)
+                HavenRichSectionIconGeometry.Validate(candidate);
             var sectionNow = _session.Document.Sections.First(item => item.Id == sectionId);
             var brush = BoardsCuiIconResolver.SemanticBrush("section", colorOverride: sectionNow.IconColor);
-            Set("GeneratedSectionIconPreview", new BoardsGeneratedSectionIconPreviewView(
-                BoardsCuiIconResolver.CreateGeneratedIcon(_generatedSectionIconPreview, brush),
-                result.ModelId));
+            Set("GeneratedSectionIconPreviews", CreateGeneratedPreviewViews(_generatedSectionIconPreviews, brush, targetEpoch));
             Set("HasGeneratedSectionIconPreview", true);
             Set("SectionIconSuggestionModel", result.ModelId);
-            Set("SectionIconSuggestionCaption", $"Preview · {result.ModelId}");
-            Set("StatusText", "Icon preview ready. Apply it to save this section icon.");
+            Set("SectionIconSuggestionCaption", $"{_generatedSectionIconPreviews.Count} suggestions ready");
+            Set("StatusText", $"{_generatedSectionIconPreviews.Count} icon options ready. Choose one to save it to this section.");
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (OperationCanceledException) when (operationCancellation.IsCancellationRequested)
+        {
+            if (!_disposed && _sectionIconPickerSectionId == sectionId)
+                Set("StatusText", "Icon suggestions were canceled.");
+        }
+        catch (OperationCanceledException) { throw; }
         catch (Exception exception)
         {
             System.Diagnostics.Trace.TraceWarning($"Section icon suggestion failed: {exception.Message}");
@@ -2114,6 +2153,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         finally
         {
+            lock (_sectionIconSuggestionGate)
+                if (ReferenceEquals(_sectionIconSuggestionCancellation, operationCancellation))
+                    _sectionIconSuggestionCancellation = null;
+            operationCancellation.Dispose();
             _sectionIconSuggestionInProgress = false;
             Set("IsSectionIconSuggestionInProgress", false);
             Set("CanSuggestSectionIcon", !_disposed && _sectionIconGenerationHost?.CanGenerate == true &&
@@ -2121,17 +2164,23 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
     }
 
-    private async Task ApplyGeneratedSectionIconAsync(CancellationToken cancellationToken)
+    private async Task ApplyGeneratedSectionIconAsync(string index, CancellationToken cancellationToken)
     {
-        if (!CanEdit || !_isEditMode || _generatedSectionIconPreview is null ||
+        var indexParts = index.Split(':', StringSplitOptions.None);
+        if (!CanEdit || !_isEditMode || indexParts.Length != 2 ||
+            !long.TryParse(indexParts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var targetEpoch) ||
+            targetEpoch != Volatile.Read(ref _sectionIconPickerEpoch) ||
+            !int.TryParse(indexParts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var candidateIndex) ||
+            candidateIndex < 0 || candidateIndex >= _generatedSectionIconPreviews.Count ||
             _sectionIconPickerSectionId is not { } sectionId) return;
-        HavenRichSectionIconGeometry.Validate(_generatedSectionIconPreview);
+        var selectedIcon = _generatedSectionIconPreviews[candidateIndex];
+        HavenRichSectionIconGeometry.Validate(selectedIcon);
         var section = _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId);
         if (section is null) return;
         try
         {
             await _session.SetSectionGeneratedIconAsync(sectionId,
-                HavenRichSectionIconGeometry.Copy(_generatedSectionIconPreview), section.IconColor, cancellationToken);
+                HavenRichSectionIconGeometry.Copy(selectedIcon), section.IconColor, cancellationToken);
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
@@ -2141,9 +2190,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("StatusText", "The section icon could not be saved. Try again.");
             return;
         }
-        _generatedSectionIconPreview = null;
+        _generatedSectionIconPreviews = [];
         Set("HasGeneratedSectionIconPreview", false);
-        Set("GeneratedSectionIconPreview", null);
+        Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
         Set("StatusText", "Section icon saved.");
         PushDocumentToBindings();
         NavRebuildRequested?.Invoke();
@@ -2156,13 +2205,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (!CanEdit || !IsEditMode) return;
         var section = _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId);
         if (section is null) return;
+        CancelSectionIconSuggestion();
         _sectionIconPickerSectionId = section.Id;
-        _generatedSectionIconPreview = null;
+        _generatedSectionIconPreviews = [];
         _sectionIconSearchText = string.Empty;
         Set("SectionIconPickerSearch", string.Empty);
         Set("SectionIconPickerTitle", $"Section appearance · {section.Title}");
         Set("HasGeneratedSectionIconPreview", false);
-        Set("GeneratedSectionIconPreview", null);
+        Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
         Set("CanSuggestSectionIcon", _sectionIconGenerationHost?.CanGenerate == true);
         Set("IsSectionIconPickerOpen", true);
         RefreshSectionIconPickerChoices();
@@ -2170,10 +2220,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void CloseSectionIconPicker()
     {
+        CancelSectionIconSuggestion();
         _sectionIconPickerSectionId = null;
-        _generatedSectionIconPreview = null;
+        _generatedSectionIconPreviews = [];
         Set("HasGeneratedSectionIconPreview", false);
-        Set("GeneratedSectionIconPreview", null);
+        Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
         Set("CanSuggestSectionIcon", false);
         Set("IsSectionIconPickerOpen", false);
     }
@@ -2214,12 +2265,39 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("HasSectionIconPickerChoices", _sectionIconPickerChoices.Count > 0);
         Set("SectionIconPickerHasThemeColor", section.IconColor is null);
         Set("SectionIconPickerColor", section.IconColor ?? string.Empty);
-        if (_generatedSectionIconPreview is { } generatedPreview)
-            Set("GeneratedSectionIconPreview", new BoardsGeneratedSectionIconPreviewView(
-                BoardsCuiIconResolver.CreateGeneratedIcon(generatedPreview,
-                    BoardsCuiIconResolver.SemanticBrush("section", colorOverride: section.IconColor)),
-                _properties.TryGetValue("SectionIconSuggestionModel", out var modelName) ? modelName as string ?? string.Empty : string.Empty));
+        if (_generatedSectionIconPreviews.Count > 0)
+        {
+            var generatedBrush = BoardsCuiIconResolver.SemanticBrush("section", colorOverride: section.IconColor);
+            Set("GeneratedSectionIconPreviews", CreateGeneratedPreviewViews(_generatedSectionIconPreviews,
+                generatedBrush, Volatile.Read(ref _sectionIconPickerEpoch)));
+        }
     }
+
+    private static IReadOnlyList<BoardsGeneratedSectionIconPreviewView> CreateGeneratedPreviewViews(
+        IReadOnlyList<HavenRichSectionGeneratedIcon> candidates, IBrush brush, long epoch) =>
+        Array.AsReadOnly(candidates.Select((candidate, index) => new BoardsGeneratedSectionIconPreviewView(
+            epoch.ToString(CultureInfo.InvariantCulture) + ":" + index.ToString(CultureInfo.InvariantCulture),
+            BoardsCuiIconResolver.CreateGeneratedIcon(candidate, brush),
+            $"Option {index + 1}")).ToArray());
+
+    private void CancelSectionIconSuggestion()
+    {
+        Interlocked.Increment(ref _sectionIconPickerEpoch);
+        _generatedSectionIconPreviews = [];
+        Set("HasGeneratedSectionIconPreview", false);
+        Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
+        CancellationTokenSource? cancellation;
+        lock (_sectionIconSuggestionGate)
+        {
+            cancellation = _sectionIconSuggestionCancellation;
+            _sectionIconSuggestionCancellation = null;
+        }
+        if (cancellation is null) return;
+        try { cancellation.Cancel(); }
+        catch (ObjectDisposedException) { }
+    }
+
+    internal void CancelSectionIconSuggestionForClose() => CancelSectionIconSuggestion();
 
     public async Task RenamePageAsync(string sectionId, string pageId, string title)
     {
@@ -3915,6 +3993,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private void PushDocumentToBindings()
     {
+        CancelSectionIconSuggestion();
         var doc = _session.Document;
         var page = CurrentPage();
         var heading = page.Blocks.FirstOrDefault(b => b.Kind == "heading");

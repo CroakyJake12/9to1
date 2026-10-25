@@ -25,7 +25,7 @@ public delegate ValueTask<BoardsExternalSaveReceipt> BoardsExternalSaveCallback(
 
 /// <summary>Preview returned by an explicit name-only section icon suggestion request.</summary>
 public sealed record BoardsGeneratedSectionIconResult(
-    HavenRichSectionGeneratedIcon Geometry,
+    IReadOnlyList<HavenRichSectionGeneratedIcon> Candidates,
     string ProviderId,
     string ModelId);
 
@@ -286,6 +286,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         if (!await TryPrepareToCloseAsync().ConfigureAwait(false))
             throw new InvalidOperationException("The embedded Write page refused to close; its draft remains open.");
         _disposed = true;
+        ViewModel.CancelSectionIconSuggestionForClose();
         ViewModel.RebuildRequested -= QueueRender;
         ViewModel.NavRebuildRequested -= QueueRender;
         ViewModel.SelectionChanged -= QueueRender;

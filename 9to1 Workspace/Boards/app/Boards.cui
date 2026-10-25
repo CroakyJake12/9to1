@@ -4,6 +4,7 @@
     <Action name="OpenRecentPage" command="OpenRecentPage" parameter="{Binding page.Target}" />
     <Action name="ApplySectionIconChoice" command="ApplySectionIconChoice" parameter="{Binding icon.Key}" />
     <Action name="ApplySectionIconColor" command="ApplySectionIconColor" parameter="{Binding color.Hex}" />
+    <Action name="ApplyGeneratedSectionIcon" command="ApplyGeneratedSectionIcon" parameter="{Binding generated.Index}" />
     <Action name="UseThemeSectionIconColor" command="UseThemeSectionIconColor" />
     <Action name="CloseSectionIconPicker" command="CloseSectionIconPicker" />
   </Actions>
@@ -278,17 +279,21 @@
             <Container Type="Horizontal Stack" Row="3" CellGap="10" VerticalAlignment="Center">
               <Button ID="SuggestSectionIconButton" Content="Suggest from section name" Action="SuggestSectionIcon" IsEnabled="{Binding CanSuggestSectionIcon}" AccessibleName="Create an icon preview from this section name" Tooltip="Sends the section name only to the currently selected Home model" />
               <If Condition="{Binding IsSectionIconSuggestionInProgress}"><Text Text="Creating preview…" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" /></If>
-              <If Condition="{Binding HasGeneratedSectionIconPreview}">
-                <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
-                  <Image ID="GeneratedSectionIconPreviewImage" Source="{Binding GeneratedSectionIconPreview.Preview}" Width="28" Height="28" AccessibleName="Generated section icon preview" />
-                  <Text Text="{Binding SectionIconSuggestionCaption}" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
-                  <Button ID="ApplyGeneratedSectionIconButton" Content="Apply preview" Action="ApplyGeneratedSectionIcon" AccessibleName="Apply generated icon preview to this section" />
-                </Container>
-              </If>
+              <Text Text="{Binding SectionIconSuggestionCaption}" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
             </Container>
             <Container Type="Overlay" Row="4" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
               <Container Type="Vertical Stack" CellGap="6">
                 <Text Text="Choose an icon" FontWeight="SemiBold" />
+                <If Condition="{Binding HasGeneratedSectionIconPreview}">
+                  <Repeat ID="GeneratedSectionIconOptions" Source="{Binding GeneratedSectionIconPreviews}" As="generated" Key="{Binding generated.Index}" Panel="Wrap">
+                    <Button ID="ApplyGeneratedSectionIconButton" Action="ApplyGeneratedSectionIcon" AccessibleName="Apply generated section icon option" Tooltip="{Binding generated.ModelLabel}" Width="76" Height="66" Padding="5">
+                      <Container Type="Vertical Stack" CellGap="3" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Image ID="GeneratedSectionIconPreviewImage" Source="{Binding generated.Preview}" Width="28" Height="28" HorizontalAlignment="Center" AccessibleName="Generated section icon preview" />
+                        <Text Text="{Binding generated.ModelLabel}" FontSize="11" HorizontalAlignment="Center" />
+                      </Container>
+                    </Button>
+                  </Repeat>
+                </If>
                 <If Condition="{Binding HasSectionIconPickerChoices}">
                   <Repeat ID="SectionIconChoices" Source="{Binding SectionIconPickerChoices}" As="icon" Key="{Binding icon.Key}" Panel="Wrap">
                     <Button Action="ApplySectionIconChoice" Selected="{Binding icon.IsSelected}" AccessibleName="{Binding icon.AccessibleName}" Tooltip="{Binding icon.Label}" Width="88" Height="68" Padding="5">
