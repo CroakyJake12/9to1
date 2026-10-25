@@ -1,4 +1,5 @@
 using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 using Haven.Application;
 using Haven.Core;
 
@@ -15,6 +16,92 @@ public sealed class SpaceTaskWorkspaceService(
     SpaceRegistry spaces, IConversationRepository conversations, TaskExecutionCoordinator canonical)
 {
     public bool HasConfiguredCommandOwner => canonical.HasCommandAuthority;
+    public bool HasAuthorizedTaskCensus => canonical.HasTaskObservationCensus;
+    private readonly ConditionalWeakTable<TaskContextSelection, object> _selections = new();
+
+    /// <summary>Reads the same canonical store under its actual observation owner. The
+    /// cursor is opaque and every candidate is freshly authorized before any context read.</summary>
+    public async Task<AuthorizedTaskContextPage> ReadAllTasksPageAsync(int maximumCandidates,
+        TaskObservationPageCursor? cursor, CancellationToken token,
+        Action<Action>? originalSourceCallbackScope = null)
+    {
+        var page = await Join(() => canonical.ReadAuthorizedTaskPageAsync(maximumCandidates, cursor, token), originalSourceCallbackScope).ConfigureAwait(false);
+        if (page.Disposition != TaskObservationDisposition.Authorized)
+            throw new UnauthorizedAccessException("The actual Task observation owner is unavailable for this principal.");
+        var rows = new List<AuthorizedTaskContextObservation>();
+        foreach (var task in page.Tasks)
+            rows.Add(await ReadAuthorizedContextAsync(task.TaskId, null, token, originalSourceCallbackScope).ConfigureAwait(false));
+        return new(Array.AsReadOnly(rows.OrderByDescending(row => row.HasObservedLiveExecution)
+            .ThenByDescending(row => row.Snapshot.UpdatedAt).ThenBy(row => row.Snapshot.TaskId).ToArray()),
+            page.Next, page.HasUnavailableContexts);
+    }
+
+    /// <summary>Resolves the EXACT issued Task/Run, including an older task sharing a
+    /// context. Never substitutes GetByContext's latest task or creates a conversation.</summary>
+    public Task<AuthorizedTaskContextObservation> ReadSelectionAsync(TaskContextSelection selection,
+        CancellationToken token, Action<Action>? originalSourceCallbackScope = null)
+    {
+        ArgumentNullException.ThrowIfNull(selection);
+        if (!ReferenceEquals(selection.Issuer, this) || !_selections.TryGetValue(selection, out _))
+            throw new UnauthorizedAccessException("This actual task-context source did not issue the selection.");
+        return ReadAuthorizedContextAsync(selection.TaskId, selection, token, originalSourceCallbackScope);
+    }
+
+    private async Task<AuthorizedTaskContextObservation> ReadAuthorizedContextAsync(Guid taskId,
+        TaskContextSelection? selected, CancellationToken token, Action<Action>? scope)
+    {
+        async Task<TaskExecutionSnapshot> ReadTask()
+        {
+            var result = await Join(() => canonical.ReadAuthorizedTaskObservationAsync(taskId, token), scope).ConfigureAwait(false);
+            if (result.Disposition == TaskObservationDisposition.Denied)
+                throw new UnauthorizedAccessException("The current principal cannot observe this original task.");
+            var task = result.Snapshot ?? throw new InvalidOperationException("The original authorized task is unavailable.");
+            if (result.Disposition != TaskObservationDisposition.Authorized || task.TaskId != taskId)
+                throw new InvalidDataException("The actual task owner returned an invalid observation.");
+            if (selected is not null && (task.ExecutionId != selected.ExecutionId || task.ContextId != selected.ContextId || task.OwnerBinding != selected.OwnerBinding))
+                throw new InvalidOperationException("The selected original Task/Run or owner changed; refresh the Tasks list.");
+            return task;
+        }
+        var before = await ReadTask().ConfigureAwait(false);
+        var conversation = await Join(() => conversations.GetAsync(before.ContextId, token), scope).ConfigureAwait(false);
+        if (conversation is not null && (conversation.Id != before.ContextId || conversation.SpaceId == Guid.Empty))
+            throw new InvalidDataException("The actual task context returned a different identity or invalid origin.");
+        var origin = conversation?.SpaceId;
+        if (selected is not null && (selected.OriginSpaceId != origin || selected.HadConversation != (conversation is not null)))
+            throw new InvalidOperationException("The original task context or Space membership changed; refresh the Tasks list.");
+        SpaceDefinition? space = null;
+        if (origin is { } spaceId)
+        {
+            space = await Join(() => spaces.ReadExistingAsync(spaceId, token), scope).ConfigureAwait(false);
+            if (space is not null && space.Id != spaceId) throw new InvalidDataException("The task origin returned a different Space.");
+        }
+        var currentConversation = await Join(() => conversations.GetAsync(before.ContextId, token), scope).ConfigureAwait(false);
+        if ((currentConversation is null) != (conversation is null) || currentConversation?.Id != conversation?.Id || currentConversation?.SpaceId != origin)
+            throw new InvalidOperationException("The actual task context changed during observation.");
+        var current = await ReadTask().ConfigureAwait(false); // Fresh actual principal after context reads.
+        if (current.ExecutionId != before.ExecutionId || current.ContextId != before.ContextId || current.OwnerBinding != before.OwnerBinding)
+            throw new InvalidOperationException("The original task owner changed during context observation.");
+        var issued = selected ?? new TaskContextSelection(this, current.TaskId, current.ExecutionId, current.ContextId,
+            origin, currentConversation is not null, current.OwnerBinding!);
+        if (selected is null) _selections.Add(issued, new object());
+        return new(issued, currentConversation, space?.Revision, space?.Name, current,
+            TaskExecutionProjection.From(current));
+    }
+
+    public async Task<FollowUpDecision> SubmitSelectedFollowUpAsync(TaskContextSelection selection,
+        long expectedPersistenceRevision, string instruction, TaskFollowUpMode mode, CancellationToken token,
+        Action<Action>? originalSourceCallbackScope = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(instruction);
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        var current = await ReadSelectionAsync(selection, token, originalSourceCallbackScope).ConfigureAwait(false);
+        if (current.Snapshot.PersistenceRevision != expectedPersistenceRevision)
+            throw new InvalidOperationException("The original task changed before this follow-up; refresh first.");
+        var reply = await Join(() => canonical.SubmitFollowUpAsync(selection.TaskId, instruction, mode, null, null, token), originalSourceCallbackScope).ConfigureAwait(false);
+        if (reply.Snapshot.TaskId != selection.TaskId || reply.Snapshot.ExecutionId != selection.ExecutionId || reply.Snapshot.ContextId != selection.ContextId)
+            throw new InvalidDataException("The actual follow-up belongs to a different Task/Run/context.");
+        return reply;
+    }
 
     /// <summary>The limit is explicit; the returned page is not a completeness claim.</summary>
     public Task<IReadOnlyList<SpaceTaskObservation>> ReadPageAsync(
@@ -208,8 +295,13 @@ public sealed class SpaceTaskWorkspaceService(
 /// <summary>A detached read observation. OriginalAttemptRetained is not activity or command authority.</summary>
 public sealed record SpaceTaskObservation(
     Guid SpaceId, long SpaceRevision, Conversation Conversation, TaskExecutionSnapshot? Snapshot,
-    TaskExecutionProjection? Projection, bool OriginalAttemptRetained)
+    TaskExecutionProjection? Projection, bool OriginalAttemptRetained) : ITaskContextObservation
 {
+    public Guid ContextId => Conversation.Id;
+    public Guid? OriginSpaceId => SpaceId;
+    public long? OriginSpaceRevision => SpaceRevision;
+    public Conversation? OriginalConversation => Conversation;
+    public string Title => Conversation.Title;
     public TaskRunActivityObservation? Activity { get; init; }
     public bool HasObservedLiveExecution => Activity is { IsLive: true } live && Snapshot is { State: TaskExecutionLifecycle.Running } task &&
         live.TaskId == task.TaskId && live.ExecutionId == task.ExecutionId && live.ContextId == Conversation.Id &&
@@ -220,6 +312,58 @@ public sealed record SpaceTaskObservation(
         : OriginalAttemptRetained ? $"Saved task: {Snapshot.State}. Original attempt admission is retained; this is not a live activity witness."
         : $"Saved task: {Snapshot.State}. Original attempt custody is unavailable; recovery requires its owning service.";
     public string RecoveryObservation => Snapshot?.RecoveryObservation is { } recovery
+        ? $"{recovery.ReasonCode}; iterator {recovery.IteratorOutcome}; settlement {recovery.SettlementOutcome}. This does not authorize replay."
+        : "No recovery observation is recorded. Provider continuation requires its original owner.";
+}
+
+/// <summary>Common detached presentation data; none of these fields is a read or command grant.</summary>
+public interface ITaskContextObservation
+{
+    Guid ContextId { get; }
+    Guid? OriginSpaceId { get; }
+    long? OriginSpaceRevision { get; }
+    Conversation? OriginalConversation { get; }
+    string Title { get; }
+    TaskExecutionSnapshot? Snapshot { get; }
+    TaskExecutionProjection? Projection { get; }
+    TaskRunActivityObservation? Activity { get; }
+    bool HasObservedLiveExecution { get; }
+    string ExecutionObservation { get; }
+    string RecoveryObservation { get; }
+}
+
+/// <summary>An exact source-issued selection, not a permission or execution lease.
+/// The original nullable Space and absence of a conversation are retained as observed.</summary>
+public sealed class TaskContextSelection
+{
+    internal SpaceTaskWorkspaceService Issuer { get; }
+    public Guid TaskId { get; }
+    public Guid ExecutionId { get; }
+    public Guid ContextId { get; }
+    public Guid? OriginSpaceId { get; }
+    internal bool HadConversation { get; }
+    internal TaskExecutionOwnerBinding OwnerBinding { get; }
+    internal TaskContextSelection(SpaceTaskWorkspaceService issuer, Guid taskId, Guid executionId,
+        Guid contextId, Guid? originSpaceId, bool hadConversation, TaskExecutionOwnerBinding binding)
+    { Issuer = issuer; TaskId = taskId; ExecutionId = executionId; ContextId = contextId;
+      OriginSpaceId = originSpaceId; HadConversation = hadConversation; OwnerBinding = binding; }
+}
+
+public sealed record AuthorizedTaskContextPage(IReadOnlyList<AuthorizedTaskContextObservation> Tasks,
+    TaskObservationPageCursor? Next, bool HasUnavailableContexts);
+
+public sealed record AuthorizedTaskContextObservation(TaskContextSelection Selection,
+    Conversation? OriginalConversation, long? OriginSpaceRevision, string? OriginSpaceName,
+    TaskExecutionSnapshot Snapshot, TaskExecutionProjection Projection) : ITaskContextObservation
+{
+    public Guid ContextId => Selection.ContextId;
+    public Guid? OriginSpaceId => Selection.OriginSpaceId;
+    public string Title => OriginalConversation?.Title ?? Snapshot.PromptSummary;
+    // A saved state supplies no producer or active-source witness.
+    public TaskRunActivityObservation? Activity => null;
+    public bool HasObservedLiveExecution => false;
+    public string ExecutionObservation => $"Saved task: {Snapshot.State}. Current execution is not established by this observation.";
+    public string RecoveryObservation => Snapshot.RecoveryObservation is { } recovery
         ? $"{recovery.ReasonCode}; iterator {recovery.IteratorOutcome}; settlement {recovery.SettlementOutcome}. This does not authorize replay."
         : "No recovery observation is recorded. Provider continuation requires its original owner.";
 }
