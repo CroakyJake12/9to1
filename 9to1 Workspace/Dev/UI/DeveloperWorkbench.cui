@@ -81,6 +81,19 @@
         <Input id="dev-source-location" Type="Text" Value="{Binding SourceLocation}" placeholdertext="Line or line:column" accessible-name="Source line and optional column" />
         <Button id="dev-go-to-source-location" action="dev.go-to-source-location" content="Go to" accessible-name="Go to line and column in the current source draft" Interactive="{Binding CanGoToSourceLocation}" />
       </Container>
+      <Text text="Find and replace literal text" />
+      <Container Type="Wrap" CellGap="8">
+        <Input id="dev-source-find" Type="Text" Value="{Binding SourceFindQuery}" placeholdertext="Find in this draft" accessible-name="Literal text to find in the current source draft" />
+        <Input id="dev-source-find-case" Type="Checkbox" Checked="{Binding SourceFindMatchCase}" Content="Match case" accessible-name="Match literal text case" />
+        <Button id="dev-find-previous-source" action="dev.find-previous-source" content="Find previous" Interactive="{Binding CanFindSourceText}" />
+        <Button id="dev-find-next-source" action="dev.find-next-source" content="Find next" Interactive="{Binding CanFindSourceText}" />
+      </Container>
+      <Container Type="Wrap" CellGap="8">
+        <Input id="dev-source-replacement" Type="Text" Value="{Binding SourceReplaceText}" placeholdertext="Replacement text" accessible-name="Literal replacement text; an empty value removes the found text" />
+        <Button id="dev-replace-source-match" action="dev.replace-source-match" content="Replace found match" Interactive="{Binding CanReplaceSourceMatch}" />
+        <Button id="dev-replace-all-source" action="dev.replace-all-source" content="Replace all in draft" Interactive="{Binding CanFindSourceText}" />
+      </Container>
+      <Text text="{Binding SourceFindStatus}" text-wrapping="Wrap" accessible-name="Current draft find and replace result" />
       <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" TextSelection="{Binding EditorTextSelection}" Multiline="true" Interactive="{Binding CanEditSource}" />
       <Container Type="Wrap">
         <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
