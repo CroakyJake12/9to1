@@ -246,14 +246,16 @@ public sealed class BoardsEditorTests
         Assert.Equal(expected.Length, components.Length);
         var toolbarHost = components.Single(component => component.Name == "ToolbarHost");
         Assert.True(toolbarHost.Properties.TryGetValue("HorizontalScrolling", out var horizontalScrolling)
-            && horizontalScrolling is CuiLiteralValue { Value: "true" });
+            && horizontalScrolling is CuiLiteralValue horizontalLiteral
+            && bool.TryParse(horizontalLiteral.Value, out var horizontalEnabled) && horizontalEnabled);
         Assert.True(toolbarHost.Properties.TryGetValue("VerticalScrolling", out var verticalScrolling)
-            && verticalScrolling is CuiLiteralValue { Value: "false" });
+            && verticalScrolling is CuiLiteralValue verticalLiteral
+            && bool.TryParse(verticalLiteral.Value, out var verticalEnabled) && !verticalEnabled);
         var boardSwitcher = components.Single(component => component.Name == "BoardSwitcher");
         Assert.True(boardSwitcher.Properties.TryGetValue("IconSource", out var boardIcon)
             && boardIcon is CuiLiteralValue { Value: "icon:boards" });
-        Assert.True(boardSwitcher.Properties.TryGetValue("Content", out var boardTitle)
-            && boardTitle is CuiBindingValue { Path: "BoardTitle" });
+        Assert.True(boardSwitcher.Properties.TryGetValue("IsEnabled", out var boardMenuEnabled)
+            && boardMenuEnabled is CuiBindingValue { Path: "CanOpenBoardMenu" });
         var searchBox = components.Single(component => component.Name == "NavSearchBox");
         Assert.True(searchBox.Properties.TryGetValue("cornerradius", out var searchRadius)
             && searchRadius is CuiLiteralValue { Value: "18" });
