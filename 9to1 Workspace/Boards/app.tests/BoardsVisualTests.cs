@@ -266,14 +266,16 @@ public sealed class BoardsVisualTests
                 var frame = Assert.Single(grid.Children);
                 var tableFrame = Flatten(host).OfType<Border>().Single(candidate => ReferenceEquals(candidate.Child, grid));
                 var editor = Assert.Single(Flatten(frame).OfType<TextBox>());
-                return (grid, frame, tableFrame, editor);
+                return (RowSpan: Grid.GetRowSpan(frame), ColumnSpan: Grid.GetColumnSpan(frame),
+                    TableWidth: tableFrame.Width, TableAlignment: tableFrame.HorizontalAlignment,
+                    Text: editor.Text, Weight: editor.FontWeight);
             });
-            Assert.Equal(2, Grid.GetRowSpan(result.frame));
-            Assert.Equal(2, Grid.GetColumnSpan(result.frame));
-            Assert.Equal(420, result.tableFrame.Width);
-            Assert.Equal(HorizontalAlignment.Center, result.tableFrame.HorizontalAlignment);
-            Assert.Equal("Merged title", result.editor.Text);
-            Assert.Equal(FontWeight.Bold, result.editor.FontWeight);
+            Assert.Equal(2, result.RowSpan);
+            Assert.Equal(2, result.ColumnSpan);
+            Assert.Equal(420, result.TableWidth);
+            Assert.Equal(HorizontalAlignment.Center, result.TableAlignment);
+            Assert.Equal("Merged title", result.Text);
+            Assert.Equal(FontWeight.Bold, result.Weight);
         }
         finally { await session.DisposeAsync(); }
     }
