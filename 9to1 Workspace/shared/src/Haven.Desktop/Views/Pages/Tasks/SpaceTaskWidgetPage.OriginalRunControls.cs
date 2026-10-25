@@ -28,6 +28,7 @@ public sealed partial class SpaceTaskWidgetPage
         {
             "task.pause" => available.CanPause,
             "task.stop" => available.CanStop,
+            "task.end-pass" => available.CanEndPass,
             "task.resume-original" => available.CanResumeUnstartedOriginal || available.CanResumeOriginalToolCheckpoint
                 || available.CanResumeColdOriginal,
             _ => false
@@ -68,6 +69,7 @@ public sealed partial class SpaceTaskWidgetPage
             if (_runControlCommand is { HasLiveWork: true })
                 throw new InvalidOperationException("A SAME original run control is already pending.");
             _runControlCommand = original; // Complete factor Task already published before any owner callback.
+            if (command == "task.end-pass") _runControlAvailability = null; // Unknown terminal ACK cannot restore stale Resume.
         }
         original.DemandPublication();
         var current = await original.AwaitAsync(InvokeOriginalSource(() =>
@@ -103,7 +105,10 @@ public sealed partial class SpaceTaskWidgetPage
         {
             var actual = InvokeOriginalSource(() => command == "task.pause"
                 ? _canonical.PauseOriginalRunAsync(same.TaskId, same.ExecutionId, commandToken)
-                : _canonical.StopOriginalRunAsync(same.TaskId, same.ExecutionId, commandToken));
+                : command == "task.end-pass"
+                    ? _canonical.EndPausedOriginalRunAsync(new ProviderExecutionContext(captured.TaskId, captured.ContextId,
+                        captured.ExecutionId, captured.Attempts.LastOrDefault()?.Id, captured.PersistenceRevision), commandToken)
+                    : _canonical.StopOriginalRunAsync(same.TaskId, same.ExecutionId, commandToken));
             var reply = await original.AwaitAsync(actual).ConfigureAwait(false);
             AcknowledgedOriginalRunControl = reply; // Real owner ACK survives a later UI callback failure.
             DemandSameRunControlContext(reply.CanonicalTaskContext, same);

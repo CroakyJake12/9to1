@@ -39,11 +39,12 @@ public sealed partial class TaskExecutionCoordinator
             RequireRun(current, expectedExecutionId);
             await ValidateOriginalProcessCommandAsync(current, "task:observe-original-controls", token).ConfigureAwait(false);
             var live = TryGetOriginalRunControlSource(current);
-            var canWithdraw = live is not null && current.State is not (TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled);
+            var canWithdraw = live is not null && !IsOriginalPassEnding(live) && current.State is not (TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled);
             var canResumeCold = live is null && await HasOriginalColdRunResumeBoundaryAsync(stage, current, token).ConfigureAwait(false);
             return new TaskRunOriginalRunControlAvailability(OriginalRunControlContext(current), canWithdraw, canWithdraw,
                 live is not null && HasOriginalUnstartedRunResume(live, current))
             {
+                CanEndPass = live is not null && HasOriginalEndPassBoundary(live, current, out _),
                 CanResumeOriginalToolCheckpoint = live is not null && HasOriginalToolCheckpointRunResume(live, current),
                 CanResumeColdOriginal = canResumeCold
             };
@@ -76,6 +77,7 @@ public sealed partial class TaskExecutionCoordinator
         await ValidateOriginalProcessCommandAsync(current, kind == TaskRunOriginalRunControlKind.Pause ? "task:pause-original" : "task:stop-original", token).ConfigureAwait(false);
         var original = TryGetOriginalRunControlSource(current)
             ?? throw new InvalidOperationException("The SAME live original task input/producer is unavailable; durable IDs cannot create a stop or recovery witness.");
+        DemandOriginalPassMayResume(original); // Terminal End Pass excludes all further run controls.
         var producer = original.OriginalProcessProducer!;
         producer.DemandExternalOriginalJoin();
         if (current.Attempts.LastOrDefault() is { State: TaskRunAttemptState.Admitted or TaskRunAttemptState.Running } attempt)
@@ -93,6 +95,7 @@ public sealed partial class TaskExecutionCoordinator
         OriginalRunControl? prior = null;
         lock (_runControlGate)
         {
+            DemandOriginalPassMayResume(original);
             var controls = _originalRunControls.GetValue(original, static _ => new OriginalRunControls());
             if (controls.Requests.TryGetValue(kind, out var retained)) prior = retained;
             if (prior is not null) request = prior;
@@ -274,7 +277,7 @@ public sealed partial class TaskExecutionCoordinator
 
     private bool HasOriginalUnstartedRunResume(TaskRunInvocationCustody original, TaskExecutionSnapshot current)
     {
-        if (current.State != TaskExecutionLifecycle.Suspended || original.OriginalContinuationFactory is null
+        if (IsOriginalPassEnding(original) || current.State != TaskExecutionLifecycle.Suspended || original.OriginalContinuationFactory is null
             || original.OriginalInputCurrentness is null || original.OriginalChatOwner is null
             || original.OriginalDelegatedChildLink is not null || original.AttemptAdmissionInvoked || original.OriginalProviderInvocationInvoked
             || current.Attempts.Count != 0 || !original.CanReturnPublishedPermissionRefusal(current)) return false;

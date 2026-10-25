@@ -77,6 +77,19 @@ public sealed partial class ChatSessionService
             throw new InvalidDataException("The original pause acknowledgement belongs to another task operation.");
         return result;
     }
+    public async Task<TaskRunOriginalRunControlResult> EndObservedTaskComposerPassAsync(
+        TaskRunOriginalInitialChatObservationLease sameObservation, TaskRunOriginalRunControlAvailability observed,
+        CancellationToken commandToken)
+    {
+        ArgumentNullException.ThrowIfNull(observed);
+        var same = RequireObservedTaskComposerIdentity(sameObservation);
+        await safety.EnsureMayActAsync(same.Context.ContextId, "chat.end-pass", commandToken).ConfigureAwait(false);
+        var current = await same.Owner.GetOriginalRunControlAvailabilityAsync(same.Context.TaskId, same.Context.ExecutionId, commandToken).ConfigureAwait(false);
+        if (current.CanonicalTaskContext != observed.CanonicalTaskContext || !current.CanEndPass ||
+            current.CanonicalTaskContext.ContextId != sameObservation.ConversationId)
+            throw new InvalidOperationException("The original paused pass changed or cannot yet be ended safely.");
+        return await same.Owner.EndPausedOriginalRunAsync(observed.CanonicalTaskContext, commandToken).ConfigureAwait(false);
+    }
     public async Task<TaskRunOriginalResumeObservationLease> StartObservedTaskComposerResumeAsync(
         TaskRunOriginalInitialChatObservationLease sameObservation, TaskRunOriginalRunControlAvailability observed,
         CancellationToken observationToken)

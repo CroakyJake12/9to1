@@ -35,6 +35,7 @@ internal interface IChatComposerTaskActions
     bool CanStop { get; }
     bool CanPause => false;
     bool IsPassPaused => false;
+    bool CanEndPass => false;
     bool CanResume => false;
     bool HasSendModePreference => false;
     TaskFollowUpMode? PreferredSendMode => null;
@@ -50,6 +51,7 @@ internal interface IChatComposerTaskActions
         return steer ? Steer() : Queue();
     }
     ValueTask Pause() => ValueTask.FromException(new NotSupportedException("This task source has no original pause command."));
+    ValueTask EndPass() => ValueTask.FromException(new NotSupportedException("This task source has no original End Pass command."));
     ValueTask Resume() => ValueTask.FromException(new NotSupportedException("This task source has no original resume command."));
     ValueTask Steer();
     ValueTask Queue();
@@ -86,6 +88,7 @@ public interface IChatComposerSource
     bool CanSteer => false;
     bool CanPause => false;
     bool IsPassPaused => false;
+    bool CanEndPass => false;
     bool CanResume => false;
     bool CanSend { get; }
     bool IsEditing { get; }
@@ -96,6 +99,7 @@ public interface IChatComposerSource
     ValueTask Stop();
     ValueTask Steer() => ValueTask.FromException(new NotSupportedException("This source has no canonical task steering command."));
     ValueTask Pause() => ValueTask.FromException(new NotSupportedException("This source has no canonical task pause command."));
+    ValueTask EndPass() => ValueTask.FromException(new NotSupportedException("This source has no canonical End Pass command."));
     ValueTask Resume() => ValueTask.FromException(new NotSupportedException("This source has no canonical task continuation command."));
     ValueTask Add();
     ValueTask OpenSettings();
@@ -140,12 +144,14 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         var actions = new List<CuiActionShelfItem>(4);
         CuiActionShelfItem Item(string id, string command, string label, string icon, string tooltip) =>
             new(id, command, label, "avares://Haven/Assets/" + (icon == "send" ? "send" : "composer-" + icon) + ".svg", tooltip, ContextIdentity: _source.ActionIdentity);
-        if (_source.CanResume)
+        if (_source.CanResume || _source.IsPassPaused || _source.CanEndPass)
         {
-            actions.Add(Item("resume", "composer.resume", "Resume", "resume", "Continue this same task from its approved continuation boundary"));
-            return actions; // End Pass requires its own genuine terminal owner; no filler.
+            if (_source.CanResume)
+                actions.Add(Item("resume", "composer.resume", "Resume", "resume", "Continue this same task from its approved continuation boundary"));
+            if (_source.CanEndPass)
+                actions.Add(Item("end-pass", "composer.end-pass", "End Pass", "stop", "End this acknowledged paused pass; retain draft and queued content"));
+            return actions; // Inspection is never an invented continuation.
         }
-        if (_source.IsPassPaused) return actions; // Inspection is not an available continuation.
         if (_source.CanSteer)
             actions.Add(Item("steer", "composer.steer", "Steer", "steer", "Send this instruction to the current task"));
         if (_source.CanPause)
@@ -300,6 +306,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             "composer.send" => !_source.IsSending && _source.HasPendingMessage && _source.CanSend,
             "composer.queue" => _source.CanQueue,
             "composer.voice" => _source.CanEnterVoice,
+            "composer.end-pass" => _source.CanEndPass,
             "composer.stop" => _source.CanStop,
             "composer.steer" => _source.CanSteer,
             "composer.pause" => _source.CanPause,
@@ -327,6 +334,8 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return _source.Send();
             case "composer.queue" when IsActionAvailable(command) == true:
                 return _source.Queue();
+            case "composer.end-pass" when _source.CanEndPass:
+                return _source.EndPass();
             case "composer.voice" when _source.CanEnterVoice:
                 return _source.EnterVoice();
             case "composer.stop" when _source.CanStop:

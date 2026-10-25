@@ -2,13 +2,14 @@ using Haven.Core;
 
 namespace Haven.Application;
 
-public enum TaskRunOriginalRunControlKind { Pause = 0, Stop = 1 }
-public enum TaskRunOriginalRunControlDisposition { Suspended = 0, CancelledAfterOriginalClose = 1, AlreadyCompletedByOriginal = 2 }
+public enum TaskRunOriginalRunControlKind { Pause = 0, Stop = 1, EndPass = 2 }
+public enum TaskRunOriginalRunControlDisposition { Suspended = 0, CancelledAfterOriginalClose = 1, AlreadyCompletedByOriginal = 2, EndedAfterOriginalPause = 3 }
 
 /// <summary>Detached command availability only. Every operation freshly validates the original owner.</summary>
 public sealed record TaskRunOriginalRunControlAvailability(
     ProviderExecutionContext CanonicalTaskContext, bool CanPause, bool CanStop, bool CanResumeUnstartedOriginal)
 {
+    public bool CanEndPass { get; init; }
     public bool CanResumeOriginalToolCheckpoint { get; init; }
     /// <summary>A source-authenticated durable cold boundary is present. This is an
     /// observation only; cold resume must still claim the same journal entry and

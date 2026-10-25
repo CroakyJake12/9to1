@@ -93,6 +93,7 @@ public sealed partial class TaskExecutionCoordinator
         TaskCompletionSource start;
         lock (_invocationAdmissionGate)
         {
+            DemandOriginalPassMayResume(original);
             if (_unstartedContinuations.TryGetValue(inspection.ActualSnapshot.TaskId, out var existing))
             {
                 if (!ReferenceEquals(existing.Original, original) || !ReferenceEquals(existing.SameChat, sameChat) || existing.Claimed)
@@ -421,6 +422,7 @@ public sealed partial class TaskExecutionCoordinator
         token.ThrowIfCancellationRequested();
         lock (_invocationAdmissionGate)
         {
+            DemandOriginalPassMayResume(binding.Original);
             if (!ReferenceEquals(binding.Issuer, this) || !ReferenceEquals(binding.SameChat, sameChat)
                 || binding.Preparation is not { IsCompletedSuccessfully: true }
                 || !ReferenceEquals(binding.Preparation.Result, binding) || binding.Claimed
