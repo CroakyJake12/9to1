@@ -107,8 +107,14 @@ public sealed class HomeModelPickerCuiProjectionTests
             new("provider", "model", null, true, 0),
             new("other", "model", "revision", false, 1))]);
         surface.ApplyState(state with { Preview = new("chat.active", 4, null, "Unavailable", ["same", "same"]) });
+        surface.ApplyCatalogue(new HomeModelCataloguePage(
+            [new("provider", "catalogue-model", null, "Catalogue model", "Provider", true,
+                new HashSet<string>(["Chat"], StringComparer.Ordinal), 32768, "Ready", "Local", null)], 0, 1, false, 3),
+            "Authorised catalogue loaded.");
 
         Walk(surface.Document.Components, surface);
+        Assert.True(Value<bool>(surface, "HasCatalogue"));
+        Assert.Equal("Authorised catalogue loaded.", Value<string>(surface, "CatalogueStatus"));
         surface.ApplyState(State([]));
         Walk(surface.Document.Components, surface);
     }

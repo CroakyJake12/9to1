@@ -1,6 +1,8 @@
 <Cui id="home-model-picker" product="9-1" version="1">
   <Actions>
     <Action name="Refresh" command="Refresh" parameter="{Binding RefreshSelection}" />
+    <Action name="RefreshCatalogue" command="RefreshCatalogue" />
+    <Action name="AddCatalogueCandidate" command="AddCatalogueCandidate" parameter="{Binding model.Selection}" />
     <Action name="SelectCurrentRoute" command="SelectRoute" parameter="{Binding CurrentRouteSelection}" />
     <Action name="SelectRoute" command="SelectRoute" parameter="{Binding route.Selection}" />
     <Action name="ChatCategory" command="SelectCategory" parameter="chat" />
@@ -45,6 +47,26 @@
           <Button id="category-video" action="VideoCategory" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
         </Container>
         <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" />
+        <Container id="model-catalogue" background="{Resource CuiPanelBrush}" padding="14" margin="0 8 8 8" Type="Vertical Stack" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+          <Container Type="Horizontal Stack">
+            <Text id="model-catalogue-title" text="Add a model from the current authorised catalogue" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+            <Button id="model-catalogue-refresh" action="RefreshCatalogue" content="Refresh catalogue" margin="8 0 0 0" accessible-name="Refresh the authorised model catalogue" />
+          </Container>
+          <Text id="model-catalogue-status" text="{Binding CatalogueStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 6" />
+          <If condition="{Binding HasCatalogue}">
+            <Repeat Source="{Binding Catalogue}" As="model" Key="{Binding model.Identity}">
+              <Container id="model-catalogue-entry" margin="0 5 0 0" Type="Horizontal Stack">
+                <Container width="410" Type="Vertical Stack">
+                  <Text text="{Binding model.DisplayName}" foreground="{Resource CuiTextBrush}" />
+                  <Text text="{Binding model.ProviderName}" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding model.Locality}" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding model.Capabilities}" foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button action="AddCatalogueCandidate" content="Add to route" margin="8 0 0 0" accessible-name="Add this catalogue model to the route draft" />
+              </Container>
+            </Repeat>
+          </If>
+        </Container>
         <If condition="{Binding HasPendingApproval}">
           <Text id="model-picker-pending-approval" text="Change pending review in Home" foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 8" />
         </If>

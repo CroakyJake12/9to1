@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using HavenOS.Home;
 using HavenOS.Home.Core;
@@ -14,14 +15,25 @@ public sealed class HomeModelPickerCuiControllerTests
 {
     private sealed class StubProvider(HomeModelPickerSnapshot snapshot) : IHomeModelPickerFeatureProvider
     {
+        public HomeModelPickerSnapshot Snapshot { get; private set; } = snapshot;
+        public HomeModelCataloguePage Catalogue { get; init; } = new([], 0, 20, false, 1);
+        public HomeModelRouteEdit? LastEdit { get; private set; }
         public Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken ct = default) =>
             Task.FromResult(new HomeCoreOperationResult<object>(false, "AuditNotOwned", "This host does not own the original route audit."));
         public Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null, CancellationToken ct = default) =>
-            Task.FromResult(new HomeCoreOperationResult<HomeModelCataloguePage>(true, "Ready", "Current authorised provider catalogue.", new([], 0, 20, false, 0)));
+            Task.FromResult(new HomeCoreOperationResult<HomeModelCataloguePage>(true, "Ready", "Current authorised provider catalogue.", Catalogue));
         public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> GetSnapshotAsync(string scope, string category, CancellationToken ct = default) =>
-            Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(true, "Ready", "Current personal Home route.", snapshot));
-        public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit, CancellationToken ct = default) =>
-            Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(false, "PermissionDenied", "n/a"));
+            Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(true, "Ready", "Current personal Home route.", Snapshot));
+        public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit, CancellationToken ct = default)
+        {
+            LastEdit = edit;
+            Snapshot = Snapshot with
+            {
+                Revision = edit.Route.Version,
+                Routes = Snapshot.Routes.Select(route => route.RouteId == edit.Route.RouteId ? edit.Route : route).ToArray()
+            };
+            return Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(true, "Saved", "Saved.", Snapshot));
+        }
         public Task<HomeCoreOperationResult<HomeModelRoutePreview>> PreviewResolutionAsync(HomeModelRoutePreviewRequest request, CancellationToken ct = default) =>
             Task.FromResult(new HomeCoreOperationResult<HomeModelRoutePreview>(false, "PermissionDenied", "n/a"));
     }
@@ -99,6 +111,57 @@ public sealed class HomeModelPickerCuiControllerTests
     }
 
     [Fact]
+    public async Task Catalogue_refresh_exposes_authorised_model_and_adds_only_that_entry_to_route_draft()
+    {
+        var route = new HomeModelRouteContract("chat.active", 7, "User", "chat", null, null,
+            [new("provider", "existing", null, true, 0)], JsonSerializer.SerializeToElement(new { }));
+        var catalogueEntry = new HomeModelPickerCatalogueEntry("provider-b", "model-b", null,
+            "Friendly model B", "Provider B", true, new HashSet<string>(["Chat", "Tools"], StringComparer.Ordinal),
+            32768, "Ready", "Local", null);
+        var provider = new StubProvider(new HomeModelPickerSnapshot(7, "User", "chat", [route]))
+        {
+            Catalogue = new([catalogueEntry], 0, 1, false, 8)
+        };
+        var surface = new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>"));
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(provider), surface);
+        await controller.OpenAsync("User", "chat");
+
+        var loaded = await controller.ExecuteAsync(new(HomeModelPickerAction.RefreshCatalogue));
+
+        Assert.True(loaded.Succeeded);
+        Assert.True(Value<bool>(surface, "HasCatalogue"));
+        var row = Assert.Single(surface.Projection.Catalogue);
+        Assert.Equal("Friendly model B", Value<string>(row, "DisplayName"));
+        Assert.Equal("Local", Value<string>(row, "Locality"));
+        Assert.Equal("Chat · Tools", Value<string>(row, "Capabilities"));
+
+        var unknown = await controller.ExecuteAsync(new(HomeModelPickerAction.AddCatalogueCandidate,
+            ProviderId: "not-listed", ModelId: "model-b"));
+
+        Assert.False(unknown.Succeeded);
+        Assert.Equal("CatalogueEntryNotLoaded", unknown.Code);
+        Assert.Equal(new[] { "existing" }, surface.State.Candidates.Select(candidate => candidate.ModelId));
+
+        var added = await controller.ExecuteAsync(new(HomeModelPickerAction.AddCatalogueCandidate,
+            ProviderId: "provider-b", ModelId: "model-b"));
+
+        Assert.True(added.Succeeded);
+        Assert.Equal(new[] { ("existing", 0), ("model-b", 1) },
+            surface.State.Candidates.Select(candidate => (candidate.ModelId, candidate.Order)));
+        Assert.True(surface.State.HasUnsavedChanges);
+        Assert.Equal(7, surface.State.Snapshot!.Revision); // adding is draft-only; canonical save remains explicit
+
+        var saved = await controller.ExecuteAsync(new(HomeModelPickerAction.SaveRoute));
+
+        Assert.True(saved.Succeeded);
+        Assert.NotNull(provider.LastEdit);
+        Assert.Equal(7, provider.LastEdit!.ExpectedRevision);
+        Assert.Equal(new[] { ("existing", 0), ("model-b", 1) },
+            provider.LastEdit.Route.Candidates.Select(candidate => (candidate.ModelId, candidate.Order)));
+        Assert.False(surface.State.HasUnsavedChanges);
+    }
+
+    [Fact]
     public async Task SetReasoningLevel_action_dispatches_to_editor_and_marks_unsaved_draft()
     {
         var route = new HomeModelRouteContract("chat.active", 4, "User", "chat", null, null,
@@ -155,4 +218,10 @@ public sealed class HomeModelPickerCuiControllerTests
 
     private static HomeModelRouteContract Route(string id, params HomeModelRouteCandidate[] candidates) =>
         new(id, 4, "User", "chat", null, null, candidates, JsonSerializer.SerializeToElement(new { }));
+
+    private static T Value<T>(ICuiBindingContext context, string path)
+    {
+        Assert.True(context.TryGetValue(path, out var value));
+        return Assert.IsType<T>(value);
+    }
 }
