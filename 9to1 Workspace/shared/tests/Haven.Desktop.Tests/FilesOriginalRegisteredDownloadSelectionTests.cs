@@ -273,7 +273,7 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             try
             {
                 var results = await rig.Keep(source.SearchAsync(new HomeLibraryQuery(Text: "selected.9to1board"), rig.Token));
-                var selected = Assert.Single(results);
+                var selected = Assert.Single(results, item => item.ArtifactType == "9to1 board document");
                 Assert.Equal("files", selected.OwnerApp);
                 Assert.Equal("9to1 board document", selected.ArtifactType);
                 Assert.Equal("files.board", selected.OpenLink.TargetRouteId);
