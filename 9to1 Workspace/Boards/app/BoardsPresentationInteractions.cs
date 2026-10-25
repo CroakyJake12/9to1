@@ -14,7 +14,7 @@ namespace CakeOS.Apps.Boards.App;
 /// <summary>Shared native pointer owner for standalone and embedded Boards surfaces.</summary>
 public sealed class BoardInkInteractionController : IDisposable
 {
-    private readonly Canvas _overlay;
+    private readonly Panel _overlay;
     private readonly BoardsViewModel _viewModel;
     private bool _drawing;
     private bool _disposed;
@@ -30,7 +30,7 @@ public sealed class BoardInkInteractionController : IDisposable
     private readonly EventHandler<SizeChangedEventArgs> _resized;
     private IPointer? _capturedPointer;
 
-    public BoardInkInteractionController(Canvas overlay, BoardsViewModel viewModel)
+    public BoardInkInteractionController(Panel overlay, BoardsViewModel viewModel)
     {
         _overlay = overlay ?? throw new ArgumentNullException(nameof(overlay));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -147,23 +147,14 @@ public sealed class BoardInkInteractionController : IDisposable
         {
             var point = ToOverlayCoordinates(_points[0].X, _points[0].Y, _drawingPanX, _drawingPanY, _drawingZoom);
             var diameter = Math.Clamp(_drawingWidth * _points[0].Pressure, 1, 48);
-            var dot = new Ellipse { Tag = "live-ink", Width = diameter, Height = diameter, Fill = BrushForInk(_drawingColor) };
-            Canvas.SetLeft(dot, point.X - diameter / 2);
-            Canvas.SetTop(dot, point.Y - diameter / 2);
-            _overlay.Children.Add(dot);
+            BoardInkOverlayRenderer.AddLiveDot(_overlay, point, diameter, BrushForInk(_drawingColor));
             return;
         }
         if (_points.Count < 2) return;
-        _overlay.Children.Add(new Polyline
-        {
-            Tag = "live-ink",
-            Points = _points.Select(point => ToOverlayCoordinates(point.X, point.Y, _drawingPanX, _drawingPanY, _drawingZoom)).ToList(),
-            Stroke = BrushForInk(_drawingColor),
-            StrokeThickness = Math.Clamp(_drawingWidth, 1, 32),
-            StrokeLineCap = PenLineCap.Round,
-            StrokeJoin = PenLineJoin.Round,
-            Opacity = string.Equals(_drawingTool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? 0.42 : 1
-        });
+        BoardInkOverlayRenderer.AddLiveStroke(_overlay,
+            _points.Select(point => ToOverlayCoordinates(point.X, point.Y, _drawingPanX, _drawingPanY, _drawingZoom)).ToArray(),
+            BrushForInk(_drawingColor), Math.Clamp(_drawingWidth, 1, 32),
+            string.Equals(_drawingTool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? 0.42 : 1);
     }
 
     private async Task CommitStrokeAsync(string pageId, IReadOnlyList<(double X, double Y, double Pressure)> points,
@@ -456,7 +447,7 @@ public sealed class BoardsEmbeddedSurfaceLifecycle : IDisposable
     {
         if (_disposed || IsReady || !_root.IsAttachedToVisualTree()) return;
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(_root, "BlocksHost") is null ||
-            BoardsCuiControlFinder.FindByAutomationId<Canvas>(_root, "InkOverlayLayer") is not { } ink)
+            BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "InkOverlayLayer") is not { } ink)
             return;
 
         _inputOwner = new BoardsTextAndKeyboardOwner(_root, _viewModel);

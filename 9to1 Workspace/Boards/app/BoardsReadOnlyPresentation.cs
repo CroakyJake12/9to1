@@ -110,7 +110,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
         ViewModel.RefreshCuiContext();
-        if (BoardsCuiControlFinder.FindByAutomationId<Canvas>(Content, "InkOverlayLayer") is { } ink)
+        if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "InkOverlayLayer") is { } ink)
             await (_surfaceLifecycle!.InkInteraction?.RenderAsync() ?? BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel));
     }
 
