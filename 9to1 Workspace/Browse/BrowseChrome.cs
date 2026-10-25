@@ -123,7 +123,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         _profilePaths = paths;
         _data = new BrowserDataService(paths);
         _tabSessionPersistence = tabSessionPersistence;
-        _permissionStores[homeProfileId] = new BrowserSitePermissionStore(paths);
+        _permissionStores[homeProfileId] = new BrowserSitePermissionStore(paths, homeProfileId, homeProfileId);
         _privateProfiles = new BrowserPrivateProfileManager(paths.BrowserProfileDirectory);
         _enginePreferences = new BrowseEnginePreferencesStore(paths);
         _enginePolicy = BrowseEngineSelectionPolicy.Restore(preferences);
@@ -136,6 +136,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     }
 
     public string StandardProfileDirectory { get; }
+    public bool HasUnassignedLegacyProfileData => Haven.Browser.BrowserProfileStorage.HasUnassignedLegacyData(_profilePaths);
     public event EventHandler<BrowseChromeSnapshot>? StateChanged;
     /// <summary>Raised only after ordinary unsaved-work preflight accepted retirement.
     /// Observers cannot prevent the original resources from being drained.</summary>

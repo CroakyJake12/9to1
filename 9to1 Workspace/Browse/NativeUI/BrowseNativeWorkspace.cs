@@ -119,6 +119,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "IsSettings" => selected.NativePage == BrowserNativePage.Settings,
             "RecordHistory" => _chrome.HistoryRecordingEnabled,
             "RestoreTabs" => _chrome.TabRestoreEnabled,
+            "HasUnassignedLegacyProfileData" => _chrome.HasUnassignedLegacyProfileData,
+            "LegacyProfileDataStatus" => _chrome.HasUnassignedLegacyProfileData
+                ? "Older browser storage has no verified profile owner. It is preserved and isolated until reviewed; no account data was imported."
+                : string.Empty,
             "NativeTitle" => selected.Title,
             "EmptyBookmarks" => _bookmarkRows.Length == 0,
             "EmptyHistory" => _snapshot.History.Count == 0,

@@ -145,6 +145,7 @@
                 <Input Type="Switch" id="BrowseRestoreTabsSwitch" Checked="{Binding RestoreTabs, Mode=TwoWay}" Interactive="{Binding Can.EnableTabRestore}" AccessibleName="Restore tabs on startup" />
               </Container>
               <Text FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap">Applies the next time Haven starts. Your current tabs stay open.</Text>
+              <Text id="BrowseUnassignedLegacyProfileData" IsVisible="{Binding HasUnassignedLegacyProfileData}" Text="{Binding LegacyProfileDataStatus}" TextWrapping="Wrap" />
             </Container>
           </Container>
         </Container>

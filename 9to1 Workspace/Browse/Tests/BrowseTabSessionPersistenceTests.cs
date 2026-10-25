@@ -121,7 +121,7 @@ public sealed partial class BrowseNativeOwnershipTests
         var legacyOrigin = new Uri("https://legacy.example/");
         var currentOrigin = new Uri("https://one.example/");
         var otherOrigin = new Uri("https://one.example/");
-        using (var legacy = new BrowserSitePermissionStore(paths))
+        using (var legacy = new BrowserSitePermissionStore(paths, currentProfile, currentProfile))
             await legacy.SetDecisionAsync(legacyOrigin, BrowserSitePermissionKind.Camera,
                 BrowserSitePermissionDecision.Deny, default);
         await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
@@ -164,6 +164,100 @@ public sealed partial class BrowseNativeOwnershipTests
         Assert.Equal(BrowserSitePermissionDecision.Deny, restarted.ObserveOriginPermission(otherId,
             restarted.ObserveOriginalEngine(otherId)!, otherOrigin, BrowserSitePermissionKind.Camera));
         Assert.DoesNotContain(restarted.State.Permissions, permission => permission.Origin == "https://legacy.example");
+    }
+
+    [Fact]
+    public async Task Legacy_browser_storage_stays_with_its_recorded_profile_when_home_profile_changes()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        const string profileA = "legacy-owner-a"; const string profileB = "new-home-profile-b";
+        var origin = new Uri("https://shared-origin.example/"); var tabA = Guid.NewGuid(); var tabB = Guid.NewGuid();
+        var onlyA = new BrowseTabSessionProjection([
+            new(tabA, "A", origin.AbsoluteUri, BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow)
+            { ProfileId = profileA }
+        ], tabA);
+        string legacyBytes; string legacyEngineDirectory;
+        await using (var firstA = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: profileA,
+            tabSessionPersistence: new TabSessionFixture(onlyA)))
+        {
+            legacyEngineDirectory = factory.Requests[0].ProfileDirectory;
+            Assert.Equal(Path.Combine(paths.BrowserProfileDirectory, "engines", "chromium"), legacyEngineDirectory);
+            await firstA.SetPermissionAsync(BrowserSitePermissionKind.Camera, BrowserSitePermissionDecision.Allow);
+            Assert.Equal(BrowserSitePermissionDecision.Allow, firstA.ObserveOriginPermission(tabA,
+                firstA.ObserveOriginalEngine(tabA)!, origin, BrowserSitePermissionKind.Camera));
+        }
+        var permissionFile = Path.Combine(paths.DataDirectory, "browser-site-permissions.json");
+        legacyBytes = Convert.ToBase64String(await File.ReadAllBytesAsync(permissionFile));
+
+        var bothProfiles = new BrowseTabSessionProjection([
+            new(tabA, "A", origin.AbsoluteUri, BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow)
+            { ProfileId = profileA },
+            new(tabB, "B", origin.AbsoluteUri, BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow)
+            { ProfileId = profileB }
+        ], tabB);
+        await using (var homeB = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: profileB,
+            tabSessionPersistence: new TabSessionFixture(bothProfiles)))
+        {
+            Assert.Equal(BrowserSitePermissionDecision.Ask, homeB.ObserveOriginPermission(tabB,
+                homeB.ObserveOriginalEngine(tabB)!, origin, BrowserSitePermissionKind.Camera));
+            Assert.Empty(homeB.State.Permissions);
+            Assert.NotEqual(legacyEngineDirectory, factory.Requests[^1].ProfileDirectory);
+            Assert.StartsWith(Path.Combine(paths.BrowserProfileDirectory, "profiles") + Path.DirectorySeparatorChar,
+                factory.Requests[^1].ProfileDirectory, StringComparison.Ordinal);
+            await homeB.SelectTabAsync(tabA);
+            Assert.Equal(BrowserSitePermissionDecision.Allow, homeB.ObserveOriginPermission(tabA,
+                homeB.ObserveOriginalEngine(tabA)!, origin, BrowserSitePermissionKind.Camera));
+            Assert.Contains(homeB.State.Permissions, item => item.Decision == BrowserSitePermissionDecision.Allow);
+        }
+
+        Assert.Equal(legacyBytes, Convert.ToBase64String(await File.ReadAllBytesAsync(permissionFile)));
+        await using var homeAAgain = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: profileA,
+            tabSessionPersistence: new TabSessionFixture(onlyA));
+        Assert.Equal(legacyEngineDirectory, factory.Requests[^1].ProfileDirectory);
+        Assert.Equal(BrowserSitePermissionDecision.Allow, homeAAgain.ObserveOriginPermission(tabA,
+            homeAAgain.ObserveOriginalEngine(tabA)!, origin, BrowserSitePermissionKind.Camera));
+    }
+
+    [Fact]
+    public void Unattributed_legacy_data_is_reported_and_never_autoassigned_to_a_profile()
+    {
+        var paths = new PreservedPaths();
+        using (var legacy = new BrowserSitePermissionStore(paths))
+            legacy.SetDecisionAsync(new Uri("https://legacy.example/"), BrowserSitePermissionKind.Camera,
+                BrowserSitePermissionDecision.Allow, default).GetAwaiter().GetResult();
+        var original = File.ReadAllBytes(Path.Combine(paths.DataDirectory, "browser-site-permissions.json"));
+        Assert.True(BrowserProfileStorage.HasUnassignedLegacyData(paths));
+        var profileDirectory = BrowserProfileStorage.ResolveProfileDirectory(paths, "unverified-profile");
+        Assert.NotEqual(paths.BrowserProfileDirectory, profileDirectory);
+        Assert.True(BrowserProfileStorage.HasUnassignedLegacyData(paths));
+        Assert.Equal(original, File.ReadAllBytes(Path.Combine(paths.DataDirectory, "browser-site-permissions.json")));
+    }
+
+    [Fact]
+    public async Task Concurrent_first_profiles_claim_at_most_one_legacy_root()
+    {
+        var paths = new PreservedPaths();
+        var first = Task.Run(() => BrowserProfileStorage.ResolveProfileDirectory(paths, "concurrent-a"));
+        var second = Task.Run(() => BrowserProfileStorage.ResolveProfileDirectory(paths, "concurrent-b"));
+        var roots = await Task.WhenAll(first, second);
+        Assert.Single(roots.Where(path => StringComparer.Ordinal.Equals(path, paths.BrowserProfileDirectory)));
+        Assert.NotEqual(roots[0], roots[1]);
+    }
+
+    [Fact]
+    public void Browser_profile_root_symbolic_link_is_refused()
+    {
+        using var paths = new PreservedPaths();
+        var target = Path.Combine(Path.GetTempPath(), "browse-profile-target-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(target);
+        var link = paths.BrowserProfileDirectory;
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(link)!);
+            Directory.CreateSymbolicLink(link, target);
+            Assert.Throws<InvalidDataException>(() => BrowserProfileStorage.ResolveProfileDirectory(paths, "profile"));
+        }
+        finally { Directory.Delete(target, recursive: true); }
     }
 
     [Fact]
