@@ -47,6 +47,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private IReadOnlyList<RecentBoardCard> _recentBoardCards = [];
     private IReadOnlyList<RecentPageCard> _recentPageCards = [];
     private string _landingSearchQuery = string.Empty;
+    private (string PageId, string BlockId, int CaretIndex)? _pendingTextFocus;
 
     private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
     private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
@@ -687,6 +688,115 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     }
 
     // ----- Generalized id-encoded editing (legacy names keep working) -----
+
+    public async Task<bool> SplitTextBlockAtAsync(string blockId, int caretIndex,
+        CancellationToken cancellationToken = default)
+    {
+        if (!RequireEditMode()) return false;
+        var page = CurrentPage();
+        var block = page.Blocks.FirstOrDefault(item => item.Id == blockId);
+        if (block is null || block.Kind is not ("paragraph" or "heading")) return false;
+        if (caretIndex < 0 || caretIndex > block.Text.Length) return false;
+        if (block.Runs.Count > 0 && !string.Equals(string.Concat(block.Runs.Select(run => run.Text)), block.Text, StringComparison.Ordinal))
+        {
+            Set("StatusText", "Text block formatting ranges do not match its text; the block was left unchanged.");
+            return false;
+        }
+
+        string createdId;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            try { createdId = await adapter.SplitTextBlockAtAsync(page.Id, blockId, caretIndex, cancellationToken); }
+            catch (Exception error) when (error is InvalidOperationException or ArgumentOutOfRangeException or KeyNotFoundException)
+            {
+                Set("StatusText", "Text block could not be split: " + FirstLine(error.Message));
+                return false;
+            }
+        }
+        else
+        {
+            var text = block.Text;
+            var (leftRuns, rightRuns) = BoardTextRanges.SplitAt(block.Runs, text, caretIndex);
+            block.Text = text[..caretIndex];
+            block.Runs = leftRuns;
+            var following = new RichBoardBlock
+            {
+                Kind = block.Kind,
+                StyleId = block.StyleId,
+                Text = text[caretIndex..],
+                Runs = rightRuns,
+                Alignment = block.Alignment,
+                LineSpacing = block.LineSpacing,
+                SpaceBefore = block.SpaceBefore,
+                SpaceAfter = block.SpaceAfter,
+                IndentLevel = block.IndentLevel,
+            };
+            page.Blocks.Insert(page.Blocks.IndexOf(block) + 1, following);
+            createdId = following.Id;
+            _session.MarkDirty();
+        }
+        _selectedBlockId = createdId;
+        _pendingTextFocus = (page.Id, createdId, 0);
+        PushDocumentToBindings();
+        RequestRebuild();
+        return true;
+    }
+
+    public async Task<bool> MergeTextBlockWithPreviousAsync(string blockId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!RequireEditMode()) return false;
+        var page = CurrentPage();
+        var index = page.Blocks.FindIndex(item => item.Id == blockId);
+        if (index <= 0) return false;
+        var previous = page.Blocks[index - 1];
+        var current = page.Blocks[index];
+        if (previous.Kind is not ("paragraph" or "heading") || current.Kind is not ("paragraph" or "heading"))
+            return false;
+        if ((previous.Runs.Count > 0 && !string.Equals(string.Concat(previous.Runs.Select(run => run.Text)), previous.Text, StringComparison.Ordinal)) ||
+            (current.Runs.Count > 0 && !string.Equals(string.Concat(current.Runs.Select(run => run.Text)), current.Text, StringComparison.Ordinal)))
+        {
+            Set("StatusText", "Text block formatting ranges do not match its text; the blocks were left unchanged.");
+            return false;
+        }
+        var caretIndex = previous.Text.Length;
+        string mergedId;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            try { mergedId = await adapter.MergeTextBlockWithPreviousAsync(page.Id, blockId, cancellationToken); }
+            catch (Exception error) when (error is InvalidOperationException or ArgumentOutOfRangeException or KeyNotFoundException)
+            {
+                Set("StatusText", "Text blocks could not be merged: " + FirstLine(error.Message));
+                return false;
+            }
+        }
+        else
+        {
+            previous.Text += current.Text;
+            if (previous.Runs.Count > 0 || current.Runs.Count > 0)
+                previous.Runs = [.. BoardTextRanges.Copy(previous.Runs), .. BoardTextRanges.Copy(current.Runs)];
+            page.Blocks.RemoveAt(index);
+            _session.MarkDirty();
+            mergedId = previous.Id;
+        }
+        _selectedBlockId = mergedId;
+        _pendingTextFocus = (page.Id, mergedId, caretIndex);
+        PushDocumentToBindings();
+        RequestRebuild();
+        return true;
+    }
+
+    internal bool TryConsumePendingTextFocus(string pageId, string blockId, out int caretIndex)
+    {
+        if (_pendingTextFocus is { } pending && pending.PageId == pageId && pending.BlockId == blockId)
+        {
+            caretIndex = pending.CaretIndex;
+            _pendingTextFocus = null;
+            return true;
+        }
+        caretIndex = 0;
+        return false;
+    }
 
     public void EditText(string controlName, string text)
     {

@@ -888,6 +888,42 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         finally { _mergeGate.Release(); }
     }
 
+    public async ValueTask<string> SplitTextBlockAtAsync(string pageId, string blockId, int caretIndex,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string createdId = string.Empty;
+            await _real.MutateAsync(rich =>
+                createdId = HavenRichNotesOps.SplitTextBlockAt(rich, pageId, blockId, caretIndex).Id,
+                cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return createdId;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<string> MergeTextBlockWithPreviousAsync(string pageId, string blockId,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string mergedId = string.Empty;
+            await _real.MutateAsync(rich =>
+                mergedId = HavenRichNotesOps.MergeTextBlockWithPrevious(rich, pageId, blockId),
+                cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return mergedId;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     public async ValueTask SetCanvasLockedAsync(string pageId, bool locked,
         CancellationToken cancellationToken = default)
     {

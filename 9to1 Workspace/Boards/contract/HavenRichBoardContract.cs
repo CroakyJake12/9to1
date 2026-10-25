@@ -629,6 +629,144 @@ public static partial class HavenRichNotesOps
         Touch(notes);
     }
 
+    public static HavenRichBlock SplitTextBlockAt(HavenRichNotes notes, string pageId, string blockId, int caretIndex)
+    {
+        var page = RequirePage(notes, pageId);
+        var block = RequireBlock(notes, pageId, blockId);
+        if (block.Kind is not (HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading))
+            throw new InvalidOperationException("Only paragraph and heading text blocks can be split.");
+        var text = block.PlainText ?? string.Empty;
+        if (caretIndex < 0 || caretIndex > text.Length)
+            throw new ArgumentOutOfRangeException(nameof(caretIndex), "The split point is outside the text block.");
+
+        var leftText = text[..caretIndex];
+        var rightText = text[caretIndex..];
+        List<HavenRichTextRun> leftRuns = [];
+        List<HavenRichTextRun> rightRuns = [];
+        if (block.Runs.Count > 0)
+        {
+            if (!string.Equals(string.Concat(block.Runs.Select(run => run.Text)), text, StringComparison.Ordinal))
+                throw new InvalidOperationException("Text formatting ranges do not match the block text.");
+            SplitRuns(block.Runs, caretIndex, leftRuns, rightRuns);
+        }
+        block.PlainText = leftText;
+        block.Runs = leftRuns;
+        var following = new HavenRichBlock
+        {
+            Kind = block.Kind,
+            StyleId = block.StyleId,
+            PlainText = rightText,
+            Runs = rightRuns,
+            Alignment = block.Alignment,
+            LineSpacing = block.LineSpacing,
+            SpaceBefore = block.SpaceBefore,
+            SpaceAfter = block.SpaceAfter,
+            IndentLevel = block.IndentLevel,
+        };
+        page.Blocks.Insert(page.Blocks.IndexOf(block) + 1, following);
+        NormalizeBlockOrder(page);
+        Touch(notes);
+        return following;
+    }
+
+    public static string MergeTextBlockWithPrevious(HavenRichNotes notes, string pageId, string blockId)
+    {
+        var page = RequirePage(notes, pageId);
+        var index = page.Blocks.FindIndex(block => block.Id == blockId);
+        if (index <= 0)
+            throw new InvalidOperationException("There is no previous text block to merge with.");
+        var previous = page.Blocks[index - 1];
+        var current = page.Blocks[index];
+        if (previous.Kind is not (HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading) ||
+            current.Kind is not (HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading) ||
+            previous.Attachment is not null || current.Attachment is not null)
+            throw new InvalidOperationException("Only unattached paragraph or heading blocks can be merged.");
+
+        var leftText = previous.PlainText ?? string.Empty;
+        var rightText = current.PlainText ?? string.Empty;
+        var mergedRuns = EffectiveRuns(notes, previous);
+        mergedRuns.AddRange(EffectiveRuns(notes, current));
+        previous.PlainText = leftText + rightText;
+        previous.Runs = mergedRuns;
+        page.Blocks.RemoveAt(index);
+        NormalizeBlockOrder(page);
+        Touch(notes);
+        return previous.Id;
+    }
+
+    private static void SplitRuns(IReadOnlyList<HavenRichTextRun> runs, int caretIndex,
+        List<HavenRichTextRun> left, List<HavenRichTextRun> right)
+    {
+        var offset = 0;
+        foreach (var run in runs)
+        {
+            var split = Math.Clamp(caretIndex - offset, 0, run.Text.Length);
+            if (split > 0) left.Add(CloneRun(run, run.Text[..split]));
+            if (split < run.Text.Length) right.Add(CloneRun(run, run.Text[split..]));
+            offset += run.Text.Length;
+        }
+    }
+
+    private static List<HavenRichTextRun> EffectiveRuns(HavenRichNotes notes, HavenRichBlock block)
+    {
+        var style = HavenRichStyleResolver.Resolve(notes, block);
+        if (block.Runs.Count == 0)
+            return string.IsNullOrEmpty(block.PlainText) ? [] :
+            [new HavenRichTextRun
+            {
+                Text = block.PlainText,
+                Bold = style.Bold,
+                Italic = style.Italic,
+                Underline = style.Underline,
+                StrikeThrough = style.StrikeThrough,
+                Baseline = style.Baseline,
+                FontFamily = style.FontFamily,
+                FontSize = style.FontSize,
+                Foreground = style.Foreground,
+                Background = style.Background,
+            }];
+
+        if (!string.Equals(string.Concat(block.Runs.Select(run => run.Text)), block.PlainText, StringComparison.Ordinal))
+            throw new InvalidOperationException("Text formatting ranges do not match the block text.");
+
+        return block.Runs.Select(run =>
+        {
+            var copy = CloneRun(run);
+            if (!HasStyle(run))
+            {
+                copy.Bold = style.Bold;
+                copy.Italic = style.Italic;
+                copy.Underline = style.Underline;
+                copy.StrikeThrough = style.StrikeThrough;
+                copy.Baseline = style.Baseline;
+            }
+            if (string.IsNullOrEmpty(copy.FontFamily)) copy.FontFamily = style.FontFamily;
+            if (copy.FontSize <= 0) copy.FontSize = style.FontSize;
+            if (string.IsNullOrEmpty(copy.Foreground)) copy.Foreground = style.Foreground;
+            if (string.IsNullOrEmpty(copy.Background)) copy.Background = style.Background;
+            return copy;
+        }).ToList();
+    }
+
+    private static HavenRichTextRun CloneRun(HavenRichTextRun run, string? text = null) => new()
+    {
+        Text = text ?? run.Text,
+        Bold = run.Bold,
+        Italic = run.Italic,
+        Underline = run.Underline,
+        StrikeThrough = run.StrikeThrough,
+        Baseline = run.Baseline,
+        FontFamily = run.FontFamily,
+        FontSize = run.FontSize,
+        Foreground = run.Foreground,
+        Background = run.Background,
+    };
+
+    private static void NormalizeBlockOrder(HavenRichPage page)
+    {
+        for (var order = 0; order < page.Blocks.Count; order++) page.Blocks[order].Order = order;
+    }
+
     public static void UpdateParagraphText(HavenRichNotes notes, string pageId, string blockId, string text)
     {
         var block = RequireBlock(notes, pageId, blockId);
