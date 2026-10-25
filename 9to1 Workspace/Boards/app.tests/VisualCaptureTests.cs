@@ -169,7 +169,8 @@ public sealed class VisualCaptureTests
         object? accent = null;
         Assert.True(Avalonia.Application.Current?.TryGetResource("CuiAccentBrush", null, out accent) == true);
         Assert.IsType<Avalonia.Media.LinearGradientBrush>(accent);
-        Assert.Same(accent, topBar.BorderBrush);
+        Assert.Equal(new Thickness(0), topBar.BorderThickness);
+        Assert.Null(topBar.BorderBrush);
         var host = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "BlocksHost")
             ?? throw new InvalidOperationException("Missing BlocksHost after the real presentation reached ready state. Runtime tree:\n" + tree);
         Assert.NotEmpty(host.Children);

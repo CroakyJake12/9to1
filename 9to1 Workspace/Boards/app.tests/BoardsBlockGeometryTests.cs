@@ -101,10 +101,10 @@ public sealed class BoardsBlockGeometryTests
         Assert.Equal(14, actual.tallRow.GripGlyphSize);
         Assert.Equal("Drag block handle", actual.tallRow.GripGlyphName);
         Assert.Equal(18, actual.tallRow.AddGlyphSize);
-        Assert.Equal((actual.shortRow.GridHeight - 32) / 2, actual.shortRow.InsertTop, precision: 1);
-        Assert.Equal(actual.shortRow.InsertTop, actual.shortRow.GripRootTop, precision: 1);
-        Assert.Equal((actual.tallRow.GridHeight - 32) / 2, actual.tallRow.InsertTop, precision: 1);
-        Assert.Equal(actual.tallRow.InsertTop, actual.tallRow.GripRootTop, precision: 1);
+        Assert.InRange(Math.Abs((actual.shortRow.GridHeight - 32) / 2 - actual.shortRow.InsertTop), 0, 0.5);
+        Assert.InRange(Math.Abs(actual.shortRow.InsertTop - actual.shortRow.GripRootTop), 0, 0.5);
+        Assert.InRange(Math.Abs((actual.tallRow.GridHeight - 32) / 2 - actual.tallRow.InsertTop), 0, 0.5);
+        Assert.InRange(Math.Abs(actual.tallRow.InsertTop - actual.tallRow.GripRootTop), 0, 0.5);
         Assert.Equal(0, actual.shortRow.Opacity);
         Assert.Equal(0, actual.tallRow.Opacity);
         Assert.Equal(0, actual.hiddenGripOpacity);

@@ -267,7 +267,8 @@ public sealed class BoardsVisualTests
                 var grid = Flatten(host).OfType<Grid>().Single(candidate =>
                     candidate.RowDefinitions.Count == 2 && candidate.ColumnDefinitions.Count == 2);
                 var frame = Assert.Single(grid.Children);
-                var tableFrame = Flatten(host).OfType<Border>().Single(candidate => ReferenceEquals(candidate.Child, grid));
+                var tableFrame = Flatten(host).OfType<Border>().Single(candidate =>
+                    candidate.Name == "BoardTableFrame_" + block.Id);
                 var editor = Assert.Single(Flatten(frame).OfType<TextBox>());
                 Assert.Contains(Flatten(host).OfType<TextBox>(), box => box.Text == "Merged title");
                 Assert.Contains(Flatten(host).OfType<Button>(), button => Equals(button.Content, "+ Box"));
