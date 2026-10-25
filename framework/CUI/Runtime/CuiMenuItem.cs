@@ -26,6 +26,10 @@ public sealed class CuiMenuItem : MenuItem
     public static readonly StyledProperty<int> MenuColumnsProperty = AvaloniaProperty.Register<CuiMenuItem, int>(nameof(MenuColumns), 1,
         validate: value => value is >= 1 and <= 8);
     public static readonly StyledProperty<bool> IconOnlyProperty = AvaloniaProperty.Register<CuiMenuItem, bool>(nameof(IconOnly));
+    /// <summary>Optional glyph size independent of the menu hit target. NaN uses the existing menu defaults.</summary>
+    public static readonly StyledProperty<double> IconSizeProperty = AvaloniaProperty.Register<CuiMenuItem, double>(nameof(IconSize), double.NaN,
+        validate: value => double.IsNaN(value) || double.IsFinite(value) && value is > 0 and <= 256);
+    public double IconSize { get => GetValue(IconSizeProperty); set => SetValue(IconSizeProperty, value); }
     public int MenuColumns { get => GetValue(MenuColumnsProperty); set => SetValue(MenuColumnsProperty, value); }
     public bool IconOnly { get => GetValue(IconOnlyProperty); set => SetValue(IconOnlyProperty, value); }
     private long _focusRecoveryGeneration;
