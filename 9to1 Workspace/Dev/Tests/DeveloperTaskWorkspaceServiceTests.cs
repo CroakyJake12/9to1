@@ -824,11 +824,33 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     [Fact]
     public async Task Live_identical_console_target_action_coalesces_without_starting_another_process()
     {
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var f = await Fixture.CreateAsync(); var configuration = ConfigureConsoleTarget(f); var context = f.Context();
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        f.Owner.BeforeBody = release.Task;
         var digest = DeveloperRunConfigurationSelection.Digest(configuration);
-        var first = await f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, OriginalTestBodyToken);
-        var duplicate = await f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, OriginalTestBodyToken);
-        Assert.True(first.Succeeded, first.Error?.Message); Assert.Same(first.Value, duplicate.Value); Assert.Equal(1, f.Tools.ProcessCalls);
+        var first = f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, deadline.Token);
+        Task<DeveloperOperationResult<DeveloperActionObservation>>? duplicate = null;
+        try
+        {
+            await f.Owner.Entered.Task.WaitAsync(deadline.Token);
+            duplicate = f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, deadline.Token);
+            Assert.False(first.IsCompleted); Assert.False(duplicate.IsCompleted);
+            Assert.Equal(1, f.Owner.ExecuteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            release.TrySetResult();
+            try { await first; } finally { if (duplicate is not null) await duplicate; }
+        }
+        var original = await first; var coalesced = await duplicate!;
+        Assert.True(original.Succeeded, original.Error?.Message); Assert.True(coalesced.Succeeded, coalesced.Error?.Message);
+        Assert.Same(original.Value, coalesced.Value); Assert.Equal(1, f.Tools.ProcessCalls);
+        // Once custody of a healthy live result is pruned, a persisted command ACK
+        // cannot reconstruct this exact declaration or authorize another dispatch.
+        var completed = await f.Dev.RunInspectedConfigurationAsync(f.Reference, context, configuration.Id, configuration.Revision, digest, deadline.Token);
+        Assert.Equal(DeveloperOperationErrorCode.PermissionRequired, completed.Error!.Code);
+        Assert.Null(completed.Value); Assert.Equal(1, f.Tools.ProcessCalls);
         await f.Dev.CloseAndDrainAsync();
     }
 
