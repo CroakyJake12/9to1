@@ -175,7 +175,16 @@ public sealed class SpaceBuilderCanonicalSourceTests
                 window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 Button Find(string id) => root.GetVisualDescendants().OfType<Button>().Single(button =>
                     button.Name == id || AutomationProperties.GetAutomationId(button) == id);
-                var add = Find("space-builder-attach-boards-source"); Assert.True(add.IsEnabled);
+                var options = Assert.IsAssignableFrom<object[]>(GetBinding("builder.boardOptions"));
+                Assert.Single(options);
+                var matchingAdds = root.GetVisualDescendants().OfType<Button>().Where(button =>
+                    button.Name == "space-builder-attach-boards-source" ||
+                    AutomationProperties.GetAutomationId(button) == "space-builder-attach-boards-source").ToArray();
+                Assert.True(matchingAdds.Length == 1,
+                    $"Expected the single Boards source action in Advanced; found {matchingAdds.Length}. " +
+                    $"Buttons=[{string.Join(", ", root.GetVisualDescendants().OfType<Button>().Select(button =>
+                        $"{button.Name ?? "<unnamed>"}/{AutomationProperties.GetAutomationId(button) ?? "<no-id>"}"))}]");
+                var add = matchingAdds[0]; Assert.True(add.IsEnabled);
                 add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
                 var remove = Find("space-builder-remove-context-source");
                 remove.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
@@ -184,6 +193,12 @@ public sealed class SpaceBuilderCanonicalSourceTests
             }
             finally { window.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;
+
+            object? GetBinding(string path)
+            {
+                Assert.True(bindings.TryGetValue(path, out var value));
+                return value;
+            }
         }, token);
     }
 
