@@ -307,6 +307,68 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
         });
 
     [Fact]
+    public Task Files_context_metadata_selection_binds_exact_current_row_identity_without_reading_or_writing_content()
+        => Run(async rig =>
+        {
+            var supplied = Encoding.UTF8.GetBytes("metadata only");
+            var uploaded = await rig.UploadAsync("context.txt", supplied);
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, rig.Folder.Value,
+                token: rig.Token, expectedStoreId: rig.Workspace.Configuration.StoreId));
+            var row = Assert.Single(page.Items, item => item.Id == uploaded.FileId);
+            var before = await rig.BytesAsync();
+
+            var selection = await rig.Keep(rig.Browser.SelectOriginalContextMetadataWithinSourceAsync(
+                page, row, rig.Workspace.Actor, body => body(), rig.Retain, rig.Token));
+            Assert.True(rig.Browser.IsIssuedOriginalContextMetadataSelection(selection));
+            Assert.Equal(rig.Workspace.Actor, selection.OriginalActor);
+            Assert.Equal(rig.Workspace.Configuration.StoreId, selection.StoreId);
+            Assert.Equal(rig.Folder.Value, selection.ParentFolderId);
+            Assert.Equal(uploaded.FileId.Value, selection.FileId);
+            Assert.Equal(uploaded.RevisionId.Value, selection.RevisionId);
+            Assert.Equal("context.txt", selection.Name);
+            Assert.Equal($"{selection.StoreId:D}/{selection.FileId:D}", selection.CanonicalEntityId);
+            Assert.Equal(Convert.ToHexString(SHA256.HashData(supplied)), selection.ContentSha256);
+            Assert.Equal((long?)supplied.Length, selection.SizeBytes);
+            await rig.Keep(rig.Browser.RevalidateOriginalContextMetadataWithinSourceAsync(
+                selection, body => body(), rig.Retain, rig.Token));
+
+            var forged = new FilesOriginalContextMetadataSelection(selection.OriginalActor, selection.StoreId,
+                selection.ParentFolderId, selection.FileId, selection.RevisionId, selection.Name,
+                selection.ContentSha256, selection.SizeBytes);
+            Assert.False(rig.Browser.IsIssuedOriginalContextMetadataSelection(forged));
+            var forgedCheck = rig.Keep(rig.Browser.RevalidateOriginalContextMetadataWithinSourceAsync(
+                forged, body => body(), rig.Retain, rig.Token));
+            await rig.ObserveExpectedFailureAsync(forgedCheck, typeof(UnauthorizedAccessException),
+                "Retain the same original Files metadata selection.");
+            Assert.Equal(supplied, await rig.ReadPhysicalAsync("context.txt"));
+            var after = await rig.BytesAsync();
+            Assert.Equal(before.Home, after.Home);
+            Assert.Equal(before.Drive, after.Drive);
+        });
+
+    [Fact]
+    public Task Files_context_metadata_selection_rejects_an_advanced_revision_and_old_store_page()
+        => Run(async rig =>
+        {
+            var originalBytes = Encoding.UTF8.GetBytes("revision one");
+            var replacement = Encoding.UTF8.GetBytes("revision two");
+            var uploaded = await rig.UploadAsync("changing-context.txt", originalBytes);
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, rig.Folder.Value,
+                token: rig.Token, expectedStoreId: rig.Workspace.Configuration.StoreId));
+            var row = Assert.Single(page.Items, item => item.Id == uploaded.FileId);
+            var selection = await rig.Keep(rig.Browser.SelectOriginalContextMetadataWithinSourceAsync(
+                page, row, rig.Workspace.Actor, body => body(), rig.Retain, rig.Token));
+            await rig.ReplaceAsync(uploaded, replacement);
+
+            var stale = rig.Keep(rig.Browser.RevalidateOriginalContextMetadataWithinSourceAsync(
+                selection, body => body(), rig.Retain, rig.Token));
+            await rig.ObserveExpectedFailureAsync(stale, typeof(InvalidOperationException),
+                "The displayed Files folder changed.");
+            Assert.Equal(replacement, await rig.ReadPhysicalAsync("race-" + uploaded.FileId.Value.ToString("N") + ".content"));
+            Assert.Equal(originalBytes, await rig.ReadPhysicalAsync("changing-context.txt"));
+        });
+
+    [Fact]
     public Task Home_selected_board_save_uses_real_review_and_files_CAS_preserves_old_bytes_and_reopens_same_file()
         => Run(async rig =>
         {
