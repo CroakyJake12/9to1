@@ -36,7 +36,7 @@ public sealed class HavenRichBoardTests
             HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), now, now, null, notes);
         var bytes = JsonSerializer.SerializeToUtf8Bytes(document, Json);
         var reopened = HavenBoardDocumentCodec.Deserialize(bytes);
-        var reopenedPage = Assert.Single(reopened.RichNotes!.Sections[0].Pages.Where(item => item.Id == page.Id));
+        var reopenedPage = Assert.Single(reopened.RichNotes!.Sections[0].Pages, item => item.Id == page.Id);
 
         Assert.Equal(selected.ApplicationId, reopenedPage.EmbeddedArtifact!.ApplicationId);
         Assert.Equal(selected.ArtifactId, reopenedPage.EmbeddedArtifact.ArtifactId);

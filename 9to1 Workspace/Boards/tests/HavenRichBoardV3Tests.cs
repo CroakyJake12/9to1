@@ -68,11 +68,11 @@ public sealed class HavenRichBoardV3Tests
             {
                 VariableId = "variable-a", Name = "a", Minimum = -2, Maximum = 6, Step = 0.5, DefaultValue = 1.5
             };
+            string blockId = string.Empty;
             await using (var session = await RichBoardSession.CreateNewAsync(store, "Graph slider"))
             {
                 await session.SaveAsAsync(path);
                 var pageId = session.Rich.Sections[0].Pages[0].Id;
-                string blockId = string.Empty;
                 await session.MutateAsync(rich =>
                 {
                     var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Graph);
