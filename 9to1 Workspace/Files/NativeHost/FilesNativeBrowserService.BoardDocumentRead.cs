@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Runtime.CompilerServices;
 using Haven.Application;
 
 namespace HavenOS.Files.NativeHost;
@@ -10,6 +11,32 @@ public sealed record FilesOriginalBoardDocumentRead(Guid StoreId, Guid FileId, G
 
 public sealed partial class FilesNativeBrowserService
 {
+    private sealed class OriginalBoardRead { internal Exception? Denied; }
+    private readonly ConditionalWeakTable<Task, OriginalBoardRead> _originalBoardReads = new();
+    /// <summary>Expected denial metadata only, for THIS producer's exact failed task.
+    /// It grants no read, path, actor or replacement task authority.</summary>
+    public bool IsOriginalBoardDocumentReadRefusal(Task original, Exception failure)
+    {
+        if (!_originalBoardReads.TryGetValue(original, out var operation) || operation.Denied is not { } denied || original.Exception is null) return false;
+        var pending = new Stack<Exception>(); pending.Push(failure); var count = 0;
+        while (pending.TryPop(out var taskFailure))
+        {
+            if (++count > 4096) return false;
+            if (ReferenceEquals(taskFailure, denied)) continue;
+            if (taskFailure is not AggregateException { InnerExceptions.Count: > 0 } group) return false;
+            foreach (var child in group.InnerExceptions) pending.Push(child);
+        }
+        // Require that the task itself failed for that same exact issued denial.
+        pending.Push(original.Exception); count = 0;
+        while (pending.TryPop(out var current))
+        {
+            if (++count > 4096) return false;
+            if (ReferenceEquals(current, denied)) continue;
+            if (current is not AggregateException { InnerExceptions.Count: > 0 } group) return false;
+            foreach (var child in group.InnerExceptions) pending.Push(child);
+        }
+        return true;
+    }
     // Match the Boards document codec's maximum supported envelope size. Files rejects larger
     // revisions before opening their registered physical materialisation.
     public const int MaximumBoardDocumentBytes = 40 * 1024 * 1024;
@@ -26,10 +53,11 @@ public sealed partial class FilesNativeBrowserService
         FilesNativeBrowserPage page, HostedItemMetadata row, AuthenticatedResourceActor actor,
         Func<bool> lifetime, Action<Action> scope, Action<Task> retain, CancellationToken token)
     {
+        var operation = new OriginalBoardRead();
         var original = new CloudflareOriginalTaskLedger(); original.BindOriginalOwner(this); original.BindOriginalCallerCallback(scope);
         var source = new FilesOriginalReadSourceScope(body => original.Invoke(() => { body(); return true; }),
-            actual => { original.Track(actual); retain(actual); });
-        return original.RunToOriginalSettlementAsync(async () =>
+            child => { _originalBoardReads.GetValue(child, _ => operation); original.Track(child); retain(child); });
+        var actual = original.RunToOriginalSettlementAsync(async () =>
         {
             token.ThrowIfCancellationRequested();
             var retained = source.Invoke(() => _originalPages.TryGetValue(page, out var issued) && issued.Actor == actor &&
@@ -49,10 +77,21 @@ public sealed partial class FilesNativeBrowserService
             {
                 currentToken.ThrowIfCancellationRequested();
                 if (!source.Invoke(lifetime) || !resources.IsIssuedOriginalReadOwnerBinding(actor, read, "files.board.read",
-                    read.OriginalScope, workspace.Provider, workspace.Directories, page.StoreID) ||
-                    await source.Observe(() => resources.AuthorizeOriginalReadForActorAsync(actor, read, "files.board.read",
-                        [read.OriginalScope], currentToken).AsTask()).ConfigureAwait(false) != actor || !source.Invoke(lifetime))
+                    read.OriginalScope, workspace.Provider, workspace.Directories, page.StoreID))
                     throw new UnauthorizedAccessException("The original Home READ no longer permits this selected board document.");
+                var authorized = await source.Observe(() => resources.AuthorizeOriginalReadForActorAsync(actor, read, "files.board.read",
+                    [read.OriginalScope], currentToken).AsTask()).ConfigureAwait(false);
+                if (authorized != actor)
+                {
+                    var denied = new UnauthorizedAccessException("The current Files resource owner denied reading this board.");
+                    if (source.Invoke(lifetime) && await source.Observe(() => actors.GetCurrentAsync(currentToken).AsTask()).ConfigureAwait(false) == actor)
+                    {
+                        Interlocked.CompareExchange(ref operation.Denied, denied, null);
+                        throw operation.Denied ?? denied;
+                    }
+                    throw denied;
+                }
+                if (!source.Invoke(lifetime)) throw new UnauthorizedAccessException("The original Home board read lifetime retired.");
                 var evidence = await source.Observe(() => workspace.Provider.GetStoreEvidenceAsync(page.StoreID,
                     source.OriginalSynchronousScope, source.RetainOriginalTask, currentToken)).ConfigureAwait(false);
                 if (evidence.StoreId != page.StoreID || evidence.Revision != page.StoreRevision)
@@ -126,5 +165,7 @@ public sealed partial class FilesNativeBrowserService
                 if (!transferred) CryptographicOperations.ZeroMemory(bytes);
             }
         });
+        _originalBoardReads.GetValue(actual, _ => operation);
+        return actual;
     }
 }

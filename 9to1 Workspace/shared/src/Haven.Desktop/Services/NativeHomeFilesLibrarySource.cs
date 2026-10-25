@@ -226,8 +226,9 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                 !await IsCurrentAsync(entry, source, caller).ConfigureAwait(false) ||
                 entry.Row.Kind != HostedItemKind.File || !FilesNativeBrowserService.IsBoardDocumentCandidate(entry.Row)) return null;
             var boardRead = _boardRead ?? throw new NotSupportedException("The original Home selected-board reader is unavailable.");
-            var lease = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedAsync(entry.Page, entry.Row,
+            var outcome = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedOutcomeAsync(entry.Page, entry.Row,
                 _alive, _ownerCurrent, Own, Retain, source, caller))).ConfigureAwait(false);
+            var lease = DemandOriginalBoardReadOutcome(outcome);
             try
             {
                 if (!await IsCurrentAsync(entry, source, caller).ConfigureAwait(false) || !lease.IsOpen)
@@ -521,8 +522,9 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         var transferred = false;
         try
         {
-            readLease = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedAsync(pageForRow, selectedRow,
+            var readOutcome = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedOutcomeAsync(pageForRow, selectedRow,
                 _alive, _ownerCurrent, Own, Retain, source, token))).ConfigureAwait(false);
+            readLease = DemandOriginalBoardReadOutcome(readOutcome);
             if (!readLease.IsOpen || readLease.StoreId != receipt.FilesStoreId || readLease.ParentFolderId != receipt.ParentFolderId ||
                 readLease.FileId != receipt.FileId || readLease.RevisionId != receipt.FilesCasRevisionId)
                 throw new UnauthorizedAccessException("The Home read lease differs from the exact created Files revision.");
@@ -550,6 +552,15 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         }
     }
 
+    private NativeHomeFilesBoardReadLease DemandOriginalBoardReadOutcome(NativeHomeFilesBoardReadSource.ReadOutcome outcome)
+    {
+        if (outcome.Refusal is { } refusal)
+        {
+            if (!_refusals.TryGetValue(refusal, out _)) _refusals.Add(refusal, new());
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(refusal).Throw();
+        }
+        return outcome.Lease ?? throw new InvalidDataException("The original board READ returned no lease.");
+    }
     private Task ValidatePageAsync(FilesNativeBrowserPage page, CancellationToken token) =>
         _browser.RevalidateOriginalHomeLibraryPageWithinSourceAsync(page, _actor, _alive, Own, Retain, token);
     private static FilesOriginalBoardDocumentCreateSettlementException? FindCreateSettlementFailure(Exception error)

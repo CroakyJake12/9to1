@@ -163,16 +163,142 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         });
     }
 
-    private static async Task WithRigAsync(Func<Rig, Task> body)
+    private static async Task WithRigAsync(Func<Rig, Task> body, Action<Exception>? assertCleanupFailure = null)
     {
         var rig = await Rig.CreateAsync();
         var failures = new List<Exception>();
         try { await body(rig); } catch (Exception error) { failures.Add(error); }
-        try { await rig.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
+        Exception? cleanupFailure = null;
+        try { await rig.DisposeAsync(); } catch (Exception error) { cleanupFailure = error; }
+        if (assertCleanupFailure is null || failures.Count != 0)
+        { if (cleanupFailure is not null) failures.Add(cleanupFailure); }
+        else
+        {
+            try
+            {
+                Assert.NotNull(cleanupFailure);
+                assertCleanupFailure(cleanupFailure!);
+                rig.DeleteTemporaryFixtureAfterExpectedDrain();
+            }
+            catch (Exception assertion)
+            { failures.Add(assertion); if (cleanupFailure is not null) failures.Add(cleanupFailure); }
+        }
         // Test cleanup must never replace the first failed product assertion.
         // Expected owner refusals remain explicitly asserted in each body.
         if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures.Count != 0) throw new AggregateException("The board workflow and its independent cleanup retained their failures.", failures);
+    }
+
+    [LinuxFact]
+    public async Task Real_resource_READ_denial_retains_created_receipt_and_fresh_retry_opens_that_same_file()
+    {
+        await WithRigAsync(async rig =>
+        {
+            var reviews = 0;
+            async Task Review(HomePermissionAuthorization authorization, CancellationToken token)
+            { reviews++; Assert.True((await rig.Trust.DecideAsync(authorization.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded); }
+            await rig.InitializeLibraryAsync(Review);
+            var selected = await rig.SelectBoardsFolderAsync();
+            rig.ReadPolicy.DenyBoardReads = true;
+            var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(selected, "READ retry board",
+                BoardBytes(Guid.NewGuid(), "Same created file"), rig.Token));
+            Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, created.State);
+            var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
+            Assert.Null(created.PreparedAddress); Assert.Equal("CreatedOpenFailed", created.OpenFailureCode);
+            Assert.True(rig.ReadPolicy.Denials > 0); Assert.Equal(1, reviews);
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, receipt.ParentFolderId,
+                token: rig.Token, expectedStoreId: receipt.FilesStoreId));
+            var row = Assert.Single(page.Items, item => item.Id.Value == receipt.FileId);
+            var original = rig.Browser.ReadOriginalBoardDocumentWithinSourceAsync(page, row, rig.Workspace.Actor,
+                () => true, body => body(), rig.Retain, rig.Token);
+            var refusal = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(original));
+            Assert.True(rig.Browser.IsOriginalBoardDocumentReadRefusal(original, refusal));
+            Assert.False(rig.Browser.IsOriginalBoardDocumentReadRefusal(original, new UnauthorizedAccessException("The current Files resource owner denied reading this board.")));
+            Assert.False(rig.Browser.IsOriginalBoardDocumentReadRefusal(Task.FromException(refusal), refusal));
+            Assert.False(rig.Browser.IsOriginalBoardDocumentReadRefusal(original, new AggregateException(refusal, new IOException("Foreign READ sibling IO."))));
+
+            rig.ReadPolicy.DenyBoardReads = false;
+            var address = await rig.Keep(rig.Library.PrepareCreatedBoardOpenAsync(receipt, rig.Token));
+            var parsed = BoardsBrowseAppContentAddress.Parse(address);
+            Assert.Equal(receipt.FilesStoreId, parsed.StoreId); Assert.Equal(receipt.FileId, parsed.FileId);
+            Assert.Equal(receipt.FilesCasRevisionId, parsed.RevisionId);
+            await using var lease = rig.Writes.TakePrepared(parsed.ReadToken!.Value, parsed.StoreId!.Value,
+                parsed.ParentFolderId!.Value, parsed.FileId!.Value, parsed.RevisionId!.Value);
+            Assert.Equal(receipt.DocumentId, HavenBoardDocumentCodec.Deserialize(lease.Bytes).DocumentId);
+            Assert.Equal(receipt.FilesCasRevisionId, lease.RevisionId); Assert.Equal(1, reviews);
+            Assert.Single(await rig.ListBoardsAsync());
+            Assert.Single(Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content"));
+        });
+    }
+
+    [LinuxFact]
+    public async Task Missing_real_immutable_leaf_remains_an_IO_failure_even_after_the_fixture_restores_it()
+    {
+        FileNotFoundException? actualMissingLeaf = null;
+        await WithRigAsync(async rig =>
+        {
+            async Task Review(HomePermissionAuthorization authorization, CancellationToken token)
+            { Assert.True((await rig.Trust.DecideAsync(authorization.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded); }
+            await rig.InitializeLibraryAsync(Review);
+            var selected = await rig.SelectBoardsFolderAsync();
+            var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(selected, "Missing leaf board",
+                BoardBytes(Guid.NewGuid(), "Real filesystem failure"), rig.Token));
+            var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
+            var parsed = BoardsBrowseAppContentAddress.Parse(created.PreparedAddress!);
+            await rig.Writes.DiscardPreparedAsync(parsed.ReadToken!.Value);
+            var leaf = Assert.Single(Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content"));
+            var bytes = await File.ReadAllBytesAsync(leaf, rig.Token);
+            File.Delete(leaf);
+            try
+            {
+                var failure = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(rig.Library.PrepareCreatedBoardOpenAsync(receipt, rig.Token)));
+                var leaves = FailureLeaves(failure).ToArray();
+                actualMissingLeaf = Assert.IsType<FileNotFoundException>(leaves.First());
+                Assert.All(leaves, item => Assert.Same(actualMissingLeaf, item));
+                Assert.False(rig.Library.IsExpectedRefusal(failure));
+            }
+            finally { await File.WriteAllBytesAsync(leaf, bytes, rig.Token); }
+            Assert.Single(await rig.ListBoardsAsync());
+        }, failure =>
+        {
+            Assert.NotNull(actualMissingLeaf);
+            Assert.All(FailureLeaves(failure), item => Assert.Same(actualMissingLeaf, item));
+        });
+    }
+    private static IEnumerable<Exception> FailureLeaves(Exception failure) => failure is AggregateException aggregate
+        ? aggregate.InnerExceptions.SelectMany(FailureLeaves) : [failure];
+
+    // Deny-only policy injection over the genuine private Files issuer and its
+    // actual canonical ACL/currentness checks. Every positive answer is forwarded.
+    private sealed class ReadPolicyFixture(FilesArtifactResourceResolver actual) :
+        IOriginalCanonicalReadResolver, IOriginalCanonicalWriteResolver, IOriginalScopedCanonicalResourceAccessResolver
+    {
+        internal bool DenyBoardReads;
+        internal int Denials;
+        public string ResourceKind => actual.ResourceKind;
+        private ResourceAccessDecision Filter(string action, ResourceScope scope, ResourceAccessDecision decision)
+        {
+            if (decision.Allowed && DenyBoardReads && action == "files.board.read" && scope.Access == ResourceAccess.Read)
+            { Interlocked.Increment(ref Denials); return decision with { Allowed = false, Code = "FixtureOriginalBoardReadDenied" }; }
+            return decision;
+        }
+        public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string action, ResourceScope scope, CancellationToken token) =>
+            Filter(action, scope, await actual.EvaluateAsync(actor, action, scope, token));
+        public async Task<ResourceAccessDecision> EvaluateWithinOriginalSourceAsync(AuthenticatedResourceActor actor, string action, ResourceScope resource,
+            Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+            Filter(action, resource, await actual.EvaluateWithinOriginalSourceAsync(actor, action, resource, scope, retain, token));
+        public bool IsIssuedOriginalRead(IOriginalCanonicalReadContext context, AuthenticatedResourceActor actor, string action, ResourceScope scope) =>
+            actual.IsIssuedOriginalRead(context, actor, action, scope);
+        public bool IsIssuedOriginalReadOwnerBinding(IOriginalCanonicalReadContext context, object provider, object directories, Guid store) =>
+            actual.IsIssuedOriginalReadOwnerBinding(context, provider, directories, store);
+        public async ValueTask<ResourceAccessDecision> EvaluateOriginalReadAsync(IOriginalCanonicalReadContext context,
+            AuthenticatedResourceActor actor, string action, ResourceScope scope, CancellationToken token) =>
+            Filter(action, scope, await actual.EvaluateOriginalReadAsync(context, actor, action, scope, token));
+        public bool IsIssuedOriginalWrite(IOriginalCanonicalWriteContext context, AuthenticatedResourceActor actor, string action, ResourceScope scope) =>
+            actual.IsIssuedOriginalWrite(context, actor, action, scope);
+        public ValueTask<ResourceAccessDecision> EvaluateOriginalWriteAsync(IOriginalCanonicalWriteContext context,
+            AuthenticatedResourceActor actor, string action, ResourceScope scope, CancellationToken token) =>
+            actual.EvaluateOriginalWriteAsync(context, actor, action, scope, token);
     }
 
     private static byte[] BoardBytes(Guid documentId, string title)
@@ -198,6 +324,7 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         private NativeHomeFilesBoardReadSource? _read;
         private NativeHomeFilesBoardWriteSource? _writes;
         private NativeHomeFilesLibrarySource? _library;
+        private ReadPolicyFixture? _readPolicy;
 
         private Rig()
         { _chosen = Path.Combine(_root, "chosen"); HomePath = Path.Combine(_root, "home.json"); }
@@ -214,6 +341,9 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         internal NativeHomeFilesBoardWriteSource Writes => _writes ?? throw new InvalidOperationException();
         internal NativeHomeFilesBoardReadSource Read => _read ?? throw new InvalidOperationException();
         internal NativeHomeFilesLibrarySource Library => _library ?? throw new InvalidOperationException();
+        internal ReadPolicyFixture ReadPolicy => _readPolicy ?? throw new InvalidOperationException();
+        internal void DeleteTemporaryFixtureAfterExpectedDrain()
+        { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); }
 
         internal void Retain(Task task) { lock (_gate) _retained.Add(task); }
         internal void FailNextBoardCreateAudits(int count) =>
@@ -245,6 +375,12 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
                 services.AddSingleton<ResourceAuthorizationService>();
                 services.AddSingleton<HomeResourceOperationBroker>();
                 services.AddFilesNativeHost();
+                services.RemoveAll<ICanonicalResourceAccessResolver>();
+                services.AddSingleton<ReadPolicyFixture>(provider => {
+                    var readPolicy = new ReadPolicyFixture(provider.GetRequiredService<FilesArtifactResourceResolver>());
+                    rig._readPolicy = readPolicy; return readPolicy;
+                });
+                services.AddSingleton<ICanonicalResourceAccessResolver>(provider => provider.GetRequiredService<ReadPolicyFixture>());
                 services.RemoveAll<FilesNativeBrowserService>();
                 services.AddSingleton(provider => new FilesNativeBrowserService(
                     provider.GetRequiredService<NativeFilesWorkspaceAuthority>(),
