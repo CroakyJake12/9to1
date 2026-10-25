@@ -1,5 +1,20 @@
 # Haven Boards evidence ledger
 
+## Active implementation checkpoint — 25 October 2026
+
+- Per-surface Edit/View mode: **IMPLEMENTED, owning checks pending**. The CUI
+  header exposes the persistent mode toggle. View retains text selection/copy,
+  search, navigation, board open/save, and appearance controls while preventing
+  document mutations at dispatch, text/check input, toolbar, and direct editor
+  operation boundaries. The app test now covers blocked title/block edits and
+  resumed editing after switching back. Root owns the SDK/test run for this
+  isolated branch; no build or runtime result is claimed here.
+- Remaining major Boards gaps are Progress Tracker packets B-01 through B-04.
+  In particular, board-centric recent landing/picker, canonical
+  cross-client Board/Page convergence, embedded Write/Canvas/Chat/ScopedChat/Data
+  pages, full donor block parity, collaboration, and scalable accessibility are
+  still incomplete. This checkpoint does not establish full implementation.
+
 ## RC2 (revision editor: schema v3, styles, graphs, tables, undo)
 
 - `.9to1board` schema v3 (backwards-compatible additive facet: run baseline/font/colors, paragraph props, styles catalog, table/cell styling + structure, image/divider/graph blocks, ink tools/pressure/selection/view, attachment size/sidecar): **IMPLEMENTED, BUILT, TESTED**.

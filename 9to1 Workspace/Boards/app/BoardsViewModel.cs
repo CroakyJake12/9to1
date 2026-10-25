@@ -27,6 +27,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private string _selectedPageId = "page-1";
     private string _selectedBlockId = "block-para";
     private bool _syncing;
+    private bool _isEditMode = true;
+    private Control? _attachedRoot;
     private readonly Dictionary<TextBox, Action> _textRangeBindings = [];
     private readonly Dictionary<TextBox, (string Page, string Block)> _formattedTextBindings = [];
     private TextBox? _textRangeControl;
@@ -38,6 +40,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public BoardsViewModel(IRichBoardSession session)
     {
         _session = session ?? throw new ArgumentNullException(nameof(session));
+        Set("IsEditMode", true);
+        Set("ModeLabel", "Edit");
         _session.StatusChanged += (_, status) =>
         {
             Set("StatusText", status);
@@ -86,6 +90,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public double InkWidth { get; set; } = 2.5;
     public string InkColor { get; set; } = "#FF111111";
     public bool IsDrawMode { get; private set; }
+    public bool IsEditMode => _isEditMode;
     public double InkZoom { get; set; } = 1;
     public double InkPanX { get; set; }
     public double InkPanY { get; set; }
@@ -121,6 +126,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Push bindings, flag dirty and rebuild after a direct view-model edit.</summary>
     public void CommitViewEdit()
     {
+        if (!RequireEditMode()) return;
         PushDocumentToBindings();
         _session.MarkDirty();
         RequestRebuild();
@@ -134,6 +140,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command == "ToggleEditView")
+        {
+            SetEditMode(!_isEditMode);
+            return;
+        }
+        if (!_isEditMode && !AllowedWhileViewing(command))
+        {
+            Set("StatusText", "View mode: switch to Edit to change this board.");
+            return;
+        }
         if (await DispatchCuiContextAsync(command, cancellationToken)) return;
         if (await DispatchTextRangeAsync(command, cancellationToken)) return;
         switch (command)
@@ -335,6 +351,42 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
     }
 
+    private static bool AllowedWhileViewing(string command) => command is
+        "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or
+        "FileMenu" or "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ToggleTheme" or
+        "SelectSection1" or "SelectSection2" or "SelectPage1" or "SelectPage2" or "ToggleEditView";
+
+    private void SetEditMode(bool enabled)
+    {
+        if (_isEditMode == enabled) return;
+        _isEditMode = enabled;
+        Set("IsEditMode", enabled);
+        Set("ModeLabel", enabled ? "Edit" : "View");
+        if (!enabled) InvalidateTextRange();
+        ApplyAuthoringState(_attachedRoot);
+        RefreshTextRangeBindings();
+        RefreshCuiContext();
+        RequestRebuild();
+    }
+
+    private bool RequireEditMode()
+    {
+        if (_isEditMode) return true;
+        Set("StatusText", "View mode: switch to Edit to change this board.");
+        return false;
+    }
+
+    internal void ApplyAuthoringState(Control? root)
+    {
+        if (root is null) return;
+        foreach (var input in FindControls<TextBox>(root))
+        {
+            // Keep text selectable and copyable in View mode.
+            if ((input.Name ?? string.Empty) != "NavSearchBox") input.IsReadOnly = !_isEditMode;
+        }
+        foreach (var checkBox in FindControls<CheckBox>(root)) checkBox.IsEnabled = _isEditMode;
+    }
+
     private async Task OpenBoardDispatchAsync(CancellationToken cancellationToken)
     {
         if (OpenBoardAsync is not null)
@@ -365,7 +417,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// </summary>
     public void Attach(Control root)
     {
+        _attachedRoot = root;
         _textRangeDetached = false;
+        ApplyAuthoringState(root);
         foreach (var textBox in FindControls<TextBox>(root))
         {
             var name = textBox.Name ?? string.Empty;
@@ -407,6 +461,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Unsubscribe all Attach handlers (used when switching boards).</summary>
     public void Detach()
     {
+        _attachedRoot = null;
         _textRangeDetached = true;
         Interlocked.Increment(ref _textRangeEpoch);
         foreach (var removeRange in _textRangeBindings.Values.ToArray()) removeRange();
@@ -448,6 +503,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void AddInkStroke(double x = 60, double y = 40)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             _ = CommitSampleInkAsync(adapter, SelectedPageId);
@@ -459,6 +515,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Commits one pointer-drawn stroke as real persisted ink data.</summary>
     public async ValueTask CommitInkStrokeAsync(string pageId, IReadOnlyList<(double X, double Y)> points)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.CommitInkStrokeAsync(pageId, points);
@@ -475,6 +532,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         IReadOnlyList<(double X, double Y, double Pressure)> points,
         double width, string color, string tool)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.CommitInkStrokeAsync(pageId, points, width, color, tool);
@@ -490,6 +548,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async ValueTask ClearInkAsync(string pageId, CancellationToken cancellationToken = default)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.ClearInkAsync(pageId, cancellationToken);
@@ -512,6 +571,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void EditText(string controlName, string text)
     {
+        if (!_isEditMode && controlName != "NavSearchBox") return;
         switch (controlName)
         {
             case "BoardTitleBox":
@@ -692,6 +752,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void EditCheck(string controlName, bool done)
     {
+        if (!_isEditMode) return;
         switch (controlName)
         {
             case "Check1Done": FindChecklist(0).IsChecked = done; Set("Check1Done", done); break;
@@ -808,7 +869,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (_textRangeControl is not null && (_textRangePage != SelectedPageId || _textRangeBlock != SelectedBlockId)) InvalidateTextRange();
         var selection = CurrentTextRange();
         var blockMode = _textRangeControl is null && !_textRangeDetached;
-        var allowed = !_textRangeBusy && (selection is not null || blockMode);
+        var allowed = _isEditMode && !_textRangeBusy && (selection is not null || blockMode);
         Set("CanFormatTextRange", allowed);
         Set("TextRangeSummary", selection is not null ? $"Selected text: {Math.Abs(selection.Caret - selection.Anchor)} characters"
             : _textRangeControl is not null ? "Select text to format" : block is not null ? "Selected block" : "No text selection");
@@ -965,6 +1026,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task RenameSectionAsync(string sectionId, string title)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.RenameSectionAsync(sectionId, title);
@@ -984,6 +1046,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task RenamePageAsync(string sectionId, string pageId, string title)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.RenamePageAsync(pageId, title);
@@ -1005,6 +1068,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task DeleteSectionAsync(string sectionId)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             if (!await adapter.DeleteSectionAsync(sectionId))
@@ -1033,6 +1097,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task DeletePageAsync(string sectionId, string pageId)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             if (!await adapter.DeletePageAsync(pageId))
@@ -1062,6 +1127,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task DuplicateSectionAsync(string sectionId)
     {
+        if (!RequireEditMode()) return;
         string? freshId = null;
         if (_session is ContractSessionAdapter adapter)
         {
@@ -1090,6 +1156,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task DuplicatePageAsync(string sectionId, string pageId)
     {
+        if (!RequireEditMode()) return;
         string? freshId = null;
         if (_session is ContractSessionAdapter adapter)
         {
@@ -1119,6 +1186,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task MoveSectionAsync(string sectionId, int delta)
     {
+        if (!RequireEditMode()) return;
         var sections = _session.Document.Sections;
         var index = sections.FindIndex(s => s.Id == sectionId);
         if (index < 0)
@@ -1145,6 +1213,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task MovePageAsync(string sectionId, string pageId, int delta)
     {
+        if (!RequireEditMode()) return;
         var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
         if (section is null)
             return;
@@ -1174,6 +1243,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Converts the selected text block between paragraph/heading/list kinds.</summary>
     public async Task ConvertSelectedKindAsync(string kind)
     {
+        if (!RequireEditMode()) return;
         var block = SelectedBlockOrNull();
         if (block is null)
             return;
@@ -1328,6 +1398,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task InsertKindAsync(string kindTag, string? insertAfterBlockId = null)
     {
+        if (!RequireEditMode()) return;
         // Drawing is a page capability, not a hidden placeholder block. The
         // renderer provides its surface only while drawing is active or real
         // strokes already exist, so an empty page does not acquire dead space.
@@ -1452,6 +1523,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task ApplyStyleToSelectedAsync(string styleId)
     {
+        if (!RequireEditMode()) return;
         if (string.IsNullOrWhiteSpace(styleId))
             return;
         if (!_session.Styles.Any(s => s.Id == styleId))
@@ -1467,6 +1539,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task DeleteBlockAsync(string viewBlockId)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.DeleteViewBlockAsync(CurrentPage().Id, viewBlockId);
@@ -1489,6 +1562,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task AddChecklistItemAsync(string parentViewBlockId, string text = "New item")
     {
+        if (!RequireEditMode()) return;
         var (parentId, _) = SplitItemId(parentViewBlockId);
         if (_session is ContractSessionAdapter adapter && parentId is not null)
         {
@@ -1506,6 +1580,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Enter at the end of a checklist row appends the next item.</summary>
     public async Task ChecklistEnterAsync(string viewBlockId)
     {
+        if (!RequireEditMode()) return;
         var block = FindChecklistBlock(viewBlockId);
         var parentKey = block is not null ? ParentKey(block.Id) : viewBlockId;
         await AddChecklistItemAsync(parentKey);
@@ -1514,6 +1589,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Backspace on an empty checklist row removes it.</summary>
     public async Task ChecklistBackspaceAsync(string viewBlockId, string currentText)
     {
+        if (!RequireEditMode()) return;
         if (!string.IsNullOrEmpty(currentText))
             return;
         var block = FindChecklistBlock(viewBlockId);
@@ -1533,6 +1609,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void ChecklistIndent(string viewBlockId, int delta)
     {
+        if (!RequireEditMode()) return;
         var block = FindChecklistBlock(viewBlockId);
         if (block is null)
             return;
@@ -1543,6 +1620,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void TableAddRow(string blockId)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
@@ -1555,6 +1633,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void TableDelRow(string blockId)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
@@ -1575,6 +1654,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void TableAddCol(string blockId)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
@@ -1587,6 +1667,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void TableDelCol(string blockId)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
@@ -1607,6 +1688,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetCellAlign(string blockId, int row, int col, string alignH)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
@@ -1619,6 +1701,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void ToggleCellBold(string blockId, int row, int col)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
@@ -1633,6 +1716,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void ToggleGraphExpression(string blockId, string exprId)
     {
+        if (!RequireEditMode()) return;
         var expr = FindBlock(blockId)?.Graph?.Expressions.FirstOrDefault(e => e.Id == exprId);
         if (expr is null)
             return;
@@ -1644,6 +1728,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void GraphAddExpression(string blockId, string text = "y = x")
     {
+        if (!RequireEditMode()) return;
         var graph = FindBlock(blockId)?.Graph;
         if (graph is null || graph.Expressions.Count >= 32)
             return;
@@ -1655,6 +1740,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task GraphDeleteExpressionAsync(string blockId, string exprId)
     {
+        if (!RequireEditMode()) return;
         var graph = FindBlock(blockId)?.Graph;
         if (graph is null)
             return;
@@ -1669,6 +1755,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void GraphPanZoom(string blockId, double dx, double dy, double factor)
     {
+        if (!RequireEditMode()) return;
         var graph = FindBlock(blockId)?.Graph;
         if (graph is null)
             return;
@@ -1743,6 +1830,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task ReplaceImageAsync(string blockId)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null || (block.Kind != "image" && block.Kind != "paragraph" && block.Kind != "heading"))
             return;
@@ -1781,6 +1869,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task AttachFileAsync(string blockId, string? pickedPath = null)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null)
             return;
@@ -1808,6 +1897,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task RemoveAttachmentAsync(string blockId)
     {
+        if (!RequireEditMode()) return;
         var block = FindBlock(blockId);
         if (block is null)
             return;
@@ -1873,6 +1963,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetDividerStyle(string blockId, string lineStyle)
     {
+        if (!RequireEditMode()) return;
         var divider = FindBlock(blockId)?.Divider;
         if (divider is null)
             return;
@@ -1884,6 +1975,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetImageAlignment(string blockId, string alignment)
     {
+        if (!RequireEditMode()) return;
         var image = FindBlock(blockId)?.Image;
         if (image is null)
             return;
@@ -1894,6 +1986,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetInkTool(string tool)
     {
+        if (!RequireEditMode()) return;
         InkTool = tool;
         Set("StatusText", $"Ink tool: {tool}");
         RequestRebuild();
@@ -1902,6 +1995,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Turns the current note page into its contextual drawing state.</summary>
     public Task ActivateDrawingAsync()
     {
+        if (!RequireEditMode()) return Task.CompletedTask;
         IsDrawMode = true;
         InkTool = "Pen";
         Set("StatusText", "Draw mode — choose a pen tool and draw on the page");
@@ -1920,6 +2014,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetInkColor(string hex)
     {
+        if (!RequireEditMode()) return;
         InkColor = string.IsNullOrWhiteSpace(hex) ? "#FF111111" : hex.Trim();
         PushDocumentToBindings();
         RequestRebuild();
@@ -1927,6 +2022,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetInkWidth(double width)
     {
+        if (!RequireEditMode()) return;
         InkWidth = Math.Clamp(width, 1, 32);
         PushDocumentToBindings();
         RequestRebuild();
@@ -1934,6 +2030,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task SetInkZoomAsync(double zoom)
     {
+        if (!RequireEditMode()) return;
         InkZoom = Math.Clamp(zoom, 0.25, 8);
         if (_session is ContractSessionAdapter adapter)
             await adapter.SetInkViewAsync(SelectedPageId, InkPanX, InkPanY, InkZoom);
@@ -1942,6 +2039,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task PanInkViewAsync(double dx, double dy)
     {
+        if (!RequireEditMode()) return;
         InkPanX += dx;
         InkPanY += dy;
         if (_session is ContractSessionAdapter adapter)
@@ -1951,6 +2049,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task ResetInkViewAsync()
     {
+        if (!RequireEditMode()) return;
         InkZoom = 1;
         InkPanX = 0;
         InkPanY = 0;
@@ -1990,6 +2089,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task AddCanvasBoxAsync()
     {
+        if (!RequireEditMode()) return;
         if (_session is not ContractSessionAdapter adapter)
         {
             Set("StatusText", "Freeform canvas needs the contract session");
@@ -2001,6 +2101,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task MoveCanvasBoxAsync(string objectId, double x, double y)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
             await adapter.MoveCanvasObjectAsync(SelectedPageId, objectId, x, y);
         RefreshAfterEdit();
@@ -2008,6 +2109,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task RemoveCanvasBoxAsync(string objectId)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
             await adapter.RemoveCanvasObjectAsync(SelectedPageId, objectId);
         RefreshAfterEdit();
@@ -2017,6 +2119,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task<string?> StyleCreateAsync(string name)
     {
+        if (!RequireEditMode()) return null;
         if (_session is ContractSessionAdapter adapter)
         {
             var id = await adapter.CreateCustomStyleAsync(name);
@@ -2029,6 +2132,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task StyleRenameAsync(string styleId, string name)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.UpdateStyleAsync(styleId, s => s.Name = name);
@@ -2040,6 +2144,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task ApplyStyleEditAsync(StyleEditModel model)
     {
+        if (!RequireEditMode()) return;
         if (_session is not ContractSessionAdapter adapter)
         {
             Set("StatusText", "Style edit needs the contract session");
@@ -2059,6 +2164,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task StyleDeleteAsync(string styleId)
     {
+        if (!RequireEditMode()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             try
@@ -2078,6 +2184,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task<string?> StyleDuplicateAsync(string styleId)
     {
+        if (!RequireEditMode()) return null;
         if (_session is ContractSessionAdapter adapter)
         {
             var id = await adapter.DuplicateStyleAsync(styleId);
@@ -2135,6 +2242,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetSelectedAlignment(string alignment)
     {
+        if (!RequireEditMode()) return;
         SelectedBlock().Alignment = alignment;
         PushDocumentToBindings();
         _session.MarkDirty();
@@ -2143,6 +2251,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetSelectedColors(string foreground, string background)
     {
+        if (!RequireEditMode()) return;
         var block = SelectedBlock();
         block.Foreground = foreground ?? string.Empty;
         block.Background = background ?? string.Empty;
@@ -2153,6 +2262,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetSelectedFontFamily(string family)
     {
+        if (!RequireEditMode()) return;
         SelectedBlock().FontFamily = family ?? string.Empty;
         PushDocumentToBindings();
         _session.MarkDirty();
@@ -2161,6 +2271,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetSelectedFontSize(double size)
     {
+        if (!RequireEditMode()) return;
         SelectedBlock().FontSize = Math.Clamp(size, 8, 96);
         PushDocumentToBindings();
         _session.MarkDirty();
@@ -2173,6 +2284,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void ShiftSelectedIndent(int delta)
     {
+        if (!RequireEditMode()) return;
         var block = SelectedBlock();
         block.IndentLevel = Math.Clamp(block.IndentLevel + delta, -1, 8);
         PushDocumentToBindings();
