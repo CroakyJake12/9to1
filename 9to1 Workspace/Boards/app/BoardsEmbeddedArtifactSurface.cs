@@ -228,14 +228,12 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
 
     private static async Task DispatchAsync(Func<Task> work)
     {
-        var operation = Dispatcher.UIThread.InvokeAsync(work);
-        await await operation;
+        await Dispatcher.UIThread.InvokeAsync(work);
     }
 
     private static async Task<T> DispatchAsync<T>(Func<Task<T>> work)
     {
-        var operation = Dispatcher.UIThread.InvokeAsync(work);
-        return await await operation;
+        return await Dispatcher.UIThread.InvokeAsync(work);
     }
 
     private static string FirstLine(string value)
