@@ -14,6 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaResource Include="..\..\shared\src\Haven.Desktop\Assets\OwnerAppIcons\dark\boards.png" Link="Assets\OwnerAppIcons\dark\boards.png" />
+    <AvaloniaResource Include="..\..\shared\src\Haven.Desktop\Assets\OwnerAppIcons\light\boards.png" Link="Assets\OwnerAppIcons\light\boards.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Controls\Avalonia.Controls.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Remote.Protocol\Avalonia.Remote.Protocol.csproj" />
