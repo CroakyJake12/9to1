@@ -165,7 +165,7 @@ public static class BlockRenderer
             BorderThickness = new Thickness(3, 0, 0, 0),
             BorderBrush = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
             Padding = new Thickness(9, 2, 0, 2),
-            Margin = new Thickness(-73, 0, 0, 10),
+            Margin = new Thickness(-76, 0, 0, 10),
             Background = Brushes.Transparent,
         };
         border.Tag = new BlockReorderRow(selectId, blockIndex);
