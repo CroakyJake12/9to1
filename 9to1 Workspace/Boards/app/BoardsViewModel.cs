@@ -126,6 +126,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public IReadOnlyList<RichStyleView> StyleList => _session.Styles;
     public IReadOnlyList<RichBoardBlock> PageBlocks => CurrentPage().Blocks;
     public bool IsStandalonePresentation { get; private set; } = true;
+    public bool IsEmbeddedPresentation => !IsStandalonePresentation;
 
     public void SetLanding(bool show)
     {
@@ -137,6 +138,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         IsStandalonePresentation = false;
         Set(nameof(IsStandalonePresentation), false);
+        Set(nameof(IsEmbeddedPresentation), true);
     }
 
     public void SetEmbeddedPageStatus(bool unavailable, string message)
