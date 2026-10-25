@@ -32,11 +32,12 @@ public static class CanonicalAutomationCoreNodes
             }),
             [new("in", GraphPortDirection.Input, "flow"), new("out", GraphPortDirection.Output, "flow", true)])
     ];
-    public static NodeGraphSchemaRegistry CreateRegistry() => new(Types(),
+    public static NodeGraphSchemaRegistry CreateRegistry() => new(Types().Concat(SpaceUserMessageGraph.Types()),
     [
         new(EmptyProfileId, new HashSet<string>(), new HashSet<string>()),
         new(ProfileId, new HashSet<string>([ManualType, EmitType], StringComparer.Ordinal),
-            new HashSet<string>([FlowCapability, ValueCapability], StringComparer.Ordinal))
+            new HashSet<string>([FlowCapability, ValueCapability], StringComparer.Ordinal)),
+        SpaceUserMessageGraph.Profile()
     ]);
     public static bool IsRegistered(NodeGraphSchemaRegistry schemas) =>
         JsonSerializer.Serialize(schemas.ListNodeTypes(ProfileId).OrderBy(value => value.TypeId, StringComparer.Ordinal)) ==
