@@ -23,6 +23,7 @@ internal interface IHomeOriginalLibrarySource : IHomeArtifactSearchIndex, IHomeA
 internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySource
 {
     private sealed record Entry(HomeArtifactReference View, NotesDocumentSummary Summary);
+    private sealed record WriteEntry(HomeArtifactReference View, NotesDocumentSummary Summary);
     private sealed record Read(INotesOriginalLibraryReadRequest Request, HomeNotesLibraryReadAdmission Admission);
     private sealed record Operation(Task Task, CancellationToken Token);
     private readonly HomeNativeWindowsComposition _home;
@@ -35,11 +36,13 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySour
     private readonly Action<Action> _parent;
     private readonly Func<CancellationToken, Task> _admit;
     private readonly Func<bool> _alive;
+    private readonly bool _writeSelectionMode;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _sync = new();
     private readonly List<Operation> _operations = [];
     private readonly HashSet<Exception> _refusals = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<string, Entry> _entries = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, WriteEntry> _writeEntries = new(StringComparer.Ordinal);
     private IBoardsNotebookSummarySource? _metadata;
     private HomeLibraryQuery? _query;
     private (INotesOriginalLibraryReadRequest Request, HomeNotesLibraryReadReview Review)? _pending;
@@ -52,11 +55,12 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySour
         VerifiedNotesRepository verified, HomeNotesResourceAdmissionSource admission,
         AuthenticatedResourceActor actor, string session,
         Func<HomePermissionAuthorization, CancellationToken, Task> present,
-        Func<CancellationToken, Task> admit, Action<Action> parent, Func<bool> alive)
+        Func<CancellationToken, Task> admit, Action<Action> parent, Func<bool> alive, bool writeSelectionMode = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(session);
         _home = home; _notes = notes; _verified = verified; _admission = admission; _actor = actor;
         _session = session; _present = present; _admit = admit; _parent = parent; _alive = alive;
+        _writeSelectionMode = writeSelectionMode;
         if (!admission.IsBoundToOriginalNotes(notes) ||
             !ReferenceEquals(home.Services.GetService(typeof(NotesRepository)), notes) ||
             !ReferenceEquals(home.Services.GetService(typeof(HomeNotesResourceAdmissionSource)), admission))
@@ -78,13 +82,37 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySour
             var identity = query with { Offset = 0, Cursor = null };
             if (query.Offset == 0)
             {
-                _entries.Clear(); _metadata = null; _query = null;
-                var read = await ReadAsync(null, originals, token).ConfigureAwait(false);
-                _metadata = _notes.CreateOriginalBoardsSummarySource(read.Request, read.Snapshot, read.Admission);
+                _entries.Clear(); _writeEntries.Clear(); _metadata = null; _query = null;
+                var read = await ReadAsync(null, originals, token, _writeSelectionMode).ConfigureAwait(false);
+                if (_writeSelectionMode)
+                {
+                    foreach (var metadata in read.Snapshot.Metadata.Where(value => !value.IsDeleted &&
+                                 !StringComparer.Ordinal.Equals(value.Product, "boards")))
+                    {
+                        var row = metadata.Summary;
+                        if (row.Id == Guid.Empty || row.Version < 1 || string.IsNullOrWhiteSpace(row.Title))
+                            throw new InvalidDataException("The original Notes owner returned invalid Write metadata.");
+                        var id = row.Id.ToString("D");
+                        var reference = new HomeArtifactReference("write", id, row.Title, "Write document",
+                            "Write library", _actor.ProfileId, null, row.UpdatedAt, false, false, false, false, [],
+                            new(HomeRoute.Library, "write", id, "select", "write.document"));
+                        if (!_writeEntries.TryAdd(id, new(reference, row)))
+                            throw new InvalidDataException("The original Notes owner returned duplicate Write identities.");
+                    }
+                }
+                else
+                    _metadata = _notes.CreateOriginalBoardsSummarySource(read.Request, read.Snapshot, read.Admission);
                 _query = identity;
             }
-            else if (_query != identity || _metadata is null)
+            else if (_query != identity || (!_writeSelectionMode && _metadata is null))
                 throw Refuse("LibraryPageChanged", "Refresh Library before opening another page.");
+            if (_writeSelectionMode)
+            {
+                await DemandCurrentAsync(originals, token).ConfigureAwait(false);
+                var selectedText = query.Text?.Trim();
+                return _writeEntries.Values.Select(value => value.View).Where(value => string.IsNullOrEmpty(selectedText) ||
+                    value.DisplayName.Contains(selectedText, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+            }
             var rows = await CurrentSummariesAsync(originals, token).ConfigureAwait(false);
             _entries.Clear();
             foreach (var row in rows)
@@ -107,13 +135,40 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySour
     public Task<HomeArtifactReference?> GetByIdAsync(string ownerApp, string artifactId, CancellationToken cancellationToken) =>
         RunAsync<HomeArtifactReference?>(async (originals, token) =>
         {
+            if (_writeSelectionMode && ownerApp == "write" && _writeEntries.TryGetValue(artifactId, out var writeEntry))
+            {
+                await DemandCurrentAsync(originals, token).ConfigureAwait(false);
+                return writeEntry.View;
+            }
             if (ownerApp != "boards" || !_entries.TryGetValue(artifactId, out var entry)) return null;
             return await IsCurrentEntryAsync(entry, originals, token).ConfigureAwait(false) ? entry.View : null;
         }, cancellationToken);
 
     public Task<bool> CanReadAsync(string ownerApp, string artifactId, CancellationToken cancellationToken) =>
-        RunAsync(async (originals, token) => ownerApp == "boards" && _entries.TryGetValue(artifactId, out var entry) &&
-            await IsCurrentEntryAsync(entry, originals, token).ConfigureAwait(false), cancellationToken);
+        RunAsync(async (originals, token) =>
+        {
+            if (_writeSelectionMode && ownerApp == "write" && _writeEntries.ContainsKey(artifactId))
+            { await DemandCurrentAsync(originals, token).ConfigureAwait(false); return true; }
+            return ownerApp == "boards" && _entries.TryGetValue(artifactId, out var entry) &&
+                await IsCurrentEntryAsync(entry, originals, token).ConfigureAwait(false);
+        }, cancellationToken);
+
+    internal Task<BoardEmbeddedArtifactReference?> SelectWriteDocumentAsync(HomeArtifactReference selected,
+        CancellationToken cancellationToken = default) => RunAsync<BoardEmbeddedArtifactReference?>(async (originals, token) =>
+    {
+        ArgumentNullException.ThrowIfNull(selected);
+        if (!_writeSelectionMode || selected.OwnerApp != "write" ||
+            !_writeEntries.TryGetValue(selected.ArtifactId, out var entry) ||
+            !ReferenceEquals(selected.OpenLink, entry.View.OpenLink) || selected.ArtifactId != entry.Summary.Id.ToString("D"))
+            throw new UnauthorizedAccessException("Choose a Write document from this exact reviewed Home Library page.");
+        await DemandCurrentAsync(originals, token).ConfigureAwait(false);
+        // This is a metadata reference only. The embedding host performs a fresh, exact
+        // write.document.read review and rejects a changed version before showing content.
+        var reference = new BoardEmbeddedArtifactReference("write", entry.Summary.Id,
+            new BoardEmbeddedArtifactRevision(entry.Summary.Version, null));
+        reference.Validate();
+        return reference;
+    }, cancellationToken);
 
     public Task<bool> CanOpenAsync(HomeDeepLink link, CancellationToken cancellationToken) => RunAsync(async (originals, token) =>
     {
@@ -147,7 +202,8 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySour
     }
 
     private async Task<(INotesOriginalLibraryReadRequest Request, NotesOriginalLibrarySnapshot Snapshot,
-        HomeNotesLibraryReadAdmission Admission)> ReadAsync(Guid? documentId, CloudflareOriginalTaskLedger originals, CancellationToken token)
+        HomeNotesLibraryReadAdmission Admission)> ReadAsync(Guid? documentId, CloudflareOriginalTaskLedger originals,
+        CancellationToken token, bool writeLibraryRead = false)
     {
         // Stable producer callbacks resolve the currently serialized ORIGINAL operation,
         // rather than capturing an already-settled query ledger in the saved read witness.
@@ -192,11 +248,13 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySour
                 _notes.PrepareOriginalLibraryReadAsync(documentId, token).AsTask())).ConfigureAwait(false);
             var scope = new ResourceScope(HomeNotesResourceAdmissionSource.ScopeKind,
                 request.StoreObservation.StoreIdentity.StoreId.ToString("D"), request.StoreObservation.Revision, ResourceAccess.Read);
+            var readAction = writeLibraryRead ? HomeNotesResourceAdmissionSource.WriteLibraryReadAction : HomeNotesResourceAdmissionSource.ReadAction;
             var allowed = await originals.AwaitAsync(originals.Invoke(() => _admission.EvaluateWithinOriginalSourceAsync(
-                _actor, HomeNotesResourceAdmissionSource.ReadAction, scope, Own, Retain, token))).ConfigureAwait(false);
+                _actor, readAction, scope, Own, Retain, token))).ConfigureAwait(false);
             if (!allowed.Allowed) throw Refuse("LibrarySetupRequired", "Set up or explicitly import this existing Notes store in Boards before browsing its Library references.");
-            var review = await originals.AwaitAsync(originals.Invoke(() =>
-                _admission.RequestLibrarySnapshotWithinOriginalSourceAsync(request, _session, Own, Retain, token))).ConfigureAwait(false);
+            var review = await originals.AwaitAsync(originals.Invoke(() => writeLibraryRead
+                ? _admission.RequestWriteLibrarySnapshotWithinOriginalSourceAsync(request, _session, Own, Retain, token)
+                : _admission.RequestLibrarySnapshotWithinOriginalSourceAsync(request, _session, Own, Retain, token))).ConfigureAwait(false);
             _pending = (request, review); // Retain before any presenter, dispatch or source fault.
         }
         var original = _pending!.Value;
