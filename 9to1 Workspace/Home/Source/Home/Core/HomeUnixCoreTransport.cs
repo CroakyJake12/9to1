@@ -10,9 +10,9 @@ namespace HavenOS.Home.Core;
 // Exact pre-admission socket-reader outcomes. Hosts may count these as rejected
 // unauthenticated connections; an unrelated API timeout or I/O failure is not one.
 internal sealed class HomeUnixCoreFirstFrameTimeoutException(Exception cause)
-    : TimeoutException("Home Core first frame deadline exceeded.", cause);
+    : TimeoutException("Home Core first frame deadline exceeded.", cause) { }
 internal sealed class HomeUnixCoreFirstFrameEndedException(Exception cause)
-    : EndOfStreamException("The peer closed before its complete first Home frame.", cause);
+    : EndOfStreamException("The peer closed before its complete first Home frame.", cause) { }
 
 /// <summary>Additive accepting-host seam, not a listener or a default DI registration.
 /// One original reader owns every frame on the SAME accepted socket. Legacy discovery
