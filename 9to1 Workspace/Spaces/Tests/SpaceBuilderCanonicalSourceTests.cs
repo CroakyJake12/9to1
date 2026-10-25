@@ -62,7 +62,7 @@ public sealed class SpaceBuilderCanonicalSourceTests
                     editor.MoveContextReference(request.SpaceId, request.DraftRevision, request.ContextId,
                         request.ExpectedIndex, command == "space-builder.source.move-up" ? -1 : 1);
                 return ValueTask.CompletedTask;
-            }, filesOptions: () => []);
+            }, sourceOptions: () => []);
         Assert.True(bindings.TryGetValue("builder.contextReferences", out var projected));
         var rows = Assert.IsAssignableFrom<object[]>(projected);
         var moveUp = Assert.IsType<SpaceBuilderContextReferenceRow>(rows[1]);
