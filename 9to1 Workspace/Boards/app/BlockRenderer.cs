@@ -212,7 +212,7 @@ public static class BlockRenderer
             CuiPropertyLevel.Instance, geometrySource);
         if (!insertAction)
         {
-            var glyph = BuildBlockGripGlyph();
+            var glyph = BoardsIcons.Glyph(BoardsIcons.Grip, 14, "Drag block handle");
             CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
                 CuiPropertyLevel.Instance, "Boards block drag grip surface");
             CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
@@ -238,37 +238,6 @@ public static class BlockRenderer
             addGlyph.Height = 18;
         }
     }
-
-    private static Control BuildBlockGripGlyph()
-    {
-        var glyph = new Grid
-        {
-            Width = 10,
-            Height = 14,
-            ColumnDefinitions = new ColumnDefinitions("*,*"),
-            RowDefinitions = new RowDefinitions("*,*,*"),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        for (var row = 0; row < 3; row++)
-            for (var column = 0; column < 2; column++)
-            {
-                var dot = new Ellipse
-                {
-                    Width = 3,
-                    Height = 3,
-                    Fill = BoardsTheme.SecondaryTextBrush,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
-                Grid.SetRow(dot, row);
-                Grid.SetColumn(dot, column);
-                glyph.Children.Add(dot);
-            }
-        AutomationProperties.SetName(glyph, "Drag block handle");
-        return glyph;
-    }
-
 
     // ----- Block dispatch -----
 

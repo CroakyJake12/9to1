@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
@@ -50,7 +49,8 @@ public sealed class BoardsBlockGeometryTests
             Border Row(string id) => Assert.Single(host.GetLogicalDescendants().OfType<Border>(), border =>
                 border.Tag is BlockReorderRow row && row.BlockId == id);
             (double Height, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double Opacity,
-                int GripColumn, int InsertColumn, int GripDotCount, bool GripHasNoSurface, double AddGlyphSize,
+                int GripColumn, int InsertColumn, bool HasCanonicalGripGlyph, bool GripHasNoSurface,
+                double GripGlyphSize, string? GripGlyphName, double AddGlyphSize,
                 string InsertLayout) MeasureRow(string id)
             {
                 var border = Row(id);
@@ -60,16 +60,16 @@ public sealed class BoardsBlockGeometryTests
                 var gripButton = Assert.Single(border.GetLogicalDescendants().OfType<Button>(), button => button.Name == "BlockGripToggle");
                 var gripRoot = Assert.Single(grid.Children.Where(child =>
                     child.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle")));
-                var glyph = Assert.IsType<Grid>(gripButton.Content);
+                var glyph = Assert.IsType<Image>(gripButton.Content);
                 var addGlyph = Assert.IsType<Image>(insert.Content);
                 var insertLayout = $"Width={insert.Width}, Height={insert.Height}, MinHeight={insert.MinHeight}, " +
                     $"MaxHeight={insert.MaxHeight}, Bounds={insert.Bounds}, Padding={insert.Padding}, " +
                     $"BorderThickness={insert.BorderThickness}, Margin={insert.Margin}";
                 return (border.Bounds.Height, insert.Bounds.Height, insert.Bounds.Top,
                     gripButton.Bounds.Height, gripButton.Bounds.Top, insert.Opacity,
-                    Grid.GetColumn(gripRoot), Grid.GetColumn(insert), glyph.Children.OfType<Ellipse>().Count(),
+                    Grid.GetColumn(gripRoot), Grid.GetColumn(insert), glyph.Source is not null,
                     gripButton.Background is ISolidColorBrush gripBrush && gripBrush.Color.A == 0,
-                    addGlyph.Width, insertLayout);
+                    glyph.Width, AutomationProperties.GetName(glyph), addGlyph.Width, insertLayout);
             }
 
             var shortRow = MeasureRow("short-note");
@@ -92,12 +92,14 @@ public sealed class BoardsBlockGeometryTests
         Assert.Equal(32, actual.tallRow.GripHeight);
         Assert.Equal(0, actual.tallRow.GripColumn);
         Assert.Equal(1, actual.tallRow.InsertColumn);
-        Assert.Equal(6, actual.tallRow.GripDotCount);
+        Assert.True(actual.tallRow.HasCanonicalGripGlyph);
         Assert.True(actual.tallRow.GripHasNoSurface);
+        Assert.Equal(14, actual.tallRow.GripGlyphSize);
+        Assert.Equal("Drag block handle", actual.tallRow.GripGlyphName);
         Assert.Equal(18, actual.tallRow.AddGlyphSize);
         Assert.InRange(actual.tallRow.InsertTop, 0, 2);
         Assert.InRange(actual.tallRow.GripTop, 0, 2);
-        Assert.Equal(0.56, actual.shortRow.Opacity, precision: 2);
+        Assert.Equal(0.76, actual.shortRow.Opacity, precision: 2);
         Assert.Equal(1, actual.tallRow.Opacity);
         Assert.Equal(1, actual.focusedOpacity);
     }
