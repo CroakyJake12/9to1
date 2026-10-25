@@ -54,6 +54,11 @@ public static class CuiLayoutProperties
                     value = bool.Parse(text); type = typeof(bool); initial = false; break;
                 case "CellMargin": value = Thickness.Parse(text); type = typeof(Thickness); initial = default(Thickness); break;
                 case "Orientation": value = Enum.Parse<Orientation>(text, true); type = typeof(Orientation); initial = Orientation.Horizontal; break;
+                case "ScrollBarThickness":
+                    if (_control is not CuiContainerControl) return false;
+                    value = double.Parse(text, CultureInfo.InvariantCulture); type = typeof(double); initial = 0d;
+                    if (!double.IsFinite((double)value) || (double)value is < 0 or > 64) throw new FormatException("ScrollBarThickness must be from 0 to 64 DIP.");
+                    break;
                 case "HorizontalScrolling": case "VerticalScrolling": case "HorizontalOverflowArrows": case "FollowAtEnd":
                     if (_control is not CuiContainerControl) return false;
                     value = bool.Parse(text); type = typeof(bool); initial = false; break;
@@ -102,6 +107,7 @@ public static class CuiLayoutProperties
                 case "HorizontalScrolling": ((CuiContainerControl)_control).SetScrolling(horizontal: (bool)property.Value!); break;
                 case "VerticalScrolling": ((CuiContainerControl)_control).SetScrolling(vertical: (bool)property.Value!); break;
                 case "HorizontalOverflowArrows": ((CuiContainerControl)_control).SetHorizontalOverflowArrows((bool)property.Value!); break;
+                case "ScrollBarThickness": ((CuiContainerControl)_control).SetScrollBarThickness((double)property.Value!); break;
                 case "FollowAtEnd": ((CuiContainerControl)_control).SetFollowAtEnd((bool)property.Value!); break;
             }
         }

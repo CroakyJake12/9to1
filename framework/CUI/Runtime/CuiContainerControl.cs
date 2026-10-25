@@ -19,6 +19,8 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
     private bool _horizontalScrolling, _verticalScrolling;
     private bool _horizontalOverflowArrows;
     private CuiHorizontalOverflowControls? _horizontalOverflowControls;
+    private double _scrollBarThickness, _scrollBarDisplayScale = 1;
+    private IDisposable? _scrollBarScaleSubscription;
     private bool _followAtEnd, _followingLatest = true;
     private Thickness _cellMargin;
     private readonly List<Border> _cells = [];
@@ -301,6 +303,27 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         SetScrolling();
     }
 
+    /// <summary>Opt-in visible scrollbar face thickness in unscaled DIP. Zero
+    /// restores the theme default; the native rail and hit geometry stay intact.</summary>
+    public void SetScrollBarThickness(double thickness)
+    {
+        if (!double.IsFinite(thickness) || thickness is < 0 or > 64)
+            throw new ArgumentOutOfRangeException(nameof(thickness));
+        if (_scrollBarThickness == thickness) return;
+        _scrollBarThickness = thickness;
+        _scrollBarScaleSubscription ??= this.GetResourceObservable("CuiDisplayScale").Subscribe(new ValueObserver(value =>
+        {
+            _scrollBarDisplayScale = value is double scale ? scale : 1;
+            ApplyScrollBarThickness();
+        }));
+        ApplyScrollBarThickness();
+    }
+    private void ApplyScrollBarThickness()
+    {
+        if (_scrollBarThickness > 0) _scroll.Resources["CuiScrollThumbThickness"] = _scrollBarThickness * _scrollBarDisplayScale;
+        else _scroll.Resources.Remove("CuiScrollThumbThickness");
+    }
+
     public void AddChild(Control child) => InsertAuthoredChild(AuthoredChildCount, child);
 
     /// <summary>Number of authored children (cells) currently held by this container.</summary>
@@ -391,6 +414,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         _focusBrushSubscription = null; _validationBrushSubscription = null; _focusThicknessSubscription = null;
         _scroll.ScrollChanged -= OnScrollChanged;
         _horizontalOverflowControls?.Dispose(); _horizontalOverflowControls = null;
+        _scrollBarScaleSubscription?.Dispose(); _scrollBarScaleSubscription = null;
         foreach (var (control, handler) in _placementHandlers) control.PropertyChanged -= handler;
         _placementHandlers.Clear();
         (Layout as IDisposable)?.Dispose();

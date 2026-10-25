@@ -357,6 +357,8 @@ public static class CuiControlTemplates
     {
         CuiPropertyPresentation.ConfigurePart(owner,CuiPropertyPresentation.TemplatePart.ScrollBar);
         var thumb = new Thumb();CuiPropertyPresentation.ConfigurePart(thumb,CuiPropertyPresentation.TemplatePart.ScrollThumb);
+        CuiPropertyPresentation.Set(thumb, "Template", new FuncControlTemplate<Thumb>((target, _) => ScrollThumbFace(target, owner)),
+            CuiPropertyLevel.Theme, "CUI scrollbar face", 1);
         var track = Name(new Track { Thumb = thumb },"PART_Track",scope);
         Bind(track, Track.MinimumProperty, owner, "Minimum"); Bind(track, Track.MaximumProperty, owner, "Maximum");
         Bind(track, Track.ViewportSizeProperty, owner, "ViewportSize"); Bind(track, Track.ValueProperty, owner, "Value", true);
@@ -368,6 +370,43 @@ public static class CuiControlTemplates
         CuiPropertyPresentation.ConfigurePart(track.DecreaseButton,CuiPropertyPresentation.TemplatePart.RailButton);
         CuiPropertyPresentation.ConfigurePart(track.IncreaseButton,CuiPropertyPresentation.TemplatePart.RailButton);
         return track;
+    }
+
+    private static Control ScrollThumbFace(Thumb owner, ScrollBar bar)
+    {
+        var face = Frame(owner);
+        face.Name = "CuiScrollThumbFace";
+        face.HorizontalAlignment = HorizontalAlignment.Center;
+        face.VerticalAlignment = VerticalAlignment.Center;
+        // Transparent outer paint preserves the complete native drag target.
+        var hit = new Panel { Background = Brushes.Transparent, Children = { face } };
+        var subscriptions = new List<IDisposable>();
+        void Refresh()
+        {
+            var size = owner.TryFindResource("CuiScrollBarSize", out var rail) && rail is double value ? value : 12;
+            var thickness = owner.TryFindResource("CuiScrollThumbThickness", out var scoped) && scoped is double desired
+                ? Math.Clamp(desired, 1, size) : size;
+            if (owner.TryFindResource("CuiHighContrast", out var high) && high is true) thickness = size;
+            face.Width = bar.Orientation == Orientation.Vertical ? thickness : double.NaN;
+            face.Height = bar.Orientation == Orientation.Horizontal ? thickness : double.NaN;
+            face.HorizontalAlignment = bar.Orientation == Orientation.Vertical ? HorizontalAlignment.Center : HorizontalAlignment.Stretch;
+            face.VerticalAlignment = bar.Orientation == Orientation.Horizontal ? VerticalAlignment.Center : VerticalAlignment.Stretch;
+        }
+        hit.AttachedToVisualTree += (_, _) =>
+        {
+            if (subscriptions.Count != 0) return;
+            foreach (var key in new[] { "CuiScrollBarSize", "CuiScrollThumbThickness", "CuiHighContrast" })
+                subscriptions.Add(owner.GetResourceObservable(key).Subscribe(new TemplateValueObserver(_ => Refresh())));
+            subscriptions.Add(bar.GetObservable(ScrollBar.OrientationProperty).Subscribe(new TemplateValueObserver<Orientation>(_ => Refresh())));
+            Refresh();
+        };
+        hit.DetachedFromVisualTree += (_, _) =>
+        {
+            foreach (var subscription in subscriptions) subscription.Dispose();
+            subscriptions.Clear();
+        };
+        Refresh();
+        return hit;
     }
 
     private static Control Slider(Slider owner, INameScope scope)
@@ -645,4 +684,17 @@ public static class CuiControlTemplates
         var stack=new StackPanel(); var header=new ToggleButton(); Bind(header,ContentControl.ContentProperty,owner,"Header"); Bind(header,ToggleButton.IsCheckedProperty,owner,"IsExpanded",true);
         stack.Children.Add(header); var content=Presenter(owner,scope); Bind(content,Control.IsVisibleProperty,owner,"IsExpanded"); stack.Children.Add(content); return Frame(owner,stack);
     }
+    private sealed class TemplateValueObserver(Action<object?> next) : IObserver<object?>
+    {
+        public void OnNext(object? value) => next(value);
+        public void OnCompleted() { }
+        public void OnError(Exception error) => throw error;
+    }
+    private sealed class TemplateValueObserver<T>(Action<T> next) : IObserver<T>
+    {
+        public void OnNext(T value) => next(value);
+        public void OnCompleted() { }
+        public void OnError(Exception error) => throw error;
+    }
+
 }
