@@ -629,8 +629,6 @@ public static partial class HavenRichNotesOps
             throw new InvalidOperationException("Free placement applies only to Native Board pages.");
         if (page.LayoutMode != HavenRichPageLayoutModes.Unlocked)
             throw new InvalidOperationException("Free placement is available only in Unlocked layout mode.");
-        if (page.IsCanvasLocked)
-            throw new InvalidOperationException("The page layout lock prevents block placement.");
         ValidateBlockPlacement(x, y, width, height, zOrder);
         var block = RequireBlock(notes, pageId, blockId);
         if (block.Layout == HavenRichBlockLayouts.Absolute &&
