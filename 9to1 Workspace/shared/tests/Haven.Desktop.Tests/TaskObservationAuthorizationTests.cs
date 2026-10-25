@@ -20,6 +20,92 @@ namespace Haven.Desktop.Tests;
 
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Task_permission_review_responds_only_through_the_same_actual_Ask_owner_without_resuming_work(bool approve)
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(tools: false);
+        var task = rig.Service.CurrentCanonicalTask!;
+        var originalRequest = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        _ = await rig.Tasks.SubmitFollowUpAsync(task.TaskId, "retain this queued work", TaskFollowUpMode.Queue, null, null, token);
+        var review = Assert.IsType<TaskRunOriginalTaskPermissionReview>(await rig.Tasks.ReadOriginalTaskPermissionReviewAsync(task.TaskId, task.ExecutionId, token));
+        Assert.Equal(originalRequest.Id, review.Request.Id); Assert.True(review.CanRespond);
+        Assert.Contains("does not approve", review.Request.Explanation, StringComparison.Ordinal);
+        Assert.Equal(task.ContextId, review.CanonicalTaskContext.ContextId);
+        var reply = await rig.Tasks.RespondOriginalTaskPermissionAsync(review, approve, token);
+        Assert.Equal(approve ? PermissionDecisionKind.Allowed : PermissionDecisionKind.Denied, reply.Decision.Kind);
+        Assert.Equal(task.TaskId, reply.TaskId); Assert.Equal(task.ExecutionId, reply.ExecutionId);
+        var current = (await rig.Tasks.GetAsync(task.TaskId, token))!;
+        Assert.Equal(TaskExecutionLifecycle.Suspended, current.State); Assert.Empty(current.Attempts);
+        Assert.Equal("retain this queued work", Assert.Single(current.Queue).Summary);
+        var after = Assert.IsType<TaskRunOriginalTaskPermissionReview>(await rig.Tasks.ReadOriginalTaskPermissionReviewAsync(task.TaskId, task.ExecutionId, token));
+        Assert.False(after.CanRespond); Assert.Equal(reply.Decision, after.AcknowledgedDecision);
+        Assert.Equal(0, rig.Client.Dispatches); Assert.Equal(0, rig.Workspace.Effects);
+    }
+
+    [Fact]
+    public async Task Task_permission_review_refuses_copied_foreign_and_stale_reviews_before_any_decision()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        await using var foreign = new Rig();
+        await rig.RunAsync(tools: false);
+        var task = rig.Service.CurrentCanonicalTask!;
+        var review = Assert.IsType<TaskRunOriginalTaskPermissionReview>(await rig.Tasks.ReadOriginalTaskPermissionReviewAsync(task.TaskId, task.ExecutionId, token));
+        var copied = (TaskRunOriginalTaskPermissionReview)typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(review, null)!;
+        Assert.Throws<UnauthorizedAccessException>(() => { _ = rig.Tasks.RespondOriginalTaskPermissionAsync(copied, true, token); });
+        Assert.Throws<UnauthorizedAccessException>(() => { _ = foreign.Tasks.RespondOriginalTaskPermissionAsync(review, true, token); });
+        _ = await rig.Tasks.SubmitFollowUpAsync(task.TaskId, "newer actual task revision", TaskFollowUpMode.Queue, null, null, token);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Tasks.RespondOriginalTaskPermissionAsync(review, true, token));
+        Assert.True(rig.Owner.CanRespond(review.Request.Id));
+        Assert.Null(rig.Owner.GetAcknowledgedOriginalDecision(review.Request.Id));
+        Assert.Equal(0, rig.Client.Dispatches);
+        var fresh = Assert.IsType<TaskRunOriginalTaskPermissionReview>(await rig.Tasks.ReadOriginalTaskPermissionReviewAsync(task.TaskId, task.ExecutionId, token));
+        _ = await rig.Tasks.RespondOriginalTaskPermissionAsync(fresh, false, token);
+    }
+
+    [Fact]
+    public async Task Task_permission_review_joins_actual_metadata_read_on_owner_retirement_and_preserves_all_source_faults()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var rig = new Rig(temporary: false);
+        var held = new TaskCompletionSource<RemediationRequest?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = new OperationCanceledException("actual permission metadata faulted OCE");
+        var sibling = new IOException("actual permission metadata storage failure");
+        try
+        {
+            await rig.RunAsync(tools: false);
+            var task = rig.Service.CurrentCanonicalTask!;
+            rig.RemediationRows.OriginalRead = held.Task;
+            var reading = rig.Tasks.ReadOriginalTaskPermissionReviewAsync(task.TaskId, task.ExecutionId, token);
+            await rig.RemediationRows.OriginalReadEntered.Task.WaitAsync(token);
+            var close = rig.Owner.CloseAndDrainAsync();
+            Assert.False(close.IsCompleted); Assert.False(reading.IsCompleted); Assert.False(held.Task.IsCompleted);
+            held.SetException([first, sibling]);
+            var error = await Record.ExceptionAsync(() => reading);
+            Assert.NotNull(error); Assert.True(reading.IsFaulted);
+            Assert.Contains(Leaves(error), leaf => ReferenceEquals(leaf, first));
+            Assert.Contains(Leaves(error), leaf => ReferenceEquals(leaf, sibling));
+            var closed = await Record.ExceptionAsync(() => close);
+            Assert.NotNull(closed); Assert.True(close.IsFaulted);
+            Assert.Contains(Leaves(closed), leaf => ReferenceEquals(leaf, first));
+            Assert.Contains(Leaves(closed), leaf => ReferenceEquals(leaf, sibling));
+            Assert.Equal(0, rig.Client.Dispatches);
+        }
+        finally
+        {
+            held.TrySetException([first, sibling]);
+            rig.RemediationRows.OriginalRead = null;
+            var originalClose = await Record.ExceptionAsync(() => rig.DisposeAsync().AsTask());
+            Assert.NotNull(originalClose);
+            Assert.Contains(Leaves(originalClose), leaf => ReferenceEquals(leaf, first));
+            Assert.Contains(Leaves(originalClose), leaf => ReferenceEquals(leaf, sibling));
+        }
+    }
+
     [AvaloniaFact]
     public async Task All_tasks_authored_scope_menus_persist_and_page_the_actual_store_then_open_the_exact_selected_task()
     {
