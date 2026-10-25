@@ -368,18 +368,50 @@ public static class CuiThemeResourceApplier
         // palette tokens as contrast/document-colour anchors; a surface does
         // not become a primary action and no outline or effect is introduced.
         var accent = palette.SurfaceAccent ?? palette.Accent;
-        var strong = palette.SurfaceAccent is { } surface ? Blend(surface, Colors.Black, .25) : palette.AccentStrong;
         var secondary = palette.SurfaceAccent is { } tint ? Blend(tint, Colors.White, .22) : palette.AccentSecondary;
-        IBrush Surface(Color colour, double strength) => CreateGradientBrush(new(
-            Blend(colour, strong, .025),
-            Blend(colour, accent, strength * .45),
-            Blend(colour, secondary, strength),
+        var dark = Luminance(palette.Text) > Luminance(palette.Panel);
+        var panel = WithAlpha(palette.Panel, 255);
+        // The old ramp started from the almost-black shell independently of the
+        // page. On a full workspace it left a black sidebar beside a purple card.
+        // Share the page's tonal ramp and lower it only slightly for its backing
+        // workspace; a transparent sidebar then paints that same continuous field.
+        var page = new CuiAccentGradient(
+            Readable(Blend(panel, accent, dark ? .14 : .08)),
+            Readable(Blend(panel, accent, dark ? .24 : .15)),
+            Readable(Blend(panel, secondary, dark ? .38 : .24)),
             new RelativePoint(0, 0, RelativeUnit.Relative),
-            new RelativePoint(1, 1, RelativeUnit.Relative)));
-        resources["CuiShellMaterial"] = Surface(palette.TideBase, .09);
-        resources["CuiWorkspaceMaterial"] = Surface(palette.TideBase, .14);
-        resources["CuiSurfaceMaterial"] = Surface(palette.Panel, .12);
-        resources["CuiFloatingSurfaceMaterial"] = Surface(palette.Panel2, .16);
+            new RelativePoint(1, 1, RelativeUnit.Relative));
+        var backing = dark ? .08 : .025;
+        var workspace = CreateGradientBrush(page with {
+            Start = Blend(page.Start, Colors.Black, backing),
+            Middle = Blend(page.Middle, Colors.Black, backing),
+            End = Blend(page.End, Colors.Black, backing)
+        });
+        resources["CuiWorkspaceBrush"] = workspace;
+        resources["CuiShellMaterial"] = workspace;
+        resources["CuiWorkspaceMaterial"] = workspace;
+        resources["CuiSurfaceMaterial"] = CreateGradientBrush(page);
+        resources["CuiFloatingSurfaceMaterial"] = CreateGradientBrush(page with {
+            Start = Readable(Blend(page.Start, secondary, dark ? .10 : .06)),
+            Middle = Readable(Blend(page.Middle, secondary, dark ? .16 : .10)),
+            End = Readable(Blend(page.End, secondary, dark ? .20 : .12))
+        });
+
+        Color Readable(Color colour)
+        {
+            // A white/yellow custom anchor must still support ordinary secondary
+            // text. Keep the chosen hue and constrain only its tonal strength.
+            if (CuiContrast.Ratio(palette.TextSoft, colour) >= 4.5) return colour;
+            var target = dark ? Colors.Black : Colors.White;
+            var low = 0d; var high = 1d;
+            for (var index = 0; index < 16; index++)
+            {
+                var middle = (low + high) / 2;
+                if (CuiContrast.Ratio(palette.TextSoft, Blend(colour, target, middle)) >= 4.5) high = middle;
+                else low = middle;
+            }
+            return Blend(colour, target, high);
+        }
     }
 
     private static Color InputSurface(CuiPalette palette) =>

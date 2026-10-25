@@ -178,7 +178,7 @@ public static class CuiSurfacePaletteCatalog
         // surface identity, not an action accent or a saved user preference.
         // Explicit user accents retain their complete existing derivation.
         Color? surfaceAccent = theme == CuiTheme.Glow && appIdentity == "app.boards" && accentOverride is null
-            ? Blend(accent, Colors.Red, .18) : null;
+            ? Blend(accent, Colors.Red, .24) : null;
         if (anchors is not null)
             hue = hue with { Tide = Blend(Colors.White, surfaceAccent ?? accent, .28).ToString() };
         var palette = Assemble(hue, appearance, theme, accent, secondary, strong, soft, surfaceAccent);
