@@ -92,3 +92,11 @@ evidence that the subsequently integrated theme code has rendered correctly.
 These later explicit decisions supersede any intermediate wrapping proposal or
 static capture. Implementation, source compilation, basic rendering and full
 acceptance remain separate states.
+
+- Enlarge subscript/superscript glyphs and place them after the font and font-size
+  selectors.
+- Remove the redundant topbar Boards / Board / Page breadcrumb; sidebar and page
+  title already establish location.
+- Once the scrollbar is removed, reduce toolbar height to fit one comfortable
+  button row plus padding; allow the document's flexible row to use the freed
+  height instead of retaining empty toolbar space.
