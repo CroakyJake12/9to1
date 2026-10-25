@@ -32,12 +32,15 @@ public sealed class OriginalSpacePolicyLineage : IEquatable<OriginalSpacePolicyL
 public sealed class OriginalSpacePolicySnapshot
 {
     public OriginalSpacePolicySnapshot(EffectiveSpacePolicy policy, OriginalSpacePolicyLineage lineage,
-        OriginalSpaceCapturedContext? capturedContext = null)
+        OriginalSpaceCapturedContext? capturedContext = null, SpaceUserMessageGraph? userMessageGraph = null)
     {
         ArgumentNullException.ThrowIfNull(policy); ArgumentNullException.ThrowIfNull(lineage);
         if (policy.SpaceId != lineage.SpaceId || !policy.Ancestry.SequenceEqual(lineage.Ancestors.Select(row => row.SpaceId)))
             throw new ArgumentException("The policy and original ancestry differ.");
-        Lineage = lineage; CapturedContext = capturedContext;
+        if (userMessageGraph is not null && (userMessageGraph.SpaceId != policy.SpaceId ||
+            userMessageGraph.SpaceRevision != lineage.Ancestors[^1].Revision))
+            throw new ArgumentException("The user-message graph does not belong to this exact Space revision.", nameof(userMessageGraph));
+        Lineage = lineage; CapturedContext = capturedContext; UserMessageGraph = userMessageGraph;
         if (capturedContext is not null && capturedContext.SpaceId != policy.SpaceId)
             throw new ArgumentException("The captured context belongs to another Space.", nameof(capturedContext));
         Policy = policy with
@@ -51,6 +54,7 @@ public sealed class OriginalSpacePolicySnapshot
     public EffectiveSpacePolicy Policy { get; }
     public OriginalSpacePolicyLineage Lineage { get; }
     public OriginalSpaceCapturedContext? CapturedContext { get; }
+    public SpaceUserMessageGraph? UserMessageGraph { get; }
 }
 
 
