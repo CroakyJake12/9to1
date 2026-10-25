@@ -89,6 +89,7 @@ public sealed class FilesOperationJournal
 	public async Task<IReadOnlyList<FilesOperation>> ListPendingAsync(CancellationToken cancellationToken = default)
 	{
 		FilesOperationJournalState state = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);
+		_ = GetNextSequence(state);
 		return state.Operations.Values
 			.Where(static operation => operation.State is FilesOperationState.Pending or FilesOperationState.Running)
 			.OrderBy(static operation => operation.Sequence)

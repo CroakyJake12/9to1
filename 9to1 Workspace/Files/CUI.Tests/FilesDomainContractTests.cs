@@ -204,7 +204,11 @@ internal static class FilesDomainContractTests
 				NextSequence = 8,
 			});
 			string before = await File.ReadAllTextAsync(duplicatePath);
-			await Check.ThrowsAsync<InvalidDataException>(() => new FilesOperationJournal(duplicatePath).EnqueueAsync(NewOperation("must-not-repeat")));
+			var duplicateJournal = new FilesOperationJournal(duplicatePath);
+			await Check.ThrowsAsync<InvalidDataException>(() => duplicateJournal.EnqueueAsync(NewOperation("must-not-repeat")));
+			await Check.ThrowsAsync<InvalidDataException>(() => duplicateJournal.ListPendingAsync());
+			await Check.ThrowsAsync<InvalidDataException>(() => duplicateJournal.TransitionAsync(
+				duplicateA.Id, FilesOperationState.Running, DateTimeOffset.UtcNow.AddSeconds(1)));
 			Check.Equal(before, await File.ReadAllTextAsync(duplicatePath));
 		}
 		finally
