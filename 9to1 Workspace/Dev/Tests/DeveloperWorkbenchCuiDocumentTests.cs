@@ -138,26 +138,32 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
     [Fact]
     public void Cui_draft_checks_problems_and_outline_use_actual_source_actions_and_observed_keys()
     {
-        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var document = DeveloperWorkbenchCuiDocument.Load();
+        var nodes = Descendants(document.Components).ToArray();
         var check = Assert.Single(nodes, node => node.Name == "dev-analyze-cui-draft");
         Assert.Contains(check.Actions.Values, action => action.Name == "dev.analyze-cui-draft");
         Assert.Contains(check.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
             && property.Value is CuiBindingValue binding && binding.Path == "CanAnalyzeCuiDraft");
-        foreach (var (id, command) in new[] { ("dev-go-to-cui-problem", "dev.go-to-cui-problem"), ("dev-go-to-cui-element", "dev.go-to-cui-element") })
+        foreach (var (id, command, parameter) in new[] { ("dev-go-to-cui-problem", "dev.go-to-cui-problem", "problem.SelectionKey"), ("dev-go-to-cui-element", "dev.go-to-cui-element", "element.SelectionKey") })
         {
             var location = Assert.Single(nodes, node => node.Name == id);
             var action = Assert.Single(location.Actions.Values, value => value.Name == command);
-            Assert.IsType<CuiBindingValue>(action.Parameter);
+            Assert.True(document.Actions.TryGetValue(action.Name, out var definition));
+            Assert.Equal(command, definition!.Command);
+            Assert.Equal(parameter, Assert.IsType<CuiBindingValue>(definition.Parameter).Path);
         }
     }
 
     [Fact]
     public void Component_property_edits_use_observed_property_keys_and_the_same_current_draft_actions()
     {
-        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var document = DeveloperWorkbenchCuiDocument.Load();
+        var nodes = Descendants(document.Components).ToArray();
         var choose = Assert.Single(nodes, node => node.Name == "dev-select-cui-property");
         var select = Assert.Single(choose.Actions.Values, action => action.Name == "dev.select-cui-property");
-        Assert.IsType<CuiBindingValue>(select.Parameter);
+        Assert.True(document.Actions.TryGetValue(select.Name, out var definition));
+        Assert.Equal("dev.select-cui-property", definition!.Command);
+        Assert.Equal("property.SelectionKey", Assert.IsType<CuiBindingValue>(definition.Parameter).Path);
         var input = Assert.Single(nodes, node => node.Name == "dev-cui-property-value");
         Assert.Equal("Input", input.Type);
         Assert.Contains(input.Properties, pair => pair.Key.Equals("Value", StringComparison.OrdinalIgnoreCase)
