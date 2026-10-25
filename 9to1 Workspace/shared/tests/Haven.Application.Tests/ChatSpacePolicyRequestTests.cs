@@ -13,7 +13,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     public async Task Space_request_uses_original_policy_and_never_substitutes_legacy_personal_memory()
     {
         using var files = new SpacePolicyFiles();
-        var space = await files.Registry.CreateAsync("Owned policy");
+        var space = await files.Registry.CreateAsync("Owned policy", cancellationToken: TestContext.Current.CancellationToken);
         var source = new ControlledSpacePolicySource(files.Registry);
         var rig = new SpacePolicyRig(source, space.Id);
         await rig.SendAsync(null);
@@ -34,13 +34,13 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     public async Task Parent_revision_changed_at_physical_dispatch_prevents_transport_body()
     {
         using var files = new SpacePolicyFiles();
-        var parent = await files.Registry.CreateAsync("Parent");
-        var child = await files.Registry.CreateAsync("Child", null, parent.Id);
+        var parent = await files.Registry.CreateAsync("Parent", cancellationToken: TestContext.Current.CancellationToken);
+        var child = await files.Registry.CreateAsync("Child", null, parent.Id, TestContext.Current.CancellationToken);
         var source = new ControlledSpacePolicySource(files.Registry);
         var rig = new SpacePolicyRig(source, child.Id);
         rig.Transport.BeforePhysicalDispatch = async () =>
         {
-            await files.Registry.UpdateAsync(parent with { Instructions = "Changed parent policy" }, parent.Revision);
+            await files.Registry.UpdateAsync(parent with { Instructions = "Changed parent policy" }, parent.Revision, TestContext.Current.CancellationToken);
         };
         var error = await Record.ExceptionAsync(() => rig.SendAsync(null));
         Assert.NotNull(error);
@@ -53,8 +53,8 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     public async Task Unsupported_untyped_closed_corpus_policy_blocks_before_memory_or_model()
     {
         using var files = new SpacePolicyFiles();
-        var space = await files.Registry.CreateAsync("Closed corpus");
-        space = await files.Registry.UpdateAsync(space with { ContextPolicy = new(SourceOnly: true) }, space.Revision);
+        var space = await files.Registry.CreateAsync("Closed corpus", cancellationToken: TestContext.Current.CancellationToken);
+        space = await files.Registry.UpdateAsync(space with { ContextPolicy = new(SourceOnly: true) }, space.Revision, TestContext.Current.CancellationToken);
         var rig = new SpacePolicyRig(new ControlledSpacePolicySource(files.Registry), space.Id);
         var error = await Record.ExceptionAsync(() => rig.SendAsync(null));
         Assert.NotNull(error);
@@ -68,7 +68,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     public async Task Durable_lineage_survives_without_a_live_guard_and_fresh_capture_can_rebind_it()
     {
         using var files = new SpacePolicyFiles();
-        var space = await files.Registry.CreateAsync("Restart lineage");
+        var space = await files.Registry.CreateAsync("Restart lineage", cancellationToken: TestContext.Current.CancellationToken);
         var rig = new SpacePolicyRig(new ControlledSpacePolicySource(files.Registry), space.Id);
         await rig.SendAsync(null);
         var initial = Assert.Single(rig.Transport.Requests).Options!;
