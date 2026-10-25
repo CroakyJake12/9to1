@@ -27,13 +27,18 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     private string _baselineJson = "{}";
     private string? _lastError;
     private bool _disposed;
+    private readonly bool _canSwitchBoard;
+    private readonly bool _canSaveAs;
     private readonly Guid _textOwner = Guid.NewGuid();
     private BoardTextSelection? _issuedTextSelection;
 
-    private ContractSessionAdapter(JsonFileHavenBoardStore? store, RichBoardSession real)
+    private ContractSessionAdapter(JsonFileHavenBoardStore? store, RichBoardSession real,
+        bool canSwitchBoard = true, bool canSaveAs = true)
     {
         _store = store;
         _real = real;
+        _canSwitchBoard = canSwitchBoard;
+        _canSaveAs = canSaveAs;
         _real.StatusChanged += (_, status) => StatusChanged?.Invoke(this, Status);
     }
 
@@ -77,6 +82,20 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     {
         ArgumentNullException.ThrowIfNull(document);
         var adapter = new ContractSessionAdapter(null, RichBoardSession.OpenReadOnly(document));
+        adapter.RefreshView();
+        return Task.FromResult(adapter);
+    }
+
+    /// <summary>Opens an editable detached document whose only persistence path is the
+    /// caller's explicit callback. The callback is invoked after projection and validation.</summary>
+    public static Task<ContractSessionAdapter> OpenExternallyWritableAsync(
+        HavenBoardDocument document,
+        Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask<bool>> save)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(save);
+        var adapter = new ContractSessionAdapter(null,
+            RichBoardSession.OpenExternallyWritable(document, save), canSwitchBoard: false, canSaveAs: false);
         adapter.RefreshView();
         return Task.FromResult(adapter);
     }
@@ -127,6 +146,9 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     public RichBoardDocument Document => _view;
     public string Snapshot => JsonSerializer.Serialize(_view, Json);
     public bool CanEdit => !_real.IsReadOnly;
+    public bool CanSwitchBoard => _canSwitchBoard;
+    public bool CanSaveAs => _canSaveAs;
+    public bool HasUnsavedChanges => _real.HasUnsavedChanges;
     private void EnsureEditable()
     {
         if (!CanEdit) throw new InvalidOperationException("This board source is open read-only.");
@@ -438,6 +460,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     {
         ThrowIfDisposed();
         EnsureEditable();
+        if (!_canSaveAs) throw new InvalidOperationException("This source does not grant Save As access.");
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {

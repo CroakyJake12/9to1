@@ -12,6 +12,69 @@ namespace CakeOS.Apps.Boards.App.Tests;
 public sealed class ContractAdapterTests
 {
     [Fact]
+    public async Task External_writable_session_requires_explicit_save_and_advances_only_on_receipt()
+    {
+        var document = CreateNotesDocument("Home source");
+        ReadOnlyMemory<byte> submitted = default;
+        var callbackCount = 0;
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(document,
+            (bytes, _) =>
+            {
+                Interlocked.Increment(ref callbackCount);
+                submitted = bytes.ToArray();
+                return ValueTask.FromResult(true);
+            });
+        await using (adapter)
+        {
+            Assert.True(adapter.CanEdit);
+            Assert.False(adapter.CanSwitchBoard);
+            Assert.False(adapter.CanSaveAs);
+            var originalPageCount = adapter.Document.Sections[0].Pages.Count;
+            await adapter.AddPageAsync(adapter.Document.Sections[0].Id);
+            Assert.Equal(originalPageCount + 1, adapter.Document.Sections[0].Pages.Count);
+            Assert.True(adapter.HasUnsavedChanges);
+            await Task.Delay(900);
+            Assert.Equal(0, Volatile.Read(ref callbackCount));
+
+            await adapter.SaveAsync();
+
+            Assert.Equal(1, Volatile.Read(ref callbackCount));
+            Assert.False(adapter.HasUnsavedChanges);
+            var saved = HavenBoardDocumentCodec.Deserialize(submitted);
+            Assert.Equal(originalPageCount + 1, saved.RichNotes!.Sections[0].Pages.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Rejected_external_save_keeps_draft_and_undo_history()
+    {
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(CreateNotesDocument("Home source"),
+            (_, _) => ValueTask.FromResult(false));
+        await using (adapter)
+        {
+            var originalPageCount = adapter.Document.Sections[0].Pages.Count;
+            await adapter.AddPageAsync(adapter.Document.Sections[0].Id);
+            Assert.True(adapter.CanUndo);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => adapter.SaveAsync().AsTask());
+
+            Assert.True(adapter.HasUnsavedChanges);
+            Assert.True(adapter.CanUndo);
+            Assert.Equal(originalPageCount + 1, adapter.Document.Sections[0].Pages.Count);
+            Assert.True(await adapter.UndoAsync());
+            Assert.Equal(originalPageCount, adapter.Document.Sections[0].Pages.Count);
+        }
+    }
+
+    private static HavenBoardDocument CreateNotesDocument(string title)
+    {
+        var now = DateTimeOffset.UtcNow;
+        return new HavenBoardDocument(HavenBoardDocument.FormatIdentity,
+            HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), now, now,
+            Snapshot: null, RichNotes: HavenRichNotes.Create(title));
+    }
+
+    [Fact]
     public async Task Verified_document_bytes_open_through_a_detached_read_only_session()
     {
         var now = DateTimeOffset.UtcNow;
