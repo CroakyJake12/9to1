@@ -620,10 +620,11 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> resolver =
             (_, path, _) => Task.FromResult(DeveloperOperationResult<DeveloperCodeDocument>.Success(ResolveDocument(path)));
         var ctor = typeof(DeveloperProjectWorkbenchPage).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
-            .Single(value => value.GetParameters().Length == 14 && value.GetParameters()[11].ParameterType == typeof(DeveloperManualSourceReadOwner));
+            .Single(value => value.GetParameters().Length == 15 && value.GetParameters()[11].ParameterType == typeof(DeveloperManualSourceReadOwner)
+                && value.GetParameters()[14].ParameterType == typeof(DeveloperTaskDraftRecoveryOwner));
         var page = (DeveloperProjectWorkbenchPage)ctor.Invoke([fixture.Dev, fixture.Tasks, resolved,
             fixture.Current.TaskId, fixture.Current.ExecutionId, fixture.Current.ContextId, new SearchPublicationNoReadiness(), resolver,
-            (Action)(() => { }), OriginalTestBodyToken, null, reader, null, null]);
+            (Action)(() => { }), OriginalTestBodyToken, null, reader, null, null, null]);
         SearchPublicationField("_active").SetValue(page, true); // component admission only, not a native frame witness
         return page;
     }
