@@ -282,7 +282,7 @@
                   </Container>
                 </If>
                 <If condition="{Binding SharedInkAvailable}">
-                  <Text text="{Binding SharedInkStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text ID="SharedInkStatusUnavailable" text="{Binding SharedInkStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
                 </If>
                 <If condition="{Binding IsViewMode}">
                   <Text text="Viewing · content is protected. Turn Edit on to make changes." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
@@ -344,7 +344,7 @@
                           </Container>
                           </If>
                           <Button content="Refresh drawing" action="boards.ink.refresh" horizontal-alignment="Left" />
-                          <Text text="{Binding SharedInkStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                          <Text ID="SharedInkStatusSelected" text="{Binding SharedInkStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
                           <Object Type="BoardsSharedInkSurface" Height="540" min-height="200" accessible-name="Shared drawing. Draw with pen, mouse or touch. Undo removes a stroke." />
                         </If>
                       </If>
