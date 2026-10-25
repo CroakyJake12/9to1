@@ -462,7 +462,7 @@ public sealed class CuiControlRegistry
             ("TabIndex", "integer", typeof(int), true), ("AccessibleName", "text", typeof(string), true),
             ("AccessibleDescription", "text", typeof(string), true), ("Role", "symbol", typeof(string), true),
             ("Tooltip", "text", typeof(string), true), ("Shortcut", "text", typeof(string), true),
-            ("IconSource", "uri", typeof(string), true), ("IconSize", "length", typeof(double), true),
+            ("IconSource", "uri", typeof(string), true), ("IconSize", "length", typeof(double?), true),
             ("MenuColumns", "integer", typeof(int), true), ("IconOnly", "boolean", typeof(bool), true),
             ("ToggleType", "symbol", typeof(MenuItemToggleType), true),
             ("Selected", "boolean", typeof(bool), true), ("ResizeEdge", "symbol", typeof(string), true),

@@ -588,7 +588,7 @@ public static class CuiControlTemplates
             check.HorizontalAlignment = checkOverIcon ? HorizontalAlignment.Right : HorizontalAlignment.Center;
             check.VerticalAlignment = checkOverIcon ? VerticalAlignment.Top : VerticalAlignment.Center;
             check.Margin = checkOverIcon ? new Thickness(2) : new Thickness(0);
-            var explicitIconSize = owner is CuiMenuItem { IconSize: var size } && double.IsFinite(size) ? size : double.NaN;
+            var explicitIconSize = owner is CuiMenuItem { IconSize: { } size } ? size : double.NaN;
             iconImage.Width = iconImage.Height = double.IsNaN(explicitIconSize) ? iconOnly ? 36 : 20 : explicitIconSize;
             iconContent.Width = iconContent.Height = explicitIconSize;
             iconImage.IsVisible = hasImage;
