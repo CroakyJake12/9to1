@@ -1,0 +1,11 @@
+<Cui>
+  <Theme Name="user_preference">
+    <Page ID="BoardsStartupFailurePage">
+      <Container Type="Vertical Stack" Padding="24" CellGap="16" MaxWidth="660" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Text Text="Boards could not open" FontSize="24" FontWeight="SemiBold" />
+        <Text Text="The application surface could not be loaded. Your saved boards have not been replaced." TextWrapping="Wrap" />
+        <Text Text="{Binding Failure}" TextWrapping="Wrap" AccessibleName="Boards startup error" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

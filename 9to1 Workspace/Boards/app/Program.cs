@@ -1,7 +1,6 @@
 // CUI Boards — Avalonia 12.0.1 Win32 desktop entry point.
-// Loads Boards.cui and opens a native window with Skia rendering.
-// Mirrors apps/Home/src/AvaloniaHome packaging: .cui discovery, fallback UI,
-// diagnostics printed to console. No AXAML.
+// Loads the embedded, compiled Boards CUI documents and opens a native window.
+// The runtime consumes the canonical compiled transport; no source path discovery or AXAML.
 
 using System;
 using System.IO;
@@ -18,10 +17,10 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
-using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -43,49 +42,16 @@ internal static class Program
             Console.WriteLine($"[CUI Boards] Board argument: {OpenPath}");
         }
 
-        var cuiPath = FindCuiFile();
-        Console.WriteLine($"[CUI Boards] .cui file: {cuiPath ?? "NOT FOUND"}");
-
+        Console.WriteLine("[CUI Boards] Loading embedded compiled CUI documents.");
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
     public static AppBuilder BuildAvaloniaApp()
     {
-        return AppBuilder.Configure<BoardsApp>()
+        return CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BoardsApp>()
             .UseWin32()
             .UseSkia()
-            .UseHarfBuzz()
-            .WithInterFont();
-    }
-
-    internal static string? FindCuiFile()
-    {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        var candidates = new[]
-        {
-            Path.Combine(baseDir, "Boards.cui"),
-            Path.Combine(baseDir, "ui", "Boards.cui"),
-        };
-
-        foreach (var candidate in candidates)
-        {
-            if (File.Exists(candidate))
-                return candidate;
-        }
-
-        var dir = new DirectoryInfo(baseDir);
-        for (var i = 0; i < 12 && dir != null; i++)
-        {
-            var path = Path.Combine(dir.FullName, "9to1 Workspace", "Boards", "app", "Boards.cui");
-            if (File.Exists(path))
-                return path;
-            var alt = Path.Combine(dir.FullName, "Boards", "app", "Boards.cui");
-            if (File.Exists(alt))
-                return alt;
-            dir = dir.Parent;
-        }
-
-        return null;
+            .UseHarfBuzz());
     }
 }
 
@@ -118,8 +84,9 @@ internal sealed class BoardsApp : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        Styles.Add(new FluentTheme());
         ApplySavedTheme();
+        CuiNativeHost.InitialisePrimitiveTheme(this, "Boards",
+            BoardsTheme.Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright);
         // Real durable session: edits persist to a physical .9to1board file.
         // Optional CLI arg opens/creates that board; otherwise the default board opens.
         var storeRoot = Path.Combine(
@@ -231,39 +198,40 @@ internal sealed class BoardsApp : Application
             _closeAttempt = PrepareWindowCloseAsync(window);
         };
 
-        var cuiPath = Program.FindCuiFile();
-        if (cuiPath != null && _viewModel is not null)
+        if (_viewModel is not null)
         {
-            Console.WriteLine($"[CUI Boards] Loading .cui: {cuiPath}");
-            _loader = new CuiControlLoader();
-            _loader.SetBindingContext(_viewModel);
-            _loader.SetActionDispatcher(_viewModel);
-
-            var (root, diagnostics) = _loader.LoadFile(cuiPath);
-            Console.WriteLine($"[CUI Boards] Diagnostics: {diagnostics.Count}");
-            foreach (var diagnostic in diagnostics)
-                Console.WriteLine($"[CUI Boards] Diagnostic: {diagnostic}");
-
-            if (root != null)
+            try
             {
-                _root = root;
-                _loader.WireBindings(root);
-                _viewModel.Attach(root);
-                WireDynamicSurface(root);
-                window.Content = root;
-                Console.WriteLine($"[CUI Boards] Root: {root.GetType().Name} — window rendered");
+                _loader = new CuiControlLoader();
+                _loader.SetBindingContext(_viewModel);
+                _loader.SetActionDispatcher(_viewModel);
+                var document = BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName);
+                var (root, diagnostics) = _loader.TryLoad(document);
+                Console.WriteLine($"[CUI Boards] Compiled document diagnostics: {diagnostics.Count}");
+                foreach (var diagnostic in diagnostics)
+                    Console.WriteLine($"[CUI Boards] Diagnostic: {diagnostic}");
+
+                if (root is not null)
+                {
+                    _root = root;
+                    _loader.WireBindings(root);
+                    _viewModel.Attach(root);
+                    WireDynamicSurface(root);
+                    window.Content = root;
+                    Console.WriteLine($"[CUI Boards] Root: {root.GetType().Name} — window rendered");
+                }
+                else
+                    window.Content = CreateFallbackUI(diagnostics.Count > 0
+                        ? string.Join("\n", diagnostics.Select(diagnostic => diagnostic.ToString()))
+                        : "Compiled Boards CUI failed to load");
             }
-            else
+            catch (Exception error)
             {
-                window.Content = CreateFallbackUI(diagnostics.Any()
-                    ? string.Join("\n", diagnostics.Select(d => d.ToString()))
-                    : "Failed to load CUI");
+                window.Content = CreateFallbackUI(error.Message);
             }
         }
         else
-        {
-            window.Content = CreateFallbackUI("No .cui file found");
-        }
+            window.Content = CreateFallbackUI("The Boards session is unavailable.");
 
         return window;
     }
@@ -686,22 +654,8 @@ internal sealed class BoardsApp : Application
             properties.On("CloseProperties", _ => dialog.Close());
             using var loader = new CuiControlLoader();
             loader.SetBindingContext(properties); loader.SetActionDispatcher(properties);
-            var (content, diagnostics) = loader.LoadMarkup("""
-                <Cui><Theme Name="user_preference"><Page ID="BoardPropertiesPage">
-                  <Container Type="Vertical Stack" Padding="20" CellGap="6" VerticalScrolling="True" Background="{Resource CuiPanelBrush}">
-                    <Text Text="Board properties" FontSize="20" FontWeight="Bold" Margin="0 0 0 6" />
-                    <Text Text="Title" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
-                    <Text Text="{Binding Title}" TextWrapping="Wrap" Margin="0 0 0 2" />
-                    <Text Text="File" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
-                    <Text Text="{Binding File}" TextWrapping="Wrap" Margin="0 0 0 2" />
-                    <Text Text="Location" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
-                    <Text Text="{Binding Location}" TextWrapping="Wrap" Margin="0 0 0 2" />
-                    <Text Text="Size" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
-                    <Text Text="{Binding Size}" Margin="0 0 0 2" />
-                    <Button Content="Close" Action="CloseProperties" AccessibleName="Close properties" HorizontalAlignment="Right" />
-                  </Container>
-                </Page></Theme></Cui>
-                """, "BoardProperties.cui");
+            var (content, diagnostics) = loader.TryLoad(
+                BoardsCuiDocuments.Load(BoardsCuiDocuments.BoardPropertiesSourceName));
             if (content is null)
                 throw new InvalidOperationException("The canonical board properties view could not load: " + string.Join("; ", diagnostics));
             loader.WireBindings(content);
@@ -1163,7 +1117,7 @@ internal sealed class BoardsApp : Application
         titleBox.TextChanged += (_, _) => viewModel.EditText("BoardTitleBox", titleBox.Text ?? string.Empty);
     }
 
-    // ----- Theme (Fluent control templates + shared CUI theme + Light/Dark) -----
+    // ----- Shared CUI theme + Light/Dark appearance -----
 
     private static string SettingsPath() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -1280,17 +1234,8 @@ internal sealed class BoardsApp : Application
         _loader?.Dispose(); _loader = new CuiControlLoader();
         var diagnostic = new CuiViewModel(); diagnostic.Set("Failure",message);
         _loader.SetBindingContext(diagnostic);
-        var parser = new CakeOS.Cui.Language.CuiRichParser();
-        var document = parser.Parse("""
-            <Cui><Theme Name="user_preference"><Page id="boards-startup-failure">
-              <Container Type="Vertical Stack" Padding="24" CellGap="16" MaxWidth="660" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Text Text="Boards could not open" FontSize="24" FontWeight="SemiBold" />
-                <Text Text="The application surface could not be loaded. Your saved boards have not been replaced." TextWrapping="Wrap" />
-                <Text Text="{Binding Failure}" TextWrapping="Wrap" AccessibleName="Boards startup error" />
-              </Container>
-            </Page></Theme></Cui>
-            """, "BoardsStartupFailure.cui");
-        var (root,diagnostics) = _loader.TryLoad(document);
+        var (root, diagnostics) = _loader.TryLoad(
+            BoardsCuiDocuments.Load(BoardsCuiDocuments.StartupFailureSourceName));
         if (root is null) throw new InvalidOperationException("Boards and its CUI diagnostic surface could not load: "+string.Join("; ",diagnostics));
         _loader.WireBindings(root); return root;
     }
