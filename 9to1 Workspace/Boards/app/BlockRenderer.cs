@@ -4,6 +4,8 @@
 // ViewModel routes edits without hardcoding. Contract block/item ids never
 // contain '_', so names split on the LAST '_' (see BoardsViewModel).
 
+using System.Globalization;
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
@@ -14,6 +16,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
@@ -22,9 +25,12 @@ namespace CakeOS.Apps.Boards.App;
 
 public static class BlockRenderer
 {
+    private static readonly ConditionalWeakTable<Panel, AbsoluteHostPlacementState> AbsolutePlacements = new();
     private const double GraphWidth = 420;
     private const double GraphHeight = 260;
     private const double BlockGutterTargetSize = 32;
+    private const double BlockGutterLeadingInset = 76;
+    private const double BlockContentTopInset = 2;
     private const double ChecklistCheckboxFirstLineOffset = 7;
     private const double ChecklistCheckboxTextGap = 6;
 
@@ -33,16 +39,25 @@ public static class BlockRenderer
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(vm);
         var canvas = await vm.GetCanvasObjectsAsync().ConfigureAwait(false);
-        Rebuild(host, vm, canvas);
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            Rebuild(host, vm, canvas, FindAbsoluteBlocksHost(host)));
     }
 
-    public static void Rebuild(StackPanel host, BoardsViewModel vm, IReadOnlyList<CanvasBoxView> canvasBoxes)
+    public static void Rebuild(StackPanel host, BoardsViewModel vm, IReadOnlyList<CanvasBoxView> canvasBoxes) =>
+        Rebuild(host, vm, canvasBoxes, FindAbsoluteBlocksHost(host));
+
+    public static void Rebuild(StackPanel host, BoardsViewModel vm,
+        IReadOnlyList<CanvasBoxView> canvasBoxes, Panel? absoluteBlocksHost)
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(vm);
+        if (absoluteBlocksHost is not null) AbsolutePlacements.GetValue(absoluteBlocksHost, panel => new(panel)).Reset();
         host.Children.Clear();
+        absoluteBlocksHost?.Children.Clear();
 
         var blocks = vm.PageBlocks;
+        if (blocks.Any(block => block.Layout == HavenRichBlockLayouts.Absolute) && absoluteBlocksHost is null)
+            throw new InvalidOperationException("The authored AbsoluteBlocksHost is required to render saved free-positioned blocks.");
         if (blocks.Count == 0)
         {
             host.Children.Add(BuildEmptyPageHint(vm));
@@ -51,28 +66,196 @@ public static class BlockRenderer
         while (index < blocks.Count)
         {
             var block = blocks[index];
+            if (block.Layout == HavenRichBlockLayouts.Absolute)
+            {
+                if (IsListKind(block.Kind))
+                {
+                    var parentId = ParentKey(block.Id);
+                    var listRun = new List<RichBoardBlock>();
+                    var start = index;
+                    while (index < blocks.Count && IsListKind(blocks[index].Kind) &&
+                        blocks[index].Layout == HavenRichBlockLayouts.Absolute &&
+                        ParentKey(blocks[index].Id) == parentId)
+                        listRun.Add(blocks[index++]);
+                    RenderAbsoluteList(absoluteBlocksHost!, vm, listRun, start, host);
+                }
+                else
+                {
+                    RenderAbsoluteBlock(absoluteBlocksHost!, vm, block, index, host);
+                    index++;
+                }
+                continue;
+            }
             if (IsListKind(block.Kind))
             {
                 var run = new List<RichBoardBlock>();
                 var runStart = index;
-                while (index < blocks.Count && IsListKind(blocks[index].Kind))
+                while (index < blocks.Count && IsListKind(blocks[index].Kind) &&
+                    blocks[index].Layout != HavenRichBlockLayouts.Absolute)
                     run.Add(blocks[index++]);
-                // Keep each contract block as its own row so pointer reordering
-                // and the authored per-block keyboard actions address the same
-                // stable identity. The shared add-item affordance remains after
-                // the contiguous list run.
-                for (var offset = 0; offset < run.Count; offset++)
-                    host.Children.Add(WithSelection(vm, run[offset].Id, BuildChecklistRow(vm, run[offset]),
-                        run[offset].Id, runStart + offset, host));
-                host.Children.Add(BuildChecklistAddButton(vm, run[0].Id));
+                // Locked vertical mode keeps item rows independently reorderable.
+                // Free mode treats the canonical list parent as one spatial block,
+                // so one handle moves the complete list and its add-item affordance.
+                if (vm.LayoutMode == HavenRichPageLayoutModes.Unlocked && absoluteBlocksHost is not null)
+                {
+                    var list = new StackPanel { Orientation = Orientation.Vertical };
+                    foreach (var item in run) list.Children.Add(BuildChecklistRow(vm, item));
+                    list.Children.Add(BuildChecklistAddButton(vm, run[0].Id));
+                    var parentId = ParentKey(run[0].Id);
+                    host.Children.Add(WithSelection(vm, run[0].Id, list, parentId, runStart, host,
+                        absoluteBlocksHost, placementBlockId: parentId, placementBlock: run[0]));
+                }
+                else
+                {
+                    for (var offset = 0; offset < run.Count; offset++)
+                        host.Children.Add(WithSelection(vm, run[offset].Id, BuildChecklistRow(vm, run[offset]),
+                            run[offset].Id, runStart + offset, host, absoluteBlocksHost,
+                            placementBlockId: ParentKey(run[offset].Id), placementBlock: run[offset]));
+                    host.Children.Add(BuildChecklistAddButton(vm, run[0].Id));
+                }
                 continue;
             }
-            host.Children.Add(WithSelection(vm, block.Id, BuildBlock(vm, block), block.Id, index, host));
+            host.Children.Add(WithSelection(vm, block.Id, BuildBlock(vm, block), block.Id, index, host,
+                absoluteBlocksHost, placementBlockId: block.Id, placementBlock: block));
             index++;
         }
 
+        if (absoluteBlocksHost is not null)
+            RenderAbsoluteBlocksHostExtent(absoluteBlocksHost, blocks);
         host.Children.Add(BuildFreeformSection(vm, canvasBoxes ?? []));
         vm.ApplyAuthoringState(host);
+    }
+
+    private static Panel? FindAbsoluteBlocksHost(StackPanel blocksHost)
+    {
+        var root = blocksHost.GetVisualAncestors().OfType<Control>().LastOrDefault() ?? blocksHost;
+        return BoardsCuiControlFinder.FindByAutomationId<Panel>(root, "AbsoluteBlocksHost");
+    }
+
+    private static void RenderAbsoluteBlocksHostExtent(Panel absoluteHost, IReadOnlyList<RichBoardBlock> blocks)
+    {
+        var persistedExtent = blocks.Where(block => block.Layout == HavenRichBlockLayouts.Absolute)
+            .Select(block => block.Y + block.Height + 24)
+            .DefaultIfEmpty(0)
+            .Max();
+        var renderedExtent = AbsolutePlacements.TryGetValue(absoluteHost, out var state)
+            ? state.BottomExtent + 24
+            : 0;
+        var extent = Math.Max(persistedExtent, renderedExtent);
+        absoluteHost.Height = extent > 0 ? extent : double.NaN;
+    }
+
+    private static void RenderAbsoluteBlock(
+        Panel absoluteHost, BoardsViewModel vm, RichBoardBlock block, int blockIndex, StackPanel flowHost)
+    {
+        var control = WithSelection(vm, block.Id, BuildBlock(vm, block), block.Id, blockIndex,
+            flowHost, absoluteHost, block.Id, block, absolutePositioned: true);
+        absoluteHost.Children.Add(control);
+        PlaceAbsoluteBlock(absoluteHost, control, block, block.Width, block.Height);
+    }
+
+    private static void RenderAbsoluteList(
+        Panel absoluteHost, BoardsViewModel vm, IReadOnlyList<RichBoardBlock> items, int blockIndex, StackPanel flowHost)
+    {
+        if (items.Count == 0) return;
+        var list = new StackPanel { Orientation = Orientation.Vertical, Width = items[0].Width };
+        foreach (var item in items) list.Children.Add(BuildChecklistRow(vm, item));
+        var parentId = ParentKey(items[0].Id);
+        list.Children.Add(BuildChecklistAddButton(vm, parentId));
+        var control = WithSelection(vm, items[0].Id, list, parentId, blockIndex,
+            flowHost, absoluteHost, parentId, items[0], absolutePositioned: true);
+        list.Measure(new Size(items[0].Width, double.PositiveInfinity));
+        absoluteHost.Children.Add(control);
+        PlaceAbsoluteBlock(absoluteHost, control, items[0], items[0].Width,
+            Math.Max(items[0].Height, list.DesiredSize.Height));
+    }
+
+    private static void PlaceAbsoluteBlock(
+        Panel absoluteHost, Control control, RichBoardBlock block, double contentWidth, double contentHeight)
+    {
+        var width = contentWidth + BlockGutterLeadingInset;
+        var height = contentHeight + BlockContentTopInset * 2;
+        control.Width = width;
+        control.MinHeight = height;
+        control.Measure(new Size(width, double.PositiveInfinity));
+        height = Math.Max(height, control.DesiredSize.Height);
+        control.Height = height;
+        control.HorizontalAlignment = HorizontalAlignment.Left;
+        control.VerticalAlignment = VerticalAlignment.Top;
+        Panel.SetZIndex(control, block.ZOrder);
+
+        var left = block.X - BlockGutterLeadingInset;
+        var top = block.Y - BlockContentTopInset;
+        var coordinateTarget = control is Border { Child: Control child } ? child : control;
+        AbsolutePlacements.GetValue(absoluteHost, panel => new(panel)).Add(control, coordinateTarget,
+            left, top, width, height);
+    }
+
+    private sealed class AbsoluteHostPlacementState
+    {
+        private sealed record Placement(Control Cell, Control CoordinateTarget,
+            double Left, double Top, double Width, double Height);
+
+        private readonly Panel _host;
+        private readonly List<Placement> _placements = [];
+        private Size _lastSize;
+        private bool _hasSize;
+        public double BottomExtent => _placements.Select(placement => placement.Top + placement.Height).DefaultIfEmpty(0).Max();
+
+        public AbsoluteHostPlacementState(Panel host)
+        {
+            _host = host;
+            _host.SizeChanged += OnSizeChanged;
+        }
+
+        public void Reset()
+        {
+            foreach (var placement in _placements)
+            {
+                if (_host is Canvas)
+                {
+                    Canvas.SetLeft(placement.Cell, double.NaN);
+                    Canvas.SetTop(placement.Cell, double.NaN);
+                }
+                else
+                {
+                    CuiLayoutProperties.Detach(placement.CoordinateTarget);
+                }
+            }
+            _placements.Clear();
+            _hasSize = false;
+        }
+
+        public void Add(Control cell, Control coordinateTarget, double left, double top, double width, double height)
+        {
+            if (_host is Canvas)
+            {
+                Canvas.SetLeft(cell, left);
+                Canvas.SetTop(cell, top);
+                return;
+            }
+            _placements.Add(new Placement(cell, coordinateTarget, left, top, width, height));
+            Apply(_placements[^1]);
+        }
+
+        private void OnSizeChanged(object? sender, SizeChangedEventArgs e)
+        {
+            if (_hasSize && _lastSize == e.NewSize) return;
+            _hasSize = true;
+            _lastSize = e.NewSize;
+            foreach (var placement in _placements) Apply(placement);
+        }
+
+        private void Apply(Placement placement)
+        {
+            var xPixel = placement.Left + placement.Width / 2 - _host.Bounds.Width / 2;
+            var yPixel = _host.Bounds.Height / 2 - (placement.Top + placement.Height / 2);
+            if (!CuiLayoutProperties.SetLiteral(placement.CoordinateTarget, "XPixel",
+                    xPixel.ToString(CultureInfo.InvariantCulture), source: "Boards native block placement") ||
+                !CuiLayoutProperties.SetLiteral(placement.CoordinateTarget, "YPixel",
+                    yPixel.ToString(CultureInfo.InvariantCulture), source: "Boards native block placement"))
+                throw new InvalidOperationException("The authored AbsoluteBlocksHost does not expose CUI pixel placement.");
+        }
     }
 
     private static Control BuildEmptyPageHint(BoardsViewModel vm)
@@ -102,7 +285,10 @@ public static class BlockRenderer
 
     /// <summary>Subtle selection outline: transparent until selected, then an accent bar.</summary>
     private static Control WithSelection(
-        BoardsViewModel vm, string selectId, Control inner, string insertAfterBlockId, int blockIndex, StackPanel host)
+        BoardsViewModel vm, string selectId, Control inner, string insertAfterBlockId, int blockIndex,
+        StackPanel host, Panel? absoluteBlocksHost = null,
+        string? placementBlockId = null, RichBoardBlock? placementBlock = null,
+        bool absolutePositioned = false)
     {
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
         // The 64px gutter occupies the page-card margin before the text column;
@@ -165,7 +351,7 @@ public static class BlockRenderer
             BorderThickness = new Thickness(3, 0, 0, 0),
             BorderBrush = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
             Padding = new Thickness(9, 2, 0, 2),
-            Margin = new Thickness(-76, 0, 0, 10),
+            Margin = absolutePositioned ? new Thickness(0) : new Thickness(-BlockGutterLeadingInset, 0, 0, 10),
             Background = Brushes.Transparent,
         };
         border.Tag = new BlockReorderRow(selectId, blockIndex);
@@ -191,7 +377,32 @@ public static class BlockRenderer
         border.AddHandler(InputElement.GotFocusEvent, (_, _) => { focused = true; UpdateGutterEmphasis(); }, RoutingStrategies.Bubble);
         border.AddHandler(InputElement.LostFocusEvent, (_, _) => { focused = false; UpdateGutterEmphasis(); }, RoutingStrategies.Bubble);
         if (gripControl is not null)
-            BlockReorderPointer.Attach(gripControl, host, vm, selectId, blockIndex);
+        {
+            if (placementBlock is not null && placementBlockId is not null && absoluteBlocksHost is not null &&
+                vm.LayoutMode == HavenRichPageLayoutModes.Unlocked)
+            {
+                if (vm.IsEditMode)
+                    BlockPlacementGesture.Attach(gripControl, border, inner, absoluteBlocksHost, vm,
+                        vm.SelectedPageId, placementBlockId, placementBlock);
+                else if (placementBlock.Layout == HavenRichBlockLayouts.Flow && vm.IsEditMode)
+                    BlockReorderPointer.Attach(gripControl, host, vm, selectId, blockIndex);
+            }
+            else if (placementBlock?.Layout != HavenRichBlockLayouts.Absolute)
+            {
+                BlockReorderPointer.Attach(gripControl, host, vm, selectId, blockIndex);
+            }
+        }
+        if (placementBlock?.Layout == HavenRichBlockLayouts.Absolute &&
+            placementBlockId is not null && vm.IsEditMode)
+        {
+            var pageId = vm.SelectedPageId;
+            var menu = new ContextMenu();
+            var toFlow = new MenuItem { Header = "Move to Vertical Flow" };
+            Avalonia.Automation.AutomationProperties.SetName(toFlow, "Move block to Vertical Flow");
+            toFlow.Click += async (_, _) => await vm.MoveBlockToVerticalFlowAsync(pageId, placementBlockId);
+            menu.Items.Add(toFlow);
+            border.ContextMenu = menu;
+        }
         return border;
     }
 
@@ -1722,6 +1933,180 @@ public static class BlockRenderer
     {
         var colon = viewId.IndexOf(':');
         return colon > 0 ? viewId[..colon] : viewId;
+    }
+
+    /// <summary>Pointer owner for the explicit Free placement gesture on a block grip.</summary>
+    private sealed class BlockPlacementGesture
+    {
+        private const double DragThreshold = 6;
+        private readonly Control _grip;
+        private readonly Border _row;
+        private readonly Control _content;
+        private readonly Panel _absoluteHost;
+        private readonly BoardsViewModel _viewModel;
+        private readonly string _pageId;
+        private readonly string _blockId;
+        private readonly RichBoardBlock _block;
+        private Button? _handle;
+        private IPointer? _pointer;
+        private Point _start;
+        private double _anchorX;
+        private double _anchorY;
+        private double _width;
+        private double _height;
+        private ITransform? _originalTransform;
+        private bool _pressed;
+        private bool _dragging;
+
+        private BlockPlacementGesture(Control grip, Border row, Control content,
+            Panel absoluteHost, BoardsViewModel viewModel, string pageId, string blockId, RichBoardBlock block)
+        {
+            _grip = grip;
+            _row = row;
+            _content = content;
+            _absoluteHost = absoluteHost;
+            _viewModel = viewModel;
+            _pageId = pageId;
+            _blockId = blockId;
+            _block = block;
+            _grip.AttachedToVisualTree += OnGripAttached;
+            _grip.LayoutUpdated += OnGripLayoutUpdated;
+            TryAttachHandle();
+        }
+
+        public static void Attach(Control grip, Border row, Control content,
+            Panel absoluteHost, BoardsViewModel viewModel, string pageId, string blockId, RichBoardBlock block)
+        {
+            _ = new BlockPlacementGesture(grip, row, content, absoluteHost,
+                viewModel, pageId, blockId, block);
+        }
+
+        private void OnGripAttached(object? sender, VisualTreeAttachmentEventArgs e) => TryAttachHandle();
+        private void OnGripLayoutUpdated(object? sender, EventArgs e) => TryAttachHandle();
+
+        private void TryAttachHandle()
+        {
+            if (_handle is not null) return;
+            var handle = _grip.GetVisualDescendants().OfType<Button>()
+                .FirstOrDefault(button => button.Name == "BlockGripToggle");
+            if (handle is null) return;
+            _handle = handle;
+            _grip.AttachedToVisualTree -= OnGripAttached;
+            _grip.LayoutUpdated -= OnGripLayoutUpdated;
+            handle.PointerPressed += OnPressed;
+            handle.PointerMoved += OnMoved;
+            handle.PointerReleased += OnReleased;
+            handle.PointerCaptureLost += OnCaptureLost;
+            handle.KeyDown += OnKeyDown;
+            handle.DetachedFromVisualTree += OnDetached;
+        }
+
+        private void OnPressed(object? sender, PointerPressedEventArgs e)
+        {
+            var handle = _handle;
+            if (handle is null || !e.GetCurrentPoint(handle).Properties.IsLeftButtonPressed ||
+                !_viewModel.IsEditMode || !_viewModel.CanChangeLayoutMode ||
+                !string.Equals(_pageId, _viewModel.SelectedPageId, StringComparison.Ordinal) || _pressed)
+                return;
+
+            _pressed = true;
+            _pointer = e.Pointer;
+            _start = e.GetPosition(_absoluteHost);
+            var rowPosition = e.GetPosition(_row);
+            _anchorX = rowPosition.X - BlockGutterLeadingInset;
+            _anchorY = rowPosition.Y - BlockContentTopInset;
+            _width = _block.Layout == HavenRichBlockLayouts.Absolute
+                ? _block.Width
+                : Math.Max(1, _content.Bounds.Width);
+            _height = _block.Layout == HavenRichBlockLayouts.Absolute
+                ? _block.Height
+                : Math.Max(1, _content.Bounds.Height);
+        }
+
+        private void OnMoved(object? sender, PointerEventArgs e)
+        {
+            var handle = _handle;
+            if (handle is null || !_pressed || !ReferenceEquals(_pointer, e.Pointer)) return;
+            var position = e.GetPosition(_absoluteHost);
+            var delta = position - _start;
+            if (!_dragging && Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y) >= DragThreshold)
+            {
+                if (!_viewModel.IsEditMode || !_viewModel.CanChangeLayoutMode ||
+                    !string.Equals(_pageId, _viewModel.SelectedPageId, StringComparison.Ordinal))
+                {
+                    Cancel();
+                    return;
+                }
+                _dragging = true;
+                _originalTransform = _row.RenderTransform;
+                _pointer?.Capture(handle);
+                ToolTip.SetTip(handle, "Drag to place this block. Press Escape to cancel.");
+            }
+            if (!_dragging) return;
+            _row.RenderTransform = new TranslateTransform(delta.X, delta.Y);
+            e.Handled = true;
+        }
+
+        private void OnReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            if (!_pressed || !ReferenceEquals(_pointer, e.Pointer)) return;
+            var wasDrag = _dragging;
+            var position = e.GetPosition(_absoluteHost);
+            var x = Math.Clamp(position.X - _anchorX, 0, HavenRichBlockLayoutGeometry.CoordinateLimit);
+            var y = Math.Clamp(position.Y - _anchorY, 0, HavenRichBlockLayoutGeometry.CoordinateLimit);
+            if (wasDrag) e.Handled = true;
+            Cancel();
+            if (wasDrag) _ = CommitPlacementAsync(x, y);
+        }
+
+        private async Task CommitPlacementAsync(double x, double y)
+        {
+            try
+            {
+                if (!string.Equals(_pageId, _viewModel.SelectedPageId, StringComparison.Ordinal)) return;
+                await _viewModel.PlaceBlockAsync(_pageId, _blockId, x, y, _width, _height, _block.ZOrder);
+            }
+            catch (OperationCanceledException)
+            {
+                ReportStatus("Block placement was cancelled.");
+            }
+            catch (Exception error)
+            {
+                try { _viewModel.ReportBlockMoveFailure(error); }
+                catch { ReportStatus("Block placement failed."); }
+            }
+        }
+
+        private void OnKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Escape || !_pressed) return;
+            e.Handled = true;
+            Cancel();
+        }
+
+        private void OnCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+        {
+            if (_pressed) Cancel();
+        }
+
+        private void OnDetached(object? sender, VisualTreeAttachmentEventArgs e) => Cancel();
+        private void ReportStatus(string message)
+        {
+            try { _viewModel.Set("StatusText", message); }
+            catch { /* Status observers must not escape an input callback. */ }
+        }
+
+        private void Cancel()
+        {
+            var pointer = _pointer;
+            var handle = _handle;
+            _pointer = null;
+            _pressed = false;
+            _dragging = false;
+            _row.RenderTransform = _originalTransform;
+            _originalTransform = null;
+            if (pointer?.Captured == handle) pointer.Capture(null);
+        }
     }
 }
 

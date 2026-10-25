@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
+using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Xunit;
 
@@ -194,6 +195,90 @@ public sealed class BoardsBlockGeometryTests
         Assert.Equal(32, actual.SecondSlotWidth);
         Assert.False(actual.HasInsert);
         Assert.False(actual.HasGrip);
+    }
+
+    [Fact]
+    public async Task Absolute_blocks_render_in_the_free_layer_while_flow_blocks_keep_document_order()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/absolute-block-layer");
+        var page = session.Document.Sections[0].Pages[0];
+        page.LayoutMode = HavenRichPageLayoutModes.Unlocked;
+        var absolute = page.Blocks[0];
+        absolute.Id = "absolute-note";
+        absolute.Text = "Placed note";
+        absolute.Layout = HavenRichBlockLayouts.Absolute;
+        absolute.X = 84;
+        absolute.Y = 124;
+        absolute.Width = 320;
+        absolute.Height = 144;
+        absolute.ZOrder = 2;
+        page.Blocks.Add(new RichBoardBlock
+        {
+            Id = "flow-note",
+            Kind = "paragraph",
+            Text = "Flow note",
+        });
+        var viewModel = new BoardsViewModel(session);
+
+        var actual = TestUiThread.Run(() =>
+        {
+            var flowHost = new StackPanel();
+            var absoluteContainer = new CuiContainerControl("Absolute");
+            Assert.True(CuiLayoutProperties.SetLiteral(absoluteContainer, "XInherited", "True"));
+            Assert.True(CuiLayoutProperties.SetLiteral(absoluteContainer, "YInherited", "True"));
+            var absoluteHost = absoluteContainer.Layout;
+            var surface = new Grid { RowDefinitions = new RowDefinitions("Auto") };
+            surface.Children.Add(flowHost);
+            surface.Children.Add(absoluteContainer);
+            var window = new Window { Width = 620, Height = 520, Content = surface };
+            BlockRenderer.Rebuild(flowHost, viewModel, [], absoluteHost);
+            window.Show();
+            window.Measure(new Size(620, 520));
+            window.Arrange(new Rect(0, 0, 620, 520));
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+            var flowRow = Assert.Single(flowHost.GetVisualDescendants().OfType<Border>(), border =>
+                border.Tag is BlockReorderRow row && row.BlockId == "flow-note");
+            Assert.DoesNotContain(flowHost.GetVisualDescendants().OfType<Border>(), border =>
+                border.Tag is BlockReorderRow row && row.BlockId == "absolute-note");
+            var absoluteRow = Assert.Single(absoluteHost.Children.OfType<Border>(), border =>
+                border.Tag is BlockReorderRow row && row.BlockId == "absolute-note");
+            Assert.DoesNotContain(absoluteHost.Children.OfType<Border>(), border =>
+                border.Tag is BlockReorderRow row && row.BlockId == "flow-note");
+            var absoluteText = Assert.Single(absoluteRow.GetVisualDescendants().OfType<TextBox>(), box => box.Name == "t_absolute-note");
+            var initialTextPoint = absoluteText.TranslatePoint(new Point(0, 0), absoluteHost);
+            Assert.NotNull(initialTextPoint);
+            var initialHostSize = absoluteHost.Bounds.Size;
+
+            window.Width = 820;
+            window.Height = 620;
+            window.Measure(new Size(820, 620));
+            window.Arrange(new Rect(0, 0, 820, 620));
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            var resizedTextPoint = absoluteText.TranslatePoint(new Point(0, 0), absoluteHost);
+            Assert.NotNull(resizedTextPoint);
+            var result = (FlowText: Assert.Single(flowRow.GetVisualDescendants().OfType<TextBox>(), box => box.Name == "t_flow-note").Text,
+                InitialTextX: initialTextPoint.Value.X, InitialTextY: initialTextPoint.Value.Y,
+                ResizedTextX: resizedTextPoint.Value.X, ResizedTextY: resizedTextPoint.Value.Y,
+                InitialHostWidth: initialHostSize.Width, ResizedHostWidth: absoluteHost.Bounds.Width,
+                AbsoluteWidth: absoluteRow.Bounds.Width, AbsoluteHeight: absoluteRow.Bounds.Height,
+                FlowCount: flowHost.GetVisualDescendants().OfType<Border>().Count(border => border.Tag is BlockReorderRow),
+                AbsoluteCount: absoluteHost.Children.OfType<Border>().Count(border => border.Tag is BlockReorderRow));
+            window.Close();
+            return result;
+        });
+
+        Assert.Equal("Flow note", actual.FlowText);
+        Assert.Equal(84, actual.InitialTextX);
+        Assert.Equal(124, actual.InitialTextY);
+        Assert.Equal(actual.InitialTextX, actual.ResizedTextX);
+        Assert.Equal(actual.InitialTextY, actual.ResizedTextY);
+        Assert.True(actual.ResizedHostWidth > actual.InitialHostWidth);
+        Assert.Equal(396, actual.AbsoluteWidth);
+        Assert.Equal(148, actual.AbsoluteHeight);
+        Assert.Equal(1, actual.FlowCount);
+        Assert.Equal(1, actual.AbsoluteCount);
     }
 
     [Fact]
