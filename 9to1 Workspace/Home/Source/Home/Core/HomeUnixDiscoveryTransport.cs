@@ -33,9 +33,10 @@ public static class HomeUnixDiscoveryTransport
         try
         {
             var request = JsonSerializer.Deserialize<HomeNativeDiscoveryRequest>(retainedFirstFrame ?? await ReadFrameAsync(stream, deadline.Token).ConfigureAwait(false), Json);
-            using var process = HomeNativePeerObservation.RetainAcceptedUnixProcess(accepted);
+            using var process = discovery.RetainOriginalUnixPeer(accepted);
             var peer = process?.Observe();
-            var snapshot = request is null || peer is null ? null : await discovery.DiscoverAsync(peer, request.Requirements, deadline.Token).ConfigureAwait(false);
+            var snapshot = request is null || peer is null || process is null ? null
+                : await discovery.DiscoverOriginalUnixAsync(process, request.Requirements, deadline.Token).ConfigureAwait(false);
             if (snapshot is not null && process?.Observe() != peer) snapshot = null;
             response = new(snapshot is null ? "HomePeerOrServiceUnavailable" : "HomeDiscoveryReady", snapshot);
         }
