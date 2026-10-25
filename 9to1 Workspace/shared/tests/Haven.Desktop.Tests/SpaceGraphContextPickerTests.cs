@@ -73,7 +73,7 @@ public sealed class SpaceGraphContextPickerTests
         var overflow = Reference("beyond-limit") with { AddedAt = DateTimeOffset.UnixEpoch.AddSeconds(3) };
         var parent = await registry.CreateAsync("Source parent", cancellationToken: token);
         parent = await registry.UpdateAsync(parent with { ContextReferences = [first, excluded, denied, unknown, second, overflow] }, parent.Revision, token);
-        var child = await registry.CreateAsync("Source child", parentSpaceId: parent.Id, cancellationToken: token);
+        var child = await registry.CreateAsync("Source child", description: null, parentSpaceId: parent.Id, cancellationToken: token);
         var layout = Layout();
         child = await registry.SaveDraftAsync(child.Id, SpaceConfigurationDocument.From(child) with
         { Inheritance = new SpaceInheritancePolicy(Sources: true), ContextPolicy = new(MaximumRetrievedItems: 2), LayoutDocument = layout },
@@ -105,7 +105,7 @@ public sealed class SpaceGraphContextPickerTests
         var reference = Reference("reviewed");
         var parent = await registry.CreateAsync("Parent", cancellationToken: token);
         parent = await registry.UpdateAsync(parent with { ContextReferences = [reference] }, parent.Revision, token);
-        var current = await registry.CreateAsync("Guarded picker", parentSpaceId: parent.Id, cancellationToken: token);
+        var current = await registry.CreateAsync("Guarded picker", description: null, parentSpaceId: parent.Id, cancellationToken: token);
         var layout = Layout(twoAppendNodes: true);
         current = await registry.SaveDraftAsync(current.Id, SpaceConfigurationDocument.From(current) with
         { Inheritance = new SpaceInheritancePolicy(Sources: true), LayoutDocument = layout }, current.Revision,
