@@ -105,6 +105,28 @@ public sealed class HomeLibraryDestinationTests
         finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
     }
     [AvaloniaFact]
+    public async Task Library_pin_toggle_uses_the_same_current_artifact_identity_and_refreshes_projection()
+    {
+        var index = new Index(1); var authorization = new Authorization(); var preferences = new Preferences();
+        var page = Page(index, authorization, (_, _) => true, preferences); Window? window = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page);
+            var pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "home-library-toggle-pin");
+            pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            var pinned = Assert.Single(page.Current!.Items);
+            Assert.Equal(index.Rows.Single().ArtifactId, pinned.ArtifactId);
+            Assert.True(pinned.IsPinned); Assert.True(preferences.IsPinned("boards", pinned.ArtifactId));
+            Assert.True(authorization.Reads >= 2); // Search and the fresh pin action both recheck current read access.
+            Assert.Single(index.Rows); // Pinning a reference never creates a copied artifact.
+            pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "home-library-toggle-pin");
+            pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(Assert.Single(page.Current!.Items).IsPinned);
+            Assert.False(preferences.IsPinned("boards", pinned.ArtifactId));
+        }
+        finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
+    }
+    [AvaloniaFact]
     public async Task Library_close_waits_for_its_actual_delayed_query_and_does_not_publish_retired_rows()
     {
         var index = new Index(1) { Held = new(TaskCreationOptions.RunContinuationsAsynchronously) };
@@ -142,8 +164,9 @@ public sealed class HomeLibraryDestinationTests
         }
         finally { try { await session.CloseAndDrainAsync(); } finally { window?.Close(); } }
     }
-    private static HomeLibraryDestinationPage Page(Index index, Authorization authorization, Func<HomeDeepLink, Task, bool> queue) =>
-        new(router => new(index, authorization, router, new Preferences()), _ => Task.CompletedTask, queue);
+    private static HomeLibraryDestinationPage Page(Index index, Authorization authorization, Func<HomeDeepLink, Task, bool> queue,
+        IHomeLibraryPreferences? preferences = null) =>
+        new(router => new(index, authorization, router, preferences ?? new Preferences()), _ => Task.CompletedTask, queue);
     private static Window Show(Control page)
     { var window = new Window { Width = 800, Height = 620, Content = page }; window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); return window; }
     private sealed class Registry : IModeRegistry
@@ -180,13 +203,16 @@ public sealed class HomeLibraryDestinationTests
     }
     private sealed class Authorization : IHomeArtifactAuthorization
     {
-        internal bool Allowed = true; internal int Opens;
-        public Task<bool> CanReadAsync(string app, string id, CancellationToken token) => Task.FromResult(Allowed);
+        internal bool Allowed = true; internal int Opens, Reads;
+        public Task<bool> CanReadAsync(string app, string id, CancellationToken token) { Reads++; return Task.FromResult(Allowed); }
         public Task<bool> CanOpenAsync(HomeDeepLink link, CancellationToken token) { Opens++; return Task.FromResult(Allowed); }
     }
     private sealed class Preferences : IHomeLibraryPreferences
     {
-        public Task<bool> IsPinnedAsync(string app, string id, CancellationToken token) => Task.FromResult(false);
-        public Task SetPinnedAsync(string app, string id, bool pinned, CancellationToken token) => throw new InvalidOperationException("This read/open slice cannot mutate pin state.");
+        private readonly HashSet<string> _pinned = new(StringComparer.Ordinal);
+        internal bool IsPinned(string app, string id) => _pinned.Contains(app + "/" + id);
+        public Task<bool> IsPinnedAsync(string app, string id, CancellationToken token) => Task.FromResult(IsPinned(app, id));
+        public Task SetPinnedAsync(string app, string id, bool pinned, CancellationToken token)
+        { var key = app + "/" + id; if (pinned) _pinned.Add(key); else _pinned.Remove(key); return Task.CompletedTask; }
     }
 }

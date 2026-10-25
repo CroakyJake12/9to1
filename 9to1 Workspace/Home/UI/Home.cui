@@ -136,19 +136,22 @@
                     <Text id="library-status" Text="{Binding LibrarySummary}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
                     <Container id="library-results" Type="Vertical Stack" CellGap="8" role="list" accessible-name="Authorised artifacts">
                       <Repeat id="home-library-rows" Source="{Binding LibraryRows}" As="artifact" Key="{Binding artifact.Key}">
-                        <Button id="home-library-item" action="OpenHomeLibraryArtifact" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalAlignment="Stretch" Padding="12" accessible-name="{Binding artifact.DisplayName}">
-                          <Container Type="Vertical Stack" CellGap="5" HorizontalAlignment="Stretch">
-                            <Text Text="{Binding artifact.DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                            <Container Type="Wrap" CellGap="10">
-                              <Text Text="{Binding artifact.OwnerApp}" />
-                              <Text Text="{Binding artifact.ArtifactType}" />
-                              <Text Text="{Binding artifact.LastModified}" Foreground="{Resource CuiTextSoftBrush}" />
+                        <Container Type="Horizontal Stack" CellGap="8">
+                          <Button id="home-library-item" action="OpenHomeLibraryArtifact" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalAlignment="Stretch" Padding="12" accessible-name="{Binding artifact.DisplayName}">
+                            <Container Type="Vertical Stack" CellGap="5" HorizontalAlignment="Stretch">
+                              <Text Text="{Binding artifact.DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                              <Container Type="Wrap" CellGap="10">
+                                <Text Text="{Binding artifact.OwnerApp}" />
+                                <Text Text="{Binding artifact.ArtifactType}" />
+                                <Text Text="{Binding artifact.LastModified}" Foreground="{Resource CuiTextSoftBrush}" />
+                              </Container>
+                              <Text Text="{Binding artifact.Location}" Foreground="{Resource CuiTextSoftBrush}" />
+                              <Text Text="{Binding artifact.Owner}" Foreground="{Resource CuiTextSoftBrush}" />
+                              <If Condition="{Binding artifact.IsPinned}"><Text Text="Pinned" Foreground="{Resource CuiTextSoftBrush}" /></If>
                             </Container>
-                            <Text Text="{Binding artifact.Location}" Foreground="{Resource CuiTextSoftBrush}" />
-                            <Text Text="{Binding artifact.Owner}" Foreground="{Resource CuiTextSoftBrush}" />
-                            <If Condition="{Binding artifact.IsPinned}"><Text Text="Pinned" Foreground="{Resource CuiTextSoftBrush}" /></If>
-                          </Container>
-                        </Button>
+                          </Button>
+                          <Button id="home-library-toggle-pin" action="ToggleHomeLibraryPin" parameter="{Binding artifact.Target}" Content="Pin / unpin" IsEnabled="{Binding CanToggleHomeLibraryPin, fallback=false}" AccessibleName="Pin or unpin this artifact" />
+                        </Container>
                       </Repeat>
                     </Container>
                     <Container Type="Wrap" CellGap="8">
