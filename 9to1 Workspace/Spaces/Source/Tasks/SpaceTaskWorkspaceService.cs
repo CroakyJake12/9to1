@@ -43,7 +43,8 @@ public sealed class SpaceTaskWorkspaceService(
         }
         // Opening/renaming a conversation cannot manufacture task activity or priority.
         // Until a current activity witness exists, use the actual task's recorded update.
-        return Array.AsReadOnly(observations.OrderByDescending(row => row.Snapshot?.UpdatedAt ?? row.Conversation.CreatedAt)
+        return Array.AsReadOnly(observations.OrderByDescending(row => row.HasObservedLiveExecution)
+            .ThenByDescending(row => row.Snapshot?.UpdatedAt ?? row.Conversation.CreatedAt)
             .ThenBy(row => row.Conversation.Id).ToArray());
     }
 
@@ -74,6 +75,17 @@ public sealed class SpaceTaskWorkspaceService(
                 throw new InvalidDataException("A different original task attempt was returned.");
             originalRetained = issued is not null;
         }
+        TaskRunActivityObservation? activity = null;
+        if (snapshot is { State: TaskExecutionLifecycle.Running } && originalRetained && canonical.HasCommandAuthority)
+        {
+            var actualActivity = await Join(() => canonical.ObserveOriginalRunActivityAsync(snapshot.TaskId,
+                snapshot.ExecutionId, cancellationToken), originalSourceCallbackScope).ConfigureAwait(false);
+            if (actualActivity.TaskId != snapshot.TaskId || actualActivity.ExecutionId != snapshot.ExecutionId ||
+                actualActivity.ContextId != originalConversationId)
+                throw new InvalidDataException("The actual live task observation belongs to another context or run.");
+            // Never apply a newer/older live witness to a different displayed revision.
+            if (actualActivity.PersistenceRevision == snapshot.PersistenceRevision) activity = actualActivity;
+        }
         // Membership can change while the task read or issued-attempt read is pending.
         // These are observation checks, not a physical transaction or mutation grant.
         var currentConversation = await Join(() => conversations.GetAsync(originalConversationId, cancellationToken), originalSourceCallbackScope).ConfigureAwait(false);
@@ -84,7 +96,7 @@ public sealed class SpaceTaskWorkspaceService(
             throw new SpaceRevisionConflictException(spaceId, space.Revision, currentSpace.Revision);
         cancellationToken.ThrowIfCancellationRequested();
         return new(spaceId, currentSpace.Revision, currentConversation!, snapshot,
-            snapshot is null ? null : TaskExecutionProjection.From(snapshot), originalRetained);
+            snapshot is null ? null : TaskExecutionProjection.From(snapshot), originalRetained) { Activity = activity };
     }
 
     /// <summary>Queues or steers the same Task/Run. It does not resume or redispatch a provider.</summary>
@@ -198,7 +210,12 @@ public sealed record SpaceTaskObservation(
     Guid SpaceId, long SpaceRevision, Conversation Conversation, TaskExecutionSnapshot? Snapshot,
     TaskExecutionProjection? Projection, bool OriginalAttemptRetained)
 {
+    public TaskRunActivityObservation? Activity { get; init; }
+    public bool HasObservedLiveExecution => Activity is { IsLive: true } live && Snapshot is { State: TaskExecutionLifecycle.Running } task &&
+        live.TaskId == task.TaskId && live.ExecutionId == task.ExecutionId && live.ContextId == Conversation.Id &&
+        live.PersistenceRevision == task.PersistenceRevision;
     public string ExecutionObservation => Snapshot is null ? "No canonical task has been started for this conversation."
+        : HasObservedLiveExecution ? $"Live original execution observed at {Activity!.ObservedAt:O}; recorded task: {Snapshot.State}."
         : Snapshot.Attempts.Count == 0 ? $"Saved task: {Snapshot.State}. No provider attempt is recorded."
         : OriginalAttemptRetained ? $"Saved task: {Snapshot.State}. Original attempt admission is retained; this is not a live activity witness."
         : $"Saved task: {Snapshot.State}. Original attempt custody is unavailable; recovery requires its owning service.";

@@ -58,6 +58,21 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
     internal Task? ActualStop { get { lock (_gate) return _stop; } }
     internal Task? ActualClose { get { lock (_gate) return _close; } }
     internal Task? ActualDispose { get { lock (_gate) return _dispose; } }
+    /// <summary>Current private source observation only, never command/resume authority.
+    /// An admission, completed frame or saved Running row alone cannot satisfy this.</summary>
+    internal bool HasLiveOriginalSource
+    {
+        get
+        {
+            lock (_gate)
+                return _sourceInvoked && _enumerationClaimed && _iterator is not null && !_admissionSealed &&
+                    !_runWithdrawalRequested && !_lifetimeDisposed && !_lifetime.IsCancellationRequested &&
+                    _stop is null && _close is null && _dispose is null && !_knownFault && _causes.Count == 0 &&
+                    _raw.All(actual => !actual.IsFaulted && !actual.IsCanceled) &&
+                    !_custody.HasOwnedTerminalObservation && _lastMove is { IsFaulted: false, IsCanceled: false } move &&
+                    (!move.IsCompletedSuccessfully || move.Result);
+        }
+    }
     internal bool HasHealthyClosedOriginal
     {
         get

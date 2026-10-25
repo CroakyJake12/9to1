@@ -197,6 +197,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             await initialSend.WaitAsync(TimeSpan.FromSeconds(10));
             var waiting = Assert.IsType<ChatCanonicalPermissionWaitingObservation>(page.CanonicalPermissionWaiting);
             var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, token))!;
+            Assert.False((await rig.Tasks.ObserveOriginalRunActivityAsync(initial.TaskId, initial.ExecutionId, token)).IsLive);
             await rig.Owner.ApproveOriginalAsync(waiting.PermissionRequest.Id, token);
             var bindings = page.OriginalTaskComposer.Bindings;
             await bindings.DispatchAsync("composer.refresh-task-controls", null);
@@ -205,6 +206,10 @@ public sealed partial class ChatCloudPermissionCallerTests
             rig.Capture.ApprovedProviderBody = _ => { entered.TrySetResult(); return release.Task; };
             resumed = bindings.DispatchAsync("composer.resume", null).AsTask();
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var liveActivity = await rig.Tasks.ObserveOriginalRunActivityAsync(initial.TaskId, initial.ExecutionId, token);
+            Assert.True(liveActivity.IsLive);
+            Assert.Equal(initial.TaskId, liveActivity.TaskId);
+            Assert.Equal(initial.ExecutionId, liveActivity.ExecutionId);
             page.SetDraft("live continued follow-up");
             Assert.False(resumed.IsCompleted);
             Assert.True(page.IsSending);
@@ -227,6 +232,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.Equal(TaskRunOriginalRunControlKind.Pause, ack.Kind);
             Assert.Equal(TaskRunOriginalRunControlDisposition.Suspended, ack.Disposition);
             var same = (await rig.Tasks.GetByContextAsync(initial.ContextId, token))!;
+            Assert.False((await rig.Tasks.ObserveOriginalRunActivityAsync(same.TaskId, same.ExecutionId, token)).IsLive);
             Assert.Equal(initial.TaskId, same.TaskId); Assert.Equal(initial.ExecutionId, same.ExecutionId);
             Assert.Equal("live continued follow-up", Assert.Single(same.Queue).Summary);
             Assert.Equal("retain this draft while pausing", page.OriginalTaskComposer.Input.Text);
