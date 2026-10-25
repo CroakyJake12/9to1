@@ -691,7 +691,7 @@ public sealed class HavenRichBoardV3Tests
         Assert.True(HavenGraphExpression.TryGetInequality("y <= x^2", out var belowBoundary, out var belowAbove));
         Assert.Equal("x^2", belowBoundary);
         Assert.False(belowAbove);
-        Assert.True(HavenGraphExpression.TryGetInequality("x + 1 >= y", out var aboveBoundary, out var aboveAbove));
+        Assert.True(HavenGraphExpression.TryGetInequality("x + 1 <= y", out var aboveBoundary, out var aboveAbove));
         Assert.Equal("x + 1", aboveBoundary);
         Assert.True(aboveAbove);
         Assert.True(HavenGraphExpression.TryGetInequality("y > sin(x)", out var strictBoundary, out var strictAbove));
