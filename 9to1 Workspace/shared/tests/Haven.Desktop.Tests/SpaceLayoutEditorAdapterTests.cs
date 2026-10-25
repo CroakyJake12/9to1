@@ -1,4 +1,5 @@
 using Haven.Application;
+using Haven.Application.NodeGraph;
 using Haven.Desktop.Views.Pages.Spaces;
 using Haven.UI.Components;
 
@@ -76,6 +77,12 @@ public sealed class SpaceLayoutEditorAdapterTests
         var source = Assert.Single(nodes, node => node.TypeId == SpaceUserMessageGraph.SourceType);
         var truncate = Assert.Single(nodes, node => node.TypeId == SpaceUserMessageGraph.TruncateType);
         var output = Assert.Single(nodes, node => node.TypeId == SpaceUserMessageGraph.OutputType);
+        page.Editor.SelectNode(truncate.Id);
+        var maximumInput = Assert.Single(page.NodeConfigurationInputs,
+            pair => pair.Key.EndsWith(".maximumTextElements", StringComparison.Ordinal)).Value;
+        Assert.Equal("1000", maximumInput.Text);
+        maximumInput.Text = "256";
+        Assert.Equal("256", Assert.Single(page.Editor.Document.Nodes, node => node.Id == truncate.Id).Metadata["maximumTextElements"]);
         Assert.True(page.Editor.Connect(source.Id, "out", truncate.Id, "in"));
         Assert.True(page.Editor.Connect(truncate.Id, "out", output.Id, "in"));
         Assert.NotNull(latestDraft);

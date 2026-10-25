@@ -5,6 +5,7 @@ using Haven.Desktop.HavenUI.Backend;
 using Haven.UI;
 using Haven.UI.Components;
 using HavenButton = Haven.UI.Components.Button;
+using HavenInput = Haven.UI.Components.Input;
 using HavenPage = Haven.UI.Components.Page;
 using HavenText = Haven.UI.Components.Text;
 
@@ -94,6 +95,8 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     private readonly SpaceRegistry _registry;
     private readonly Action<SpaceLayoutDocument>? _onDraftChanged;
     private readonly List<(HavenButton Button, string TypeId, EventHandler Handler)> _userMessagePalette = [];
+    private readonly List<(HavenInput Input, EventHandler Handler)> _configurationInputs = [];
+    private readonly Container _configurationInspector;
     private SpaceDefinition _space;
     private bool _disposed;
     private bool _saving;
@@ -112,7 +115,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         _onDraftChanged = onDraftChanged;
         _space = space ?? throw new ArgumentNullException(nameof(space));
 
-        var root = new HavenPage { Name = "Spaces.Layout.Root", Layout = HavenLayout.Grid, Rows = "Auto 1fr Auto" };
+        var root = new HavenPage { Name = "Spaces.Layout.Root", Layout = HavenLayout.Grid, Rows = "Auto Auto 1fr Auto" };
         root.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         root.SetValue(HavenProperties.Height, HavenLength.Percent(100));
         root.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(18)));
@@ -145,9 +148,17 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         header.Add(Save);
         root.Add(header);
 
+        _configurationInspector = new Container { Name = "Spaces.Layout.NodeConfiguration", Layout = HavenLayout.Wrap };
+        _configurationInspector.SetValue(HavenProperties.Row, 1);
+        _configurationInspector.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+        _configurationInspector.SetValue(HavenProperties.Gap, HavenLength.Px(8));
+        _configurationInspector.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        _configurationInspector.Accessibility.AccessibleName = "Selected graph node configuration";
+        root.Add(_configurationInspector);
+
         Editor = new NodeEditor { Name = "Spaces.Layout.NodeEditor" };
         Editor.Accessibility.AccessibleName = $"{space.Name} layout and additional logic editor";
-        Editor.SetValue(HavenProperties.Row, 1);
+        Editor.SetValue(HavenProperties.Row, 2);
         Editor.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         Editor.SetValue(HavenProperties.Height, HavenLength.Percent(100));
         Editor.SetValue(HavenProperties.MinHeight, HavenLength.Px(420));
@@ -162,7 +173,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
             ? "Add registered nodes, connect their typed ports, then validate the graph."
             : $"Loaded {Editor.Document.Nodes.Count} nodes and {Editor.Document.Edges.Count} connections.")
         { Name = "Spaces.Layout.Status", Level = TextLevel.Caption };
-        Status.SetValue(HavenProperties.Row, 2);
+        Status.SetValue(HavenProperties.Row, 3);
         Status.SetValue(HavenProperties.Foreground, "TextSecondary");
         root.Add(Status);
 
@@ -176,6 +187,8 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         ResetView.Invoked += OnResetView;
         Save.Invoked += OnSave;
         Editor.DocumentChanged += OnDocumentChanged;
+        Editor.SelectionChanged += OnSelectionChanged;
+        OnSelectionChanged(Editor.SelectedNodeIds);
     }
 
     internal HavenSceneControl Scene { get; }
@@ -210,6 +223,62 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         var offset = Editor.Document.Nodes.Count * 28d;
         Editor.AddNode(node, 60d + offset, 70d + offset);
     }
+
+    private void OnSelectionChanged(IReadOnlyCollection<Guid> selectedIds)
+    {
+        foreach (var (input, handler) in _configurationInputs) input.TextChanged -= handler;
+        _configurationInputs.Clear();
+        foreach (var child in _configurationInspector.Children.ToArray()) _configurationInspector.Remove(child);
+        var node = selectedIds.Count == 1
+            ? Editor.Document.Nodes.SingleOrDefault(candidate => candidate.Id == selectedIds.Single())
+            : null;
+        var profile = SpaceUserMessageGraph.Profile();
+        var schema = node is null || !profile.AllowedNodeTypes.Contains(node.TypeId)
+            ? null
+            : SpaceUserMessageGraph.Types().SingleOrDefault(type => type.TypeId == node.TypeId && type.Version == node.SchemaVersion);
+        if (node is null || schema is null || !schema.ConfigurationSchema.TryGetProperty("properties", out var properties) ||
+            properties.ValueKind != System.Text.Json.JsonValueKind.Object || properties.EnumerateObject().Count() == 0)
+        {
+            _configurationInspector.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+            return;
+        }
+
+        _configurationInspector.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+        var heading = new HavenText($"{node.Title} settings") { Level = TextLevel.H3 };
+        _configurationInspector.Add(heading);
+        var required = schema.ConfigurationSchema.TryGetProperty("required", out var requiredArray) &&
+            requiredArray.ValueKind == System.Text.Json.JsonValueKind.Array
+            ? requiredArray.EnumerateArray().Where(value => value.ValueKind == System.Text.Json.JsonValueKind.String)
+                .Select(value => value.GetString()!).ToHashSet(StringComparer.Ordinal)
+            : new HashSet<string>(StringComparer.Ordinal);
+        foreach (var property in properties.EnumerateObject())
+        {
+            var key = property.Name;
+            var type = property.Value.TryGetProperty("type", out var propertyType) && propertyType.ValueKind == System.Text.Json.JsonValueKind.String
+                ? propertyType.GetString() : "value";
+            var labelText = key + (required.Contains(key) ? " (required)" : "");
+            if (property.Value.TryGetProperty("enum", out var enumValues) && enumValues.ValueKind == System.Text.Json.JsonValueKind.Array)
+                labelText += " · " + string.Join(" / ", enumValues.EnumerateArray().Select(value => value.ToString()));
+            var label = new HavenText(labelText) { Level = TextLevel.Caption };
+            _configurationInspector.Add(label);
+            var input = new HavenInput { Name = $"Spaces.Layout.NodeConfiguration.{node.Id:D}.{key}", Placeholder = type };
+            input.Accessibility.AccessibleName = labelText;
+            input.Text = node.Metadata.GetValueOrDefault(key, string.Empty);
+            EventHandler handler = (_, _) => Editor.UpdateNode(node.Id, current =>
+            {
+                var metadata = new Dictionary<string, string>(current.Metadata, StringComparer.Ordinal);
+                if (input.Text.Length == 0 && !required.Contains(key)) metadata.Remove(key);
+                else metadata[key] = input.Text;
+                return current with { Metadata = metadata };
+            });
+            input.TextChanged += handler;
+            _configurationInputs.Add((input, handler));
+            _configurationInspector.Add(input);
+        }
+    }
+
+    internal IReadOnlyDictionary<string, HavenInput> NodeConfigurationInputs => _configurationInputs
+        .ToDictionary(pair => pair.Input.Name ?? string.Empty, pair => pair.Input, StringComparer.Ordinal);
 
     private void OnDeleteSelection(object? sender, EventArgs e) => Editor.DeleteSelection();
     private void OnResetView(object? sender, EventArgs e) => Editor.ResetViewport();
@@ -278,10 +347,13 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        foreach (var (input, handler) in _configurationInputs) input.TextChanged -= handler;
+        _configurationInputs.Clear();
         foreach (var (button, _, handler) in _userMessagePalette) button.Invoked -= handler;
         DeleteSelection.Invoked -= OnDeleteSelection;
         ResetView.Invoked -= OnResetView;
         Save.Invoked -= OnSave;
         Editor.DocumentChanged -= OnDocumentChanged;
+        Editor.SelectionChanged -= OnSelectionChanged;
     }
 }
