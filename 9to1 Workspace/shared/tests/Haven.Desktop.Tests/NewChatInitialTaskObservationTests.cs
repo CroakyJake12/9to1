@@ -174,6 +174,161 @@ public sealed partial class ChatCloudPermissionCallerTests
     }
 
     [AvaloniaFact]
+    public async Task Native_issued_continuation_accepts_live_queue_and_keyboard_stop_uses_its_real_pause_owner()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var offered = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        rig.Client.AvailableModels = [offered];
+        var directory = Path.Combine(Path.GetTempPath(), "native-resumed-controls-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var drafts = new NativeComposerDraftStore();
+        var page = CreateNativeComposerPage(rig, directory, drafts);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task? resumed = null;
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            page.ConfigureTaskMode(); page.SelectModel(offered);
+            await page.SubmitOriginalInstructionAsync("Keep this original task identity");
+            var initialSend = (Task)typeof(NewChatPage).GetField("_originalSend", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+            await initialSend.WaitAsync(TimeSpan.FromSeconds(10));
+            var waiting = Assert.IsType<ChatCanonicalPermissionWaitingObservation>(page.CanonicalPermissionWaiting);
+            var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, token))!;
+            await rig.Owner.ApproveOriginalAsync(waiting.PermissionRequest.Id, token);
+            var bindings = page.OriginalTaskComposer.Bindings;
+            await bindings.DispatchAsync("composer.refresh-task-controls", null);
+            Assert.True(bindings.IsActionAvailable("composer.resume"));
+            rig.Client.RunApprovedOwnedFrame = true;
+            rig.Capture.ApprovedProviderBody = _ => { entered.TrySetResult(); return release.Task; };
+            resumed = bindings.DispatchAsync("composer.resume", null).AsTask();
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            page.SetDraft("live continued follow-up");
+            Assert.False(resumed.IsCompleted);
+            Assert.True(page.IsSending);
+            Assert.True(bindings.IsActionAvailable("composer.queue"));
+            Assert.True(bindings.IsActionAvailable("composer.steer"));
+            Assert.True(bindings.IsActionAvailable("composer.pause"));
+            Assert.False(bindings.IsActionAvailable("composer.send"));
+            await bindings.DispatchAsync("composer.queue", null);
+            Assert.Equal("live continued follow-up", page.CanonicalTaskFollowUp?.QueuedTask?.Summary);
+            Assert.Null(page.CanonicalPermissionWaiting);
+            page.SetDraft("retain this draft while pausing");
+            Assert.True(page.TryStopResponse()); // Keyboard/public Stop is the same real resumable pause.
+            Assert.Null(page.CanonicalTaskPauseAcknowledgement);
+            Assert.False(bindings.IsActionAvailable("composer.pause"));
+            release.SetResult(false);
+            await resumed.WaitAsync(TimeSpan.FromSeconds(10));
+            var pausing = OriginalNativePauseDriver(page);
+            await pausing.WaitAsync(TimeSpan.FromSeconds(10));
+            var ack = Assert.IsType<TaskRunOriginalRunControlResult>(page.CanonicalTaskPauseAcknowledgement);
+            Assert.Equal(TaskRunOriginalRunControlKind.Pause, ack.Kind);
+            Assert.Equal(TaskRunOriginalRunControlDisposition.Suspended, ack.Disposition);
+            var same = (await rig.Tasks.GetByContextAsync(initial.ContextId, token))!;
+            Assert.Equal(initial.TaskId, same.TaskId); Assert.Equal(initial.ExecutionId, same.ExecutionId);
+            Assert.Equal("live continued follow-up", Assert.Single(same.Queue).Summary);
+            Assert.Equal("retain this draft while pausing", page.OriginalTaskComposer.Input.Text);
+            Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal("retain this draft while pausing", drafts.Last?.Content);
+        }
+        finally
+        {
+            release.TrySetResult(false);
+            page.RequestRetirement();
+            _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
+            if (resumed is not null) _ = await Record.ExceptionAsync(() => resumed);
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Native_resumed_followup_held_ack_then_retirement_preserves_its_actual_acceptance_and_newer_draft(bool newerTyping)
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var offered = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        rig.Client.AvailableModels = [offered];
+        var directory = Path.Combine(Path.GetTempPath(), "native-resumed-followup-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var drafts = new NativeComposerDraftStore();
+        var page = CreateNativeComposerPage(rig, directory, drafts);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationToken actualProducerToken = default;
+        Task? resumed = null, command = null, close = null, producer = null;
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            page.ConfigureTaskMode(); page.SelectModel(offered);
+            await page.SubmitOriginalInstructionAsync("Keep the original accepted task");
+            var initialSend = (Task)typeof(NewChatPage).GetField("_originalSend", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+            await initialSend.WaitAsync(TimeSpan.FromSeconds(10));
+            var waiting = Assert.IsType<ChatCanonicalPermissionWaitingObservation>(page.CanonicalPermissionWaiting);
+            await rig.Owner.ApproveOriginalAsync(waiting.PermissionRequest.Id, token);
+            var bindings = page.OriginalTaskComposer.Bindings;
+            await bindings.DispatchAsync("composer.refresh-task-controls", null);
+            rig.Client.RunApprovedOwnedFrame = true;
+            rig.Capture.ApprovedProviderBody = actual => { actualProducerToken = actual; entered.TrySetResult(); return release.Task; };
+            resumed = bindings.DispatchAsync("composer.resume", null).AsTask();
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var lease = NativeComposerIssuedResumeLease(page);
+            producer = ActualHostedProducer(lease);
+            Assert.True(rig.Service.IsIssuedObservedTaskComposerResume(NativeComposerIssuedLease(page), lease));
+            var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, token))!;
+            page.SetDraft("accepted continued instruction");
+            Assert.True(bindings.IsActionAvailable("composer.queue"));
+            rig.TaskRows.HeldFollowUpWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            command = bindings.DispatchAsync("composer.queue", null).AsTask();
+            await rig.TaskRows.FollowUpWriteEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(command.IsCompleted);
+            if (newerTyping) page.SetDraft("newer continued draft");
+            page.RequestRetirement();
+            close = page.CloseAndDrainAsync();
+            Assert.False(close.IsCompleted);
+            rig.TaskRows.HeldFollowUpWrite.SetResult();
+            await command.WaitAsync(TimeSpan.FromSeconds(10));
+            await close.WaitAsync(TimeSpan.FromSeconds(10));
+            await resumed.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(actualProducerToken.IsCancellationRequested);
+            Assert.False(producer.IsCompleted);
+            Assert.Equal(TaskRunOriginalResumeObservationDisposition.ObservationDetached, (await lease.WaitAsync()).Disposition);
+            var actual = (await rig.Tasks.GetByContextAsync(initial.ContextId, token))!;
+            Assert.Equal(initial.TaskId, actual.TaskId); Assert.Equal(initial.ExecutionId, actual.ExecutionId);
+            Assert.Equal("accepted continued instruction", Assert.Single(actual.Queue).Summary);
+            Assert.Equal(newerTyping ? "newer continued draft" : "", drafts.Last?.Content ?? "");
+            Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User);
+            release.SetResult(false);
+            await producer.WaitAsync(TimeSpan.FromSeconds(10));
+        }
+        finally
+        {
+            rig.TaskRows.HeldFollowUpWrite?.TrySetResult();
+            release.TrySetResult(false);
+            if (command is not null) _ = await Record.ExceptionAsync(() => command);
+            page.RequestRetirement();
+            _ = await Record.ExceptionAsync(() => close ??= page.CloseAndDrainAsync());
+            if (resumed is not null) _ = await Record.ExceptionAsync(() => resumed);
+            if (producer is not null) _ = await Record.ExceptionAsync(() => producer);
+            Directory.Delete(directory, true);
+        }
+    }
+    private static TaskRunOriginalResumeObservationLease NativeComposerIssuedResumeLease(NewChatPage page)
+    {
+        var entries = (System.Collections.IDictionary)typeof(NewChatPage).GetField("_nativeTaskLiveResumes", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+        var entry = Assert.Single(entries.Values.Cast<object>());
+        return Assert.IsType<TaskRunOriginalResumeObservationLease>(entry.GetType().GetProperty("Lease")!.GetValue(entry));
+    }
+
+    private static Task OriginalNativePauseDriver(NewChatPage page) =>
+        Assert.IsAssignableFrom<Task>(typeof(NewChatPage).GetField("_actualNativeTaskPause", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+
+    [AvaloniaFact]
     public async Task Native_voice_entry_requires_its_actual_host_and_preserves_the_same_draft_and_selection()
     {
         await using var rig = new Rig(temporary: false);

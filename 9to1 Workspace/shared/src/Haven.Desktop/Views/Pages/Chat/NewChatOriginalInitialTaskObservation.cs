@@ -251,6 +251,8 @@ internal sealed class NewChatOriginalInitialTaskObservation
         lock (_gate) lease = _lease ?? throw new InvalidOperationException("No original task identity is retained.");
         DemandIssued(lease); return lease;
     }
+    // An opaque identity anchor only. Live continued commands require the NEW issued Resume lease.
+    internal TaskRunOriginalInitialChatObservationLease ComposerIdentity => RequireComposerLease();
     internal Task<TaskRunOriginalRunControlAvailability?> AcquireActualComposerControls(CancellationToken token)
     {
         Task<TaskRunOriginalRunControlAvailability?>? actual = null;

@@ -30,6 +30,9 @@ internal interface IChatComposerVoiceActions
 internal interface IChatComposerTaskActions
 {
     bool IsApplicable { get; }
+    bool IsRunning => false;
+    bool CanRefreshControls => false;
+    ValueTask RefreshControls() => ValueTask.FromException(new NotSupportedException("No actual task controls owner is bound."));
     bool CanSteer { get; }
     bool CanQueue { get; }
     bool CanStop { get; }
@@ -67,6 +70,8 @@ internal interface IChatComposerTaskActions
 public interface IChatComposerSource
 {
     object? ActionIdentity => null;
+    bool CanRefreshTaskControls => false;
+    ValueTask RefreshTaskControls() => ValueTask.FromException(new NotSupportedException("No actual task controls owner is bound."));
     bool CanEnterVoice => false;
     ValueTask EnterVoice() => ValueTask.FromException(new NotSupportedException("No actual Voice workflow owner is bound."));
     string Draft { get; set; }
@@ -191,6 +196,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         value = null;
         switch (path)
         {
+            case "Composer.CanRefreshTaskControls": value = _source.CanRefreshTaskControls; return true;
             case "Composer.ActionShelf": value = EligibleShelfActions(); return true;
             case "Composer.Draft":
                 value = _source.Draft;
@@ -301,6 +307,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     {
         return command switch
         {
+            "composer.refresh-task-controls" => _source.CanRefreshTaskControls,
             "composer.submit" => _source.CanSubmit,
             "composer.prefer-steer" or "composer.prefer-queue" => _source.HasSendModePreference,
             "composer.send" => !_source.IsSending && _source.HasPendingMessage && _source.CanSend,
@@ -334,6 +341,8 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return _source.Send();
             case "composer.queue" when IsActionAvailable(command) == true:
                 return _source.Queue();
+            case "composer.refresh-task-controls" when _source.CanRefreshTaskControls:
+                return _source.RefreshTaskControls();
             case "composer.end-pass" when _source.CanEndPass:
                 return _source.EndPass();
             case "composer.voice" when _source.CanEnterVoice:

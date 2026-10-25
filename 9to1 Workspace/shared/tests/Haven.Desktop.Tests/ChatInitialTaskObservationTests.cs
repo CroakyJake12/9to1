@@ -78,11 +78,24 @@ public sealed partial class ChatCloudPermissionCallerTests
             await entered.Task.WaitAsync(token);
             var lease = await acquired.Task.WaitAsync(token);
             Assert.True(rig.Service.IsIssuedObservedTaskComposerResume(initial, lease));
+            Assert.False(rig.Service.CanSubmitObservedOriginalTaskFollowUp(initial));
+            Assert.True(rig.Service.CanSubmitObservedResumedTaskFollowUp(initial, lease));
+            var copiedResume = (TaskRunOriginalResumeObservationLease)typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(lease, null)!;
+            Assert.False(rig.Service.CanSubmitObservedResumedTaskFollowUp(initial, copiedResume));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Service.SubmitObservedResumedTaskFollowUpAsync(initial,
+                copiedResume, "refuse foreign continued command", TaskFollowUpMode.Queue, token));
+            var queued = await rig.Service.SubmitObservedResumedTaskFollowUpAsync(initial, lease,
+                "same issued continuation follow-up", TaskFollowUpMode.Queue, token);
+            Assert.Equal(original.TaskId, queued.Snapshot.TaskId); Assert.Equal(original.ExecutionId, queued.Snapshot.ExecutionId);
+            Assert.Equal("same issued continuation follow-up", Assert.Single(queued.Snapshot.Queue).Summary);
             producer = ActualHostedProducer(lease);
             close = parent.CloseAndDrainAsync();
             await close.WaitAsync(token);
             await observing.WaitAsync(token);
             Assert.True(childClose!.IsCompletedSuccessfully);
+            Assert.False(rig.Service.CanSubmitObservedResumedTaskFollowUp(initial, lease));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Service.SubmitObservedResumedTaskFollowUpAsync(initial,
+                lease, "do not use retired continued observer", TaskFollowUpMode.Queue, token));
             Assert.False(producer.IsCompleted);
             Assert.False(actualProducerToken.IsCancellationRequested);
             Assert.False(held.Task.IsCompleted);
