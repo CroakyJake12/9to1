@@ -64,6 +64,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         // A restored ordinary unpinned tab is distinct from a replaceable preview.
         public bool IsPreview = true;
         public string GroupId = "default";
+        public DeveloperDraftHistory? DraftHistory;
+        public string? DraftHistoryBasis;
     }
     private sealed record ManualTabState(string Draft, string Baseline, string Before, string After,
         string BeforeSha256, string AfterSha256, long DraftRevision, long ReviewRevision, bool Reviewed);
@@ -351,6 +353,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 "DraftText" => _manual && _editor is null ? _manualDraftText : _editor?.DraftText ?? "",
                 "SourceLocation" => _sourceLocation, "EditorTextSelection" => _editorTextSelection,
                 "CanGoToSourceLocation" => IsActionAvailable("dev.go-to-source-location"),
+                "CanUndoSourceEdit" => IsActionAvailable("dev.undo-source-edit"),
+                "CanRedoSourceEdit" => IsActionAvailable("dev.redo-source-edit"),
                 "SavedBuildStages" => SavedStageChoices(_project).Select(choice => new SavedStageItem(choice.SelectionKey,
                     choice.Label, choice.Summary + (choice.UnavailableReason is { } reason ? "\n" + reason : ""),
                     "Inspect saved stage " + choice.Label, !_pending)).ToArray(),
@@ -398,7 +402,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         }
         return path is "CanStructuredSearch" or "SearchUseRegex" or "SearchMatchCase" or "ProjectSearchMatches" or
             "ProjectTitle" or "ProjectSummary" or "Files" or "SourcePath" or "SearchQuery" or "SearchResults" or
-            "EditorTitle" or "DraftText" or "SourceLocation" or "EditorTextSelection" or "CanGoToSourceLocation" or "SavedBuildStages" or "SavedBuildStagesStatus" or "SelectedBuildStageSummary" or "CanRunSavedStage" or "SourceFindQuery" or "SourceReplaceText" or "SourceFindMatchCase" or "SourceFindStatus" or "CanFindSourceText" or "CanReplaceSourceMatch" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
+            "EditorTitle" or "DraftText" or "SourceLocation" or "EditorTextSelection" or "CanGoToSourceLocation" or "CanUndoSourceEdit" or "CanRedoSourceEdit" or "SavedBuildStages" or "SavedBuildStagesStatus" or "SelectedBuildStageSummary" or "CanRunSavedStage" or "SourceFindQuery" or "SourceReplaceText" or "SourceFindMatchCase" or "SourceFindStatus" or "CanFindSourceText" or "CanReplaceSourceMatch" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
             "StageTaskId" or "StageId" or "BranchName" or "ProcessStatus" or "ProcessOutput" or "Status" or "CanOpenSource" or "CanPreview" or "CanApply" or "CanRevert" or
             "SourceTabs" or "SourceTabPinLabel" or "CanPinSourceTab" or "CanEditSource" or "SourceTabsStatus" or
             "ProjectEntries" or "ProjectFolder" or "ProjectExplorerStatus" or "ShowProjectExplorer" or "ShowLegacyFiles" or
@@ -474,6 +478,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (command == "dev.undo-source-edit") return CurrentDraftHistory()?.CanUndo(CurrentEditorText()) == true;
+            if (command == "dev.redo-source-edit") return CurrentDraftHistory()?.CanRedo(CurrentEditorText()) == true;
             if (command is "dev.find-next-source" or "dev.find-previous-source" or "dev.replace-all-source")
                 return CurrentSourceTab() is not null && !string.IsNullOrEmpty(_sourceFindQuery);
             if (command == "dev.replace-source-match") return CanReplaceSourceMatch();
@@ -524,6 +530,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command is "dev.undo-source-edit" or "dev.redo-source-edit") return DispatchDraftHistoryAsync(command, cancellationToken);
         if (command is "dev.find-next-source" or "dev.find-previous-source" or "dev.replace-source-match" or "dev.replace-all-source")
             return DispatchSourceFindAsync(command, cancellationToken);
         if (command == "dev.select-build-stage") return SelectSavedBuildStage(parameter);

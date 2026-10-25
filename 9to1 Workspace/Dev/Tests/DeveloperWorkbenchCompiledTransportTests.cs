@@ -96,7 +96,8 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
             "dev.project-entries-next", "dev.open-source", "dev.search", "dev.open-search-result",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
-            "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.preview-edit",
+            "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
+            "dev.redo-source-edit", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];
@@ -121,7 +122,8 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
             "dev.project-entries-next", "dev.open-source", "dev.search", "dev.open-search-result",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
-            "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.preview-edit",
+            "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
+            "dev.redo-source-edit", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];

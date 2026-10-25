@@ -96,6 +96,8 @@
       <Text text="{Binding SourceFindStatus}" text-wrapping="Wrap" accessible-name="Current draft find and replace result" />
       <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" TextSelection="{Binding EditorTextSelection}" Multiline="true" Interactive="{Binding CanEditSource}" />
       <Container Type="Wrap">
+        <Button id="dev-undo-source-edit" action="dev.undo-source-edit" content="Undo draft edit" accessible-name="Undo the last edit in this document; saving still requires review" Interactive="{Binding CanUndoSourceEdit}" />
+        <Button id="dev-redo-source-edit" action="dev.redo-source-edit" content="Redo draft edit" accessible-name="Redo the next edit in this document; saving still requires review" Interactive="{Binding CanRedoSourceEdit}" />
         <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
         <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />
         <Button id="dev-save-reviewed" action="dev.save-reviewed" content="Save reviewed" accessible-name="Save all current reviewed drafts through individual Home write approvals" Interactive="{Binding CanSaveReviewed}" />

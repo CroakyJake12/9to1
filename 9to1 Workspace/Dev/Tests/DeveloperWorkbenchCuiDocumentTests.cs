@@ -19,7 +19,8 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.project-entries-next", "dev.open-source", "dev.search", "dev.open-search-result",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
-            "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.preview-edit",
+            "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
+            "dev.redo-source-edit", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];
@@ -117,6 +118,21 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         Assert.Contains(replace.Actions.Values, value => value.Name == "dev.replace-source-match");
         Assert.Contains(replace.Properties, pair => pair.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
             && pair.Value is CuiBindingValue value && value.Path == "CanReplaceSourceMatch");
+    }
+
+    [Fact]
+    public void Draft_undo_and_redo_are_bound_to_the_selected_documents_real_history_availability()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        foreach (var (id, command, availability) in new[] {
+            ("dev-undo-source-edit", "dev.undo-source-edit", "CanUndoSourceEdit"),
+            ("dev-redo-source-edit", "dev.redo-source-edit", "CanRedoSourceEdit") })
+        {
+            var button = Assert.Single(nodes, node => node.Name == id);
+            Assert.Contains(button.Actions.Values, action => action.Name == command);
+            Assert.Contains(button.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
+                && property.Value is CuiBindingValue binding && binding.Path == availability);
+        }
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)
