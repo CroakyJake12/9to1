@@ -113,10 +113,40 @@ public sealed class CuiCustomThemeTests
         CuiCustomThemeResourceApplier.ApplyToResources(resources, theme);
         Assert.NotNull(resources["CuiAccentPrimaryFill"]);
         Assert.Equal(Color.Parse(theme.PrimaryAccent.Colour.Hex), Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiAccentPrimaryBrush"]).Color);
+        var customBrush = resources["CuiAccentPrimaryBrush"];
+        var customInk = resources["CuiAccentPrimaryForegroundBrush"];
         CuiCustomThemeResourceApplier.ClearFromResources(resources);
-        CuiThemeResourceApplier.ApplyToResources(resources, palette);
         Assert.Null(resources["CuiCustomTypography"]); Assert.Null(resources["CuiButtonRoundnessPercent"]);
-        Assert.Null(resources["CuiAccentPrimaryFill"]); Assert.Null(resources["CuiAccentPrimaryForegroundBrush"]);
+        // Clearing removes authored overrides. Reapplying the base must then
+        // restore its explicit role tokens, rather than leaving actions inkless.
+        foreach (var role in new[] { "Primary", "Secondary", "Tertiary" })
+            foreach (var suffix in new[] { "Fill", "Background", "HoverBackground", "PressedBackground",
+                "ForegroundBrush", "HoverForegroundBrush", "PressedForegroundBrush" })
+                Assert.Null(resources[$"CuiAccent{role}{suffix}"]);
+        CuiThemeResourceApplier.ApplyToResources(resources, palette);
+        var freshBase = new ResourceDictionary();
+        CuiThemeResourceApplier.ApplyToResources(freshBase, palette);
+        Assert.NotSame(customBrush, resources["CuiAccentPrimaryBrush"]);
+        Assert.NotSame(customInk, resources["CuiAccentPrimaryForegroundBrush"]);
+        Assert.IsType<CuiMaterialBrush>(resources["CuiWorkspaceMaterial"]);
+        foreach (var role in new[] { "Primary", "Secondary", "Tertiary" })
+        {
+            foreach (var suffix in new[] { "Fill", "Background", "HoverBackground", "PressedBackground" })
+                Assert.Null(resources[$"CuiAccent{role}{suffix}"]);
+            foreach (var state in new[] { "", "Hover", "Pressed" })
+            {
+                var inkKey = $"CuiAccent{role}{state}ForegroundBrush";
+                Assert.Same(resources["CuiAccentForegroundBrush"], resources[inkKey]);
+                Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(freshBase[inkKey]).Color,
+                    Assert.IsAssignableFrom<ISolidColorBrush>(resources[inkKey]).Color);
+                var fillKey = $"CuiAccent{role}{state}Brush";
+                var expected = Assert.IsAssignableFrom<ILinearGradientBrush>(freshBase[fillKey]);
+                var restored = Assert.IsAssignableFrom<ILinearGradientBrush>(resources[fillKey]);
+                Assert.Equal(expected.StartPoint, restored.StartPoint); Assert.Equal(expected.EndPoint, restored.EndPoint);
+                Assert.Equal(expected.GradientStops.Select(stop => (stop.Offset, stop.Color)),
+                    restored.GradientStops.Select(stop => (stop.Offset, stop.Color)));
+            }
+        }
     }
 
     [Fact]
