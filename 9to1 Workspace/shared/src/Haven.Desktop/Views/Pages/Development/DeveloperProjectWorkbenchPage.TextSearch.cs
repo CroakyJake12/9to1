@@ -20,8 +20,10 @@ public sealed partial class DeveloperProjectWorkbenchPage
 
     // Both keyboard input and replace actions enter the SAME original draft owner and invalidate
     // old review state. No source save, permission decision or executable action happens here.
-    private void UpdateCurrentDraftText(string text)
+    private void UpdateCurrentDraftText(string text, bool recordHistory = true)
     {
+        var previous = CurrentEditorText();
+        var history = recordHistory ? CurrentDraftHistory() : null;
         _editorTextSelection = null; InvalidateSourceFind();
         if (_manual && _editor is null)
         {
@@ -30,12 +32,12 @@ public sealed partial class DeveloperProjectWorkbenchPage
             _manualDraftText = text; _manualDraftRevision++; _manualReviewed = false;
             _manualAfterText = ""; _manualAfterSha256 = ""; _manualReviewRevision = -1;
             if (CurrentSourceTab() is { } manualTab) { manualTab.IsPinned = true; manualTab.IsPreview = false; }
-            StoreSelectedTab(); return;
+            StoreSelectedTab(); history?.RecordChange(previous, text); return;
         }
         if (_editor is null) throw new InvalidOperationException("Open a real complete source document first.");
         _editor = _review!.UpdateDraft(_editor.EditorId, _editor.DraftRevision, text);
         if (CurrentSourceTab() is { } editedTab) { editedTab.IsPinned = true; editedTab.IsPreview = false; }
-        StoreSelectedTab();
+        StoreSelectedTab(); history?.RecordChange(previous, text);
     }
 
     private ValueTask DispatchSourceFindAsync(string command, CancellationToken token)

@@ -419,6 +419,52 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Draft_undo_redo_keep_document_histories_separate_and_invalidate_previous_review_without_saving()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string saved = "alpha"; f.Tools.TextValue = saved;
+            page = await SearchPublicationPage(f, reader.Owner);
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            Assert.False(page.IsActionAvailable("dev.undo-source-edit")); Assert.False(page.IsActionAvailable("dev.redo-source-edit"));
+            page.TrySetValue("DraftText", "alpha typed");
+            page.TrySetValue("SourceFindQuery", "alpha"); page.TrySetValue("SourceReplaceText", "beta");
+            await page.DispatchAsync("dev.replace-all-source", null, OriginalTestBodyToken);
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("alpha typed", draft);
+            await page.DispatchAsync("dev.preview-edit", null, OriginalTestBodyToken);
+            Assert.True(page.IsActionAvailable("dev.apply-edit"));
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(saved, draft);
+            Assert.False(page.HasUnsavedWork); Assert.False(page.IsActionAvailable("dev.apply-edit"));
+            await page.DispatchAsync("dev.redo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal("alpha typed", draft);
+            Assert.False(page.IsActionAvailable("dev.apply-edit"));
+            page.TrySetValue("DraftText", "new Main draft"); Assert.False(page.IsActionAvailable("dev.redo-source-edit"));
+            page.TrySetValue("SourcePath", "Other.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            Assert.False(page.IsActionAvailable("dev.undo-source-edit")); page.TrySetValue("DraftText", "other draft");
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(saved, draft);
+            var main = Assert.Single(NativeSourceTabs(page), tab => NativeTabPath(tab) == "Main.cui");
+            var key = Assert.IsType<Guid>(main.GetType().GetProperty("Id")!.GetValue(main)).ToString("D");
+            await page.DispatchAsync("dev.select-source-tab", key, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal("new Main draft", draft);
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal("alpha typed", draft);
+            Assert.False(page.IsActionAvailable("dev.apply-edit")); Assert.True(page.HasUnsavedWork);
+            Assert.Equal(saved, f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));
