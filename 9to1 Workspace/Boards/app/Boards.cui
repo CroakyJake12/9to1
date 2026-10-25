@@ -161,7 +161,7 @@
             <Container Type="Grid" ID="PageSurface">
               <Container margin="40 32" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="PageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" AccessibleName="Current Board and page" />
-                <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" BorderWidth="0" />
+                <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
                 <Container Type="Vertical Stack" ID="BlocksHost" />
               </Container>
               <Container Type="Absolute" ID="InkOverlayLayer" />

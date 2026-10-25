@@ -4,6 +4,8 @@
 
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 
 namespace CakeOS.Apps.Boards.App;
@@ -51,8 +53,13 @@ public static class ThemeApplier
         Paint<StackPanel>(root, "ContextHost", c => c.Background = BoardsTheme.SurfaceBrush);
         Paint<TextBox>(root, "BoardTitleBox", box =>
         {
-            box.Background = Brushes.Transparent;
-            box.BorderThickness = new Avalonia.Thickness(0);
+            SetDocumentTextSurface(box, Brushes.Transparent);
+            box.Foreground = BoardsTheme.TextBrush;
+            box.FontFamily = ProductFont;
+        });
+        Paint<TextBox>(root, "PageTitleBox", box =>
+        {
+            SetDocumentTextSurface(box, Brushes.Transparent);
             box.Foreground = BoardsTheme.TextBrush;
             box.FontFamily = ProductFont;
         });
@@ -62,6 +69,31 @@ public static class ThemeApplier
             box.Foreground = BoardsTheme.TextBrush;
             box.FontFamily = ProductFont;
         });
+    }
+
+    public static void SetDocumentTextSurface(TextBox input, IBrush background)
+    {
+        CuiPropertyPresentation.Set(input, "Foreground", input.Foreground ?? BoardsTheme.TextBrush,
+            CuiPropertyLevel.Instance, "Boards document text");
+        CuiPropertyPresentation.Set(input, "Background", background, CuiPropertyLevel.Instance,
+            "Boards document surface");
+        CuiPropertyPresentation.Set(input, "BorderWidth", new Avalonia.Thickness(0), CuiPropertyLevel.Instance,
+            "Boards document surface");
+        CuiPropertyPresentation.Set(input, "CornerRadius", new Avalonia.CornerRadius(0), CuiPropertyLevel.Instance,
+            "Boards document surface");
+    }
+
+    public static void ApplyToolbarInputSurface(Control root)
+    {
+        foreach (var combo in root.GetVisualDescendants().OfType<ComboBox>())
+        {
+            CuiPropertyPresentation.Set(combo, "Background", BoardsTheme.CardBrush, CuiPropertyLevel.Instance,
+                "Boards toolbar surface");
+            CuiPropertyPresentation.Set(combo, "Foreground", BoardsTheme.TextBrush, CuiPropertyLevel.Instance,
+                "Boards toolbar surface");
+            CuiPropertyPresentation.Set(combo, "BorderWidth", new Avalonia.Thickness(0), CuiPropertyLevel.Instance,
+                "Boards toolbar surface");
+        }
     }
 
     private static void Paint<T>(Control root, string automationId, Action<T> paint) where T : Control

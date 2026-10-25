@@ -219,6 +219,7 @@ public static class BlockRenderer
         else
             box.Foreground = BoardsTheme.ContrastText(
                 !string.IsNullOrEmpty(block.Background) ? block.Background : style?.Background);
+        ThemeApplier.SetDocumentTextSurface(box, box.Background);
         ToolTip.SetTip(box, (isHeading ? "Heading" : "Paragraph") + " — select to format");
         AutomationProperties.SetName(box, (isHeading ? "Heading" : "Paragraph") + " editor");
         var captured = block.Id;
@@ -368,6 +369,7 @@ public static class BlockRenderer
             FontStyle = item.Italic ? FontStyle.Italic : FontStyle.Normal,
             Foreground = item.IsChecked ? BoardsTheme.SecondaryTextBrush : BoardsTheme.TextBrush,
         };
+        ThemeApplier.SetDocumentTextSurface(text, Brushes.Transparent);
         ToolTip.SetTip(text, "Checklist item text (Enter adds next, empty Backspace removes)");
         AutomationProperties.SetName(text, "Checklist item text");
         var erase = new Button
@@ -489,6 +491,7 @@ public static class BlockRenderer
                     box.Foreground = cellForeground;
                 else
                     box.Foreground = BoardsTheme.ContrastText(cellStyle?.Background);
+                ThemeApplier.SetDocumentTextSurface(box, box.Background);
                 box.TextAlignment = ParseAlignment(cellStyle?.AlignH ?? "inherit");
                 box.VerticalAlignment = cellStyle?.AlignV switch
                 {

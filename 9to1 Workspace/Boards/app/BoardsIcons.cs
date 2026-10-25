@@ -1,8 +1,7 @@
-// BoardsIcons: one consistent glyph system for the Boards chrome.
-// Glyphs come from the Windows system icon fonts (Segoe Fluent Icons with
-// Segoe MDL2 Assets fallback) — no new assets, no emoji in production UI.
-// Every icon use site must also set ToolTip + AutomationProperties.Name.
+// Boards icons resolve through Haven's maintained vector catalog. No icon
+// depends on a platform font containing a private-use glyph.
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 
@@ -10,58 +9,57 @@ namespace CakeOS.Apps.Boards.App;
 
 public static class BoardsIcons
 {
-    public const string FontStack = "Segoe Fluent Icons, Segoe MDL2 Assets";
+    public const string Save = "save";
+    public const string Undo = "undo";
+    public const string Redo = "redo";
+    public const string Add = "plus";
+    public const string Delete = "delete";
+    public const string Close = "close";
+    public const string Check = "check";
+    public const string Search = "search";
+    public const string More = "more";
+    public const string Grip = "more";
+    public const string ChevronDown = "chevron-down";
+    public const string ChevronRight = "chevron-right";
+    public const string ChevronLeft = "chevron-left";
+    public const string Bold = "bold";
+    public const string Italic = "italic";
+    public const string Underline = "underline";
+    public const string Strikethrough = "text";
+    public const string BulletedList = "tasks";
+    public const string NumberedList = "tasks";
+    public const string Edit = "properties";
+    public const string Image = "file";
+    public const string Attach = "copy";
+    public const string Settings = "settings";
+    public const string Page = "file";
+    public const string Section = "boards";
+    public const string Table = "data";
+    public const string Chart = "data";
+    public const string Ink = "pen";
+    public const string AlignLeft = "align-text";
+    public const string AlignCenter = "align-text";
+    public const string AlignRight = "align-text";
+    public const string Subscript = "text";
+    public const string Superscript = "text";
+    public const string Theme = "palette";
+    public const string File = "file";
+    public const string Info = "properties";
 
-    public const string Save = "\uE74E";
-    public const string Undo = "\uE7A7";
-    public const string Redo = "\uE7A6";
-    public const string Add = "\uE710";
-    public const string Delete = "\uE74D";
-    public const string Close = "\uE711";
-    public const string Check = "\uE73E";
-    public const string Search = "\uE721";
-    public const string More = "\uE712";
-    public const string Grip = "\uE76F";
-    public const string ChevronDown = "\uE70D";
-    public const string ChevronRight = "\uE76C";
-    public const string ChevronLeft = "\uE76B";
-    public const string Bold = "\uE8DD";
-    public const string Italic = "\uE8DB";
-    public const string Underline = "\uE8DC";
-    public const string Strikethrough = "\uE8DE";
-    public const string BulletedList = "\uE8FD";
-    public const string NumberedList = "\uE80A";
-    public const string Edit = "\uE70F";
-    public const string Image = "\uE8B9";
-    public const string Attach = "\uE723";
-    public const string Settings = "\uE713";
-    public const string Page = "\uE7C3";
-    public const string Section = "\uE8B7";
-    public const string Table = "\uE9F9";
-    public const string Chart = "\uE9D2";
-    public const string Ink = "\uE76D";
-    public const string AlignLeft = "\uE8E4";
-    public const string AlignCenter = "\uE8E8";
-    public const string AlignRight = "\uE8EA";
-    public const string Subscript = "\uE8EE";
-    public const string Superscript = "\uE8ED";
-    public const string Theme = "\uE790";
-    public const string File = "\uE7C3";
-    public const string Info = "\uE946";
-
-    public static TextBlock Glyph(string glyph, double size = 14, string? accessibleName = null)
+    public static Control Glyph(string glyph, double size = 14, string? accessibleName = null)
     {
-        var text = new TextBlock
+        var icon = new Image
         {
-            Text = glyph,
-            FontFamily = new FontFamily(FontStack),
-            FontSize = size,
+            Source = BoardsCuiIconResolver.CreateIcon(glyph, BoardsTheme.TextBrush),
+            Width = size,
+            Height = size,
+            Stretch = Avalonia.Media.Stretch.Uniform,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
         };
         if (!string.IsNullOrEmpty(accessibleName))
-            Avalonia.Automation.AutomationProperties.SetName(text, accessibleName);
-        return text;
+            Avalonia.Automation.AutomationProperties.SetName(icon, accessibleName);
+        return icon;
     }
 
     public static Button IconButton(string glyph, string name, string tooltip, double size = 15)

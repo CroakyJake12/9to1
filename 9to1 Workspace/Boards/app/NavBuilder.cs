@@ -211,13 +211,19 @@ public static class NavBuilder
             Padding = new Thickness(8, 6, 8, 6),
             Margin = new Thickness(0, 1, 0, 1),
         };
-        button.Content = new TextBlock
+        var pageTitle = new TextBlock
         {
             Text = page.Title,
             FontSize = 13,
             Foreground = selected ? BoardsTheme.AccentContrastBrush : BoardsTheme.TextBrush,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
+        CuiPropertyPresentation.Set(pageTitle, "Foreground", pageTitle.Foreground,
+            CuiPropertyLevel.Instance, "Boards page title text");
+        button.Content = pageTitle;
+        CakeOS.Cui.Runtime.CuiPropertyPresentation.Set(button, "Background",
+            selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
+            CakeOS.Cui.Runtime.CuiPropertyLevel.Instance, "Boards page selection");
         ToolTip.SetTip(button, page.Title);
         Avalonia.Automation.AutomationProperties.SetName(button, "Page " + page.Title);
         button.Click += (_, _) => vm.SelectPage(section.Id, page.Id);
