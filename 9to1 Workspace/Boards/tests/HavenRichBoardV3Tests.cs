@@ -391,6 +391,56 @@ public sealed class HavenRichBoardV3Tests
     // ---------- Tables ----------
 
     [Fact]
+    public async Task Table_row_and_column_reorder_preserve_stable_cells_sizes_and_one_step_undo()
+    {
+        await WithStoreAsync(async (store, _) =>
+        {
+            await using var session = await RichBoardSession.CreateNewAsync(store, "Table reorder");
+            var pageId = session.Rich.Sections[0].Pages[0].Id;
+            string blockId = string.Empty;
+            await session.MutateAsync(rich =>
+            {
+                var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Table);
+                blockId = block.Id;
+                var table = block.Table!;
+                table.Rows[0].Cells[0].Text = "top-left";
+                table.Rows[0].Cells[1].Text = "top-right";
+                table.Rows[1].Cells[0].Text = "bottom-left";
+                table.Rows[1].Cells[1].Text = "bottom-right";
+                table.ColumnWidths = [120, 240];
+                table.RowHeights = [30, 60];
+            });
+
+            var beforeRows = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+            var rowIds = beforeRows.Rows.Select(row => row.Cells.Select(cell => cell.Id).ToArray()).ToArray();
+            var column0Ids = beforeRows.Rows.Select(row => row.Cells[0].Id).ToArray();
+            var column1Ids = beforeRows.Rows.Select(row => row.Cells[1].Id).ToArray();
+
+            await session.MutateAsync(rich => Assert.True(HavenRichNotesOps.MoveTableRow(rich, pageId, blockId, 1, 0)));
+            var movedRows = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+            Assert.Equal(rowIds[1], movedRows.Rows[0].Cells.Select(cell => cell.Id));
+            Assert.Equal(new[] { 60d, 30d }, movedRows.RowHeights);
+            Assert.Equal("bottom-left", movedRows.Rows[0].Cells[0].Text);
+            Assert.True(await session.UndoAsync());
+            var restoredRows = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+            Assert.Equal(rowIds[0], restoredRows.Rows[0].Cells.Select(cell => cell.Id));
+            Assert.Equal(new[] { 30d, 60d }, restoredRows.RowHeights);
+
+            await session.MutateAsync(rich => Assert.True(HavenRichNotesOps.MoveTableColumn(rich, pageId, blockId, 1, 0)));
+            var movedColumns = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+            Assert.Equal(column1Ids, movedColumns.Rows.Select(row => row.Cells[0].Id));
+            Assert.Equal(new[] { 240d, 120d }, movedColumns.ColumnWidths);
+            Assert.Equal("top-right", movedColumns.Rows[0].Cells[0].Text);
+            Assert.True(await session.UndoAsync());
+            var restoredColumns = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+            Assert.Equal(column0Ids, restoredColumns.Rows.Select(row => row.Cells[0].Id));
+            Assert.Equal(new[] { 120d, 240d }, restoredColumns.ColumnWidths);
+            Assert.False(HavenRichNotesOps.MoveTableRow(session.Rich, pageId, blockId, 0, 2));
+            Assert.False(HavenRichNotesOps.MoveTableColumn(session.Rich, pageId, blockId, 0, 2));
+        });
+    }
+
+    [Fact]
     public async Task Table_structure_style_and_formatted_cells_survive_reopen()
     {
         await WithStoreAsync(async (store, root) =>

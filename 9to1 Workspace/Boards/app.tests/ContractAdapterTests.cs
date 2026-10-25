@@ -66,6 +66,60 @@ public sealed class ContractAdapterTests
         }
     }
 
+    [Fact]
+    public async Task Table_reorder_command_moves_stable_cells_and_is_one_undoable_change()
+    {
+        var document = CreateNotesDocument("Table reorder");
+        var notes = document.RichNotes!;
+        var page = notes.Sections[0].Pages[0];
+        var block = HavenRichNotesOps.AddBlock(notes, page.Id, HavenRichBlockKind.Table);
+        var table = block.Table!;
+        table.Rows[0].Cells[0].Text = "top-left";
+        table.Rows[0].Cells[1].Text = "top-right";
+        table.Rows[1].Cells[0].Text = "bottom-left";
+        table.Rows[1].Cells[1].Text = "bottom-right";
+        table.Rows[1].Cells[0].Bold = true;
+        table.ColumnWidths = [120, 240];
+        table.RowHeights = [30, 60];
+        var movedRowCellIds = table.Rows[1].Cells.Select(cell => cell.Id).ToArray();
+        var movedColumnCellIds = table.Rows.Select(row => row.Cells[1].Id).ToArray();
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(document,
+            (_, _) => ValueTask.FromResult(true));
+        await using (adapter)
+        {
+            var viewModel = new BoardsViewModel(adapter);
+            viewModel.FocusBlock(block.Id);
+            viewModel.FocusCell(block.Id, 1, 0);
+            await viewModel.DispatchAsync("ContextMoveRowUp", null);
+
+            var afterRowMove = await adapter.GetDetachedContractDocumentAsync();
+            var movedTable = afterRowMove.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.Equal(movedRowCellIds, movedTable.Rows[0].Cells.Select(cell => cell.Id));
+            Assert.Equal("bottom-left", movedTable.Rows[0].Cells[0].Text);
+            Assert.True(movedTable.Rows[0].Cells[0].Bold);
+            Assert.Equal(new[] { 60d, 30d }, movedTable.RowHeights);
+            Assert.Equal((block.Id, 0, 0), viewModel.SelectedCell);
+            Assert.True(await adapter.UndoAsync());
+            var restoredRows = await adapter.GetDetachedContractDocumentAsync();
+            var restoredTable = restoredRows.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.Equal(new[] { 30d, 60d }, restoredTable.RowHeights);
+            Assert.Equal("top-left", restoredTable.Rows[0].Cells[0].Text);
+
+            viewModel.FocusCell(block.Id, 0, 0);
+            await viewModel.DispatchAsync("ContextMoveColumnRight", null);
+            var afterColumnMove = await adapter.GetDetachedContractDocumentAsync();
+            var movedColumns = afterColumnMove.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.Equal(movedColumnCellIds, movedColumns.Rows.Select(row => row.Cells[0].Id));
+            Assert.Equal(new[] { 240d, 120d }, movedColumns.ColumnWidths);
+            Assert.Equal("top-right", movedColumns.Rows[0].Cells[0].Text);
+            Assert.True(await adapter.UndoAsync());
+            var restoredColumns = await adapter.GetDetachedContractDocumentAsync();
+            var originalColumns = restoredColumns.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.Equal(new[] { 120d, 240d }, originalColumns.ColumnWidths);
+            Assert.Equal("top-left", originalColumns.Rows[0].Cells[0].Text);
+        }
+    }
+
     private static HavenBoardDocument CreateNotesDocument(string title)
     {
         var now = DateTimeOffset.UtcNow;

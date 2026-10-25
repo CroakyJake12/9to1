@@ -29,6 +29,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private string _selectedSectionId = "section-1";
     private string _selectedPageId = "page-1";
     private string _selectedBlockId = "block-para";
+    private long _tableSelectionEpoch;
     private bool _syncing;
     private bool _isEditMode = true;
     private Control? _attachedRoot;
@@ -1155,6 +1156,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             return;
         if (_selectedBlockId == blockId)
             return;
+        InvalidateTableSelection();
         _selectedBlockId = blockId;
         InvalidateTextRange();
         PushSelectedInfo();
@@ -1355,6 +1357,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
         if (section is null)
             return;
+        InvalidateTableSelection();
         _selectedSectionId = section.Id;
         var page = section.Pages.FirstOrDefault();
         _selectedPageId = page?.Id ?? _selectedPageId;
@@ -1373,6 +1376,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var page = section?.Pages.FirstOrDefault(p => p.Id == pageId);
         if (section is null || page is null)
             return;
+        InvalidateTableSelection();
         _selectedSectionId = section.Id;
         _selectedPageId = page.Id;
         SelectExistingBlock(page);
@@ -1823,6 +1827,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (block?.Kind != "table" || row < 0 || row >= block.TableRows || column < 0 || column >= block.TableCols)
             return;
         FocusBlock(blockId);
+        InvalidateTableSelection();
         SelectedCell = (blockId, row, column);
         RefreshCuiContext();
         SelectionChanged?.Invoke();
@@ -1830,6 +1835,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     /// <summary>Currently focused table cell, if any (block id, row, column).</summary>
     public (string BlockId, int Row, int Col)? SelectedCell { get; private set; }
+
+    private void InvalidateTableSelection() => Interlocked.Increment(ref _tableSelectionEpoch);
 
     // ----- Block operations used by BlockRenderer -----
 
