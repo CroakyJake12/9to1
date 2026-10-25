@@ -158,15 +158,67 @@ public static class CuiControlTemplates
     private static Control Choice(ToggleButton owner, INameScope scope)
     {
         var row = new Grid { ColumnDefinitions = new("Auto,*"), ColumnSpacing = 8 };
-        var mark = new TextBlock { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
-        Bind(mark, TextBlock.ForegroundProperty, owner, "Foreground");
-        void Update() => mark.Text = owner.IsChecked == true ? owner is RadioButton ? "●" : "✓" : owner.IsChecked is null ? "−" : string.Empty;
-        owner.PropertyChanged += (_, change) => { if (change.Property == ToggleButton.IsCheckedProperty) Update(); };
-        Update();
-        var box = Frame(owner, mark); Resource(box, Control.WidthProperty, "CuiChoiceSize"); Resource(box, Control.HeightProperty, "CuiChoiceSize"); box.VerticalAlignment = VerticalAlignment.Center;
+        var tick = new Avalonia.Controls.Shapes.Path
+        {
+            Name = "CuiChoiceTick", Data = Geometry.Parse("M2,7 L5.5,10.5 L12,2.5"),
+            Width = 14, Height = 14, Stretch = Stretch.Uniform,
+            StrokeThickness = 2.6, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false
+        };
+        var dash = new Avalonia.Controls.Shapes.Path
+        {
+            Name = "CuiChoiceIndeterminate", Data = Geometry.Parse("M2,7 L12,7"),
+            Width = 12, Height = 3, Stretch = Stretch.Uniform,
+            StrokeThickness = 2.6, StrokeLineCap = PenLineCap.Round,
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false
+        };
+        var dot = new Avalonia.Controls.Shapes.Ellipse
+        {
+            Name = "CuiChoiceRadioDot", Width = 10, Height = 10,
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false
+        };
+        var box = new Border { Name = "CuiChoiceBox", Child = new Panel { Children = { tick, dash, dot } }, VerticalAlignment = VerticalAlignment.Center };
+        Resource(box, Control.WidthProperty, "CuiChoiceSize"); Resource(box, Control.HeightProperty, "CuiChoiceSize");
         Resource(box, Border.CornerRadiusProperty, owner is RadioButton ? "CuiThumbRadius" : "CuiChoiceRadius");
+        object? Token(string key) => owner.TryFindResource(key, out var value) ? value : null;
+        void Update()
+        {
+            var active = owner.IsChecked != false;
+            var high = Token("CuiHighContrast") is true;
+            box.Background = active ? Token("CuiAccentPrimaryBrush") as IBrush ?? owner.Background : owner.Background;
+            box.BorderBrush = active && !high ? Brushes.Transparent : owner.BorderBrush;
+            box.BorderThickness = owner.BorderThickness;
+            var ink = active ? Token("CuiAccentPrimaryForegroundBrush") as IBrush ?? owner.Foreground : owner.Foreground;
+            tick.Stroke = ink; dash.Stroke = ink; dot.Fill = ink;
+            tick.IsVisible = owner is not RadioButton && owner.IsChecked == true;
+            dot.IsVisible = owner is RadioButton && owner.IsChecked == true;
+            dash.IsVisible = owner.IsChecked is null;
+        }
+        var subscriptions = new List<IDisposable>();
+        void Changed(object? sender, AvaloniaPropertyChangedEventArgs change)
+        {
+            if (change.Property.Name is "IsChecked" or "Background" or "Foreground" or "BorderBrush" or "BorderThickness") Update();
+        }
+        row.AttachedToVisualTree += (_, _) =>
+        {
+            if (subscriptions.Count != 0) return;
+            owner.PropertyChanged += Changed;
+            foreach (var key in new[] { "CuiAccentPrimaryBrush", "CuiAccentPrimaryForegroundBrush", "CuiHighContrast" })
+                subscriptions.Add(owner.GetResourceObservable(key).Subscribe(new TemplateValueObserver(_ => Update())));
+            Update();
+        };
+        row.DetachedFromVisualTree += (_, _) =>
+        {
+            owner.PropertyChanged -= Changed;
+            foreach (var subscription in subscriptions) subscription.Dispose();
+            subscriptions.Clear();
+        };
         var presenter = Presenter(owner, scope); Grid.SetColumn(presenter, 1);
         row.Children.Add(box); row.Children.Add(presenter);
+        Update();
         return row;
     }
 
