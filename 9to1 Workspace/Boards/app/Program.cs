@@ -54,7 +54,7 @@ internal static class Program
     }
 
     /// <summary>Shared read-only drawing-layer renderer used by standalone and embedded surfaces.</summary>
-    internal static async Task RenderReadOnlyInkOverlayAsync(Canvas overlay, BoardsViewModel viewModel)
+    internal static async Task RenderReadOnlyInkOverlayAsync(Panel overlay, BoardsViewModel viewModel)
     {
         await BoardInkOverlayRenderer.RenderReadOnlyAsync(overlay, viewModel);
     }
@@ -75,7 +75,7 @@ internal sealed class BoardsApp : Application
     private Control? _root;
     private Window? _window;
     private StackPanel? _blocksHost;
-    private Canvas? _inkOverlay;
+    private Panel? _inkOverlay;
     private BoardInkInteractionController? _inkInteraction;
     private BoardsTextAndKeyboardOwner? _textAndKeyboardOwner;
     private ComboBox? _styleBox;
@@ -285,7 +285,7 @@ internal sealed class BoardsApp : Application
             return;
         var activeViewModel = _viewModel;
         _blocksHost = FindByAutomationId<StackPanel>(root, "BlocksHost");
-        _inkOverlay = FindByAutomationId<Canvas>(root, "InkOverlayLayer");
+        _inkOverlay = FindByAutomationId<Panel>(root, "InkOverlayLayer");
         _styleBox = FindByAutomationId<ComboBox>(root, "StyleBox");
         _addKindBox = FindByAutomationId<ComboBox>(root, "AddKindBox");
         var insertButton = FindByAutomationId<Button>(root, "AddBlockKind");

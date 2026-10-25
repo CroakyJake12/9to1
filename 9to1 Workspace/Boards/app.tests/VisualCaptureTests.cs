@@ -88,7 +88,7 @@ public sealed class VisualCaptureTests
             BlockRenderer.RebuildAsync(host!, viewModel).GetAwaiter().GetResult();
             inputOwner = new BoardsTextAndKeyboardOwner(root, viewModel);
             inputOwner.AttachWindow(window);
-            var inkOverlay = BoardsCuiControlFinder.FindByAutomationId<Canvas>(root, "InkOverlayLayer");
+            var inkOverlay = BoardsCuiControlFinder.FindByAutomationId<Panel>(root, "InkOverlayLayer");
             Assert.NotNull(inkOverlay);
             inkInteraction = new BoardInkInteractionController(inkOverlay!, viewModel);
             if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "NavHost") is { } nav)
