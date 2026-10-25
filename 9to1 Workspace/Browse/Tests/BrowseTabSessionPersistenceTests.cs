@@ -247,7 +247,7 @@ public sealed partial class BrowseNativeOwnershipTests
     [Fact]
     public void Browser_profile_root_symbolic_link_is_refused()
     {
-        using var paths = new PreservedPaths();
+        var paths = new PreservedPaths();
         var target = Path.Combine(Path.GetTempPath(), "browse-profile-target-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(target);
         var link = paths.BrowserProfileDirectory;

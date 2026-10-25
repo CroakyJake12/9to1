@@ -48,7 +48,9 @@ public static class BrowserProfileStorage
     public static bool HasUnassignedLegacyData(IAppPaths paths)
     {
         ArgumentNullException.ThrowIfNull(paths);
-        lock (Gate) return ReadOwner(paths) is null && HasLegacyBrowserData(paths);
+        try { lock (Gate) return ReadOwner(paths) is null && HasLegacyBrowserData(paths); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        { return true; }
     }
 
     private static OwnerMarker? ReadOwner(IAppPaths paths)
