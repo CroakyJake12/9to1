@@ -29,6 +29,8 @@ public sealed class BoardsEditorTests
         Assert.Equal("align-left", BoardsIcons.AlignLeft);
         Assert.Equal("align-center", BoardsIcons.AlignCenter);
         Assert.Equal("align-right", BoardsIcons.AlignRight);
+        Assert.Equal("indent-decrease", BoardsIcons.IndentDecrease);
+        Assert.Equal("indent-increase", BoardsIcons.IndentIncrease);
         Assert.Equal("bulleted-list", BoardsIcons.BulletedList);
         Assert.Equal("numbered-list", BoardsIcons.NumberedList);
         Assert.Equal("image", BoardsIcons.Image);
@@ -50,6 +52,44 @@ public sealed class BoardsEditorTests
         var attachment = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("paperclip", Brushes.White).Drawing);
         Assert.Null(attachment.Brush);
         Assert.NotNull(attachment.Pen);
+
+        var section = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("section", Brushes.White).Drawing);
+        Assert.NotNull(section.Brush);
+        Assert.Null(section.Pen);
+    }
+
+    [Fact]
+    public void Board_action_icons_use_contrast_safe_semantic_colours_and_hc_text()
+    {
+        var brushes = TestUiThread.Run(() =>
+        {
+            var target = new Button();
+            target.Resources["CuiTextBrush"] = Brushes.White;
+            target.Resources["CuiMutedBrush"] = Brushes.Gray;
+            target.Resources["CuiPanel2Brush"] = new SolidColorBrush(Color.Parse("#FF181521"));
+            target.Resources["CuiSuccessBrush"] = new SolidColorBrush(Color.Parse("#FF238A5A"));
+            target.Resources["CuiInformationBrush"] = new SolidColorBrush(Color.Parse("#FF596FCA"));
+            target.Resources["CuiHighContrast"] = false;
+            var insert = Assert.IsType<SolidColorBrush>(BoardsCuiIconResolver.SemanticBrush("plus", target));
+            var table = Assert.IsType<SolidColorBrush>(BoardsCuiIconResolver.SemanticBrush("table", target));
+            var delete = Assert.IsType<SolidColorBrush>(BoardsCuiIconResolver.SemanticBrush("delete", target));
+            target.IsEnabled = false;
+            var disabled = BoardsCuiIconResolver.SemanticBrush("plus", target);
+            target.IsEnabled = true;
+            target.Resources["CuiHighContrast"] = true;
+            var highContrast = BoardsCuiIconResolver.SemanticBrush("delete", target);
+            return (insert.Color, table.Color, delete.Color, disabled, highContrast);
+        });
+
+        Assert.NotEqual(brushes.insert, brushes.table);
+        Assert.NotEqual(brushes.insert, brushes.delete);
+        Assert.NotEqual(brushes.table, brushes.delete);
+        var iconBackground = Color.Parse("#FF181521");
+        Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.insert, iconBackground) >= 3d);
+        Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.table, iconBackground) >= 3d);
+        Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.delete, iconBackground) >= 3d);
+        Assert.Same(Brushes.Gray, brushes.disabled);
+        Assert.Same(Brushes.White, brushes.highContrast);
     }
 
     [Fact]
@@ -322,7 +362,7 @@ public sealed class BoardsEditorTests
 
         var expected = new[]
         {
-            "TopBarLeft", "TopBarRight", "BoardsAppIcon", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
+            "TopBarLeft", "TopBarRight", "BoardsAppIcon", "UndoButton", "RedoButton", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
             "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "VerticalLayoutToggle", "FreeLayoutToggle", "OverflowButton",
         };
         var components = document.Components
@@ -371,6 +411,16 @@ public sealed class BoardsEditorTests
         var overflow = components.Single(component => component.Name == "OverflowButton");
         Assert.True(overflow.Properties.TryGetValue("IconSource", out var overflowIcon)
             && overflowIcon is CuiLiteralValue { Value: "icon:more" });
+        foreach (var iconButtonName in new[] { "UndoButton", "RedoButton", "OverflowButton" })
+        {
+            var iconButton = components.Single(component => component.Name == iconButtonName);
+            Assert.True(iconButton.Properties.TryGetValue("IconSize", out var iconSize)
+                && iconSize is CuiLiteralValue { Value: "18" });
+            Assert.True(iconButton.Properties.TryGetValue("Width", out var hitTargetWidth)
+                && hitTargetWidth is CuiLiteralValue { Value: "32" });
+            Assert.True(iconButton.Properties.TryGetValue("Height", out var hitTargetHeight)
+                && hitTargetHeight is CuiLiteralValue { Value: "32" });
+        }
         Assert.DoesNotContain(document.Components.SelectMany(c => c.DescendantsAndSelf()),
             component => component.Name == "ThemeButton");
         var appIcon = components.Single(component => component.Name == "BoardsAppIcon");
