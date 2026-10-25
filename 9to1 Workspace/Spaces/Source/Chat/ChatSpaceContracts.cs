@@ -29,6 +29,7 @@ public sealed record ChatSpaceMessage(
     string? AvatarSource = null)
 {
     public bool HasThinking => !string.IsNullOrWhiteSpace(Thinking);
+    public bool HasProgress => !string.IsNullOrWhiteSpace(ProgressLabel);
 }
 
 public sealed record ChatSpaceBranch(
@@ -189,6 +190,9 @@ public interface IChatSpaceBackend
     Task<MessageAttachment> ImportAttachmentAsync(Guid conversationId, Guid? branchId, string path, CancellationToken cancellationToken);
     Task RemoveAttachmentAsync(Guid conversationId, Guid? branchId, Guid attachmentId, CancellationToken cancellationToken);
     Task SendAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken);
+    /// <summary>Retains a stopped partial reply after admitting the exact persisted input on the same canonical branch.</summary>
+    Task PersistStoppedPartialAsync(Guid conversationId, Guid branchId, ChatMessage acceptedInput, ChatMessage message, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This Chat backend cannot persist stopped partial replies.");
     Task<ConversationBranch> CreateBranchAsync(Guid conversationId, Guid messageId, string? name, CancellationToken cancellationToken);
     Task SwitchBranchAsync(Guid conversationId, Guid branchId, CancellationToken cancellationToken);
     Task RegenerateAsync(Guid conversationId, Guid assistantMessageId, ModelDescriptor model, CancellationToken cancellationToken);

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Haven.Application;
 using Haven.Core;
 
@@ -12,6 +13,9 @@ public sealed partial class ChatSpaceController
         public Queue<Submission> Pending { get; } = new();
         public Dictionary<Guid, ChatSpaceMessage> Overlay { get; } = [];
         public bool AcceptProgress;
+        public CancellationTokenSource? ActiveCancellation;
+        public bool HasActiveItem;
+        public bool StopRequested;
     }
     private readonly Dictionary<Guid, TurnQueue> _turns = [];
     private sealed class InlineProgress(Action<ChatStreamEvent> report) : IProgress<ChatStreamEvent>
@@ -39,6 +43,7 @@ public sealed partial class ChatSpaceController
                     ?? throw new InvalidOperationException("Choose an available model before sending.");
                 var id = state.Conversation.Id;
                 if (!_turns.TryGetValue(id, out queue)) { queue = new(); _turns.Add(id, queue); start = true; }
+                if (queue.StopRequested) throw new InvalidOperationException("Wait for the stopping response to settle before sending.");
                 if (queue.Pending.Count >= MaxSendQueue) throw new InvalidOperationException($"Message queue is full ({MaxSendQueue}).");
                 submission = new(view, new(_conversations[id], composer.Draft.Trim(), model,
                     composer.Attachments.Select(item => item.Id).ToArray(), _threadSettings.ActionMode, _threadSettings.ResponseMode, BranchId: view.BranchId),
@@ -54,6 +59,43 @@ public sealed partial class ChatSpaceController
         catch (Exception exception) when (exception is not OperationCanceledException) { Fail(exception, view); }
     }
 
+    /// <summary>Requests cancellation of the active operation in the current conversation.</summary>
+    public bool StopActiveResponse()
+    {
+        CancellationTokenSource? active;
+        lock (_gate)
+        {
+            if (_state.Conversation is not { } conversation || !_turns.TryGetValue(conversation.Id, out var queue)) return false;
+            if (queue.StopRequested) return false;
+            active = queue.ActiveCancellation;
+            if (active is null)
+            {
+                if (!queue.HasActiveItem && queue.Pending.Count == 0) return false;
+                queue.StopRequested = true;
+                return true;
+            }
+            if (active.IsCancellationRequested) return false;
+            queue.StopRequested = true;
+        }
+        try { active.Cancel(); return true; }
+        catch (ObjectDisposedException) { return false; }
+    }
+
+    public bool CanStopActiveResponse
+    {
+        get
+        {
+            lock (_gate)
+            {
+                if (_state.Conversation is not { } conversation || !_turns.TryGetValue(conversation.Id, out var queue)) return false;
+                if (queue.StopRequested) return false;
+                return queue.ActiveCancellation is { } active
+                    ? !active.IsCancellationRequested
+                    : queue.HasActiveItem || queue.Pending.Count > 0;
+            }
+        }
+    }
+
     private async Task RunQueueAsync(TurnQueue queue, Guid conversationId, CancellationToken token)
     {
         while (true)
@@ -62,19 +104,31 @@ public sealed partial class ChatSpaceController
             lock (_gate)
             {
                 if (queue.Pending.Count == 0) { RemoveQueue(conversationId, queue); return; }
-                item = queue.Pending.Dequeue(); queue.Overlay.Clear(); queue.AcceptProgress = true;
+                item = queue.Pending.Dequeue(); queue.Overlay.Clear(); queue.AcceptProgress = true; queue.HasActiveItem = true;
             }
+            using var activeCancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
+            bool stopRequested;
+            lock (_gate)
+            {
+                queue.ActiveCancellation = activeCancellation;
+                stopRequested = queue.StopRequested;
+                queue.StopRequested = false;
+            }
+            var operationToken = activeCancellation.Token;
             var acknowledged = false;
             var inputAccepted = 0;
+            ChatMessage? acceptedUserInput = null;
             string? terminalRefusal = null;
             try
             {
+                if (stopRequested) activeCancellation.Cancel();
                 // A queued operation must not erase text composed after its admission.
-                await SaveCurrentDraftAsync(item.View, token).ConfigureAwait(false);
+                await SaveCurrentDraftAsync(item.View, operationToken).ConfigureAwait(false);
                 var originalRequest = item.Request with { InputAccepted = (message, _) =>
                 {
                     if (message.ConversationId != conversationId || message.Role != MessageRole.User)
                         throw new InvalidOperationException("The accepted input does not belong to this submitted conversation.");
+                    Interlocked.Exchange(ref acceptedUserInput, message);
                     Interlocked.Exchange(ref inputAccepted, 1);
                     return Task.CompletedTask;
                 } };
@@ -85,7 +139,7 @@ public sealed partial class ChatSpaceController
                     else if (value.Kind == ChatStreamEventKind.PermissionRequired)
                         terminalRefusal = "Permission is required before this request can continue.";
                     Stream(queue, item, value);
-                }), token).ConfigureAwait(false);
+                }), operationToken).ConfigureAwait(false);
                 if (terminalRefusal is not null) throw new InvalidOperationException(terminalRefusal);
                 acknowledged = true;
                 lock (_gate) queue.AcceptProgress = false;
@@ -95,8 +149,8 @@ public sealed partial class ChatSpaceController
                     finished = queue.Pending.Count == 0;
                     if (finished) RemoveQueue(conversationId, queue);
                 }
-                await RefreshAsync(item.View, finished ? "Response complete" : "Sending queued message", token).ConfigureAwait(false);
-                await SaveCurrentDraftAsync(item.View, token).ConfigureAwait(false);
+                await RefreshAsync(item.View, finished ? "Response complete" : "Sending queued message", operationToken).ConfigureAwait(false);
+                await SaveCurrentDraftAsync(item.View, operationToken).ConfigureAwait(false);
                 if (finished) return;
             }
             catch (Exception exception)
@@ -108,20 +162,92 @@ public sealed partial class ChatSpaceController
                 // Once execution acknowledged, a later presentation/read failure cannot make
                 // that completed request eligible for recovery and accidental replay.
                 var hasAcceptedInput = Volatile.Read(ref inputAccepted) != 0;
+                var explicitlyStopped = exception is OperationCanceledException && activeCancellation.IsCancellationRequested && !token.IsCancellationRequested;
                 var recovered = acknowledged || hasAcceptedInput ? pending : new[] { item }.Concat(pending).ToArray();
                 var text = string.Join("\n\n", recovered.Select(value => value.Composer.Draft).Where(value => value.Length > 0));
                 var attachments = recovered.SelectMany(value => value.Composer.Attachments).DistinctBy(value => value.Id).ToArray();
+                ChatSpaceMessage[] partialMessagesToPersist = hasAcceptedInput && !acknowledged && exception is OperationCanceledException
+                    ? queue.Overlay.Values.Where(message => message.Role == MessageRole.Assistant && message.IsStreaming &&
+                        !string.IsNullOrWhiteSpace(message.Content)).ToArray()
+                    : [];
+                Exception? partialPersistenceFailure = null;
+                foreach (var partial in partialMessagesToPersist)
+                {
+                    try
+                    {
+                        // This marks the durable message only. The ordinary Chat path has
+                        // no canonical resumable RequestID/checkpoint here, so this must
+                        // never be interpreted as permission to offer Resume.
+                        var metadata = JsonSerializer.Serialize(new
+                        {
+                            responseState = explicitlyStopped ? "Stopped" : "Interrupted",
+                            isPartial = true,
+                            toolActivities = partial.ToolActivities
+                        });
+                        var saved = new ChatMessage(partial.Id, conversationId, MessageRole.Assistant, partial.Content,
+                            partial.SpeakerLabel, partial.ModelName, metadata, DateTimeOffset.UtcNow);
+                        await _backend.PersistStoppedPartialAsync(conversationId,
+                            item.View.BranchId ?? throw new InvalidOperationException("The stopped response has no canonical branch."),
+                            Volatile.Read(ref acceptedUserInput) ?? throw new InvalidOperationException("The canonical accepted user input is unavailable."),
+                            saved, CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (Exception persistFailure)
+                    {
+                        partialPersistenceFailure = persistFailure;
+                        break;
+                    }
+                }
+                var failureStatus = acknowledged
+                    ? "The response completed, but its view could not refresh. " + exception.Message
+                    : exception is OperationCanceledException && partialMessagesToPersist.Length > 0
+                        ? partialPersistenceFailure is null
+                            ? hasAcceptedInput
+                                ? (explicitlyStopped ? "Response stopped." : "Response interrupted.") + " Its partial text was saved in this conversation. The accepted user message remains saved and will not be replayed automatically."
+                                : (explicitlyStopped ? "Response stopped." : "Response interrupted.") + " Its partial text was saved in this conversation; draft content was recovered. Review before resending."
+                            : hasAcceptedInput
+                                ? (explicitlyStopped ? "Response stopped." : "Response interrupted.") + " Partial text remains visible here but could not be saved. The accepted user message remains saved and will not be replayed automatically. Storage error: " + partialPersistenceFailure.Message
+                                : (explicitlyStopped ? "Response stopped" : "Response interrupted") + ", but its partial text could not be saved. It remains visible here; draft content was recovered. Storage error: " + partialPersistenceFailure.Message
+                        : exception is OperationCanceledException && explicitlyStopped && hasAcceptedInput
+                            ? "Response stopped. The accepted user message remains saved; no partial reply was available to retain. It will not be replayed automatically."
+                        : exception is OperationCanceledException && explicitlyStopped
+                            ? "Response stopped before the user input was accepted; its draft content was recovered."
+                        : hasAcceptedInput
+                            ? "Your message was saved, but the response did not complete. Review the conversation before retrying. " + exception.Message
+                            : exception is OperationCanceledException
+                                ? "Sending interrupted. Draft content was recovered; review the conversation before resending."
+                                : exception.Message;
+                var failureTone = exception is OperationCanceledException && !acknowledged && partialPersistenceFailure is null
+                    ? ChatSpaceStatusTone.Neutral
+                    : ChatSpaceStatusTone.Error;
                 Change(state =>
                 {
                     var composer = state.Composer;
                     _composerVersion++;
+                    // Cancellation can arrive after one or more streamed deltas. Do not
+                    // leave that visible partial reply looking like a live response once
+                    // the queue has been retired; retain its text and expose the actual
+                    // stopped state instead of silently discarding the activity witness.
+                    if (exception is OperationCanceledException)
+                    {
+                        foreach (var (messageId, message) in queue.Overlay.ToArray())
+                            if (message.Role == MessageRole.Assistant && message.IsStreaming)
+                            {
+                                queue.Overlay[messageId] = message with
+                                { IsStreaming = false, ProgressLabel = message.Content.Length > 0
+                                    ? explicitlyStopped ? "Stopped · partial response" : "Interrupted · partial response"
+                                    : explicitlyStopped ? "Stopped" : "Interrupted" };
+                            }
+                        if (state.Conversation is { } current && current.Id == conversationId)
+                        {
+                            var messages = current.Messages.Select(message => queue.Overlay.GetValueOrDefault(message.Id) ?? message).ToList();
+                            messages.AddRange(queue.Overlay.Values.Where(message => !current.Messages.Any(existing => existing.Id == message.Id)));
+                            state = state with { Conversation = current with { Messages = messages } };
+                        }
+                    }
                     return state with { Composer = composer with
                         { Draft = string.IsNullOrEmpty(text) ? composer.Draft : string.IsNullOrEmpty(composer.Draft) ? text : composer.Draft + "\n\n" + text,
                           Attachments = composer.Attachments.Concat(attachments).DistinctBy(value => value.Id).ToArray(), IsSending = _turns.ContainsKey(conversationId) },
-                        Status = new(acknowledged ? "The response completed, but its view could not refresh. " + exception.Message
-                            : hasAcceptedInput ? "Your message was saved, but the response did not complete. Review the conversation before retrying. " + exception.Message
-                            : exception is OperationCanceledException ? "Sending interrupted. Draft content was recovered; review the conversation before resending." : exception.Message,
-                            ChatSpaceStatusTone.Error, true) };
+                        Status = new(failureStatus, failureTone, true) };
                 }, item.View);
                 bool current; lock (_gate) current = Matches(item.View);
                 if (current) await SaveCurrentDraftAsync(item.View, CancellationToken.None).ConfigureAwait(false);
@@ -136,8 +262,16 @@ public sealed partial class ChatSpaceController
                         Attachments = previous.Attachments.Concat(attachments).DistinctBy(value => value.Id).ToArray()
                     }, CancellationToken.None).ConfigureAwait(false);
                 }
-                if (exception is OperationCanceledException) throw;
+                if (exception is OperationCanceledException && token.IsCancellationRequested) throw;
                 return;
+            }
+            finally
+            {
+                lock (_gate)
+                {
+                    if (ReferenceEquals(queue.ActiveCancellation, activeCancellation)) queue.ActiveCancellation = null;
+                    queue.HasActiveItem = false;
+                }
             }
         }
     }
