@@ -26,6 +26,9 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     private IReadOnlyList<ITaskContextObservation> _rows = [];
     private TaskShownScope _scope;
     private bool _canChangeScope, _canReadAll, _canNext, _canPrevious;
+    private bool _reviewOpen, _reviewBusy, _reviewAnswered;
+    private TaskRunOriginalTaskPermissionReview? _review;
+    private string _reviewTitle = "", _reviewStatus = "";
     private string _instruction = "", _status = "";
     private long _instructionVersion;
     private bool _busy, _canDelegate, _canBlank, _retired;
@@ -82,6 +85,9 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     public event EventHandler<ITaskContextObservation>? RecentTaskRequested;
     public event EventHandler<TaskShownScope>? ScopeRequested;
     public event EventHandler<bool>? PageRequested;
+    public event EventHandler<ITaskContextObservation>? PermissionReviewRequested;
+    public event EventHandler<bool>? PermissionResponseRequested;
+    public event EventHandler? PermissionReviewCloseRequested;
     public event EventHandler? RefreshRequested;
     private T Find<T>(string id) where T : Control => Root?.GetVisualDescendants().OfType<T>()
         .Single(control => AutomationProperties.GetAutomationId(control) == id)
@@ -92,6 +98,8 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     public void SetRecent(IReadOnlyList<ITaskContextObservation> rows, Action? guard = null) => Write(() => _rows = rows.ToArray(), guard);
     public void SetScope(TaskShownScope scope, bool canChange, bool canReadAll, bool canNext, bool canPrevious, Action? guard = null) =>
         Write(() => { _scope = scope; _canChangeScope = canChange; _canReadAll = canReadAll; _canNext = canNext; _canPrevious = canPrevious; }, guard);
+    public void SetPermissionReview(TaskRunOriginalTaskPermissionReview? review, string title, bool open, bool busy, string status, bool answered = false, Action? guard = null) =>
+        Write(() => { _review = review; _reviewTitle = title; _reviewOpen = open; _reviewBusy = busy; _reviewStatus = status; _reviewAnswered = answered; }, guard);
     public void SetBusy(bool value) => Write(() => _busy = value);
     public void SetStartAvailability(bool canDelegate, bool canBlank, Action? guard = null) =>
         Write(() => { _canDelegate = canDelegate; _canBlank = canBlank; }, guard);
@@ -113,12 +121,21 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
             "CanNextPage" => _canNext && !_busy && !_retired,
             "CanPreviousPage" => _canPrevious && !_busy && !_retired,
             "EmptyLabel" => _scope == TaskShownScope.AllTasks ? "No authorized tasks are available on this page." : "No task conversations are available in this Space. Start a task above.",
+            "ReviewOpen" => _reviewOpen,
+            "ReviewTitle" => _reviewTitle,
+            "ReviewQuestion" => _review?.Request.Title ?? "Loading permission request…",
+            "ReviewExplanation" => _review?.Request.Explanation ?? "",
+            "ReviewRequester" => _review is null ? "" : "Requested by " + _review.Request.RequestingComponentName,
+            "ReviewProvider" => _review?.Request.ProviderName ?? "",
+            "ReviewStatus" => _reviewStatus,
+            "CanRespondReview" => !_retired && !_reviewBusy && !_reviewAnswered && _review?.CanRespond == true,
+            "CanCloseReview" => !_retired && _reviewOpen,
             "Status" => _status, "CanEditInstruction" => !_busy && !_retired,
             "CanDelegate" => !_busy && !_retired && _canDelegate && !string.IsNullOrWhiteSpace(_instruction),
             "CanOpenBlank" => !_busy && !_retired && _canBlank, "CanRefresh" => !_retired && !_busy,
             _ => null
         };
-        return path is "Instruction" or "Rows" or "HasRows" or "ScopeLabel" or "Status" or "CanEditInstruction" or "CanDelegate" or "CanOpenBlank" or "CanRefresh" or "CanChangeScope" or "CanReadAllTasks" or "IsTaskSpaceOnly" or "IsAllTasks" or "CanNextPage" or "CanPreviousPage" or "EmptyLabel";
+        return path is "Instruction" or "Rows" or "HasRows" or "ScopeLabel" or "Status" or "CanEditInstruction" or "CanDelegate" or "CanOpenBlank" or "CanRefresh" or "CanChangeScope" or "CanReadAllTasks" or "IsTaskSpaceOnly" or "IsAllTasks" or "CanNextPage" or "CanPreviousPage" or "EmptyLabel" or "ReviewOpen" or "ReviewTitle" or "ReviewQuestion" or "ReviewExplanation" or "ReviewRequester" or "ReviewProvider" or "ReviewStatus" or "CanRespondReview" or "CanCloseReview";
     }
     public bool TrySetValue(string path, object? value)
     {
@@ -137,6 +154,8 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
             "id" => task is null ? "context-" + row.ContextId.ToString("D") : "task-" + task.TaskId.ToString("D"), "observation" => row, "title" => row.Title,
             "openLabel" => "Open existing task " + row.Title,
             "accessibleName" => row.Title + "; " + Status(row),
+            "hasPermissionReview" => row.PermissionReview is { CanRespond: true },
+            "permissionPrimary" => row.PermissionReview is { CanRespond: true } && task?.State != TaskExecutionLifecycle.Blocked,
             "status" => Status(row), "completed" => task?.State == TaskExecutionLifecycle.Completed,
             "summary" => task is null ? "No canonical task has been started." : task.PromptSummary,
             "origin" => row is AuthorizedTaskContextObservation external
@@ -150,9 +169,11 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
             "identity" => task is null ? $"Conversation {row.ContextId:D}" : $"Task {task.TaskId:D}; run {task.ExecutionId:D}",
             _ => null
         };
-        return path is "id" or "observation" or "title" or "openLabel" or "accessibleName" or "status" or "completed" or "summary" or "progress" or "observationText" or "checkpoint" or "identity" or "origin";
+        return path is "id" or "observation" or "title" or "openLabel" or "accessibleName" or "status" or "completed" or "summary" or "progress" or "observationText" or "checkpoint" or "identity" or "origin" or "hasPermissionReview" or "permissionPrimary";
     }
-    private static string Status(ITaskContextObservation row) => row.HasObservedLiveExecution ? $"Working · observed {row.Activity!.ObservedAt.LocalDateTime:g}" : row.Snapshot?.State switch
+    private static string Status(ITaskContextObservation row) => row.Snapshot?.State == TaskExecutionLifecycle.Blocked ? "Blocked · details available"
+        : row.PermissionReview is { CanRespond: true } ? "Permission needed"
+        : row.HasObservedLiveExecution ? $"Working · observed {row.Activity!.ObservedAt.LocalDateTime:g}" : row.Snapshot?.State switch
     {
         TaskExecutionLifecycle.Completed => "Completed · not verified",
         TaskExecutionLifecycle.Blocked => "Blocked · details available",
@@ -167,6 +188,9 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     public bool? IsActionAvailable(string command) => command switch
     {
         "tasks.open" => !_retired,
+        "tasks.review-permission" => !_retired && !_reviewBusy,
+        "tasks.allow-permission" or "tasks.deny-permission" => !_retired && !_reviewBusy && !_reviewAnswered && _reviewOpen && _review?.CanRespond == true,
+        "tasks.close-permission" => !_retired && _reviewOpen,
         "tasks.scope-only" => !_retired && _canChangeScope,
         "tasks.scope-all" => !_retired && _canChangeScope && _canReadAll,
         "tasks.next" => !_retired && !_busy && _canNext,
@@ -179,12 +203,19 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Tasks action is unavailable.");
         _ownCallback(() =>
         {
-            if (command == "tasks.open")
+            if (command is "tasks.open" or "tasks.review-permission")
             {
                 if (parameter is not ITaskContextObservation captured || !_rows.Any(row => ReferenceEquals(row, captured)))
                     throw new InvalidOperationException("This task tile changed; refresh before opening it.");
-                RecentTaskRequested?.Invoke(this, captured);
+                if (command == "tasks.open") RecentTaskRequested?.Invoke(this, captured);
+                else
+                {
+                    if (captured.PermissionReview is not { CanRespond: true }) throw new InvalidOperationException("This task has no pending original permission review.");
+                    PermissionReviewRequested?.Invoke(this, captured);
+                }
             }
+            else if (command is "tasks.allow-permission" or "tasks.deny-permission") PermissionResponseRequested?.Invoke(this, command == "tasks.allow-permission");
+            else if (command == "tasks.close-permission") PermissionReviewCloseRequested?.Invoke(this, EventArgs.Empty);
             else if (command is "tasks.scope-only" or "tasks.scope-all") ScopeRequested?.Invoke(this,
                 command == "tasks.scope-all" ? TaskShownScope.AllTasks : TaskShownScope.TaskSpaceOnly);
             else if (command is "tasks.next" or "tasks.previous") PageRequested?.Invoke(this, command == "tasks.next");

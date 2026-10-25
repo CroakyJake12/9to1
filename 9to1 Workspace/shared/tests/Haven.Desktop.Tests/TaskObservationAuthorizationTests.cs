@@ -106,6 +106,80 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Task_permission_authored_popout_reviews_and_records_real_response_without_starting_or_losing_drafts(bool approve)
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        using var paths = new ObservationPaths();
+        await rig.RunAsync(tools: false);
+        var task = rig.Service.CurrentCanonicalTask!;
+        var request = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        _ = await rig.Tasks.SubmitFollowUpAsync(task.TaskId, "keep queued instructions", TaskFollowUpMode.Queue, null, null, token);
+        var registry = new SpaceRegistry(new ObservationSettings());
+        _ = await registry.GetAllAsync(cancellationToken: token);
+        var preferences = new UserPreferencesService(paths); preferences.SetShownTasks(TaskShownScope.AllTasks);
+        var source = new SpaceTaskWorkspaceService(registry, rig.Conversations, rig.Tasks);
+        var page = new SpaceTasksDashboardPage(source, rig.Tasks, SpaceRegistry.TasksSpaceId,
+            _ => Task.CompletedTask, null, null, preferences, _ => Task.CompletedTask);
+        var window = new Window { Width = 1000, Height = 800, Content = page };
+        try
+        {
+            window.Show(); await page.ActivateAsync(token); window.UpdateLayout();
+            var row = Assert.Single(page.CurrentObservations);
+            Assert.Equal(request.Id, row.PermissionReview!.Request.Id);
+            page.Scene.Instruction.Text = "preserve this unsent new-task draft";
+            var reviewButton = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>()
+                .Single(button => AutomationProperties.GetAutomationId(button) == "tasks-tile-review-permission");
+            reviewButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualPermissionReview).WaitAsync(token);
+            window.UpdateLayout();
+            var content = string.Join("\n", ObservationAuthoredControls(page.Scene.Root!).OfType<TextBlock>().Select(text => text.Text));
+            Assert.Contains(request.Title, content, StringComparison.Ordinal);
+            Assert.Contains(request.Explanation, content, StringComparison.Ordinal);
+            Assert.Contains(request.ProviderName!, content, StringComparison.Ordinal);
+            var buttonId = approve ? "tasks-permission-allow" : "tasks-permission-deny";
+            var respond = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>()
+                .Single(button => AutomationProperties.GetAutomationId(button) == buttonId);
+            Assert.True(respond.IsEffectivelyEnabled);
+            respond.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualPermissionResponse).WaitAsync(token);
+            var response = Assert.IsType<TaskRunOriginalTaskPermissionResponse>(page.AcknowledgedPermissionResponse);
+            Assert.Equal(request.Id, response.RequestId);
+            Assert.Equal(approve ? PermissionDecisionKind.Allowed : PermissionDecisionKind.Denied, response.Decision.Kind);
+            Assert.Equal(task.TaskId, response.TaskId); Assert.Equal(task.ExecutionId, response.ExecutionId);
+            Assert.Equal("preserve this unsent new-task draft", page.Scene.Instruction.Text);
+            var current = (await rig.Tasks.GetAsync(task.TaskId, token))!;
+            Assert.Equal(TaskExecutionLifecycle.Suspended, current.State); Assert.Empty(current.Attempts);
+            Assert.Equal("keep queued instructions", Assert.Single(current.Queue).Summary);
+            Assert.Equal(0, rig.Client.Dispatches); Assert.Equal(0, rig.Workspace.Effects);
+            var controls = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>().ToArray();
+            Assert.False(controls.Single(button => AutomationProperties.GetAutomationId(button) == "tasks-permission-allow").IsEffectivelyEnabled);
+            Assert.False(controls.Single(button => AutomationProperties.GetAutomationId(button) == "tasks-permission-deny").IsEffectivelyEnabled);
+            controls.Single(button => AutomationProperties.GetAutomationId(button) == "tasks-permission-close")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            Assert.True(page.Scene.TryGetValue("ReviewOpen", out var open)); Assert.Equal(false, open);
+        }
+        finally
+        {
+            page.RequestRetirement(); await page.CloseAndDrainAsync();
+            window.Content = null; window.Close();
+        }
+    }
+
+    private static IEnumerable<Control> ObservationAuthoredControls(Control root)
+    {
+        yield return root;
+        var children = root is CuiContainerControl container ? container.AuthoredChildren : root.GetVisualChildren().OfType<Control>();
+        foreach (var child in children)
+            foreach (var control in ObservationAuthoredControls(child)) yield return control;
+    }
+
     [AvaloniaFact]
     public async Task All_tasks_authored_scope_menus_persist_and_page_the_actual_store_then_open_the_exact_selected_task()
     {

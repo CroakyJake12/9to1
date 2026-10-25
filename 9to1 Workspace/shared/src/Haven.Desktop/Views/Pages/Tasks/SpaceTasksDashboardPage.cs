@@ -34,6 +34,14 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     private readonly List<TaskObservationPageCursor?> _previousCursors = [];
     private IReadOnlyList<ITaskContextObservation> _currentObservations = [];
     private bool _navigationPending;
+    private ITaskContextObservation? _permissionSelection;
+    private TaskRunOriginalTaskPermissionReview? _permissionReview;
+    private bool _permissionOpen, _permissionWorkPending, _permissionResponded;
+    private long _permissionSequence;
+    private string _permissionTitle = "", _permissionStatus = "";
+    internal Task? ActualPermissionReview { get; private set; }
+    internal Task? ActualPermissionResponse { get; private set; }
+    public TaskRunOriginalTaskPermissionResponse? AcknowledgedPermissionResponse { get; private set; }
     internal Task? ActualScopeChange { get; private set; }
     internal Task? ActualPageNavigation { get; private set; }
     private readonly DesktopOriginalWorkLifetime _work;
@@ -69,6 +77,9 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         _scene.RefreshRequested += OnRefreshRequested;
         _scene.ScopeRequested += OnScopeRequested;
         _scene.PageRequested += OnPageRequested;
+        _scene.PermissionReviewRequested += OnPermissionReviewRequested;
+        _scene.PermissionResponseRequested += OnPermissionResponseRequested;
+        _scene.PermissionReviewCloseRequested += OnPermissionReviewCloseRequested;
     }
 
     public SpaceTasksDashboardPage(SpaceTaskWorkspaceService source, TaskExecutionCoordinator canonical,
@@ -190,6 +201,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                     {
                         lock (_gate) { if (_readSequence != sequence || shown != _shownScope) return; }
                         _currentObservations = []; _observations = []; _nextCursor = null;
+                        ClosePermissionReview();
                         _scene.SetRecent([]); PublishScope();
                         _scene.SetStatus(error is UnauthorizedAccessException ? "The current profile cannot show this task context. Refresh after checking your profile."
                             : "Tasks couldn’t refresh. Try again.");
@@ -213,7 +225,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             {
                 original.DemandPublication();
                 lock (_gate) { _shownScope = shown; _pageCursor = null; _nextCursor = null; _previousCursors.Clear(); _readSequence++; }
-                _currentObservations = []; _observations = []; _scene.SetRecent([]); PublishScope();
+                _currentObservations = []; _observations = []; ClosePermissionReview(); _scene.SetRecent([]); PublishScope();
             }).ConfigureAwait(false);
             await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
         });
@@ -301,6 +313,119 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             }
         });
     }
+    private void PublishPermissionReview() => _scene.SetPermissionReview(_permissionReview, _permissionTitle,
+        _permissionOpen, _permissionWorkPending, _permissionStatus, _permissionResponded);
+    private void ClosePermissionReview()
+    {
+        lock (_gate) _permissionSequence++;
+        _permissionOpen = false; _permissionReview = null; _permissionSelection = null;
+        _permissionTitle = ""; _permissionStatus = ""; _permissionResponded = false;
+        PublishPermissionReview();
+    }
+    private void OnPermissionReviewCloseRequested(object? sender, EventArgs args) => ClosePermissionReview();
+    private void OnPermissionReviewRequested(object? sender, ITaskContextObservation selected)
+    {
+        if (!_currentObservations.Any(row => ReferenceEquals(row, selected)) || selected.PermissionReview is not { CanRespond: true })
+            throw new InvalidOperationException("This task permission tile changed before review.");
+        long generation, sequence;
+        lock (_gate)
+        {
+            if (_permissionWorkPending) throw new InvalidOperationException("An original permission review or response is pending.");
+            _permissionWorkPending = true; generation = _generation; sequence = ++_permissionSequence;
+        }
+        try { ActualPermissionReview = _work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation));
+            try
+            {
+                await DispatchOriginalAsync(original, () =>
+                {
+                    if (_permissionSequence != sequence) return;
+                    _permissionSelection = selected; _permissionReview = null; _permissionResponded = false;
+                    _permissionOpen = true; _permissionTitle = selected.Title; _permissionStatus = "Loading the actual permission request…";
+                    PublishPermissionReview();
+                }).ConfigureAwait(false);
+                var current = await original.AwaitAsync(InvokePhysicalSource(() =>
+                    _source.ReadPermissionReviewAsync(selected, original.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                await DispatchOriginalAsync(original, () =>
+                {
+                    if (_permissionSequence != sequence) return;
+                    _permissionReview = current;
+                    _permissionStatus = current.CanRespond ? "Review the scope and consequences before choosing."
+                        : "This request cannot accept another response.";
+                    PublishPermissionReview();
+                }).ConfigureAwait(false);
+            }
+            catch (Exception error)
+            {
+                original.Retain(error);
+                if (IsCurrent(generation))
+                    try { await DispatchOriginalAsync(original, () =>
+                    { if (_permissionSequence == sequence) { _permissionStatus = "The permission request couldn’t be reviewed. Close and try again."; _permissionReview = null; PublishPermissionReview(); } }).ConfigureAwait(false); }
+                    catch (Exception projectionError) { original.Retain(projectionError); }
+            }
+            finally
+            {
+                lock (_gate) _permissionWorkPending = false;
+                if (IsCurrent(generation))
+                    try { await DispatchOriginalAsync(original, PublishPermissionReview).ConfigureAwait(false); }
+                    catch (Exception projectionError) { original.Retain(projectionError); }
+            }
+            original.ThrowRetained();
+        }); }
+        catch { lock (_gate) _permissionWorkPending = false; throw; }
+    }
+    private void OnPermissionResponseRequested(object? sender, bool approve)
+    {
+        var selected = _permissionSelection;
+        var reviewed = _permissionReview;
+        long generation, sequence;
+        lock (_gate)
+        {
+            if (_permissionWorkPending || !_permissionOpen || _permissionResponded || selected is null || reviewed?.CanRespond != true)
+                throw new InvalidOperationException("No current reviewed permission response is available.");
+            _permissionWorkPending = true; generation = _generation; sequence = _permissionSequence;
+        }
+        try { ActualPermissionResponse = _work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation));
+            try
+            {
+                await DispatchOriginalAsync(original, PublishPermissionReview).ConfigureAwait(false);
+                var reply = await original.AwaitAsync(InvokePhysicalSource(() => _source.RespondPermissionReviewAsync(
+                    selected!, reviewed!, approve, original.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                AcknowledgedPermissionResponse = reply; // The genuine source ACK survives optional UI withdrawal.
+                await DispatchOriginalAsync(original, () =>
+                {
+                    if (_permissionSequence != sequence) return;
+                    _permissionResponded = true;
+                    _permissionStatus = reply.Decision.Kind == PermissionDecisionKind.Allowed
+                        ? "Permission allowed. Resume the task separately when ready."
+                        : "Permission denied. The task remains suspended.";
+                    PublishPermissionReview();
+                }).ConfigureAwait(false);
+                await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
+            }
+            catch (Exception error)
+            {
+                original.Retain(error);
+                if (IsCurrent(generation))
+                    try { await DispatchOriginalAsync(original, () =>
+                    { if (_permissionSequence == sequence) { _permissionResponded = true; _permissionStatus = "The response couldn’t be confirmed. Close and review the current request."; PublishPermissionReview(); } }).ConfigureAwait(false); }
+                    catch (Exception projectionError) { original.Retain(projectionError); }
+            }
+            finally
+            {
+                lock (_gate) _permissionWorkPending = false;
+                if (IsCurrent(generation))
+                    try { await DispatchOriginalAsync(original, PublishPermissionReview).ConfigureAwait(false); }
+                    catch (Exception projectionError) { original.Retain(projectionError); }
+            }
+            original.ThrowRetained();
+        }); }
+        catch { lock (_gate) _permissionWorkPending = false; throw; }
+    }
+
     private void OnDelegateRequested(object? sender, string instruction)
     {
         if (_startNew is null) throw new InvalidOperationException("The genuine explicit new-task owner is unconfigured.");
@@ -398,6 +523,9 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         _scene.RefreshRequested -= OnRefreshRequested;
         _scene.ScopeRequested -= OnScopeRequested;
         _scene.PageRequested -= OnPageRequested;
+        _scene.PermissionReviewRequested -= OnPermissionReviewRequested;
+        _scene.PermissionResponseRequested -= OnPermissionResponseRequested;
+        _scene.PermissionReviewCloseRequested -= OnPermissionReviewCloseRequested;
         return InvokePhysicalSource(() => Dispatcher.UIThread.InvokeAsync(() =>
             InvokePhysicalSource(() => { _scene.RequestRetirement(); return true; })).GetTask());
     }

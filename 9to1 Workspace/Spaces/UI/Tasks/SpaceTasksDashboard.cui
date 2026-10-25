@@ -1,12 +1,14 @@
 <Cui id="spaces.tasks.dashboard" version="1">
   <Actions>
     <Action name="OpenExistingTask" command="tasks.open" parameter="{Binding task.observation}" />
+    <Action name="ReviewTaskPermission" command="tasks.review-permission" parameter="{Binding task.observation}" />
     <Action name="SubmitNewTask" command="tasks.submit" parameter="{Binding Event}" />
     <Action name="ToggleTaskDetails"><Toggle Target="DetailsOpen" /></Action>
   </Actions>
   <Variable Type="bool" ID="DetailsOpen">False</Variable>
   <Theme Name="user_preference">
     <Page id="space-tasks-dashboard" accessible-name="Tasks and recorded progress">
+      <Container id="tasks-overlay" Type="Overlay Float">
       <Container id="tasks-dashboard-scroll" Type="Vertical Stack" Padding="24" CellGap="14" VerticalScrolling="True" HorizontalScrolling="False">
         <Container Type="Horizontal Stack" CellGap="12">
           <Text id="tasks-heading" text="Tasks" font-size="26" font-weight="Bold" />
@@ -49,7 +51,15 @@
                 <Text id="tasks-tile-completed" text="{Binding task.status}" foreground="{Resource CuiSuccessBrush}" font-weight="SemiBold" accessible-name="{Binding task.status}" />
               </If>
               <If Condition="!{Binding task.completed}">
-                <Text id="tasks-tile-status" text="{Binding task.status}" font-weight="SemiBold" TextWrapping="Wrap" accessible-name="{Binding task.status}" />
+                <If Condition="{Binding task.permissionPrimary}">
+                  <Text id="tasks-tile-permission-status" text="{Binding task.status}" foreground="{Resource CuiInformationBrush}" font-weight="SemiBold" TextWrapping="Wrap" accessible-name="{Binding task.status}" />
+                </If>
+                <If Condition="!{Binding task.permissionPrimary}">
+                  <Text id="tasks-tile-status" text="{Binding task.status}" font-weight="SemiBold" TextWrapping="Wrap" accessible-name="{Binding task.status}" />
+                </If>
+              </If>
+              <If Condition="{Binding task.hasPermissionReview}">
+                <Button id="tasks-tile-review-permission" action="ReviewTaskPermission" content="Review permission" accessible-name="Review the actual pending permission for this task" />
               </If>
               <Text id="tasks-tile-origin" text="{Binding task.origin}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
               <Text id="tasks-tile-summary" text="{Binding task.summary}" TextWrapping="Wrap" />
@@ -71,6 +81,24 @@
           </Container>
         </If>
         <Text id="tasks-page-status" text="{Binding Status}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" accessible-name="Task dashboard result" />
+      </Container>
+      <If Condition="{Binding ReviewOpen}">
+        <Container id="tasks-permission-popout" Type="Floating" Target="tasks-scope" Placement="Under" action="tasks.close-permission">
+          <Container Type="Vertical Stack" Width="440" MaxWidth="480" MaxHeight="500" VerticalScrolling="True" Padding="18" CellGap="10" Background="{Resource CuiPanelBrush}" BorderBrush="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="14" accessible-name="Review task permission">
+            <Text text="{Binding ReviewTitle}" font-size="18" font-weight="SemiBold" TextWrapping="Wrap" />
+            <Text id="tasks-permission-question" text="{Binding ReviewQuestion}" font-weight="SemiBold" TextWrapping="Wrap" />
+            <Text text="{Binding ReviewRequester}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Text text="{Binding ReviewProvider}" TextWrapping="Wrap" />
+            <Text id="tasks-permission-explanation" text="{Binding ReviewExplanation}" TextWrapping="Wrap" />
+            <Text id="tasks-permission-status" text="{Binding ReviewStatus}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Container Type="Wrap" CellGap="8">
+              <Button id="tasks-permission-allow" content="Allow this request" action="tasks.allow-permission" Interactive="{Binding CanRespondReview}" accessible-name="Allow only this reviewed task permission request" />
+              <Button id="tasks-permission-deny" content="Deny" action="tasks.deny-permission" Interactive="{Binding CanRespondReview}" accessible-name="Deny this reviewed task permission request" />
+              <Button id="tasks-permission-close" content="Close" action="tasks.close-permission" Interactive="{Binding CanCloseReview}" accessible-name="Close permission review and return to tasks" />
+            </Container>
+          </Container>
+        </Container>
+      </If>
       </Container>
     </Page>
   </Theme>
