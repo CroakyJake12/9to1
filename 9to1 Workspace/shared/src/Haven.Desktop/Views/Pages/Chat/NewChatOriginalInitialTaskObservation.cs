@@ -263,6 +263,12 @@ internal sealed class NewChatOriginalInitialTaskObservation
         InvokePhysicalSource(() => actual = _source.PauseObservedTaskComposerAsync(RequireComposerLease(), token));
         return actual!;
     }
+    internal Task<TaskRunOriginalRunControlResult> AcquireActualComposerEndPass(TaskRunOriginalRunControlAvailability observed, CancellationToken token)
+    {
+        Task<TaskRunOriginalRunControlResult>? actual = null;
+        InvokePhysicalSource(() => actual = _source.EndObservedTaskComposerPassAsync(RequireComposerLease(), observed, token));
+        return actual!;
+    }
     internal Task<TaskRunOriginalResumeObservationLease> AcquireActualComposerResume(TaskRunOriginalRunControlAvailability observed, CancellationToken token)
     {
         Task<TaskRunOriginalResumeObservationLease>? actual = null;

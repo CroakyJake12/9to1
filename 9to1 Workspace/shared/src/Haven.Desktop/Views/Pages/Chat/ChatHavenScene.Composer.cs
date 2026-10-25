@@ -40,6 +40,9 @@ internal sealed partial class ChatHavenScene
         public bool CanSteer => ActiveTask?.CanSteer == true;
         public bool CanPause => ActiveTask?.CanPause == true;
         public bool IsPassPaused => ActiveTask?.IsPassPaused == true;
+        public bool CanEndPass => ActiveTask?.CanEndPass == true;
+        public ValueTask EndPass() => ActiveTask is { CanEndPass: true } task ? task.EndPass() :
+            ValueTask.FromException(new InvalidOperationException("The same paused pass cannot currently be ended safely."));
         public bool CanResume => ActiveTask?.CanResume == true;
         public bool HasSendModePreference => ActiveTask?.HasSendModePreference == true;
         public TaskFollowUpMode? PreferredSendMode => ActiveTask?.PreferredSendMode;

@@ -38,14 +38,14 @@ public sealed partial class NewChatPage
         if (current?.Owner.CanSubmitFollowUp != true) return false;
         var target = CaptureOriginalConversationTarget();
         lock (_originalSendGate)
-            return !_nativeTaskPauseAdmissions.Contains(target) && !_nativeTaskFollowUpAdmissions.Contains(target) &&
+            return !_nativeTaskEndPassAdmissions.Contains(target) && !_nativeTaskPauseAdmissions.Contains(target) && !_nativeTaskFollowUpAdmissions.Contains(target) &&
                 (!_nativeTaskFollowUpAcks.TryGetValue(target, out var accepted) || accepted.Revision != Volatile.Read(ref _originalComposerRevision));
     }
     private bool CanStopNativeComposerTask()
     {
         var current = CurrentTaskComposerPresentation(requireLive: false);
         if (current?.Owner.CurrentAcknowledgedContext is null) return false;
-        lock (_originalSendGate) return !_nativeTaskPauseAdmissions.Contains(CaptureOriginalConversationTarget()) && !_originalTaskStopAdmissionReserved && _actualOriginalTaskStop is not { IsCompleted: false } &&
+        lock (_originalSendGate) return !_nativeTaskEndPassAdmissions.Contains(CaptureOriginalConversationTarget()) && !_nativeTaskPauseAdmissions.Contains(CaptureOriginalConversationTarget()) && !_originalTaskStopAdmissionReserved && _actualOriginalTaskStop is not { IsCompleted: false } &&
             (_isSending || _nativeTaskControls.TryGetValue(CaptureOriginalConversationTarget(), out var available) && available.CanStop);
     }
     private ValueTask StopNativeComposerTask()
@@ -65,7 +65,7 @@ public sealed partial class NewChatPage
         var current = CurrentTaskComposerPresentation(requireLive: false);
         if (_safetyLocked || current?.Owner.CurrentAcknowledgedContext is null) return false;
         var target = CaptureOriginalConversationTarget();
-        lock (_originalSendGate) return !_nativeTaskPauseAdmissions.Contains(target) &&
+        lock (_originalSendGate) return !_nativeTaskEndPassAdmissions.Contains(target) && !_nativeTaskPauseAdmissions.Contains(target) &&
             !_nativeTaskResumeAdmissions.Contains(target) && !_originalTaskStopAdmissionReserved &&
             _actualOriginalTaskStop is not { IsCompleted: false } &&
             (_isSending || _nativeTaskControls.TryGetValue(target, out var controls) && controls.CanPause);
@@ -115,6 +115,66 @@ public sealed partial class NewChatPage
             });
         }
         catch { lock (_originalSendGate) _nativeTaskPauseAdmissions.Remove(target); throw; }
+    }
+    private readonly HashSet<OriginalConversationTarget> _nativeTaskEndPassAdmissions = [];
+    private (OriginalConversationTarget Target, TaskRunOriginalRunControlResult Result)? _nativeTaskEndPassResult;
+    public TaskRunOriginalRunControlResult? CanonicalTaskEndPassAcknowledgement =>
+        _nativeTaskEndPassResult is { } actual && actual.Target == CaptureOriginalConversationTarget() ? actual.Result : null;
+    private bool CanEndNativeComposerPass()
+    {
+        if (_safetyLocked || CurrentTaskComposerPresentation(requireLive: false) is null) return false;
+        var target = CaptureOriginalConversationTarget();
+        lock (_originalSendGate) return !_nativeTaskEndPassAdmissions.Contains(target) &&
+            !_nativeTaskPauseAdmissions.Contains(target) && !_nativeTaskResumeAdmissions.Contains(target) &&
+            _actualOriginalTaskStop is not { IsCompleted: false } && !_originalTaskStopAdmissionReserved &&
+            _nativeTaskControls.TryGetValue(target, out var controls) && controls.CanEndPass;
+    }
+    private Task EndNativeComposerPassAsync()
+    {
+        DemandOriginalChatCurrent();
+        if (!CanEndNativeComposerPass()) throw new InvalidOperationException("The same paused pass cannot currently be ended safely.");
+        var presentation = CurrentTaskComposerPresentation(requireLive: false)!;
+        var target = CaptureOriginalConversationTarget();
+        TaskRunOriginalRunControlAvailability controls;
+        lock (_originalSendGate)
+        {
+            if (!_nativeTaskEndPassAdmissions.Add(target)) throw new InvalidOperationException("End Pass is already pending.");
+            controls = _nativeTaskControls[target];
+            _nativeTaskControls.Remove(target); // A failed/unknown terminal ACK must never restore stale Resume grants.
+        }
+        try
+        {
+            return _originalWork.RunAsync(async original =>
+            {
+                BindOriginalConversationTarget(original, target);
+                try
+                {
+                    original.DemandPublication();
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
+                    {
+                        SetProjectionStatus("Ending the paused pass; waiting for its original owner's terminal acknowledgement...");
+                        _scene.ComposerView.RefreshSurface();
+                    })).GetTask()).ConfigureAwait(false);
+                    original.DemandPublication();
+                    var actual = presentation.Owner.AcquireActualComposerEndPass(controls, original.Token);
+                    var result = await original.AwaitAsync(actual).ConfigureAwait(false);
+                    _nativeTaskEndPassResult = (target, result);
+                    if (!original.IsPublicationCurrent) return;
+                    await RefreshNativeTaskControlsAsync(original, presentation).ConfigureAwait(false);
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(() =>
+                        SetProjectionStatus("Pass ended. Draft and queued instructions were retained."))).GetTask()).ConfigureAwait(false);
+                }
+                catch (Exception cause) { original.Retain(cause); throw; }
+                finally
+                {
+                    lock (_originalSendGate) _nativeTaskEndPassAdmissions.Remove(target);
+                    if (original.IsPublicationCurrent)
+                        await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                            original.RunAcceptedPublicationCallback(_scene.ComposerView.RefreshSurface)).GetTask()).ConfigureAwait(false);
+                }
+            });
+        }
+        catch { lock (_originalSendGate) _nativeTaskEndPassAdmissions.Remove(target); throw; }
     }
     private Task AdmitNativeTaskFollowUpAsync(TaskFollowUpMode mode)
     {
@@ -241,7 +301,7 @@ public sealed partial class NewChatPage
     {
         if (_safetyLocked || CurrentTaskComposerPresentation(requireLive: false) is null) return false;
         var target = CaptureOriginalConversationTarget();
-        lock (_originalSendGate) return !_nativeTaskPauseAdmissions.Contains(target) && !_nativeTaskResumeAdmissions.Contains(target) &&
+        lock (_originalSendGate) return !_nativeTaskEndPassAdmissions.Contains(target) && !_nativeTaskPauseAdmissions.Contains(target) && !_nativeTaskResumeAdmissions.Contains(target) &&
             _nativeTaskControls.TryGetValue(target, out var controls) &&
             (controls.CanResumeUnstartedOriginal || controls.CanResumeOriginalToolCheckpoint || controls.CanResumeColdOriginal);
     }
@@ -383,6 +443,8 @@ public sealed partial class NewChatPage
             !page._safetyLocked && page.CurrentTaskComposerPresentation()?.Owner.CanSubmitFollowUp == true;
         public TaskFollowUpMode? PreferredSendMode => page.NativePreferredSubmitMode;
         public ValueTask SetPreferredSendMode(TaskFollowUpMode mode) => page.SetNativePreferredSubmitMode(mode);
+        public bool CanEndPass => page.CanEndNativeComposerPass();
+        public ValueTask EndPass() => new(page.EndNativeComposerPassAsync());
         public bool CanResume => page.CanResumeNativeComposerTask();
         public ValueTask Resume() => new(page.ResumeNativeComposerTaskAsync());
         public ValueTask Steer() => new(page.AdmitNativeTaskFollowUpAsync(TaskFollowUpMode.Steer));

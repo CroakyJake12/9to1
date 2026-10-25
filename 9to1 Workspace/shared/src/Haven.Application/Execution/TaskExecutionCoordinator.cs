@@ -217,6 +217,7 @@ public sealed partial class TaskExecutionCoordinator(
     {
         var snapshot = await RequireAsync(ownerTaskId, cancellationToken).ConfigureAwait(false);
         await ValidateTaskCommandAsync(snapshot, "task:queue:promote-to-steer", cancellationToken).ConfigureAwait(false);
+        DemandOriginalPassMayReceiveSteer(snapshot); // Refuse before changing any queued row.
         var queue = snapshot.Queue.ToList();
         var index = queue.FindIndex(item => item.TaskId == queuedTaskId);
         if (index < 0) throw new KeyNotFoundException("Queued task was not found.");
@@ -345,6 +346,7 @@ public sealed partial class TaskExecutionCoordinator(
     {
         var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
         await ValidateTaskCommandAsync(snapshot, "task:steer", cancellationToken).ConfigureAwait(false);
+        DemandOriginalPassMayReceiveSteer(snapshot);
         var scopes = NormalizeScopes(requiredPermissionScopes);
         var requiresApproval = scopes.Any(scope => !snapshot.ApprovedPermissionScopes.Contains(scope, StringComparer.OrdinalIgnoreCase));
         var affected = (affectedActionIds is { Count: > 0 } ? affectedActionIds : snapshot.Plan
@@ -407,6 +409,7 @@ public sealed partial class TaskExecutionCoordinator(
         steers.Add(steer);
         var updated = snapshot with { Steers = steers, Plan = nodes, PlanVersion = version,
             State = waiting ? TaskExecutionLifecycle.WaitingSafeBoundary : TaskExecutionLifecycle.Running, UpdatedAt = now };
+        DemandOriginalPassMayReceiveSteer(snapshot);
         updated = await PersistAsync(updated, cancellationToken).ConfigureAwait(false);
         foreach (var older in supersededSteers)
             PublishSteer(updated, older, ExecutionActionStatus.Superseded, "Earlier steer superseded");

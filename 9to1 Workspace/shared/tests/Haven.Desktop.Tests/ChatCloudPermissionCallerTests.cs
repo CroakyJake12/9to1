@@ -693,6 +693,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         public Task<TaskExecutionSnapshot?>? OverrideRead = null;
         public bool RefuseSuspension;
         public TaskCompletionSource? HeldFollowUpWrite;
+        public TaskCompletionSource? HeldTerminalWrite;
+        public TaskCompletionSource TerminalWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource FollowUpWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task? ContinuationWrite; public int ContinuationWriteCalls;
         public TaskCompletionSource OverrideReadEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -703,6 +705,11 @@ public sealed partial class ChatCloudPermissionCallerTests
             { ContinuationWriteCalls++; return actual; }
             if (RefuseSuspension && value.State == TaskExecutionLifecycle.Suspended) throw new TaskExecutionRevisionConflictException(value.TaskId, value.PersistenceRevision - 1, value.PersistenceRevision);
             var before = _rows.TryGetValue(value.TaskId, out var json) ? JsonSerializer.Deserialize<TaskExecutionSnapshot>(json) : null;
+            if (value.State == TaskExecutionLifecycle.Cancelled && before?.State == TaskExecutionLifecycle.Suspended && HeldTerminalWrite is { } terminal)
+            {
+                TerminalWriteEntered.TrySetResult();
+                return CommitHeldFollowUpAsync(value, before.PersistenceRevision, terminal.Task);
+            }
             if (value.Queue.Count > (before?.Queue.Count ?? 0) && HeldFollowUpWrite is { } held)
             {
                 FollowUpWriteEntered.TrySetResult();

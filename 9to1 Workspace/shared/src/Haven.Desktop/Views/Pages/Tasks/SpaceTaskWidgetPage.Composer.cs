@@ -89,6 +89,8 @@ public sealed partial class SpaceTaskWidgetPage
             Disposition: TaskRunOriginalRunControlDisposition.Suspended } ack &&
             page._observation?.Snapshot is { State: TaskExecutionLifecycle.Suspended } current &&
             current.TaskId == ack.CanonicalTaskContext.TaskId && current.ExecutionId == ack.CanonicalTaskContext.ExecutionId;
+        public bool CanEndPass => page.IsActionAvailable("task.end-pass") == true;
+        public ValueTask EndPass() => ForwardAsync("task.end-pass");
         public bool CanResume => page.IsActionAvailable("task.resume-original") == true;
         public bool IsEditing => false;
         public IReadOnlyList<ChatComposerChip> Chips => [];

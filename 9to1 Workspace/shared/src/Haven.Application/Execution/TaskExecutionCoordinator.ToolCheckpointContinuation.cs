@@ -88,6 +88,7 @@ public sealed partial class TaskExecutionCoordinator
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         lock (_invocationAdmissionGate)
         {
+            DemandOriginalPassMayResume(sameOriginal);
             if (_toolCheckpointContinuations.TryGetValue(sameOriginal.OriginalBinding!.TaskId, out var prior))
             {
                 if (!ReferenceEquals(prior.Original, sameOriginal) || !ReferenceEquals(prior.Boundary, boundary) || prior.Claimed)
@@ -135,6 +136,7 @@ public sealed partial class TaskExecutionCoordinator
     // local capability/route selection, permission, input, cleanup and expected-revision CAS.
     private bool HasOriginalToolCheckpointRunResume(TaskRunInvocationCustody original, TaskExecutionSnapshot current)
     {
+        if (IsOriginalPassEnding(original)) return false;
         if (original.OriginalToolCheckpoint is not { } boundary || original.OriginalToolContinuationFactory is null
             || !original.OriginalProviderInvocationInvoked || original.OriginalInputCurrentness is null
             || original.OriginalChatOwner is not { } chat || current.State != TaskExecutionLifecycle.Suspended)
@@ -428,6 +430,7 @@ public sealed partial class TaskExecutionCoordinator
     {
         lock (_invocationAdmissionGate)
         {
+            DemandOriginalPassMayResume(binding.Original);
             if (!ReferenceEquals(binding.Issuer, this) || !ReferenceEquals(binding.Boundary.Chat, chat)
                 || !_toolCheckpointContinuations.TryGetValue(binding.Acknowledged!.TaskId, out var actual)
                 || !ReferenceEquals(actual, binding) || binding.Claimed || binding.Bound

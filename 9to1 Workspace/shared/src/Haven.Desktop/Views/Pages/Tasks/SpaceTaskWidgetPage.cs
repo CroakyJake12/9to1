@@ -309,8 +309,11 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             return command switch
             {
                 "task.refresh" => true,
-                "task.pause" or "task.stop" or "task.resume-original" => IsOriginalRunControlAvailable(command),
-                "task.steer" or "task.queue" => !_followUpAdmissionPending && _instructionVersion != _acceptedInstructionVersion &&
+                "task.pause" or "task.stop" or "task.resume-original" or "task.end-pass" => IsOriginalRunControlAvailable(command),
+                "task.steer" or "task.queue" => _runControlCommand is not { HasLiveWork: true } &&
+                    (command == "task.queue" || _observation?.Snapshot is
+                        { State: not (TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled or TaskExecutionLifecycle.Failed) }) &&
+                    !_followUpAdmissionPending && _instructionVersion != _acceptedInstructionVersion &&
                     !string.IsNullOrWhiteSpace(_instruction) && _source.HasConfiguredCommandOwner && _observation?.Snapshot?.OwnerBinding is not null,
                 "dev.open" => _openDev is not null && _developerView is not null,
                 _ => false
@@ -357,7 +360,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                     }
                     await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
                 }
-                else if (command is "task.pause" or "task.stop" or "task.resume-original")
+                else if (command is "task.pause" or "task.stop" or "task.resume-original" or "task.end-pass")
                 {
                     var same = captured?.Snapshot ?? throw new InvalidOperationException("No original Task/Run was captured.");
                     await DispatchOriginalRunControlAsync(original, generation, command, same, scope.Token).ConfigureAwait(false);

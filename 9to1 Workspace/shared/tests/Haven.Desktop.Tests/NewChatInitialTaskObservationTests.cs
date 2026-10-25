@@ -115,13 +115,16 @@ public sealed partial class ChatCloudPermissionCallerTests
             var copied = (TaskRunOriginalInitialChatObservationLease)typeof(object)
                 .GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(lease, null)!;
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => rig.Service.PauseObservedTaskComposerAsync(copied, token));
-            page.SetDraft("Preserve this unsent instruction");
             var bindings = page.OriginalTaskComposer.Bindings;
+            page.SetDraft("queued instruction to preserve");
+            await bindings.DispatchAsync("composer.queue", null);
+            page.SetDraft("Preserve this unsent instruction");
             Assert.True(bindings.IsActionAvailable("composer.pause"));
             Assert.False(bindings.IsActionAvailable("composer.resume"));
             pausing = bindings.DispatchAsync("composer.pause", null).AsTask();
             Assert.False(pausing.IsCompleted);
             Assert.Null(page.CanonicalTaskPauseAcknowledgement);
+            Assert.False(bindings.IsActionAvailable("composer.end-pass"));
             Assert.False(bindings.IsActionAvailable("composer.pause"));
             Assert.False(bindings.IsActionAvailable("composer.resume"));
             Assert.False(disposal.Task.IsCanceled);
@@ -139,6 +142,22 @@ public sealed partial class ChatCloudPermissionCallerTests
             var controls = (await rig.Service.GetObservedTaskComposerControlsAsync(lease, token))!;
             Assert.Equal(controls.CanResumeUnstartedOriginal || controls.CanResumeOriginalToolCheckpoint || controls.CanResumeColdOriginal,
                 bindings.IsActionAvailable("composer.resume"));
+            Assert.NotEmpty(actual.Attempts); // Actual invoked provider, not a synthetic never-started status.
+            Assert.True(controls.CanEndPass);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => rig.Service.EndObservedTaskComposerPassAsync(copied, controls, token));
+            Assert.True(bindings.IsActionAvailable("composer.end-pass"));
+            await bindings.DispatchAsync("composer.end-pass", null);
+            var ended = Assert.IsType<TaskRunOriginalRunControlResult>(page.CanonicalTaskEndPassAcknowledgement);
+            Assert.Equal(TaskRunOriginalRunControlKind.EndPass, ended.Kind);
+            Assert.Equal(TaskRunOriginalRunControlDisposition.EndedAfterOriginalPause, ended.Disposition);
+            Assert.Equal(TaskExecutionLifecycle.Cancelled, ended.State);
+            var terminal = (await rig.Tasks.GetByContextAsync(initial.ContextId, token))!;
+            Assert.Equal(initial.TaskId, terminal.TaskId); Assert.Equal(initial.ExecutionId, terminal.ExecutionId);
+            Assert.Equal("queued instruction to preserve", Assert.Single(terminal.Queue).Summary);
+            Assert.Equal(QueuedFollowUpState.Queued, terminal.Queue[0].State);
+            Assert.Equal("Preserve this unsent instruction", page.OriginalTaskComposer.Input.Text);
+            Assert.False(bindings.IsActionAvailable("composer.resume"));
+            Assert.False(bindings.IsActionAvailable("composer.end-pass"));
             await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal("Preserve this unsent instruction", drafts.Last?.Content);
             Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User);
