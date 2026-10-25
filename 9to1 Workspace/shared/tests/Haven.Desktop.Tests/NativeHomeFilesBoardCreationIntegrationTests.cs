@@ -268,6 +268,56 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
     private static IEnumerable<Exception> FailureLeaves(Exception failure) => failure is AggregateException aggregate
         ? aggregate.InnerExceptions.SelectMany(FailureLeaves) : [failure];
 
+    [LinuxFact]
+    public async Task Exact_caller_cancelled_original_READ_is_joined_without_converting_a_foreign_cancellation()
+    {
+        await WithRigAsync(async rig =>
+        {
+            async Task Review(HomePermissionAuthorization request, CancellationToken token)
+            { Assert.True((await rig.Trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded); }
+            await rig.InitializeLibraryAsync(Review);
+            var folder = await rig.SelectBoardsFolderAsync();
+            var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(folder, "Cancelled READ board",
+                BoardBytes(Guid.NewGuid(), "Retain caller cancellation"), rig.Token));
+            var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, receipt.ParentFolderId,
+                token: rig.Token, expectedStoreId: receipt.FilesStoreId));
+            var row = Assert.Single(page.Items, item => item.Id.Value == receipt.FileId);
+            using var caller = new CancellationTokenSource(); caller.Cancel();
+            var ledger = new CloudflareOriginalTaskLedger();
+            var original = rig.Read.ReadSelectedOutcomeAsync(page, row, () => true, rig.IsHomeAuthorityCurrentAsync,
+                body => body(), rig.Retain, ledger, caller.Token);
+            var cancelled = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => rig.Keep(original));
+            Assert.True(original.IsCanceled); Assert.Equal(caller.Token, cancelled.CancellationToken);
+            await rig.Read.DrainPreparedAsync();
+        });
+    }
+
+    [LinuxFact]
+    public async Task Foreign_READ_scope_cancellation_remains_a_fault_and_cannot_retire_as_caller_cancellation()
+    {
+        using var foreign = new CancellationTokenSource(); foreign.Cancel();
+        var refusal = new OperationCanceledException("Foreign READ source callback cancellation.", foreign.Token);
+        await WithRigAsync(async rig =>
+        {
+            async Task Review(HomePermissionAuthorization request, CancellationToken token)
+            { Assert.True((await rig.Trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded); }
+            await rig.InitializeLibraryAsync(Review);
+            var folder = await rig.SelectBoardsFolderAsync();
+            var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(folder, "Foreign cancellation board",
+                BoardBytes(Guid.NewGuid(), "Refuse foreign cancellation"), rig.Token));
+            var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, receipt.ParentFolderId,
+                token: rig.Token, expectedStoreId: receipt.FilesStoreId));
+            var row = Assert.Single(page.Items, item => item.Id.Value == receipt.FileId);
+            var original = rig.Read.ReadSelectedOutcomeAsync(page, row, () => true, rig.IsHomeAuthorityCurrentAsync,
+                _ => throw refusal, rig.Retain, new CloudflareOriginalTaskLedger(), rig.Token);
+            var failure = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(original));
+            Assert.True(original.IsFaulted); Assert.False(original.IsCanceled);
+            Assert.All(FailureLeaves(failure), item => Assert.Same(refusal, item));
+        }, failure => Assert.All(FailureLeaves(failure), item => Assert.Same(refusal, item)));
+    }
+
     // Deny-only policy injection over the genuine private Files issuer and its
     // actual canonical ACL/currentness checks. Every positive answer is forwarded.
     private sealed class ReadPolicyFixture(FilesArtifactResourceResolver actual) :
@@ -342,6 +392,8 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         internal NativeHomeFilesBoardReadSource Read => _read ?? throw new InvalidOperationException();
         internal NativeHomeFilesLibrarySource Library => _library ?? throw new InvalidOperationException();
         internal ReadPolicyFixture ReadPolicy => _readPolicy ?? throw new InvalidOperationException();
+        internal async Task<bool> IsHomeAuthorityCurrentAsync(CancellationToken token) =>
+            await (_graph ?? throw new InvalidOperationException()).GetRequiredService<IAuthenticatedResourceActorSource>().GetCurrentAsync(token) == Workspace.Actor;
         internal void DeleteTemporaryFixtureAfterExpectedDrain()
         { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); }
 
