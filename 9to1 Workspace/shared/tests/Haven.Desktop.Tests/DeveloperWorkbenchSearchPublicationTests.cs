@@ -513,6 +513,52 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Cui_property_inspector_edits_only_the_literal_draft_value_and_preserves_review_undo_and_source_boundaries()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string saved = "<Cui>\r\n<!-- keep this comment -->\r\n<Page><Text id='title' text='A &amp; B' font-size='18' /></Page>\r\n</Cui>";
+            f.Tools.TextValue = saved; page = await SearchPublicationPage(f, reader.Owner);
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var reads = f.Tools.ReadCalls; var preparations = f.Owner.PrepareCalls;
+            object[] Rows(string binding)
+            {
+                Assert.True(page.TryGetValue(binding, out var value)); return Assert.IsAssignableFrom<System.Collections.IEnumerable>(value).Cast<object>().ToArray();
+            }
+            string Key(object row) => Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            string Label(object row) => Assert.IsType<string>(row.GetType().GetProperty("Label")!.GetValue(row));
+            await page.DispatchAsync("dev.analyze-cui-draft", null, OriginalTestBodyToken);
+            var component = Assert.Single(Rows("CuiDraftOutline"), row => Label(row).Contains("title — Text", StringComparison.Ordinal));
+            await page.DispatchAsync("dev.go-to-cui-element", Key(component), OriginalTestBodyToken);
+            var property = Assert.Single(Rows("CuiInspectableProperties"), row => Label(row) == "text — text");
+            var oldPropertyKey = Key(property);
+            await page.DispatchAsync("dev.select-cui-property", oldPropertyKey, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("CuiPropertyDraftValue", out var value)); Assert.Equal("A & B", value);
+            page.TrySetValue("CuiPropertyDraftValue", "Changed 'quoted' & < x");
+            Assert.True(page.IsActionAvailable("dev.change-cui-property"));
+            await page.DispatchAsync("dev.change-cui-property", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out var draft));
+            Assert.Equal(saved.Replace("A &amp; B", "Changed &apos;quoted&apos; &amp; &lt; x", StringComparison.Ordinal), draft);
+            Assert.True(page.HasUnsavedWork); Assert.True(page.IsActionAvailable("dev.undo-source-edit"));
+            Assert.False(page.IsActionAvailable("dev.apply-edit")); Assert.Empty(Rows("CuiInspectableProperties"));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => page.DispatchAsync("dev.select-cui-property", oldPropertyKey, OriginalTestBodyToken).AsTask());
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal(saved, draft);
+            Assert.False(page.HasUnsavedWork); Assert.False(page.IsActionAvailable("dev.apply-edit"));
+            Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(preparations, f.Owner.PrepareCalls);
+            Assert.Equal(saved, f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));

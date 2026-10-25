@@ -7,6 +7,7 @@
     <Action name="dev.inspect-recovered-draft" command="dev.inspect-recovered-draft" parameter="{Binding recovered.SelectionKey}" />
     <Action name="dev.go-to-cui-problem" command="dev.go-to-cui-problem" parameter="{Binding problem.SelectionKey}" />
     <Action name="dev.go-to-cui-element" command="dev.go-to-cui-element" parameter="{Binding element.SelectionKey}" />
+    <Action name="dev.select-cui-property" command="dev.select-cui-property" parameter="{Binding property.SelectionKey}" />
   </Actions>
   <Page>
     <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
@@ -110,6 +111,19 @@
           <Button id="dev-go-to-cui-element" action="dev.go-to-cui-element" content="{Binding element.Label}" accessible-name="{Binding element.AccessibleName}" Interactive="{Binding element.CanNavigate}" horizontal-content-alignment="Left" />
         </Repeat>
       </Container>
+      <Text text="CUI component properties" font-size="18" />
+      <Text text="{Binding CuiPropertyStatus}" text-wrapping="Wrap" accessible-name="CUI component property inspection status and unsupported syntax limits" />
+      <Container Type="Vertical Stack" max-height="200" VerticalScrolling="True" accessible-name="Existing CUI component attributes">
+        <Repeat id="dev-cui-properties" Source="{Binding CuiInspectableProperties}" As="property" Key="{Binding property.SelectionKey}">
+          <Container Type="Vertical Stack" CellGap="2">
+            <Button id="dev-select-cui-property" action="dev.select-cui-property" content="{Binding property.Label}" accessible-name="{Binding property.Label}" Interactive="{Binding property.CanSelect}" horizontal-content-alignment="Left" />
+            <Text text="{Binding property.Details}" text-wrapping="Wrap" />
+          </Container>
+        </Repeat>
+      </Container>
+      <Text text="{Binding CuiSelectedProperty}" accessible-name="Selected component and registered property type" />
+      <Input id="dev-cui-property-value" Type="Text" Value="{Binding CuiPropertyDraftValue}" Multiline="true" accessible-name="New literal attribute value; bindings and resources remain code-defined" Interactive="{Binding CanEditCuiProperty}" />
+      <Button id="dev-change-cui-property" action="dev.change-cui-property" content="Update property in draft" Interactive="{Binding CanChangeCuiProperty}" />
       <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" TextSelection="{Binding EditorTextSelection}" Multiline="true" Interactive="{Binding CanEditSource}" />
       <Container Type="Wrap">
         <Button id="dev-undo-source-edit" action="dev.undo-source-edit" content="Undo draft edit" accessible-name="Undo the last edit in this document; saving still requires review" Interactive="{Binding CanUndoSourceEdit}" />

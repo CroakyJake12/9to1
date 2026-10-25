@@ -337,6 +337,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             // Preserve source/outcome evidence in its actual owner; a withdrawn binding cannot disclose it.
             if (!_active || _work.IsRetiring) { value = null; return false; }
             if (TryGetManualRecoveryConflictValue(path, out value)) return true;
+            if (TryGetCuiPropertyValue(path, out value)) return true;
             if (TryGetCuiAnalysisValue(path, out value)) return true;
             value = path switch
             {
@@ -442,7 +443,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             });
             return true;
         }
-        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "SourceFindQuery" or "SourceReplaceText" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
+        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "SourceFindQuery" or "SourceReplaceText" or "CuiPropertyDraftValue" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
         long generation; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
         {
@@ -465,6 +466,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             if (!StringComparer.Ordinal.Equals(_sourceFindQuery, text)) { _sourceFindQuery = text; _editorTextSelection = null; InvalidateSourceFind(); }
                             break;
                         case "SourceReplaceText": _sourceReplaceText = text; break;
+                        case "CuiPropertyDraftValue": _cuiPropertyDraftValue = text; break;
                         case "DraftText": UpdateCurrentDraftText(text); break;
                         case "Command": _command = text; break; case "TestCommand": _testCommand = text; break;
                         case "StageTaskId": _stageTaskId = text; CaptureSelectedSavedStage(); break; case "StageId": _stageId = text; CaptureSelectedSavedStage(); break; case "BranchName": _branchName = text; break;
@@ -482,6 +484,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (command == "dev.select-cui-property") return CurrentCuiPropertyInspection()?.Properties.Take(100).Any(property => property.CanEdit) == true;
+            if (command == "dev.change-cui-property") return SelectedCuiProperty() is { CanEdit: true } property && property.Value != _cuiPropertyDraftValue;
             if (command == "dev.analyze-cui-draft") return CurrentSourceTab() is { } source && DeveloperCuiSourceAnalysis.Supports(source.Path, CurrentEditorText());
             if (command == "dev.go-to-cui-problem") return CurrentCuiAnalysis() is { Problems.Count: > 0 };
             if (command == "dev.go-to-cui-element") return CurrentCuiAnalysis() is { Outline.Count: > 0 };
@@ -537,6 +541,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command == "dev.select-cui-property") return SelectCuiProperty(parameter);
+        if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);
         if (command == "dev.analyze-cui-draft") return DispatchCuiAnalysisAsync(cancellationToken);
         if (command is "dev.go-to-cui-problem" or "dev.go-to-cui-element") return DispatchCuiSourceNavigationAsync(command, parameter, cancellationToken);
         if (command is "dev.undo-source-edit" or "dev.redo-source-edit") return DispatchDraftHistoryAsync(command, cancellationToken);
