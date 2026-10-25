@@ -101,6 +101,10 @@ public sealed class BoardsEditorTests
             target.Resources["CuiTextBrush"] = Brushes.White;
             target.Resources["CuiMutedBrush"] = Brushes.Gray;
             target.Resources["CuiPanel2Brush"] = new SolidColorBrush(Color.Parse("#FF181521"));
+            target.Resources["CuiFloatingSurfaceMaterial"] = target.Resources["CuiPanel2Brush"];
+            target.Resources["CuiSurfaceMaterial"] = target.Resources["CuiPanel2Brush"];
+            target.Resources["CuiWorkspaceMaterial"] = target.Resources["CuiPanel2Brush"];
+            target.Resources["CuiShellMaterial"] = target.Resources["CuiPanel2Brush"];
             target.Resources["CuiSuccessBrush"] = new SolidColorBrush(Color.Parse("#FF238A5A"));
             target.Resources["CuiInformationBrush"] = new SolidColorBrush(Color.Parse("#FF596FCA"));
             target.Resources["CuiHighContrast"] = false;
