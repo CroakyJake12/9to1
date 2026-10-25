@@ -25,6 +25,10 @@ public sealed class VerifiedNotesRepository(
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
     private readonly string _root = inner.VerifyOwningRoot(paths);
 
+    /// <summary>Reports whether this verification wrapper belongs to the exact supplied original Notes owner.
+    /// This identity observation grants no repository access and is used only during owner composition.</summary>
+    public bool IsBoundToOriginalNotes(NotesRepository original) => ReferenceEquals(inner, original);
+
     /// <summary>
     /// Forwards the migration path registered by the managed wrapper to the repository that owns the read fence.
     /// </summary>
