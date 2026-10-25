@@ -185,6 +185,109 @@ public sealed class FilesNativeBoardDocumentCreateTests
         Assert.Single(final.Items, item => item.Name == exactReceipt.DisplayName);
     }
 
+    [LinuxFact]
+    public async Task Failed_original_task_registration_stops_before_review_and_file_publication()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var source = await rig.OpenBoardFolderAsync();
+        var creator = rig.Creator = rig.Browser.CreateOriginalBoardDocumentCreateOwner(rig.Physical);
+        var before = await rig.ReadBytesAsync();
+        var reviewCount = 0;
+        var registrationFailure = new InvalidOperationException("Controlled source task retention failure.");
+        var thrown = Record.Exception(() => creator.CreateBoardDocumentWithinSourceAsync(source.Page,
+            source.Folder, rig.Workspace.Actor, "Must not start", BoardBytes(Guid.NewGuid(), "No side effect"),
+            () => true, (_, _) => { reviewCount++; return Task.CompletedTask; }, "retain-failure",
+            body => body(), _ => throw registrationFailure, rig.Token));
+
+        Assert.Same(registrationFailure, thrown);
+        var closeFailure = await Assert.ThrowsAnyAsync<Exception>(() => creator.CloseAndDrainAsync());
+        Assert.Contains("Controlled source task retention failure", closeFailure.ToString(), StringComparison.Ordinal);
+        Assert.Equal(0, reviewCount);
+        var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor,
+            rig.Workspace.Configuration.AppFolders["boards"].Value, token: rig.Token,
+            expectedStoreId: rig.Workspace.Configuration.StoreId));
+        Assert.Empty(page.Items);
+        var after = await rig.ReadBytesAsync();
+        Assert.Equal(before.Home, after.Home);
+        Assert.Equal(before.Drive, after.Drive);
+    }
+
+    [LinuxFact]
+    public async Task Closing_original_owner_joins_an_inflight_create_and_commits_that_same_admitted_operation()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var source = await rig.OpenBoardFolderAsync();
+        var creator = rig.Creator = rig.Browser.CreateOriginalBoardDocumentCreateOwner(rig.Physical);
+        var reviewStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseReview = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task Review(HomePermissionAuthorization request, CancellationToken token)
+        {
+            reviewStarted.SetResult();
+            await releaseReview.Task.WaitAsync(token);
+            Assert.True((await rig.Trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept,
+                cancellationToken: token)).Succeeded);
+        }
+        var createTask = rig.Keep(creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder,
+            rig.Workspace.Actor, "Close while creating", BoardBytes(Guid.NewGuid(), "Finish admitted create"),
+            () => true, Review, "owner-close-create", body => body(), rig.Retain, rig.Token));
+        await reviewStarted.Task.WaitAsync(rig.Token);
+        var closeTask = creator.CloseAndDrainAsync();
+        await Task.Yield();
+        Assert.False(closeTask.IsCompleted);
+
+        releaseReview.SetResult();
+        var receipt = await createTask;
+        await closeTask;
+
+        Assert.True(creator.IsIssuedCreateReceipt(receipt));
+        var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, receipt.ParentFolderId,
+            token: rig.Token, expectedStoreId: receipt.FilesStoreId));
+        Assert.Single(page.Items, item => item.Id.Value == receipt.FileId);
+    }
+
+    [LinuxFact]
+    public async Task Closing_original_owner_waits_for_inflight_audit_only_retry_and_accepts_that_same_receipt()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var source = await rig.OpenBoardFolderAsync();
+        var creator = rig.Creator = rig.Browser.CreateOriginalBoardDocumentCreateOwner(rig.Physical);
+        var approvalCount = 0;
+        async Task Review(HomePermissionAuthorization request, CancellationToken token)
+        {
+            approvalCount++;
+            Assert.True((await rig.Trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept,
+                cancellationToken: token)).Succeeded);
+        }
+        rig.FailingHomeStore.FailNextBoardCreateAudit = true;
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(
+            creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder, rig.Workspace.Actor,
+                "Close during audit retry", BoardBytes(Guid.NewGuid(), "One committed item"), () => true,
+                Review, "owner-close-audit-retry", body => body(), rig.Retain, rig.Token)));
+        var pending = FindSettlement(failure);
+        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, pending.State);
+        var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(pending.Receipt);
+
+        var barrier = rig.FailingHomeStore.BlockNextBoardCreateAuditWrite();
+        var retry = rig.Keep(creator.RetryCreateSettlementWithinSourceAsync(pending.Attempt,
+            body => body(), rig.Retain, rig.Token));
+        await barrier.Started.Task.WaitAsync(rig.Token);
+        var close = creator.CloseAndDrainAsync();
+        await Task.Yield();
+        Assert.False(close.IsCompleted);
+
+        barrier.Release.SetResult();
+        var settled = await retry;
+        await close;
+
+        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, settled.State);
+        Assert.Same(receipt, settled.Receipt);
+        Assert.Equal(1, approvalCount);
+        Assert.Equal(1, rig.FailingHomeStore.BoardCreateAuditFailureCount);
+        var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, receipt.ParentFolderId,
+            token: rig.Token, expectedStoreId: receipt.FilesStoreId));
+        Assert.Single(page.Items, item => item.Id.Value == receipt.FileId);
+    }
+
     private static byte[] BoardBytes(Guid id, string title)
     {
         var now = DateTimeOffset.UtcNow;
@@ -327,17 +430,25 @@ public sealed class FilesNativeBoardDocumentCreateTests
     {
         private int _failNextBoardCreateAudit;
         private int _boardCreateAuditFailureCount;
+        private AuditWriteBarrier? _nextBoardCreateAuditBarrier;
         internal bool FailNextBoardCreateAudit
         {
             set => Interlocked.Exchange(ref _failNextBoardCreateAudit, value ? 1 : 0);
         }
         internal int BoardCreateAuditFailureCount => Volatile.Read(ref _boardCreateAuditFailureCount);
+        internal AuditWriteBarrier BlockNextBoardCreateAuditWrite()
+        {
+            var barrier = new AuditWriteBarrier();
+            if (Interlocked.CompareExchange(ref _nextBoardCreateAuditBarrier, barrier, null) is not null)
+                throw new InvalidOperationException("A board-create audit write is already blocked.");
+            return barrier;
+        }
         public Task<HomeStateReadResult> ReadAsync(CancellationToken cancellationToken = default) => inner.ReadAsync(cancellationToken);
         public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRecordRevision,
             AuthenticatedResourceActor expectedActor, IHomeStateCommitActorGuard guard,
             CancellationToken cancellationToken = default)
             => inner.WriteGuardedAsync(record, expectedRecordRevision, expectedActor, guard, cancellationToken);
-        public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRecordRevision,
             CancellationToken cancellationToken = default)
         {
             if (record.RecordType == "home.permissions-trust" &&
@@ -345,10 +456,23 @@ public sealed class FilesNativeBoardDocumentCreateTests
                 Interlocked.Exchange(ref _failNextBoardCreateAudit, 0) != 0)
             {
                 Interlocked.Increment(ref _boardCreateAuditFailureCount);
-                return Task.FromResult(HomeStateWriteResult.Failed(new(HomeCoreErrorCode.HomeServiceUnavailable,
-                    "Controlled one-shot board create audit failure.", record.RecordId, true)));
+                return HomeStateWriteResult.Failed(new(HomeCoreErrorCode.HomeServiceUnavailable,
+                    "Controlled one-shot board create audit failure.", record.RecordId, true));
             }
-            return inner.WriteAsync(record, expectedRecordRevision, cancellationToken);
+            if (record.RecordType == "home.permissions-trust" &&
+                record.Payload.GetRawText().Contains("FILES_BOARD_CREATED", StringComparison.Ordinal) &&
+                Interlocked.Exchange(ref _nextBoardCreateAuditBarrier, null) is { } barrier)
+            {
+                barrier.Started.TrySetResult();
+                await barrier.Release.Task.WaitAsync(cancellationToken);
+            }
+            return await inner.WriteAsync(record, expectedRecordRevision, cancellationToken);
         }
+    }
+
+    internal sealed class AuditWriteBarrier
+    {
+        internal TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 }
