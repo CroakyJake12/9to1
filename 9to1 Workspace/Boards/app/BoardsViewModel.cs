@@ -2537,8 +2537,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
-        if (block.HasMergedCells) { Set("StatusText", "Split merged cells before adding a table row."); return; }
         EnsureTableDims(block);
+        if (block.TableRows >= 100) { Set("StatusText", "Tables support at most 100 rows."); return; }
         block.TableRows = Math.Min(100, block.TableRows + 1);
         PushDocumentToBindings();
         _session.MarkDirty();
@@ -2573,8 +2573,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
-        if (block.HasMergedCells) { Set("StatusText", "Split merged cells before adding a table column."); return; }
         EnsureTableDims(block);
+        if (block.TableCols >= 50) { Set("StatusText", "Tables support at most 50 columns."); return; }
         block.TableCols = Math.Min(50, block.TableCols + 1);
         PushDocumentToBindings();
         _session.MarkDirty();
