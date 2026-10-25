@@ -15,7 +15,8 @@ public static class NavBuilder
 {
     private static readonly HashSet<string> CollapsedSections = new(StringComparer.Ordinal);
     private static readonly HashSet<string> CollapsedPages = new(StringComparer.Ordinal);
-    private static object? _stateDocument;
+    private static IRichBoardSession? _stateSession;
+    private static (string SectionId, string PageId)? _lastRevealedSelection;
 
     /// <summary>Pending inline rename: set by double-click, F2 or the Rename menu item.</summary>
     private static (bool IsSection, string SectionId, string? PageId)? _pendingRename;
@@ -27,15 +28,16 @@ public static class NavBuilder
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(vm);
-        var document = vm.Session.Document;
-        if (!ReferenceEquals(_stateDocument, document))
+        if (!ReferenceEquals(_stateSession, vm.Session))
         {
             CollapsedSections.Clear();
             CollapsedPages.Clear();
             _pendingRename = null;
             RenameActive = false;
-            _stateDocument = document;
+            _lastRevealedSelection = null;
+            _stateSession = vm.Session;
         }
+        RevealSelectedPageOnNavigation(vm);
         RenameActive = false;
         host.Children.Clear();
 
@@ -90,6 +92,24 @@ public static class NavBuilder
         TakePendingRename(host, vm);
     }
 
+    private static void RevealSelectedPageOnNavigation(BoardsViewModel vm)
+    {
+        var selection = (vm.SelectedSectionId, vm.SelectedPageId);
+        if (_lastRevealedSelection == selection) return;
+        _lastRevealedSelection = selection;
+        var section = vm.Session.Document.Sections.FirstOrDefault(item => item.Id == selection.SelectedSectionId);
+        if (section is null) return;
+        CollapsedSections.Remove(section.Id);
+        var pages = section.Pages.ToDictionary(page => page.Id, StringComparer.Ordinal);
+        if (!pages.TryGetValue(selection.SelectedPageId, out var page)) return;
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        while (page.ParentPageId is { } parentId && seen.Add(parentId) && pages.TryGetValue(parentId, out var parent))
+        {
+            CollapsedPages.Remove(parent.Id);
+            page = parent;
+        }
+    }
+
     private static bool Matches(string title, string filter) =>
         string.IsNullOrEmpty(filter) || title.Contains(filter, StringComparison.OrdinalIgnoreCase);
 
@@ -105,11 +125,18 @@ public static class NavBuilder
     private static Control BuildSectionHeader(
         StackPanel host, BoardsViewModel vm, RichBoardSection section, bool collapsed)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 2) };
+        var row = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("24,20,*,Auto"),
+            Height = 34,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
         var chevron = new Button
         {
             Content = BoardsIcons.Glyph(collapsed ? BoardsIcons.ChevronRight : BoardsIcons.ChevronDown, 11),
-            Padding = new Thickness(4),
+            Width = 24,
+            Height = 30,
+            Padding = new Thickness(2),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
@@ -124,6 +151,10 @@ public static class NavBuilder
                 CollapsedSections.Add(section.Id);
             vm.RequestNavRebuild();
         };
+        row.Children.Add(chevron);
+        var sectionIcon = BoardsIcons.Glyph(BoardsIcons.Section, 15, "Section");
+        Grid.SetColumn(sectionIcon, 1);
+        row.Children.Add(sectionIcon);
         var title = new Button
         {
             Content = new TextBlock
@@ -138,8 +169,10 @@ public static class NavBuilder
             BorderThickness = new Thickness(0),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(4),
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(4, 0),
         };
+        Grid.SetColumn(title, 2);
         ToolTip.SetTip(title, "Open first page of " + section.Title);
         Avalonia.Automation.AutomationProperties.SetName(title, "Section " + section.Title);
         title.Click += (_, _) => vm.SelectSection(section.Id);
@@ -172,9 +205,14 @@ public static class NavBuilder
             AddMenuItem(menu, "Delete", async () => await vm.DeleteSectionAsync(section.Id));
             title.ContextMenu = menu;
         }
-        row.Children.Add(chevron);
         row.Children.Add(title);
-        return row;
+        return new Border
+        {
+            Child = row,
+            Margin = new Thickness(0, 1, 0, 1),
+            CornerRadius = new CornerRadius(6),
+            Background = Brushes.Transparent,
+        };
     }
 
     private static Control BuildPageRow(
@@ -182,15 +220,24 @@ public static class NavBuilder
         int depth, bool hasChildren, bool collapsed)
     {
         var selected = vm.SelectedPageId == page.Id && vm.SelectedSectionId == section.Id;
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(depth * 16, 0, 0, 0) };
+        var row = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("24,20,*,Auto"),
+            Height = 34,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        var disclosure = new Button
+        {
+            Width = 24,
+            Height = 30,
+            Padding = new Thickness(2),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
         if (hasChildren)
         {
-            var disclosure = new Button
-            {
-                Content = BoardsIcons.Glyph(collapsed ? BoardsIcons.ChevronRight : BoardsIcons.ChevronDown, 10),
-                Padding = new Thickness(3), Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
+            disclosure.Content = BoardsIcons.Glyph(collapsed ? BoardsIcons.ChevronRight : BoardsIcons.ChevronDown, 10);
             ToolTip.SetTip(disclosure, collapsed ? "Expand subpages" : "Collapse subpages");
             Avalonia.Automation.AutomationProperties.SetName(disclosure,
                 (collapsed ? "Expand subpages of " : "Collapse subpages of ") + page.Title);
@@ -199,18 +246,25 @@ public static class NavBuilder
                 if (collapsed) CollapsedPages.Remove(page.Id); else CollapsedPages.Add(page.Id);
                 vm.RequestNavRebuild();
             };
-            row.Children.Add(disclosure);
         }
-        else row.Children.Add(new Border { Width = 20 });
+        else
+        {
+            disclosure.IsEnabled = false;
+            ToolTip.SetTip(disclosure, "No subpages");
+            Avalonia.Automation.AutomationProperties.SetName(disclosure, "No subpages for " + page.Title);
+        }
+        row.Children.Add(disclosure);
+        var pageIcon = BoardsIcons.Glyph(BoardsIcons.Page, 15, "Page");
+        Grid.SetColumn(pageIcon, 1);
+        row.Children.Add(pageIcon);
         var button = new Button
         {
-            Background = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
+            Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
-            CornerRadius = new CornerRadius(6),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(8, 6, 8, 6),
-            Margin = new Thickness(0, 1, 0, 1),
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(4, 0),
         };
         var pageTitle = new TextBlock
         {
@@ -222,9 +276,7 @@ public static class NavBuilder
         CuiPropertyPresentation.Set(pageTitle, "Foreground", pageTitle.Foreground,
             CuiPropertyLevel.Instance, "Boards page title text");
         button.Content = pageTitle;
-        CakeOS.Cui.Runtime.CuiPropertyPresentation.Set(button, "Background",
-            selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
-            CakeOS.Cui.Runtime.CuiPropertyLevel.Instance, "Boards page selection");
+        Grid.SetColumn(button, 2);
         ToolTip.SetTip(button, page.Title);
         Avalonia.Automation.AutomationProperties.SetName(button, "Page " + page.Title);
         button.Click += (_, _) => vm.SelectPage(section.Id, page.Id);
@@ -264,7 +316,13 @@ public static class NavBuilder
             button.ContextMenu = menu;
         }
         row.Children.Add(button);
-        return row;
+        return new Border
+        {
+            Child = row,
+            Margin = new Thickness((depth + 1) * 16, 1, 0, 1),
+            CornerRadius = new CornerRadius(6),
+            Background = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
+        };
     }
 
     private static void TakePendingRename(StackPanel host, BoardsViewModel vm)

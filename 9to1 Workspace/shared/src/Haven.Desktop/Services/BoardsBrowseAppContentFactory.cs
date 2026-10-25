@@ -50,6 +50,29 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             actualReduceMotion, actualThemePreference, takePreparedBoardRead, takePreparedBoardWrite, createAndOpenBoard);
     }
 
+    /// <summary>
+    /// Creates the same typed, per-tab Board creation/recovery host used by rich Boards sessions
+    /// for a Home-owned empty-library action. The callback remains the original Home/Files owner;
+    /// this adapter adds no creation authority or alternate result state.
+    /// </summary>
+    internal static IBoardsHomeBoardCreationHost CreateOriginalHomeBoardCreationHost(
+        Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken,
+            Task<BoardsHomeBoardCreationResult>> originalCreateAndOpen,
+        BrowseAppContentRequest actualRequest,
+        CancellationToken actualHostLifetime)
+    {
+        ArgumentNullException.ThrowIfNull(originalCreateAndOpen);
+        ArgumentNullException.ThrowIfNull(actualRequest);
+        if (actualRequest.TabId == Guid.Empty || string.IsNullOrWhiteSpace(actualRequest.ProfileId))
+            throw new UnauthorizedAccessException("Retain the original tab and actual Home profile.");
+        if (actualRequest.Privacy != BrowserTabPrivacy.Standard)
+            throw new NotSupportedException("An owned device Boards library is not a private browser session.");
+        if (!actualHostLifetime.CanBeCanceled)
+            throw new ArgumentException("Retain the actual Home tab lifetime.", nameof(actualHostLifetime));
+        actualHostLifetime.ThrowIfCancellationRequested();
+        return new HomeBoardCreationHost(originalCreateAndOpen, actualRequest, actualHostLifetime);
+    }
+
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -79,7 +102,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                 {
                     embeddedOwner = CreateEmbeddedArtifactHost(request, writeLifetime.Token);
                     var boardCreationHost = _createAndOpenBoard is null ? null :
-                        new HomeBoardCreationHost(_createAndOpenBoard, request, writeLifetime.Token);
+                        CreateOriginalHomeBoardCreationHost(_createAndOpenBoard, request, writeLifetime.Token);
                     return new BoardsWritableRichDocumentBrowseAppContentSession(
                         request, address, writeLease, writeLifetime, embeddedOwner, boardCreationHost);
                 }

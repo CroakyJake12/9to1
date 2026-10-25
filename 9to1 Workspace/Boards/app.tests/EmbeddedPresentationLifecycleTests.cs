@@ -40,7 +40,7 @@ public sealed class EmbeddedPresentationLifecycleTests
     {
         var (bytes, sectionId, embeddedPageId, nativePageId, reference) = MakeBoardWithEmbeddedWrite();
         TestUiThread.Run(() => { });
-        var owner = new DelayedEmbeddedHost(reference);
+        var owner = TestUiThread.Run(() => new DelayedEmbeddedHost(reference));
         var open = TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
             bytes, "files:document-2", "revision-1",
             (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")),
@@ -82,7 +82,7 @@ public sealed class EmbeddedPresentationLifecycleTests
     {
         var (bytes, sectionId, embeddedPageId, _, reference) = MakeBoardWithEmbeddedWrite();
         TestUiThread.Run(() => { });
-        var owner = new DelayedEmbeddedHost(reference);
+        var owner = TestUiThread.Run(() => new DelayedEmbeddedHost(reference));
         var presentation = PumpUi(TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
             bytes, "files:document-close-gate", "revision-1",
             (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")),
@@ -129,7 +129,7 @@ public sealed class EmbeddedPresentationLifecycleTests
     {
         var (bytes, sectionId, embeddedPageId, nativePageId, reference) = MakeBoardWithEmbeddedWrite();
         TestUiThread.Run(() => { });
-        var owner = new DelayedEmbeddedHost(reference);
+        var owner = TestUiThread.Run(() => new DelayedEmbeddedHost(reference));
         var presentation = PumpUi(TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
             bytes, "files:document-navigation-gate", "revision-1",
             (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")),
@@ -181,7 +181,7 @@ public sealed class EmbeddedPresentationLifecycleTests
     {
         var (bytes, sectionId, embeddedPageId, _, reference) = MakeBoardWithEmbeddedWrite();
         TestUiThread.Run(() => { });
-        var owner = new DelayedEmbeddedHost(reference);
+        var owner = TestUiThread.Run(() => new DelayedEmbeddedHost(reference));
         owner.Session.RevalidationResult = false;
         var presentation = PumpUi(TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
             bytes, "files:document-revalidation-gate", "revision-1",
@@ -217,7 +217,7 @@ public sealed class EmbeddedPresentationLifecycleTests
     {
         var (bytes, sectionId, embeddedPageId, _, reference) = MakeBoardWithEmbeddedWrite();
         TestUiThread.Run(() => { });
-        var owner = new DelayedEmbeddedHost(reference);
+        var owner = TestUiThread.Run(() => new DelayedEmbeddedHost(reference));
         owner.Session.CloseFailure = new IOException("close sentinel");
         var presentation = PumpUi(TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
             bytes, "files:document-publication-failure", "revision-1",

@@ -4,14 +4,13 @@
     <Action name="OpenRecentPage" command="OpenRecentPage" parameter="{Binding page.Target}" />
   </Actions>
   <Page>
-    <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr Auto">
+    <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr">
       <!-- Top document bar: file actions, title, save state, global actions -->
       <Container padding="12 8" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}">
         <Container Type="Grid" ColumnSizes="Auto 1fr Auto">
           <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" CellGap="4">
             <Container Type="Menu" ID="FileMenu">
               <Button Type="Menu Item" ID="FileMenuButton" Content="File" Interactive="{Binding CanEdit}" AccessibleName="Board file menu">
-                <Button Type="Menu Item" Content="New board" Action="NewBoard" />
                 <Button Type="Menu Item" Content="Retry opening created board" Action="RetryOpenCreatedBoard" Interactive="{Binding CanRetryHomeBoardOpen}" />
                 <Button Type="Menu Item" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" />
                 <Button Type="Menu Item" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" />
@@ -26,10 +25,13 @@
             <Button ID="UndoButton" Content="Undo" Action="Undo" Interactive="{Binding IsEditMode}" AccessibleName="Undo" />
             <Button ID="RedoButton" Content="Redo" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" />
           </Container>
-          <Input id="BoardTitleBox" accessible-name="Board title" font-size="20" font-weight="SemiBold" vertical-alignment="Center" margin="12 0" Type="Text" ID="BoardTitleBox" Column="1" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" BorderWidth="0" />
+          <Container Type="Vertical Stack" Column="1" CellGap="0">
+            <Input id="BoardTitleBox" accessible-name="Board title" font-size="20" font-weight="SemiBold" vertical-alignment="Center" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" BorderWidth="0" />
+            <Text ID="PageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Current Board, section and page" />
+          </Container>
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="2" CellGap="6">
-            <Button ID="EditViewToggle" Content="{Binding ModeLabel, fallback=Edit}" Action="ToggleEditView" Interactive="{Binding CanToggleEditMode}" AccessibleName="Switch between Edit and View mode" />
-            <Button ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="Lock or unlock freeform canvas layout" />
+            <Button ID="EditViewToggle" Content="{Binding ModeLabel, fallback=Editing}" Action="ToggleEditView" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
+            <Button ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
             <Text ID="SaveState" Text="{Binding SaveStateText, fallback=Saved}" FontSize="12" VerticalAlignment="Center" Margin="0 0 8 0" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
             <Button ID="ThemeButton" Content="Appearance" Action="ToggleTheme" AccessibleName="Toggle light or dark appearance" />
             <Container Type="Menu" ID="MoreMenu">
@@ -44,47 +46,45 @@
       </Container>
       <!-- Left navigation: search, sections/pages (built in code), add actions -->
       <Container padding="8" Type="Overlay" ID="NavPane" Row="1" Column="0">
-        <Container Type="Vertical Stack">
-          <Input id="NavSearchBox" accessible-name="Search sections and pages" placeholdertext="Search" margin="0 0 0 8" Type="Text" ID="NavSearchBox" />
-          <Button ID="BoardSwitcher" Action="ShowLanding" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open Boards picker" Margin="0 6 0 6" HorizontalAlignment="Stretch">
-            <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
-              <Image Source="icon:folder" Width="18" Height="18" AccessibleName="Board" />
-              <Text Text="{Binding BoardTitle, fallback=Your boards}" TextWrapping="Wrap" />
-            </Container>
-          </Button>
-          <Container verticalalignment="Stretch" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False">
+        <Container Type="Grid" RowSizes="Auto Auto Auto 1fr Auto" CellGap="4">
+          <Container Type="Horizontal Stack" Row="0" CellGap="8" VerticalAlignment="Center" Padding="4 6">
+            <Image Source="icon:boards" Width="22" Height="22" AccessibleName="Boards" />
+            <Text Text="Boards" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+          </Container>
+          <Container Type="Menu" ID="BoardSwitcherMenu" Row="1">
+            <Button Type="Menu Item" ID="BoardSwitcher" Content="{Binding BoardTitle, fallback=Your boards}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Current Board and board actions" HorizontalAlignment="Stretch">
+              <Button Type="Menu Item" Content="New Board…" Action="NewBoard" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
+              <Button Type="Menu Item" Content="Open Board…" Action="OpenBoard" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open an existing Board" />
+              <Button Type="Menu Item" Content="All Boards…" Action="ShowLanding" Interactive="{Binding CanSwitchBoard}" AccessibleName="Browse and switch Boards" />
+            </Button>
+          </Container>
+          <Input id="NavSearchBox" Row="2" accessible-name="Search sections and pages" placeholdertext="Search pages" margin="0 0 4 0" Type="Text" ID="NavSearchBox" />
+          <Container verticalalignment="Stretch" Type="Overlay" Row="3" VerticalScrolling="True" HorizontalScrolling="False">
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
-          <Container Type="Menu" Margin="0 8 0 0">
-            <Button Type="Menu Item" Content="+ New" Interactive="{Binding CanEdit}" AccessibleName="New content" ID="AddNewButton">
-              <Button Type="Menu Item" Content="Notes Page" Action="AddPage" AccessibleName="Create a notes page" />
+          <Container Type="Menu" Row="4" Margin="0 8 0 0">
+            <Button Type="Menu Item" Content="+ Add page or section" Interactive="{Binding CanEdit}" AccessibleName="Add a page or section" ID="AddNewButton">
+              <Button Type="Menu Item" Content="New page in this section" Action="AddPage" AccessibleName="Create a page in the current section" />
+              <Button Type="Menu Item" Content="New section" Action="AddSection" AccessibleName="Create a new section in this Board" />
               <Button Type="Menu Item" Content="Attach existing Write document…" Action="AddWritePage" Interactive="{Binding CanAddWritePage}" AccessibleName="Attach an existing Write document as a page" />
               <Button Type="Menu Item" Content="New Write document…" Action="CreateWritePage" Interactive="{Binding CanAddWritePage}" AccessibleName="Create a Write document as a page" />
-              <Button Type="Menu Item" Content="Subpage under selected page" Action="AddSubpage" AccessibleName="Create a nested subpage" />
-              <Button Type="Menu Item" Content="Board" Action="NewBoard" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate board file" />
-              <Button Type="Menu Item" Content="Retry opening created board" Action="RetryOpenCreatedBoard" Interactive="{Binding CanRetryHomeBoardOpen}" AccessibleName="Retry opening the same created board" />
-              <Button Type="Menu Item" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" AccessibleName="Retry finishing the created Board save" />
-              <Button Type="Menu Item" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
-              <Button Type="Menu Item" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
               <Button Type="Menu Item" Content="Attach existing Canvas…" Action="AddCanvasPage" Interactive="{Binding CanAddCanvasPage}" AccessibleName="Attach an existing Canvas as a page" />
               <Button Type="Menu Item" Content="New Canvas…" Action="CreateCanvasPage" Interactive="{Binding CanAddCanvasPage}" AccessibleName="Create a Canvas as a page" />
               <Button Type="Menu Item" Content="{Binding LinkCreatedEmbeddedPageLabel}" Action="LinkCreatedEmbeddedPage" Interactive="{Binding CanLinkCreatedEmbeddedPage}" AccessibleName="Link the created owner page to its original Board section" />
-              <Button Type="Menu Item" Content="Section" Action="AddSection" AccessibleName="Create a section" />
             </Button>
           </Container>
         </Container>
       </Container>
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
       <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
-        <Container Type="Vertical Stack" Row="0" Active="{Binding ShowNativeAuthoring}">
-          <Container Type="Wrap" CellGap="6" Padding="12 6" AccessibleName="Text formatting">
+        <Container Type="Grid" Row="0" ColumnSizes="Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar">
+          <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="12 6" AccessibleName="Text formatting">
             <Button ID="RangeBold" Content="B" FontWeight="Bold" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
             <Button ID="RangeItalic" Content="I" FontStyle="Italic" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic" />
             <Button ID="RangeUnderline" Content="U" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" Tooltip="Underline" />
             <Button ID="RangeStrike" Content="S" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough" />
-            <Text Text="{Binding TextRangeSummary}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
-          <Container Type="Vertical Stack" ID="ToolbarHost" />
+          <Container Type="Vertical Stack" ID="ToolbarHost" Column="1" />
         </Container>
         <Container Type="Vertical Stack" ID="ContextHost" Row="1" Active="{Binding ContextVisible}" Padding="12 6" Background="{Resource CuiPanelBrush}">
           <If Condition="{Binding ContextIsTable}">
@@ -179,7 +179,6 @@
           <Container horizontalalignment="Stretch" cornerradius="0" padding="0" margin="0" Type="Overlay" ID="PageCard" BorderWidth="0">
             <Container Type="Grid" ID="PageSurface">
               <Container margin="40 32" Type="Vertical Stack" ID="DocumentContentLayer">
-                <Text ID="PageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" AccessibleName="Current Board and page" />
                 <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />
                 <Container Type="Vertical Stack" ID="EmbeddedArtifactHost" />
@@ -236,12 +235,6 @@
           </Container>
         </If>
         <If Condition="{Binding HasNoRecentPages}"><Text Text="Pages you open will appear here." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></If>
-      </Container>
-      <!-- Minimal status footer -->
-      <Container padding="12 6" Type="Overlay" ID="FooterBar" Row="2" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}">
-        <Container Type="Horizontal Stack">
-          <Text text="{Binding SaveStateText, fallback=Saved}" font-size="12" font-weight="SemiBold" vertical-alignment="Center" />
-        </Container>
       </Container>
     </Container>
   </Page>
