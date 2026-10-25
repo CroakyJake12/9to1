@@ -218,8 +218,8 @@ public sealed partial class FilesNativeBrowserService
             if (_retiring || !lifetime() || !_browser._originalPages.TryGetValue(page, out var original) ||
                 original.Actor != actor || page.StoreID != original.Workspace.Configuration.StoreId ||
                 !page.Items.Any(item => ReferenceEquals(item, row)) || !IsBoardDocumentCandidate(row) ||
-                row.ParentId?.Value != page.ParentID ||
-                sourceId != GetSourceId(page.StoreID, row.ParentId!.Value.Value, row.Id.Value) ||
+                row.ParentId is not { } selectedParent || page.ParentID != selectedParent.Value ||
+                sourceId != GetSourceId(page.StoreID, selectedParent.Value, row.Id.Value) ||
                 sessionId.Length is 0 or > 256)
                 throw new UnauthorizedAccessException("Save the same current selected Files board through its original Home session.");
             if (!Guid.TryParse(actor.ProfileId, out var profile) || profile == Guid.Empty)
@@ -297,9 +297,11 @@ public sealed partial class FilesNativeBrowserService
                 if (!Guid.TryParse(operation.ExpectedRevision, out var expectedRevision) ||
                     NormalizeSha256(row.ContentHash) != operation.ExpectedSha256 || row.CurrentRevisionId?.Value != expectedRevision)
                     return new(false, null, "FilesRevisionConflict", "The selected Files board revision or content hash changed.", true);
+                if (row.ParentId is not { } selectedParent)
+                    return new(false, null, "FilesParentUnavailable", "The selected Files board has no canonical parent folder.", true);
 
                 var parentResult = await source.Observe(() => workspace.Provider.GetForOriginalStoreAsync(
-                    operation.Page.StoreID, row.ParentId!.Value, token)).ConfigureAwait(false);
+                    operation.Page.StoreID, selectedParent, token)).ConfigureAwait(false);
                 if (!parentResult.IsSuccess || parentResult.Value is not { Kind: HostedItemKind.Folder, CurrentRevisionId: { } parentRevision })
                     return new(false, null, "FilesParentUnavailable", "The selected Files parent folder is unavailable.", true);
                 var parentFolder = parentResult.Value
@@ -317,12 +319,14 @@ public sealed partial class FilesNativeBrowserService
                 if (!content.IsSuccess || content.Value is not { } currentContent ||
                     currentContent.Revision.ItemId != row.Id || currentContent.Revision.Id != row.CurrentRevisionId ||
                     NormalizeSha256(currentContent.Revision.ContentHash) != operation.ExpectedSha256 ||
-                    currentContent.Revision.SizeBytes != row.SizeBytes || currentContent.UploadAnchorFolderId != row.ParentId ||
+                    currentContent.Revision.SizeBytes != row.SizeBytes || currentContent.UploadAnchorFolderId != selectedParent ||
                     string.IsNullOrWhiteSpace(currentContent.ProviderContentReference))
                     return new(false, null, "FilesBoardSourceUnavailable", "This Files board has no verified immutable source revision to update.", true);
+                if (currentContent.UploadAnchorFolderId is not { } anchor)
+                    return new(false, null, "FilesBoardAnchorUnavailable", "The selected board has no registered content anchor.", true);
 
                 var profile = Guid.Parse(operation.Actor.ProfileId);
-                var anchors = workspace.Configuration.AppFolders.Where(pair => pair.Value == currentContent.UploadAnchorFolderId).Take(2).ToArray();
+                var anchors = workspace.Configuration.AppFolders.Where(pair => pair.Value == anchor).Take(2).ToArray();
                 if (anchors.Length != 1)
                     return new(false, null, "FilesBoardAnchorUnavailable", "The current Files board has no unique registered content anchor.", true);
                 async ValueTask RequireWrite(CancellationToken ct)
@@ -335,10 +339,10 @@ public sealed partial class FilesNativeBrowserService
                 }
                 await RequireWrite(token).ConfigureAwait(false);
                 var binding = await source.Observe(() => workspace.Directories.ResolveOriginalRegisteredFolderAsync(
-                    profile, anchors[0].Key, currentContent.UploadAnchorFolderId.Value, workspace.Provider,
+                    profile, anchors[0].Key, anchor, workspace.Provider,
                     operation.Page.StoreID, true, ct => RequireWrite(ct), token)).ConfigureAwait(false);
                 if (!binding.IsSuccess || binding.Value is not { } originalBinding ||
-                    originalBinding.FolderId != currentContent.UploadAnchorFolderId || originalBinding.ProfileId != profile ||
+                    originalBinding.FolderId != anchor || originalBinding.ProfileId != profile ||
                     originalBinding.LocationId != row.LocationId)
                     return new(false, null, "FilesBoardAnchorUnavailable", "The selected board content anchor is no longer registered for this Home profile.", true);
 
@@ -443,7 +447,7 @@ public sealed partial class FilesNativeBrowserService
                         actual => operation.Materialization = actual).ConfigureAwait(false);
                     if (!_physicalOwner.IsIssuedOriginalBoardDocumentMaterialization(operation.Materialization) ||
                         operation.Materialization.OriginalRecord is not { } materialized ||
-                        materialized.FilesStoreId != operation.Page.StoreID || materialized.ParentFolderId != row.ParentId!.Value.Value ||
+                        materialized.FilesStoreId != operation.Page.StoreID || materialized.ParentFolderId != selectedParent.Value ||
                         materialized.FileId != row.Id.Value || materialized.ExpectedRevisionId != expectedRevision ||
                         materialized.NewRevisionId != operation.NewRevisionId || materialized.DocumentId != operation.DocumentId ||
                         materialized.SizeBytes != operation.Payload.Length ||
@@ -457,7 +461,7 @@ public sealed partial class FilesNativeBrowserService
                         exactMaterialization, source.OriginalSynchronousScope, source.RetainOriginalTask, token)).ConfigureAwait(false);
                     await RequireWrite(token).ConfigureAwait(false);
 
-                    var uploaded = new FilesUploadedContent(row.Id, row.ParentId, row.Name, row.ContentType,
+                    var uploaded = new FilesUploadedContent(row.Id, selectedParent, row.Name, row.ContentType,
                         new(operation.NewRevisionId), new(expectedRevision), operation.Actor.ActorId, DateTimeOffset.UtcNow,
                         operation.Payload.Length, operation.PayloadSha256, materialized.RelativeContentReference);
                     var guard = new FilesCommitAuthorityGuard(operation.Actor.ActorId, async ct =>
