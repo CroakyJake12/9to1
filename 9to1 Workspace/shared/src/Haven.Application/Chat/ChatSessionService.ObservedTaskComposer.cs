@@ -40,6 +40,105 @@ public sealed partial class ChatSessionService
             throw new InvalidDataException("The actual follow-up reply belongs to a different Task/Run/context.");
         return reply; // Actual durable ACK, not a statement that a steer was applied.
     }
+    private bool TryGetLiveResumedTaskComposerRun(TaskRunOriginalInitialChatObservationLease initial,
+        TaskRunOriginalResumeObservationLease resume, out TaskRunInvocationCustody? actual)
+    {
+        actual = null;
+        if (!IsIssuedObservedTaskComposerResume(initial, resume) || taskCoordinator?.HasCommandAuthority != true ||
+            resume.Original is not HostedOriginalRunResume hosted) return false;
+        lock (hosted.Gate)
+        {
+            if (hosted.RetirementRequested || hosted.Producer is null || hosted.Producer.IsCompleted) return false;
+            if (hosted.ToolCheckpoint is { Claimed: true, Bound: true } checkpoint &&
+                ReferenceEquals(checkpoint.Issuer, taskCoordinator) && ReferenceEquals(checkpoint.OriginalHost, hosted) && ReferenceEquals(checkpoint.Next.OriginalProcessProducer, hosted.Source))
+                actual = checkpoint.Next;
+            else if (hosted.Source.OriginalContinuationCustody?.OriginalColdPreparation is { BodyBound: true } cold &&
+                ReferenceEquals(cold.Owner, taskCoordinator) && ReferenceEquals(cold.Invocation.OriginalProcessProducer, hosted.Source.OriginalContinuationCustody.OriginalChild))
+                actual = cold.Invocation;
+            else if (hosted.Source.OriginalContinuationCustody?.OriginalPreparation is { Claimed: true, Bound: true } same &&
+                ReferenceEquals(same.Issuer, taskCoordinator) && ReferenceEquals(same.Next.OriginalProcessProducer, hosted.Source.OriginalContinuationCustody.OriginalChild))
+                actual = same.Next;
+            if (actual is null || !ReferenceEquals(actual.Issuer, taskCoordinator) || !ReferenceEquals(actual.OriginalSelf, actual) ||
+                actual.OriginalBinding is not { } binding || binding.TaskId != resume.CanonicalTaskContext.TaskId ||
+                binding.ExecutionId != resume.CanonicalTaskContext.ExecutionId || binding.ContextId != initial.ConversationId ||
+                actual.OwnedCleanupTerminal || actual.Causes.Count != 0 || actual.OriginalProcessProducer is not { } producer ||
+                producer.ActualStop is not null || producer.ActualDispose is not null ||
+                hosted.ActualRun is not null && !ReferenceEquals(hosted.ActualRun, actual))
+            { actual = null; return false; }
+            return true;
+        }
+    }
+    public bool CanSubmitObservedResumedTaskFollowUp(TaskRunOriginalInitialChatObservationLease initial,
+        TaskRunOriginalResumeObservationLease resume) => TryGetLiveResumedTaskComposerRun(initial, resume, out _);
+
+    public async Task<FollowUpDecision> SubmitObservedResumedTaskFollowUpAsync(
+        TaskRunOriginalInitialChatObservationLease initial, TaskRunOriginalResumeObservationLease resume,
+        string instruction, TaskFollowUpMode mode, CancellationToken commandToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(instruction);
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        if (!TryGetLiveResumedTaskComposerRun(initial, resume, out var original))
+            throw new InvalidOperationException("The same issued continuation cannot receive a live follow-up.");
+        var context = resume.CanonicalTaskContext;
+        var coordinator = resume.Issuer;
+        await safety.EnsureMayActAsync(context.ContextId, "chat.task-follow-up", commandToken).ConfigureAwait(false);
+        var current = await coordinator.GetAsync(context.TaskId, commandToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("The original continued task is unavailable.");
+        if (current.ContextId != initial.ConversationId || current.ExecutionId != context.ExecutionId ||
+            current.State is TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled or TaskExecutionLifecycle.Failed ||
+            !TryGetLiveResumedTaskComposerRun(initial, resume, out var latest) || !ReferenceEquals(original, latest))
+            throw new InvalidOperationException("The original continuation changed or is no longer live.");
+        var reply = await coordinator.SubmitFollowUpAsync(context.TaskId, instruction, mode, null, null, commandToken).ConfigureAwait(false);
+        if (reply.Snapshot.TaskId != context.TaskId || reply.Snapshot.ExecutionId != context.ExecutionId || reply.Snapshot.ContextId != initial.ConversationId)
+            throw new InvalidDataException("The continued follow-up acknowledgement belongs to another Task/Run/context.");
+        return reply;
+    }
+    public async Task<TaskRunOriginalRunControlResult> PauseObservedResumedTaskComposerAsync(
+        TaskRunOriginalInitialChatObservationLease initial, TaskRunOriginalResumeObservationLease resume, CancellationToken commandToken)
+    {
+        if (!TryGetLiveResumedTaskComposerRun(initial, resume, out var original))
+            throw new InvalidOperationException("The same issued continuation is no longer live for Pause.");
+        var context = resume.CanonicalTaskContext;
+        await safety.EnsureMayActAsync(context.ContextId, "chat.pause", commandToken).ConfigureAwait(false);
+        var current = await resume.Issuer.GetOriginalRunControlAvailabilityAsync(context.TaskId, context.ExecutionId, commandToken).ConfigureAwait(false);
+        if (!current.CanPause || !TryGetLiveResumedTaskComposerRun(initial, resume, out var latest) || !ReferenceEquals(original, latest))
+            throw new InvalidOperationException("The original continuation changed before Pause admission.");
+        var result = await resume.Issuer.PauseOriginalRunAsync(context.TaskId, context.ExecutionId, commandToken).ConfigureAwait(false);
+        if (result.Kind != TaskRunOriginalRunControlKind.Pause || result.CanonicalTaskContext.TaskId != context.TaskId ||
+            result.CanonicalTaskContext.ExecutionId != context.ExecutionId || result.CanonicalTaskContext.ContextId != context.ContextId)
+            throw new InvalidDataException("The continued Pause acknowledgement belongs to another Task/Run/context.");
+        return result;
+    }
+    /// <summary>Same-owner invalidation only; signals carry no snapshot/permission grant. The
+    /// borrowing view owns this actual event registration and joins its own posted projections.</summary>
+    public IDisposable WatchObservedResumedTaskComposer(TaskRunOriginalInitialChatObservationLease initial,
+        TaskRunOriginalResumeObservationLease resume, Action invalidated)
+    {
+        ArgumentNullException.ThrowIfNull(invalidated);
+        if (!IsIssuedObservedTaskComposerResume(initial, resume))
+            throw new UnauthorizedAccessException("The same Chat owner did not issue this continuation observation.");
+        return new ComposerTaskInvalidation(resume.Issuer, resume.CanonicalTaskContext, invalidated);
+    }
+    private sealed class ComposerTaskInvalidation : IDisposable
+    {
+        private readonly TaskExecutionCoordinator _owner;
+        private readonly EventHandler<TaskExecutionSnapshot> _handler;
+        private int _disposed;
+        internal ComposerTaskInvalidation(TaskExecutionCoordinator owner, ProviderExecutionContext same, Action invalidated)
+        {
+            _owner = owner;
+            _handler = (_, snapshot) =>
+            {
+                if (Volatile.Read(ref _disposed) == 0 && snapshot.TaskId == same.TaskId &&
+                    snapshot.ExecutionId == same.ExecutionId && snapshot.ContextId == same.ContextId) invalidated();
+            };
+            owner.SnapshotChanged += _handler;
+        }
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) == 0) _owner.SnapshotChanged -= _handler;
+        }
+    }
     private (TaskExecutionCoordinator Owner, ProviderExecutionContext Context) RequireObservedTaskComposerIdentity(
         TaskRunOriginalInitialChatObservationLease sameObservation)
     {

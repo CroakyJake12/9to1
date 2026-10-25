@@ -50,6 +50,7 @@ public sealed partial class NewChatPage
                 _currentOriginalInitialTaskPresentation = null;
         }
         foreach (var original in stale) CaptureOriginalInitialTaskStop(original.Owner);
+        RetireNativeTaskResumePresentationsForNewTarget();
     }
 
     private bool TryStopOriginalCanonicalTaskResponse()

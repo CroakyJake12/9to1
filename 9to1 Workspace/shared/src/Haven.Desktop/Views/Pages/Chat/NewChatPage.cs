@@ -244,7 +244,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public bool HasStarted => _messages.Count > 0;
     public string ActiveAgentName => _activeAgent?.Name ?? "No Agent (Default)";
     public ChatActionMode EffectiveChatActionMode => _chatActionModeOverride ?? ChatActionMode.AllowBasicActions;
-    public bool IsSending => _isSending;
+    public bool IsSending => _isSending || LiveNativeTaskResume() is not null;
 
     /// <summary>Typed access to the current pending composer attachments owned by this page.</summary>
     public IReadOnlyList<MessageAttachment> PendingComposerAttachments => _persistedAttachments;
@@ -272,7 +272,12 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public bool TryStopResponse()
     {
-        if (_conversation.Mode == HavenMode.Tasks) return TryStopOriginalCanonicalTaskResponse();
+        if (_conversation.Mode == HavenMode.Tasks)
+        {
+            if (!CanPauseNativeComposerTask()) return false;
+            _ = PauseNativeComposerTaskAsync(); // Same retained pause driver; ACK alone changes the paused state.
+            return true;
+        }
         var cancellation = _sendCancellation;
         if (cancellation is null || cancellation.IsCancellationRequested) return false;
 
@@ -1110,7 +1115,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // instead of discarding SubmitCurrentInstructionAsync through the legacy event.
         _scene.ComposerDirectSend = _ => new ValueTask(SubmitCurrentInstructionAsync());
         _scene.ComposerSource.TaskActions = new NativeTaskComposerActions(this);
-        _scene.ComposerSource.ActionContextIdentity = () => CaptureOriginalConversationTarget();
+        _scene.ComposerSource.ActionContextIdentity = CaptureOriginalComposerActionIdentity;
         _scene.StopRequested += OnStopRequested;
         _composerInput.Invalidated += OnComposerEditCompleted;
         _scene.ResolveProblemsRequested += (_, _) =>

@@ -51,6 +51,22 @@ internal sealed class SpaceOriginalRunResumeObservation
         ActualObservation = ObserveOriginalAsync();
     }
 
+    internal bool CanUseComposerLease(Func<TaskRunOriginalResumeObservationLease, bool> available)
+    {
+        TaskRunOriginalResumeObservationLease? lease;
+        lock (_gate) lease = _lease;
+        return lease is not null && !_retirement.IsRetiring && !_sceneIsRetiring() && _isIssued(lease) && available(lease);
+    }
+    internal Task<T> AcquireActualComposerCommand<T>(Func<TaskRunOriginalResumeObservationLease, Task<T>> acquire)
+    {
+        TaskRunOriginalResumeObservationLease lease;
+        lock (_gate) lease = _lease ?? throw new InvalidOperationException("The actual continuation lease is unavailable.");
+        if (_retirement.IsRetiring || _sceneIsRetiring()) throw new InvalidOperationException("The continuation observation has retired.");
+        DemandIssued(lease);
+        Task<T>? actual = null;
+        AcquirePhysicalSource(() => actual = acquire(lease));
+        return actual ?? throw new InvalidOperationException("The continuation command returned no original Task.");
+    }
     internal Task<TaskRunOriginalResumeObservationLease?> ActualAcquisition => _actualAcquisition;
     internal Task<TaskRunOriginalResumeObservationResult?> ActualObservation { get; }
     internal Task? OriginalClose => _retirement.OriginalClose;

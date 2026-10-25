@@ -33,10 +33,13 @@ internal sealed partial class ChatHavenScene
 
         public string Draft { get => _scene.Input.Text; set => _scene.Input.Text = value ?? string.Empty; }
         public string Placeholder { get; set; } = "Ask Haven anything";
-        public bool IsSending => _scene._isSending;
+        public bool IsSending => _scene._isSending || ActiveTask?.IsRunning == true;
         public bool IsSafetyLocked => _scene._safetyLocked;
         public bool HasAdd { get; set; } = true;
         public bool CanStop => ActiveTask is { } task ? task.CanStop : _scene._isSending;
+        public bool CanRefreshTaskControls => ActiveTask?.CanRefreshControls == true;
+        public ValueTask RefreshTaskControls() => ActiveTask is { CanRefreshControls: true } task ? task.RefreshControls() :
+            ValueTask.FromException(new InvalidOperationException("The original task controls are unavailable."));
         public bool CanSteer => ActiveTask?.CanSteer == true;
         public bool CanPause => ActiveTask?.CanPause == true;
         public bool IsPassPaused => ActiveTask?.IsPassPaused == true;

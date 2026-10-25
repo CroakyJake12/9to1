@@ -150,6 +150,9 @@
 
     <Container id="settings-panel" Type="Wrap" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowSettings}" accessible-name="Thread settings panel">
+      <Button id="refresh-task-actions" action="composer.refresh-task-controls" content="Refresh task actions"
+              IsVisible="{Binding Composer.CanRefreshTaskControls}" MinHeight="44"
+              accessible-name="Refresh this original task's available actions" />
       <Text text="Actions:" font-size="12" font-weight="SemiBold" />
       <Button action="composer.set-action-mode.AllowAllActions" content="All" font-size="12" />
       <Button action="composer.set-action-mode.AllowBasicActions" content="Basic" font-size="12" />
