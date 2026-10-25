@@ -13,6 +13,9 @@
               <Button Type="Menu Item" ID="FileMenuButton" Content="File" Interactive="{Binding CanEdit}" AccessibleName="Board file menu">
                 <Button Type="Menu Item" Content="New board" Action="NewBoard" />
                 <Button Type="Menu Item" Content="Retry opening created board" Action="RetryOpenCreatedBoard" Interactive="{Binding CanRetryHomeBoardOpen}" />
+                <Button Type="Menu Item" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" />
+                <Button Type="Menu Item" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" />
+                <Button Type="Menu Item" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" />
                 <Button Type="Menu Item" Content="Open…" Action="OpenBoard" />
                 <Button Type="Menu Item" Content="Save" Action="SaveBoard" />
                 <Button Type="Menu Item" Content="Save As…" Action="SaveAsBoard" />
@@ -60,6 +63,9 @@
               <Button Type="Menu Item" Content="Subpage under selected page" Action="AddSubpage" AccessibleName="Create a nested subpage" />
               <Button Type="Menu Item" Content="Board" Action="NewBoard" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate board file" />
               <Button Type="Menu Item" Content="Retry opening created board" Action="RetryOpenCreatedBoard" Interactive="{Binding CanRetryHomeBoardOpen}" AccessibleName="Retry opening the same created board" />
+              <Button Type="Menu Item" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" AccessibleName="Retry finishing the created Board save" />
+              <Button Type="Menu Item" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
+              <Button Type="Menu Item" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
               <Button Type="Menu Item" Content="Canvas (coming later)" Interactive="False" AccessibleName="Canvas unavailable, coming later" AccessibleDescription="Canvas is not available in this Boards host yet." />
               <Button Type="Menu Item" Content="Section" Action="AddSection" AccessibleName="Create a section" />
             </Button>

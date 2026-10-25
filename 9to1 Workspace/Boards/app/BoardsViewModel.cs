@@ -53,6 +53,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private IReadOnlyList<RecentPageCard> _recentPageCards = [];
     private string _landingSearchQuery = string.Empty;
     private (string PageId, string BlockId, int CaretIndex)? _pendingTextFocus;
+    private bool _homeCreationOperationInProgress;
 
     private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
     private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
@@ -202,7 +203,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool CanToggleEditMode => CanEdit;
     public bool CanSwitchBoard => CanEdit && _session is not IBoardSessionCapabilities { CanSwitchBoard: false };
     public bool CanSaveAs => CanEdit && _session is not IBoardSessionCapabilities { CanSaveAs: false };
-    public bool CanCreateBoard => CanSwitchBoard || CanEdit && _homeBoardCreationHost is not null;
+    public bool CanCreateBoard => CanSwitchBoard || CanEdit && _homeBoardCreationHost is not null &&
+        !_homeCreationOperationInProgress && !_homeBoardCreationHost.HasUnresolvedCreation;
     public bool CanAddWritePage => _embeddedArtifactHost is not null && CanEdit && _isEditMode;
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
     public string SelectedPageType => CurrentPage().PageType;
@@ -270,9 +272,25 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         if ((!CanSwitchBoard && command is ("ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or "OpenBoard")) ||
             (!CanSaveAs && command == "SaveAsBoard") ||
-            (!CanSwitchBoard && command == "NewBoard" && (_homeBoardCreationHost is null || _homeBoardCreationHost.CanRetryOpenCreatedBoard)))
+            (!CanSwitchBoard && command == "NewBoard" && _homeBoardCreationHost is null))
         {
             Set("StatusText", "This board source does not grant that action.");
+            return;
+        }
+        if (!CanSwitchBoard && command == "NewBoard" && _homeCreationOperationInProgress)
+        {
+            Set("StatusText", "A Board creation is already in progress.");
+            return;
+        }
+        if (!CanSwitchBoard && command == "NewBoard" && _homeBoardCreationHost?.HasUnresolvedCreation == true)
+        {
+            Set("StatusText", _homeBoardCreationHost.CanRetryCreationSettlement
+                ? "Board created; saving is still finishing. Retry before opening it."
+                : _homeBoardCreationHost.CanOpenRecordedBoard
+                    ? "Board found; its save status could not be confirmed. Open the saved Board to continue."
+                : _homeBoardCreationHost.CanRetryOpenCreatedBoard
+                    ? "Board created, opening failed. Retry opens the same Board."
+                    : "Unable to confirm whether this Board was saved. Creating another is disabled while Home checks.");
             return;
         }
         if (command == "ToggleEditView")
@@ -301,6 +319,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 break;
             case "RetryOpenCreatedBoard":
                 await RetryOpenCreatedHomeBoardAsync(cancellationToken);
+                break;
+            case "RetryBoardCreationSettlement":
+                await RetryHomeBoardCreationSettlementAsync(cancellationToken);
+                break;
+            case "CheckSavedBoard":
+                await InspectHomeBoardCreationAsync(cancellationToken);
+                break;
+            case "OpenRecordedBoard":
+                await OpenRecordedHomeBoardAsync(cancellationToken);
                 break;
             case "NewMenu":
                 NewMenuRequested?.Invoke();
@@ -524,6 +551,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             NewBoardRequested?.Invoke();
             return;
         }
+        if (_homeCreationOperationInProgress)
+        {
+            Set("StatusText", "A Board creation is already in progress.");
+            return;
+        }
+        _homeCreationOperationInProgress = true;
+        RefreshHomeBoardCreationAvailability();
         try
         {
             var draft = HavenBoardDocumentCodec.CreateNew();
@@ -539,11 +573,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             throw;
         }
-        catch (Exception error)
+        catch (Exception)
         {
-            Set("StatusText", "Board creation or opening was interrupted. Check the Boards Library before creating another Board. " + FirstLine(error.Message));
+            Set("StatusText", "Unable to confirm whether this Board was saved. Creating another is disabled while Home checks.");
         }
-        finally { RefreshHomeBoardCreationAvailability(); }
+        finally { _homeCreationOperationInProgress = false; RefreshHomeBoardCreationAvailability(); }
     }
 
     private async Task RetryOpenCreatedHomeBoardAsync(CancellationToken cancellationToken)
@@ -555,6 +589,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             RefreshHomeBoardCreationAvailability();
             return;
         }
+        if (_homeCreationOperationInProgress)
+        {
+            Set("StatusText", "A Board operation is already in progress.");
+            return;
+        }
+        _homeCreationOperationInProgress = true;
+        RefreshHomeBoardCreationAvailability();
         try
         {
             var result = await host.RetryOpenCreatedBoardAsync(cancellationToken);
@@ -568,7 +609,80 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             Set("StatusText", "Could not open the created Board. Retry remains available. " + FirstLine(error.Message));
         }
-        finally { RefreshHomeBoardCreationAvailability(); }
+        finally { _homeCreationOperationInProgress = false; RefreshHomeBoardCreationAvailability(); }
+    }
+
+    private async Task RetryHomeBoardCreationSettlementAsync(CancellationToken cancellationToken)
+    {
+        var host = _homeBoardCreationHost;
+        if (host is null || !host.CanRetryCreationSettlement)
+        {
+            Set("StatusText", "There is no Board save waiting to finish.");
+            RefreshHomeBoardCreationAvailability();
+            return;
+        }
+        if (_homeCreationOperationInProgress)
+        {
+            Set("StatusText", "A Board operation is already in progress.");
+            return;
+        }
+        _homeCreationOperationInProgress = true;
+        RefreshHomeBoardCreationAvailability();
+        try
+        {
+            ApplyHomeBoardCreationResult(await host.RetryCreationSettlementAsync(cancellationToken));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            Set("StatusText", "Board creation is still being checked. Creating again is disabled until the outcome is confirmed. " + FirstLine(error.Message));
+        }
+        finally { _homeCreationOperationInProgress = false; RefreshHomeBoardCreationAvailability(); }
+    }
+
+    private async Task InspectHomeBoardCreationAsync(CancellationToken cancellationToken)
+    {
+        var host = _homeBoardCreationHost;
+        if (host is null || !host.CanInspectUnknownCreation)
+        {
+            Set("StatusText", "There is no unconfirmed Board save to check.");
+            RefreshHomeBoardCreationAvailability();
+            return;
+        }
+        if (_homeCreationOperationInProgress) { Set("StatusText", "A Board operation is already in progress."); return; }
+        _homeCreationOperationInProgress = true;
+        RefreshHomeBoardCreationAvailability();
+        try { ApplyHomeBoardCreationResult(await host.InspectUnknownCreationAsync(cancellationToken)); }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception error)
+        {
+            Set("StatusText", "Unable to confirm whether this Board was saved. Creating another is disabled while Home checks. " + FirstLine(error.Message));
+        }
+        finally { _homeCreationOperationInProgress = false; RefreshHomeBoardCreationAvailability(); }
+    }
+
+    private async Task OpenRecordedHomeBoardAsync(CancellationToken cancellationToken)
+    {
+        var host = _homeBoardCreationHost;
+        if (host is null || !host.CanOpenRecordedBoard)
+        {
+            Set("StatusText", "There is no confirmed saved Board ready to open.");
+            RefreshHomeBoardCreationAvailability();
+            return;
+        }
+        if (_homeCreationOperationInProgress) { Set("StatusText", "A Board operation is already in progress."); return; }
+        _homeCreationOperationInProgress = true;
+        RefreshHomeBoardCreationAvailability();
+        try { ApplyHomeBoardCreationResult(await host.OpenRecordedBoardAsync(cancellationToken)); }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception error)
+        {
+            Set("StatusText", "The saved Board could not be opened. Its receipt is retained so you can retry. " + FirstLine(error.Message));
+        }
+        finally { _homeCreationOperationInProgress = false; RefreshHomeBoardCreationAvailability(); }
     }
 
     private void ApplyHomeBoardCreationResult(BoardsHomeBoardCreationResult result)
@@ -584,9 +698,21 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit:
                 Set("StatusText", "New Board was not created: " + FirstLine(result.Message ?? result.Code ?? "Files did not commit the artifact."));
                 break;
+            case BoardsHomeBoardCreationOutcome.HomeAuditPending:
+                Set("StatusText", "Board created; saving is still finishing. Retry before opening it.");
+                break;
+            case BoardsHomeBoardCreationOutcome.OutcomeUnknown:
+                Set("StatusText", "Unable to confirm whether this Board was saved. Creating another is disabled while Home checks.");
+                break;
+            case BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit:
+                Set("StatusText", "Board found; its save status could not be confirmed. Open the saved Board to continue.");
+                break;
             case BoardsHomeBoardCreationOutcome.CreatedOpenFailed:
                 Set("StatusText", "Board created, opening failed. Retry opens the same Board." +
                     (string.IsNullOrWhiteSpace(result.Message) ? string.Empty : " " + FirstLine(result.Message)));
+                break;
+            case BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning:
+                Set("StatusText", "Board opened; Home could not confirm the final save status. Creating another Board remains disabled.");
                 break;
             default:
                 Set("StatusText", "Board creation returned an unsupported result. Check the Boards Library before creating another Board.");
@@ -597,13 +723,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private void RefreshHomeBoardCreationAvailability()
     {
-        Set("CanCreateBoard", CanCreateBoard && _homeBoardCreationHost?.CanRetryOpenCreatedBoard != true);
-        Set("CanRetryHomeBoardOpen", _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
+        Set("CanCreateBoard", CanCreateBoard);
+        Set("CanRetryHomeBoardOpen", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
+        Set("CanRetryBoardCreationSettlement", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryCreationSettlement == true);
+        Set("CanCheckSavedBoard", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanInspectUnknownCreation == true);
+        Set("CanOpenRecordedBoard", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanOpenRecordedBoard == true);
     }
 
     private static bool AllowedWhileViewing(string command) => command is
         "OpenRecentBoard" or "OpenRecentPage" or
-        "NewBoard" or "RetryOpenCreatedBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or
+        "NewBoard" or "RetryOpenCreatedBoard" or "RetryBoardCreationSettlement" or "CheckSavedBoard" or "OpenRecordedBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or
         "FileMenu" or "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ToggleTheme" or
         "SelectSection1" or "SelectSection2" or "SelectPage1" or "SelectPage2" or "ToggleEditView";
 

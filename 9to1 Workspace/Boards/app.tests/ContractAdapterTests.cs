@@ -65,6 +65,61 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Pending_home_settlement_blocks_duplicate_create_and_retries_only_the_original_attempt()
+    {
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(CreateNotesDocument("Pinned Board"),
+            (_, _) => ValueTask.FromResult(true));
+        await using (adapter)
+        {
+            var host = new PendingSettlementBoardCreationHost();
+            var viewModel = new BoardsViewModel(adapter, homeBoardCreationHost: host);
+            await viewModel.DispatchAsync("NewBoard", null);
+            Assert.Equal(1, host.CreateCount);
+            Assert.False(viewModel.TryGetValue("CanCreateBoard", out var canCreate) && canCreate is true);
+            Assert.True(viewModel.TryGetValue("CanRetryBoardCreationSettlement", out var canRetry) && canRetry is true);
+
+            await viewModel.DispatchAsync("RetryBoardCreationSettlement", null);
+            Assert.Equal(1, host.CreateCount);
+            Assert.Equal(1, host.SettlementRetryCount);
+            Assert.True(host.CanRetryOpenCreatedBoard);
+            Assert.True(viewModel.TryGetValue("CanRetryHomeBoardOpen", out var canOpen) && canOpen is true);
+            Assert.Equal("Board created, opening failed. Retry opens the same Board.", viewModel.Get("StatusText"));
+        }
+    }
+
+    [Fact]
+    public async Task Unknown_home_creation_outcome_blocks_duplicate_create_without_claiming_a_receipt()
+    {
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(CreateNotesDocument("Pinned Board"),
+            (_, _) => ValueTask.FromResult(true));
+        await using (adapter)
+        {
+            var host = new UnknownBoardCreationHost();
+            var viewModel = new BoardsViewModel(adapter, homeBoardCreationHost: host);
+            await viewModel.DispatchAsync("NewBoard", null);
+            await viewModel.DispatchAsync("NewBoard", null);
+
+            Assert.Equal(1, host.CreateCount);
+            Assert.False(viewModel.TryGetValue("CanCreateBoard", out var canCreate) && canCreate is true);
+            Assert.False(viewModel.TryGetValue("CanRetryHomeBoardOpen", out var canOpen) && canOpen is true);
+            Assert.False(viewModel.TryGetValue("CanRetryBoardCreationSettlement", out var canSettle) && canSettle is true);
+            Assert.Equal("Unable to confirm whether this Board was saved. Creating another is disabled while Home checks.",
+                viewModel.Get("StatusText"));
+            Assert.True(viewModel.TryGetValue("CanCheckSavedBoard", out var canCheck) && canCheck is true);
+            await viewModel.DispatchAsync("CheckSavedBoard", null);
+            Assert.Equal(1, host.InspectCount);
+            Assert.True(viewModel.TryGetValue("CanOpenRecordedBoard", out var canOpenRecorded) && canOpenRecorded is true);
+            await viewModel.DispatchAsync("OpenRecordedBoard", null);
+            Assert.Equal(1, host.OpenRecordedCount);
+            Assert.Equal(1, host.CreateCount);
+            Assert.Equal("Board opened; Home could not confirm the final save status. Creating another Board remains disabled.",
+                viewModel.Get("StatusText"));
+            Assert.False(viewModel.TryGetValue("CanCreateBoard", out canCreate) && canCreate is true);
+            Assert.Equal("Pinned Board", adapter.Document.Title);
+        }
+    }
+
+    [Fact]
     public async Task External_writable_session_requires_explicit_save_and_clears_only_after_acknowledgement()
     {
         var document = CreateNotesDocument("Home source");
@@ -261,6 +316,7 @@ public sealed class ContractAdapterTests
             viewModel.FocusCell(block.Id, 0, 0);
             Assert.True(viewModel.TryGetValue("ContextCanMergeCellRight", out var canMerge) && canMerge is true);
             await viewModel.DispatchAsync("ContextMergeCellRight", null);
+            Assert.Equal("Table cells merged; covered values and formatting remain recoverable on split.", viewModel.Get("StatusText"));
             var mergedDocument = await adapter.GetDetachedContractDocumentAsync();
             var merged = mergedDocument.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
             Assert.Equal(2, merged.Rows[0].Cells[0].ColumnSpan);
@@ -305,6 +361,10 @@ public sealed class ContractAdapterTests
     {
         public ReadOnlyMemory<byte>? Draft { get; private set; }
         public bool CanRetryOpenCreatedBoard => false;
+        public bool CanRetryCreationSettlement => false;
+        public bool CanInspectUnknownCreation => false;
+        public bool CanOpenRecordedBoard => false;
+        public bool HasUnresolvedCreation => false;
 
         public Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
             CancellationToken cancellationToken = default)
@@ -319,6 +379,17 @@ public sealed class ContractAdapterTests
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new BoardsHomeBoardCreationResult(
                 BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "NoPendingOpen"));
+
+        public Task<BoardsHomeBoardCreationResult> RetryCreationSettlementAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(
+                BoardsHomeBoardCreationOutcome.OutcomeUnknown, "NoPendingSettlement"));
+        public Task<BoardsHomeBoardCreationResult> InspectUnknownCreationAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown, "NoUnknownAttempt"));
+        public Task<BoardsHomeBoardCreationResult> OpenRecordedBoardAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown, "NoRecordedReceipt"));
     }
 
     private sealed class RetainedFailedOpenBoardCreationHost : IBoardsHomeBoardCreationHost
@@ -327,6 +398,10 @@ public sealed class ContractAdapterTests
         public int CreateCount { get; private set; }
         public int RetryCount { get; private set; }
         public bool CanRetryOpenCreatedBoard { get; private set; }
+        public bool CanRetryCreationSettlement => false;
+        public bool CanInspectUnknownCreation => false;
+        public bool CanOpenRecordedBoard => false;
+        public bool HasUnresolvedCreation => CanRetryOpenCreatedBoard;
 
         public Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
             CancellationToken cancellationToken = default)
@@ -347,6 +422,103 @@ public sealed class ContractAdapterTests
             RetryCount++;
             CanRetryOpenCreatedBoard = false;
             return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.Opened));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> RetryCreationSettlementAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(
+                BoardsHomeBoardCreationOutcome.OutcomeUnknown, "NoPendingSettlement"));
+        public Task<BoardsHomeBoardCreationResult> InspectUnknownCreationAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown, "NoUnknownAttempt"));
+        public Task<BoardsHomeBoardCreationResult> OpenRecordedBoardAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown, "NoRecordedReceipt"));
+    }
+
+    private sealed class PendingSettlementBoardCreationHost : IBoardsHomeBoardCreationHost
+    {
+        public int CreateCount { get; private set; }
+        public int SettlementRetryCount { get; private set; }
+        public bool CanRetryOpenCreatedBoard { get; private set; }
+        public bool CanRetryCreationSettlement { get; private set; }
+        public bool CanInspectUnknownCreation => false;
+        public bool CanOpenRecordedBoard => false;
+        public bool HasUnresolvedCreation => CanRetryOpenCreatedBoard || CanRetryCreationSettlement;
+
+        public Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _ = HavenBoardDocumentCodec.Deserialize(validatedDraft);
+            CreateCount++;
+            CanRetryCreationSettlement = true;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.HomeAuditPending));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> RetryCreationSettlementAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            SettlementRetryCount++;
+            CanRetryCreationSettlement = false;
+            CanRetryOpenCreatedBoard = true;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(
+                BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "RouteUnavailable"));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+        public Task<BoardsHomeBoardCreationResult> InspectUnknownCreationAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+        public Task<BoardsHomeBoardCreationResult> OpenRecordedBoardAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+    }
+
+    private sealed class UnknownBoardCreationHost : IBoardsHomeBoardCreationHost
+    {
+        public int CreateCount { get; private set; }
+        public int InspectCount { get; private set; }
+        public int OpenRecordedCount { get; private set; }
+        public bool CanRetryOpenCreatedBoard => false;
+        public bool CanRetryCreationSettlement => false;
+        private bool _unresolved = true;
+        private bool _canOpenRecorded;
+        public bool CanInspectUnknownCreation => _unresolved && !_canOpenRecorded;
+        public bool CanOpenRecordedBoard => _canOpenRecorded;
+        public bool HasUnresolvedCreation { get; private set; }
+
+        public Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _ = HavenBoardDocumentCodec.Deserialize(validatedDraft);
+            CreateCount++;
+            HasUnresolvedCreation = true;
+            _unresolved = true;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> RetryCreationSettlementAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+
+        public Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown));
+
+        public Task<BoardsHomeBoardCreationResult> InspectUnknownCreationAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            InspectCount++;
+            _unresolved = false;
+            _canOpenRecorded = true;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit));
+        }
+
+        public Task<BoardsHomeBoardCreationResult> OpenRecordedBoardAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            OpenRecordedCount++;
+            _canOpenRecorded = false;
+            return Task.FromResult(new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning));
         }
     }
 

@@ -167,38 +167,209 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         CancellationToken tabLifetime) : IBoardsHomeBoardCreationHost
     {
         public bool CanRetryOpenCreatedBoard => _hasCreatedBoardPendingOpen;
+        public bool CanRetryCreationSettlement => _creationSettlementPending;
+        public bool CanInspectUnknownCreation => _creationOutcomeUnknown;
+        public bool CanOpenRecordedBoard => _uncertainReceiptAvailable;
+        public bool HasUnresolvedCreation => _hasCreatedBoardPendingOpen || _creationSettlementPending ||
+            _creationOutcomeUnknown || _uncertainReceiptAvailable || _openedWithAuditWarning;
         private bool _hasCreatedBoardPendingOpen;
+        private bool _creationSettlementPending;
+        private bool _creationOutcomeUnknown;
+        private bool _uncertainReceiptAvailable;
+        private bool _openedWithAuditWarning;
 
         public async Task<BoardsHomeBoardCreationResult> CreateAndOpenAsync(ReadOnlyMemory<byte> validatedDraft,
             CancellationToken cancellationToken = default)
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
             linked.Token.ThrowIfCancellationRequested();
+            try
+            {
+                var result = await createAndOpen(request,
+                    new BoardsHomeBoardCreationRequest(validatedDraft, BoardsHomeBoardCreationOperation.Create), linked.Token).ConfigureAwait(false);
+                RecordCreationResult(result);
+                return result;
+            }
+            catch
+            {
+                // The callback may have crossed Files' commit boundary before failing.
+                // Block duplicate creation until Home reconciles the same attempt.
+                _creationOutcomeUnknown = true;
+                throw;
+            }
+        }
+
+        public async Task<BoardsHomeBoardCreationResult> RetryCreationSettlementAsync(
+            CancellationToken cancellationToken = default)
+        {
+            if (!_creationSettlementPending)
+                return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown,
+                    "NoPendingSettlement", "There is no retained Home audit settlement to retry.");
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+            linked.Token.ThrowIfCancellationRequested();
             var result = await createAndOpen(request,
-                new BoardsHomeBoardCreationRequest(validatedDraft, RetryOpenExisting: false), linked.Token).ConfigureAwait(false);
-            _hasCreatedBoardPendingOpen = result.Outcome == BoardsHomeBoardCreationOutcome.CreatedOpenFailed;
-            return result;
+                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
+                    BoardsHomeBoardCreationOperation.RetrySettlement), linked.Token).ConfigureAwait(false);
+            return RecordSettlementResult(result);
         }
 
         public async Task<BoardsHomeBoardCreationResult> RetryOpenCreatedBoardAsync(
             CancellationToken cancellationToken = default)
         {
             if (!_hasCreatedBoardPendingOpen)
-                return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit,
+                return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown,
                     "NoPendingCreatedBoard", "There is no committed Board waiting to open.");
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
             linked.Token.ThrowIfCancellationRequested();
             var result = await createAndOpen(request,
-                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty, RetryOpenExisting: true), linked.Token).ConfigureAwait(false);
-            if (result.Outcome == BoardsHomeBoardCreationOutcome.Opened)
-                _hasCreatedBoardPendingOpen = false;
-            else
+                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
+                    BoardsHomeBoardCreationOperation.RetryOpenExisting), linked.Token).ConfigureAwait(false);
+            return RecordOpenResult(result);
+        }
+
+        public async Task<BoardsHomeBoardCreationResult> InspectUnknownCreationAsync(
+            CancellationToken cancellationToken = default)
+        {
+            if (!_creationOutcomeUnknown)
+                return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown,
+                    "NoUnknownAttempt", "There is no unresolved Board creation to inspect.");
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+            linked.Token.ThrowIfCancellationRequested();
+            var result = await createAndOpen(request,
+                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
+                    BoardsHomeBoardCreationOperation.InspectOutcome), linked.Token).ConfigureAwait(false);
+            return RecordInspectionResult(result);
+        }
+
+        public async Task<BoardsHomeBoardCreationResult> OpenRecordedBoardAsync(
+            CancellationToken cancellationToken = default)
+        {
+            if (!_uncertainReceiptAvailable)
+                return new BoardsHomeBoardCreationResult(BoardsHomeBoardCreationOutcome.OutcomeUnknown,
+                    "NoRecordedReceipt", "There is no corroborated Board receipt to open.");
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tabLifetime, cancellationToken);
+            linked.Token.ThrowIfCancellationRequested();
+            var result = await createAndOpen(request,
+                new BoardsHomeBoardCreationRequest(ReadOnlyMemory<byte>.Empty,
+                    BoardsHomeBoardCreationOperation.OpenRecordedExisting), linked.Token).ConfigureAwait(false);
+            return RecordRecordedOpenResult(result);
+        }
+
+        private void RecordCreationResult(BoardsHomeBoardCreationResult result)
+        {
+            _hasCreatedBoardPendingOpen = result.Outcome == BoardsHomeBoardCreationOutcome.CreatedOpenFailed;
+            _creationSettlementPending = result.Outcome == BoardsHomeBoardCreationOutcome.HomeAuditPending;
+            _creationOutcomeUnknown = result.Outcome == BoardsHomeBoardCreationOutcome.OutcomeUnknown;
+            _uncertainReceiptAvailable = result.Outcome == BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit;
+            _openedWithAuditWarning = result.Outcome == BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning;
+        }
+
+        private BoardsHomeBoardCreationResult RecordSettlementResult(BoardsHomeBoardCreationResult result)
+        {
+            switch (result.Outcome)
             {
-                _hasCreatedBoardPendingOpen = true;
-                if (result.Outcome != BoardsHomeBoardCreationOutcome.CreatedOpenFailed)
-                    result = result with { Outcome = BoardsHomeBoardCreationOutcome.CreatedOpenFailed };
+                case BoardsHomeBoardCreationOutcome.HomeAuditPending:
+                    _creationSettlementPending = true; _creationOutcomeUnknown = false; _hasCreatedBoardPendingOpen = false; break;
+                case BoardsHomeBoardCreationOutcome.OutcomeUnknown:
+                    _creationSettlementPending = false; _creationOutcomeUnknown = true; _hasCreatedBoardPendingOpen = false; break;
+                case BoardsHomeBoardCreationOutcome.CreatedOpenFailed:
+                    _creationSettlementPending = false; _creationOutcomeUnknown = false; _hasCreatedBoardPendingOpen = true; break;
+                case BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit:
+                    _creationSettlementPending = false; _creationOutcomeUnknown = false; _hasCreatedBoardPendingOpen = false;
+                    _uncertainReceiptAvailable = true; break;
+                case BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning:
+                    _creationSettlementPending = false; _creationOutcomeUnknown = false; _hasCreatedBoardPendingOpen = false;
+                    _uncertainReceiptAvailable = false; _openedWithAuditWarning = true; break;
+                case BoardsHomeBoardCreationOutcome.Opened:
+                case BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit:
+                    _creationSettlementPending = false; _creationOutcomeUnknown = false; _hasCreatedBoardPendingOpen = false; break;
+                default:
+                    // A settlement retry cannot be canceled before creation. Preserve
+                    // the no-duplicate gate if Home returned an impossible outcome.
+                    _creationSettlementPending = false; _creationOutcomeUnknown = true; _hasCreatedBoardPendingOpen = false;
+                    result = result with { Outcome = BoardsHomeBoardCreationOutcome.OutcomeUnknown };
+                    break;
             }
             return result;
+        }
+
+        private BoardsHomeBoardCreationResult RecordOpenResult(BoardsHomeBoardCreationResult result)
+        {
+            switch (result.Outcome)
+            {
+                case BoardsHomeBoardCreationOutcome.Opened:
+                    _hasCreatedBoardPendingOpen = false; _creationSettlementPending = false; _creationOutcomeUnknown = false;
+                    _uncertainReceiptAvailable = false; _openedWithAuditWarning = false;
+                    return result;
+                case BoardsHomeBoardCreationOutcome.HomeAuditPending:
+                    _hasCreatedBoardPendingOpen = false; _creationSettlementPending = true; _creationOutcomeUnknown = false;
+                    return result;
+                case BoardsHomeBoardCreationOutcome.OutcomeUnknown:
+                    _hasCreatedBoardPendingOpen = false; _creationSettlementPending = false; _creationOutcomeUnknown = true;
+                    return result;
+                case BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning:
+                    _hasCreatedBoardPendingOpen = false; _creationSettlementPending = false; _creationOutcomeUnknown = false;
+                    _uncertainReceiptAvailable = false; _openedWithAuditWarning = true;
+                    return result;
+                case BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit:
+                    _hasCreatedBoardPendingOpen = false; _creationSettlementPending = false; _creationOutcomeUnknown = false;
+                    _uncertainReceiptAvailable = true; _openedWithAuditWarning = false;
+                    return result;
+                default:
+                    _hasCreatedBoardPendingOpen = true; _creationSettlementPending = false; _creationOutcomeUnknown = false;
+                    return result.Outcome == BoardsHomeBoardCreationOutcome.CreatedOpenFailed
+                        ? result : result with { Outcome = BoardsHomeBoardCreationOutcome.CreatedOpenFailed };
+            }
+        }
+
+        private BoardsHomeBoardCreationResult RecordInspectionResult(BoardsHomeBoardCreationResult result)
+        {
+            _hasCreatedBoardPendingOpen = false;
+            _creationSettlementPending = false;
+            _uncertainReceiptAvailable = false;
+            _openedWithAuditWarning = false;
+            switch (result.Outcome)
+            {
+                case BoardsHomeBoardCreationOutcome.HomeAuditPending:
+                    _creationOutcomeUnknown = false; _creationSettlementPending = true; return result;
+                case BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit:
+                    _creationOutcomeUnknown = false; _uncertainReceiptAvailable = true; return result;
+                case BoardsHomeBoardCreationOutcome.CreatedOpenFailed:
+                    _creationOutcomeUnknown = false; _hasCreatedBoardPendingOpen = true; return result;
+                case BoardsHomeBoardCreationOutcome.Opened:
+                    _creationOutcomeUnknown = false; return result;
+                case BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning:
+                    _creationOutcomeUnknown = false; _openedWithAuditWarning = true; return result;
+                case BoardsHomeBoardCreationOutcome.CreateFailedBeforeCommit:
+                    _creationOutcomeUnknown = false; return result;
+                case BoardsHomeBoardCreationOutcome.OutcomeUnknown:
+                    _creationOutcomeUnknown = true; return result;
+                default:
+                    _creationOutcomeUnknown = true;
+                    return result with { Outcome = BoardsHomeBoardCreationOutcome.OutcomeUnknown };
+            }
+        }
+
+        private BoardsHomeBoardCreationResult RecordRecordedOpenResult(BoardsHomeBoardCreationResult result)
+        {
+            switch (result.Outcome)
+            {
+                case BoardsHomeBoardCreationOutcome.OpenedWithAuditWarning:
+                    _uncertainReceiptAvailable = false; _openedWithAuditWarning = true;
+                    return result;
+                case BoardsHomeBoardCreationOutcome.Opened:
+                    _uncertainReceiptAvailable = false; _openedWithAuditWarning = false; _creationOutcomeUnknown = false;
+                    return result;
+                case BoardsHomeBoardCreationOutcome.OutcomeUnknown:
+                    _uncertainReceiptAvailable = false; _creationOutcomeUnknown = true;
+                    return result;
+                default:
+                    // The exact receipt remains retained so the user can retry its
+                    // fresh owner-authorized open; no create operation is repeated.
+                    _uncertainReceiptAvailable = true;
+                    return result.Outcome == BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit
+                        ? result : result with { Outcome = BoardsHomeBoardCreationOutcome.CommittedWithUncertainAudit };
+            }
         }
     }
 }
