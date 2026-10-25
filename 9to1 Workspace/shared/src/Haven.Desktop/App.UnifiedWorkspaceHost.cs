@@ -714,6 +714,7 @@ public sealed partial class App
             internal Task? OriginalSource, Navigation;
             internal bool CreateDispatched, Opened;
             internal Exception? UnknownFailure;
+            internal string? DisplayName;
         }
         private Task<BoardsHomeBoardCreationResult> CreateAndOpenBoardAsync(BrowseAppContentRequest origin,
             BoardsHomeBoardCreationRequest request, CancellationToken token)
@@ -775,11 +776,13 @@ public sealed partial class App
                     }
                     finally { picker.Close(); picker.Content = null; await shown; }
                     if (folder is null) return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No Board was created.");
+                    state.DisplayName = state.Page.SelectedBoardCreateDisplayName
+                        ?? throw new InvalidOperationException("The original Board picker did not retain its accepted file name.");
                     caller.ThrowIfCancellationRequested();
                     state.CreateDispatched = true;
                     try
                     {
-                        var original = state.Source.CreateInSelectedFolderAsync(folder, "New board.9to1board", request.ValidatedDraft, caller);
+                        var original = state.Source.CreateInSelectedFolderAsync(folder, state.DisplayName, request.ValidatedDraft, caller);
                         state.OriginalSource = original; _ = Track(original);
                         state.Result = await original;
                     }
