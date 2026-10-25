@@ -175,8 +175,17 @@ public static class BlockRenderer
         {
             var opacity = hovering || focused ? 1 : 0;
             if (insert is not null) insert.Opacity = opacity;
-            if (gripControl is not null) gripControl.Opacity = opacity;
+            if (gripControl is not null)
+            {
+                // CUI theme projection can outrank a native Avalonia opacity
+                // assignment on the authored container. Publish the state at
+                // instance priority so the entire nested grip disappears too.
+                CuiPropertyPresentation.Set(gripControl, "Opacity", opacity,
+                    CuiPropertyLevel.Instance, "Boards quiet block gutter visibility");
+                gripControl.Opacity = opacity;
+            }
         }
+        UpdateGutterEmphasis();
         border.PointerEntered += (_, _) => { hovering = true; UpdateGutterEmphasis(); };
         border.PointerExited += (_, _) => { hovering = false; UpdateGutterEmphasis(); };
         border.AddHandler(InputElement.GotFocusEvent, (_, _) => { focused = true; UpdateGutterEmphasis(); }, RoutingStrategies.Bubble);
