@@ -323,7 +323,7 @@ public sealed class BoardsEditorTests
         var expected = new[]
         {
             "TopBarLeft", "TopBarRight", "BoardsAppIcon", "BoardTitleBox", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "BlocksHost", "AbsoluteBlocksHost",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "VerticalLayoutToggle", "FreeLayoutToggle",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -349,6 +349,14 @@ public sealed class BoardsEditorTests
         var boardTitle = components.Single(component => component.Name == "BoardTitleBox");
         Assert.True(boardTitle.Properties.TryGetValue("Value", out var boardTitleValue)
             && boardTitleValue is CuiBindingValue { Path: "BoardTitle" });
+        var verticalLayout = components.Single(component => component.Name == "VerticalLayoutToggle");
+        Assert.True(verticalLayout.Properties.TryGetValue("Selected", out var verticalSelected)
+            && verticalSelected is CuiBindingValue { Path: "IsVerticalLayout" });
+        Assert.True(verticalLayout.Properties.TryGetValue("Interactive", out var layoutInteractive)
+            && layoutInteractive is CuiBindingValue { Path: "CanChangeLayoutMode" });
+        var freeLayout = components.Single(component => component.Name == "FreeLayoutToggle");
+        Assert.True(freeLayout.Properties.TryGetValue("Selected", out var freeSelected)
+            && freeSelected is CuiBindingValue { Path: "IsFreeLayout" });
         var appIcon = components.Single(component => component.Name == "BoardsAppIcon");
         Assert.True(appIcon.Properties.TryGetValue("Source", out var appIconSource)
             && appIconSource is CuiLiteralValue { Value: "ownerbrand:boards" });
@@ -357,7 +365,7 @@ public sealed class BoardsEditorTests
             && searchRadius is CuiLiteralValue { Value: "18" });
         var pageCard = components.Single(component => component.Name == "PageCard");
         Assert.True(pageCard.Properties.TryGetValue("cornerradius", out var pageCorner)
-            && pageCorner is CuiLiteralValue { Value: "26" });
+            && pageCorner is CuiLiteralValue { Value: "22" });
 
         var found = await OnUiThreadAsync(() =>
         {
@@ -370,17 +378,25 @@ public sealed class BoardsEditorTests
                     <Container Type="Vertical Stack" ID="NavHost" />
                     <Container Type="Horizontal Stack" ID="ToolbarHost" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False" />
                     <Container Type="Vertical Stack" ID="ContextHost" />
-                    <Container Type="Vertical Stack" ID="BlocksHost" />
-                    <Container Type="Absolute" ID="AbsoluteBlocksHost" />
+                    <Container Type="Grid" ID="PageBlocksSurface" RowSizes="Auto">
+                      <Container Type="Vertical Stack" ID="BlocksHost" Row="0" />
+                      <Container Type="Absolute" ID="AbsoluteBlocksHost" Row="0" />
+                    </Container>
                   </Container>
                 </Cui>
                 """,
                 "boards-host-lookup.cui").Root);
-            return FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "BlocksHost") is { LayoutType: "Vertical Stack" }
+            var pageBlocksSurface = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "PageBlocksSurface");
+            var flowBlocks = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "BlocksHost");
+            var absoluteBlocks = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "AbsoluteBlocksHost");
+            return pageBlocksSurface is { LayoutType: "Grid" }
+                && flowBlocks is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "NavHost") is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Horizontal Stack", Layout: StackPanel }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ContextHost") is { LayoutType: "Vertical Stack" }
-                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "AbsoluteBlocksHost") is { LayoutType: "Absolute", Layout: Canvas }
+                && absoluteBlocks is { LayoutType: "Absolute", Layout: Canvas }
+                && ReferenceEquals(flowBlocks.Parent, pageBlocksSurface)
+                && ReferenceEquals(absoluteBlocks.Parent, pageBlocksSurface)
                 && FindByAutomationId<TextBox>(root, "BoardTitleBox") is not null;
         });
         Assert.True(found);
