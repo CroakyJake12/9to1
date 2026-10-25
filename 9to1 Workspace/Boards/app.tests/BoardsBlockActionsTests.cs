@@ -106,6 +106,7 @@ public sealed class BoardsBlockActionsTests
                 Assert.NotEqual(source.Items[0].Id, copy.Items[0].Id);
                 Assert.NotEqual(source.Table!.Rows[0].Cells[0].Id, copy.Table!.Rows[0].Cells[0].Id);
                 Assert.NotEqual(source.Image!.Id, copy.Image!.Id);
+                Assert.NotEqual(source.Graph!.GraphId, copy.Graph!.GraphId);
                 Assert.NotEqual(source.Graph!.Expressions[0].Id, copy.Graph!.Expressions[0].Id);
                 Assert.NotEqual(source.Attachment!.Id, copy.Attachment!.Id);
                 Assert.Equal("quote", copy.StyleId); Assert.Equal("sidecar:abc123", copy.Image.LocalReference);
@@ -117,6 +118,7 @@ public sealed class BoardsBlockActionsTests
                 comparable.Items[0].Id = source.Items[0].Id;
                 comparable.Table!.Rows[0].Cells[0].Id = source.Table.Rows[0].Cells[0].Id;
                 comparable.Image!.Id = source.Image.Id;
+                comparable.Graph!.GraphId = source.Graph.GraphId;
                 comparable.Graph!.Expressions[0].Id = source.Graph.Expressions[0].Id;
                 comparable.Attachment!.Id = source.Attachment.Id;
                 Assert.Equal(original, JsonSerializer.Serialize(comparable));
@@ -152,6 +154,9 @@ public sealed class BoardsBlockActionsTests
             var last = adapter.CaptureBlockAction(page.Id, "block-c")!;
             Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(first, BoardBlockAction.MoveUp, () => true)).Code);
             Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(last, BoardBlockAction.MoveDown, () => true)).Code);
+            Assert.True((await adapter.ApplyBlockActionAsync(first, BoardBlockAction.Delete, () => true)).Applied);
+            Assert.True(await adapter.UndoAsync());
+            Assert.Equal(before, adapter.Snapshot);
             Assert.False((await adapter.ApplyBlockActionAsync(first, BoardBlockAction.Delete, () => true)).Applied);
             var current = adapter.CaptureBlockAction(page.Id, "block-b")!;
             Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Delete, () => false)).Applied);

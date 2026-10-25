@@ -150,7 +150,7 @@ public sealed class ContractAdapterTests
             Assert.Equal(movedRowCellIds, movedTable.Rows[0].Cells.Select(cell => cell.Id));
             Assert.Equal("bottom-left", movedTable.Rows[0].Cells[0].Text);
             Assert.True(movedTable.Rows[0].Cells[0].Bold);
-            Assert.Equal(new[] { 60d, 30d }, movedTable.RowHeights);
+            Assert.Equal(new[] { 60d, 30d, 0d }, movedTable.RowHeights);
             Assert.Equal((block.Id, 0, 0), viewModel.SelectedCell);
             Assert.True(await adapter.UndoAsync());
             var restoredRows = await adapter.GetDetachedContractDocumentAsync();
@@ -163,7 +163,7 @@ public sealed class ContractAdapterTests
             var afterColumnMove = await adapter.GetDetachedContractDocumentAsync();
             var movedColumns = afterColumnMove.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
             Assert.Equal(movedColumnCellIds, movedColumns.Rows.Select(row => row.Cells[0].Id));
-            Assert.Equal(new[] { 240d, 120d }, movedColumns.ColumnWidths);
+            Assert.Equal(new[] { 240d, 120d, 0d }, movedColumns.ColumnWidths);
             Assert.Equal("top-right", movedColumns.Rows[0].Cells[0].Text);
             Assert.True(await adapter.UndoAsync());
             var restoredColumns = await adapter.GetDetachedContractDocumentAsync();
