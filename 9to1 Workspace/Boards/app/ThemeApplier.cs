@@ -20,36 +20,12 @@ public static class ThemeApplier
         var palette = BoardsTheme.SharedPalette;
         CuiThemeResourceApplier.Apply(palette);
 
-        Paint<Border>(root, "TopBar", b =>
-        {
-            b.Background = BoardsTheme.SurfaceBrush;
-            b.BorderBrush = BoardsTheme.AccentBrush;
-            b.BorderThickness = new Avalonia.Thickness(0, 0, 0, 1);
-        });
-        Paint<Border>(root, "NavPane", b =>
-        {
-            b.Background = BoardsTheme.SurfaceBrush;
-            b.BorderBrush = BoardsTheme.BorderBrush;
-            b.BorderThickness = new Avalonia.Thickness(0, 0, 1, 0);
-        });
         Paint<Border>(root, "FooterBar", b =>
         {
             b.Background = BoardsTheme.SurfaceBrush;
             b.BorderBrush = BoardsTheme.BorderBrush;
             b.BorderThickness = new Avalonia.Thickness(0, 1, 0, 0);
         });
-        Paint<ScrollViewer>(root, "EditorScroll", c => c.Background = BoardsTheme.AppBackgroundBrush);
-        Paint<Border>(root, "PageCard", c =>
-        {
-            c.Background = BoardsTheme.PageBackgroundBrush;
-            c.BorderBrush = Brushes.Transparent;
-            c.BorderThickness = new Avalonia.Thickness(0);
-            c.CornerRadius = new Avalonia.CornerRadius(0);
-            c.Padding = new Avalonia.Thickness(0);
-            c.Margin = new Avalonia.Thickness(0);
-        });
-        Paint<StackPanel>(root, "DocumentContentLayer", c => c.Margin = new Avalonia.Thickness(40, 32));
-        Paint<StackPanel>(root, "ToolbarHost", c => c.Background = BoardsTheme.SurfaceBrush);
         Paint<StackPanel>(root, "ContextHost", c => c.Background = BoardsTheme.SurfaceBrush);
         Paint<TextBox>(root, "BoardTitleBox", box =>
         {
@@ -63,12 +39,7 @@ public static class ThemeApplier
             box.Foreground = BoardsTheme.TextBrush;
             box.FontFamily = ProductFont;
         });
-        Paint<TextBox>(root, "NavSearchBox", box =>
-        {
-            box.Background = BoardsTheme.CardBrush;
-            box.Foreground = BoardsTheme.TextBrush;
-            box.FontFamily = ProductFont;
-        });
+        Paint<TextBox>(root, "NavSearchBox", box => box.FontFamily = ProductFont);
     }
 
     public static void SetDocumentTextSurface(TextBox input, IBrush background)
@@ -92,6 +63,8 @@ public static class ThemeApplier
             CuiPropertyPresentation.Set(combo, "Foreground", BoardsTheme.TextBrush, CuiPropertyLevel.Instance,
                 "Boards toolbar surface");
             CuiPropertyPresentation.Set(combo, "BorderWidth", new Avalonia.Thickness(0), CuiPropertyLevel.Instance,
+                "Boards toolbar surface");
+            CuiPropertyPresentation.Set(combo, "CornerRadius", new Avalonia.CornerRadius(10), CuiPropertyLevel.Instance,
                 "Boards toolbar surface");
         }
     }

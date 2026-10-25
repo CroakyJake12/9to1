@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using CakeOS.Cui.Runtime;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -44,7 +45,7 @@ public static class ToolbarBuilder
         // Toolbar controls stay on a single logical row. The authored ToolbarHost
         // owns horizontal scrolling, so narrow windows keep every command reachable
         // without wrapping the persistent toolbar into a second vertical band.
-        var bar = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(12, 8, 12, 8) };
+        var bar = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 2) };
         if (vm.IsDrawMode)
         {
             BuildDrawToolbar(bar, vm);
@@ -79,13 +80,18 @@ public static class ToolbarBuilder
         host.Children.Add(bar);
     }
 
-    private static Control Separator() => new Border
+    private static Control Separator()
     {
-        Width = 1,
-        Background = BoardsTheme.BorderBrush,
-        Margin = new Thickness(6, 4),
-        VerticalAlignment = VerticalAlignment.Stretch,
-    };
+        var separator = new Border
+        {
+            Width = 1,
+            Margin = new Thickness(6, 4),
+            VerticalAlignment = VerticalAlignment.Stretch,
+        };
+        CuiPropertyPresentation.Set(separator, "Background", BoardsTheme.BorderBrush,
+            CuiPropertyLevel.Instance, "Boards toolbar group divider");
+        return separator;
+    }
 
     private static ToggleButton Toggle(
         BoardsViewModel vm, string glyph, string name, string tip, bool active, Func<Task> tapped,
@@ -99,6 +105,7 @@ public static class ToolbarBuilder
             BorderThickness = new Thickness(0),
             Margin = new Thickness(1, 0),
         };
+        SetQuietToolbarControl(toggle, active, "Boards toolbar toggle");
         toggle.Content = textFallback
             ? (object)new TextBlock
             {
@@ -157,21 +164,39 @@ public static class ToolbarBuilder
 
     private static Control ColorPopupButton(BoardsViewModel vm, string label, string tip, bool isHighlight)
     {
+        var selectedBlock = vm.FindBlock(vm.SelectedBlockId);
+        var previewColor = isHighlight ? selectedBlock?.Background : selectedBlock?.Foreground;
+        var preview = new Border
+        {
+            Width = 16,
+            Height = 3,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            CornerRadius = new CornerRadius(1.5),
+        };
+        var previewBrush = !string.IsNullOrWhiteSpace(previewColor) && BoardsTheme.TryBrush(previewColor, out var parsed)
+            ? parsed
+            : isHighlight ? Brushes.Transparent : BoardsTheme.TextBrush;
+        CuiPropertyPresentation.Set(preview, "Background", previewBrush, CuiPropertyLevel.Instance,
+            "Boards selected text colour preview");
+        var content = new StackPanel { Orientation = Orientation.Vertical, Spacing = 2 };
+        content.Children.Add(new TextBlock
+        {
+            Text = label,
+            FontSize = 13,
+            FontWeight = FontWeight.SemiBold,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        });
+        content.Children.Add(preview);
         var button = new Button
         {
-            Content = new TextBlock
-            {
-                Text = label,
-                FontSize = 13,
-                FontWeight = FontWeight.SemiBold,
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-            },
+            Content = content,
             Padding = new Thickness(8, 6),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             Margin = new Thickness(1, 0),
         };
+        SetQuietToolbarControl(button, selected: false, "Boards toolbar colour control");
         ToolTip.SetTip(button, tip);
         Avalonia.Automation.AutomationProperties.SetName(button, tip);
         var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
@@ -236,6 +261,7 @@ public static class ToolbarBuilder
             BorderThickness = new Thickness(0),
             Margin = new Thickness(1, 0),
         };
+        SetQuietToolbarControl(button, selected: false, "Boards toolbar indent control");
         ToolTip.SetTip(button, tip);
         Avalonia.Automation.AutomationProperties.SetName(button, tip);
         button.Click += (_, _) => tapped();
@@ -291,6 +317,7 @@ public static class ToolbarBuilder
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
         };
+        SetQuietToolbarControl(button, vm.IsDrawMode, "Boards toolbar drawing mode");
         ToolTip.SetTip(button, "Draw — show pen, highlighter, eraser and colour tools");
         Avalonia.Automation.AutomationProperties.SetName(button, "Draw");
         button.Click += async (_, _) =>
@@ -307,6 +334,7 @@ public static class ToolbarBuilder
         BoardsViewModel vm, string? tooltip = null, string? insertAfterBlockId = null)
     {
         var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", tooltip ?? "Insert a block (grouped menu with search)");
+        SetQuietToolbarControl(button, selected: false, "Boards toolbar insert action");
         var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
         var panel = new StackPanel { Orientation = Orientation.Vertical, MinWidth = 260 };
         var search = new TextBox { PlaceholderText = "Search blocks and styles…", Margin = new Thickness(0, 0, 0, 8) };
@@ -415,6 +443,7 @@ public static class ToolbarBuilder
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
             };
+            SetQuietToolbarControl(button, button.IsChecked == true, "Boards drawing tool selection");
             ToolTip.SetTip(button, tool + " drawing tool");
             Avalonia.Automation.AutomationProperties.SetName(button, tool + " drawing tool");
             button.Click += (_, _) => vm.SetInkTool(tool);
@@ -434,6 +463,13 @@ public static class ToolbarBuilder
                 BorderThickness = new Thickness(string.Equals(vm.InkColor, hex, StringComparison.OrdinalIgnoreCase) ? 3 : 1),
                 CornerRadius = new CornerRadius(12), VerticalAlignment = VerticalAlignment.Center,
             };
+            CuiPropertyPresentation.Set(swatch, "Background", BoardsTheme.Brush(hex), CuiPropertyLevel.Instance,
+                "Boards ink colour well");
+            CuiPropertyPresentation.Set(swatch, "BorderWidth", new Thickness(
+                string.Equals(vm.InkColor, hex, StringComparison.OrdinalIgnoreCase) ? 2 : 0), CuiPropertyLevel.Instance,
+                "Boards ink colour well");
+            CuiPropertyPresentation.Set(swatch, "BorderBrush", BoardsTheme.TextBrush, CuiPropertyLevel.Instance,
+                "Boards ink colour well");
             ToolTip.SetTip(swatch, name + " ink");
             Avalonia.Automation.AutomationProperties.SetName(swatch, name + " ink");
             swatch.Click += (_, _) => vm.SetInkColor(hex);
@@ -448,6 +484,7 @@ public static class ToolbarBuilder
                 Padding = new Thickness(7, 6), Margin = new Thickness(1, 0),
                 Background = Brushes.Transparent, BorderThickness = new Thickness(0),
             };
+            SetQuietToolbarControl(stroke, stroke.IsChecked == true, "Boards stroke width selection");
             ToolTip.SetTip(stroke, "Stroke width " + width.ToString("0"));
             Avalonia.Automation.AutomationProperties.SetName(stroke, "Stroke width " + width.ToString("0"));
             stroke.Click += (_, _) => vm.SetInkWidth(width);
@@ -455,8 +492,10 @@ public static class ToolbarBuilder
         }
         bar.Children.Add(Separator());
         var undo = BoardsIcons.IconButton(BoardsIcons.Undo, "Undo drawing", "Undo the last drawing action");
+        SetQuietToolbarControl(undo, selected: false, "Boards drawing toolbar action");
         undo.Click += async (_, _) => await vm.DispatchAsync("Undo", null);
         var redo = BoardsIcons.IconButton(BoardsIcons.Redo, "Redo drawing", "Redo the last drawing action");
+        SetQuietToolbarControl(redo, selected: false, "Boards drawing toolbar action");
         redo.Click += async (_, _) => await vm.DispatchAsync("Redo", null);
         bar.Children.Add(undo);
         bar.Children.Add(redo);
@@ -469,12 +508,27 @@ public static class ToolbarBuilder
         Avalonia.Automation.AutomationProperties.SetName(zoomIn, "Zoom drawing in");
         zoomIn.Click += async (_, _) => await vm.SetInkZoomAsync(vm.InkZoom * 1.25);
         var reset = new Button { Content = "Reset view", Padding = new Thickness(7, 6), Margin = new Thickness(2, 0) };
+        SetQuietToolbarControl(zoomOut, selected: false, "Boards drawing viewport action");
+        SetQuietToolbarControl(zoomIn, selected: false, "Boards drawing viewport action");
+        SetQuietToolbarControl(reset, selected: false, "Boards drawing viewport action");
         ToolTip.SetTip(reset, "Reset drawing view");
         Avalonia.Automation.AutomationProperties.SetName(reset, "Reset drawing view");
         reset.Click += async (_, _) => await vm.ResetInkViewAsync();
         bar.Children.Add(zoomOut);
         bar.Children.Add(zoomIn);
         bar.Children.Add(reset);
+    }
+
+    private static void SetQuietToolbarControl(Control control, bool selected, string source)
+    {
+        CuiPropertyPresentation.Set(control, "Foreground", BoardsTheme.TextBrush,
+            CuiPropertyLevel.Instance, source + " text");
+        CuiPropertyPresentation.Set(control, "Background", selected ? BoardsTheme.CardBrush : Brushes.Transparent,
+            CuiPropertyLevel.Instance, source + " surface");
+        CuiPropertyPresentation.Set(control, "BorderWidth", new Thickness(0),
+            CuiPropertyLevel.Instance, source + " border");
+        CuiPropertyPresentation.Set(control, "CornerRadius", new CornerRadius(8),
+            CuiPropertyLevel.Instance, source + " shape");
     }
 }
 
