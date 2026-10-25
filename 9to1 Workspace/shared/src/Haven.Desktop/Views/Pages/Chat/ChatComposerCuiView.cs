@@ -32,7 +32,7 @@ public interface IChatComposerSource
     bool IsSending { get; }
     bool CanStop => IsSending;
     bool HasPendingMessage => !string.IsNullOrWhiteSpace(Draft);
-    bool CanQueue => IsSending && HasPendingMessage && CanSend && !IsEditing;
+    bool CanQueue => IsSending && CanStop && HasPendingMessage && CanSend && !IsEditing;
     bool IsSafetyLocked { get; }
     bool HasAdd { get; }
     bool CanSend { get; }
@@ -217,7 +217,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 // Both enter the existing source admission: its current run owns the FIFO.
                 return _source.Send();
             case "composer.stop" when _source.CanStop:
-                return _source.Stop();
+                return StopProjectedAsync();
             case "composer.send" or "composer.queue" or "composer.stop":
                 return ValueTask.FromException(new InvalidOperationException("This conversation action is no longer available."));
             case "composer.add":
@@ -255,6 +255,26 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             default:
                 return ValueTask.FromException(new InvalidOperationException($"Chat composer CUI command '{command}' is not owned by the shared composer."));
         }
+    }
+
+    private async ValueTask StopProjectedAsync()
+    {
+        Exception? sourceFailure = null;
+        try { await _source.Stop().ConfigureAwait(false); }
+        catch (Exception error) { sourceFailure = error; }
+        try
+        {
+            // Cancellation admission can settle before the active producer acknowledges it.
+            // Re-read the same live source now so retired Stop/Queue controls withdraw even
+            // if no further stream event arrives. This does not assert producer completion.
+            await Dispatcher.UIThread.InvokeAsync(Refresh).GetTask().ConfigureAwait(false);
+        }
+        catch (Exception projectionFailure) when (sourceFailure is not null)
+        {
+            throw new AggregateException("The original stop and its projection both failed.", sourceFailure, projectionFailure);
+        }
+        if (sourceFailure is not null)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(sourceFailure).Throw();
     }
 
     private async ValueTask ApplyActionModeAsync(string mode)

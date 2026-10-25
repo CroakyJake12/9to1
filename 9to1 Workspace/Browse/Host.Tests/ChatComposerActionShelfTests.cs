@@ -42,6 +42,18 @@ public sealed class ChatComposerActionShelfTests
     }
 
     [Fact]
+    public void Stopping_or_noninterruptible_work_cannot_advertise_queue_from_busy_state_alone()
+    {
+        var source = new Source { IsSending = true, Draft = "follow up", Stopping = true };
+        var bindings = new ChatComposerBindings(source);
+        Assert.False(bindings.IsActionAvailable("composer.queue"));
+        Assert.False(bindings.IsActionAvailable("composer.stop"));
+        Assert.True(bindings.TryGetValue("Composer.CanQueue", out var queue));
+        Assert.Equal(false, queue);
+        Assert.Equal("follow up", source.Draft);
+    }
+
+    [Fact]
     public async Task Queue_joins_the_existing_source_operation_once_and_returns_its_failure()
     {
         var original = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -54,6 +66,23 @@ public sealed class ChatComposerActionShelfTests
         var error = await Assert.ThrowsAsync<IOException>(() => admitted);
         Assert.Equal("canonical admission failed", error.Message);
         Assert.Equal("follow up", source.Draft);
+    }
+
+    [AvaloniaFact]
+    public async Task Stop_projects_actual_retirement_and_preserves_the_original_source_failure()
+    {
+        var failure = new IOException("original stop admission failed");
+        var source = new Source { IsSending = true, Draft = "keep", StopFailure = failure };
+        var bindings = new ChatComposerBindings(source);
+        var refreshes = 0;
+        bindings.PropertyChanged += (_, _) => refreshes++;
+        var actual = await Assert.ThrowsAsync<IOException>(() => bindings.DispatchAsync("composer.stop", null).AsTask());
+        Assert.Same(failure, actual);
+        Assert.Equal(1, source.Stops);
+        Assert.True(refreshes > 0);
+        Assert.False(bindings.IsActionAvailable("composer.stop"));
+        Assert.False(bindings.IsActionAvailable("composer.queue"));
+        Assert.Equal("keep", source.Draft);
     }
 
     [AvaloniaFact]
@@ -110,6 +139,8 @@ public sealed class ChatComposerActionShelfTests
         public string Draft { get; set; } = "";
         public string Placeholder => "Message";
         public bool IsSending { get; set; }
+        public bool Stopping { get; set; }
+        public bool CanStop => IsSending && !Stopping;
         public bool IsSafetyLocked { get; set; }
         public bool HasAdd => true;
         public bool CanSend => !IsSafetyLocked && !string.IsNullOrWhiteSpace(Draft);
@@ -118,8 +149,14 @@ public sealed class ChatComposerActionShelfTests
         public Task Operation { get; set; } = Task.CompletedTask;
         public int Sends;
         public int Stops;
+        public Exception? StopFailure;
         public ValueTask Send() { Sends++; return new(Operation); }
-        public ValueTask Stop() { Stops++; return ValueTask.CompletedTask; }
+        public ValueTask Stop()
+        {
+            Stops++;
+            Stopping = true;
+            return StopFailure is null ? ValueTask.CompletedTask : ValueTask.FromException(StopFailure);
+        }
         public ValueTask Add() => ValueTask.CompletedTask;
         public ValueTask OpenSettings() => ValueTask.CompletedTask;
         public ValueTask CloseSettings() => ValueTask.CompletedTask;
