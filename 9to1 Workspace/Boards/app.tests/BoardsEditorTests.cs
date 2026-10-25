@@ -86,7 +86,7 @@ public sealed class BoardsEditorTests
             target.IsEnabled = true;
             target.Resources["CuiHighContrast"] = true;
             var highContrast = BoardsCuiIconResolver.SemanticBrush("delete", target);
-            return (insert.Color, table.Color, delete.Color, disabled, highContrast);
+            return (insert: insert.Color, table: table.Color, delete: delete.Color, disabled, highContrast);
         });
 
         Assert.NotEqual(brushes.insert, brushes.table);
