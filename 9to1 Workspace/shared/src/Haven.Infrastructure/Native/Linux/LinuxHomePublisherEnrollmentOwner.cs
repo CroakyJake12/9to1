@@ -41,7 +41,17 @@ public sealed class LinuxHomePublisherEnrollmentOwner
         _statePath = Path.GetFullPath(actualCanonicalStateFile);
     }
 
-    public async Task<Result> EnrollAsync(Request originalRequest, CancellationToken cancellationToken)
+    public Task<Result> EnrollAsync(Request originalRequest, CancellationToken cancellationToken)
+        => ProcessAsync(originalRequest, null, cancellationToken);
+
+    // Reuses the exact verified public-input lifetime and existing canonical enrollment.
+    // This path cannot enroll a publisher or initialize a missing machine profile.
+    internal Task<Result> WithinExistingEnrollmentAsync(Request request,
+        Func<ExistingEnrollment, CancellationToken, Task> operation, CancellationToken token)
+        => ProcessAsync(request, operation ?? throw new ArgumentNullException(nameof(operation)), token);
+
+    private async Task<Result> ProcessAsync(Request originalRequest,
+        Func<ExistingEnrollment, CancellationToken, Task>? existingOperation, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(originalRequest);
         cancellationToken.ThrowIfCancellationRequested(); DemandAdministrator();
@@ -95,6 +105,12 @@ public sealed class LinuxHomePublisherEnrollmentOwner
             if (!verified.AsSpan().SequenceEqual(row.Payload)) throw new UnauthorizedAccessException("The signed original package payload changed.");
         }
         certificateInput.DemandCurrent(); catalogueInput.DemandCurrent(); state.DemandCurrent();
+        var read = await _database.ReadAsync(cancellationToken).ConfigureAwait(false);
+        if (!read.Succeeded) throw new InvalidDataException("The canonical package registry requires recovery: " + read.Failure?.Code);
+        var registry = read.Snapshot!;
+        if (existingOperation is not null && (registry.UnknownFields is null ||
+            !registry.UnknownFields.ContainsKey(HomePackageOriginalPublisherEnrollmentRecord.Field)))
+            throw new UnauthorizedAccessException("Bootstrap activation requires the already-enrolled canonical publisher; it cannot establish initial trust.");
         var principal = await new OperatingSystemPrincipalSource().GetPrincipalAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The actual administrative OS principal is unavailable.");
         var actor = await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false)
@@ -104,9 +120,6 @@ public sealed class LinuxHomePublisherEnrollmentOwner
         var enrollment = new HomePackageOriginalPublisherEnrollmentRecord(2, Digest(certificateInput.Bytes), request.IssuerKeyId,
             catalogue.CatalogueRevision, Digest(payload), image, request.OperationId, actor.ActorId, actor.ProfileId, principal,
             catalogue.HomePackageId, catalogue.RootPackageId, request.SelectedPackageIds, DateTimeOffset.UtcNow, Convert.ToBase64String(payload));
-        var read = await _database.ReadAsync(cancellationToken).ConfigureAwait(false);
-        if (!read.Succeeded) throw new InvalidDataException("The canonical package registry requires recovery: " + read.Failure?.Code);
-        var registry = read.Snapshot!;
         var fields = registry.UnknownFields?.ToDictionary(pair => pair.Key, pair => pair.Value.Clone(), StringComparer.Ordinal)
             ?? new Dictionary<string, JsonElement>(StringComparer.Ordinal);
         if (fields.TryGetValue(HomePackageOriginalPublisherEnrollmentRecord.Field, out var previous))
@@ -122,6 +135,14 @@ public sealed class LinuxHomePublisherEnrollmentOwner
                 !retained.SelectedPackageIds.Order(StringComparer.Ordinal).SequenceEqual(selected.Order(StringComparer.Ordinal)))
                 throw new UnauthorizedAccessException("A different existing publisher/catalogue/selection requires explicit owning recovery; enrollment never overwrites it.");
             await DemandFinalAsync().ConfigureAwait(false);
+            if (existingOperation is not null)
+            {
+                var existing = new ExistingEnrollment(this, registry, retained, actor, rows, signer,
+                    new CommitGuard(state, certificateInput, catalogueInput, _profiles, actor,
+                        certificate.NotBefore.ToUniversalTime(), certificate.NotAfter.ToUniversalTime()), DemandFinalAsync);
+                await existingOperation(existing, cancellationToken).ConfigureAwait(false);
+                await DemandFinalAsync().ConfigureAwait(false);
+            }
             return new(true, registry.Revision, retained);
         }
         fields.Add(HomePackageOriginalPublisherEnrollmentRecord.Field, JsonSerializer.SerializeToElement(enrollment));
@@ -138,10 +159,37 @@ public sealed class LinuxHomePublisherEnrollmentOwner
         async Task DemandFinalAsync()
         {
             DemandAdministrator(); state.DemandCurrent(); certificateInput.DemandCurrent(); catalogueInput.DemandCurrent();
+            if (DateTime.UtcNow < certificate.NotBefore.ToUniversalTime() || DateTime.UtcNow > certificate.NotAfter.ToUniversalTime())
+                throw new UnauthorizedAccessException("The original public publisher certificate is no longer current.");
             if (actor != await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) ||
                 principal != await new OperatingSystemPrincipalSource().GetPrincipalAsync(cancellationToken).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The actual administrative OS profile changed during enrollment; retain its original outcome for recovery.");
         }
+    }
+
+    internal sealed class ExistingEnrollment
+    {
+        private readonly LinuxHomePublisherEnrollmentOwner _owner;
+        private readonly RSA _signer;
+        private readonly IHomeStateCommitActorGuard _guard;
+        private readonly Func<Task> _demandCurrent;
+        internal HomePackageDatabaseSnapshot Registry { get; }
+        internal HomePackageOriginalPublisherEnrollmentRecord Enrollment { get; }
+        internal AuthenticatedResourceActor Actor { get; }
+        internal IReadOnlyDictionary<string, LinuxHomePackageOriginalArtifactProvider.Row> Rows { get; }
+        internal ExistingEnrollment(LinuxHomePublisherEnrollmentOwner owner, HomePackageDatabaseSnapshot registry,
+            HomePackageOriginalPublisherEnrollmentRecord enrollment, AuthenticatedResourceActor actor,
+            IReadOnlyDictionary<string, LinuxHomePackageOriginalArtifactProvider.Row> rows, RSA signer, IHomeStateCommitActorGuard guard, Func<Task> demandCurrent)
+        { _owner = owner; Registry = registry; Enrollment = enrollment; Actor = actor; Rows = rows; _signer = signer; _guard = guard; _demandCurrent = demandCurrent; }
+        internal byte[] VerifyReceipt(byte[] bytes) => VerifyEnvelope(bytes, _signer, Enrollment.IssuerKeyId, 1024 * 1024);
+        internal async Task<HomePackageDatabaseSnapshot> SaveAsync(HomePackageDatabaseSnapshot snapshot, long expectedRevision, CancellationToken token)
+        {
+            var written = await _owner._database.SaveOriginalBootstrapEnrollmentWithinSourceAsync(snapshot, expectedRevision,
+                Actor, _guard, body => body(), _ => { }, token).ConfigureAwait(false);
+            return written.Succeeded ? written.Snapshot! : throw new IOException("The canonical bootstrap commit was not acknowledged: " + written.Failure?.Code);
+        }
+        internal Task DemandCurrentAsync() => _demandCurrent();
+        internal string StatePath => _owner._statePath;
     }
 
     private sealed class CommitGuard(ProtectedState state, Input certificate, Input catalogue,
@@ -238,7 +286,7 @@ public sealed class LinuxHomePublisherEnrollmentOwner
                 }
             }
         }
-        private static void DemandChain(string directory)
+        internal static void DemandChain(string directory)
         {
             var prefix = "";
             foreach (var component in directory.Split('/', StringSplitOptions.RemoveEmptyEntries))
@@ -255,6 +303,7 @@ public sealed class LinuxHomePublisherEnrollmentOwner
         }
         public void Dispose() => _root.Dispose();
     }
+    internal static void DemandProtectedMachineDirectory(string path) { DemandAdministrator(); ProtectedState.DemandChain(path); }
     private static void DemandAdministrator()
     {
         if (!OperatingSystem.IsLinux() || LinuxOriginalDownloadPaths.CurrentUid() != 0)
