@@ -160,6 +160,80 @@ public sealed class SpaceLayoutEditorAdapterTests
         }
     }
 
+    [Fact]
+    public async Task Builder_sample_preview_runs_the_current_draft_and_reports_truncation_without_changing_active_space()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var source = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SourceType);
+        var truncate = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.TruncateType);
+        var output = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.OutputType);
+        var activeLayout = new SpaceLayoutDocument([source, truncate, output],
+            [new(Guid.NewGuid(), source.Id, "out", truncate.Id, "in"), new(Guid.NewGuid(), truncate.Id, "out", output.Id, "in")])
+        { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
+        var activeSpace = new SpaceDefinition(Guid.NewGuid(), "Preview sample", "", "space", SpaceKind.General,
+            false, false, null, "", SpaceThinkingMode.Default, [], [], null, now, now, LayoutDocument: activeLayout);
+        var draftUpdates = 0;
+        using var page = new SpaceLayoutEditorPage(activeSpace, _ => draftUpdates++);
+        page.Editor.SelectNode(truncate.Id);
+        var maximum = Assert.Single(page.NodeConfigurationInputs,
+            pair => pair.Key.EndsWith(".maximumTextElements", StringComparison.Ordinal)).Value;
+        maximum.Text = "3";
+        page.PreviewSampleInput.Text = "abcdef";
+        var updatesBeforePreview = draftUpdates;
+
+        await page.PreviewSampleAsync();
+
+        Assert.Equal(updatesBeforePreview, draftUpdates);
+        Assert.Equal("1000", activeSpace.LayoutDocument!.Nodes.Single(node => node.TypeId == SpaceUserMessageGraph.TruncateType)
+            .Metadata["maximumTextElements"]);
+        Assert.Equal(1, activeSpace.ActiveConfigurationRevision);
+        Assert.Contains("Synthetic sample derived output", page.PreviewOutput.Content, StringComparison.Ordinal);
+        Assert.Contains("3 Unicode text element(s) omitted", page.PreviewOutput.Content, StringComparison.Ordinal);
+        Assert.Contains("abc", page.PreviewOutput.Content, StringComparison.Ordinal);
+        Assert.Contains(SpaceUserMessageGraph.TruncateType, page.PreviewTrace.Content, StringComparison.Ordinal);
+        Assert.Contains("SHA-256", page.PreviewTrace.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Builder_sample_preview_reports_an_incomplete_graph_instead_of_claiming_success()
+    {
+        var (page, _, _) = NewPage();
+        using (page)
+        {
+            Add(page, SpaceUserMessageGraph.SourceType);
+            await page.PreviewSampleAsync();
+            Assert.Contains("Sample preview unavailable", page.PreviewOutput.Content, StringComparison.Ordinal);
+            Assert.Empty(page.PreviewTrace.Content);
+        }
+    }
+
+    [Fact]
+    public async Task Builder_sample_preview_surfaces_numeric_format_uncertainty_from_the_typed_trace()
+    {
+        var (page, _, _) = NewPage();
+        using (page)
+        {
+            Add(page, SpaceUserMessageGraph.SourceType);
+            Add(page, SpaceUserMessageGraph.ExtractNumbersType);
+            Add(page, SpaceUserMessageGraph.NumbersToTextType);
+            Add(page, SpaceUserMessageGraph.OutputType);
+            var nodes = page.Editor.Document.Nodes.ToDictionary(node => node.TypeId, StringComparer.Ordinal);
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.SourceType].Id, "out",
+                nodes[SpaceUserMessageGraph.ExtractNumbersType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.ExtractNumbersType].Id, "out",
+                nodes[SpaceUserMessageGraph.NumbersToTextType].Id, "in"));
+            Assert.True(page.Editor.Connect(nodes[SpaceUserMessageGraph.NumbersToTextType].Id, "out",
+                nodes[SpaceUserMessageGraph.OutputType].Id, "in"));
+            page.PreviewSampleInput.Text = "The ambiguous candidate is 1,234.";
+
+            await page.PreviewSampleAsync();
+
+            Assert.Contains("numeric uncertainty", page.PreviewTrace.Content, StringComparison.Ordinal);
+            Assert.Contains(SpaceUserMessageGraph.ExtractNumbersType, page.PreviewTrace.Content, StringComparison.Ordinal);
+            Assert.Contains("1,234", page.PreviewTrace.Content, StringComparison.Ordinal);
+        }
+    }
+
     private static void Add(SpaceLayoutEditorPage page, string typeId) =>
         Assert.Single(page.UserMessagePalette, entry => entry.TypeId == typeId).Button.Invoke();
 

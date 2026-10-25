@@ -1,6 +1,7 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Haven.Application;
+using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.UI;
 using Haven.UI.Components;
@@ -97,9 +98,11 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     private readonly List<(HavenButton Button, string TypeId, EventHandler Handler)> _userMessagePalette = [];
     private readonly List<(HavenInput Input, EventHandler Handler)> _configurationInputs = [];
     private readonly Container _configurationInspector;
+    private readonly CancellationTokenSource _pageLifetime = new();
     private SpaceDefinition _space;
     private bool _disposed;
     private bool _saving;
+    private bool _previewing;
     private bool _suppressDraftChange;
 
     public SpaceLayoutEditorPage(SpaceRegistry registry, SpaceDefinition space)
@@ -115,7 +118,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         _onDraftChanged = onDraftChanged;
         _space = space ?? throw new ArgumentNullException(nameof(space));
 
-        var root = new HavenPage { Name = "Spaces.Layout.Root", Layout = HavenLayout.Grid, Rows = "Auto Auto Auto 1fr Auto" };
+        var root = new HavenPage { Name = "Spaces.Layout.Root", Layout = HavenLayout.Grid, Rows = "Auto Auto Auto Auto 1fr Auto" };
         root.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         root.SetValue(HavenProperties.Height, HavenLength.Percent(100));
         root.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(18)));
@@ -155,8 +158,29 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         }
         root.Add(palette);
 
+        var previewPanel = new Container { Name = "Spaces.Layout.SamplePreview", Layout = HavenLayout.Vertical };
+        previewPanel.SetValue(HavenProperties.Row, 2);
+        previewPanel.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+        previewPanel.SetValue(HavenProperties.Gap, HavenLength.Px(6));
+        previewPanel.Accessibility.AccessibleName = "User-message graph sample preview";
+        previewPanel.Add(new HavenText("Sample preview · synthetic input only · no model, Files, app or external action is called.")
+            { Level = TextLevel.Caption });
+        _previewSampleInput = new HavenInput { Name = "Spaces.Layout.SamplePreview.Input", Placeholder = "Synthetic sample user message" };
+        _previewSampleInput.Accessibility.AccessibleName = "Synthetic sample user message; this is not sent or saved";
+        _previewSampleInput.Text = "The sample contains 12, 34.5 and -6e2.";
+        previewPanel.Add(_previewSampleInput);
+        _previewButton = ActionButton("Spaces.Layout.SamplePreview.Run", "play", "Preview sample", ButtonVariant.Secondary);
+        _previewButton.Accessibility.Description = "Run the current draft graph against the synthetic sample input only. No model or external service is called.";
+        _previewButton.Invoked += OnPreviewSample;
+        previewPanel.Add(_previewButton);
+        _previewOutput = new HavenText("No sample preview has run.") { Name = "Spaces.Layout.SamplePreview.Output", Level = TextLevel.Paragraph };
+        previewPanel.Add(_previewOutput);
+        _previewTrace = new HavenText(string.Empty) { Name = "Spaces.Layout.SamplePreview.Trace", Level = TextLevel.Caption };
+        previewPanel.Add(_previewTrace);
+        root.Add(previewPanel);
+
         _configurationInspector = new Container { Name = "Spaces.Layout.NodeConfiguration", Layout = HavenLayout.Wrap };
-        _configurationInspector.SetValue(HavenProperties.Row, 2);
+        _configurationInspector.SetValue(HavenProperties.Row, 3);
         _configurationInspector.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         _configurationInspector.SetValue(HavenProperties.Gap, HavenLength.Px(8));
         _configurationInspector.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
@@ -165,7 +189,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
 
         Editor = new NodeEditor { Name = "Spaces.Layout.NodeEditor" };
         Editor.Accessibility.AccessibleName = $"{space.Name} layout and additional logic editor";
-        Editor.SetValue(HavenProperties.Row, 3);
+        Editor.SetValue(HavenProperties.Row, 4);
         Editor.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         Editor.SetValue(HavenProperties.Height, HavenLength.Percent(100));
         Editor.SetValue(HavenProperties.MinHeight, HavenLength.Px(420));
@@ -180,7 +204,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
             ? "Add registered nodes, connect their typed ports, then validate the graph."
             : $"Loaded {Editor.Document.Nodes.Count} nodes and {Editor.Document.Edges.Count} connections.")
         { Name = "Spaces.Layout.Status", Level = TextLevel.Caption };
-        Status.SetValue(HavenProperties.Row, 4);
+        Status.SetValue(HavenProperties.Row, 5);
         Status.SetValue(HavenProperties.Foreground, "TextSecondary");
         root.Add(Status);
 
@@ -201,8 +225,15 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     internal HavenSceneControl Scene { get; }
     internal NodeEditor Editor { get; }
     internal HavenText Status { get; }
+    private HavenInput _previewSampleInput { get; }
+    private HavenButton _previewButton { get; }
+    private HavenText _previewOutput { get; }
+    private HavenText _previewTrace { get; }
     internal IReadOnlyList<(HavenButton Button, string TypeId)> UserMessagePalette =>
         _userMessagePalette.Select(item => (item.Button, item.TypeId)).ToArray();
+    internal HavenInput PreviewSampleInput => _previewSampleInput;
+    internal HavenText PreviewOutput => _previewOutput;
+    internal HavenText PreviewTrace => _previewTrace;
     internal HavenButton DeleteSelection { get; }
     internal HavenButton ResetView { get; }
     internal HavenButton Save { get; }
@@ -290,6 +321,82 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     private void OnDeleteSelection(object? sender, EventArgs e) => Editor.DeleteSelection();
     private void OnResetView(object? sender, EventArgs e) => Editor.ResetViewport();
 
+    private async void OnPreviewSample(object? sender, EventArgs e) => await PreviewSampleAsync().ConfigureAwait(true);
+
+    internal async Task PreviewSampleAsync()
+    {
+        if (_disposed || _previewing) return;
+        var sample = _previewSampleInput.Text;
+        if (string.IsNullOrEmpty(sample))
+        {
+            _previewOutput.Content = "Enter a synthetic sample message first.";
+            _previewTrace.Content = string.Empty;
+            return;
+        }
+
+        var document = Editor.Document;
+        var draftRevision = document.Revision;
+        var graphId = document.GraphId;
+        var spaceId = _space.Id;
+        var spaceRevision = _space.Revision;
+        _previewing = true;
+        _previewButton.SetValue(HavenProperties.Enabled, false);
+        _previewButton.SetState(HavenElementState.Disabled, true);
+        _previewOutput.Content = "Running the current draft against the synthetic sample…";
+        _previewTrace.Content = string.Empty;
+        try
+        {
+            var layout = SpaceLayoutEditorAdapter.FromEditor(document, _space.LayoutDocument);
+            var graph = SpaceUserMessageGraph.Compile(spaceId, spaceRevision, layout);
+            var message = new ChatMessage(Guid.NewGuid(), Guid.NewGuid(), MessageRole.User, sample,
+                AgentName: null, ModelName: null, MetadataJson: null, CreatedAt: DateTimeOffset.UtcNow);
+            var result = await graph.ExecuteAsync(message, _pageLifetime.Token).ConfigureAwait(true);
+            if (_disposed) return;
+            if (Editor.Document.Revision != draftRevision || Editor.Document.GraphId != graphId ||
+                _space.Id != spaceId || _space.Revision != spaceRevision || !string.Equals(_previewSampleInput.Text, sample, StringComparison.Ordinal))
+            {
+                _previewOutput.Content = "Preview result discarded because the draft or sample changed while it ran. Run the sample again.";
+                _previewTrace.Content = string.Empty;
+                return;
+            }
+
+            _previewOutput.Content = $"Synthetic sample derived output · {result.OmittedTextElements} Unicode text element(s) omitted:\n" +
+                LimitPreviewDisplay(result.DerivedText);
+            _previewTrace.Content = LimitPreviewDisplay("Sample-only node trace:\n" + string.Join("\n", result.Trace.Select(item =>
+            {
+                var value = result.TypedNodeOutputs.GetValueOrDefault(item.NodeId);
+                var typed = value?.JsonValue is { } json ? " · value=" + json.GetRawText() : string.Empty;
+                var flags = item.MoreResultsOmitted ? " · more results omitted" : string.Empty;
+                if (item.HasNumericUncertainty) flags += " · numeric uncertainty";
+                return $"{item.TypeId}: {item.State}; {item.InputTextElements} → {item.OutputTextElements} text elements; {item.OutputDataType}; SHA-256 {item.OutputSha256 ?? "unavailable"}{flags}{typed}";
+            })));
+        }
+        catch (OperationCanceledException) when (_pageLifetime.IsCancellationRequested)
+        {
+            if (!_disposed) _previewOutput.Content = "Sample preview cancelled because the editor closed.";
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or ArgumentException or OperationCanceledException)
+        {
+            if (!_disposed)
+            {
+                _previewOutput.Content = "Sample preview unavailable: " + exception.Message;
+                _previewTrace.Content = string.Empty;
+            }
+        }
+        finally
+        {
+            _previewing = false;
+            if (!_disposed)
+            {
+                _previewButton.SetValue(HavenProperties.Enabled, true);
+                _previewButton.SetState(HavenElementState.Disabled, false);
+            }
+        }
+    }
+
+    private static string LimitPreviewDisplay(string value) => value.Length <= 8192
+        ? value : value[..8192] + "… [display truncated; graph output was not changed]";
+
     private void OnDocumentChanged(NodeEditorDocument document)
     {
         Status.Content = $"Unsaved changes · {document.Nodes.Count} nodes · {document.Edges.Count} connections";
@@ -354,13 +461,16 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        _pageLifetime.Cancel();
         foreach (var (input, handler) in _configurationInputs) input.TextChanged -= handler;
         _configurationInputs.Clear();
         foreach (var (button, _, handler) in _userMessagePalette) button.Invoked -= handler;
+        _previewButton.Invoked -= OnPreviewSample;
         DeleteSelection.Invoked -= OnDeleteSelection;
         ResetView.Invoked -= OnResetView;
         Save.Invoked -= OnSave;
         Editor.DocumentChanged -= OnDocumentChanged;
         Editor.SelectionChanged -= OnSelectionChanged;
+        _pageLifetime.Dispose();
     }
 }
