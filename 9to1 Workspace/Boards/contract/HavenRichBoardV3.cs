@@ -768,8 +768,8 @@ public static partial class HavenRichNotesOps
     public static bool DeleteTableRow(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
-        if (HasMergedCells(table)) return false;
         if (table.Rows.Count <= 1 || index < 0 || index >= table.Rows.Count) return false;
+        if (RowIntersectsMerge(table, index)) return false;
         table.Rows.RemoveAt(index);
         if (index < table.RowHeights.Count) table.RowHeights.RemoveAt(index);
         TouchNotes(notes);
@@ -813,9 +813,9 @@ public static partial class HavenRichNotesOps
     public static bool DeleteTableColumn(HavenRichNotes notes, string pageId, string blockId, int index)
     {
         var table = RequireTable(notes, pageId, blockId);
-        if (HasMergedCells(table)) return false;
         var width = table.Rows[0].Cells.Count;
         if (width <= 1 || index < 0 || index >= width) return false;
+        if (ColumnIntersectsMerge(table, index)) return false;
         foreach (var row in table.Rows)
             row.Cells.RemoveAt(index);
         if (index < table.ColumnWidths.Count) table.ColumnWidths.RemoveAt(index);
@@ -938,6 +938,14 @@ public static partial class HavenRichNotesOps
 
     private static bool HasMergedCells(HavenRichTable table) => table.Rows.SelectMany(row => row.Cells)
         .Any(cell => cell.CoveredByCellId is not null || cell.RowSpan > 1 || cell.ColumnSpan > 1);
+
+    private static bool RowIntersectsMerge(HavenRichTable table, int row) =>
+        table.Rows[row].Cells.Any(cell => cell.CoveredByCellId is not null ||
+            cell.RowSpan > 1 || cell.ColumnSpan > 1);
+
+    private static bool ColumnIntersectsMerge(HavenRichTable table, int column) =>
+        table.Rows.Any(row => row.Cells[column].CoveredByCellId is not null ||
+            row.Cells[column].RowSpan > 1 || row.Cells[column].ColumnSpan > 1);
 
     private static void MoveParallelValue(List<double> values, int fromIndex, int toIndex)
     {

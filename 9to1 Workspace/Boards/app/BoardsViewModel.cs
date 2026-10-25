@@ -2551,10 +2551,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
-        if (block.HasMergedCells) { Set("StatusText", "Split merged cells before removing a table row."); return; }
         EnsureTableDims(block);
         if (block.TableRows <= 1)
             return;
+        if (TableEdgeIntersectsMerge(block, rowEdge: true))
+        {
+            Set("StatusText", "Split the merged cells in the last row before deleting that row.");
+            return;
+        }
         block.TableRows--;
         var doomed = block.TableCells.Keys.Where(k => RowOf(k) >= block.TableRows).ToArray();
         foreach (var key in doomed)
@@ -2587,10 +2591,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
-        if (block.HasMergedCells) { Set("StatusText", "Split merged cells before removing a table column."); return; }
         EnsureTableDims(block);
         if (block.TableCols <= 1)
             return;
+        if (TableEdgeIntersectsMerge(block, rowEdge: false))
+        {
+            Set("StatusText", "Split the merged cells in the last column before deleting that column.");
+            return;
+        }
         block.TableCols--;
         var doomed = block.TableCells.Keys.Where(k => ColOf(k) >= block.TableCols).ToArray();
         foreach (var key in doomed)
