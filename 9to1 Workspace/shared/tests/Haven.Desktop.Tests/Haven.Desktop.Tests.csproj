@@ -57,6 +57,7 @@
     <Compile Include="OriginalNativeDevelopmentCompositionTests.cs;SpaceLayoutEditorAdapterTests.cs" />
     <Compile Include="SpaceTasksDashboardOriginalWorkTests.cs;SpaceTasksDashboardCuiTests.cs" />
     <Compile Include="FilesNativeBoardDocumentCreateTests.cs" />
+    <Compile Include="UserPreferencesServiceTaskScopeTests.cs" />
     <Compile Include="StrataLoopbackProviderSettingsTests.cs" />
     <Compile Include="HomeLibraryDestinationTests.cs;DeveloperManualDraftRecoveryTests.cs" />
     <Compile Include="DeveloperSavedProjectsNavigationTests.cs;TaskRunEndPassTests.cs" />
