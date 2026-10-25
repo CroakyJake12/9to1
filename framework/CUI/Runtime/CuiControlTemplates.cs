@@ -588,7 +588,9 @@ public static class CuiControlTemplates
             check.HorizontalAlignment = checkOverIcon ? HorizontalAlignment.Right : HorizontalAlignment.Center;
             check.VerticalAlignment = checkOverIcon ? VerticalAlignment.Top : VerticalAlignment.Center;
             check.Margin = checkOverIcon ? new Thickness(2) : new Thickness(0);
-            iconImage.Width = iconImage.Height = iconOnly ? 36 : 20;
+            var explicitIconSize = owner is CuiMenuItem { IconSize: var size } && double.IsFinite(size) ? size : double.NaN;
+            iconImage.Width = iconImage.Height = double.IsNaN(explicitIconSize) ? iconOnly ? 36 : 20 : explicitIconSize;
+            iconContent.Width = iconContent.Height = explicitIconSize;
             iconImage.IsVisible = hasImage;
             iconContent.IsVisible = !hasImage && owner.Icon is not null;
             check.IsVisible = hasToggle;
@@ -609,7 +611,7 @@ public static class CuiControlTemplates
         }
         owner.PropertyChanged += (_, change) =>
         {
-            if (change.Property == Avalonia.Controls.MenuItem.IconProperty || change.Property == CuiMenuItem.IconOnlyProperty
+            if (change.Property == Avalonia.Controls.MenuItem.IconProperty || change.Property == CuiMenuItem.IconOnlyProperty || change.Property == CuiMenuItem.IconSizeProperty
                 || change.Property == Avalonia.Controls.MenuItem.ToggleTypeProperty
                 || change.Property == Avalonia.Controls.MenuItem.IsCheckedProperty) UpdateRow();
         };
