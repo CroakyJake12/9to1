@@ -64,11 +64,17 @@ public sealed class SpaceUserMessageGraph
         if (spaceId == Guid.Empty || spaceRevision < 1 || layout.GraphId == Guid.Empty || layout.Revision < 1 ||
             layout.SchemaVersion != SpaceLayoutDocument.CurrentSchemaVersion || layout.Nodes is null || layout.Edges is null ||
             layout.Nodes.Count is < 2 or > SpaceLayoutDocument.MaximumNodes || layout.Edges.Count > SpaceLayoutDocument.MaximumEdges ||
-            layout.Edges.Any(edge => edge is null))
+            layout.Edges.Any(edge => edge is null || edge.Metadata is null || edge.Metadata.Count != 0 || !string.IsNullOrEmpty(edge.Branch)) ||
+            layout.Nodes.Any(node => node is null || node.Ports is null || node.Ports.Count > 2 || node.Metadata is null || node.Metadata.Count > 1))
             throw Invalid("The Space graph needs bounded canonical identities and a supported schema.");
-        // Snapshot editable collections before schema validation and execution projection.
-        layout = JsonSerializer.Deserialize<SpaceLayoutDocument>(JsonSerializer.SerializeToUtf8Bytes(layout))
-            ?? throw Invalid("The Space graph could not be snapshotted.");
+        // Snapshot only executable data. Unrelated editor comments/geometry are not copied
+        // into a request, and bounds are checked before cloning editable collections.
+        layout = layout with
+        {
+            Nodes = layout.Nodes.Select(node => node with
+            { Ports = node.Ports.ToArray(), Metadata = node.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal) }).ToArray(),
+            Edges = layout.Edges.ToArray()
+        };
         var schemas = CanonicalAutomationCoreNodes.CreateRegistry();
         var registered = schemas.ListNodeTypes(ProfileId);
         var nodes = new List<GraphNode>();
