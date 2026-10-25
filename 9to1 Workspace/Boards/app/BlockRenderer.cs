@@ -129,7 +129,7 @@ public static class BlockRenderer
             grip.Opacity = 0;
             if (grip.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.Name == "BlockGripToggle") is { } toggle)
                 ConfigureBlockGutterButton(toggle, insertAction: false);
-            grip.Margin = new Thickness(0, 0, 4, 0);
+            grip.Margin = new Thickness(0);
             Grid.SetColumn(grip, 0);
             row.Children.Add(grip);
 

@@ -202,6 +202,8 @@ public sealed class VisualCaptureTests
         Assert.Equal(32, grip.Bounds.Height);
         Assert.Equal(32, insert.Bounds.Width);
         Assert.Equal(32, insert.Bounds.Height);
+        Assert.True(gripPoint.Value.X + grip.Bounds.Width <= insertPoint.Value.X + 0.5,
+            $"The 32px grip and insert targets must remain adjacent without overlap; grip={gripPoint.Value}, insert={insertPoint.Value}.");
         Assert.True(gripPoint.Value.X >= 0 && gripPoint.Value.X + grip.Bounds.Width <= titlePoint.Value.X + 1,
             $"The 32px grip target must fit in the margin left of the title; grip={gripPoint.Value}, title={titlePoint.Value}, card={pageCard.Bounds}.");
         Assert.True(insertPoint.Value.X >= 0 && insertPoint.Value.X + insert.Bounds.Width <= titlePoint.Value.X + 1,
