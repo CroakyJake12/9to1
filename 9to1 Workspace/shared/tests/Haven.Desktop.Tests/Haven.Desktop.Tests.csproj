@@ -56,7 +56,7 @@
     <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
     <Compile Include="OriginalNativeDevelopmentCompositionTests.cs;SpaceLayoutEditorAdapterTests.cs" />
     <Compile Include="SpaceTasksDashboardOriginalWorkTests.cs;SpaceTasksDashboardCuiTests.cs" />
-    <Compile Include="SpaceGraphContextPickerTests.cs;BoardsSectionIconSuggestionServiceTests.cs" />
+    <Compile Include="SpaceGraphContextPickerTests.cs;SpaceGraphTextNormalizationTests.cs;BoardsSectionIconSuggestionServiceTests.cs" />
     <Compile Include="FilesNativeBoardDocumentCreateTests.cs" />
     <Compile Include="NativeHomeFilesBoardCreationIntegrationTests.cs" />
     <Compile Include="TaskObservationAuthorizationTests.cs" />

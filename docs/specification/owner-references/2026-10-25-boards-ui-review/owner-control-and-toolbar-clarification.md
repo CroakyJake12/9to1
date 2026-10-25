@@ -166,3 +166,18 @@ The requested live generated section icons remain distinct from built-in icons
 or name-based recommendations. A fixed searchable palette does not fulfil the
 live generation requirement. Keep that remaining requirement explicit until a
 real model route, safe persisted representation and rendering are implemented.
+
+## Latest populated-render review
+
+The owner requests a visibly present soft Glow gradient, heavier toolbar text
+(including font size), and font family/size controls supporting both typing and
+dropdown choice. Table default borders must follow the active accent and retain
+a uniform corner stroke; explicit saved user colours still win. The representative
+maths fixture should demonstrate default theme styling, not an accidental blue
+override. Use white bold text on a brighter **+ Add** pill about three-fifths of
+the sidebar width. Center the board-name/save-status group with its icon and
+chevron. Reduce the Editing and Vertical Stacking containers' vertical padding,
+brighten dropdown triggers and the selected-page accent. Update actual section
+and page icons, and correct malformed list/alignment toolbar glyphs to readable
+line-and-dot/number silhouettes. Preserve the previous spacing, margin-controls,
+user theme overrides, accessible input and real actions.
