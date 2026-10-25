@@ -28,7 +28,8 @@ public sealed class VisualCaptureTests
         return dir;
     }
 
-    private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false, bool openStyleMenu = false)
+    private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false,
+        bool openStyleMenu = false, bool openSectionIconPicker = false)
     {
         var priorMode = TestUiThread.Run(() => BoardsTheme.Mode);
         var priorCuiTheme = TestUiThread.Run(() => CuiSurfacePaletteCatalog.ActiveTheme);
@@ -50,7 +51,8 @@ public sealed class VisualCaptureTests
             window = mountedWindow;
             PumpUi(TestUiThread.Run(() => presentation.WaitUntilReadyAsync()), "surface readiness");
             PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()), "render drain");
-            return TestUiThread.Run(() => CaptureReadyOnUiThread(presentation, mountedWindow, width, height, shotName, openStyleMenu));
+            return TestUiThread.Run(() => CaptureReadyOnUiThread(presentation, mountedWindow, width, height,
+                shotName, openStyleMenu, openSectionIconPicker));
         }
         finally
         {
@@ -93,7 +95,7 @@ public sealed class VisualCaptureTests
     }
 
     private static string CaptureReadyOnUiThread(BoardsWritablePresentation presentation, Window window,
-        int width, int height, string shotName, bool openStyleMenu)
+        int width, int height, string shotName, bool openStyleMenu, bool openSectionIconPicker)
     {
         var viewModel = presentation.ViewModel;
         var root = presentation.Content;
@@ -107,6 +109,32 @@ public sealed class VisualCaptureTests
             using var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new Vector(96, 96));
             bitmap.Render(window);
             bitmap.Save(path);
+        }
+
+        if (openSectionIconPicker)
+        {
+            // Keep this capture tied to the real picker state used by the
+            // navigation context menu. Reflection lets this focused visual
+            // fixture remain source-compatible with older presentation APIs;
+            // the method must exist in the integrated picker owner.
+            var openPicker = viewModel.GetType().GetMethod("OpenSectionIconPicker");
+            Assert.NotNull(openPicker);
+            openPicker.Invoke(viewModel, [viewModel.SelectedSectionId]);
+            Dispatcher.UIThread.RunJobs();
+
+            var picker = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "SectionIconPickerPanel")
+                ?? throw new InvalidOperationException("Missing authored section icon picker panel. Runtime tree:\n" +
+                    BoardsCuiControlFinder.DescribeRuntimeTree(root));
+            Assert.True(picker.IsVisible, "Opening the selected section's appearance action should show the real picker.");
+            var search = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "SectionIconPickerSearch");
+            Assert.NotNull(search);
+            var iconChoices = root.GetVisualDescendants().OfType<Button>()
+                .Select(button => Avalonia.Automation.AutomationProperties.GetName(button))
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .ToArray();
+            Assert.Contains("Use Boards section icon", iconChoices);
+            Assert.Contains("Use Folder section icon", iconChoices);
+            Assert.Contains("Use Violet for this section icon", iconChoices);
         }
         SaveCapture(shotPath);
 
@@ -188,12 +216,24 @@ public sealed class VisualCaptureTests
             ?? throw new InvalidOperationException("The page title is not in the page card visual tree.");
         var blockTextPoint = firstBlockText.TranslatePoint(new Point(0, 0), pageCard)
             ?? throw new InvalidOperationException("The block text is not in the page card visual tree.");
+        var titlePresenter = pageTitle.GetVisualDescendants()
+            .OfType<Avalonia.Controls.Presenters.TextPresenter>().FirstOrDefault()
+            ?? throw new InvalidOperationException("The page title has no rendered text presenter.");
+        var blockTextPresenter = firstBlockText.GetVisualDescendants()
+            .OfType<Avalonia.Controls.Presenters.TextPresenter>().FirstOrDefault()
+            ?? throw new InvalidOperationException("The first document block has no rendered text presenter.");
+        var titleGlyphPoint = titlePresenter.TranslatePoint(new Point(0, 0), pageCard)
+            ?? throw new InvalidOperationException("The page title glyphs are not in the page card visual tree.");
+        var blockGlyphPoint = blockTextPresenter.TranslatePoint(new Point(0, 0), pageCard)
+            ?? throw new InvalidOperationException("The block glyphs are not in the page card visual tree.");
         var gripPoint = grip.TranslatePoint(new Point(0, 0), pageCard)
             ?? throw new InvalidOperationException("The block grip is not in the page card visual tree.");
         var insertPoint = insert.TranslatePoint(new Point(0, 0), pageCard)
             ?? throw new InvalidOperationException("The block insert action is not in the page card visual tree.");
         Assert.True(Math.Abs(blockTextPoint.X - titlePoint.X) <= 1,
             $"Block text should align with the page title; block={blockTextPoint}, title={titlePoint}.");
+        Assert.True(Math.Abs(blockGlyphPoint.X - titleGlyphPoint.X) <= 1,
+            $"Rendered block glyphs should align with rendered page-title glyphs; block={blockGlyphPoint}, title={titleGlyphPoint}.");
         Assert.Equal(32, grip.Bounds.Width);
         Assert.Equal(32, grip.Bounds.Height);
         Assert.Equal(32, insert.Bounds.Width);
@@ -315,6 +355,16 @@ public sealed class VisualCaptureTests
     {
         var dir = await FixtureDirAsync();
         var shot = Capture(Path.Combine(dir, "A-Level Maths.9to1board"), 1440, 900, "maths-dark-1440x900.png", dark: true);
+        Assert.True(File.Exists(shot));
+        Assert.True(new FileInfo(shot).Length > 4096);
+    }
+
+    [Fact]
+    public async Task Capture_builtin_section_icon_picker_1440x900()
+    {
+        var dir = await FixtureDirAsync();
+        var shot = Capture(Path.Combine(dir, "A-Level Maths.9to1board"), 1440, 900,
+            "section-icon-picker-1440x900.png", dark: true, openSectionIconPicker: true);
         Assert.True(File.Exists(shot));
         Assert.True(new FileInfo(shot).Length > 4096);
     }
