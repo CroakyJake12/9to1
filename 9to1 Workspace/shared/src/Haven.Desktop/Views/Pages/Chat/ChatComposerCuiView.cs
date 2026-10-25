@@ -19,6 +19,14 @@ namespace Haven.Desktop.Views.Pages.Chat;
 /// <summary>One authored composer chip (capability/Agent/Skill/resource or persisted attachment).</summary>
 public sealed record ChatComposerChip(string Id, string Label, bool Invokable);
 
+/// <summary>Borrowed actual host of the existing Voice workflow. Opening presentation never
+/// starts capture; its owning Start command retains device consent and call lifetime.</summary>
+internal interface IChatComposerVoiceActions
+{
+    bool CanEnter(Guid conversationId, ModelDescriptor model);
+    ValueTask Enter(Guid conversationId, ModelDescriptor model);
+}
+
 internal interface IChatComposerTaskActions
 {
     bool IsApplicable { get; }
@@ -57,6 +65,8 @@ internal interface IChatComposerTaskActions
 public interface IChatComposerSource
 {
     object? ActionIdentity => null;
+    bool CanEnterVoice => false;
+    ValueTask EnterVoice() => ValueTask.FromException(new NotSupportedException("No actual Voice workflow owner is bound."));
     string Draft { get; set; }
     string Placeholder { get; }
     bool IsSending { get; }
@@ -147,7 +157,9 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         if (!_source.IsSending && _source.HasPendingMessage && _source.CanSend)
             actions.Insert(0, Item("send", "composer.send", _source.IsEditing ? "Update message" : "Send", "send",
                 _source.IsEditing ? "Update the message being edited" : "Send message"));
-        // Voice is added only when the same-session capture owner can actually acquire it.
+        if (_source.CanEnterVoice)
+            actions.Add(new("voice", "composer.voice", "Voice", "avares://Haven/Assets/composer-voice.svg",
+                "Open Voice in this same conversation; capture starts only with its Start command", ContextIdentity: _source.ActionIdentity));
         return actions;
     }
 
@@ -287,6 +299,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             "composer.prefer-steer" or "composer.prefer-queue" => _source.HasSendModePreference,
             "composer.send" => !_source.IsSending && _source.HasPendingMessage && _source.CanSend,
             "composer.queue" => _source.CanQueue,
+            "composer.voice" => _source.CanEnterVoice,
             "composer.stop" => _source.CanStop,
             "composer.steer" => _source.CanSteer,
             "composer.pause" => _source.CanPause,
@@ -314,6 +327,8 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return _source.Send();
             case "composer.queue" when IsActionAvailable(command) == true:
                 return _source.Queue();
+            case "composer.voice" when _source.CanEnterVoice:
+                return _source.EnterVoice();
             case "composer.stop" when _source.CanStop:
                 return StopProjectedAsync();
             case "composer.steer" when _source.CanSteer:

@@ -16,6 +16,18 @@ internal sealed partial class ChatHavenScene
         internal IChatComposerTaskActions? TaskActions { get; set; }
         internal Func<object?>? ActionContextIdentity { get; set; }
         public object? ActionIdentity => ActionContextIdentity?.Invoke();
+        internal IChatComposerVoiceActions? VoiceActions { get; set; }
+        internal Func<(Guid ConversationId, ModelDescriptor? Model)>? VoiceTarget { get; set; }
+        public bool CanEnterVoice => VoiceTarget?.Invoke() is { Model: { } model } target &&
+            VoiceActions?.CanEnter(target.ConversationId, model) == true;
+        public ValueTask EnterVoice()
+        {
+            var owner = VoiceActions;
+            var target = VoiceTarget?.Invoke();
+            return target is { Model: { } model } actual && owner is not null && owner.CanEnter(actual.ConversationId, model)
+                ? owner.Enter(actual.ConversationId, model)
+                : ValueTask.FromException(new InvalidOperationException("The original conversation's Voice workflow is unavailable."));
+        }
         private IChatComposerTaskActions? ActiveTask => TaskActions is { IsApplicable: true } actual ? actual : null;
         public HavenComposerSource(ChatHavenScene scene) => _scene = scene;
 

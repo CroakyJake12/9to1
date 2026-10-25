@@ -28,6 +28,37 @@ public sealed partial class MainView
     private InChatCallWidgetViewModel? _globalCallViewModel;
     private NativeProjectsPage? _nativeProjectsPage;
     private readonly NativeProjectUiStateStore _nativeProjectUiStateStore = new();
+    private NewChatPage? _composerVoicePage;
+
+    private sealed class ShellComposerVoiceActions(MainView shell, NewChatPage page,
+        InChatCallWidgetViewModel owner) : IChatComposerVoiceActions
+    {
+        public bool CanEnter(Guid conversationId, ModelDescriptor model) => shell._betaOverlaysAttached &&
+            ReferenceEquals(shell._globalCallViewModel, owner) && ReferenceEquals(shell.CurrentPage, page) &&
+            page.IsOriginalVoiceTarget(conversationId, model) &&
+            (!owner.IsActive || owner.LinkedCallConversationId == conversationId);
+        public ValueTask Enter(Guid conversationId, ModelDescriptor model)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.VerifyAccess();
+            if (!CanEnter(conversationId, model))
+                return ValueTask.FromException(new InvalidOperationException("The same conversation's Voice host is unavailable."));
+            owner.AttachConversation(conversationId, model);
+            owner.Open(); // Real presentation only; the existing Start command owns capture.
+            if (shell._globalCallWidget is { } widget) widget.IsVisible = owner.IsVisible;
+            return ValueTask.CompletedTask;
+        }
+    }
+    private void BindCurrentComposerVoiceOwner(object? content)
+    {
+        var page = content as NewChatPage;
+        if (!ReferenceEquals(page, _composerVoicePage))
+        {
+            _composerVoicePage?.BindOriginalComposerVoiceOwner(null);
+            _composerVoicePage = page;
+        }
+        if (page is not null && _betaOverlaysAttached && _globalCallViewModel is { } owner)
+            page.BindOriginalComposerVoiceOwner(new ShellComposerVoiceActions(this, page, owner));
+    }
 
     public void OpenVoiceSession()
     {
@@ -180,10 +211,15 @@ public sealed partial class MainView
             return;
         }
 
-        if (_globalCallWidget is not null && _globalCallViewModel is not null)
+        void RefreshOwnedVoiceProjection()
         {
-            _globalCallWidget.IsVisible = _globalCallViewModel.IsVisible;
+            if (!_betaOverlaysAttached || !ReferenceEquals(sender, _globalCallViewModel)) return;
+            _composerVoicePage?.RefreshOriginalComposerVoiceAvailability();
+            if (_globalCallWidget is not null && _globalCallViewModel is not null)
+                _globalCallWidget.IsVisible = _globalCallViewModel.IsVisible;
         }
+        if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess()) RefreshOwnedVoiceProjection();
+        else Avalonia.Threading.Dispatcher.UIThread.Post(RefreshOwnedVoiceProjection);
     }
 
     private void OnPageContentPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -203,6 +239,7 @@ public sealed partial class MainView
             return;
         }
 
+        BindCurrentComposerVoiceOwner(content);
         var destination = ClassifyLegacyPresentation(content);
         switch (destination)
         {
@@ -401,6 +438,8 @@ public sealed partial class MainView
         }
 
         _betaOverlaysAttached = false;
+        _composerVoicePage?.BindOriginalComposerVoiceOwner(null);
+        _composerVoicePage = null;
         _sessions.ExecutionChanged -= OnExecutionChanged;
         PageContent.PropertyChanged -= OnPageContentPropertyChanged;
 

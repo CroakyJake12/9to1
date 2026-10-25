@@ -154,6 +154,102 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Native_voice_entry_requires_its_actual_host_and_preserves_the_same_draft_and_selection()
+    {
+        await using var rig = new Rig(temporary: false);
+        var offered = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        rig.Client.AvailableModels = [offered];
+        var directory = Path.Combine(Path.GetTempPath(), "native-voice-entry-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var page = CreateNativeComposerPage(rig, directory, new NativeComposerDraftStore());
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            page.SelectModel(offered);
+            page.SetDraft("keep this draft");
+            var view = page.OriginalTaskComposer;
+            view.Input.SetSelection(2, 7);
+            var selection = (view.Input.CaretIndex, view.Input.SelectionStart, view.Input.SelectionLength);
+            Assert.False(view.Bindings.IsActionAvailable("composer.voice"));
+            var actualOwner = new NativeVoiceEntryOwner(page.ConversationId, offered);
+            page.BindOriginalComposerVoiceOwner(actualOwner);
+            Assert.True(view.Bindings.IsActionAvailable("composer.voice"));
+            Assert.True(view.Bindings.TryGetValue("Composer.ActionShelf", out var value));
+            Assert.Equal(new[] { "send", "voice" }, Assert.IsAssignableFrom<IReadOnlyList<CakeOS.Cui.Runtime.CuiActionShelfItem>>(value).Select(item => item.Id));
+            Assert.Equal(0, actualOwner.Entries);
+            await view.Bindings.DispatchAsync("composer.voice", null);
+            Assert.Equal(1, actualOwner.Entries);
+            Assert.Equal("keep this draft", view.Input.Text);
+            Assert.Equal(selection, (view.Input.CaretIndex, view.Input.SelectionStart, view.Input.SelectionLength));
+            Assert.Equal(0, rig.Client.Dispatches); // Opening the real workflow is not capture/provider invocation.
+            actualOwner.Available = false;
+            Assert.False(view.Bindings.IsActionAvailable("composer.voice"));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => view.Bindings.DispatchAsync("composer.voice", null).AsTask());
+            Assert.Equal(1, actualOwner.Entries);
+            page.BindOriginalComposerVoiceOwner(null);
+            Assert.False(view.Bindings.IsActionAvailable("composer.voice"));
+        }
+        finally
+        {
+            page.RequestRetirement();
+            _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
+            Directory.Delete(directory, true);
+        }
+    }
+
+    private sealed class NativeVoiceEntryOwner(Guid conversationId, ModelDescriptor model) : IChatComposerVoiceActions
+    {
+        public bool Available = true;
+        public int Entries;
+        public bool CanEnter(Guid actualConversationId, ModelDescriptor actualModel) =>
+            Available && actualConversationId == conversationId && actualModel == model;
+        public ValueTask Enter(Guid actualConversationId, ModelDescriptor actualModel)
+        {
+            Assert.True(CanEnter(actualConversationId, actualModel));
+            Entries++;
+            return ValueTask.CompletedTask;
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Existing_voice_widget_start_passes_its_exact_attached_conversation_to_the_actual_call_owner()
+    {
+        await using var rig = new Rig(temporary: false);
+        var conversation = rig.Conversation;
+        rig.Conversations.Current = conversation;
+        var offered = rig.Provider.Model.Model;
+        CallStartOptions? requested = null;
+        var starts = 0;
+        var call = new CallSession(Guid.NewGuid(), conversation.Id, offered.Name, null, null, null,
+            CallInputMode.HandsFree, false, CallSessionStatus.Active, DateTimeOffset.UtcNow);
+        var capabilities = new CallCapabilities(false, false, false, "Controlled capture unavailable", null, null, [], [], []);
+        var actualOwner = NativeComposerProxy<ICallCoordinator>((name, arguments) => name switch
+        {
+            "get_Capabilities" => capabilities,
+            "get_IsActive" => starts != 0,
+            "get_IsMuted" or "get_IsScreenSharing" => false,
+            "get_State" => CallState.Listening,
+            "get_CurrentSession" => starts == 0 ? null : call,
+            "get_CurrentConversation" => starts == 0 ? null : conversation,
+            "StartAsync" => Start((CallStartOptions)arguments![0]!),
+            _ when name.StartsWith("add_", StringComparison.Ordinal) || name.StartsWith("remove_", StringComparison.Ordinal) => null,
+            _ => throw new InvalidOperationException("Unexpected call owner operation: " + name)
+        });
+        Task<CallSession> Start(CallStartOptions options) { starts++; requested = options; return Task.FromResult(call); }
+        using var widget = new Haven.Desktop.ViewModels.InChatCallWidgetViewModel(actualOwner, rig.Conversations);
+        widget.AttachConversation(conversation.Id, offered);
+        widget.Open();
+        Assert.Equal(0, starts);
+        await widget.StartCallCommand.ExecuteAsync();
+        Assert.NotNull(requested);
+        Assert.Equal(conversation.Id, requested.ConversationId);
+        Assert.Equal(offered, requested.Model);
+        Assert.Equal(conversation.Id, widget.LinkedCallConversationId);
+        Assert.Equal(1, starts);
+    }
+
     [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
