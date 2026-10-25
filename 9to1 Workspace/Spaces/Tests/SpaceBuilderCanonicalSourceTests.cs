@@ -118,7 +118,7 @@ public sealed class SpaceBuilderCanonicalSourceTests
             (category, value) => editor.SetCategoryState(category, value),
             (kind, id) => editor.DetachCapability(kind, id),
             () => [], () => [], (_, _, _) => ValueTask.CompletedTask,
-            setContextIncluded: editor.SetContextReferenceIncluded);
+            setContextIncluded: (contextId, included) => editor.SetContextReferenceIncluded(contextId, included));
         Assert.True(bindings.TryGetValue("builder.contextReferences", out var rows));
         var row = Assert.IsType<SpaceBuilderContextReferenceRow>(Assert.Single(Assert.IsAssignableFrom<object[]>(rows)));
         Assert.True(row.included);

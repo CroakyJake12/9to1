@@ -331,15 +331,17 @@ public sealed class HavenChatSpaceBackendAcceptanceTests
 
         private sealed class BoundInvocation(Rig owner, Guid conversationId, Guid branchId) : IConversationBranchInvocation
         {
+            private readonly Guid _conversationId = conversationId;
+            private readonly Guid _branchId = branchId;
             private bool _disposed;
             private bool _admitted;
-            public Guid ConversationId { get; } = conversationId;
-            public Guid BranchId { get; } = branchId;
+            public Guid ConversationId => _conversationId;
+            public Guid BranchId => _branchId;
             public Task AdmitExistingUserInputAsync(ChatMessage message, CancellationToken cancellationToken)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (_disposed || _admitted || message.ConversationId != conversationId || message.Role != MessageRole.User ||
-                    owner.Branch.Id != branchId || !owner.Branch.IsCurrent || owner.Messages.LastOrDefault(item => item.Role == MessageRole.User) != message)
+                if (_disposed || _admitted || message.ConversationId != _conversationId || message.Role != MessageRole.User ||
+                    owner.Branch.Id != _branchId || !owner.Branch.IsCurrent || owner.Messages.LastOrDefault(item => item.Role == MessageRole.User) != message)
                     throw new InvalidOperationException("The original accepted user input does not match current canonical branch history.");
                 _admitted = true;
                 return Task.CompletedTask;

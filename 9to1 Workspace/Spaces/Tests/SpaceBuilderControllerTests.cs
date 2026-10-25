@@ -400,7 +400,7 @@ public sealed class SpaceBuilderControllerTests
         var changedParent = (await registry.GetAsync(parent.Id, token))!;
         Assert.Equal("Child", unchangedChild.Name);
         Assert.Equal("Child draft", unchangedChild.DraftConfiguration!.Name);
-        var validatedParent = Assert.Single(validator.ValidatedAncestry.Where(revision => revision.SpaceId == parent.Id));
+        var validatedParent = Assert.Single(validator.ValidatedAncestry, revision => revision.SpaceId == parent.Id);
         Assert.NotEqual(validatedParent.SpaceRevision, changedParent.Revision);
     }
 

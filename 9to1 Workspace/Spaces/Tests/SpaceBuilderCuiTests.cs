@@ -25,7 +25,7 @@ public sealed class SpaceBuilderCuiTests
             (category, state) => controller.SetCategoryState(category, state),
             (kind, id) => controller.DetachCapability(kind, id),
             () => [], () => [], (_, _, _) => ValueTask.CompletedTask,
-            selectView: controller.SelectEditorView, selectExpertSection: controller.SelectExpertSection,
+            selectView: view => controller.SelectEditorView(view), selectExpertSection: section => controller.SelectExpertSection(section),
             previewDraft: controller.PreviewDraft, validateDraft: controller.ValidateDraftAsync);
 
         Assert.True(bindings.TryGetValue("builder.view.isBasic", out var selected));
@@ -100,7 +100,7 @@ public sealed class SpaceBuilderCuiTests
             (category, state) => controller.SetCategoryState(category, state),
             (kind, id) => controller.DetachCapability(kind, id),
             () => [], () => [], (_, _, _) => ValueTask.CompletedTask,
-            selectView: controller.SelectEditorView, selectExpertSection: controller.SelectExpertSection,
+            selectView: view => controller.SelectEditorView(view), selectExpertSection: section => controller.SelectExpertSection(section),
             previewDraft: controller.PreviewDraft, validateDraft: controller.ValidateDraftAsync);
 
         await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));

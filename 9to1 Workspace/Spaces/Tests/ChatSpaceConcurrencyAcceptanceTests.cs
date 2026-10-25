@@ -117,7 +117,7 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         Assert.False(controller.CanStopActiveResponse);
         await sending;
 
-        var stopped = Assert.Single(controller.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+        var stopped = Assert.Single(controller.State.Conversation!.Messages, message => message.Role == MessageRole.Assistant);
         Assert.Equal(emitPartial ? "A real streamed partial" : string.Empty, stopped.Content);
         Assert.False(stopped.IsStreaming);
         Assert.Equal(emitPartial ? "Stopped · partial response" : "Stopped", stopped.ProgressLabel);
@@ -135,7 +135,7 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
             Assert.Equal(Assert.Single(backend.Data[id].Branches).Id, persisted.Branch);
             Assert.Equal(JsonValueKind.True, persisted.Message.Metadata["isPartial"].ValueKind);
             Assert.Equal("Stopped", persisted.Message.Metadata["responseState"].GetString());
-            var restored = Assert.Single(reopened.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+            var restored = Assert.Single(reopened.State.Conversation!.Messages, message => message.Role == MessageRole.Assistant);
             Assert.Equal(stopped.Id, restored.Id);
             Assert.Equal("A real streamed partial", restored.Content);
             Assert.Equal("model-a", restored.ModelName);
@@ -146,7 +146,7 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         else
         {
             Assert.Empty(backend.PartialWrites);
-            Assert.Empty(reopened.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+            Assert.DoesNotContain(reopened.State.Conversation!.Messages, message => message.Role == MessageRole.Assistant);
         }
     }
 
@@ -163,7 +163,7 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         Assert.True(controller.StopActiveResponse());
         await sending;
 
-        var partial = Assert.Single(controller.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+        var partial = Assert.Single(controller.State.Conversation!.Messages, message => message.Role == MessageRole.Assistant);
         Assert.Equal("A real streamed partial", partial.Content);
         Assert.False(partial.IsStreaming);
         Assert.Equal("Stopped · partial response", partial.ProgressLabel);
@@ -209,7 +209,8 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         Assert.Equal(ChatSpaceStatusTone.Error, controller.State.Status.Tone);
         Assert.Contains("accepted user message remains saved and will not be replayed automatically", controller.State.Status.Message);
         Assert.DoesNotContain("draft content was recovered", controller.State.Status.Message);
-        Assert.Equal("A real streamed partial", Assert.Single(controller.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant)).Content);
+        Assert.Equal("A real streamed partial", Assert.Single(controller.State.Conversation!.Messages,
+            message => message.Role == MessageRole.Assistant).Content);
     }
 
     [Fact]
@@ -302,7 +303,7 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => sending);
 
         Assert.Empty(backend.PartialWrites);
-        var visible = Assert.Single(controller.State.Conversation!.Messages.Where(message => message.Role == MessageRole.Assistant));
+        var visible = Assert.Single(controller.State.Conversation!.Messages, message => message.Role == MessageRole.Assistant);
         Assert.Equal("The complete answer", visible.Content);
         Assert.False(visible.IsStreaming);
         Assert.Contains("response completed", controller.State.Status.Message);

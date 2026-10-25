@@ -32,9 +32,9 @@ public sealed class SpaceBuilderPolicyEditingTests
         }, original.Revision, token);
         var editor = new SpaceBuilderController(registry, original.Id);
         Assert.True(await editor.LoadAsync(token));
-        var bindings = Bindings(editor, setModelCapabilityRequired: editor.SetModelCapabilityRequired,
-            setPersonalMemoryReadAllowed: editor.SetPersonalMemoryReadAllowed,
-            setCapabilityOverride: editor.SetCapabilityOverride);
+        var bindings = Bindings(editor, setModelCapabilityRequired: (capability, required) => editor.SetModelCapabilityRequired(capability, required),
+            setPersonalMemoryReadAllowed: allowed => editor.SetPersonalMemoryReadAllowed(allowed),
+            setCapabilityOverride: (kind, id, value) => editor.SetCapabilityOverride(kind, id, value));
         Assert.True(bindings.TrySetValue("builder.context.webAccess", (int)SpaceWebAccessPolicy.Disabled));
         Assert.True(bindings.TrySetValue("builder.context.sourceOnly", true));
         Assert.True(bindings.TrySetValue("builder.context.includeSelection", false));
@@ -204,7 +204,8 @@ public sealed class SpaceBuilderPolicyEditingTests
         var calls = new List<(string Command, object? Parameter)>();
         var bindings = new SpaceBuilderCuiBindings(() => editor.State, (field, value) => editor.SetField(field, value),
             (category, value) => editor.SetCategoryState(category, value), (kind, id) => editor.DetachCapability(kind, id),
-            () => [skill], () => [package], (command, parameter, _) => { calls.Add((command, parameter)); return ValueTask.CompletedTask; });
+            () => [skill], () => [package], (command, parameter, _) => { calls.Add((command, parameter)); return ValueTask.CompletedTask; },
+            isCurrent: () => true, canGoBack: () => false);
         await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
