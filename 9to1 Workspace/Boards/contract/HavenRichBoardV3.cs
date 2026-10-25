@@ -776,6 +776,19 @@ public static partial class HavenRichNotesOps
         TouchNotes(notes);
     }
 
+    public static void SetRowHeight(HavenRichNotes notes, string pageId, string blockId, int row, double height)
+    {
+        var table = RequireTable(notes, pageId, blockId);
+        if (row < 0 || row >= table.Rows.Count)
+            throw new ArgumentOutOfRangeException(nameof(row));
+        if (height is < 0 or > 5000)
+            throw new ArgumentOutOfRangeException(nameof(height));
+        while (table.RowHeights.Count < table.Rows.Count)
+            table.RowHeights.Add(0);
+        table.RowHeights[row] = height;
+        TouchNotes(notes);
+    }
+
     public static void SetTableStyle(HavenRichNotes notes, string pageId, string blockId,
         string? background = null, string? borderColor = null, double? borderWidth = null,
         HavenRichBorderStyle? borderStyle = null, double? cornerRadius = null, bool? alternatingRows = null)

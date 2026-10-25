@@ -195,6 +195,7 @@ internal static class Projector
             TableRows = table.Rows.Count,
             TableCols = table.Rows.Count > 0 ? table.Rows[0].Cells.Count : 0,
             ColumnWidths = [.. table.ColumnWidths],
+            RowHeights = [.. table.RowHeights],
             AttachmentId = block.Attachment?.Id,
             AttachmentName = block.Attachment?.DisplayName,
             AttachmentSize = block.Attachment?.SizeBytes ?? 0
@@ -553,6 +554,13 @@ internal static class MergeDeltas
             if (viewBlock.ColumnWidths[c] != old)
                 HavenRichNotesOps.SetColumnWidth(rich, page.Id, contractBlock.Id, c, viewBlock.ColumnWidths[c]);
         }
+        var baselineHeights = baselineBlock?.RowHeights ?? [];
+        for (var r = 0; r < viewBlock.RowHeights.Count && r < table.Rows.Count; r++)
+        {
+            var old = r < baselineHeights.Count ? baselineHeights[r] : 0;
+            if (viewBlock.RowHeights[r] != old)
+                HavenRichNotesOps.SetRowHeight(rich, page.Id, contractBlock.Id, r, viewBlock.RowHeights[r]);
+        }
     }
 
     private static void MergeTableStyle(
@@ -760,6 +768,7 @@ internal static class MergeDeltas
                     block.Table.CornerRadius = viewBlock.TableStyle.CornerRadius;
                     block.Table.AlternatingRows = viewBlock.TableStyle.AlternatingRows;
                     block.Table.ColumnWidths = [.. viewBlock.ColumnWidths];
+                    block.Table.RowHeights = [.. viewBlock.RowHeights];
                 }
                 if (!string.IsNullOrEmpty(viewBlock.StyleId))
                     block.StyleId = viewBlock.StyleId;
@@ -1123,6 +1132,7 @@ internal static class MergeDeltas
         TableRows = source.TableRows,
         TableCols = source.TableCols,
         ColumnWidths = [.. source.ColumnWidths],
+        RowHeights = [.. source.RowHeights],
         Image = source.Image,
         Divider = source.Divider,
         Graph = source.Graph,

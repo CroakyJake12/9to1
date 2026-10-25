@@ -36,6 +36,12 @@ public sealed partial class BoardsViewModel
         Set("ContextColumnWidthLabel", columnWidth > 0
             ? $"Column {column + 1}: {columnWidth:0} px"
             : cellKey is null ? "Select a cell" : $"Column {column + 1}: Auto");
+        var rowHeight = cellKey is not null && row < block!.RowHeights.Count
+            ? block.RowHeights[row]
+            : 0;
+        Set("ContextRowHeightLabel", rowHeight > 0
+            ? $"Row {row + 1}: {rowHeight:0} px"
+            : cellKey is null ? "Select a cell" : $"Row {row + 1}: Auto");
         Set("ContextTableSurfaceIndex", Math.Max(0, Array.FindIndex(ContextSurfaces, surface => surface.Hex == block?.TableStyle.Background)));
         Set("ContextTableBorderIndex", IndexOf(ContextBorderOptions, block?.TableStyle.BorderStyle));
         Set("ContextAlternatingRows", block?.TableStyle.AlternatingRows == true);
@@ -201,6 +207,12 @@ public sealed partial class BoardsViewModel
         {
             case "ContextAddRow" when block.Kind == "table": TableAddRow(block.Id); break;
             case "ContextDeleteRow" when block.Kind == "table": TableDelRow(block.Id); break;
+            case "ContextRowShorter" when TryGetContextCell(block, out var shortRow, out _):
+                SetContextRowHeight(block, shortRow, -16); break;
+            case "ContextRowTaller" when TryGetContextCell(block, out var tallRow, out _):
+                SetContextRowHeight(block, tallRow, 16); break;
+            case "ContextRowAutoHeight" when TryGetContextCell(block, out var autoRow, out _):
+                SetContextRowHeight(block, autoRow, null); break;
             case "ContextAddColumn" when block.Kind == "table": TableAddCol(block.Id); break;
             case "ContextDeleteColumn" when block.Kind == "table": TableDelCol(block.Id); break;
             case "ContextColumnNarrower" when TryGetContextCell(block, out _, out var narrowColumn):
@@ -299,6 +311,27 @@ public sealed partial class BoardsViewModel
             block.ColumnWidths[column] = current <= 0
                 ? (delta.Value < 0 ? 112 : 184)
                 : Math.Clamp(current + delta.Value, 80, 1600);
+        }
+        CommitViewEdit();
+        RequestRebuild();
+        RefreshCuiContext();
+    }
+
+    private void SetContextRowHeight(RichBoardBlock block, int row, double? delta)
+    {
+        if (!RequireEditMode() || block.Kind != "table" || row < 0 || row >= block.TableRows)
+            return;
+        if (delta is null)
+        {
+            if (row < block.RowHeights.Count) block.RowHeights[row] = 0;
+        }
+        else
+        {
+            while (block.RowHeights.Count <= row) block.RowHeights.Add(0);
+            var current = block.RowHeights[row];
+            block.RowHeights[row] = current <= 0
+                ? (delta.Value < 0 ? 48 : 80)
+                : Math.Clamp(current + delta.Value, 32, 1600);
         }
         CommitViewEdit();
         RequestRebuild();

@@ -96,6 +96,35 @@ public sealed class HavenRichBoardV3Tests
         });
     }
 
+    [Fact]
+    public async Task Table_row_and_column_dimensions_survive_save_and_reopen()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var path = Path.Combine(root, "table-dimensions.9to1board");
+            string pageId = string.Empty;
+            string blockId = string.Empty;
+            await using (var session = await RichBoardSession.CreateNewAsync(store, "Table dimensions"))
+            {
+                await session.SaveAsAsync(path);
+                pageId = session.Rich.Sections[0].Pages[0].Id;
+                await session.MutateAsync(rich =>
+                {
+                    var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Table);
+                    blockId = block.Id;
+                    HavenRichNotesOps.SetColumnWidth(rich, pageId, blockId, 1, 184);
+                    HavenRichNotesOps.SetRowHeight(rich, pageId, blockId, 1, 96);
+                });
+                await session.SaveAsync();
+            }
+
+            await using var reopened = await RichBoardSession.OpenAtPathAsync(store, path);
+            var table = reopened.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+            Assert.Equal(184, table.ColumnWidths[1]);
+            Assert.Equal(96, table.RowHeights[1]);
+        });
+    }
+
     // ---------- Runs: baseline + formatting ----------
 
     [Fact]
