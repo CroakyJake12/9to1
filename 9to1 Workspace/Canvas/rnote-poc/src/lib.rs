@@ -21,6 +21,14 @@ use rnote_compose::Color;
 use rnote_engine::engine::export::{DocExportFormat, DocExportPrefs};
 use rnote_engine::engine::{EngineConfig, EngineConfigShared};
 use rnote_engine::engine::EngineSnapshot;
+use rnote_engine::engine::import::XoppImportPrefs;
+use rnote_engine::store::StrokeKey;
+use rnote_engine::fileformats::{FileFormatLoader, xoppformat::XoppFile};
+use rnote_engine::strokes::Stroke;
+use rnote_compose::shapes::Shapeable;
+use slotmap::Key;
+use std::sync::Arc;
+use std::io::Read;
 use rnote_engine::pens::pensconfig::brushconfig::BrushStyle;
 use rnote_engine::pens::pensconfig::eraserconfig::{EraserConfig, EraserStyle};
 use rnote_engine::pens::{PenMode, PenStyle};
@@ -251,6 +259,10 @@ impl Default for HeadlessCanvasEngine {
 }
 
 impl HeadlessCanvasEngine {
+    /// Bound immutable bridge enumeration independently of caller-supplied counts.
+    pub const MAXIMUM_STROKE_KEYS: usize = 1_000_000;
+    pub const MAXIMUM_IMPORT_PAYLOAD_BYTES: usize = 256 * 1024 * 1024;
+
     pub fn new() -> Self {
         let mut engine = Engine::default();
         let config = EngineConfigShared::from(EngineConfig::default());
@@ -616,6 +628,271 @@ impl HeadlessCanvasEngine {
             .context("Rnote save failed")
     }
 
+    /// Native slotmap identities from Rnote's public, non-trashed snapshot.
+    /// Reading must never mutate the store or its undo history.
+    pub fn stroke_keys(&self) -> Result<Vec<u64>> {
+        if self.stroke_active { anyhow::bail!("Cannot enumerate an unfinished stroke"); }
+        let snapshot = self.engine.take_snapshot();
+        if snapshot.stroke_components.len() > Self::MAXIMUM_STROKE_KEYS {
+            anyhow::bail!("Rnote snapshot exceeds the native stroke-key budget");
+        }
+        let mut keys: Vec<_> = snapshot.stroke_components.keys()
+            .map(|key| key.data().as_ffi()).collect();
+        keys.sort_unstable();
+        Ok(keys)
+    }
+
+    fn rendered_keys(snapshot: &EngineSnapshot) -> Result<Vec<StrokeKey>> {
+        if snapshot.stroke_components.len() > Self::MAXIMUM_STROKE_KEYS {
+            anyhow::bail!("Rnote snapshot exceeds the native stroke-key budget");
+        }
+        let mut keys: Vec<_> = snapshot.stroke_components.keys().collect();
+        // The donor orders first by StrokeLayer, then its monotonic chronology.
+        // ChronoComponent::Ord exposes the latter without accessing private t.
+        // Refuse incomplete/tied chronology rather than inventing a render order.
+        for key in &keys {
+            if !snapshot.chrono_components.contains_key(*key) {
+                anyhow::bail!("Rnote snapshot has no chronology for a live stroke");
+            }
+        }
+        keys.sort_unstable_by(|left, right| {
+            let left = &snapshot.chrono_components[*left];
+            let right = &snapshot.chrono_components[*right];
+            left.layer.cmp(&right.layer).then_with(|| left.cmp(right))
+        });
+        for pair in keys.windows(2) {
+            if snapshot.chrono_components[pair[0]] == snapshot.chrono_components[pair[1]] {
+                anyhow::bail!("Rnote snapshot has ambiguous live-stroke chronology");
+            }
+        }
+        Ok(keys)
+    }
+
+    /// Retain the donor's layer/chronological rendering order, not slotmap order.
+    pub fn rendered_stroke_keys(&self) -> Result<Vec<u64>> {
+        if self.stroke_active { anyhow::bail!("Cannot order an unfinished stroke"); }
+        Ok(Self::rendered_keys(&self.engine.take_snapshot())?.into_iter()
+            .map(|key| key.data().as_ffi()).collect())
+    }
+
+    /// Resolve the topmost genuine donor hitbox. A miss is None, not an error.
+    pub fn quick_erase_target(&self, x: f64, y: f64) -> Result<Option<u64>> {
+        if self.stroke_active { anyhow::bail!("Cannot target an unfinished stroke"); }
+        if !x.is_finite() || !y.is_finite() {
+            anyhow::bail!("Quick erase coordinates must be finite");
+        }
+        let snapshot = self.engine.take_snapshot();
+        for key in Self::rendered_keys(&snapshot)?.into_iter().rev() {
+            if snapshot.stroke_components[key].hitboxes().iter().any(|bounds| {
+                // The donor's AABB contains_local_point uses these inclusive bounds.
+                bounds.mins[0] <= x && x <= bounds.maxs[0]
+                    && bounds.mins[1] <= y && y <= bounds.maxs[1]
+            }) {
+                return Ok(Some(key.data().as_ffi()));
+            }
+        }
+        Ok(None)
+    }
+
+    /// Export selected native entities without changing the original engine.
+    /// A detached snapshot retains actual slotmap keys, styles, paths and camera.
+    /// Loading that detached EXPORT engine does not replace live store/history.
+    pub async fn export_selected_strokes(&self, keys: &[u64]) -> Result<Vec<u8>> {
+        if self.stroke_active { anyhow::bail!("Cannot export an unfinished stroke"); }
+        if keys.is_empty() || keys.len() > Self::MAXIMUM_STROKE_KEYS {
+            anyhow::bail!("Native selection must contain a bounded nonempty key set");
+        }
+        let requested: HashSet<_> = keys.iter().copied().collect();
+        if requested.len() != keys.len() || requested.contains(&0) {
+            anyhow::bail!("Native selection requires unique nonzero keys");
+        }
+        let mut snapshot = self.engine.take_snapshot();
+        if snapshot.stroke_components.len() > Self::MAXIMUM_STROKE_KEYS {
+            anyhow::bail!("Rnote snapshot exceeds the native stroke-key budget");
+        }
+        let present: HashSet<_> = snapshot.stroke_components.keys()
+            .map(|key| key.data().as_ffi()).collect();
+        if !requested.is_subset(&present) {
+            anyhow::bail!("Native selection contains a foreign, trashed or stale key");
+        }
+        Arc::make_mut(&mut snapshot.stroke_components)
+            .retain(|key, _| requested.contains(&key.data().as_ffi()));
+        Arc::make_mut(&mut snapshot.chrono_components)
+            .retain(|key, _| requested.contains(&key.data().as_ffi()));
+        Self::from_snapshot(snapshot).save_rnote().await
+    }
+
+    /// Preserve Rnote's real Xournal++ importer rather than interpreting its XML here.
+    pub async fn from_xopp(bytes: Vec<u8>, dpi: f64) -> Result<Self> {
+        if !dpi.is_finite() || !(1.0..=2400.0).contains(&dpi) {
+            anyhow::bail!("Xournal++ import DPI must be finite and within 1..=2400");
+        }
+        // The pinned donor snapshot importer logs and skips failed per-entity
+        // conversions. Refuse any such loss before creating/publishing a native
+        // engine by running the SAME public donor converters on this owned input.
+        // This repeats conversion work for imports; it is not another importer.
+        let background = Self::preflight_xopp_entities(&bytes, dpi)?;
+        let mut snapshot = EngineSnapshot::load_from_xopp_bytes(bytes, XoppImportPrefs { dpi })
+            .await.context("Rnote Xournal++ snapshot load failed")?;
+        if !snapshot.document.width.is_finite() || !snapshot.document.height.is_finite()
+            || snapshot.document.width <= 0.0 || snapshot.document.height <= 0.0 {
+            anyhow::bail!("Xournal++ import requires a nonempty finite page extent");
+        }
+        // The donor ignores Xopp background colour. Preserve an admitted plain
+        // solid colour in the genuine IMPORT snapshot before materialisation.
+        snapshot.document.config.background.color = background;
+        Ok(Self::from_snapshot(snapshot))
+    }
+
+    fn preflight_xopp_entities(bytes: &[u8], dpi: f64) -> Result<Color> {
+        Self::validate_xopp_schema(bytes)?;
+        let source = XoppFile::load_from_bytes(bytes).context("Validate Xournal++ with donor parser")?;
+        if source.xopp_root.pages.len() != 1 {
+            anyhow::bail!("Multiple Xournal++ pages require reviewed page-identity conversion");
+        }
+        let background = match &source.xopp_root.pages[0].background.bg_type {
+            rnote_engine::fileformats::xoppformat::XoppBackgroundType::Solid { color, style }
+                if matches!(style, rnote_engine::fileformats::xoppformat::XoppBackgroundSolidStyle::Plain) =>
+                rnote_engine::utils::color_from_xopp(*color),
+            _ => anyhow::bail!("This Xournal++ background needs an explicit compatibility conversion"),
+        };
+        let mut offset = Vector2::new(0.0, 0.0);
+        let mut entities = 0usize;
+        for page in source.xopp_root.pages {
+            if !page.width.is_finite() || !page.height.is_finite()
+                || page.width <= 0.0 || page.height <= 0.0 {
+                anyhow::bail!("Xournal++ page dimensions must be finite and positive");
+            }
+            if !rnote_engine::utils::convert_value_dpi(page.width, XoppFile::DPI, dpi).is_finite()
+                || !rnote_engine::utils::convert_value_dpi(page.height, XoppFile::DPI, dpi).is_finite() {
+                anyhow::bail!("Xournal++ page dimension conversion overflow");
+            }
+            for layer in page.layers {
+                for count in [layer.strokes.len(), layer.images.len(), layer.texts.len()] {
+                    entities = entities.checked_add(count).context("Xournal++ entity count overflow")?;
+                    if entities > Self::MAXIMUM_STROKE_KEYS {
+                        anyhow::bail!("Xournal++ entities exceed the native stroke budget");
+                    }
+                }
+                for stroke in layer.strokes {
+                    if stroke.width.is_empty() || !stroke.width[0].is_finite() || stroke.width[0] <= 0.0
+                        || stroke.width.iter().any(|width| !width.is_finite() || *width < 0.0)
+                        || (stroke.width.len() > 1 && !stroke.width[1..].iter().any(|width| *width > 0.0))
+                        || stroke.coords.iter().any(|point| !point.x.is_finite() || !point.y.is_finite()) {
+                        anyhow::bail!("Xournal++ stroke has invalid source geometry");
+                    }
+                    let (converted, _) = Stroke::from_xoppstroke(stroke, offset, dpi)
+                        .context("Xournal++ stroke conversion refused; import is atomic")?;
+                    Self::validate_import_bounds(&converted)?;
+                }
+                for image in layer.images {
+                    if [image.left, image.top, image.right, image.bottom].iter().any(|value| !value.is_finite())
+                        || image.left >= image.right || image.top >= image.bottom {
+                        anyhow::bail!("Xournal++ image has invalid source bounds");
+                    }
+                    let converted = Stroke::from_xoppimage(image, offset, dpi)
+                        .context("Xournal++ image conversion refused; import is atomic")?;
+                    Self::validate_import_bounds(&converted)?;
+                }
+                for text in layer.texts {
+                    if !text.size.is_finite() || text.size <= 0.0 || !text.x.is_finite() || !text.y.is_finite() {
+                        anyhow::bail!("Xournal++ text has invalid source geometry");
+                    }
+                    let converted = Stroke::from_xopptext(text, offset, dpi)
+                        .context("Xournal++ text conversion refused; import is atomic")?;
+                    Self::validate_import_bounds(&converted)?;
+                }
+            }
+            offset.y += rnote_engine::utils::convert_value_dpi(page.height, XoppFile::DPI, dpi);
+            if !offset.y.is_finite() {
+                anyhow::bail!("Xournal++ page offset overflow");
+            }
+        }
+        Ok(background)
+    }
+
+    /// Schema admission only: use the same XML library as the donor, then let
+    /// the actual donor parser/converters interpret every admitted entity.
+    /// Unsupported properties must not disappear into its permissive defaults.
+    fn validate_xopp_schema(bytes: &[u8]) -> Result<()> {
+        let mut xml = String::new();
+        flate2::read::MultiGzDecoder::new(bytes)
+            .take(Self::MAXIMUM_IMPORT_PAYLOAD_BYTES as u64 + 1).read_to_string(&mut xml)?;
+        if xml.len() > Self::MAXIMUM_IMPORT_PAYLOAD_BYTES { anyhow::bail!("Xournal++ XML exceeds its size budget"); }
+        let document = roxmltree::Document::parse(&xml).context("Validate Xournal++ XML schema")?;
+        let root = document.root_element();
+        if root.tag_name().name() != "xournal" || root.attribute("fileversion") != Some("4") {
+            anyhow::bail!("Unsupported Xournal++ root or file version");
+        }
+        if root.children().filter(|node| node.has_tag_name("page")).count() != 1 {
+            anyhow::bail!("Xournal++ page identity conversion is required");
+        }
+        if root.children().filter(|node| node.has_tag_name("title")).count() > 1 {
+            anyhow::bail!("Xournal++ has duplicate document metadata");
+        }
+        for text in document.descendants().filter(|node| node.is_text() && !node.text().unwrap_or_default().trim().is_empty()) {
+            if !matches!(text.parent_element().map(|node| node.tag_name().name()), Some("title" | "stroke" | "image" | "text")) {
+                anyhow::bail!("Xournal++ contains misplaced text content");
+            }
+        }
+        for (index, node) in document.descendants().filter(|node| node.is_element()).enumerate() {
+            if index >= Self::MAXIMUM_STROKE_KEYS || node.tag_name().namespace().is_some() {
+                anyhow::bail!("Unsupported Xournal++ namespace or XML entity budget");
+            }
+            let (parent, attributes): (&str, &[&str]) = match node.tag_name().name() {
+                "xournal" => ("", &["creator", "fileversion"]),
+                "title" => ("xournal", &[]),
+                "page" => ("xournal", &["width", "height"]),
+                "background" => ("page", &["type", "color", "style"]),
+                "layer" => ("page", &[]),
+                "stroke" => ("layer", &["tool", "color", "width"]),
+                "image" => ("layer", &["left", "top", "right", "bottom"]),
+                "text" => ("layer", &["font", "size", "x", "y", "color"]),
+                _ => anyhow::bail!("Xournal++ contains an unsupported entity"),
+            };
+            if node != root && node.parent_element().map(|node| node.tag_name().name()) != Some(parent) {
+                anyhow::bail!("Unsupported Xournal++ entity nesting");
+            }
+            if node.attributes().any(|attribute| attribute.namespace().is_some() || !attributes.contains(&attribute.name())) {
+                anyhow::bail!("Xournal++ contains an unsupported property");
+            }
+            match node.tag_name().name() {
+                "page" if node.children().filter(|child| child.has_tag_name("layer")).count() != 1
+                    || node.children().filter(|child| child.has_tag_name("background")).count() != 1 =>
+                    anyhow::bail!("Xournal++ layer/background identity conversion is required"),
+                "background" if node.attribute("type") != Some("solid") || node.attribute("style") != Some("plain") =>
+                    anyhow::bail!("Xournal++ background style requires compatibility conversion"),
+                "stroke" => {
+                    if node.attribute("tool") != Some("pen") { anyhow::bail!("Xournal++ tool conversion requires compatibility review"); }
+                    let values = |text: &str| -> Result<Vec<f64>> {
+                        text.split_ascii_whitespace().map(|value| {
+                            let value: f64 = value.parse()?;
+                            if !value.is_finite() { anyhow::bail!("Xournal++ numbers must be finite"); }
+                            Ok(value)
+                        }).collect()
+                    };
+                    let coordinates = values(node.text().unwrap_or_default())?;
+                    let widths = values(node.attribute("width").context("Xournal++ stroke width missing")?)?;
+                    if coordinates.len() < 2 || coordinates.len() % 2 != 0
+                        || !(widths.len() == 1 || widths.len() == coordinates.len() / 2 + 1) {
+                        anyhow::bail!("Xournal++ stroke sample/pressure counts would be truncated");
+                    }
+                }
+                _ => {},
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_import_bounds(stroke: &Stroke) -> Result<()> {
+        let bounds = stroke.bounds();
+        if (0..2).any(|axis| !bounds.mins[axis].is_finite() || !bounds.maxs[axis].is_finite()
+            || bounds.mins[axis] > bounds.maxs[axis]) {
+            anyhow::bail!("Xournal++ entity has invalid converted donor geometry");
+        }
+        Ok(())
+    }
+
     /// Commit a complete Rnote document by replacing a same-directory temporary
     /// file. A failed write leaves the previous document available for reopen.
     pub async fn save_rnote_atomically(&self, path: impl AsRef<Path>) -> Result<()> {
@@ -651,6 +928,10 @@ impl HeadlessCanvasEngine {
         let snapshot = EngineSnapshot::load_from_rnote_bytes(bytes)
             .await
             .context("Rnote snapshot load failed")?;
+        Ok(Self::from_snapshot(snapshot))
+    }
+
+    fn from_snapshot(snapshot: EngineSnapshot) -> Self {
         let mut engine = Engine::default();
         let config = EngineConfigShared::from(EngineConfig::default());
         let _ = engine.install_config(&config, None);
@@ -669,7 +950,7 @@ impl HeadlessCanvasEngine {
             config,
         };
         canvas.configure_tool();
-        Ok(canvas)
+        canvas
     }
 
     pub async fn from_rnote_file(path: impl AsRef<Path>) -> Result<Self> {
