@@ -1,5 +1,6 @@
 using Haven.Application.Automations;
 using Haven.Core;
+using System.Text.Json;
 using Xunit;
 
 namespace Haven.Application.Tests;
@@ -27,7 +28,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Equal(3, result.Trace.Count);
         Assert.All(result.Trace, item => Assert.Equal("Succeeded", item.State));
         Assert.NotEqual(result.InputSha256, result.OutputSha256);
-        Assert.Equal(3, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
+        Assert.Equal(7, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
         Assert.Equal(2, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(CanonicalAutomationCoreNodes.ProfileId).Count);
     }
 
@@ -135,6 +136,137 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Empty(rig.Transport.Requests);
         Assert.Equal("Hello", Assert.Single(rig.Repository.Messages.Where(message => message.Role == MessageRole.User)).Content);
         files.Passed = true;
+    }
+
+    [Theory]
+    [InlineData("invariant", "x=-1.5; y=6.02e2; list: 1 2", "-1.5|602|1|2")]
+    [InlineData("en-US", "Balance -1,234.50; rate 6.02e2", "-1234.5|602")]
+    [InlineData("de-DE", "Kosten 1.234,50; Faktor -2,5", "1234.5|-2.5")]
+    [InlineData("fr-FR", "Prix 1\u202F234,50 et 2,5", "1234.5|2.5")]
+    public async Task Space_graph_extracts_typed_numbers_with_explicit_locale_and_original_spans(string locale, string text, string expected)
+    {
+        var layout = StructuredMessageLayout(SpaceUserMessageGraph.ExtractNumbersType, new() { ["locale"] = locale });
+        var result = await RunGraph(layout, text);
+        var extraction = JsonSerializer.Deserialize<SpaceNumberExtraction>(result.DerivedText, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+
+        Assert.Equal(locale, extraction.Locale);
+        Assert.Equal(expected.Split('|'), extraction.Numbers.Select(number => number.InvariantValue));
+        Assert.All(extraction.Numbers, number => Assert.Equal(number.RawText, text.Substring(number.StartUtf16, number.LengthUtf16)));
+        Assert.Equal(SpaceUserMessageGraph.NumbersDataType,
+            Assert.Single(result.TypedNodeOutputs.Values.Where(value => value.DataType == SpaceUserMessageGraph.NumbersDataType)).DataType);
+        Assert.Contains(result.Trace, item => item.OutputDataType == SpaceUserMessageGraph.NumbersDataType);
+        Assert.False(extraction.MoreResultsOmitted);
+        if (locale == "fr-FR") Assert.True(extraction.HasUncertainty); // Space grouping can also separate tokens.
+    }
+
+    [Fact]
+    public async Task Space_graph_numeric_ambiguity_and_precision_loss_are_exposed_without_guessing_or_rounding()
+    {
+        const string text = "1,234; 99999999999999999999999999999; 1e-30";
+        var result = await RunGraph(StructuredMessageLayout(SpaceUserMessageGraph.ExtractNumbersType, new() { ["locale"] = "en-US" }), text);
+        var extraction = JsonSerializer.Deserialize<SpaceNumberExtraction>(result.DerivedText, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+
+        Assert.Equal(3, extraction.Numbers.Count);
+        Assert.Equal("1234", extraction.Numbers[0].InvariantValue);
+        Assert.NotNull(extraction.Numbers[0].Uncertainty);
+        Assert.Null(extraction.Numbers[1].InvariantValue);
+        Assert.Null(extraction.Numbers[2].InvariantValue);
+        Assert.All(extraction.Numbers, number => Assert.NotNull(number.Uncertainty));
+        Assert.True(extraction.HasUncertainty);
+        Assert.Contains(result.Trace, item => item.HasUncertainty);
+        Assert.DoesNotContain("99999999999999999999999999999", JsonSerializer.Serialize(result.Trace), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("ordinal", "whole-word", "cat", "cat scatter cat_ cat\u0301 cat. CAT", 2)]
+    [InlineData("ordinal-ignore-case", "whole-word", "cat", "cat scatter cat_ cat\u0301 cat. CAT", 3)]
+    [InlineData("ordinal", "substring", "cat", "cat scatter cat_ cat\u0301 cat. CAT", 5)]
+    [InlineData("ordinal-ignore-case", "substring", "cat fish", "cat fish; cat  fish; CAT fish", 2)]
+    [InlineData("ordinal", "whole-word", "cat", "𐐀cat cat𐐀 cat", 1)]
+    [InlineData("ordinal-ignore-case", "whole-word", "café", "cafe cafe\u0301 café CAFÉ", 2)]
+    public async Task Space_graph_phrase_matching_uses_documented_literal_unicode_semantics(string comparison, string boundary, string query, string text, int expected)
+    {
+        var result = await RunGraph(StructuredMessageLayout(SpaceUserMessageGraph.SearchWordsType,
+            new() { ["query"] = query, ["locale"] = "invariant", ["comparison"] = comparison, ["boundary"] = boundary }), text);
+        var matches = JsonSerializer.Deserialize<SpacePhraseMatches>(result.DerivedText, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+
+        Assert.Equal(expected, matches.Matches.Count);
+        Assert.Equal(comparison, matches.Comparison);
+        Assert.Equal(boundary, matches.Boundary);
+        Assert.All(matches.Matches, match => Assert.Equal(match.Text, text.Substring(match.StartUtf16, match.LengthUtf16)));
+        Assert.False(matches.MoreResultsOmitted);
+        Assert.Contains(result.Trace, item => item.OutputDataType == SpaceUserMessageGraph.MatchesDataType);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Space_graph_structured_result_bounds_report_omitted_matches(bool numbers)
+    {
+        var layout = numbers ? StructuredMessageLayout(SpaceUserMessageGraph.ExtractNumbersType, new() { ["locale"] = "invariant" }) :
+            StructuredMessageLayout(SpaceUserMessageGraph.SearchWordsType,
+                new() { ["query"] = "cat", ["locale"] = "invariant", ["comparison"] = "ordinal", ["boundary"] = "whole-word" });
+        var text = string.Join("; ", Enumerable.Repeat(numbers ? "7" : "cat", 513));
+        var result = await RunGraph(layout, text);
+        using var rendered = JsonDocument.Parse(result.DerivedText);
+
+        Assert.True(rendered.RootElement.GetProperty("moreResultsOmitted").GetBoolean());
+        Assert.Equal(512, rendered.RootElement.GetProperty(numbers ? "numbers" : "matches").GetArrayLength());
+        Assert.Contains(result.Trace, item => item.MoreResultsOmitted);
+        Assert.Equal(0, result.OmittedTextElements); // This counts only actual truncation, not a guessed JSON-length difference.
+    }
+
+    [Fact]
+    public void Space_graph_typed_number_output_cannot_connect_directly_to_string_request_input()
+    {
+        var layout = StructuredMessageLayout(SpaceUserMessageGraph.ExtractNumbersType, new() { ["locale"] = "invariant" });
+        var withoutRenderer = layout with
+        {
+            Nodes = [layout.Nodes[0], layout.Nodes[1], layout.Nodes[3]],
+            Edges = [layout.Edges[0], new(Guid.NewGuid(), layout.Nodes[1].Id, "out", layout.Nodes[3].Id, "in")]
+        };
+        Assert.Throws<SpaceRequestPolicyBlockedException>(() => SpaceUserMessageGraph.Compile(Guid.NewGuid(), 1, withoutRenderer));
+    }
+
+    [Fact]
+    public async Task Space_graph_real_request_renders_typed_extraction_and_preserves_saved_text_and_private_trace()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Typed numeric request", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry),
+            StructuredMessageLayout(SpaceUserMessageGraph.ExtractNumbersType, new() { ["locale"] = "invariant" }));
+        var rig = new GraphRequestRig(source, space.Id);
+
+        await rig.SendAsync("secret amount 12 and 3.5");
+
+        var user = Assert.Single(rig.Repository.Messages.Where(message => message.Role == MessageRole.User));
+        Assert.Equal("secret amount 12 and 3.5", user.Content);
+        var wire = Assert.Single(rig.Transport.Requests);
+        var extraction = JsonSerializer.Deserialize<SpaceNumberExtraction>(Assert.Single(wire.Messages.Where(message => message.Role == "user")).Content,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        Assert.Equal(new[] { "12", "3.5" }, extraction.Numbers.Select(number => number.InvariantValue));
+        var trace = Assert.Single(rig.Events.Values.Where(item => item.ComponentId == "spaces.user-message-graph"));
+        Assert.DoesNotContain("secret amount", JsonSerializer.Serialize(trace.SafeMetadata), StringComparison.Ordinal);
+        Assert.Equal(user.Id.ToString("D"), trace.SafeMetadata!["userMessageId"]);
+        files.Passed = true;
+    }
+
+    private static async Task<SpaceUserMessageGraphResult> RunGraph(SpaceLayoutDocument layout, string text)
+    {
+        var graph = SpaceUserMessageGraph.Compile(Guid.NewGuid(), 1, layout);
+        return await graph.ExecuteAsync(new(Guid.NewGuid(), Guid.NewGuid(), MessageRole.User, text, null, null, null, DateTimeOffset.UtcNow),
+            TestContext.Current.CancellationToken);
+    }
+    private static SpaceLayoutDocument StructuredMessageLayout(string typeId, Dictionary<string, string> metadata)
+    {
+        var source = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SourceType);
+        var transform = SpaceUserMessageGraph.CreateNode(typeId) with { Metadata = metadata };
+        var render = SpaceUserMessageGraph.CreateNode(typeId == SpaceUserMessageGraph.ExtractNumbersType ?
+            SpaceUserMessageGraph.NumbersToTextType : SpaceUserMessageGraph.MatchesToTextType);
+        var output = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.OutputType);
+        var nodes = new[] { source, transform, render, output };
+        return new(nodes, nodes.Zip(nodes.Skip(1), (from, to) => new SpaceLayoutEdge(Guid.NewGuid(), from.Id, "out", to.Id, "in")).ToArray())
+        { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
     }
 
     private static SpaceLayoutDocument UserMessageLayout(int maximum)
