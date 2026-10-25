@@ -213,8 +213,33 @@ public sealed class DeveloperTaskWorkspaceService(
     /// <summary>Uses the exact saved task/stage revision. This is one existing stage, not another pipeline or run.</summary>
     public Task<DeveloperOperationResult<DeveloperActionObservation>> RunStageAsync(
         DeveloperProjectReference project, DeveloperCanonicalActionContext context, string taskId, long taskRevision, string stageId,
-        CancellationToken cancellationToken = default) => AdmitAsync(project, context,
-            RequestDigest(new { operation = "run-stage", taskId, taskRevision, stageId }),
+        CancellationToken cancellationToken = default) => RunStageCoreAsync(project, context, taskId, taskRevision, stageId, null, cancellationToken);
+
+    /// <summary>Pins the complete inspected canonical task definition as well as its declared revision.
+    /// The hash is lowercase SHA-256 over UTF-8 System.Text.Json General serialization of the typed
+    /// task row: declaration order, complete stage/dependency/argument lists, enum values and nulls
+    /// are retained. No path, case, whitespace or command normalization occurs. This comparison
+    /// grants no trust or execution permission; the same original Task/Home owners remain mandatory.</summary>
+    public static string ComputeSavedTaskDefinitionSha256(DeveloperTaskDefinition task)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(task))).ToLowerInvariant();
+    }
+
+    public Task<DeveloperOperationResult<DeveloperActionObservation>> RunInspectedStageAsync(
+        DeveloperProjectReference project, DeveloperCanonicalActionContext context, string taskId, long taskRevision, string stageId,
+        string expectedDefinitionSha256, CancellationToken cancellationToken = default)
+    {
+        if (expectedDefinitionSha256 is not { Length: 64 } || !expectedDefinitionSha256.All(Uri.IsHexDigit))
+            throw new ArgumentException("An exact saved-task definition SHA-256 is required.", nameof(expectedDefinitionSha256));
+        return RunStageCoreAsync(project, context, taskId, taskRevision, stageId, expectedDefinitionSha256.ToLowerInvariant(), cancellationToken);
+    }
+
+    private Task<DeveloperOperationResult<DeveloperActionObservation>> RunStageCoreAsync(
+        DeveloperProjectReference project, DeveloperCanonicalActionContext context, string taskId, long taskRevision, string stageId,
+        string? expectedDefinitionSha256, CancellationToken cancellationToken) => AdmitAsync(project, context,
+            expectedDefinitionSha256 is null ? RequestDigest(new { operation = "run-stage", taskId, taskRevision, stageId }) :
+                RequestDigest(new { operation = "run-stage", taskId, taskRevision, stageId, expectedDefinitionSha256 }),
             async token =>
             {
                 var resolved = await ResolveAsync(project, token).ConfigureAwait(false);
@@ -223,6 +248,10 @@ public sealed class DeveloperTaskWorkspaceService(
                 if (task is null || task.Revision != taskRevision || task.EnvironmentId != resolved.Value.Root.EnvironmentId ||
                     task.WorkingDirectoryRootId != project.RootId.ToString("D"))
                     return Fail<PreparedCall>(DeveloperOperationErrorCode.RevisionConflict, "The saved task/root/environment revision does not match this request.", context.ActionId);
+                task = DeveloperPipelineExecutor.CaptureTaskDefinition(task);
+                if (expectedDefinitionSha256 is not null && !StringComparer.Ordinal.Equals(expectedDefinitionSha256, ComputeSavedTaskDefinitionSha256(task)))
+                    return Fail<PreparedCall>(DeveloperOperationErrorCode.RevisionConflict,
+                        "The inspected saved task definition changed. Select and inspect its current stage before execution.", context.ActionId);
                 var stage = task.Stages.SingleOrDefault(value => value.StageId == stageId);
                 if (stage is null || stage.DependsOn.Count > 0 || task.DependsOn.Count > 0)
                     return Fail<PreparedCall>(DeveloperOperationErrorCode.CapabilityUnavailable, "A dependent pipeline requires the existing pipeline dependency coordinator; a stage cannot bypass its prerequisites.", context.ActionId);

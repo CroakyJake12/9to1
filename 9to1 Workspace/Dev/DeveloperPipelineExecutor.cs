@@ -69,6 +69,23 @@ public sealed class DeveloperPipelineExecutor(
             request.WorkspaceRevision < 1 || !StringComparer.Ordinal.Equals(request.TaskId, task.TaskId) ||
             string.IsNullOrWhiteSpace(request.CallerIdentity))
             return Fail(DeveloperOperationErrorCode.InvalidInput, "A valid task execution request is required.", "task", requestId);
+        if (cancellationToken.IsCancellationRequested)
+            return Fail(DeveloperOperationErrorCode.Cancelled,
+                "Task execution was cancelled before workspace trust or Home authorization.", task.TaskId, requestId);
+        try
+        {
+            task = CaptureTaskDefinition(task);
+            var capturedResources = new Dictionary<string, Guid>(StringComparer.Ordinal);
+            foreach (var pair in stageResourceIds) capturedResources.Add(pair.Key, pair.Value);
+            stageResourceIds = capturedResources;
+        }
+        catch (Exception error) when (error is InvalidOperationException or ArgumentException)
+        {
+            return Fail(DeveloperOperationErrorCode.InvalidInput,
+                "The task or stage-resource map changed while its execution snapshot was being captured.", task.TaskId, requestId);
+        }
+        if (ValidateTask(task, stageResourceIds) is { } taskError)
+            return Fail(DeveloperOperationErrorCode.InvalidInput, taskError, task.TaskId, requestId);
         if (task.RequiresWorkspaceTrust)
         {
             bool trusted;
@@ -82,20 +99,25 @@ public sealed class DeveloperPipelineExecutor(
                 return Fail(DeveloperOperationErrorCode.CapabilityUnavailable,
                     "Workspace trust could not be verified; the task was not started.", task.TaskId, requestId);
             }
+            if (cancellationToken.IsCancellationRequested)
+                return Fail(DeveloperOperationErrorCode.Cancelled,
+                    "Task execution was cancelled while checking workspace trust.", task.TaskId, requestId);
             if (!trusted)
                 return Fail(DeveloperOperationErrorCode.PermissionRequired,
                     "This task executes workspace-controlled code and requires workspace trust.", task.TaskId, requestId);
         }
-        if (ValidateTask(task, stageResourceIds) is { } taskError)
-            return Fail(DeveloperOperationErrorCode.InvalidInput, taskError, task.TaskId, requestId);
+        if (cancellationToken.IsCancellationRequested)
+            return Fail(DeveloperOperationErrorCode.Cancelled,
+                "Task execution was cancelled before Home authorization.", task.TaskId, requestId);
 
         var resourceIds = task.Stages.Select(stage => stageResourceIds[stage.StageId]).Distinct().ToArray();
+        var affectedResources = Array.AsReadOnly(resourceIds.Select(id => id.ToString("D")).ToArray());
         DeveloperMutationAuthorization authorization;
         try
         {
             authorization = await mutationGate.AuthorizeAsync(new DeveloperMutationRequest(
                 requestId, request.CallerIdentity.Trim(), "9to1.Dev.RunTask", "workspace.execute",
-                request.WorkspaceId, request.WorkspaceRevision, task.TaskId, resourceIds.Select(id => id.ToString("D")).ToArray(),
+                request.WorkspaceId, request.WorkspaceRevision, task.TaskId, affectedResources,
                 IsReversible: false, HasExternalSideEffects: true), cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -106,6 +128,9 @@ public sealed class DeveloperPipelineExecutor(
         {
             return Fail(DeveloperOperationErrorCode.CapabilityUnavailable, "Home authorization could not be reached; the task was not started.", task.TaskId, requestId);
         }
+        if (cancellationToken.IsCancellationRequested)
+            return Fail(DeveloperOperationErrorCode.Cancelled,
+                "Task execution was cancelled while Home authorization was pending.", task.TaskId, requestId);
         if (authorization.Decision != DeveloperAuthorizationDecision.Granted || string.IsNullOrWhiteSpace(authorization.GrantId))
             return Fail(authorization.Decision == DeveloperAuthorizationDecision.PendingApproval
                     ? DeveloperOperationErrorCode.PermissionRequired : DeveloperOperationErrorCode.PermissionDenied,
@@ -136,7 +161,7 @@ public sealed class DeveloperPipelineExecutor(
                     outcome.ExitCode == 0 ? DeveloperBuildStageState.Succeeded : DeveloperBuildStageState.Failed,
                     outcome.ExitCode, outcome.Diagnostics, outcome.ExitCode == 0 ? null : outcome.OutputSummary ?? "The stage failed.");
             }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (timeout.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
             {
                 completed[stage.StageId] = Result(stage, startedAt, DeveloperBuildStageState.Failed, null, [], "The stage timed out.");
             }
@@ -147,13 +172,18 @@ public sealed class DeveloperPipelineExecutor(
                     completed[pending.StageId] = Result(pending, DeveloperBuildStageState.Cancelled, null, [], "The task was cancelled before this stage started.");
                 break;
             }
+            catch (OperationCanceledException)
+            {
+                completed[stage.StageId] = Result(stage, startedAt, DeveloperBuildStageState.Failed, null, [],
+                    "The stage provider cancelled unexpectedly.");
+            }
             catch (Exception)
             {
                 completed[stage.StageId] = Result(stage, startedAt, DeveloperBuildStageState.Failed, null, [], "The stage provider failed unexpectedly.");
             }
         }
 
-        var stageResults = TopologicalOrder(task.Stages).Select(stage => completed[stage.StageId]).ToArray();
+        var stageResults = Array.AsReadOnly(TopologicalOrder(task.Stages).Select(stage => completed[stage.StageId]).ToArray());
         var cancelled = stageResults.Any(static stage => stage.State == DeveloperBuildStageState.Cancelled);
         var succeeded = stageResults.All(static stage => stage.State == DeveloperBuildStageState.Succeeded);
         var result = new DeveloperPipelineResult(requestId, request.WorkspaceId, task.TaskId,
@@ -167,11 +197,12 @@ public sealed class DeveloperPipelineExecutor(
 
     private static DeveloperPipelineStageResult Result(DeveloperBuildStage stage, DateTimeOffset startedAt,
         DeveloperBuildStageState state, int? exitCode, IReadOnlyList<DeveloperDiagnostic> diagnostics, string? failure) =>
-        new(stage.StageId, state, startedAt, DateTimeOffset.UtcNow, exitCode, diagnostics, failure);
+        new(stage.StageId, state, startedAt, DateTimeOffset.UtcNow, exitCode, Array.AsReadOnly(diagnostics.ToArray()), failure);
 
     private static string? ValidateTask(DeveloperTaskDefinition task, IReadOnlyDictionary<string, Guid> resourceIds)
     {
-        if (string.IsNullOrWhiteSpace(task.TaskId) || task.Revision < 1 || task.Stages is null || task.Stages.Count == 0)
+        if (string.IsNullOrWhiteSpace(task.TaskId) || task.Revision < 1 || task.DependsOn is null ||
+            task.Stages is null || task.Stages.Count == 0)
             return "A task needs a stable ID, positive revision, and at least one stage.";
         if (task.Stages.Any(stage => stage is null || string.IsNullOrWhiteSpace(stage.StageId) ||
                                      stage.DependsOn is null || stage.Arguments is null || stage.Timeout < TimeSpan.Zero))
@@ -186,6 +217,21 @@ public sealed class DeveloperPipelineExecutor(
         try { _ = TopologicalOrder(task.Stages); }
         catch (InvalidOperationException) { return "Task dependencies contain a cycle."; }
         return null;
+    }
+
+    internal static DeveloperTaskDefinition CaptureTaskDefinition(DeveloperTaskDefinition task)
+    {
+        // No caller-owned task/stage collection may change between Home's preview and
+        // execution. The runner receives only these detached snapshots.
+        var taskDependencies = task.DependsOn is null ? null! : Array.AsReadOnly(task.DependsOn.ToArray());
+        var sourceStages = task.Stages is null ? null : task.Stages.ToArray();
+        IReadOnlyList<DeveloperBuildStage> capturedStages = sourceStages is null ? null! :
+            Array.AsReadOnly(sourceStages.Select(stage => stage is null ? null! : stage with
+            {
+                DependsOn = stage.DependsOn is null ? null! : Array.AsReadOnly(stage.DependsOn.ToArray()),
+                Arguments = stage.Arguments is null ? null! : Array.AsReadOnly(stage.Arguments.ToArray())
+            }).ToArray());
+        return task with { DependsOn = taskDependencies, Stages = capturedStages };
     }
 
     private static IReadOnlyList<DeveloperBuildStage> TopologicalOrder(IReadOnlyList<DeveloperBuildStage> stages)
