@@ -730,11 +730,11 @@ public sealed partial class App
                     try
                     {
                         token.ThrowIfCancellationRequested();
-                        var address = BoardsBrowseAppContentAddress.ForFile(target.StoreId, target.FolderId,
+                        var boardAddress = BoardsBrowseAppContentAddress.ForFile(target.StoreId, target.FolderId,
                             target.FileId!.Value, target.RevisionId!.Value, tokenId);
-                        lock (preparedBoards) { preparedBoards.Remove(link); preparedBoards.Add(link, new(address, tokenId)); }
+                        lock (preparedBoards) { preparedBoards.Remove(link); preparedBoards.Add(link, new(boardAddress, tokenId)); }
                     }
-                    catch { Track(boardRead.DiscardPreparedAsync(tokenId)); throw; }
+                    catch { _ = Track(boardRead.DiscardPreparedAsync(tokenId)); throw; }
                     return;
                 }
                 var address = target.FileId is { } file && target.RevisionId is { } revision
