@@ -641,7 +641,8 @@ public sealed partial class App
         /// Selection is not authority; the existing Browse registration and owning app admit it.</summary>
         internal Task? TryAcquireInitialUnifiedProductRoute(OriginalUnifiedProduct product, CancellationToken token)
         {
-            var route = OriginalUnifiedProductRoute(product);
+            var route = product == OriginalUnifiedProduct.Boards
+                ? "browse://home/library/boards" : OriginalUnifiedProductRoute(product);
             Dispatcher.UIThread.VerifyAccess(); DemandExternalOriginalRetirementJoin();
             lock (_gate)
             {
