@@ -441,6 +441,10 @@ public sealed class ContractAdapterTests
             Assert.Equal("Covered content", reopenedTable.Rows[0].Cells[1].Text);
             Assert.Equal(originalCellIds, reopenedTable.Rows.Take(originalRows)
                 .SelectMany(row => row.Cells.Take(originalColumns)).Select(cell => cell.Id));
+            var interiorDeleteProbe = await reopened.GetDetachedContractDocumentAsync();
+            var probeNotes = interiorDeleteProbe.RichNotes!;
+            Assert.False(HavenRichNotesOps.DeleteTableRow(probeNotes, pageId, blockId, originalRows - 2));
+            Assert.False(HavenRichNotesOps.DeleteTableColumn(probeNotes, pageId, blockId, originalColumns - 1));
 
             var reopenedViewModel = new BoardsViewModel(reopened);
             reopenedViewModel.FocusBlock(blockId);
