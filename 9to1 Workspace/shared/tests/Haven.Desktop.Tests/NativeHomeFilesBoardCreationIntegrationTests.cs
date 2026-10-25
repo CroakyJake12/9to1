@@ -128,7 +128,7 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
     public async Task Home_audit_retry_uses_the_same_attempt_and_receipt_and_opens_only_after_terminal_settlement()
     {
         await using var rig = await Rig.CreateAsync();
-        rig.Home.FailNextBoardCreateAudits(2); // Initial settlement plus the source's one bounded retry.
+        rig.FailNextBoardCreateAudits(2); // Initial settlement plus the source's one bounded retry.
         var approvals = 0;
         async Task Review(HomePermissionAuthorization authorization, CancellationToken token)
         {
@@ -161,7 +161,7 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, settled.State);
         Assert.Same(receipt, settled.Receipt);
         Assert.NotNull(settled.PreparedAddress);
-        Assert.Equal(2, rig.Home.BoardCreateAuditFailureCount);
+        Assert.Equal(2, rig.BoardCreateAuditFailureCount);
         Assert.Equal(2, approvals); // One create review and one fresh read review; retries did not create again.
         Assert.Single(await rig.ListBoardsAsync());
         var parsed = BoardsBrowseAppContentAddress.Parse(settled.PreparedAddress!);
@@ -193,6 +193,7 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         private readonly CancellationTokenSource _deadline = new(TimeSpan.FromSeconds(45));
         private ServiceProvider? _graph;
         private FilesOriginalBoardDocumentPhysicalOwner? _physical;
+        private FailBoardCreateAuditObserver? _auditObserver;
         private FilesNativeBrowserService.BoardDocumentCreateOwner? _creator;
         private FilesNativeBrowserService.BoardDocumentWriteOwner? _writer;
         private NativeHomeFilesBoardReadSource? _read;
@@ -210,12 +211,15 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         internal FilesNativeBrowserService Browser { get; private set; } = null!;
         internal FilesOriginalBoardDocumentPhysicalOwner Physical => _physical ?? throw new InvalidOperationException();
         internal HomePermissionTrustService Trust { get; private set; } = null!;
-        internal FailBoardCreateAuditStore Home { get; private set; } = null!;
+        internal FileHomeCoreStateStore Home { get; private set; } = null!;
+        internal int BoardCreateAuditFailureCount => _auditObserver?.BoardCreateAuditFailureCount ?? 0;
         internal NativeHomeFilesBoardWriteSource Writes => _writes ?? throw new InvalidOperationException();
         internal NativeHomeFilesBoardReadSource Read => _read ?? throw new InvalidOperationException();
         internal NativeHomeFilesLibrarySource Library => _library ?? throw new InvalidOperationException();
 
         internal void Retain(Task task) { lock (_gate) _retained.Add(task); }
+        internal void FailNextBoardCreateAudits(int count) =>
+            (_auditObserver ?? throw new InvalidOperationException("The audit observer is unavailable.")).FailNextBoardCreateAudits(count);
         internal Task<T> Keep<T>(Task<T> task) { Retain(task); return task; }
         internal Task Keep(Task task) { Retain(task); return task; }
 
@@ -225,8 +229,9 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
             try
             {
                 Directory.CreateDirectory(rig._chosen);
-                var homeStore = new FileHomeCoreStateStore(rig.HomePath);
-                rig.Home = new FailBoardCreateAuditStore(homeStore);
+                rig._auditObserver = new FailBoardCreateAuditObserver();
+                rig.Home = new FileHomeCoreStateStore(rig.HomePath, rig._auditObserver);
+                rig._auditObserver.Bind(rig.Home);
                 var profiles = new HomeLocalProfileIdentity(rig.Home, new OperatingSystemPrincipalSource());
                 var services = new ServiceCollection();
                 services.AddSingleton<IHomeCoreStateStore>(rig.Home);
@@ -318,33 +323,39 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         }
     }
 
-    private sealed class FailBoardCreateAuditStore(IHomeCoreStateStore inner) : IHomeCoreStateStore
+    private sealed class FailBoardCreateAuditObserver : IHomePersistedWriteObserver
     {
+        private FileHomeCoreStateStore? _store;
         private int _remainingFailures;
         private int _failureCount;
         internal int BoardCreateAuditFailureCount => Volatile.Read(ref _failureCount);
         internal void FailNextBoardCreateAudits(int count) => Interlocked.Exchange(ref _remainingFailures, count);
-        public Task<HomeStateReadResult> ReadAsync(CancellationToken cancellationToken = default) => inner.ReadAsync(cancellationToken);
-        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRecordRevision,
-            AuthenticatedResourceActor expectedActor, IHomeStateCommitActorGuard guard, CancellationToken cancellationToken = default) =>
-            inner.WriteGuardedAsync(record, expectedRecordRevision, expectedActor, guard, cancellationToken);
-        public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRecordRevision,
-            CancellationToken cancellationToken = default)
+        internal void Bind(FileHomeCoreStateStore store)
         {
-            if (record.RecordType == "home.permissions-trust" &&
-                record.Payload.GetRawText().Contains("FILES_BOARD_CREATED", StringComparison.Ordinal))
+            if (Interlocked.CompareExchange(ref _store, store, null) is not null)
+                throw new InvalidOperationException("Bind the actual Home store once.");
+        }
+
+        public async Task OnPersistedWriteAsync(string recordId, long actualRecordRevision, CancellationToken cancellationToken)
+        {
+            var store = Volatile.Read(ref _store) ?? throw new InvalidOperationException("The actual Home store was not bound.");
+            var read = await store.ReadAsync(cancellationToken);
+            if (!read.IsSuccess) throw new IOException("Could not inspect the persisted Home audit fixture record.");
+            var record = read.State!.Records.SingleOrDefault(item =>
+                item.RecordId == recordId && item.Revision == actualRecordRevision);
+            if (record?.RecordType != "home.permissions-trust" ||
+                !record.Payload.GetRawText().Contains("FILES_BOARD_CREATED", StringComparison.Ordinal)) return;
+            while (true)
             {
-                while (true)
-                {
-                    var remaining = Volatile.Read(ref _remainingFailures);
-                    if (remaining == 0) break;
-                    if (Interlocked.CompareExchange(ref _remainingFailures, remaining - 1, remaining) != remaining) continue;
-                    Interlocked.Increment(ref _failureCount);
-                    return Task.FromResult(HomeStateWriteResult.Failed(new(HomeCoreErrorCode.HomeServiceUnavailable,
-                        "Controlled Home board-create audit failure.", record.RecordId, true)));
-                }
+                var remaining = Volatile.Read(ref _remainingFailures);
+                if (remaining == 0) return;
+                if (Interlocked.CompareExchange(ref _remainingFailures, remaining - 1, remaining) != remaining) continue;
+                Interlocked.Increment(ref _failureCount);
+                // This callback runs only after the real FileHome atomic write and locks have
+                // completed. Throwing models a lost acknowledgement; it never fabricates a
+                // rejected write or substitutes a different Home store.
+                throw new IOException("Controlled lost acknowledgement for the persisted board-create audit.");
             }
-            return inner.WriteAsync(record, expectedRecordRevision, cancellationToken);
         }
     }
 }
