@@ -144,11 +144,24 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     }
 
     public RichBoardDocument Document => _view;
+    /// <summary>Returns a full detached contract document snapshot for host metadata.</summary>
+    public async Task<HavenBoardDocument> GetDetachedContractDocumentAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            return HavenBoardDocumentCodec.Deserialize(JsonSerializer.SerializeToUtf8Bytes(_real.Document, Json));
+        }
+        finally { _mergeGate.Release(); }
+    }
     public string Snapshot => JsonSerializer.Serialize(_view, Json);
     public bool CanEdit => !_real.IsReadOnly;
     public bool CanSwitchBoard => _canSwitchBoard;
     public bool CanSaveAs => _canSaveAs;
-    public bool HasUnsavedChanges => _real.HasUnsavedChanges;
+    public bool HasUnsavedChanges => _real.HasUnsavedChanges ||
+        !string.Equals(_baselineJson, ProjectedViewJson(), StringComparison.Ordinal);
     private void EnsureEditable()
     {
         if (!CanEdit) throw new InvalidOperationException("This board source is open read-only.");

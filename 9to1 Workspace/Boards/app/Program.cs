@@ -13,7 +13,6 @@ using Avalonia.Controls.Primitives;
 using Ellipse = Avalonia.Controls.Shapes.Ellipse;
 using Polyline = Avalonia.Controls.Shapes.Polyline;
 using Avalonia.Layout;
-using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
@@ -77,6 +76,8 @@ internal sealed class BoardsApp : Application
     private Window? _window;
     private StackPanel? _blocksHost;
     private Canvas? _inkOverlay;
+    private BoardInkInteractionController? _inkInteraction;
+    private BoardsTextAndKeyboardOwner? _textAndKeyboardOwner;
     private ComboBox? _styleBox;
     private ComboBox? _addKindBox;
     private bool _syncingCombos;
@@ -160,37 +161,6 @@ internal sealed class BoardsApp : Application
             Background = BoardsTheme.AppBackgroundBrush,
         };
         _window = window;
-
-        window.KeyDown += (s, e) =>
-        {
-            if (_viewModel is null)
-                return;
-            var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
-            if (!ctrl)
-                return;
-            var handled = e.Key switch
-            {
-                Key.B => "ToggleBold",
-                Key.I => "ToggleItalic",
-                Key.U => "ToggleUnderline",
-                Key.Z => "Undo",
-                Key.Y => "Redo",
-                Key.S => "SaveBoard",
-                _ => null,
-            };
-            if (handled is not null)
-            {
-                e.Handled = true;
-                // Keyboard commands share menu admission and original-task custody,
-                // so close joins an accepted save and refuses new work while draining.
-                var viewModel = _viewModel;
-                _ = ObserveMenuActionAsync(() => viewModel.DispatchAsync(handled, null).AsTask());
-            }
-            else if (e.Key == Key.Escape)
-            {
-                _viewModel.Set("StatusText", "Ready");
-            }
-        };
 
         // Native close is canceled until the actual save acknowledges this draft.
         // Keep the UI loop free for storage completion and visible retry feedback.
@@ -278,8 +248,16 @@ internal sealed class BoardsApp : Application
         try
         {
             _closeDrain = _closeSaveOwner.DrainAfterSaveAsync(
-                () => _loader?.Dispose(),
-                () => _loader?.WhenActionsIdleAsync() ?? Task.CompletedTask);
+                () =>
+                {
+                    _textAndKeyboardOwner?.Dispose();
+                    _inkInteraction?.Dispose();
+                    _loader?.Dispose();
+                },
+                () => Task.WhenAll(
+                    _loader?.WhenActionsIdleAsync() ?? Task.CompletedTask,
+                    _textAndKeyboardOwner?.DrainAsync() ?? Task.CompletedTask,
+                    _inkInteraction?.DrainAsync() ?? Task.CompletedTask));
             await _closeDrain;
         }
         catch (Exception error)
@@ -297,6 +275,7 @@ internal sealed class BoardsApp : Application
     {
         if (_viewModel is null)
             return;
+        var activeViewModel = _viewModel;
         _blocksHost = FindByAutomationId<StackPanel>(root, "BlocksHost");
         _inkOverlay = FindByAutomationId<Canvas>(root, "InkOverlayLayer");
         _styleBox = FindByAutomationId<ComboBox>(root, "StyleBox");
@@ -304,14 +283,21 @@ internal sealed class BoardsApp : Application
         var insertButton = FindByAutomationId<Button>(root, "AddBlockKind");
         // Canonical CUI keeps authored identity on its outer control. Layout
         // panels are internal adapters, resolved through the helper below.
-        WireTitleBox(root);
-        WireSearchBox(root);
+        _textAndKeyboardOwner?.Dispose();
+        if (_window is not null)
+        {
+            _textAndKeyboardOwner = new BoardsTextAndKeyboardOwner(root, activeViewModel,
+                command => ObserveMenuActionAsync(() => activeViewModel.DispatchAsync(command, null).AsTask()));
+            _textAndKeyboardOwner.AttachWindow(_window);
+        }
         ThemeApplier.ApplyChrome(root);
         FillTopBar(root);
         FillNav(root);
         FillToolbar();
         TameEditorScroll(root);
-        WireInkOverlay();
+        _inkInteraction?.Dispose();
+        _inkInteraction = _inkOverlay is null ? null : new BoardInkInteractionController(_inkOverlay, activeViewModel);
+        _ = RenderInkOverlayAsync();
         UpdateWindowTitle();
         _viewModel.SelectionChanged += OnSelectionChanged;
         _viewModel.LandingRequested += OnLandingRequested;
@@ -489,17 +475,6 @@ internal sealed class BoardsApp : Application
         var scroller = FindByAutomationId<CuiContainerControl>(root, "EditorScroll");
         if (scroller is not null && !CuiLayoutProperties.SetLiteral(scroller,"HorizontalScrolling","False",source:"Boards editor viewport"))
             throw new InvalidOperationException("The canonical Boards scrolling property is unavailable.");
-    }
-
-    private void WireSearchBox(Control root)
-    {
-        if (_viewModel is null)
-            return;
-        var search = FindByAutomationId<TextBox>(root, "NavSearchBox");
-        if (search is null)
-            return;
-        var viewModel = _viewModel;
-        search.TextChanged += (_, _) => viewModel.SearchText = search.Text ?? string.Empty;
     }
 
     private void FillTopBar(Control root)
@@ -840,6 +815,9 @@ internal sealed class BoardsApp : Application
 
         oldVm ??= _viewModel;
         oldSession ??= _session;
+        _textAndKeyboardOwner?.Dispose();
+        _inkInteraction?.Dispose();
+        await (_inkInteraction?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         var next = new BoardsViewModel(adapter);
         next.SetLanding(false);
         if (selectedPageId is not null && !next.SelectPageById(selectedPageId))
@@ -860,236 +838,9 @@ internal sealed class BoardsApp : Application
             await oldSession.DisposeAsync();
     }
 
-    // ----- Page-level ink overlay: persisted page.Ink is always rendered. -----
+    // ----- Shared editable page surface owners. -----
 
-    private void WireInkOverlay()
-    {
-        if (_inkOverlay is null || Equals(_inkOverlay.Tag, "page-ink-wired"))
-            return;
-        _inkOverlay.Tag = "page-ink-wired";
-        var drawing = false;
-        var points = new System.Collections.Generic.List<(double X, double Y, double Pressure)>();
-        string? drawingPageId = null;
-        double drawingZoom = 1;
-        double drawingPanX = 0;
-        double drawingPanY = 0;
-        double drawingWidth = 2.5;
-        string drawingColor = "#FF111111";
-        string drawingTool = "Pen";
-        _inkOverlay.PointerPressed += (_, e) =>
-        {
-            var viewModel = _viewModel;
-            if (viewModel is null || !viewModel.IsDrawMode)
-                return;
-            var pageId = viewModel.SelectedPageId;
-            var location = ToInkCoordinates(e.GetPosition(_inkOverlay), viewModel.InkPanX, viewModel.InkPanY, viewModel.InkZoom);
-            if (string.Equals(viewModel.InkTool, "Eraser", StringComparison.OrdinalIgnoreCase))
-            {
-                _ = EraseAtAsync(viewModel, pageId, location.X, location.Y);
-                e.Handled = true;
-                return;
-            }
-            if (string.Equals(viewModel.InkTool, "Select", StringComparison.OrdinalIgnoreCase))
-            {
-                _ = SelectInkAtAsync(viewModel, pageId, location.X, location.Y);
-                e.Handled = true;
-                return;
-            }
-            drawing = true;
-            drawingPageId = pageId;
-            drawingZoom = viewModel.InkZoom;
-            drawingPanX = viewModel.InkPanX;
-            drawingPanY = viewModel.InkPanY;
-            drawingWidth = viewModel.InkWidth;
-            drawingColor = viewModel.InkColor;
-            drawingTool = viewModel.InkTool;
-            points.Clear();
-            var inkLocation = ToInkCoordinates(e.GetPosition(_inkOverlay), drawingPanX, drawingPanY, drawingZoom);
-            points.Add((inkLocation.X, inkLocation.Y, ReadPressure(e, _inkOverlay)));
-            e.Pointer.Capture(_inkOverlay);
-            RenderLiveStroke(_inkOverlay, points, drawingColor, drawingWidth, drawingTool, drawingZoom, drawingPanX, drawingPanY);
-            e.Handled = true;
-        };
-        _inkOverlay.PointerMoved += (_, e) =>
-        {
-            var viewModel = _viewModel;
-            if (!drawing || viewModel is null)
-                return;
-            var location = ToInkCoordinates(e.GetPosition(_inkOverlay), drawingPanX, drawingPanY, drawingZoom);
-            points.Add((location.X, location.Y, ReadPressure(e, _inkOverlay)));
-            RenderLiveStroke(_inkOverlay, points, drawingColor, drawingWidth, drawingTool, drawingZoom, drawingPanX, drawingPanY);
-            e.Handled = true;
-        };
-        _inkOverlay.PointerReleased += (_, e) =>
-        {
-            var viewModel = _viewModel;
-            if (!drawing || viewModel is null)
-                return;
-            drawing = false;
-            e.Pointer.Capture(null);
-            var pageId = drawingPageId;
-            drawingPageId = null;
-            if (pageId is not null)
-                _ = CommitOverlayStrokeAsync(viewModel, pageId, points.ToArray(), drawingWidth, drawingColor, drawingTool);
-            e.Handled = true;
-        };
-        _inkOverlay.SizeChanged += (_, _) => _ = RenderInkOverlayAsync();
-    }
-
-    private async Task CommitOverlayStrokeAsync(
-        BoardsViewModel viewModel, string pageId,
-        IReadOnlyList<(double X, double Y, double Pressure)> points,
-        double width, string color, string tool)
-    {
-        try
-        {
-            await viewModel.CommitInkStrokeAsync(pageId, points, width, color, tool);
-        }
-        catch (Exception error)
-        {
-            viewModel.ReportInkCommitFailure(error.Message);
-            return;
-        }
-        await RenderInkOverlayAsync();
-    }
-
-    private async Task RenderInkOverlayAsync()
-    {
-        if (_inkOverlay is null || _viewModel is null)
-            return;
-        var overlay = _inkOverlay;
-        var viewModel = _viewModel;
-        var pageId = viewModel.SelectedPageId;
-        var panX = viewModel.InkPanX;
-        var panY = viewModel.InkPanY;
-        var zoom = viewModel.InkZoom;
-        var strokes = await viewModel.GetInkStrokesAsync(pageId);
-        if (!ReferenceEquals(overlay, _inkOverlay) || !ReferenceEquals(viewModel, _viewModel) ||
-            !string.Equals(pageId, viewModel.SelectedPageId, StringComparison.Ordinal))
-            return;
-        if (panX != viewModel.InkPanX || panY != viewModel.InkPanY || zoom != viewModel.InkZoom)
-        {
-            await RenderInkOverlayAsync();
-            return;
-        }
-        overlay.Children.Clear();
-        overlay.IsHitTestVisible = viewModel.IsDrawMode;
-        ToolTip.SetTip(overlay, viewModel.IsDrawMode ? "Draw directly over this page" : "Use Draw to annotate this page");
-        AutomationProperties.SetName(overlay, "Page drawing layer");
-        var requiredHeight = 0d;
-        foreach (var stroke in strokes)
-        {
-            if (stroke.Points.Count == 0)
-                continue;
-            requiredHeight = Math.Max(requiredHeight,
-                stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48);
-            AddRenderedStroke(overlay, stroke, panX, panY, zoom);
-        }
-        if (requiredHeight > overlay.Bounds.Height + 1)
-            overlay.Height = requiredHeight;
-        else if (overlay.Height > 0 && requiredHeight < overlay.Bounds.Height - 24)
-            overlay.Height = double.NaN;
-    }
-
-    internal static void AddRenderedStroke(Canvas overlay, InkStrokeView stroke, double panX, double panY, double zoom) =>
-        BoardInkOverlayRenderer.AddRenderedStroke(overlay, stroke, panX, panY, zoom);
-
-    private static void RenderLiveStroke(
-        Canvas overlay,
-        IReadOnlyList<(double X, double Y, double Pressure)> points,
-        string color,
-        double width,
-        string tool,
-        double zoom,
-        double panX,
-        double panY)
-    {
-        var prior = overlay.Children.OfType<Polyline>().Where(line => Equals(line.Tag, "live-ink")).ToList();
-        foreach (var line in prior)
-            overlay.Children.Remove(line);
-        if (points.Count < 2)
-            return;
-        overlay.Children.Add(new Polyline
-        {
-            Tag = "live-ink",
-            Points = points.Select(point => new Point(point.X * zoom + panX, point.Y * zoom + panY)).ToList(),
-            Stroke = BrushForInk(color),
-            StrokeThickness = Math.Clamp(width, 1, 32),
-            StrokeLineCap = PenLineCap.Round,
-            StrokeJoin = PenLineJoin.Round,
-            Opacity = string.Equals(tool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? 0.42 : 1,
-        });
-    }
-
-    private static Point ToInkCoordinates(Point location, double panX, double panY, double zoom) => new(
-        (location.X - panX) / zoom,
-        (location.Y - panY) / zoom);
-
-    private static Point ToOverlayCoordinates(double x, double y, double panX, double panY, double zoom) => new(
-        x * zoom + panX,
-        y * zoom + panY);
-
-    private static double EffectiveStrokeWidth(InkStrokeView stroke, IReadOnlyList<InkPointView> points) =>
-        Math.Clamp(stroke.Width * Math.Clamp(points.Average(point => point.Pressure), 0.25, 1), 0.8, 64);
-
-    private static IBrush BrushForInk(string color)
-    {
-        try { return new SolidColorBrush(Color.Parse(color)); }
-        catch { return Brushes.Black; }
-    }
-
-    private static async Task EraseAtAsync(BoardsViewModel viewModel, string pageId, double x, double y)
-    {
-        if (viewModel.Session is ContractSessionAdapter adapter)
-            await adapter.EraseInkAtPageAsync(pageId, x, y);
-        else
-            await viewModel.ClearInkAsync(pageId);
-        viewModel.RefreshAfterEdit();
-    }
-
-    private static async Task SelectInkAtAsync(BoardsViewModel viewModel, string pageId, double x, double y)
-    {
-        if (viewModel.Session is ContractSessionAdapter adapter)
-            await adapter.SelectInkAtPageAsync(pageId, x, y);
-        viewModel.RefreshAfterEdit();
-    }
-
-    private static async Task RemoveLastStrokeAsync(BoardsViewModel viewModel)
-    {
-        if (viewModel.Session is ContractSessionAdapter adapter)
-            await adapter.RemoveLastInkStrokeAsync(viewModel.SelectedPageId);
-        else
-            await viewModel.ClearInkAsync();
-        viewModel.RefreshAfterEdit();
-    }
-
-    private static double ReadPressure(PointerEventArgs e, Visual relativeTo)
-    {
-        try
-        {
-            var pressure = e.GetCurrentPoint(relativeTo).Properties.Pressure;
-            return pressure > 0 ? Math.Clamp(pressure, 0.05, 1) : 0.5;
-        }
-        catch
-        {
-            return 0.5;
-        }
-    }
-
-    /// <summary>
-    /// The static title box is wired by automation id. Without this, title edits
-    /// would never reach the session.
-    /// </summary>
-    private void WireTitleBox(Control root)
-    {
-        if (_viewModel is null)
-            return;
-        var titleBox = FindByAutomationId<TextBox>(root, "BoardTitleBox");
-        if (titleBox is null)
-            return;
-        var viewModel = _viewModel;
-        titleBox.TextChanged += (_, _) => viewModel.EditText("BoardTitleBox", titleBox.Text ?? string.Empty);
-    }
+    private Task RenderInkOverlayAsync() => _inkInteraction?.RenderAsync() ?? Task.CompletedTask;
 
     // ----- Shared CUI theme + Light/Dark appearance -----
 

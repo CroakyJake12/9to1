@@ -36,11 +36,13 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     private readonly ContractSessionAdapter _session;
     private readonly CuiControlLoader _loader;
     private readonly byte[] _initialDocumentBytes;
+    private BoardsPresentationRenderQueue? _renderQueue;
+    private BoardInkInteractionController? _inkInteraction;
+    private BoardsTextAndKeyboardOwner? _inputOwner;
     private readonly Guid _documentId;
     private readonly string? _snapshotBoardId;
     private string _sourceRevision;
     private bool _disposed;
-    private bool _renderQueued;
 
     private BoardsWritablePresentation(
         HavenBoardDocument document,
@@ -68,8 +70,10 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     public BoardsExternalSaveReceipt? LastSaveReceipt { get; private set; }
     public BoardsViewModel ViewModel { get; }
     public Control Content { get; }
-    /// <summary>Returns a fresh detached copy; callers cannot mutate the session through it.</summary>
+    /// <summary>Returns the detached document supplied when this presentation opened.</summary>
     public HavenBoardDocument Document => HavenBoardDocumentCodec.Deserialize(_initialDocumentBytes);
+    public Task<HavenBoardDocument> GetCurrentDocumentAsync(CancellationToken cancellationToken = default) =>
+        _session.GetDetachedContractDocumentAsync(cancellationToken);
 
     public static async Task<BoardsWritablePresentation> OpenWritableDocumentAsync(
         ReadOnlyMemory<byte> verifiedDocument,
@@ -176,10 +180,13 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
 
     private void WireSurface(Control root)
     {
-        if (FindByAutomationId<TextBox>(root, "NavSearchBox") is { } search)
-            search.TextChanged += (_, _) => ViewModel.SearchText = search.Text ?? string.Empty;
+        _inputOwner = new BoardsTextAndKeyboardOwner(root, ViewModel);
         if (FindByAutomationId<Canvas>(root, "InkOverlayLayer") is { } ink)
-            ink.SizeChanged += (_, _) => QueueRender();
+            _inkInteraction = new BoardInkInteractionController(ink, ViewModel);
+        _renderQueue = new BoardsPresentationRenderQueue(RenderAsync, error =>
+        {
+            if (!_disposed) ViewModel.Set("StatusText", "Boards view could not be refreshed: " + error.Message.Split('\n')[0]);
+        });
         ViewModel.RebuildRequested += QueueRender;
         ViewModel.NavRebuildRequested += QueueRender;
         ViewModel.SelectionChanged += QueueRender;
@@ -187,21 +194,12 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
 
     private void QueueRender()
     {
-        if (_disposed || _renderQueued) return;
-        _renderQueued = true;
-        Dispatcher.UIThread.Post(async () =>
-        {
-            try { await RenderAsync(); }
-            catch (Exception error)
-            {
-                if (!_disposed) ViewModel.Set("StatusText", "Boards view could not be refreshed: " + error.Message.Split('\n')[0]);
-            }
-        });
+        if (_disposed) return;
+        _renderQueue?.Queue();
     }
 
     private async Task RenderAsync()
     {
-        _renderQueued = false;
         if (_disposed) return;
         if (FindByAutomationId<StackPanel>(Content, "BlocksHost") is { } blocks)
             await BlockRenderer.RebuildAsync(blocks, ViewModel);
@@ -211,7 +209,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
         ViewModel.RefreshCuiContext();
         if (FindByAutomationId<Canvas>(Content, "InkOverlayLayer") is { } ink)
-            await BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel);
+            await (_inkInteraction?.RenderAsync() ?? BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel));
     }
 
     private static T? FindByAutomationId<T>(Control root, string id) where T : Control
@@ -231,7 +229,16 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         ViewModel.RebuildRequested -= QueueRender;
         ViewModel.NavRebuildRequested -= QueueRender;
         ViewModel.SelectionChanged -= QueueRender;
+        _renderQueue?.Dispose();
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _inputOwner?.Dispose();
+            _inkInteraction?.Dispose();
+        });
+        await (_inputOwner?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+        await (_inkInteraction?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
+        await (_renderQueue?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(_loader.Dispose);
         await _session.DisposeAsync().ConfigureAwait(false);
     }
