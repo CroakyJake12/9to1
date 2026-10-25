@@ -258,7 +258,7 @@ public sealed class BoardsEditorTests
             && searchRadius is CakeOS.Cui.Language.CuiLiteralValue { Value: "18" });
         var pageCard = components.Single(component => component.Name == "PageCard");
         Assert.True(pageCard.Properties.TryGetValue("cornerradius", out var pageCorner)
-            && pageCorner is CakeOS.Cui.Language.CuiLiteralValue { Value: "26 0 0 0" });
+            && pageCorner is CakeOS.Cui.Language.CuiLiteralValue { Value: "26" });
 
         var found = await OnUiThreadAsync(() =>
         {
