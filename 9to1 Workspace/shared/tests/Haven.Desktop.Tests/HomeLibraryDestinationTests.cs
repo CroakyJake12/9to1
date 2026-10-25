@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
@@ -182,7 +183,7 @@ public sealed class HomeLibraryDestinationTests
             $"Expected one {authoredId}; page rows={page.Current?.Items.Count ?? 0} " +
             $"artifact IDs=[{string.Join(",", page.Current?.Items.Select(item => item.ArtifactId) ?? [])}]; " +
             $"buttons=[{string.Join("; ", controls.Select(item =>
-                $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{global::Avalonia.Automation.AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
+                $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
         return matches[0];
     }
     private static Window Show(Control page)
