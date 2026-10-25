@@ -39,15 +39,20 @@ public sealed class CuiMenuIconSizeTests
                 Assert.Equal(20, Assert.Single(items.Single(item => Equals(item.Header, "Normal")).GetVisualDescendants().OfType<Image>()).Width);
                 CuiPropertyPresentation.Set(undo, "IconSize", 16d, CuiPropertyLevel.Instance, "test glyph size");
                 window.UpdateLayout(); Assert.Equal(16, glyph.Bounds.Width, 2);
-                CuiPropertyPresentation.Set(undo, "IconSize", double.NaN, CuiPropertyLevel.Instance, "test glyph size");
-                window.UpdateLayout(); Assert.Equal(36, glyph.Width);
+                Assert.Throws<ArgumentException>(() => CuiPropertyPresentation.Set(undo, "IconSize", double.NaN,
+                    CuiPropertyLevel.Instance, "test glyph size"));
+                Assert.Equal(16, glyph.Width);
+                Assert.True(CuiPropertyPresentation.Remove(undo, "IconSize", CuiPropertyLevel.Instance, "test glyph size"));
+                window.UpdateLayout(); Assert.Equal(18, glyph.Width); // restore the authored declaration first
+                Assert.True(CuiPropertyPresentation.Remove(undo, "IconSize", CuiPropertyLevel.Instance, "CUI authored Instance"));
+                window.UpdateLayout(); Assert.Null(undo.IconSize); Assert.Equal(36, glyph.Width);
             }
             finally { window.Close(); }
         }, CancellationToken.None);
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(-1)] [InlineData(257)] [InlineData(double.PositiveInfinity)]
+    [InlineData(0)] [InlineData(-1)] [InlineData(257)] [InlineData(double.PositiveInfinity)] [InlineData(double.NaN)]
     public void Menu_icon_size_rejects_nonpositive_or_unbounded_values(double size) =>
         Assert.Throws<ArgumentException>(() => new CuiMenuItem { IconSize = size });
 }
