@@ -26,8 +26,42 @@ public sealed class TaskRunOriginalTaskPermissionReview
 public sealed record TaskRunOriginalTaskPermissionResponse(Guid TaskId, Guid ExecutionId, Guid ContextId,
     Guid RequestId, PermissionDecision Decision);
 
+/// <summary>A publication invalidation only. Fresh original-owner reads supply the actual
+/// current request/decision; this hint cannot grant visibility or a permission response.</summary>
+public sealed record TaskPermissionReviewInvalidation(Guid TaskId, Guid ExecutionId, Guid RequestId);
+
 public sealed partial class TaskExecutionCoordinator
 {
+    public IDisposable? WatchOriginalTaskPermissionChanges(Action<TaskPermissionReviewInvalidation> invalidated)
+    {
+        ArgumentNullException.ThrowIfNull(invalidated);
+        if (HasSealedOriginalProcessProducerAdmission) throw new InvalidOperationException("The original Task observation owner is retiring.");
+        // Production uses this SAME maintained published event hub for the coordinator
+        // and the permission owner. Other sinks do not silently acquire a watcher API.
+        return events is ExecutionEventHub hub ? new OriginalPermissionChanges(hub, invalidated) : null;
+    }
+    private sealed class OriginalPermissionChanges : IDisposable
+    {
+        private readonly ExecutionEventHub _hub;
+        private readonly EventHandler<ExecutionEvent> _handler;
+        private int _disposed;
+        internal OriginalPermissionChanges(ExecutionEventHub hub, Action<TaskPermissionReviewInvalidation> invalidated)
+        {
+            _hub = hub;
+            _handler = (_, entry) =>
+            {
+                if (Volatile.Read(ref _disposed) != 0 || entry.ComponentId != TaskRunCloudPermissionRemediationOwner.ComponentId ||
+                    entry.TaskId is not { } taskId || taskId == Guid.Empty || entry.ExecutionId == Guid.Empty ||
+                    entry.RemediationId is not { } requestId || requestId == Guid.Empty ||
+                    entry.SafeMetadata?.GetValueOrDefault("eventKind") != "task-cloud-permission") return;
+                invalidated(new(taskId, entry.ExecutionId, requestId));
+            };
+            hub.Published += _handler;
+        }
+        public void Dispose()
+        { if (Interlocked.Exchange(ref _disposed, 1) == 0) _hub.Published -= _handler; }
+    }
+
     private readonly ConditionalWeakTable<TaskRunOriginalTaskPermissionReview, object> _issuedPermissionReviews = new();
 
     public Task<TaskRunOriginalTaskPermissionReview?> ReadOriginalTaskPermissionReviewAsync(Guid taskId,

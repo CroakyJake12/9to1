@@ -54,6 +54,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     private string _instruction = "", _status = "";
     private Task? _hostClose, _nativeReadinessClose;
     private NativeCanonicalTaskSceneReadiness? _nativeReadinessOwner;
+    private IDisposable? _permissionChanges;
     private DesktopOriginalWorkLifetime.Original? _nativeReadinessAcquisition;
 
     public SpaceTaskWidgetPage(SpaceTaskWorkspaceService source, TaskExecutionCoordinator canonical,
@@ -185,7 +186,8 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             {
                 original.DemandPublication();
                 if (!_subscribed)
-                    InvokeOriginalSource(() => { _canonical.SnapshotChanged += OnSnapshotChanged; _canonical.RunActivityInvalidated += OnRunActivityInvalidated; _subscribed = true; return true; });
+                    InvokeOriginalSource(() => { _canonical.SnapshotChanged += OnSnapshotChanged; _canonical.RunActivityInvalidated += OnRunActivityInvalidated; _subscribed = true;
+                        _permissionChanges = _canonical.WatchOriginalTaskPermissionChanges(OnPermissionInvalidated); return true; });
             }
             await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
             await original.AwaitAsync(_composerView.InitializeAsync(scope.Token)).ConfigureAwait(false);
@@ -279,6 +281,21 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || hint.ContextId != _conversationId || hint.TaskId != _originalTaskId || hint.ExecutionId != _originalRunId) return;
+            generation = _generation;
+        }
+        _ = _work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation));
+            await RefreshOriginalAsync(original, generation, original.Token).ConfigureAwait(false);
+        });
+    }
+
+    private void OnPermissionInvalidated(TaskPermissionReviewInvalidation hint)
+    {
+        long generation;
+        lock (_gate)
+        {
+            if (!_active || _work.IsRetiring || hint.TaskId != _originalTaskId || hint.ExecutionId != _originalRunId) return;
             generation = _generation;
         }
         _ = _work.RunAsync(async original =>
@@ -489,6 +506,8 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         NativeCanonicalTaskSceneReadiness? readiness;
         lock (_gate) { _active = false; _generation++; readiness = _nativeReadinessOwner; }
         if (_subscribed) { _canonical.SnapshotChanged -= OnSnapshotChanged; _canonical.RunActivityInvalidated -= OnRunActivityInvalidated; _subscribed = false; }
+        var permissionChanges = Interlocked.Exchange(ref _permissionChanges, null);
+        InvokeOriginalSource(() => { permissionChanges?.Dispose(); return true; });
         var failures = new List<Exception>();
         RequestOriginalResumeObservationRetirement(failures); // Request every observer, never the business producer.
         Task? nativeClose = null, hostClose = null;

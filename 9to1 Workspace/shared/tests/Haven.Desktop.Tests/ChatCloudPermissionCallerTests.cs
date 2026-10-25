@@ -518,7 +518,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         public ChatSessionService Service { get; }
         public List<ChatStreamEvent> Stream { get; } = [];
         private readonly string _root = Path.Combine(Path.GetTempPath(), "astra-ask-caller-" + Guid.NewGuid().ToString("N"));
-        public Rig(bool temporary = true)
+        public Rig(bool temporary = true, IExecutionEventSink? originalEvents = null)
         {
             Conversation = Conversation with { IsTemporary = temporary };
             Directory.CreateDirectory(_root);
@@ -528,9 +528,9 @@ public sealed partial class ChatCloudPermissionCallerTests
             Runtime = new((task, run, attempt, token) => tasks!.TryGetIssuedAttemptAsync(task, run, attempt, token));
             Capture? originalCapture = null;
             Settlement = new(Runtime, () => originalCapture?.OriginalAsk);
-            Tasks = tasks = new(TaskRows, Events, admissionAuthority: Authority, runtimeSettlement: Settlement);
-            Remediation = new(RemediationRows, new Secrets(), Events, Registry);
-            Owner = new(Source, Authority, () => Tasks, Remediation, RemediationRows, Registry, Events);
+            Tasks = tasks = new(TaskRows, originalEvents ?? Events, admissionAuthority: Authority, runtimeSettlement: Settlement);
+            Remediation = new(RemediationRows, new Secrets(), originalEvents ?? Events, Registry);
+            Owner = new(Source, Authority, () => Tasks, Remediation, RemediationRows, Registry, originalEvents ?? Events);
             Capture = originalCapture = new(Tasks, Authority, Source, Provider, Runtime);
             Client = new(Capture);
             Service = new(Conversations, Client, new CapabilityPreflightService(), new Safety(),

@@ -39,6 +39,8 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     private bool _permissionOpen, _permissionWorkPending, _permissionResponded;
     private long _permissionSequence;
     private string _permissionTitle = "", _permissionStatus = "";
+    private IDisposable? _permissionChanges;
+    internal Task? ActualPermissionInvalidation { get; private set; }
     internal Task? ActualPermissionReview { get; private set; }
     internal Task? ActualPermissionResponse { get; private set; }
     public TaskRunOriginalTaskPermissionResponse? AcknowledgedPermissionResponse { get; private set; }
@@ -138,7 +140,8 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             {
                 original.DemandPublication();
                 if (!_subscribed)
-                { _canonical.SnapshotChanged += OnSnapshotChanged; _canonical.RunActivityInvalidated += OnRunActivityInvalidated; _subscribed = true; }
+                { _canonical.SnapshotChanged += OnSnapshotChanged; _canonical.RunActivityInvalidated += OnRunActivityInvalidated; _subscribed = true;
+                    _permissionChanges = InvokePhysicalSource(() => _canonical.WatchOriginalTaskPermissionChanges(OnPermissionInvalidated)); }
             }
             await ReadOriginalPageAsync(original, generation, scope.Token).ConfigureAwait(false);
         });
@@ -246,7 +249,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             }
             try
             {
-                await DispatchOriginalAsync(original, () => PublishScope()).ConfigureAwait(false);
+                await DispatchOriginalAsync(original, () => { ClosePermissionReview(); PublishScope(); }).ConfigureAwait(false);
                 await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
             }
             finally
@@ -270,8 +273,41 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     private void OnRunActivityInvalidated(object? sender, TaskRunActivityInvalidation hint)
     {
         lock (_gate) if (!_active || _work.IsRetiring || !_currentObservations.Any(row =>
-            row.Snapshot?.TaskId == hint.TaskId && row.Snapshot.ExecutionId == hint.ExecutionId && row.ContextId == hint.ContextId)) return;
+            row.Snapshot is { } task && task.TaskId == hint.TaskId && task.ExecutionId == hint.ExecutionId && row.ContextId == hint.ContextId)) return;
         _ = RefreshOriginalAsync(); // Hint is not state; the same source freshly authorizes and reads.
+    }
+    private void OnPermissionInvalidated(TaskPermissionReviewInvalidation hint)
+    {
+        long generation;
+        lock (_gate)
+        {
+            if (!_active || _work.IsRetiring || !_currentObservations.Any(row =>
+                row.Snapshot is { } task && task.TaskId == hint.TaskId && task.ExecutionId == hint.ExecutionId)) return;
+            generation = _generation;
+        }
+        ActualPermissionInvalidation = _work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation));
+            await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
+            await DispatchOriginalAsync(original, () =>
+            {
+                if (!_permissionOpen || _permissionReview?.Request.Id != hint.RequestId ||
+                    _permissionSelection?.Snapshot is not { } selectedTask || selectedTask.TaskId != hint.TaskId || selectedTask.ExecutionId != hint.ExecutionId) return;
+                // Published is NOT durable or permission acceptance. Only the newly
+                // read current original owner can reconcile an already open pop-out.
+                var row = _currentObservations.SingleOrDefault(row => row.Snapshot is { } task && task.TaskId == hint.TaskId && task.ExecutionId == hint.ExecutionId);
+                if (row?.PermissionReview is not { } reviewed) { ClosePermissionReview(); return; }
+                _permissionSelection = row; _permissionReview = reviewed;
+                _permissionResponded = !reviewed.CanRespond;
+                _permissionStatus = reviewed.AcknowledgedDecision?.Kind switch
+                {
+                    PermissionDecisionKind.Allowed => "Permission allowed. Resume the task separately when ready.",
+                    PermissionDecisionKind.Denied => "Permission denied. The task remains suspended.",
+                    _ => reviewed.CanRespond ? "Review the scope and consequences before choosing." : "This request cannot accept another response."
+                };
+                PublishPermissionReview();
+            }).ConfigureAwait(false);
+        });
     }
     private void OnRefreshRequested(object? sender, EventArgs args)
     {
@@ -523,6 +559,8 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     {
         lock (_gate) { _active = false; _generation++; }
         if (_subscribed) { _canonical.SnapshotChanged -= OnSnapshotChanged; _canonical.RunActivityInvalidated -= OnRunActivityInvalidated; _subscribed = false; }
+        var permissionChanges = Interlocked.Exchange(ref _permissionChanges, null);
+        InvokePhysicalSource(() => { permissionChanges?.Dispose(); return true; });
         _scene.DelegateRequested -= OnDelegateRequested;
         _scene.NewBlankTaskRequested -= OnBlankRequested;
         _scene.RecentTaskRequested -= OnOpenRequested;
