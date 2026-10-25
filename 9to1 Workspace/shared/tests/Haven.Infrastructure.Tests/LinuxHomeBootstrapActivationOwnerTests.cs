@@ -3,6 +3,7 @@ using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Haven.Infrastructure.Native.Linux;
 using Haven.Infrastructure.Native.Windows;
 using HavenOS.Home.Apps;
@@ -128,6 +129,72 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
         Assert.Empty((await rig.Database.ReadAsync(rig.Token)).Snapshot!.RecentOperations);
     }
 
+    [LinuxAdminTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Actual_failure_after_publication_recovers_same_operation_without_repeating_namespace_effects(bool acknowledgementLost)
+    {
+        using var rig = new Rig(failAfterPublication: !acknowledgementLost, loseSettlementAcknowledgement: acknowledgementLost);
+        await rig.Enroll();
+        var failure = await Assert.ThrowsAsync<LinuxHomeBootstrapActivationOwner.ActivationUnconfirmedException>(() => rig.Owner.ActivateAsync(rig.Request(), rig.Token));
+        Assert.Equal(rig.Operation, failure.OperationId);
+        var active = Path.Combine(rig.Code, "active"); Assert.Equal(active, failure.ObservedActivePath);
+        Assert.True(Directory.Exists(active)); Assert.False(Directory.Exists(rig.Stage));
+        var before = (await rig.Database.ReadAsync(rig.Token)).Snapshot!;
+        Assert.All(before.RecentOperations, journal => Assert.Equal(acknowledgementLost ? HomePackageJournalState.Succeeded : HomePackageJournalState.Validated, journal.State));
+        Assert.Equal(acknowledgementLost ? 2 : 0, before.Packages.Count);
+        var directoryStamp = Directory.GetLastWriteTimeUtc(active);
+        var recovered = await rig.Owner.RecoverAsync(rig.Request(), rig.Token);
+        Assert.Equal(acknowledgementLost, recovered.AlreadySettled);
+        Assert.Equal(rig.Operation, recovered.OperationId); Assert.Equal(active, recovered.ActivePath);
+        Assert.Equal(directoryStamp, Directory.GetLastWriteTimeUtc(active));
+        Assert.False(Directory.Exists(rig.Stage));
+        Assert.Equal(rig.Elf, File.ReadAllBytes(Path.Combine(active, "home", "app")));
+        var after = (await rig.Database.ReadAsync(rig.Token)).Snapshot!;
+        Assert.Equal(2, after.Packages.Count); Assert.All(after.RecentOperations, journal => Assert.Equal(HomePackageJournalState.Succeeded, journal.State));
+        var bytes = File.ReadAllBytes(rig.StatePath);
+        var again = await rig.Owner.RecoverAsync(rig.Request(), rig.Token);
+        Assert.True(again.AlreadySettled); Assert.Equal(after.Revision, again.RegistryRevision);
+        Assert.Equal(bytes, File.ReadAllBytes(rig.StatePath));
+    }
+
+    [LinuxAdminTheory]
+    [InlineData("wrong-operation")]
+    [InlineData("changed-plan")]
+    [InlineData("changed-runtime")]
+    [InlineData("changed-mode")]
+    [InlineData("missing-active")]
+    public async Task Pending_recovery_never_adopts_different_or_missing_published_source(string damage)
+    {
+        using var rig = new Rig(failAfterPublication: true); await rig.Enroll();
+        await Assert.ThrowsAsync<LinuxHomeBootstrapActivationOwner.ActivationUnconfirmedException>(() => rig.Owner.ActivateAsync(rig.Request(), rig.Token));
+        var request = rig.Request(); var active = Path.Combine(rig.Code, "active");
+        if (damage == "wrong-operation") request = request with { SigningInputs = request.SigningInputs with { OperationId = Guid.NewGuid() } };
+        if (damage == "changed-plan") File.AppendAllText(rig.PlanPath, " ");
+        if (damage == "changed-runtime") File.WriteAllBytes(Path.Combine(active, "home", "app"), [9, 8]);
+        if (damage == "changed-mode") File.SetUnixFileMode(Path.Combine(active, "home"), Mode700);
+        if (damage == "missing-active") Directory.Move(active, rig.Stage);
+        var before = File.ReadAllBytes(rig.StatePath);
+        await Assert.ThrowsAnyAsync<Exception>(() => rig.Owner.RecoverAsync(request, rig.Token));
+        Assert.Equal(before, File.ReadAllBytes(rig.StatePath));
+        var registry = (await rig.Database.ReadAsync(rig.Token)).Snapshot!;
+        Assert.Empty(registry.Packages); Assert.All(registry.RecentOperations, item => Assert.Equal(HomePackageJournalState.Validated, item.State));
+        Assert.Equal(damage != "missing-active", Directory.Exists(active));
+    }
+
+    [LinuxAdminFact]
+    public async Task An_enrolled_registry_missing_its_original_OS_profile_is_preserved_without_first_run_repair()
+    {
+        using var rig = new Rig(); await rig.Enroll();
+        var document = JsonNode.Parse(File.ReadAllBytes(rig.StatePath))!;
+        var records = document["Records"]!.AsArray();
+        var profile = records.Single(value => value!["RecordId"]!.GetValue<string>() == "home.local-profile");
+        records.Remove(profile); Write(rig.StatePath, JsonSerializer.SerializeToUtf8Bytes(document));
+        var before = File.ReadAllBytes(rig.StatePath);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => rig.Owner.ActivateAsync(rig.Request(), rig.Token));
+        Assert.Equal(before, File.ReadAllBytes(rig.StatePath)); Assert.Equal(Mode700, File.GetUnixFileMode(rig.Stage));
+    }
+
     private sealed class Rig : IDisposable
     {
         private readonly RSA _signer = RSA.Create(3072);
@@ -140,7 +207,7 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
         internal string StatePath => Path.Combine(StateDirectory, "canonical.json");
         internal string CertificatePath => Path.Combine(Root, "TEST-ONLY-public.cer");
         private string CataloguePath => Path.Combine(Root, "TEST-ONLY-catalogue.json");
-        private string PlanPath => Path.Combine(Root, "plan.json");
+        internal string PlanPath => Path.Combine(Root, "plan.json");
         internal Guid Operation { get; } = Guid.NewGuid();
         internal CancellationToken Token => _deadline.Token;
         internal byte[] Elf { get; } = File.ReadAllBytes("/usr/bin/true");
@@ -148,7 +215,7 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
         private LinuxHomePublisherEnrollmentOwner Publisher { get; }
         internal LinuxHomeBootstrapActivationOwner Owner { get; }
         private readonly string _abi = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x64";
-        internal Rig(string? damage = null)
+        internal Rig(string? damage = null, bool failAfterPublication = false, bool loseSettlementAcknowledgement = false)
         {
             File.SetUnixFileMode(Root, Mode700); Directory.CreateDirectory(Code, Mode755);
             Directory.CreateDirectory(Stage, Mode700); Directory.CreateDirectory(StateDirectory, Mode700);
@@ -180,8 +247,12 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
             var catalogue = new NativeWindowsHomeInstallerBootstrapAdmission.Catalogue(1, "test.bootstrap", "test.only.publisher", "home.pkg", "root.pkg", ["home.pkg", "root.pkg"], packages);
             Write(CataloguePath, Envelope(JsonSerializer.SerializeToUtf8Bytes(catalogue, Web)));
             Write(PlanPath, JsonSerializer.SerializeToUtf8Bytes(new LinuxHomeBootstrapActivationOwner.Plan(1, layouts), Web));
-            var store = new FileHomeCoreStateStore(StatePath); Database = new(store);
-            Publisher = new(store, Database, new HomeLocalProfileIdentity(store, new OperatingSystemPrincipalSource()), StatePath);
+            var store = loseSettlementAcknowledgement
+                ? new FileHomeCoreStateStore(StatePath, new LoseActualSettlementAcknowledgement())
+                : new FileHomeCoreStateStore(StatePath);
+            Database = new(store);
+            ITrustedHostPrincipalSource principals = new FailOnceAfterPublicationPrincipal(Path.Combine(Code, "active"), failAfterPublication);
+            Publisher = new(store, Database, new HomeLocalProfileIdentity(store, principals), StatePath);
             Owner = new(Publisher);
         }
         internal LinuxHomeBootstrapActivationOwner.Request Request() => new(new(CertificatePath, Digest(_certificate.RawData),
@@ -194,6 +265,30 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
             return JsonSerializer.SerializeToUtf8Bytes(new { schemaVersion = 1, issuerKeyId = "test.only.publisher", payload = Convert.ToBase64String(payload), signature = Convert.ToBase64String(signature) });
         }
         public void Dispose() { _certificate.Dispose(); _signer.Dispose(); _deadline.Dispose(); Directory.Delete(Root, recursive: true); }
+    }
+    // Delegates every identity read to the actual OS source. This injects one
+    // refusal after the real bundle rename, never a fabricated successful actor.
+    private sealed class FailOnceAfterPublicationPrincipal(string active, bool armed) : ITrustedHostPrincipalSource
+    {
+        private int _armed = armed ? 1 : 0;
+        public ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        {
+            if (Directory.Exists(active) && Interlocked.Exchange(ref _armed, 0) == 1)
+                throw new IOException("TEST fault: actual profile guard unavailable after real bundle publication.");
+            return new OperatingSystemPrincipalSource().GetPrincipalAsync(token);
+        }
+    }
+    // Existing actual-store fixture seam: physical canonical persistence succeeds,
+    // then its acknowledgement is lost. The persisted source is never substituted.
+    private sealed class LoseActualSettlementAcknowledgement : IHomePersistedWriteObserver
+    {
+        private bool _thrown;
+        public Task OnPersistedWriteAsync(string recordId, long revision, CancellationToken token)
+        {
+            if (!_thrown && recordId == HomePackageDatabase.RecordId && revision == 3)
+            { _thrown = true; throw new IOException("TEST fault: actual settlement publication acknowledgement lost."); }
+            return Task.CompletedTask;
+        }
     }
     private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);
     private static string Digest(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes));

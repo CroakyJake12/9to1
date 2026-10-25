@@ -105,9 +105,44 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
     /// never establish publisher trust.</summary>
     public ValidatedStage ValidateStage(string stageLeaf, IReadOnlyList<HomePackageActivatedFile> completeFiles,
         string entrypointRelativePath, CancellationToken cancellationToken = default)
+        => ValidateStageCore(stageLeaf, completeFiles, entrypointRelativePath, allowActive: false, cancellationToken);
+
+    internal ValidatedStage ValidatePublishedMachineCode(IReadOnlyList<HomePackageActivatedFile> completeFiles,
+        string entrypointRelativePath, CancellationToken cancellationToken)
+    {
+        if (!_machineArtifacts) throw new UnauthorizedAccessException("Only the original verified machine owner may inspect its published code cohort.");
+        var stage = ValidateStageCore("active", completeFiles, entrypointRelativePath, allowActive: true, cancellationToken);
+        try
+        {
+            lock (_gate)
+            {
+                DemandCurrent();
+                if ((LinuxOriginalDownloadPaths.ReadIdentity(stage.Directory).Mode & 0x1ff) != 0x1ed)
+                    throw new UnauthorizedAccessException("The published machine-code root must retain mode0755.");
+                foreach (var file in stage.Files)
+                {
+                    using var held = LinuxOriginalDownloadPaths.OpenAt(stage.Directory, file.RelativePath, 0x80000UL | 0x800UL);
+                    var identity = LinuxOriginalDownloadPaths.ReadIdentity(held);
+                    if (!stage.FileIdentities[file.RelativePath].SameReadVersion(identity) ||
+                        (identity.Mode & 0x1ff) != ((identity.Mode & 0x49) != 0 ? 0x1ed : 0x1a4))
+                        throw new UnauthorizedAccessException("The published code file changed or lost its exact read-only artifact mode.");
+                }
+                foreach (var relative in stage.Files.SelectMany(value => ParentDirectories(value.RelativePath)).Distinct(StringComparer.Ordinal))
+                {
+                    using var held = LinuxOriginalDownloadPaths.OpenAt(stage.Directory, relative, LinuxOriginalDownloadPaths.DirectoryFlags(mutable: true));
+                    if ((LinuxOriginalDownloadPaths.ReadIdentity(held).Mode & 0x1ff) != 0x1ed)
+                        throw new UnauthorizedAccessException("The published code directory must retain mode0755.");
+                }
+                return stage;
+            }
+        }
+        catch { stage.Dispose(); throw; }
+    }
+    private ValidatedStage ValidateStageCore(string stageLeaf, IReadOnlyList<HomePackageActivatedFile> completeFiles,
+        string entrypointRelativePath, bool allowActive, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(completeFiles);
-        if (!LinuxOriginalDownloadPaths.IsSafeLeaf(stageLeaf) || stageLeaf == "active")
+        if (!LinuxOriginalDownloadPaths.IsSafeLeaf(stageLeaf) || !allowActive && stageLeaf == "active")
             throw new ArgumentException("A distinct existing stage directory is required.", nameof(stageLeaf));
         var files = completeFiles.Take(4097).Select(value => value with { }).ToArray();
         if (files.Length is < 1 or > 4096 || files.Any(value =>

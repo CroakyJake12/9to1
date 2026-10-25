@@ -11,7 +11,8 @@ namespace Haven.Desktop.Services;
 internal static class LinuxHomeBootstrapActivationCommand
 {
     internal const string Switch = "--home-activate-bootstrap";
-    internal static bool IsInvocation(string[] args) => args.Length != 0 && args[0] == Switch;
+    internal const string RecoverySwitch = "--home-recover-bootstrap";
+    internal static bool IsInvocation(string[] args) => args.Length != 0 && args[0] is Switch or RecoverySwitch;
     internal static int Run(string[] args, TextWriter output, TextWriter error)
     {
         Guid? operationId = null;
@@ -41,10 +42,12 @@ internal static class LinuxHomeBootstrapActivationCommand
             var store = new FileHomeCoreStateStore(statePath); var database = new HomePackageDatabase(store);
             var profiles = new HomeLocalProfileIdentity(store, new OperatingSystemPrincipalSource());
             var publisher = new LinuxHomePublisherEnrollmentOwner(store, database, profiles, statePath);
-            var result = new LinuxHomeBootstrapActivationOwner(publisher).ActivateAsync(new(signing, parent, Required("--stage-leaf"), plan),
-                CancellationToken.None).GetAwaiter().GetResult();
-            output.WriteLine(JsonSerializer.Serialize(new { code = "LinuxBootstrapCodeActivatedRuntimeUnavailable", operationId = result.OperationId,
-                result.ActivePath, result.RegistryRevision, result.PackageIds, installedPeerAdmission = "NOT_ESTABLISHED", rootService = "NOT_STARTED" }));
+            var owner = new LinuxHomeBootstrapActivationOwner(publisher);
+            var request = new LinuxHomeBootstrapActivationOwner.Request(signing, parent, Required("--stage-leaf"), plan);
+            var recovery = args[0] == RecoverySwitch;
+            var result = (recovery ? owner.RecoverAsync(request, CancellationToken.None) : owner.ActivateAsync(request, CancellationToken.None)).GetAwaiter().GetResult();
+            output.WriteLine(JsonSerializer.Serialize(new { code = recovery ? "LinuxBootstrapRecoverySettledRuntimeUnavailable" : "LinuxBootstrapCodeActivatedRuntimeUnavailable", operationId = result.OperationId,
+                result.ActivePath, result.RegistryRevision, result.PackageIds, result.AlreadySettled, installedPeerAdmission = "NOT_ESTABLISHED", rootService = "NOT_STARTED" }));
             return 0;
         }
         catch (LinuxHomeBootstrapActivationOwner.ActivationUnconfirmedException cause)
