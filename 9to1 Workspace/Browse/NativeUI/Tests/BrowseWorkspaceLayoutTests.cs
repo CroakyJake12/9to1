@@ -41,6 +41,12 @@ public sealed partial class BrowseNativeUiTests
             var parents = views.Select(view => Assert.IsType<Grid>(view.Parent)).Distinct().ToArray();
             Assert.Single(parents);
             Assert.Equal(2, Grid.GetColumn(views[0])); Assert.Equal(0, Grid.GetColumn(views[1]));
+            await Click(window, workspace, Find(window, "BrowseToggleSplitOrientationButton")); Layout();
+            Assert.Equal(Haven.Core.SplitOrientation.Horizontal, chrome.State.SplitOrientation);
+            Assert.Equal(0, Grid.GetColumn(views[0])); Assert.Equal(0, Grid.GetColumn(views[1]));
+            Assert.Equal(2, Grid.GetRow(views[0])); Assert.Equal(0, Grid.GetRow(views[1]));
+            await Click(window, workspace, Find(window, "BrowseWidenPrimaryPaneButton")); Layout();
+            Assert.Equal(0.55, chrome.State.PrimaryPaneRatio, precision: 2);
             var before = factory.Hosts.Count;
             await Click(window, workspace, Find(window, "BrowseFocusSplitSecondaryButton")); Layout();
             Assert.Equal(tabs[0].Id, chrome.State.SelectedTabId);

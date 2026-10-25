@@ -110,13 +110,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "HasUnsavedTabPlacement" => _chrome.HasUnsavedTabPlacement,
             "HasUnsavedSplitViewLayout" => _chrome.HasUnsavedSplitViewLayout,
             "HasSplitView" => _chrome.HasSplitView,
+            "SplitOrientationLabel" => _snapshot.SplitOrientation == SplitOrientation.Vertical ? "Side by side" : "Stacked",
+            "SplitRatioLabel" => "Primary pane " + (_snapshot.PrimaryPaneRatio * 100).ToString("N0", CultureInfo.CurrentCulture) + "%",
             "ToggleSplitLabel" => _chrome.HasSplitView ? "Close split view" : "Split selected tab with another tab",
-            "SplitPrimaryLabel" => _snapshot.PaneTabIds.Count == 2
-                ? "Focus left pane: " + (_snapshot.Tabs.FirstOrDefault(tab => tab.Id == _snapshot.PaneTabIds[0])?.Title ?? "Tab")
-                : "Focus left pane",
-            "SplitSecondaryLabel" => _snapshot.PaneTabIds.Count == 2
-                ? "Focus right pane: " + (_snapshot.Tabs.FirstOrDefault(tab => tab.Id == _snapshot.PaneTabIds[1])?.Title ?? "Tab")
-                : "Focus right pane",
+            "SplitPrimaryLabel" => (_snapshot.SplitOrientation == SplitOrientation.Vertical ? "Focus left pane" : "Focus top pane") +
+                (_snapshot.PaneTabIds.Count == 2 ? ": " + (_snapshot.Tabs.FirstOrDefault(tab => tab.Id == _snapshot.PaneTabIds[0])?.Title ?? "Tab") : string.Empty),
+            "SplitSecondaryLabel" => (_snapshot.SplitOrientation == SplitOrientation.Vertical ? "Focus right pane" : "Focus bottom pane") +
+                (_snapshot.PaneTabIds.Count == 2 ? ": " + (_snapshot.Tabs.FirstOrDefault(tab => tab.Id == _snapshot.PaneTabIds[1])?.Title ?? "Tab") : string.Empty),
             "ToolsOpen" => _toolsOpen,
             "IsLoading" => selected.IsLoading,
             "IsNotLoading" => !selected.IsLoading,
@@ -296,6 +296,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.MoveTabRight" => _chrome.CanMoveTab(tab.Id, 1),
             "9to1.Browse.SaveTabPlacement" => _chrome.HasUnsavedTabPlacement,
             "9to1.Browse.ToggleSplitView" => _chrome.HasSplitView || _chrome.CanSplitSelectedTab,
+            "9to1.Browse.ToggleSplitOrientation" => _chrome.HasSplitView,
+            "9to1.Browse.WidenPrimaryPane" => _chrome.CanWidenPrimaryPane,
+            "9to1.Browse.NarrowPrimaryPane" => _chrome.CanNarrowPrimaryPane,
             "9to1.Browse.SaveSplitViewLayout" => _chrome.HasUnsavedSplitViewLayout,
             "9to1.Browse.FocusSplitPrimary" or "9to1.Browse.FocusSplitSecondary" or
                 "9to1.Browse.SwapSplitPanes" or "9to1.Browse.CloseSplitView" => _chrome.HasSplitView,
@@ -418,6 +421,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     break;
                 case "9to1.Browse.ReopenClosedTab": await Operation(() => _chrome.ReopenClosedTabAsync(token)); _addressDraft = false; break;
                 case "9to1.Browse.ToggleSplitView": await Operation(() => _chrome.ToggleSplitViewAsync(token)); break;
+                case "9to1.Browse.ToggleSplitOrientation": await Operation(() => _chrome.ToggleSplitOrientationAsync(token)); break;
+                case "9to1.Browse.WidenPrimaryPane": await Operation(() => _chrome.AdjustPrimaryPaneAsync(1, token)); break;
+                case "9to1.Browse.NarrowPrimaryPane": await Operation(() => _chrome.AdjustPrimaryPaneAsync(-1, token)); break;
                 case "9to1.Browse.SaveSplitViewLayout": await Operation(() => _chrome.SaveSplitViewLayoutAsync(token)); break;
                 case "9to1.Browse.FocusSplitPrimary":
                     if (_snapshot.PaneTabIds.Count == 2) await Operation(() => _chrome.FocusSplitPaneAsync(_snapshot.PaneTabIds[0], token));

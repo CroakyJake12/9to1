@@ -1,5 +1,6 @@
 using Haven.Application;
 using Haven.Browser;
+using Haven.Core;
 
 namespace HavenOS.Apps.Browse;
 
@@ -13,6 +14,8 @@ public sealed record BrowseTabSessionProjection(IReadOnlyList<BrowserTabState> T
     /// <summary>Tab identities currently occupying the two durable split panes.</summary>
     /// <summary>Null means a legacy producer omitted pane state; empty explicitly collapses the split.</summary>
     public IReadOnlyList<Guid>? PaneTabIds { get; init; }
+    public SplitOrientation? SplitOrientation { get; init; }
+    public double? PrimaryPaneRatio { get; init; }
 }
 
 /// <summary>The shared host adapts its existing WorkspaceSessionSnapshot owner.

@@ -160,6 +160,14 @@ public sealed class BrowseNativeWindow : Window
             Key.P when args.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) => "9to1.Browse.NewPrivateTab",
             Key.W when args.KeyModifiers.HasFlag(KeyModifiers.Control) => "9to1.Browse.CloseTab",
             Key.R when args.KeyModifiers.HasFlag(KeyModifiers.Control) => "9to1.Browse.Reload",
+            Key.Right when args.KeyModifiers == (KeyModifiers.Alt | KeyModifiers.Shift) &&
+                _workspace.State.SplitOrientation == Haven.Core.SplitOrientation.Vertical => "9to1.Browse.WidenPrimaryPane",
+            Key.Left when args.KeyModifiers == (KeyModifiers.Alt | KeyModifiers.Shift) &&
+                _workspace.State.SplitOrientation == Haven.Core.SplitOrientation.Vertical => "9to1.Browse.NarrowPrimaryPane",
+            Key.Down when args.KeyModifiers == (KeyModifiers.Alt | KeyModifiers.Shift) &&
+                _workspace.State.SplitOrientation == Haven.Core.SplitOrientation.Horizontal => "9to1.Browse.WidenPrimaryPane",
+            Key.Up when args.KeyModifiers == (KeyModifiers.Alt | KeyModifiers.Shift) &&
+                _workspace.State.SplitOrientation == Haven.Core.SplitOrientation.Horizontal => "9to1.Browse.NarrowPrimaryPane",
             Key.Left when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Back",
             Key.Right when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Forward",
             Key.Enter when this.GetLogicalDescendants().OfType<TextBox>().SingleOrDefault(control => control.Name == "BrowseAddressBox")?.IsFocused == true => "9to1.Browse.Navigate",
@@ -186,6 +194,7 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         _workspace = workspace; Content = _surfaces;
         _surfaces.ColumnDefinitions = new ColumnDefinitions("*,1,*");
+        _surfaces.RowDefinitions = new RowDefinitions("*,1,*");
         _surfaces.Children.Add(_unavailable); _surfaces.Children.Add(_splitDivider);
         AttachedToVisualTree += OnAttached; DetachedFromVisualTree += OnDetached;
     }
@@ -254,7 +263,27 @@ internal sealed class BrowseEngineViewport : ContentControl
         var currentApps = new HashSet<IBrowseAppContentSession>(ReferenceEqualityComparer.Instance);
         var split = state.PaneTabIds.Count == 2;
         _splitDivider.IsVisible = split;
-        Grid.SetColumn(_splitDivider, 1); Grid.SetRowSpan(_splitDivider, 1);
+        if (split && state.SplitOrientation == Haven.Core.SplitOrientation.Horizontal)
+        {
+            _surfaces.ColumnDefinitions = new ColumnDefinitions("*");
+            _surfaces.RowDefinitions = new RowDefinitions(SplitDefinitions(state.PrimaryPaneRatio));
+            _splitDivider.Width = double.NaN; _splitDivider.Height = 1;
+            Grid.SetColumn(_splitDivider, 0); Grid.SetRow(_splitDivider, 1);
+            Grid.SetColumnSpan(_splitDivider, 1); Grid.SetRowSpan(_splitDivider, 1);
+        }
+        else if (split)
+        {
+            _surfaces.ColumnDefinitions = new ColumnDefinitions(SplitDefinitions(state.PrimaryPaneRatio));
+            _surfaces.RowDefinitions = new RowDefinitions("*");
+            _splitDivider.Width = 1; _splitDivider.Height = double.NaN;
+            Grid.SetColumn(_splitDivider, 1); Grid.SetRow(_splitDivider, 0);
+            Grid.SetColumnSpan(_splitDivider, 1); Grid.SetRowSpan(_splitDivider, 1);
+        }
+        else
+        {
+            _surfaces.ColumnDefinitions = new ColumnDefinitions("*,1,*");
+            _surfaces.RowDefinitions = new RowDefinitions("*,1,*");
+        }
         var selectedHasView = false;
         foreach (var tab in state.Tabs)
         {
@@ -275,7 +304,7 @@ internal sealed class BrowseEngineViewport : ContentControl
                     else if (!ReferenceEquals(mountedApp.Child, view)) throw new InvalidOperationException("The app replaced its original native view.");
                     var visible = split ? state.PaneTabIds.Contains(tab.Id) : tab.Id == state.SelectedTabId;
                     mountedApp.IsVisible = visible;
-                    PlaceInPane(mountedApp, state.PaneTabIds, tab.Id);
+                    PlaceInPane(mountedApp, state.PaneTabIds, tab.Id, state.SplitOrientation);
                     if (tab.Id == state.SelectedTabId && mountedApp.IsVisible) selectedHasView = true;
                 }
                 else if (_originalAppViews.TryGetValue(app, out var retained)) retained.IsVisible = false;
@@ -292,7 +321,7 @@ internal sealed class BrowseEngineViewport : ContentControl
             else if (!ReferenceEquals(mounted, originalView)) throw new InvalidOperationException("The same engine replaced its original native view.");
             originalView.IsVisible = (split ? state.PaneTabIds.Contains(tab.Id) : tab.Id == state.SelectedTabId) &&
                 tab.Address.IsWeb && tab.EngineState == BrowseEngineState.Ready;
-            PlaceInPane(originalView, state.PaneTabIds, tab.Id);
+            PlaceInPane(originalView, state.PaneTabIds, tab.Id, state.SplitOrientation);
             if (tab.Id == state.SelectedTabId && originalView.IsVisible) selectedHasView = true;
         }
         foreach (var original in _originalViews.Keys.Where(original => !current.Contains(original)).ToArray())
@@ -313,16 +342,30 @@ internal sealed class BrowseEngineViewport : ContentControl
         _unavailable.IsVisible = !selectedHasView && selected.NativePage == Haven.Browser.BrowserNativePage.None;
         _unavailable.Text = !selected.Address.IsWeb || selected.EngineState == BrowseEngineState.Crashed ? selected.Status :
             "The native " + (selected.Engine == BrowseEngineKind.Gecko ? "Firefox" : "Chromium") + " renderer is not connected. Tab identity, bookmarks and browser settings are retained.";
-        PlaceInPane(_unavailable, state.PaneTabIds, selected.Id);
+        PlaceInPane(_unavailable, state.PaneTabIds, selected.Id, state.SplitOrientation);
     }
 
-    private static void PlaceInPane(Control view, IReadOnlyList<Guid> paneTabIds, Guid tabId)
+    private static void PlaceInPane(Control view, IReadOnlyList<Guid> paneTabIds, Guid tabId,
+        Haven.Core.SplitOrientation orientation)
     {
         if (paneTabIds.Count != 2)
         {
-            Grid.SetColumn(view, 0); Grid.SetColumnSpan(view, 3); return;
+            Grid.SetColumn(view, 0); Grid.SetRow(view, 0);
+            Grid.SetColumnSpan(view, 3); Grid.SetRowSpan(view, 3); return;
         }
         var pane = Array.IndexOf(paneTabIds.ToArray(), tabId);
-        Grid.SetColumn(view, pane == 1 ? 2 : 0); Grid.SetColumnSpan(view, 1);
+        if (orientation == Haven.Core.SplitOrientation.Horizontal)
+        {
+            Grid.SetColumn(view, 0); Grid.SetRow(view, pane == 1 ? 2 : 0);
+            Grid.SetColumnSpan(view, 1); Grid.SetRowSpan(view, 1);
+        }
+        else
+        {
+            Grid.SetColumn(view, pane == 1 ? 2 : 0); Grid.SetRow(view, 0);
+            Grid.SetColumnSpan(view, 1); Grid.SetRowSpan(view, 1);
+        }
     }
+
+    private static string SplitDefinitions(double ratio) => ratio.ToString("R", System.Globalization.CultureInfo.InvariantCulture) +
+        "*,1," + (1 - ratio).ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "*";
 }

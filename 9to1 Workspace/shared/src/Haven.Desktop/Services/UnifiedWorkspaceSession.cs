@@ -128,14 +128,23 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                 var panes = window.Layout.Kind == WorkspaceLayoutKind.Split && window.Layout.Panes.Count == 2
                     ? window.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId).ToArray()
                     : [];
-                if (panes.Length != 2 || panes[0] == panes[1] || panes.Any(id => !projected.Any(tab => tab.Id == id &&
-                    tab.Privacy == BrowserTabPrivacy.Standard && StringComparer.Ordinal.Equals(tab.ProfileId, ProfileId))))
+                if (panes.Length != 2 || panes[0] == panes[1] ||
+                    window.SelectedTabId is not { } focused || !panes.Contains(focused) ||
+                    !Enum.IsDefined(window.Layout.Orientation) || !double.IsFinite(window.Layout.PrimaryRatio) ||
+                    window.Layout.PrimaryRatio < WorkspaceLayoutSnapshot.MinimumPaneRatio ||
+                    window.Layout.PrimaryRatio > WorkspaceLayoutSnapshot.MaximumPaneRatio ||
+                    panes.Any(id => !projected.Any(tab => tab.Id == id && tab.Privacy == BrowserTabPrivacy.Standard &&
+                        StringComparer.Ordinal.Equals(tab.ProfileId, ProfileId))))
                     panes = [];
                 // Load does not authorize deletion. Browse can refuse a restored
                 // row; only tabs it actually publishes in Save become managed.
                 return (BrowseTabSessionProjection?)new BrowseTabSessionProjection(Array.AsReadOnly(projected.ToArray()),
                     projected.Any(tab => tab.Id == window.SelectedTabId) ? window.SelectedTabId : null)
-                { ClosedTabs = Array.AsReadOnly(closed), PaneTabIds = Array.AsReadOnly(panes) };
+                {
+                    ClosedTabs = Array.AsReadOnly(closed), PaneTabIds = Array.AsReadOnly(panes),
+                    SplitOrientation = panes.Length == 2 ? window.Layout.Orientation : null,
+                    PrimaryPaneRatio = panes.Length == 2 ? window.Layout.PrimaryRatio : null
+                };
             }));
 
         public Task SaveAsync(BrowseTabSessionProjection projection, CancellationToken cancellationToken)
