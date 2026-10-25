@@ -94,23 +94,15 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
 /// <summary>Canonical typed CUI action parameters for the model picker. These are the only
 /// objects routed through named &lt;Action parameter=...&gt; declarations; no ad-hoc metadata
 /// attributes are transported.</summary>
-/// <summary>Canonical label projection for an advertised reasoning-level ID list. The label derives
-/// only from the level's ordinal and the model's advertised level count via
-/// <see cref="ReasoningScale.TierPercentages"/> (3=35/70/100, 4=25/50/75/100, 5=20/40/60/80/100).
-/// Unknown counts and out-of-range ordinals stay a truthful unknown (null), never a fake 100 or an
-/// invented on/off or enum mapping.</summary>
+/// <summary>Projects the exact advertised reasoning-level ID as its label. A provider's level IDs are
+/// semantic values, not percentages or ordinals; showing a derived percentage would imply unsupported
+/// behavior that the provider never advertised.</summary>
 public static class HomeModelPickerReasoningLabels
 {
     public static string? LabelForLevel(IReadOnlyList<string> advertisedIds, string? levelId)
     {
         if (advertisedIds is null || string.IsNullOrWhiteSpace(levelId)) return null;
-        var ordinal = -1;
-        for (var i = 0; i < advertisedIds.Count; i++)
-        {
-            if (StringComparer.Ordinal.Equals(advertisedIds[i], levelId)) { ordinal = i; break; }
-        }
-        if (ordinal < 0 || !ReasoningScale.TryTierPercentage(advertisedIds.Count, ordinal, out var percentage)) return null;
-        return $"{percentage}%";
+        return advertisedIds.Contains(levelId, StringComparer.Ordinal) ? levelId : null;
     }
 }
 
