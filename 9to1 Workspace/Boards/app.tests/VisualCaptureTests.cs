@@ -142,21 +142,15 @@ public sealed class VisualCaptureTests
             ?? throw new InvalidOperationException("The authored EditorScroll host did not create its CUI-owned ScrollViewer. Runtime tree:\n" + tree);
         Assert.True(editorScroll.Bounds.Width > width * 0.70,
             $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
-        var horizontalInset = pageCard.Margin.Left + pageCard.Margin.Right;
-        var widthDifference = editorScroll.Viewport.Width - pageCard.Bounds.Width;
-        Assert.True(horizontalInset > 0,
-            $"The authored PageCard should retain its intentional inset margin; margin={pageCard.Margin}.");
-        Assert.InRange(widthDifference, horizontalInset - 1, horizontalInset + 1);
-        var pageCardOrigin = pageCard.TranslatePoint(new Point(0, 0), editorScroll);
-        Assert.NotNull(pageCardOrigin);
-        Assert.True(pageCardOrigin.Value.X >= -1,
-            $"The inset page card begins outside the editor viewport; origin={pageCardOrigin.Value}, viewport={editorScroll.Viewport}.");
-        Assert.True(pageCardOrigin.Value.X + pageCard.Bounds.Width <= editorScroll.Viewport.Width + 1,
-            $"The page card is clipped by the editor viewport; origin={pageCardOrigin.Value}, card={pageCard.Bounds}, viewport={editorScroll.Viewport}.");
+        var toolbarFrame = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "FormattingToolbar")
+            ?? throw new InvalidOperationException("Missing authored FormattingToolbar. Runtime tree:\n" + tree);
+        Assert.True(Math.Abs(pageCard.Bounds.Left - toolbarFrame.Bounds.Left) <= 1,
+            $"The page panel left edge {pageCard.Bounds.Left} did not align with toolbar {toolbarFrame.Bounds.Left}.");
+        Assert.True(Math.Abs(pageCard.Bounds.Right - toolbarFrame.Bounds.Right) <= 1,
+            $"The page panel right edge {pageCard.Bounds.Right} did not align with toolbar {toolbarFrame.Bounds.Right}.");
+        Assert.True(pageCard.Bounds.Width - editorScroll.Viewport.Width >= 12,
+            $"The document viewport did not retain its native scrollbar gutter inside the full-width panel (panel={pageCard.Bounds.Width}, viewport={editorScroll.Viewport.Width}).");
         Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
-        Assert.True(pageCard.Padding.Left + pageCard.Padding.Right > 0 &&
-            pageCard.Padding.Top + pageCard.Padding.Bottom > 0,
-            $"The authored PageCard should preserve its inner content inset; padding={pageCard.Padding}.");
         Assert.Equal(new Thickness(0), pageCard.BorderThickness);
         Assert.True(pageCard.CornerRadius.TopLeft > 0,
             $"The authored PageCard should retain its rounded panel treatment; radius={pageCard.CornerRadius}.");
