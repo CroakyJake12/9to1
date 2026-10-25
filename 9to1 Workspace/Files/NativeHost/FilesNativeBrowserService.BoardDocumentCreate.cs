@@ -301,7 +301,18 @@ public sealed partial class FilesNativeBrowserService
                     await began.ConfigureAwait(false);
                     _executing.Value = operation;
                     var receipt = await originals.RunToOriginalSettlementAsync(() => ExecuteAsync(operation, presentReview, token)).ConfigureAwait(false);
-                    lock (_gate) _receipts.Add(receipt, operation);
+                    lock (_gate)
+                    {
+                        // ExecuteAsync may publish the same source-owned receipt before
+                        // this outer task settles. Preserve that registration; never let
+                        // another operation adopt its receipt during a repeated join.
+                        if (_receipts.TryGetValue(receipt, out var registered))
+                        {
+                            if (!ReferenceEquals(registered, operation))
+                                throw new InvalidOperationException("Another create operation owns this receipt.");
+                        }
+                        else _receipts.Add(receipt, operation);
+                    }
                     return receipt;
                 }
                 finally

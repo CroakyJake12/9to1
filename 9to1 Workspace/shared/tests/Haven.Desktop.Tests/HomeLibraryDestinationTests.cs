@@ -271,9 +271,9 @@ public sealed class HomeLibraryDestinationTests
         identity.EndsWith("/id:" + authoredId, StringComparison.Ordinal);
     private static Button FindLibraryButton(HomeLibraryDestinationPage page, string authoredId)
     {
-        var visual = page.GetVisualDescendants().OfType<Control>().Take(160).ToArray();
-        var controls = visual.OfType<Button>().Take(80).ToArray();
-        var repeatTree = string.Join("; ", visual.Where(control =>
+        var visual = page.GetVisualDescendants().OfType<Control>().ToArray();
+        var controls = visual.OfType<Button>().ToArray();
+        var repeatTree = string.Join("; ", visual.Take(160).Where(control =>
                 CuiRuntimeIdentity.GetStableId(control) is { } id &&
                 (id.Contains("home-library-rows", StringComparison.Ordinal) || id.Contains("library-results", StringComparison.Ordinal)))
             .Select(control =>
@@ -290,7 +290,7 @@ public sealed class HomeLibraryDestinationTests
             $"repeat tree=[{repeatTree}]; " +
             $"repeat child tree=[{RepeatChildTreeDiagnostic(page)}]; " +
             $"runtime diagnostics=[{RepeatRuntimeDiagnosticSummary(page)}]; " +
-            $"buttons=[{string.Join("; ", controls.Select(item =>
+            $"buttons=[{string.Join("; ", controls.Take(80).Select(item =>
                 $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
         return matches[0];
     }
