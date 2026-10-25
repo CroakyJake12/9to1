@@ -340,6 +340,19 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                             null, cause.CleanupFailures);
                     }
                 }
+                else if (cause.State == FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown)
+                {
+                    try
+                    {
+                        settlement = await ObserveCreateSettlementWithinSourceAsync(source, createOwner, attempt!,
+                            CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        settlement = new(FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown,
+                            null, cause.CleanupFailures);
+                    }
+                }
             }
             if (settlement.Receipt is { } selectedReceipt &&
                 (selectedReceipt.FilesStoreId != entry.Page.StoreID || selectedReceipt.ParentFolderId != entry.Row.Id.Value))
@@ -367,14 +380,32 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
             return await FinishCreatedBoardWithinSourceAsync(source, owner, settlement, sameAttempt, caller).ConfigureAwait(false);
         }, token);
 
+    internal Task<NativeHomeFilesBoardCreateResult> ObserveCreateSettlementAsync(
+        FilesOriginalBoardDocumentCreateAttempt sameAttempt, CancellationToken token) =>
+        RunAsync(async (source, caller) =>
+        {
+            var owner = _boardCreate ?? throw new NotSupportedException("The original Files board-create owner is unavailable.");
+            var settlement = await ObserveCreateSettlementWithinSourceAsync(source, owner, sameAttempt, caller).ConfigureAwait(false);
+            return await FinishCreatedBoardWithinSourceAsync(source, owner, settlement, sameAttempt, caller,
+                prepareOpen: false).ConfigureAwait(false);
+        }, token);
+
+    private async Task<FilesOriginalBoardDocumentCreateSettlementResult> ObserveCreateSettlementWithinSourceAsync(
+        CloudflareOriginalTaskLedger source, FilesNativeBrowserService.BoardDocumentCreateOwner owner,
+        FilesOriginalBoardDocumentCreateAttempt attempt, CancellationToken token)
+    {
+        var observeTask = StartSettlementAwareTask(source, retain => owner.ObserveCreateSettlementWithinSourceAsync(
+            attempt, Own, retain, token));
+        return await observeTask.ConfigureAwait(false);
+    }
+
     private async Task<NativeHomeFilesBoardCreateResult> FinishCreatedBoardWithinSourceAsync(
         CloudflareOriginalTaskLedger source, FilesNativeBrowserService.BoardDocumentCreateOwner owner,
         FilesOriginalBoardDocumentCreateSettlementResult settlement,
-        FilesOriginalBoardDocumentCreateAttempt? attempt, CancellationToken token)
+        FilesOriginalBoardDocumentCreateAttempt? attempt, CancellationToken token, bool prepareOpen = true)
     {
         var receipt = settlement.Receipt;
-        if (receipt is null || settlement.State is FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending or
-            FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown or
+        if (receipt is null || settlement.State is FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown or
             FilesOriginalBoardDocumentCreateSettlementState.NotCreated)
             return new(settlement.State, attempt, null, null, null, settlement.CleanupFailures);
         if (!owner.IsIssuedCreateReceipt(receipt) || receipt.OriginalActor != _actor ||
@@ -385,6 +416,11 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
 
         var link = new HomeDeepLink(HomeRoute.Library, "files",
             receipt.FilesStoreId.ToString("D") + "/" + receipt.FileId.ToString("D"), "open", "files.board");
+        if (settlement.State == FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending)
+            return new(settlement.State, attempt, receipt, link, null, settlement.CleanupFailures,
+                "HomeAuditPending", "The exact Files board exists, but Home has not settled its create audit. Retry audit before opening it.");
+        if (!prepareOpen)
+            return new(settlement.State, attempt, receipt, link, null, settlement.CleanupFailures);
         try
         {
             var address = await PrepareCreatedBoardOpenWithinSourceAsync(source, owner, receipt, token).ConfigureAwait(false);
