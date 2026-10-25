@@ -49,5 +49,36 @@ public sealed class DeveloperManualRecoveryConflictTests
         Assert.Equal(Hash(changedAgain), afterReinspection.CurrentSourceSha256);
     }
 
+    [Fact]
+    public void Explicit_merge_combines_user_text_against_current_basis_without_replacing_the_retained_original()
+    {
+        var saved = new DeveloperDraftRecoveryTab("Main.cui", Hash("old source"), "protected unsaved text", true);
+        const string current = "externally saved text";
+        const string merged = "externally saved text plus the user's retained changes";
+        var adopted = DeveloperProjectWorkbenchPage.PrepareExplicitManualRecovery(saved, Hash(current), current, merged);
+        Assert.NotNull(adopted);
+        Assert.Equal(merged, adopted.RetainedDraftText);
+        Assert.Equal(current, adopted.CurrentSourceText);
+        Assert.Equal(Hash(current), adopted.CurrentSourceSha256);
+        Assert.Equal(Hash("old source"), adopted.SavedBaselineSha256);
+        Assert.Equal("protected unsaved text", saved.DraftText);
+        Assert.Null(DeveloperProjectWorkbenchPage.PrepareExplicitManualRecovery(saved, Hash(current), "changed again", merged));
+        Assert.Equal("protected unsaved text", saved.DraftText);
+    }
+
+    [Fact]
+    public void Explicit_empty_merge_is_not_replaced_by_retained_text_and_binary_or_oversized_merges_are_refused()
+    {
+        var saved = new DeveloperDraftRecoveryTab("Main.cui", Hash("old source"), "keep original protected text", true);
+        const string current = "current source";
+        var empty = DeveloperProjectWorkbenchPage.PrepareExplicitManualRecovery(saved, Hash(current), current, "");
+        Assert.NotNull(empty); Assert.Equal("", empty.RetainedDraftText);
+        Assert.Throws<ArgumentException>(() => DeveloperProjectWorkbenchPage.PrepareExplicitManualRecovery(
+            saved, Hash(current), current, "binary\0merge"));
+        Assert.Throws<ArgumentException>(() => DeveloperProjectWorkbenchPage.PrepareExplicitManualRecovery(
+            saved, Hash(current), current, new string('x', DeveloperSourceReviewSession.MaximumTextCharacters + 1)));
+        Assert.Equal("keep original protected text", saved.DraftText);
+    }
+
     private static string Hash(string text) => DeveloperManualSourceEditOwner.Sha256(text);
 }

@@ -213,6 +213,40 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Unadopted_recovery_merge_keeps_originals_separate_and_vetoes_close_without_source_authority()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            page = await SearchPublicationPage(f, reader.Owner);
+            // Enrol protected observation data only. This fixture has no task recovery owner,
+            // so typing must never make an adoption command or a source write available.
+            var first = new DeveloperDraftRecoveryTab("Main.cui", DeveloperManualSourceEditOwner.Sha256("old"), "retained original", true);
+            var state = new DeveloperManualRecoveryState(new(Guid.NewGuid(), f.Current.TaskId, f.Current.ExecutionId, f.Current.ContextId),
+                1, [new(first, "external current source")], first.RelativePath, true);
+            typeof(DeveloperProjectWorkbenchPage).GetMethod("StageTaskRecoveryConflicts", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(page, [state]);
+            Assert.False(page.HasUnsavedWork);
+            Assert.True(page.TrySetValue("RecoveredMergedDraft", "external current source plus retained changes"));
+            Assert.True(page.HasUnsavedWork);
+            Assert.True(page.TryGetValue("RecoveredMergedDraft", out var merged));
+            Assert.Equal("external current source plus retained changes", merged);
+            Assert.True(page.TryGetValue("RecoveredRetainedDraft", out var retained)); Assert.Equal(first.DraftText, retained);
+            Assert.True(page.TryGetValue("RecoveredCurrentSource", out var current)); Assert.Equal("external current source", current);
+            Assert.False(page.IsActionAvailable("dev.use-merged-recovered-draft"));
+            Assert.Equal(0, f.Tools.WriteCalls);
+            Assert.True(page.TrySetValue("RecoveredMergedDraft", first.DraftText));
+            Assert.False(page.HasUnsavedWork); // Only genuinely new merge text needs an extra close veto.
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));

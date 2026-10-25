@@ -262,7 +262,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     /// so a tab owner can veto retirement instead of silently discarding it. A manual (no-AI)
     /// draft vetoes close until applied, reverted, or its exact latest complete protected
     /// recovery is acknowledged. An older acknowledged snapshot never clears a newer draft.</summary>
-    internal bool HasUnsavedWork { get { lock (_gate) return _pending ||
+    internal bool HasUnsavedWork { get { lock (_gate) return _pending || HasUnadoptedRecoveryMerge() ||
         (_sourceTabs.Any(IsTabDirty) || _editor is { IsDirty: true } ||
             (_manual && !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline))) &&
         !HasExactProtectedManualRecovery() && !HasExactProtectedTaskRecovery(); } }
@@ -403,7 +403,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             });
             return true;
         }
-        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
+        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "RecoveredMergedDraft" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
         long generation; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
         {
@@ -420,6 +420,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             // until the path once again names the actually open source.
                             StoreSelectedTab(); _sourcePath = text; break;
                         case "SearchQuery": if (!StringComparer.Ordinal.Equals(_searchQuery, text)) { _searchQuery = text; InvalidateProjectSearch(); } break;
+                        case "RecoveredMergedDraft": UpdateRecoveryMerge(text); break;
                         case "DraftText":
                             if (_manual && _editor is null)
                             {
@@ -452,6 +453,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (!_active || _work.IsRetiring || _pending) return false;
             if (command == "dev.inspect-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && _manualRecoveryCandidates.Count > 0;
             if (command == "dev.reconcile-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && SelectedManualRecoveryCandidate() is not null;
+            if (command == "dev.use-merged-recovered-draft") return (_manual ? _manualReader is not null : _taskRecoveryOwner is not null) && SelectedManualRecoveryCandidate() is { MergedDraftText: not null };
             if (command is "dev.select-source-tab" or "dev.close-source-tab") return _sourceTabs.Count > 0;
             if (command == "dev.toggle-source-tab-pin") return CurrentSourceTab() is not null;
             if (command == "dev.open-project-entry") return _manualReader is not null && _projectEntries is not null;
@@ -495,7 +497,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
-        if (command is "dev.inspect-recovered-draft" or "dev.reconcile-recovered-draft")
+        if (command is "dev.inspect-recovered-draft" or "dev.reconcile-recovered-draft" or "dev.use-merged-recovered-draft")
             return DispatchManualRecoveryConflictAsync(command, parameter, cancellationToken);
         long generation; string path, query, terminal, test, stageTask, stage, branch; DeveloperEditorSnapshot? editor; DeveloperSourceChangePass? pass;
         string manualBeforeText, manualDraftText, manualBeforeSha256, manualAfterSha256; bool manualReviewed; long manualReviewRevision;

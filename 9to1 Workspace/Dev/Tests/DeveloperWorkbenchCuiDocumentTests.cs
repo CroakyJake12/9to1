@@ -17,7 +17,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command", "dev.run-tests",
             "dev.run-stage", "dev.create-branch", "dev.switch-branch",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin",
-            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result", "dev.inspect-recovered-draft", "dev.reconcile-recovered-draft"];
+            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result", "dev.inspect-recovered-draft", "dev.reconcile-recovered-draft", "dev.use-merged-recovered-draft"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
         Assert.Equal(nodes.Length, nodes.Select(value => value.StableId).Distinct().Count());
     }
@@ -62,6 +62,27 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         Assert.Contains(editor.Properties, pair => pair.Key.Equals("Value", StringComparison.OrdinalIgnoreCase)
             && pair.Value is CuiBindingValue draft && draft.Path == "DraftText");
     }
+    [Fact]
+    public void Recovery_merge_is_a_real_editable_CUI_input_with_explicit_adoption_and_readonly_originals()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var merge = Assert.Single(nodes, value => value.Name == "dev-recovery-merged");
+        Assert.Equal("Input", merge.Type);
+        Assert.Contains(merge.Properties, pair => pair.Key.Equals("Value", StringComparison.OrdinalIgnoreCase)
+            && pair.Value is CuiBindingValue binding && binding.Path == "RecoveredMergedDraft");
+        Assert.Contains(merge.Properties, pair => pair.Key.Equals("Multiline", StringComparison.OrdinalIgnoreCase)
+            && pair.Value is CuiLiteralValue literal && bool.TryParse(literal.Value, out var enabled) && enabled);
+        var action = Assert.Single(nodes, value => value.Name == "dev-use-merged-recovered-draft");
+        Assert.Contains(action.Actions.Values, value => value.Name == "dev.use-merged-recovered-draft");
+        foreach (var id in new[] { "dev-recovery-current", "dev-recovery-retained" })
+        {
+            var original = Assert.Single(nodes, value => value.Name == id);
+            Assert.Equal("Object", original.Type);
+            Assert.Contains(original.Properties, pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)
+                && pair.Value is CuiLiteralValue type && type.Value == "ReadOnlyText");
+        }
+    }
+
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)
     {
         foreach (var node in nodes)

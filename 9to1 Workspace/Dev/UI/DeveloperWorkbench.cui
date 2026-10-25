@@ -72,6 +72,9 @@
         <Object type="ReadOnlyText" id="dev-recovery-current" text="{Binding RecoveredCurrentSource}" font-family="monospace" min-height="100" accessible-name="Freshly authorised current source for recovery comparison" />
         <Text text="Your retained draft" />
         <Object type="ReadOnlyText" id="dev-recovery-retained" text="{Binding RecoveredRetainedDraft}" font-family="monospace" min-height="100" accessible-name="Protected unsaved draft for recovery comparison" />
+        <Text text="Merge your changes" />
+        <Input id="dev-recovery-merged" Type="Text" Value="{Binding RecoveredMergedDraft}" Multiline="true" font-family="monospace" min-height="160" accessible-name="Editable merged recovery draft; current source and original retained draft stay unchanged" Interactive="{Binding CanEditRecoveryMerge}" />
+        <Button id="dev-use-merged-recovered-draft" action="dev.use-merged-recovered-draft" content="Use merged draft" accessible-name="Use this merged draft against freshly read current source; review is required before saving" Interactive="{Binding CanUseMergedRecoveredDraft}" />
         <Button id="dev-reconcile-recovered-draft" action="dev.reconcile-recovered-draft" content="Use recovered draft against current source" accessible-name="Explicitly reconcile this retained draft against freshly read current source; review is still required before writing" Interactive="{Binding CanReconcileRecoveredDraft}" />
       </Container>
       <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" Interactive="{Binding CanEditSource}" />
