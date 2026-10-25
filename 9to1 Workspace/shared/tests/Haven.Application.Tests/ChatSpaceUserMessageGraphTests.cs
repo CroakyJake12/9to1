@@ -28,7 +28,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Equal(3, result.Trace.Count);
         Assert.All(result.Trace, item => Assert.Equal("Succeeded", item.State));
         Assert.NotEqual(result.InputSha256, result.OutputSha256);
-        Assert.Equal(13, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
+        Assert.Equal(14, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(SpaceUserMessageGraph.ProfileId).Count);
         Assert.Equal(2, CanonicalAutomationCoreNodes.CreateRegistry().ListNodeTypes(CanonicalAutomationCoreNodes.ProfileId).Count);
     }
 
@@ -476,6 +476,100 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Empty(rig.Transport.Requests);
         Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
         files.Passed = true;
+    }
+
+    [Theory]
+    [InlineData(true, "compile the project")]
+    [InlineData(false, "explain the project")]
+    public async Task Space_graph_json_boolean_branch_uses_actual_value_and_preserves_the_derived_object(bool chooseRequest, string expected)
+    {
+        var text = JsonSerializer.Serialize(new { useRequest = chooseRequest, request = "compile the project", fallback = "explain the project" });
+        var result = await RunGraph(ConditionalJsonMessageLayout(), text);
+        Assert.Equal(expected, result.DerivedText);
+        var route = Assert.Single(result.Trace, item => item.TypeId == SpaceUserMessageGraph.RouteJsonBooleanType);
+        Assert.Equal(chooseRequest ? "true" : "false", route.SelectedBranch);
+        var value = Assert.Single(result.TypedNodePortOutputs[route.NodeId]);
+        Assert.Equal(route.SelectedBranch, value.Key);
+        Assert.Equal(SpaceUserMessageGraph.JsonDataType, value.Value.DataType);
+        var routed = value.Value.JsonValue!.Value.GetProperty("value");
+        Assert.Equal(chooseRequest, routed.GetProperty("useRequest").GetBoolean());
+        Assert.Equal("compile the project", routed.GetProperty("request").GetString());
+        Assert.Single(result.Trace, item => item.TypeId == SpaceUserMessageGraph.SelectJsonType && item.State == "Skipped");
+        Assert.Single(result.Trace, item => item.TypeId == SpaceUserMessageGraph.JsonStringType && item.State == "Skipped");
+        Assert.Equal(0, result.OmittedTextElements);
+    }
+
+    [Theory]
+    [InlineData("\"true\"")]
+    [InlineData("\"false\"")]
+    [InlineData("1")]
+    [InlineData("0")]
+    [InlineData("null")]
+    [InlineData("{}")]
+    [InlineData("missing")]
+    public async Task Space_graph_json_boolean_branch_refuses_coercion_and_absent_values(string condition)
+    {
+        var text = condition == "missing" ? "{\"request\":\"compile\",\"fallback\":\"explain\"}"
+            : "{\"useRequest\":" + condition + ",\"request\":\"compile\",\"fallback\":\"explain\"}";
+        var error = await Assert.ThrowsAsync<SpaceRequestPolicyBlockedException>(() => RunGraph(ConditionalJsonMessageLayout(), text));
+        Assert.Contains("Route by JSON boolean", error.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(text, error.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(true, "compile the project")]
+    [InlineData(false, "explain the project")]
+    public async Task Space_graph_json_boolean_branch_real_request_keeps_original_history_and_uses_only_the_selected_field(bool chooseRequest, string expected)
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Structured boolean request", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry), ConditionalJsonMessageLayout());
+        var rig = new GraphRequestRig(source, space.Id);
+        var text = JsonSerializer.Serialize(new { useRequest = chooseRequest, request = "compile the project", fallback = "explain the project" });
+        await rig.SendAsync(text);
+        Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        Assert.Equal(expected, Assert.Single(Assert.Single(rig.Transport.Requests).Messages, message => message.Role == "user").Content);
+        var trace = Assert.Single(rig.Events.Values, item => item.ComponentId == "spaces.user-message-graph").SafeMetadata!["trace"];
+        Assert.DoesNotContain(expected, trace, StringComparison.Ordinal);
+        files.Passed = true;
+    }
+
+    [Fact]
+    public async Task Space_graph_json_boolean_branch_does_not_fall_back_when_selected_field_is_missing()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Strict boolean request", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry), ConditionalJsonMessageLayout());
+        var rig = new GraphRequestRig(source, space.Id);
+        const string text = "{\"useRequest\":true,\"fallback\":\"must not run\"}";
+        var error = await Record.ExceptionAsync(() => rig.SendAsync(text));
+        Assert.NotNull(error); Assert.True(ContainsSpaceCode(error, "SPACE_USER_MESSAGE_GRAPH_INVALID"));
+        Assert.Empty(rig.Transport.Requests);
+        Assert.Equal(text, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        files.Passed = true;
+    }
+
+    private static SpaceLayoutDocument ConditionalJsonMessageLayout()
+    {
+        var source = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SourceType);
+        var parse = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.ParseJsonType);
+        var route = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.RouteJsonBooleanType) with
+            { Metadata = new Dictionary<string, string> { ["pointer"] = "/useRequest" } };
+        var chosen = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SelectJsonType) with
+            { Metadata = new Dictionary<string, string> { ["pointer"] = "/request" } };
+        var fallback = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.SelectJsonType) with
+            { Metadata = new Dictionary<string, string> { ["pointer"] = "/fallback" } };
+        var chosenText = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.JsonStringType);
+        var fallbackText = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.JsonStringType);
+        var merge = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.MergeType);
+        var output = SpaceUserMessageGraph.CreateNode(SpaceUserMessageGraph.OutputType);
+        return new([source, parse, route, chosen, chosenText, fallback, fallbackText, merge, output],
+            [new(Guid.NewGuid(), source.Id, "out", parse.Id, "in"), new(Guid.NewGuid(), parse.Id, "out", route.Id, "in"),
+                new(Guid.NewGuid(), route.Id, "true", chosen.Id, "in"), new(Guid.NewGuid(), chosen.Id, "out", chosenText.Id, "in"),
+                new(Guid.NewGuid(), chosenText.Id, "out", merge.Id, "in"), new(Guid.NewGuid(), route.Id, "false", fallback.Id, "in"),
+                new(Guid.NewGuid(), fallback.Id, "out", fallbackText.Id, "in"), new(Guid.NewGuid(), fallbackText.Id, "out", merge.Id, "in"),
+                new(Guid.NewGuid(), merge.Id, "out", output.Id, "in")])
+            { GraphId = Guid.NewGuid(), Revision = 1, State = SpaceLayoutRevisionState.Active };
     }
 
     private static SpaceLayoutDocument DirectConditionalMessageLayout(string comparison, string boundary, string query)
