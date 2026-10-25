@@ -52,6 +52,69 @@ public sealed class ContractAdapterTests
     }
 
     [Fact]
+    public async Task Created_canvas_is_retained_when_selection_changes_and_explicit_link_does_not_create_again()
+    {
+        var root = TempDirectory();
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "deferred-canvas-link.9to1board");
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            var sectionId = adapter.Document.Sections[0].Id;
+            var originalPageId = adapter.Document.Sections[0].Pages[0].Id;
+            var otherSectionId = await adapter.AddSectionAsync("Other section");
+            var otherPageId = adapter.Document.Sections.Single(section => section.Id == otherSectionId).Pages[0].Id;
+            var host = new DelayedCanvasChoiceHost();
+            var viewModel = new BoardsViewModel(adapter, embeddedArtifactHost: host);
+
+            var create = viewModel.DispatchAsync("CreateCanvasPage", null);
+            Assert.Equal(1, host.CreateCount);
+            viewModel.SelectPage(otherSectionId, otherPageId);
+            host.CompleteCreate();
+            await create;
+
+            Assert.Equal(2, adapter.Document.Sections[0].Pages.Count);
+            Assert.True(viewModel.TryGetValue("CanLinkCreatedEmbeddedPage", out var canLink) && canLink is false);
+            Assert.Contains("original Board page changed", viewModel.Get("StatusText")?.ToString() ?? string.Empty,
+                StringComparison.OrdinalIgnoreCase);
+
+            viewModel.SelectPage(sectionId, originalPageId);
+            Assert.True(viewModel.TryGetValue("CanLinkCreatedEmbeddedPage", out canLink) && canLink is true);
+            await viewModel.DispatchAsync("LinkCreatedEmbeddedPage", null);
+
+            Assert.Equal(1, host.CreateCount);
+            var linked = Assert.Single(adapter.Document.Sections[0].Pages,
+                page => page.EmbeddedArtifact == host.CreatedReference);
+            Assert.Equal(HavenRichPageTypes.Canvas, linked.PageType);
+            Assert.Equal("Created Canvas linked to the original Board section.", viewModel.Get("StatusText"));
+        }
+        finally { DeleteDirectory(root); }
+    }
+
+    [Fact]
+    public async Task Created_canvas_result_is_not_attached_after_board_view_model_is_disposed()
+    {
+        var root = TempDirectory();
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store,
+                Path.Combine(root, "disposed-canvas-link.9to1board"));
+            var host = new DelayedCanvasChoiceHost();
+            var viewModel = new BoardsViewModel(adapter, embeddedArtifactHost: host);
+            var create = viewModel.DispatchAsync("CreateCanvasPage", null);
+            viewModel.Dispose();
+            host.CompleteCreate();
+            await create;
+
+            Assert.Equal(1, host.CreateCount);
+            Assert.DoesNotContain(adapter.Document.Sections.SelectMany(section => section.Pages),
+                page => page.EmbeddedArtifact == host.CreatedReference);
+        }
+        finally { DeleteDirectory(root); }
+    }
+
+    [Fact]
     public async Task Home_board_creation_intent_sends_a_validated_draft_without_mutating_the_pinned_board()
     {
         var original = CreateNotesDocument("Current pinned Board");
@@ -364,6 +427,7 @@ public sealed class ContractAdapterTests
         var block = HavenRichNotesOps.AddBlock(notes, page.Id, HavenRichBlockKind.Table);
         var table = block.Table!;
         var baselineWidth = table.Width;
+        var baselineAlignment = table.Alignment;
         table.Rows[0].Cells[0].Text = "Heading";
         table.Rows[0].Cells[1].Background = "#FFE8F0FE";
         var anchorId = table.Rows[0].Cells[0].Id;
@@ -422,7 +486,7 @@ public sealed class ContractAdapterTests
             Assert.True(await adapter.UndoAsync());
             var undoneAlignment = await adapter.GetDetachedContractDocumentAsync();
             var undoneAlignmentTable = undoneAlignment.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
-            Assert.Equal(HavenRichAlignment.Left, undoneAlignmentTable.Alignment);
+            Assert.Equal(baselineAlignment, undoneAlignmentTable.Alignment);
             Assert.True(undoneAlignmentTable.HasHeaderColumn);
             Assert.True(undoneAlignmentTable.HasHeaderRow);
             Assert.True(await adapter.UndoAsync());
@@ -435,7 +499,7 @@ public sealed class ContractAdapterTests
             var undoneHeaderRowTable = undoneHeaderRow.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
             Assert.False(undoneHeaderRowTable.HasHeaderRow);
             Assert.False(undoneHeaderRowTable.HasHeaderColumn);
-            Assert.Equal(HavenRichAlignment.Left, undoneHeaderRowTable.Alignment);
+            Assert.Equal(baselineAlignment, undoneHeaderRowTable.Alignment);
             Assert.Equal(baselineWidth, undoneHeaderRowTable.Width);
             Assert.True(await adapter.UndoAsync());
             var undoneMerge = await adapter.GetDetachedContractDocumentAsync();
@@ -483,6 +547,27 @@ public sealed class ContractAdapterTests
 
         private static BoardEmbeddedArtifactReference Reference() =>
             new("canvas", Guid.NewGuid(), new BoardEmbeddedArtifactRevision(null, Guid.NewGuid()));
+    }
+
+    private sealed class DelayedCanvasChoiceHost : IBoardsEmbeddedArtifactHost
+    {
+        private readonly TaskCompletionSource<BoardEmbeddedArtifactReference?> _created =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public BoardEmbeddedArtifactReference CreatedReference { get; } =
+            new("canvas", Guid.NewGuid(), new BoardEmbeddedArtifactRevision(null, Guid.NewGuid()));
+        public int CreateCount { get; private set; }
+        public void CompleteCreate() => _created.TrySetResult(CreatedReference);
+        public void BindOwningControl(Avalonia.Controls.Control control) { }
+        public Task<IBoardsEmbeddedArtifactSession> OpenAsync(BoardEmbeddedArtifactReference reference,
+            BoardEmbeddedArtifactMode mode, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<BoardEmbeddedArtifactReference?> SelectAsync(string applicationId, CancellationToken ct = default) =>
+            Task.FromResult<BoardEmbeddedArtifactReference?>(null);
+        public Task<BoardEmbeddedArtifactReference?> CreateAsync(string applicationId, CancellationToken ct = default)
+        {
+            Assert.Equal("canvas", applicationId);
+            CreateCount++;
+            return _created.Task.WaitAsync(ct);
+        }
     }
 
     private sealed class DecliningBoardCreationHost : IBoardsHomeBoardCreationHost

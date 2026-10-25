@@ -68,6 +68,7 @@
               <Button Type="Menu Item" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
               <Button Type="Menu Item" Content="Attach existing Canvas…" Action="AddCanvasPage" Interactive="{Binding CanAddCanvasPage}" AccessibleName="Attach an existing Canvas as a page" />
               <Button Type="Menu Item" Content="New Canvas…" Action="CreateCanvasPage" Interactive="{Binding CanAddCanvasPage}" AccessibleName="Create a Canvas as a page" />
+              <Button Type="Menu Item" Content="{Binding LinkCreatedEmbeddedPageLabel}" Action="LinkCreatedEmbeddedPage" Interactive="{Binding CanLinkCreatedEmbeddedPage}" AccessibleName="Link the created owner page to its original Board section" />
               <Button Type="Menu Item" Content="Section" Action="AddSection" AccessibleName="Create a section" />
             </Button>
           </Container>

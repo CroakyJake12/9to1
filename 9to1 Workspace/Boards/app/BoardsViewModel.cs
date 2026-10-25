@@ -54,10 +54,17 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private string _landingSearchQuery = string.Empty;
     private (string PageId, string BlockId, int CaretIndex)? _pendingTextFocus;
     private bool _homeCreationOperationInProgress;
+    private bool _embeddedPageLinkOperationInProgress;
+    private PendingEmbeddedPageLink? _pendingEmbeddedPageLink;
     private bool _disposed;
 
     private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
     private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
+    private sealed record EmbeddedPageTarget(IRichBoardSession Session, RichBoardDocument Document,
+        RichBoardSection Section, string PageId);
+    private sealed record PendingEmbeddedPageLink(string ApplicationId, string ApplicationName,
+        string PageType, Haven.Application.BoardEmbeddedArtifactReference Reference,
+        EmbeddedPageTarget Target, bool LinkAttempted);
 
     public BoardsViewModel(IRichBoardSession session, IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null,
         IBoardsHomeBoardCreationHost? homeBoardCreationHost = null)
@@ -71,8 +78,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("RecentBoardsLoaded", false);
         Set("EmbeddedPageUnavailable", false);
         Set("EmbeddedPageMessage", string.Empty);
-        Set("CanAddWritePage", CanAddWritePage);
-        Set("CanAddCanvasPage", CanAddCanvasPage);
+        RefreshEmbeddedPageLinkState();
         RefreshHomeBoardCreationAvailability();
         _session.StatusChanged += (_, status) =>
         {
@@ -211,8 +217,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool CanSaveAs => CanEdit && _session is not IBoardSessionCapabilities { CanSaveAs: false };
     public bool CanCreateBoard => CanSwitchBoard || CanEdit && _homeBoardCreationHost is not null &&
         !_homeCreationOperationInProgress && !_homeBoardCreationHost.HasUnresolvedCreation;
-    public bool CanAddWritePage => _embeddedArtifactHost is not null && CanEdit && _isEditMode;
-    public bool CanAddCanvasPage => _embeddedArtifactHost is not null && CanEdit && _isEditMode;
+    public bool CanAddWritePage => _embeddedArtifactHost is not null && CanEdit && _isEditMode && _pendingEmbeddedPageLink is null;
+    public bool CanAddCanvasPage => _embeddedArtifactHost is not null && CanEdit && _isEditMode && _pendingEmbeddedPageLink is null;
+    public bool CanLinkCreatedEmbeddedPage => _pendingEmbeddedPageLink is { } pending &&
+        !pending.LinkAttempted && !_embeddedPageLinkOperationInProgress && IsEmbeddedPageTargetCurrent(pending.Target);
+    public string LinkCreatedEmbeddedPageLabel => _pendingEmbeddedPageLink is { } pending
+        ? $"Link created {pending.ApplicationName} to original section…"
+        : "Link created page to original section…";
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
     public string SelectedPageType => CurrentPage().PageType;
     public Haven.Application.BoardEmbeddedArtifactReference? SelectedEmbeddedArtifact => CurrentPage().EmbeddedArtifact;
@@ -435,6 +446,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case "CreateCanvasPage":
                 await AddEmbeddedArtifactPageAsync("canvas", HavenRichPageTypes.Canvas,
                     createNew: true, cancellationToken);
+                break;
+            case "LinkCreatedEmbeddedPage":
+                await LinkCreatedEmbeddedPageAsync(cancellationToken);
                 break;
             case "AddSubpage":
                 await AddSubpageAsync(_selectedSectionId, _selectedPageId);
@@ -773,8 +787,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             SyncSelectedInkView();
         }
         Set("IsEditMode", enabled);
-        Set("CanAddWritePage", CanAddWritePage);
-        Set("CanAddCanvasPage", CanAddCanvasPage);
+        RefreshEmbeddedPageLinkState();
         Set("ShowNativeAuthoring", ShowNativeAuthoring);
         Set("ModeLabel", enabled ? "Edit" : "View");
         if (!enabled) InvalidateTextRange();
@@ -790,6 +803,27 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private async Task AddEmbeddedArtifactPageAsync(string applicationId, string pageType,
         bool createNew, CancellationToken cancellationToken)
     {
+        if (_embeddedPageLinkOperationInProgress)
+        {
+            Set("StatusText", "A page selection or link is already in progress.");
+            return;
+        }
+        _embeddedPageLinkOperationInProgress = true;
+        RefreshEmbeddedPageLinkState();
+        try
+        {
+            await AddEmbeddedArtifactPageCoreAsync(applicationId, pageType, createNew, cancellationToken);
+        }
+        finally
+        {
+            _embeddedPageLinkOperationInProgress = false;
+            if (!_disposed) RefreshEmbeddedPageLinkState();
+        }
+    }
+
+    private async Task AddEmbeddedArtifactPageCoreAsync(string applicationId, string pageType,
+        bool createNew, CancellationToken cancellationToken)
+    {
         var applicationName = applicationId switch
         {
             "write" => "Write",
@@ -797,6 +831,22 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             _ => applicationId
         };
         if (!RequireEditMode()) return;
+        if (_pendingEmbeddedPageLink is not null)
+        {
+            Set("StatusText", "Link the previously created page or check its original section before adding another.");
+            return;
+        }
+        if (_session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", "This Board session cannot persist owner-backed pages.");
+            return;
+        }
+        var target = CaptureEmbeddedPageTarget();
+        if (target is null)
+        {
+            Set("StatusText", "Select a Board page before attaching an owner page.");
+            return;
+        }
         var host = _embeddedArtifactHost;
         if (host is null)
         {
@@ -812,13 +862,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            throw;
+            return;
         }
         catch (Exception error)
         {
-            Set("StatusText", $"{applicationName} page could not be selected: " + FirstLine(error.Message));
+            if (!_disposed && !SessionIsDisposed)
+                Set("StatusText", $"{applicationName} page could not be selected: " + FirstLine(error.Message));
             return;
         }
+        if (_disposed || SessionIsDisposed) return;
         if (reference is null)
         {
             Set("StatusText", createNew
@@ -826,33 +878,156 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 : $"{applicationName} page selection was cancelled.");
             return;
         }
-        reference.Validate();
-        if (!string.Equals(reference.ApplicationId, applicationId, StringComparison.Ordinal))
-            throw new InvalidDataException($"The Home {applicationName} owner returned a reference for another application.");
-        if (_session is not ContractSessionAdapter adapter)
-        {
-            Set("StatusText", "This Board session cannot persist owner-backed pages.");
-            return;
-        }
-
         try
         {
-            var pageId = await adapter.AddEmbeddedArtifactPageAsync(CurrentSection().Id,
-                pageType, reference, createNew ? $"New {applicationName} document" : $"{applicationName} document",
-                cancellationToken: cancellationToken).ConfigureAwait(true);
-            SelectPage(_selectedSectionId, pageId);
-            Set("StatusText", createNew
-                ? $"{applicationName} document created and linked."
-                : $"{applicationName} document linked.");
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
+            reference.Validate();
+            if (!string.Equals(reference.ApplicationId, applicationId, StringComparison.Ordinal))
+                throw new InvalidDataException($"The Home {applicationName} owner returned a reference for another application.");
         }
         catch (Exception error)
         {
-            Set("StatusText", $"{applicationName} page could not be added: " + FirstLine(error.Message));
+            Set("StatusText", $"The Home {applicationName} owner returned an unusable reference: " + FirstLine(error.Message));
+            return;
         }
+        if (!IsEmbeddedPageTargetCurrent(target))
+        {
+            if (createNew)
+                RetainCreatedEmbeddedPage(applicationId, applicationName, pageType, reference, target,
+                    linkAttempted: false, $"The original Board page changed while {applicationName} was being created.");
+            else
+                Set("StatusText", $"The Board page changed while the {applicationName} picker was open. Nothing was linked; select it again from the intended page.");
+            return;
+        }
+        if (cancellationToken.IsCancellationRequested)
+        {
+            if (createNew)
+                RetainCreatedEmbeddedPage(applicationId, applicationName, pageType, reference, target,
+                    linkAttempted: false, "The Board closed before the new page could be linked.");
+            else
+                Set("StatusText", $"The Board page changed while the {applicationName} picker was open. Nothing was linked.");
+            return;
+        }
+        try
+        {
+            var pageId = await adapter.AddEmbeddedArtifactPageAsync(target.Section.Id,
+                pageType, reference, createNew ? $"New {applicationName} document" : $"{applicationName} document",
+                cancellationToken: cancellationToken).ConfigureAwait(true);
+            if (IsEmbeddedPageTargetCurrent(target))
+                SelectPage(target.Section.Id, pageId);
+            Set("StatusText", createNew
+                ? $"{applicationName} document created and linked to the original section."
+                : $"{applicationName} document linked to the original section.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            if (createNew)
+                RetainCreatedEmbeddedPage(applicationId, applicationName, pageType, reference, target,
+                    linkAttempted: true, $"{applicationName} was created, but the Board could not confirm whether its link finished.");
+            else
+                Set("StatusText", $"The {applicationName} link could not be confirmed. Check the original section before trying again.");
+        }
+        catch (Exception error)
+        {
+            if (createNew)
+                RetainCreatedEmbeddedPage(applicationId, applicationName, pageType, reference, target,
+                    linkAttempted: true, $"{applicationName} was created, but the Board could not confirm whether its link finished: " + FirstLine(error.Message));
+            else
+                Set("StatusText", $"{applicationName} page could not be linked: " + FirstLine(error.Message));
+        }
+    }
+
+    private EmbeddedPageTarget? CaptureEmbeddedPageTarget()
+    {
+        var document = _session.Document;
+        var section = document.Sections.FirstOrDefault(item => item.Id == _selectedSectionId);
+        if (section is null || section.Pages.All(page => page.Id != _selectedPageId)) return null;
+        return new EmbeddedPageTarget(_session, document, section, _selectedPageId);
+    }
+
+    private bool IsEmbeddedPageTargetCurrent(EmbeddedPageTarget target) =>
+        !_disposed && !SessionIsDisposed && ReferenceEquals(_session, target.Session) &&
+        ReferenceEquals(_session.Document, target.Document) && CanEdit && _isEditMode &&
+        target.Document.Sections.Any(section => ReferenceEquals(section, target.Section) && section.Id == target.Section.Id) &&
+        string.Equals(_selectedSectionId, target.Section.Id, StringComparison.Ordinal) &&
+        string.Equals(_selectedPageId, target.PageId, StringComparison.Ordinal);
+
+    private bool IsOriginalEmbeddedPageSelectionCurrent(EmbeddedPageTarget target) =>
+        !_disposed && !SessionIsDisposed && ReferenceEquals(_session, target.Session) && CanEdit && _isEditMode &&
+        _session.Document.Sections.Any(section => section.Id == target.Section.Id &&
+            section.Pages.Any(page => page.Id == target.PageId)) &&
+        string.Equals(_selectedSectionId, target.Section.Id, StringComparison.Ordinal) &&
+        string.Equals(_selectedPageId, target.PageId, StringComparison.Ordinal);
+
+    private void RetainCreatedEmbeddedPage(string applicationId, string applicationName, string pageType,
+        Haven.Application.BoardEmbeddedArtifactReference reference, EmbeddedPageTarget target,
+        bool linkAttempted, string status)
+    {
+        _pendingEmbeddedPageLink = new PendingEmbeddedPageLink(applicationId, applicationName, pageType,
+            reference, target, linkAttempted);
+        RefreshEmbeddedPageLinkState();
+        Set("StatusText", status + (linkAttempted
+            ? " Review the original section before attempting another link."
+            : " Return to the original page and use the explicit link action to finish."));
+    }
+
+    private async Task LinkCreatedEmbeddedPageAsync(CancellationToken cancellationToken)
+    {
+        if (_pendingEmbeddedPageLink is not { } pending)
+        {
+            Set("StatusText", "There is no unlinked created page to attach.");
+            return;
+        }
+        if (pending.LinkAttempted)
+        {
+            Set("StatusText", $"{pending.ApplicationName} was created, but its Board link could not be confirmed. Check the original section before trying again.");
+            return;
+        }
+        if (!IsEmbeddedPageTargetCurrent(pending.Target) || _session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", $"Return to the original Board page in Edit mode before linking the created {pending.ApplicationName}.");
+            return;
+        }
+
+        _embeddedPageLinkOperationInProgress = true;
+        RefreshEmbeddedPageLinkState();
+        try
+        {
+            var pageId = await adapter.AddEmbeddedArtifactPageAsync(pending.Target.Section.Id,
+                pending.PageType, pending.Reference, $"New {pending.ApplicationName} document",
+                cancellationToken: cancellationToken).ConfigureAwait(true);
+            if (_disposed || SessionIsDisposed) return;
+            _pendingEmbeddedPageLink = null;
+            RefreshEmbeddedPageLinkState();
+            if (IsOriginalEmbeddedPageSelectionCurrent(pending.Target))
+                SelectPage(pending.Target.Section.Id, pageId);
+            Set("StatusText", $"Created {pending.ApplicationName} linked to the original Board section.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            if (_disposed || SessionIsDisposed) return;
+            _pendingEmbeddedPageLink = pending with { LinkAttempted = true };
+            Set("StatusText", $"{pending.ApplicationName} exists, but the Board could not confirm whether its link finished. Check the original section before trying again.");
+        }
+        catch (Exception error)
+        {
+            if (_disposed || SessionIsDisposed) return;
+            _pendingEmbeddedPageLink = pending with { LinkAttempted = true };
+            Set("StatusText", $"{pending.ApplicationName} exists, but the Board could not confirm whether its link finished: " + FirstLine(error.Message));
+        }
+        finally
+        {
+            _embeddedPageLinkOperationInProgress = false;
+            if (!_disposed && !SessionIsDisposed) RefreshEmbeddedPageLinkState();
+        }
+    }
+
+    private void RefreshEmbeddedPageLinkState()
+    {
+        if (_disposed) return;
+        Set("CanAddWritePage", CanAddWritePage);
+        Set("CanAddCanvasPage", CanAddCanvasPage);
+        Set("CanLinkCreatedEmbeddedPage", CanLinkCreatedEmbeddedPage);
+        Set("LinkCreatedEmbeddedPageLabel", LinkCreatedEmbeddedPageLabel);
     }
 
     private bool RequireEditMode()
@@ -1637,6 +1812,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _selectedSectionId = section.Id;
         var page = section.Pages.FirstOrDefault();
         _selectedPageId = page?.Id ?? _selectedPageId;
+        RefreshEmbeddedPageLinkState();
         if (page is not null)
             SelectExistingBlock(page);
         SyncSelectedInkView();
@@ -1655,6 +1831,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         InvalidateTableSelection();
         _selectedSectionId = section.Id;
         _selectedPageId = page.Id;
+        RefreshEmbeddedPageLinkState();
         SelectExistingBlock(page);
         SyncSelectedInkView();
         PushDocumentToBindings();
