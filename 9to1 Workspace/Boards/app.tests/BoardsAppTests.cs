@@ -46,6 +46,24 @@ public sealed class BoardsAppTests
     }
 
     [Fact]
+    public void Boards_authored_views_load_from_the_compiled_embedded_cui_transport()
+    {
+        foreach (var source in new[]
+        {
+            BoardsCuiDocuments.MainSourceName,
+            BoardsCuiDocuments.GraphSlidersSourceName,
+            BoardsCuiDocuments.BlockGripSourceName,
+            BoardsCuiDocuments.BoardPropertiesSourceName,
+            BoardsCuiDocuments.StartupFailureSourceName,
+        })
+        {
+            var document = BoardsCuiDocuments.Load(source);
+            Assert.Equal(source, document.SourceName);
+            Assert.NotEmpty(document.Components);
+        }
+    }
+
+    [Fact]
     public void Boards_cui_parses_with_zero_errors()
     {
         var path = FindBoardsCui();

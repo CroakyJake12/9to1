@@ -2,6 +2,11 @@
 
 ## Active implementation checkpoint — 25 October 2026
 
+- Production CUI transport/theme: **IMPLEMENTED, owning checks pending**. The app
+  consumes its embedded compiled V1/V2 CUI documents, with whole-artifact runtime
+  admission; runtime `.cui` path search and reparsing are removed. Native primitive
+  styling now uses shared CUI theme resources rather than FluentTheme. A compiled
+  artifact regression loads the main view and authored fragments; Root owns build/run.
 - Per-surface Edit/View mode: **IMPLEMENTED, owning checks pending**. The CUI
   header exposes the persistent mode toggle. View retains text selection/copy,
   search, navigation, board open/save, and appearance controls while preventing
