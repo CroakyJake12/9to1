@@ -5,7 +5,7 @@ using Avalonia.Media;
 namespace CakeOS.Cui.Themes;
 
 public enum CuiFontRole { Main, PrimaryButton, SecondaryButton, TertiaryButton, Heading, Body, Code }
-public enum CuiAccentRole { None, Primary, Secondary, Tertiary }
+public enum CuiAccentRole { None = 0, Primary = 1, Secondary = 2, Tertiary = 3, Text = 4, Negative = 5 }
 
 /// <summary>Backend conversion of a validated portable custom theme into existing shared CUI resources.</summary>
 public static class CuiCustomThemeResourceApplier
@@ -17,7 +17,7 @@ public static class CuiCustomThemeResourceApplier
         ArgumentNullException.ThrowIfNull(resources);
         foreach (var key in new[] { "CuiCustomTypography", "CuiCustomFontScale", "CuiButtonRoundnessPercent" }) resources.Remove(key);
         foreach (var role in new[] { "Primary", "Secondary", "Tertiary" })
-            foreach (var suffix in new[] { "Fill", "ForegroundBrush", "PressedBrush", "Background", "HoverBackground", "PressedBackground" })
+            foreach (var suffix in new[] { "Fill", "ForegroundBrush", "HoverForegroundBrush", "PressedForegroundBrush", "PressedBrush", "Background", "HoverBackground", "PressedBackground" })
                 resources.Remove($"CuiAccent{role}{suffix}");
     }
 
@@ -73,6 +73,8 @@ public static class CuiCustomThemeResourceApplier
                 resources[$"CuiAccent{role}HoverBrush"] = background;
                 resources[$"CuiAccent{role}PressedBrush"] = background;
                 resources[$"CuiAccent{role}ForegroundBrush"] = foreground;
+                resources[$"CuiAccent{role}HoverForegroundBrush"] = foreground;
+                resources[$"CuiAccent{role}PressedForegroundBrush"] = foreground;
                 resources[$"CuiAccent{role}Background"] = background;
                 resources[$"CuiAccent{role}HoverBackground"] = background;
                 resources[$"CuiAccent{role}PressedBackground"] = background;
@@ -110,6 +112,8 @@ public static class CuiCustomThemeResourceApplier
             (byte)Math.Round(colour.B * colour.A / 255d + background.B * (1 - colour.A / 255d)))).ToArray();
         var ink = samples.Min(colour => CuiContrast.Ratio(Colors.Black, colour)) >= samples.Min(colour => CuiContrast.Ratio(Colors.White, colour)) ? Colors.Black : Colors.White;
         resources[$"CuiAccent{role}ForegroundBrush"] = new SolidColorBrush(ink).ToImmutable();
+        resources[$"CuiAccent{role}HoverForegroundBrush"] = resources[$"CuiAccent{role}ForegroundBrush"];
+        resources[$"CuiAccent{role}PressedForegroundBrush"] = resources[$"CuiAccent{role}ForegroundBrush"];
     }
 
     /// <summary>Backdrop effects belong to the owning surface, never foreground text or icons.</summary>
