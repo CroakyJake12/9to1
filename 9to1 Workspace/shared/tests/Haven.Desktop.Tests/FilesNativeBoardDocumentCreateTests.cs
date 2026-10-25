@@ -157,6 +157,14 @@ public sealed class FilesNativeBoardDocumentCreateTests
 
         Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, pending.State);
         var exactReceipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(pending.Receipt);
+        var beforeObserve = await rig.ReadBytesAsync();
+        var observed = await rig.Keep(creator.ObserveCreateSettlementWithinSourceAsync(
+            pending.Attempt, body => body(), rig.Retain, rig.Token));
+        var afterObserve = await rig.ReadBytesAsync();
+        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, observed.State);
+        Assert.Same(exactReceipt, observed.Receipt);
+        Assert.Equal(beforeObserve.Home, afterObserve.Home);
+        Assert.Equal(beforeObserve.Drive, afterObserve.Drive);
         var current = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, exactReceipt.ParentFolderId,
             token: rig.Token, expectedStoreId: exactReceipt.FilesStoreId));
         Assert.Single(current.Items, item => item.Id.Value == exactReceipt.FileId);

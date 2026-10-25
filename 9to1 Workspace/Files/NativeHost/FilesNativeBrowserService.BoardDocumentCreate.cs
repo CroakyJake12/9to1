@@ -69,7 +69,7 @@ public sealed partial class FilesNativeBrowserService
             internal Task<FilesOriginalBoardDocumentCreateSettlementResult>? SettlementTask;
             internal FilesOriginalBoardDocumentCreateAttempt Attempt = new();
             internal IReadOnlyList<Exception> CleanupFailures = Array.Empty<Exception>();
-            internal bool Claimed, Validated, AuditRecorded, Retired, ExactCommitReceipt;
+            internal bool Claimed, Validated, AuditRecorded, Retired, ExactCommitReceipt, ReconciledExactCommit;
             internal Action<Action> Scope = null!;
             internal Action<Task> Retain = null!;
             internal FilesOriginalReadSourceScope Source = null!;
@@ -327,10 +327,12 @@ public sealed partial class FilesNativeBrowserService
                 operation.AuditRecorded = true;
             }
 
-            var state = operation.ExactCommitReceipt && operation.Receipt is { } receipt
-                ? operation.CleanupFailures.Count == 0
-                    ? FilesOriginalBoardDocumentCreateSettlementState.Committed
-                    : FilesOriginalBoardDocumentCreateSettlementState.CommittedWithCleanupIssues
+            var state = operation.ExactCommitReceipt && operation.Receipt is not null
+                ? operation.ReconciledExactCommit
+                    ? FilesOriginalBoardDocumentCreateSettlementState.CommittedWithUncertainAudit
+                    : operation.CleanupFailures.Count == 0
+                        ? FilesOriginalBoardDocumentCreateSettlementState.Committed
+                        : FilesOriginalBoardDocumentCreateSettlementState.CommittedWithCleanupIssues
                 : operation.ActualResult is { IsSuccess: false }
                     ? FilesOriginalBoardDocumentCreateSettlementState.NotCreated
                     : FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown;
@@ -338,6 +340,88 @@ public sealed partial class FilesNativeBrowserService
                 lock (_gate)
                     if (!_receipts.TryGetValue(committed, out _)) _receipts.Add(committed, operation);
             return new(state, operation.Receipt, operation.CleanupFailures);
+        }
+
+        /// <summary>Read-only reconciliation for one retained uncertain create. It never repeats
+        /// provider publication or Home admission; a receipt is returned only after the same
+        /// actor/store and exact current file/content revision metadata are corroborated.</summary>
+        public async Task<FilesOriginalBoardDocumentCreateSettlementResult> ObserveCreateSettlementWithinSourceAsync(
+            FilesOriginalBoardDocumentCreateAttempt sameAttempt, Action<Action> scope, Action<Task> retain,
+            CancellationToken token)
+        {
+            ArgumentNullException.ThrowIfNull(sameAttempt); ArgumentNullException.ThrowIfNull(scope); ArgumentNullException.ThrowIfNull(retain);
+            if (!_attempts.TryGetValue(sameAttempt, out var operation) || !ReferenceEquals(operation.Owner, this) ||
+                !ReferenceEquals(operation.Attempt, sameAttempt))
+                throw new UnauthorizedAccessException("Use the exact Files board-create attempt issued by this owner.");
+            token.ThrowIfCancellationRequested();
+            if (operation.ActualResult is { IsSuccess: false } && !operation.ExactCommitReceipt)
+                return new(FilesOriginalBoardDocumentCreateSettlementState.NotCreated, null, operation.CleanupFailures);
+
+            var source = FilesOriginalParentSourceCallbacks.Create(scope, retain);
+            var current = await source.Observe(() => _browser.OriginalBrowserWorkspaces.GetOriginalCurrentWithinSourceAsync(
+                operation.Page.StoreID, source, token)).ConfigureAwait(false);
+            var actor = await source.Observe(() => _browser.OriginalBrowserActors.GetCurrentAsync(token).AsTask()).ConfigureAwait(false);
+            if (!source.Invoke(operation.Lifetime) || current?.Actor != operation.Actor || actor != operation.Actor ||
+                !ReferenceEquals(current.Provider, operation.Workspace.Provider) ||
+                !ReferenceEquals(current.Directories, operation.Workspace.Directories))
+                throw new UnauthorizedAccessException("The exact original Files/Home actor or workspace changed during create reconciliation.");
+            var evidence = await source.Observe(() => current.Provider.GetStoreEvidenceAsync(operation.Page.StoreID,
+                source.OriginalSynchronousScope, source.RetainOriginalTask, token)).ConfigureAwait(false);
+            if (evidence.StoreId != operation.Page.StoreID ||
+                !current.Configuration.AppFolders.TryGetValue("boards", out var boardsRoot) ||
+                boardsRoot.Value != operation.Folder.Id.Value)
+                return Unknown();
+
+            var parent = await source.Observe(() => current.Provider.GetForOriginalStoreAsync(operation.Page.StoreID,
+                operation.Folder.Id, token)).ConfigureAwait(false);
+            var file = await source.Observe(() => current.Provider.GetForOriginalStoreAsync(operation.Page.StoreID,
+                new(operation.FileId), token)).ConfigureAwait(false);
+            if (!parent.IsSuccess || parent.Value is not { Kind: HostedItemKind.Folder, CurrentRevisionId: not null } parentRow ||
+                !file.IsSuccess || file.Value is not { Kind: HostedItemKind.File, ParentId: { } parentId,
+                    CurrentRevisionId: { } fileRevision } fileRow || parentId.Value != operation.Folder.Id.Value ||
+                fileRow.Id.Value != operation.FileId || fileRow.Name != operation.DisplayName ||
+                fileRow.SizeBytes != operation.Payload.LongLength ||
+                !StringComparer.OrdinalIgnoreCase.Equals(FilesNativeBrowserService.NormalizeSha256(fileRow.ContentHash), operation.PayloadHash) ||
+                fileRow.LocationId != parentRow.LocationId ||
+                fileRevision.Value != operation.FileRevisionId || !FilesNativeBrowserService.IsBoardDocumentCandidate(fileRow))
+                return Unknown();
+
+            var content = await source.Observe(() => current.Provider.GetCurrentArtifactContentForOriginalStoreAsync(
+                operation.Page.StoreID, fileRow.Id, fileRow.CurrentRevisionId, token)).ConfigureAwait(false);
+            var owningAppRevisionId = content.IsSuccess ? content.Value?.Revision.OwningAppRevisionId : null;
+            if (!content.IsSuccess || content.Value is not { } exactContent ||
+                exactContent.Revision.ItemId.Value != operation.FileId ||
+                exactContent.Revision.Id.Value != operation.FileRevisionId ||
+                exactContent.Revision.OwningAppId != "files" ||
+                owningAppRevisionId != exactContent.Revision.Id.ToString() ||
+                exactContent.Revision.SizeBytes != operation.Payload.LongLength ||
+                !StringComparer.OrdinalIgnoreCase.Equals(exactContent.Revision.ContentHash, operation.PayloadHash) ||
+                exactContent.UploadAnchorFolderId?.Value != operation.Folder.Id.Value ||
+                exactContent.ProviderContentReference != ".9to1-board-" + operation.FileRevisionId.ToString("N") + ".content")
+                return Unknown();
+
+            var receipt = operation.Receipt ?? new FilesOriginalBoardDocumentCreateReceipt(
+                operation.Page.StoreID, operation.Folder.Id.Value, operation.FileId, fileRevision.Value,
+                exactContent.Revision.Id.Value, owningAppRevisionId!,
+                operation.DocumentId, operation.DisplayName, operation.PayloadHash,
+                exactContent.Revision.SizeBytes ?? operation.Payload.LongLength, operation.Actor);
+            operation.Receipt = receipt;
+            operation.ExactCommitReceipt = true;
+            operation.ReconciledExactCommit = operation.ActualOutcome?.Code == "FILES_BOARD_CREATE_OUTCOME_UNKNOWN";
+            if (operation.AuditRecorded)
+                lock (_gate)
+                    if (!_receipts.TryGetValue(receipt, out _)) _receipts.Add(receipt, operation);
+            var state = !operation.AuditRecorded
+                ? FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending
+                : operation.ReconciledExactCommit
+                    ? FilesOriginalBoardDocumentCreateSettlementState.CommittedWithUncertainAudit
+                    : operation.CleanupFailures.Count == 0
+                        ? FilesOriginalBoardDocumentCreateSettlementState.Committed
+                        : FilesOriginalBoardDocumentCreateSettlementState.CommittedWithCleanupIssues;
+            return new(state, receipt, operation.CleanupFailures);
+
+            FilesOriginalBoardDocumentCreateSettlementResult Unknown()
+                => new(FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown, null, operation.CleanupFailures);
         }
 
         /// <summary>UI eligibility only: returns true when this exact current issued folder row
