@@ -185,6 +185,28 @@ public static class BlockRenderer
 
     private static void ConfigureBlockGutterButton(Button button)
     {
+        // CUI's theme projection writes at a higher native value priority than
+        // these ordinary Avalonia assignments. Record the compact geometry as
+        // an instance declaration so it wins over the 34px theme minimum and
+        // the shared button padding.
+        const string geometrySource = "Boards block gutter geometry";
+        CuiPropertyPresentation.Set(button, "Width", BlockGutterTargetSize,
+            CuiPropertyLevel.Instance, geometrySource);
+        CuiPropertyPresentation.Set(button, "Height", BlockGutterTargetSize,
+            CuiPropertyLevel.Instance, geometrySource);
+        CuiPropertyPresentation.Set(button, "MinWidth", BlockGutterTargetSize,
+            CuiPropertyLevel.Instance, geometrySource);
+        CuiPropertyPresentation.Set(button, "MinHeight", BlockGutterTargetSize,
+            CuiPropertyLevel.Instance, geometrySource);
+        CuiPropertyPresentation.Set(button, "MaxWidth", BlockGutterTargetSize,
+            CuiPropertyLevel.Instance, geometrySource);
+        CuiPropertyPresentation.Set(button, "MaxHeight", BlockGutterTargetSize,
+            CuiPropertyLevel.Instance, geometrySource);
+        CuiPropertyPresentation.Set(button, "Padding", new Thickness(0),
+            CuiPropertyLevel.Instance, geometrySource);
+        CuiPropertyPresentation.Set(button, "BorderWidth", new Thickness(0),
+            CuiPropertyLevel.Instance, geometrySource);
+
         button.Width = BlockGutterTargetSize;
         button.Height = BlockGutterTargetSize;
         button.MinWidth = BlockGutterTargetSize;
