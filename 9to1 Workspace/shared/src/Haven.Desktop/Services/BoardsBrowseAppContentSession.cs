@@ -39,6 +39,12 @@ internal sealed partial class BoardsBrowseAppContentSession : IBrowseNativeAppCo
     private CuiSceneHost? _host;
     private Task<CuiSceneAvailability>? _show;
     private Preparation? _prepared;
+    // Keep the authored CUI branch containing the retained Write controls mounted while
+    // a reversible close preparation has temporarily frozen the core. The core suppresses
+    // these values while pending; rebuilding the branch would try to reparent the same
+    // singleton renderer before Avalonia has detached it from the prior branch.
+    private bool? _preparedShowCurrentBoard;
+    private bool? _preparedHistoryPreview;
     private volatile bool _published, _closing, _preparing;
     private int _activeDispatches;
     private long _acceptedDispatchVersion; // UI-thread admission sequence, never an app state or authority receipt.
@@ -175,6 +181,10 @@ internal sealed partial class BoardsBrowseAppContentSession : IBrowseNativeAppCo
             if (path == "StorageSourceBusy") { value = owner._activeDispatches > 0; return true; }
             if (path == "StorageSourceIdle") { value = owner._activeDispatches == 0; return true; }
             if (path == "SharedInkStatus") { value = owner._sharedInkStatus; return true; }
+            if (path == "ShowCurrentBoard" && owner._preparedShowCurrentBoard is { } showBoard)
+            { value = showBoard; return true; }
+            if (path == "IsHistoryPreview" && owner._preparedHistoryPreview is { } historyPreview)
+            { value = historyPreview; return true; }
             if (owner._core is { } core) return core.TryGetValue(path, out value);
             value = null; return false;
         }
@@ -362,7 +372,28 @@ internal sealed partial class BoardsBrowseAppContentSession : IBrowseNativeAppCo
             else if (core is { IsDirty: true } or { HasUnknownCommitOutcome: true }) return null;
             DemandAlive(); _route.DemandPublicationCurrent();
             var id = core?.DocumentId; var revision = core?.DurableRevision ?? 0; var generation = core?.EditGeneration ?? 0;
-            if (restore && !core!.TrySuspendPreparedPresentation(id, revision, generation)) return null;
+            if (restore)
+            {
+                core!.TryGetValue("ShowCurrentBoard", out var showCurrentBoard);
+                core.TryGetValue("IsHistoryPreview", out var historyPreview);
+                _preparedShowCurrentBoard = showCurrentBoard is true;
+                _preparedHistoryPreview = historyPreview is true;
+                try
+                {
+                    if (!core.TrySuspendPreparedPresentation(id, revision, generation))
+                    {
+                        _preparedShowCurrentBoard = null;
+                        _preparedHistoryPreview = null;
+                        return null;
+                    }
+                }
+                catch
+                {
+                    _preparedShowCurrentBoard = null;
+                    _preparedHistoryPreview = null;
+                    throw;
+                }
+            }
             return _prepared = new Preparation(this, core, restore, id, revision, generation);
         }
         finally { _preparing = false; RefreshSharedInk(); }
@@ -391,7 +422,12 @@ internal sealed partial class BoardsBrowseAppContentSession : IBrowseNativeAppCo
                     if (_aborted) return;
                     if (!IsCurrent) throw new InvalidOperationException("The original Boards preparation is no longer current.");
                     owner._prepared = null;
-                    try { if (restoreCore) originalCore!.AdmitPresentation(); }
+                    try
+                    {
+                        if (restoreCore) originalCore!.AdmitPresentation();
+                        owner._preparedShowCurrentBoard = null;
+                        owner._preparedHistoryPreview = null;
+                    }
                     catch { owner._prepared = this; throw; }
                     _aborted = true;
                 }).GetTask();
