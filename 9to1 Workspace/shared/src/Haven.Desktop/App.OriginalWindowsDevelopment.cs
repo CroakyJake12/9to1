@@ -218,6 +218,7 @@ public sealed partial class App
     {
         void Request(Action request)
         { try { _originalAppWork.RunCloseCallback(request); } catch (Exception error) { AddAppCause(failures, error); } }
+        if (_windowsManualProcesses is { } manualProcesses) Request(manualProcesses.RequestOriginalRetirement);
         if (_windowsDeveloperPermissions is { } permissions) Request(permissions.RequestOriginalSetupRetirement);
         if (_windowsCurrentExecution is { } execution) Request(execution.RequestOriginalExecutionRetirement);
         if (_windowsExecutionConsent is { } consent) Request(consent.RequestOriginalExecutionRetirement);
