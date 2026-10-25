@@ -72,7 +72,7 @@ public sealed class NavBuilderTests
     }
 
     [Fact]
-    public async Task Section_context_menu_exposes_only_the_persistable_icon_and_color_choices()
+    public async Task Section_context_menu_opens_the_authored_persistable_icon_picker()
     {
         await using var session = new InMemoryRichBoardSession();
         await session.OpenAsync(null);
@@ -92,13 +92,22 @@ public sealed class NavBuilderTests
             Assert.Equal("Section icon", Avalonia.Automation.AutomationProperties.GetName(icon));
             var title = Assert.IsType<Button>(row.Children[2]);
             var menu = Assert.IsType<ContextMenu>(title.ContextMenu);
-            var appearance = Assert.Single(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Icon and color"));
-            var iconMenu = Assert.Single(appearance.Items.OfType<MenuItem>(), item => Equals(item.Header, "Icon"));
-            var colorMenu = Assert.Single(appearance.Items.OfType<MenuItem>(), item => Equals(item.Header, "Color"));
-            Assert.Equal(BoardsIcons.SectionIconChoices.Count, iconMenu.Items.OfType<MenuItem>().Count());
-            Assert.Equal(BoardsIcons.SectionIconColors.Count + 1, colorMenu.Items.OfType<MenuItem>().Count());
-            Assert.Contains(iconMenu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Chat ✓"));
-            Assert.Contains(colorMenu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Teal ✓"));
+            var appearance = Assert.Single(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Icon and color…"));
+            appearance.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+            Assert.True(vm.Get("IsSectionIconPickerOpen") as bool?);
         });
+
+        var allChoices = Assert.IsAssignableFrom<IReadOnlyList<BoardsSectionIconChoiceView>>(vm.Get("SectionIconPickerChoices"));
+        Assert.Equal(BoardsIcons.SectionIconChoices.Count, allChoices.Count);
+        Assert.True(vm.TrySetValue("SectionIconPickerSearch", "stud"));
+        var filtered = Assert.IsAssignableFrom<IReadOnlyList<BoardsSectionIconChoiceView>>(vm.Get("SectionIconPickerChoices"));
+        Assert.Equal("study", Assert.Single(filtered).Key);
+        await vm.DispatchAsync("ApplySectionIconChoice", "study");
+        Assert.Equal("study", section.IconKey);
+        Assert.Equal("#187B72", section.IconColor);
+        Assert.True(vm.Get("IsSectionIconPickerOpen") as bool?);
+        await vm.DispatchAsync("CloseSectionIconPicker");
+        Assert.False(vm.Get("IsSectionIconPickerOpen") as bool?);
+        vm.Dispose();
     }
 }

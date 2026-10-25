@@ -16,11 +16,16 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using CakeOS.Apps.Boards.Contract;
 
 namespace CakeOS.Apps.Boards.App;
+
+public sealed record BoardsSectionIconChoiceView(string Key, string Label, IImage Preview, bool IsSelected);
+public sealed record BoardsSectionIconColorChoiceView(string Name, string Hex, IBrush Preview, bool IsSelected);
 
 public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiRepeatItemBindingContext, INotifyPropertyChanged
@@ -28,6 +33,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private readonly IRichBoardSession _session;
     private readonly IBoardsEmbeddedArtifactHost? _embeddedArtifactHost;
     private readonly IBoardsHomeBoardCreationHost? _homeBoardCreationHost;
+    private string? _sectionIconPickerSectionId;
+    private string _sectionIconSearchText = string.Empty;
+    private IReadOnlyList<BoardsSectionIconChoiceView> _sectionIconPickerChoices = [];
+    private IReadOnlyList<BoardsSectionIconColorChoiceView> _sectionIconPickerColors = [];
     private readonly Dictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
     private string _selectedSectionId = "section-1";
     private string _selectedPageId = "page-1";
@@ -79,11 +88,20 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("IsEditMode", _isEditMode);
         Set("CanToggleEditMode", CanToggleEditMode);
         Set("CanChangeLayoutMode", CanChangeLayoutMode);
+        Set("LayoutModeLabel", LayoutModeLabel);
+        Set("LayoutModeAccessibleName", LayoutModeAccessibleName);
         Set("ModeLabel", _isEditMode ? "Editing" : "Viewing");
         Set("ModeToggleAccessibleName", _isEditMode ? "Switch to Viewing mode" : "Switch to Editing mode");
         Set("RecentBoardsLoaded", false);
         Set("EmbeddedPageUnavailable", false);
         Set("EmbeddedPageMessage", string.Empty);
+        Set("IsSectionIconPickerOpen", false);
+        Set("SectionIconPickerSearch", string.Empty);
+        Set("SectionIconPickerTitle", string.Empty);
+        Set("SectionIconPickerChoices", _sectionIconPickerChoices);
+        Set("SectionIconPickerColors", _sectionIconPickerColors);
+        Set("HasSectionIconPickerChoices", false);
+        Set("SectionIconPickerHasThemeColor", true);
         RefreshEmbeddedPageLinkState();
         RefreshHomeBoardCreationAvailability();
         _session.StatusChanged += (_, status) =>
@@ -91,6 +109,20 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("StatusText", status);
             Set("SaveStateText", MapSaveState(status));
         };
+        void RefreshPickerOnThemeChange()
+        {
+            if (_sectionIconPickerSectionId is null || _disposed) return;
+            if (Dispatcher.UIThread.CheckAccess())
+                RefreshSectionIconPickerChoices();
+            else
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (!_disposed && _sectionIconPickerSectionId is not null)
+                        RefreshSectionIconPickerChoices();
+                });
+        }
+        BoardsTheme.Changed += RefreshPickerOnThemeChange;
+        _detachers.Add(() => BoardsTheme.Changed -= RefreshPickerOnThemeChange);
         ReselectDefaults();
         PushDocumentToBindings();
         Set("StatusText", _session.Status);
@@ -190,6 +222,34 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         value = null;
+        if (item is BoardsSectionIconChoiceView sectionIcon &&
+            _sectionIconPickerChoices.Any(actual => ReferenceEquals(actual, sectionIcon)))
+        {
+            value = path switch
+            {
+                "Key" => sectionIcon.Key,
+                "Label" => sectionIcon.Label,
+                "Preview" => sectionIcon.Preview,
+                "IsSelected" => sectionIcon.IsSelected,
+                "AccessibleName" => $"Use {sectionIcon.Label} section icon",
+                _ => null,
+            };
+            return value is not null;
+        }
+        if (item is BoardsSectionIconColorChoiceView sectionColor &&
+            _sectionIconPickerColors.Any(actual => ReferenceEquals(actual, sectionColor)))
+        {
+            value = path switch
+            {
+                "Name" => sectionColor.Name,
+                "Hex" => sectionColor.Hex,
+                "Preview" => sectionColor.Preview,
+                "IsSelected" => sectionColor.IsSelected,
+                "AccessibleName" => $"Use {sectionColor.Name} for this section icon",
+                _ => null,
+            };
+            return value is not null;
+        }
         if (item is RecentBoardCard board && _allRecentBoards.Any(actual => ReferenceEquals(actual, board)))
         {
             value = path switch
@@ -241,6 +301,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool CanChangeLayoutMode => IsNativePage && _isEditMode && CanEdit && _session is ContractSessionAdapter;
     public bool IsVerticalLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Locked, StringComparison.Ordinal);
     public bool IsFreeLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Unlocked, StringComparison.Ordinal);
+    public string LayoutModeLabel => IsVerticalLayout ? "Vertical Stacking" : "Free Placement";
+    public string LayoutModeAccessibleName => IsVerticalLayout
+        ? "Switch from Vertical Stacking to Free Placement"
+        : "Switch from Free Placement to Vertical Stacking";
     public string SelectedPageType => CurrentPage().PageType;
     public Haven.Application.BoardEmbeddedArtifactReference? SelectedEmbeddedArtifact => CurrentPage().EmbeddedArtifact;
     public bool ShowNativeAuthoring => _isEditMode &&
@@ -301,7 +365,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (_disposed || SessionIsDisposed) return;
         if (!CanEdit && command is ("ToggleEditView" or "ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or
             "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or "FileMenu" or
-            "OverflowMenu" or "BoardProperties" or "CloseWindow"))
+            "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ApplySectionIconChoice" or
+            "ApplySectionIconColor" or "UseThemeSectionIconColor"))
         {
             Set("StatusText", "This board source is open read-only.");
             return;
@@ -349,6 +414,24 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (await DispatchTextRangeAsync(command, cancellationToken)) return;
         switch (command)
         {
+            case "CloseSectionIconPicker":
+                CloseSectionIconPicker();
+                break;
+            case "ApplySectionIconChoice" when parameter is string iconKey && _sectionIconPickerSectionId is { } iconSectionId:
+                var iconSection = _session.Document.Sections.FirstOrDefault(item => item.Id == iconSectionId);
+                if (iconSection is not null)
+                    await SetSectionIconAsync(iconSectionId, iconKey, iconSection.IconColor, cancellationToken);
+                break;
+            case "ApplySectionIconColor" when parameter is string iconColor && _sectionIconPickerSectionId is { } colorSectionId:
+                var colorSection = _session.Document.Sections.FirstOrDefault(item => item.Id == colorSectionId);
+                if (colorSection is not null)
+                    await SetSectionIconAsync(colorSectionId, colorSection.IconKey, iconColor, cancellationToken);
+                break;
+            case "UseThemeSectionIconColor" when _sectionIconPickerSectionId is { } themeSectionId:
+                var themeSection = _session.Document.Sections.FirstOrDefault(item => item.Id == themeSectionId);
+                if (themeSection is not null)
+                    await SetSectionIconAsync(themeSectionId, themeSection.IconKey, null, cancellationToken);
+                break;
             case "NewBoard":
                 if (_homeBoardCreationHost is null) NewBoardRequested?.Invoke();
                 else await CreateAndOpenHomeBoardAsync(cancellationToken);
@@ -806,6 +889,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             return;
         }
         if (_isEditMode == enabled) return;
+        if (!enabled) CloseSectionIconPicker();
         _isEditMode = enabled;
         if (enabled)
         {
@@ -1903,23 +1987,26 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         NavRebuildRequested?.Invoke();
     }
 
-    public async Task SetSectionIconAsync(string sectionId, string iconKey, string? iconColor)
+    public async Task<bool> SetSectionIconAsync(string sectionId, string iconKey, string? iconColor,
+        CancellationToken cancellationToken = default)
     {
-        if (!RequireEditMode()) return;
+        if (!RequireEditMode()) return false;
         if (!BoardsIcons.SectionIconChoices.Contains(iconKey, StringComparer.Ordinal) ||
             (iconColor is not null && (iconColor.Length != 7 || iconColor[0] != '#' ||
                 !iconColor.Skip(1).All(Uri.IsHexDigit))))
         {
             Set("StatusText", "Choose an available section icon and color.");
-            return;
+            return false;
         }
 
         try
         {
-            await _session.SetSectionIconAsync(sectionId, iconKey, iconColor);
+            await _session.SetSectionIconAsync(sectionId, iconKey, iconColor, cancellationToken);
+            if (_sectionIconPickerSectionId == sectionId) RefreshSectionIconPickerChoices();
             PushDocumentToBindings();
             NavRebuildRequested?.Invoke();
             RequestRebuild();
+            return true;
         }
         catch (OperationCanceledException)
         {
@@ -1930,7 +2017,65 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             System.Diagnostics.Trace.TraceWarning($"Section appearance change failed: {exception.Message}");
             Set("StatusText", "The section appearance could not be saved. Try again.");
+            return false;
         }
+    }
+
+    public void OpenSectionIconPicker(string sectionId)
+    {
+        if (!CanEdit || !IsEditMode) return;
+        var section = _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId);
+        if (section is null) return;
+        _sectionIconPickerSectionId = section.Id;
+        _sectionIconSearchText = string.Empty;
+        Set("SectionIconPickerSearch", string.Empty);
+        Set("SectionIconPickerTitle", $"Section appearance · {section.Title}");
+        Set("IsSectionIconPickerOpen", true);
+        RefreshSectionIconPickerChoices();
+    }
+
+    public void CloseSectionIconPicker()
+    {
+        _sectionIconPickerSectionId = null;
+        Set("IsSectionIconPickerOpen", false);
+    }
+
+    private void RefreshSectionIconPickerChoices()
+    {
+        var section = _sectionIconPickerSectionId is { } sectionId
+            ? _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId)
+            : null;
+        if (section is null)
+        {
+            CloseSectionIconPicker();
+            return;
+        }
+
+        var query = _sectionIconSearchText.Trim();
+        _sectionIconPickerChoices = BoardsIcons.SectionIconChoices
+            .Select(key => (Key: key, Label: BoardsIcons.SectionIconLabel(key)))
+            .Where(choice => string.IsNullOrEmpty(query) ||
+                choice.Label.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                choice.Key.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Select(choice => new BoardsSectionIconChoiceView(
+                choice.Key,
+                choice.Label,
+                BoardsCuiIconResolver.CreateIcon(choice.Key,
+                    BoardsCuiIconResolver.SemanticBrush(choice.Key, colorOverride: section.IconColor)),
+                string.Equals(section.IconKey, choice.Key, StringComparison.Ordinal)))
+            .ToArray();
+        _sectionIconPickerColors = BoardsIcons.SectionIconColors
+            .Select(choice => new BoardsSectionIconColorChoiceView(
+                choice.Name,
+                choice.Hex,
+                new SolidColorBrush(Color.Parse(choice.Hex)),
+                string.Equals(section.IconColor, choice.Hex, StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
+        Set("SectionIconPickerChoices", _sectionIconPickerChoices);
+        Set("SectionIconPickerColors", _sectionIconPickerColors);
+        Set("HasSectionIconPickerChoices", _sectionIconPickerChoices.Count > 0);
+        Set("SectionIconPickerHasThemeColor", section.IconColor is null);
+        Set("SectionIconPickerColor", section.IconColor ?? string.Empty);
     }
 
     public async Task RenamePageAsync(string sectionId, string pageId, string title)
@@ -3652,6 +3797,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("PageTitle", page.Title);
             Set("IsNativePage", string.Equals(page.PageType, HavenRichPageTypes.Native, StringComparison.Ordinal));
             Set("CanChangeLayoutMode", CanChangeLayoutMode);
+            Set("LayoutModeLabel", LayoutModeLabel);
+            Set("LayoutModeAccessibleName", LayoutModeAccessibleName);
             Set("IsVerticalLayout", IsVerticalLayout);
             Set("IsFreeLayout", IsFreeLayout);
             Set("IsWritePage", string.Equals(page.PageType, HavenRichPageTypes.Write, StringComparison.Ordinal));

@@ -21,6 +21,15 @@ namespace CakeOS.Apps.Boards.App.Tests;
 public sealed class BoardsEditorTests
 {
     [Fact]
+    public void Boards_brand_fallback_remains_an_outline_with_visible_catalog_details()
+    {
+        var drawing = Assert.IsType<GeometryDrawing>(
+            BoardsCuiIconResolver.CreateIcon("boards", Brushes.White).Drawing);
+        Assert.Null(drawing.Brush);
+        Assert.NotNull(drawing.Pen);
+    }
+
+    [Fact]
     public void Toolbar_icon_mapping_uses_distinct_canonical_semantics()
     {
         Assert.Equal("grip", BoardsIcons.Grip);
@@ -400,7 +409,7 @@ public sealed class BoardsEditorTests
         var expected = new[]
         {
             "TopBarLeft", "TopBarRight", "BoardsAppIcon", "UndoButton", "RedoButton", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "VerticalLayoutToggle", "FreeLayoutToggle", "OverflowButton",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -428,23 +437,34 @@ public sealed class BoardsEditorTests
             && boardTitleValue is CuiBindingValue { Path: "BoardTitle" });
         var topBarLeft = components.Single(component => component.Name == "TopBarLeft");
         var topBarLeftNames = topBarLeft.DescendantsAndSelf().Select(component => component.Name).ToArray();
-        Assert.True(Array.IndexOf(topBarLeftNames, "FileMenu") < Array.IndexOf(topBarLeftNames, "BoardsAppIcon")
-            && Array.IndexOf(topBarLeftNames, "BoardsAppIcon") < Array.IndexOf(topBarLeftNames, "UndoButton"));
+        Assert.True(Array.IndexOf(topBarLeftNames, "BoardsAppIcon") < Array.IndexOf(topBarLeftNames, "FileMenu")
+            && Array.IndexOf(topBarLeftNames, "FileMenu") < Array.IndexOf(topBarLeftNames, "UndoButton"));
         var boardIdentity = components.Single(component => component.Name == "BoardIdentity");
         var boardIdentityNames = boardIdentity.DescendantsAndSelf().Select(component => component.Name).ToArray();
         Assert.True(Array.IndexOf(boardIdentityNames, "BoardTitleBox") < Array.IndexOf(boardIdentityNames, "SaveState"));
-        var verticalLayout = components.Single(component => component.Name == "VerticalLayoutToggle");
-        Assert.True(verticalLayout.Properties.TryGetValue("Selected", out var verticalSelected)
-            && verticalSelected is CuiBindingValue { Path: "IsVerticalLayout" });
-        Assert.True(verticalLayout.Properties.TryGetValue("Interactive", out var layoutInteractive)
+        var layoutToggle = components.Single(component => component.Name == "LayoutModeToggle");
+        Assert.True(layoutToggle.Properties.TryGetValue("Checked", out var layoutChecked)
+            && layoutChecked is CuiBindingValue { Path: "IsFreeLayout" });
+        Assert.True(File.ReadAllText(path).Contains(
+            "Checked=\"{Binding IsFreeLayout, mode=TwoWay}\"", StringComparison.Ordinal));
+        Assert.True(layoutToggle.Properties.TryGetValue("Interactive", out var layoutInteractive)
             && layoutInteractive is CuiBindingValue { Path: "CanChangeLayoutMode" });
-        var freeLayout = components.Single(component => component.Name == "FreeLayoutToggle");
-        Assert.True(freeLayout.Properties.TryGetValue("Selected", out var freeSelected)
-            && freeSelected is CuiBindingValue { Path: "IsFreeLayout" });
-        Assert.True(verticalLayout.Properties.TryGetValue("Content", out var verticalLabel)
-            && verticalLabel is CuiLiteralValue { Value: "Vertical Stacking" });
-        Assert.True(freeLayout.Properties.TryGetValue("Content", out var freeLabel)
-            && freeLabel is CuiLiteralValue { Value: "Free Placement" });
+        var layoutLabel = components.Single(component => component.Name == "LayoutModeLabel");
+        Assert.True(layoutLabel.Properties.TryGetValue("Text", out var layoutLabelValue)
+            && layoutLabelValue is CuiBindingValue { Path: "LayoutModeLabel" });
+        var iconSearch = components.Single(component => component.Name == "SectionIconPickerSearch");
+        Assert.True(iconSearch.Properties.TryGetValue("Value", out var searchValue)
+            && searchValue is CuiBindingValue { Path: "SectionIconPickerSearch" });
+        Assert.True(iconSearch.Properties.TryGetValue("WriteBack", out var searchWriteBack)
+            && searchWriteBack is CuiLiteralValue { Value: "True" });
+        var iconChoices = components.Single(component => component.Name == "SectionIconChoices");
+        Assert.True(iconChoices.Properties.TryGetValue("Source", out var iconChoicesSource)
+            && iconChoicesSource is CuiBindingValue { Path: "SectionIconPickerChoices" });
+        Assert.True(iconChoices.Properties.TryGetValue("Panel", out var iconChoicesPanel)
+            && iconChoicesPanel is CuiLiteralValue { Value: "Wrap" });
+        var iconColors = components.Single(component => component.Name == "SectionIconColors");
+        Assert.True(iconColors.Properties.TryGetValue("Source", out var iconColorsSource)
+            && iconColorsSource is CuiBindingValue { Path: "SectionIconPickerColors" });
         var overflow = components.Single(component => component.Name == "OverflowButton");
         Assert.True(overflow.Properties.TryGetValue("IconSource", out var overflowIcon)
             && overflowIcon is CuiLiteralValue { Value: "icon:more" });
