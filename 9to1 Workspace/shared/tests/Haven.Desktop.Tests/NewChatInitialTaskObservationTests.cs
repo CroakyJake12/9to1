@@ -85,6 +85,75 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Native_task_pause_waits_for_its_actual_owner_ack_and_preserves_the_same_draft_and_run()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        rig.Capture.AskDuringCapture = false;
+        rig.Client.RunApprovedOwnedFrame = true;
+        var offered = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        rig.Client.AvailableModels = [offered];
+        var disposal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.Client.OriginalDispose = disposal.Task;
+        var directory = Path.Combine(Path.GetTempPath(), "native-task-pause-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var drafts = new NativeComposerDraftStore();
+        var page = CreateNativeComposerPage(rig, directory, drafts);
+        Task? pausing = null, producer = null;
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            page.ConfigureTaskMode();
+            page.SelectModel(offered);
+            await page.SubmitOriginalInstructionAsync("Review this same task");
+            await rig.Client.DisposeEntered.Task.WaitAsync(token);
+            var lease = NativeComposerIssuedLease(page);
+            producer = InitialHostedProducer(lease);
+            var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, token))!;
+            var copied = (TaskRunOriginalInitialChatObservationLease)typeof(object)
+                .GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(lease, null)!;
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => rig.Service.PauseObservedTaskComposerAsync(copied, token));
+            page.SetDraft("Preserve this unsent instruction");
+            var bindings = page.OriginalTaskComposer.Bindings;
+            Assert.True(bindings.IsActionAvailable("composer.pause"));
+            Assert.False(bindings.IsActionAvailable("composer.resume"));
+            pausing = bindings.DispatchAsync("composer.pause", null).AsTask();
+            Assert.False(pausing.IsCompleted);
+            Assert.Null(page.CanonicalTaskPauseAcknowledgement);
+            Assert.False(bindings.IsActionAvailable("composer.pause"));
+            Assert.False(bindings.IsActionAvailable("composer.resume"));
+            Assert.False(disposal.Task.IsCanceled);
+            disposal.SetResult();
+            await pausing.WaitAsync(TimeSpan.FromSeconds(10));
+            var ack = Assert.IsType<TaskRunOriginalRunControlResult>(page.CanonicalTaskPauseAcknowledgement);
+            Assert.Equal(TaskRunOriginalRunControlKind.Pause, ack.Kind);
+            Assert.Equal(TaskRunOriginalRunControlDisposition.Suspended, ack.Disposition);
+            Assert.Equal(TaskExecutionLifecycle.Suspended, ack.State);
+            var actual = (await rig.Tasks.GetByContextAsync(initial.ContextId, token))!;
+            Assert.Equal(initial.TaskId, actual.TaskId);
+            Assert.Equal(initial.ExecutionId, actual.ExecutionId);
+            Assert.True(bindings.TryGetValue("Composer.Draft", out var draft));
+            Assert.Equal("Preserve this unsent instruction", draft);
+            var controls = (await rig.Service.GetObservedTaskComposerControlsAsync(lease, token))!;
+            Assert.Equal(controls.CanResumeUnstartedOriginal || controls.CanResumeOriginalToolCheckpoint || controls.CanResumeColdOriginal,
+                bindings.IsActionAvailable("composer.resume"));
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal("Preserve this unsent instruction", drafts.Last?.Content);
+            Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User);
+        }
+        finally
+        {
+            disposal.TrySetResult();
+            if (pausing is not null) _ = await Record.ExceptionAsync(() => pausing);
+            page.RequestRetirement();
+            _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
+            if (producer is not null) _ = await Record.ExceptionAsync(() => producer);
+            Directory.Delete(directory, true);
+        }
+    }
+
     [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
