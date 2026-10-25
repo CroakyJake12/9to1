@@ -182,6 +182,7 @@ public sealed class HomeLibraryDestinationTests
         Assert.True(matches.Length == 1,
             $"Expected one {authoredId}; page rows={page.Current?.Items.Count ?? 0} " +
             $"artifact IDs=[{string.Join(",", page.Current?.Items.Select(item => item.ArtifactId) ?? [])}]; " +
+            $"runtime diagnostics=[{string.Join("; ", page.RuntimeDiagnostics.Select(item => $"{item.Code}: {item.Message}"))}]; " +
             $"buttons=[{string.Join("; ", controls.Select(item =>
                 $"stable='{CuiRuntimeIdentity.GetStableId(item)}' automation='{AutomationProperties.GetAutomationId(item)}' name='{item.Name}' content='{item.Content}'"))}]");
         return matches[0];
