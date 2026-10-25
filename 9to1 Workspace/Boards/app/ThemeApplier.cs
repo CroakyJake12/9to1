@@ -27,39 +27,6 @@ public static class ThemeApplier
             b.BorderThickness = new Avalonia.Thickness(0, 1, 0, 0);
         });
         Paint<StackPanel>(root, "ContextHost", c => c.Background = BoardsTheme.SurfaceBrush);
-        foreach (var id in new[] { "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike" })
-        {
-            var button = BoardsCuiControlFinder.FindByAutomationId<Button>(root, id);
-            if (button is null) continue;
-            CuiPropertyPresentation.Set(button, "Width", 32d, CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "MinWidth", 32d, CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "Height", 32d, CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "MinHeight", 32d, CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "Padding", new Avalonia.Thickness(0), CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "FontSize", 14d, CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "Foreground", BoardsTheme.TextBrush, CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent, CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "BorderWidth", new Avalonia.Thickness(0), CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "CornerRadius", new Avalonia.CornerRadius(6), CuiPropertyLevel.Instance,
-                "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "HorizontalContentAlignment", Avalonia.Layout.HorizontalAlignment.Center,
-                CuiPropertyLevel.Instance, "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "VerticalContentAlignment", Avalonia.Layout.VerticalAlignment.Center,
-                CuiPropertyLevel.Instance, "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "HorizontalAlignment", Avalonia.Layout.HorizontalAlignment.Center,
-                CuiPropertyLevel.Instance, "Boards compact range-format control");
-            CuiPropertyPresentation.Set(button, "VerticalAlignment", Avalonia.Layout.VerticalAlignment.Center,
-                CuiPropertyLevel.Instance, "Boards compact range-format control");
-        }
         Paint<TextBox>(root, "BoardTitleBox", box =>
         {
             SetDocumentTextSurface(box, Brushes.Transparent);

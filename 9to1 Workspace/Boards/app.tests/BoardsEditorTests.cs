@@ -236,8 +236,8 @@ public sealed class BoardsEditorTests
 
         var expected = new[]
         {
-            "TopBarLeft", "TopBarRight", "BoardTitleBox", "NavSearchBox", "NavHost",
-            "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "BlocksHost",
+            "TopBarLeft", "TopBarRight", "BoardsAppIcon", "BoardTitleBox", "NavSearchBox", "NavHost",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "BlocksHost",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
@@ -253,9 +253,12 @@ public sealed class BoardsEditorTests
             && bool.TryParse(verticalLiteral.Value, out var verticalEnabled) && !verticalEnabled);
         var boardSwitcher = components.Single(component => component.Name == "BoardSwitcher");
         Assert.True(boardSwitcher.Properties.TryGetValue("IconSource", out var boardIcon)
-            && boardIcon is CuiLiteralValue { Value: "icon:boards" });
+            && boardIcon is CuiLiteralValue { Value: "icon:chevron-down" });
         Assert.True(boardSwitcher.Properties.TryGetValue("IsEnabled", out var boardMenuEnabled)
             && boardMenuEnabled is CuiBindingValue { Path: "CanOpenBoardMenu" });
+        var boardTitle = components.Single(component => component.Name == "BoardTitleBox");
+        Assert.True(boardTitle.Properties.TryGetValue("Value", out var boardTitleValue)
+            && boardTitleValue is CuiBindingValue { Path: "BoardTitle" });
         var searchBox = components.Single(component => component.Name == "NavSearchBox");
         Assert.True(searchBox.Properties.TryGetValue("cornerradius", out var searchRadius)
             && searchRadius is CuiLiteralValue { Value: "18" });

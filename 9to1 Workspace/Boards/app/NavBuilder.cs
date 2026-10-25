@@ -161,7 +161,7 @@ public static class NavBuilder
             Content = new TextBlock
             {
                 Text = section.Title,
-                FontSize = 13,
+                FontSize = 14,
                 FontWeight = FontWeight.SemiBold,
                 Foreground = BoardsTheme.TextBrush,
                 TextTrimming = TextTrimming.CharacterEllipsis,
@@ -263,8 +263,8 @@ public static class NavBuilder
         }
         var selectedMarker = new Border
         {
-            Width = 2,
-            Height = 16,
+            Width = 3,
+            Height = 18,
             CornerRadius = new CornerRadius(1),
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,

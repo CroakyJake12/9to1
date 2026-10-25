@@ -71,8 +71,8 @@ public static class ToolbarBuilder
         bar.Children.Add(Toggle(vm, BoardsIcons.NumberedList, "Numbered list", "Toggle numbered list",
             selected?.Kind == "numbered", async () => await vm.ConvertSelectedKindAsync("numbered")));
         bar.Children.Add(AlignGroup(vm, selected));
-        bar.Children.Add(IndentButton(vm, "−", "Decrease indent", () => vm.ShiftSelectedIndent(-1)));
-        bar.Children.Add(IndentButton(vm, "+", "Increase indent", () => vm.ShiftSelectedIndent(1)));
+        bar.Children.Add(IndentButton(vm, BoardsIcons.ChevronLeft, "Decrease indent", () => vm.ShiftSelectedIndent(-1)));
+        bar.Children.Add(IndentButton(vm, BoardsIcons.ChevronRight, "Increase indent", () => vm.ShiftSelectedIndent(1)));
         bar.Children.Add(Separator());
         bar.Children.Add(DrawButton(vm));
         bar.Children.Add(CreateInsertButton(vm));
@@ -124,7 +124,7 @@ public static class ToolbarBuilder
 
     private static Control FontCombo(BoardsViewModel vm, RichBoardBlock? selected)
     {
-        var combo = new ComboBox { Width = 128, Margin = new Thickness(4, 0) };
+        var combo = new ComboBox { Width = 108, Margin = new Thickness(4, 0) };
         ToolTip.SetTip(combo, "Font family");
         Avalonia.Automation.AutomationProperties.SetName(combo, "Font family");
         combo.ItemsSource = FontFamilies.Select(f => new ComboBoxItem { Content = f }).ToList();
@@ -251,16 +251,10 @@ public static class ToolbarBuilder
         return row;
     }
 
-    private static Control IndentButton(BoardsViewModel vm, string label, string tip, Action tapped)
+    private static Control IndentButton(BoardsViewModel vm, string glyph, string tip, Action tapped)
     {
-        var button = new Button
-        {
-            Content = new TextBlock { Text = label, FontSize = 13, FontWeight = FontWeight.SemiBold },
-            Padding = new Thickness(8, 6),
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Margin = new Thickness(1, 0),
-        };
+        var button = BoardsIcons.IconButton(glyph, tip, tip, 15);
+        button.Margin = new Thickness(1, 0);
         SetQuietToolbarControl(button, selected: false, "Boards toolbar indent control");
         ToolTip.SetTip(button, tip);
         Avalonia.Automation.AutomationProperties.SetName(button, tip);
@@ -272,7 +266,7 @@ public static class ToolbarBuilder
 
     private static Control BuildStyleGalleryInternal(BoardsViewModel vm)
     {
-        var combo = new ComboBox { Width = 190, Margin = new Thickness(0, 0, 4, 0) };
+        var combo = new ComboBox { Width = 150, Margin = new Thickness(0, 0, 4, 0) };
         ToolTip.SetTip(combo, "Paragraph style (custom styles appear here)");
         Avalonia.Automation.AutomationProperties.SetName(combo, "Paragraph style");
         var items = new List<ComboBoxItem>();
