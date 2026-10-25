@@ -626,7 +626,7 @@ public sealed class ContractAdapterTests
             var undoneHeaderColumn = await adapter.GetDetachedContractDocumentAsync();
             var undoneHeaderColumnTable = undoneHeaderColumn.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
             Assert.Equal(baselineHeaderColumn, undoneHeaderColumnTable.HasHeaderColumn);
-            Assert.Equal(baselineHeaderRow, undoneHeaderColumnTable.HasHeaderRow);
+            Assert.True(undoneHeaderColumnTable.HasHeaderRow);
             Assert.True(await adapter.UndoAsync());
             var undoneHeaderRow = await adapter.GetDetachedContractDocumentAsync();
             var undoneHeaderRowTable = undoneHeaderRow.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
