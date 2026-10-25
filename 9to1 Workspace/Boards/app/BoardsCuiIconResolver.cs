@@ -25,6 +25,7 @@ public static class BoardsCuiIconResolver
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         ArgumentNullException.ThrowIfNull(brush);
+        var filledSilhouette = FilledSilhouetteKeys.Contains(key.Trim());
         var source = HavenIconCatalog.Resolve(key);
         var geometry = new StreamGeometry();
         using (var writer = geometry.Open())
@@ -32,7 +33,7 @@ public static class BoardsCuiIconResolver
             writer.SetFillRule(source.Path.FillRule == HavenFillRule.NonZero ? FillRule.NonZero : FillRule.EvenOdd);
             foreach (var figure in source.Path.Figures)
             {
-                writer.BeginFigure(new Point(figure.Start.X, figure.Start.Y), false);
+                writer.BeginFigure(new Point(figure.Start.X, figure.Start.Y), filledSilhouette && figure.Closed);
                 foreach (var segment in figure.Segments)
                 {
                     switch (segment)
@@ -62,7 +63,6 @@ public static class BoardsCuiIconResolver
                 writer.EndFigure(figure.Closed);
             }
         }
-        var filledSilhouette = FilledSilhouetteKeys.Contains(key.Trim());
         return new DrawingImage(new GeometryDrawing
         {
             Geometry = geometry,

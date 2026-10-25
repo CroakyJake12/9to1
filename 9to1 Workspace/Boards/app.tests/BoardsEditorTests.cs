@@ -9,6 +9,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Media;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui;
 using Xunit;
@@ -32,6 +33,18 @@ public sealed class BoardsEditorTests
         Assert.Equal("numbered-list", BoardsIcons.NumberedList);
         Assert.Equal("image", BoardsIcons.Image);
         Assert.Equal("paperclip", BoardsIcons.Attach);
+    }
+
+    [Fact]
+    public void Boards_icon_resolver_fills_only_authored_closed_silhouettes()
+    {
+        var grip = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("grip", Brushes.White).Drawing);
+        Assert.NotNull(grip.Brush);
+        Assert.Null(grip.Pen);
+
+        var attachment = Assert.IsType<GeometryDrawing>(BoardsCuiIconResolver.CreateIcon("paperclip", Brushes.White).Drawing);
+        Assert.Null(attachment.Brush);
+        Assert.NotNull(attachment.Pen);
     }
 
     private static Task<T> OnUiThreadAsync<T>(Func<T> work) =>
