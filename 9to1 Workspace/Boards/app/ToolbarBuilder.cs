@@ -39,21 +39,22 @@ public static class ToolbarBuilder
     public static void Rebuild(StackPanel host, BoardsViewModel vm)
     {
         ArgumentNullException.ThrowIfNull(host);
-        var responsiveToolbar = new WrapPanel { Orientation = Orientation.Horizontal, ItemSpacing = 4, LineSpacing = 4 };
-        Rebuild(responsiveToolbar, vm);
-        host.Children.Clear();
-        host.Children.Add(responsiveToolbar);
+        Rebuild((Panel)host, vm);
     }
 
     public static void Rebuild(WrapPanel host, BoardsViewModel vm)
     {
         ArgumentNullException.ThrowIfNull(host);
+        Rebuild((Panel)host, vm);
+    }
+
+    private static void Rebuild(Panel host, BoardsViewModel vm)
+    {
         ArgumentNullException.ThrowIfNull(vm);
         host.Children.Clear();
 
-        // The authored ToolbarHost is a horizontal CUI Wrap panel. Related commands
-        // stay grouped, the default-width toolbar remains one quiet row, and narrower
-        // windows wrap whole groups without introducing a persistent scrollbar.
+        // The authored ToolbarHost is a single-row CUI scroll host. Related commands
+        // stay grouped, with the CUI-owned edge arrows preserving access to every tool.
         if (vm.IsDrawMode)
         {
             BuildDrawToolbar(host, vm);
@@ -437,7 +438,7 @@ public static class ToolbarBuilder
         }
     }
 
-    private static void BuildDrawToolbar(WrapPanel bar, BoardsViewModel vm)
+    private static void BuildDrawToolbar(Panel bar, BoardsViewModel vm)
     {
         bar.Children.Add(Group(DrawButton(vm), Separator()));
         var tools = Group();

@@ -464,7 +464,7 @@ internal sealed class BoardsApp : Application
     {
         if (_root is null || _viewModel is null)
             return;
-        var toolbar = FindByAutomationId<WrapPanel>(_root, "ToolbarHost");
+        var toolbar = FindByAutomationId<StackPanel>(_root, "ToolbarHost");
         if (toolbar is not null)
             ToolbarBuilder.Rebuild(toolbar, _viewModel);
         _viewModel.RefreshCuiContext();

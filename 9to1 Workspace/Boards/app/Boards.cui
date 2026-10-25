@@ -88,7 +88,7 @@
             <Button ID="RangeStrike" Content="S" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough" />
           </Container>
           <Container Type="Overlay" Column="1" Width="1" Height="20" VerticalAlignment="Center" Margin="6 0" Background="{Resource CuiLineBrush}" />
-          <Container Type="Wrap" Orientation="Horizontal" CellGap="4" ID="ToolbarHost" Column="2" HorizontalScrolling="False" VerticalScrolling="False" />
+          <Container Type="Horizontal Stack" CellGap="4" ID="ToolbarHost" Column="2" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False" />
         </Container>
         <Container Type="Vertical Stack" ID="ContextHost" Row="1" Active="{Binding ContextVisible}" Padding="12 6" Background="{Resource CuiPanelBrush}">
           <If Condition="{Binding ContextIsTable}">
@@ -188,6 +188,7 @@
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />
                 <Container Type="Vertical Stack" ID="EmbeddedArtifactHost" />
                 <Container Type="Vertical Stack" ID="BlocksHost" Active="{Binding IsNativePage}" />
+                <Container Type="Absolute" ID="AbsoluteBlocksHost" Active="{Binding IsNativePage}" />
               </Container>
               <Container Type="Absolute" ID="InkOverlayLayer" Active="{Binding IsNativePage}" />
             </Container>
