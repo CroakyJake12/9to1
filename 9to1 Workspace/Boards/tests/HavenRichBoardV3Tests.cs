@@ -435,8 +435,9 @@ public sealed class HavenRichBoardV3Tests
             var restoredColumns = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
             Assert.Equal(column0Ids, restoredColumns.Rows.Select(row => row.Cells[0].Id));
             Assert.Equal(new[] { 120d, 240d }, restoredColumns.ColumnWidths);
-            Assert.False(HavenRichNotesOps.MoveTableRow(session.Rich, pageId, blockId, 0, 2));
-            Assert.False(HavenRichNotesOps.MoveTableColumn(session.Rich, pageId, blockId, 0, 2));
+            Assert.False(HavenRichNotesOps.MoveTableRow(session.Rich, pageId, blockId, 0, restoredRows.Rows.Count));
+            Assert.False(HavenRichNotesOps.MoveTableColumn(session.Rich, pageId, blockId, 0,
+                restoredColumns.Rows[0].Cells.Count));
         });
     }
 
