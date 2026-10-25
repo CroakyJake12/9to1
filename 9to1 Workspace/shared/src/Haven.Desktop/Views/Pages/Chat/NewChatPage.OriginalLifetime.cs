@@ -301,7 +301,11 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             if (safety is not null)
                 try { await original.AwaitAsync(safety); } catch (Exception error) { original.Retain(error); }
             Task? publication = null;
-            try { publication = InvokeOriginalChatUiAsync(RefreshVisualState); }
+            // This optional final projection may be withdrawn between scheduling and
+            // dispatch. It is already owned; a successful no-effect callback is not a
+            // source cancellation or another publication admission.
+            try { publication = Dispatcher.UIThread.InvokeAsync(() =>
+                original.RunAcceptedPublicationCallback(RefreshVisualState)).GetTask(); }
             catch (Exception error) { failures.Add(error); }
             if (publication is not null)
                 try { await original.AwaitAsync(publication); } catch (Exception error) { original.Retain(error); }
