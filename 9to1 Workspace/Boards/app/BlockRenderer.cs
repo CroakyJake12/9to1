@@ -577,7 +577,8 @@ public static class BlockRenderer
                 _ => HorizontalAlignment.Stretch,
             },
         };
-        if (TryBrush(block.TableStyle.Background, out var tableBackground))
+        var hasTableBackground = TryBrush(block.TableStyle.Background, out var tableBackground);
+        if (hasTableBackground)
             tableBorder.Background = tableBackground;
         else
             tableBorder.Background = BoardsTheme.CardBrush;
@@ -627,18 +628,31 @@ public static class BlockRenderer
                     FontStyle = cellStyle?.Italic == true ? FontStyle.Italic : FontStyle.Normal,
                     MinHeight = 30,
                 };
+                string? resolvedBackgroundHex = null;
                 if (cellStyle is not null && TryBrush(cellStyle.Background, out var cellBackground))
+                {
                     box.Background = cellBackground;
+                    resolvedBackgroundHex = cellStyle.Background;
+                }
+                else if (hasTableBackground)
+                {
+                    box.Background = tableBackground;
+                    resolvedBackgroundHex = block.TableStyle.Background;
+                }
                 else if (isHeaderCell)
+                {
                     box.Background = headerBackground;
+                    resolvedBackgroundHex = headerBackground.Color.ToString();
+                }
                 else if (block.TableStyle.AlternatingRows && r % 2 == 1)
+                {
                     box.Background = new SolidColorBrush(palette.Panel3);
+                    resolvedBackgroundHex = palette.Panel3.ToString();
+                }
                 if (cellStyle is not null && TryBrush(cellStyle.Foreground, out var cellForeground))
                     box.Foreground = cellForeground;
                 else
-                    box.Foreground = isHeaderCell
-                        ? BoardsTheme.ContrastText(headerBackground.Color.ToString())
-                        : BoardsTheme.ContrastText(cellStyle?.Background);
+                    box.Foreground = BoardsTheme.ContrastText(resolvedBackgroundHex);
                 ThemeApplier.SetDocumentTextSurface(box, box.Background ?? Brushes.Transparent);
                 box.TextAlignment = ParseAlignment(cellStyle?.AlignH ?? "inherit");
                 box.VerticalAlignment = cellStyle?.AlignV switch

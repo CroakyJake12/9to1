@@ -205,11 +205,33 @@ public sealed class BoardsBlockGeometryTests
                 },
                 CellStyles = new Dictionary<string, RichCellStyleView>
                 {
-                    ["1,1"] = new() { Background = "#FF123456" },
+                    ["1,1"] = new() { Background = "#FF123456", Foreground = "#FFAABBCC" },
+                },
+            };
+            var overrideBlock = new RichBoardBlock
+            {
+                Id = "override-table",
+                Kind = "table",
+                TableRows = 2,
+                TableCols = 2,
+                TableStyle = new RichTableStyleView
+                {
+                    Background = "#FF654321",
+                    HasHeaderRow = true,
+                    AlternatingRows = true,
+                },
+                TableCells = new Dictionary<string, string>
+                {
+                    ["0,0"] = "Header", ["0,1"] = "Header 2", ["1,0"] = "Inherited", ["1,1"] = "Cell override",
+                },
+                CellStyles = new Dictionary<string, RichCellStyleView>
+                {
+                    ["1,1"] = new() { Background = "#FF222222" },
                 },
             };
             session.Document.Sections[0].Pages[0].Blocks.Clear();
             session.Document.Sections[0].Pages[0].Blocks.Add(block);
+            session.Document.Sections[0].Pages[0].Blocks.Add(overrideBlock);
             var palette = BoardsTheme.SharedPalette;
             var actual = TestUiThread.Run(() =>
             {
@@ -221,17 +243,27 @@ public sealed class BoardsBlockGeometryTests
                 window.Arrange(new Rect(0, 0, 700, 500));
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 var cells = host.GetVisualDescendants().OfType<TextBox>()
-                    .Where(box => box.Name?.StartsWith("cell_theme-table_", StringComparison.Ordinal) == true)
+                    .Where(box => box.Name?.StartsWith("cell_", StringComparison.Ordinal) == true)
                     .ToDictionary(box => box.Name!, StringComparer.Ordinal);
-                var backgrounds = cells.ToDictionary(pair => pair.Key, pair =>
-                    ((Border)pair.Value.Parent!).Background, StringComparer.Ordinal);
+                var cellsByAppearance = cells.ToDictionary(pair => pair.Key, pair =>
+                    (Background: ((Border)pair.Value.Parent!).Background, Foreground: pair.Value.Foreground),
+                    StringComparer.Ordinal);
                 window.Close();
-                return backgrounds;
+                return cellsByAppearance;
             });
 
-            Assert.Equal(palette.AccentSoft, Assert.IsType<SolidColorBrush>(actual["cell_theme-table_0_0"]).Color);
-            Assert.Equal(palette.Panel3, Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_0"]).Color);
-            Assert.Equal(Color.Parse("#FF123456"), Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_1"]).Color);
+            Assert.Equal(palette.AccentSoft, Assert.IsType<SolidColorBrush>(actual["cell_theme-table_0_0"].Background).Color);
+            Assert.Equal(palette.Panel3, Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_0"].Background).Color);
+            Assert.Equal(Color.Parse("#FF123456"), Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_1"].Background).Color);
+            Assert.Equal(Color.Parse("#FFAABBCC"), Assert.IsType<SolidColorBrush>(actual["cell_theme-table_1_1"].Foreground).Color);
+
+            Assert.Equal(Color.Parse("#FF654321"), Assert.IsType<SolidColorBrush>(actual["cell_override-table_0_0"].Background).Color);
+            Assert.Equal(Color.Parse("#FF654321"), Assert.IsType<SolidColorBrush>(actual["cell_override-table_1_0"].Background).Color);
+            Assert.Equal(Color.Parse("#FF222222"), Assert.IsType<SolidColorBrush>(actual["cell_override-table_1_1"].Background).Color);
+            var tableText = Assert.IsType<SolidColorBrush>(BoardsTheme.ContrastText("#FF654321")).Color;
+            var cellText = Assert.IsType<SolidColorBrush>(BoardsTheme.ContrastText("#FF222222")).Color;
+            Assert.Equal(tableText, Assert.IsType<SolidColorBrush>(actual["cell_override-table_0_0"].Foreground).Color);
+            Assert.Equal(cellText, Assert.IsType<SolidColorBrush>(actual["cell_override-table_1_1"].Foreground).Color);
         }
         finally
         {
