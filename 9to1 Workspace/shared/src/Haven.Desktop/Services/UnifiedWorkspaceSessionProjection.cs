@@ -30,12 +30,18 @@ internal static class UnifiedWorkspaceSessionProjection
         DemandUnique(current.Tabs.Select(tab => tab.Id), "projected tabs");
         if (current.Tabs.Any(tab => tab.Privacy != BrowserTabPrivacy.Standard))
             throw new InvalidDataException("Private tabs cannot enter a canonical workspace projection.");
+        DemandUnique(current.ClosedTabs.Select(item => item.Tab.Id), "recently closed tabs");
+        if (current.ClosedTabs.Count > 25)
+            throw new InvalidDataException("The recently closed tab list exceeds its bounded recovery capacity.");
 
         var owningWindow = original.Windows.SingleOrDefault(window => window.Id == windowId)
             ?? throw new InvalidDataException("The owning window must be seeded before merging its projection.");
         DemandUnique(owningWindow.Layout.Panes.Select(pane => pane.Id), "owning window panes");
         var ownedIds = owningWindow.OrderedTabIds.ToHashSet();
         var currentIds = current.Tabs.Select(tab => tab.Id).ToHashSet();
+        var closedTabIds = current.ClosedTabs.Select(item => item.Tab.Id).ToHashSet();
+        if (closedTabIds.Overlaps(currentIds))
+            throw new InvalidDataException("A tab cannot be both open and recently closed in the same window.");
         if (previouslyManagedTabIds.Any(id => !ownedIds.Contains(id)))
             throw new InvalidDataException("Managed tab identities must belong to the original owning window.");
         if (current.SelectedTabId is { } selected && !currentIds.Contains(selected))
@@ -43,6 +49,22 @@ internal static class UnifiedWorkspaceSessionProjection
 
         var otherReferences = original.Windows.Where(window => window.Id != windowId)
             .SelectMany(WindowReferences).ToHashSet();
+        if (closedTabIds.Overlaps(otherReferences))
+            throw new InvalidDataException("A recently closed tab identity is still owned by another window.");
+        var otherClosedIds = original.Windows.Where(window => window.Id != windowId)
+            .SelectMany(window => window.RecentlyClosedTabs.Select(tab => tab.Id)).ToHashSet();
+        if (closedTabIds.Overlaps(otherClosedIds))
+            throw new InvalidDataException("A recently closed tab identity cannot be recoverable in more than one window.");
+        foreach (var closed in current.ClosedTabs)
+        {
+            var tab = closed.Tab;
+            if (tab.Privacy != BrowserTabPrivacy.Standard || tab.ProfileId is null ||
+                tab.ProfileId.Length > 0 && string.IsNullOrWhiteSpace(tab.ProfileId) || closed.Index < 0 ||
+                closed.EngineOverride is { } engine && !Enum.IsDefined(engine) ||
+                tab.Group.Length > 0 && (!Guid.TryParse(tab.Group, out var group) || group == Guid.Empty) ||
+                !AppContentAddress.TryParse(tab.Address, out _))
+                throw new InvalidDataException("A recently closed tab contains invalid or private restoration metadata.");
+        }
         if (currentIds.Any(id => !ownedIds.Contains(id) && otherReferences.Contains(id)))
             throw new InvalidDataException("A new tab identity cannot replace another window's tab.");
         var closedIds = previouslyManagedTabIds.Where(id => !currentIds.Contains(id)).ToHashSet();
@@ -93,7 +115,12 @@ internal static class UnifiedWorkspaceSessionProjection
         var changedWindow = owningWindow with
         {
             OrderedTabIds = ReadOnly(orderedIds), SelectedTabId = current.SelectedTabId,
-            Layout = layout, UpdatedAt = latestUpdate
+            Layout = layout,
+            RecentlyClosedTabs = ReadOnly(current.ClosedTabs.Select(item => new WorkspaceClosedTabSnapshot(
+                item.Tab.Id, item.Tab.Title, item.Tab.Address, item.Tab.ProfileId!,
+                Guid.TryParse(item.Tab.Group, out var group) ? group : null, item.Index,
+                item.EngineOverride?.ToString(), item.Tab.IsPinned ?? false, item.Tab.UpdatedAt)).ToArray()),
+            UpdatedAt = latestUpdate
         };
         return original with
         {
@@ -144,7 +171,8 @@ internal static class UnifiedWorkspaceSessionProjection
     private static WorkspaceWindowSnapshot Detach(WorkspaceWindowSnapshot window) => window with
     {
         OrderedTabIds = ReadOnly(window.OrderedTabIds.ToArray()),
-        Layout = window.Layout with { Panes = ReadOnly(window.Layout.Panes.ToArray()) }
+        Layout = window.Layout with { Panes = ReadOnly(window.Layout.Panes.ToArray()) },
+        RecentlyClosedTabs = ReadOnly(window.RecentlyClosedTabs.ToArray())
     };
 
     private static IReadOnlyList<T> ReadOnly<T>(T[] values) => Array.AsReadOnly(values);

@@ -1,10 +1,16 @@
+using Haven.Application;
 using Haven.Browser;
 
 namespace HavenOS.Apps.Browse;
 
 /// <summary>A projection into the existing canonical workspace session, not a new
 /// rich persistence schema. Private tabs and private selection are excluded.</summary>
-public sealed record BrowseTabSessionProjection(IReadOnlyList<BrowserTabState> Tabs, Guid? SelectedTabId);
+public sealed record BrowseClosedTabProjection(BrowserTabState Tab, int Index, BrowseEngineKind? EngineOverride);
+
+public sealed record BrowseTabSessionProjection(IReadOnlyList<BrowserTabState> Tabs, Guid? SelectedTabId)
+{
+    public IReadOnlyList<BrowseClosedTabProjection> ClosedTabs { get; init; } = [];
+}
 
 /// <summary>The shared host adapts its existing WorkspaceSessionSnapshot owner.
 /// Other browser data remains with BrowserDataService. Every returned task belongs

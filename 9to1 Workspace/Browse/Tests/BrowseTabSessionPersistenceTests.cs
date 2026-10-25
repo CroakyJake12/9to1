@@ -166,12 +166,135 @@ public sealed partial class BrowseNativeOwnershipTests
         Assert.DoesNotContain(restarted.State.Permissions, permission => permission.Origin == "https://legacy.example");
     }
 
+    [Fact]
+    public async Task Recently_closed_native_tab_survives_restart_without_starting_until_explicit_reopen()
+    {
+        var paths = new PreservedPaths(); const string profile = "profile-closed-route";
+        var tabId = Guid.NewGuid();
+        var session = new TabSessionFixture(new([
+            new(tabId, "Saved document", "9to1://write/document-42", BrowserTabPrivacy.Standard,
+                string.Empty, DateTimeOffset.UtcNow) { ProfileId = profile }
+        ], tabId));
+        var originalApps = new AppFixtureFactory();
+
+        await using (var firstRun = await BrowseChrome.CreateAsync(paths, appContentFactory: originalApps,
+            homeProfileId: profile, tabSessionPersistence: session))
+        {
+            Assert.Equal("9to1://write/document-42", Assert.Single(originalApps.Requests).Address.Value);
+            await firstRun.CloseTabAsync(tabId);
+            var saved = Assert.Single(session.Saves[^1].ClosedTabs);
+            Assert.Equal(tabId, saved.Tab.Id); Assert.Equal(profile, saved.Tab.ProfileId);
+            Assert.Equal("9to1://write/document-42", saved.Tab.Address);
+        }
+
+        var restoredApps = new AppFixtureFactory();
+        await using var restarted = await BrowseChrome.CreateAsync(paths, appContentFactory: restoredApps,
+            homeProfileId: profile, tabSessionPersistence: session);
+        Assert.True(restarted.CanReopenClosedTab);
+        Assert.Empty(restoredApps.Requests); // Loading recovery metadata alone never opens or runs the app.
+        Assert.DoesNotContain(restarted.State.Tabs, tab => tab.Id == tabId);
+
+        await restarted.ReopenClosedTabAsync();
+        var reopened = Assert.Single(restoredApps.Requests);
+        Assert.Equal(tabId, reopened.TabId); Assert.Equal(profile, reopened.ProfileId);
+        Assert.Equal("9to1://write/document-42", reopened.Address.Value);
+        Assert.Empty(session.Saves[^1].ClosedTabs);
+    }
+
+    [Fact]
+    public async Task Recently_closed_web_tab_restores_original_profile_and_engine_override_after_restart()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        const string currentProfile = "profile-default";
+        const string tabProfile = "profile-research";
+        var tabId = Guid.NewGuid();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var initial = new BrowseTabSessionProjection([
+            new(tabId, "Research", "https://research.example/", BrowserTabPrivacy.Standard,
+                string.Empty, DateTimeOffset.UtcNow) { ProfileId = tabProfile }
+        ], tabId);
+        var session = new TabSessionFixture(initial);
+        string profileDirectory;
+
+        await using (var chrome = await BrowseChrome.CreateAsync(paths, factory,
+            homeProfileId: currentProfile, tabSessionPersistence: session))
+        {
+            await chrome.SetSelectedTabEngineAsync(BrowseEngineKind.Chromium);
+            profileDirectory = factory.Requests[0].ProfileDirectory;
+            await chrome.CloseTabAsync(tabId);
+            var closed = Assert.Single(session.Saves[^1].ClosedTabs);
+            Assert.Equal(tabId, closed.Tab.Id); Assert.Equal(tabProfile, closed.Tab.ProfileId);
+            Assert.Equal(BrowseEngineKind.Chromium, closed.EngineOverride);
+        }
+
+        await using var restarted = await BrowseChrome.CreateAsync(paths, factory,
+            homeProfileId: currentProfile, tabSessionPersistence: session);
+        Assert.True(restarted.CanReopenClosedTab);
+        await restarted.ReopenClosedTabAsync();
+        var reopened = restarted.State.SelectedTab;
+        Assert.Equal(tabId, reopened.Id); Assert.Equal(tabProfile, reopened.ProfileId);
+        Assert.Equal(BrowseEngineKind.Chromium, reopened.Engine);
+        Assert.Equal(profileDirectory, factory.Requests.Last().ProfileDirectory);
+    }
+
+    [Fact]
+    public async Task Closed_private_tab_never_enters_the_canonical_recently_closed_stack()
+    {
+        var session = new TabSessionFixture(null);
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), tabSessionPersistence: session);
+        var privateId = (await chrome.NewTabAsync(true)).SelectedTabId;
+        await chrome.CloseTabAsync(privateId);
+        Assert.Empty(session.Saves[^1].ClosedTabs);
+        Assert.DoesNotContain(session.Saves[^1].Tabs, tab => tab.Id == privateId || tab.Privacy == BrowserTabPrivacy.Private);
+    }
+
+    [Fact]
+    public async Task Standalone_recently_closed_tab_restores_from_existing_browser_data_store()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        const string currentProfile = "standalone-current";
+        const string tabProfile = "standalone-research";
+        var tabId = Guid.NewGuid();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        using (var data = new BrowserDataService(paths))
+            await data.SaveTabsAsync([
+                new(tabId, "Research", "https://research.example/", BrowserTabPrivacy.Standard,
+                    string.Empty, DateTimeOffset.UtcNow) { ProfileId = tabProfile }
+            ], CancellationToken.None);
+        string originalProfileDirectory;
+
+        await using (var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: currentProfile))
+        {
+            originalProfileDirectory = factory.Requests[0].ProfileDirectory;
+            await chrome.CloseTabAsync(tabId);
+        }
+
+        using (var data = new BrowserDataService(paths))
+        {
+            var closed = Assert.Single(data.ClosedTabs);
+            Assert.Equal(tabId, closed.Tab.Id); Assert.Equal(tabProfile, closed.Tab.ProfileId);
+        }
+
+        await using var restarted = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: currentProfile);
+        Assert.True(restarted.CanReopenClosedTab);
+        await restarted.ReopenClosedTabAsync();
+        Assert.Equal(tabId, restarted.State.SelectedTabId);
+        Assert.Equal(tabProfile, restarted.State.SelectedTab.ProfileId);
+        Assert.Equal(originalProfileDirectory, factory.Requests.Last().ProfileDirectory);
+        using var final = new BrowserDataService(paths);
+        Assert.Empty(final.ClosedTabs);
+        Assert.Contains(final.Tabs, tab => tab.Id == tabId);
+    }
+
     private sealed class TabSessionFixture(BrowseTabSessionProjection? projection) : IBrowseTabSessionPersistence
     {
+        private BrowseTabSessionProjection? _stored = projection;
         public List<BrowseTabSessionProjection> Saves { get; } = [];
         public Task? NextSave;
-        public Task<BrowseTabSessionProjection?> LoadAsync(CancellationToken token) => Task.FromResult(projection);
+        public Task<BrowseTabSessionProjection?> LoadAsync(CancellationToken token) => Task.FromResult(_stored);
         public Task SaveAsync(BrowseTabSessionProjection value, CancellationToken token)
-        { token.ThrowIfCancellationRequested(); Saves.Add(value); var original = NextSave ?? Task.CompletedTask; NextSave = null; return original; }
+        { token.ThrowIfCancellationRequested(); Saves.Add(value); _stored = value; var original = NextSave ?? Task.CompletedTask; NextSave = null; return original; }
     }
 }
