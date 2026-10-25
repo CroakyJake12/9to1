@@ -32,12 +32,12 @@ public sealed class SpaceBuilderCanonicalSourceTests
         Assert.Empty((await registry.GetAsync(space.Id, token))!.ContextReferences ?? []);
         Assert.True(await editor.SaveAsync(token));
         var reopened = (await files.OpenRegistry().GetAsync(space.Id, token))!;
-        var saved = Assert.Single(reopened.ContextReferences!);
+        var saved = Assert.Single(reopened.DraftConfiguration!.ContextReferences);
         Assert.Equal(reference, saved); Assert.Equal(space.Id, reopened.Id);
         Assert.Equal(SpaceContextPermission.Read, saved.Permission); Assert.Equal(SpaceContextIndexState.NotRequired, saved.IndexState);
         Assert.Equal(JsonSerializer.Serialize(space.ModelPolicy), JsonSerializer.Serialize(reopened.ModelPolicy));
         Assert.Equal(JsonSerializer.Serialize(space.LayoutDocument), JsonSerializer.Serialize(reopened.LayoutDocument));
-        Assert.True(reopened.ContextPolicy!.SourceOnly); Assert.Equal(1, reopened.ContextPolicy.MaximumRetrievedItems);
+        Assert.True(reopened.DraftConfiguration.ContextPolicy!.SourceOnly); Assert.Equal(1, reopened.DraftConfiguration.ContextPolicy.MaximumRetrievedItems);
     }
 
     [Fact]
@@ -52,7 +52,9 @@ public sealed class SpaceBuilderCanonicalSourceTests
         Assert.True(editor.DetachLegacyFileReference(path));
         Assert.Single((await registry.GetAsync(space.Id, token))!.Files); // Still only a draft edit.
         Assert.True(editor.AttachContextReference(Reference(), space.Revision)); Assert.True(await editor.SaveAsync(token));
-        Assert.Empty((await files.OpenRegistry().GetAsync(space.Id, token))!.Files);
+        var saved = (await files.OpenRegistry().GetAsync(space.Id, token))!;
+        Assert.Single(saved.Files); // Active files remain until draft activation.
+        Assert.Empty(saved.DraftConfiguration!.Files);
         Assert.True(File.Exists(path)); Assert.Equal("PRESERVE FILE BYTES", await File.ReadAllTextAsync(path, token));
     }
 

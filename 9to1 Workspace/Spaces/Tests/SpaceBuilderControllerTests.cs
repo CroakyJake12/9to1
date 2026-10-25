@@ -21,14 +21,26 @@ public sealed class SpaceBuilderControllerTests
         Assert.True(controller.State.CanSave);
         Assert.True(await controller.SaveAsync(token));
         var saved = await files.OpenRegistry().GetAsync(space.Id, token);
-        Assert.Equal("Updated", saved!.Name);
-        Assert.Equal("New purpose", saved.Description);
-        Assert.Equal(Haven.Application.SpaceCapabilityCategoryState.Enabled, saved.CapabilityCategoryPolicy!.Skills);
+        Assert.Equal("Original", saved!.Name);
+        Assert.Equal("Updated", saved.DraftConfiguration!.Name);
+        Assert.Equal("New purpose", saved.DraftConfiguration.Description);
+        Assert.Equal(Haven.Application.SpaceCapabilityCategoryState.Enabled, saved.DraftConfiguration.CapabilityCategoryPolicy!.Skills);
         // Hidden policy must survive a Basic save.
         Assert.NotNull(saved.CapabilityBindings);
         Assert.False(controller.State.HasChanges);
         // Active revision must NOT advance on an ordinary (unvalidated) save.
-        Assert.NotEqual(controller.State.ActiveRevision, controller.State.DraftRevision);
+        Assert.Equal(space.Revision, saved.Revision);
+        Assert.Equal(space.ActiveConfigurationRevision, saved.ActiveConfigurationRevision);
+        Assert.True(controller.State.CanActivate);
+        Assert.True(await controller.ActivateAsync(token));
+        saved = await files.OpenRegistry().GetAsync(space.Id, token);
+        Assert.Equal("Updated", saved!.Name);
+        Assert.Equal("New purpose", saved.Description);
+        Assert.Equal(Haven.Application.SpaceCapabilityCategoryState.Enabled, saved.CapabilityCategoryPolicy!.Skills);
+        Assert.Null(saved.DraftConfiguration);
+        Assert.Equal(space.ActiveConfigurationRevision + 1, saved.ActiveConfigurationRevision);
+        Assert.Equal(space.Revision + 1, saved.Revision);
+        Assert.Equal("Updated", controller.State.Draft.Name);
         // Discard re-reads the canonical record without deleting the draft conflict path.
         Assert.True(controller.SetField(SpaceBuilderField.Name, "Unsaved"));
         Assert.True(controller.State.HasChanges);
@@ -82,6 +94,35 @@ public sealed class SpaceBuilderControllerTests
         Assert.False(await second.SaveAsync(token));
         Assert.True(second.State.HasConflict);
         Assert.Equal("Second draft", second.State.Draft.Name);
+    }
+
+    [Fact]
+    public async Task Draft_save_preserves_active_revision_and_stale_active_cas_cannot_publish_it()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Active version", cancellationToken: token);
+        var controller = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await controller.LoadAsync(token));
+        Assert.True(controller.SetField(SpaceBuilderField.Name, "Draft version"));
+        Assert.True(await controller.SaveAsync(token));
+        var savedDraft = (await registry.GetAsync(space.Id, token))!;
+        Assert.Equal(space.Revision, savedDraft.Revision);
+        Assert.Equal(space.ActiveConfigurationRevision, savedDraft.ActiveConfigurationRevision);
+        Assert.Equal("Active version", savedDraft.Name);
+        Assert.Equal("Draft version", savedDraft.DraftConfiguration!.Name);
+
+        var independentlyChanged = await registry.UpdateAsync(savedDraft with { Description = "Live update" },
+            savedDraft.Revision, token);
+        Assert.Equal("Draft version", independentlyChanged.DraftConfiguration!.Name);
+        await Assert.ThrowsAsync<SpaceRevisionConflictException>(() => registry.ActivateDraftAsync(space.Id,
+            savedDraft.Revision, savedDraft.DraftConfigurationRevision, savedDraft.ActiveConfigurationRevision, token));
+        var afterConflict = (await registry.GetAsync(space.Id, token))!;
+        Assert.Equal("Active version", afterConflict.Name);
+        Assert.Equal("Live update", afterConflict.Description);
+        Assert.Equal("Draft version", afterConflict.DraftConfiguration!.Name);
     }
 
     [Fact]

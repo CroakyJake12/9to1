@@ -142,6 +142,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.category.memory" => CategoryIndex(SpaceBuilderCategory.Memory),
             "builder.canEdit" => _isCurrent() && state.CanEdit,
             "builder.canSave" => _isCurrent() && state.CanSave,
+            "builder.canActivate" => _isCurrent() && state.CanActivate,
             "builder.canDiscard" => _isCurrent() && state.CanDiscard,
             "builder.canReload" => _isCurrent() && state.CanReload,
             "builder.canGoBack" => _isCurrent() && _canGoBack(),
@@ -244,6 +245,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     public bool? IsActionAvailable(string command) => command switch
     {
         "space-builder.save" => _isCurrent() && _state().CanSave,
+        "space-builder.activate" => _isCurrent() && _state().CanActivate,
         "space-builder.view.basic" or "space-builder.view.advanced" or "space-builder.view.expert" => _isCurrent(),
         "space-builder.preview" or "space-builder.validate" => _isCurrent() && _state().IsLoaded && !_state().IsBusy,
         "space-builder.expert.details" or "space-builder.expert.harness" or "space-builder.expert.model" or

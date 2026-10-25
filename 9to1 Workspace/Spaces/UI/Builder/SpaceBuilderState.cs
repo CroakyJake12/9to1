@@ -29,22 +29,39 @@ public sealed record SpaceBuilderDraft(
     public SpaceInheritancePolicy Inheritance { get; init; } = new();
     public IReadOnlyList<SpaceContextReference> ContextReferences { get; init; } = [];
     public IReadOnlyList<SpaceFileReference> LegacyFiles { get; init; } = [];
+    public SpaceModelPolicy? ModelPolicy { get; init; }
+    public SpaceMemoryPolicy? MemoryPolicy { get; init; }
+    public IReadOnlyList<SpaceExamplePair> ExamplePairs { get; init; } = [];
+    public IReadOnlyList<SpaceShareGrant> Shares { get; init; } = [];
+    public SpaceGeneratedSurface? GeneratedSurface { get; init; }
     public SpaceLayoutDocument? LayoutDocument { get; init; }
 
     public static SpaceBuilderDraft Empty { get; } = new("", "", "", "",
         new Haven.Application.SpaceCapabilityCategoryPolicy(), []);
 
-    internal static SpaceBuilderDraft From(SpaceDefinition space) =>
-        new(space.Name, space.Description, space.IconKey, space.Instructions,
-            space.CapabilityCategoryPolicy ?? new Haven.Application.SpaceCapabilityCategoryPolicy(),
-            space.CapabilityBindings?.ToArray() ?? [])
+    internal static SpaceBuilderDraft From(SpaceDefinition space) => From(space,
+        space.DraftConfiguration ?? SpaceConfigurationDocument.From(space));
+
+    internal static SpaceBuilderDraft From(SpaceDefinition space, SpaceConfigurationDocument configuration)
+    {
+        var projected = configuration.ApplyTo(space);
+        return
+        new(projected.Name, projected.Description, projected.IconKey, projected.Instructions,
+            projected.CapabilityCategoryPolicy ?? new Haven.Application.SpaceCapabilityCategoryPolicy(),
+            projected.CapabilityBindings?.ToArray() ?? [])
         {
-            ContextPolicy = space.ContextPolicy ?? new SpaceContextPolicy(),
-            Inheritance = space.Inheritance ?? new SpaceInheritancePolicy(),
-            ContextReferences = Array.AsReadOnly((space.ContextReferences ?? []).ToArray()),
-            LegacyFiles = Array.AsReadOnly(space.Files.ToArray()),
-            LayoutDocument = space.LayoutDocument
+            ContextPolicy = projected.ContextPolicy ?? new SpaceContextPolicy(),
+            Inheritance = projected.Inheritance ?? new SpaceInheritancePolicy(),
+            ContextReferences = Array.AsReadOnly((projected.ContextReferences ?? []).ToArray()),
+            LegacyFiles = Array.AsReadOnly(projected.Files.ToArray()),
+            ModelPolicy = projected.ModelPolicy,
+            MemoryPolicy = projected.MemoryPolicy,
+            ExamplePairs = Array.AsReadOnly((projected.ExamplePairs ?? []).ToArray()),
+            Shares = Array.AsReadOnly((projected.Shares ?? []).ToArray()),
+            GeneratedSurface = projected.GeneratedSurface,
+            LayoutDocument = projected.LayoutDocument
         };
+    }
 }
 
 public sealed record SpaceBuilderState(
@@ -60,6 +77,9 @@ public sealed record SpaceBuilderState(
     bool HasConflict,
     string StatusMessage)
 {
+    public long? SpaceRevision { get; init; }
+    public long? DraftBaseActiveRevision { get; init; }
+    public bool HasPersistedDraft { get; init; }
     public SpaceBuilderEditorView EditorView { get; init; } = SpaceBuilderEditorView.Basic;
     public SpaceBuilderExpertSection ExpertSection { get; init; } = SpaceBuilderExpertSection.Details;
     public SpaceBuilderPreview? Preview { get; init; }
@@ -70,6 +90,13 @@ public sealed record SpaceBuilderState(
     public bool CanDiscard => IsLoaded && !IsBusy && (HasChanges || HasConflict);
     public bool CanReload => !IsBusy && !HasChanges;
     public bool HasActiveRevision => ActiveRevision is not null;
+    public bool HasUnverifiedDependencies => Draft.CapabilityBindings.Count != 0 || Draft.ContextReferences.Count != 0 ||
+        Draft.LegacyFiles.Count != 0 || Draft.LayoutDocument is { Nodes.Count: > 0 } ||
+        !string.IsNullOrWhiteSpace(Draft.ModelPolicy?.DefaultModelId) ||
+        !string.IsNullOrWhiteSpace(Draft.ModelPolicy?.ProviderConstraint) || Draft.ModelPolicy?.RequiredCapabilities?.Count > 0 ||
+        Draft.Shares.Count != 0 || Draft.GeneratedSurface is not null;
+    public bool CanActivate => CanEdit && !IsBusy && !HasChanges && !HasConflict && HasPersistedDraft && DraftRevision is not null &&
+        ActiveRevision is not null && DraftBaseActiveRevision == ActiveRevision && !HasUnverifiedDependencies;
     public bool HasExpertConfiguration => Draft.LayoutDocument is { } layout &&
         (layout.Nodes.Count != 0 || layout.Edges.Count != 0 || layout.Groups.Count != 0 || layout.Comments.Count != 0);
 }

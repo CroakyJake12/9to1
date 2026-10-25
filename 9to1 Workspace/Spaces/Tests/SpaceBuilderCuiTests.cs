@@ -32,14 +32,14 @@ public sealed class SpaceBuilderCuiTests
         Assert.Equal(true, selected);
         await bindings.DispatchAsync("space-builder.view.advanced", null, deadline.Token);
         Assert.Equal(space.Id, controller.State.SpaceId);
-        Assert.Equal(space.Revision, controller.State.DraftRevision);
+        Assert.Equal(space.DraftConfigurationRevision, controller.State.DraftRevision);
         Assert.Equal(SpaceBuilderEditorView.Advanced, controller.State.EditorView);
         Assert.True(bindings.TryGetValue("builder.view.isAdvanced", out selected));
         Assert.Equal(true, selected);
         await bindings.DispatchAsync("space-builder.expert.model", null, deadline.Token);
         Assert.Equal(SpaceBuilderEditorView.Expert, controller.State.EditorView);
         Assert.Equal(SpaceBuilderExpertSection.ModelLogic, controller.State.ExpertSection);
-        Assert.Equal(space.Revision, controller.State.DraftRevision);
+        Assert.Equal(space.DraftConfigurationRevision, controller.State.DraftRevision);
     }
 
     [Fact]

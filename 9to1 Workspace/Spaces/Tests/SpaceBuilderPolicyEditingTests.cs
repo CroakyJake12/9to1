@@ -43,18 +43,19 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.True(await editor.SaveAsync(token));
         var saved = (await files.OpenRegistry().GetAsync(original.Id, token))!;
         Assert.Equal(original.Id, saved.Id);
-        Assert.Equal(original.Revision + 1, saved.Revision);
-        Assert.Equal(new SpaceContextPolicy(SpaceWebAccessPolicy.Disabled, true, false, 7), saved.ContextPolicy);
-        Assert.Equal(new SpaceInheritancePolicy(true, true, true, true, false, false, false), saved.Inheritance);
+        Assert.Equal(original.Revision, saved.Revision);
+        Assert.Equal(original.ActiveConfigurationRevision, saved.ActiveConfigurationRevision);
+        Assert.Equal(new SpaceContextPolicy(SpaceWebAccessPolicy.Disabled, true, false, 7), saved.DraftConfiguration!.ContextPolicy);
+        Assert.Equal(new SpaceInheritancePolicy(true, true, true, true, false, false, false), saved.DraftConfiguration.Inheritance);
         Assert.Equal(JsonSerializer.Serialize(original.ModelPolicy), JsonSerializer.Serialize(saved.ModelPolicy));
         Assert.Equal(JsonSerializer.Serialize(original.LayoutDocument), JsonSerializer.Serialize(saved.LayoutDocument));
         Assert.Equal(JsonSerializer.Serialize(original.CapabilityBindings), JsonSerializer.Serialize(saved.CapabilityBindings));
         var reopened = new SpaceBuilderController(files.OpenRegistry(), original.Id);
         Assert.True(await reopened.LoadAsync(token));
-        Assert.Equal(saved.ContextPolicy, reopened.State.Draft.ContextPolicy);
-        Assert.Equal(saved.Inheritance, reopened.State.Draft.Inheritance);
+        Assert.Equal(saved.DraftConfiguration.ContextPolicy, reopened.State.Draft.ContextPolicy);
+        Assert.Equal(saved.DraftConfiguration.Inheritance, reopened.State.Draft.Inheritance);
         Assert.False(reopened.State.HasChanges);
-        Assert.Null(reopened.State.ActiveRevision); // Saved configuration is not activation.
+        Assert.Equal(saved.ActiveConfigurationRevision, reopened.State.ActiveRevision); // Saved configuration is not activation.
     }
 
     [Fact]
@@ -76,8 +77,9 @@ public sealed class SpaceBuilderPolicyEditingTests
         Assert.True(second.State.HasConflict);
         Assert.Equal(draft, second.State.Draft);
         var saved = (await files.OpenRegistry().GetAsync(space.Id, token))!;
-        Assert.True(saved.ContextPolicy!.SourceOnly);
-        Assert.True(saved.Inheritance!.Plugins);
+        Assert.True(saved.DraftConfiguration!.ContextPolicy!.SourceOnly);
+        Assert.True(saved.DraftConfiguration.Inheritance!.Plugins);
+        Assert.False(saved.ContextPolicy!.SourceOnly); // Draft saves do not change the active resolver view.
         var current = true;
         var bindings = Bindings(first, () => current);
         Assert.False(bindings.TrySetValue("builder.context.webAccess", -1));
@@ -143,12 +145,12 @@ public sealed class SpaceBuilderPolicyEditingTests
             source.ReleaseCommit.TrySetResult();
             Assert.True(await saving);
             var saved = (await files.OpenRegistry().GetAsync(space.Id, token))!;
-            Assert.True(saved.ContextPolicy!.SourceOnly);
-            Assert.True(saved.Inheritance!.Agents);
+            Assert.True(saved.DraftConfiguration!.ContextPolicy!.SourceOnly);
+            Assert.True(saved.DraftConfiguration.Inheritance!.Agents);
             Assert.False(editor.State.Draft.Inheritance.Agents);
             Assert.True(editor.State.HasChanges);
             Assert.True(await editor.SaveAsync(token));
-            Assert.False((await files.OpenRegistry().GetAsync(space.Id, token))!.Inheritance!.Agents);
+            Assert.False((await files.OpenRegistry().GetAsync(space.Id, token))!.DraftConfiguration!.Inheritance!.Agents);
         }
         finally { source.ReleaseCommit.TrySetResult(); await saving; }
     }

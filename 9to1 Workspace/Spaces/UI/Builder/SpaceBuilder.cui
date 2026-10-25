@@ -186,6 +186,7 @@
             <Button id="space-builder-back" content="Back to Spaces" action="space-builder.back" Interactive="{Binding builder.canGoBack}" accessible-name="Back to Spaces" />
           </If>
           <Button id="space-builder-save" content="Save" action="space-builder.save" Interactive="{Binding builder.canSave}" accessible-name="Save Space Builder configuration" />
+          <Button id="space-builder-activate" content="Activate" action="space-builder.activate" Interactive="{Binding builder.canActivate}" accessible-name="Activate the saved Space configuration" />
           <Button id="space-builder-discard" content="Discard changes" action="space-builder.discard" Interactive="{Binding builder.canDiscard}" accessible-name="Discard unsaved changes and reload" />
           <Button id="space-builder-reload" content="Reload" action="space-builder.reload" Interactive="{Binding builder.canReload}" accessible-name="Reload saved Space Builder configuration" />
         </Container>

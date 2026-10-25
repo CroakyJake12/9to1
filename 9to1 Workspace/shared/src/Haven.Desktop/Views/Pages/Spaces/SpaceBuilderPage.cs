@@ -11,7 +11,7 @@ namespace Haven.Desktop.Views.Pages.Spaces;
 
 /// <summary>Retained canonical Space Builder content surface. Borrowed SpaceRegistry;
 /// hosts the authored SpaceBuilder.cui through SpaceBuilderController and
-/// SpaceBuilderCuiBindings. Incremental: Advanced/Expert are not yet implemented.</summary>
+/// SpaceBuilderCuiBindings.</summary>
 public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalRetirementParticipant,
     IDesktopOriginalRetirementJoinGuard, IDisposable, IAsyncDisposable
 {
@@ -113,7 +113,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             if (choice is not null && !_boardsChoices.Any(option => ReferenceEquals(option.Input, choice)))
                 throw new InvalidOperationException("Choose an item from this page's current original source list.");
             var state = _controller.State;
-            var revision = state.DraftRevision ?? throw new InvalidOperationException("Load the actual Space revision first.");
+            var revision = state.SpaceRevision ?? throw new InvalidOperationException("Load the actual Space revision first.");
             _controllerOperations++; _sourcePickerBusy = true;
             try { return _work.RunAsync(async original =>
             {
@@ -128,7 +128,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                         var options = await original.AwaitAsync(Source(() => source.GetOriginalBoardsContextChoicesAsync(
                             _originalRegistry, state.SpaceId, revision, Own, linked.Token))).ConfigureAwait(false);
                         original.DemandPublication();
-                        if (_controller.State.DraftRevision != revision)
+                        if (_controller.State.SpaceRevision != revision)
                             throw new InvalidOperationException("The Space changed while the source chooser was open. Refresh it.");
                         _boardsChoices = options; _boardsChoicesRevision = revision;
                         _controller.ReportSourceStatus(options.Count == 0 ? "No canonical Boards notebooks were found in the reviewed library."
@@ -278,6 +278,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     }
 
     public Task<bool> SaveAsync(CancellationToken token = default) => RunControllerAsync(_controller.SaveAsync, token);
+    public Task<bool> ActivateAsync(CancellationToken token = default) => RunControllerAsync(_controller.ActivateAsync, token, refreshGraph: true);
     public Task<bool> DiscardChangesAsync(CancellationToken token = default) => RunControllerAsync(_controller.DiscardChangesAsync, token, refreshGraph: true);
     public Task<bool> ReloadAsync(CancellationToken token = default) => RunControllerAsync(_controller.LoadAsync, token, refreshGraph: true);
 
@@ -424,6 +425,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         var actual = command switch
         {
             "space-builder.save" => SaveAsync(token),
+            "space-builder.activate" => ActivateAsync(token),
             "space-builder.discard" => DiscardChangesAsync(token),
             "space-builder.reload" => ReloadAsync(token),
             _ => throw new InvalidOperationException("This Space Builder command is not owned by this page.")
@@ -475,7 +477,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private void OnStateChanged(SpaceBuilderState state)
     {
-        if (_boardsChoicesRevision is { } revision && state.DraftRevision != revision)
+        if (_boardsChoicesRevision is { } revision && state.SpaceRevision != revision)
         { _boardsChoices = []; _boardsChoicesRevision = null; }
         RefreshBindings();
         if (Dispatcher.UIThread.CheckAccess()) UpdateGraphVisibility(state);

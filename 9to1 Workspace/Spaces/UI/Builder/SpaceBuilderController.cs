@@ -98,7 +98,9 @@ public sealed class SpaceBuilderController
             if (current is null || current.IsArchived) issues.Add("The Space is unavailable or archived.");
             else
             {
-                if (current.Revision != expectedRevision)
+                if (current.Revision != snapshot.SpaceRevision || current.DraftConfigurationRevision != expectedRevision ||
+                    current.ActiveConfigurationRevision != snapshot.ActiveRevision ||
+                    current.DraftBaseActiveRevision != snapshot.DraftBaseActiveRevision)
                     issues.Add($"The saved Space changed to revision {current.Revision}; reload before validating or saving.");
                 var name = snapshot.Draft.Name.Trim();
                 if (name.Length is < 1 or > 80) issues.Add("Space name must contain 1 to 80 characters.");
@@ -120,7 +122,9 @@ public sealed class SpaceBuilderController
                 issues.Add("The graph contains structural-only nodes without a registered TypeId; they cannot be activated.");
         }
         if (issues.Count == 0)
-            issues.Add("Draft structure is valid. Registered node schemas, resource availability, permissions and model capabilities still require validation by their owning services before activation.");
+            issues.Add(snapshot.HasUnverifiedDependencies
+                ? "Draft structure is valid. Registered node schemas, resource availability, permissions and model capabilities still require validation by their owning services before activation."
+                : "Draft structure is valid and ready for activation.");
         SpaceBuilderState next;
         lock (_gate)
         {
@@ -237,7 +241,10 @@ public sealed class SpaceBuilderController
             {
                 _baseline = SpaceBuilderDraft.From(space);
                 _editVersion++;
-                return state with { DraftRevision = space.Revision, ActiveRevision = null,
+                return state with { DraftRevision = space.DraftConfigurationRevision,
+                    ActiveRevision = space.ActiveConfigurationRevision, SpaceRevision = space.Revision,
+                    DraftBaseActiveRevision = space.DraftBaseActiveRevision,
+                    HasPersistedDraft = space.DraftConfiguration is not null,
                     Draft = _baseline, IsLoaded = true, IsReadOnly = space.IsBuiltIn,
                     HasChanges = false, HasConflict = false,
                     Preview = null, ValidationIssues = [],
@@ -274,20 +281,20 @@ public sealed class SpaceBuilderController
                     StatusMessage = "This Space cannot be edited. Your draft has been kept." });
                 return false;
             }
-            if (current.Revision != saving.DraftRevision)
-                throw new SpaceRevisionConflictException(current.Id, saving.DraftRevision!.Value, current.Revision);
+            if (current.Revision != saving.SpaceRevision)
+                throw new SpaceRevisionConflictException(current.Id, saving.SpaceRevision!.Value, current.Revision);
             var savedLayout = saving.Draft.LayoutDocument;
-            if (savedLayout is not null && !Equals(savedLayout, _baseline.LayoutDocument))
+            if (savedLayout is not null &&
+                (!Equals(savedLayout, _baseline.LayoutDocument) || savedLayout.State != SpaceLayoutRevisionState.Draft))
                 savedLayout = savedLayout with
                 {
                     GraphId = savedLayout.GraphId == Guid.Empty ? _baseline.LayoutDocument?.GraphId ?? Guid.NewGuid() : savedLayout.GraphId,
                     Revision = checked((_baseline.LayoutDocument?.Revision ?? savedLayout.Revision) + 1),
                     State = SpaceLayoutRevisionState.Draft
                 };
-            // Patch only this editor projection's fields on the canonical Space revision.
-            // Unexposed model/memory/graph configuration survives; the registry checks the
-            // SAME expected revision again. Saving preferences does not claim activation.
-            var saved = await _registry.UpdateAsync(current with
+            // Patch only this editor projection's fields over the saved draft (or active
+            // configuration when no draft exists). Other authored fields remain intact.
+            var configuration = (current.DraftConfiguration ?? SpaceConfigurationDocument.From(current)) with
             {
                 Name = saving.Draft.Name, Description = saving.Draft.Description,
                 IconKey = saving.Draft.IconKey, Instructions = saving.Draft.Instructions,
@@ -297,16 +304,26 @@ public sealed class SpaceBuilderController
                 Inheritance = saving.Draft.Inheritance,
                 ContextReferences = saving.Draft.ContextReferences.ToArray(),
                 Files = saving.Draft.LegacyFiles.ToArray(),
-                LayoutDocument = savedLayout
-            }, saving.DraftRevision, cancellationToken).ConfigureAwait(false);
+                LayoutDocument = savedLayout,
+                ModelPolicy = saving.Draft.ModelPolicy,
+                MemoryPolicy = saving.Draft.MemoryPolicy,
+                ExamplePairs = saving.Draft.ExamplePairs.ToArray(),
+                Shares = saving.Draft.Shares.ToArray(),
+                GeneratedSurface = saving.Draft.GeneratedSurface
+            };
+            var saved = await _registry.SaveDraftAsync(current.Id, configuration, saving.SpaceRevision!.Value,
+                saving.DraftRevision!.Value, saving.ActiveRevision!.Value, cancellationToken).ConfigureAwait(false);
             Change(state =>
             {
                 _baseline = SpaceBuilderDraft.From(saved);
                 var draft = _editVersion == editVersion ? _baseline : state.Draft;
-                return state with { DraftRevision = saved.Revision,
+                return state with { DraftRevision = saved.DraftConfigurationRevision,
+                    ActiveRevision = saved.ActiveConfigurationRevision, SpaceRevision = saved.Revision,
+                    DraftBaseActiveRevision = saved.DraftBaseActiveRevision,
+                    HasPersistedDraft = true,
                     Draft = draft, HasChanges = draft != _baseline, HasConflict = false,
                     Preview = null, ValidationIssues = [],
-                    StatusMessage = draft == _baseline ? "Space Builder draft saved. Activation requires the versioned active-definition workflow." : "Earlier changes saved. Your latest edits are still unsaved." };
+                    StatusMessage = draft == _baseline ? "Space Builder draft saved. Activate to publish this validated configuration." : "Earlier changes saved. Your latest edits are still unsaved." };
             });
             return true;
         }
@@ -314,6 +331,12 @@ public sealed class SpaceBuilderController
         {
             Change(state => state with { HasConflict = true,
                 StatusMessage = "This Space changed elsewhere. Your draft is unchanged. Discard changes and reload to use the saved version." });
+            return false;
+        }
+        catch (SpaceDraftRevisionConflictException)
+        {
+            Change(state => state with { HasConflict = true,
+                StatusMessage = "This Space draft changed elsewhere. Your draft is unchanged. Discard changes and reload to use the saved version." });
             return false;
         }
         catch (ArgumentException error)
@@ -325,6 +348,64 @@ public sealed class SpaceBuilderController
         {
             Change(state => state with { StatusMessage = "Could not save Space Builder configuration; your draft has been kept: " + error.Message });
             throw;
+        }
+        finally { Change(state => state with { IsSaving = false }); }
+    }
+
+    /// <summary>Publishes the already-saved Builder draft through SpaceRegistry's atomic
+    /// active/draft CAS. The registry revalidates the configuration and rejects dependencies
+    /// whose owning services are not available to this publication path.</summary>
+    public async Task<bool> ActivateAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        SpaceBuilderState activating;
+        lock (_gate)
+        {
+            if (!_state.CanActivate) return false;
+            activating = _state = _state with { IsSaving = true, StatusMessage = "Publishing the saved Space configuration…" };
+        }
+        try
+        {
+            StateChanged?.Invoke(activating);
+            var activated = await _registry.ActivateDraftAsync(activating.SpaceId, activating.SpaceRevision!.Value,
+                activating.DraftRevision!.Value, activating.ActiveRevision!.Value, cancellationToken).ConfigureAwait(false);
+            Change(state =>
+            {
+                _baseline = SpaceBuilderDraft.From(activated);
+                _editVersion++;
+                return state with
+                {
+                    SpaceRevision = activated.Revision,
+                    DraftRevision = activated.DraftConfigurationRevision,
+                    ActiveRevision = activated.ActiveConfigurationRevision,
+                    DraftBaseActiveRevision = activated.DraftBaseActiveRevision,
+                    HasPersistedDraft = false,
+                    Draft = _baseline,
+                    HasChanges = false,
+                    HasConflict = false,
+                    Preview = null,
+                    ValidationIssues = [],
+                    StatusMessage = $"Space configuration activated at revision {activated.ActiveConfigurationRevision}."
+                };
+            });
+            return true;
+        }
+        catch (SpaceRevisionConflictException)
+        {
+            Change(state => state with { HasConflict = true,
+                StatusMessage = "The active Space changed elsewhere. Your draft is unchanged; reload and reconcile before activation." });
+            return false;
+        }
+        catch (SpaceDraftRevisionConflictException)
+        {
+            Change(state => state with { HasConflict = true,
+                StatusMessage = "The saved Space draft changed elsewhere. Your draft is unchanged; reload before activation." });
+            return false;
+        }
+        catch (InvalidOperationException error)
+        {
+            Change(state => state with { StatusMessage = "Space configuration was not activated: " + error.Message });
+            return false;
         }
         finally { Change(state => state with { IsSaving = false }); }
     }
@@ -397,7 +478,7 @@ public sealed class SpaceBuilderController
         SpaceBuilderState next;
         lock (_gate)
         {
-            if (!_state.CanEdit || _state.DraftRevision != expectedRevision) return false;
+            if (!_state.CanEdit || _state.SpaceRevision != expectedRevision) return false;
             var existing = _state.Draft.ContextReferences.SingleOrDefault(value => value.Kind == reference.Kind &&
                 value.OwnerAppId == reference.OwnerAppId && value.CanonicalEntityId == reference.CanonicalEntityId);
             if (existing is not null) reference = reference with { ContextId = existing.ContextId };
