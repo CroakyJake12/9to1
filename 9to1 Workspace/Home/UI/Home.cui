@@ -137,7 +137,7 @@
                     <Container id="library-results" Type="Vertical Stack" CellGap="8" role="list" accessible-name="Authorised artifacts">
                       <Repeat id="home-library-rows" Source="{Binding LibraryRows}" As="artifact" Key="{Binding artifact.Key}">
                         <Container Type="Horizontal Stack" CellGap="8">
-                          <Button id="home-library-item" action="OpenHomeLibraryArtifact" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalAlignment="Stretch" Padding="12" accessible-name="{Binding artifact.DisplayName}">
+                          <Button id="home-library-item" action="OpenHomeLibraryArtifact" parameter="{Binding artifact.Target}" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalAlignment="Stretch" Padding="12" accessible-name="{Binding artifact.DisplayName}">
                             <Container Type="Vertical Stack" CellGap="5" HorizontalAlignment="Stretch">
                               <Text Text="{Binding artifact.DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
                               <Container Type="Wrap" CellGap="10">
