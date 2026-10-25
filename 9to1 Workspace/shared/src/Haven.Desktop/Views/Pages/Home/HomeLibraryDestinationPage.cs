@@ -26,7 +26,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     private readonly Func<HomeDeepLink, Task, bool> _queue;
     private readonly Func<HomeDeepLink, CancellationToken, Task>? _prepareNavigation;
     private readonly Func<HomeArtifactReference, CancellationToken, Task<BoardEmbeddedArtifactReference?>>? _selectArtifact;
+    private Func<HomeDeepLink, CancellationToken, Task<HomeDeepLink?>>? _selectBoardFolder;
     private readonly TaskCompletionSource<BoardEmbeddedArtifactReference?> _selection = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<HomeDeepLink?> _folderSelection = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
     private readonly TextBox _search = new() { MaxLength = 256 };
@@ -94,11 +96,11 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     }
     internal bool IsAlive => !_work.IsRetiring;
     internal HomeLibraryPage? Current => _page;
-    internal IReadOnlyList<CuiDiagnostic> RuntimeDiagnostics => _loader.RuntimeDiagnostics;
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
     internal Task<BoardEmbeddedArtifactReference?> Selection => _selection.Task;
-    internal bool IsSelectionMode => _selectArtifact is not null;
+    internal Task<HomeDeepLink?> FolderSelection => _folderSelection.Task;
+    internal bool IsSelectionMode => _selectArtifact is not null || _selectBoardFolder is not null;
     internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
     internal void InvokeOriginalSource(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { body(); return true; });
     internal Task ActivateAsync(CancellationToken token)
@@ -116,6 +118,17 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             throw new InvalidOperationException("Set the initial Library filters before its first activation.");
         _ownerFilter.Text = ownerApp;
         _typeFilter.Text = artifactType;
+    }
+    internal void SetFolderSelectionMode(Func<HomeDeepLink, CancellationToken, Task<HomeDeepLink?>> selectCurrentFolder)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentNullException.ThrowIfNull(selectCurrentFolder);
+        if (_active || _initialization is not null || _page is not null || _selectArtifact is not null || _selectBoardFolder is not null)
+            throw new InvalidOperationException("Choose folder selection mode before the Library page is activated.");
+        _selectBoardFolder = selectCurrentFolder;
+        _status = "Choose the configured Boards folder. The folder row is checked again by its original Files owner.";
+        SetInitialQuery("files", "Files folder");
+        RefreshBindings();
     }
     public bool TryGetValue(string path, out object? value) => _bindings.TryGetValue(path, out value);
     public bool TrySetValue(string path, object? value) => _bindings.TrySetValue(path, value);
@@ -149,7 +162,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         "NextLibraryPage" => _page?.HasMore == true && QueryInputsMatchCurrentPage(),
         "PreviousLibraryPage" => _query.Offset > 0 && QueryInputsMatchCurrentPage(),
         "OpenHomeLibraryArtifact" => _page?.Items.Count > 0,
-        "ToggleHomeLibraryPin" => _selectArtifact is null && _page?.Items.Count > 0,
+        "ToggleHomeLibraryPin" => _selectArtifact is null && _selectBoardFolder is null && _page?.Items.Count > 0,
         _ => false
     });
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
@@ -186,6 +199,25 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
                             throw new UnauthorizedAccessException("The selected reference does not match this Home Library row.");
                         original.RunAcceptedPublicationCallback(() => _selection.TrySetResult(reference));
                     }
+                    return;
+                }
+                if (_selectBoardFolder is { } selectFolder)
+                {
+                    if (selected.OwnerApp != "files" || selected.ArtifactType != "Files folder" ||
+                        selected.OpenLink.TargetRouteId != "files.folder")
+                        throw new UnauthorizedAccessException("Choose a folder from the current Files Library results.");
+                    var selectedFolder = await original.AwaitAsync(selectFolder(selected.OpenLink, original.Token));
+                    await original.AwaitAsync(_admit(original.Token));
+                    if (!original.IsAcceptedPublicationCurrent) return;
+                    if (selectedFolder is not null)
+                    {
+                        if (!ReferenceEquals(selectedFolder, selected.OpenLink) || selectedFolder.OwnerApp != "files" ||
+                            selectedFolder.TargetRouteId != "files.folder")
+                            throw new UnauthorizedAccessException("The original Files folder selection no longer matches this Library row.");
+                        original.RunAcceptedPublicationCallback(() => _folderSelection.TrySetResult(selectedFolder));
+                    }
+                    else if (original.IsAcceptedPublicationCurrent)
+                        original.RunAcceptedPublicationCallback(() => _status = "This row is not the currently configured Boards folder. Choose the registered Boards folder.");
                     return;
                 }
                 if (command == "ToggleHomeLibraryPin")
@@ -284,7 +316,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         _bindings.Set("LibrarySummary", summary);
         _bindings.Set("CanSearchLibrary", available);
         _bindings.Set("CanOpenHomeLibraryArtifact", available && _page?.Succeeded == true);
-        _bindings.Set("CanToggleHomeLibraryPin", _selectArtifact is null && available && _page?.Succeeded == true);
+        _bindings.Set("CanToggleHomeLibraryPin", _selectArtifact is null && _selectBoardFolder is null && available && _page?.Succeeded == true);
         _bindings.Set("CanNextLibraryPage", available && queryMatches && _page?.HasMore == true);
         _bindings.Set("CanPreviousLibraryPage", available && queryMatches && _query.Offset > 0);
         _bindings.Set("LibraryPageSummary", _page is { Items.Count: > 0 } page
