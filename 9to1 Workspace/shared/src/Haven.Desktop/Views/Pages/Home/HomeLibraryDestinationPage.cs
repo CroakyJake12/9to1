@@ -357,6 +357,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         _selection.TrySetResult(null);
+        _folderSelection.TrySetResult(null);
         return _work.CloseAndDrainAsync();
     }
     private async Task StopAsync()

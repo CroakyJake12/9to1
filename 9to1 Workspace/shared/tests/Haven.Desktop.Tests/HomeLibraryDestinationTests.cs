@@ -21,6 +21,30 @@ namespace Haven.Desktop.Tests;
 public sealed class HomeLibraryDestinationTests
 {
     [AvaloniaFact]
+    public async Task Folder_selection_returns_only_the_same_current_Home_link_and_disables_pin_mutation()
+    {
+        var store = Guid.NewGuid(); var folder = Guid.NewGuid();
+        var link = new HomeDeepLink(HomeRoute.Library, "files", store.ToString("D") + "/" + folder.ToString("D"),
+            "open", "files.folder");
+        var row = new HomeArtifactReference("files", store.ToString("D") + "/" + folder.ToString("D"),
+            "Boards", "Files folder", "Files", "fixture-profile", null, DateTimeOffset.UtcNow,
+            false, false, false, false, [], link);
+        var index = new Index([row]); var page = Page(index, new(), (_, _) => true);
+        page.SetFolderSelectionMode((selected, _) => Task.FromResult<HomeDeepLink?>(selected));
+        Window? window = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page);
+            Assert.True(page.IsSelectionMode);
+            Assert.False(page.IsActionAvailable("ToggleHomeLibraryPin"));
+            await page.DispatchAsync("OpenHomeLibraryArtifact", row.OpenLink);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Same(link, await page.FolderSelection);
+        }
+        finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
+    }
+
+    [AvaloniaFact]
     public async Task Canonical_Library_row_opens_the_same_authorised_identity_through_the_actual_queue_callback()
     {
         var index = new Index(1); var authorization = new Authorization();
@@ -211,6 +235,7 @@ public sealed class HomeLibraryDestinationTests
             return new HomeArtifactReference("boards", id, $"Notebook {number:D2}", "Boards notebook", "Fixture library", "fixture-profile", null,
                 DateTimeOffset.UnixEpoch.AddMinutes(-number), false, false, false, false, [], new(HomeRoute.Library, "boards", id, "open", "boards.notebook"));
         }).ToArray();
+        internal Index(IReadOnlyList<HomeArtifactReference> rows) => Rows = rows;
         public async Task<IReadOnlyList<HomeArtifactReference>> SearchAsync(HomeLibraryQuery query, CancellationToken token)
         {
             LastQuery = query; Entered.TrySetResult();
