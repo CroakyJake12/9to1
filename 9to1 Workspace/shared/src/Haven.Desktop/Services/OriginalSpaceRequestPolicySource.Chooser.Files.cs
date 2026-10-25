@@ -134,10 +134,14 @@ internal sealed partial class OriginalSpaceRequestPolicySource
         await DemandChooserSpaceAsync(catalogue.Owners, spaceId, expectedRevision, originals, token).ConfigureAwait(false);
         await DemandAuthorityAsync(catalogue.Owners, catalogue.Authority, originals, token).ConfigureAwait(false);
 
+        var digest = NormalizeFilesDigest(selected.ContentSha256);
+        if (selected.ContentSha256 is not null && digest is null)
+            throw Block("SPACE_FILES_CHOOSER_DIGEST_INVALID", "The Files owner returned an invalid content digest; refresh the current file metadata.");
+
         var reference = new SpaceContextReference(Guid.NewGuid(), SpaceContextReferenceKind.File, "files",
             selected.CanonicalEntityId, selected.RevisionId.ToString("D"), SpaceContextPermission.Read,
             SpaceContextIndexState.NotRequired, true, DateTimeOffset.UtcNow, selected.FileId)
-        { ContentSha256 = selected.ContentSha256 };
+        { ContentSha256 = digest, ParentFolderId = selected.ParentFolderId };
         return reference;
     });
 
@@ -152,4 +156,12 @@ internal sealed partial class OriginalSpaceRequestPolicySource
     }
 
     private static string storeIdAndFileId(Guid storeId, Guid fileId) => storeId.ToString("D") + "/" + fileId.ToString("D");
+
+    private static string? NormalizeFilesDigest(string? value)
+    {
+        if (value is null) return null;
+        if (value.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase)) value = value[7..];
+        if (value.Length != 64 || value.Any(character => !Uri.IsHexDigit(character))) return null;
+        return "sha256:" + value.ToLowerInvariant();
+    }
 }

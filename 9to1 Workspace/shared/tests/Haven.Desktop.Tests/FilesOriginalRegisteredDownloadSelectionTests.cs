@@ -163,6 +163,11 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             Assert.Equal(uploaded.FileId.Value, preview.FileId); Assert.Equal(uploaded.RevisionId.ToString(), preview.Revision);
             Assert.Equal(Encoding.UTF8.GetByteCount(text), preview.TotalBytes);
             Assert.Contains("Read-only", preview.Message, StringComparison.Ordinal);
+            await rig.Keep(rig.Browser.RevalidateOriginalTextPreviewWithinSourceAsync(preview,
+                () => true, body => body(), rig.Retain, rig.Token));
+            await rig.ObserveExpectedFailureAsync(rig.Keep(rig.Browser.RevalidateOriginalTextPreviewWithinSourceAsync(
+                preview with { }, () => true, body => body(), rig.Retain, rig.Token)),
+                typeof(UnauthorizedAccessException), "Retain the SAME successful original Files preview.");
             Assert.Equal(before.Home, (await rig.BytesAsync()).Home); Assert.Equal(before.Drive, (await rig.BytesAsync()).Drive);
         });
 

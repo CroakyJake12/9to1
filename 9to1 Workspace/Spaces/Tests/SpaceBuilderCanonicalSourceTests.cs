@@ -47,12 +47,12 @@ public sealed class SpaceBuilderCanonicalSourceTests
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30)); var token = deadline.Token;
         var registry = files.OpenRegistry();
         var space = await registry.CreateAsync("Managed Files reference", cancellationToken: token);
-        var storeId = Guid.NewGuid(); var fileId = Guid.NewGuid(); var revisionId = Guid.NewGuid();
+        var storeId = Guid.NewGuid(); var parentFolderId = Guid.NewGuid(); var fileId = Guid.NewGuid(); var revisionId = Guid.NewGuid();
         var digest = "sha256:" + new string('a', 64);
         var reference = new SpaceContextReference(Guid.NewGuid(), SpaceContextReferenceKind.File, "files",
             storeId.ToString("D") + "/" + fileId.ToString("D"), revisionId.ToString("D"), SpaceContextPermission.Read,
             SpaceContextIndexState.NotRequired, true, DateTimeOffset.UtcNow, fileId)
-        { ContentSha256 = digest };
+        { ContentSha256 = digest, ParentFolderId = parentFolderId };
         var editor = new SpaceBuilderController(registry, space.Id);
         Assert.True(await editor.LoadAsync(token));
         Assert.True(editor.AttachContextReference(reference, space.Revision));

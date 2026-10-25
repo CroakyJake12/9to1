@@ -978,7 +978,9 @@ public sealed partial class SpaceRegistry
                 reference.HostedFileId == Guid.Empty ||
                 !Enum.IsDefined(reference.Permission) || !Enum.IsDefined(reference.IndexState) ||
                 reference.ContentSha256 is { } digest && (reference.Kind != SpaceContextReferenceKind.File ||
-                    reference.OwnerAppId != "files" || !IsSha256Digest(digest))) ||
+                    reference.OwnerAppId != "files" || !IsSha256Digest(digest)) ||
+                reference.ParentFolderId is { } parentFolderId && (parentFolderId == Guid.Empty ||
+                    reference.Kind != SpaceContextReferenceKind.File || reference.OwnerAppId != "files")) ||
             space.ContextReferences.Select(reference => reference.ContextId).Distinct().Count() != space.ContextReferences.Count)
             throw new ArgumentException("Space context references must be valid and unique.");
         if (space.Shares is null || space.Shares.Any(grant => grant is null ||

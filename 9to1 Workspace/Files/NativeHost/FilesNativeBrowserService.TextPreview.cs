@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Runtime.CompilerServices;
 using Haven.Application;
+using HavenOS.Files;
 
 namespace HavenOS.Files.NativeHost;
 
@@ -9,6 +11,10 @@ public sealed record FilesOriginalTextPreview(bool Succeeded, string Code, strin
 
 public sealed partial class FilesNativeBrowserService
 {
+    private sealed record OriginalTextPreviewWitness(FilesNativeBrowserService Issuer,
+        FilesNativeBrowserPage Page, HostedItemMetadata Row, AuthenticatedResourceActor Actor,
+        NativeFilesWorkspace Workspace, IOriginalCanonicalReadContext Read);
+    private readonly ConditionalWeakTable<FilesOriginalTextPreview, OriginalTextPreviewWitness> _originalTextPreviewWitnesses = new();
     public const int MaximumTextPreviewBytes = 1024 * 1024;
     public const int MaximumTextPreviewCharacters = 65536;
     public bool HasOriginalTextPreviewOwner => _originalFolders is not null;
@@ -142,12 +148,72 @@ public sealed partial class FilesNativeBrowserService
                 text = text[..length];
             }
             await Demand(token).ConfigureAwait(false);
-            return new FilesOriginalTextPreview(true, "PreviewReady", truncated
+            var preview = new FilesOriginalTextPreview(true, "PreviewReady", truncated
                 ? "Read-only UTF-8 preview · first 65,536 characters at most; remaining text is not displayed."
                 : "Read-only UTF-8 preview · no code or links are executed.", row.Id.Value, row.Name,
                 row.CurrentRevisionId!.Value.ToString(), text, size, truncated);
+            source.Invoke(() =>
+            {
+                _originalTextPreviewWitnesses.Add(preview,
+                    new OriginalTextPreviewWitness(this, page, row, actor, workspace, read));
+                return true;
+            });
+            return preview;
             FilesOriginalTextPreview Refused(string code, string message, long total = 0) =>
                 new(false, code, message, row.Id.Value, row.Name, row.CurrentRevisionId!.Value.ToString(), "", total);
+        });
+    }
+
+    /// <summary>Revalidates the exact Files preview admission after its text was captured,
+    /// without reopening or rereading content. Only the same successful issued result can be used.</summary>
+    public Task RevalidateOriginalTextPreviewWithinSourceAsync(FilesOriginalTextPreview samePreview,
+        Func<bool> lifetime, Action<Action> scope, Action<Task> retain, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(samePreview);
+        ArgumentNullException.ThrowIfNull(lifetime);
+        var original = new CloudflareOriginalTaskLedger(); original.BindOriginalOwner(this); original.BindOriginalCallerCallback(scope);
+        var source = new FilesOriginalReadSourceScope(body => original.Invoke(() => { body(); return true; }),
+            actual => { original.Track(actual); retain(actual); });
+        return original.RunToOriginalSettlementAsync(async () =>
+        {
+            token.ThrowIfCancellationRequested();
+            var witness = source.Invoke(() => samePreview.Succeeded &&
+                _originalTextPreviewWitnesses.TryGetValue(samePreview, out var issued) &&
+                ReferenceEquals(issued.Issuer, this) && issued.Actor.ProfileId == issued.Workspace.Actor.ProfileId &&
+                issued.Actor == issued.Workspace.Actor && issued.Page.StoreID == issued.Workspace.Configuration.StoreId &&
+                !issued.Page.IsTrash && issued.Page.Items.Any(row => ReferenceEquals(row, issued.Row)) &&
+                issued.Row.Id.Value == samePreview.FileId && issued.Row.Name == samePreview.Name &&
+                issued.Row.CurrentRevisionId?.Value.ToString() == samePreview.Revision
+                    ? issued : throw new UnauthorizedAccessException("Retain the SAME successful original Files preview."));
+            if (!source.Invoke(lifetime)) throw new UnauthorizedAccessException("The original Files preview admission retired.");
+            var current = await source.Observe(() => workspaces.GetOriginalCurrentWithinSourceAsync(
+                witness.Page.StoreID, source, token)).ConfigureAwait(false);
+            if (current?.Actor != witness.Actor ||
+                !ReferenceEquals(current.Provider, witness.Workspace.Provider) ||
+                !ReferenceEquals(current.Directories, witness.Workspace.Directories) ||
+                !ReferenceEquals(current.Materializations, witness.Workspace.Materializations))
+                throw new UnauthorizedAccessException("The original Files preview workspace changed.");
+            var resourceScope = witness.Read.OriginalScope;
+            if (resourceScope.Kind != "files.item" || resourceScope.Id != witness.Row.Id.ToString() ||
+                resourceScope.Revision != witness.Row.CurrentRevisionId?.ToString() || resourceScope.Access != ResourceAccess.Read ||
+                !resources.IsIssuedOriginalReadOwnerBinding(witness.Actor, witness.Read, "files.preview.read",
+                    resourceScope, current.Provider, current.Directories, witness.Page.StoreID))
+                throw new UnauthorizedAccessException("The original Files preview read owner changed.");
+            if (await source.Observe(() => resources.AuthorizeOriginalReadForActorAsync(witness.Actor, witness.Read,
+                    "files.preview.read", [resourceScope], token).AsTask()).ConfigureAwait(false) != witness.Actor ||
+                !source.Invoke(lifetime))
+                throw new UnauthorizedAccessException("The original Home READ no longer permits this Files preview.");
+            await source.ObserveVoid(() => RevalidateOriginalHomeLibraryPageWithinSourceAsync(witness.Page,
+                witness.Actor, lifetime, scopeBody => source.Invoke(() => { scopeBody(); return true; }),
+                source.Retain, token)).ConfigureAwait(false);
+            var metadata = await source.Observe(() => current.Provider.GetForOriginalStoreAsync(
+                witness.Page.StoreID, witness.Row.Id, token)).ConfigureAwait(false);
+            if (!metadata.IsSuccess || metadata.Value != witness.Row || !source.Invoke(lifetime))
+                throw new InvalidOperationException("The original Files preview row or revision changed.");
+            if (await source.Observe(() => resources.AuthorizeOriginalReadForActorAsync(witness.Actor, witness.Read,
+                    "files.preview.read", [resourceScope], token).AsTask()).ConfigureAwait(false) != witness.Actor)
+                throw new UnauthorizedAccessException("The original Home READ changed while revalidating this Files preview.");
+            return true;
         });
     }
     private static string? NormalizeTextPreviewHash(string? value)

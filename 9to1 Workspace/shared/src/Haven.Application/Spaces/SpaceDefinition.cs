@@ -74,6 +74,11 @@ public sealed record SpaceContextReference(
     /// This is provenance metadata only, never an access grant.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public string? ContentSha256 { get; init; }
+
+    /// <summary>Files-owned parent folder observed for current-row re-selection. It is a location
+    /// hint only and never grants access or proves that the file remains in that folder.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? ParentFolderId { get; init; }
 }
 
 public sealed record SpaceShareGrant(

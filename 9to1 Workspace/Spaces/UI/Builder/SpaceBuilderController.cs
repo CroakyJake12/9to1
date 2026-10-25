@@ -817,6 +817,7 @@ public sealed class SpaceBuilderController
         return parts.Length == 2 && Guid.TryParseExact(parts[0], "D", out var storeId) && storeId != Guid.Empty &&
             parts[0] == storeId.ToString("D") && Guid.TryParseExact(parts[1], "D", out var fileId) && fileId != Guid.Empty &&
             parts[1] == fileId.ToString("D") && reference.HostedFileId == fileId &&
+            reference.ParentFolderId is { } parentFolderId && parentFolderId != Guid.Empty &&
             Guid.TryParseExact(reference.RevisionToken, "D", out var revisionId) && revisionId != Guid.Empty;
     }
     public bool DetachContextReference(Guid contextId)
