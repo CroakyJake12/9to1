@@ -19,6 +19,10 @@ public sealed partial class App
     private HomeDeveloperProjectSetupActionPolicySource? _windowsDeveloperSetupPolicy;
     private HomeDeveloperProjectEditResourceResolver? _windowsDeveloperEditResolver;
     private HomeDeveloperProjectEditActionPolicySource? _windowsDeveloperEditPolicy;
+    private HomeDeveloperManualProjectExecutionResourceResolver? _windowsManualRunResolver;
+    private HomeDeveloperManualProjectExecutionActionPolicySource? _windowsManualRunPolicy;
+    private HomeDeveloperManualProjectExecutionAdmissionSource? _windowsManualRuns;
+    private DeveloperManualProjectProcessOwner? _windowsManualProcesses;
     private HomeColdProjectReadResourceResolver? _windowsColdProjectResolver;
     private HomeColdProjectReadActionPolicySource? _windowsColdProjectPolicy;
     private FilesDeveloperOriginalCurrentProjectExecutionResolver? _windowsExecutionResolver;
@@ -55,6 +59,9 @@ public sealed partial class App
         _windowsDeveloperEditResolver = new(() => _windowsDeveloperEdits
             ?? throw new InvalidOperationException("The SAME Windows Home EDIT owner is not captured."));
         _windowsDeveloperEditPolicy = new();
+        _windowsManualRunResolver = new(() => _windowsManualRuns
+            ?? throw new InvalidOperationException("The SAME Home manual Run owner is not captured."));
+        _windowsManualRunPolicy = new();
         if (!WindowsColdProjectRequested) return;
         _windowsColdProjectResolver = new(() => _windowsColdProjects
             ?? throw new InvalidOperationException("The SAME Windows cold project source is not captured."));
@@ -64,11 +71,11 @@ public sealed partial class App
         _windowsExecutionPolicy = new();
     }
     private ICanonicalResourceAccessResolver[] OriginalWindowsDeveloperResolvers() => WindowsColdProjectRequested
-        ? [_windowsDeveloperReadResolver!, _windowsDeveloperDestinationResolver!, _windowsDeveloperEditResolver!, _windowsColdProjectResolver!, _windowsExecutionResolver!]
-        : [_windowsDeveloperReadResolver!, _windowsDeveloperDestinationResolver!, _windowsDeveloperEditResolver!];
+        ? [_windowsDeveloperReadResolver!, _windowsDeveloperDestinationResolver!, _windowsDeveloperEditResolver!, _windowsManualRunResolver!, _windowsColdProjectResolver!, _windowsExecutionResolver!]
+        : [_windowsDeveloperReadResolver!, _windowsDeveloperDestinationResolver!, _windowsDeveloperEditResolver!, _windowsManualRunResolver!];
     private IHomeActionPolicySource[] OriginalWindowsDeveloperPolicies() => WindowsColdProjectRequested
-        ? [_windowsDeveloperReadPolicy!, _windowsDeveloperSetupPolicy!, _windowsDeveloperEditPolicy!, _windowsColdProjectPolicy!, _windowsExecutionPolicy!]
-        : [_windowsDeveloperReadPolicy!, _windowsDeveloperSetupPolicy!, _windowsDeveloperEditPolicy!];
+        ? [_windowsDeveloperReadPolicy!, _windowsDeveloperSetupPolicy!, _windowsDeveloperEditPolicy!, _windowsManualRunPolicy!, _windowsColdProjectPolicy!, _windowsExecutionPolicy!]
+        : [_windowsDeveloperReadPolicy!, _windowsDeveloperSetupPolicy!, _windowsDeveloperEditPolicy!, _windowsManualRunPolicy!];
 
     private void ConfigureOriginalWindowsDeveloperRegistrations(IServiceCollection services)
     {
@@ -85,6 +92,9 @@ public sealed partial class App
             services.AddHavenOwnedDeveloperSourceEdits(home,
                 provider => provider.GetRequiredService<IDeveloperProjectOriginalEditScopeSource>(),
                 _windowsDeveloperEditResolver!, _windowsDeveloperEditPolicy!);
+            services.AddHavenOwnedDeveloperManualExecution(home,
+                provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                _windowsManualRunResolver!, _windowsManualRunPolicy!);
             services.AddHavenOwnedDeveloperSetups(home,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
@@ -120,6 +130,13 @@ public sealed partial class App
                 provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
                 provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>(),
                 provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>()));
+            services.AddSingleton<DeveloperManualProjectProcessOwner>(provider => new(
+                provider.GetRequiredService<NativeFilesWorkspaceService>(),
+                provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
+                provider.GetRequiredService<HomeDeveloperManualProjectExecutionAdmissionSource>(),
+                provider.GetRequiredService<IWorkspaceToolService>() as IWorkspaceOriginalInvocationSource
+                    ?? throw new InvalidOperationException("The original workspace process owner is unavailable.")));
             if (WindowsColdProjectRequested)
             {
                 services.AddHavenOwnedNativeColdProjectResources(home);
@@ -146,6 +163,8 @@ public sealed partial class App
             }
             Capture<HomeDeveloperProjectReadAdmissionSource>(actual => _windowsDeveloperReads = actual);
             Capture<HomeDeveloperProjectEditAdmissionSource>(actual => _windowsDeveloperEdits = actual);
+            Capture<HomeDeveloperManualProjectExecutionAdmissionSource>(actual => _windowsManualRuns = actual);
+            Capture<DeveloperManualProjectProcessOwner>(actual => _windowsManualProcesses = actual);
             Capture<HomeDeveloperProjectSetupJournal>(actual => _windowsDeveloperJournal = actual);
             Capture<HomeDeveloperProjectSetupPermissionSource>(actual => _windowsDeveloperPermissions = actual);
             Capture<FilesDeveloperOriginalSourceSelection>(actual => _windowsDeveloperSelections = actual);
@@ -176,6 +195,8 @@ public sealed partial class App
     private void DemandOriginalWindowsDeveloperRetirementJoin()
     {
         DemandOriginalAssistantDevelopmentInputsJoin();
+        _windowsManualProcesses?.DemandExternalOriginalJoin();
+        _windowsManualRuns?.DemandExternalOriginalManualExecutionJoin();
         _windowsDeveloperPermissions?.DemandExternalOriginalSetupJoin();
         _windowsDeveloperSteps?.DemandExternalOriginalSetupStepOutcomeJoin();
         _windowsDeveloperScopes?.DemandExternalOriginalSetupScopeJoin();
@@ -228,6 +249,14 @@ public sealed partial class App
             catch (Exception error)
             { AddAppCause(failures, error); if (completionPhase) completionAcquisitionFailed = true; }
         }
+        // Stop and join each actual manual process before retiring its Home admission
+        // or borrowed Files/READ owners. Preserve failures while still closing siblings.
+        if (_windowsManualProcesses is { } manualProcesses) Close(manualProcesses.CloseAndDrainOriginalAsync, completions);
+        foreach (var original in completions.Distinct<Task>(ReferenceEqualityComparer.Instance))
+            await JoinOriginalAppTaskAsync(original, failures);
+        if (completionAcquisitionFailed) ThrowAppCauses(failures);
+        completions.Clear();
+        if (_windowsManualRuns is { } manualRuns) Close(manualRuns.CloseAndDrainOriginalManualExecutionsAsync, completions);
         if (_windowsDeveloperPermissions is { } permissions) Close(permissions.CloseAndDrainOriginalSetupsAsync, completions);
         if (_windowsCurrentExecution is { } execution) Close(execution.CloseAndDrainOriginalExecutionAsync, completions);
         if (_windowsExecutionConsent is { } consent) Close(consent.CloseAndDrainOriginalExecutionsAsync, completions);
