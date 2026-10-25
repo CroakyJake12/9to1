@@ -114,6 +114,11 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                     await CloseUnpublishedAsync(opened);
                     throw new UnauthorizedAccessException("The artifact revision or access changed before the embedded page could be shown.");
                 }
+                if (!IsCurrentSelection(pageId, sectionId, pageType, reference, mode))
+                {
+                    await CloseUnpublishedAsync(opened);
+                    return;
+                }
                 _session = opened;
                 _pageId = pageId;
                 _sectionId = sectionId;
@@ -182,17 +187,20 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         var pageType = _pageType;
         var reference = _reference;
         var mode = _mode;
-        if (pageId is null || pageType is null || reference is null ||
-            !IsCurrentSelection(pageId, sectionId, pageType, reference, mode))
+        if (pageId is null || pageType is null || reference is null)
             return null;
         IBoardsEmbeddedArtifactClosePreparation? ownerPreparation = null;
         try
         {
             ownerPreparation = await session.PrepareToCloseAsync(cancellationToken);
             if (ownerPreparation is null || !ownerPreparation.IsCurrent ||
-                !IsCurrentSelection(pageId, sectionId, pageType, reference, mode))
+                !IsRetainedSessionCurrent(session, pageId, sectionId, pageType, reference, mode))
             {
-                if (ownerPreparation is not null) await ownerPreparation.AbortAsync();
+                if (ownerPreparation is not null)
+                {
+                    await ownerPreparation.AbortAsync();
+                    await ownerPreparation.DisposeAsync();
+                }
                 viewModel.Set("StatusText", "The embedded artifact owner refused to prepare this close; its page remains open.");
                 return null;
             }
@@ -202,7 +210,11 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         }
         catch
         {
-            if (ownerPreparation is not null) await ownerPreparation.AbortAsync();
+            if (ownerPreparation is not null)
+            {
+                await ownerPreparation.AbortAsync();
+                await ownerPreparation.DisposeAsync();
+            }
             throw;
         }
     }
@@ -226,20 +238,17 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            if (preparation is not null) await AbortPreparedCloseCoreAsync((SurfaceClosePreparation)preparation);
             RestoreSelectionIfNeeded(restoreSelection, oldSectionId, oldPageId);
             throw;
         }
         catch (Exception error)
         {
             if (preparation is not null)
-                await preparation.AbortAsync();
+                await AbortPreparedCloseCoreAsync((SurfaceClosePreparation)preparation);
             RestoreSelectionIfNeeded(restoreSelection, oldSectionId, oldPageId);
             viewModel.Set("StatusText", "The embedded page remains open: " + FirstLine(error.Message));
             return false;
-        }
-        finally
-        {
-            if (preparation is not null) await preparation.DisposeAsync();
         }
     }
 
@@ -337,23 +346,38 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
     {
         Dispatcher.UIThread.VerifyAccess();
         await _gate.WaitAsync();
-        try
-        {
-            if (!ReferenceEquals(_pendingPreparation, preparation)) return;
-            if (preparation.OwnerPreparation is { } ownerPreparation)
-                await ownerPreparation.AbortAsync();
-            _pendingPreparation = null;
-        }
+        try { await AbortPreparedCloseCoreAsync(preparation); }
         finally { _gate.Release(); }
+    }
+
+    private async Task AbortPreparedCloseCoreAsync(SurfaceClosePreparation preparation)
+    {
+        if (!ReferenceEquals(_pendingPreparation, preparation))
+        {
+            preparation.MarkAborted();
+            return;
+        }
+        if (preparation.OwnerPreparation is { } ownerPreparation)
+        {
+            await ownerPreparation.AbortAsync();
+            await ownerPreparation.DisposeAsync();
+        }
+        _pendingPreparation = null;
+        preparation.MarkAborted();
     }
 
     private bool IsPreparationCurrent(SurfaceClosePreparation preparation) =>
         !_disposed && ReferenceEquals(_pendingPreparation, preparation) &&
         (preparation.Session is null || ReferenceEquals(_session, preparation.Session)) &&
         (preparation.Session is null || preparation.Reference is { } reference &&
-            IsCurrentSelection(preparation.PageId, preparation.SectionId,
+            IsRetainedSessionCurrent(preparation.Session, preparation.PageId, preparation.SectionId,
                 preparation.PageType, reference, preparation.Mode)) &&
         (preparation.OwnerPreparation?.IsCurrent ?? true);
+
+    private bool IsRetainedSessionCurrent(IBoardsEmbeddedArtifactSession session, string pageId,
+        string? sectionId, string pageType, BoardEmbeddedArtifactReference reference, BoardEmbeddedArtifactMode mode) =>
+        ReferenceEquals(_session, session) && _pageId == pageId && _sectionId == sectionId &&
+        _pageType == pageType && Equals(_reference, reference) && _mode == mode;
 
     private sealed class SurfaceClosePreparation(BoardsEmbeddedArtifactSurface owner,
         IBoardsEmbeddedArtifactSession? session, IBoardsEmbeddedArtifactClosePreparation? ownerPreparation,
@@ -372,6 +396,7 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         public bool IsCurrent => Volatile.Read(ref _finished) == 0 && owner.IsPreparationCurrent(this);
 
         public void MarkCommitted() => Interlocked.Exchange(ref _finished, 1);
+        public void MarkAborted() => Interlocked.Exchange(ref _finished, 1);
 
         public async Task CommitAsync(CancellationToken ct = default)
         {
