@@ -441,6 +441,82 @@ public sealed class HavenRichBoardV3Tests
     }
 
     [Fact]
+    public async Task Table_merge_only_absorbs_blank_cells_and_split_restores_the_stable_slots()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var path = Path.Combine(root, "table-merge.9to1board");
+            string pageId = string.Empty;
+            string blockId = string.Empty;
+            string duplicateBlockId = string.Empty;
+            string anchorId = string.Empty;
+            string[] originalCellIds = [];
+            await using (var session = await RichBoardSession.CreateNewAsync(store, "Table merge"))
+            {
+                await session.SaveAsAsync(path);
+                pageId = session.Rich.Sections[0].Pages[0].Id;
+                await session.MutateAsync(rich =>
+                {
+                    var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Table);
+                    blockId = block.Id;
+                    var table = block.Table!;
+                    anchorId = table.Rows[0].Cells[0].Id;
+                    table.Rows[0].Cells[0].Text = "Title";
+                    table.Rows[0].Cells[1].Background = "#FFE8F0FE";
+                    originalCellIds = table.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id).ToArray();
+                });
+
+                await session.MutateAsync(rich =>
+                {
+                    Assert.True(HavenRichNotesOps.CanMergeTableCellRight(rich, pageId, blockId, 0, 0));
+                    Assert.True(HavenRichNotesOps.MergeTableCellRight(rich, pageId, blockId, 0, 0));
+                    Assert.True(HavenRichNotesOps.CanMergeTableCellDown(rich, pageId, blockId, 0, 0));
+                    Assert.True(HavenRichNotesOps.MergeTableCellDown(rich, pageId, blockId, 0, 0));
+                });
+
+                var merged = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+                Assert.Equal(2, merged.Rows[0].Cells[0].RowSpan);
+                Assert.Equal(2, merged.Rows[0].Cells[0].ColumnSpan);
+                Assert.Equal("Title", merged.Rows[0].Cells[0].Text);
+                Assert.All(merged.Rows.SelectMany(row => row.Cells).Skip(1), cell => Assert.Equal(anchorId, cell.CoveredByCellId));
+                Assert.False(HavenRichNotesOps.MoveTableRow(session.Rich, pageId, blockId, 0, 1));
+                Assert.False(HavenRichNotesOps.DeleteTableColumn(session.Rich, pageId, blockId, 1));
+                await session.MutateAsync(rich => duplicateBlockId =
+                    HavenRichNotesOps.DuplicateBlock(rich, pageId, blockId).Id);
+                var duplicate = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == duplicateBlockId).Table!;
+                var duplicateAnchorId = duplicate.Rows[0].Cells[0].Id;
+                Assert.NotEqual(anchorId, duplicateAnchorId);
+                Assert.All(duplicate.Rows.SelectMany(row => row.Cells).Skip(1),
+                    cell => Assert.Equal(duplicateAnchorId, cell.CoveredByCellId));
+                await session.SaveAsync();
+
+                await session.MutateAsync(rich => Assert.True(HavenRichNotesOps.SplitTableCell(rich, pageId, blockId, 0, 0)));
+                Assert.True(await session.UndoAsync());
+                var undoSplit = session.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+                Assert.Equal(2, undoSplit.Rows[0].Cells[0].RowSpan);
+                Assert.Equal(2, undoSplit.Rows[0].Cells[0].ColumnSpan);
+                Assert.True(await session.RedoAsync());
+                await session.SaveAsync();
+            }
+
+            await using var reopened = await RichBoardSession.OpenAtPathAsync(store, path);
+            var split = reopened.Rich.Sections[0].Pages[0].Blocks.Single(block => block.Id == blockId).Table!;
+            Assert.Equal(originalCellIds, split.Rows.SelectMany(row => row.Cells).Select(cell => cell.Id));
+            Assert.All(split.Rows.SelectMany(row => row.Cells), cell =>
+            {
+                Assert.Equal(1, cell.RowSpan);
+                Assert.Equal(1, cell.ColumnSpan);
+                Assert.Null(cell.CoveredByCellId);
+            });
+            Assert.Equal("Title", split.Rows[0].Cells[0].Text);
+            Assert.Equal("#FFE8F0FE", split.Rows[0].Cells[1].Background);
+            await reopened.MutateAsync(rich => HavenRichNotesOps.UpdateTableCell(rich, pageId, blockId,
+                split.Rows[0].Cells[1].Id, "occupied"));
+            Assert.False(HavenRichNotesOps.CanMergeTableCellRight(reopened.Rich, pageId, blockId, 0, 0));
+        });
+    }
+
+    [Fact]
     public async Task Table_structure_style_and_formatted_cells_survive_reopen()
     {
         await WithStoreAsync(async (store, root) =>

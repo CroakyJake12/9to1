@@ -19,11 +19,11 @@ internal static class Projector
         {
             Id = s.Id,
             Title = s.Title,
-            Pages = s.Pages.Select(ProjectPage).ToList()
+            Pages = s.Pages.Select(page => ProjectPage(rich, page)).ToList()
         }).ToList();
     }
 
-    private static RichBoardPage ProjectPage(HavenRichPage page) => new()
+    private static RichBoardPage ProjectPage(HavenRichNotes notes, HavenRichPage page) => new()
     {
         Id = page.Id,
         ParentPageId = page.ParentPageId,
@@ -34,10 +34,10 @@ internal static class Projector
         InkPanX = page.InkView?.PanX ?? 0,
         InkPanY = page.InkView?.PanY ?? 0,
         InkZoom = page.InkView?.Zoom ?? 1,
-        Blocks = ProjectBlocks(page)
+        Blocks = ProjectBlocks(notes, page)
     };
 
-    private static List<RichBoardBlock> ProjectBlocks(HavenRichPage page)
+    private static List<RichBoardBlock> ProjectBlocks(HavenRichNotes notes, HavenRichPage page)
     {
         var blocks = new List<RichBoardBlock>();
         foreach (var block in page.Blocks)
@@ -93,7 +93,7 @@ internal static class Projector
                         });
                     break;
                 case HavenRichBlockKind.Table when block.Table is not null:
-                    blocks.Add(ProjectTable(block));
+                    blocks.Add(ProjectTable(notes, page, block));
                     break;
                 case HavenRichBlockKind.Image when block.Image is not null:
                     blocks.Add(new RichBoardBlock
@@ -156,17 +156,19 @@ internal static class Projector
         return blocks;
     }
 
-    private static RichBoardBlock ProjectTable(HavenRichBlock block)
+    private static RichBoardBlock ProjectTable(HavenRichNotes notes, HavenRichPage page, HavenRichBlock block)
     {
         var table = block.Table!;
         var cells = new Dictionary<string, string>(StringComparer.Ordinal);
         var styles = new Dictionary<string, RichCellStyleView>(StringComparer.Ordinal);
+        var spans = new Dictionary<string, RichTableCellSpanView>(StringComparer.Ordinal);
         for (var r = 0; r < table.Rows.Count; r++)
             for (var c = 0; c < table.Rows[r].Cells.Count; c++)
             {
                 var cell = table.Rows[r].Cells[c];
-                cells[$"{r},{c}"] = cell.Text;
-                styles[$"{r},{c}"] = new RichCellStyleView
+                var key = $"{r},{c}";
+                cells[key] = cell.Text;
+                styles[key] = new RichCellStyleView
                 {
                     AlignH = cell.AlignmentH.ToString().ToLowerInvariant(),
                     AlignV = cell.AlignmentV.ToString().ToLowerInvariant(),
@@ -177,6 +179,17 @@ internal static class Projector
                     Underline = cell.Underline,
                     Baseline = cell.Baseline.ToString().ToLowerInvariant()
                 };
+                spans[key] = new RichTableCellSpanView
+                {
+                    RowSpan = cell.RowSpan,
+                    ColumnSpan = cell.ColumnSpan,
+                    CoveredByCellId = cell.CoveredByCellId,
+                    CanMergeRight = cell.CoveredByCellId is null &&
+                        HavenRichNotesOps.CanMergeTableCellRight(notes, page.Id, block.Id, r, c),
+                    CanMergeDown = cell.CoveredByCellId is null &&
+                        HavenRichNotesOps.CanMergeTableCellDown(notes, page.Id, block.Id, r, c),
+                    CanSplit = cell.CoveredByCellId is null && (cell.RowSpan > 1 || cell.ColumnSpan > 1)
+                };
             }
         return new RichBoardBlock
         {
@@ -184,6 +197,9 @@ internal static class Projector
             Kind = "table",
             StyleId = block.StyleId,
             TableCells = cells,
+            CellSpans = spans,
+            HasMergedCells = spans.Values.Any(span => span.CoveredByCellId is not null ||
+                span.RowSpan > 1 || span.ColumnSpan > 1),
             TableStyle = new RichTableStyleView
             {
                 Background = table.Background,

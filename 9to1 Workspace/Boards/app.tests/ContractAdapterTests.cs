@@ -120,6 +120,48 @@ public sealed class ContractAdapterTests
         }
     }
 
+    [Fact]
+    public async Task Table_merge_and_split_context_actions_preserve_stable_blank_slots_and_undo()
+    {
+        var document = CreateNotesDocument("Table merge actions");
+        var notes = document.RichNotes!;
+        var page = notes.Sections[0].Pages[0];
+        var block = HavenRichNotesOps.AddBlock(notes, page.Id, HavenRichBlockKind.Table);
+        var table = block.Table!;
+        table.Rows[0].Cells[0].Text = "Heading";
+        table.Rows[0].Cells[1].Background = "#FFE8F0FE";
+        var anchorId = table.Rows[0].Cells[0].Id;
+        var coveredId = table.Rows[0].Cells[1].Id;
+        var adapter = await ContractSessionAdapter.OpenExternallyWritableAsync(document,
+            (_, _) => ValueTask.FromResult(true));
+        await using (adapter)
+        {
+            var viewModel = new BoardsViewModel(adapter);
+            viewModel.FocusBlock(block.Id);
+            viewModel.FocusCell(block.Id, 0, 0);
+            Assert.True(viewModel.TryGetValue("ContextCanMergeCellRight", out var canMerge) && canMerge is true);
+            await viewModel.DispatchAsync("ContextMergeCellRight", null);
+            var mergedDocument = await adapter.GetDetachedContractDocumentAsync();
+            var merged = mergedDocument.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.Equal(2, merged.Rows[0].Cells[0].ColumnSpan);
+            Assert.Equal(anchorId, merged.Rows[0].Cells[1].CoveredByCellId);
+            Assert.Equal("Heading", merged.Rows[0].Cells[0].Text);
+            Assert.True(viewModel.TryGetValue("ContextCanSplitCell", out var canSplit) && canSplit is true);
+
+            await viewModel.DispatchAsync("ContextSplitCell", null);
+            var splitDocument = await adapter.GetDetachedContractDocumentAsync();
+            var split = splitDocument.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
+            Assert.Equal(1, split.Rows[0].Cells[0].ColumnSpan);
+            Assert.Null(split.Rows[0].Cells[1].CoveredByCellId);
+            Assert.Equal(coveredId, split.Rows[0].Cells[1].Id);
+            Assert.Equal("#FFE8F0FE", split.Rows[0].Cells[1].Background);
+            Assert.True(viewModel.TryGetValue("ContextCanChangeTableStructure", out var canChangeStructure) && canChangeStructure is true);
+            Assert.True(await adapter.UndoAsync());
+            var undone = await adapter.GetDetachedContractDocumentAsync();
+            Assert.Equal(2, undone.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!.Rows[0].Cells[0].ColumnSpan);
+        }
+    }
+
     private static HavenBoardDocument CreateNotesDocument(string title)
     {
         var now = DateTimeOffset.UtcNow;

@@ -64,6 +64,8 @@ public sealed class RichBoardBlock
     public Dictionary<string, string> TableCells { get; set; } = new(StringComparer.Ordinal);
     public RichTableStyleView TableStyle { get; set; } = new();
     public Dictionary<string, RichCellStyleView> CellStyles { get; set; } = new(StringComparer.Ordinal);
+    public Dictionary<string, RichTableCellSpanView> CellSpans { get; set; } = new(StringComparer.Ordinal);
+    public bool HasMergedCells { get; set; }
     public int TableRows { get; set; }
     public int TableCols { get; set; }
     public List<double> ColumnWidths { get; set; } = [];
@@ -116,6 +118,17 @@ public sealed class RichCellStyleView
     public bool Italic { get; set; }
     public bool Underline { get; set; }
     public string Baseline { get; set; } = "normal";
+}
+
+/// <summary>Structural table-cell extent projected from the canonical cell IDs.</summary>
+public sealed class RichTableCellSpanView
+{
+    public int RowSpan { get; set; } = 1;
+    public int ColumnSpan { get; set; } = 1;
+    public string? CoveredByCellId { get; set; }
+    public bool CanMergeRight { get; set; }
+    public bool CanMergeDown { get; set; }
+    public bool CanSplit { get; set; }
 }
 
 /// <summary>Image payload surfaced to the editor (bytes only while importing).</summary>

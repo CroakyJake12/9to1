@@ -12,6 +12,7 @@ using Haven.Application;
 namespace CakeOS.Apps.Boards.App;
 
 public enum BoardBlockAction { MoveUp, MoveDown, Duplicate, Delete }
+public enum BoardTableCellAction { MergeRight, MergeDown, Split }
 public sealed record BoardBlockActionRequest(BoardBlockActionTarget Target, BoardBlockAction Action);
 public sealed record BoardBlockMoveRequest(BoardBlockActionTarget Target, int DestinationIndex);
 public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string PageId, string BlockId,
@@ -490,6 +491,57 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
                     : HavenRichNotesOps.MoveTableColumn(rich, pageId, blockId, fromIndex, toIndex);
             }, cancellationToken).ConfigureAwait(false);
             if (!applied || !moved) return false;
+            RefreshView();
+            return true;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>Applies one selected-cell merge or split as a guarded, undoable contract mutation.</summary>
+    public async ValueTask<bool> ApplyTableCellActionAsync(string pageId, string blockId, int row, int column,
+        BoardTableCellAction action, Func<bool> originStillSelected, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(originStillSelected);
+        if (_disposed || string.IsNullOrWhiteSpace(pageId) || string.IsNullOrWhiteSpace(blockId) ||
+            row < 0 || column < 0 || !originStillSelected())
+            return false;
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            EnsureEditable();
+            if (!originStillSelected()) return false;
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var version = DocumentVersion;
+            bool Applicable(HavenRichNotes rich)
+            {
+                if (_disposed || !originStillSelected() || rich.Version != version) return false;
+                var page = rich.Sections.SelectMany(section => section.Pages)
+                    .FirstOrDefault(candidate => candidate.Id == pageId);
+                var table = page?.Blocks.FirstOrDefault(candidate => candidate.Id == blockId)?.Table;
+                if (table is null || row >= table.Rows.Count || column >= table.Rows[row].Cells.Count)
+                    return false;
+                var cell = table.Rows[row].Cells[column];
+                return action switch
+                {
+                    BoardTableCellAction.MergeRight => HavenRichNotesOps.CanMergeTableCellRight(rich, pageId, blockId, row, column),
+                    BoardTableCellAction.MergeDown => HavenRichNotesOps.CanMergeTableCellDown(rich, pageId, blockId, row, column),
+                    BoardTableCellAction.Split => cell.CoveredByCellId is null && (cell.RowSpan > 1 || cell.ColumnSpan > 1),
+                    _ => false
+                };
+            }
+            if (!Applicable(_real.Rich)) return false;
+            var appliedAction = false;
+            var applied = await _real.MutateIfAsync(Applicable, rich =>
+            {
+                appliedAction = action switch
+                {
+                    BoardTableCellAction.MergeRight => HavenRichNotesOps.MergeTableCellRight(rich, pageId, blockId, row, column),
+                    BoardTableCellAction.MergeDown => HavenRichNotesOps.MergeTableCellDown(rich, pageId, blockId, row, column),
+                    BoardTableCellAction.Split => HavenRichNotesOps.SplitTableCell(rich, pageId, blockId, row, column),
+                    _ => false
+                };
+            }, cancellationToken).ConfigureAwait(false);
+            if (!applied || !appliedAction) return false;
             RefreshView();
             return true;
         }

@@ -30,10 +30,16 @@ public sealed partial class BoardsViewModel
         Set("ContextCellVerticalIndex", IndexOf(ContextVerticalOptions, cellStyle?.AlignV));
         Set("ContextCellSurfaceIndex", Math.Max(0, Array.FindIndex(ContextSurfaces, surface => surface.Hex == cellStyle?.Background)));
         Set("ContextHasCell", cellKey is not null);
-        Set("ContextCanMoveRowUp", cellKey is not null && row > 0);
-        Set("ContextCanMoveRowDown", cellKey is not null && row < block!.TableRows - 1);
-        Set("ContextCanMoveColumnLeft", cellKey is not null && column > 0);
-        Set("ContextCanMoveColumnRight", cellKey is not null && column < block!.TableCols - 1);
+        var cellSpan = cellKey is not null && block!.CellSpans.TryGetValue(cellKey, out var projectedSpan)
+            ? projectedSpan : null;
+        Set("ContextCanMoveRowUp", cellKey is not null && !block!.HasMergedCells && row > 0);
+        Set("ContextCanMoveRowDown", cellKey is not null && !block!.HasMergedCells && row < block!.TableRows - 1);
+        Set("ContextCanMoveColumnLeft", cellKey is not null && !block!.HasMergedCells && column > 0);
+        Set("ContextCanMoveColumnRight", cellKey is not null && !block!.HasMergedCells && column < block!.TableCols - 1);
+        Set("ContextCanChangeTableStructure", block is { Kind: "table", HasMergedCells: false });
+        Set("ContextCanMergeCellRight", cellSpan?.CanMergeRight == true);
+        Set("ContextCanMergeCellDown", cellSpan?.CanMergeDown == true);
+        Set("ContextCanSplitCell", cellSpan?.CanSplit == true);
         Set("ContextCellHint", cellKey is null ? "Focus a cell for cell tools." : $"Cell {cellKey}");
         var columnWidth = cellKey is not null && column < block!.ColumnWidths.Count
             ? block.ColumnWidths[column]
@@ -268,6 +274,15 @@ public sealed partial class BoardsViewModel
                 await MoveSelectedTableAxisAsync(block, moveLeftRow, moveLeftColumn, -1, rowAxis: false, cancellationToken); break;
             case "ContextMoveColumnRight" when TryGetContextCell(block, out var moveRightRow, out var moveRightColumn):
                 await MoveSelectedTableAxisAsync(block, moveRightRow, moveRightColumn, 1, rowAxis: false, cancellationToken); break;
+            case "ContextMergeCellRight" when TryGetContextCell(block, out var mergeRightRow, out var mergeRightColumn):
+                await ApplySelectedTableCellActionAsync(block, mergeRightRow, mergeRightColumn,
+                    BoardTableCellAction.MergeRight, cancellationToken); break;
+            case "ContextMergeCellDown" when TryGetContextCell(block, out var mergeDownRow, out var mergeDownColumn):
+                await ApplySelectedTableCellActionAsync(block, mergeDownRow, mergeDownColumn,
+                    BoardTableCellAction.MergeDown, cancellationToken); break;
+            case "ContextSplitCell" when TryGetContextCell(block, out var splitRow, out var splitColumn):
+                await ApplySelectedTableCellActionAsync(block, splitRow, splitColumn,
+                    BoardTableCellAction.Split, cancellationToken); break;
             case "ContextColumnNarrower" when TryGetContextCell(block, out _, out var narrowColumn):
                 SetContextColumnWidth(block, narrowColumn, -24); break;
             case "ContextColumnWider" when TryGetContextCell(block, out _, out var wideColumn):
@@ -388,6 +403,43 @@ public sealed partial class BoardsViewModel
         FocusCell(block.Id, rowAxis ? toIndex : row, rowAxis ? column : toIndex);
         RefreshAfterEdit();
         Set("StatusText", rowAxis ? "Table row moved." : "Table column moved.");
+    }
+
+    private async Task ApplySelectedTableCellActionAsync(RichBoardBlock block, int row, int column,
+        BoardTableCellAction action, CancellationToken cancellationToken)
+    {
+        if (!RequireEditMode()) return;
+        if (_session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", "Table cell merging requires the canonical Boards contract session.");
+            return;
+        }
+        var epoch = Interlocked.Read(ref _tableSelectionEpoch);
+        bool IsOriginCurrent() => Interlocked.Read(ref _tableSelectionEpoch) == epoch;
+        bool applied;
+        try
+        {
+            applied = await adapter.ApplyTableCellActionAsync(SelectedPageId, block.Id, row, column,
+                action, IsOriginCurrent, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            Set("StatusText", "Table cell operation failed: " + FirstLine(error.Message));
+            return;
+        }
+        if (!applied)
+        {
+            Set("StatusText", "That table cell cannot be merged or split in its current structure.");
+            return;
+        }
+        FocusCell(block.Id, row, column);
+        RefreshAfterEdit();
+        RefreshCuiContext();
+        Set("StatusText", action == BoardTableCellAction.Split ? "Table cell split." : "Table cells merged.");
     }
 
     private void SetContextColumnWidth(RichBoardBlock block, int column, double? delta)

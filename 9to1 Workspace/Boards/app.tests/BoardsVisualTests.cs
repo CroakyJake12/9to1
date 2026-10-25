@@ -204,6 +204,49 @@ public sealed class BoardsVisualTests
     }
 
     [Fact]
+    public async Task Merged_table_renders_one_expanded_editor_and_hides_covered_slots()
+    {
+        var vm = MemoryModel(out var session);
+        try
+        {
+            var block = new RichBoardBlock
+            {
+                Id = "merged-table",
+                Kind = "table",
+                TableRows = 2,
+                TableCols = 2,
+                HasMergedCells = true,
+                TableCells = new Dictionary<string, string>
+                {
+                    ["0,0"] = "Merged title", ["0,1"] = string.Empty,
+                    ["1,0"] = string.Empty, ["1,1"] = string.Empty
+                },
+                CellSpans = new Dictionary<string, RichTableCellSpanView>
+                {
+                    ["0,0"] = new() { RowSpan = 2, ColumnSpan = 2 },
+                    ["0,1"] = new() { CoveredByCellId = "cell-anchor" },
+                    ["1,0"] = new() { CoveredByCellId = "cell-anchor" },
+                    ["1,1"] = new() { CoveredByCellId = "cell-anchor" }
+                }
+            };
+            session.Document.Sections[0].Pages[0].Blocks.Add(block);
+            var result = Ui(() =>
+            {
+                var host = new StackPanel();
+                BlockRenderer.Rebuild(host, vm, []);
+                var grid = Flatten(host).OfType<Grid>().Single(candidate =>
+                    candidate.RowDefinitions.Count == 2 && candidate.ColumnDefinitions.Count == 2);
+                var frame = Assert.Single(grid.Children);
+                return (grid, frame);
+            });
+            Assert.Equal(2, Grid.GetRowSpan(result.frame));
+            Assert.Equal(2, Grid.GetColumnSpan(result.frame));
+            Assert.Contains(Flatten(result.frame).OfType<TextBox>(), box => box.Text == "Merged title");
+        }
+        finally { await session.DisposeAsync(); }
+    }
+
+    [Fact]
     public async Task Rendered_page_shows_no_internal_ids()
     {
         var vm = MemoryModel(out var session);

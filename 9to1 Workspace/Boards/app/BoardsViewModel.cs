@@ -2068,6 +2068,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
+        if (block.HasMergedCells) { Set("StatusText", "Split merged cells before adding a table row."); return; }
         EnsureTableDims(block);
         block.TableRows = Math.Min(100, block.TableRows + 1);
         PushDocumentToBindings();
@@ -2081,6 +2082,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
+        if (block.HasMergedCells) { Set("StatusText", "Split merged cells before removing a table row."); return; }
         EnsureTableDims(block);
         if (block.TableRows <= 1)
             return;
@@ -2102,6 +2104,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
+        if (block.HasMergedCells) { Set("StatusText", "Split merged cells before adding a table column."); return; }
         EnsureTableDims(block);
         block.TableCols = Math.Min(50, block.TableCols + 1);
         PushDocumentToBindings();
@@ -2115,6 +2118,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null || block.Kind != "table")
             return;
+        if (block.HasMergedCells) { Set("StatusText", "Split merged cells before removing a table column."); return; }
         EnsureTableDims(block);
         if (block.TableCols <= 1)
             return;

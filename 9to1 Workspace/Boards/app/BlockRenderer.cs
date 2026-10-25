@@ -467,6 +467,10 @@ public static class BlockRenderer
             for (var c = 0; c < cols; c++)
             {
                 var key = $"{r},{c}";
+                block.CellSpans.TryGetValue(key, out var cellSpan);
+                if (cellSpan?.CoveredByCellId is not null) continue;
+                var rowSpan = Math.Clamp(cellSpan?.RowSpan ?? 1, 1, rows - r);
+                var columnSpan = Math.Clamp(cellSpan?.ColumnSpan ?? 1, 1, cols - c);
                 block.TableCells.TryGetValue(key, out var cellText);
                 block.CellStyles.TryGetValue(key, out var cellStyle);
                 var box = new TextBox
@@ -509,12 +513,14 @@ public static class BlockRenderer
                 {
                     Child = box,
                     BorderBrush = BoardsTheme.BorderBrush,
-                    BorderThickness = new Thickness(0, 0, c < cols - 1 ? 1 : 0, r < rows - 1 ? 1 : 0),
+                    BorderThickness = new Thickness(0, 0, c + columnSpan < cols ? 1 : 0, r + rowSpan < rows ? 1 : 0),
                     Background = box.Background,
                 };
                 box.Background = Brushes.Transparent;
                 Grid.SetRow(frame, r);
                 Grid.SetColumn(frame, c);
+                Grid.SetRowSpan(frame, rowSpan);
+                Grid.SetColumnSpan(frame, columnSpan);
                 grid.Children.Add(frame);
             }
         tableBorder.Child = grid;
