@@ -297,7 +297,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
         HomeNativeApprovalWindowOwner approvals)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(_provider, _home);
-        if (!admission.IsBoundToOriginalNotes(notes) ||
+        if (!verified.IsBoundToOriginalNotes(notes) || !admission.IsBoundToOriginalNotes(notes) ||
             !ReferenceEquals(_home.Services.GetService(typeof(NotesRepository)), notes) ||
             !ReferenceEquals(_home.Services.GetService(typeof(VerifiedNotesRepository)), verified) ||
             !ReferenceEquals(_home.Services.GetService(typeof(HomeNotesResourceAdmissionSource)), admission) ||
