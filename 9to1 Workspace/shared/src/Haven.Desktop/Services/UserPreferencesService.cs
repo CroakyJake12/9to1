@@ -589,6 +589,18 @@ public sealed partial class UserPreferencesService
         return isResearch ? SpaceSubmitMode.Steer : null;
     }
 
+    /// <summary>Persisted presentation scope for Tasks. Unknown future values safely
+    /// display this Space only; the actual task owner still authorizes every global read.</summary>
+    public TaskShownScope ShownTasks => Enum.IsDefined(_preferences.ShownTasks)
+        ? _preferences.ShownTasks : TaskShownScope.TaskSpaceOnly;
+
+    public void SetShownTasks(TaskShownScope scope)
+    {
+        if (!Enum.IsDefined(scope)) throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unsupported shown-task scope.");
+        _preferences = _preferences with { ShownTasks = scope };
+        Save();
+    }
+
     /// <summary>Persists one typed submit-mode override under the stable Space ID.</summary>
     public void SetSpaceSubmitMode(Guid spaceId, SpaceSubmitMode mode)
     {
@@ -832,6 +844,7 @@ public sealed partial class UserPreferencesService
         public string DefaultEffort { get; init; } = EffortLevel.Medium.ToString();
         /// <summary>Per-Space active-task submit overrides; missing entries retain the relevant default.</summary>
         public Dictionary<Guid, SpaceSubmitMode> SpaceSubmitModes { get; init; } = [];
+        public TaskShownScope ShownTasks { get; init; } = TaskShownScope.TaskSpaceOnly;
         /// <summary>
         /// Gets or updates auto switch compatible models, the bindable or domain state represented by this property.
         /// </summary>
