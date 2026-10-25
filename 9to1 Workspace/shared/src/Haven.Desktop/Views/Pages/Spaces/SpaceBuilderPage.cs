@@ -70,10 +70,12 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             () => _installedPlugins,
             DispatchAsync, CanMutate, () => _queueBack is not null,
             () => _boardsChoices, () => _boardsSource is not null && !_sourcePickerBusy,
-            _controller.SelectEditorView, _controller.SelectExpertSection,
-            _controller.PreviewDraft, ValidateDraftWithOwnerAsync, _controller.SetContextReferenceIncluded,
-            _controller.SetModelCapabilityRequired, _controller.SetPersonalMemoryReadAllowed,
-            _controller.SetCapabilityOverride, TryUpdateExamplePair);
+            view => { _controller.SelectEditorView(view); }, section => { _controller.SelectExpertSection(section); },
+            _controller.PreviewDraft, ValidateDraftWithOwnerAsync,
+            (contextId, included) => { _controller.SetContextReferenceIncluded(contextId, included); },
+            (capability, required) => { _controller.SetModelCapabilityRequired(capability, required); },
+            allowed => { _controller.SetPersonalMemoryReadAllowed(allowed); },
+            (kind, id, policy) => { _controller.SetCapabilityOverride(kind, id, policy); }, TryUpdateExamplePair);
         _controller.StateChanged += OnStateChanged;
         Document = document;
         _contentGrid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
