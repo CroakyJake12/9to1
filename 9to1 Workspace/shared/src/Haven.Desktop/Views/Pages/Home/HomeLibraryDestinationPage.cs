@@ -32,6 +32,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
     private readonly TextBox _search = new() { MaxLength = 256 };
+    private readonly TextBox _boardCreateName = new() { MaxLength = 120, Text = "New board" };
     private readonly TextBox _ownerFilter = new() { MaxLength = 256 };
     private readonly TextBox _typeFilter = new() { MaxLength = 256 };
     private readonly ComboBox _sort = new() { ItemsSource = new[] { "Recently modified", "Oldest first", "Name", "Type" }, SelectedIndex = 0 };
@@ -51,6 +52,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     private long _generation;
     private bool _active, _busy, _stopped;
     private string _status = "Browse authorised references from your apps.";
+    internal string? SelectedBoardCreateDisplayName { get; private set; }
 
     private event PropertyChangedEventHandler? _bindingPropertyChanged;
     event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
@@ -79,6 +81,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         if (theme is not null) _loader.SetThemePreferenceContext(theme);
         _loader.SetActionDispatcher(this); _loader.SetBindingContext(this);
         _loader.BindAuthoredControl("library-search", _ => _search);
+        _loader.BindAuthoredControl("library-board-create-name", _ => _boardCreateName);
         _loader.BindAuthoredControl("library-owner-filter", _ => _ownerFilter);
         _loader.BindAuthoredControl("library-type-filter", _ => _typeFilter);
         _loader.BindAuthoredControl("library-sort", _ => _sort);
@@ -126,6 +129,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         if (_active || _initialization is not null || _page is not null || _selectArtifact is not null || _selectBoardFolder is not null)
             throw new InvalidOperationException("Choose folder selection mode before the Library page is activated.");
         _selectBoardFolder = selectCurrentFolder;
+        _bindings.Set("IsBoardFolderSelection", true);
         _status = "Choose the configured Boards folder. The folder row is checked again by its original Files owner.";
         SetInitialQuery("files", "Files folder");
         RefreshBindings();
@@ -219,7 +223,19 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
                         if (!ReferenceEquals(selectedFolder, selected.OpenLink) || selectedFolder.OwnerApp != "files" ||
                             selectedFolder.TargetRouteId != "files.folder")
                             throw new UnauthorizedAccessException("The original Files folder selection no longer matches this Library row.");
-                        original.RunAcceptedPublicationCallback(() => _folderSelection.TrySetResult(selectedFolder));
+                        var displayName = _boardCreateName.Text?.Trim();
+                        if (string.IsNullOrWhiteSpace(displayName) || displayName.Length > 120 ||
+                            displayName is "." or ".." || displayName.IndexOfAny(['/', '\\', '\0']) >= 0 ||
+                            displayName.Any(char.IsControl))
+                        {
+                            original.RunAcceptedPublicationCallback(() => _status = "Enter a board file name of 1–120 characters without path separators.");
+                            return;
+                        }
+                        original.RunAcceptedPublicationCallback(() =>
+                        {
+                            if (_folderSelection.TrySetResult(selectedFolder))
+                                SelectedBoardCreateDisplayName = displayName;
+                        });
                     }
                     else if (original.IsAcceptedPublicationCurrent)
                         original.RunAcceptedPublicationCallback(() => _status = "This row is not the currently configured Boards folder. Choose the registered Boards folder.");
@@ -315,6 +331,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             item.DisplayName, item.OwnerApp, item.ArtifactType, item.LastModified.ToLocalTime().ToString("g"),
             item.Location, item.Owner, item.SharedBy, item.IsPinned, item.OpenLink)).ToArray() ?? [];
         _bindings.Set("LibraryRows", _rows);
+        _bindings.Set("IsBoardFolderSelection", _selectBoardFolder is not null);
         var notice = _page?.Succeeded == true ? _source?.AvailabilityNotice : null;
         var summary = string.IsNullOrWhiteSpace(notice) ? _status : _status + " " + notice;
         if (_page is not null && !queryMatches) summary += " Search to apply the changed filters.";
