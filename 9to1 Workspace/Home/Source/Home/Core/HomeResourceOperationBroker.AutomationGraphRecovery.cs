@@ -2,6 +2,8 @@ using Haven.Application;
 using Haven.Application.NodeGraph;
 using HavenOS.Home.PermissionsTrustNotifications;
 
+using System.Text.Json;
+
 namespace HavenOS.Home.Core;
 
 public sealed partial class HomeResourceOperationBroker
