@@ -107,16 +107,18 @@ public static class BlockRenderer
         // The first slot stays a compact, fixed target even when the content in
         // the row (especially a table) is much taller than an ordinary block.
         var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,Auto,*") };
+        Button? insert = null;
         Control? gripControl = null;
-        var insert = ToolbarBuilder.CreateInsertButton(
-            vm, "Insert a block after this note", insertAfterBlockId);
-        ConfigureBlockGutterButton(insert);
-        insert.Margin = new Thickness(0, 0, 2, 0);
-        insert.Opacity = selected ? 1 : QuietBlockGutterOpacity;
-        Grid.SetColumn(insert, 0);
-        row.Children.Add(insert);
         if (vm.IsEditMode)
         {
+            insert = ToolbarBuilder.CreateInsertButton(
+                vm, "Insert a block after this note", insertAfterBlockId);
+            ConfigureBlockGutterButton(insert);
+            insert.Margin = new Thickness(0, 0, 2, 0);
+            insert.Opacity = selected ? 1 : QuietBlockGutterOpacity;
+            Grid.SetColumn(insert, 0);
+            row.Children.Add(insert);
+
             var grip = BlockGripCui.Build(vm, selectId);
             gripControl = grip;
             grip.MinWidth = BlockGutterTargetSize;
@@ -129,6 +131,27 @@ public static class BlockRenderer
             grip.Margin = new Thickness(0, 0, 4, 0);
             Grid.SetColumn(grip, 1);
             row.Children.Add(grip);
+        }
+        else
+        {
+            // Keep the document column aligned between modes without leaving
+            // an edit command in the read-only surface.
+            row.Children.Add(new Border
+            {
+                Width = BlockGutterTargetSize,
+                Height = BlockGutterTargetSize,
+                IsHitTestVisible = false,
+                Focusable = false,
+            });
+            var gripSlot = new Border
+            {
+                Width = BlockGutterTargetSize + 4,
+                Height = BlockGutterTargetSize,
+                IsHitTestVisible = false,
+                Focusable = false,
+            };
+            Grid.SetColumn(gripSlot, 1);
+            row.Children.Add(gripSlot);
         }
         Grid.SetColumn(inner, 2);
         row.Children.Add(inner);
@@ -147,7 +170,7 @@ public static class BlockRenderer
         void UpdateGutterEmphasis()
         {
             var opacity = selected || hovering || focused ? 1 : QuietBlockGutterOpacity;
-            insert.Opacity = opacity;
+            if (insert is not null) insert.Opacity = opacity;
             if (gripControl is not null) gripControl.Opacity = opacity;
         }
         border.PointerEntered += (_, _) => { hovering = true; UpdateGutterEmphasis(); };
@@ -389,8 +412,12 @@ public static class BlockRenderer
         {
             Name = "done_" + suffix,
             IsChecked = item.IsChecked,
+            Width = 24,
+            Height = 24,
             MinWidth = 24,
             MinHeight = 24,
+            MaxWidth = 24,
+            MaxHeight = 24,
             VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(0, 4, 10, 0),
         };

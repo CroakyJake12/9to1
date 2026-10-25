@@ -115,9 +115,40 @@ public sealed class BoardsBlockGeometryTests
         });
 
         Assert.InRange(actual.Gap, 8, 12);
-        Assert.True(actual.CheckWidth >= 24, $"Checkbox target width was {actual.CheckWidth}.");
+        Assert.Equal(24, actual.CheckWidth);
         Assert.True(actual.TextHeight > 36, $"Expected the long label to wrap; height={actual.TextHeight}.");
         Assert.Equal(GridUnitType.Star, actual.ColumnWidth.GridUnitType);
         Assert.Equal(Avalonia.Media.TextWrapping.Wrap, actual.TextWrapping);
+    }
+
+    [Fact]
+    public async Task View_mode_reserves_the_gutter_without_rendering_edit_actions()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/view-gutter-geometry");
+        var viewModel = new BoardsViewModel(session);
+        await viewModel.DispatchAsync("ToggleEditView", null);
+        Assert.False(viewModel.IsEditMode);
+
+        var actual = TestUiThread.Run(() =>
+        {
+            var host = new StackPanel { Width = 520 };
+            BlockRenderer.Rebuild(host, viewModel, []);
+            var row = Assert.Single(host.GetLogicalDescendants().OfType<Border>(), border =>
+                border.Tag is BlockReorderRow block && block.BlockId == viewModel.PageBlocks[0].Id);
+            var grid = Assert.IsType<Grid>(row.Child);
+            var slots = grid.Children.OfType<Border>().ToArray();
+            Assert.Equal(2, slots.Length);
+            return (Column: grid.ColumnDefinitions[0].Width, FirstSlotWidth: slots[0].Width,
+                SecondSlotWidth: slots[1].Width,
+                HasInsert: grid.GetLogicalDescendants().OfType<Button>().Any(button => AutomationProperties.GetName(button) == "Insert"),
+                HasGrip: grid.GetLogicalDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle"));
+        });
+
+        Assert.Equal(32, actual.Column.Value);
+        Assert.Equal(32, actual.FirstSlotWidth);
+        Assert.Equal(36, actual.SecondSlotWidth);
+        Assert.False(actual.HasInsert);
+        Assert.False(actual.HasGrip);
     }
 }
