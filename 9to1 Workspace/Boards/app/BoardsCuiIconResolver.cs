@@ -98,7 +98,7 @@ public static class BoardsCuiIconResolver
         foreach (var shape in icon.Shapes)
         {
             var isCutout = shape is HavenRichSectionIconPolygon { IsCutout: true };
-            var geometry = shape switch
+            Geometry geometry = shape switch
             {
                 HavenRichSectionIconRoundRect rect => new RectangleGeometry(
                     new Rect(rect.X, rect.Y, rect.Width, rect.Height), rect.Radius, rect.Radius),
