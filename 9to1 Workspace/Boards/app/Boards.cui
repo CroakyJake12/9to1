@@ -8,7 +8,7 @@
   <Page>
     <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
       <!-- Top document bar: file actions, title, save state, global actions -->
-      <Container padding="12 6" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="{Resource CuiShellMaterial}" BorderWidth="0">
+      <Container padding="12 2" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="{Resource CuiShellMaterial}" BorderWidth="0">
         <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto" CellGap="2">
           <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" Row="0" CellGap="8" VerticalAlignment="Center">
             <Container Type="Menu" ID="FileMenu">
