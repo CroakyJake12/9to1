@@ -329,19 +329,26 @@ public sealed class HavenChatSpaceBackendAcceptanceTests
             return new BoundInvocation(rig, conversationId, branchId);
         }
 
-        private sealed class BoundInvocation(Rig owner, Guid conversationId, Guid branchId) : IConversationBranchInvocation
+        private sealed class BoundInvocation : IConversationBranchInvocation
         {
-            private readonly Guid _conversationId = conversationId;
-            private readonly Guid _branchId = branchId;
+            private readonly Rig _owner;
+            private readonly Guid _conversationId;
+            private readonly Guid _branchId;
             private bool _disposed;
             private bool _admitted;
+            public BoundInvocation(Rig owner, Guid conversationId, Guid branchId)
+            {
+                _owner = owner;
+                _conversationId = conversationId;
+                _branchId = branchId;
+            }
             public Guid ConversationId => _conversationId;
             public Guid BranchId => _branchId;
             public Task AdmitExistingUserInputAsync(ChatMessage message, CancellationToken cancellationToken)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 if (_disposed || _admitted || message.ConversationId != _conversationId || message.Role != MessageRole.User ||
-                    owner.Branch.Id != _branchId || !owner.Branch.IsCurrent || owner.Messages.LastOrDefault(item => item.Role == MessageRole.User) != message)
+                    _owner.Branch.Id != _branchId || !_owner.Branch.IsCurrent || _owner.Messages.LastOrDefault(item => item.Role == MessageRole.User) != message)
                     throw new InvalidOperationException("The original accepted user input does not match current canonical branch history.");
                 _admitted = true;
                 return Task.CompletedTask;
@@ -351,19 +358,19 @@ public sealed class HavenChatSpaceBackendAcceptanceTests
             public Task AddMessageAsync(ChatMessage message, CancellationToken cancellationToken)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (_disposed || owner.Branch.Id != branchId || !owner.Branch.IsCurrent || message.ConversationId != conversationId)
+                if (_disposed || _owner.Branch.Id != _branchId || !_owner.Branch.IsCurrent || message.ConversationId != _conversationId)
                     throw new InvalidOperationException("The original conversation branch is no longer current.");
                 if (!_admitted && message.Role != MessageRole.User)
                     throw new InvalidOperationException("The original user input must be admitted before response persistence.");
                 if (_admitted && message.Role == MessageRole.User)
                     throw new InvalidOperationException("The invocation has already admitted its original user input.");
-                if (owner.Messages.Any(existing => existing.Id == message.Id))
+                if (_owner.Messages.Any(existing => existing.Id == message.Id))
                     throw new InvalidOperationException("The message ID already exists.");
-                owner.Messages.Add(message);
+                _owner.Messages.Add(message);
                 return Task.CompletedTask;
             }
             public Task<IReadOnlyList<ChatMessage>> GetContextMessagesAsync(CancellationToken cancellationToken) =>
-                Task.FromResult<IReadOnlyList<ChatMessage>>(owner.Messages.ToArray());
+                Task.FromResult<IReadOnlyList<ChatMessage>>(_owner.Messages.ToArray());
             public ValueTask DisposeAsync() { _disposed = true; return ValueTask.CompletedTask; }
         }
     }
