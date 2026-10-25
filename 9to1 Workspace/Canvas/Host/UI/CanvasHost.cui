@@ -3,11 +3,13 @@
   <Variable Type="bool" ID="ShowWorkspace">False</Variable>
   <Variable Type="commandstate" ID="OpenResult" />
   <Variable Type="commandstate" ID="StartResult" />
+  <Variable Type="commandstate" ID="ChoiceResult" />
   <Actions>
     <Action name="OpenCanvasItem" command="canvas.host.openItem" parameter="{Binding canvas}" result="OpenResult">
       <Set Target="ShowStart" Value="False" When="{Binding OpenResult.Succeeded}" />
       <Set Target="ShowWorkspace" Value="True" When="{Binding OpenResult.Succeeded}" />
     </Action>
+    <Action name="SelectCanvasItem" command="canvas.host.selectItem" parameter="{Binding canvas}" result="ChoiceResult" />
     <Action name="ResumeCanvas" command="canvas.host.resume" result="OpenResult">
       <Set Target="ShowStart" Value="False" When="{Binding OpenResult.Succeeded}" />
       <Set Target="ShowWorkspace" Value="True" When="{Binding OpenResult.Succeeded}" />
@@ -28,19 +30,20 @@
           <Container Type="Vertical Stack" CellGap="6">
             <Text text="Canvas" font-size="34" font-weight="Bold" />
             <Text text="A place to write, sketch and work through ideas." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+            <Text text="Choose a Canvas for the containing Board. The reference records its current revision; Board access is still governed separately." text-wrapping="Wrap" Active="{Binding IsEmbeddedChooser}" />
           </Container>
           <Container Type="Vertical Stack" CellGap="8" Active="{Binding CanResume}">
             <Text text="Continue editing" font-weight="SemiBold" />
             <Button id="canvas-resume" content="{Binding OpenedName}" action="ResumeCanvas" accessible-name="Resume the retained Canvas document" horizontal-alignment="Left" padding="18,12" Interactive="{Binding CanResume}" />
           </Container>
-          <Container Type="Vertical Stack" CellGap="10">
+          <Container Type="Vertical Stack" CellGap="10" Active="{Binding CanCreate}">
             <Text text="Create a canvas" font-size="20" font-weight="SemiBold" />
             <Container Type="Wrap" CellGap="10">
-              <Input id="canvas-host-new-name" accessible-name="New canvas name" Type="Text" Value="{Binding NewName, Mode=TwoWay}" min-width="240" Interactive="{Binding CanWrite}" />
-              <Button id="canvas-create" content="Create canvas" action="canvas.host.create" padding="18,10" Interactive="{Binding CanWrite}" />
+              <Input id="canvas-host-new-name" accessible-name="New canvas name" Type="Text" Value="{Binding NewName, Mode=TwoWay}" min-width="240" Interactive="{Binding CanCreate}" />
+              <Button id="canvas-create" content="Create canvas" action="canvas.host.create" padding="18,10" Active="{Binding CanCreate}" Interactive="{Binding CanCreate}" />
             </Container>
           </Container>
-          <Container Type="Vertical Stack" CellGap="12">
+          <Container Type="Vertical Stack" CellGap="12" Active="{Binding CanBrowse}">
             <Text text="Your canvases" font-size="20" font-weight="SemiBold" />
             <Container Type="Wrap" CellGap="10">
               <Input id="canvas-search-query" accessible-name="Search canvases" Type="Text" Value="{Binding SearchQuery, Mode=TwoWay}" min-width="240" Interactive="{Binding CanSearch}" />
@@ -50,12 +53,13 @@
             <Text text="No canvases match this view. Create a canvas or change your search." foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" Active="{Binding HasNoDocuments}" />
             <Container id="canvas-launch-cards" Type="Wrap" CellGap="12">
               <Repeat Source="{Binding Canvases}" As="canvas" Key="{Binding canvas.Id}">
-                <Button action="OpenCanvasItem" accessible-name="{Binding canvas.Name}" width="280" padding="20" corner-radius="16" horizontal-content-alignment="Left" Interactive="{Binding CanOpen}">
+                <Button action="OpenCanvasItem" accessible-name="{Binding canvas.Name}" width="280" padding="20" corner-radius="16" horizontal-content-alignment="Left" Active="{Binding IsStandalone}" Interactive="{Binding CanOpen}">
                   <Container Type="Vertical Stack" CellGap="8">
                     <Text text="{Binding canvas.Name}" font-size="18" font-weight="SemiBold" text-wrapping="Wrap" />
                     <Text text="{Binding canvas.Modified}" foreground="{Resource CuiTextSoftBrush}" />
                   </Container>
                 </Button>
+                <Button action="SelectCanvasItem" content="Select this Canvas" accessible-name="Select this Canvas for the current Board" width="280" padding="20" Active="{Binding CanSelect}" Interactive="{Binding CanSelect}" />
               </Repeat>
             </Container>
             <Button content="More canvases" action="canvas.host.page" horizontal-alignment="Left" Active="{Binding HasMoreDocuments}" Interactive="{Binding CanPage}" />
