@@ -677,6 +677,10 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             }
         }
 
+        private bool IsClosePreparationCurrent(WriteClosePreparation preparation) =>
+            !lifetime.IsCancellationRequested && !_closed &&
+            ReferenceEquals(_preparation, preparation) && owner.IsCurrentPublication();
+
         public Task CloseAndDrainAsync()
         {
             CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
@@ -732,8 +736,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             private Task? _begin, _abort;
             internal bool Accepted => Volatile.Read(ref _accepted) != 0;
             public bool IsCurrent => !Accepted && Volatile.Read(ref _aborted) == 0 &&
-                !owner.lifetime.IsCancellationRequested && !owner._closed &&
-                ReferenceEquals(owner._preparation, this) && owner.owner.IsCurrentPublication();
+                owner.IsClosePreparationCurrent(this);
 
             public Task BeginCloseAsync(CancellationToken cancellationToken = default)
             {
@@ -753,7 +756,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
                 {
                     if (_abort is not null) return _abort;
                     if (Accepted) return Task.FromException(new InvalidOperationException("An accepted original Write close cannot be aborted."));
-                    if (_aborted) return Task.CompletedTask;
+                    if (Volatile.Read(ref _aborted) != 0) return Task.CompletedTask;
                     return _abort = owner.AbortPreparationAsync(this);
                 }
             }
