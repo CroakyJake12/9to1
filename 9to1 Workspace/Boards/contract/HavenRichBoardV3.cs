@@ -328,6 +328,35 @@ public static class HavenRichGraphValidator
 /// </summary>
 public static class HavenGraphExpression
 {
+    /// <summary>Recognizes a single explicit y-versus-function inequality. The
+    /// returned function is evaluated by the same bounded graph expression parser.</summary>
+    public static bool TryGetInequality(string expression, out string function, out bool shadeAbove)
+    {
+        function = string.Empty;
+        shadeAbove = false;
+        var text = (expression ?? string.Empty).Trim();
+        foreach (var relation in new[] { "<=", ">=", "<", ">" })
+        {
+            var index = text.IndexOf(relation, StringComparison.Ordinal);
+            if (index <= 0 || index + relation.Length >= text.Length ||
+                text.IndexOf(relation, index + relation.Length, StringComparison.Ordinal) >= 0)
+                continue;
+            var left = text[..index].Trim();
+            var right = text[(index + relation.Length)..].Trim();
+            var leftIsY = left is "y" or "Y";
+            var rightIsY = right is "y" or "Y";
+            if (leftIsY == rightIsY)
+                continue;
+            function = leftIsY ? right : left;
+            if (function.Length == 0)
+                continue;
+            var pointsUp = relation[0] == '>';
+            shadeAbove = leftIsY ? pointsUp : !pointsUp;
+            return true;
+        }
+        return false;
+    }
+
     public static bool TryEvaluate(string expression, double x, out double value,
         IReadOnlyDictionary<string, double>? variables = null)
     {
