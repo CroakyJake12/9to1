@@ -13,6 +13,7 @@ namespace CakeOS.Apps.Boards.App;
 public static class NavBuilder
 {
     private static readonly HashSet<string> CollapsedSections = new(StringComparer.Ordinal);
+    private static readonly HashSet<string> CollapsedPages = new(StringComparer.Ordinal);
     private static object? _stateDocument;
 
     /// <summary>Pending inline rename: set by double-click, F2 or the Rename menu item.</summary>
@@ -29,6 +30,7 @@ public static class NavBuilder
         if (!ReferenceEquals(_stateDocument, document))
         {
             CollapsedSections.Clear();
+            CollapsedPages.Clear();
             _pendingRename = null;
             RenameActive = false;
             _stateDocument = document;
@@ -46,22 +48,41 @@ public static class NavBuilder
         var anyMatch = false;
         foreach (var section in sections)
         {
+            var matchCache = new Dictionary<string, bool>(StringComparer.Ordinal);
+            bool HasMatch(RichBoardPage page)
+            {
+                if (matchCache.TryGetValue(page.Id, out var cached)) return cached;
+                matchCache[page.Id] = false; // Defensive cycle stop even for an in-memory malformed draft.
+                var matched = Matches(section.Title, filter) || Matches(page.Title, filter) ||
+                    section.Pages.Where(child => child.ParentPageId == page.Id).Any(HasMatch);
+                matchCache[page.Id] = matched;
+                return matched;
+            }
             var showSection = Matches(section.Title, filter)
-                || section.Pages.Any(p => Matches(p.Title, filter));
+                || section.Pages.Where(p => p.ParentPageId is null).Any(HasMatch);
             if (!showSection)
                 continue;
             anyMatch = true;
-            var pages = string.IsNullOrEmpty(filter)
-                ? section.Pages
-                : section.Pages.Where(p => Matches(p.Title, filter) || Matches(section.Title, filter)).ToList();
             var collapsed = CollapsedSections.Contains(section.Id) && string.IsNullOrEmpty(filter);
             host.Children.Add(BuildSectionHeader(host, vm, section, collapsed));
             if (collapsed)
                 continue;
-            if (pages.Count == 0)
+            if (section.Pages.Count == 0)
                 host.Children.Add(Hint("No pages — add one below."));
-            foreach (var page in pages)
-                host.Children.Add(BuildPageRow(host, vm, section, page));
+            foreach (var page in section.Pages.Where(page => page.ParentPageId is null))
+                AddPageTree(page, 0);
+
+            void AddPageTree(RichBoardPage page, int depth)
+            {
+                var children = section.Pages.Where(child => child.ParentPageId == page.Id).ToArray();
+                var matches = Matches(page.Title, filter) || children.Any(HasMatch);
+                if (matches)
+                    host.Children.Add(BuildPageRow(host, vm, section, page, depth, children.Length > 0,
+                        CollapsedPages.Contains(page.Id) && string.IsNullOrEmpty(filter)));
+                if (matches && (string.IsNullOrEmpty(filter) && !CollapsedPages.Contains(page.Id) ||
+                                !string.IsNullOrEmpty(filter)))
+                    foreach (var child in children) AddPageTree(child, depth + 1);
+            }
         }
         if (!anyMatch)
             host.Children.Add(Hint($"No matches for “{filter}”."));
@@ -152,9 +173,30 @@ public static class NavBuilder
     }
 
     private static Control BuildPageRow(
-        StackPanel host, BoardsViewModel vm, RichBoardSection section, RichBoardPage page)
+        StackPanel host, BoardsViewModel vm, RichBoardSection section, RichBoardPage page,
+        int depth, bool hasChildren, bool collapsed)
     {
         var selected = vm.SelectedPageId == page.Id && vm.SelectedSectionId == section.Id;
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(depth * 16, 0, 0, 0) };
+        if (hasChildren)
+        {
+            var disclosure = new Button
+            {
+                Content = BoardsIcons.Glyph(collapsed ? BoardsIcons.ChevronRight : BoardsIcons.ChevronDown, 10),
+                Padding = new Thickness(3), Background = Brushes.Transparent, BorderThickness = new Thickness(0),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            ToolTip.SetTip(disclosure, collapsed ? "Expand subpages" : "Collapse subpages");
+            Avalonia.Automation.AutomationProperties.SetName(disclosure,
+                (collapsed ? "Expand subpages of " : "Collapse subpages of ") + page.Title);
+            disclosure.Click += (_, _) =>
+            {
+                if (collapsed) CollapsedPages.Remove(page.Id); else CollapsedPages.Add(page.Id);
+                vm.RequestNavRebuild();
+            };
+            row.Children.Add(disclosure);
+        }
+        else row.Children.Add(new Border { Width = 20 });
         var button = new Button
         {
             Background = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
@@ -162,7 +204,7 @@ public static class NavBuilder
             CornerRadius = new CornerRadius(6),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(28, 6, 8, 6),
+            Padding = new Thickness(8, 6, 8, 6),
             Margin = new Thickness(0, 1, 0, 1),
         };
         button.Content = new TextBlock
@@ -199,8 +241,15 @@ public static class NavBuilder
         AddMenuItem(menu, "Move up", async () => await vm.MovePageAsync(section.Id, page.Id, -1));
         AddMenuItem(menu, "Move down", async () => await vm.MovePageAsync(section.Id, page.Id, 1));
         AddMenuItem(menu, "Delete", async () => await vm.DeletePageAsync(section.Id, page.Id));
+        AddMenuItem(menu, "Add subpage", async () => await vm.AddSubpageAsync(section.Id, page.Id));
+        if (page.ParentPageId is not null)
+            AddMenuItem(menu, "Move to section root", async () => await vm.SetPageParentAsync(section.Id, page.Id, null));
+        var pageIndex = section.Pages.IndexOf(page);
+        if (pageIndex > 0)
+            AddMenuItem(menu, "Nest under previous page", async () => await vm.SetPageParentAsync(section.Id, page.Id, section.Pages[pageIndex - 1].Id));
         button.ContextMenu = menu;
-        return button;
+        row.Children.Add(button);
+        return row;
     }
 
     private static void TakePendingRename(StackPanel host, BoardsViewModel vm)

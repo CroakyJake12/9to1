@@ -142,6 +142,75 @@ public sealed class BoardsAppTests
     }
 
     [Fact]
+    public async Task View_mode_keeps_ink_and_graph_navigation_session_local()
+    {
+        var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/view-navigation-test");
+        var page = session.Document.Sections[0].Pages[0];
+        var graph = new RichGraphView
+        {
+            Sliders = [new RichGraphSliderView
+            {
+                VariableId = "variable-a", Name = "a", Minimum = -2, Maximum = 6, Step = 0.5, DefaultValue = 1.5
+            }]
+        };
+        page.Blocks.Add(new RichBoardBlock { Id = "view-graph", Kind = "graph", Graph = graph });
+        var viewModel = new BoardsViewModel(session);
+        await viewModel.DispatchAsync("ToggleEditView", null);
+
+        await viewModel.PanInkViewAsync(12, -4);
+        await viewModel.SetInkZoomAsync(2);
+        viewModel.GraphPanZoom("view-graph", 0.1, 0, 1);
+        viewModel.SetGraphSliderValue("view-graph", "variable-a", 2.5);
+
+        Assert.Equal(12, viewModel.InkPanX);
+        Assert.Equal(2, viewModel.InkZoom);
+        Assert.Equal(0, page.InkPanX);
+        Assert.Equal(1, page.InkZoom);
+        Assert.Equal(-10, graph.XMin);
+        Assert.Equal(-8, viewModel.GetGraphForRendering("view-graph")!.XMin);
+        Assert.Equal(2.5, viewModel.GetGraphSliderValues("view-graph")["a"]);
+
+        await viewModel.DispatchAsync("ToggleEditView", null);
+        Assert.Equal(-10, viewModel.GetGraphForRendering("view-graph")!.XMin);
+        Assert.Equal(0, viewModel.InkPanX);
+        Assert.Equal(1, viewModel.InkZoom);
+        Assert.Equal(1.5, viewModel.GetGraphSliderValues("view-graph")["a"]);
+        await session.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task View_mode_restores_only_the_controls_that_were_editable()
+    {
+        var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/view-control-state-test");
+        var viewModel = new BoardsViewModel(session);
+        var search = new TextBox { Name = "NavSearchBox" };
+        var editable = new TextBox { Name = "Editable" };
+        var readOnly = new TextBox { Name = "ReadOnly", IsReadOnly = true };
+        var enabledCheck = new CheckBox { Name = "EnabledCheck", IsEnabled = true };
+        var disabledCheck = new CheckBox { Name = "DisabledCheck", IsEnabled = false };
+        var root = new StackPanel { Children = { search, editable, readOnly, enabledCheck, disabledCheck } };
+        viewModel.Attach(root);
+
+        await viewModel.DispatchAsync("ToggleEditView", null);
+        Assert.True(editable.IsReadOnly);
+        Assert.True(readOnly.IsReadOnly);
+        Assert.False(search.IsReadOnly);
+        Assert.False(enabledCheck.IsEnabled);
+        Assert.False(disabledCheck.IsEnabled);
+
+        await viewModel.DispatchAsync("ToggleEditView", null);
+        Assert.False(editable.IsReadOnly);
+        Assert.True(readOnly.IsReadOnly);
+        Assert.False(search.IsReadOnly);
+        Assert.True(enabledCheck.IsEnabled);
+        Assert.False(disabledCheck.IsEnabled);
+        viewModel.Detach();
+        await session.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Boards_cui_extended_properties_apply()
     {
         var markup = """

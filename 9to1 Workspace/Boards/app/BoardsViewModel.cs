@@ -36,6 +36,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private long _textRangeEpoch;
     private bool _textRangeDetached, _textRangeBusy;
     private readonly List<Action> _detachers = [];
+    private readonly ConditionalWeakTable<TextBox, AuthoringTextState> _textModeStates = new();
+    private readonly ConditionalWeakTable<CheckBox, AuthoringCheckState> _checkModeStates = new();
+    private readonly Dictionary<string, (double PanX, double PanY, double Zoom)> _viewInkOverrides = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RichGraphView> _viewGraphOverrides = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Dictionary<string, double>> _graphSessionValues = new(StringComparer.Ordinal);
+
+    private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
+    private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
 
     public BoardsViewModel(IRichBoardSession session)
     {
@@ -233,6 +241,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 _session.MarkDirty();
                 RequestRebuild();
                 break;
+            case "AddSubpage":
+                await AddSubpageAsync(_selectedSectionId, _selectedPageId);
+                break;
             case "ToggleBold":
                 await ToggleSelectedBlockTextFormatAsync(BoardTextFormat.Bold, cancellationToken);
                 break;
@@ -360,6 +371,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         if (_isEditMode == enabled) return;
         _isEditMode = enabled;
+        if (enabled)
+        {
+            _viewGraphOverrides.Clear();
+            _graphSessionValues.Clear();
+            SyncSelectedInkView();
+        }
         Set("IsEditMode", enabled);
         Set("ModeLabel", enabled ? "Edit" : "View");
         if (!enabled) InvalidateTextRange();
@@ -381,10 +398,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (root is null) return;
         foreach (var input in FindControls<TextBox>(root))
         {
+            if ((input.Name ?? string.Empty) == "NavSearchBox") continue;
             // Keep text selectable and copyable in View mode.
-            if ((input.Name ?? string.Empty) != "NavSearchBox") input.IsReadOnly = !_isEditMode;
+            var original = _textModeStates.GetValue(input, control => new AuthoringTextState(control.IsReadOnly));
+            input.IsReadOnly = !_isEditMode || original.IsReadOnly;
         }
-        foreach (var checkBox in FindControls<CheckBox>(root)) checkBox.IsEnabled = _isEditMode;
+        foreach (var checkBox in FindControls<CheckBox>(root))
+        {
+            var original = _checkModeStates.GetValue(checkBox, control => new AuthoringCheckState(control.IsEnabled));
+            checkBox.IsEnabled = _isEditMode && original.IsEnabled;
+        }
     }
 
     private async Task OpenBoardDispatchAsync(CancellationToken cancellationToken)
@@ -1066,6 +1089,63 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         RequestRebuild();
     }
 
+    public async Task AddSubpageAsync(string sectionId, string parentPageId)
+    {
+        if (!RequireEditMode()) return;
+        var section = _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId);
+        if (section is null || section.Pages.All(page => page.Id != parentPageId)) return;
+        RichBoardPage child;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            var pageId = await adapter.AddSubpageAsync(sectionId, parentPageId);
+            child = _session.Document.Sections.SelectMany(item => item.Pages).First(page => page.Id == pageId);
+        }
+        else
+        {
+            child = new RichBoardPage { Title = $"Page {section.Pages.Count + 1}", ParentPageId = parentPageId };
+            section.Pages.Add(child);
+            _session.MarkDirty();
+        }
+        _selectedSectionId = sectionId;
+        _selectedPageId = child.Id;
+        SelectExistingBlock(child);
+        PushDocumentToBindings();
+        RequestRebuild();
+        NavRebuildRequested?.Invoke();
+    }
+
+    public async Task SetPageParentAsync(string sectionId, string pageId, string? parentPageId)
+    {
+        if (!RequireEditMode()) return;
+        var section = _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId);
+        var page = section?.Pages.FirstOrDefault(item => item.Id == pageId);
+        if (page is null || pageId == parentPageId) return;
+        if (parentPageId is not null && section!.Pages.All(item => item.Id != parentPageId)) return;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            try { await adapter.SetPageParentAsync(pageId, parentPageId); }
+            catch (Exception error) { Set("StatusText", "Page move refused: " + FirstLine(error.Message)); return; }
+        }
+        else
+        {
+            var cursor = parentPageId;
+            while (cursor is not null)
+            {
+                if (cursor == pageId)
+                {
+                    Set("StatusText", "A page cannot be nested beneath itself or its descendant.");
+                    return;
+                }
+                cursor = section!.Pages.First(item => item.Id == cursor).ParentPageId;
+            }
+            page.ParentPageId = parentPageId;
+            _session.MarkDirty();
+        }
+        PushDocumentToBindings();
+        RequestRebuild();
+        NavRebuildRequested?.Invoke();
+    }
+
     public async Task DeleteSectionAsync(string sectionId)
     {
         if (!RequireEditMode()) return;
@@ -1111,6 +1191,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             return;
         }
         var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
+        var page = section?.Pages.FirstOrDefault(item => item.Id == pageId);
+        if (page is not null)
+            foreach (var child in section!.Pages.Where(item => item.ParentPageId == pageId))
+                child.ParentPageId = page.ParentPageId;
         var removed = section is not null && section.Pages.Count > 1 &&
             section.Pages.RemoveAll(p => p.Id == pageId) > 0;
         if (!removed)
@@ -1755,8 +1839,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void GraphPanZoom(string blockId, double dx, double dy, double factor)
     {
-        if (!RequireEditMode()) return;
-        var graph = FindBlock(blockId)?.Graph;
+        var stored = FindBlock(blockId)?.Graph;
+        var graph = stored is null ? null : _isEditMode ? stored : GetOrCreateViewGraph(blockId, stored);
         if (graph is null)
             return;
         var width = graph.XMax - graph.XMin;
@@ -1779,9 +1863,137 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             graph.YMin += dy * height;
             graph.YMax += dy * height;
         }
+        if (_isEditMode)
+        {
+            PushDocumentToBindings();
+            _session.MarkDirty();
+        }
+        RequestRebuild();
+    }
+
+    public RichGraphView? GetGraphForRendering(string blockId)
+    {
+        var stored = FindBlock(blockId)?.Graph;
+        if (stored is null || _isEditMode) return stored;
+        return GetOrCreateViewGraph(blockId, stored);
+    }
+
+    public IReadOnlyDictionary<string, double> GetGraphSliderValues(string blockId)
+    {
+        var graph = GetGraphForRendering(blockId);
+        if (graph is null) return new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        var key = SelectedPageId + "\0" + blockId;
+        if (!_graphSessionValues.TryGetValue(key, out var values))
+            _graphSessionValues[key] = values = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        foreach (var slider in graph.Sliders)
+            if (!values.ContainsKey(slider.VariableId)) values[slider.VariableId] = slider.DefaultValue;
+        return graph.Sliders.ToDictionary(slider => slider.Name,
+            slider => Math.Clamp(values[slider.VariableId], slider.Minimum, slider.Maximum), StringComparer.OrdinalIgnoreCase);
+    }
+
+    public void SetGraphSliderValue(string blockId, string variableId, double value)
+    {
+        if (_isEditMode || !double.IsFinite(value)) return;
+        var graph = GetGraphForRendering(blockId);
+        var slider = graph?.Sliders.FirstOrDefault(item => item.VariableId == variableId);
+        if (slider is null) return;
+        var key = SelectedPageId + "\0" + blockId;
+        if (!_graphSessionValues.TryGetValue(key, out var values))
+            _graphSessionValues[key] = values = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        var snapped = slider.Minimum + Math.Round((Math.Clamp(value, slider.Minimum, slider.Maximum) - slider.Minimum) / slider.Step) * slider.Step;
+        values[slider.VariableId] = Math.Clamp(snapped, slider.Minimum, slider.Maximum);
+    }
+
+    public void AddGraphSlider(string blockId)
+    {
+        if (!RequireEditMode()) return;
+        var graph = FindBlock(blockId)?.Graph;
+        if (graph is null || graph.Sliders.Count >= 16) return;
+        var reserved = new HashSet<string>(graph.Sliders.Select(slider => slider.Name), StringComparer.OrdinalIgnoreCase)
+            { "x", "pi", "e", "sin", "cos", "tan", "sqrt", "abs", "exp", "ln", "log" };
+        var name = "abcdefghijklmnopqrstuvwxyz".FirstOrDefault(character => !reserved.Contains(character.ToString()));
+        if (name == default)
+        {
+            Set("StatusText", "No available slider variable name remains on this graph.");
+            return;
+        }
+        graph.Sliders.Add(new RichGraphSliderView { VariableId = "variable-" + Guid.NewGuid().ToString("N")[..12], Name = name.ToString() });
         PushDocumentToBindings();
         _session.MarkDirty();
         RequestRebuild();
+    }
+
+    public void RemoveGraphSlider(string blockId, string variableId)
+    {
+        if (!RequireEditMode()) return;
+        var graph = FindBlock(blockId)?.Graph;
+        if (graph is null || graph.Sliders.RemoveAll(slider => slider.VariableId == variableId) == 0) return;
+        _graphSessionValues.Remove(SelectedPageId + "\0" + blockId);
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
+    public void ConfigureGraphSlider(string blockId, string variableId, string name,
+        double minimum, double maximum, double step, double defaultValue)
+    {
+        if (!RequireEditMode()) return;
+        var graph = FindBlock(blockId)?.Graph;
+        var slider = graph?.Sliders.FirstOrDefault(item => item.VariableId == variableId);
+        if (slider is null) return;
+        var candidate = new RichGraphSliderView
+        {
+            VariableId = variableId, Name = name.Trim(), Minimum = minimum, Maximum = maximum,
+            Step = step, DefaultValue = defaultValue
+        };
+        // Reuse the canonical contract validator before accepting editor values.
+        var probe = new HavenRichGraph
+        {
+            Sliders = graph!.Sliders.Where(item => item.VariableId != variableId).Select(item => new HavenRichGraphSlider
+            {
+                VariableId = item.VariableId, Name = item.Name, Minimum = item.Minimum, Maximum = item.Maximum,
+                Step = item.Step, DefaultValue = item.DefaultValue
+            }).Append(new HavenRichGraphSlider
+            {
+                VariableId = candidate.VariableId, Name = candidate.Name, Minimum = candidate.Minimum,
+                Maximum = candidate.Maximum, Step = candidate.Step, DefaultValue = candidate.DefaultValue
+            }).ToList()
+        };
+        try { HavenRichGraphValidator.Validate(probe); }
+        catch (Exception error) { Set("StatusText", "Slider change refused: " + error.Message); return; }
+        slider.Name = candidate.Name;
+        slider.Minimum = minimum;
+        slider.Maximum = maximum;
+        slider.Step = step;
+        slider.DefaultValue = defaultValue;
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
+    private RichGraphView GetOrCreateViewGraph(string blockId, RichGraphView source)
+    {
+        var key = SelectedPageId + "\0" + blockId;
+        if (_viewGraphOverrides.TryGetValue(key, out var current)) return current;
+        current = new RichGraphView
+        {
+            GraphId = source.GraphId,
+            Sliders = source.Sliders.Select(slider => new RichGraphSliderView
+            {
+                VariableId = slider.VariableId, Name = slider.Name, Minimum = slider.Minimum,
+                Maximum = slider.Maximum, Step = slider.Step, DefaultValue = slider.DefaultValue
+            }).ToList(),
+            Expressions = source.Expressions.Select(expression => new RichGraphExpressionView
+            {
+                Id = expression.Id, Text = expression.Text, Visible = expression.Visible, Color = expression.Color,
+                LineWidth = expression.LineWidth, DomainMin = expression.DomainMin, DomainMax = expression.DomainMax
+            }).ToList(),
+            XMin = source.XMin, XMax = source.XMax, YMin = source.YMin, YMax = source.YMax,
+            ShowGrid = source.ShowGrid, ShowAxes = source.ShowAxes, XLabel = source.XLabel, YLabel = source.YLabel,
+            Points = source.Points.Select(point => new RichGraphPointView { X = point.X, Y = point.Y, Label = point.Label }).ToList()
+        };
+        _viewGraphOverrides[key] = current;
+        return current;
     }
 
     private readonly Dictionary<string, (long Version, byte[] Bytes)> _imageBytesCache = new(StringComparer.Ordinal);
@@ -2030,31 +2242,45 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task SetInkZoomAsync(double zoom)
     {
-        if (!RequireEditMode()) return;
         InkZoom = Math.Clamp(zoom, 0.25, 8);
-        if (_session is ContractSessionAdapter adapter)
+        if (!_isEditMode)
+            _viewInkOverrides[SelectedPageId] = (InkPanX, InkPanY, InkZoom);
+        else if (_session is ContractSessionAdapter adapter)
+        {
             await adapter.SetInkViewAsync(SelectedPageId, InkPanX, InkPanY, InkZoom);
+            _viewInkOverrides.Remove(SelectedPageId);
+        }
         Set("StatusText", $"Ink zoom: {InkZoom:0.##}x");
+        RequestRebuild();
     }
 
     public async Task PanInkViewAsync(double dx, double dy)
     {
-        if (!RequireEditMode()) return;
         InkPanX += dx;
         InkPanY += dy;
-        if (_session is ContractSessionAdapter adapter)
+        if (!_isEditMode)
+            _viewInkOverrides[SelectedPageId] = (InkPanX, InkPanY, InkZoom);
+        else if (_session is ContractSessionAdapter adapter)
+        {
             await adapter.SetInkViewAsync(SelectedPageId, InkPanX, InkPanY, InkZoom);
+            _viewInkOverrides.Remove(SelectedPageId);
+        }
         Set("StatusText", $"Ink pan: {InkPanX:0}, {InkPanY:0}");
+        RequestRebuild();
     }
 
     public async Task ResetInkViewAsync()
     {
-        if (!RequireEditMode()) return;
         InkZoom = 1;
         InkPanX = 0;
         InkPanY = 0;
-        if (_session is ContractSessionAdapter adapter)
+        if (!_isEditMode)
+            _viewInkOverrides[SelectedPageId] = (0, 0, 1);
+        else if (_session is ContractSessionAdapter adapter)
+        {
             await adapter.SetInkViewAsync(SelectedPageId, 0, 0, 1);
+            _viewInkOverrides.Remove(SelectedPageId);
+        }
         RequestRebuild();
     }
 
@@ -2554,9 +2780,18 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var page = _session.Document.Sections
             .FirstOrDefault(section => section.Id == _selectedSectionId)?.Pages
             .FirstOrDefault(candidate => candidate.Id == _selectedPageId);
-        InkPanX = page?.InkPanX ?? 0;
-        InkPanY = page?.InkPanY ?? 0;
-        InkZoom = page is null ? 1 : Math.Clamp(page.InkZoom, 0.25, 8);
+        if (_viewInkOverrides.TryGetValue(_selectedPageId, out var view))
+        {
+            InkPanX = view.PanX;
+            InkPanY = view.PanY;
+            InkZoom = view.Zoom;
+        }
+        else
+        {
+            InkPanX = page?.InkPanX ?? 0;
+            InkPanY = page?.InkPanY ?? 0;
+            InkZoom = page is null ? 1 : Math.Clamp(page.InkZoom, 0.25, 8);
+        }
     }
 
     private static IEnumerable<T> FindControls<T>(Control root) where T : Control

@@ -6,9 +6,21 @@
   header exposes the persistent mode toggle. View retains text selection/copy,
   search, navigation, board open/save, and appearance controls while preventing
   document mutations at dispatch, text/check input, toolbar, and direct editor
-  operation boundaries. The app test now covers blocked title/block edits and
-  resumed editing after switching back. Root owns the SDK/test run for this
+  operation boundaries. Page/canvas and graph viewport interaction remain
+  session-local while viewing. The app tests cover blocked title/block edits,
+  resumed editing, and nonpersistent camera changes. Root owns the SDK/test run for this
   isolated branch; no build or runtime result is claimed here.
+- Native nested Page hierarchy: **IMPLEMENTED, owning checks pending**. Parent IDs
+  survive projection/save/reopen and section duplication; cycle/cross-section
+  parent links fail closed; deleting a page promotes its direct children to the
+  deleted page's parent. The sidebar exposes nested disclosure, create-subpage,
+  outdent and deterministic nesting actions. Broader canonical Board/Page
+  convergence across clients remains incomplete.
+- Graph sliders: **IMPLEMENTED, owning checks pending**. Slider definitions use
+  stable VariableIDs and validated name/range/step/default fields through the
+  existing graph owner; the existing expression parser accepts slider variables.
+  View slider values and graph viewport are session-local. Slider controls,
+  projection/reopen and evaluator tests are authored for Root's serial run.
 - Remaining major Boards gaps are Progress Tracker packets B-01 through B-04.
   In particular, board-centric recent landing/picker, canonical
   cross-client Board/Page convergence, embedded Write/Canvas/Chat/ScopedChat/Data

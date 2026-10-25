@@ -374,6 +374,52 @@ public sealed class ContractAdapterTests
         }
     }
 
+    [Fact]
+    public async Task Graph_slider_definition_survives_cui_projection_save_and_reopen()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "graph-slider-projection.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            string variableId;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var page = adapter.Document.Sections[0].Pages[0];
+                var graphBlock = new RichBoardBlock
+                {
+                    Id = "graph-slider-block", Kind = "graph", Graph = new RichGraphView()
+                };
+                page.Blocks.Add(graphBlock);
+                adapter.MarkDirty();
+                await adapter.SaveAsync();
+
+                var viewModel = new BoardsViewModel(adapter);
+                viewModel.AddGraphSlider(graphBlock.Id);
+                await adapter.SaveAsync();
+                var slider = Assert.Single(viewModel.FindBlock(graphBlock.Id)!.Graph!.Sliders);
+                variableId = slider.VariableId;
+                viewModel.ConfigureGraphSlider(graphBlock.Id, variableId, "a", -3, 7, 0.25, 1.5);
+                var expression = viewModel.FindBlock(graphBlock.Id)!.Graph!.Expressions[0];
+                expression.Text = "y = 2a + x";
+                adapter.MarkDirty();
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var restored = reopened.Document.Sections[0].Pages[0].Blocks.Single(block => block.Id == "graph-slider-block");
+            var persisted = Assert.Single(restored.Graph!.Sliders);
+            Assert.Equal(variableId, persisted.VariableId);
+            Assert.Equal("a", persisted.Name);
+            Assert.Equal(-3, persisted.Minimum);
+            Assert.Equal(7, persisted.Maximum);
+            Assert.Equal(0.25, persisted.Step);
+            Assert.Equal(1.5, persisted.DefaultValue);
+            Assert.Equal("y = 2a + x", Assert.Single(restored.Graph.Expressions).Text);
+        }
+        finally { DeleteDirectory(root); }
+    }
+
     private static string TempDirectory()
     {
         var root = Path.Combine(Path.GetTempPath(), "cakeos-adapter-tests", Guid.NewGuid().ToString("N"));

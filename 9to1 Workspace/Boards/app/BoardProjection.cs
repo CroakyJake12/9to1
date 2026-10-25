@@ -26,6 +26,7 @@ internal static class Projector
     private static RichBoardPage ProjectPage(HavenRichPage page) => new()
     {
         Id = page.Id,
+        ParentPageId = page.ParentPageId,
         Title = page.Title,
         InkPanX = page.InkView?.PanX ?? 0,
         InkPanY = page.InkView?.PanY ?? 0,
@@ -191,6 +192,16 @@ internal static class Projector
 
     private static RichGraphView ProjectGraph(HavenRichGraph graph) => new()
     {
+        GraphId = graph.GraphId,
+        Sliders = graph.Sliders.Select(slider => new RichGraphSliderView
+        {
+            VariableId = slider.VariableId,
+            Name = slider.Name,
+            Minimum = slider.Minimum,
+            Maximum = slider.Maximum,
+            Step = slider.Step,
+            DefaultValue = slider.DefaultValue
+        }).ToList(),
         Expressions = graph.Expressions.Select(e => new RichGraphExpressionView
         {
             Id = e.Id,
@@ -305,6 +316,9 @@ internal static class MergeDeltas
             if (baselinePages.TryGetValue(viewPage.Id, out var baselinePage) &&
                 viewPage.Title != baselinePage.Title)
                 HavenRichNotesOps.RenamePage(rich, contractPage.Id, viewPage.Title);
+            if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
+                viewPage.ParentPageId != baselinePage.ParentPageId)
+                HavenRichNotesOps.SetPageParent(rich, contractPage.Id, viewPage.ParentPageId);
             MergeBlocks(rich, contractPage, viewPage,
                 baselinePage?.Blocks.ToDictionary(b => b.Id, StringComparer.Ordinal)
                 ?? new Dictionary<string, RichBoardBlock>(StringComparer.Ordinal));
@@ -601,6 +615,7 @@ internal static class MergeDeltas
     private static void ImportPageTree(HavenRichSection section, RichBoardPage viewPage)
     {
         var page = HavenRichNotesOps.ImportPage(section, viewPage.Id, viewPage.Title);
+        page.ParentPageId = viewPage.ParentPageId;
         var checklistByParent = new Dictionary<string, HavenRichBlock>(StringComparer.Ordinal);
         foreach (var viewBlock in viewPage.Blocks)
         {
@@ -785,7 +800,7 @@ internal static class MergeDeltas
                     Kind = HavenRichBlockKind.Graph,
                     Order = page.Blocks.Count,
                     StyleId = string.IsNullOrEmpty(viewBlock.StyleId) ? "normal" : viewBlock.StyleId,
-                    Graph = new HavenRichGraph()
+                    Graph = new HavenRichGraph { GraphId = viewBlock.Graph?.GraphId ?? string.Empty }
                 };
                 if (viewBlock.Graph is not null)
                 {
@@ -813,6 +828,15 @@ internal static class MergeDeltas
                     created.Graph.YLabel = source.YLabel;
                     created.Graph.Points = source.Points
                         .Select(p => new HavenRichGraphPoint { X = p.X, Y = p.Y, Label = p.Label }).ToList();
+                    created.Graph.Sliders = source.Sliders.Select(slider => new HavenRichGraphSlider
+                    {
+                        VariableId = slider.VariableId,
+                        Name = slider.Name,
+                        Minimum = slider.Minimum,
+                        Maximum = slider.Maximum,
+                        Step = slider.Step,
+                        DefaultValue = slider.DefaultValue
+                    }).ToList();
                 }
                 page.Blocks.Add(created);
                 break;
@@ -904,7 +928,24 @@ internal static class MergeDeltas
             HavenRichNotesOps.SetGraphOptions(rich, page.Id, contractBlock.Id,
                 showGrid: current.ShowGrid, showAxes: current.ShowAxes,
                 xLabel: current.XLabel, yLabel: current.YLabel);
+        if (oldGraph is null || !current.Sliders.SequenceEqual(oldGraph.Sliders, RichGraphSliderComparer.Instance))
+            HavenRichNotesOps.SetGraphSliders(rich, page.Id, contractBlock.Id, current.Sliders.Select(slider =>
+                new HavenRichGraphSlider
+                {
+                    VariableId = slider.VariableId, Name = slider.Name, Minimum = slider.Minimum,
+                    Maximum = slider.Maximum, Step = slider.Step, DefaultValue = slider.DefaultValue
+                }).ToArray());
         MergeGraphPoints(rich, page, contractBlock, current, oldGraph);
+    }
+
+    private sealed class RichGraphSliderComparer : IEqualityComparer<RichGraphSliderView>
+    {
+        public static readonly RichGraphSliderComparer Instance = new();
+        public bool Equals(RichGraphSliderView? left, RichGraphSliderView? right) => left is not null && right is not null &&
+            left.VariableId == right.VariableId && left.Name == right.Name && left.Minimum == right.Minimum &&
+            left.Maximum == right.Maximum && left.Step == right.Step && left.DefaultValue == right.DefaultValue;
+        public int GetHashCode(RichGraphSliderView value) => HashCode.Combine(value.VariableId, value.Name,
+            value.Minimum, value.Maximum, value.Step, value.DefaultValue);
     }
 
     private static bool GraphExpressionChanged(RichGraphExpressionView current, RichGraphExpressionView baseline) =>
