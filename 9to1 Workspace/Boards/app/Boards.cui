@@ -186,7 +186,7 @@
         <Container horizontalalignment="Stretch" cornerradius="22" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Row="2" Background="{Resource CuiSurfaceMaterial}" BorderWidth="0">
           <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
             <Container Type="Grid" ID="PageSurface">
-              <Container margin="44 36" Type="Vertical Stack" ID="DocumentContentLayer">
+              <Container margin="76 36" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
                 <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />
