@@ -76,6 +76,19 @@ public static class OriginalNativeDevelopmentServiceCollectionExtensions
                 provider.GetRequiredService<IDeveloperProjectOriginalEditAdmissionSource>(),
                 provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>()));
         }
+        // Manual console Run has its OWN genuine Home Execute source. Selection/READ/WRITE
+        // alone never makes this owner available. Preserve a host's already registered singleton.
+        if (services.Any(item => item.ServiceType == typeof(IDeveloperProjectOriginalManualExecutionAdmissionSource)) &&
+            services.Any(item => item.ServiceType == typeof(DeveloperManualSourceReadOwner)) &&
+            !services.Any(item => item.ServiceType == typeof(DeveloperManualProjectProcessOwner)))
+        {
+            services.AddSingleton<DeveloperManualProjectProcessOwner>(provider => new(
+                provider.GetRequiredService<NativeFilesWorkspaceService>(), provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalManualExecutionAdmissionSource>(),
+                provider.GetRequiredService<IWorkspaceToolService>() as IWorkspaceOriginalInvocationSource
+                    ?? throw new NotSupportedException("The SAME maintained original workspace process owner is required.")));
+        }
         services.AddSingleton<DeveloperProjectWorkbenchPageFactory>(provider => new(
             provider.GetRequiredService<DeveloperTaskWorkspaceService>(), provider.GetRequiredService<TaskExecutionCoordinator>(),
             provider.GetRequiredService<FilesNativeBrowserService>(), provider));

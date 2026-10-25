@@ -19,6 +19,11 @@ public static partial class OriginalLocalTaskConsole
         private HomeDeveloperProjectSetupActionPolicySource? _setupPolicy;
         private HomeDeveloperProjectEditResourceResolver? _setupEditResolver;
         private HomeDeveloperProjectEditActionPolicySource? _setupEditPolicy;
+        private HomeDeveloperManualProjectExecutionResourceResolver? _setupManualRunResolver;
+        private HomeDeveloperManualProjectExecutionActionPolicySource? _setupManualRunPolicy;
+        private HomeDeveloperManualProjectExecutionAdmissionSource? _setupManualRuns;
+        private DeveloperManualProjectProcessOwner? _setupManualProcessOwner;
+        private CancellationTokenSource? _manualConsoleRunStop;
         private FilesDeveloperOriginalSourceSelection? _setupSelections;
         private IDeveloperProjectOriginalPhysicalCaptureSource? _setupPhysical;
         private FilesDeveloperOriginalSetupScopeSource? _setupScopes;
@@ -40,6 +45,9 @@ public static partial class OriginalLocalTaskConsole
             _setupEditResolver = new(() => _setupEdits
                 ?? throw new InvalidOperationException("The SAME captured Home source EDIT owner is unavailable."));
             _setupEditPolicy = new();
+            _setupManualRunResolver = new(() => _setupManualRuns
+                ?? throw new InvalidOperationException("The SAME captured Home manual Run owner is unavailable."));
+            _setupManualRunPolicy = new();
         }
 
         private void ConfigureOriginalDeveloperSetupOwners(IServiceCollection services)
@@ -50,6 +58,8 @@ public static partial class OriginalLocalTaskConsole
             services.AddHavenOwnedDeveloperSourceEdits(domain,
                 provider => provider.GetRequiredService<IDeveloperProjectOriginalEditScopeSource>(),
                 _setupEditResolver!, _setupEditPolicy!);
+            services.AddHavenOwnedDeveloperManualExecution(domain,
+                provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), _setupManualRunResolver!, _setupManualRunPolicy!);
             services.AddHavenOwnedDeveloperSetups(domain,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
@@ -82,6 +92,8 @@ public static partial class OriginalLocalTaskConsole
             Resolve<FileDeveloperWorkspaceStore>(original, value => _setupWorkspaceStore = value);
             Resolve<HomeDeveloperProjectReadAdmissionSource>(original, value => _setupReads = value);
             Resolve<HomeDeveloperProjectEditAdmissionSource>(original, value => _setupEdits = value);
+            Resolve<HomeDeveloperManualProjectExecutionAdmissionSource>(original, value => _setupManualRuns = value);
+            Resolve<DeveloperManualProjectProcessOwner>(original, value => _setupManualProcessOwner = value);
             Resolve<HomeDeveloperProjectSetupJournal>(original, value => _setupJournal = value);
             Resolve<HomeDeveloperProjectSetupPermissionSource>(original, value => _setupPermissions = value);
             Resolve<FilesDeveloperOriginalSourceSelection>(original, value => _setupSelections = value);
@@ -93,6 +105,8 @@ public static partial class OriginalLocalTaskConsole
 
         private void DemandOriginalDeveloperSetupJoins()
         {
+            _setupManualProcessOwner?.DemandExternalOriginalJoin();
+            _setupManualRuns?.DemandExternalOriginalManualExecutionJoin();
             _setupSteps?.DemandExternalOriginalSetupStepOutcomeJoin();
             _setupScopes?.DemandExternalOriginalSetupScopeJoin();
             _setupSelections?.DemandExternalOriginalCaptureJoin();
@@ -112,7 +126,16 @@ public static partial class OriginalLocalTaskConsole
         }
         private async Task CloseAndDrainOriginalDeveloperSetupsAsync()
         {
-            var failures = new List<Exception>(); var permissionCloses = new List<Task>();
+            var failures = new List<Exception>();
+            // Process exit/output and its actual per-operation Home audit settle before any
+            // borrowed Files selection, READ source or native capture provider retires.
+            var processCloses = new List<Task>();
+            if (_setupManualProcessOwner is not null) AcquireClose(_setupManualProcessOwner.CloseAndDrainOriginalAsync, processCloses, failures);
+            await JoinAll(processCloses, failures).ConfigureAwait(false);
+            var runCloses = new List<Task>();
+            if (_setupManualRuns is not null) AcquireClose(_setupManualRuns.CloseAndDrainOriginalManualExecutionsAsync, runCloses, failures);
+            await JoinAll(runCloses, failures).ConfigureAwait(false);
+            var permissionCloses = new List<Task>();
             if (_setupPermissions is not null)
                 AcquireClose(_setupPermissions.CloseAndDrainOriginalSetupsAsync, permissionCloses, failures);
             await JoinAll(permissionCloses, failures).ConfigureAwait(false);
@@ -138,6 +161,70 @@ public static partial class OriginalLocalTaskConsole
             if (_setupEdits is not null) AcquireClose(_setupEdits.CloseAndDrainOriginalEditsAsync, closes, failures);
             await JoinAll(closes, failures).ConfigureAwait(false);
             Throw(failures);
+        }
+
+        private void LaunchOriginalManualProjectRun(DesktopOriginalWorkLifetime.Original commandOriginal,
+            string argument, CancellationToken token)
+        {
+            var parts = argument.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length is not (4 or 5) || !Guid.TryParse(parts[0], out var workspace) || workspace == Guid.Empty ||
+                !Guid.TryParse(parts[1], out var project) || project == Guid.Empty || !Guid.TryParse(parts[2], out var root) || root == Guid.Empty ||
+                string.IsNullOrWhiteSpace(parts[3]) || parts[3].Length > 128 || parts[3].Any(char.IsControl))
+                throw new ArgumentException("Use project-run <saved workspace GUID> <saved project GUID> <saved root GUID> <exact configuration ID> [exact repository binding ID]. IDs containing spaces require the native selector.");
+            token.ThrowIfCancellationRequested();
+            Scope(commandOriginal, () =>
+            {
+                if (_setupManualProcessOwner is null || _setupManualRuns is null || _setupWorkspaceStore is null || _developer is null)
+                    throw new InvalidOperationException("The genuine configured manual Run owners are unavailable.");
+            });
+            var configurationId = parts[3]; var repository = parts.Length == 5 ? parts[4] : null;
+            _ = _work.RunAsync(async original =>
+            {
+                using var stop = CancellationTokenSource.CreateLinkedTokenSource(original.Token);
+                lock (_gate)
+                {
+                    if (_manualConsoleRunStop is not null) throw new InvalidOperationException("One manual console Run is already retained. Inspect it or request project-run-stop before another launch.");
+                    _manualConsoleRunStop = stop;
+                }
+                try
+                {
+                var stored = await Acquire(original, () => _setupWorkspaceStore!.GetAsync(workspace, original.Token)).ConfigureAwait(false);
+                if (!stored.Succeeded || stored.Value is null) throw new InvalidOperationException(JsonSerializer.Serialize(stored.Error));
+                var selectedProject = stored.Value.Projects.Single(value => value.ProjectId == project);
+                if (!selectedProject.RootIds.Contains(root)) throw new InvalidOperationException("Select an actual root of the SAME saved project.");
+                var reference = new DeveloperProjectReference(workspace, stored.Value.Revision, project, selectedProject.Revision, root, repository);
+                var resolved = await Acquire(original, () => _developer!.ResolveAsync(reference, original.Token)).ConfigureAwait(false);
+                if (!resolved.Succeeded || resolved.Value is null) throw new InvalidOperationException(JsonSerializer.Serialize(resolved.Error));
+                var choices = DeveloperRunConfigurationSelection.Observe(resolved.Value);
+                var choice = choices.Value?.SingleOrDefault(value => value.Configuration.Id == configurationId)
+                    ?? throw new InvalidOperationException("The saved project has no unambiguous declared Run configuration with that ID.");
+                if (choice.UnavailableReason is { } reason) throw new NotSupportedException(reason);
+                Scope(original, () => Write(new { manualRunReview = choice.Summary, choice.DefinitionSha256,
+                    note = "This is not permission. Display and decide the separate source READ and exact console Run in Home while this original operation waits." }));
+                var observed = await Acquire(original, () => _setupManualProcessOwner!.RunAsync(resolved.Value, choice,
+                    body => Scope(original, body), stop.Token)).ConfigureAwait(false);
+                Scope(original, () => Write(new { manualRun = observed.OperationId, project = observed.Project,
+                    observed.ConfigurationId, observed.DefinitionSha256, observed.ProcessSucceeded, observed.Process,
+                    observed.CleanupCompleted, physical = observed.PhysicalOutcome is { } physical
+                        ? new { physical.OriginalReceiptReference, physical.Effects, physical.KnownNoEffect, physical.OutcomeUnknown } : null,
+                    causes = observed.OriginalErrors.Select(error => error.ToString()).ToArray(),
+                    note = "No Task was created. This retained original is never automatically replayed." }));
+                foreach (var error in observed.OriginalErrors) original.Retain(error);
+                original.ThrowRetained();
+                }
+                finally { lock (_gate) _manualConsoleRunStop = null; }
+            });
+            Write(new { manualRunRequested = true, workspace, project, root, configurationId,
+                note = "No Task/container is required. Use home-requests/home-display and explicitly accept or decline each original review. Process output/lifecycle will be reported by the retained background operation." });
+        }
+
+        private void StopOriginalManualProjectRun(DesktopOriginalWorkLifetime.Original original)
+        {
+            CancellationTokenSource stop;
+            lock (_gate) stop = _manualConsoleRunStop
+                ?? throw new InvalidOperationException("There is no current retained manual console Run to stop.");
+            Scope(original, stop.Cancel); // Actual callbacks execute outside the host lock.
+            Write(new { manualRunStopRequested = true, note = "The original process owner joins its actual stop, exit, output and cleanup before reporting the outcome." });
         }
 
         private async Task ListOriginalFilesAsync(DesktopOriginalWorkLifetime.Original original,
