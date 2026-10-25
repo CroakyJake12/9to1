@@ -248,6 +248,15 @@ public sealed partial class CanvasHostSurface : ContentControl
         using var reader = new StreamReader(stream);
         var parser = new CuiRichParser(); var document = parser.Parse(await reader.ReadToEndAsync(ct));
         if (parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error)) throw new InvalidDataException("Canvas host CUI is invalid.");
+        if (_embeddedTarget is not null)
+        {
+            var variables = new Dictionary<string, CuiVariableDeclaration>(document.Variables, StringComparer.Ordinal);
+            if (!variables.TryGetValue("ShowStart", out var showStart) || !variables.TryGetValue("ShowWorkspace", out var showWorkspace))
+                throw new InvalidDataException("The Canvas host CUI has no embedded presentation state.");
+            variables["ShowStart"] = showStart with { Value = "False" };
+            variables["ShowWorkspace"] = showWorkspace with { Value = "True" };
+            document = document with { Variables = variables };
+        }
         _sceneInitialization = Original(() => _shell.ShowAsync(new("canvas", "Canvas", "Canvas", document, _model, new Actions(this), new HostReadiness(this))
         { ThemePreference = _themePreference, IsPublicationCurrent = () => !_closed && !_lifetime.IsCancellationRequested }, ct));
         await _originalWork.ObserveOriginalAsync(_sceneInitialization);
@@ -262,6 +271,7 @@ public sealed partial class CanvasHostSurface : ContentControl
         };
         await _originalWork.ObserveOriginalAsync(Original(() => _approvals.InitializeAsync(ct)));
         await RefreshAsync(null, ct);
+        if (_embeddedTarget is { } target) await OpenEmbeddedTargetAsync(target, ct);
     }
     private async ValueTask<CuiSceneAvailability> CheckHostAsync(CancellationToken ct)
     {
@@ -325,23 +335,24 @@ public sealed partial class CanvasHostSurface : ContentControl
         var retained = HasRetainedCanvas();
         _model.Set("HasRetainedCanvas", retained);
         _model.Set("HasNoRetainedCanvas", !retained);
-        _model.Set("CanReturnStart", idle && noPending);
+        var standalone = _embeddedTarget is null;
+        _model.Set("CanReturnStart", standalone && idle && noPending);
         _model.Set("CanResume", idle && noPending && retained);
         _model.Set("OpenedName", _opened?.Artifact.DisplayName ?? "Canvas");
         _model.Set("HasPendingRequest", !noPending || _requestUncertain);
-        _model.Set("CanSearch", idle && noPending);
+        _model.Set("CanSearch", standalone && idle && noPending);
         _model.Set("HasNoDocuments", _documents.Length == 0);
         _model.Set("HasMoreDocuments", _nextPage is not null);
         _launchRows = _documents.Select(item => new CanvasLaunchRow(item)).ToArray();
         _model.Set("Canvases", _launchRows);
-        _model.Set("CanNavigate", idle && noPending);
-        _model.Set("CanSetup", idle && _ready && _configuration is null && noPending);
-        _model.Set("CanWrite", idle && WriteAvailable() && noPending);
+        _model.Set("CanNavigate", standalone && idle && noPending);
+        _model.Set("CanSetup", standalone && idle && _ready && _configuration is null && noPending);
+        _model.Set("CanWrite", standalone && idle && WriteAvailable() && noPending);
         _model.Set("CanFinish", idle && !noPending);
-        _model.Set("CanReviewWorkspace", idle && _ready && _workspace is null && _configuration is not null && noPending);
+        _model.Set("CanReviewWorkspace", standalone && idle && _ready && _workspace is null && _configuration is not null && noPending);
         _model.Set("CanPrevious", idle && _selected > 0); _model.Set("CanNext", idle && _selected + 1 < _documents.Length);
-        _model.Set("CanOpen", idle && _documents.Length > 0 && noPending);
-        _model.Set("CanPage", idle && _nextPage is not null && noPending);
+        _model.Set("CanOpen", standalone && idle && _documents.Length > 0 && noPending);
+        _model.Set("CanPage", standalone && idle && _nextPage is not null && noPending);
         _model.Set("SelectedName", _documents.Length == 0 ? "No document selected" : _documents[_selected].Name);
     }
     private void SetStatus(string message) => Original(() => { _model.Set("Status", message); return true; });
