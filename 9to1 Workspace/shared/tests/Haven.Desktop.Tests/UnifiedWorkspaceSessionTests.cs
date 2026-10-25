@@ -45,7 +45,7 @@ public sealed class UnifiedWorkspaceSessionTests
     public async Task Browse_split_panes_restore_and_round_trip_through_the_existing_window_layout()
     {
         var first = UnifiedWorkspaceTabState.Merge(null, Browser("First"));
-        var second = UnifiedWorkspaceTabState.Merge(null, Browser("Second"));
+        var second = UnifiedWorkspaceTabState.Merge(null, Browser("Second") with { ProfileId = "other-profile" });
         var window = Window(WorkspaceWindowKind.Main, [first.Id, second.Id]) with
         {
             SelectedTabId = second.Id,
@@ -63,6 +63,8 @@ public sealed class UnifiedWorkspaceSessionTests
 
         var loaded = await port.LoadAsync(CancellationToken.None);
         Assert.Equal(new[] { first.Id, second.Id }, loaded!.PaneTabIds);
+        Assert.Equal("profile", loaded.Tabs.Single(tab => tab.Id == first.Id).ProfileId);
+        Assert.Equal("other-profile", loaded.Tabs.Single(tab => tab.Id == second.Id).ProfileId);
         await port.SaveAsync(loaded with { PaneTabIds = [second.Id, first.Id],
             SplitOrientation = SplitOrientation.Vertical, PrimaryPaneRatio = 0.65 }, CancellationToken.None);
         var saved = repository.Writes[^1].Windows.Single();
@@ -70,6 +72,9 @@ public sealed class UnifiedWorkspaceSessionTests
         Assert.Equal(SplitOrientation.Vertical, saved.Layout.Orientation);
         Assert.Equal(0.65, saved.Layout.PrimaryRatio, precision: 2);
         Assert.Equal(new[] { second.Id, first.Id }, saved.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
+        Assert.True(UnifiedWorkspaceTabState.TryProject(repository.Writes[^1].Tabs.Single(tab => tab.Id == second.Id),
+            "profile", out var restoredOtherProfile));
+        Assert.Equal("other-profile", restoredOtherProfile!.ProfileId);
         Assert.Equal(window.Layout.Panes.Select(pane => pane.Id).OrderBy(id => id),
             saved.Layout.Panes.Select(pane => pane.Id).OrderBy(id => id));
         await session.SealAndDrainAsync();

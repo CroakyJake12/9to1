@@ -161,11 +161,12 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
     }
 
     [Fact]
-    public void Browse_split_projection_persists_two_same_profile_panes_and_rejects_invalid_references()
+    public void Browse_split_projection_persists_two_different_profile_panes_and_rejects_invalid_references()
     {
         var a = Tab("A"); var b = Tab("B"); var original = Session([a, b]);
         var paneIds = new[] { b.Id, a.Id };
-        var split = Projection([Project(a), Project(b)], b.Id) with
+        var split = Projection([Project(a) with { ProfileId = "profile-a" },
+            Project(b) with { ProfileId = "profile-b" }], b.Id) with
         { PaneTabIds = paneIds, SplitOrientation = SplitOrientation.Vertical, PrimaryPaneRatio = 0.65 };
         var merged = Merge(original, split, a.Id, b.Id);
         var layout = merged.Windows[0].Layout;
@@ -175,9 +176,10 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
         Assert.Equal(paneIds, layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
         Assert.Equal(b.Id, merged.Windows[0].SelectedTabId);
 
-        var crossProfile = split with
-        { Tabs = [Project(a), Project(b) with { ProfileId = "different-profile" }] };
-        Assert.Throws<InvalidDataException>(() => Merge(original, crossProfile, a.Id, b.Id));
+        var privatePane = split with
+        { Tabs = [Project(a) with { ProfileId = "profile-a" },
+            Project(b) with { ProfileId = "profile-b", Privacy = BrowserTabPrivacy.Private }] };
+        Assert.Throws<InvalidDataException>(() => Merge(original, privatePane, a.Id, b.Id));
         Assert.Throws<InvalidDataException>(() => Merge(original,
             split with { PaneTabIds = [a.Id, Guid.NewGuid()] }, a.Id, b.Id));
         Assert.Throws<InvalidDataException>(() => Merge(original,

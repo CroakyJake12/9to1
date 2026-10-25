@@ -133,8 +133,7 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                     !Enum.IsDefined(window.Layout.Orientation) || !double.IsFinite(window.Layout.PrimaryRatio) ||
                     window.Layout.PrimaryRatio < WorkspaceLayoutSnapshot.MinimumPaneRatio ||
                     window.Layout.PrimaryRatio > WorkspaceLayoutSnapshot.MaximumPaneRatio ||
-                    panes.Any(id => !projected.Any(tab => tab.Id == id && tab.Privacy == BrowserTabPrivacy.Standard &&
-                        StringComparer.Ordinal.Equals(tab.ProfileId, ProfileId))))
+                    panes.Any(id => !projected.Any(tab => tab.Id == id && tab.Privacy == BrowserTabPrivacy.Standard)))
                     panes = [];
                 var groupIds = projected.Select(tab => Guid.TryParse(tab.Group, out var groupId) ? groupId : Guid.Empty)
                     .Where(id => id != Guid.Empty).Concat(closed.Select(tab => Guid.TryParse(tab.Tab.Group, out var groupId)

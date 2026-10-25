@@ -51,10 +51,8 @@ internal static class UnifiedWorkspaceSessionProjection
             throw new InvalidDataException("The selected tab must belong to the non-private projection.");
         if (paneTabIds.Count == 2 && (paneTabIds.Any(id => !currentIds.Contains(id)) ||
             current.SelectedTabId is not { } focused || !paneTabIds.Contains(focused) ||
-            paneTabIds.Any(id => current.Tabs.Single(tab => tab.Id == id).Privacy != BrowserTabPrivacy.Standard ||
-                !StringComparer.Ordinal.Equals(current.Tabs.Single(tab => tab.Id == id).ProfileId,
-                    current.Tabs.Single(tab => tab.Id == paneTabIds[0]).ProfileId))))
-            throw new InvalidDataException("Split panes must be open standard tabs in the same profile, with focus inside the split.");
+            paneTabIds.Any(id => current.Tabs.Single(tab => tab.Id == id).Privacy != BrowserTabPrivacy.Standard)))
+            throw new InvalidDataException("Split panes must be open standard tabs, with focus inside the split.");
         var splitOrientation = current.SplitOrientation ?? (owningWindow.Layout.Kind == WorkspaceLayoutKind.Split
             ? owningWindow.Layout.Orientation : SplitOrientation.Vertical);
         var primaryPaneRatio = current.PrimaryPaneRatio ?? (owningWindow.Layout.Kind == WorkspaceLayoutKind.Split
