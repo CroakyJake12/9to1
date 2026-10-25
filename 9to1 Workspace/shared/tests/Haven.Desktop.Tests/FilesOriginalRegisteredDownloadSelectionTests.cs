@@ -419,11 +419,18 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
         });
 
     [Fact]
-    public Task Actual_files_revision_and_parent_revision_races_are_conflicts_without_clobbering_current_bytes()
+    public Task Actual_stale_selected_file_revision_is_a_conflict_without_materializing_candidate_bytes()
         => Run(async rig =>
         {
             if (!OperatingSystem.IsLinux()) return;
             await AssertBoardRaceAsync(rig, "stale-item.9to1board", advanceParentOnly: false);
+        });
+
+    [Fact]
+    public Task Actual_stale_parent_revision_is_a_provider_conflict_without_clobbering_or_referencing_candidate_bytes()
+        => Run(async rig =>
+        {
+            if (!OperatingSystem.IsLinux()) return;
             await AssertBoardRaceAsync(rig, "stale-parent.9to1board", advanceParentOnly: true);
         });
 
