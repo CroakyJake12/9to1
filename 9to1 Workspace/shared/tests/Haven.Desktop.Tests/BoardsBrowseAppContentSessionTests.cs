@@ -9,6 +9,8 @@ using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
+using HavenOS.Files.NativeHost;
+using HavenOS.Files;
 using HavenOS.Home.Core;
 using HavenOS.Home.NativeUI;
 using Microsoft.Extensions.DependencyInjection;
@@ -75,6 +77,35 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.True(session.CanRetireOriginalView);
         Assert.False(session.IsPublicationCurrent);
         Assert.False(lease.IsOpen);
+    }
+
+    [Fact]
+    public async Task Selected_Files_board_transport_bytes_are_zeroed_when_final_Home_authority_cancels_or_throws()
+    {
+        var store = Guid.NewGuid(); var folder = Guid.NewGuid(); var file = Guid.NewGuid(); var revision = Guid.NewGuid();
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new HavenBoardDocument(HavenBoardDocument.FormatIdentity,
+            HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow, null, HavenRichNotes.Create("Transport buffer")), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var actor = new AuthenticatedResourceActor("local:fixture", "fixture-profile", null, null, "fixture-revision");
+        var row = new HostedItemMetadata(new(file), new(Guid.NewGuid()), new(folder), "selected.9to1board",
+            HostedItemKind.File, "application/json", "local-profile:" + actor.ProfileId, "personal", bytes.Length,
+            DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, new(revision), SyncAvailability.AvailableOffline,
+            false, "sha256:" + Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant());
+        var page = new FilesNativeBrowserPage(store, "store-revision", folder,
+            [row], null);
+
+        async Task VerifyZeroed(Func<CancellationToken, Task<bool>> authority)
+        {
+            var transport = bytes.ToArray();
+            var read = new FilesOriginalBoardDocumentRead(store, file, folder, revision,
+                Convert.ToHexString(SHA256.HashData(transport)), transport);
+            await Assert.ThrowsAnyAsync<Exception>(() => NativeHomeFilesBoardReadSource.CreateLeaseAfterReadAsync(
+                read, page, row, actor, () => true, authority, CancellationToken.None));
+            Assert.All(transport, value => Assert.Equal((byte)0, value));
+        }
+
+        await VerifyZeroed(_ => throw new OperationCanceledException("final profile observation canceled"));
+        await VerifyZeroed(_ => throw new InvalidOperationException("final profile observation failed"));
     }
 
     [AvaloniaFact]
