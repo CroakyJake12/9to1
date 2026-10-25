@@ -817,7 +817,7 @@ internal sealed class BoardsApp : Application
         oldSession ??= _session;
         _textAndKeyboardOwner?.Dispose();
         _inkInteraction?.Dispose();
-        await (_inkInteraction?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+        await (_inkInteraction?.DrainAsync() ?? Task.CompletedTask);
         var next = new BoardsViewModel(adapter);
         next.SetLanding(false);
         if (selectedPageId is not null && !next.SelectPageById(selectedPageId))
