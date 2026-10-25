@@ -9,6 +9,9 @@ namespace HavenOS.Home.Core;
 /// <summary>Reads actual accepted Unix socket peer credentials. Unsupported platforms fail closed.</summary>
 public static class HomeNativePeerObservation
 {
+    // Same SO_PEERCRED observer, with actual connected-process custody for owning
+    // accepting paths. The detached public record remains discovery metadata only.
+    internal static HomeNativeLinuxPeerProcess? RetainAcceptedUnixProcess(Socket accepted) => HomeNativeLinuxPeerProcess.Capture(accepted);
     public static HomeNativeObservedPeer? FromAcceptedUnixSocket(Socket accepted)
     {
         ArgumentNullException.ThrowIfNull(accepted);

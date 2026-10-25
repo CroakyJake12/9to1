@@ -28,16 +28,19 @@ public static class HomeUnixDiscoveryTransport
             throw new InvalidDataException("Retained discovery frame exceeds the original bound.");
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(5));
-        var peer = HomeNativePeerObservation.FromAcceptedUnixSocket(accepted);
-        if (peer is null) return;
         using var stream = new NetworkStream(accepted, ownsSocket: false);
         HomeNativeDiscoveryResponse response;
         try
         {
             var request = JsonSerializer.Deserialize<HomeNativeDiscoveryRequest>(retainedFirstFrame ?? await ReadFrameAsync(stream, deadline.Token).ConfigureAwait(false), Json);
-            var snapshot = request is null ? null : await discovery.DiscoverAsync(peer, request.Requirements, deadline.Token).ConfigureAwait(false);
+            using var process = HomeNativePeerObservation.RetainAcceptedUnixProcess(accepted);
+            var peer = process?.Observe();
+            var snapshot = request is null || peer is null ? null : await discovery.DiscoverAsync(peer, request.Requirements, deadline.Token).ConfigureAwait(false);
+            if (snapshot is not null && process?.Observe() != peer) snapshot = null;
             response = new(snapshot is null ? "HomePeerOrServiceUnavailable" : "HomeDiscoveryReady", snapshot);
         }
+        catch (HomeNativePeerProcessUnavailableException)
+        { response = new(HomeNativePeerProcessUnavailableException.Code, null); }
         catch (JsonException) { response = new("HomeDiscoveryRequestInvalid", null); }
         catch (InvalidDataException) { response = new("HomeDiscoveryRequestInvalid", null); }
         var payload = JsonSerializer.SerializeToUtf8Bytes(response, Json);
