@@ -19,7 +19,8 @@ using CakeOS.Cui.Runtime;
 
 namespace CakeOS.Apps.Boards.App;
 
-public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
+public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiActionDispatcher,
+    ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
     private readonly IRichBoardSession _session;
     private readonly Dictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
@@ -41,6 +42,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private readonly Dictionary<string, (double PanX, double PanY, double Zoom)> _viewInkOverrides = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RichGraphView> _viewGraphOverrides = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Dictionary<string, double>> _graphSessionValues = new(StringComparer.Ordinal);
+    private IReadOnlyList<RecentBoardCard> _allRecentBoards = [];
+    private IReadOnlyList<RecentPageCard> _allRecentPages = [];
+    private IReadOnlyList<RecentBoardCard> _recentBoardCards = [];
+    private IReadOnlyList<RecentPageCard> _recentPageCards = [];
+    private string _landingSearchQuery = string.Empty;
 
     private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
     private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
@@ -50,6 +56,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _session = session ?? throw new ArgumentNullException(nameof(session));
         Set("IsEditMode", true);
         Set("ModeLabel", "Edit");
+        Set("RecentBoardsLoaded", false);
         _session.StatusChanged += (_, status) =>
         {
             Set("StatusText", status);
@@ -89,16 +96,86 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     /// <summary>Host-provided board switcher used by OpenBoard when set.</summary>
     public Func<Task>? OpenBoardAsync { get; set; }
+    public Func<string, string?, Task>? OpenBoardPathAsync { get; set; }
 
     public string SelectedBlockId => _selectedBlockId;
     public IReadOnlyList<RichStyleView> StyleList => _session.Styles;
     public IReadOnlyList<RichBoardBlock> PageBlocks => CurrentPage().Blocks;
+
+    public void SetLanding(bool show)
+    {
+        Set("IsLanding", show);
+        if (show) Set("LandingSearchQuery", _landingSearchQuery);
+    }
+
+    public void SetLandingData(IReadOnlyList<RecentBoardCard> boards, IReadOnlyList<RecentPageCard> pages)
+    {
+        _allRecentBoards = boards.ToArray();
+        _allRecentPages = pages.ToArray();
+        Set("RecentBoardsLoaded", true);
+        ApplyLandingFilter();
+    }
+
+    public void SetLandingSearch(string? query)
+    {
+        _landingSearchQuery = query ?? string.Empty;
+        ApplyLandingFilter();
+    }
+
+    private void ApplyLandingFilter()
+    {
+        var query = _landingSearchQuery.Trim();
+        _recentBoardCards = string.IsNullOrEmpty(query) ? _allRecentBoards : _allRecentBoards.Where(item =>
+            item.Title.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            item.Preview.Contains(query, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+        _recentPageCards = string.IsNullOrEmpty(query) ? _allRecentPages : _allRecentPages.Where(item =>
+            item.PageTitle.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            item.BoardTitle.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            item.Preview.Contains(query, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+        Set("RecentBoardCards", _recentBoardCards);
+        Set("RecentPageCards", _recentPageCards);
+        Set("HasRecentBoards", _recentBoardCards.Count > 0);
+        Set("HasRecentPages", _recentPageCards.Count > 0);
+        Set("HasNoRecentBoards", Get("RecentBoardsLoaded") is true && _recentBoardCards.Count == 0);
+        Set("HasNoRecentPages", Get("RecentBoardsLoaded") is true && _recentPageCards.Count == 0);
+        Set("LandingSearchQuery", _landingSearchQuery);
+    }
+
+    public bool TryGetItemValue(object item, string path, out object? value)
+    {
+        value = null;
+        if (item is RecentBoardCard board && _allRecentBoards.Any(actual => ReferenceEquals(actual, board)))
+        {
+            value = path switch
+            {
+                "Id" => board.Id, "Target" => board, "Path" => board.Path, "Title" => board.Title,
+                "Preview" => board.Preview, "ModifiedLabel" => board.ModifiedLabel,
+                "IconLabel" => board.IconLabel, "IsAvailable" => board.IsAvailable,
+                "AvailabilityLabel" => board.AvailabilityLabel, _ => null
+            };
+            return value is not null;
+        }
+        if (item is RecentPageCard page && _allRecentPages.Any(actual => ReferenceEquals(actual, page)))
+        {
+            value = path switch
+            {
+                "Id" => page.Id, "Target" => page, "Path" => page.Path, "PageId" => page.PageId,
+                "PageTitle" => page.PageTitle, "BoardTitle" => page.BoardTitle,
+                "Preview" => page.Preview, "OpenedLabel" => page.OpenedLabel, _ => null
+            };
+            return value is not null;
+        }
+        return false;
+    }
 
     public string InkTool { get; set; } = "Pen";
     public double InkWidth { get; set; } = 2.5;
     public string InkColor { get; set; } = "#FF111111";
     public bool IsDrawMode { get; private set; }
     public bool IsEditMode => _isEditMode;
+    public bool IsLanding => Get("IsLanding") as bool? ?? false;
+    public IReadOnlyList<RecentBoardCard> RecentBoardCards => _recentBoardCards;
+    public IReadOnlyList<RecentPageCard> RecentPageCards => _recentPageCards;
     public double InkZoom { get; set; } = 1;
     public double InkPanX { get; set; }
     public double InkPanY { get; set; }
@@ -153,6 +230,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             SetEditMode(!_isEditMode);
             return;
         }
+        if (command == "ShowLanding")
+        {
+            SetLanding(true);
+            LandingRequested?.Invoke();
+            return;
+        }
         if (!_isEditMode && !AllowedWhileViewing(command))
         {
             Set("StatusText", "View mode: switch to Edit to change this board.");
@@ -170,6 +253,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 break;
             case "OpenBoard":
                 await OpenBoardDispatchAsync(cancellationToken);
+                break;
+            case "OpenRecentBoard":
+                if (parameter is RecentBoardCard board && _allRecentBoards.Any(item => ReferenceEquals(item, board)) && board.IsAvailable && OpenBoardPathAsync is not null)
+                    await OpenBoardPathAsync(board.Path, null);
+                break;
+            case "OpenRecentPage":
+                if (parameter is RecentPageCard page && _allRecentPages.Any(item => ReferenceEquals(item, page)) && OpenBoardPathAsync is not null)
+                    await OpenBoardPathAsync(page.Path, page.PageId);
                 break;
             case "SaveBoard":
                 Set("SaveStateText", "Saving…");
@@ -363,6 +454,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     }
 
     private static bool AllowedWhileViewing(string command) => command is
+        "OpenRecentBoard" or "OpenRecentPage" or
         "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or
         "FileMenu" or "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ToggleTheme" or
         "SelectSection1" or "SelectSection2" or "SelectPage1" or "SelectPage2" or "ToggleEditView";
@@ -974,6 +1066,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     /// <summary>Raised when the navigation pane alone should rebuild (search, rename, reorder).</summary>
     public event Action? NavRebuildRequested;
+    public event Action? LandingRequested;
 
     /// <summary>Raised when the File menu should open (host builds it).</summary>
     public event Action? FileMenuRequested;
@@ -1045,6 +1138,17 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         NavRebuildRequested?.Invoke();
         SelectionChanged?.Invoke();
         RequestRebuild();
+    }
+
+    public bool SelectPageById(string pageId)
+    {
+        foreach (var section in _session.Document.Sections)
+        {
+            if (section.Pages.All(page => page.Id != pageId)) continue;
+            SelectPage(section.Id, pageId);
+            return true;
+        }
+        return false;
     }
 
     public async Task RenameSectionAsync(string sectionId, string title)

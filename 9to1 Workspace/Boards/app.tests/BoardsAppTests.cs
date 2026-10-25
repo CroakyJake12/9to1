@@ -61,6 +61,21 @@ public sealed class BoardsAppTests
     }
 
     [Fact]
+    public void Graph_slider_cui_fragment_parses_with_zero_errors()
+    {
+        var path = Path.Combine(Path.GetDirectoryName(FindBoardsCui())!, "GraphSliderCui.cui");
+        var parser = new CuiRichParser();
+        var document = parser.ParseFile(path);
+        var errors = parser.Diagnostics.Diagnostics
+            .Where(d => d.Severity == CuiDiagnosticSeverity.Error)
+            .Select(d => d.ToString())
+            .ToArray();
+
+        Assert.True(errors.Length == 0, $"GraphSliderCui.cui parse errors: {string.Join("; ", errors)}");
+        Assert.NotEmpty(document.Components);
+    }
+
+    [Fact]
     public async Task Boards_cui_loader_builds_non_null_root()
     {
         var path = FindBoardsCui();
@@ -207,6 +222,39 @@ public sealed class BoardsAppTests
         Assert.True(enabledCheck.IsEnabled);
         Assert.False(disabledCheck.IsEnabled);
         viewModel.Detach();
+        await session.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Landing_repeats_search_and_dispatch_only_current_typed_rows()
+    {
+        var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/landing-row-test");
+        var viewModel = new BoardsViewModel(session);
+        var matching = new RecentBoardCard("board-a", "C:/boards/a.9to1board", "Algebra notes", "Quadratic review", DateTimeOffset.UtcNow, true);
+        var other = new RecentBoardCard("board-b", "C:/boards/b.9to1board", "Travel", "Packing list", DateTimeOffset.UtcNow, true);
+        var recentPage = new RecentPageCard(matching.Path, "section-a", "page-a", matching.Title, "Quadratics", "Roots", DateTimeOffset.UtcNow);
+        string? openedPath = null;
+        string? openedPage = null;
+        viewModel.OpenBoardPathAsync = (path, page) => { openedPath = path; openedPage = page; return Task.CompletedTask; };
+        viewModel.SetLandingData([matching, other], [recentPage]);
+        viewModel.SetLanding(true);
+        viewModel.SetLandingSearch("quadratic");
+
+        Assert.Single(viewModel.RecentBoardCards);
+        Assert.Equal("Algebra notes", viewModel.RecentBoardCards[0].Title);
+        Assert.True(viewModel.TryGetItemValue(matching, "Title", out var title));
+        Assert.Equal("Algebra notes", title);
+        await viewModel.DispatchAsync("OpenRecentBoard", matching);
+        Assert.Equal(matching.Path, openedPath);
+        Assert.Null(openedPage);
+
+        await viewModel.DispatchAsync("OpenRecentPage", recentPage);
+        Assert.Equal(matching.Path, openedPath);
+        Assert.Equal("page-a", openedPage);
+        viewModel.SetLandingData([other], []);
+        await viewModel.DispatchAsync("OpenRecentBoard", matching);
+        Assert.Equal("page-a", openedPage);
         await session.DisposeAsync();
     }
 

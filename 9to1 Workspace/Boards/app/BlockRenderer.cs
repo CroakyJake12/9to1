@@ -670,31 +670,10 @@ public static class BlockRenderer
         }
         else
         {
-            foreach (var sliderDefinition in graph.Sliders)
+            if (graph.Sliders.Count > 0)
             {
-                var sliderRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
-                var value = vm.GetGraphSliderValues(block.Id).GetValueOrDefault(sliderDefinition.Name, sliderDefinition.DefaultValue);
-                var label = new TextBlock
+                shell.Children.Add(GraphSliderCui.Build(vm, block.Id, graph, () =>
                 {
-                    Text = $"{sliderDefinition.Name} = {value:0.##}", Width = 76,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                var runtimeSlider = new Slider
-                {
-                    Minimum = sliderDefinition.Minimum,
-                    Maximum = sliderDefinition.Maximum,
-                    Value = value,
-                    Width = 220,
-                    TickFrequency = sliderDefinition.Step,
-                    IsSnapToTickEnabled = true,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                ToolTip.SetTip(runtimeSlider, $"View-only value for {sliderDefinition.Name}");
-                AutomationProperties.SetName(runtimeSlider, $"Graph variable {sliderDefinition.Name}");
-                runtimeSlider.ValueChanged += (_, args) =>
-                {
-                    vm.SetGraphSliderValue(block.Id, sliderDefinition.VariableId, args.NewValue);
-                    label.Text = $"{sliderDefinition.Name} = {args.NewValue:0.##}";
                     var updated = BuildGraphCanvas(graph, vm.GetGraphSliderValues(block.Id));
                     var currentIndex = shell.Children.IndexOf(graphCanvas);
                     if (currentIndex >= 0)
@@ -703,10 +682,7 @@ public static class BlockRenderer
                         shell.Children.Insert(currentIndex, updated);
                         graphCanvas = updated;
                     }
-                };
-                sliderRow.Children.Add(label);
-                sliderRow.Children.Add(runtimeSlider);
-                shell.Children.Add(sliderRow);
+                }));
             }
         }
 
