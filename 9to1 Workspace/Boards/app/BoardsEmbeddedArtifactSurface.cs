@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.Contract;
+using CakeOS.Cui.Runtime;
 using Haven.Application;
 
 namespace CakeOS.Apps.Boards.App;
@@ -17,7 +18,7 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
     private string? _pageType;
     private BoardEmbeddedArtifactReference? _reference;
     private BoardEmbeddedArtifactMode _mode;
-    private Panel? _surface;
+    private CuiContainerControl? _surface;
     private SurfaceClosePreparation? _pendingPreparation;
     private FailedSelection? _failedSelection;
     private bool _disposed;
@@ -33,14 +34,14 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             Equals(Reference, reference) && Mode == mode;
     }
 
-    public Task RenderAsync(Panel surface)
+    public Task RenderAsync(CuiContainerControl surface)
     {
         ArgumentNullException.ThrowIfNull(surface);
         if (Dispatcher.UIThread.CheckAccess()) return RenderOnUiThreadAsync(surface);
         return DispatchAsync(() => RenderOnUiThreadAsync(surface));
     }
 
-    private async Task RenderOnUiThreadAsync(Panel surface)
+    private async Task RenderOnUiThreadAsync(CuiContainerControl surface)
     {
         Dispatcher.UIThread.VerifyAccess();
         await _gate.WaitAsync();
@@ -64,7 +65,6 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             if (!IsEmbeddedArtifactPage(pageType))
             {
                 if (!await RetireCurrentAsync(restoreSelection: true).ConfigureAwait(true)) return;
-                surface.Children.Clear();
                 viewModel.SetEmbeddedPageStatus(false, string.Empty);
                 return;
             }
@@ -76,35 +76,29 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                 {
                     if (await _session.RevalidateAsync() && _session.IsPublicationCurrent)
                     {
-                        var currentSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost") ?? surface;
-                        if (!currentSurface.Children.Contains(_session.Content))
-                        {
-                            currentSurface.Children.Clear();
-                            currentSurface.Children.Add(_session.Content);
-                        }
+                        var currentSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? surface;
+                        if (!currentSurface.AuthoredChildren.Contains(_session.Content))
+                            currentSurface.AddChild(_session.Content);
                         return;
                     }
                 }
                 catch (Exception error)
                 {
-                    var currentSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost") ?? surface;
-                    currentSurface.Children.Remove(_session.Content);
-                    currentSurface.Children.Clear();
+                    var currentSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? surface;
+                    currentSurface.RemoveChild(_session.Content);
                     _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
                     viewModel.SetEmbeddedPageStatus(true,
                         "The linked artifact could not be revalidated: " + FirstLine(error.Message));
                     return;
                 }
-                var unavailableSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost") ?? surface;
-                unavailableSurface.Children.Remove(_session.Content);
-                unavailableSurface.Children.Clear();
+                var unavailableSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? surface;
+                unavailableSurface.RemoveChild(_session.Content);
                 _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
                 viewModel.SetEmbeddedPageStatus(true, "The linked artifact is unavailable at its pinned revision or current permissions. Reopen it from its owner to refresh access.");
                 return;
             }
 
             if (!await RetireCurrentAsync(restoreSelection: true).ConfigureAwait(true)) return;
-            surface.Children.Clear();
             if (host is null)
             {
                 viewModel.SetEmbeddedPageStatus(true, "Open this Board in Home to access its linked artifact.");
@@ -142,18 +136,15 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                     await CloseUnpublishedAsync(opened);
                     return;
                 }
-                // The selected page's CUI `Active` branch may have queued its
-                // layout swap while the owner opened asynchronously. Wait for
-                // Avalonia's render pass, then resolve the currently mounted
-                // authored host rather than attaching to the previous branch.
-                await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-                if (!IsCurrentSelection(pageId, sectionId, pageType, reference, mode) ||
-                    !await opened.RevalidateAsync() || !opened.IsPublicationCurrent)
+                // Resolve the stable CUI container wrapper, then publish through
+                // its authored-child API so later binding reconciliation retains
+                // this externally owned control as a real CUI child.
+                if (!IsCurrentSelection(pageId, sectionId, pageType, reference, mode))
                 {
                     await CloseUnpublishedAsync(opened);
                     return;
                 }
-                var currentSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost");
+                var currentSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost");
                 if (currentSurface is null)
                 {
                     await CloseUnpublishedAsync(opened);
@@ -161,18 +152,22 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                         "The linked page host is not available in the current Board view. Select the page again to reopen it.");
                     return;
                 }
+                try { currentSurface.AddChild(opened.Content); }
+                catch
+                {
+                    await CloseUnpublishedAsync(opened);
+                    throw;
+                }
                 _session = opened;
                 _pageId = pageId;
                 _sectionId = sectionId;
                 _pageType = pageType;
                 _reference = reference;
                 _mode = mode;
-                currentSurface.Children.Add(opened.Content);
             }
             catch (Exception error)
             {
                 _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
-                (BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost") ?? surface).Children.Clear();
                 viewModel.SetEmbeddedPageStatus(true,
                     "The linked artifact could not be opened: " + FirstLine(error.Message));
             }
@@ -360,7 +355,8 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         }
 
         await ownerPreparation.BeginCloseAsync(cancellationToken);
-        _surface?.Children.Remove(session.Content);
+        (BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? _surface)
+            ?.RemoveChild(session.Content);
         try { await session.CloseAndDrainAsync(); }
         finally
         {

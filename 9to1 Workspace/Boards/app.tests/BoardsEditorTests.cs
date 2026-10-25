@@ -23,6 +23,20 @@ public sealed class BoardsEditorTests
         Task.FromResult(TestUiThread.Run(work));
 
     [Fact]
+    public async Task Queued_text_edit_after_session_disposal_is_ignored()
+    {
+        var session = new InMemoryRichBoardSession();
+        var viewModel = new BoardsViewModel(session);
+        var originalTitle = session.Document.Title;
+        await session.DisposeAsync();
+
+        viewModel.EditText("BoardTitleBox", "late queued title");
+
+        Assert.Equal(originalTitle, session.Document.Title);
+        viewModel.Dispose();
+    }
+
+    [Fact]
     public async Task Dynamic_checklist_renders_one_row_per_item()
     {
         const int count = 5;

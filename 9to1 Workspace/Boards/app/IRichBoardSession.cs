@@ -7,6 +7,12 @@ using CakeOS.Apps.Boards.Contract;
 
 namespace CakeOS.Apps.Boards.App;
 
+/// <summary>Optional lifetime signal used by UI event adapters to ignore queued events after owner disposal.</summary>
+internal interface IBoardSessionLifetime
+{
+    bool IsDisposed { get; }
+}
+
 /// <summary>Document model surfaced to the CUI Boards editor.</summary>
 public sealed class RichBoardDocument
 {

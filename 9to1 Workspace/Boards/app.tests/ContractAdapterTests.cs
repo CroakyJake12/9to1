@@ -323,6 +323,7 @@ public sealed class ContractAdapterTests
         var page = notes.Sections[0].Pages[0];
         var block = HavenRichNotesOps.AddBlock(notes, page.Id, HavenRichBlockKind.Table);
         var table = block.Table!;
+        var baselineWidth = table.Width;
         table.Rows[0].Cells[0].Text = "Heading";
         table.Rows[0].Cells[1].Background = "#FFE8F0FE";
         var anchorId = table.Rows[0].Cells[0].Id;
@@ -377,7 +378,7 @@ public sealed class ContractAdapterTests
             Assert.True(undoneFormattingTable.HasHeaderRow);
             Assert.True(undoneFormattingTable.HasHeaderColumn);
             Assert.Equal(HavenRichAlignment.Center, undoneFormattingTable.Alignment);
-            Assert.Equal(640, undoneFormattingTable.Width);
+            Assert.Equal(baselineWidth, undoneFormattingTable.Width);
             Assert.True(await adapter.UndoAsync());
             var undoneAlignment = await adapter.GetDetachedContractDocumentAsync();
             var undoneAlignmentTable = undoneAlignment.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;
@@ -395,7 +396,7 @@ public sealed class ContractAdapterTests
             Assert.False(undoneHeaderRowTable.HasHeaderRow);
             Assert.False(undoneHeaderRowTable.HasHeaderColumn);
             Assert.Equal(HavenRichAlignment.Left, undoneHeaderRowTable.Alignment);
-            Assert.Equal(640, undoneHeaderRowTable.Width);
+            Assert.Equal(baselineWidth, undoneHeaderRowTable.Width);
             Assert.True(await adapter.UndoAsync());
             var undoneMerge = await adapter.GetDetachedContractDocumentAsync();
             var undoneTable = undoneMerge.RichNotes!.Sections[0].Pages[0].Blocks.Single(candidate => candidate.Id == block.Id).Table!;

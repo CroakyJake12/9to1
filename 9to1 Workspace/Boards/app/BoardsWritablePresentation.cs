@@ -255,7 +255,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             NavBuilder.Rebuild(nav, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
-        if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "EmbeddedArtifactHost") is { } embedded)
+        if (BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(Content, "EmbeddedArtifactHost") is { } embedded)
             await _embeddedArtifacts.RenderAsync(embedded);
         ViewModel.RefreshCuiContext();
         if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "InkOverlayLayer") is { } ink)

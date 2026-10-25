@@ -19,7 +19,8 @@ public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string 
     string ViewStamp, int ViewIndex, int ViewCount);
 public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId);
 
-public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession, IBoardSessionCapabilities
+public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession, IBoardSessionCapabilities,
+    IBoardSessionLifetime
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -29,7 +30,8 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     private readonly RichBoardDocument _view = new() { Title = "Untitled board", Sections = [] };
     private string _baselineJson = "{}";
     private string? _lastError;
-    private bool _disposed;
+    private volatile bool _disposed;
+    bool IBoardSessionLifetime.IsDisposed => _disposed;
     private readonly bool _canSwitchBoard;
     private readonly bool _canSaveAs;
     private readonly Guid _textOwner = Guid.NewGuid();

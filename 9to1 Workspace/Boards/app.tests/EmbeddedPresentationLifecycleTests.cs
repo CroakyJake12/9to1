@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Apps.Boards.Contract;
+using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Xunit;
 
@@ -61,9 +62,9 @@ public sealed class EmbeddedPresentationLifecycleTests
             Assert.Equal(1, owner.Session.DisposeCount);
             var publishedState = TestUiThread.Run(() =>
             {
-                var embeddedSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(presentation.Content, "EmbeddedArtifactHost");
+                var embeddedSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(presentation.Content, "EmbeddedArtifactHost");
                 return (presentation.ViewModel.SelectedPageId, owner.BoundOwner,
-                    ContainsOwnerContent: embeddedSurface?.Children.Contains(owner.Session.Content) ?? false);
+                    ContainsOwnerContent: embeddedSurface?.AuthoredChildren.Contains(owner.Session.Content) ?? false);
             });
             Assert.Equal(nativePageId, publishedState.SelectedPageId);
             Assert.Same(presentation.Content, publishedState.BoundOwner);
@@ -112,7 +113,7 @@ public sealed class EmbeddedPresentationLifecycleTests
             Assert.Equal(1, owner.Session.CloseCount);
             Assert.Equal(1, owner.Session.DisposeCount);
             var remainsMounted = TestUiThread.Run(() =>
-                BoardsCuiControlFinder.FindByAutomationId<Panel>(presentation.Content, "EmbeddedArtifactHost")?.Children
+                BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(presentation.Content, "EmbeddedArtifactHost")?.AuthoredChildren
                     .Contains(owner.Session.Content) ?? false);
             Assert.False(remainsMounted);
         }
@@ -142,10 +143,20 @@ public sealed class EmbeddedPresentationLifecycleTests
             PumpUntilUi(owner.OpenStarted.Task);
             owner.CompleteOpen();
             PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
-            var embeddedHost = TestUiThread.Run(() =>
-                BoardsCuiControlFinder.FindByAutomationId<Panel>(presentation.Content, "EmbeddedArtifactHost"));
-            Assert.NotNull(embeddedHost);
-            Assert.Contains(owner.Session.Content, embeddedHost!.Children);
+            var mountedState = TestUiThread.Run(() =>
+            {
+                var authoredHost = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(presentation.Content, "EmbeddedArtifactHost");
+                return (Host: authoredHost,
+                    HasContent: authoredHost?.AuthoredChildren.Contains(owner.Session.Content) ?? false,
+                    AuthoredChildCount: authoredHost?.AuthoredChildren.Count ?? -1,
+                    Status: presentation.ViewModel.Get("EmbeddedPageMessage")?.ToString(),
+                    RuntimeTree: BoardsCuiControlFinder.DescribeRuntimeTree(presentation.Content));
+            });
+            Assert.NotNull(mountedState.Host);
+            Assert.True(mountedState.HasContent,
+                $"The owner-opened control was not retained as an authored child (opens={owner.OpenCount}, " +
+                $"revalidations={owner.Session.RevalidationCount}, childCount={mountedState.AuthoredChildCount}, " +
+                $"status='{mountedState.Status}'). Runtime tree:\n{mountedState.RuntimeTree}");
 
             TestUiThread.Run(() => presentation.ViewModel.SelectPage(sectionId, nativePageId));
             PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
@@ -183,9 +194,9 @@ public sealed class EmbeddedPresentationLifecycleTests
             owner.CompleteOpen();
             PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
             var embeddedHost = TestUiThread.Run(() =>
-                BoardsCuiControlFinder.FindByAutomationId<Panel>(presentation.Content, "EmbeddedArtifactHost"));
+                BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(presentation.Content, "EmbeddedArtifactHost"));
             Assert.NotNull(embeddedHost);
-            Assert.DoesNotContain(owner.Session.Content, embeddedHost!.Children);
+            Assert.DoesNotContain(owner.Session.Content, embeddedHost!.AuthoredChildren);
             Assert.Equal(1, owner.Session.RevalidateCount);
             Assert.Equal(1, owner.Session.BeginCloseCount);
             Assert.Equal(1, owner.Session.CloseCount);
@@ -264,12 +275,14 @@ public sealed class EmbeddedPresentationLifecycleTests
         public readonly TaskCompletionSource OpenStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public DelayedEmbeddedSession Session { get; } = new(reference);
         public Control? BoundOwner { get; private set; }
+        public int OpenCount { get; private set; }
 
         public void BindOwningControl(Control control) => BoundOwner = control;
         public Task<IBoardsEmbeddedArtifactSession> OpenAsync(BoardEmbeddedArtifactReference requested,
             BoardEmbeddedArtifactMode mode, CancellationToken ct = default)
         {
             Assert.Equal(reference, requested);
+            OpenCount++;
             OpenStarted.TrySetResult();
             return _open.Task;
         }
