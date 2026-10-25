@@ -778,17 +778,21 @@ public sealed class SpaceBuilderController
     }
 
     /// <summary>Store a canonical read reference selected by the host's genuine owning-app
-    /// source. This metadata grants no body read; the request source needs new Home admission.</summary>
+    /// source. This is Space policy intent only; the request source still needs the owner's actual read admission.</summary>
     public bool AttachContextReference(SpaceContextReference reference, long expectedRevision)
     {
         ArgumentNullException.ThrowIfNull(reference);
-        if (reference.ContextId == Guid.Empty || reference.Kind != SpaceContextReferenceKind.BoardPage ||
-            reference.OwnerAppId != "boards" || reference.Permission != SpaceContextPermission.Read ||
-            !Guid.TryParseExact(reference.CanonicalEntityId, "D", out var id) || id == Guid.Empty ||
-            reference.CanonicalEntityId != id.ToString("D") ||
-            !long.TryParse(reference.RevisionToken, System.Globalization.NumberStyles.None,
-                System.Globalization.CultureInfo.InvariantCulture, out var version) || version < 1)
-            throw new ArgumentException("Choose an original canonical Boards notebook/version.", nameof(reference));
+        var boardsReference = reference.Kind == SpaceContextReferenceKind.BoardPage && reference.OwnerAppId == "boards" &&
+            reference.Permission == SpaceContextPermission.Read &&
+            Guid.TryParseExact(reference.CanonicalEntityId, "D", out var boardId) && boardId != Guid.Empty &&
+            reference.CanonicalEntityId == boardId.ToString("D") &&
+            long.TryParse(reference.RevisionToken, System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out var boardVersion) && boardVersion >= 1;
+        var filesReference = reference.Kind == SpaceContextReferenceKind.File && reference.OwnerAppId == "files" &&
+            reference.Permission == SpaceContextPermission.Read && reference.IndexState == SpaceContextIndexState.NotRequired &&
+            IsCanonicalFilesReference(reference);
+        if (reference.ContextId == Guid.Empty || !boardsReference && !filesReference)
+            throw new ArgumentException("Choose a current canonical Boards notebook or Files file reference.", nameof(reference));
         SpaceBuilderState next;
         lock (_gate)
         {
@@ -800,9 +804,20 @@ public sealed class SpaceBuilderController
             var draft = _state.Draft with { ContextReferences = Array.AsReadOnly(rows) };
             _editVersion++;
             next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
-                StatusMessage = "Canonical Boards source selected. Save to persist; its body still requires original Home approval when used." };
+                StatusMessage = filesReference
+                    ? "Canonical Files reference selected with read intent for this Space. This does not grant Home access or read content; the Files owner must authorize actual use. Save to persist."
+                    : "Canonical Boards source selected. Save to persist; its body still requires original Home approval when used." };
         }
         StateChanged?.Invoke(next); return true;
+    }
+
+    private static bool IsCanonicalFilesReference(SpaceContextReference reference)
+    {
+        var parts = reference.CanonicalEntityId.Split('/', StringSplitOptions.None);
+        return parts.Length == 2 && Guid.TryParseExact(parts[0], "D", out var storeId) && storeId != Guid.Empty &&
+            parts[0] == storeId.ToString("D") && Guid.TryParseExact(parts[1], "D", out var fileId) && fileId != Guid.Empty &&
+            parts[1] == fileId.ToString("D") && reference.HostedFileId == fileId &&
+            Guid.TryParseExact(reference.RevisionToken, "D", out var revisionId) && revisionId != Guid.Empty;
     }
     public bool DetachContextReference(Guid contextId)
     {

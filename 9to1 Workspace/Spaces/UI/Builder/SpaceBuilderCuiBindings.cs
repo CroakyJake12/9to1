@@ -30,6 +30,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Action<bool>? _setPersonalMemoryReadAllowed;
     private readonly Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? _setCapabilityOverride;
     private readonly Func<int, SpaceExamplePair, SpaceExamplePair, bool>? _updateExamplePair;
+    private readonly Func<IReadOnlyList<SpaceBuilderFilesSourceOption>> _filesOptions;
+    private readonly Func<bool> _canBrowseFiles;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
     private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
     private static readonly string[] CapabilityOverrideOptions = ["Inherit", "Enabled", "Disabled"];
@@ -56,7 +58,9 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         Action<ToolCapability, bool>? setModelCapabilityRequired = null,
         Action<bool>? setPersonalMemoryReadAllowed = null,
         Action<SpaceCapabilityKind, string, SpaceCapabilityOverride>? setCapabilityOverride = null,
-        Func<int, SpaceExamplePair, SpaceExamplePair, bool>? updateExamplePair = null)
+        Func<int, SpaceExamplePair, SpaceExamplePair, bool>? updateExamplePair = null,
+        Func<IReadOnlyList<SpaceBuilderFilesSourceOption>>? filesOptions = null,
+        Func<bool>? canBrowseFiles = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
@@ -78,6 +82,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         _setPersonalMemoryReadAllowed = setPersonalMemoryReadAllowed;
         _setCapabilityOverride = setCapabilityOverride;
         _updateExamplePair = updateExamplePair;
+        _filesOptions = filesOptions ?? (() => []);
+        _canBrowseFiles = canBrowseFiles ?? (() => false);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -129,6 +135,20 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.context.maximumRetrievedItems" => state.Draft.ContextPolicy.MaximumRetrievedItems?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             "builder.boardOptions" => _sourceOptions(),
             "builder.canBrowseSources" => _isCurrent() && state.CanEdit && !state.IsBusy && _canBrowseSources(),
+            "builder.filesOptions" => _filesOptions(),
+            "builder.canBrowseFiles" => _isCurrent() && state.CanEdit && !state.IsBusy && _canBrowseFiles(),
+            "builder.filesReferences" => state.Draft.ContextReferences
+                .Where(reference => reference.Kind == SpaceContextReferenceKind.File && reference.OwnerAppId == "files")
+                .Select(reference => new SpaceBuilderContextReferenceRow
+                {
+                    id = reference.ContextId.ToString("D"),
+                    label = _filesOptions().FirstOrDefault(option => option.Id == reference.CanonicalEntityId)?.Label ??
+                        ("Files / " + reference.CanonicalEntityId),
+                    revision = reference.RevisionToken ?? "Current revision",
+                    policy = reference.Permission == SpaceContextPermission.Read
+                        ? "Space read intent; Home authorization required" : reference.Permission.ToString(),
+                    included = reference.IncludedAutomatically
+                }).ToArray(),
             "builder.contextReferences" => state.Draft.ContextReferences.Select((reference, index) => new SpaceBuilderContextReferenceRow
             {
                 id = reference.ContextId.ToString("D"),
@@ -360,6 +380,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         "space-builder.reload" => _isCurrent() && _state().CanReload,
         "space-builder.back" => _isCurrent() && _canGoBack(),
         "space-builder.source.browse" or "space-builder.source.attach" => _isCurrent() && _state().CanEdit && !_state().IsBusy && _canBrowseSources(),
+        "space-builder.files.browse" or "space-builder.files.attach" => _isCurrent() && _state().CanEdit && !_state().IsBusy && _canBrowseFiles(),
         "space-builder.source.remove" or "space-builder.legacy-file.remove" => _isCurrent() && _state().CanEdit,
         "space-builder.source.move-up" or "space-builder.source.move-down" => _isCurrent() && _state().CanEdit,
         "space-builder.capability.remove" => _isCurrent() && _state().CanEdit,

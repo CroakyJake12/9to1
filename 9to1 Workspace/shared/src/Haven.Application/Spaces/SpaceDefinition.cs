@@ -68,7 +68,13 @@ public sealed record SpaceContextReference(
     SpaceContextIndexState IndexState,
     bool IncludedAutomatically,
     DateTimeOffset AddedAt,
-    Guid? HostedFileId = null);
+    Guid? HostedFileId = null)
+{
+    /// <summary>Files-issued immutable content digest observed when this reference was selected.
+    /// This is provenance metadata only, never an access grant.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ContentSha256 { get; init; }
+}
 
 public sealed record SpaceShareGrant(
     string PrincipalId,

@@ -41,6 +41,40 @@ public sealed class SpaceBuilderCanonicalSourceTests
     }
 
     [Fact]
+    public async Task Files_reference_keeps_issued_identity_revision_and_digest_in_draft_without_changing_active_policy()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30)); var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Managed Files reference", cancellationToken: token);
+        var storeId = Guid.NewGuid(); var fileId = Guid.NewGuid(); var revisionId = Guid.NewGuid();
+        var digest = "sha256:" + new string('a', 64);
+        var reference = new SpaceContextReference(Guid.NewGuid(), SpaceContextReferenceKind.File, "files",
+            storeId.ToString("D") + "/" + fileId.ToString("D"), revisionId.ToString("D"), SpaceContextPermission.Read,
+            SpaceContextIndexState.NotRequired, true, DateTimeOffset.UtcNow, fileId)
+        { ContentSha256 = digest };
+        var editor = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await editor.LoadAsync(token));
+        Assert.True(editor.AttachContextReference(reference, space.Revision));
+        Assert.Empty((await registry.GetAsync(space.Id, token))!.ContextReferences ?? []);
+        Assert.True(await editor.SaveAsync(token));
+
+        var reopened = (await files.OpenRegistry().GetAsync(space.Id, token))!;
+        var saved = Assert.Single(reopened.DraftConfiguration!.ContextReferences);
+        Assert.Equal(reference, saved);
+        Assert.Equal(digest, saved.ContentSha256);
+        Assert.Equal(space.Id, reopened.Id);
+        Assert.Empty(reopened.ContextReferences ?? []);
+        Assert.Equal(space.ActiveConfigurationRevision, reopened.ActiveConfigurationRevision);
+        var invalid = SpaceConfigurationDocument.From(reopened) with
+        { ContextReferences = [reference with { ContentSha256 = "sha256:not-a-current-digest" }] };
+        await Assert.ThrowsAsync<ArgumentException>(() => files.OpenRegistry().SaveDraftAsync(space.Id, invalid,
+            reopened.Revision, reopened.DraftConfigurationRevision, reopened.ActiveConfigurationRevision, token));
+        var unchanged = (await files.OpenRegistry().GetAsync(space.Id, token))!;
+        Assert.Equal(digest, Assert.Single(unchanged.DraftConfiguration!.ContextReferences).ContentSha256);
+    }
+
+    [Fact]
     public async Task Context_source_priority_survives_reload_and_controls_the_real_item_limit()
     {
         using var files = new SpaceDetailsTestFiles();
@@ -203,11 +237,15 @@ public sealed class SpaceBuilderCanonicalSourceTests
         var reference = Reference(); Assert.True(editor.AttachContextReference(reference, space.Revision));
         var issued = new DisplayOnlyToken();
         var option = new SpaceBuilderBoardsSourceOption(reference.CanonicalEntityId, "Original notebook", reference.RevisionToken!, issued);
+        var fileIssued = new DisplayOnlyFilesToken();
+        var fileOption = new SpaceBuilderFilesSourceOption(Guid.NewGuid().ToString("D"), "Original file", "Files / Reports",
+            Guid.NewGuid().ToString("D"), fileIssued);
         var calls = new List<(string Command, object? Parameter)>();
         var bindings = new SpaceBuilderCuiBindings(() => editor.State, (field, value) => editor.SetField(field, value),
             (category, value) => editor.SetCategoryState(category, value), (kind, id) => editor.DetachCapability(kind, id),
             () => [], () => [], (command, parameter, _) => { calls.Add((command, parameter)); return ValueTask.CompletedTask; },
-            () => true, () => false, () => [option], () => true);
+            () => true, () => false, () => [option], () => true,
+            filesOptions: () => [fileOption], canBrowseFiles: () => true);
         await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
@@ -233,10 +271,15 @@ public sealed class SpaceBuilderCanonicalSourceTests
                         $"{button.Name ?? "<unnamed>"}/{AutomationProperties.GetAutomationId(button) ?? "<no-id>"}"))}]");
                 var add = matchingAdds[0]; Assert.True(add.IsEnabled);
                 add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
+                var fileOptions = Assert.IsAssignableFrom<IReadOnlyList<SpaceBuilderFilesSourceOption>>(GetBinding("builder.filesOptions"));
+                Assert.Same(fileOption, Assert.Single(fileOptions));
+                var fileAdd = Find("space-builder-attach-files-source"); Assert.True(fileAdd.IsEnabled);
+                fileAdd.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
                 var remove = Find("space-builder-remove-context-source");
                 remove.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
                 Assert.Equal("space-builder.source.attach", calls[0].Command); Assert.Same(issued, calls[0].Parameter);
-                Assert.Equal(("space-builder.source.remove", (object?)reference.ContextId.ToString("D")), calls[1]);
+                Assert.Equal("space-builder.files.attach", calls[1].Command); Assert.Same(fileIssued, calls[1].Parameter);
+                Assert.Equal(("space-builder.source.remove", (object?)reference.ContextId.ToString("D")), calls[2]);
             }
             finally { window.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;
@@ -250,6 +293,7 @@ public sealed class SpaceBuilderCanonicalSourceTests
     }
 
     private sealed class DisplayOnlyToken : ISpaceBuilderOriginalBoardsSourceChoice { }
+    private sealed class DisplayOnlyFilesToken : ISpaceBuilderOriginalFilesSourceChoice { }
     private static SpaceContextReference Reference() => new(Guid.NewGuid(), SpaceContextReferenceKind.BoardPage,
         "boards", Guid.NewGuid().ToString("D"), "7", SpaceContextPermission.Read, SpaceContextIndexState.NotRequired,
         true, DateTimeOffset.UtcNow);

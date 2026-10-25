@@ -976,7 +976,9 @@ public sealed partial class SpaceRegistry
                 reference.ContextId == Guid.Empty || string.IsNullOrWhiteSpace(reference.OwnerAppId) ||
                 string.IsNullOrWhiteSpace(reference.CanonicalEntityId) || !Enum.IsDefined(reference.Kind) ||
                 reference.HostedFileId == Guid.Empty ||
-                !Enum.IsDefined(reference.Permission) || !Enum.IsDefined(reference.IndexState)) ||
+                !Enum.IsDefined(reference.Permission) || !Enum.IsDefined(reference.IndexState) ||
+                reference.ContentSha256 is { } digest && (reference.Kind != SpaceContextReferenceKind.File ||
+                    reference.OwnerAppId != "files" || !IsSha256Digest(digest))) ||
             space.ContextReferences.Select(reference => reference.ContextId).Distinct().Count() != space.ContextReferences.Count)
             throw new ArgumentException("Space context references must be valid and unique.");
         if (space.Shares is null || space.Shares.Any(grant => grant is null ||
@@ -1054,6 +1056,10 @@ public sealed partial class SpaceRegistry
         if (spaces.Any(space => space.Id != exceptId && space.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException($"A Space named '{name}' already exists.");
     }
+
+    private static bool IsSha256Digest(string value) => value.Length == 71 &&
+        value.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) &&
+        value.AsSpan(7).IndexOfAnyExcept("0123456789abcdefABCDEF") < 0;
 
     private static string MakeUniqueName(IReadOnlyList<SpaceDefinition> spaces, string desired)
     {

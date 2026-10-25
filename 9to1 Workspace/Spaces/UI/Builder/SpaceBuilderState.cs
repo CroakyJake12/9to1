@@ -15,6 +15,11 @@ public interface ISpaceBuilderOriginalBoardsSourceChoice { }
 public sealed record SpaceBuilderBoardsSourceOption(string Id, string Label, string Revision,
     [property: System.Text.Json.Serialization.JsonIgnore] ISpaceBuilderOriginalBoardsSourceChoice Input);
 
+/// <summary>Opaque current Files choice. Display metadata alone never authorises reading its content.</summary>
+public interface ISpaceBuilderOriginalFilesSourceChoice { }
+public sealed record SpaceBuilderFilesSourceOption(string Id, string Label, string Location, string Revision,
+    [property: System.Text.Json.Serialization.JsonIgnore] ISpaceBuilderOriginalFilesSourceChoice Input);
+
 public sealed record SpaceBuilderDraft(
     string Name,
     string Description,

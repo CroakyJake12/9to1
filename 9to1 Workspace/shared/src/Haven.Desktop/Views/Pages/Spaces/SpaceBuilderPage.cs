@@ -19,9 +19,12 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     private readonly SpaceBuilderController _controller;
     private readonly SpaceRegistry _originalRegistry;
     private OriginalSpaceRequestPolicySource? _boardsSource;
+    private OriginalSpaceRequestPolicySource? _filesSource;
     private ISpaceDraftActivationValidator? _activationValidator;
     private IReadOnlyList<SpaceBuilderBoardsSourceOption> _boardsChoices = [];
     private long? _boardsChoicesRevision;
+    private IReadOnlyList<SpaceBuilderFilesSourceOption> _filesChoices = [];
+    private long? _filesChoicesRevision;
     private bool _sourcePickerBusy;
     private readonly ExtensionManager? _extensions;
     private readonly SpaceBuilderCuiBindings _bindings;
@@ -75,7 +78,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             (contextId, included) => { _controller.SetContextReferenceIncluded(contextId, included); },
             (capability, required) => { _controller.SetModelCapabilityRequired(capability, required); },
             allowed => { _controller.SetPersonalMemoryReadAllowed(allowed); },
-            (kind, id, policy) => { _controller.SetCapabilityOverride(kind, id, policy); }, TryUpdateExamplePair);
+            (kind, id, policy) => { _controller.SetCapabilityOverride(kind, id, policy); }, TryUpdateExamplePair,
+            () => _filesChoices, () => _filesSource is not null && !_sourcePickerBusy);
         _controller.StateChanged += OnStateChanged;
         Document = document;
         _contentGrid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
@@ -106,6 +110,18 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             if (_activation is not null || _boardsSource is not null || !source.HasOriginalContextRegistry(_originalRegistry))
                 throw new InvalidOperationException("Bind the SAME original Space/Notes source once, before page activation.");
             _boardsSource = source;
+        }
+    }
+
+    internal void BindOriginalFilesContextSource(OriginalSpaceRequestPolicySource source)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_gate)
+        {
+            if (_activation is not null || _filesSource is not null || !source.HasOriginalContextRegistry(_originalRegistry) ||
+                _boardsSource is not null && !ReferenceEquals(_boardsSource, source))
+                throw new InvalidOperationException("Bind the SAME original Space/Files source once, before page activation.");
+            _filesSource = source;
         }
     }
 
@@ -160,6 +176,65 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                 catch (Exception error)
                 {
                     if (original.IsPublicationCurrent) _controller.ReportSourceStatus("Could not select the original source; the draft is preserved: " + error.Message);
+                    throw;
+                }
+                finally
+                {
+                    lock (_gate) { _controllerOperations--; _sourcePickerBusy = false; }
+                    RefreshBindings();
+                }
+            }); }
+            catch { _controllerOperations--; _sourcePickerBusy = false; throw; }
+        }
+    }
+
+    private Task RunFilesSourceChoiceAsync(ISpaceBuilderOriginalFilesSourceChoice? choice, CancellationToken caller)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate() || _controller.State.IsBusy || _filesSource is not { } source)
+                throw new InvalidOperationException("The original Files reference chooser is unavailable.");
+            if (choice is not null && !_filesChoices.Any(option => ReferenceEquals(option.Input, choice)))
+                throw new InvalidOperationException("Choose a current item from this page's original Files list.");
+            var state = _controller.State;
+            var revision = state.SpaceRevision ?? throw new InvalidOperationException("Load the actual Space revision first.");
+            _controllerOperations++; _sourcePickerBusy = true;
+            try { return _work.RunAsync(async original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, original.Token);
+                Func<bool> lifetime = () => original.IsPublicationCurrent && IsPresentationCurrent();
+                try
+                {
+                    RefreshBindings();
+                    void Own(Action body) => Source(() => { body(); return true; });
+                    if (choice is null)
+                    {
+                        var options = await original.AwaitAsync(Source(() => source.GetOriginalFilesContextChoicesAsync(
+                            _originalRegistry, state.SpaceId, revision, lifetime, Own, linked.Token))).ConfigureAwait(false);
+                        original.DemandPublication();
+                        if (_controller.State.SpaceRevision != revision)
+                            throw new InvalidOperationException("The Space changed while its Files list was open. Refresh it.");
+                        _filesChoices = options;
+                        _filesChoicesRevision = revision;
+                        _controller.ReportSourceStatus(options.Count == 0
+                            ? "No current Files references are available to attach from this Home profile."
+                            : "Choose a current Files file to attach a read reference to this Space. Home still controls content access; selecting a row reads no content.");
+                    }
+                    else
+                    {
+                        var reference = await original.AwaitAsync(Source(() => source.ResolveOriginalFilesContextChoiceAsync(
+                            choice, _originalRegistry, state.SpaceId, revision, lifetime, Own, linked.Token))).ConfigureAwait(false);
+                        original.DemandPublication();
+                        if (_controller.State.SpaceRevision != revision || !_controller.AttachContextReference(reference, revision))
+                            throw new InvalidOperationException("The Space changed before the Files reference could be added. Refresh the Builder.");
+                        _editEpoch++;
+                    }
+                }
+                catch (Exception error)
+                {
+                    if (original.IsPublicationCurrent)
+                        _controller.ReportSourceStatus("Could not select the original Files item; the Space draft is preserved: " + error.Message);
                     throw;
                 }
                 finally
@@ -380,6 +455,9 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         if (command == "space-builder.source.browse") { await RunSourceChoiceAsync(null, token).ConfigureAwait(false); return; }
         if (command == "space-builder.source.attach" && parameter is ISpaceBuilderOriginalBoardsSourceChoice sourceChoice)
         { await RunSourceChoiceAsync(sourceChoice, token).ConfigureAwait(false); return; }
+        if (command == "space-builder.files.browse") { await RunFilesSourceChoiceAsync(null, token).ConfigureAwait(false); return; }
+        if (command == "space-builder.files.attach" && parameter is ISpaceBuilderOriginalFilesSourceChoice filesChoice)
+        { await RunFilesSourceChoiceAsync(filesChoice, token).ConfigureAwait(false); return; }
         if (command is "space-builder.source.remove" or "space-builder.legacy-file.remove")
         {
             lock (_gate)
@@ -579,6 +657,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     {
         if (_boardsChoicesRevision is { } revision && state.SpaceRevision != revision)
         { _boardsChoices = []; _boardsChoicesRevision = null; }
+        if (_filesChoicesRevision is { } filesRevision && state.SpaceRevision != filesRevision)
+        { _filesChoices = []; _filesChoicesRevision = null; }
         RefreshBindings();
         if (Dispatcher.UIThread.CheckAccess()) UpdateGraphVisibility(state);
         else Dispatcher.UIThread.Post(() => UpdateGraphVisibility(state));
