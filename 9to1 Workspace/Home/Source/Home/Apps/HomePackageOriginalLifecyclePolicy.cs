@@ -184,3 +184,18 @@ public static class HomePackageOriginalVersionChecks
     public static bool TrySatisfy(string actualVersion, HomePackageDependency requiredRange, out bool satisfies)
         => HomePackageOriginalLifecyclePolicy.TrySatisfyVersionCore(actualVersion, requiredRange, out satisfies);
 }
+
+
+/// <summary>Pure maintained removal-state policy only. A null refusal grants no
+/// publisher, installer, privileged channel or execution authority.</summary>
+public static class HomePackageOriginalRemovalChecks
+{
+    public static HomeAppsError? Evaluate(HomePackageDatabaseSnapshot registry, HomePackageArtifactDescriptor descriptor,
+        string originalHomePackageId, string? sameOriginalReservedOperationId = null)
+    {
+        ArgumentNullException.ThrowIfNull(registry); ArgumentNullException.ThrowIfNull(descriptor);
+        var invalid = HomePackageDatabase.ValidateOriginalProtectedSnapshot(registry);
+        return invalid is not null ? new(invalid.Code, invalid.Message, descriptor.PackageId, false, true)
+            : HomePackageOriginalDependencyLifecycle.EvaluateRemovalState(registry, descriptor, originalHomePackageId, sameOriginalReservedOperationId);
+    }
+}

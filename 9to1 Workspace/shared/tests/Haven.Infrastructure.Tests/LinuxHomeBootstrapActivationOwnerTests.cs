@@ -215,7 +215,8 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
         private LinuxHomePublisherEnrollmentOwner Publisher { get; }
         internal LinuxHomeBootstrapActivationOwner Owner { get; }
         private readonly string _abi = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x64";
-        internal Rig(string? damage = null, bool failAfterPublication = false, bool loseSettlementAcknowledgement = false, bool includeNativeHelper = false)
+        private readonly string[] _selected;
+        internal Rig(string? damage = null, bool failAfterPublication = false, bool loseSettlementAcknowledgement = false, bool includeNativeHelper = false, bool includeOptionalApp = false)
         {
             File.SetUnixFileMode(Root, Mode700); Directory.CreateDirectory(Code, Mode755);
             Directory.CreateDirectory(Stage, Mode700); Directory.CreateDirectory(StateDirectory, Mode700);
@@ -225,9 +226,10 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
             certificate.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, true));
             _certificate = certificate.CreateSelfSigned(DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow.AddHours(1));
             Write(CertificatePath, _certificate.RawData);
+            _selected = includeOptionalApp ? ["home.pkg", "root.pkg", "optional.pkg"] : ["home.pkg", "root.pkg"];
             var packages = new List<NativeWindowsHomeInstallerBootstrapAdmission.CataloguePackage>();
             var layouts = new List<LinuxHomeBootstrapActivationOwner.PackageLayout>();
-            foreach (var app in new[] { "home", "root" })
+            foreach (var app in includeOptionalApp ? new[] { "home", "root", "optional" } : new[] { "home", "root" })
             {
                 var directory = Path.Combine(Stage, app); Directory.CreateDirectory(directory, Mode700);
                 var executable = damage == "script" && app == "home" ? "#!/bin/sh\nexit 0\n"u8.ToArray() : Elf;
@@ -246,7 +248,7 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
                 var receipt = new LinuxHomeBootstrapActivationOwner.Receipt(1, app + ".pkg", app, version, "linux", _abi, "app", runtimeFiles);
                 var signedReceipt = Envelope(JsonSerializer.SerializeToUtf8Bytes(receipt, Web), corrupt: damage == "receipt-signature" && app == "home");
                 Write(Path.Combine(directory, "receipt.json"), signedReceipt);
-                var descriptor = new HomePackageArtifactDescriptor(1, app + ".pkg", app, version, "stable", "mandatory-shared-core", "linux", _abi,
+                var descriptor = new HomePackageArtifactDescriptor(1, app + ".pkg", app, version, "stable", app == "optional" ? "optional-app" : "mandatory-shared-core", "linux", _abi,
                     damage == "dependency" && app == "home" ? [new("absent.pkg", "1.0.0")] : [], ["home.core"], Digest(signedReceipt), Digest(payload), payload.Length);
                 var bytes = JsonSerializer.SerializeToUtf8Bytes(descriptor, Web);
                 packages.Add(new(Convert.ToBase64String(Envelope(bytes)), Convert.ToBase64String(bytes)));
@@ -264,7 +266,7 @@ public sealed class LinuxHomeBootstrapActivationOwnerTests
             Owner = new(Publisher);
         }
         internal LinuxHomeBootstrapActivationOwner.Request Request() => new(new(CertificatePath, Digest(_certificate.RawData),
-            CataloguePath, Digest(File.ReadAllBytes(CataloguePath)), "test.only.publisher", _abi, ["home.pkg", "root.pkg"], Operation), Code, "prepared", PlanPath);
+            CataloguePath, Digest(File.ReadAllBytes(CataloguePath)), "test.only.publisher", _abi, _selected, Operation), Code, "prepared", PlanPath);
         internal Task Enroll() => Publisher.EnrollAsync(Request().SigningInputs, Token);
         private byte[] Envelope(byte[] payload, bool corrupt = false)
         {
