@@ -8,6 +8,8 @@
  */
 
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 using Haven.Application;
 
 namespace Haven.Browser;
@@ -105,10 +107,26 @@ public sealed class BrowserSitePermissionStore : IDisposable
     /// </summary>
     private int _disposed;
 
-    public BrowserSitePermissionStore(IAppPaths paths)
+    public BrowserSitePermissionStore(IAppPaths paths) : this(paths, null, null) { }
+
+    /// <summary>
+    /// Opens the existing legacy store for the current profile and a separate
+    /// deterministic store for each other profile. Existing decisions are never
+    /// copied between profiles or removed from the legacy store.
+    /// </summary>
+    public BrowserSitePermissionStore(IAppPaths paths, string? profileId, string? currentProfileId)
     {
         ArgumentNullException.ThrowIfNull(paths);
-        _path = Path.Combine(paths.DataDirectory, "browser-site-permissions.json");
+        var dataDirectory = paths.DataDirectory;
+        if (profileId is not null && profileId.Length > 0 &&
+            !StringComparer.Ordinal.Equals(profileId, currentProfileId))
+        {
+            if (string.IsNullOrWhiteSpace(profileId))
+                throw new InvalidDataException("A browser profile identity cannot be whitespace.");
+            var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(profileId))).ToLowerInvariant();
+            dataDirectory = Path.Combine(paths.BrowserProfileDirectory, "profiles", identity);
+        }
+        _path = Path.Combine(dataDirectory, "browser-site-permissions.json");
         _backupPath = _path + ".bak";
         _data = Load();
     }

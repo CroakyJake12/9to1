@@ -93,8 +93,10 @@ public sealed record BrowseChromeSnapshot(
 public sealed partial class BrowseChrome : IAsyncDisposable
 {
     private readonly BrowserDataService _data;
+    private readonly IAppPaths _profilePaths;
     private readonly IBrowseTabSessionPersistence? _tabSessionPersistence;
-    private readonly BrowserSitePermissionStore _permissions;
+    private readonly object _permissionStoreGate = new();
+    private readonly Dictionary<string, BrowserSitePermissionStore> _permissionStores = new(StringComparer.Ordinal);
     private readonly BrowserPrivateProfileManager _privateProfiles;
     private readonly BrowseEnginePreferencesStore _enginePreferences;
     private BrowseEngineSelectionPolicy _enginePolicy;
@@ -118,9 +120,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         string homeProfileId,
         IBrowseTabSessionPersistence? tabSessionPersistence)
     {
+        _profilePaths = paths;
         _data = new BrowserDataService(paths);
         _tabSessionPersistence = tabSessionPersistence;
-        _permissions = new BrowserSitePermissionStore(paths);
+        _permissionStores[homeProfileId] = new BrowserSitePermissionStore(paths);
         _privateProfiles = new BrowserPrivateProfileManager(paths.BrowserProfileDirectory);
         _enginePreferences = new BrowseEnginePreferencesStore(paths);
         _enginePolicy = BrowseEngineSelectionPolicy.Restore(preferences);
@@ -596,7 +599,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         }
         else
         {
-            await _permissions.SetDecisionAsync(tab.Address.WebUri!, kind, decision, cancellationToken).ConfigureAwait(false);
+            await PermissionStoreFor(tab.ProfileId).SetDecisionAsync(tab.Address.WebUri!, kind, decision, cancellationToken).ConfigureAwait(false);
             _status = $"{kind} permission set to {decision} for {tab.Address.Authority}.";
         }
         return Publish();
@@ -818,7 +821,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         if (_engineFactory is null || !IsEngineAvailable(engine)) throw new PlatformNotSupportedException(EngineUnavailableReason(engine));
         var profileRoot = tab.Privacy == BrowserTabPrivacy.Private
             ? await _privateProfiles.CreateAsync(tab.Id, cancellationToken).ConfigureAwait(false)
-            : StandardProfileDirectory;
+            : StandardProfileDirectoryFor(tab.ProfileId);
         var profile = Path.Combine(profileRoot, "engines", engine.ToString().ToLowerInvariant());
         Directory.CreateDirectory(profile);
         var actual = _engineFactory.CreateAsync(
@@ -897,7 +900,19 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         !tab.Address.IsWeb ? BrowserSitePermissionDecision.Ask :
         tab.Privacy == BrowserTabPrivacy.Private
             ? tab.PrivatePermissions.GetValueOrDefault(PrivatePermissionKey(tab.Address.WebUri!, kind), BrowserSitePermissionDecision.Ask)
-            : _permissions.GetDecision(tab.Address.WebUri!, kind);
+            : PermissionStoreFor(tab.ProfileId).GetDecision(tab.Address.WebUri!, kind);
+
+    private BrowserSitePermissionStore PermissionStoreFor(string profileId)
+    {
+        var identity = profileId.Length == 0 ? _homeProfileId : profileId;
+        lock (_permissionStoreGate)
+        {
+            if (_permissionStores.TryGetValue(identity, out var existing)) return existing;
+            var created = new BrowserSitePermissionStore(_profilePaths, identity, _homeProfileId);
+            _permissionStores.Add(identity, created);
+            return created;
+        }
+    }
 
     private BrowserTabState[] CaptureStandardTabs()
     {
@@ -942,7 +957,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             selected.Id,
             _data.Bookmarks,
             _data.History,
-            _permissions.Permissions,
+            PermissionStoreFor(selected.ProfileId).Permissions,
             new BrowseDownloadSnapshot(
                 _automation is not null,
                 _automation is null ? "No approved download ledger is registered." : "Only completed, policy-approved downloads are listed.",
@@ -1132,7 +1147,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             }
         }
         if (failures.Count != 0) throw new AggregateException("Browse retained its original profile retirement failures.", failures);
-        _permissions.Dispose(); _data.Dispose(); _tabs.Clear();
+        BrowserSitePermissionStore[] permissionStores;
+        lock (_permissionStoreGate) permissionStores = _permissionStores.Values.ToArray();
+        foreach (var permissions in permissionStores) permissions.Dispose();
+        _data.Dispose(); _tabs.Clear();
         _disposed = true; GC.SuppressFinalize(this);
     }
 
