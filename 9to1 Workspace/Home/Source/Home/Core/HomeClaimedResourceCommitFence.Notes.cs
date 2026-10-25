@@ -14,17 +14,33 @@ public sealed partial class HomeClaimedResourceCommitFence
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, string targetAppId = HomeNotesResourceAdmissionSource.TargetAppId,
-        string actionId = HomeNotesResourceAdmissionSource.SaveAction, CancellationToken cancellationToken = default) =>
+        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken = default) =>
+        CaptureNotesSaveAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability,
+            originalActor, HomeNotesResourceAdmissionSource.TargetAppId, HomeNotesResourceAdmissionSource.SaveAction, cancellationToken);
+
+    internal static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesSaveAsync(
+        HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
+        INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
+        AuthenticatedResourceActor originalActor, string targetAppId, string actionId,
+        CancellationToken cancellationToken) =>
         CaptureNotesSaveCoreAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability, originalActor, targetAppId, actionId, cancellationToken, null, null);
 
     public static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesSaveWithinOriginalSourceAsync(
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
+        AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        CaptureNotesSaveWithinOriginalSourceAsync(broker, store, profiles, ownership, originalSource, originalIntent,
+            originalCapability, originalActor, scope, retain, HomeNotesResourceAdmissionSource.TargetAppId,
+            HomeNotesResourceAdmissionSource.SaveAction, cancellationToken);
+
+    internal static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesSaveWithinOriginalSourceAsync(
+        HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
+        INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
         AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain,
-        string targetAppId = HomeNotesResourceAdmissionSource.TargetAppId,
-        string actionId = HomeNotesResourceAdmissionSource.SaveAction, CancellationToken cancellationToken = default) =>
+        string targetAppId, string actionId, CancellationToken cancellationToken) =>
         CaptureNotesSaveCoreAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability, originalActor, targetAppId, actionId, cancellationToken, scope, retain);
 
     private static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesSaveCoreAsync(
@@ -92,17 +108,32 @@ public sealed partial class HomeClaimedResourceCommitFence
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, string targetAppId = HomeNotesResourceAdmissionSource.TargetAppId,
-        string actionId = HomeNotesResourceAdmissionSource.ReadAction, CancellationToken cancellationToken = default) =>
+        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken = default) =>
+        CaptureNotesLibraryReadAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability,
+            originalActor, HomeNotesResourceAdmissionSource.TargetAppId, HomeNotesResourceAdmissionSource.ReadAction, cancellationToken);
+
+    internal static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadAsync(
+        HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
+        INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
+        AuthenticatedResourceActor originalActor, string targetAppId, string actionId, CancellationToken cancellationToken) =>
         CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, targetAppId, actionId, cancellationToken, null, null);
 
     public static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadWithinOriginalSourceAsync(
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
+        AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        CaptureNotesLibraryReadWithinOriginalSourceAsync(broker, store, profiles, ownership, originalSource, originalRequest,
+            originalCapability, originalActor, scope, retain, HomeNotesResourceAdmissionSource.TargetAppId,
+            HomeNotesResourceAdmissionSource.ReadAction, cancellationToken);
+
+    internal static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadWithinOriginalSourceAsync(
+        HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
+        INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
         AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain,
-        string targetAppId = HomeNotesResourceAdmissionSource.TargetAppId,
-        string actionId = HomeNotesResourceAdmissionSource.ReadAction, CancellationToken cancellationToken = default) =>
+        string targetAppId, string actionId, CancellationToken cancellationToken) =>
         CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, targetAppId, actionId, cancellationToken, scope, retain);
 
     private static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadCoreAsync(
