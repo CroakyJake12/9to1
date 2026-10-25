@@ -30,6 +30,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     private readonly ComboBox _sharedFilter = new() { ItemsSource = new[] { "Any sharing", "Shared", "Not shared" }, SelectedIndex = 0 };
     private readonly ComboBox _generatedFilter = new() { ItemsSource = new[] { "Any origin", "Generated", "Not generated" }, SelectedIndex = 0 };
     private readonly DesktopOriginalWorkLifetime _work;
+    // Activation callers may stop waiting as soon as the page retires, while the actual
+    // admitted query remains owned by _work and is still joined before the page detaches.
+    private readonly CancellationTokenSource _activationObservers = new();
     private HomeLibraryPage? _page;
     private HomeLibraryQuery _query = new(Limit: 25);
     private DesktopOriginalWorkLifetime.Original? _opening;
@@ -80,8 +83,11 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     internal Task ActivateAsync(CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess(); _active = true;
-        return _work.RunAsync(original => SearchAsync(original, token, _query.Offset), actual => _initialization ??= actual);
+        var actual = _work.RunAsync(original => SearchAsync(original, token, _query.Offset), actualTask => _initialization ??= actualTask);
+        return ObserveActivationAsync(actual, _activationObservers.Token);
     }
+    private static async Task ObserveActivationAsync(Task actual, CancellationToken retirement) =>
+        await actual.WaitAsync(retirement).ConfigureAwait(false);
     internal void Deactivate() { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; }
     public bool? IsActionAvailable(string command) => IsAlive && _active && !_busy && (command switch
     {
@@ -244,6 +250,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     { CloudflareOriginalExecutionGuard.DemandExternalJoin(this); return _work.CloseAndDrainAsync(); }
     private async Task StopAsync()
     {
+        _activationObservers.Cancel();
         _active = false; ++_generation;
         var failures = new List<Exception>();
         async Task Join(Task task) { try { await task; } catch (Exception cause) { failures.Add(task.Exception ?? cause); } }
@@ -261,7 +268,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         // including first activation, settle. Only then seal/join their private index adapter.
         // Sealing it in Stop would fault a delayed query's already-admitted authorization.
         try { if (_source is not null) await _source.DisposeAsync(); }
-        finally { Content = null; }
+        finally { _activationObservers.Dispose(); Content = null; }
     }
     private static IEnumerable<CuiComponent> Descendants(CuiComponent node) => new[] { node }
         .Concat(node.Children.SelectMany(Descendants)).Concat(node.ElseChildren.SelectMany(Descendants));

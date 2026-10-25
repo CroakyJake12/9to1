@@ -4,6 +4,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -28,7 +29,7 @@ public sealed class HomeLibraryDestinationTests
         try
         {
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
-            var row = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "home-library-item");
+            var row = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-item"));
             Assert.Equal("Notebook 00", global::Avalonia.Automation.AutomationProperties.GetName(row));
             row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
@@ -49,12 +50,12 @@ public sealed class HomeLibraryDestinationTests
         try
         {
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
-            var row = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "home-library-item");
+            var row = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-item"));
             authorization.Allowed = false;
             row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.False(queued); Assert.Null(page.Current);
-            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "home-library-item");
+            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-item"));
             await page.CloseAndDrainAsync(); Assert.True(page.OriginalClose!.IsCompletedSuccessfully);
         }
         finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
@@ -112,14 +113,14 @@ public sealed class HomeLibraryDestinationTests
         try
         {
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
-            var pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "home-library-toggle-pin");
+            var pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-toggle-pin"));
             pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
             var pinned = Assert.Single(page.Current!.Items);
             Assert.Equal(index.Rows.Single().ArtifactId, pinned.ArtifactId);
             Assert.True(pinned.IsPinned); Assert.True(preferences.IsPinned("boards", pinned.ArtifactId));
             Assert.True(authorization.Reads >= 2); // Search and the fresh pin action both recheck current read access.
             Assert.Single(index.Rows); // Pinning a reference never creates a copied artifact.
-            pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "home-library-toggle-pin");
+            pin = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => HasAuthoredIdentity(item, "home-library-toggle-pin"));
             pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.False(Assert.Single(page.Current!.Items).IsPinned);
             Assert.False(preferences.IsPinned("boards", pinned.ArtifactId));
@@ -167,6 +168,12 @@ public sealed class HomeLibraryDestinationTests
     private static HomeLibraryDestinationPage Page(Index index, Authorization authorization, Func<HomeDeepLink, Task, bool> queue,
         IHomeLibraryPreferences? preferences = null) =>
         new(router => new(index, authorization, router, preferences ?? new Preferences()), _ => Task.CompletedTask, queue);
+    // CUI Repeat instances have a keyed runtime identity below the authored ID; querying
+    // Control.Name loses that distinction and is not the repeated-item identity contract.
+    private static bool HasAuthoredIdentity(Control control, string authoredId) =>
+        CuiRuntimeIdentity.GetStableId(control) is { } identity &&
+        identity.Contains("id:home-library-rows|key:", StringComparison.Ordinal) &&
+        identity.EndsWith("/id:" + authoredId, StringComparison.Ordinal);
     private static Window Show(Control page)
     { var window = new Window { Width = 800, Height = 620, Content = page }; window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); return window; }
     private sealed class Registry : IModeRegistry
