@@ -30,6 +30,11 @@
   create/open, and the sidebar board-switcher-to-picker path are wired. Canonical
   Home Library artifact inclusion and cross-client recency are not implemented;
   those remain with Home/shared-host integration.
+- Inline block actions: **PARTIALLY IMPLEMENTED, owning checks pending**. Edit mode
+  exposes an inline insertion menu and keyboard-focusable grip menu for ordered
+  block movement, duplication and deletion; View mode hides both authoring controls.
+  CUI-native hover presentation, drag reordering and slash/split/merge shortcuts
+  are still incomplete.
 - Remaining major Boards gaps are Progress Tracker packets B-01 through B-04.
   In particular, canonical Home Library landing integration, cross-client
   Board/Page convergence, embedded Write/Canvas/Chat/ScopedChat/Data
