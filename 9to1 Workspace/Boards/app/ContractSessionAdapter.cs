@@ -617,6 +617,8 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         if (!string.IsNullOrEmpty(image.LocalReference) &&
             image.LocalReference.StartsWith("sidecar:", StringComparison.Ordinal))
         {
+            if (string.IsNullOrWhiteSpace(_real.FilePath))
+                return Task.FromResult<byte[]?>(null);
             try
             {
                 var blob = Path.Combine(

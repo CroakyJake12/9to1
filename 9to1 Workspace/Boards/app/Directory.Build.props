@@ -1,0 +1,12 @@
+<Project>
+  <Import Project="..\..\Directory.Build.props" />
+
+  <!-- The Windows executable and cross-platform embedding library live side by side.
+       Give restore/build intermediates a project-specific directory so their assets,
+       generated CUI sources and compiler caches can never overwrite one another. -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>
