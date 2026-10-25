@@ -4,6 +4,7 @@ using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace Haven.Desktop.Services;
 
@@ -17,6 +18,10 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
     private sealed record Operation(Task Task, CancellationToken Token);
     private readonly FilesNativeBrowserService _browser;
     private readonly NativeHomeFilesBoardReadSource? _boardRead;
+    private readonly NativeHomeFilesBoardWriteSource? _boardWrite;
+    private readonly Func<HomePermissionAuthorization, CancellationToken, Task>? _boardWriteReview;
+    private readonly Action<Action>? _boardWriteScope;
+    private readonly Action<Task>? _boardWriteRetain;
     private readonly AuthenticatedResourceActor _actor;
     private readonly IHomeCoreStateStore _home;
     private readonly Func<CancellationToken, Task<bool>> _ownerCurrent;
@@ -33,11 +38,20 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
     private Task? _close;
     internal NativeHomeFilesLibrarySource(FilesNativeBrowserService browser, AuthenticatedResourceActor actor,
         IHomeCoreStateStore home, Func<CancellationToken, Task<bool>> ownerCurrent,
-        Action<Action> parent, Func<bool> alive, NativeHomeFilesBoardReadSource? boardRead = null)
-    { _browser = browser; _boardRead = boardRead; _actor = actor; _home = home; _ownerCurrent = ownerCurrent; _parent = parent; _alive = alive; }
+        Action<Action> parent, Func<bool> alive, NativeHomeFilesBoardReadSource? boardRead = null,
+        NativeHomeFilesBoardWriteSource? boardWrite = null,
+        Func<HomePermissionAuthorization, CancellationToken, Task>? boardWriteReview = null,
+        Action<Action>? boardWriteScope = null, Action<Task>? boardWriteRetain = null)
+    { _browser = browser; _boardRead = boardRead; _boardWrite = boardWrite; _actor = actor; _home = home;
+        _ownerCurrent = ownerCurrent; _parent = parent; _alive = alive; _boardWriteReview = boardWriteReview;
+        _boardWriteScope = boardWriteScope; _boardWriteRetain = boardWriteRetain; }
+    internal bool HasWritableBoardSource => _boardWrite is not null && _boardWriteReview is not null &&
+        _boardWriteScope is not null && _boardWriteRetain is not null;
     public string? AvailabilityNotice => _boardRead is null || !_browser.HasOriginalBoardDocumentReadOwner
         ? "Files shows folder and supported raw text/code references from its current metadata. Text preview requires an existing local content anchor."
-        : "Files shows current folders, supported text/code references and .9to1board documents. Board documents open read-only from their exact selected Files revision; text preview requires an existing local content anchor.";
+        : HasWritableBoardSource
+            ? "Files shows current folders, supported text/code references and .9to1board documents. Boards opens the exact selected Files revision; saving requests fresh Home review and creates a new immutable revision."
+            : "Files shows current folders, supported text/code references and .9to1board documents. Board documents open read-only from their exact selected Files revision; text preview requires an existing local content anchor.";
     public HomeLibraryService CreateService(IHomeDeepLinkRouter router) => new(this, this, router, new HomeCoreLibraryPreferences(_home));
     public Task RevalidateAsync(CancellationToken token) => RunAsync(async (source, caller) =>
     { await RequireOwnerAsync(source, caller).ConfigureAwait(false); return true; }, token);
@@ -186,6 +200,34 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
             {
                 await lease.DisposeAsync().ConfigureAwait(false);
                 throw;
+            }
+        }, token);
+
+    internal Task<Guid?> PrepareOriginalBoardWriteAsync(HomeDeepLink link, CancellationToken token) =>
+        RunAsync<Guid?>(async (source, caller) =>
+        {
+            if (_boardWrite is null || _boardWriteReview is null || _boardWriteScope is null || _boardWriteRetain is null ||
+                link.OwnerApp != "files" || link.TargetRouteId != "files.board" ||
+                !_entries.TryGetValue(link.ObjectId, out var entry) || !ReferenceEquals(entry.View.OpenLink, link) ||
+                !await IsCurrentAsync(entry, source, caller).ConfigureAwait(false) ||
+                entry.Row.Kind != HostedItemKind.File || !FilesNativeBrowserService.IsBoardDocumentCandidate(entry.Row)) return null;
+            var boardRead = _boardRead ?? throw new NotSupportedException("The original Home selected-board reader is unavailable.");
+            NativeHomeFilesBoardReadLease? lease = null;
+            var transferred = false;
+            try
+            {
+                lease = await source.AwaitAsync(source.Invoke(() => boardRead.ReadSelectedAsync(entry.Page, entry.Row,
+                    _alive, _ownerCurrent, Own, Retain, source, caller))).ConfigureAwait(false);
+                if (!await IsCurrentAsync(entry, source, caller).ConfigureAwait(false) || !lease.IsOpen)
+                    throw new UnauthorizedAccessException("The selected Home Library board row retired before its write was prepared.");
+                var id = _boardWrite.RegisterPrepared(entry.Page, entry.Row, lease, _alive, _boardWriteReview,
+                    "home-library-board:" + entry.Row.Id.Value.ToString("D"), _boardWriteScope, _boardWriteRetain);
+                transferred = true;
+                return id;
+            }
+            finally
+            {
+                if (!transferred && lease is not null) await lease.DisposeAsync().ConfigureAwait(false);
             }
         }, token);
 

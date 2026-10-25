@@ -43,6 +43,12 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.True(selected.IsFilesDocument); Assert.Null(selected.DocumentId);
         Assert.Equal(store, selected.StoreId); Assert.Equal(folder, selected.ParentFolderId);
         Assert.Equal(file, selected.FileId); Assert.Equal(revision, selected.RevisionId); Assert.Equal(token, selected.ReadToken);
+        var writable = BoardsBrowseAppContentAddress.Parse(
+            BoardsBrowseAppContentAddress.ForWritableFile(store, folder, file, revision, token));
+        Assert.True(writable.IsFilesDocument); Assert.True(writable.Writable);
+        Assert.Equal(selected.StoreId, writable.StoreId); Assert.Equal(selected.ParentFolderId, writable.ParentFolderId);
+        Assert.Equal(selected.FileId, writable.FileId); Assert.Equal(selected.RevisionId, writable.RevisionId);
+        Assert.Equal(selected.ReadToken, writable.ReadToken);
         Assert.Throws<FormatException>(() => BoardsBrowseAppContentAddress.Parse(
             AppContentAddress.Parse($"9to1://boards/files/{store:D}/{folder:D}/{file:D}/{revision:D}/{Guid.Empty:D}")));
     }
@@ -77,6 +83,41 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.True(session.CanRetireOriginalView);
         Assert.False(session.IsPublicationCurrent);
         Assert.False(lease.IsOpen);
+    }
+
+    [Fact]
+    public async Task Home_write_lease_advances_only_after_a_committed_new_Files_revision()
+    {
+        var store = Guid.NewGuid(); var folder = Guid.NewGuid(); var file = Guid.NewGuid();
+        var revision = Guid.NewGuid(); var nextRevision = Guid.NewGuid();
+        var documentId = Guid.NewGuid(); var bytes = new byte[] { 1, 2, 3, 4 };
+        var actor = new AuthenticatedResourceActor("local:fixture", "fixture-profile", null, null, "fixture-revision");
+        var read = new FilesOriginalBoardDocumentRead(store, file, folder, revision,
+            Convert.ToHexString(SHA256.HashData(bytes)), bytes);
+        var readLease = new NativeHomeFilesBoardReadLease(read, actor, () => true, _ => Task.FromResult(true));
+        var sourceId = $"files/{store:D}/{folder:D}/{file:D}";
+        var calls = 0;
+        await using var writeLease = new NativeHomeFilesBoardWriteLease(readLease, sourceId, documentId,
+            (actualSource, expectedRevision, expectedHash, actualDocumentId, payload, _) =>
+            {
+                calls++;
+                Assert.Equal(sourceId, actualSource);
+                Assert.Equal(revision.ToString("D"), expectedRevision);
+                Assert.Equal(Convert.ToHexString(SHA256.HashData(bytes)), expectedHash);
+                Assert.Equal(documentId, actualDocumentId);
+                Assert.Equal(new byte[] { 9, 8, 7 }, payload.ToArray());
+                return Task.FromResult(new FilesOriginalBoardDocumentWriteOutcome(true, nextRevision, "Saved", "Saved."));
+            });
+
+        var saved = await writeLease.SaveAsync(sourceId, revision.ToString("D"), new byte[] { 9, 8, 7 },
+            TestContext.Current.CancellationToken);
+        Assert.True(saved.Committed);
+        Assert.Equal(nextRevision, writeLease.RevisionId);
+        var stale = await writeLease.SaveAsync(sourceId, revision.ToString("D"), new byte[] { 3 },
+            TestContext.Current.CancellationToken);
+        Assert.False(stale.Committed);
+        Assert.True(stale.Conflict);
+        Assert.Equal(1, calls);
     }
 
     [Fact]
