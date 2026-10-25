@@ -16,7 +16,7 @@ public sealed partial class BrowseChrome
             var index = _tabs.FindIndex(tab => tab.Id == tabId);
             var next = index + direction;
             return index >= 0 && next >= 0 && next < _tabs.Count && !_tabs[index].IsHome &&
-                !_tabs[next].IsHome && _tabs[index].IsPinned == _tabs[next].IsPinned;
+                IsSamePlacementOwner(_tabs[index], _tabs[next]);
         }
     }
 
@@ -51,6 +51,54 @@ public sealed partial class BrowseChrome
         DemandPlaceableTab(tabId);
         var admittedOrder = CapturePlacementOrder();
         return RetainContentTransition(() => MoveTabCoreAsync(tabId, direction, admittedOrder, token), token);
+    }
+
+    /// <summary>Reorders one existing tab relative to another without crossing tab owners or pin sections.</summary>
+    public Task<BrowseChromeSnapshot> MoveTabRelativeAsync(Guid tabId, Guid targetTabId, bool beforeTarget,
+        CancellationToken token = default)
+    {
+        ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
+        DemandPlaceableTab(tabId); DemandPlaceableTab(targetTabId);
+        if (tabId == targetTabId) return Task.FromResult(Publish());
+        var admittedOrder = CapturePlacementOrder();
+        return RetainContentTransition(() => MoveTabRelativeCoreAsync(tabId, targetTabId, beforeTarget, admittedOrder, token), token);
+    }
+
+    public bool CanMoveTabRelative(Guid tabId, Guid targetTabId)
+    {
+        if (_disposed || _nativeRetiring || tabId == targetTabId) return false;
+        lock (_nativeSourceGate)
+        {
+            var source = _tabs.FirstOrDefault(tab => tab.Id == tabId);
+            var target = _tabs.FirstOrDefault(tab => tab.Id == targetTabId);
+            return source is not null && target is not null && IsSamePlacementOwner(source, target);
+        }
+    }
+
+    private async Task<BrowseChromeSnapshot> MoveTabRelativeCoreAsync(Guid tabId, Guid targetTabId, bool beforeTarget,
+        string admittedOrder, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        lock (_nativeSourceGate)
+        {
+            if (!string.Equals(admittedOrder, CapturePlacementOrder(), StringComparison.Ordinal))
+                throw new InvalidOperationException("Tab placement changed before this move; use the current tab controls.");
+            var source = DemandPlaceableTab(tabId);
+            var target = DemandPlaceableTab(targetTabId);
+            if (!IsSamePlacementOwner(source, target))
+                throw new InvalidOperationException("Tabs can be reordered only within the same privacy, profile, and pin section.");
+            var sourceIndex = _tabs.IndexOf(source);
+            var targetIndex = _tabs.IndexOf(target);
+            _tabs.RemoveAt(sourceIndex);
+            targetIndex = _tabs.IndexOf(target);
+            _tabs.Insert(beforeTarget ? targetIndex : targetIndex + 1, source);
+            if (sourceIndex != _tabs.IndexOf(source))
+            {
+                _tabPlacementRevision = checked(_tabPlacementRevision + 1);
+                _tabPlacementNeedsSave = true;
+            }
+        }
+        return await SaveTabPlacementCoreAsync("Tab order saved.", token).ConfigureAwait(false);
     }
 
     private async Task<BrowseChromeSnapshot> MoveTabCoreAsync(Guid tabId, int direction, string admittedOrder, CancellationToken token)
@@ -117,6 +165,10 @@ public sealed partial class BrowseChrome
             _tabs.Clear(); _tabs.AddRange(ordered);
         }
     }
+
+    private static bool IsSamePlacementOwner(TabRuntime first, TabRuntime second) =>
+        !first.IsHome && !second.IsHome && first.IsPinned == second.IsPinned &&
+        first.Privacy == second.Privacy && StringComparer.Ordinal.Equals(first.ProfileId, second.ProfileId);
 
     private string CapturePlacementOrder()
     {
