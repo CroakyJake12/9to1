@@ -125,10 +125,10 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
     }
 
     [LinuxFact]
-    public async Task Home_audit_retry_uses_the_same_attempt_and_receipt_and_opens_only_after_terminal_settlement()
+    public async Task Lost_create_audit_acknowledgement_reuses_the_same_receipt_without_a_second_create()
     {
         await using var rig = await Rig.CreateAsync();
-        rig.FailNextBoardCreateAudits(2); // Initial settlement plus the source's one bounded retry.
+        rig.FailNextBoardCreateAudits(1); // The actual Home record is persisted before its acknowledgement is lost.
         var approvals = 0;
         async Task Review(HomePermissionAuthorization authorization, CancellationToken token)
         {
@@ -141,30 +141,13 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         var created = await rig.Keep(rig.Library.CreateInSelectedFolderAsync(
             selected, "Audit retry board", BoardBytes(Guid.NewGuid(), "Audit retry"), rig.Token));
 
-        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, created.State);
-        var attempt = Assert.IsType<FilesOriginalBoardDocumentCreateAttempt>(created.SettlementAttempt);
+        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, created.State);
         var receipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(created.Receipt);
-        Assert.Null(created.PreparedAddress);
+        Assert.NotNull(created.PreparedAddress);
+        Assert.Equal(1, rig.BoardCreateAuditFailureCount);
+        Assert.Equal(2, approvals); // One create review and one independent fresh read review.
         Assert.Single(await rig.ListBoardsAsync());
-
-        var homeBeforeObserve = await File.ReadAllBytesAsync(rig.HomePath, rig.Token);
-        var driveBeforeObserve = await File.ReadAllBytesAsync(rig.DrivePath, rig.Token);
-        var observed = await rig.Keep(rig.Library.ObserveCreateSettlementAsync(attempt, rig.Token));
-        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, observed.State);
-        Assert.Same(receipt, observed.Receipt);
-        Assert.Null(observed.PreparedAddress);
-        Assert.Equal(homeBeforeObserve, await File.ReadAllBytesAsync(rig.HomePath, rig.Token));
-        Assert.Equal(driveBeforeObserve, await File.ReadAllBytesAsync(rig.DrivePath, rig.Token));
-        Assert.Single(await rig.ListBoardsAsync());
-
-        var settled = await rig.Keep(rig.Library.RetryCreateSettlementAndPrepareAsync(attempt, rig.Token));
-        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, settled.State);
-        Assert.Same(receipt, settled.Receipt);
-        Assert.NotNull(settled.PreparedAddress);
-        Assert.Equal(2, rig.BoardCreateAuditFailureCount);
-        Assert.Equal(2, approvals); // One create review and one fresh read review; retries did not create again.
-        Assert.Single(await rig.ListBoardsAsync());
-        var parsed = BoardsBrowseAppContentAddress.Parse(settled.PreparedAddress!);
+        var parsed = BoardsBrowseAppContentAddress.Parse(created.PreparedAddress!);
         Assert.Equal(receipt.FileId, parsed.FileId);
         Assert.Equal(receipt.FilesCasRevisionId, parsed.RevisionId);
         var lease = rig.Writes.TakePrepared(parsed.ReadToken!.Value, parsed.StoreId!.Value,
@@ -201,10 +184,9 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
         private NativeHomeFilesLibrarySource? _library;
 
         private Rig()
-        { _chosen = Path.Combine(_root, "chosen"); HomePath = Path.Combine(_root, "home.json"); DrivePath = Path.Combine(_chosen, ".9to1-files", "drive.json"); }
+        { _chosen = Path.Combine(_root, "chosen"); HomePath = Path.Combine(_root, "home.json"); }
 
         internal string HomePath { get; }
-        internal string DrivePath { get; }
         internal string BoardsDirectory { get; private set; } = string.Empty;
         internal CancellationToken Token => _deadline.Token;
         internal NativeFilesWorkspace Workspace { get; private set; } = null!;
