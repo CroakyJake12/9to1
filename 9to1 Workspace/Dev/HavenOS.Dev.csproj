@@ -26,6 +26,9 @@
       DeveloperWorkbench.cui from the packaged compiled bundle.
     -->
     <ProjectReference Include="..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
+    <!-- Current-draft preview uses the maintained compiler and V2 artifact projection,
+         not a source-to-native parser or a parallel rendering backend. -->
+    <ProjectReference Include="..\..\framework\CUI\Compiler\CakeOS.Cui.Compiler.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
     <!-- The canonical CUI compiler pipeline discovers UI/DeveloperWorkbench.cui via the default

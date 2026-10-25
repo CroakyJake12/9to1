@@ -8,6 +8,20 @@ namespace HavenOS.Apps.Dev.Tests;
 public sealed class DeveloperWorkbenchCuiDocumentTests
 {
     [Fact]
+    public void Static_draft_preview_has_a_typed_native_slot_explicit_subset_and_actual_diagnostics()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var preview = Assert.Single(nodes, node => node.Name == "dev-cui-draft-preview");
+        Assert.Equal("Object", preview.Type);
+        Assert.True(preview.TryGetLiteralAttribute("type", out var renderer)); Assert.Equal("DeveloperCuiDraftPreview", renderer);
+        var action = Assert.Single(nodes, node => node.Name == "dev-preview-cui-draft");
+        Assert.Contains(action.Actions.Values, value => value.Name == "dev.preview-cui-draft");
+        Assert.Contains(action.Properties.Values, value => value is CuiBindingValue binding && binding.Path == "CanPreviewCuiDraft");
+        foreach (var binding in new[] { "CuiDraftPreviewSubset", "CuiDraftPreviewStatus", "CuiDraftPreviewDiagnostics" })
+            Assert.Contains(nodes, node => node.Properties.Values.Any(value => value is CuiBindingValue actual && actual.Path == binding));
+    }
+
+    [Fact]
     public void Maintained_document_parses_and_exposes_all_real_project_editor_and_command_actions()
     {
         var document = DeveloperWorkbenchCuiDocument.Load();
@@ -20,7 +34,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
-            "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.preview-edit",
+            "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.preview-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.new-run-target", "dev.edit-run-target", "dev.review-run-target", "dev.save-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];

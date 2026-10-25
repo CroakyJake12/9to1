@@ -163,6 +163,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         // Each host gets its own registry with the canonical built-in ReadOnlyText contract.
         // The normal compiler admits the same typed properties without an app-specific factory.
         _controls = new();
+        _controls.RegisterObjectRenderer("DeveloperCuiDraftPreview", _ => CreateCuiPreviewSlot());
         _host = new(_controls);
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
         // Host custody precedes actual property/content publication callbacks. If a later
@@ -235,6 +236,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _review = null; // No AI Task-backed review session; manual edits route through the genuine edit admission + kernel.
         Document = DeveloperWorkbenchCuiDocument.Load();
         _controls = new();
+        _controls.RegisterObjectRenderer("DeveloperCuiDraftPreview", _ => CreateCuiPreviewSlot());
         _host = new(_controls);
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
         if (retainOriginalAcquisition is not null)
@@ -345,6 +347,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetRunEditValue(path, out value)) return true;
             if (TryGetCuiPropertyValue(path, out value)) return true;
             if (TryGetCuiAnalysisValue(path, out value)) return true;
+            if (TryGetCuiPreviewValue(path, out value)) return true;
             value = path switch
             {
                 "ProjectTitle" => _project.Project.Name,
@@ -506,6 +509,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (command == "dev.create-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && CurrentNewFileReview();
             if (command == "dev.select-cui-property") return CurrentCuiPropertyInspection()?.Properties.Take(100).Any(property => property.CanEdit) == true;
             if (command == "dev.change-cui-property") return SelectedCuiProperty() is { CanEdit: true } property && property.Value != _cuiPropertyDraftValue;
+            if (command == "dev.preview-cui-draft") return _cuiPreviewSlot is not null && CurrentSourceTab() is { } preview && DeveloperCuiDraftPreviewCompiler.Supports(preview.Path, CurrentEditorText());
             if (command == "dev.analyze-cui-draft") return CurrentSourceTab() is { } source && DeveloperCuiSourceAnalysis.Supports(source.Path, CurrentEditorText());
             if (command == "dev.go-to-cui-problem") return CurrentCuiAnalysis() is { Problems.Count: > 0 };
             if (command == "dev.go-to-cui-element") return CurrentCuiAnalysis() is { Outline.Count: > 0 };
@@ -570,6 +574,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         if (command == "dev.select-cui-property") return SelectCuiProperty(parameter);
         if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);
         if (command == "dev.analyze-cui-draft") return DispatchCuiAnalysisAsync(cancellationToken);
+        if (command == "dev.preview-cui-draft") return DispatchCuiPreviewAsync(cancellationToken);
         if (command is "dev.go-to-cui-problem" or "dev.go-to-cui-element") return DispatchCuiSourceNavigationAsync(command, parameter, cancellationToken);
         if (command is "dev.undo-source-edit" or "dev.redo-source-edit") return DispatchDraftHistoryAsync(command, cancellationToken);
         if (command is "dev.find-next-source" or "dev.find-previous-source" or "dev.replace-source-match" or "dev.replace-all-source")
@@ -1357,6 +1362,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private async Task DetachOriginalPresentationAsync()
     {
         var errors = new List<Exception>();
+        try { await CloseCuiPreviewScenesAsync().ConfigureAwait(false); } catch (Exception error) { errors.Add(error); }
         // Acquired business originals settled before this cleanup callback. Join the SAME
         // readiness and review children independently BEFORE the host/dispatcher resources.
         try { if (_review is not null) _reviewClose ??= _review.CloseAndDrainAsync(); } catch (Exception error) { errors.Add(error); }

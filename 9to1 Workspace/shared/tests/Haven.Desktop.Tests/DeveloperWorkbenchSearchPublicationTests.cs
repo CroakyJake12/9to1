@@ -1,5 +1,7 @@
 using System.Reflection;
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Desktop.Services;
@@ -656,13 +658,113 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Native_static_CUI_preview_retains_last_valid_scene_without_source_effects()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string saved = "<Cui><Page><Container Type='Vertical Stack'><Text text='compiled &amp; literal' /></Container></Page></Cui>";
+            f.Tools.TextValue = saved; page = await SearchPublicationPage(f, reader.Owner, new PreviewComponentReadiness());
+            // Real workbench artifact, registered Object and child scene. Readiness is
+            // a controlled component input, not a native frame/installation witness.
+            await page.ActivateAsync(OriginalTestBodyToken);
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var editor = SearchPublicationField("_editor").GetValue(page);
+            var selection = SearchPublicationField("_editorTextSelection").GetValue(page);
+            var reads = f.Tools.ReadCalls; var preparations = f.Owner.PrepareCalls;
+            var slot = Assert.IsType<ContentControl>(SearchPublicationField("_cuiPreviewSlot").GetValue(page));
+            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            var host = Assert.IsType<CuiSceneHost>(slot.Content);
+            Assert.False(host.IsHitTestVisible); Assert.Equal(CuiSceneAvailabilityState.Ready, host.Availability!.State);
+            Assert.Contains(Assert.IsAssignableFrom<Control>(host.Content).GetVisualDescendants().OfType<TextBlock>(), value => value.Text == "compiled & literal");
+            Assert.Same(editor, SearchPublicationField("_editor").GetValue(page));
+            Assert.Same(selection, SearchPublicationField("_editorTextSelection").GetValue(page));
+            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status)); Assert.Contains("Showing current Main.cui", Assert.IsType<string>(status));
+            Assert.Contains(DeveloperManualSourceEditOwner.Sha256(saved), Assert.IsType<string>(status));
+            const string unsupported = "<Cui><Page><Image Source='https://example.test/not-fetched.png' /></Page></Cui>";
+            Assert.True(page.TrySetValue("DraftText", unsupported));
+            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            Assert.Same(host, slot.Content);
+            Assert.True(page.TryGetValue("CuiDraftPreviewDiagnostics", out var diagnostics)); Assert.Contains("DEVCP003", Assert.IsType<string>(diagnostics));
+            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out status)); Assert.Contains("last valid; stale", Assert.IsType<string>(status));
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(unsupported, draft);
+            page.TrySetValue("DraftText", "<Cui><Page><Text text='next compiled draft' /></Page></Cui>");
+            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            var replacement = Assert.IsType<CuiSceneHost>(slot.Content); Assert.NotSame(host, replacement);
+            Assert.Contains(Assert.IsAssignableFrom<Control>(replacement.Content).GetVisualDescendants().OfType<TextBlock>(), value => value.Text == "next compiled draft");
+            Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(preparations, f.Owner.PrepareCalls);
+            Assert.Equal(saved, f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+            var scenes = Assert.IsAssignableFrom<System.Collections.IEnumerable>(SearchPublicationField("_cuiPreviewScenes").GetValue(page));
+            Assert.Same(replacement, Assert.Single(scenes.Cast<object>()));
+            await page.CloseAndDrainAsync(); Assert.Empty(scenes.Cast<object>());
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Native_static_CUI_preview_rechecks_draft_after_readiness_and_never_mounts_stale_compilation()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        var readiness = new PreviewComponentReadiness(); DeveloperProjectWorkbenchPage? page = null; Task? pending = null;
+        try
+        {
+            f.Tools.TextValue = "<Cui><Page><Text text='first valid' /></Page></Cui>";
+            page = await SearchPublicationPage(f, reader.Owner, readiness); await page.ActivateAsync(OriginalTestBodyToken);
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            var slot = Assert.IsType<ContentControl>(SearchPublicationField("_cuiPreviewSlot").GetValue(page)); var valid = slot.Content;
+            page.TrySetValue("DraftText", "<Cui><Page><Text text='captured before readiness' /></Page></Cui>");
+            readiness.HoldNext = true;
+            pending = page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken).AsTask();
+            await readiness.Entered.Task.WaitAsync(OriginalTestBodyToken); Assert.False(pending.IsCompleted);
+            const string newer = "<Cui><Page><Text text='newer edit must win' /></Page></Cui>";
+            Assert.True(page.TrySetValue("DraftText", newer)); readiness.Release.TrySetResult(); await pending;
+            Assert.Same(valid, slot.Content);
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(newer, draft);
+            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status)); Assert.Contains("last valid; stale", Assert.IsType<string>(status));
+            var scenes = Assert.IsAssignableFrom<System.Collections.IEnumerable>(SearchPublicationField("_cuiPreviewScenes").GetValue(page));
+            Assert.Same(valid, Assert.Single(scenes.Cast<object>()));
+            Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Tools.WriteCalls);
+        }
+        finally
+        {
+            readiness.Release.TrySetResult();
+            try { if (pending is not null) await pending; }
+            finally
+            {
+                try { if (page is not null) await page.CloseAndDrainAsync(); }
+                finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+            }
+        }
+    }
+
+    private sealed class PreviewComponentReadiness : ICuiSceneReadiness
+    {
+        public bool HoldNext;
+        public readonly TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token)
+        {
+            if (HoldNext) { HoldNext = false; Entered.TrySetResult(); await Release.Task.WaitAsync(token); }
+            return new(CuiSceneAvailabilityState.Ready, "TEST_COMPONENT_ONLY", "Controlled component readiness; no native frame or authority witness.");
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));
     private static string NativeTabGroup(object tab) => Assert.IsType<string>(tab.GetType().GetField("GroupId")!.GetValue(tab));
     private static string NativeTabPath(object tab) => Assert.IsType<string>(tab.GetType().GetProperty("Path")!.GetValue(tab));
 
-    private static async Task<DeveloperProjectWorkbenchPage> SearchPublicationPage(Fixture fixture, DeveloperManualSourceReadOwner reader)
+    private static async Task<DeveloperProjectWorkbenchPage> SearchPublicationPage(Fixture fixture, DeveloperManualSourceReadOwner reader, ICuiSceneReadiness? componentReadiness = null)
     {
         var resolved = (await fixture.Dev.ResolveAsync(fixture.Reference)).Value!;
         var documents = new Dictionary<string, DeveloperCodeDocument>(StringComparer.Ordinal);
@@ -678,7 +780,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             .Single(value => value.GetParameters().Length == 15 && value.GetParameters()[11].ParameterType == typeof(DeveloperManualSourceReadOwner)
                 && value.GetParameters()[14].ParameterType == typeof(DeveloperTaskDraftRecoveryOwner));
         var page = (DeveloperProjectWorkbenchPage)ctor.Invoke([fixture.Dev, fixture.Tasks, resolved,
-            fixture.Current.TaskId, fixture.Current.ExecutionId, fixture.Current.ContextId, new SearchPublicationNoReadiness(), resolver,
+            fixture.Current.TaskId, fixture.Current.ExecutionId, fixture.Current.ContextId, componentReadiness ?? new SearchPublicationNoReadiness(), resolver,
             (Action)(() => { }), OriginalTestBodyToken, null, reader, null, null, null]);
         SearchPublicationField("_active").SetValue(page, true); // component admission only, not a native frame witness
         return page;
