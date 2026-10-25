@@ -7,7 +7,6 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
-using CakeOS.Cui.Runtime;
 using System.Collections.Concurrent;
 
 namespace CakeOS.Apps.Boards.App;
