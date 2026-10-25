@@ -20,6 +20,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     private readonly Func<CancellationToken, Task> _admit;
     private readonly Func<HomeDeepLink, Task, bool> _queue;
     private readonly Func<HomeDeepLink, CancellationToken, Task>? _prepareNavigation;
+    private readonly Func<HomeArtifactReference, CancellationToken, Task<BoardEmbeddedArtifactReference?>>? _selectArtifact;
+    private readonly TaskCompletionSource<BoardEmbeddedArtifactReference?>? _selection = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
     private readonly TextBox _search = new() { MaxLength = 256 };
@@ -45,10 +47,12 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     internal HomeLibraryDestinationPage(Func<IHomeDeepLinkRouter, HomeLibraryService> create,
         Func<CancellationToken, Task> admit, Func<HomeDeepLink, Task, bool> queue,
         IHomeOriginalLibrarySource? ownedSource = null, CuiThemePreferenceContext? theme = null,
-        Func<HomeDeepLink, CancellationToken, Task>? prepareNavigation = null)
+        Func<HomeDeepLink, CancellationToken, Task>? prepareNavigation = null,
+        Func<HomeArtifactReference, CancellationToken, Task<BoardEmbeddedArtifactReference?>>? selectArtifact = null)
     {
         Dispatcher.UIThread.VerifyAccess(); _admit = admit; _queue = queue; _source = ownedSource;
-        _prepareNavigation = prepareNavigation;
+        _prepareNavigation = prepareNavigation; _selectArtifact = selectArtifact;
+        if (_selectArtifact is not null) _status = "Choose a Write document to embed. The selected reference does not grant content access.";
         _work = new(StopAsync, CleanupAsync); _library = create(new Router(this));
         var document = HomeCuiSurface.LoadDefault().Document;
         var scope = document.Components.Single(component => component.IsThemeScope);
@@ -78,6 +82,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     internal HomeLibraryPage? Current => _page;
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
+    internal Task<BoardEmbeddedArtifactReference?> Selection => _selection.Task;
+    internal bool IsSelectionMode => _selectArtifact is not null;
     internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
     internal void InvokeOriginalSource(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { body(); return true; });
     internal Task ActivateAsync(CancellationToken token)
@@ -95,7 +101,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         "NextLibraryPage" => _page?.HasMore == true && QueryInputsMatchCurrentPage(),
         "PreviousLibraryPage" => _query.Offset > 0 && QueryInputsMatchCurrentPage(),
         "OpenHomeLibraryArtifact" => _page?.Items.Count > 0,
-        "ToggleHomeLibraryPin" => _page?.Items.Count > 0,
+        "ToggleHomeLibraryPin" => _selectArtifact is null && _page?.Items.Count > 0,
         _ => false
     });
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
@@ -120,6 +126,20 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
                 _busy = true; RefreshBindings();
                 await original.AwaitAsync(_admit(original.Token));
                 if (!original.IsAcceptedPublicationCurrent) return;
+                if (_selectArtifact is { } select)
+                {
+                    var reference = await original.AwaitAsync(select(selected, original.Token));
+                    await original.AwaitAsync(_admit(original.Token));
+                    if (!original.IsAcceptedPublicationCurrent) return;
+                    if (reference is not null)
+                    {
+                        reference.Validate();
+                        if (reference.ApplicationId != selected.OwnerApp || reference.ArtifactId.ToString("D") != selected.ArtifactId)
+                            throw new UnauthorizedAccessException("The selected reference does not match this Home Library row.");
+                        original.RunAcceptedPublicationCallback(() => _selection.TrySetResult(reference));
+                    }
+                    return;
+                }
                 if (command == "ToggleHomeLibraryPin")
                 {
                     var result = await original.AwaitAsync(_library.SetPinnedAsync(selected.OwnerApp, selected.ArtifactId,
@@ -213,7 +233,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         _bindings.Set("LibrarySummary", summary);
         _bindings.Set("CanSearchLibrary", available);
         _bindings.Set("CanOpenHomeLibraryArtifact", available && _page?.Succeeded == true);
-        _bindings.Set("CanToggleHomeLibraryPin", available && _page?.Succeeded == true);
+        _bindings.Set("CanToggleHomeLibraryPin", _selectArtifact is null && available && _page?.Succeeded == true);
         _bindings.Set("CanNextLibraryPage", available && queryMatches && _page?.HasMore == true);
         _bindings.Set("CanPreviousLibraryPage", available && queryMatches && _query.Offset > 0);
         _bindings.Set("LibraryPageSummary", _page is { Items.Count: > 0 } page
@@ -251,7 +271,11 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         return _preparation = _work.RunAsync(_ => Task.FromResult(true));
     }
     internal Task CloseAndDrainAsync()
-    { CloudflareOriginalExecutionGuard.DemandExternalJoin(this); return _work.CloseAndDrainAsync(); }
+    {
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        _selection.TrySetResult(null);
+        return _work.CloseAndDrainAsync();
+    }
     private async Task StopAsync()
     {
         _activationObservers.Cancel();
