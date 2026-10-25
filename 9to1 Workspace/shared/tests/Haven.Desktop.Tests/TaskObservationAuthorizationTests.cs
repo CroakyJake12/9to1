@@ -2,12 +2,179 @@ using Haven.Application;
 using Haven.Core;
 using HavenOS.Apps.Spaces.Tasks;
 using System.Reflection;
+using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
+using Haven.Desktop.Services;
+using Haven.Desktop.Views.Pages.Tasks;
+using HavenOS.Home.Core;
 using Xunit;
 
 namespace Haven.Desktop.Tests;
 
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [AvaloniaFact]
+    public async Task All_tasks_authored_scope_menus_persist_and_page_the_actual_store_then_open_the_exact_selected_task()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig();
+        using var paths = new ObservationPaths();
+        var preferences = new UserPreferencesService(paths);
+        var registry = new SpaceRegistry(new ObservationSettings());
+        _ = await registry.GetAllAsync(cancellationToken: token);
+        rig.Conversations.Current = rig.Conversation;
+        for (var index = 0; index < 41; index++)
+            _ = await rig.Tasks.BeginAuthorizedAsync(index < 2 ? rig.Conversation.Id : Guid.NewGuid(), Guid.NewGuid(),
+                $"genuine owned task {index}", TaskExecutionDurability.PersistedPlan, [], token);
+        var source = new SpaceTaskWorkspaceService(registry, rig.Conversations, rig.Tasks);
+        var opened = new TaskCompletionSource<AuthorizedTaskContextObservation>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var page = new SpaceTasksDashboardPage(source, rig.Tasks, SpaceRegistry.TasksSpaceId,
+            _ => throw new InvalidOperationException("No legacy Space task was selected."), null, null, preferences,
+            selected => { opened.TrySetResult(selected); return Task.CompletedTask; });
+        var window = new Window { Width = 1000, Height = 800, Content = page };
+        try
+        {
+            window.Show(); await page.ActivateAsync(token); window.UpdateLayout();
+            Assert.Equal(TaskShownScope.TaskSpaceOnly, page.ShownScope); Assert.Empty(page.CurrentObservations);
+            var owner = page.Scene.RecentRows;
+            var context = Assert.IsType<ContextMenu>(owner.ContextMenu);
+            var point = owner.TranslatePoint(new Point(10, 10), window)!.Value;
+            window.MouseDown(point, MouseButton.Right); window.MouseUp(point, MouseButton.Right);
+            window.UpdateLayout();
+            Assert.True(context.IsOpen); // Actual pointer context route, not a second menu implementation.
+            var shown = Assert.IsAssignableFrom<MenuItem>(Assert.Single(context.Items));
+            Assert.Equal("Shown Tasks", shown.Header);
+            var all = shown.Items.OfType<MenuItem>().Single(item => Equals(item.Header, "All Tasks"));
+            shown.IsSubMenuOpen = true;
+            all.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualScopeChange).WaitAsync(token);
+            Assert.Equal(TaskShownScope.AllTasks, new UserPreferencesService(paths).ShownTasks);
+            Assert.Equal(40, page.CurrentObservations.Count);
+            var firstIds = page.CurrentObservations.Select(row => row.Snapshot!.TaskId).ToArray();
+            var tile = page.Scene.RecentRows.GetVisualDescendants().OfType<Button>().First();
+            tile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var actualOpened = await opened.Task.WaitAsync(token);
+            Assert.Contains(actualOpened.Snapshot.TaskId, firstIds);
+            Assert.True(source.IsIssuedSelection(actualOpened.Selection));
+            Assert.Equal(actualOpened.Selection.ExecutionId, actualOpened.Snapshot.ExecutionId);
+            var next = page.Scene.Root!.GetVisualDescendants().OfType<Button>().Single(button => AutomationProperties.GetAutomationId(button) == "tasks-next-page");
+            next.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualPageNavigation).WaitAsync(token);
+            Assert.Single(page.CurrentObservations);
+            Assert.DoesNotContain(page.CurrentObservations[0].Snapshot!.TaskId, firstIds);
+            var previous = page.Scene.Root!.GetVisualDescendants().OfType<Button>().Single(button => AutomationProperties.GetAutomationId(button) == "tasks-previous-page");
+            previous.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualPageNavigation).WaitAsync(token);
+            Assert.Equal(firstIds.Order(), page.CurrentObservations.Select(row => row.Snapshot!.TaskId).Order());
+            var overflow = page.Scene.Root!.GetVisualDescendants().OfType<MenuItem>().Single(item => AutomationProperties.GetAutomationId(item) == "tasks-overflow");
+            Assert.Equal("Task list options", AutomationProperties.GetName(overflow));
+            overflow.IsSubMenuOpen = true;
+            var overflowShown = Assert.IsAssignableFrom<MenuItem>(Assert.Single(overflow.Items));
+            overflowShown.IsSubMenuOpen = true;
+            overflowShown.Items.OfType<MenuItem>().Single(item => Equals(item.Header, "Task Space Only"))
+                .RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualScopeChange).WaitAsync(token);
+            Assert.Empty(page.CurrentObservations);
+            Assert.Equal(TaskShownScope.TaskSpaceOnly, new UserPreferencesService(paths).ShownTasks);
+            Assert.Null(rig.Conversation.SpaceId); Assert.Equal(0, rig.Conversations.Writes); Assert.Equal(0, rig.Client.Dispatches);
+        }
+        finally
+        {
+            page.RequestRetirement(); await page.CloseAndDrainAsync();
+            window.Content = null; window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task All_tasks_native_widget_keeps_historical_task_and_null_origin_through_readiness_and_same_context_new_task()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig();
+        rig.Conversations.Current = rig.Conversation;
+        var first = await rig.Tasks.BeginAuthorizedAsync(rig.Conversation.Id, Guid.NewGuid(), "first original task", TaskExecutionDurability.PersistedPlan, [], token);
+        var source = new SpaceTaskWorkspaceService(new SpaceRegistry(new ObservationReadOnlySettings()), rig.Conversations, rig.Tasks);
+        var selected = Assert.Single((await source.ReadAllTasksPageAsync(10, null, token)).Tasks);
+        var readiness = new ObservationReadinessForwarder();
+        var home = new ObservationUnavailableHome();
+        using var connection = new CancellationTokenSource(); using var lifetime = new CancellationTokenSource();
+        var widget = new SpaceTaskWidgetPage(source, rig.Tasks, selected.Selection, readiness);
+        var window = new Window { Width = 1000, Height = 800, Content = widget };
+        try
+        {
+            readiness.Owner = await widget.AcquireOriginalNativeReadinessAsync(page => NativeCanonicalTaskSceneReadiness.BindOriginal(
+                page, home, rig.Actors, connection.Token, lifetime.Token));
+            window.Show(); await widget.ActivateAsync(token);
+            Assert.Equal("CONTROLLED_OBSERVATION_UNAVAILABLE", (await readiness.ActualCheck!).Code);
+            Assert.True(home.Calls > 0); // Real current Task reads around the actual Home observation; no Ready fabricated.
+            Assert.Null(widget.OriginalTaskSelection!.OriginSpaceId);
+            Assert.Equal(first.TaskId, widget.OriginalReadinessContext.TaskId);
+            var newer = await rig.Tasks.BeginAuthorizedAsync(rig.Conversation.Id, Guid.NewGuid(), "newer same-context task", TaskExecutionDurability.PersistedPlan, [], token);
+            Assert.True(widget.IsActionAvailable("task.refresh"));
+            await widget.DispatchAsync("task.refresh", null, token);
+            Assert.Equal(first.TaskId, widget.OriginalReadinessContext.TaskId);
+            Assert.Equal(first.ExecutionId, widget.OriginalReadinessContext.RunId);
+            widget.TrySetValue("Instruction", "follow up only the exact historical task");
+            await widget.DispatchAsync("task.queue", null, token);
+            Assert.Equal(first.TaskId, widget.AcknowledgedFollowUp!.Snapshot.TaskId);
+            Assert.Single((await rig.Tasks.GetAsync(first.TaskId, token))!.Queue);
+            Assert.Empty((await rig.Tasks.GetAsync(newer.TaskId, token))!.Queue);
+            Assert.Equal(HavenMode.Studio, rig.Conversations.Current!.Mode);
+            Assert.Null(rig.Conversations.Current.SpaceId); Assert.Equal(0, rig.Conversations.Writes);
+            Assert.Equal(0, rig.Client.Dispatches); Assert.Equal(0, home.CloseCalls);
+        }
+        finally
+        {
+            widget.RequestRetirement(); await widget.CloseAndDrainAsync();
+            window.Content = null; window.Close();
+        }
+    }
+
+    private sealed class ObservationReadinessForwarder : ICuiSceneReadiness
+    {
+        internal NativeCanonicalTaskSceneReadiness? Owner;
+        internal Task<CuiSceneAvailability>? ActualCheck;
+        public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token)
+        { var actual = Owner!.CheckAsync(token).AsTask(); ActualCheck = actual; return new(actual); }
+    }
+    private sealed class ObservationUnavailableHome : IHomeNativeStartupSession
+    {
+        internal int Calls, CloseCalls;
+        public Task<HomeNativeStartupObservation> CheckAsync(CancellationToken token)
+        { token.ThrowIfCancellationRequested(); Calls++; return Task.FromResult(new HomeNativeStartupObservation(HomeNativeStartupState.Unready,
+            "CONTROLLED_OBSERVATION_UNAVAILABLE", "Controlled negative compatibility observation; no installed or native acceptance.")); }
+        public Task CloseAndDrainAsync() { CloseCalls++; return Task.CompletedTask; }
+    }
+    private sealed class ObservationPaths : IAppPaths, IDisposable
+    {
+        public string DataDirectory { get; } = Path.Combine(Path.GetTempPath(), "actual-task-observation-" + Guid.NewGuid().ToString("N"));
+        public string DatabasePath => Path.Combine(DataDirectory, "unused.db");
+        public string BrowserProfileDirectory => Path.Combine(DataDirectory, "browser");
+        public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
+        public string LogsDirectory => Path.Combine(DataDirectory, "logs");
+        public string LegacyStatePath => Path.Combine(DataDirectory, "legacy.json");
+        public void Dispose() { if (Directory.Exists(DataDirectory)) Directory.Delete(DataDirectory, true); }
+    }
+    private sealed class ObservationSettings : IVersionedSettingsStore
+    {
+        private readonly Dictionary<string, object> _values = [];
+        public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class => Task.FromResult(_values.GetValueOrDefault(key) as T);
+        public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class { _values[key] = value; return Task.CompletedTask; }
+        public Task RemoveAsync(string key, CancellationToken token) { _values.Remove(key); return Task.CompletedTask; }
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => throw new NotSupportedException();
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest value, CancellationToken token) => throw new NotSupportedException();
+    }
+
     [Fact]
     public async Task Task_observation_reopens_historical_own_task_after_authentication_renewal_without_renewing_command_admission()
     {

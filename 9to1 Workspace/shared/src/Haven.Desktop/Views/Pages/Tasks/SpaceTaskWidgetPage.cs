@@ -32,6 +32,8 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     private readonly SpaceDevelopmentWorkspace? _development;
     private readonly Func<SpaceDeveloperView, Task>? _openDev;
     private readonly Guid _spaceId, _conversationId;
+    private readonly Guid _composerPreferenceSpaceId;
+    private readonly TaskContextSelection? _selection;
     private readonly Guid? _projectReferenceId;
     private readonly ICuiSceneReadiness _readiness;
     private readonly CuiSceneHost _host;
@@ -47,7 +49,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     private bool _active, _subscribed;
     private long _generation;
     private Guid? _originalTaskId, _originalRunId;
-    private SpaceTaskObservation? _observation;
+    private ITaskContextObservation? _observation;
     private SpaceDeveloperView? _developerView;
     private string _instruction = "", _status = "";
     private Task? _hostClose, _nativeReadinessClose;
@@ -59,14 +61,32 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         SpaceDevelopmentWorkspace? development = null, Guid? originalProjectReferenceId = null,
         Func<SpaceDeveloperView, Task>? openSameProjectInDev = null,
         Guid? expectedOriginalTaskId = null, Guid? expectedOriginalExecutionId = null)
+        : this(source, canonical, actualSpaceId, actualConversationId, readiness, development,
+            originalProjectReferenceId, openSameProjectInDev, expectedOriginalTaskId, expectedOriginalExecutionId, null) { }
+
+    public SpaceTaskWidgetPage(SpaceTaskWorkspaceService source, TaskExecutionCoordinator canonical,
+        TaskContextSelection actualSelection, ICuiSceneReadiness readiness)
+        : this(source, canonical, (actualSelection ?? throw new ArgumentNullException(nameof(actualSelection))).OriginSpaceId ?? Guid.Empty,
+            actualSelection.ContextId, readiness, null, null, null, actualSelection.TaskId, actualSelection.ExecutionId, actualSelection) { }
+
+    private SpaceTaskWidgetPage(SpaceTaskWorkspaceService source, TaskExecutionCoordinator canonical,
+        Guid actualSpaceId, Guid actualConversationId, ICuiSceneReadiness readiness,
+        SpaceDevelopmentWorkspace? development, Guid? originalProjectReferenceId,
+        Func<SpaceDeveloperView, Task>? openSameProjectInDev,
+        Guid? expectedOriginalTaskId, Guid? expectedOriginalExecutionId, TaskContextSelection? selection)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
-        if (actualSpaceId == Guid.Empty || actualConversationId == Guid.Empty || originalProjectReferenceId == Guid.Empty)
+        if (selection is null && actualSpaceId == Guid.Empty || actualConversationId == Guid.Empty || originalProjectReferenceId == Guid.Empty)
             throw new ArgumentException("Existing Space/conversation/reference identities are required.");
         if (expectedOriginalTaskId.HasValue != expectedOriginalExecutionId.HasValue ||
             expectedOriginalTaskId == Guid.Empty || expectedOriginalExecutionId == Guid.Empty)
             throw new ArgumentException("Supply the actual original Task/Run pair together, or neither for an unstarted context.");
+        if (selection is not null && !source.IsIssuedSelection(selection))
+            throw new UnauthorizedAccessException("The same actual task-context source must issue this selection.");
+        _selection = selection;
+        // This is the presentation preference owner, not an invented origin Space.
+        _composerPreferenceSpaceId = actualSpaceId == Guid.Empty ? SpaceRegistry.TasksSpaceId : actualSpaceId;
         _originalTaskId = expectedOriginalTaskId; _originalRunId = expectedOriginalExecutionId;
         _spaceId = actualSpaceId; _conversationId = actualConversationId;
         _development = development; _projectReferenceId = originalProjectReferenceId; _openDev = openSameProjectInDev;
@@ -83,6 +103,12 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     }
 
     internal SpaceTaskWorkspaceService OriginalTaskSource => _source;
+    internal TaskContextSelection? OriginalTaskSelection => _selection;
+    internal async Task<ITaskContextObservation> ReadOriginalTaskContextAsync(CancellationToken token, Action<Action> sourceScope)
+    {
+        if (_selection is { } selected) return await _source.ReadSelectionAsync(selected, token, sourceScope).ConfigureAwait(false);
+        return await _source.ReadAsync(_spaceId, _conversationId, token, sourceScope).ConfigureAwait(false);
+    }
     internal (Guid SpaceId, Guid ContextId, Guid? TaskId, Guid? RunId) OriginalReadinessContext
     { get { lock (_gate) return (_spaceId, _conversationId, _originalTaskId, _originalRunId); } }
     internal long OriginalReadinessGeneration { get { lock (_gate) return _generation; } }
@@ -130,6 +156,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         lock (_gate)
         {
             _work.DemandAdmission();
+            if (_selection is not null) throw new InvalidOperationException("A global task selection has no issued embedded Dev project binding.");
             return _nativeReadinessOwner ?? throw new InvalidOperationException("No SAME source-owned Task native readiness binder is attached.");
         }
     }
@@ -185,7 +212,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     private async Task RefreshOriginalAsync(DesktopOriginalWorkLifetime.Original original, long generation, CancellationToken token)
     {
         original.DemandPublication();
-        var actual = InvokeOriginalSource(() => _source.ReadAsync(_spaceId, _conversationId, token, OwnNestedOriginalSource));
+        var actual = InvokeOriginalSource(() => ReadOriginalTaskContextAsync(token, OwnNestedOriginalSource));
         var observation = await original.AwaitAsync(actual).ConfigureAwait(false);
         SpaceDeveloperView? project = null;
         if (_development is not null && _projectReferenceId is { } id)
@@ -195,7 +222,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             if (project.Task.Snapshot?.TaskId != observation.Snapshot?.TaskId ||
                 project.Task.Snapshot?.ExecutionId != observation.Snapshot?.ExecutionId ||
                 project.Task.Snapshot?.ContextId != observation.Snapshot?.ContextId ||
-                project.Task.Conversation.Id != observation.Conversation.Id)
+                project.Task.Conversation.Id != observation.ContextId)
                 throw new InvalidDataException("The Dev project belongs to a different original Task/Run.");
             // Dev reopening resolves the project and then reads the SAME task again.
             // Present that fresh canonical revision, including acknowledged actions/checkpoint.
@@ -219,7 +246,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
 
     private void OnSnapshotChanged(object? sender, TaskExecutionSnapshot snapshot)
     {
-        if (snapshot.ContextId != _conversationId) return;
+        if (snapshot.ContextId != _conversationId || _selection is { } selected && snapshot.TaskId != selected.TaskId) return;
         long generation;
         bool originalPairReplaced;
         lock (_gate)
@@ -251,7 +278,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         var view = _observation; var task = view?.Snapshot;
         value = path switch
         {
-            "Title" => view?.Conversation.Title ?? "Space task",
+            "Title" => view?.Title ?? "Task",
             "Identities" => task is null ? "No canonical task is recorded." : $"Task {task.TaskId:D}\nRun {task.ExecutionId:D}\nContext {task.ContextId:D}\nSaved revision {task.PersistenceRevision}",
             "Objective" => task?.PromptSummary ?? "Open an existing task conversation; this widget does not start a new task.",
             "Observation" => view?.ExecutionObservation ?? "The original task observation has not been loaded.",
@@ -314,7 +341,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                     (command == "task.queue" || _observation?.Snapshot is
                         { State: not (TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled or TaskExecutionLifecycle.Failed) }) &&
                     !_followUpAdmissionPending && _instructionVersion != _acceptedInstructionVersion &&
-                    !string.IsNullOrWhiteSpace(_instruction) && _source.HasConfiguredCommandOwner && _observation?.Snapshot?.OwnerBinding is not null,
+                    !string.IsNullOrWhiteSpace(_instruction) && _source.HasConfiguredCommandOwner && _observation?.HasCurrentCommandIdentity == true && _observation.Snapshot?.OwnerBinding is not null,
                 "dev.open" => _openDev is not null && _developerView is not null,
                 _ => false
             };
@@ -346,9 +373,12 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                 else if (command is "task.steer" or "task.queue")
                 {
                     var snapshot = captured?.Snapshot ?? throw new InvalidOperationException("No original canonical task was captured.");
-                    var reply = await original.AwaitAsync(InvokeOriginalSource(() => _source.SubmitFollowUpAsync(_spaceId, _conversationId,
-                        snapshot.TaskId, snapshot.ExecutionId, snapshot.PersistenceRevision, capturedInstruction,
-                        command == "task.steer" ? TaskFollowUpMode.Steer : TaskFollowUpMode.Queue, scope.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                    var mode = command == "task.steer" ? TaskFollowUpMode.Steer : TaskFollowUpMode.Queue;
+                    var actualFollowUp = InvokeOriginalSource(() => _selection is { } selected
+                        ? _source.SubmitSelectedFollowUpAsync(selected, snapshot.PersistenceRevision, capturedInstruction, mode, scope.Token, OwnNestedOriginalSource)
+                        : _source.SubmitFollowUpAsync(_spaceId, _conversationId, snapshot.TaskId, snapshot.ExecutionId,
+                            snapshot.PersistenceRevision, capturedInstruction, mode, scope.Token, OwnNestedOriginalSource));
+                    var reply = await original.AwaitAsync(actualFollowUp).ConfigureAwait(false);
                     AcknowledgedFollowUp = reply; // Actual CAS reply survives subsequent UI failure/withdrawal.
                     lock (_gate)
                     {

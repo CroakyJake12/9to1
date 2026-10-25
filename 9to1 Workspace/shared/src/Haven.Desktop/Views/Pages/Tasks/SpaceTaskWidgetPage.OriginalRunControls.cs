@@ -36,10 +36,10 @@ public sealed partial class SpaceTaskWidgetPage
     }
 
     private async Task RefreshOriginalRunControlsAsync(DesktopOriginalWorkLifetime.Original original,
-        long generation, SpaceTaskObservation observation, CancellationToken token)
+        long generation, ITaskContextObservation observation, CancellationToken token)
     {
         TaskRunOriginalRunControlAvailability? availability = null;
-        if (_source.HasConfiguredCommandOwner && observation.Snapshot?.OwnerBinding is not null)
+        if (_source.HasConfiguredCommandOwner && observation.HasCurrentCommandIdentity && observation.Snapshot?.OwnerBinding is not null)
         {
             var snapshot = observation.Snapshot;
             original.DemandPublication();
@@ -73,7 +73,7 @@ public sealed partial class SpaceTaskWidgetPage
         }
         original.DemandPublication();
         var current = await original.AwaitAsync(InvokeOriginalSource(() =>
-            _source.ReadAsync(_spaceId, _conversationId, commandToken, OwnNestedOriginalSource))).ConfigureAwait(false);
+            ReadOriginalTaskContextAsync(commandToken, OwnNestedOriginalSource))).ConfigureAwait(false);
         if (current.Snapshot is not { } same || same.TaskId != captured.TaskId || same.ExecutionId != captured.ExecutionId)
             throw new InvalidOperationException("The original Task/Run changed before its control was admitted.");
         original.DemandPublication();

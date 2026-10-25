@@ -9,6 +9,7 @@ using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Haven.Core;
+using Haven.Application;
 using HavenOS.Apps.Spaces.Tasks;
 
 namespace Haven.Desktop.Views.Pages.Tasks;
@@ -22,7 +23,9 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     private readonly Action<Action> _ownCallback;
     private readonly Action _demandWrite;
     private readonly Guid _spaceId;
-    private IReadOnlyList<SpaceTaskObservation> _rows = [];
+    private IReadOnlyList<ITaskContextObservation> _rows = [];
+    private TaskShownScope _scope;
+    private bool _canChangeScope, _canReadAll, _canNext, _canPrevious;
     private string _instruction = "", _status = "";
     private long _instructionVersion;
     private bool _busy, _canDelegate, _canBlank, _retired;
@@ -76,7 +79,9 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     internal Task WhenActionsIdleAsync() => _loader?.WhenActionsIdleAsync() ?? Task.CompletedTask;
     public event EventHandler<string>? DelegateRequested;
     public event EventHandler? NewBlankTaskRequested;
-    public event EventHandler<SpaceTaskObservation>? RecentTaskRequested;
+    public event EventHandler<ITaskContextObservation>? RecentTaskRequested;
+    public event EventHandler<TaskShownScope>? ScopeRequested;
+    public event EventHandler<bool>? PageRequested;
     public event EventHandler? RefreshRequested;
     private T Find<T>(string id) where T : Control => Root?.GetVisualDescendants().OfType<T>()
         .Single(control => AutomationProperties.GetAutomationId(control) == id)
@@ -84,7 +89,9 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     private void Notify() => PropertyChanged?.Invoke(this, new(null));
     private void Write(Action effect, Action? guard = null)
     { _demandWrite(); guard?.Invoke(); effect(); _demandWrite(); guard?.Invoke(); Notify(); _demandWrite(); guard?.Invoke(); }
-    public void SetRecent(IReadOnlyList<SpaceTaskObservation> rows, Action? guard = null) => Write(() => _rows = rows.ToArray(), guard);
+    public void SetRecent(IReadOnlyList<ITaskContextObservation> rows, Action? guard = null) => Write(() => _rows = rows.ToArray(), guard);
+    public void SetScope(TaskShownScope scope, bool canChange, bool canReadAll, bool canNext, bool canPrevious, Action? guard = null) =>
+        Write(() => { _scope = scope; _canChangeScope = canChange; _canReadAll = canReadAll; _canNext = canNext; _canPrevious = canPrevious; }, guard);
     public void SetBusy(bool value) => Write(() => _busy = value);
     public void SetStartAvailability(bool canDelegate, bool canBlank, Action? guard = null) =>
         Write(() => { _canDelegate = canDelegate; _canBlank = canBlank; }, guard);
@@ -98,13 +105,20 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
         value = path switch
         {
             "Instruction" => _instruction, "Rows" => _rows, "HasRows" => _rows.Count != 0,
-            "ScopeLabel" => _spaceId == Haven.Application.SpaceRegistry.TasksSpaceId ? "Task Space Only" : "Current Space",
+            "ScopeLabel" => _spaceId == SpaceRegistry.TasksSpaceId ? _scope == TaskShownScope.AllTasks ? "All Tasks" : "Task Space Only" : "Current Space",
+            "CanChangeScope" => _canChangeScope && !_retired,
+            "CanReadAllTasks" => _canChangeScope && _canReadAll && !_retired,
+            "IsTaskSpaceOnly" => _scope == TaskShownScope.TaskSpaceOnly,
+            "IsAllTasks" => _scope == TaskShownScope.AllTasks,
+            "CanNextPage" => _canNext && !_busy && !_retired,
+            "CanPreviousPage" => _canPrevious && !_busy && !_retired,
+            "EmptyLabel" => _scope == TaskShownScope.AllTasks ? "No authorized tasks are available on this page." : "No task conversations are available in this Space. Start a task above.",
             "Status" => _status, "CanEditInstruction" => !_busy && !_retired,
             "CanDelegate" => !_busy && !_retired && _canDelegate && !string.IsNullOrWhiteSpace(_instruction),
             "CanOpenBlank" => !_busy && !_retired && _canBlank, "CanRefresh" => !_retired && !_busy,
             _ => null
         };
-        return path is "Instruction" or "Rows" or "HasRows" or "ScopeLabel" or "Status" or "CanEditInstruction" or "CanDelegate" or "CanOpenBlank" or "CanRefresh";
+        return path is "Instruction" or "Rows" or "HasRows" or "ScopeLabel" or "Status" or "CanEditInstruction" or "CanDelegate" or "CanOpenBlank" or "CanRefresh" or "CanChangeScope" or "CanReadAllTasks" or "IsTaskSpaceOnly" or "IsAllTasks" or "CanNextPage" or "CanPreviousPage" or "EmptyLabel";
     }
     public bool TrySetValue(string path, object? value)
     {
@@ -116,25 +130,29 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         value = null;
-        if (item is not SpaceTaskObservation row) return false;
+        if (item is not ITaskContextObservation row) return false;
         var task = row.Snapshot;
         value = path switch
         {
-            "id" => row.Conversation.Id, "observation" => row, "title" => row.Conversation.Title,
-            "openLabel" => "Open existing task " + row.Conversation.Title,
-            "accessibleName" => row.Conversation.Title + "; " + Status(row),
+            "id" => task is null ? "context-" + row.ContextId.ToString("D") : "task-" + task.TaskId.ToString("D"), "observation" => row, "title" => row.Title,
+            "openLabel" => "Open existing task " + row.Title,
+            "accessibleName" => row.Title + "; " + Status(row),
             "status" => Status(row), "completed" => task?.State == TaskExecutionLifecycle.Completed,
             "summary" => task is null ? "No canonical task has been started." : task.PromptSummary,
+            "origin" => row is AuthorizedTaskContextObservation external
+                ? external.OriginSpaceName is { Length: > 0 } name ? "From " + name
+                    : external.OriginalConversation is not null ? "Original conversation" : "Original task context"
+                : "This Space",
             "progress" => task?.Plan.Count > 0 ? $"{row.Projection?.AcceptedActions.Count ?? 0} action(s) completed." : "",
             "observationText" => row.ExecutionObservation + " " + row.RecoveryObservation,
             "checkpoint" => task is null ? "" : $"Accepted {row.Projection?.AcceptedActions.Count ?? 0} of {task.Plan.Count} recorded action(s). " +
                 (task.CheckpointId is { } checkpoint ? $"Acknowledged checkpoint {checkpoint:D}." : "No acknowledged checkpoint is recorded."),
-            "identity" => task is null ? $"Conversation {row.Conversation.Id:D}" : $"Task {task.TaskId:D}; run {task.ExecutionId:D}",
+            "identity" => task is null ? $"Conversation {row.ContextId:D}" : $"Task {task.TaskId:D}; run {task.ExecutionId:D}",
             _ => null
         };
-        return path is "id" or "observation" or "title" or "openLabel" or "accessibleName" or "status" or "completed" or "summary" or "progress" or "observationText" or "checkpoint" or "identity";
+        return path is "id" or "observation" or "title" or "openLabel" or "accessibleName" or "status" or "completed" or "summary" or "progress" or "observationText" or "checkpoint" or "identity" or "origin";
     }
-    private static string Status(SpaceTaskObservation row) => row.HasObservedLiveExecution ? $"Working · observed {row.Activity!.ObservedAt.LocalDateTime:g}" : row.Snapshot?.State switch
+    private static string Status(ITaskContextObservation row) => row.HasObservedLiveExecution ? $"Working · observed {row.Activity!.ObservedAt.LocalDateTime:g}" : row.Snapshot?.State switch
     {
         TaskExecutionLifecycle.Completed => "Completed · not verified",
         TaskExecutionLifecycle.Blocked => "Blocked · details available",
@@ -148,7 +166,11 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
     public bool TrySetItemValue(object item, string path, object? value) => false;
     public bool? IsActionAvailable(string command) => command switch
     {
-        "tasks.open" => !_retired, "tasks.delegate" or "tasks.submit" => !_retired && !_busy && _canDelegate && !string.IsNullOrWhiteSpace(_instruction),
+        "tasks.open" => !_retired,
+        "tasks.scope-only" => !_retired && _canChangeScope,
+        "tasks.scope-all" => !_retired && _canChangeScope && _canReadAll,
+        "tasks.next" => !_retired && !_busy && _canNext,
+        "tasks.previous" => !_retired && !_busy && _canPrevious, "tasks.delegate" or "tasks.submit" => !_retired && !_busy && _canDelegate && !string.IsNullOrWhiteSpace(_instruction),
         "tasks.blank" => !_retired && !_busy && _canBlank, "tasks.refresh" => !_retired && !_busy, _ => false
     };
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
@@ -159,10 +181,13 @@ public sealed class SpaceTasksDashboardCuiScene : UserControl, ICuiWritableBindi
         {
             if (command == "tasks.open")
             {
-                if (parameter is not SpaceTaskObservation captured || !_rows.Any(row => ReferenceEquals(row, captured)))
+                if (parameter is not ITaskContextObservation captured || !_rows.Any(row => ReferenceEquals(row, captured)))
                     throw new InvalidOperationException("This task tile changed; refresh before opening it.");
                 RecentTaskRequested?.Invoke(this, captured);
             }
+            else if (command is "tasks.scope-only" or "tasks.scope-all") ScopeRequested?.Invoke(this,
+                command == "tasks.scope-all" ? TaskShownScope.AllTasks : TaskShownScope.TaskSpaceOnly);
+            else if (command is "tasks.next" or "tasks.previous") PageRequested?.Invoke(this, command == "tasks.next");
             else if (command == "tasks.blank") NewBlankTaskRequested?.Invoke(this, EventArgs.Empty);
             else if (command == "tasks.refresh") RefreshRequested?.Invoke(this, EventArgs.Empty);
             else

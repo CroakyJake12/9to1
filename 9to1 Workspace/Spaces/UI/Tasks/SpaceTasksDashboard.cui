@@ -8,7 +8,19 @@
   <Theme Name="user_preference">
     <Page id="space-tasks-dashboard" accessible-name="Tasks and recorded progress">
       <Container id="tasks-dashboard-scroll" Type="Vertical Stack" Padding="24" CellGap="14" VerticalScrolling="True" HorizontalScrolling="False">
-        <Text id="tasks-heading" text="Tasks" font-size="26" font-weight="Bold" />
+        <Container Type="Horizontal Stack" CellGap="12">
+          <Text id="tasks-heading" text="Tasks" font-size="26" font-weight="Bold" />
+          <If Condition="{Binding CanChangeScope}">
+            <Container Type="Menu" Background="{Resource CuiTransparentBrush}">
+              <Button id="tasks-overflow" Type="Menu Item" content="…" accessible-name="Task list options" Tooltip="Task list options">
+                <Button Type="Menu Item" content="Shown Tasks" accessible-name="Shown Tasks">
+                  <Button id="tasks-overflow-only" Type="Menu Item" content="Task Space Only" action="tasks.scope-only" ToggleType="Radio" Checked="{Binding IsTaskSpaceOnly}" />
+                  <Button id="tasks-overflow-all" Type="Menu Item" content="All Tasks" action="tasks.scope-all" ToggleType="Radio" Checked="{Binding IsAllTasks}" Interactive="{Binding CanReadAllTasks}" />
+                </Button>
+              </Button>
+            </Container>
+          </If>
+        </Container>
         <Text id="tasks-scope" text="{Binding ScopeLabel}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Shown task scope" />
         <Text id="tasks-new-work-heading" text="Delegate a new task" font-size="18" font-weight="SemiBold" />
         <Input id="tasks-new-instruction" Type="Text" AcceptsReturn="True" SubmitAction="SubmitNewTask" Value="{Binding Instruction}" placeholdertext="Describe a new, one-off task…" MinHeight="76" Interactive="{Binding CanEditInstruction}" accessible-name="New task instruction" />
@@ -21,9 +33,15 @@
         <Text id="tasks-existing-heading" text="Existing work" font-size="18" font-weight="SemiBold" />
         <Button id="tasks-details-toggle" action="ToggleTaskDetails" content="Show/hide task details" accessible-name="Show or hide diagnostic details for the displayed tasks" />
         <If Condition="!{Binding HasRows}">
-          <Text id="tasks-empty" text="No task conversations are available in this Space. Start a task above." TextWrapping="Wrap" />
+          <Text id="tasks-empty" text="{Binding EmptyLabel}" TextWrapping="Wrap" />
         </If>
-        <Container id="tasks-recent-rows" Type="Vertical Stack" CellGap="10" accessible-name="Existing canonical task tiles">
+        <Container id="tasks-recent-rows" Type="Vertical Stack" CellGap="10" MinHeight="40" accessible-name="Existing canonical task tiles">
+          <Container Type="Context Menu">
+            <Button id="tasks-context-scope" Type="Menu Item" content="Shown Tasks" Interactive="{Binding CanChangeScope}">
+              <Button id="tasks-context-only" Type="Menu Item" content="Task Space Only" action="tasks.scope-only" ToggleType="Radio" Checked="{Binding IsTaskSpaceOnly}" />
+              <Button id="tasks-context-all" Type="Menu Item" content="All Tasks" action="tasks.scope-all" ToggleType="Radio" Checked="{Binding IsAllTasks}" Interactive="{Binding CanReadAllTasks}" />
+            </Button>
+          </Container>
           <Repeat id="tasks-tile-repeat" Source="{Binding Rows}" As="task" Key="{Binding task.id}">
             <Container id="tasks-tile" Type="Vertical Stack" Padding="16" CellGap="8" Background="{Resource CuiPanelBrush}" BorderBrush="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="14" accessible-name="{Binding task.accessibleName}">
               <Button id="tasks-tile-open" action="OpenExistingTask" content="{Binding task.title}" HorizontalAlignment="Stretch" MinHeight="40" accessible-name="{Binding task.openLabel}" Tooltip="{Binding task.title}" />
@@ -33,6 +51,7 @@
               <If Condition="!{Binding task.completed}">
                 <Text id="tasks-tile-status" text="{Binding task.status}" font-weight="SemiBold" TextWrapping="Wrap" accessible-name="{Binding task.status}" />
               </If>
+              <Text id="tasks-tile-origin" text="{Binding task.origin}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
               <Text id="tasks-tile-summary" text="{Binding task.summary}" TextWrapping="Wrap" />
               <Text id="tasks-tile-progress" text="{Binding task.progress}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
               <If Condition="{Binding DetailsOpen}">
@@ -45,6 +64,12 @@
             </Container>
           </Repeat>
         </Container>
+        <If Condition="{Binding IsAllTasks}">
+          <Container Type="Horizontal Stack" CellGap="8" accessible-name="Canonical task pages">
+            <Button id="tasks-previous-page" content="Previous page" action="tasks.previous" Interactive="{Binding CanPreviousPage}" />
+            <Button id="tasks-next-page" content="Next page" action="tasks.next" Interactive="{Binding CanNextPage}" />
+          </Container>
+        </If>
         <Text id="tasks-page-status" text="{Binding Status}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" accessible-name="Task dashboard result" />
       </Container>
     </Page>

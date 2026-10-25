@@ -67,7 +67,8 @@ public sealed partial class MainView
             var page = new SpaceTasksDashboardPage(routes.Source, routes.Canonical, actualSpace.Id,
                 observation => OpenOriginalCanonicalTaskAsync(observation),
                 routes.Canonical.HasAttemptAuthority ? instruction => OpenOriginalExplicitTaskAsync(instruction) : null,
-                () => OpenOriginalExplicitTaskAsync(null));
+                () => OpenOriginalExplicitTaskAsync(null), _preferences,
+                observation => OpenOriginalAuthorizedTaskAsync(observation));
             RetainOriginalCanonicalPage(page); // Before any tab/property/activation callback.
             original.DemandPublication();
             AddOrSelectTab(key, "9to1 Tasks", page, true, HavenSurface.Tasks, forceNewTab: true);
@@ -130,6 +131,42 @@ public sealed partial class MainView
             AddOrSelectTab(key, current.Conversation.Title, acquiredPage, true, HavenSurface.Tasks, forceNewTab: true);
         });
     }
+
+    private Task OpenOriginalAuthorizedTaskAsync(AuthorizedTaskContextObservation captured) =>
+        _originalShellWork.RunAsync(async original =>
+        {
+            var routes = _canonicalSpaceRoutes ?? throw new InvalidOperationException("The original Task services are unconfigured.");
+            original.BindPublicationGuard(() => !IsDisposed); original.DemandPublication();
+            void OwnRawSource(Action callback) => AcquireOriginalShellSynchronous(original, () => { callback(); return true; });
+            var current = await original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+                () => routes.Source.ReadSelectionAsync(captured.Selection, original.Token, OwnRawSource)));
+            SpaceTaskWidgetPage? acquiredPage = null;
+            OriginalTaskFrameReadiness? acquiredReadiness = null;
+            Task<NativeCanonicalTaskSceneReadiness>? actualReadinessAcquisition = null;
+            var key = $"space-task-{current.ContextId:N}-{current.Snapshot.TaskId:N}-{current.Snapshot.ExecutionId:N}";
+            await PublishOriginalCanonicalTabAsync(original, () =>
+            {
+                var existing = OpenTabs.FirstOrDefault(tab => tab.Key == key);
+                if (existing is not null) { SelectedTab = existing; return; }
+                var bindFrame = routes.BindOriginalFrame ?? throw new InvalidOperationException("The genuine native Task frame/readiness owner is unconfigured.");
+                DemandCanonicalPageAcquisition();
+                var readiness = new OriginalTaskFrameReadiness();
+                var page = new SpaceTaskWidgetPage(routes.Source, routes.Canonical, current.Selection, readiness);
+                RetainOriginalCanonicalPage(page); // Same genuine native owner cohort, before any callback.
+                acquiredPage = page; acquiredReadiness = readiness;
+                page.BindOriginalComposerPreferences(_preferences);
+                actualReadinessAcquisition = page.AcquireOriginalNativeReadinessAsync(bindFrame);
+            });
+            if (actualReadinessAcquisition is null || acquiredPage is null || acquiredReadiness is null) return;
+            var actualReadiness = await original.AwaitAsync(actualReadinessAcquisition);
+            await PublishOriginalCanonicalTabAsync(original, () =>
+            {
+                acquiredReadiness.Bind(actualReadiness); original.DemandPublication();
+                AddOrSelectTab(key, current.Title, acquiredPage, true, HavenSurface.Tasks, forceNewTab: true);
+            });
+            // This opens the SAME authorized task. It never configures Tasks mode, creates
+            // a conversation, changes nullable Space origin, resumes, or submits new work.
+        });
 
     private Task OpenOriginalCanonicalTaskSpaceAsync(Guid actualSpaceId) =>
         _originalShellWork.RunAsync(original => OpenOriginalCanonicalTaskDashboardAsync(original, actualSpaceId));
