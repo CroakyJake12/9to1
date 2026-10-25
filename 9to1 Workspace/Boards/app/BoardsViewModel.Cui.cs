@@ -1,3 +1,5 @@
+using CakeOS.Apps.Boards.Contract;
+
 namespace CakeOS.Apps.Boards.App;
 
 // Canonical CUI projection over the existing document/session mutation methods.
