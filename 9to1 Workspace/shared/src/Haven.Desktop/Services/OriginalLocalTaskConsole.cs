@@ -73,6 +73,8 @@ public static partial class OriginalLocalTaskConsole
         "files-configure <chosen empty absolute directory> | files-status | files-list [observed parent GUID]",
         "strata-select <explicit nonsecret developer artifact JSON> (configuration only; Task-scoped individual Home READ approval follows; protected Safetensors/CUDA remain required)",
         "project-register <write or observed destination folder GUID> <existing absolute project path> | container-create <saved workspace GUID> <saved project GUID> <saved root GUID> <name>",
+        "project-target-review <workspace GUID> <project GUID> <root GUID> <repository binding ID or none> <target ID> <new or edit> <timeout seconds> <exact command>",
+        "project-target-save <observed review reference GUID> (canonical declaration/recovery only; separate Run approval follows)",
         "project-run <saved workspace GUID> <saved project GUID> <saved root GUID> <exact configuration ID> [exact repository binding ID] | project-run-stop (manual console Run; no Task)",
         "containers | project <workspace-id> <project-id> <root-id> <existing-container-id> | project-clear | spaces | space <space-id> | space-create <name>",
         "task <instruction> | context | attach | open <space-id> <reference-id> <task-id> <run-id>",
@@ -365,6 +367,8 @@ public static partial class OriginalLocalTaskConsole
                 case "files-status":
                     Write(await Acquire(original, () => _nativeFiles!.GetConfigurationAsync(token)).ConfigureAwait(false)); break;
                 case "files-list": await ListOriginalFilesAsync(original, argument, token).ConfigureAwait(false); break;
+                case "project-target-review": await ReviewOriginalConsoleRunTargetAsync(original, argument, token).ConfigureAwait(false); break;
+                case "project-target-save": LaunchOriginalConsoleRunTargetSave(original, argument, token); break;
                 case "project-run": LaunchOriginalManualProjectRun(original, argument, token); break;
                 case "project-run-stop": StopOriginalManualProjectRun(original); break;
                 case "project-register": LaunchOriginalExistingProjectRegistration(original, argument, token); break;
