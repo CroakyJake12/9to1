@@ -44,6 +44,8 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     public Task WaitUntilReadyAsync(CancellationToken cancellationToken = default) =>
         (_surfaceLifecycle ?? throw new InvalidOperationException("The Boards surface has not been initialized.")).WaitUntilReadyAsync(cancellationToken);
     public Task DrainRenderingAsync() => _renderQueue?.DrainAsync() ?? Task.CompletedTask;
+    public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default) =>
+        _disposed ? Task.FromResult(true) : _embeddedArtifacts.TryPrepareToCloseAsync(cancellationToken);
 
     public static async Task<BoardsReadOnlyPresentation> OpenReadOnlyDocumentAsync(
         ReadOnlyMemory<byte> verifiedDocument, CancellationToken ct = default,
@@ -128,7 +130,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
-        if (!await _embeddedArtifacts.TryPrepareToCloseAsync().ConfigureAwait(false))
+        if (!await TryPrepareToCloseAsync().ConfigureAwait(false))
             throw new InvalidOperationException("The embedded Write page refused to close; its draft remains open.");
         _disposed = true;
         ViewModel.RebuildRequested -= QueueRender;
