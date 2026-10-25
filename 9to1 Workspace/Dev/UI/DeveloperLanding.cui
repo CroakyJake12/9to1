@@ -5,7 +5,8 @@
   <Page id="dev-saved-projects-page" role="main" accessible-name="Saved development projects">
     <Container id="dev-saved-projects-root" margin="16" Type="Vertical Stack" CellGap="12">
       <Text id="dev-title" text="Build" font-size="24" />
-      <Text text="Open a saved project and its existing task. Opening keeps the same task and run." text-wrapping="Wrap" />
+      <Text text="Open a saved project root manually, or continue an existing task with the same task and run. Check the location, environment and repository before opening." text-wrapping="Wrap" />
+      <Input id="dev-project-query" Type="Text" Value="{Binding ProjectQuery}" placeholdertext="Filter projects, roots, environments or repositories" accessible-name="Filter saved project and task references" />
       <Container id="dev-saved-project-controls" Type="Horizontal Stack" CellGap="8">
         <Button id="dev-refresh-saved-projects" action="dev.references.refresh" content="Refresh" Interactive="{Binding CanRefresh}" accessible-name="Refresh saved development projects" />
         <Button id="dev-open-selected-space" action="dev.references.open-space" content="Open Space" Interactive="{Binding CanOpenSpace}" accessible-name="Open the selected Space" />
@@ -16,9 +17,14 @@
           <Text text="{Binding item.Summary}" text-wrapping="Wrap" />
           <Text text="{Binding item.TaskLabel}" foreground="{Resource CuiTextSoftBrush}" />
           <Text text="{Binding item.CheckpointLabel}" foreground="{Resource CuiTextSoftBrush}" />
-          <Button id="dev-open-task" action="dev.references.open-task" content="Open task and project" Interactive="{Binding item.CanOpen}" accessible-name="Open the existing task for the selected project" />
+          <Button id="dev-open-task" action="dev.references.open-task" content="{Binding item.OpenLabel}" Interactive="{Binding item.CanOpen}" accessible-name="{Binding item.OpenAccessibleName}" />
         </Container>
       </Repeat>
+      <Container Type="Horizontal Stack" CellGap="8">
+        <Button id="dev-projects-previous" action="dev.references.previous-projects" content="Previous projects" Interactive="{Binding CanPreviousProjectPage}" />
+        <Button id="dev-projects-next" action="dev.references.next-projects" content="Next projects" Interactive="{Binding CanNextProjectPage}" />
+      </Container>
+      <Text text="{Binding ProjectFilterStatus}" text-wrapping="Wrap" accessible-name="Filtered project list and current page" />
       <Text id="dev-reference-coverage" text="{Binding Coverage}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Saved project observation coverage" />
       <Text id="dev-reference-status" text="{Binding Status}" accessible-name="Development project status" />
 

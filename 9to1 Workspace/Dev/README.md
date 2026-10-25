@@ -9,9 +9,17 @@ The canonical workspace path also connects the maintained source editor, reviewe
 - Workspace and project records use stable IDs; workspace files are versioned, atomically saved, and protected from stale writers.
 - Project templates can be registered by providers and filtered by language, framework, platform, product surface, search text, and toolchain readiness.
 - Task execution validates dependencies, requires workspace trust where declared, requests Home authorization before executing, enforces stage timeouts, and returns stage-level states and diagnostics.
-- Code intelligence delegates semantic operations to the existing advanced service. Code-action edits require a cached exact proposal and an explicit Home grant; edits are rejected when workspace identity/revision/path changes. Rename remains unavailable until the shared service can provide a reviewable preview before mutation.
+- Code intelligence delegates semantic operations to the existing advanced service. Code actions and semantic rename previews retain immutable proposals for explicit Home-approved application; source/version conflicts refuse stale proposals. The native manual workbench does not call the raw language-server provider: it still needs a genuine read/process admission adapter.
 - Structured results carry stable error codes, target IDs, retry metadata, and request IDs.
 - A Space can persist a reference to the original workspace/project/root and canonical Task/Run. Fresh reopening reads the existing stores and current task observation; it does not create a workspace, task or attempt. A revision conflict requires an explicit current-reference attachment through the owning service.
+
+### Current Build editor and saved-project navigation
+
+The compiled-CUI Build landing presents every saved project/root/repository choice, including its actual location and environment. Filtering and bounded pages select metadata only. Manual Open passes the exact revision-bound reference to the existing host callback, which resolves and checks current access again. A failed manual census is shown as unavailable and cannot enable new setup. Typing a folder path is a candidate for the genuine Files/Home setup adapter, not authorization.
+
+The workbench keeps per-document draft Undo/Redo, literal Find/Replace, protected conflict/merge recovery, and explicit source review. Current CUI drafts can use the authoritative parser for Problems and component-outline navigation. The property inspector edits existing literal attributes on uniquely named built-in components in XML-shaped CUI, preserving all source outside the selected attribute value. Bindings, shorthand and unsupported structured values remain code-defined. Changes enter the same unreviewed draft, Undo and recovery owners; no source write occurs until the normal reviewed apply path.
+
+These CUI checks and property edits are bounded authoring tools, not a full compiler, visual canvas, runtime preview or language-server admission. Saved RunConfiguration/PreviewProvider metadata alone does not supply a native launch/preview owner. Manual project creation from templates, arbitrary new-file creation, target-specific Run and full visual designer workflows remain open until their real owning adapters are connected. Focused owning tests must be compiled/run for the exact integrated source; this description makes no acceptance claim.
 
 ## Ownership and integration limits
 

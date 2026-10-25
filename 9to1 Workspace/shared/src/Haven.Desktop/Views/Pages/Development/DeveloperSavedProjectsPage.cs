@@ -45,7 +45,11 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private string _manualFolderPath = "";
     private string _manualStatus = "";
     private string _retainedAttemptState = "";
-    private bool _manualBusy;
+    private bool _manualBusy, _manualMetadataAvailable;
+    private string _manualCatalogStatus = "Refresh to observe saved manual project roots.";
+    private string _projectQuery = "";
+    private int _projectPage;
+    private const int ProjectPageSize = 100;
 
     public DeveloperSavedProjectsPage(SpaceDevelopmentReferenceCatalog originalCatalog, SpaceRegistry originalSpaces,
         ICuiSceneReadiness originalHomeReadiness, Action demandOriginalHomeJoin,
@@ -160,7 +164,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             {
                 unavailable = PublishAsync(original, () =>
                 {
-                    _page = null; _metadataAvailable = false;
+                    _page = null; _manualRows = []; _metadataAvailable = false; _manualMetadataAvailable = false;
                     _status = "Saved projects could not be read. Refresh to try again.";
                 });
                 await original.AwaitAsync(unavailable).ConfigureAwait(false);
@@ -173,7 +177,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private async Task ReadAndPublishOriginalAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
         long sequence; lock (_gate) sequence = ++_readSequence;
-        await PublishAsync(original, () => { _page = null; _metadataAvailable = false; _status = "Reading saved projects…"; }).ConfigureAwait(false);
+        await PublishAsync(original, () => { _page = null; _manualRows = []; _metadataAvailable = false; _manualMetadataAvailable = false; _projectPage = 0; _manualCatalogStatus = "Reading saved manual project roots…"; _status = "Reading saved projects…"; }).ConfigureAwait(false);
         var before = await ObserveOriginalHomeAsync(original, token).ConfigureAwait(false);
         if (before.State != CuiSceneAvailabilityState.Ready)
         { await PublishAsync(original, () => _status = before.Message).ConfigureAwait(false); return; }
@@ -183,37 +187,36 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             SpaceDevelopmentReferenceCatalog.MaximumSavedReferences, token, OwnNestedOriginalSource))).ConfigureAwait(false);
         // Manual (no-AI) saved projects: real workspace-store identity, resolved by the same Dev
         // service when opened. This enumerates no Task/model; it grants no READ/execution authority.
-        var manualRows = Array.Empty<ManualProjectItem>();
+        var manualRows = Array.Empty<ManualProjectItem>(); var manualAvailable = false;
+        var manualCoverage = "Saved manual project enumeration is unavailable in this host.";
         if (_manualWorkspaces is not null)
         {
             var listed = await original.AwaitAsync(InvokeOriginalSource(() => _manualWorkspaces.ListAsync(token))).ConfigureAwait(false);
             if (listed.Succeeded && listed.Value is not null)
-                manualRows = listed.Value.SelectMany(workspace => workspace.Projects
-                    .Where(project => project.RootIds.Count > 0)
-                    .Select(project => BuildManualItem(workspace, project))).ToArray();
+            {
+                var choices = DeveloperSavedProjectChoices.Build(listed.Value, token);
+                if (choices.Succeeded && choices.Value is not null)
+                {
+                    manualRows = choices.Value.Select(choice => new ManualProjectItem(choice.SelectionKey, choice.Title,
+                        choice.Summary, "Manual open — no AI task or model required", choice.RootSummary, choice.Reference, true)).ToArray();
+                    manualAvailable = true; manualCoverage = $"{manualRows.Length} saved manual project/root/repository choices. Opening rechecks current source access.";
+                }
+                else manualCoverage = "Saved manual project roots are unavailable: " + choices.Error?.Message;
+            }
+            else manualCoverage = "Saved manual project roots are unavailable: " + (listed.Error?.Message ?? "The store did not return a complete census.");
         }
         var after = await ObserveOriginalHomeAsync(original, token).ConfigureAwait(false);
         await PublishAsync(original, () =>
         {
             if (_readSequence != sequence) return;
-            if (after.State != CuiSceneAvailabilityState.Ready) { _status = after.Message; return; }
-            _page = page; _manualRows = manualRows; _metadataAvailable = true;
+            if (after.State != CuiSceneAvailabilityState.Ready) { _status = after.Message; _manualRows = []; _manualMetadataAvailable = false; return; }
+            _page = page; _manualRows = manualRows; _metadataAvailable = true; _manualMetadataAvailable = manualAvailable; _manualCatalogStatus = manualCoverage;
             _status = manualRows.Length > 0
-                ? "Choose an existing task, or open a saved project manually (no AI task or model). Each open checks the current saved reference again."
-                : "Choose the existing task, then open its saved project in Dev. Each open checks the current saved reference again.";
+                ? "Choose an existing task, or choose a saved project root and repository to open manually. Each open checks the current saved reference again."
+                : page.Rows.Count > 0 ? "Choose an existing task to open its saved project. Each open checks the current saved reference again."
+                : manualAvailable ? "No saved project references were found. Open an existing project folder as a manual project below."
+                : "Saved manual projects are unavailable. See the coverage message and refresh before creating or opening a manual project.";
         }).ConfigureAwait(false);
-    }
-
-    private static ManualProjectItem BuildManualItem(DeveloperWorkspace workspace, DeveloperProject project)
-    {
-        var rootId = project.RootIds[0];
-        return new ManualProjectItem(
-            "manual/" + workspace.WorkspaceId.ToString("D") + "/" + project.ProjectId.ToString("D"),
-            project.Name,
-            $"Workspace {workspace.WorkspaceId:D} / revision {workspace.Revision}; project {project.ProjectId:D} / revision {project.Revision}",
-            "Manual open — no AI task or model required",
-            $"Root {rootId:D}; opens the same compiled-CUI source workspace with reads enabled.",
-            new DeveloperProjectReference(workspace.WorkspaceId, workspace.Revision, project.ProjectId, project.Revision, rootId));
     }
 
     public bool TryGetValue(string path, out object? value)
@@ -223,7 +226,10 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             value = path switch
             {
                 "Projects" => MergeProjectItems(),
-                "Coverage" => _page?.Coverage ?? "Connect Home and refresh to view your saved projects.",
+                "Coverage" => (_page?.Coverage ?? "Connect Home and refresh to view your saved projects.") + "\n" + _manualCatalogStatus,
+                "ProjectQuery" => _projectQuery, "ProjectFilterStatus" => ProjectFilterStatus(),
+                "CanPreviousProjectPage" => IsActionAvailable("dev.references.previous-projects"),
+                "CanNextProjectPage" => IsActionAvailable("dev.references.next-projects"),
                 "Status" => _status,
                 "CanRefresh" => IsActionAvailable("dev.references.refresh"),
                 "CanOpenSpace" => IsActionAvailable("dev.references.open-space"),
@@ -236,20 +242,27 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             };
         }
         return path is "Projects" or "Coverage" or "Status" or "CanRefresh" or "CanOpenSpace" or "CanCreateManual" or
-            "ManualFolderPath" or "ManualStatus" or "RetainedAttempt" or "ManualBusy";
+            "ManualFolderPath" or "ManualStatus" or "RetainedAttempt" or "ManualBusy" or "ProjectQuery" or "ProjectFilterStatus" or "CanPreviousProjectPage" or "CanNextProjectPage";
     }
 
-    /// <summary>Writable binding writeback from the canonical landing document. The folder Input
-    /// (Value="{Binding ManualFolderPath}") writes the genuine selected existing project path back
-    /// here so the typed create action uses the real folder selection.</summary>
+    /// <summary>Writable metadata inputs from the canonical landing document. A typed folder path
+    /// is only a candidate; the existing setup adapter still performs actual Files selection and
+    /// Home admission. Filter writeback changes the visible page and withdraws hidden row keys.</summary>
     public bool TrySetValue(string path, object? value)
     {
-        lock (_gate)
+        if (value is not string text || path is not ("ManualFolderPath" or "ProjectQuery")) return false;
+        long generation; lock (_gate) generation = _generation;
+        _work.RunSynchronous(original =>
         {
-            if (path != "ManualFolderPath") return false;
-            _manualFolderPath = value as string ?? "";
-            return true;
-        }
+            original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
+            lock (_gate)
+            {
+                if (path == "ManualFolderPath") _manualFolderPath = text;
+                else { _projectQuery = text; _projectPage = 0; }
+            }
+            NotifyOriginal(original);
+        });
+        return true;
     }
     bool ICuiRepeatItemBindingContext.TryGetItemValue(object item, string path, out object? value)
     {
@@ -265,6 +278,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                 nameof(ProjectItem.TaskLabel) => (true, projectItem.TaskLabel),
                 nameof(ProjectItem.CheckpointLabel) => (true, projectItem.CheckpointLabel),
                 nameof(ProjectItem.CanOpen) => (true, projectItem.CanOpen),
+                nameof(ProjectItem.OpenLabel) => (true, projectItem.OpenLabel),
+                nameof(ProjectItem.OpenAccessibleName) => (true, projectItem.OpenAccessibleName),
                 _ => (false, (object?)null)
             };
         }
@@ -278,6 +293,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                 nameof(ManualProjectItem.TaskLabel) => (true, manualItem.TaskLabel),
                 nameof(ManualProjectItem.CheckpointLabel) => (true, manualItem.CheckpointLabel),
                 nameof(ManualProjectItem.CanOpen) => (true, manualItem.CanOpen),
+                nameof(ManualProjectItem.OpenLabel) => (true, manualItem.OpenLabel),
+                nameof(ManualProjectItem.OpenAccessibleName) => (true, manualItem.OpenAccessibleName),
                 _ => (false, (object?)null)
             };
         }
@@ -292,9 +309,11 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             return command switch
             {
                 "dev.references.refresh" => true,
-                "dev.references.open-task" => _metadataAvailable && ((_page is { Rows.Count: > 0 }) || _manualRows.Count > 0),
+                "dev.references.open-task" => _metadataAvailable && MergeProjectItems().Length > 0,
+                "dev.references.previous-projects" => _metadataAvailable && _projectPage > 0,
+                "dev.references.next-projects" => _metadataAvailable && (_projectPage + 1) * ProjectPageSize < FilteredProjectItems().Length,
                 "dev.references.open-space" => _metadataAvailable && _page?.Rows.Select(row => row.SpaceId).Distinct().Count() == 1,
-                "dev.references.create-manual-project" => _metadataAvailable && !_manualBusy && _createManualProject is not null && _openExistingManual is not null && !string.IsNullOrWhiteSpace(_manualFolderPath),
+                "dev.references.create-manual-project" => _metadataAvailable && _manualMetadataAvailable && !_manualBusy && _createManualProject is not null && _openExistingManual is not null && !string.IsNullOrWhiteSpace(_manualFolderPath),
                 _ => false
             };
         }
@@ -302,6 +321,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This saved-project action is unavailable.");
+        if (command is "dev.references.previous-projects" or "dev.references.next-projects") return ChangeProjectPage(command);
         long generation; SpaceDevelopmentReferenceRow? captured = null; DeveloperProjectReference? manualReference = null;
         lock (_gate)
         {
@@ -309,12 +329,10 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             if (command == "dev.references.open-task")
             {
                 var key = parameter as string;
-                if (key is not null && key.StartsWith("manual/", StringComparison.Ordinal))
-                    manualReference = _manualRows.SingleOrDefault(row => row.SelectionKey == key)?.Reference
-                        ?? throw new InvalidOperationException("Select an actual observed saved project reference.");
-                else
-                    captured = _page?.Rows.SingleOrDefault(row => row.SelectionKey == key)
-                        ?? throw new InvalidOperationException("Select an actual observed saved project reference.");
+                var selected = MergeProjectItems().SingleOrDefault(item => SelectionKey(item) == key);
+                if (selected is ManualProjectItem manual) manualReference = manual.Reference;
+                else if (selected is ProjectItem task) captured = task.Original;
+                else throw new InvalidOperationException("Select an actual reference from the current filtered project page.");
             }
             if (command == "dev.references.open-space") captured = _page!.Rows[0];
         }
@@ -416,21 +434,54 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         public string Summary => Original.Summary;
         public string TaskLabel => Original.TaskLabel;
         public string CheckpointLabel => Original.CheckpointLabel;
+        public string OpenLabel => "Open task and project";
+        public string OpenAccessibleName => "Open the existing task and saved project " + Title;
     }
     /// <summary>A manual (no-AI) saved-project row: real workspace-store identity, no Task/link.
     /// It satisfies the same typed CUI members as a Task row so the shared compiled picker renders it.</summary>
-    private sealed record ManualProjectItem(string SelectionKey, string Title, string Summary, string TaskLabel, string CheckpointLabel, DeveloperProjectReference Reference)
+    private sealed record ManualProjectItem(string SelectionKey, string Title, string Summary, string TaskLabel, string CheckpointLabel, DeveloperProjectReference Reference, bool CanOpen)
     {
-        // Manual rows are only published when saved metadata is available; open is then enabled.
-        public bool CanOpen => true;
+        public string OpenLabel => "Open this root manually";
+        public string OpenAccessibleName => "Open saved project " + Title + "; " + CheckpointLabel;
     }
-    private object[] MergeProjectItems()
+    private sealed record ProjectDisplay(object Value, string Title, string Key, string SearchText);
+    private object[] FilteredProjectItems()
     {
-        var items = new List<object>();
+        if (!_metadataAvailable) return [];
+        var items = new List<ProjectDisplay>();
         if (_page is not null)
-            foreach (var row in _page.Rows) items.Add(new ProjectItem(row, _metadataAvailable));
-        foreach (var manual in _manualRows) items.Add(manual);
-        return items.ToArray();
+            foreach (var row in _page.Rows) items.Add(new(new ProjectItem(row, true), row.Title, row.SelectionKey,
+                row.Title + "\n" + row.Summary + "\n" + row.TaskLabel + "\n" + row.CheckpointLabel));
+        if (_manualMetadataAvailable)
+            foreach (var manual in _manualRows) items.Add(new(manual, manual.Title, manual.SelectionKey,
+                manual.Title + "\n" + manual.Summary + "\n" + manual.CheckpointLabel));
+        var query = _projectQuery.Trim();
+        return items.Where(item => query.Length == 0 || item.SearchText.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(item => item.Title, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.Key, StringComparer.Ordinal)
+            .Select(item => item.Value).ToArray();
+    }
+    private object[] MergeProjectItems() => FilteredProjectItems().Skip(_projectPage * ProjectPageSize).Take(ProjectPageSize).ToArray();
+    private static string SelectionKey(object item) => item switch { ProjectItem task => task.SelectionKey, ManualProjectItem manual => manual.SelectionKey, _ => "" };
+    private string ProjectFilterStatus()
+    {
+        var count = FilteredProjectItems().Length;
+        return count == 0 ? "No saved project references match this filter. Refresh coverage below distinguishes an empty list from an unavailable store."
+            : $"Showing {_projectPage * ProjectPageSize + 1}–{Math.Min((long)count, (_projectPage + 1L) * ProjectPageSize)} of {count} project/root references.";
+    }
+    private ValueTask ChangeProjectPage(string command)
+    {
+        long generation; lock (_gate) generation = _generation;
+        _work.RunSynchronous(original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
+            lock (_gate)
+            {
+                if (IsActionAvailable(command) != true) throw new InvalidOperationException("This filtered project page is unavailable.");
+                _projectPage += command == "dev.references.next-projects" ? 1 : -1;
+            }
+            NotifyOriginal(original);
+        });
+        return ValueTask.CompletedTask;
     }
     private Task PublishAsync(DesktopOriginalWorkLifetime.Original original, Action publish)
     {
@@ -438,15 +489,19 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         {
             original.DemandPublication();
             InvokeOriginalSource(() => { lock (_gate) publish(); return true; });
-            foreach (var callback in PropertyChanged?.GetInvocationList() ?? [])
-            {
-                original.DemandPublication();
-                try { InvokeOriginalSource(() => { ((PropertyChangedEventHandler)callback)(this, new(null)); return true; }); }
-                catch (Exception error) { original.Retain(error); }
-            }
-            original.ThrowRetained();
+            NotifyOriginal(original);
         }).GetTask());
         return original.AwaitAsync(actual);
+    }
+    private void NotifyOriginal(DesktopOriginalWorkLifetime.Original original)
+    {
+        foreach (var callback in PropertyChanged?.GetInvocationList() ?? [])
+        {
+            original.DemandPublication();
+            try { InvokeOriginalSource(() => { ((PropertyChangedEventHandler)callback)(this, new(null)); return true; }); }
+            catch (Exception error) { original.Retain(error); }
+        }
+        original.ThrowRetained();
     }
     private void OwnNestedOriginalSource(Action callback) => InvokeOriginalSource(() => { callback(); return true; });
     private T InvokeOriginalSource<T>(Func<T> callback)
