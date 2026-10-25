@@ -84,7 +84,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         string sourceRevision,
         BoardsExternalSaveCallback save,
         CancellationToken ct = default,
-        IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null)
+        IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null,
+        bool standaloneChrome = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceId);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceRevision);
@@ -164,7 +165,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
                 ct.ThrowIfCancellationRequested();
                 var viewModel = new BoardsViewModel(session, embeddedArtifactHost);
                 viewModel.SetLanding(false);
-                viewModel.SetEmbeddedPresentation();
+                if (!standaloneChrome) viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Ready to edit");
                 viewModel.Set("SaveStateText", "Saved source revision");
                 loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());

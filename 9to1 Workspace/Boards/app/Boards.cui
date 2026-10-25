@@ -68,22 +68,11 @@
       <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
         <Container Type="Vertical Stack" Row="0" Active="{Binding ShowNativeAuthoring}">
           <Container Type="Wrap" CellGap="6" Padding="12 6" AccessibleName="Text formatting">
-            <Button ID="RangeBold" Content="B" FontWeight="Bold" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" />
-            <Button ID="RangeItalic" Content="I" FontStyle="Italic" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" />
-            <Button ID="RangeUnderline" Content="U" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" />
-            <Button ID="RangeStrike" Content="S" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" />
+            <Button ID="RangeBold" Content="B" FontWeight="Bold" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
+            <Button ID="RangeItalic" Content="I" FontStyle="Italic" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic" />
+            <Button ID="RangeUnderline" Content="U" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" Tooltip="Underline" />
+            <Button ID="RangeStrike" Content="S" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough" />
             <Text Text="{Binding TextRangeSummary}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-            <Text Text="{Binding RangeBoldState}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-            <Text Text="{Binding RangeItalicState}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-            <Text Text="{Binding RangeUnderlineState}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-            <Text Text="{Binding RangeStrikeState}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-          </Container>
-          <Container Type="Wrap" CellGap="4" AccessibleName="Selected block actions">
-            <Button ID="BlockMoveUp" Content="Move up" Action="BlockMoveUp" IsEnabled="{Binding CanMoveBlockUp}" AccessibleName="Move selected block up" />
-            <Button ID="BlockMoveDown" Content="Move down" Action="BlockMoveDown" IsEnabled="{Binding CanMoveBlockDown}" AccessibleName="Move selected block down" />
-            <Button ID="BlockDuplicate" Content="Duplicate" Action="BlockDuplicate" IsEnabled="{Binding CanManageSelectedBlock}" AccessibleName="Duplicate selected block" />
-            <Button ID="BlockDelete" Content="Delete" Action="BlockDelete" IsEnabled="{Binding CanManageSelectedBlock}" AccessibleName="Delete selected block" />
-            <Text Text="{Binding BlockActionSummary}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
           <Container Type="Vertical Stack" ID="ToolbarHost" />
         </Container>
