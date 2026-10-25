@@ -209,7 +209,7 @@ public sealed class DeveloperPipelineExecutorTests
         var result = await pending;
 
         Assert.True(result.Succeeded, result.Error?.Message);
-        Assert.Equal(1, gate.Request!.AffectedRelativePaths.Count);
+        Assert.Single(gate.Request!.AffectedRelativePaths);
         Assert.Equal(["compile"], runner.Ran);
         Assert.Equal(["compile"], result.Value!.Stages.Select(stage => stage.StageId));
         var executedTask = runner.LastTask!;
