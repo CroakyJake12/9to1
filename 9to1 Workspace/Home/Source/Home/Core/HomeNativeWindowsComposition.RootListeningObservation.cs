@@ -28,18 +28,18 @@ public sealed partial class HomeNativeWindowsComposition
     public bool IsIssuedOriginalRootListeningObservation(OriginalRootListeningObservation same) => same is not null &&
         ReferenceEquals(same.Issuer, this) && _rootListeningIssued.TryGetValue(same, out var work) && work.Healthy &&
         ReferenceEquals(work.Driver.Result, same);
-    /// <summary>Pure current owner/lease check. Actor and package authority are
-    /// independently observed by the caller; this never performs startup or IO.</summary>
+    /// <summary>Current original owner/physical-listening lease check. Actor and
+    /// package authority are independently observed; this never starts a host.</summary>
     public bool IsCurrentOriginalRootListeningObservation(OriginalRootListeningObservation same)
     {
         if (!IsIssuedOriginalRootListeningObservation(same)) return false;
-        HomeNativeWindowsBootstrap? actual;
+        object? actual;
         lock (_sync)
         {
-            if (_closing || _originalProcessRetiring || _start?.IsCompletedSuccessfully != true || _bootstrap is null) return false;
-            actual = _bootstrap;
+            if (_closing || _originalProcessRetiring || _start?.IsCompletedSuccessfully != true || _bootstrap is null && _linuxBootstrap is null) return false;
+            actual = _bootstrap ?? (object?)_linuxBootstrap;
         }
-        try { return actual.CaptureOriginalListeningLease(new(Services, Runtime, Profiles)) == same.ActualLease; }
+        try { return CaptureActualRootLease(actual!) == same.ActualLease; }
         catch (UnauthorizedAccessException) { return false; }
         catch (ObjectDisposedException) { return false; }
     }
@@ -93,20 +93,20 @@ public sealed partial class HomeNativeWindowsComposition
             OriginalRootListeningObservation? result = null;
             try
             {
-                HomeNativeWindowsBootstrap? actualBootstrap = null;
+                object? actualBootstrap = null;
                 source.Invoke(() =>
                 {
                     lock (_sync)
                     {
-                        if (_closing || _originalProcessRetiring || _start?.IsCompletedSuccessfully != true || _bootstrap is null)
+                        if (_closing || _originalProcessRetiring || _start?.IsCompletedSuccessfully != true || _bootstrap is null && _linuxBootstrap is null)
                             throw new UnauthorizedAccessException("The actual successful Home process bootstrap is required.");
-                        actualBootstrap = _bootstrap;
+                        actualBootstrap = _bootstrap ?? (object?)_linuxBootstrap;
                     }
                     return true;
                 });
                 var actor = await Read(() => Profiles.GetCurrentWithinOriginalSourceAsync(Run, Keep, token)).ConfigureAwait(false)
                     ?? throw new UnauthorizedAccessException("The actual Home profile is unavailable.");
-                var first = source.Invoke(() => actualBootstrap!.CaptureOriginalListeningLease(new(Services, Runtime, Profiles)));
+                var first = source.Invoke(() => CaptureActualRootLease(actualBootstrap!));
                 if (actor.ProfileId != first.ProfileId || actor.OrganisationId is not null || first.LeaseIdentity == Guid.Empty)
                     throw new UnauthorizedAccessException("The actual Home lease does not belong to its current local actor.");
                 if (actor != await Read(() => Profiles.GetCurrentWithinOriginalSourceAsync(Run, Keep, token)).ConfigureAwait(false))
@@ -115,11 +115,11 @@ public sealed partial class HomeNativeWindowsComposition
                 {
                     lock (_sync)
                     {
-                        if (_closing || _originalProcessRetiring || !ReferenceEquals(_bootstrap, actualBootstrap))
+                        if (_closing || _originalProcessRetiring || !ReferenceEquals(_bootstrap, actualBootstrap) && !ReferenceEquals(_linuxBootstrap, actualBootstrap))
                             throw new UnauthorizedAccessException("The original Home process retired during listener observation.");
                     }
                     token.ThrowIfCancellationRequested();
-                    if (actualBootstrap!.CaptureOriginalListeningLease(new(Services, Runtime, Profiles)) != first)
+                    if (CaptureActualRootLease(actualBootstrap!) != first)
                         throw new UnauthorizedAccessException("The actual Home listening lease changed.");
                     result = new(this, actor, first); return true;
                 });
@@ -141,6 +141,11 @@ public sealed partial class HomeNativeWindowsComposition
             return raw is null ? throw new InvalidOperationException("The actual Home listener source returned no original Task.") : value;
         }
     }
+    private HomeNativeWindowsListeningLease CaptureActualRootLease(object actual) => actual switch {
+        HomeNativeWindowsBootstrap windows => windows.CaptureOriginalListeningLease(new(Services, Runtime, Profiles)),
+        HomeNativeLinuxProcessBootstrap linux => linux.CaptureOriginalListeningLease(new(Services, Runtime, Profiles)),
+        _ => throw new UnauthorizedAccessException("The same original supported Home bootstrap is required.")
+    };
     private async Task JoinOriginalRootListeningAsync(List<Exception> failures)
     {
         RootListeningWork[] actuals; lock (_sync) actuals = _rootListeningOriginals.ToArray();

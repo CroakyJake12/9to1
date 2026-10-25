@@ -57,6 +57,7 @@ internal static class Program
         try
         {
 #if !ANDROID
+            args = App.CaptureOriginalLinuxRootLaunchLocators(args);
             args = App.CaptureOriginalNativeHomeLaunchLocators(args);
             args = App.CaptureOriginalHomeRootLaunchLocators(args);
 #endif

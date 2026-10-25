@@ -14,18 +14,20 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
     private readonly Socket _socket;
     private readonly HomeNativeObservedPeer _peer;
     private readonly SafeFileHandle _pid;
-    private readonly SafeFileHandle _executable;
+    private readonly SafeFileHandle? _executable;
     private readonly ImageIdentity _image;
     private readonly object _gate = new();
     private bool _closed;
     private HomeNativeLinuxPeerProcess(Socket socket, HomeNativeObservedPeer peer,
-        SafeFileHandle pid, SafeFileHandle executable, ImageIdentity image)
+        SafeFileHandle pid, SafeFileHandle? executable, ImageIdentity image)
     { _socket = socket; _peer = peer; _pid = pid; _executable = executable; _image = image; }
 
-    internal static HomeNativeLinuxPeerProcess? Capture(Socket socket)
+    internal static HomeNativeLinuxPeerProcess? Capture(Socket socket) => Capture(socket, requireImage: true);
+    internal static HomeNativeLinuxPeerProcess? CaptureKernelServiceLifetime(Socket socket) => Capture(socket, requireImage: false);
+    private static HomeNativeLinuxPeerProcess? Capture(Socket socket, bool requireImage)
     {
         var peer = HomeNativePeerObservation.FromAcceptedUnixSocket(socket);
-        if (peer is null) return null;
+        if (peer is null || !requireImage && peer.OperatingSystemPrincipalId != "unix-euid:0") return null;
         // SO_PEERPIDFD binds to the process that actually established THIS socket,
         // unlike pidfd_open(observed numeric PID) after an asynchronous gap.
         uint size = 4;
@@ -44,6 +46,12 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
         {
             if (size != 4) throw new IOException("The connected Home peer pidfd has an unsupported kernel shape.");
             if (!Alive(pid)) return null;
+            if (!requireImage)
+            {
+                var serviceLifetime = new HomeNativeLinuxPeerProcess(socket, peer, pid, null, default);
+                if (serviceLifetime.Observe() is null) return null;
+                pid = null!; return serviceLifetime;
+            }
             try { executable = File.OpenHandle($"/proc/{peer.ProcessId}/exe", FileMode.Open, FileAccess.Read, FileShare.Read); }
             catch (Exception cause) when (cause is FileNotFoundException or DirectoryNotFoundException) { return null; }
             catch (IOException) when (!Alive(pid)) { return null; }
@@ -63,6 +71,7 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
         {
             ObjectDisposedException.ThrowIf(_closed, this);
             if (!Alive(_pid) || HomeNativePeerObservation.FromAcceptedUnixSocket(_socket) != _peer) return null;
+            if (_executable is null) return _peer; // lifetime/credentials only, never an executable/installed observation
             SafeFileHandle actual;
             try { actual = File.OpenHandle($"/proc/{_peer.ProcessId}/exe", FileMode.Open, FileAccess.Read, FileShare.Read); }
             catch (Exception cause) when (cause is FileNotFoundException or DirectoryNotFoundException) { return null; }
@@ -97,7 +106,7 @@ internal sealed class HomeNativeLinuxPeerProcess : IDisposable
         return result == 0 && entry.Returned == 0;
     }
     public void Dispose()
-    { lock (_gate) { if (_closed) return; _closed = true; _executable.Dispose(); _pid.Dispose(); } }
+    { lock (_gate) { if (_closed) return; _closed = true; _executable?.Dispose(); _pid.Dispose(); } }
 
     [DllImport("libc", EntryPoint = "getsockopt", SetLastError = true)]
     private static extern int GetPeerPidFd(SafeSocketHandle socket, int level, int option, out int descriptor, ref uint size);

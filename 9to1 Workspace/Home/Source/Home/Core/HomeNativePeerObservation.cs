@@ -9,6 +9,32 @@ namespace HavenOS.Home.Core;
 /// <summary>Reads actual accepted Unix socket peer credentials. Unsupported platforms fail closed.</summary>
 public static class HomeNativePeerObservation
 {
+    /// <summary>Physical-only retained connected-process observation. This grants no
+    /// installation, service role, profile, permission or execution authority.</summary>
+    public sealed class OriginalUnixProcess : IDisposable
+    {
+        private readonly HomeNativeLinuxPeerProcess _actual;
+        internal OriginalUnixProcess(HomeNativeLinuxPeerProcess actual, bool executableObserved = true)
+        { _actual = actual; HasObservedExecutable = executableObserved; }
+        public bool HasObservedExecutable { get; }
+        public HomeNativeObservedPeer? ObserveCurrent() => _actual.Observe();
+        public void Dispose() => _actual.Dispose();
+    }
+    public static OriginalUnixProcess? RetainOriginalUnixProcess(Socket connected)
+    {
+        var actual = HomeNativeLinuxPeerProcess.Capture(connected);
+        return actual is null ? null : new(actual);
+    }
+
+    /// <summary>Root-service socket lifetime/credentials only. Cross-UID executable
+    /// access is unavailable to ordinary Home. Consumers must independently verify
+    /// actual registered-service provenance; this never authenticates installed code.</summary>
+    public static OriginalUnixProcess? RetainOriginalUnixServiceLifetime(Socket connected)
+    {
+        var actual = HomeNativeLinuxPeerProcess.CaptureKernelServiceLifetime(connected);
+        return actual is null ? null : new(actual, executableObserved: false);
+    }
+
     // Same SO_PEERCRED observer, with actual connected-process custody for owning
     // accepting paths. The detached public record remains discovery metadata only.
     internal static HomeNativeLinuxPeerProcess? RetainAcceptedUnixProcess(Socket accepted) => HomeNativeLinuxPeerProcess.Capture(accepted);

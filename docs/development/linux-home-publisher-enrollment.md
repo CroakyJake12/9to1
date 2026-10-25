@@ -283,3 +283,38 @@ which refuses before UID/group/namespace/fork operations. Native compilation and
 that refusal run require a separately admitted actual Root check. The current
 source work has not executed a helper, changed privileges, registered/started a
 service or established a production signing/enrollment/controlled-launch result.
+
+## Linux Home child client composition
+
+The controlled native child receives only `--home-linux-root-control` and its
+original endpoint locator. Program consumes this locator before GUI parsing;
+ordinary Home startup supplies none and retains its existing local path. The
+locator is not authority. The client requires the connected actualUID0 peer's
+SO_PEERPIDFD lifetime and actual `sd_pid_get_unit(peerPid)==9to1-root.service`.
+Cross-UID `/proc/RootPID/exe` access is unavailable to an ordinary user, so this
+specifically named physical service-lifetime observation claims no executable or
+installed proof. The full executable pin remains mandatory for existing Core
+accepted app/Home peers. The registered Root independently cold-verifies its own
+signed executable/cohort and controls the actual Home child; no unknown Root or
+ordinary process gains authority merely by using the locator/UID/socket.
+
+That same client is bound once to the actual Home/store/OS-profile/index graph.
+It connects before Home starts, observes the canonical selected package inventory
+through Root, and checks that this process executes the exact protected Home
+entrypoint. Home then starts its existing Linux process bootstrap and Core host.
+Only after the real host/listener/lease has independently succeeded does the
+client borrow its source-issued listening observation, get the existing installed
+registry's Home ID, and publish the same actor/profile/lease/socket tuple to Root.
+Role verification checks the current actual actor, original process/listener,
+maintained registry row and live Root acknowledgement before and after awaits.
+No fake installed GUID, alternate profile, second listener or session issuer is
+created. Root retires on unsolicited controlled Home loss, retaining actual child
+status and all cleanup failures; explicit registered service retirement is distinct.
+
+The implemented peer verifier admits this actual controlled Home only. Unknown
+selected applications remain denied until Root owns their real controlled launch
+producer and Home's original approval/write path is connected. Linux app launch,
+service unit installation/deployment, real signing inputs and native integration
+remain outstanding; these source changes do not claim runtime Ready or100%.
+Focused negative controls use actual failed socket connections and omitted source
+callbacks, preserving foreign endpoint files and creating no Home identity.

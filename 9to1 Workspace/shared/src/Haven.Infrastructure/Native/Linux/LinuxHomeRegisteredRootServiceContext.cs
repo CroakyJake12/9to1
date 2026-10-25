@@ -23,6 +23,9 @@ public sealed class LinuxHomeRegisteredRootServiceContext
     }
     public sealed record Observation(InteractiveUser? OriginalUser, string? UnavailableReason);
 
+    internal static bool IsOriginalRegisteredProcess(int pid) => pid > 0 && OperatingSystem.IsLinux() &&
+        ReadString((out IntPtr pointer) => SdPidGetUnit(pid, out pointer)) == ServiceUnit;
+
     public Observation ObserveOriginalActiveUser()
     {
         if (!OperatingSystem.IsLinux() || LinuxOriginalDownloadPaths.CurrentUid() != 0)
