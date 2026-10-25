@@ -49,8 +49,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
     /// <summary>Creates the SAME compiled-CUI workbench in manual (no-AI) mode for a resolved saved
     /// project. No Task/Run/context/model or generation is involved: the real saved project identity
     /// is the admission. Reads/search go through the GENUINE Home/Files/kernel selective owner (a real
-    /// configured read admission, never raw path IO); source edits and process execution are NOT
-    /// offered here and fail closed. Caller retains the Page before publication.</summary>
+    /// configured read admission, never raw path IO); source edits and declared console execution require their
+    /// separately configured genuine Home/Files owners and fail closed when unavailable. Caller retains the Page before publication.</summary>
     public DeveloperProjectWorkbenchPage CreateManual(DeveloperResolvedProject actualProject,
         Func<DeveloperProjectWorkbenchPage, ICuiSceneReadiness> createOriginalReadinessChild,
         Action<DeveloperProjectWorkbenchPage> retainOriginalChild,
@@ -73,7 +73,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             originalPage => { page = originalPage; retainOriginalChild(originalPage); },
             createOriginalReadinessChild, manualRead, manualEdit, services.GetService<FileDeveloperWorkspaceStore>(),
             services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>(),
-            services.GetService<IProviderSecretStore>(), services.GetService<IAppPaths>());
+            services.GetService<IProviderSecretStore>(), services.GetService<IAppPaths>(),
+            services.GetService<DeveloperManualProjectProcessOwner>());
     }
 
     /// <summary>Creates a genuine presentation child bound to this exact Dev host, independent

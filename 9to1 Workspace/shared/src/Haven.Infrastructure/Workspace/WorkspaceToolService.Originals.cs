@@ -17,6 +17,9 @@ public sealed partial class WorkspaceToolService
     public bool IsIssuedOriginal(IWorkspaceOriginalInvocation originalInvocation) =>
         originalInvocation is Invocation actual && ReferenceEquals(actual.Owner, this);
 
+    public bool IsIssuedOriginalForFence(IWorkspaceOriginalInvocation originalInvocation, IWorkspaceToolFinalFence sameFence) =>
+        originalInvocation is Invocation actual && ReferenceEquals(actual.Owner, this) && ReferenceEquals(actual.Fence, sameFence);
+
     public bool ValidateOriginalOutcome(IWorkspaceOriginalInvocation originalInvocation, WorkspaceToolPhysicalOutcome originalOutcome) =>
         originalInvocation is Invocation actual && ReferenceEquals(actual.Owner, this) && actual.OwnsOutcome(originalOutcome);
 

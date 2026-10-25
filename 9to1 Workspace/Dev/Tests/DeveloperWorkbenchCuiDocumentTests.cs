@@ -21,7 +21,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
             "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.preview-edit",
-            "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.run-selected-target", "dev.run-command",
+            "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
             "dev.switch-branch"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
@@ -202,6 +202,10 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         Assert.Contains(run.Actions.Values, action => action.Name == "dev.run-selected-target");
         Assert.Contains(run.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
             && property.Value is CuiBindingValue binding && binding.Path == "CanRunSelectedTarget");
+        var stop = Assert.Single(nodes, node => node.Name == "dev-stop-manual-run");
+        Assert.Contains(stop.Actions.Values, action => action.Name == "dev.stop-manual-run");
+        Assert.Contains(stop.Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
+            && property.Value is CuiBindingValue binding && binding.Path == "CanStopManualRun");
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)

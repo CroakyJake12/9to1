@@ -14,15 +14,22 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
     private readonly object _sync = new();
     private readonly HashSet<Fence> _issued = [];
     private readonly Func<IWorkspaceManualEditFinalFenceValidator>? _manualValidator;
+    private readonly Func<IWorkspaceManualProcessFinalFenceValidator>? _manualProcessValidator;
     public WorkspaceTaskRunEffectAuthority(TaskRunPermissionAuthority tasks, IPermissionDecisionEngine policy,
         IPermissionOriginalEffectFence effects)
         : this(tasks, policy, effects, null) { }
     public WorkspaceTaskRunEffectAuthority(TaskRunPermissionAuthority tasks, IPermissionDecisionEngine policy,
         IPermissionOriginalEffectFence effects, Func<IWorkspaceOriginalProcessStartConsentSource>? processConsents = null,
         Func<IWorkspaceManualEditFinalFenceValidator>? manualValidator = null)
+        : this(null, tasks, policy, effects, processConsents, manualValidator) { }
+    public WorkspaceTaskRunEffectAuthority(Func<IWorkspaceManualProcessFinalFenceValidator>? manualProcessValidator,
+        TaskRunPermissionAuthority tasks, IPermissionDecisionEngine policy,
+        IPermissionOriginalEffectFence effects, Func<IWorkspaceOriginalProcessStartConsentSource>? processConsents = null,
+        Func<IWorkspaceManualEditFinalFenceValidator>? manualValidator = null)
     {
         _processConsents = processConsents;
         _manualValidator = manualValidator;
+        _manualProcessValidator = manualProcessValidator;
         if (!ReferenceEquals(policy, effects)) throw new ArgumentException("SAME central policy/effect writer gate required.");
         _tasks = tasks; _policy = policy; _effects = effects;
     }
@@ -35,7 +42,8 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
             // issuer's private validator. No arbitrary fence can register itself, and no
             // AlwaysAllow/TestFence workaround can fabricate membership.
             var validator = _manualValidator?.Invoke();
-            return validator is not null && validator.IsIssuedOriginal(originalFence);
+            return validator is not null && validator.IsIssuedOriginal(originalFence) ||
+                _manualProcessValidator?.Invoke().IsIssuedOriginal(originalFence) == true;
         }
     }
     internal Task ValidateOriginalToolAsync(TaskRunAttemptAdmission original, string toolName, CancellationToken token) =>

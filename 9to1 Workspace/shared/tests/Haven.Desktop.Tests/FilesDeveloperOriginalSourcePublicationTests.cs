@@ -634,13 +634,98 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
     private static DeveloperManualSourceEditOwner ManualEditor(Rig rig) => new(
         rig.Graph.GetRequiredService<NativeFilesWorkspaceService>(), rig.Selections, rig.Reads, rig.Edits, rig.Kernel);
 
+    [LinuxPublicationFact]
+    public Task Manual_console_Run_without_Task_uses_real_Home_review_executor_output_and_releases_Home_before_exit() => Run(async rig =>
+    {
+        var choice = Assert.Single(DeveloperRunConfigurationSelection.Observe(rig.Saved).Value!);
+        var operation = rig.Keep(rig.ProcessOwner.RunAsync(rig.Saved, choice, body => body(), rig.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        var request = await rig.DecideNextAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        var scope = Assert.Single(request.Impact.ResourceBinding!.Scopes);
+        Assert.Equal("dev.project.console", scope.Kind); Assert.Equal(ResourceAccess.Execute, scope.Access);
+        Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "manual-finished.txt")));
+        var deadline = Stopwatch.StartNew();
+        while (!File.Exists(Path.Combine(rig.ProjectRoot, "manual-started.txt")) && deadline.Elapsed < TimeSpan.FromSeconds(5))
+            await Task.Delay(10, rig.Token);
+        Assert.True(File.Exists(Path.Combine(rig.ProjectRoot, "manual-started.txt")));
+        Assert.False(operation.IsCompleted);
+        // This actual Home store read must complete while the original process is still waiting.
+        // Holding the Home entry until process exit would block it for the declared two seconds.
+        await rig.Keep(rig.Home.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).WaitAsync(TimeSpan.FromSeconds(1), rig.Token);
+        Assert.False(operation.IsCompleted);
+        var observed = await operation;
+        Assert.True(observed.ProcessSucceeded); Assert.True(observed.CleanupCompleted); Assert.Empty(observed.OriginalErrors);
+        Assert.NotNull(observed.OperationId); Assert.NotEqual(Guid.Empty, observed.OperationId);
+        Assert.Equal(choice.Configuration.Id, observed.ConfigurationId); Assert.Equal(choice.DefinitionSha256, observed.DefinitionSha256);
+        Assert.Equal("manual-ready", observed.Process!.StandardOutput); Assert.Equal("manual-error", observed.Process.StandardError);
+        Assert.Equal(0, observed.Process.ExitCode); Assert.False(observed.Process.TimedOut);
+        var effect = Assert.Single(observed.PhysicalOutcome!.Effects);
+        Assert.Equal(WorkspaceToolEffectKind.ProcessStart, effect.Kind); Assert.Equal(rig.ProjectRoot, effect.CanonicalTarget);
+        Assert.True(effect.Admitted && effect.EffectKnown && effect.TerminalOutcomeKnown); Assert.NotNull(effect.ProcessId);
+        Assert.Equal(HomePermissionRequestState.Succeeded, (await rig.Keep(rig.Home.Permissions.ReadRequestObservationAsync(request.RequestId, rig.Token)))!.State);
+        Assert.Null(rig.Graph.GetService<Func<IWorkspaceOriginalProcessStartConsentSource>>());
+        Assert.Same(rig.Runs, rig.Graph.GetRequiredService<IWorkspaceManualProcessFinalFenceValidator>());
+        Assert.DoesNotContain(rig.Decisions, item => item.Scope.ActionName is HomeDeveloperProjectEditAdmissionSource.EditAction or HomeDeveloperProjectEditAdmissionSource.CreateAction);
+    }, canonicalSavedProject: true, manualRunCommand: "printf started > manual-started.txt; sleep 2; printf 'manual-ready'; printf 'manual-error' >&2; printf finished > manual-finished.txt");
+
+    [LinuxPublicationFact]
+    public Task Manual_console_Run_declined_execution_preserves_READ_and_never_starts_the_command() => Run(async rig =>
+    {
+        var choice = Assert.Single(DeveloperRunConfigurationSelection.Observe(rig.Saved).Value!);
+        var operation = rig.Keep(rig.ProcessOwner.RunAsync(rig.Saved, choice, body => body(), rig.Token));
+        await rig.DecideNextAsync(operation, HomeDeveloperProjectReadAdmissionSource.ReadAction, HomeApprovalChoice.Accept);
+        await rig.DecideNextAsync(operation, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Decline);
+        var observed = await operation;
+        Assert.False(observed.ProcessSucceeded); Assert.Null(observed.Process); Assert.Null(observed.PhysicalOutcome);
+        Assert.NotEmpty(observed.OriginalErrors);
+        foreach (var error in observed.OriginalErrors)
+        {
+            Assert.All(OriginalLeaves(error), cause => Assert.IsType<UnauthorizedAccessException>(cause));
+            rig.Expect(error);
+        }
+        Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "manual-started.txt")));
+        Assert.Single(rig.Decisions, item => item.Scope.ActionName == HomeDeveloperProjectReadAdmissionSource.ReadAction);
+        Assert.Single(rig.Decisions, item => item.Scope.ActionName == HomeDeveloperManualProjectExecutionAdmissionSource.RunAction);
+    }, canonicalSavedProject: true, manualRunCommand: "printf started > manual-started.txt");
+
+    [LinuxPublicationFact]
+    public Task Manual_Run_cannot_adopt_changed_saved_definition_after_explicit_accept() => Run(async rig =>
+    {
+        var source = await rig.OpenRegisteredReadAsync();
+        var choice = Assert.Single(DeveloperRunConfigurationSelection.Observe(rig.Saved).Value!);
+        var binding = await rig.Keep(rig.Selections.CaptureOriginalManualExecutionAsync(source.Selection, source.Read, source.Capture,
+            choice.Configuration.Id, choice.Configuration.Revision, choice.DefinitionSha256, rig.Token));
+        var acquisition = rig.Keep(rig.Runs.AcquireOriginalManualExecutionAsync(binding, rig.Token));
+        var request = await rig.DecideNextAsync(acquisition, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, HomeApprovalChoice.Accept);
+        var admission = await acquisition;
+        Assert.Null(admission.OriginalFence.OriginalAttempt); Assert.True(rig.FenceAuthority.IsIssuedOriginal(admission.OriginalFence));
+        var legacy = new WorkspaceTaskRunEffectAuthority(rig.Graph.GetRequiredService<TaskRunPermissionAuthority>(),
+            rig.Graph.GetRequiredService<IPermissionDecisionEngine>(), rig.Graph.GetRequiredService<IPermissionOriginalEffectFence>());
+        Assert.False(legacy.IsIssuedOriginal(admission.OriginalFence));
+        var document = JsonNode.Parse(await File.ReadAllTextAsync(rig.SavedMetadataPath, rig.Token))!;
+        document["workspace"]!["runConfigurations"]![0]!["command"] = "printf replacement > manual-started.txt";
+        await File.WriteAllTextAsync(rig.SavedMetadataPath, document.ToJsonString(), rig.Token);
+        var physical = Assert.IsAssignableFrom<IWorkspaceOriginalInvocationSource>(rig.Graph.GetRequiredService<IWorkspaceToolService>());
+        var invocation = rig.RetainInvocation(physical.AcquireOriginalInvocation(admission.OriginalFence));
+        await rig.RefusesAsync(() => invocation.Tools.RunProcessAsync(WorkspaceToolProcessRequestFactory.CreateOriginal(
+            binding.CanonicalRoot, binding.Command, binding.TimeoutSeconds), rig.Token));
+        var outcome = await rig.Keep(invocation.CompleteOriginalAsync(false, rig.Token));
+        Assert.True(physical.ValidateOriginalOutcome(invocation, outcome)); Assert.True(outcome.KnownNoEffect);
+        Assert.All(outcome.Effects, effect => Assert.False(effect.Admitted)); Assert.False(File.Exists(Path.Combine(rig.ProjectRoot, "manual-started.txt")));
+        admission.ObserveOriginalProcessOutcome(invocation, null, outcome);
+        await rig.CloseUnpublishedRunAsync(admission, request);
+    }, canonicalSavedProject: true, manualRunCommand: "printf original > manual-started.txt");
+
+    private static IEnumerable<Exception> OriginalLeaves(Exception error) => error is AggregateException group
+        ? group.InnerExceptions.SelectMany(OriginalLeaves) : [error];
+
     private static async Task Run(Func<Rig, Task> body, string? existingTarget = null,
-        bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true)
+        bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true, string? manualRunCommand = null)
     {
         Rig? rig = null;
         Exception? primary = null;
         var cleanup = new List<Exception>();
-        try { rig = await Rig.CreateAsync(existingTarget, canonicalSavedProject, registerSavedProject, bindSavedStore); await body(rig); }
+        try { rig = await Rig.CreateAsync(existingTarget, canonicalSavedProject, registerSavedProject, bindSavedStore, manualRunCommand); await body(rig); }
         catch (Exception error) { primary = error; if (rig is not null) rig.PreserveStorage = true; }
         finally
         {
@@ -683,6 +768,8 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
         internal HomeLocalDomainComposition Home = null!;
         internal HomeDeveloperProjectReadAdmissionSource Reads = null!;
         internal HomeDeveloperProjectEditAdmissionSource Edits = null!;
+        internal HomeDeveloperManualProjectExecutionAdmissionSource Runs = null!;
+        internal DeveloperManualProjectProcessOwner ProcessOwner = null!;
         internal FilesDeveloperOriginalSourceSelection Selections = null!;
         internal IDeveloperProjectOriginalPhysicalCaptureSource Kernel = null!;
         private NativeFilesWorkspace _workspace = null!;
@@ -705,7 +792,7 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
         internal string SavedRegistryPath => _savedRegistryPath ?? throw new InvalidOperationException("No actual project registry observation was captured.");
 
         internal static async Task<Rig> CreateAsync(string? existingTarget = null,
-            bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true)
+            bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true, string? manualRunCommand = null)
         {
             if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This fixture requires the genuine Linux Home/Files native owners.");
             var rig = new Rig();
@@ -726,17 +813,20 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 NativeFilesWorkspaceAuthority? authority = null;
                 HomeDeveloperProjectReadAdmissionSource? reads = null;
                 HomeDeveloperProjectEditAdmissionSource? edits = null;
+                HomeDeveloperManualProjectExecutionAdmissionSource? runs = null;
                 var readPolicy = new HomeDeveloperProjectReadActionPolicySource();
                 var editPolicy = new HomeDeveloperProjectEditActionPolicySource();
+                var runPolicy = new HomeDeveloperManualProjectExecutionActionPolicySource();
+                var runResolver = new HomeDeveloperManualProjectExecutionResourceResolver(() => runs ?? throw new InvalidOperationException("Actual manual Run owner is not resolved."));
                 var readResolver = new HomeDeveloperProjectReadResourceResolver(() => reads ?? throw new InvalidOperationException("Actual READ owner is not resolved."));
                 var editResolver = new HomeDeveloperProjectEditResourceResolver(() => edits ?? throw new InvalidOperationException("Actual WRITE owner is not resolved."));
                 var destinationResolver = new FilesDeveloperOriginalSetupDestinationResolver(
                     () => rig.Graph.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>());
-                var resolvers = new List<ICanonicalResourceAccessResolver> { readResolver, editResolver };
+                var resolvers = new List<ICanonicalResourceAccessResolver> { readResolver, editResolver, runResolver };
                 if (canonicalSavedProject && bindSavedStore) resolvers.Add(destinationResolver);
                 rig._registration = CloudflareLocalDomainRegistration.CreateOriginal(
                     new FileHomeCoreStateStore(Path.Combine(homeRoot, "state.json")), new OperatingSystemPrincipalSource(), new Paths(rig._root),
-                    originalResolvers: resolvers, originalPolicies: [readPolicy, editPolicy],
+                    originalResolvers: resolvers, originalPolicies: [readPolicy, editPolicy, runPolicy],
                     configureOriginalStores: identity =>
                     {
                         files = new(identity.StateStore, identity.Profiles);
@@ -759,6 +849,12 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                     provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), readResolver, readPolicy);
                 services.AddHavenOwnedDeveloperSourceEdits(rig.Home,
                     provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), editResolver, editPolicy);
+                services.AddHavenOwnedDeveloperManualExecution(rig.Home,
+                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), runResolver, runPolicy);
+                services.AddSingleton<DeveloperManualProjectProcessOwner>(provider => new(provider.GetRequiredService<NativeFilesWorkspaceService>(),
+                    provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
+                    provider.GetRequiredService<HomeDeveloperManualProjectExecutionAdmissionSource>(),
+                    Assert.IsAssignableFrom<IWorkspaceOriginalInvocationSource>(provider.GetRequiredService<IWorkspaceToolService>())));
                 Func<IServiceProvider, IDeveloperProjectOriginalPhysicalCaptureSource> kernelFactory = provider =>
                     Assert.IsType<WorkspaceToolService>(provider.GetRequiredService<IWorkspaceToolService>()).CreateOriginalDeveloperCaptureSource(
                         provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
@@ -788,6 +884,8 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 rig._graph = services.BuildServiceProvider();
                 rig.Reads = reads = rig._graph.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>();
                 rig.Edits = edits = rig._graph.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>();
+                rig.Runs = runs = rig._graph.GetRequiredService<HomeDeveloperManualProjectExecutionAdmissionSource>();
+                rig.ProcessOwner = rig._graph.GetRequiredService<DeveloperManualProjectProcessOwner>();
                 rig.Kernel = rig._graph.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>();
                 rig.Selections = rig._graph.GetRequiredService<FilesDeveloperOriginalSourceSelection>();
                 Assert.Same(rig.Edits, rig._graph.GetRequiredService<IWorkspaceManualEditFinalFenceValidator>());
@@ -798,7 +896,7 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 File.SetUnixFileMode(rig.ProjectRoot, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                 await File.WriteAllTextAsync(rig.SeedPath, "existing independent source\n", rig.Token);
                 if (existingTarget is not null) await File.WriteAllTextAsync(rig.TargetPath, existingTarget, rig.Token);
-                if (canonicalSavedProject) await rig.CreateSavedFixtureAsync(registerSavedProject);
+                if (canonicalSavedProject) await rig.CreateSavedFixtureAsync(registerSavedProject, manualRunCommand);
                 return rig;
             }
             catch (Exception primary)
@@ -812,6 +910,8 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
 
         internal Task<T> Keep<T>(Task<T> actual) { _raw.Add(actual); return actual; }
         internal Task Keep(Task actual) { _raw.Add(actual); return actual; }
+        internal IWorkspaceOriginalInvocation RetainInvocation(IWorkspaceOriginalInvocation invocation)
+        { _fences.Add(invocation); return invocation; }
         internal IWorkspaceToolFinalFence RetainFence(IWorkspaceToolFinalFence fence)
         {
             _fences.Add(Assert.IsAssignableFrom<IAsyncDisposable>(fence));
@@ -860,7 +960,7 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
             var read = await operation;
             return new(selection, read, await Keep(Selections.CaptureOriginalAsync(selection, read, Token)));
         }
-        private async Task CreateSavedFixtureAsync(bool register)
+        private async Task CreateSavedFixtureAsync(bool register, string? manualRunCommand)
         {
             if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This fixture owns Linux saved-project metadata.");
             var projectId = Guid.NewGuid();
@@ -871,6 +971,13 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 Projects = [new(projectId, "generic", "Actual manual saved source", [rootId], "CUI", null, "none", [], [], [], [], null)],
                 SourceControlBindings = [repository]
             };
+            if (manualRunCommand is not null)
+                draft = draft with
+                {
+                    Projects = [draft.Projects[0] with { RunConfigurationIds = ["manual-console"] }],
+                    RunConfigurations = [new("manual-console", DeveloperRunConfigurationSelection.ProviderId, projectId.ToString("D"), "console", [],
+                        rootId.ToString("D"), "local", [], null) { Command = manualRunCommand, TimeoutSeconds = 10 }]
+                };
             var created = await Keep(SavedStore.CreateAsync(draft, Token));
             Assert.True(created.Succeeded);
             var workspace = Assert.IsType<DeveloperWorkspace>(created.Value);
@@ -1007,6 +1114,14 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
             Assert.Contains(observed!.State, new[] { HomePermissionRequestState.Failed, HomePermissionRequestState.Cancelled });
             Assert.NotEqual(HomePermissionRequestState.Succeeded, observed.State);
         }
+        internal async Task CloseUnpublishedRunAsync(IDeveloperProjectOriginalManualExecutionAdmission run, HomePermissionRequest request)
+        {
+            var unexpected = new List<Exception>(); Task? actual = null;
+            try { actual = Keep(run.DisposeAsync().AsTask()); await actual; }
+            catch (Exception error) { AddUnexpected(actual?.Exception ?? error, unexpected); }
+            if (unexpected.Count != 0) throw new AggregateException("New manual Run cleanup failures remain visible.", unexpected);
+            await AssertUnpublishedRequestAsync(request);
+        }
         internal async Task CloseUnpublishedWriteAsync(IDeveloperProjectOriginalEditAdmission write, HomePermissionRequest request)
         {
             var unexpected = new List<Exception>();
@@ -1098,6 +1213,8 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
             // Each explicitly borrowed native owner is closed independently. Only the exact
             // already-observed operation failures are expected; a new close failure still fails.
             foreach (var source in _registeredNativeSources) await Close(() => Keep(source.CloseAndDrainOriginalAsync()));
+            if (ProcessOwner is not null) await Close(ProcessOwner.CloseAndDrainOriginalAsync);
+            if (Runs is not null) await Close(Runs.CloseAndDrainOriginalManualExecutionsAsync);
             if (Edits is not null) await Close(Edits.CloseAndDrainOriginalEditsAsync);
             if (Reads is not null) await Close(Reads.CloseAndDrainOriginalReadsAsync);
             if (Selections is not null) await Close(Selections.CloseAndDrainOriginalSelectionsAsync);

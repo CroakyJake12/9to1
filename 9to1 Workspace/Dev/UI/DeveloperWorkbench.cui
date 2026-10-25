@@ -159,6 +159,7 @@
       </Repeat>
       <Text text="{Binding SelectedRunTargetSummary}" text-wrapping="Wrap" accessible-name="Selected exact Run target and execution admission" />
       <Button id="dev-run-selected-target" action="dev.run-selected-target" content="Run selected target" Interactive="{Binding CanRunSelectedTarget}" />
+      <Button id="dev-stop-manual-run" action="dev.stop-manual-run" content="Stop manual Run" Interactive="{Binding CanStopManualRun}" />
       <Input id="dev-terminal-command" placeholdertext="Explicit command in this project" accessible-name="Terminal command" Type="Text" Value="{Binding Command}" />
       <Button id="dev-terminal-run" action="dev.run-command" content="Run command" />
       <Input id="dev-test-command" placeholdertext="Explicit test command" accessible-name="Test command" Type="Text" Value="{Binding TestCommand}" />
