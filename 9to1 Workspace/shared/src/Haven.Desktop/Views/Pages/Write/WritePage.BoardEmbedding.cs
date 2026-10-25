@@ -6,7 +6,7 @@ namespace Haven.Desktop.Views.Pages.Write;
 
 public sealed partial class WritePage
 {
-    private bool _embeddedReadOnly;
+    private bool? _embeddedReadOnly;
 
     /// <summary>Applies the embedded view mode to the real Write scene. Document selection,
     /// scrolling and copy remain available; editing surfaces and authored controls are disabled.</summary>
