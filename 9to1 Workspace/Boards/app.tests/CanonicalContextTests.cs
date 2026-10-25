@@ -26,7 +26,11 @@ public sealed class CanonicalContextTests
             Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             Assert.NotNull(root);
             loader.WireBindings(root);
+            vm.Attach(root);
             var controls = root.GetLogicalDescendants().OfType<Control>().ToArray();
+            var pageTitle = Assert.Single(controls.OfType<TextBox>(), control => AutomationProperties.GetName(control) == "Page title");
+            pageTitle.Text = "Editable page heading";
+            Assert.Equal("Editable page heading", document.Sections[0].Pages[0].Title);
             var alternating = Assert.Single(controls.OfType<CheckBox>(), control => control.Content?.ToString() == "Alternating rows");
             alternating.IsChecked = true;
             Assert.True(table.TableStyle.AlternatingRows);
@@ -59,6 +63,7 @@ public sealed class CanonicalContextTests
             Assert.Equal("#FFFFF3C4", table.CellStyles["1,1"].Background);
             Assert.Same(document, session.Document);
             Assert.Equal(table.Id, vm.SelectedBlockId);
+            vm.Detach();
         });
         await session.SaveAsync();
         Assert.Contains("#FFFFFFFF", session.Snapshot, StringComparison.Ordinal);

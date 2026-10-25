@@ -846,6 +846,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 _session.Document.Title = text;
                 Set("BoardTitle", text);
                 break;
+            case "PageTitleBox":
+            {
+                var pageTitle = text.Length <= 2048 ? text : text[..2048];
+                CurrentPage().Title = pageTitle;
+                Set("PageTitle", pageTitle);
+                NavRebuildRequested?.Invoke();
+                break;
+            }
             case "NavSearchBox":
                 // Filter-only: never dirties the document.
                 SearchText = text;

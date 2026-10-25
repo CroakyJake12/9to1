@@ -160,7 +160,7 @@
           <Container horizontalalignment="Stretch" cornerradius="0" padding="0" margin="0" Type="Overlay" ID="PageCard" BorderWidth="0">
             <Container Type="Grid" ID="PageSurface">
               <Container margin="40 32" Type="Vertical Stack" ID="DocumentContentLayer">
-                <Text text="{Binding PageTitle, fallback=Welcome}" font-size="28" font-weight="Bold" margin="0 0 0 4" />
+                <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" BorderWidth="0" />
                 <Container Type="Vertical Stack" ID="BlocksHost" />
               </Container>
               <Container Type="Absolute" ID="InkOverlayLayer" />
