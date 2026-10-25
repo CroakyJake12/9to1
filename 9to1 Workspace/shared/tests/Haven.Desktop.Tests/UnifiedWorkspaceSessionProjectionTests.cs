@@ -103,7 +103,8 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
         var merged = UnifiedWorkspaceSessionProjection.Merge(original, window.Id, "actual-profile",
             Projection([restored], id), new HashSet<Guid>());
 
-        Assert.Equal("alternate-profile", Assert.Single(merged.Tabs).ProfileId);
+        Assert.True(UnifiedWorkspaceTabState.TryProject(Assert.Single(merged.Tabs), "actual-profile", out var projected));
+        Assert.Equal("alternate-profile", projected!.ProfileId);
         Assert.Empty(Assert.Single(merged.Windows).RecentlyClosedTabs);
         Assert.Throws<InvalidDataException>(() => UnifiedWorkspaceSessionProjection.Merge(original, window.Id,
             "actual-profile", Projection([restored with { ProfileId = "forged-profile" }], id), new HashSet<Guid>()));
@@ -124,7 +125,8 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
         var merged = UnifiedWorkspaceSessionProjection.Merge(original, window.Id, "actual-profile",
             Projection([restored], id), new HashSet<Guid>());
 
-        Assert.Equal("actual-profile", Assert.Single(merged.Tabs).ProfileId);
+        Assert.True(UnifiedWorkspaceTabState.TryProject(Assert.Single(merged.Tabs), "actual-profile", out var projected));
+        Assert.Equal("actual-profile", projected!.ProfileId);
     }
 
     [Theory]
