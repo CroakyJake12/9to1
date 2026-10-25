@@ -21,11 +21,13 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
     private readonly string _sessionId;
     private readonly Func<HomeNotesLibraryReadReview, CancellationToken, Task> _presentRead;
     private readonly Func<HomeNotesSaveReview, CancellationToken, Task> _presentSave;
+    private readonly bool _allowWrites;
     private readonly Action<Action> _originalScope;
     private readonly Action<Task> _retainOriginalTask;
     private readonly CancellationToken _lifetime;
     private readonly SemaphoreSlim _operations = new(1, 1);
     private long _expectedVersion;
+    private NotesDocument? _cachedRead;
     private bool _retiring, _unsettledSave;
     private Task? _close;
 
@@ -33,10 +35,10 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
         HomeNotesResourceAdmissionSource home, Guid documentId, long expectedVersion, string sessionId,
         Func<HomeNotesLibraryReadReview, CancellationToken, Task> presentRead,
         Func<HomeNotesSaveReview, CancellationToken, Task> presentSave,
-        Action<Action> originalScope, Action<Task> retainOriginalTask, CancellationToken lifetime)
+        Action<Action> originalScope, Action<Task> retainOriginalTask, CancellationToken lifetime, bool allowWrites)
     {
         _notes = notes; _verified = verified; _home = home; _documentId = documentId;
-        _expectedVersion = expectedVersion; _sessionId = sessionId; _presentRead = presentRead;
+        _expectedVersion = expectedVersion; _sessionId = sessionId; _presentRead = presentRead; _allowWrites = allowWrites;
         _presentSave = presentSave; _originalScope = originalScope; _retainOriginalTask = retainOriginalTask; _lifetime = lifetime;
     }
 
@@ -45,7 +47,8 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
         long expectedVersion, string sessionId,
         Func<HomeNotesLibraryReadReview, CancellationToken, Task> presentRead,
         Func<HomeNotesSaveReview, CancellationToken, Task> presentSave,
-        Action<Action> originalScope, Action<Task> retainOriginalTask, CancellationToken lifetime)
+        Action<Action> originalScope, Action<Task> retainOriginalTask, CancellationToken lifetime,
+        bool allowWrites = true)
     {
         ArgumentNullException.ThrowIfNull(notes); ArgumentNullException.ThrowIfNull(verified);
         ArgumentNullException.ThrowIfNull(home); ArgumentNullException.ThrowIfNull(presentRead);
@@ -57,7 +60,7 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
             !verified.IsBoundToOriginal(notes) || !home.IsBoundToOriginalNotes(notes))
             throw new UnauthorizedAccessException("Retain the original Write artifact, Notes/verified/Home owners and actual presentation lifetime.");
         return new(notes, verified, home, documentId, expectedVersion, sessionId,
-            presentRead, presentSave, originalScope, retainOriginalTask, lifetime);
+            presentRead, presentSave, originalScope, retainOriginalTask, lifetime, allowWrites);
     }
 
     public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken cancellationToken) =>
@@ -77,6 +80,7 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
     {
         ArgumentNullException.ThrowIfNull(document);
         DemandSelected(document.Id);
+        if (!_allowWrites) throw new UnauthorizedAccessException("This embedded Write page is read-only.");
         if (document.Version < 0 || document.Version != Volatile.Read(ref _expectedVersion) || IsBoardsDocument(document))
             throw new UnauthorizedAccessException("Save only the selected current Write document revision.");
         var bytes = JsonSerializer.SerializeToUtf8Bytes(document, Json);
@@ -128,6 +132,7 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
             throw new InvalidDataException("The original Notes acknowledgement does not match this Write candidate.");
         }
         Volatile.Write(ref _expectedVersion, receipt.Version);
+        _cachedRead = Detach(target);
         return receipt;
     }
 
@@ -135,6 +140,8 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
     {
         if (_unsettledSave) throw new IOException("The previous Write publication or Home audit remains unresolved.");
         var expected = Volatile.Read(ref _expectedVersion);
+        if (_cachedRead is { } cached && cached.Version == expected)
+            return Detach(cached);
         var request = await _notes.PrepareOriginalLibraryReadAsync(_documentId, token).ConfigureAwait(false);
         if (!_notes.IsIssuedOriginalLibraryReadRequest(request) || request.DocumentId != _documentId ||
             request.Kind != NotesOriginalReadKind.LibrarySnapshot)
@@ -160,7 +167,8 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
         var document = snapshot.SelectedDocument;
         if (document is null || document.Id != _documentId || document.Version != expected || IsBoardsDocument(document))
             throw new InvalidOperationException("The selected Write artifact is no longer at its pinned owner revision.");
-        return document;
+        _cachedRead = Detach(document);
+        return Detach(document);
     }
 
     public Task DeleteAsync(Guid documentId, CancellationToken cancellationToken) =>
@@ -220,6 +228,9 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
     }
 
     private static bool IsBoardsDocument(NotesDocument document) => BoardsWorkspaceService.IsBoardsNotebook(document);
+    private static NotesDocument Detach(NotesDocument document) =>
+        JsonSerializer.Deserialize<NotesDocument>(JsonSerializer.SerializeToUtf8Bytes(document, Json), Json)
+        ?? throw new InvalidDataException("The Write document could not be detached from its original owner.");
     private void DemandSelected(Guid documentId)
     {
         if (documentId == Guid.Empty || documentId != _documentId)
