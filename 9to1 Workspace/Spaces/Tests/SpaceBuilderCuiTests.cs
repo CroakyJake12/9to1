@@ -116,16 +116,18 @@ public sealed class SpaceBuilderCuiTests
             window.Show();
             window.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
-            Control expertView = root.GetVisualDescendants().OfType<Control>()
-                .Single(control => control.Name == "space-builder-expert-view" ||
-                    AutomationProperties.GetAutomationId(control) == "space-builder-expert-view");
-            Assert.False(expertView.IsVisible);
-
             await bindings.DispatchAsync("space-builder.view.expert", null, deadline.Token);
             window.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
             Assert.Equal(SpaceBuilderEditorView.Expert, controller.State.EditorView);
+            Control expertView = root.GetVisualDescendants().OfType<Control>()
+                .Single(control => control.Name == "space-builder-expert-view" ||
+                    AutomationProperties.GetAutomationId(control) == "space-builder-expert-view");
             Assert.True(expertView.IsVisible);
+            await bindings.DispatchAsync("space-builder.view.basic", null, deadline.Token);
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            Assert.False(expertView.IsVisible);
             window.Close();
             loader.Dispose();
             Dispatcher.UIThread.RunJobs();

@@ -296,24 +296,24 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
 
     public bool TrySetItemValue(object item, string path, object? value)
     {
-        if (!_isCurrent() || value is not bool enabled) return false;
+        if (!_isCurrent()) return false;
         var state = _state();
         if (!state.CanEdit) return false;
-        if (path == "included" && item is SpaceBuilderContextReferenceRow row &&
+        if (path == "included" && value is bool included && item is SpaceBuilderContextReferenceRow row &&
             Guid.TryParseExact(row.id, "D", out var contextId) && _setContextIncluded is not null &&
             state.Draft.ContextReferences.Any(reference => reference.ContextId == contextId && reference.IncludedAutomatically == row.included))
         {
-            _setContextIncluded(contextId, enabled);
+            _setContextIncluded(contextId, included);
             Refresh();
             return true;
         }
-        if (path == "required" && item is SpaceBuilderModelCapabilityRow modelRow &&
+        if (path == "required" && value is bool required && item is SpaceBuilderModelCapabilityRow modelRow &&
             Enum.TryParse<ToolCapability>(modelRow.id, false, out var capability) && Enum.IsDefined(capability) &&
             _setModelCapabilityRequired is not null &&
             (state.Draft.ModelPolicy?.RequiredCapabilities ?? []).Any(name =>
                 Enum.TryParse<ToolCapability>(name, true, out var parsed) && parsed == capability) == modelRow.required)
         {
-            _setModelCapabilityRequired(capability, enabled);
+            _setModelCapabilityRequired(capability, required);
             Refresh();
             return true;
         }

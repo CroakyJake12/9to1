@@ -21,7 +21,7 @@
           <Button id="space-builder-view-expert" content="Expert" action="space-builder.view.expert" Selected="{Binding builder.view.isExpert}" accessible-name="Expert view" />
         </Container>
         <Text id="space-builder-expert-active-hint" text="Expert configurations active · open Expert to inspect them" IsVisible="{Binding builder.hasExpertConfiguration}" foreground="{Resource CuiTextSoftBrush}" />
-        <Container id="space-builder-expert-view" Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isExpert}">
+        <Container id="space-builder-expert-view" Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isExpert}">
           <Text text="Expert pages · same Space and draft revision" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Container Type="Wrap" CellGap="8" role="tablist" accessible-name="Expert pages">
             <Button id="space-builder-expert-details" content="Details" action="space-builder.expert.details" Selected="{Binding builder.expert.isDetails}" />
@@ -52,7 +52,7 @@
           <Text text="Custom instructions" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-instructions" Type="Text" AcceptsReturn="True" MinHeight="120" Value="{Binding builder.instructions, mode=TwoWay}" accessible-name="Space custom instructions" />
         </Container>
-        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
+        <Container Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
           <Text text="Sources and privacy" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Policies are checked before request dispatch; unavailable original owners block the request. Saving does not grant permission, retrieve source bodies or enable outside web access." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Text text="Outside web access" foreground="{Resource CuiTextBrush}" />
@@ -112,7 +112,7 @@
           <Text text="Memory" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-memory" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.memory, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Memory category state" />
         </Container>
-        <Container id="space-builder-model-policy" Type="Vertical Stack" CellGap="6" IsVisible="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
+        <Container id="space-builder-model-policy" Type="Vertical Stack" CellGap="6" Active="{Binding builder.view.isAdvanced}" Interactive="{Binding builder.canEdit}">
           <Text text="Model routing override" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Optional exact model and provider IDs. Leave the model blank to use the current governed default. Activation checks configured IDs against the live catalogue. The default seeds model choice; a model selected in the current composer takes precedence while eligible." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Text text="Default model ID" foreground="{Resource CuiTextBrush}" />
@@ -129,7 +129,7 @@
             </Container>
           </Repeat>
         </Container>
-        <Container id="space-builder-memory-policy" Type="Vertical Stack" CellGap="6" IsVisible="{Binding builder.view.isAdvanced}">
+        <Container id="space-builder-memory-policy" Type="Vertical Stack" CellGap="6" Active="{Binding builder.view.isAdvanced}">
           <Text text="Memory policy" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Allow personal memory reads for this Space. The existing memory source still checks the current actor, source and separate permission before reading; parent policy or the Memory category may be more restrictive." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Container Type="Horizontal Stack" CellGap="8" Interactive="{Binding builder.canEdit}">
@@ -137,7 +137,7 @@
             <Text text="Allow personal memory reads" foreground="{Resource CuiTextBrush}" />
           </Container>
         </Container>
-        <Container id="space-builder-example-pairs" Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isAdvanced}">
+        <Container id="space-builder-example-pairs" Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isAdvanced}">
           <Text text="Space examples" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Plain-text examples are included in the Space's current prompt configuration. They do not run tools, execute code or prove installed capabilities." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Repeat id="space-builder-example-pair-list" Source="{Binding builder.examplePairs}" As="example" Key="{Binding example.key}">
@@ -151,7 +151,7 @@
           </Repeat>
           <Button id="space-builder-example-add" content="Add example" action="space-builder.example.add" Interactive="{Binding builder.canEdit}" accessible-name="Add a Space prompt example" />
         </Container>
-        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding builder.view.isAdvanced}">
+        <Container Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isAdvanced}">
           <Text text="Canonical context sources" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Choose a real Boards notebook through Home. Adding a read reference does not grant body access; using it requires a new original Home review and local inference. Current selection is not captured on this route. Up to 128 current notebooks are shown, newest first." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Button id="space-builder-browse-boards" content="Choose or refresh Boards sources" action="space-builder.source.browse" Interactive="{Binding builder.canBrowseSources}" accessible-name="Choose canonical Boards sources" />

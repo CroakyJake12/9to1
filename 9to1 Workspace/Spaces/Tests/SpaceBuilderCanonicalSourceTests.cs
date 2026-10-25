@@ -171,6 +171,8 @@ public sealed class SpaceBuilderCanonicalSourceTests
             try
             {
                 window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                await bindings.DispatchAsync("space-builder.view.advanced", null, token);
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 Button Find(string id) => root.GetVisualDescendants().OfType<Button>().Single(button =>
                     button.Name == id || AutomationProperties.GetAutomationId(button) == id);
                 var add = Find("space-builder-attach-boards-source"); Assert.True(add.IsEnabled);
