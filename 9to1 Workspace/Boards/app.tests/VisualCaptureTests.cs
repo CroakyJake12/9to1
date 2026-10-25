@@ -190,18 +190,18 @@ public sealed class VisualCaptureTests
             ?? throw new InvalidOperationException("The block grip is not in the page card visual tree.");
         var insertPoint = insert.TranslatePoint(new Point(0, 0), pageCard)
             ?? throw new InvalidOperationException("The block insert action is not in the page card visual tree.");
-        Assert.InRange(Math.Abs(blockTextPoint.Value.X - titlePoint.Value.X), 0, 1,
-            $"Block text should align with the page title; block={blockTextPoint.Value}, title={titlePoint.Value}.");
+        Assert.InRange(Math.Abs(blockTextPoint.X - titlePoint.X), 0, 1,
+            $"Block text should align with the page title; block={blockTextPoint}, title={titlePoint}.");
         Assert.Equal(32, grip.Bounds.Width);
         Assert.Equal(32, grip.Bounds.Height);
         Assert.Equal(32, insert.Bounds.Width);
         Assert.Equal(32, insert.Bounds.Height);
-        Assert.True(gripPoint.Value.X + grip.Bounds.Width <= insertPoint.Value.X + 0.5,
-            $"The 32px grip and insert targets must remain adjacent without overlap; grip={gripPoint.Value}, insert={insertPoint.Value}.");
-        Assert.True(gripPoint.Value.X >= 0 && gripPoint.Value.X + grip.Bounds.Width <= titlePoint.Value.X + 1,
-            $"The 32px grip target must fit in the margin left of the title; grip={gripPoint.Value}, title={titlePoint.Value}, card={pageCard.Bounds}.");
-        Assert.True(insertPoint.Value.X >= 0 && insertPoint.Value.X + insert.Bounds.Width <= titlePoint.Value.X + 1,
-            $"The 32px insert target must fit in the margin left of the title; insert={insertPoint.Value}, title={titlePoint.Value}, card={pageCard.Bounds}.");
+        Assert.True(gripPoint.X + grip.Bounds.Width <= insertPoint.X + 0.5,
+            $"The 32px grip and insert targets must remain adjacent without overlap; grip={gripPoint}, insert={insertPoint}.");
+        Assert.True(gripPoint.X >= 0 && gripPoint.X + grip.Bounds.Width <= titlePoint.X + 1,
+            $"The 32px grip target must fit in the margin left of the title; grip={gripPoint}, title={titlePoint}, card={pageCard.Bounds}.");
+        Assert.True(insertPoint.X >= 0 && insertPoint.X + insert.Bounds.Width <= titlePoint.X + 1,
+            $"The 32px insert target must fit in the margin left of the title; insert={insertPoint}, title={titlePoint}, card={pageCard.Bounds}.");
 
         if (openStyleMenu)
         {
