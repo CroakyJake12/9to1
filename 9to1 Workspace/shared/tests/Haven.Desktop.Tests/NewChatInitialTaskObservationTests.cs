@@ -85,6 +85,48 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [Fact]
+    public async Task Actual_completion_admitted_before_pause_keeps_its_original_completion_acknowledgement()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(tools: false);
+        var initial = rig.Service.CurrentCanonicalTask!;
+        var permission = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(permission.Id, token);
+        rig.Client.RunApprovedOwnedFrame = true;
+        rig.TaskRows.HeldCompletionWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var lease = await rig.Tasks.StartObservedOriginalRunResumeAsync(initial.TaskId, initial.ExecutionId, token);
+        Task? pausing = null;
+        try
+        {
+            await rig.TaskRows.CompletionWriteEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            // The real original completion CAS is already invoked and held. A later
+            // genuine withdrawal must join it, never rewrite that success as suspension.
+            var withdrawal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var registration = rig.Client.OriginalStreamToken.Register(() => withdrawal.TrySetResult());
+            var actualPause = rig.Tasks.PauseOriginalRunAsync(initial.TaskId, initial.ExecutionId, token);
+            pausing = actualPause;
+            await withdrawal.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.False(actualPause.IsCompleted);
+            rig.TaskRows.HeldCompletionWrite.SetResult();
+            var ack = await actualPause.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.Equal(TaskRunOriginalRunControlDisposition.AlreadyCompletedByOriginal, ack.Disposition);
+            Assert.Equal(TaskExecutionLifecycle.Completed, ack.State);
+            var completed = (await rig.Tasks.GetAsync(initial.TaskId, token))!;
+            Assert.Equal(initial.ExecutionId, completed.ExecutionId);
+            Assert.Equal(TaskExecutionLifecycle.Completed, completed.State);
+            _ = await lease.WaitAsync();
+        }
+        finally
+        {
+            rig.TaskRows.HeldCompletionWrite.TrySetResult();
+            if (pausing is not null) _ = await Record.ExceptionAsync(() => pausing);
+            _ = await Record.ExceptionAsync(() => ActualHostedProducer(lease));
+            await lease.DetachAndDrainAsync();
+        }
+    }
+
     [AvaloniaFact]
     public async Task Native_task_pause_waits_for_its_actual_owner_ack_and_preserves_the_same_draft_and_run()
     {

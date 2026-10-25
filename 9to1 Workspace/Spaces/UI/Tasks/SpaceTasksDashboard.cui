@@ -35,7 +35,7 @@
         <If Condition="!{Binding HasRows}">
           <Text id="tasks-empty" text="{Binding EmptyLabel}" TextWrapping="Wrap" />
         </If>
-        <Container id="tasks-recent-rows" Type="Vertical Stack" CellGap="10" MinHeight="40" accessible-name="Existing canonical task tiles">
+        <Container id="tasks-recent-rows" Type="Vertical Stack" CellGap="10" MinHeight="40" Background="{Resource CuiTransparentBrush}" accessible-name="Existing canonical task tiles">
           <Container Type="Context Menu">
             <Button id="tasks-context-scope" Type="Menu Item" content="Shown Tasks" Interactive="{Binding CanChangeScope}">
               <Button id="tasks-context-only" Type="Menu Item" content="Task Space Only" action="tasks.scope-only" ToggleType="Radio" Checked="{Binding IsTaskSpaceOnly}" />

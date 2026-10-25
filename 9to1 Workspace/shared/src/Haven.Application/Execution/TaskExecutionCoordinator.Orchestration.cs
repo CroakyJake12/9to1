@@ -50,7 +50,23 @@ internal sealed partial class TaskRunInvocationCustody
     internal Task<TaskExecutionSnapshot>? OriginalBegin;
     internal TaskExecutionSnapshot? CompletionBasis;
     internal Task<TaskExecutionSnapshot>? OriginalOwningCompletion;
-    internal bool CompletionCallAdmitted;
+    internal volatile bool CompletionCallAdmitted;
+    private bool _originalRunCompletionWithdrawn;
+    internal void WithdrawOriginalRunCompletion()
+    { lock (_gate) _originalRunCompletionWithdrawn = true; }
+    internal bool TryAdmitOriginalCompletion()
+    {
+        lock (_gate)
+        {
+            // A genuine already-admitted completion keeps its original CAS. A later
+            // graceful provider end cannot become completion after resumable Pause won.
+            if (_originalRunCompletionWithdrawn) return false;
+            if (CompletionCallAdmitted || OriginalCompletion is not null)
+                throw new InvalidOperationException("The original completion is already admitted.");
+            CompletionCallAdmitted = true;
+            return true;
+        }
+    }
     internal Action? DeferredCompletionPublication;
     internal ChatStreamEvent? DeferredCompletedMessage;
     internal ChatStreamEvent? DeferredPermissionRequiredMessage;
@@ -209,7 +225,7 @@ public sealed partial class TaskExecutionCoordinator
             throw new InvalidOperationException("The actual terminal invocation needs inspection before dispatch or completion; recorded status cannot replace it.");
     }
 
-    internal async Task<TaskExecutionSnapshot> CompleteOriginalInvocationAsync(TaskRunInvocationCustody custody)
+    internal async Task<TaskExecutionSnapshot?> CompleteOriginalInvocationAsync(TaskRunInvocationCustody custody)
     {
         RequireOriginalInvocation(custody);
         var basis = custody.CompletionBasis ?? throw new InvalidOperationException("The actual original produced no completion basis.");
@@ -224,7 +240,7 @@ public sealed partial class TaskExecutionCoordinator
         var attempt = current.Attempts.LastOrDefault() ?? throw new InvalidOperationException("No original attempt is available for completion.");
         await AwaitOriginalInvocationObservationSourceAsync(custody, "completion.command", () =>
             ValidateTaskCommandAsync(current, "complete-original-invocation-after-cleanup", CancellationToken.None)).ConfigureAwait(false);
-        custody.CompletionCallAdmitted = true;
+        if (!custody.TryAdmitOriginalCompletion()) return null; // Expected own Pause, not a source failure.
         var published = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         async Task<TaskExecutionSnapshot> CompletePublishedOriginalAsync()
         {
