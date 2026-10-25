@@ -57,12 +57,26 @@ internal sealed class NativeHomeFilesBoardReadSource(FilesNativeBrowserService b
     AuthenticatedResourceActor actor)
 {
     private readonly ConcurrentDictionary<Guid, NativeHomeFilesBoardReadLease> _prepared = new();
+    private readonly object _originalReadGate = new();
+    private readonly HashSet<Task> _originalReads = new(ReferenceEqualityComparer.Instance);
+    internal sealed record ReadOutcome(NativeHomeFilesBoardReadLease? Lease, Exception? Refusal);
 
     internal async Task<NativeHomeFilesBoardReadLease> ReadSelectedAsync(FilesNativeBrowserPage page,
         HostedItemMetadata row, Func<bool> lifetime, Func<CancellationToken, Task<bool>> homeAuthorityCurrent,
         Action<Action> withinOriginalSource, Action<Task> retainOriginalTask,
         CloudflareOriginalTaskLedger originals,
         CancellationToken token)
+    {
+        var outcome = await ReadSelectedOutcomeAsync(page, row, lifetime, homeAuthorityCurrent,
+            withinOriginalSource, retainOriginalTask, originals, token).ConfigureAwait(false);
+        if (outcome.Refusal is { } refusal) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(refusal).Throw();
+        return outcome.Lease ?? throw new InvalidDataException("The original Files board read returned no lease.");
+    }
+
+    internal async Task<ReadOutcome> ReadSelectedOutcomeAsync(FilesNativeBrowserPage page,
+        HostedItemMetadata row, Func<bool> lifetime, Func<CancellationToken, Task<bool>> homeAuthorityCurrent,
+        Action<Action> withinOriginalSource, Action<Task> retainOriginalTask,
+        CloudflareOriginalTaskLedger originals, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(page);
         ArgumentNullException.ThrowIfNull(row);
@@ -71,12 +85,74 @@ internal sealed class NativeHomeFilesBoardReadSource(FilesNativeBrowserService b
         if (page.IsTrash || page.Items.All(item => !ReferenceEquals(item, row)) ||
             !FilesNativeBrowserService.IsBoardDocumentCandidate(row) || row.ParentId?.Value != page.ParentID)
             throw new UnauthorizedAccessException("Select an actual current board document from Home Library.");
+        lock (_originalReadGate)
+        {
+            PruneOriginalReads();
+            if (_originalReads.Count >= 256) throw new InvalidOperationException("Original Files board read failures remain retained.");
+        }
 
-        var readTask = originals.Invoke(() => browser.ReadOriginalBoardDocumentWithinSourceAsync(page, row,
-            actor, lifetime, withinOriginalSource, retainOriginalTask, token));
-        var read = await originals.AwaitAsync(readTask).ConfigureAwait(false);
-        return await CreateLeaseAfterReadAsync(read, page, row, actor, lifetime, homeAuthorityCurrent, token)
-            .ConfigureAwait(false);
+        Task<FilesOriginalBoardDocumentRead>? acquired = null; Exception? admissionFailure = null;
+        try
+        {
+            // Return metadata from the finite scope: this source owns the raw read,
+            // and its caller retains the exact observation task below.
+            originals.Invoke(() => {
+                acquired = browser.ReadOriginalBoardDocumentWithinSourceAsync(page, row,
+                    actor, lifetime, withinOriginalSource, task => {
+                        RetainOriginalRead(task); retainOriginalTask(ObserveOriginalRead(task));
+                    }, token);
+                RetainOriginalRead(acquired); return true;
+            });
+        }
+        catch (Exception cause) { admissionFailure = cause; }
+        if (acquired is not { } readTask)
+            throw admissionFailure ?? new InvalidOperationException("The original Files board read was not acquired.");
+        ReadOutcome? outcome = null; Exception? readFailure = null;
+        try { outcome = await originals.AwaitAsync(ObserveRead()).ConfigureAwait(false); }
+        catch (Exception cause) { readFailure = cause; }
+        if (admissionFailure is not null)
+        {
+            var failures = new List<Exception> { admissionFailure };
+            if (readFailure is not null) failures.Add(readFailure);
+            if (outcome?.Lease is { } held)
+                try { await held.DisposeAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
+            throw new AggregateException("The original Files read acquisition/observation retained failures.", failures);
+        }
+        if (readFailure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(readFailure).Throw();
+        return outcome ?? throw new InvalidDataException("The original Files read returned no observation.");
+
+        async Task<ReadOutcome> ObserveRead()
+        {
+            FilesOriginalBoardDocumentRead read;
+            try { read = await readTask.ConfigureAwait(false); }
+            catch (Exception error) when (browser.IsOriginalBoardDocumentReadRefusal(readTask, error))
+            {
+                var refusal = error;
+                while (refusal is AggregateException group) refusal = group.InnerExceptions[0];
+                return new(null, refusal);
+            }
+            return new(await CreateLeaseAfterReadAsync(read, page, row, actor, lifetime, homeAuthorityCurrent, token).ConfigureAwait(false), null);
+        }
+    }
+
+    private void RetainOriginalRead(Task actual)
+    {
+        lock (_originalReadGate)
+        {
+            PruneOriginalReads();
+            _originalReads.Add(actual);
+        }
+    }
+    private void PruneOriginalReads()
+    {
+        foreach (var task in _originalReads.Where(task => task.IsCompletedSuccessfully)) task.GetAwaiter().GetResult();
+        _originalReads.RemoveWhere(task => task.IsCompletedSuccessfully || task.IsFaulted &&
+            browser.IsOriginalBoardDocumentReadRefusal(task, task.Exception!));
+    }
+    private async Task ObserveOriginalRead(Task actual)
+    {
+        try { await actual.ConfigureAwait(false); }
+        catch (Exception error) when (browser.IsOriginalBoardDocumentReadRefusal(actual, error)) { }
     }
 
     internal static async Task<NativeHomeFilesBoardReadLease> CreateLeaseAfterReadAsync(
@@ -132,8 +208,15 @@ internal sealed class NativeHomeFilesBoardReadSource(FilesNativeBrowserService b
 
     internal async Task DrainPreparedAsync()
     {
+        var failures = new List<Exception>();
         var leases = _prepared.ToArray();
         foreach (var pair in leases)
-            if (_prepared.TryRemove(pair.Key, out var lease)) await lease.DisposeAsync().ConfigureAwait(false);
+            if (_prepared.TryRemove(pair.Key, out var lease))
+                try { await lease.DisposeAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
+        Task[] original; lock (_originalReadGate) original = _originalReads.ToArray();
+        foreach (var task in original)
+            try { await task.ConfigureAwait(false); }
+            catch (Exception cause) { if (!browser.IsOriginalBoardDocumentReadRefusal(task, cause)) failures.Add(task.Exception ?? cause); }
+        if (failures.Count != 0) throw new AggregateException("The original Files board reads/prepared leases retained failures.", failures);
     }
 }
