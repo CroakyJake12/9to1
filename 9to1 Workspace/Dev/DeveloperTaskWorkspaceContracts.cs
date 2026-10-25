@@ -1,5 +1,6 @@
 using Haven.Application;
 using Haven.Core;
+using System.Text.Json.Serialization;
 
 namespace HavenOS.Apps.Dev;
 
@@ -37,5 +38,9 @@ public sealed record DeveloperActionObservation(
     public ProcessResult? OriginalProcessResult => OriginalToolResult?.OriginalProcessResult;
     public bool? ProcessSucceeded => OriginalProcessResult is { } actual ? !actual.TimedOut && actual.ExitCode == 0 : null;
     public bool KnownNoEffect { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? RunConfigurationId { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? RunConfigurationDefinitionSha256 { get; init; }
     public bool RequiresOutcomeInspection => !KnownNoEffect && Action?.State != TaskPlanNodeState.Completed;
 }

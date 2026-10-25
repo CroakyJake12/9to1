@@ -263,6 +263,37 @@ public sealed class DeveloperTaskWorkspaceService(
                     ("command", stage.Command!), ("timeout_seconds", timeout)), "Run saved development stage", task, stage));
             }, cancellationToken);
 
+    /// <summary>Runs one exact declared Workspace console target through the SAME original
+    /// Task/Home/Files process owner. Saved metadata never grants execution trust.</summary>
+    public Task<DeveloperOperationResult<DeveloperActionObservation>> RunInspectedConfigurationAsync(
+        DeveloperProjectReference project, DeveloperCanonicalActionContext context, string configurationId, long configurationRevision,
+        string expectedDefinitionSha256, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(configurationId);
+        if (configurationRevision < 1 || expectedDefinitionSha256 is not { Length: 64 } || !expectedDefinitionSha256.All(Uri.IsHexDigit))
+            throw new ArgumentException("An exact positive run-configuration revision and complete declaration SHA-256 are required.", nameof(expectedDefinitionSha256));
+        expectedDefinitionSha256 = expectedDefinitionSha256.ToLowerInvariant();
+        return AdmitAsync(project, context, RequestDigest(new { operation = "run-configuration", configurationId, configurationRevision, expectedDefinitionSha256 }),
+            async token =>
+            {
+                var resolved = await ResolveAsync(project, token).ConfigureAwait(false);
+                if (!resolved.Succeeded || resolved.Value is null) return new(resolved.RequestId, null, resolved.Error);
+                var choices = DeveloperRunConfigurationSelection.Observe(resolved.Value);
+                if (!choices.Succeeded) return new(choices.RequestId, null, choices.Error);
+                var choice = choices.Value!.SingleOrDefault(row => row.Configuration.Id == configurationId);
+                if (choice is null || choice.Configuration.Revision != configurationRevision || choice.DefinitionSha256 != expectedDefinitionSha256)
+                    return Fail<PreparedCall>(DeveloperOperationErrorCode.RevisionConflict, "The inspected run target changed. Select and inspect its current declaration before execution.", context.ActionId);
+                if (choice.UnavailableReason is { } reason)
+                    return Fail<PreparedCall>(DeveloperOperationErrorCode.CapabilityUnavailable, reason, context.ActionId);
+                var configuration = choice.Configuration;
+                var timeout = configuration.TimeoutSeconds ?? 120;
+                DemandCommand(configuration.Command!, timeout, 900);
+                return DeveloperOperationResult<PreparedCall>.Success(new(Call("run_command", ("command", configuration.Command!),
+                    ("timeout_seconds", timeout)), "Run console target " + configuration.Id + " (revision " + configuration.Revision + ")")
+                    { RunConfiguration = configuration });
+            }, cancellationToken);
+    }
+
     public Task<DeveloperOperationResult<DeveloperActionObservation>> GitAsync(
         DeveloperProjectReference project, DeveloperCanonicalActionContext context, DeveloperGitOperation operation,
         string? branchName = null, CancellationToken cancellationToken = default)
@@ -296,6 +327,7 @@ public sealed class DeveloperTaskWorkspaceService(
         DeveloperTaskDefinition? Task = null, DeveloperBuildStage? Stage = null)
     {
         public string? ExpectedDocumentRoot { get; init; }
+        public DeveloperRunConfiguration? RunConfiguration { get; init; }
     }
 
     private Task<DeveloperOperationResult<DeveloperActionObservation>> DispatchAsync(
@@ -383,7 +415,10 @@ public sealed class DeveloperTaskWorkspaceService(
             var result = !prepared.Succeeded || prepared.Value is null
                 ? new DeveloperOperationResult<DeveloperActionObservation>(prepared.RequestId, null, prepared.Error)
                 : await ObserveOriginalAsync(() => ExecuteCoreAsync(original, prepared.Value.Call, prepared.Value.Summary, token,
-                    prepared.Value.Task, prepared.Value.Stage, prepared.Value.ExpectedDocumentRoot)).ConfigureAwait(false);
+                    prepared.Value.Task, prepared.Value.Stage, prepared.Value.ExpectedDocumentRoot, prepared.Value.RunConfiguration)).ConfigureAwait(false);
+            if (prepared.Value?.RunConfiguration is { } configuration && result.Value is { } runObservation)
+                result = result with { Value = runObservation with { RunConfigurationId = configuration.Id,
+                    RunConfigurationDefinitionSha256 = DeveloperRunConfigurationSelection.Digest(configuration) } };
             // The result may contain private source/process output. Revalidate this actual
             // issuer again after the owning body/ACK, before disclosing it to the caller.
             if (result.Value is not null) await DemandCurrentObservationAsync(original.Context, token).ConfigureAwait(false);
@@ -396,11 +431,13 @@ public sealed class DeveloperTaskWorkspaceService(
 
     private async Task<DeveloperOperationResult<DeveloperActionObservation>> ExecuteCoreAsync(
         Invocation original, OllamaToolCall call, string summary, CancellationToken token,
-        DeveloperTaskDefinition? expectedTask, DeveloperBuildStage? expectedStage, string? expectedDocumentRoot)
+        DeveloperTaskDefinition? expectedTask, DeveloperBuildStage? expectedStage, string? expectedDocumentRoot, DeveloperRunConfiguration? expectedRun)
     {
         var project = original.Project; var context = original.Context;
         var resolved = await ResolveAsync(project, token).ConfigureAwait(false);
         if (!resolved.Succeeded || resolved.Value is null) return new(resolved.RequestId, null, resolved.Error);
+        if (expectedRun is not null && !IsCurrentRunDeclaration(resolved.Value, expectedRun))
+            return Fail<DeveloperActionObservation>(DeveloperOperationErrorCode.RevisionConflict, "The selected run configuration changed before preparation; no process was admitted.", context.ActionId);
         if (expectedDocumentRoot is not null && !string.Equals(Path.GetFullPath(expectedDocumentRoot),
             Path.GetFullPath(resolved.Value.Root.Location), OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
             return Fail<DeveloperActionObservation>(DeveloperOperationErrorCode.InvalidInput, "The document root does not match this current saved project.", project.RootId);
@@ -443,6 +480,9 @@ public sealed class DeveloperTaskWorkspaceService(
         {
             if (existing.OriginalToolIntent != intent || existing.ParentActionId != context.ParentActionId)
                 return Fail<DeveloperActionObservation>(DeveloperOperationErrorCode.InvalidInput, "The original action identifies different work; no operation was redispatched.", context.ActionId);
+            if (expectedRun is not null)
+                return Fail<DeveloperActionObservation>(DeveloperOperationErrorCode.PermissionRequired,
+                    "This persisted command acknowledgement does not prove the exact Run configuration. Inspect the original action; it will not be replayed.", context.ActionId);
             if (existing.State == TaskPlanNodeState.Completed)
                 return DeveloperOperationResult<DeveloperActionObservation>.Success(new(project, context, current, call.Name, null, AlreadyAcknowledged: true), context.ActionId);
             return Fail<DeveloperActionObservation>(DeveloperOperationErrorCode.PermissionRequired,
@@ -458,7 +498,7 @@ public sealed class DeveloperTaskWorkspaceService(
         // cannot silently substitute a different source tree or build definition before dispatch.
         var fresh = await ResolveAsync(project, token).ConfigureAwait(false);
         if (!fresh.Succeeded || fresh.Value is null || fresh.Value.Root != resolved.Value.Root ||
-            fresh.Value.Repository != resolved.Value.Repository || expectedTask is not null &&
+            fresh.Value.Repository != resolved.Value.Repository || expectedRun is not null && !IsCurrentRunDeclaration(fresh.Value, expectedRun) || expectedTask is not null &&
             (fresh.Value.Workspace.Tasks.SingleOrDefault(value => value.TaskId == expectedTask.TaskId) is not { } saved ||
              !SameDefinition(saved, expectedTask) || saved.Stages.SingleOrDefault(value => value.StageId == expectedStage!.StageId) is not { } freshStage ||
              !SameDefinition(freshStage, expectedStage)))
@@ -661,6 +701,13 @@ public sealed class DeveloperTaskWorkspaceService(
     private static OllamaToolCall Call(string name, params (string Name, object Value)[] arguments) =>
         new(name, arguments.ToFrozenDictionary(value => value.Name, value => JsonSerializer.SerializeToElement(value.Value), StringComparer.Ordinal));
     private static string RequestDigest<T>(T request) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(request)));
+    private static bool IsCurrentRunDeclaration(DeveloperResolvedProject project, DeveloperRunConfiguration expected)
+    {
+        var choices = DeveloperRunConfigurationSelection.Observe(project);
+        return choices.Succeeded && choices.Value!.SingleOrDefault(choice => choice.Configuration.Id == expected.Id) is { UnavailableReason: null } current &&
+            current.DefinitionSha256 == DeveloperRunConfigurationSelection.Digest(expected);
+    }
+
     private static bool SameDefinition<T>(T current, T expected) => CryptographicOperations.FixedTimeEquals(
         SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(current)), SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(expected)));
     private static void DemandDocument(DeveloperProjectReference project, DeveloperCodeDocument document)

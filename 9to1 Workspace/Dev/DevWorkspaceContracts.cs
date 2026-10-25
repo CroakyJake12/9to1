@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace HavenOS.Apps.Dev;
 
@@ -41,7 +42,15 @@ public sealed record DeveloperRunConfiguration(
     string EnvironmentId,
     IReadOnlyList<string> PreLaunchTaskIds,
     string? PreviewProviderId,
-    long Revision = 1);
+    long Revision = 1)
+{
+    // Additive metadata: old constructor/deconstruction and persisted rows remain readable.
+    // The Workspace console provider requires an explicit command, never an argv reinterpretation.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Command { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? TimeoutSeconds { get; init; }
+}
 
 public sealed record DeveloperDebugConfiguration(
     string Id,

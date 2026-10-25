@@ -338,6 +338,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (!_active || _work.IsRetiring) { value = null; return false; }
             if (TryGetManualRecoveryConflictValue(path, out value)) return true;
             if (TryGetNewFileValue(path, out value)) return true;
+            if (TryGetRunTargetValue(path, out value)) return true;
             if (TryGetCuiPropertyValue(path, out value)) return true;
             if (TryGetCuiAnalysisValue(path, out value)) return true;
             value = path switch
@@ -487,6 +488,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (command == "dev.select-run-target") return DeveloperRunConfigurationSelection.Observe(_project) is { Succeeded: true, Value.Count: > 0 };
+            if (command == "dev.run-selected-target") return !_manual && IsSelectedRunTargetCurrent(_project);
             if (command == "dev.review-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && HasNewFileSlot(_newFileName) && DeveloperNewSourceFile.Prepare(_newFileName, _newFileCuiTemplate).Succeeded;
             if (command == "dev.create-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && CurrentNewFileReview();
             if (command == "dev.select-cui-property") return CurrentCuiPropertyInspection()?.Properties.Take(100).Any(property => property.CanEdit) == true;
@@ -546,6 +549,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command == "dev.select-run-target") return SelectRunTarget(parameter);
+        if (command == "dev.run-selected-target") return RunSelectedTargetAsync(cancellationToken);
         if (command is "dev.review-new-source-file" or "dev.create-new-source-file") return DispatchNewSourceFileAsync(command, cancellationToken);
         if (command == "dev.select-cui-property") return SelectCuiProperty(parameter);
         if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);
