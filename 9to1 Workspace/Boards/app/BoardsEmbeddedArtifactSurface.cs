@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CakeOS.Apps.Boards.Contract;
 using Haven.Application;
 
@@ -17,10 +18,17 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
     private Panel? _surface;
     private bool _disposed;
 
-    public async Task RenderAsync(Panel surface)
+    public Task RenderAsync(Panel surface)
     {
         ArgumentNullException.ThrowIfNull(surface);
-        await _gate.WaitAsync().ConfigureAwait(true);
+        if (Dispatcher.UIThread.CheckAccess()) return RenderOnUiThreadAsync(surface);
+        return DispatchAsync(() => RenderOnUiThreadAsync(surface));
+    }
+
+    private async Task RenderOnUiThreadAsync(Panel surface)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        await _gate.WaitAsync();
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
@@ -75,15 +83,20 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                 reference.Validate();
                 if (!string.Equals(reference.ApplicationId, "write", StringComparison.Ordinal))
                     throw new InvalidDataException("The Board page does not identify a Write artifact.");
-                var opened = await host.OpenAsync(reference, mode).ConfigureAwait(true);
+                var opened = await host.OpenAsync(reference, mode);
+                if (!IsCurrentSelection(pageId, sectionId, reference, mode))
+                {
+                    await CloseUnpublishedAsync(opened);
+                    return;
+                }
                 if (!Equals(opened.CurrentReference, reference))
                 {
-                    await CloseUnpublishedAsync(opened).ConfigureAwait(true);
+                    await CloseUnpublishedAsync(opened);
                     throw new InvalidDataException("The Write owner did not open the pinned artifact revision.");
                 }
                 if (!opened.IsPublicationCurrent)
                 {
-                    await CloseUnpublishedAsync(opened).ConfigureAwait(true);
+                    await CloseUnpublishedAsync(opened);
                     throw new UnauthorizedAccessException("Write access changed before the embedded page could be shown.");
                 }
                 _session = opened;
@@ -104,14 +117,21 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         finally { _gate.Release(); }
     }
 
-    public async Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
+    public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
     {
+        if (Dispatcher.UIThread.CheckAccess()) return TryPrepareToCloseOnUiThreadAsync(cancellationToken);
+        return DispatchAsync(() => TryPrepareToCloseOnUiThreadAsync(cancellationToken));
+    }
+
+    private async Task<bool> TryPrepareToCloseOnUiThreadAsync(CancellationToken cancellationToken)
+    {
+        Dispatcher.UIThread.VerifyAccess();
         if (_disposed) return true;
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _gate.WaitAsync(cancellationToken);
         try
         {
             if (_disposed) return true;
-            return await RetireCurrentAsync(restoreSelection: false, cancellationToken).ConfigureAwait(false);
+            return await RetireCurrentAsync(restoreSelection: false, cancellationToken);
         }
         finally { _gate.Release(); }
     }
@@ -125,7 +145,7 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         bool prepared;
         try
         {
-            prepared = await session.TryPrepareToCloseAsync(cancellationToken).ConfigureAwait(true);
+            prepared = await session.TryPrepareToCloseAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -152,7 +172,7 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                 viewModel.Session is ContractSessionAdapter adapter)
             {
                 await adapter.SetEmbeddedArtifactAsync(_pageId, HavenRichPageTypes.Write,
-                    currentReference, cancellationToken).ConfigureAwait(true);
+                    currentReference, cancellationToken);
             }
             else
             {
@@ -162,8 +182,8 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         }
 
         _surface?.Children.Remove(session.Content);
-        await session.CloseAndDrainAsync().ConfigureAwait(true);
-        await session.DisposeAsync().ConfigureAwait(true);
+        await session.CloseAndDrainAsync();
+        await session.DisposeAsync();
         _session = null;
         _pageId = null;
         _sectionId = null;
@@ -171,15 +191,22 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
         return true;
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
+        if (Dispatcher.UIThread.CheckAccess()) return new ValueTask(DisposeOnUiThreadAsync());
+        return new ValueTask(DispatchAsync(DisposeOnUiThreadAsync));
+    }
+
+    private async Task DisposeOnUiThreadAsync()
+    {
+        Dispatcher.UIThread.VerifyAccess();
         if (_disposed) return;
-        await _gate.WaitAsync().ConfigureAwait(false);
+        await _gate.WaitAsync();
         var disposeGate = false;
         try
         {
             if (_disposed) return;
-            if (_session is not null && !await RetireCurrentAsync(restoreSelection: false).ConfigureAwait(false))
+            if (_session is not null && !await RetireCurrentAsync(restoreSelection: false))
                 throw new InvalidOperationException("The embedded Write page refused to close; its draft remains open.");
             _disposed = true;
             disposeGate = true;
@@ -189,6 +216,26 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             _gate.Release();
             if (disposeGate) _gate.Dispose();
         }
+    }
+
+    private bool IsCurrentSelection(string pageId, string? sectionId,
+        BoardEmbeddedArtifactReference reference, BoardEmbeddedArtifactMode mode) =>
+        string.Equals(viewModel.SelectedPageId, pageId, StringComparison.Ordinal) &&
+        string.Equals(viewModel.SelectedSectionId, sectionId, StringComparison.Ordinal) &&
+        string.Equals(viewModel.SelectedPageType, HavenRichPageTypes.Write, StringComparison.Ordinal) &&
+        Equals(viewModel.SelectedEmbeddedArtifact, reference) &&
+        (viewModel.IsEditMode && viewModel.CanEdit ? BoardEmbeddedArtifactMode.Edit : BoardEmbeddedArtifactMode.View) == mode;
+
+    private static async Task DispatchAsync(Func<Task> work)
+    {
+        var operation = Dispatcher.UIThread.InvokeAsync(work);
+        await await operation;
+    }
+
+    private static async Task<T> DispatchAsync<T>(Func<Task<T>> work)
+    {
+        var operation = Dispatcher.UIThread.InvokeAsync(work);
+        return await await operation;
     }
 
     private static string FirstLine(string value)

@@ -1228,12 +1228,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var blockMode = _textRangeControl is null && !_textRangeDetached;
         var allowed = _isEditMode && !_textRangeBusy && (selection is not null || blockMode);
         Set("CanFormatTextRange", allowed);
-        Set("TextRangeSummary", selection is not null ? $"Selected text: {Math.Abs(selection.Caret - selection.Anchor)} characters"
-            : _textRangeControl is not null ? "Select text to format" : block is not null ? "Selected block" : "No text selection");
-        Set("RangeBoldState", "Bold: " + (selection?.Bold.ToString() ?? (block?.Bold == true ? "On" : "Off")));
-        Set("RangeItalicState", "Italic: " + (selection?.Italic.ToString() ?? (block?.Italic == true ? "On" : "Off")));
-        Set("RangeUnderlineState", "Underline: " + (selection?.Underline.ToString() ?? (block?.Underline == true ? "On" : "Off")));
-        Set("RangeStrikeState", "Strikethrough: " + (selection?.StrikeThrough.ToString() ?? (block?.Strike == true ? "On" : "Off")));
+        var selectedCharacters = selection is null ? 0 : Math.Abs(selection.Caret - selection.Anchor);
+        Set("TextRangeSummary", selection is not null ? $"{selectedCharacters} {(selectedCharacters == 1 ? "character" : "characters")} selected"
+            : _textRangeControl is not null ? "Caret formatting" : block is not null ? "Block selected" : "Select text");
+        Set("RangeBoldState", "Bold, " + (selection?.Bold.ToString().ToLowerInvariant() ?? (block?.Bold == true ? "on" : "off")));
+        Set("RangeItalicState", "Italic, " + (selection?.Italic.ToString().ToLowerInvariant() ?? (block?.Italic == true ? "on" : "off")));
+        Set("RangeUnderlineState", "Underline, " + (selection?.Underline.ToString().ToLowerInvariant() ?? (block?.Underline == true ? "on" : "off")));
+        Set("RangeStrikeState", "Strikethrough, " + (selection?.StrikeThrough.ToString().ToLowerInvariant() ?? (block?.Strike == true ? "on" : "off")));
         RefreshCuiBlockActions();
     }
 

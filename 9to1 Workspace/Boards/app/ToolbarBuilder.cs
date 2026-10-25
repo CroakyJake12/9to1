@@ -256,11 +256,13 @@ public static class ToolbarBuilder
                 FontWeight = style.Bold ? FontWeight.Bold : FontWeight.Normal,
                 FontStyle = style.Italic ? FontStyle.Italic : FontStyle.Normal,
                 VerticalAlignment = VerticalAlignment.Center,
+                // The gallery is painted with the current UI card surface. A document
+                // style's text colour may be black on a dark card, so use the semantic
+                // control foreground here and leave document colour previews to the editor.
+                Foreground = BoardsTheme.TextBrush,
             };
             if (!string.IsNullOrEmpty(style.FontFamily))
                 preview.FontFamily = new FontFamily(style.FontFamily);
-            if (BoardsTheme.TryBrush(style.Foreground, out var foreground))
-                preview.Foreground = foreground;
             var item = new ComboBoxItem { Content = preview, Tag = style.Id };
             ToolTip.SetTip(item, (style.IsBuiltIn ? "Built-in style: " : "Custom style: ") + style.Name);
             items.Add(item);

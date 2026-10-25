@@ -40,7 +40,8 @@ public sealed class VisualCaptureTests
         var opening = TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
             File.ReadAllBytes(boardPath), boardPath, "visual-capture-r1",
             (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(
-                false, null, "capture-save-disabled", "Visual capture does not save fixture edits."))));
+                false, null, "capture-save-disabled", "Visual capture does not save fixture edits.")),
+            standaloneChrome: true));
         var presentation = PumpUi(opening, "open presentation");
         Window? window = null;
         try
@@ -153,11 +154,11 @@ public sealed class VisualCaptureTests
             ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
         Assert.Equal(new Thickness(40, 32), contentLayer.Margin);
         Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
+        var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
+            ?? throw new InvalidOperationException("Missing authored standalone TopBar. Runtime tree:\n" + tree);
         object? accent = null;
         Assert.True(Avalonia.Application.Current?.TryGetResource("CuiAccentBrush", null, out accent) == true);
         Assert.IsType<Avalonia.Media.LinearGradientBrush>(accent);
-        var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
-            ?? throw new InvalidOperationException("Missing authored TopBar. Runtime tree:\n" + tree);
         Assert.Same(accent, topBar.BorderBrush);
         var host = BoardsCuiControlFinder.FindByAutomationId<StackPanel>(root, "BlocksHost")
             ?? throw new InvalidOperationException("Missing BlocksHost after the real presentation reached ready state. Runtime tree:\n" + tree);
