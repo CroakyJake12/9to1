@@ -2,6 +2,7 @@
   <Actions>
     <Action name="ApplyHomeAppearanceOption" command="ApplyHomeAppearance" parameter="{Binding option.Target}" />
     <Action name="OpenHomeLibraryArtifact" command="OpenHomeLibraryArtifact" parameter="{Binding artifact.Target}" />
+    <Action name="ToggleHomeLibraryPin" command="ToggleHomeLibraryPin" parameter="{Binding artifact.Target}" />
     <Action name="SelectHomeEvent" command="SelectEventObject" parameter="{Binding activity.EventId}" />
   </Actions>
   <Theme Name="user_preference">
@@ -160,7 +161,7 @@
                     <Container id="library-results" Type="Vertical Stack" CellGap="8" role="list" accessible-name="Authorised artifacts">
                       <Repeat id="home-library-rows" Panel="Vertical Stack" Source="{Binding LibraryRows}" As="artifact" Key="{Binding artifact.Key}">
                         <Container Type="Horizontal Stack" CellGap="8">
-                          <Button id="home-library-item" action="OpenHomeLibraryArtifact" parameter="{Binding artifact.Target}" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalAlignment="Stretch" Padding="12" accessible-name="{Binding artifact.DisplayName}">
+                          <Button id="home-library-item" action="OpenHomeLibraryArtifact" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalAlignment="Stretch" Padding="12" accessible-name="{Binding artifact.DisplayName}">
                             <Container Type="Vertical Stack" CellGap="5" HorizontalAlignment="Stretch">
                               <Text Text="{Binding artifact.DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
                               <Container Type="Wrap" CellGap="10">
@@ -181,7 +182,7 @@
                               <If Condition="{Binding artifact.IsGenerated}"><Text id="home-library-generated" Text="Generated" Foreground="{Resource CuiTextSoftBrush}" /></If>
                             </Container>
                           </Button>
-                          <Button id="home-library-toggle-pin" action="ToggleHomeLibraryPin" parameter="{Binding artifact.Target}" Content="Pin / unpin" IsEnabled="{Binding CanToggleHomeLibraryPin, fallback=false}" AccessibleName="Pin or unpin this artifact" />
+                          <Button id="home-library-toggle-pin" action="ToggleHomeLibraryPin" Content="Pin / unpin" IsEnabled="{Binding CanToggleHomeLibraryPin, fallback=false}" AccessibleName="Pin or unpin this artifact" />
                         </Container>
                       </Repeat>
                     </Container>
