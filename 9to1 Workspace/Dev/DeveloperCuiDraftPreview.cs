@@ -25,7 +25,7 @@ public static class DeveloperCuiDraftPreviewCompiler
     public const int MaximumSourceLength = 256_000;
     public const int MaximumElements = 500;
     public const int MaximumDepth = 32;
-    public const string SupportedSubset = "Static XML-shaped CUI: one Page with Container/Text, literal text, bounded layout and hex colours. Up to 256,000 characters, 500 elements and 32 nested levels. No bindings, resources, imports, actions, input, media, custom objects or external fonts. This is not an interactive application preview or full visual designer.";
+    public const string SupportedSubset = "Static CUI preview supports one Page with Container and Text, fixed text, layout and hex colours. Use the default font or monospace. Up to 256,000 characters, 500 elements and 32 nested levels. Bindings, resources, imports, actions, input, media and custom controls are unavailable. This preview does not run your application.";
     private static readonly HashSet<string> Attributes = new(StringComparer.OrdinalIgnoreCase)
     {
         "id", "Type", "text", "width", "height", "min-width", "min-height", "max-width", "max-height",

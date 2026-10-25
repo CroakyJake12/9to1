@@ -10,7 +10,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
     private string _fileNavigationQuery = "";
     private long _fileNavigationQueryVersion;
     private int _fileNavigationPage;
-    private string _fileNavigationStatus = "Find a literal filename or path fragment across the current project. Results are freshly captured through Home READ; opening reads the selected source again.";
+    private string _fileNavigationStatus = "Find files in this project.";
     private FileNavigationObservation? _fileNavigationObservation;
     private sealed record FileNavigationObservation(Guid Id, DeveloperResolvedProject Project,
         IReadOnlyList<DeveloperProjectTreeEntry> Manifest, long QueryVersion, DeveloperProjectFileNavigationResult Result);
@@ -32,7 +32,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
             "CanFileNavigationPrevious" => IsActionAvailable("dev.file-navigation-previous"),
             "CanFileNavigationNext" => IsActionAvailable("dev.file-navigation-next"),
             "FileNavigationStatus" => current is null ? _fileNavigationStatus :
-                $"{current.Result.Matches.Count} matching files; page {_fileNavigationPage + 1} of {Math.Max(1, (current.Result.Matches.Count + FileNavigationPageSize - 1) / FileNavigationPageSize)} ({FileNavigationPageSize} per page). Filename matches precede path matches. Open rechecks current project authority and preserves existing dirty tabs.",
+                $"{current.Result.Matches.Count} matches · page {_fileNavigationPage + 1} of {Math.Max(1, (current.Result.Matches.Count + FileNavigationPageSize - 1) / FileNavigationPageSize)}",
             "FileNavigationMatches" => current is null ? Array.Empty<FileNavigationItem>() : current.Result.Matches
                 .Skip(_fileNavigationPage * FileNavigationPageSize).Take(FileNavigationPageSize)
                 .Select((match, index) => new FileNavigationItem(FileNavigationKey(current, _fileNavigationPage * FileNavigationPageSize + index),
@@ -47,7 +47,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
         if (text == _fileNavigationQuery) return;
         _fileNavigationQuery = text; _fileNavigationQueryVersion++; _fileNavigationPage = 0; _fileNavigationObservation = null;
         _fileNavigationStatus = DeveloperProjectFileNavigation.IsValidQuery(text)
-            ? "Query changed. Find files to capture and search the current project."
+            ? "Search changed. Find files again."
             : "Enter a literal filename or path fragment up to 256 characters.";
     }
 
@@ -60,10 +60,10 @@ public sealed partial class DeveloperProjectWorkbenchPage
         if (observation is null || parameter is not string key || !key.StartsWith(observation.Id.ToString("N") + ":", StringComparison.Ordinal) ||
             !int.TryParse(key.AsSpan(33), NumberStyles.None, CultureInfo.InvariantCulture, out var index) || index < _fileNavigationPage * FileNavigationPageSize ||
             index >= Math.Min(observation.Result.Matches.Count, (_fileNavigationPage + 1) * FileNavigationPageSize) || key != FileNavigationKey(observation, index))
-            throw new InvalidOperationException("Choose a displayed file from the current captured query; this selection is stale or foreign.");
+            throw new InvalidOperationException("These search results changed. Find files again.");
         var relative = observation.Result.Matches[index].RelativePath;
         if (!observation.Manifest.Any(entry => !entry.IsDirectory && StringComparer.Ordinal.Equals(entry.RelativePath, relative)))
-            throw new InvalidOperationException("The selected file is absent from this exact captured manifest.");
+            throw new InvalidOperationException("This file is no longer in the list. Find files again.");
         return new(observation, index, relative);
     }
 
@@ -75,7 +75,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                 selection.Observation.Project.Reference != project.Reference || selection.Observation.Project.Root != project.Root ||
                 selection.Observation.Project.Repository != project.Repository ||
                 CaptureFileNavigationSelection(FileNavigationKey(selection.Observation, selection.Index)).RelativePath != selection.RelativePath)
-                throw new InvalidOperationException("The query, manifest or current project changed before source publication. Existing drafts are preserved; find the file again.");
+                throw new InvalidOperationException("The project or search changed. Find files again. Your open drafts are unchanged.");
         }
     }
 
@@ -84,7 +84,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
         long generation, queryVersion; string query;
         lock (_gate)
         {
-            if (IsActionAvailable(command) != true) throw new InvalidOperationException("This current-project file navigation operation is unavailable.");
+            if (IsActionAvailable(command) != true) throw new InvalidOperationException("File search is unavailable right now.");
             generation = _generation; queryVersion = _fileNavigationQueryVersion; query = _fileNavigationQuery; _pending = true;
         }
         try
@@ -114,13 +114,13 @@ public sealed partial class DeveloperProjectWorkbenchPage
                     {
                         token.ThrowIfCancellationRequested();
                         if (queryVersion != _fileNavigationQueryVersion || query != _fileNavigationQuery)
-                        { _status = "The file query changed during capture. Find the current query again; source tabs are unchanged."; return; }
+                        { _status = "Search changed. Find files again."; return; }
                         _project = project; PublishProjectTree(entries);
                         _fileNavigationPage = 0;
                         _fileNavigationObservation = result.Succeeded && result.Value is { } matches
                             ? new(Guid.NewGuid(), project, entries, queryVersion, matches) : null;
-                        _fileNavigationStatus = result.Error?.Message ?? "Current project file query finished.";
-                        _status = "Current-project file navigation used the genuine captured Home/Files manifest; no source was opened or changed.";
+                        _fileNavigationStatus = result.Error?.Message ?? "File search finished.";
+                        _status = "File search finished.";
                     }).ConfigureAwait(false);
                 }
                 catch (Exception error) { original.Retain(error); }

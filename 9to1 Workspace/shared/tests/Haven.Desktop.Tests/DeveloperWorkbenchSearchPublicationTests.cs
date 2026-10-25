@@ -682,14 +682,15 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             Assert.Contains(Assert.IsAssignableFrom<Control>(host.Content).GetVisualDescendants().OfType<TextBlock>(), value => value.Text == "compiled & literal");
             Assert.Same(editor, SearchPublicationField("_editor").GetValue(page));
             Assert.Same(selection, SearchPublicationField("_editorTextSelection").GetValue(page));
-            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status)); Assert.Contains("Showing current Main.cui", Assert.IsType<string>(status));
-            Assert.Contains(DeveloperManualSourceEditOwner.Sha256(saved), Assert.IsType<string>(status));
+            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status)); Assert.Contains("Preview updated.", Assert.IsType<string>(status));
+            var previewObservation = Assert.IsType<DeveloperCuiDraftPreview>(SearchPublicationField("_cuiPreviewLastValid").GetValue(page));
+            Assert.Equal("Main.cui", previewObservation.RelativePath); Assert.Equal(DeveloperManualSourceEditOwner.Sha256(saved), previewObservation.SourceSha256);
             const string unsupported = "<Cui><Page><Image Source='https://example.test/not-fetched.png' /></Page></Cui>";
             Assert.True(page.TrySetValue("DraftText", unsupported));
             await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
             Assert.Same(host, slot.Content);
             Assert.True(page.TryGetValue("CuiDraftPreviewDiagnostics", out var diagnostics)); Assert.Contains("DEVCP003", Assert.IsType<string>(diagnostics));
-            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out status)); Assert.Contains("last valid; stale", Assert.IsType<string>(status));
+            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out status)); Assert.Contains("out of date", Assert.IsType<string>(status));
             Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(unsupported, draft);
             page.TrySetValue("DraftText", "<Cui><Page><Text text='next compiled draft' /></Page></Cui>");
             await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
@@ -729,7 +730,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             Assert.True(page.TrySetValue("DraftText", newer)); readiness.Release.TrySetResult(); await pending;
             Assert.Same(valid, slot.Content);
             Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(newer, draft);
-            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status)); Assert.Contains("last valid; stale", Assert.IsType<string>(status));
+            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status)); Assert.Contains("out of date", Assert.IsType<string>(status));
             var scenes = Assert.IsAssignableFrom<System.Collections.IEnumerable>(SearchPublicationField("_cuiPreviewScenes").GetValue(page));
             Assert.Same(valid, Assert.Single(scenes.Cast<object>()));
             Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Tools.WriteCalls);
