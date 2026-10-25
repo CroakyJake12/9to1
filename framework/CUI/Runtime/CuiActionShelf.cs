@@ -61,7 +61,7 @@ public sealed class CuiActionShelf : CuiContainerControl, ICuiBindingContext,
     internal ICuiBindingContext? InnerContext { get; set; }
     internal ICuiActionDispatcher? InnerDispatcher { get; set; }
     public Action? RefreshHost { get; set; }
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
     private CuiActionShelfItem? Front => _items.Length == 0 ? null : _items[_index];
     private CuiActionShelfItem? Rear => _items.Length < 2 ? null : _items[(_index + 1) % _items.Length];
     private void Publish()
