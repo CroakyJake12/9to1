@@ -84,7 +84,7 @@
             <Button ID="RangeUnderline" Content="U" Width="38" Height="38" VerticalAlignment="Top" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" Tooltip="Underline" />
             <Button ID="RangeStrike" Content="S" Width="38" Height="38" VerticalAlignment="Top" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough" />
           </Container>
-          <Container Type="Vertical Stack" ID="ToolbarHost" Column="1" />
+          <Container Type="Vertical Stack" ID="ToolbarHost" Column="1" HorizontalScrolling="True" VerticalScrolling="False" />
         </Container>
         <Container Type="Vertical Stack" ID="ContextHost" Row="1" Active="{Binding ContextVisible}" Padding="12 6" Background="{Resource CuiPanelBrush}">
           <If Condition="{Binding ContextIsTable}">

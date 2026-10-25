@@ -41,7 +41,10 @@ public static class ToolbarBuilder
         ArgumentNullException.ThrowIfNull(vm);
         host.Children.Clear();
 
-        var bar = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(12, 8, 12, 8) };
+        // Toolbar controls stay on a single logical row. The authored ToolbarHost
+        // owns horizontal scrolling, so narrow windows keep every command reachable
+        // without wrapping the persistent toolbar into a second vertical band.
+        var bar = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(12, 8, 12, 8) };
         if (vm.IsDrawMode)
         {
             BuildDrawToolbar(bar, vm);
@@ -397,7 +400,7 @@ public static class ToolbarBuilder
         }
     }
 
-    private static void BuildDrawToolbar(WrapPanel bar, BoardsViewModel vm)
+    private static void BuildDrawToolbar(StackPanel bar, BoardsViewModel vm)
     {
         bar.Children.Add(DrawButton(vm));
         bar.Children.Add(Separator());
