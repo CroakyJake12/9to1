@@ -126,6 +126,31 @@ public sealed class SpaceBuilderControllerTests
     }
 
     [Fact]
+    public async Task Draft_validation_reserves_names_used_by_other_saved_drafts()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var firstSpace = await registry.CreateAsync("First", cancellationToken: token);
+        var secondSpace = await registry.CreateAsync("Second", cancellationToken: token);
+        var first = new SpaceBuilderController(registry, firstSpace.Id);
+        var second = new SpaceBuilderController(registry, secondSpace.Id);
+        Assert.True(await first.LoadAsync(token));
+        Assert.True(first.SetField(SpaceBuilderField.Name, "Reserved by draft"));
+        Assert.True(await first.SaveAsync(token));
+
+        Assert.True(await second.LoadAsync(token));
+        Assert.True(second.SetField(SpaceBuilderField.Name, "Reserved by draft"));
+        var issues = await second.ValidateDraftAsync(token);
+        Assert.Contains(issues, issue => issue.Contains("saved draft", StringComparison.OrdinalIgnoreCase));
+        Assert.False(await second.SaveAsync(token));
+        Assert.Contains("active configuration was preserved", second.State.StatusMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("Second", (await registry.GetAsync(secondSpace.Id, token))!.Name);
+        Assert.Null((await registry.GetAsync(secondSpace.Id, token))!.DraftConfiguration);
+    }
+
+    [Fact]
     public async Task Invalid_category_state_is_rejected()
     {
         using var files = new SpaceDetailsTestFiles();

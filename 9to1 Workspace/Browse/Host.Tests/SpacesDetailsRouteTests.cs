@@ -59,7 +59,8 @@ public sealed class SpacesDetailsRouteTests
             Click(editor.Host, "space-builder-save");
             await editor.Host.CaptureOriginalActionSettlement(editor.Show!).WaitAsync(Bound);
             var saved = (await rig.Spaces.ReadExistingAsync(custom.Id))!;
-            Assert.Equal("Saved same canonical Space", saved.Name);
+            Assert.Equal("Canonical details", saved.Name);
+            Assert.Equal("Saved same canonical Space", saved.DraftConfiguration!.Name);
             Assert.Equal("retain-policy", saved.ModelName);
             Assert.Equal("Original instructions", saved.Instructions);
             await Back(editor, session);
@@ -81,6 +82,48 @@ public sealed class SpacesDetailsRouteTests
             Assert.True(editor.OriginalClose!.IsCompletedSuccessfully);
             Assert.True(home.OriginalClose!.IsCompletedSuccessfully);
             Assert.Null(root.Content);
+        }
+        catch (Exception failure) { primary = failure; throw; }
+        finally { await Cleanup(session, rig, window, primary); }
+    }
+
+    [AvaloniaFact]
+    public async Task Builder_reload_keeps_the_saved_draft_graph_instead_of_reloading_the_active_graph()
+    {
+        using var rig = new SpacesConversationRouteTests.Rig(withHome: true);
+        var nodeId = Guid.NewGuid();
+        var originalGraph = new SpaceLayoutDocument([new SpaceLayoutNode(nodeId, "Logic", "Active graph")], []);
+        var space = await rig.Spaces.CreateAsync("Draft graph reload");
+        space = await rig.Spaces.UpdateAsync(space with { LayoutDocument = originalGraph }, space.Revision);
+        var draftGraph = originalGraph with
+        {
+            Revision = originalGraph.Revision + 1,
+            Nodes = [new SpaceLayoutNode(nodeId, "Logic", "Saved draft graph")]
+        };
+        var editor = new SpaceBuilderController(rig.Spaces, space.Id);
+        Assert.True(await editor.LoadAsync());
+        Assert.True(editor.SetLayoutDocument(draftGraph));
+        Assert.True(await editor.SaveAsync());
+
+        var actor = await Start(rig);
+        var session = rig.Session("9to1://spaces", profileId: actor);
+        Window? window = null;
+        Exception? primary = null;
+        try
+        {
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            window = Mount(root);
+            var home = Assert.IsType<SpacesHomePage>(root.Content);
+            await home.Controller.SelectSpaceAsync(space.Id);
+            await home.Controller.EditDetailsAsync(space.Id);
+            var page = Assert.IsType<SpaceBuilderPage>(root.Content);
+            Assert.Equal("Saved draft graph", Assert.Single(page.CurrentGraphDraft!.Nodes).Title);
+            Assert.True(await page.ReloadAsync().WaitAsync(Bound));
+            Assert.Equal("Saved draft graph", Assert.Single(page.CurrentGraphDraft!.Nodes).Title);
+            var persisted = (await rig.Spaces.ReadExistingAsync(space.Id))!;
+            Assert.Equal("Active graph", Assert.Single(persisted.LayoutDocument!.Nodes).Title);
+            Assert.Equal("Saved draft graph", Assert.Single(persisted.DraftConfiguration!.LayoutDocument!.Nodes).Title);
         }
         catch (Exception failure) { primary = failure; throw; }
         finally { await Cleanup(session, rig, window, primary); }

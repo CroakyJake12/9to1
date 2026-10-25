@@ -171,6 +171,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                 var spaceForGraph = await original.AwaitAsync(Source(() => _originalRegistry.GetAsync(_controller.State.SpaceId, linked.Token))).ConfigureAwait(false);
                 if (spaceForGraph is null || spaceForGraph.IsArchived)
                     throw new InvalidOperationException("The Space was unavailable while opening its graph editor.");
+                if (!loaded) throw new InvalidOperationException("The saved Space draft could not be loaded for its graph editor.");
+                spaceForGraph = ProjectCurrentDraft(spaceForGraph, _controller.State);
                 if (loaded && _extensions is not null)
                 {
                     List<string> catalogFailures = [];
@@ -298,11 +300,15 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                     if (result && refreshGraph)
                     {
                         var savedSpace = await original.AwaitAsync(Source(() => _originalRegistry.GetAsync(_controller.State.SpaceId, linked.Token))).ConfigureAwait(false);
-                        if (savedSpace is not null)
+                        var state = _controller.State;
+                        if (savedSpace is null)
+                            throw new InvalidOperationException("The Space disappeared while refreshing its saved draft.");
+                        var draftSpace = ProjectCurrentDraft(savedSpace, state);
+                        if (draftSpace is not null)
                             await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
                             {
                                 original.DemandPublication();
-                                _graphEditor?.ReloadDraft(savedSpace);
+                                _graphEditor?.ReloadDraft(draftSpace);
                             }).GetTask()).ConfigureAwait(false);
                     }
                     return result;
@@ -496,6 +502,18 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         Grid.SetRow(_graphEditor, 1);
         _contentGrid.Children.Add(_graphEditor);
         UpdateGraphVisibility(_controller.State);
+    }
+
+    internal SpaceLayoutDocument? CurrentGraphDraft => _graphEditor is null
+        ? null : SpaceLayoutEditorAdapter.FromEditor(_graphEditor.Editor.Document, _controller.State.Draft.LayoutDocument);
+
+    private static SpaceDefinition? ProjectCurrentDraft(SpaceDefinition saved, SpaceBuilderState state)
+    {
+        if (saved.Id != state.SpaceId || saved.Revision != state.SpaceRevision ||
+            saved.DraftConfigurationRevision != state.DraftRevision ||
+            saved.ActiveConfigurationRevision != state.ActiveRevision)
+            throw new SpaceRevisionConflictException(state.SpaceId, state.SpaceRevision ?? 0, saved.Revision);
+        return saved with { LayoutDocument = state.Draft.LayoutDocument };
     }
 
     private void OnGraphDraftChanged(SpaceLayoutDocument document)

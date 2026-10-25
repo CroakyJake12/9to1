@@ -104,8 +104,10 @@ public sealed class SpaceBuilderController
                     issues.Add($"The saved Space changed to revision {current.Revision}; reload before validating or saving.");
                 var name = snapshot.Draft.Name.Trim();
                 if (name.Length is < 1 or > 80) issues.Add("Space name must contain 1 to 80 characters.");
-                if (spaces.Any(space => space.Id != snapshot.SpaceId && StringComparer.OrdinalIgnoreCase.Equals(space.Name.Trim(), name)))
-                    issues.Add($"A Space named '{name}' already exists.");
+                if (spaces.Any(space => space.Id != snapshot.SpaceId &&
+                    (StringComparer.OrdinalIgnoreCase.Equals(space.Name.Trim(), name) ||
+                     space.DraftConfiguration is { } savedDraft && StringComparer.OrdinalIgnoreCase.Equals(savedDraft.Name.Trim(), name))))
+                    issues.Add($"A Space or saved draft named '{name}' already exists.");
             }
         }
         if (!Enum.IsDefined(snapshot.Draft.ContextPolicy.WebAccess) || snapshot.Draft.ContextPolicy.MaximumRetrievedItems is < 0 or > 1000)
@@ -342,6 +344,11 @@ public sealed class SpaceBuilderController
         catch (ArgumentException error)
         {
             Change(state => state with { StatusMessage = "Could not save Space Builder configuration: " + error.Message });
+            return false;
+        }
+        catch (InvalidOperationException error)
+        {
+            Change(state => state with { StatusMessage = "Could not save the Space draft; the active configuration was preserved: " + error.Message });
             return false;
         }
         catch (Exception error)
