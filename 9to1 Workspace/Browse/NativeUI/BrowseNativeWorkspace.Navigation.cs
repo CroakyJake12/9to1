@@ -8,7 +8,14 @@ public sealed partial class BrowseNativeWorkspace
     /// action-settlement source. The action must return immediately after calling
     /// this method; the separately owned driver waits outside that action.</summary>
     public bool QueueNavigation(BrowseNavigationIntent intent, Task originalSourceSettlement)
+        => TryQueueNavigationOriginal(intent, originalSourceSettlement, out _);
+
+    /// <summary>Returns the SAME privately retained admitted driver. Admission is
+    /// not publication; consumers must join it and inspect the resulting session.
+    /// The sender settlement must be independently completable before navigation.</summary>
+    public bool TryQueueNavigationOriginal(BrowseNavigationIntent intent, Task originalSourceSettlement, out Task? originalNavigation)
     {
+        originalNavigation = null;
         Dispatcher.UIThread.VerifyAccess(); ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(originalSourceSettlement);
         if (!IsReady || _busy || !_originalActionAvailability("9to1.Browse.Navigate") ||
@@ -22,6 +29,7 @@ public sealed partial class BrowseNativeWorkspace
         invocation.Self = driver;
         _originalCommand = driver;
         lock (_sourceGate) Retain(_originalCommands, driver);
+        originalNavigation = driver;
         try { _status = "Opening…"; Changed(); start.SetResult(); }
         catch (Exception failure) { start.SetException(failure); throw; }
         ObserveQueuedNavigation(driver);
