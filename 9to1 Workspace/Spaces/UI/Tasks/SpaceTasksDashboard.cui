@@ -20,7 +20,7 @@
         <Text id="tasks-one-off-note" text="Reusable and scheduled work belongs in Automations." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
         <Text id="tasks-existing-heading" text="Existing work" font-size="18" font-weight="SemiBold" />
         <Button id="tasks-details-toggle" action="ToggleTaskDetails" content="Show/hide task details" accessible-name="Show or hide diagnostic details for the displayed tasks" />
-        <If Condition="{Binding HasRows}" Negate="True">
+        <If Condition="!{Binding HasRows}">
           <Text id="tasks-empty" text="No task conversations are available in this Space. Start a task above." TextWrapping="Wrap" />
         </If>
         <Container id="tasks-recent-rows" Type="Vertical Stack" CellGap="10" accessible-name="Existing canonical task tiles">
@@ -30,7 +30,7 @@
               <If Condition="{Binding task.completed}">
                 <Text id="tasks-tile-completed" text="{Binding task.status}" foreground="{Resource CuiSuccessBrush}" font-weight="SemiBold" accessible-name="{Binding task.status}" />
               </If>
-              <If Condition="{Binding task.completed}" Negate="True">
+              <If Condition="!{Binding task.completed}">
                 <Text id="tasks-tile-status" text="{Binding task.status}" font-weight="SemiBold" TextWrapping="Wrap" accessible-name="{Binding task.status}" />
               </If>
               <Text id="tasks-tile-summary" text="{Binding task.summary}" TextWrapping="Wrap" />
