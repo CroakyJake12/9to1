@@ -177,14 +177,26 @@ public sealed partial class FilesNativeBrowserService
         return original.RunToOriginalSettlementAsync(async () =>
         {
             token.ThrowIfCancellationRequested();
-            var witness = source.Invoke(() => samePreview.Succeeded &&
-                _originalTextPreviewWitnesses.TryGetValue(samePreview, out var issued) &&
-                ReferenceEquals(issued.Issuer, this) && issued.Actor.ProfileId == issued.Workspace.Actor.ProfileId &&
-                issued.Actor == issued.Workspace.Actor && issued.Page.StoreID == issued.Workspace.Configuration.StoreId &&
-                !issued.Page.IsTrash && issued.Page.Items.Any(row => ReferenceEquals(row, issued.Row)) &&
-                issued.Row.Id.Value == samePreview.FileId && issued.Row.Name == samePreview.Name &&
-                issued.Row.CurrentRevisionId?.Value.ToString() == samePreview.Revision
-                    ? issued : throw new UnauthorizedAccessException("Retain the SAME successful original Files preview."));
+            var witness = source.Invoke(() =>
+            {
+                const string refusal = "Retain the SAME successful original Files preview.";
+                UnauthorizedAccessException Reject(string reason) => new(refusal, new InvalidOperationException(reason));
+                if (!samePreview.Succeeded) throw Reject("The supplied result is not successful.");
+                if (!_originalTextPreviewWitnesses.TryGetValue(samePreview, out var issued))
+                    throw Reject("This exact preview object has no private issuer witness.");
+                if (!ReferenceEquals(issued.Issuer, this)) throw Reject("The preview witness belongs to another Files owner.");
+                if (issued.Actor.ProfileId != issued.Workspace.Actor.ProfileId || issued.Actor != issued.Workspace.Actor)
+                    throw Reject("The preview witness actor no longer matches its issued workspace.");
+                if (issued.Page.StoreID != issued.Workspace.Configuration.StoreId)
+                    throw Reject("The preview witness page is bound to another store.");
+                if (issued.Page.IsTrash || !issued.Page.Items.Any(row => ReferenceEquals(row, issued.Row)))
+                    throw Reject("The exact selected row is no longer on its issued page.");
+                if (issued.Row.Id.Value != samePreview.FileId || issued.Row.Name != samePreview.Name)
+                    throw Reject("The preview result identity does not match its issued row.");
+                if (issued.Row.CurrentRevisionId?.Value.ToString() != samePreview.Revision)
+                    throw Reject("The preview result revision does not match its issued row.");
+                return issued;
+            });
             if (!source.Invoke(lifetime)) throw new UnauthorizedAccessException("The original Files preview admission retired.");
             var current = await source.Observe(() => workspaces.GetOriginalCurrentWithinSourceAsync(
                 witness.Page.StoreID, source, token)).ConfigureAwait(false);
