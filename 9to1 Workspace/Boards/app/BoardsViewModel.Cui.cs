@@ -148,6 +148,9 @@ public sealed partial class BoardsViewModel
         finally { _blockActionBusy = false; RefreshCuiBlockActions(); }
     }
 
+    internal void ReportBlockMoveFailure(Exception error) =>
+        Set("StatusText", "Block move failed: " + FirstLine(error.Message));
+
     private static int IndexOf(string[] options, string? value) => Math.Max(0, Array.IndexOf(options, value));
 
     private bool TryGetContextCell(RichBoardBlock? block, out int row, out int column)

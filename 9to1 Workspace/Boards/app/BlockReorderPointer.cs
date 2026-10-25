@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 namespace CakeOS.Apps.Boards.App;
@@ -22,6 +23,10 @@ internal sealed class BlockReorderPointer
     private Point _start;
     private bool _pressed;
     private bool _dragging;
+    private double _lastHostY;
+    private int _scrollDirection;
+    private ScrollViewer? _scrollViewer;
+    private DispatcherTimer? _autoScrollTimer;
     private BoardBlockActionTarget? _target;
     private Border? _markedRow;
     private Thickness _markedThickness;
@@ -88,26 +93,43 @@ internal sealed class BlockReorderPointer
             _dragging = true;
             _pointer?.Capture(handle);
             ToolTip.SetTip(handle, "Drag to reorder. Press Escape to cancel.");
+            _scrollViewer = _host.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
         }
         if (_dragging)
         {
             e.Handled = true;
+            _lastHostY = position.Y;
             UpdateDropMarker(position.Y);
+            UpdateAutoScroll(e);
         }
     }
 
     private async void OnReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (!_pressed || !ReferenceEquals(_pointer, e.Pointer)) return;
-        var wasDrag = _dragging;
-        var destination = wasDrag ? GetDestination(e.GetPosition(_host).Y) : null;
-        var target = _target;
-        if (wasDrag) e.Handled = true;
-        Cancel();
-        if (wasDrag && destination is int index && target is not null && index != _sourceIndex)
+        try
         {
-            _viewModel.FocusBlock(target.BlockId);
-            await _viewModel.DispatchCuiBlockMoveAsync(new BoardBlockMoveRequest(target, index));
+            var wasDrag = _dragging;
+            var destination = wasDrag ? GetDestination(e.GetPosition(_host).Y) : null;
+            var target = _target;
+            if (wasDrag) e.Handled = true;
+            StopAutoScroll();
+            Cancel();
+            if (wasDrag && destination is int index && target is not null && index != _sourceIndex)
+            {
+                _viewModel.FocusBlock(target.BlockId);
+                await _viewModel.DispatchCuiBlockMoveAsync(new BoardBlockMoveRequest(target, index));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Cancel();
+            _viewModel.Set("StatusText", "Block move was cancelled.");
+        }
+        catch (Exception error)
+        {
+            Cancel();
+            _viewModel.ReportBlockMoveFailure(error);
         }
     }
 
@@ -142,6 +164,45 @@ internal sealed class BlockReorderPointer
         marked.BorderBrush = BoardsTheme.AccentBrush;
     }
 
+    private void UpdateAutoScroll(PointerEventArgs e)
+    {
+        if (_scrollViewer is null) return;
+        var pointerY = e.GetPosition(_scrollViewer).Y;
+        const double edgeSize = 40;
+        _scrollDirection = pointerY < edgeSize ? -1 :
+            pointerY > _scrollViewer.Viewport.Height - edgeSize ? 1 : 0;
+        if (_scrollDirection == 0)
+        {
+            StopAutoScroll();
+            return;
+        }
+        _autoScrollTimer ??= CreateAutoScrollTimer();
+        if (!_autoScrollTimer.IsEnabled) _autoScrollTimer.Start();
+    }
+
+    private DispatcherTimer CreateAutoScrollTimer()
+    {
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(35) };
+        timer.Tick += (_, _) =>
+        {
+            if (!_dragging || _scrollViewer is null || _scrollDirection == 0) { StopAutoScroll(); return; }
+            var oldOffset = _scrollViewer.Offset;
+            var maximum = Math.Max(0, _scrollViewer.Extent.Height - _scrollViewer.Viewport.Height);
+            var nextY = Math.Clamp(oldOffset.Y + _scrollDirection * 18, 0, maximum);
+            if (nextY == oldOffset.Y) { StopAutoScroll(); return; }
+            _scrollViewer.Offset = new Vector(oldOffset.X, nextY);
+            _lastHostY += nextY - oldOffset.Y;
+            UpdateDropMarker(_lastHostY);
+        };
+        return timer;
+    }
+
+    private void StopAutoScroll()
+    {
+        _scrollDirection = 0;
+        _autoScrollTimer?.Stop();
+    }
+
     private int? GetDestination(double y)
     {
         var rows = _host.Children.OfType<Border>()
@@ -165,6 +226,7 @@ internal sealed class BlockReorderPointer
     private void Cancel()
     {
         var pointer = _pointer;
+        StopAutoScroll();
         _pointer = null;
         _pressed = false;
         _dragging = false;
