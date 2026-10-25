@@ -9,7 +9,7 @@
       <Container padding="12 6" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="{Resource CuiBackgroundBrush}" BorderWidth="0">
         <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto Auto" CellGap="2">
           <Container Type="Grid" ColumnSizes="1fr Auto" Column="0" Row="0" ColumnSpan="2" CellGap="8">
-            <Input id="BoardTitleBox" accessible-name="Board title" font-size="18" font-weight="SemiBold" vertical-alignment="Center" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" BorderWidth="0" />
+            <Image ID="BoardsAppIcon" Source="icon:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Boards" />
             <Text ID="SaveState" Column="1" Text="{Binding SaveStateText, fallback=Saved}" FontSize="11" VerticalAlignment="Center" Margin="0 0 8 0" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
           <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" Row="1" CellGap="4" VerticalAlignment="Center">
@@ -43,8 +43,11 @@
       <!-- Left navigation: search, sections/pages (built in code), add actions -->
       <Container padding="16 18" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="{Resource CuiBackgroundBrush}" BorderWidth="0">
         <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="12">
-          <Container Type="Menu" ID="BoardSwitcherMenu" Row="0">
-            <Button Type="Menu Item" ID="BoardSwitcher" IconSource="icon:boards" Height="48" Padding="12 8" FontSize="15" FontWeight="SemiBold" Background="{Resource CuiBackgroundBrush}" BorderWidth="0" CornerRadius="10" IsEnabled="{Binding CanOpenBoardMenu}" Interactive="{Binding CanOpenBoardMenu}" AccessibleName="Current Board and board actions" HorizontalAlignment="Stretch">
+          <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
+            <Image ID="BoardSwitcherIcon" Source="icon:boards" Width="20" Height="20" VerticalAlignment="Center" AccessibleName="Current Board" />
+            <Input id="BoardTitleBox" column="1" accessible-name="Board title" font-size="15" font-weight="SemiBold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
+            <Container Type="Menu" ID="BoardSwitcherMenu" Column="2">
+            <Button Type="Menu Item" ID="BoardSwitcher" IconSource="icon:chevron-down" Width="32" Height="32" Padding="0" Background="Transparent" BorderWidth="0" CornerRadius="6" IsEnabled="{Binding CanOpenBoardMenu}" Interactive="{Binding CanOpenBoardMenu}" AccessibleName="Current Board actions" HorizontalAlignment="Center">
               <Button Type="Menu Item" ID="BoardSwitcherCreate" Content="New Board…" Action="NewBoard" IsEnabled="{Binding CanCreateBoard}" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
               <Button Type="Menu Item" ID="BoardSwitcherOpen" Content="Open Board…" Action="OpenBoard" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open an existing Board" />
               <Button Type="Menu Item" ID="BoardSwitcherAll" Content="All Boards…" Action="ShowLanding" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Browse and switch Boards" />
@@ -53,6 +56,7 @@
               <Button Type="Menu Item" ID="BoardSwitcherCheck" Content="Check saved Board" Action="CheckSavedBoard" IsEnabled="{Binding CanCheckSavedBoard}" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
               <Button Type="Menu Item" ID="BoardSwitcherRecorded" Content="Open saved Board" Action="OpenRecordedBoard" IsEnabled="{Binding CanOpenRecordedBoard}" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
             </Button>
+            </Container>
           </Container>
           <Input id="NavSearchBox" Row="1" accessible-name="Search sections and pages" placeholdertext="Search pages" margin="0 0 4 0" padding="14 11" cornerradius="18" background="{Resource CuiPanel2Brush}" foreground="{Resource CuiTextBrush}" borderwidth="0" Type="Text" ID="NavSearchBox" />
           <Container verticalalignment="Stretch" Type="Overlay" Row="2" VerticalScrolling="True" HorizontalScrolling="False">
@@ -75,10 +79,10 @@
       <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
         <Container Type="Grid" Row="0" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiPanel2Brush}" BorderWidth="0" Padding="8 6" Margin="12 8" CornerRadius="14">
           <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="0" VerticalAlignment="Center" AccessibleName="Text formatting">
-            <Button ID="RangeBold" Content="B" Width="32" Height="32" VerticalAlignment="Center" FontWeight="Bold" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
-            <Button ID="RangeItalic" Content="I" Width="32" Height="32" VerticalAlignment="Center" FontStyle="Italic" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic" />
-            <Button ID="RangeUnderline" Content="U" Width="32" Height="32" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" Tooltip="Underline" />
-            <Button ID="RangeStrike" Content="S" Width="32" Height="32" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough" />
+            <Button ID="RangeBold" Content="B" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
+            <Button ID="RangeItalic" Content="I" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" FontStyle="Italic" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic" />
+            <Button ID="RangeUnderline" Content="U" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" Tooltip="Underline" />
+            <Button ID="RangeStrike" Content="S" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough" />
           </Container>
           <Container Type="Overlay" Column="1" Width="1" Height="20" VerticalAlignment="Center" Margin="6 0" Background="{Resource CuiLineBrush}" />
           <Container Type="Vertical Stack" ID="ToolbarHost" Column="2" HorizontalScrolling="True" VerticalScrolling="False" />

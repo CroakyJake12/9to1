@@ -250,17 +250,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public void Set(string property, object? value, [CallerMemberName] string? caller = null)
     {
         _properties[property] = value;
-        if (string.Equals(property, "BoardTitle", StringComparison.OrdinalIgnoreCase))
-            UpdateBoardSwitcherTitle(value as string ?? string.Empty);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-    }
-
-    private void UpdateBoardSwitcherTitle(string title)
-    {
-        if (_attachedRoot is null) return;
-        if (BoardsCuiControlFinder.FindByAutomationId<MenuItem>(_attachedRoot, "BoardSwitcher") is { } switcher)
-            CuiPropertyPresentation.Set(switcher, "Header", title, CuiPropertyLevel.Instance,
-                "Boards current Board title");
     }
 
     public object? Get(string property) =>
@@ -1122,7 +1112,6 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public void Attach(Control root)
     {
         _attachedRoot = root;
-        UpdateBoardSwitcherTitle(Get("BoardTitle") as string ?? string.Empty);
         _textRangeDetached = false;
         ApplyAuthoringState(root);
         foreach (var textBox in FindControls<TextBox>(root))

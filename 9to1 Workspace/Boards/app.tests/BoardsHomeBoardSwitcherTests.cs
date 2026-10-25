@@ -45,9 +45,11 @@ public sealed class BoardsHomeBoardSwitcherTests
         {
             var switcher = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(loadedRoot, "BoardSwitcher");
             Assert.NotNull(switcher);
-            Assert.Equal("Pinned Files Board", switcher!.Header);
+            var title = BoardsCuiControlFinder.FindByAutomationId<TextBox>(loadedRoot, "BoardTitleBox");
+            Assert.NotNull(title);
+            Assert.Equal("Pinned Files Board", title!.Text);
             viewModel.EditText("BoardTitleBox", "Renamed Files Board");
-            Assert.Equal("Renamed Files Board", switcher.Header);
+            Assert.Equal("Renamed Files Board", title.Text);
         });
 
         TestUiThread.Run(() =>
