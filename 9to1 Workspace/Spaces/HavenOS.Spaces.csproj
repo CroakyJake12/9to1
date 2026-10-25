@@ -25,6 +25,7 @@
     <Compile Include="..\..\apps\Web\BrowserCanonicalIcons.cs" Link="UI\Home\BrowserCanonicalIcons.cs" />
     <ProjectReference Include="..\Dev\HavenOS.Dev.csproj" />
     <EmbeddedResource Include="UI\Tasks\SpaceTaskWidget.cui" LogicalName="HavenOS.Apps.Spaces.UI.Tasks.SpaceTaskWidget.cui" />
+    <EmbeddedResource Include="UI\Tasks\SpaceTasksDashboard.cui" LogicalName="HavenOS.Apps.Spaces.UI.Tasks.SpaceTasksDashboard.cui" />
     <EmbeddedResource Include="UI\Chat\ChatSpace.cui" LogicalName="HavenOS.Apps.Spaces.UI.Chat.ChatSpace.cui" />
     <EmbeddedResource Include="UI\Home\SpacesHome.cui" LogicalName="HavenOS.Apps.Spaces.UI.Home.SpacesHome.cui" />
     <EmbeddedResource Include="UI\Builder\SpaceDetails.cui" LogicalName="HavenOS.Apps.Spaces.UI.Builder.SpaceDetails.cui" />

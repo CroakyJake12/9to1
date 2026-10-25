@@ -1,4 +1,8 @@
 using Avalonia.Controls;
+using Avalonia;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.VisualTree;
 using Avalonia.Headless.XUnit;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -29,13 +33,13 @@ public sealed partial class SpaceTasksDashboardOriginalWorkTests
         Assert.Equal(rig.Snapshot.TaskId, actual.Snapshot!.TaskId);
         Assert.Equal(rig.Snapshot.ExecutionId, actual.Snapshot.ExecutionId);
         Assert.Equal(rig.Conversation.Id, actual.Snapshot.ContextId);
-        var text = string.Join("\n", rig.Page.OriginalScene.RecentRows.DescendantsAndSelf().OfType<HavenText>().Select(x => x.Content));
+        var text = string.Join("\n", rig.Page.OriginalScene.RecentRows.GetVisualDescendants().OfType<TextBlock>().Select(x => x.Text));
         Assert.Contains(rig.Snapshot.TaskId.ToString("D"), text);
         Assert.Contains(rig.Snapshot.ExecutionId.ToString("D"), text);
         Assert.Contains("Saved task", text);
         Assert.Contains("No provider attempt is recorded", text);
         Assert.DoesNotContain("is executing", text);
-        Click(rig, rig.Page.OriginalScene.RecentRows.DescendantsAndSelf().OfType<HavenButton>().Single());
+        Click(rig, rig.Page.OriginalScene.RecentRows.GetVisualDescendants().OfType<Avalonia.Controls.Button>().Single());
         await openEntered.Task.WaitAsync(TimeSpan.FromSeconds(5)); // Actual callback entry, not elapsed/idle success.
         await rig.Page.RefreshOriginalAsync();
         Assert.NotNull(opened);
@@ -410,13 +414,13 @@ public sealed partial class SpaceTasksDashboardOriginalWorkTests
         return null;
     }
 
-    private static void Click(Rig rig, HavenElement element)
+    private static void Click(Rig rig, Control element)
     {
         rig.Window!.UpdateLayout();
-        var router = new HavenInputRouter(rig.Page!.OriginalScene.Root);
-        var point = new HavenPoint(element.Bounds.X + element.Bounds.Width / 2, element.Bounds.Y + element.Bounds.Height / 2);
-        router.PointerPressed(point);
-        Assert.True(router.PointerReleased(point));
+        var point = element.TranslatePoint(new Point(element.Bounds.Width / 2, element.Bounds.Height / 2), rig.Window);
+        Assert.NotNull(point);
+        rig.Window.MouseDown(point.Value, MouseButton.Left);
+        rig.Window.MouseUp(point.Value, MouseButton.Left);
     }
     private static async Task<Exception?> ObserveAsync(Task actual)
     { try { await actual.WaitAsync(TimeSpan.FromSeconds(5)); return null; } catch (Exception error) { return actual.Exception ?? error; } }
