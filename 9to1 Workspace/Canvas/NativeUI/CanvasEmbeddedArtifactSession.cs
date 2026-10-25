@@ -15,23 +15,29 @@ public sealed record CanvasEmbeddedArtifactTarget(Guid ArtifactId, Guid Expected
     }
 }
 
+/// <summary>Container-level editing affordance only; Edit never grants a Canvas/Home permission.</summary>
+public enum CanvasEmbeddedArtifactMode { View, Edit }
+
 /// <summary>Retained same-Canvas-app view opened against one exact canonical owner revision.
 /// The returned view includes Canvas' existing Home approval surface and uses its existing
 /// Files owner, editor, mutation intents, and close/drain lifecycle.</summary>
 public sealed class CanvasEmbeddedArtifactSession
 {
     private readonly CanvasHostSurface _owner;
-    private readonly CanvasEmbeddedArtifactOpenResult _selection;
-
     private CanvasEmbeddedArtifactSession(CanvasHostSurface owner, CanvasEmbeddedArtifactTarget target,
-        CanvasEmbeddedArtifactOpenResult selection)
+        CanvasEmbeddedArtifactMode mode)
     {
         _owner = owner;
         Target = target;
-        _selection = selection;
+        Mode = mode;
     }
 
+    /// <summary>The stable target supplied by the containing Board when this session opened.</summary>
     public CanvasEmbeddedArtifactTarget Target { get; }
+    public CanvasEmbeddedArtifactMode Mode { get; }
+    /// <summary>Latest revision reopened by the same Canvas owner after an acknowledged Canvas
+    /// mutation. This reports the revision to persist back to the containing Board; it grants no access.</summary>
+    public CanvasEmbeddedArtifactTarget CurrentTarget => _owner.CurrentEmbeddedArtifactTarget;
     public Control View => _owner;
     public bool IsAlive => _owner.IsAlive;
 
@@ -39,15 +45,19 @@ public sealed class CanvasEmbeddedArtifactSession
     /// checks, and retain that same Canvas host as the embedded view.</summary>
     public static async Task<CanvasEmbeddedArtifactSession> OpenAsync(CanvasHostSurface sameCanvasOwner,
         CanvasEmbeddedArtifactTarget target, CancellationToken cancellationToken = default)
+        => await OpenAsync(sameCanvasOwner, target, CanvasEmbeddedArtifactMode.View, cancellationToken);
+
+    public static async Task<CanvasEmbeddedArtifactSession> OpenAsync(CanvasHostSurface sameCanvasOwner,
+        CanvasEmbeddedArtifactTarget target, CanvasEmbeddedArtifactMode mode, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(sameCanvasOwner);
         target = (target ?? throw new ArgumentNullException(nameof(target))).Validate();
         Dispatcher.UIThread.VerifyAccess();
-        var selection = await sameCanvasOwner.InitializeEmbeddedArtifactAsync(target, cancellationToken);
+        var selection = await sameCanvasOwner.InitializeEmbeddedArtifactAsync(target, mode, cancellationToken);
         if (selection.Opened.Artifact.ArtifactId != target.ArtifactId ||
             selection.Opened.Artifact.RevisionId != target.ExpectedRevisionId)
             throw new InvalidOperationException("Canvas did not retain the expected canonical artifact revision.");
-        return new(sameCanvasOwner, target, selection);
+        return new(sameCanvasOwner, target, mode);
     }
 
     /// <summary>Recheck the exact current actor, Files store/item CAS revision, artifact identity,
@@ -55,9 +65,9 @@ public sealed class CanvasEmbeddedArtifactSession
     public Task RevalidateAsync(CancellationToken cancellationToken = default)
     {
         if (!IsAlive) throw new ObjectDisposedException(nameof(CanvasEmbeddedArtifactSession));
-        if (_selection.Opened.Artifact.ArtifactId != Target.ArtifactId ||
-            _selection.Opened.Artifact.RevisionId != Target.ExpectedRevisionId)
-            throw new InvalidOperationException("The retained Canvas session differs from its stable Board reference.");
+        var currentTarget = CurrentTarget;
+        if (currentTarget.ArtifactId != Target.ArtifactId)
+            throw new InvalidOperationException("The retained Canvas session differs from its stable Board artifact identity.");
         return _owner.RevalidateEmbeddedArtifactAsync(cancellationToken);
     }
 

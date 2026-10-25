@@ -7,15 +7,20 @@ public sealed partial class CanvasHostSurface
 {
     private CanvasEmbeddedArtifactTarget? _embeddedTarget;
     private CanvasEmbeddedArtifactOpenResult? _embeddedSelection;
+    private bool _embeddedMutationsAllowed;
+    internal CanvasEmbeddedArtifactTarget CurrentEmbeddedArtifactTarget => _embeddedTarget
+        ?? throw new InvalidOperationException("This Canvas surface is not an embedded artifact session.");
 
     internal async Task<CanvasEmbeddedArtifactOpenResult> InitializeEmbeddedArtifactAsync(
-        CanvasEmbeddedArtifactTarget target, CancellationToken cancellationToken)
+        CanvasEmbeddedArtifactTarget target, CanvasEmbeddedArtifactMode mode, CancellationToken cancellationToken)
     {
         Dispatcher.UIThread.VerifyAccess();
         ArgumentNullException.ThrowIfNull(target);
         if (_initialization is not null || _embeddedTarget is not null || _nativeOwnerAcquired || _closed)
             throw new InvalidOperationException("Create an embedded Canvas session from a fresh canonical Canvas surface.");
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
         _embeddedTarget = target;
+        _embeddedMutationsAllowed = mode == CanvasEmbeddedArtifactMode.Edit;
         try
         {
             await _originalWork.ObserveOriginalAsync(InitializeAsync(cancellationToken));
