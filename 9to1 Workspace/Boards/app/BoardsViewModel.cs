@@ -55,8 +55,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public BoardsViewModel(IRichBoardSession session)
     {
         _session = session ?? throw new ArgumentNullException(nameof(session));
-        Set("IsEditMode", true);
-        Set("ModeLabel", "Edit");
+        if (!CanEdit) _isEditMode = false;
+        Set("IsEditMode", _isEditMode);
+        Set("ModeLabel", _isEditMode ? "Edit" : "View");
         Set("RecentBoardsLoaded", false);
         _session.StatusChanged += (_, status) =>
         {
@@ -102,11 +103,18 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public string SelectedBlockId => _selectedBlockId;
     public IReadOnlyList<RichStyleView> StyleList => _session.Styles;
     public IReadOnlyList<RichBoardBlock> PageBlocks => CurrentPage().Blocks;
+    public bool IsStandalonePresentation { get; private set; } = true;
 
     public void SetLanding(bool show)
     {
         Set("IsLanding", show);
         if (show) Set("LandingSearchQuery", _landingSearchQuery);
+    }
+
+    public void SetEmbeddedPresentation()
+    {
+        IsStandalonePresentation = false;
+        Set(nameof(IsStandalonePresentation), false);
     }
 
     public void SetLandingData(IReadOnlyList<RecentBoardCard> boards, IReadOnlyList<RecentPageCard> pages)
@@ -174,6 +182,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public string InkColor { get; set; } = "#FF111111";
     public bool IsDrawMode { get; private set; }
     public bool IsEditMode => _isEditMode;
+    public bool CanEdit => _session is not IBoardSessionCapabilities { CanEdit: false };
+    public bool CanToggleEditMode => CanEdit;
+    public bool CanSwitchBoard => CanEdit;
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
     public bool IsLanding => Get("IsLanding") as bool? ?? false;
     public IReadOnlyList<RecentBoardCard> RecentBoardCards => _recentBoardCards;
@@ -227,6 +238,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (!CanEdit && command is ("ToggleEditView" or "ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or
+            "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or "FileMenu" or
+            "OverflowMenu" or "BoardProperties" or "CloseWindow"))
+        {
+            Set("StatusText", "This board source is open read-only.");
+            return;
+        }
         if (command == "ToggleEditView")
         {
             SetEditMode(!_isEditMode);
@@ -466,6 +484,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private void SetEditMode(bool enabled)
     {
+        if (enabled && !CanEdit)
+        {
+            Set("StatusText", "This board source is open read-only.");
+            return;
+        }
         if (_isEditMode == enabled) return;
         _isEditMode = enabled;
         if (enabled)
@@ -485,6 +508,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private bool RequireEditMode()
     {
+        if (!CanEdit)
+        {
+            Set("StatusText", "This board source is open read-only.");
+            return false;
+        }
         if (_isEditMode) return true;
         Set("StatusText", "View mode: switch to Edit to change this board.");
         return false;

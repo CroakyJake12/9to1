@@ -3,6 +3,7 @@
 // persists through physical .9to1board files without dropping data.
 
 using CakeOS.Apps.Boards.Contract;
+using System.Text.Json;
 using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
@@ -10,6 +11,49 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class ContractAdapterTests
 {
+    [Fact]
+    public async Task Verified_document_bytes_open_through_a_detached_read_only_session()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var document = new HavenBoardDocument(HavenBoardDocument.FormatIdentity,
+            HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), now, now,
+            Snapshot: null, RichNotes: HavenRichNotes.Create("Read-only source"));
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var originalBytes = bytes.ToArray();
+        var decoded = HavenBoardDocumentCodec.Deserialize(bytes);
+
+        await using var adapter = await ContractSessionAdapter.OpenReadOnlyAsync(decoded);
+        var vm = new BoardsViewModel(adapter);
+        Assert.False(adapter.CanEdit);
+        Assert.False(vm.IsEditMode);
+        Assert.False(vm.CanToggleEditMode);
+        Assert.False(adapter.CanUndo);
+        Assert.False(adapter.CanRedo);
+
+        var originalPageCount = adapter.Document.Sections[0].Pages.Count;
+        await vm.DispatchAsync("AddPage", null);
+        await vm.DispatchAsync("ToggleEditView", null);
+        await vm.DispatchAsync("SaveBoard", null);
+
+        Assert.Equal(originalPageCount, adapter.Document.Sections[0].Pages.Count);
+        adapter.Document.Title = "Detached presentation copy";
+        Assert.Equal("Read-only source", decoded.RichNotes!.Title);
+        Assert.True(originalBytes.SequenceEqual(bytes));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => adapter.SaveAsync().AsTask());
+    }
+
+    [Fact]
+    public void Bounded_document_codec_rejects_future_and_over_limit_payloads()
+    {
+        var future = "{\"format\":\"9to1.board\",\"schemaVersion\":999}"u8.ToArray();
+        var unsupported = Assert.Throws<UnsupportedHavenBoardDocumentVersionException>(() =>
+            HavenBoardDocumentCodec.Deserialize(future));
+        Assert.Equal(999, unsupported.ActualVersion);
+
+        var oversized = new byte[HavenBoardDocumentCodec.MaximumDocumentBytes + 1];
+        Assert.Throws<InvalidDataException>(() => HavenBoardDocumentCodec.Deserialize(oversized));
+    }
+
     [Fact]
     public async Task Adapter_edit_save_dispose_reopen_preserves_notes_ink_and_table()
     {

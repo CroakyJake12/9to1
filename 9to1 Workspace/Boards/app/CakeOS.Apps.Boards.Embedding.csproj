@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>14.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CakeOS.Apps.Boards.App</RootNamespace>
+    <AssemblyName>CakeOS.Apps.Boards.Embedding</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Base\Avalonia.Base.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Controls\Avalonia.Controls.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Remote.Protocol\Avalonia.Remote.Protocol.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Skia\Avalonia.Skia\Avalonia.Skia.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\HarfBuzz\Avalonia.HarfBuzz\Avalonia.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Headless\Avalonia.Headless.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
+    <ProjectReference Include="..\contract\CakeOS.Apps.Boards.Contract.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\framework\CUI\Compiler\buildTransitive\CakeOS.Cui.props" />
+  <Import Project="..\..\..\framework\CUI\Compiler\buildTransitive\CakeOS.Cui.targets" />
+</Project>

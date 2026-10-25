@@ -53,6 +53,12 @@ internal static class Program
             .UseSkia()
             .UseHarfBuzz());
     }
+
+    /// <summary>Shared read-only drawing-layer renderer used by standalone and embedded surfaces.</summary>
+    internal static async Task RenderReadOnlyInkOverlayAsync(Canvas overlay, BoardsViewModel viewModel)
+    {
+        await BoardInkOverlayRenderer.RenderReadOnlyAsync(overlay, viewModel);
+    }
 }
 
 /// <summary>
@@ -985,40 +991,8 @@ internal sealed class BoardsApp : Application
             overlay.Height = double.NaN;
     }
 
-    private static void AddRenderedStroke(Canvas overlay, InkStrokeView stroke, double panX, double panY, double zoom)
-    {
-        if (stroke.Points.Count == 1)
-        {
-            var point = ToOverlayCoordinates(stroke.Points[0].X, stroke.Points[0].Y, panX, panY, zoom);
-            var diameter = EffectiveStrokeWidth(stroke, stroke.Points) * 1.5;
-            var dot = new Ellipse { Width = diameter, Height = diameter, Fill = BrushForInk(stroke.Color) };
-            Canvas.SetLeft(dot, point.X - diameter / 2);
-            Canvas.SetTop(dot, point.Y - diameter / 2);
-            overlay.Children.Add(dot);
-            return;
-        }
-        var polyline = new Polyline
-        {
-            Points = stroke.Points.Select(point => ToOverlayCoordinates(point.X, point.Y, panX, panY, zoom)).ToList(),
-            Stroke = BrushForInk(stroke.Color),
-            StrokeThickness = EffectiveStrokeWidth(stroke, stroke.Points),
-            StrokeLineCap = PenLineCap.Round,
-            StrokeJoin = PenLineJoin.Round,
-            Opacity = string.Equals(stroke.Tool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? 0.42 : 1,
-        };
-        overlay.Children.Add(polyline);
-        if (stroke.Selected)
-        {
-            foreach (var endpoint in new[] { stroke.Points[0], stroke.Points[^1] })
-            {
-                var point = ToOverlayCoordinates(endpoint.X, endpoint.Y, panX, panY, zoom);
-                var handle = new Ellipse { Width = 10, Height = 10, Fill = Brushes.White, Stroke = BoardsTheme.AccentBrush, StrokeThickness = 2 };
-                Canvas.SetLeft(handle, point.X - 5);
-                Canvas.SetTop(handle, point.Y - 5);
-                overlay.Children.Add(handle);
-            }
-        }
-    }
+    internal static void AddRenderedStroke(Canvas overlay, InkStrokeView stroke, double panX, double panY, double zoom) =>
+        BoardInkOverlayRenderer.AddRenderedStroke(overlay, stroke, panX, panY, zoom);
 
     private static void RenderLiveStroke(
         Canvas overlay,
