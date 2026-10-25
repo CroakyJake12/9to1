@@ -109,8 +109,8 @@ public sealed partial class LinuxHomeRootClient
         }
     }
     public IOriginalScopedCanonicalResourceAccessResolver OriginalPackageResourceResolver =>
-        new OriginalPackageResourceResolver(this);
-    private sealed class OriginalPackageResourceResolver(LinuxHomeRootClient owner) : IOriginalScopedCanonicalResourceAccessResolver
+        new OriginalPackageResourceAccess(this);
+    private sealed class OriginalPackageResourceAccess(LinuxHomeRootClient owner) : IOriginalScopedCanonicalResourceAccessResolver
     {
         public string ResourceKind => HomeNativePackageOperationsService.ResourceKind;
         public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string action, ResourceScope resource, CancellationToken token)
