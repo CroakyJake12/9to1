@@ -47,6 +47,24 @@ public sealed class BoardsEditorTests
         Assert.NotNull(attachment.Pen);
     }
 
+    [Fact]
+    public void Boards_owner_brand_resolves_packaged_light_and_dark_images()
+    {
+        var images = TestUiThread.Run(() =>
+        {
+            var target = new Image();
+            target.Resources["CuiTextBrush"] = Brushes.White;
+            target.Resources["CuiAppearance"] = "Dark";
+            var dark = BoardsCuiIconResolver.Resolve("ownerbrand:boards", target);
+            target.Resources["CuiAppearance"] = "Bright";
+            var light = BoardsCuiIconResolver.Resolve("ownerbrand:boards", target);
+            return (dark, light);
+        });
+
+        Assert.IsType<Avalonia.Media.Imaging.Bitmap>(images.dark);
+        Assert.IsType<Avalonia.Media.Imaging.Bitmap>(images.light);
+    }
+
     private static Task<T> OnUiThreadAsync<T>(Func<T> work) =>
         // All UI work funnels through the shared test UI thread: with Skia
         // registered, control trees are strictly thread-affine.
@@ -288,6 +306,9 @@ public sealed class BoardsEditorTests
         var boardTitle = components.Single(component => component.Name == "BoardTitleBox");
         Assert.True(boardTitle.Properties.TryGetValue("Value", out var boardTitleValue)
             && boardTitleValue is CuiBindingValue { Path: "BoardTitle" });
+        var appIcon = components.Single(component => component.Name == "BoardsAppIcon");
+        Assert.True(appIcon.Properties.TryGetValue("Source", out var appIconSource)
+            && appIconSource is CuiLiteralValue { Value: "ownerbrand:boards" });
         var searchBox = components.Single(component => component.Name == "NavSearchBox");
         Assert.True(searchBox.Properties.TryGetValue("cornerradius", out var searchRadius)
             && searchRadius is CuiLiteralValue { Value: "18" });
