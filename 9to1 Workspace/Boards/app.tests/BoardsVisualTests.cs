@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
@@ -268,7 +269,7 @@ public sealed class BoardsVisualTests
                 var frame = Assert.Single(grid.Children);
                 var tableFrame = Flatten(host).OfType<Border>().Single(candidate => ReferenceEquals(candidate.Child, grid));
                 var editor = Assert.Single(Flatten(frame).OfType<TextBox>());
-                return (Host: host, RowSpan: Grid.GetRowSpan(frame), ColumnSpan: Grid.GetColumnSpan(frame),
+                return (Host: host, TableFrame: tableFrame, RowSpan: Grid.GetRowSpan(frame), ColumnSpan: Grid.GetColumnSpan(frame),
                     TableWidth: tableFrame.Width, TableAlignment: tableFrame.HorizontalAlignment,
                     Text: editor.Text, Weight: editor.FontWeight);
             });
@@ -278,26 +279,36 @@ public sealed class BoardsVisualTests
             Assert.Equal(HorizontalAlignment.Center, result.TableAlignment);
             Assert.Equal("Merged title", result.Text);
             Assert.Equal(FontWeight.Bold, result.Weight);
-            // Piggyback on this existing visual test so the owner gets a real
-            // headless rendering of the merged editor without a separate run.
+            // This renderer intentionally appends the freeform surface after
+            // native blocks, so the full editor contains both regions. The
+            // component image below isolates the real table frame for review.
+            Assert.Contains(Flatten(result.Host).OfType<TextBox>(), box => box.Text == "Merged title");
+            Assert.Contains(Flatten(result.Host).OfType<Button>(), button => Equals(button.Content, "+ Box"));
+            // Capture the actual rendered table frame. The full Board editor
+            // also contains the freeform canvas, which can otherwise dominate
+            // a small headless viewport and hide the table under test.
             Ui(() =>
             {
                 const int width = 960;
                 const int height = 560;
+                var originalParent = result.TableFrame.Parent as Panel;
+                Assert.NotNull(originalParent);
+                Assert.True(originalParent!.Children.Remove(result.TableFrame));
                 var window = new Window
                 {
                     Width = width,
                     Height = height,
                     Background = Brushes.White,
-                    Content = result.Host,
+                    Content = result.TableFrame,
                 };
                 window.Show();
                 window.Measure(new Size(width, height));
                 window.Arrange(new Rect(0, 0, width, height));
-                result.Host.Measure(new Size(width, height));
-                result.Host.Arrange(new Rect(0, 0, width, height));
+                result.TableFrame.Measure(new Size(width, height));
+                result.TableFrame.Arrange(new Rect(0, 0, width, height));
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                var shot = Path.Combine(VisualCaptureTests.ShotsDirectory(), "merged-table-editor.png");
+                Assert.Contains(result.TableFrame.GetVisualDescendants().OfType<TextBox>(), box => box.Text == "Merged title");
+                var shot = Path.Combine(VisualCaptureTests.ShotsDirectory(), "merged-table-component.png");
                 using var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new Vector(96, 96));
                 bitmap.Render(window);
                 bitmap.Save(shot);
