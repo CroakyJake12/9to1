@@ -16,7 +16,7 @@ public sealed partial class App
     private HomeAppsFeature? _actualInstalledHomeAppsFeature;
     private OriginalInstalledHomeAppsPort? _actualInstalledHomeAppsPort;
     private Task? _actualInstalledHomeAppsDrain, _actualInstalledHomeAppsSourceClose;
-    private readonly List<OriginalInstalledHomeLaunch> _actualInstalledHomeLaunches = [];
+    private readonly List<OriginalInstalledHomeAction> _actualInstalledHomeActions = [];
 
     private void PrepareOriginalInstalledHomeApps(NativeWindowsHomeRootClient? sameClient)
     {
@@ -74,7 +74,7 @@ public sealed partial class App
         var sources = OriginalHomeRootSources(); var failures = new List<Exception>();
         RequestOriginalHomeApplicationLaunchRetirement(failures);
         if (_actualInstalledHomeAppsDrain is { } drain) await Join(drain);
-        OriginalInstalledHomeLaunch[] all; lock (_actualHomeRootGate) all = _actualInstalledHomeLaunches.ToArray();
+        OriginalInstalledHomeAction[] all; lock (_actualHomeRootGate) all = _actualInstalledHomeActions.ToArray();
         foreach (var actual in all) await Join(actual.OriginalTask);
         if (failures.Count == 0 && _actualInstalledHomeAppsSource is { } source)
         {
@@ -96,12 +96,12 @@ public sealed partial class App
         }
     }
 
-    internal sealed class OriginalInstalledHomeLaunch
+    internal sealed class OriginalInstalledHomeAction
     {
         internal readonly App Issuer;
         internal readonly HomePackageActionRequest OriginalRequest;
         internal readonly Task<HomePackageActionResult> OriginalTask;
-        internal OriginalInstalledHomeLaunch(App issuer, HomePackageActionRequest request, Task<HomePackageActionResult> task)
+        internal OriginalInstalledHomeAction(App issuer, HomePackageActionRequest request, Task<HomePackageActionResult> task)
         { Issuer = issuer; OriginalRequest = request; OriginalTask = task; }
     }
     internal sealed class OriginalInstalledHomeAppsPort(App owner)
@@ -127,7 +127,7 @@ public sealed partial class App
                     _owner.AcquireOriginalAppSynchronous(original, () => sources.Invoke(() =>
                     {
                         DemandSource();
-                        if (HasUnsettledLaunch()) return true;
+                        if (HasUnsettledAction()) return true;
                         raw = _owner._actualInstalledHomeAppsFeature!.RefreshAsync(query, token);
                         _ = sources.Track(raw); _ = _owner.OriginalHomeRootSources().Track(raw); return true;
                     }));
@@ -148,9 +148,9 @@ public sealed partial class App
                     throw new AggregateException("Installed Apps originals remain unconfirmed.", sources.OriginalErrors); }
                 return result;
             });
-        internal OriginalInstalledHomeLaunch StartLaunch(HomeAppsSnapshot snapshot, HomePackageEntry row)
+        internal OriginalInstalledHomeAction StartAction(HomeAppsSnapshot snapshot, HomePackageEntry row, HomePackageAction action)
         {
-            OriginalInstalledHomeLaunch? retained = null;
+            OriginalInstalledHomeAction? retained = null;
             _owner._originalAppWork.RunSynchronous(original => _owner.AcquireOriginalAppSynchronous(original, () =>
                 _owner.OriginalHomeRootSources().Invoke(() =>
                 {
@@ -159,40 +159,40 @@ public sealed partial class App
                     if (!ReferenceEquals(snapshot, feature.Current) || snapshot.IsStale ||
                         snapshot.State is not (HomeAppsDataState.Available or HomeAppsDataState.Partial) ||
                         !snapshot.Packages.Any(actual => ReferenceEquals(actual, row)) ||
-                        !row.SupportedActions.Contains(HomePackageAction.Launch) || HasUnsettledLaunch())
-                        throw new UnauthorizedAccessException("Refresh and choose the SAME current installed row before Launch.");
+                        !row.SupportedActions.Contains(action) || HasUnsettledAction())
+                        throw new UnauthorizedAccessException("Refresh and choose the SAME current catalogue row and source-supported action.");
                     lock (_owner._actualHomeRootGate)
                     {
-                        if (_owner._actualInstalledHomeLaunches.Count >= 128)
-                            throw new InvalidOperationException("Retained installed launch originals require process retirement.");
-                        var request = new HomePackageActionRequest(row.PackageId, HomePackageAction.Launch,
+                        if (_owner._actualInstalledHomeActions.Count >= 128)
+                            throw new InvalidOperationException("Retained installed package actions require process retirement.");
+                        var request = new HomePackageActionRequest(row.PackageId, action,
                             Guid.NewGuid().ToString("N"), ExpectedRevision: snapshot.Revision);
                         var raw = feature.ExecuteAsync(request, CancellationToken.None);
                         _ = _owner.OriginalHomeRootSources().Track(raw); // Before later callbacks or publication.
-                        retained = new(_owner, request, raw); _owner._actualInstalledHomeLaunches.Add(retained);
+                        retained = new(_owner, request, raw); _owner._actualInstalledHomeActions.Add(retained);
                     }
                     original.DemandPublication(); return true;
                 })));
-            return retained ?? throw new InvalidOperationException("No actual installed launch original was retained.");
+            return retained ?? throw new InvalidOperationException("No actual installed package action original was retained.");
         }
-        internal HomePackageActionResult? ObserveLaunch(OriginalInstalledHomeLaunch same) =>
+        internal HomePackageActionResult? ObserveAction(OriginalInstalledHomeAction same) =>
             _owner.OriginalHomeRootSources().Invoke(() =>
             {
                 DemandSource();
                 lock (_owner._actualHomeRootGate)
-                    if (!ReferenceEquals(same.Issuer, _owner) || !_owner._actualInstalledHomeLaunches.Any(actual => ReferenceEquals(actual, same)))
-                        throw new UnauthorizedAccessException("The SAME process-owned installed launch is required.");
+                    if (!ReferenceEquals(same.Issuer, _owner) || !_owner._actualInstalledHomeActions.Any(actual => ReferenceEquals(actual, same)))
+                        throw new UnauthorizedAccessException("The SAME process-owned installed package action is required.");
                 if (!same.OriginalTask.IsCompleted) return null;
                 try { return same.OriginalTask.GetAwaiter().GetResult(); }
                 catch (Exception cause) { _owner.OriginalHomeRootSources().Capture(same.OriginalTask, cause); throw; }
             });
-        private bool HasUnsettledLaunch()
+        private bool HasUnsettledAction()
         {
-            OriginalInstalledHomeLaunch[] all; lock (_owner._actualHomeRootGate) all = _owner._actualInstalledHomeLaunches.ToArray();
+            OriginalInstalledHomeAction[] all; lock (_owner._actualHomeRootGate) all = _owner._actualInstalledHomeActions.ToArray();
             foreach (var actual in all)
             {
                 if (!actual.OriginalTask.IsCompleted) return true;
-                var result = ObserveLaunch(actual);
+                var result = ObserveAction(actual);
                 if (result?.State is HomePackageOperationState.Unknown or HomePackageOperationState.Pending or HomePackageOperationState.Failed)
                     return true;
             }

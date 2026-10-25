@@ -124,6 +124,12 @@
                     <Text Text="Authorised references to your artifacts. Items open in their owning app." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
                     <Container Type="Wrap" CellGap="8">
                       <Input id="library-search" placeholder-text="Search artifacts" accessible-name="Search Library" width="280" Type="Text" />
+                      <Input id="library-owner-filter" placeholder-text="Owner app ID" accessible-name="Filter Library by owner app ID" width="150" Type="Text" />
+                      <Input id="library-type-filter" placeholder-text="Artifact type" accessible-name="Filter Library by artifact type" width="160" Type="Text" />
+                      <Input id="library-sort" Type="Select" AccessibleName="Sort authorised artifacts" Width="170" />
+                      <Input id="library-pinned-filter" Type="Select" AccessibleName="Filter pinned artifacts" Width="120" />
+                      <Input id="library-shared-filter" Type="Select" AccessibleName="Filter shared artifacts" Width="120" />
+                      <Input id="library-generated-filter" Type="Select" AccessibleName="Filter generated artifacts" Width="140" />
                       <Button id="library-search-submit" action="SearchLibrary" Content="Search" IsEnabled="{Binding CanSearchLibrary, fallback=false}" />
                       <Button id="library-refresh" action="RefreshLibrary" Content="Refresh" IsEnabled="{Binding CanSearchLibrary, fallback=false}" />
                     </Container>
