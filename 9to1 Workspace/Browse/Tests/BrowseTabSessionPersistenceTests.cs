@@ -68,6 +68,50 @@ public sealed partial class BrowseNativeOwnershipTests
         Assert.Contains(failure, close.Flatten().InnerExceptions);
     }
 
+    [Fact]
+    public async Task Standard_engine_storage_isolated_by_profile_and_stable_across_restart()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        const string currentProfile = "profile-current";
+        const string otherProfile = "profile-other";
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var currentFirst = Guid.NewGuid(); var other = Guid.NewGuid(); var currentSecond = Guid.NewGuid();
+        var projection = new BrowseTabSessionProjection([
+            new(currentFirst, "Current profile", "https://one.example/", BrowserTabPrivacy.Standard,
+                string.Empty, DateTimeOffset.UtcNow) { ProfileId = currentProfile },
+            new(other, "Other profile", "https://two.example/", BrowserTabPrivacy.Standard,
+                string.Empty, DateTimeOffset.UtcNow) { ProfileId = otherProfile },
+            new(currentSecond, "Current profile again", "https://three.example/", BrowserTabPrivacy.Standard,
+                string.Empty, DateTimeOffset.UtcNow) { ProfileId = currentProfile }
+        ], currentFirst);
+        var currentDirectory = Path.Combine(paths.BrowserProfileDirectory, "engines", "chromium");
+        Directory.CreateDirectory(paths.BrowserProfileDirectory);
+        var legacyData = Path.Combine(paths.BrowserProfileDirectory, "legacy-profile-data.fixture");
+        await File.WriteAllTextAsync(legacyData, "keep existing default-profile data");
+        string otherDirectory;
+
+        await using (var firstRun = await BrowseChrome.CreateAsync(paths, factory,
+            homeProfileId: currentProfile, tabSessionPersistence: new TabSessionFixture(projection)))
+        {
+            Assert.Equal(currentDirectory, factory.Requests[0].ProfileDirectory);
+            otherDirectory = factory.Requests[1].ProfileDirectory;
+            Assert.Equal(currentDirectory, factory.Requests[2].ProfileDirectory);
+            Assert.NotEqual(currentDirectory, otherDirectory);
+            Assert.True(otherDirectory.StartsWith(
+                Path.Combine(paths.BrowserProfileDirectory, "profiles") + Path.DirectorySeparatorChar,
+                StringComparison.Ordinal));
+            Assert.Equal("keep existing default-profile data", await File.ReadAllTextAsync(legacyData));
+        }
+
+        await using var restarted = await BrowseChrome.CreateAsync(paths, factory,
+            homeProfileId: currentProfile, tabSessionPersistence: new TabSessionFixture(projection));
+        Assert.Equal(currentDirectory, factory.Requests[3].ProfileDirectory);
+        Assert.Equal(otherDirectory, factory.Requests[4].ProfileDirectory);
+        Assert.Equal(currentDirectory, factory.Requests[5].ProfileDirectory);
+        Assert.Equal("keep existing default-profile data", await File.ReadAllTextAsync(legacyData));
+    }
+
     private sealed class TabSessionFixture(BrowseTabSessionProjection? projection) : IBrowseTabSessionPersistence
     {
         public List<BrowseTabSessionProjection> Saves { get; } = [];

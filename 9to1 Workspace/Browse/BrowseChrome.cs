@@ -818,7 +818,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         if (_engineFactory is null || !IsEngineAvailable(engine)) throw new PlatformNotSupportedException(EngineUnavailableReason(engine));
         var profileRoot = tab.Privacy == BrowserTabPrivacy.Private
             ? await _privateProfiles.CreateAsync(tab.Id, cancellationToken).ConfigureAwait(false)
-            : StandardProfileDirectory;
+            : StandardProfileDirectoryFor(tab.ProfileId);
         var profile = Path.Combine(profileRoot, "engines", engine.ToString().ToLowerInvariant());
         Directory.CreateDirectory(profile);
         var actual = _engineFactory.CreateAsync(
