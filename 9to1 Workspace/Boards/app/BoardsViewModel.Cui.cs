@@ -30,6 +30,12 @@ public sealed partial class BoardsViewModel
         Set("ContextCellVerticalIndex", IndexOf(ContextVerticalOptions, cellStyle?.AlignV));
         Set("ContextHasCell", cellKey is not null);
         Set("ContextCellHint", cellKey is null ? "Focus a cell for cell tools." : $"Cell {cellKey}");
+        var columnWidth = cellKey is not null && column < block!.ColumnWidths.Count
+            ? block.ColumnWidths[column]
+            : 0;
+        Set("ContextColumnWidthLabel", columnWidth > 0
+            ? $"Column {column + 1}: {columnWidth:0} px"
+            : cellKey is null ? "Select a cell" : $"Column {column + 1}: Auto");
         Set("ContextTableSurfaceIndex", Math.Max(0, Array.FindIndex(ContextSurfaces, surface => surface.Hex == block?.TableStyle.Background)));
         Set("ContextTableBorderIndex", IndexOf(ContextBorderOptions, block?.TableStyle.BorderStyle));
         Set("ContextAlternatingRows", block?.TableStyle.AlternatingRows == true);
@@ -197,6 +203,12 @@ public sealed partial class BoardsViewModel
             case "ContextDeleteRow" when block.Kind == "table": TableDelRow(block.Id); break;
             case "ContextAddColumn" when block.Kind == "table": TableAddCol(block.Id); break;
             case "ContextDeleteColumn" when block.Kind == "table": TableDelCol(block.Id); break;
+            case "ContextColumnNarrower" when TryGetContextCell(block, out _, out var narrowColumn):
+                SetContextColumnWidth(block, narrowColumn, -24); break;
+            case "ContextColumnWider" when TryGetContextCell(block, out _, out var wideColumn):
+                SetContextColumnWidth(block, wideColumn, 24); break;
+            case "ContextColumnAutoWidth" when TryGetContextCell(block, out _, out var autoColumn):
+                SetContextColumnWidth(block, autoColumn, null); break;
             case "ContextCellBold" when TryGetContextCell(block, out var row, out var column): ToggleCellBold(block.Id, row, column); break;
             case "ContextRoundTable" when block.Kind == "table": block.TableStyle.CornerRadius = Math.Min(32, block.TableStyle.CornerRadius + 2); CommitViewEdit(); break;
             case "ContextImageNarrower" when block.Kind == "image" && block.Image is not null: ResizeImage(-40); break;
@@ -270,5 +282,26 @@ public sealed partial class BoardsViewModel
         {
             block.Divider!.Thickness = Math.Clamp(block.Divider.Thickness + delta, 1, 12); CommitViewEdit();
         }
+    }
+
+    private void SetContextColumnWidth(RichBoardBlock block, int column, double? delta)
+    {
+        if (!RequireEditMode() || block.Kind != "table" || column < 0 || column >= block.TableCols)
+            return;
+        if (delta is null)
+        {
+            if (column < block.ColumnWidths.Count) block.ColumnWidths[column] = 0;
+        }
+        else
+        {
+            while (block.ColumnWidths.Count <= column) block.ColumnWidths.Add(0);
+            var current = block.ColumnWidths[column];
+            block.ColumnWidths[column] = current <= 0
+                ? (delta.Value < 0 ? 112 : 184)
+                : Math.Clamp(current + delta.Value, 80, 1600);
+        }
+        CommitViewEdit();
+        RequestRebuild();
+        RefreshCuiContext();
     }
 }
