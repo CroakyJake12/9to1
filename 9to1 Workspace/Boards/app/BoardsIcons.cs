@@ -28,14 +28,14 @@ public static class BoardsIcons
     public const string Strikethrough = "strikethrough";
     public const string BulletedList = "bulleted-list";
     public const string NumberedList = "numbered-list";
-    public const string Edit = "properties";
+    public const string Edit = "edit";
     public const string Image = "image";
     public const string Attach = "paperclip";
     public const string Settings = "settings";
     public const string Page = "file";
-    public const string Section = "boards";
-    public const string Table = "data";
-    public const string Chart = "data";
+    public const string Section = "section";
+    public const string Table = "table";
+    public const string Chart = "chart";
     public const string Ink = "pen";
     public const string AlignLeft = "align-left";
     public const string AlignCenter = "align-center";
@@ -44,7 +44,7 @@ public static class BoardsIcons
     public const string Superscript = "superscript";
     public const string Theme = "palette";
     public const string File = "file";
-    public const string Info = "properties";
+    public const string Info = "info";
 
     public static Control Glyph(string glyph, double size = 14, string? accessibleName = null)
     {
