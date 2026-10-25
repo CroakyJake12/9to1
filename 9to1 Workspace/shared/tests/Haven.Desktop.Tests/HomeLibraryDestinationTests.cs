@@ -79,6 +79,32 @@ public sealed class HomeLibraryDestinationTests
         finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
     }
     [AvaloniaFact]
+    public async Task Library_filters_sort_and_page_resume_are_sent_through_the_shared_authorized_query()
+    {
+        var index = new Index(31); var page = Page(index, new(), (_, _) => true); Window? window = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page);
+            Assert.Single(page.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "library-owner-filter").Text = "boards";
+            Assert.Single(page.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "library-type-filter").Text = "Boards notebook";
+            Assert.Single(page.GetVisualDescendants().OfType<ComboBox>(), item => item.Name == "library-sort").SelectedIndex = 1;
+            Assert.Single(page.GetVisualDescendants().OfType<ComboBox>(), item => item.Name == "library-pinned-filter").SelectedIndex = 2;
+            Assert.Single(page.GetVisualDescendants().OfType<ComboBox>(), item => item.Name == "library-shared-filter").SelectedIndex = 2;
+            Assert.Single(page.GetVisualDescendants().OfType<ComboBox>(), item => item.Name == "library-generated-filter").SelectedIndex = 2;
+            await page.DispatchAsync("SearchLibrary", null);
+            Assert.Equal("boards", index.LastQuery!.OwnerApp); Assert.Equal("Boards notebook", index.LastQuery.ArtifactType);
+            Assert.Equal(false, index.LastQuery.Pinned); Assert.Equal(false, index.LastQuery.Shared); Assert.Equal(false, index.LastQuery.Generated);
+            Assert.Equal("oldest", index.LastQuery.Sort); Assert.Equal(0, index.LastQuery.Offset);
+            Assert.Equal("Notebook 30", page.Current!.Items[0].DisplayName);
+            await page.DispatchAsync("NextLibraryPage", null);
+            Assert.Equal(25, index.LastQuery.Offset); Assert.Equal("oldest", index.LastQuery.Sort);
+            page.Deactivate(); await page.ActivateAsync(CancellationToken.None);
+            Assert.Equal(25, index.LastQuery!.Offset); Assert.Equal("boards", index.LastQuery.OwnerApp);
+            Assert.Equal("Boards notebook", index.LastQuery.ArtifactType); Assert.Equal("oldest", index.LastQuery.Sort);
+        }
+        finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
+    }
+    [AvaloniaFact]
     public async Task Library_close_waits_for_its_actual_delayed_query_and_does_not_publish_retired_rows()
     {
         var index = new Index(1) { Held = new(TaskCreationOptions.RunContinuationsAsynchronously) };

@@ -22,7 +22,13 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     private readonly Func<HomeDeepLink, CancellationToken, Task>? _prepareNavigation;
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
-    private readonly TextBox _search = new();
+    private readonly TextBox _search = new() { MaxLength = 256 };
+    private readonly TextBox _ownerFilter = new() { MaxLength = 256 };
+    private readonly TextBox _typeFilter = new() { MaxLength = 256 };
+    private readonly ComboBox _sort = new() { ItemsSource = new[] { "Recently modified", "Oldest first", "Name", "Type" }, SelectedIndex = 0 };
+    private readonly ComboBox _pinnedFilter = new() { ItemsSource = new[] { "Any pin state", "Pinned", "Not pinned" }, SelectedIndex = 0 };
+    private readonly ComboBox _sharedFilter = new() { ItemsSource = new[] { "Any sharing", "Shared", "Not shared" }, SelectedIndex = 0 };
+    private readonly ComboBox _generatedFilter = new() { ItemsSource = new[] { "Any origin", "Generated", "Not generated" }, SelectedIndex = 0 };
     private readonly DesktopOriginalWorkLifetime _work;
     private HomeLibraryPage? _page;
     private HomeLibraryQuery _query = new(Limit: 25);
@@ -50,6 +56,16 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         if (theme is not null) _loader.SetThemePreferenceContext(theme);
         _loader.SetActionDispatcher(this); _loader.SetBindingContext(_bindings);
         _loader.BindAuthoredControl("library-search", _ => _search);
+        _loader.BindAuthoredControl("library-owner-filter", _ => _ownerFilter);
+        _loader.BindAuthoredControl("library-type-filter", _ => _typeFilter);
+        _loader.BindAuthoredControl("library-sort", _ => _sort);
+        _loader.BindAuthoredControl("library-pinned-filter", _ => _pinnedFilter);
+        _loader.BindAuthoredControl("library-shared-filter", _ => _sharedFilter);
+        _loader.BindAuthoredControl("library-generated-filter", _ => _generatedFilter);
+        _search.TextChanged += (_, _) => RefreshBindings();
+        _ownerFilter.TextChanged += (_, _) => RefreshBindings(); _typeFilter.TextChanged += (_, _) => RefreshBindings();
+        _sort.SelectionChanged += (_, _) => RefreshBindings(); _pinnedFilter.SelectionChanged += (_, _) => RefreshBindings();
+        _sharedFilter.SelectionChanged += (_, _) => RefreshBindings(); _generatedFilter.SelectionChanged += (_, _) => RefreshBindings();
         var loaded = _loader.TryLoad(document with { Components = [themeScope] });
         if (loaded.Root is null || loaded.Diagnostics.Any(value => value.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The canonical Home Library fragment could not be loaded.");
@@ -70,8 +86,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     public bool? IsActionAvailable(string command) => IsAlive && _active && !_busy && (command switch
     {
         "SearchLibrary" or "RefreshLibrary" => true,
-        "NextLibraryPage" => _page?.HasMore == true,
-        "PreviousLibraryPage" => _query.Offset > 0,
+        "NextLibraryPage" => _page?.HasMore == true && QueryInputsMatchCurrentPage(),
+        "PreviousLibraryPage" => _query.Offset > 0 && QueryInputsMatchCurrentPage(),
         "OpenHomeLibraryArtifact" => _page?.Items.Count > 0,
         _ => false
     });
@@ -130,7 +146,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         {
             await original.AwaitAsync(_admit(original.Token));
             if (!original.IsAcceptedPublicationCurrent) return;
-            var query = _query with { Offset = offset, Text = string.IsNullOrWhiteSpace(_search.Text) ? null : _search.Text };
+            var query = CurrentQuery(offset);
             var page = await original.AwaitAsync(_library.SearchAsync(query, original.Token));
             await original.AwaitAsync(_admit(original.Token));
             caller.ThrowIfCancellationRequested();
@@ -145,17 +161,34 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
         finally
         { _busy = false; if (original.IsAcceptedPublicationCurrent) original.RunAcceptedPublicationCallback(RefreshBindings); }
     }
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static bool? ReadFilter(int selectedIndex) => selectedIndex switch { 1 => true, 2 => false, _ => null };
+    private HomeLibraryQuery CurrentQuery(int offset) => _query with
+    {
+        Offset = offset,
+        Text = Normalize(_search.Text),
+        OwnerApp = Normalize(_ownerFilter.Text),
+        ArtifactType = Normalize(_typeFilter.Text),
+        Pinned = ReadFilter(_pinnedFilter.SelectedIndex),
+        Shared = ReadFilter(_sharedFilter.SelectedIndex),
+        Generated = ReadFilter(_generatedFilter.SelectedIndex),
+        Sort = _sort.SelectedIndex switch { 1 => "oldest", 2 => "name", 3 => "type", _ => "recent" }
+    };
+    private bool QueryInputsMatchCurrentPage() => _page is not null && CurrentQuery(_query.Offset) == _query;
     private void ClearUnavailable(string status) { _page = null; _status = status; RefreshBindings(); }
     private void RefreshBindings()
     {
         var available = _active && IsAlive && !_busy;
+        var queryMatches = QueryInputsMatchCurrentPage();
         _bindings.Set("LibraryRows", NativeHomeArtifactLibrarySource.ProjectRows(_page));
         var notice = _page?.Succeeded == true ? _source?.AvailabilityNotice : null;
-        _bindings.Set("LibrarySummary", string.IsNullOrWhiteSpace(notice) ? _status : _status + " " + notice);
+        var summary = string.IsNullOrWhiteSpace(notice) ? _status : _status + " " + notice;
+        if (_page is not null && !queryMatches) summary += " Search to apply the changed filters.";
+        _bindings.Set("LibrarySummary", summary);
         _bindings.Set("CanSearchLibrary", available);
         _bindings.Set("CanOpenHomeLibraryArtifact", available && _page?.Succeeded == true);
-        _bindings.Set("CanNextLibraryPage", available && _page?.HasMore == true);
-        _bindings.Set("CanPreviousLibraryPage", available && _query.Offset > 0);
+        _bindings.Set("CanNextLibraryPage", available && queryMatches && _page?.HasMore == true);
+        _bindings.Set("CanPreviousLibraryPage", available && queryMatches && _query.Offset > 0);
         _bindings.Set("LibraryPageSummary", _page is { Items.Count: > 0 } page
             ? $"{_query.Offset + 1}–{_query.Offset + page.Items.Count}" : "No matching authorised artifacts.");
         _loader.RefreshBindings();
