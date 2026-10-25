@@ -108,7 +108,7 @@ public sealed class RecentBoardCatalog
                 result.Add(new RecentBoardCard(reference.Path, reference.Path, notes.Title, preview,
                     document.ModifiedUtc, true));
             }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            catch (Exception error) when (IsExpectedBoardReadFailure(error))
             {
                 result.Add(new RecentBoardCard(reference.Path, reference.Path, "Board could not be opened",
                     error.Message.Split('\n')[0], reference.OpenedUtc, false));
@@ -137,13 +137,17 @@ public sealed class RecentBoardCatalog
                     page.Blocks.Select(block => block.Text).FirstOrDefault(text => !string.IsNullOrWhiteSpace(text)) ?? "No text preview",
                     reference.OpenedUtc));
             }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            catch (Exception error) when (IsExpectedBoardReadFailure(error))
             {
                 // The board card carries its own actionable load error; do not make stale page links look usable.
             }
         }
         return result.OrderByDescending(item => item.OpenedUtc).Take(12).ToArray();
     }
+
+    private static bool IsExpectedBoardReadFailure(Exception error) =>
+        error is IOException || error is InvalidDataException || error is UnauthorizedAccessException ||
+        error is InvalidOperationException || error is JsonException;
 
     private static bool IsBoardPath(string? path) => !string.IsNullOrWhiteSpace(path) &&
         path.EndsWith(".9to1board", StringComparison.OrdinalIgnoreCase);
