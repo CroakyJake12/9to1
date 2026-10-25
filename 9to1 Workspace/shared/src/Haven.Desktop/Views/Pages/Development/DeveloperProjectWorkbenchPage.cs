@@ -61,6 +61,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         public ManualTabState? Manual = manual;
         public DeveloperSourceChangePass? Pass;
         public bool IsPinned;
+        // A restored ordinary unpinned tab is distinct from a replaceable preview.
+        public bool IsPreview = true;
+        public string GroupId = "default";
     }
     private sealed record ManualTabState(string Draft, string Baseline, string Before, string After,
         string BeforeSha256, string AfterSha256, long DraftRevision, long ReviewRevision, bool Reviewed);
@@ -350,8 +353,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 "BranchName" => _branchName, "ProcessStatus" => _processStatus, "ProcessOutput" => _processOutput, "Status" => _status,
                 "SourceTabs" => _sourceTabs.Select(tab => new SourceTabItem(tab.Id.ToString("D"),
                     (tab.Id == _selectedSourceTab ? "● " : "") + System.IO.Path.GetFileName(tab.Path) +
-                        (IsTabDirty(tab) ? " *" : "") + (tab.IsPinned ? " (pinned)" : " (preview)"),
-                    tab.Path + (IsTabDirty(tab) ? ", unsaved changes" : ", saved") + (tab.IsPinned ? ", pinned" : ", preview"),
+                        (IsTabDirty(tab) ? " *" : "") + (tab.IsPinned ? " (pinned)" : tab.IsPreview ? " (preview)" : ""),
+                    tab.Path + (IsTabDirty(tab) ? ", unsaved changes" : ", saved") + (tab.IsPinned ? ", pinned" : tab.IsPreview ? ", preview" : ", open tab"),
                     "Close " + tab.Path + (IsTabDirty(tab) ? "; apply or revert its changes first" : ""),
                     !_pending, !_pending && !IsTabDirty(tab))).ToArray(),
                 "SourceTabPinLabel" => CurrentSourceTab() is { IsPinned: true } ? "Unpin tab" : "Pin tab",
@@ -424,12 +427,12 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                                     throw new InvalidOperationException("Open an authorized source document before editing a draft.");
                                 _manualDraftText = text; _manualDraftRevision++; _manualReviewed = false;
                                 _manualAfterText = ""; _manualAfterSha256 = ""; _manualReviewRevision = -1;
-                                if (CurrentSourceTab() is { } manualTab) manualTab.IsPinned = true;
+                                if (CurrentSourceTab() is { } manualTab) { manualTab.IsPinned = true; manualTab.IsPreview = false; }
                                 StoreSelectedTab(); break;
                             }
                             if (_editor is null) throw new InvalidOperationException("Open a real complete source document first.");
                             _editor = _review!.UpdateDraft(_editor.EditorId, _editor.DraftRevision, text);
-                            if (CurrentSourceTab() is { } editedTab) editedTab.IsPinned = true;
+                            if (CurrentSourceTab() is { } editedTab) { editedTab.IsPinned = true; editedTab.IsPreview = false; }
                             StoreSelectedTab(); break;
                         case "Command": _command = text; break; case "TestCommand": _testCommand = text; break;
                         case "StageTaskId": _stageTaskId = text; break; case "StageId": _stageId = text; break; case "BranchName": _branchName = text; break;
@@ -607,7 +610,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                                 StoreSelectedTab();
                                 var tab = _sourceTabs.SingleOrDefault(item => item.Editor is { } owned && owned.Project == project.Reference &&
                                     owned.Document == prepared.Snapshot.Document);
-                                var preview = tab is null ? _sourceTabs.FirstOrDefault(item => !item.IsPinned && !IsTabDirty(item)) : null;
+                                var group = CurrentSourceTab()?.GroupId ?? "default";
+                                var preview = tab is null ? FindCleanPreview(group) : null;
                                 if (tab is null && _sourceTabs.Count - (preview is null ? 0 : 1) >= DeveloperSourceReviewSession.MaximumOpenDocuments)
                                     throw new InvalidOperationException("Close a saved source tab before opening another document.");
                                 if (preview is not null && preview.Editor is null)
@@ -617,7 +621,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                                 var value = DemandValue(InvokeOriginalSource(() => _review!.AcceptPreparedOpen(prepared, preview?.Editor)));
                                 if (tab is null)
                                 {
-                                    tab = new(value.EditorId, value.Document.RelativePath, value, null);
+                                    tab = new(value.EditorId, value.Document.RelativePath, value, null) { GroupId = group };
                                     if (preview is not null) _sourceTabs.Remove(preview);
                                     _sourceTabs.Add(tab);
                                 }
@@ -771,10 +775,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             throw new InvalidOperationException("The source changed outside this tab. Its retained draft and review were preserved; reopen after resolving the conflict.");
                         if (tab is null)
                         {
-                            ReplaceCleanPreview();
+                            var group = CurrentSourceTab()?.GroupId ?? "default";
+                            ReplaceCleanPreview(group);
                             if (_sourceTabs.Count >= DeveloperSourceReviewSession.MaximumOpenDocuments)
                                 throw new InvalidOperationException("Close a saved source tab before opening another document.");
-                            tab = new(Guid.NewGuid(), path, null, new(text, text, text, "", beforeSha, "", 1, -1, false));
+                            tab = new(Guid.NewGuid(), path, null, new(text, text, text, "", beforeSha, "", 1, -1, false)) { GroupId = group };
                             _sourceTabs.Add(tab);
                         }
                         _project = project; SelectTab(tab);
@@ -960,10 +965,12 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             _manualDraftRevision = state.DraftRevision; _manualReviewRevision = state.ReviewRevision; _manualReviewed = state.Reviewed;
         }
     }
-    private void ReplaceCleanPreview(SourceTab? replacement = null)
+    private SourceTab? FindCleanPreview(string group) => _sourceTabs.FirstOrDefault(tab =>
+        tab.IsPreview && !tab.IsPinned && !IsTabDirty(tab) && StringComparer.Ordinal.Equals(tab.GroupId, group));
+
+    private void ReplaceCleanPreview(string group)
     {
-        var preview = _sourceTabs.FirstOrDefault(tab => !ReferenceEquals(tab, replacement) && !tab.IsPinned && !IsTabDirty(tab));
-        if (preview is not null) CloseTab(preview);
+        if (FindCleanPreview(group) is { } preview) CloseTab(preview);
     }
     private void CloseTab(SourceTab tab)
     {
@@ -988,6 +995,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                     {
                         var tab = CurrentSourceTab() ?? throw new InvalidOperationException("Select an open source tab first.");
                         tab.IsPinned = !tab.IsPinned;
+                        tab.IsPreview = !tab.IsPinned;
                         _status = tab.IsPinned ? "Source tab pinned." : "Source tab unpinned; unsaved drafts are still protected.";
                     }
                     else
@@ -1043,7 +1051,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             {
                 prepared.Add(new(Guid.NewGuid(), item.Observation.RelativePath, null,
                     new(item.Text, item.Text, item.Text, "", item.Observation.ContentSha256, "", 1, -1, false))
-                { IsPinned = item.Observation.IsPinned });
+                { IsPinned = item.Observation.IsPinned, IsPreview = item.Observation.IsPreview, GroupId = item.Observation.GroupId });
                 continue;
             }
             // Task-backed restoration re-resolves genuine Files identity and opens through the
@@ -1055,7 +1063,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 () => _review!.OpenAsync(project.Reference, context!, document.Value, _businessToken), _businessToken).ConfigureAwait(false);
             if (!opened.Succeeded || opened.Value is null) { refused = opened.Error?.Message ?? "A restored canonical source read was refused."; break; }
             var editor = opened.Value;
-            prepared.Add(new(editor.EditorId, editor.Document.RelativePath, editor, null) { IsPinned = item.Observation.IsPinned });
+            prepared.Add(new(editor.EditorId, editor.Document.RelativePath, editor, null) { IsPinned = item.Observation.IsPinned, IsPreview = item.Observation.IsPreview, GroupId = item.Observation.GroupId });
             if (!StringComparer.OrdinalIgnoreCase.Equals(editor.OriginalSha256, item.Observation.ContentSha256))
             { refused = "A saved tab changed during its canonical source rebind. The previous session was preserved."; break; }
         }
@@ -1100,7 +1108,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             // live drafts exist. Normal close still refuses through HasUnsavedWork.
             if (_sourceTabs.Any(IsTabDirty)) return;
             tabs = Array.AsReadOnly(_sourceTabs.Select(tab => new DeveloperCleanEditorTab(tab.Path,
-                tab.Manual?.BeforeSha256 ?? tab.Editor!.OriginalSha256, tab.IsPinned)).ToArray());
+                tab.Manual?.BeforeSha256 ?? tab.Editor!.OriginalSha256, tab.IsPinned, tab.IsPreview, tab.GroupId)).ToArray());
             selected = CurrentSourceTab()?.Path; expected = _cleanSessionGeneration;
         }).ConfigureAwait(false);
         if (tabs is null || !original.IsPublicationCurrent) return;

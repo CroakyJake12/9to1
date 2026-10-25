@@ -128,6 +128,97 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Native_tab_pin_and_edit_commands_keep_explicit_preview_state_and_default_group()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            page = await SearchPublicationPage(f, reader.Owner);
+            page.TrySetValue("SourcePath", "src/preview.cs");
+            await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var tab = Assert.Single(NativeSourceTabs(page));
+            Assert.True(NativeTabFlag(tab, "IsPreview")); Assert.False(NativeTabFlag(tab, "IsPinned"));
+            Assert.Equal("default", NativeTabGroup(tab));
+
+            await page.DispatchAsync("dev.toggle-source-tab-pin", null, OriginalTestBodyToken);
+            Assert.True(NativeTabFlag(tab, "IsPinned")); Assert.False(NativeTabFlag(tab, "IsPreview"));
+            await page.DispatchAsync("dev.toggle-source-tab-pin", null, OriginalTestBodyToken);
+            Assert.False(NativeTabFlag(tab, "IsPinned")); Assert.True(NativeTabFlag(tab, "IsPreview"));
+            Assert.True(page.TrySetValue("DraftText", "keep the current unsaved source"));
+            Assert.True(NativeTabFlag(tab, "IsPinned")); Assert.False(NativeTabFlag(tab, "IsPreview"));
+            Assert.True(page.TryGetValue("SourceTabs", out var bindings));
+            var renderedTab = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(bindings).Cast<object>());
+            Assert.Contains("(pinned)", Assert.IsType<string>(renderedTab.GetType().GetProperty("Label")!.GetValue(renderedTab)));
+            Assert.Equal(0, f.Tools.WriteCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Restored_regular_tabs_and_other_group_previews_survive_active_group_preview_replacement()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            page = await SearchPublicationPage(f, reader.Owner);
+            page.TrySetValue("SourcePath", "src/regular-left.cs");
+            await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var left = Assert.Single(NativeSourceTabs(page));
+            // Enrol only saved presentation metadata to isolate the post-restore replacement path.
+            // Source observations and every subsequent action remain with the same actual page/owner.
+            left.GetType().GetField("GroupId")!.SetValue(left, "left");
+            left.GetType().GetField("IsPreview")!.SetValue(left, false);
+            page.TrySetValue("SourcePath", "src/preview-right.cs");
+            await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var right = Assert.Single(NativeSourceTabs(page), tab => NativeTabPath(tab) == "src/preview-right.cs");
+            right.GetType().GetField("GroupId")!.SetValue(right, "right");
+            Assert.True(NativeTabFlag(right, "IsPreview"));
+
+            await page.DispatchAsync("dev.select-source-tab", left.GetType().GetProperty("Id")!.GetValue(left)!.ToString(), OriginalTestBodyToken);
+            page.TrySetValue("SourcePath", "src/preview-left.cs");
+            await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            Assert.Equal(3, NativeSourceTabs(page).Length);
+            Assert.Contains(left, NativeSourceTabs(page)); Assert.Contains(right, NativeSourceTabs(page));
+            var preview = Assert.Single(NativeSourceTabs(page), tab => NativeTabPath(tab) == "src/preview-left.cs");
+            Assert.Equal("left", NativeTabGroup(preview)); Assert.True(NativeTabFlag(preview, "IsPreview"));
+
+            page.TrySetValue("SourcePath", "src/replacement-left.cs");
+            await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var final = NativeSourceTabs(page);
+            Assert.Equal(3, final.Length); Assert.Contains(left, final); Assert.Contains(right, final);
+            Assert.DoesNotContain(preview, final);
+            var replacement = Assert.Single(final, tab => NativeTabPath(tab) == "src/replacement-left.cs");
+            Assert.Equal("left", NativeTabGroup(replacement)); Assert.True(NativeTabFlag(replacement, "IsPreview"));
+            Assert.False(NativeTabFlag(left, "IsPreview")); Assert.False(NativeTabFlag(left, "IsPinned"));
+            Assert.Equal("right", NativeTabGroup(right));
+            Assert.True(page.TryGetValue("SourceTabs", out var bindings));
+            var regularRow = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(bindings).Cast<object>(),
+                row => Assert.IsType<string>(row.GetType().GetProperty("AccessibleName")!.GetValue(row)).StartsWith("src/regular-left.cs", StringComparison.Ordinal));
+            Assert.DoesNotContain("(preview)", Assert.IsType<string>(regularRow.GetType().GetProperty("Label")!.GetValue(regularRow)));
+            Assert.Equal(0, f.Tools.WriteCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
+        ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
+    private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));
+    private static string NativeTabGroup(object tab) => Assert.IsType<string>(tab.GetType().GetField("GroupId")!.GetValue(tab));
+    private static string NativeTabPath(object tab) => Assert.IsType<string>(tab.GetType().GetProperty("Path")!.GetValue(tab));
+
     private static async Task<DeveloperProjectWorkbenchPage> SearchPublicationPage(Fixture fixture, DeveloperManualSourceReadOwner reader)
     {
         var resolved = (await fixture.Dev.ResolveAsync(fixture.Reference)).Value!;
@@ -163,7 +254,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         var rows = ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>();
         return rows.Select(row => row.GetType().GetProperty("Id")!.GetValue(row) + "|" +
-            row.GetType().GetProperty("Path")!.GetValue(row) + "|" + row.GetType().GetField("IsPinned")!.GetValue(row)).ToArray();
+            row.GetType().GetProperty("Path")!.GetValue(row) + "|" + row.GetType().GetField("IsPinned")!.GetValue(row) + "|" +
+            NativeTabFlag(row, "IsPreview") + "|" + NativeTabGroup(row)).ToArray();
     }
 
     // Reuse the existing complete production graph rather than null/pretend reader dependencies.
