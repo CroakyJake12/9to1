@@ -56,6 +56,7 @@ public static class HavenRichPageTypes
 {
     public const string Native = "Native";
     public const string Write = "Write";
+    public const string Canvas = "Canvas";
 }
 
 public enum HavenRichBlockKind
@@ -305,6 +306,7 @@ public static class HavenRichNotesValidator
         {
             HavenRichPageTypes.Native => null,
             HavenRichPageTypes.Write => "write",
+            HavenRichPageTypes.Canvas => "canvas",
             _ => throw new InvalidOperationException($"Board page type '{page.PageType}' is not supported.")
         };
         if (expectedApplication is null)
