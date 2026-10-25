@@ -1,8 +1,8 @@
+using System.Text.Json;
 using Haven.Application;
 using Haven.Application.NodeGraph;
 using HavenOS.Home.PermissionsTrustNotifications;
-
-using System.Text.Json;
+using OriginalHomePermissionRequest = HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest;
 
 namespace HavenOS.Home.Core;
 
@@ -17,7 +17,7 @@ public sealed partial class HomeResourceOperationBroker
         return request is { State: HomePermissionRequestState.Succeeded, ResultCode: "HOME_GRAPH_PUBLISHED" };
     }
 
-    internal async Task<HomePermissionRequest?> ReadOriginalAutomationGraphPublicationRequestAsync(OwnedGraphDefinition graph,
+    internal async Task<OriginalHomePermissionRequest?> ReadOriginalAutomationGraphPublicationRequestAsync(OwnedGraphDefinition graph,
         AuthenticatedResourceActor actor, IReadOnlyList<ResourceScope> expectedScopes, string expectedArgumentsDigest,
         CancellationToken token)
     {
@@ -43,7 +43,7 @@ public sealed partial class HomeResourceOperationBroker
         if (records.Length != 1) return false;
         try
         {
-            var requests = records[0].Payload.GetProperty("Requests").Deserialize<HomePermissionRequest[]>();
+            var requests = records[0].Payload.GetProperty("Requests").Deserialize<OriginalHomePermissionRequest[]>();
             var matches = requests?.Where(request => request.RequestId == requestId).ToArray();
             return matches is { Length: 1 } && matches[0].State == HomePermissionRequestState.Succeeded &&
                 matches[0].ResultCode == "HOME_GRAPH_PUBLISHED" &&
@@ -54,7 +54,7 @@ public sealed partial class HomeResourceOperationBroker
         { return false; }
     }
 
-    private bool IsOriginalAutomationGraphPublicationRequest(HomePermissionRequest request, OwnedGraphDefinition graph,
+    private bool IsOriginalAutomationGraphPublicationRequest(OriginalHomePermissionRequest request, OwnedGraphDefinition graph,
         AuthenticatedResourceActor actor, IReadOnlyList<ResourceScope> expectedScopes, string expectedArgumentsDigest,
         string requestId)
     {
