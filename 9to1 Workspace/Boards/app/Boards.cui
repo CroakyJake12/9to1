@@ -4,9 +4,9 @@
     <Action name="OpenRecentPage" command="OpenRecentPage" parameter="{Binding page.Target}" />
   </Actions>
   <Page>
-    <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr" Background="{Resource CuiBackgroundBrush}">
+    <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr" Background="{Resource CuiPanelBrush}">
       <!-- Top document bar: file actions, title, save state, global actions -->
-      <Container padding="12 6" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="{Resource CuiBackgroundBrush}" BorderWidth="0">
+      <Container padding="12 6" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="{Resource CuiPanelBrush}" BorderWidth="0">
         <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto Auto" CellGap="2">
           <Container Type="Grid" ColumnSizes="1fr Auto" Column="0" Row="0" ColumnSpan="2" CellGap="8">
             <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
@@ -41,7 +41,7 @@
         </Container>
       </Container>
       <!-- Left navigation: search, sections/pages (built in code), add actions -->
-      <Container padding="16 18" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="{Resource CuiBackgroundBrush}" BorderWidth="0">
+      <Container padding="16 18" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="{Resource CuiPanelBrush}" BorderWidth="0">
         <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="12">
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="icon:boards" Width="20" Height="20" VerticalAlignment="Center" AccessibleName="Current Board" />
@@ -176,8 +176,8 @@
             </Container>
           </If>
         </Container>
-        <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" Row="2" VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiBackgroundBrush}">
-          <Container horizontalalignment="Stretch" cornerradius="26" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Background="{Resource CuiPanelBrush}" BorderWidth="0">
+        <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" Row="2" VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiPanelBrush}">
+          <Container horizontalalignment="Stretch" cornerradius="26" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Background="{Resource CuiPanel2Brush}" BorderWidth="0">
             <Container Type="Grid" ID="PageSurface">
               <Container margin="40 36" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
@@ -191,7 +191,7 @@
           </Container>
         </Container>
       </Container>
-      <Container Type="Vertical Stack" ID="LandingHost" Row="1" Column="1" Active="{Binding IsLanding}" VerticalScrolling="True" HorizontalScrolling="False" Padding="32 28" Background="{Resource CuiBackgroundBrush}" CellGap="12">
+      <Container Type="Vertical Stack" ID="LandingHost" Row="1" Column="1" Active="{Binding IsLanding}" VerticalScrolling="True" HorizontalScrolling="False" Padding="32 28" Background="{Resource CuiPanelBrush}" CellGap="12">
         <Text Text="Your boards" FontSize="30" FontWeight="Bold" />
         <Text Text="Open a saved workspace or create a new board." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
         <Container Type="Wrap" CellGap="8">
