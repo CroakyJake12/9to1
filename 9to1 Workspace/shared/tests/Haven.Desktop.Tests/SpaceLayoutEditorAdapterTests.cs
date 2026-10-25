@@ -1,8 +1,7 @@
-using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Haven.Application;
 using Haven.Application.NodeGraph;
 using Haven.Desktop.Views.Pages.Spaces;
+using Haven.UI;
 using Haven.UI.Components;
 
 namespace Haven.Desktop.Tests;
@@ -59,7 +58,7 @@ public sealed class SpaceLayoutEditorAdapterTests
         var profile = SpaceUserMessageGraph.Profile();
         Assert.Equal(types.Select(type => type.TypeId).ToArray(), page.UserMessagePalette.Select(entry => entry.TypeId).ToArray());
         Assert.All(page.UserMessagePalette, entry => Assert.Contains(entry.TypeId, profile.AllowedNodeTypes));
-        foreach (var entry in page.UserMessagePalette) entry.Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        foreach (var entry in page.UserMessagePalette) Invoke(entry.Button);
 
         var nodes = page.Editor.Document.Nodes;
         Assert.Equal(types.Count, nodes.Count);
@@ -250,7 +249,7 @@ public sealed class SpaceLayoutEditorAdapterTests
             Assert.Equal(new[] { "ordinal", "ordinal-ignore-case" }, comparison.Select(option => option.Value).ToArray());
             Assert.Single(comparison, option => option.Value == "ordinal" && option.Button.Accessibility.Selected);
             var ignoreCase = Assert.Single(comparison, option => option.Value == "ordinal-ignore-case");
-            ignoreCase.Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Invoke(ignoreCase.Button);
 
             Assert.Equal("ordinal-ignore-case", Assert.Single(page.Editor.Document.Nodes,
                 node => node.Id == search.Id).Metadata["comparison"]);
@@ -260,8 +259,14 @@ public sealed class SpaceLayoutEditorAdapterTests
     }
 
     private static void Add(SpaceLayoutEditorPage page, string typeId) =>
-        Assert.Single(page.UserMessagePalette, entry => entry.TypeId == typeId).Button
-            .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Invoke(Assert.Single(page.UserMessagePalette, entry => entry.TypeId == typeId).Button);
+
+    private static void Invoke(Button button)
+    {
+        var input = new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None);
+        Assert.True(button.KeyDown(input));
+        Assert.True(button.KeyUp(input));
+    }
 
     private static (SpaceLayoutEditorPage Page, SpaceDefinition Space, Func<SpaceLayoutDocument?> LatestDraft) NewPage()
     {
