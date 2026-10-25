@@ -238,6 +238,8 @@ public interface IRichBoardSession : IAsyncDisposable
 public interface IBoardSessionCapabilities
 {
     bool CanEdit { get; }
+    bool CanSwitchBoard => CanEdit;
+    bool CanSaveAs => CanEdit;
 }
 
 

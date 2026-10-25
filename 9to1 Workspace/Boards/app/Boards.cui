@@ -55,7 +55,7 @@
             <Button Type="Menu Item" Content="+ New" Interactive="{Binding CanEdit}" AccessibleName="New content" ID="AddNewButton">
               <Button Type="Menu Item" Content="Notes Page" Action="AddPage" AccessibleName="Create a notes page" />
               <Button Type="Menu Item" Content="Subpage under selected page" Action="AddSubpage" AccessibleName="Create a nested subpage" />
-              <Button Type="Menu Item" Content="Board" Action="NewBoard" AccessibleName="Create a separate board file" />
+              <Button Type="Menu Item" Content="Board" Action="NewBoard" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate board file" />
               <Button Type="Menu Item" Content="Canvas (coming later)" Interactive="False" AccessibleName="Canvas unavailable, coming later" AccessibleDescription="Canvas is not available in this Boards host yet." />
               <Button Type="Menu Item" Content="Section" Action="AddSection" AccessibleName="Create a section" />
             </Button>
