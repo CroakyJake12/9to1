@@ -108,10 +108,10 @@ public sealed class BoardsAppTests
         Assert.True(errors.Length == 0, $"BlockGripCui.cui parse errors: {string.Join("; ", errors)}");
         Assert.NotEmpty(document.Components);
         var source = File.ReadAllText(path);
-        Assert.Contains("Action="MoveUp"", source, StringComparison.Ordinal);
-        Assert.Contains("Action="MoveDown"", source, StringComparison.Ordinal);
-        Assert.Contains("Action="Duplicate"", source, StringComparison.Ordinal);
-        Assert.Contains("Action="Delete"", source, StringComparison.Ordinal);
+        Assert.Contains("Action=\"MoveUp\"", source, StringComparison.Ordinal);
+        Assert.Contains("Action=\"MoveDown\"", source, StringComparison.Ordinal);
+        Assert.Contains("Action=\"Duplicate\"", source, StringComparison.Ordinal);
+        Assert.Contains("Action=\"Delete\"", source, StringComparison.Ordinal);
     }
 
     [Fact]
