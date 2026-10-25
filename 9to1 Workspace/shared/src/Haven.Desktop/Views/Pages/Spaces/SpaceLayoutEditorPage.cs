@@ -432,9 +432,11 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
                 }
                 var branch = item.SelectedBranch is { Length: > 0 } selectedBranch
                     ? $" · selected branch={selectedBranch}; inactive branch={(selectedBranch == "true" ? "false" : "true")}" : string.Empty;
+                var normalization = item.TextNormalization is { } settings
+                    ? $" · Unicode={settings.UnicodeForm}; line endings={settings.LineEndings}; edge whitespace={settings.EdgeWhitespace}; changed={settings.Changed}" : string.Empty;
                 var flags = item.MoreResultsOmitted ? " · more results omitted" : string.Empty;
                 if (item.HasUncertainty) flags += " · numeric uncertainty";
-                return $"{item.TypeId}: {item.State}; {item.InputTextElements} → {item.OutputTextElements} text elements; {item.OutputDataType}; SHA-256 {item.OutputSha256 ?? "unavailable"}{branch}{flags}{typed}";
+                return $"{item.TypeId}: {item.State}; {item.InputTextElements} → {item.OutputTextElements} text elements; {item.OutputDataType}; SHA-256 {item.OutputSha256 ?? "unavailable"}{branch}{normalization}{flags}{typed}";
             })));
         }
         catch (OperationCanceledException) when (_pageLifetime.IsCancellationRequested)
