@@ -41,7 +41,10 @@ public sealed class SpaceTaskWorkspaceService(
             // Re-read membership instead of granting access from the detached list.
             observations.Add(await ReadAsync(spaceId, row.Id, cancellationToken, originalSourceCallbackScope).ConfigureAwait(false));
         }
-        return observations.AsReadOnly();
+        // Opening/renaming a conversation cannot manufacture task activity or priority.
+        // Until a current activity witness exists, use the actual task's recorded update.
+        return Array.AsReadOnly(observations.OrderByDescending(row => row.Snapshot?.UpdatedAt ?? row.Conversation.CreatedAt)
+            .ThenBy(row => row.Conversation.Id).ToArray());
     }
 
     public Task<SpaceTaskObservation> ReadAsync(

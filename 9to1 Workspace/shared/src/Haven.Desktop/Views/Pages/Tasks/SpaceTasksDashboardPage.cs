@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
-using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Services;
 using Haven.Desktop.ViewModels;
 using HavenOS.Apps.Spaces.Tasks;
@@ -11,12 +10,12 @@ using HavenOS.Apps.Spaces.Tasks;
 namespace Haven.Desktop.Views.Pages.Tasks;
 
 /// <summary>
-/// The maintained Tasks scene projected from actual conversations in one existing Space.
+/// The authored CUI Tasks scene projected from actual conversations in one existing Space.
 /// The coordinator/repositories and genuine new-work/open factories are borrowed. This
 /// page never creates a context, Task, Run, route, permission or provider. Closing withdraws
 /// its own admission and joins actual reads/open callbacks; it does not cancel business work.
-/// The borrowed HavenSceneControl's renderer/input/timer retirement is a separate framework
-/// prerequisite, not a presentation-success or whole-native-frame claim from these joins.
+/// Accepted CUI action and loader-terminal cohorts are joined before detaching the actual
+/// root. These joins do not claim native frame, input or independent acceptance.
 /// Constructor-before-return acquisition remains the shell owner's responsibility.
 /// </summary>
 public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDisposable,
@@ -29,12 +28,13 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     private readonly Func<string, Task>? _startNew;
     private readonly Func<Task>? _openBlank;
     private readonly DesktopOriginalWorkLifetime _work;
-    private readonly TasksSpaceHavenScene _scene;
+    private readonly SpaceTasksDashboardCuiScene _scene;
     private readonly object _gate = new();
     [ThreadStatic] private static List<SpaceTasksDashboardPage>? _physicalSources;
     private IReadOnlyList<SpaceTaskObservation> _observations = [];
     private bool _active, _subscribed, _newWorkPending;
     private long _generation, _readSequence;
+    internal Task? ActualNewWork { get; private set; }
 
     public SpaceTasksDashboardPage(SpaceTaskWorkspaceService source, TaskExecutionCoordinator canonical,
         Guid actualSpaceId, Func<SpaceTaskObservation, Task> openExistingTask,
@@ -47,8 +47,8 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         _openExisting = openExistingTask ?? throw new ArgumentNullException(nameof(openExistingTask));
         _startNew = startExplicitNewTask; _openBlank = openBlankTask;
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
-        _scene = new(OwnSceneCallback, DemandOriginalSceneWrite);
-        Scene = new HavenSceneControl { Root = _scene.Root };
+        _scene = new(actualSpaceId, OwnSceneCallback, DemandOriginalSceneWrite);
+        Scene = _scene;
         AutomationProperties.SetAutomationId(this, "SpaceCanonicalTaskDashboard");
         AutomationProperties.SetName(this, "Existing Space tasks");
         AutomationProperties.SetAutomationId(Scene, "SpaceCanonicalTaskDashboardScene");
@@ -57,10 +57,11 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         _scene.DelegateRequested += OnDelegateRequested;
         _scene.NewBlankTaskRequested += OnBlankRequested;
         _scene.RecentTaskRequested += OnOpenRequested;
+        _scene.RefreshRequested += OnRefreshRequested;
     }
 
-    public HavenSceneControl Scene { get; }
-    internal TasksSpaceHavenScene OriginalScene => _scene;
+    public SpaceTasksDashboardCuiScene Scene { get; }
+    internal SpaceTasksDashboardCuiScene OriginalScene => _scene;
     public IReadOnlyList<SpaceTaskObservation> OriginalObservations => _observations;
     private bool IsCurrent(long generation)
     { lock (_gate) return _active && !_work.IsRetiring && _generation == generation; }
@@ -119,12 +120,6 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         {
             original.DemandPublication();
             var rows = await original.AwaitAsync(InvokePhysicalSource(() => _source.ReadPageAsync(_spaceId, 40, token, OwnNestedOriginalSource))).ConfigureAwait(false);
-            var displayed = rows.Select(row => new TasksSpaceRecentItem(row.Conversation.Id, row.Conversation.Title,
-                row.Snapshot is { } task
-                    ? $"Task {task.TaskId:D}; run {task.ExecutionId:D}; saved revision {task.PersistenceRevision}\n" +
-                      row.ExecutionObservation + "\n" + row.RecoveryObservation +
-                      (row.Projection?.CheckpointId is { } checkpoint ? $"\nAcknowledged checkpoint {checkpoint:D}" : "\nNo acknowledged checkpoint.")
-                    : row.ExecutionObservation)).ToArray();
             await DispatchOriginalAsync(original, () =>
             {
                 original.DemandPublication();
@@ -135,11 +130,11 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                     original.DemandPublication();
                     lock (_gate) if (_readSequence != sequence) throw new InvalidOperationException("The original dashboard read was superseded.");
                 }
-                _scene.SetRecent(displayed, DemandRead);
+                _scene.SetRecent(rows, DemandRead);
                 _scene.SetStartAvailability(!_newWorkPending && _startNew is not null, !_newWorkPending && _openBlank is not null, DemandRead);
                 _scene.SetStatus(_startNew is null || _openBlank is null
                     ? "Some new-task entrypoints are unconfigured. Existing tasks open with their recorded Task/Run; saved state is not a live worker witness."
-                    : "Existing Space tasks; each card opens its original context and recorded Task/Run. New-work actions remain explicit.", DemandRead);
+                    : "Up to 40 task conversations in this Space. Each tile opens the same task and run. Saved state does not establish live work or verification.", DemandRead);
             }).ConfigureAwait(false);
         }
         catch (Exception error)
@@ -165,10 +160,11 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
         });
     }
-    private void OnOpenRequested(object? sender, Guid contextId)
+    private void OnRefreshRequested(object? sender, EventArgs args) => _ = RefreshOriginalAsync();
+    private void OnOpenRequested(object? sender, SpaceTaskObservation captured)
     {
-        var captured = _observations.SingleOrDefault(row => row.Conversation.Id == contextId);
-        if (captured is null) return;
+        if (!_observations.Any(row => ReferenceEquals(row, captured))) throw new InvalidOperationException("This task tile changed before opening.");
+        var contextId = captured.Conversation.Id;
         long generation; lock (_gate) generation = _generation;
         _ = _work.RunAsync(async original =>
         {
@@ -207,10 +203,12 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     }
     private void StartOriginalNewWork(Func<Task> source, bool clearInstruction)
     {
+        var instructionVersion = _scene.InstructionVersion;
         long generation; lock (_gate) generation = _generation;
         _ = _work.RunAsync(async original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
+            ActualNewWork = original.Task; // Same prepublished owner driver, never an ACK proxy.
             lock (_gate)
             {
                 if (_newWorkPending) throw new InvalidOperationException("An original new-work opener is already pending.");
@@ -226,7 +224,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                 await DispatchOriginalAsync(original, () =>
                 {
                     original.DemandPublication();
-                    if (clearInstruction) _scene.ClearInstruction();
+                    if (clearInstruction) _scene.ClearInstruction(instructionVersion);
                     _scene.SetStatus("The original new-work opener returned; this is not a durable task-completion witness.");
                 }).ConfigureAwait(false);
                 await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
@@ -287,15 +285,16 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         _scene.DelegateRequested -= OnDelegateRequested;
         _scene.NewBlankTaskRequested -= OnBlankRequested;
         _scene.RecentTaskRequested -= OnOpenRequested;
-        return Task.CompletedTask; // Synchronous subscription removal only; not business/renderer drain.
+        _scene.RefreshRequested -= OnRefreshRequested;
+        return InvokePhysicalSource(() => Dispatcher.UIThread.InvokeAsync(() =>
+            InvokePhysicalSource(() => { _scene.RequestRetirement(); return true; })).GetTask());
     }
     private async Task DetachOriginalPresentationAsync()
     {
+        await InvokePhysicalSource(_scene.CloseAndDrainAsync).ConfigureAwait(false);
         var actual = InvokePhysicalSource(() => Dispatcher.UIThread.InvokeAsync(() => InvokePhysicalSource(() =>
         {
             // Factor cleanup runs after independently joining all actual source/dispatcher tasks.
-            if (ReferenceEquals(Scene.Root, _scene.Root)) Scene.Root = null;
-            _scene.Dispose();
             if (ReferenceEquals(Content, Scene)) Content = null;
             return true;
         })).GetTask());

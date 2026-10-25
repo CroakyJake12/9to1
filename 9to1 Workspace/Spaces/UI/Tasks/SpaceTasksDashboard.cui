@@ -1,0 +1,44 @@
+<Cui id="spaces.tasks.dashboard" version="1">
+  <Actions>
+    <Action name="OpenExistingTask" command="tasks.open" parameter="{Binding task.observation}" />
+    <Action name="SubmitNewTask" command="tasks.submit" parameter="{Binding Event}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page id="space-tasks-dashboard" accessible-name="Tasks and recorded progress">
+      <Container id="tasks-dashboard-scroll" Type="Vertical Stack" Padding="24" CellGap="14" VerticalScrolling="True" HorizontalScrolling="False">
+        <Text id="tasks-heading" text="Tasks" font-size="26" font-weight="Bold" />
+        <Text id="tasks-scope" text="{Binding ScopeLabel}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Shown task scope" />
+        <Text id="tasks-new-work-heading" text="Delegate a new task" font-size="18" font-weight="SemiBold" />
+        <Input id="tasks-new-instruction" Type="Text" AcceptsReturn="True" SubmitAction="SubmitNewTask" Value="{Binding Instruction}" placeholdertext="Describe a new, one-off task…" MinHeight="76" Interactive="{Binding CanEditInstruction}" accessible-name="New task instruction" />
+        <Container id="tasks-new-work-actions" Type="Wrap" CellGap="8">
+          <Button id="tasks-delegate" action="tasks.delegate" content="Delegate task" Interactive="{Binding CanDelegate}" accessible-name="Start this explicit new task" />
+          <Button id="tasks-new-blank" action="tasks.blank" content="New blank task" Interactive="{Binding CanOpenBlank}" accessible-name="Open a new blank task" />
+          <Button id="tasks-refresh" action="tasks.refresh" content="Refresh tasks" Interactive="{Binding CanRefresh}" accessible-name="Refresh this task list" />
+        </Container>
+        <Text id="tasks-one-off-note" text="Reusable and scheduled work belongs in Automations." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Text id="tasks-existing-heading" text="Existing work" font-size="18" font-weight="SemiBold" />
+        <If Condition="{Binding HasRows}" Negate="True">
+          <Text id="tasks-empty" text="No task conversations are available in this Space. Start a task above." TextWrapping="Wrap" />
+        </If>
+        <Container id="tasks-recent-rows" Type="Vertical Stack" CellGap="10" accessible-name="Existing canonical task tiles">
+          <Repeat id="tasks-tile-repeat" Source="{Binding Rows}" As="task" Key="{Binding task.id}">
+            <Container id="tasks-tile" Type="Vertical Stack" Padding="16" CellGap="8" Background="{Resource CuiPanelBrush}" BorderBrush="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="14" accessible-name="{Binding task.accessibleName}">
+              <Button id="tasks-tile-open" action="OpenExistingTask" content="{Binding task.title}" HorizontalAlignment="Stretch" MinHeight="40" accessible-name="{Binding task.openLabel}" Tooltip="{Binding task.title}" />
+              <If Condition="{Binding task.completed}">
+                <Text id="tasks-tile-completed" text="{Binding task.status}" foreground="{Resource CuiSuccessBrush}" font-weight="SemiBold" accessible-name="{Binding task.status}" />
+              </If>
+              <If Condition="{Binding task.completed}" Negate="True">
+                <Text id="tasks-tile-status" text="{Binding task.status}" font-weight="SemiBold" TextWrapping="Wrap" accessible-name="{Binding task.status}" />
+              </If>
+              <Text id="tasks-tile-summary" text="{Binding task.summary}" TextWrapping="Wrap" />
+              <Text id="tasks-tile-observation" text="{Binding task.observationText}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              <Text id="tasks-tile-checkpoint" text="{Binding task.checkpoint}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              <Text id="tasks-tile-identity" text="{Binding task.identity}" foreground="{Resource CuiTextSoftBrush}" font-size="11" TextWrapping="Wrap" accessible-name="Canonical task and run identities" />
+            </Container>
+          </Repeat>
+        </Container>
+        <Text id="tasks-page-status" text="{Binding Status}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" accessible-name="Task dashboard result" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>
