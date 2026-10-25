@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Themes;
 using Haven.UI;
 using System.Diagnostics;
