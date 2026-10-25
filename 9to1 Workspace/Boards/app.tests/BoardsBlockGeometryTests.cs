@@ -147,17 +147,22 @@ public sealed class BoardsBlockGeometryTests
             var textHeight = text.Bounds.Height;
             var textColumn = Grid.GetColumn(text);
             var columnDefinition = row.ColumnDefinitions[textColumn];
+            var checkboxColumnWidth = row.ColumnDefinitions[Grid.GetColumn(check)].Width.Value;
             var checkWidth = check.Bounds.Width;
             var checkTop = check.Bounds.Top;
             var textTop = text.Bounds.Top;
+            var textPaddingLeft = text.Padding.Left;
             window.Close();
-            return (Gap: gap, TextHeight: textHeight, ColumnWidth: columnDefinition.Width, CheckWidth: checkWidth,
+            return (Gap: gap, TextHeight: textHeight, ColumnWidth: columnDefinition.Width,
+                CheckboxColumnWidth: checkboxColumnWidth, CheckWidth: checkWidth, TextPaddingLeft: textPaddingLeft,
                 CheckTop: checkTop, TextTop: textTop, TextWrapping: text.TextWrapping,
                 AddItemHiddenOpacity: addItemHiddenOpacity, AddItemFocusedOpacity: addItemFocusedOpacity);
         });
 
-        Assert.InRange(actual.Gap, 8, 12);
+        Assert.InRange(actual.Gap, 5.5, 6.5);
         Assert.Equal(24, actual.CheckWidth);
+        Assert.Equal(30, actual.CheckboxColumnWidth);
+        Assert.Equal(0, actual.TextPaddingLeft);
         Assert.Equal(actual.TextTop + 7, actual.CheckTop);
         Assert.Equal(0, actual.AddItemHiddenOpacity);
         Assert.Equal(1, actual.AddItemFocusedOpacity);

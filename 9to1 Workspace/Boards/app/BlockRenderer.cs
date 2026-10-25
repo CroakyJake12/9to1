@@ -32,7 +32,12 @@ public static class BlockRenderer
     private const double BlockGutterLeadingInset = 76;
     private const double BlockContentTopInset = 2;
     private const double ChecklistCheckboxFirstLineOffset = 7;
+    private const double ChecklistCheckboxTargetSize = 24;
     private const double ChecklistCheckboxTextGap = 6;
+    // The CUI checkbox template reserves its own label gutter even when the
+    // checklist supplies no CheckBox.Content. Reserve that space explicitly
+    // so the outer label column begins after the 24px target + 6px visual gap.
+    private const double ChecklistCheckboxColumnWidth = ChecklistCheckboxTargetSize + ChecklistCheckboxTextGap;
 
     public static async Task RebuildAsync(StackPanel host, BoardsViewModel vm)
     {
@@ -675,7 +680,7 @@ public static class BlockRenderer
     {
         var row = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
+            ColumnDefinitions = new ColumnDefinitions($"{ChecklistCheckboxColumnWidth},*,Auto"),
             Margin = new Thickness(Math.Max(0, item.Level) * 16, 3, 0, 3),
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
@@ -684,22 +689,22 @@ public static class BlockRenderer
         {
             Name = "done_" + suffix,
             IsChecked = item.IsChecked,
-            Width = 24,
-            Height = 24,
-            MinWidth = 24,
-            MinHeight = 24,
-            MaxWidth = 24,
-            MaxHeight = 24,
+            Width = ChecklistCheckboxTargetSize,
+            Height = ChecklistCheckboxTargetSize,
+            MinWidth = ChecklistCheckboxTargetSize,
+            MinHeight = ChecklistCheckboxTargetSize,
+            MaxWidth = ChecklistCheckboxTargetSize,
+            MaxHeight = ChecklistCheckboxTargetSize,
             VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(0, ChecklistCheckboxFirstLineOffset, ChecklistCheckboxTextGap, 0),
         };
         const string checklistGeometrySource = "Boards checklist checkbox geometry";
-        CuiPropertyPresentation.Set(check, "Width", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "Height", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "MinWidth", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "MinHeight", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "MaxWidth", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "MaxHeight", 24d, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "Width", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "Height", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MinWidth", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MinHeight", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MaxWidth", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MaxHeight", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
         CuiPropertyPresentation.Set(check, "Margin", new Thickness(0, ChecklistCheckboxFirstLineOffset, ChecklistCheckboxTextGap, 0),
             CuiPropertyLevel.Instance, checklistGeometrySource);
         AutomationProperties.SetName(check, "Checklist item done");
@@ -719,6 +724,8 @@ public static class BlockRenderer
             FontStyle = item.Italic ? FontStyle.Italic : FontStyle.Normal,
             Foreground = item.IsChecked ? BoardsTheme.SecondaryTextBrush : BoardsTheme.TextBrush,
         };
+        CuiPropertyPresentation.Set(text, "Padding", new Thickness(0, 4),
+            CuiPropertyLevel.Instance, "Boards checklist label geometry");
         ThemeApplier.SetDocumentTextSurface(text, Brushes.Transparent);
         ToolTip.SetTip(text, "Checklist item text (Enter adds next, empty Backspace removes)");
         AutomationProperties.SetName(text, "Checklist item text");
