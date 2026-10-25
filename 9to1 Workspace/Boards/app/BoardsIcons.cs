@@ -21,6 +21,7 @@ public static class BoardsIcons
     public const string Check = "\uE73E";
     public const string Search = "\uE721";
     public const string More = "\uE712";
+    public const string Grip = "\uE76F";
     public const string ChevronDown = "\uE70D";
     public const string ChevronRight = "\uE76C";
     public const string ChevronLeft = "\uE76B";
