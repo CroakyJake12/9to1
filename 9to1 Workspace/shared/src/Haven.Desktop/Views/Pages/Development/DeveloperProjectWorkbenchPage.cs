@@ -730,7 +730,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                                 else tab.Editor = value;
                                 _project = project; SelectTab(tab); published = true;
                                 if (searchSelection is not null) NavigateOpenedSearchMatch(searchSelection);
-                                _status = searchSelection is null ? "Complete source opened through its current owner. Other tabs retain their drafts and review state."
+                                _status = searchSelection is null ? "Source opened. Other unsaved drafts are kept."
                                     : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
                             }).ConfigureAwait(false);
                             if (published) await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false);
@@ -891,7 +891,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                         }
                         _project = project; SelectTab(tab);
                         if (searchSelection is not null) NavigateOpenedSearchMatch(searchSelection);
-                        _status = searchSelection is null ? "Manual source opened through the genuine Home read owner. Other tabs retain their drafts and review state."
+                        _status = searchSelection is null ? "Source opened. Other unsaved drafts are kept."
                             : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
                     }).ConfigureAwait(false);
                     await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
@@ -990,11 +990,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private void PublishProjectTree(IReadOnlyList<DeveloperProjectTreeEntry> entries)
     {
         _fileNavigationObservation = null;
-        _fileNavigationStatus = "The project file capture changed. Find the current query again.";
+        _fileNavigationStatus = "The file list changed. Find files again.";
         _projectEntries = entries;
         if (!string.IsNullOrEmpty(_projectFolder) && !entries.Any(entry => entry.IsDirectory && entry.RelativePath == _projectFolder)) _projectFolder = "";
         _projectEntryPage = 0; RebuildProjectFolderEntries();
-        _status = "Project explorer refreshed through the genuine Home READ and captured Files root. Opening a file reads it again with current authorization.";
+        _status = "Project files refreshed.";
     }
     private ValueTask DispatchProjectFolderAsync(string? folder, string command, long generation) =>
         new(_work.RunAsync(async original =>
@@ -1166,7 +1166,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                     else
                     {
                         var tab = _sourceTabs.Single(item => item.Id == requestedTab);
-                        CloseTab(tab); _status = "Saved tab closed. Select another tab to read it through its current owner.";
+                        CloseTab(tab); _status = "Saved tab closed. Select another file to open it.";
                     }
                 }).ConfigureAwait(false);
                 await SaveCleanSessionAsync(original, _project, _businessToken).ConfigureAwait(false);

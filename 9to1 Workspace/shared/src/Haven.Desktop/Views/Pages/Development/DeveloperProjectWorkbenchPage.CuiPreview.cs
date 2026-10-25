@@ -17,7 +17,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
     private Guid _cuiPreviewTab;
     private long _cuiPreviewDraftRevision;
     private string? _cuiPreviewText;
-    private string _cuiPreviewRuntimeStatus = "Preview has not been compiled.";
+    private string _cuiPreviewRuntimeStatus = "Preview this draft to see it here.";
 
     // A trusted native boundary, registered only by this workbench. The authored draft
     // can never request Object renderers; only the compiled workbench owns this slot.
@@ -49,10 +49,10 @@ public sealed partial class DeveloperProjectWorkbenchPage
     {
         if (_cuiPreviewLastValid is not { } valid) return _cuiPreviewRuntimeStatus;
         if (_cuiPreviewSlot is null || !ReferenceEquals(_cuiPreviewSlot.Content, _cuiPreviewHost))
-            return _cuiPreviewRuntimeStatus + " The workbench scene changed; compile again to mount a current preview.";
+            return "Preview is out of date. Preview this draft again.";
         var current = CurrentSourceTab()?.Id == _cuiPreviewTab && CurrentDraftRevision() == _cuiPreviewDraftRevision &&
             StringComparer.Ordinal.Equals(CurrentEditorText(), _cuiPreviewText);
-        return _cuiPreviewRuntimeStatus + $" Showing {(current ? "current" : "last valid; stale")} {valid.RelativePath}, draft revision {_cuiPreviewDraftRevision}, SHA-256 {valid.SourceSha256}.";
+        return _cuiPreviewRuntimeStatus + $" Showing {valid.RelativePath}." + (current ? "" : " Preview is out of date.");
     }
 
     private bool IsCuiPreviewCaptureCurrent(Guid tab, long revision, string path, string text, ContentControl slot) =>
@@ -66,7 +66,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
         lock (_gate)
         {
             if (IsActionAvailable("dev.preview-cui-draft") != true || CurrentSourceTab() is not { } tab || _cuiPreviewSlot is null)
-                throw new InvalidOperationException("Open CUI source in the current workbench before compiling a static draft preview.");
+                throw new InvalidOperationException("Open a CUI file before previewing it.");
             generation = _generation; revision = CurrentDraftRevision(); tabId = tab.Id; path = tab.Path; text = CurrentEditorText();
             slot = _cuiPreviewSlot; _pending = true;
         }
@@ -87,12 +87,12 @@ public sealed partial class DeveloperProjectWorkbenchPage
                     {
                         token.ThrowIfCancellationRequested();
                         if (!IsCuiPreviewCaptureCurrent(tabId, revision, path, text, slot))
-                        { _status = "The draft changed while compiling. Compile the current draft to update preview."; return; }
+                        { _status = "The draft changed. Preview it again."; return; }
                         _cuiPreviewAttempt = compilation;
                         if (!compilation.Succeeded || compilation.Document is null)
-                        { _cuiPreviewRuntimeStatus = "Preview rejected this draft; the last valid scene is retained."; return; }
+                        { _cuiPreviewRuntimeStatus = "This draft could not be previewed. Check the problems below."; return; }
                         if (_cuiPreviewScenes.Count >= MaximumPreviewScenes)
-                            throw new InvalidOperationException("Preview scene cleanup custody is full; unresolved scenes must settle before another preview.");
+                            throw new InvalidOperationException("Some previews are still closing. Wait before previewing again.");
                         var acquired = new CuiSceneHost { IsHitTestVisible = false, Focusable = false };
                         candidate = acquired;
                         _cuiPreviewScenes.Add(acquired); // Retain before readiness/native callbacks.
@@ -108,11 +108,14 @@ public sealed partial class DeveloperProjectWorkbenchPage
                         {
                             token.ThrowIfCancellationRequested();
                             if (!IsCuiPreviewCaptureCurrent(tabId, revision, path, text, slot))
-                            { _status = "The draft changed before scene publication. The last valid preview is retained."; return; }
+                            { _status = "The draft changed. The previous preview is unchanged."; return; }
                             if (availability.State != CuiSceneAvailabilityState.Ready || admitted.Diagnostics.Any(value => value.Severity == CuiDiagnosticSeverity.Error))
                             {
-                                _cuiPreviewRuntimeStatus = "Preview runtime did not admit this scene: " + availability.Message;
-                                _cuiPreviewAttempt = compilation with { Document = null, Diagnostics = compilation.Diagnostics.Concat(admitted.Diagnostics).ToArray() };
+                                _cuiPreviewRuntimeStatus = "Preview is unavailable. The previous preview is unchanged.";
+                                var diagnostics = compilation.Diagnostics.Concat(admitted.Diagnostics).ToList();
+                                if (availability.State != CuiSceneAvailabilityState.Ready)
+                                    diagnostics.Add(new("DEVCP006", CuiDiagnosticSeverity.Error, availability.Code + ": " + availability.Message, CuiSourceSpan.At(path, 1, 1)));
+                                _cuiPreviewAttempt = compilation with { Document = null, Diagnostics = diagnostics.ToArray() };
                                 return;
                             }
                             // The candidate is genuinely compiled/admitted and has finished its
@@ -128,13 +131,13 @@ public sealed partial class DeveloperProjectWorkbenchPage
                             if (!IsCuiPreviewCaptureCurrent(tabId, revision, path, text, slot))
                             {
                                 slot.Content = previousContent;
-                                _status = "The draft changed during scene publication. The last valid preview is retained."; return;
+                                _status = "The draft changed. The previous preview is unchanged."; return;
                             }
                             replaced = _cuiPreviewHost;
                             _cuiPreviewHost = admitted; _cuiPreviewLastValid = compilation;
                             _cuiPreviewTab = tabId; _cuiPreviewDraftRevision = revision; _cuiPreviewText = text;
-                            _cuiPreviewRuntimeStatus = "Static compiled V2 preview admitted; interaction and application services are disabled.";
-                            mounted = true; _status = "The captured current CUI draft is shown in static preview. Source, selection and recovery are unchanged.";
+                            _cuiPreviewRuntimeStatus = "Preview updated.";
+                            mounted = true; _status = "Preview updated.";
                         }).ConfigureAwait(false);
                     }
                 }

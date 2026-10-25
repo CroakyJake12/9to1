@@ -25,8 +25,8 @@ public static class DeveloperProjectFileNavigation
             token.ThrowIfCancellationRequested();
             if (string.IsNullOrEmpty(path) || path[0] == '/' || path.Contains('\\') ||
                 path.Split('/').Any(part => part is "" or "." or "..") || !seen.Add(path))
-                return Invalid("The captured file manifest contains an invalid or ambiguous relative path; refresh its original owner.");
-            if (seen.Count > MaximumFiles) return Invalid("Go to file supports at most 50,000 captured files; no partial catalogue was substituted.");
+                return Invalid("Some file paths are invalid or duplicated. Refresh the file list.");
+            if (seen.Count > MaximumFiles) return Invalid("File search supports up to 50,000 files. This project is too large for this search.");
             var name = path[(path.LastIndexOf('/') + 1)..];
             var rank = name.Equals(needle, StringComparison.OrdinalIgnoreCase) ? 0
                 : name.StartsWith(needle, StringComparison.OrdinalIgnoreCase) ? 1
