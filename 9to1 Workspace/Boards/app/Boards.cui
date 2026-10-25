@@ -1,4 +1,8 @@
 <Cui>
+  <Actions>
+    <Action name="OpenRecentBoard" command="OpenRecentBoard" parameter="{Binding board.Target}" />
+    <Action name="OpenRecentPage" command="OpenRecentPage" parameter="{Binding page.Target}" />
+  </Actions>
   <Page>
     <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr Auto">
       <!-- Top document bar: file actions, title, save state, global actions -->
@@ -37,6 +41,12 @@
       <Container padding="8" Type="Overlay" ID="NavPane" Row="1" Column="0">
         <Container Type="Vertical Stack">
           <Input id="NavSearchBox" accessible-name="Search sections and pages" placeholdertext="Search" margin="0 0 0 8" Type="Text" ID="NavSearchBox" />
+          <Button ID="BoardSwitcher" Action="ShowLanding" AccessibleName="Open Boards picker" Margin="0 6 0 6" HorizontalAlignment="Stretch">
+            <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
+              <Image Source="icon:folder" Width="18" Height="18" AccessibleName="Board" />
+              <Text Text="{Binding BoardTitle, fallback=Your boards}" TextWrapping="Wrap" />
+            </Container>
+          </Button>
           <Container verticalalignment="Stretch" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False">
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
@@ -131,6 +141,53 @@
             </Container>
           </Container>
         </Container>
+      </Container>
+      <Container Type="Vertical Stack" ID="LandingHost" Row="1" Column="1" Active="{Binding IsLanding}" VerticalScrolling="True" HorizontalScrolling="False" Padding="32 28" Background="{Resource CuiBackgroundBrush}" CellGap="12">
+        <Text Text="Your boards" FontSize="30" FontWeight="Bold" />
+        <Text Text="Open a saved workspace or create a new board." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        <Container Type="Wrap" CellGap="8">
+          <Button ID="LandingCreateBoard" Content="Create a board" Action="NewBoard" AccessibleName="Create a new board" />
+          <Button ID="LandingOpenBoard" Content="Open a board…" Action="OpenBoard" AccessibleName="Open an existing board" />
+          <Input ID="LandingSearchBox" Type="Text" PlaceholderText="Search boards and recent pages" AccessibleName="Search boards and recent pages" Width="300" Value="{Binding LandingSearchQuery}" WriteBack="True" />
+        </Container>
+        <Text Text="{Binding RecentBoardStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Recent boards status" />
+        <Text Text="Recent boards" FontSize="20" FontWeight="SemiBold" Margin="0 14 0 0" />
+        <If Condition="{Binding RecentBoardsLoaded, fallback=false}">
+        <If Condition="{Binding HasRecentBoards}">
+          <Container Type="Wrap" CellGap="12" Role="list" AccessibleName="Recent boards">
+            <Repeat Source="{Binding RecentBoardCards}" As="board" Key="{Binding board.Id}" Panel="Wrap">
+              <Container Type="Vertical Stack" Width="280" Padding="16" Margin="0 0 0 8" Background="{Resource CuiPanelBrush}" CornerRadius="10" CellGap="8" Role="listitem">
+                <Image Source="icon:folder" Width="24" Height="24" AccessibleName="Board" />
+                <Button Action="OpenRecentBoard" Content="{Binding board.Title}" Interactive="{Binding board.IsAvailable}" AccessibleName="Open recent board" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                <Text Text="{Binding board.Preview}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text Text="{Binding board.ModifiedLabel}" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Last modified" />
+                <Text Text="{Binding board.AvailabilityLabel}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+            </Repeat>
+          </Container>
+        </If>
+        <If Condition="{Binding HasNoRecentBoards}"><Text Text="No recent boards yet. Create a board or open an existing .9to1board file." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></If>
+        </If>
+        <Else><Text Text="Loading saved boards…" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></Else>
+        <Text Text="Recent pages and components" FontSize="20" FontWeight="SemiBold" Margin="0 14 0 0" />
+        <If Condition="{Binding HasRecentPages}">
+          <Container Type="Vertical Stack" CellGap="6" Role="list" AccessibleName="Recent pages">
+            <Repeat Source="{Binding RecentPageCards}" As="page" Key="{Binding page.Id}">
+              <Button Action="OpenRecentPage" HorizontalAlignment="Stretch" Padding="12" AccessibleName="Open recent page">
+                <Container Type="Vertical Stack" CellGap="4">
+                  <Text Text="{Binding page.PageTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                  <Text Text="{Binding page.BoardTitle}" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Container Type="Horizontal Stack" CellGap="4">
+                    <Text Text="Opened" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Text Text="{Binding page.OpenedLabel}" Foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
+                  <Text Text="{Binding page.Preview}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+              </Button>
+            </Repeat>
+          </Container>
+        </If>
+        <If Condition="{Binding HasNoRecentPages}"><Text Text="Pages you open will appear here." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></If>
       </Container>
       <!-- Minimal status footer -->
       <Container padding="12 6" Type="Overlay" ID="FooterBar" Row="2" Column="0" ColumnSpan="2">

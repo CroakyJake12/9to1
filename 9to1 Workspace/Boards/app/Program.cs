@@ -96,6 +96,8 @@ internal static class Program
 internal sealed class BoardsApp : Application
 {
     private JsonFileHavenBoardStore? _store;
+    private RecentBoardCatalog? _recentBoardCatalog;
+    private string? _lastRecentPageKey;
     private IRichBoardSession? _session;
     private BoardsViewModel? _viewModel;
     private CuiControlLoader? _loader;
@@ -122,9 +124,17 @@ internal sealed class BoardsApp : Application
         // Optional CLI arg opens/creates that board; otherwise the default board opens.
         var storeRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "9to1", "Boards");
+        var defaultBoardExisted = File.Exists(ContractSessionAdapter.DefaultBoardPath()) ||
+                                  File.Exists(ContractSessionAdapter.DefaultBoardPath() + ".bak");
         _store = new JsonFileHavenBoardStore(storeRoot);
+        _recentBoardCatalog = new RecentBoardCatalog(Path.Combine(storeRoot, "recent-board-paths.json"));
         _session = ContractSessionAdapter.OpenAsync(_store, Program.OpenPath).GetAwaiter().GetResult();
+        if (!string.IsNullOrWhiteSpace(Program.OpenPath) || defaultBoardExisted)
+            _recentBoardCatalog.Record(_session.FilePath);
         _viewModel = new BoardsViewModel(_session);
+        if (!string.IsNullOrWhiteSpace(Program.OpenPath) || defaultBoardExisted)
+            RecordCurrentPage();
+        _viewModel.SetLanding(Program.OpenPath is null);
         WireViewModel(_viewModel);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -139,6 +149,7 @@ internal sealed class BoardsApp : Application
     {
         viewModel.PickFileAsync = PickFileAsync;
         viewModel.OpenBoardAsync = SwitchBoardAsync;
+        viewModel.OpenBoardPathAsync = OpenBoardPathAsync;
         viewModel.RebuildRequested += PostRebuild;
         viewModel.StyleEditorRequested += PostStyleEditor;
     }
@@ -151,6 +162,7 @@ internal sealed class BoardsApp : Application
         viewModel.NewMenuRequested -= PostNewMenu;
         viewModel.SelectionChanged -= OnSelectionChanged;
         viewModel.NavRebuildRequested -= RebuildNav;
+        viewModel.LandingRequested -= OnLandingRequested;
         viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         viewModel.FileMenuRequested -= PostFileMenu;
         viewModel.OverflowRequested -= PostOverflowMenu;
@@ -159,6 +171,7 @@ internal sealed class BoardsApp : Application
         viewModel.ThemeToggleRequested -= PostThemeToggle;
         viewModel.PickFileAsync = null;
         viewModel.OpenBoardAsync = null;
+        viewModel.OpenBoardPathAsync = null;
         viewModel.Detach();
     }
 
@@ -327,6 +340,7 @@ internal sealed class BoardsApp : Application
         WireInkOverlay();
         UpdateWindowTitle();
         _viewModel.SelectionChanged += OnSelectionChanged;
+        _viewModel.LandingRequested += OnLandingRequested;
         _viewModel.NavRebuildRequested += RebuildNav;
         _viewModel.RebuildRequested += PostRebuild;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -368,6 +382,34 @@ internal sealed class BoardsApp : Application
             };
         }
         PostRebuild();
+        _ = RefreshLandingDataAsync();
+    }
+
+    private async Task RefreshLandingDataAsync()
+    {
+        var store = _store;
+        var catalog = _recentBoardCatalog;
+        var viewModel = _viewModel;
+        if (store is null || catalog is null || viewModel is null) return;
+        try
+        {
+            var boards = await catalog.LoadCardsAsync(store);
+            var pages = await catalog.LoadRecentPagesAsync(store);
+            if (!ReferenceEquals(viewModel, _viewModel)) return;
+            viewModel.SetLandingData(boards, pages);
+            viewModel.Set("RecentBoardStatus", catalog.LoadError is not null
+                ? "Recent board list could not be read: " + catalog.LoadError
+                : catalog.SaveError is not null ? "Recent locations could not be saved: " + catalog.SaveError : string.Empty);
+        }
+        catch (Exception error)
+        {
+            if (ReferenceEquals(viewModel, _viewModel))
+            {
+                viewModel.SetLandingData([], []);
+                viewModel.Set("StatusText", "Recent boards could not be loaded: " + error.Message.Split('\n')[0]);
+                viewModel.Set("RecentBoardStatus", "Recent boards could not be loaded. Existing board files are unchanged.");
+            }
+        }
     }
 
     private void PostRebuild()
@@ -390,6 +432,7 @@ internal sealed class BoardsApp : Application
     {
         if (_viewModel is null)
             return;
+        RecordCurrentPage();
         if (Dispatcher.UIThread.CheckAccess())
         {
             RefreshToolbarAndContext();
@@ -406,6 +449,19 @@ internal sealed class BoardsApp : Application
             });
         }
     }
+
+    private void RecordCurrentPage()
+    {
+        if (_session?.FilePath is not { } boardPath || _viewModel is null || _recentBoardCatalog is null) return;
+        var sectionId = _viewModel.SelectedSectionId;
+        var pageId = _viewModel.SelectedPageId;
+        var key = boardPath + "\0" + sectionId + "\0" + pageId;
+        if (key == _lastRecentPageKey) return;
+        _recentBoardCatalog.RecordPage(boardPath, sectionId, pageId);
+        _lastRecentPageKey = key;
+    }
+
+    private void OnLandingRequested() => _ = RefreshLandingDataAsync();
 
     private void RebuildNav()
     {
@@ -551,6 +607,8 @@ internal sealed class BoardsApp : Application
             // board and its recovery data untouched.
             var adapter = await ContractSessionAdapter.CreateNewAtPathAsync(_store, path);
             await ActivateBoardAsync(adapter);
+            _recentBoardCatalog?.Record(adapter.FilePath);
+            await RefreshLandingDataAsync();
         }
         catch (Exception error)
         {
@@ -778,8 +836,12 @@ internal sealed class BoardsApp : Application
         var oldSession = _session;
         try
         {
+            if (!File.Exists(path) && !File.Exists(path + ".bak"))
+                throw new FileNotFoundException("The recent board and its recovery backup are both unavailable. Use Open to locate another file.");
             var adapter = await ContractSessionAdapter.OpenAsync(_store, path);
             await ActivateBoardAsync(adapter, oldVm, oldSession);
+            _recentBoardCatalog?.Record(adapter.FilePath);
+            await RefreshLandingDataAsync();
         }
         catch (Exception error)
         {
@@ -788,8 +850,27 @@ internal sealed class BoardsApp : Application
         }
     }
 
+    private async Task OpenBoardPathAsync(string path, string? pageId)
+    {
+        if (_store is null) return;
+        var oldVm = _viewModel;
+        var oldSession = _session;
+        try
+        {
+            var adapter = await ContractSessionAdapter.OpenAsync(_store, path);
+            await ActivateBoardAsync(adapter, oldVm, oldSession, pageId);
+            _recentBoardCatalog?.Record(adapter.FilePath);
+            await RefreshLandingDataAsync();
+        }
+        catch (Exception error)
+        {
+            _viewModel?.Set("StatusText", "Recent board could not be opened: " + error.Message.Split('\n')[0]);
+        }
+    }
+
     private async Task ActivateBoardAsync(
-        ContractSessionAdapter adapter, BoardsViewModel? oldVm = null, IRichBoardSession? oldSession = null)
+        ContractSessionAdapter adapter, BoardsViewModel? oldVm = null, IRichBoardSession? oldSession = null,
+        string? selectedPageId = null)
     {
         if (_loader is null || _root is null)
         {
@@ -800,10 +881,15 @@ internal sealed class BoardsApp : Application
         oldVm ??= _viewModel;
         oldSession ??= _session;
         var next = new BoardsViewModel(adapter);
+        next.SetLanding(false);
+        if (selectedPageId is not null && !next.SelectPageById(selectedPageId))
+            next.Set("StatusText", "The recent page no longer exists in this board; opened its current page instead.");
         if (oldVm is not null)
             UnwireViewModel(oldVm);
         _session = adapter;
         _viewModel = next;
+        _lastRecentPageKey = null;
+        RecordCurrentPage();
         WireViewModel(next);
         _loader.SetBindingContext(next);
         _loader.SetActionDispatcher(next);

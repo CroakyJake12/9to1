@@ -19,11 +19,20 @@
 - Graph sliders: **IMPLEMENTED, owning checks pending**. Slider definitions use
   stable VariableIDs and validated name/range/step/default fields through the
   existing graph owner; the existing expression parser accepts slider variables.
-  View slider values and graph viewport are session-local. Slider controls,
-  projection/reopen and evaluator tests are authored for Root's serial run.
+  View slider values and graph viewport are session-local. View controls use an
+  authored CUI repeat fragment; projection/reopen and evaluator tests are authored
+  for Root's serial run.
+- Local Boards landing and picker: **PARTIALLY IMPLEMENTED, owning checks pending**.
+  The CUI landing shows real opened/created `.9to1board` files, actual document
+  previews/modified timestamps, and pages the user has opened. A navigation-only
+  recent-path file stores references; each card is re-read from the canonical
+  Boards file store and missing/unreadable paths are marked unavailable. Search,
+  create/open, and the sidebar board-switcher-to-picker path are wired. Canonical
+  Home Library artifact inclusion and cross-client recency are not implemented;
+  those remain with Home/shared-host integration.
 - Remaining major Boards gaps are Progress Tracker packets B-01 through B-04.
-  In particular, board-centric recent landing/picker, canonical
-  cross-client Board/Page convergence, embedded Write/Canvas/Chat/ScopedChat/Data
+  In particular, canonical Home Library landing integration, cross-client
+  Board/Page convergence, embedded Write/Canvas/Chat/ScopedChat/Data
   pages, full donor block parity, collaboration, and scalable accessibility are
   still incomplete. This checkpoint does not establish full implementation.
 

@@ -106,8 +106,13 @@ public sealed partial class BoardsViewModel
 
     public bool TrySetValue(string path, object? value)
     {
-        if (!_isEditMode) return false;
         var key = path[(path.LastIndexOf('.') + 1)..];
+        if (key == "LandingSearchQuery")
+        {
+            SetLandingSearch(value as string);
+            return true;
+        }
+        if (!_isEditMode) return false;
         if (_syncing) return key.StartsWith("Context", StringComparison.Ordinal);
         var block = FindBlock(SelectedBlockId);
         if (block is null) return false;
@@ -146,6 +151,8 @@ public sealed partial class BoardsViewModel
         }
         RefreshCuiContext(); return true;
     }
+
+    public bool TrySetItemValue(object item, string path, object? value) => false;
 
     private async ValueTask<bool> DispatchCuiContextAsync(string command, CancellationToken cancellationToken)
     {

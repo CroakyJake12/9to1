@@ -1,0 +1,13 @@
+<Cui>
+  <Page>
+    <Container Type="Wrap" CellGap="10" Role="group" AccessibleName="Graph variable sliders">
+      <Repeat Source="{Binding Rows}" As="slider" Key="{Binding slider.VariableId}" Panel="Wrap">
+        <Container Type="Horizontal Stack" CellGap="6" Padding="4 2">
+          <Text Text="{Binding slider.Name}" VerticalAlignment="Center" FontWeight="SemiBold" AccessibleName="Graph variable" />
+          <Input Type="Slider" Minimum="{Binding slider.Minimum}" Maximum="{Binding slider.Maximum}" Value="{Binding slider.Value, mode=TwoWay, type=double}" Width="220" AccessibleName="{Binding slider.AccessibleName}" />
+          <Text Text="{Binding slider.ValueLabel}" VerticalAlignment="Center" AccessibleName="Current graph variable value" />
+        </Container>
+      </Repeat>
+    </Container>
+  </Page>
+</Cui>

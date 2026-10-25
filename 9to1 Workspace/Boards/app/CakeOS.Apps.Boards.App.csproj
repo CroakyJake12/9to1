@@ -39,6 +39,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+    <Content Include="GraphSliderCui.cui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <Content Include="PackageReadme.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\..\framework\CUI\vendor\Avalonia\licence.md" Link="licenses\Avalonia-LICENSE.md" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\..\framework\CUI\vendor\Avalonia\NOTICE.md" Link="licenses\Avalonia-NOTICE.md" CopyToPublishDirectory="PreserveNewest" />
