@@ -1,3 +1,14 @@
+## Current local transition — 25 October 2026
+
+The owner requests local development takeover because cloud usage is low.
+Cloud authoring is on HOLD after checkpointing. Read
+[the current local continuation](docs/development/local-transition-2026-10-25.md)
+and its JSON companion before resuming. This supersedes the earlier cloud-resume
+instruction below. Preserve source, local sessions, WIP, failures and Thunder.
+The existing local coordinator may resume after observing exact source,
+exclusive scopes, actual model access and local build custody; a historical grant
+or session ID is not a current ACK. Do not revive cloud workers automatically.
+
 ## Boards UI review reference — 25 October 2026
 
 Apply [the later control hierarchy and Present-style toolbar clarification](docs/specification/owner-references/2026-10-25-boards-ui-review/owner-control-and-toolbar-clarification.md), including the separate Glow/Professional behavior.

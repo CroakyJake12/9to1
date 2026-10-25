@@ -1,0 +1,64 @@
+{
+  "schema": "9to1.local-continuation/v1",
+  "at": "2026-10-25T18:25:30.787330+00:00",
+  "owner_instruction": "Prepare local development transition because usage is low; transfer full context and working approach",
+  "cloud_authoring": "HOLD",
+  "local_execution": "NOT ACKNOWLEDGED",
+  "source_repository": "CroakyJake12/9to1",
+  "source_branch": "codex/resume-implementation-20261025",
+  "product_revision": "d40e5ae93529dd4c8b70e88fdfafa3c440cf4e6c",
+  "final_handoff_commit": "Separate transfer receipt",
+  "specification_sha256": "e1779d226848da492e926ab70e8d4722ad444476cfc91312bf5c2c067654fe81",
+  "read_first": [
+    "AGENTS.md",
+    "docs/development/workflow.md",
+    "docs/development/local-transition-2026-10-25.md",
+    "docs/specification/owner-references/2026-10-25-boards-ui-review/owner-control-and-toolbar-clarification.md"
+  ],
+  "priority_apps": [
+    "Home/Haven",
+    "Spaces",
+    "Build",
+    "Boards"
+  ],
+  "full_acceptance": "PAUSED",
+  "basic_checks": "Required; latest failures retained",
+  "pending_changes": {
+    "arm_native": {
+      "branch": "codex/arm-test-delivery-20261025",
+      "revision": "46cf9fb77f5c2217f58186cd3ed2a328c5566832",
+      "status": "SOURCE_ONLY; 135 Python PASS; Rust NOT RUN; false producer label BLOCKED"
+    },
+    "build_trx": {
+      "file": "9to1 Workspace/Dev/DeveloperTrxTestResults.cs",
+      "sha256": "ed8de4f11c567317044b98bfd59ce8a944c32236488a3ee5baf51c9fbf73fcfc",
+      "status": "UNTRACKED WIP preserved; not integrated; known parser/cancellation defects"
+    },
+    "spaces_questions": {
+      "status": "APPROVED_SCOPE_NOT_IMPLEMENTED",
+      "detail": "Exact scopes and findings in private worker checkpoint; no Steer/Queue alias"
+    }
+  },
+  "current_local_thread": {
+    "id": "01a16df8-1971-7d63-be3a-b8548a888274",
+    "title": "Prepare local 9to1 teams",
+    "observed_status": "notLoaded",
+    "observed_at": "2026-10-25T18:20:59Z"
+  },
+  "next_actions": [
+    "Verify exact source/private packet; preserve local work",
+    "Reconcile existing local coordinator and actual supported model/session access; record ACK and scopes",
+    "Fix 3 Spaces graph failures preserving guards",
+    "Run Boards/Glow basic checks and populated/picker captures",
+    "Run combined Desktop features and Files recovery checks",
+    "Continue Home/Spaces/Build/Boards implementation",
+    "Reconcile actual Rnote producer identity and private native ARM build path before delivery"
+  ],
+  "reporting": {
+    "cloud": "HOLD after final handoff",
+    "last_sent_message_id": "1a17442c9462d41b",
+    "last_sent_utc": "2026-10-25T18:12:00Z",
+    "format": "Rough progress; per-app changes; quantitative Thunder",
+    "recipient": "Private existing state only"
+  }
+}
