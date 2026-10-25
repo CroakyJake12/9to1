@@ -28,6 +28,8 @@ public sealed class RichBoardPage
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Untitled page";
+    public string PageType { get; set; } = HavenRichPageTypes.Native;
+    public Haven.Application.BoardEmbeddedArtifactReference? EmbeddedArtifact { get; set; }
     public bool IsCanvasLocked { get; set; }
     public List<RichBoardBlock> Blocks { get; set; } = [];
     public double InkPanX { get; set; }

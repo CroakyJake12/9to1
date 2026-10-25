@@ -33,6 +33,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     private static readonly JsonSerializerOptions DocumentJson = new(JsonSerializerDefaults.Web);
     private readonly ContractSessionAdapter _session;
     private readonly CuiControlLoader _loader;
+    private readonly BoardsEmbeddedArtifactSurface _embeddedArtifacts;
     private readonly byte[] _initialDocumentBytes;
     private BoardsPresentationRenderQueue? _renderQueue;
     private BoardsEmbeddedSurfaceLifecycle? _surfaceLifecycle;
@@ -48,7 +49,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         ContractSessionAdapter session,
         BoardsViewModel viewModel,
         CuiControlLoader loader,
-        Control content)
+        Control content,
+        IBoardsEmbeddedArtifactHost? embeddedArtifactHost)
     {
         _initialDocumentBytes = JsonSerializer.SerializeToUtf8Bytes(document, DocumentJson);
         _documentId = document.DocumentId;
@@ -59,6 +61,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         ViewModel = viewModel;
         _loader = loader;
         Content = content;
+        _embeddedArtifacts = new BoardsEmbeddedArtifactSurface(embeddedArtifactHost, viewModel);
     }
 
     public string SourceId { get; }
@@ -80,7 +83,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         string sourceId,
         string sourceRevision,
         BoardsExternalSaveCallback save,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceId);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceRevision);
@@ -158,7 +162,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             return await Dispatcher.UIThread.InvokeAsync<BoardsWritablePresentation>(() =>
             {
                 ct.ThrowIfCancellationRequested();
-                var viewModel = new BoardsViewModel(session);
+                var viewModel = new BoardsViewModel(session, embeddedArtifactHost);
                 viewModel.SetLanding(false);
                 viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Ready to edit");
@@ -174,8 +178,9 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
                 loader.WireBindings(root);
                 viewModel.Attach(root);
                 ThemeApplier.ApplyChrome(root);
+                embeddedArtifactHost?.BindOwningControl(root);
                 host = new BoardsWritablePresentation(parsed, sourceId, expectedRevision, session,
-                    viewModel, loader, root);
+                    viewModel, loader, root, embeddedArtifactHost);
                 host.WireSurface(root);
                 host.QueueRender();
                 return host;
@@ -195,12 +200,23 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     {
         ThrowIfDisposed();
         LastSaveReceipt = null;
-        await _session.SaveAsync(cancellationToken).ConfigureAwait(false);
-        if (LastSaveReceipt is null && !_session.HasUnsavedChanges) return;
-        var receipt = LastSaveReceipt;
-        if (receipt is null || !receipt.Committed || string.IsNullOrWhiteSpace(receipt.NewRevision))
-            throw new InvalidOperationException("The external source did not confirm this board revision.");
-        _sourceRevision = receipt.NewRevision;
+        if (!await _embeddedArtifacts.TryPrepareToCloseAsync(cancellationToken).ConfigureAwait(false))
+            throw new InvalidOperationException("The embedded Write page refused to close; its draft remains open.");
+        try
+        {
+            await _session.SaveAsync(cancellationToken).ConfigureAwait(false);
+            if (LastSaveReceipt is null && !_session.HasUnsavedChanges) return;
+            var receipt = LastSaveReceipt;
+            if (receipt is null || !receipt.Committed || string.IsNullOrWhiteSpace(receipt.NewRevision))
+                throw new InvalidOperationException("The external source did not confirm this board revision.");
+            _sourceRevision = receipt.NewRevision;
+        }
+        finally
+        {
+            // The nested Write owner is reopened at the current pinned revision while
+            // this Board presentation remains active.
+            QueueRender();
+        }
     }
 
     private void WireSurface(Control root)
@@ -230,6 +246,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             NavBuilder.Rebuild(nav, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
+        if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "EmbeddedArtifactHost") is { } embedded)
+            await _embeddedArtifacts.RenderAsync(embedded);
         ViewModel.RefreshCuiContext();
         if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "InkOverlayLayer") is { } ink)
             await (_surfaceLifecycle!.InkInteraction?.RenderAsync() ?? BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel));
@@ -240,6 +258,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
+        if (!await _embeddedArtifacts.TryPrepareToCloseAsync().ConfigureAwait(false))
+            throw new InvalidOperationException("The embedded Write page refused to close; its draft remains open.");
         _disposed = true;
         ViewModel.RebuildRequested -= QueueRender;
         ViewModel.NavRebuildRequested -= QueueRender;
@@ -252,6 +272,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         await (_surfaceLifecycle?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
         await (_renderQueue?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+        await _embeddedArtifacts.DisposeAsync().ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(_loader.Dispose);
         await _session.DisposeAsync().ConfigureAwait(false);
     }

@@ -7,6 +7,7 @@
 
 using System.Text.Json;
 using CakeOS.Apps.Boards.Contract;
+using Haven.Application;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -968,6 +969,41 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
                 id = HavenRichNotesOps.AddPage(rich, sectionId, title).Id, cancellationToken).ConfigureAwait(false);
             RefreshView();
             return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<string> AddEmbeddedArtifactPageAsync(string sectionId, string pageType,
+        BoardEmbeddedArtifactReference reference, string? title = null, string? parentPageId = null,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(reference);
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string id = string.Empty;
+            await _real.MutateAsync(rich => id = HavenRichNotesOps.AddEmbeddedArtifactPage(
+                rich, sectionId, pageType, reference, title, parentPageId).Id,
+                cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask SetEmbeddedArtifactAsync(string pageId, string pageType,
+        BoardEmbeddedArtifactReference? reference, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich => HavenRichNotesOps.SetEmbeddedArtifact(
+                rich, pageId, pageType, reference), cancellationToken).ConfigureAwait(false);
+            RefreshView();
         }
         finally { _mergeGate.Release(); }
     }

@@ -28,6 +28,8 @@ internal static class Projector
         Id = page.Id,
         ParentPageId = page.ParentPageId,
         Title = page.Title,
+        PageType = page.PageType,
+        EmbeddedArtifact = page.EmbeddedArtifact,
         IsCanvasLocked = page.IsCanvasLocked,
         InkPanX = page.InkView?.PanX ?? 0,
         InkPanY = page.InkView?.PanY ?? 0,
@@ -334,6 +336,10 @@ internal static class MergeDeltas
             if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
                 viewPage.IsCanvasLocked != baselinePage.IsCanvasLocked)
                 HavenRichNotesOps.SetCanvasLocked(rich, contractPage.Id, viewPage.IsCanvasLocked);
+            if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
+                (viewPage.PageType != baselinePage.PageType || !Equals(viewPage.EmbeddedArtifact, baselinePage.EmbeddedArtifact)))
+                HavenRichNotesOps.SetEmbeddedArtifact(rich, contractPage.Id,
+                    viewPage.PageType, viewPage.EmbeddedArtifact);
             MergeBlocks(rich, contractPage, viewPage,
                 baselinePage?.Blocks.ToDictionary(b => b.Id, StringComparer.Ordinal)
                 ?? new Dictionary<string, RichBoardBlock>(StringComparer.Ordinal));
@@ -639,6 +645,8 @@ internal static class MergeDeltas
         var page = HavenRichNotesOps.ImportPage(section, viewPage.Id, viewPage.Title);
         page.ParentPageId = viewPage.ParentPageId;
         page.IsCanvasLocked = viewPage.IsCanvasLocked;
+        page.PageType = viewPage.PageType;
+        page.EmbeddedArtifact = viewPage.EmbeddedArtifact;
         var checklistByParent = new Dictionary<string, HavenRichBlock>(StringComparer.Ordinal);
         foreach (var viewBlock in viewPage.Blocks)
         {
