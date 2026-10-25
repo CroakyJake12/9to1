@@ -12,7 +12,7 @@ namespace CakeOS.Apps.Boards.App.Tests;
 public sealed class BoardsCreationAndInsertionTests
 {
     [Fact]
-    public async Task New_menu_routes_notes_page_section_and_board_and_disables_canvas_honestly()
+    public async Task New_menu_routes_notes_page_section_and_board_and_disables_owner_pages_without_a_host()
     {
         await using var session = new InMemoryRichBoardSession();
         await session.OpenAsync("memory://boards/new-menu-actions");
@@ -28,7 +28,8 @@ public sealed class BoardsCreationAndInsertionTests
 
             var notesPage = Find("Notes Page");
             var board = Find("Board");
-            var canvas = Find("Canvas (coming later)");
+            var attachCanvas = Find("Attach existing Canvas…");
+            var createCanvas = Find("New Canvas…");
             var section = Find("Section");
             var initialPages = viewModel.Session.Document.Sections[0].Pages.Count;
             var initialSections = viewModel.Session.Document.Sections.Count;
@@ -40,8 +41,9 @@ public sealed class BoardsCreationAndInsertionTests
             return (
                 NotesPageName: AutomationProperties.GetName(notesPage),
                 BoardName: AutomationProperties.GetName(board),
-                CanvasName: AutomationProperties.GetName(canvas),
-                CanvasEnabled: canvas.IsEnabled,
+                AttachCanvasName: AutomationProperties.GetName(attachCanvas),
+                CreateCanvasName: AutomationProperties.GetName(createCanvas),
+                CanvasEnabled: attachCanvas.IsEnabled || createCanvas.IsEnabled,
                 PageCount: viewModel.Session.Document.Sections[0].Pages.Count,
                 InitialPages: initialPages,
                 SectionCount: viewModel.Session.Document.Sections.Count,
@@ -50,7 +52,8 @@ public sealed class BoardsCreationAndInsertionTests
 
         Assert.Equal("Create a notes page", result.NotesPageName);
         Assert.Equal("Create a separate board file", result.BoardName);
-        Assert.Equal("Canvas unavailable, coming later", result.CanvasName);
+        Assert.Equal("Attach an existing Canvas as a page", result.AttachCanvasName);
+        Assert.Equal("Create a Canvas as a page", result.CreateCanvasName);
         Assert.False(result.CanvasEnabled);
         Assert.Equal(result.InitialPages + 1, result.PageCount);
         Assert.Equal(result.InitialSections + 1, result.SectionCount);

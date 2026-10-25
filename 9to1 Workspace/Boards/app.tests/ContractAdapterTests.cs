@@ -3,6 +3,7 @@
 // persists through physical .9to1board files without dropping data.
 
 using CakeOS.Apps.Boards.Contract;
+using Haven.Application;
 using System.Text.Json;
 using Xunit;
 
@@ -11,6 +12,45 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class ContractAdapterTests
 {
+    [Fact]
+    public async Task Canvas_page_choices_attach_canonical_owner_references_and_round_trip()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "canvas-pages.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            var host = new CanvasChoiceHost();
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var viewModel = new BoardsViewModel(adapter, embeddedArtifactHost: host);
+                Assert.True(viewModel.CanAddCanvasPage);
+
+                await viewModel.DispatchAsync("AddCanvasPage", null);
+                Assert.Equal(1, host.SelectCount);
+                var attached = adapter.Document.Sections[0].Pages[^1];
+                Assert.Equal(HavenRichPageTypes.Canvas, attached.PageType);
+                Assert.Equal(host.SelectedReference, attached.EmbeddedArtifact);
+
+                await viewModel.DispatchAsync("CreateCanvasPage", null);
+                Assert.Equal(1, host.CreateCount);
+                var created = adapter.Document.Sections[0].Pages[^1];
+                Assert.Equal(HavenRichPageTypes.Canvas, created.PageType);
+                Assert.Equal(host.CreatedReference, created.EmbeddedArtifact);
+                Assert.NotEqual(attached.Id, created.Id);
+
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var restored = reopened.Document.Sections[0].Pages.Where(page => page.PageType == HavenRichPageTypes.Canvas).ToArray();
+            Assert.Equal(2, restored.Length);
+            Assert.Contains(restored, page => page.EmbeddedArtifact == host.SelectedReference);
+            Assert.Contains(restored, page => page.EmbeddedArtifact == host.CreatedReference);
+        }
+        finally { DeleteDirectory(root); }
+    }
+
     [Fact]
     public async Task Home_board_creation_intent_sends_a_validated_draft_without_mutating_the_pinned_board()
     {
@@ -410,6 +450,39 @@ public sealed class ContractAdapterTests
         return new HavenBoardDocument(HavenBoardDocument.FormatIdentity,
             HavenBoardDocument.CurrentSchemaVersion, Guid.NewGuid(), now, now,
             Snapshot: null, RichNotes: HavenRichNotes.Create(title));
+    }
+
+    private sealed class CanvasChoiceHost : IBoardsEmbeddedArtifactHost
+    {
+        public BoardEmbeddedArtifactReference SelectedReference { get; } = Reference();
+        public BoardEmbeddedArtifactReference CreatedReference { get; } = Reference();
+        public int SelectCount { get; private set; }
+        public int CreateCount { get; private set; }
+
+        public void BindOwningControl(Avalonia.Controls.Control control) { }
+
+        public Task<IBoardsEmbeddedArtifactSession> OpenAsync(BoardEmbeddedArtifactReference reference,
+            BoardEmbeddedArtifactMode mode, CancellationToken ct = default) =>
+            throw new NotSupportedException("The creation workflow does not open artifacts until the selected Board page is rendered.");
+
+        public Task<BoardEmbeddedArtifactReference?> SelectAsync(string applicationId, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            Assert.Equal("canvas", applicationId);
+            SelectCount++;
+            return Task.FromResult<BoardEmbeddedArtifactReference?>(SelectedReference);
+        }
+
+        public Task<BoardEmbeddedArtifactReference?> CreateAsync(string applicationId, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            Assert.Equal("canvas", applicationId);
+            CreateCount++;
+            return Task.FromResult<BoardEmbeddedArtifactReference?>(CreatedReference);
+        }
+
+        private static BoardEmbeddedArtifactReference Reference() =>
+            new("canvas", Guid.NewGuid(), new BoardEmbeddedArtifactRevision(null, Guid.NewGuid()));
     }
 
     private sealed class DecliningBoardCreationHost : IBoardsHomeBoardCreationHost
