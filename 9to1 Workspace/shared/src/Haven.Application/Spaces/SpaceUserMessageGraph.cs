@@ -279,11 +279,20 @@ public sealed class SpaceUserMessageGraph
             snapshot.Lineage.Ancestors[^1].Revision != SpaceRevision)
             throw Invalid("The captured context must belong to this same active Space graph and revision.");
         snapshot.CapturedContext?.ValidateAgainst(snapshot);
+        ValidateContextDependencies(snapshot.Policy);
+        return ExecuteCoreAsync(input, snapshot.CapturedContext, token);
+    }
+    /// <summary>Pure candidate dependency validation shared by activation and execution.
+    /// Saved read intent never grants a body read; the actual source owner still captures
+    /// and revalidates its original witness at request time.</summary>
+    public void ValidateContextDependencies(EffectiveSpacePolicy policy)
+    {
+        ArgumentNullException.ThrowIfNull(policy);
+        if (policy.SpaceId != SpaceId) throw Invalid("The graph context policy belongs to a different Space.");
         foreach (var id in ReferencedContextIds)
-            if (!snapshot.Policy.Sources.Any(source => source.ContextId == id && source.IncludedAutomatically &&
+            if (!policy.Sources.Any(source => source.ContextId == id && source.IncludedAutomatically &&
                 source.Permission is SpaceContextPermission.Read or SpaceContextPermission.ReadWrite))
                 throw Invalid("A configured graph source is outside the effective included read-permitted Space context.");
-        return ExecuteCoreAsync(input, snapshot.CapturedContext, token);
     }
     private async Task<SpaceUserMessageGraphResult> ExecuteCoreAsync(ChatMessage input, OriginalSpaceCapturedContext? captured, CancellationToken token)
     {
