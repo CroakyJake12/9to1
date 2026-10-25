@@ -32,9 +32,12 @@ public sealed class UnifiedWorkspaceSessionTests
 
         var loaded = await port.LoadAsync(CancellationToken.None);
         Assert.Equal(new[] { first.Id, second.Id }, loaded!.PaneTabIds);
-        await port.SaveAsync(loaded with { PaneTabIds = [second.Id, first.Id] }, CancellationToken.None);
+        await port.SaveAsync(loaded with { PaneTabIds = [second.Id, first.Id],
+            SplitOrientation = SplitOrientation.Vertical, PrimaryPaneRatio = 0.65 }, CancellationToken.None);
         var saved = repository.Writes[^1].Windows.Single();
         Assert.Equal(WorkspaceLayoutKind.Split, saved.Layout.Kind);
+        Assert.Equal(SplitOrientation.Vertical, saved.Layout.Orientation);
+        Assert.Equal(0.65, saved.Layout.PrimaryRatio, precision: 2);
         Assert.Equal(new[] { second.Id, first.Id }, saved.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
         Assert.Equal(window.Layout.Panes.Select(pane => pane.Id).OrderBy(id => id),
             saved.Layout.Panes.Select(pane => pane.Id).OrderBy(id => id));

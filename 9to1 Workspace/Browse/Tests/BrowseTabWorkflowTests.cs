@@ -36,10 +36,25 @@ public sealed partial class BrowseNativeOwnershipTests
         await chrome.SwapSplitPanesAsync();
         Assert.Equal(new[] { secondId, firstId }, chrome.State.PaneTabIds);
         Assert.Equal(secondId, chrome.State.SelectedTabId);
+        await chrome.ToggleSplitOrientationAsync();
+        Assert.Equal(Haven.Core.SplitOrientation.Horizontal, chrome.State.SplitOrientation);
+        await chrome.AdjustPrimaryPaneAsync(1);
+        Assert.Equal(0.55, chrome.State.PrimaryPaneRatio, precision: 2);
         await chrome.CloseSplitViewAsync();
         Assert.Empty(chrome.State.PaneTabIds);
         Assert.Equal(2, chrome.State.Tabs.Count);
         Assert.Equal(originalHosts.Length, factory.Hosts.Count);
+        await chrome.ToggleSplitViewAsync();
+        Assert.Equal(new[] { secondId, firstId }, chrome.State.PaneTabIds);
+        Assert.Equal(Haven.Core.SplitOrientation.Horizontal, chrome.State.SplitOrientation);
+        Assert.Equal(0.55, chrome.State.PrimaryPaneRatio, precision: 2);
+
+        await using var restarted = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: profile,
+            tabSessionPersistence: session);
+        Assert.Equal(new[] { secondId, firstId }, restarted.State.PaneTabIds);
+        Assert.Equal(secondId, restarted.State.SelectedTabId);
+        Assert.Equal(Haven.Core.SplitOrientation.Horizontal, restarted.State.SplitOrientation);
+        Assert.Equal(0.55, restarted.State.PrimaryPaneRatio, precision: 2);
     }
 
     [Fact]

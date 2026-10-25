@@ -5,8 +5,11 @@ public sealed partial class BrowseChrome
 {
     private long _paneLayoutRevision;
     private bool _paneLayoutNeedsSave;
+    private const double PaneRatioStep = 0.05;
     public bool HasSplitView => _paneTabIds.Count == 2;
     public bool HasUnsavedSplitViewLayout => !_disposed && !_nativeRetiring && _paneLayoutNeedsSave;
+    public bool CanWidenPrimaryPane => HasSplitView && _primaryPaneRatio < Haven.Core.WorkspaceLayoutSnapshot.MaximumPaneRatio;
+    public bool CanNarrowPrimaryPane => HasSplitView && _primaryPaneRatio > Haven.Core.WorkspaceLayoutSnapshot.MinimumPaneRatio;
 
     public bool CanSplitSelectedTab
     {
@@ -14,9 +17,9 @@ public sealed partial class BrowseChrome
         {
             if (_disposed || _nativeRetiring || HasSplitView) return false;
             var selected = _tabs.FirstOrDefault(tab => tab.Id == _selectedTabId);
-            return selected is { Privacy: Haven.Browser.BrowserTabPrivacy.Standard } &&
+            return selected is { Privacy: Haven.Core.BrowserTabPrivacy.Standard } &&
                 StringComparer.Ordinal.Equals(selected.ProfileId, _homeProfileId) &&
-                _tabs.Any(tab => tab.Id != selected.Id && tab.Privacy == Haven.Browser.BrowserTabPrivacy.Standard &&
+                _tabs.Any(tab => tab.Id != selected.Id && tab.Privacy == Haven.Core.BrowserTabPrivacy.Standard &&
                     StringComparer.Ordinal.Equals(tab.ProfileId, _homeProfileId));
         }
     }
@@ -36,15 +39,24 @@ public sealed partial class BrowseChrome
     public Task<BrowseChromeSnapshot> SaveSplitViewLayoutAsync(CancellationToken token = default) =>
         RetainContentTransition(() => SavePaneLayoutCoreAsync("Split view layout saved.", token), token);
 
+    public Task<BrowseChromeSnapshot> ToggleSplitOrientationAsync(CancellationToken token = default) =>
+        RetainContentTransition(() => ToggleSplitOrientationCoreAsync(token), token);
+
+    public Task<BrowseChromeSnapshot> AdjustPrimaryPaneAsync(int direction, CancellationToken token = default)
+    {
+        if (direction is not (-1 or 1)) throw new ArgumentOutOfRangeException(nameof(direction));
+        return RetainContentTransition(() => AdjustPrimaryPaneCoreAsync(direction, token), token);
+    }
+
     private async Task<BrowseChromeSnapshot> OpenSplitViewCoreAsync(CancellationToken token)
     {
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
         var selected = RequireTab(_selectedTabId);
-        if (selected.Privacy != Haven.Browser.BrowserTabPrivacy.Standard ||
+        if (selected.Privacy != Haven.Core.BrowserTabPrivacy.Standard ||
             !StringComparer.Ordinal.Equals(selected.ProfileId, _homeProfileId))
             throw new InvalidOperationException("Only standard tabs in the current profile can enter a split view.");
         var second = _tabs.FirstOrDefault(tab => tab.Id != selected.Id &&
-            tab.Privacy == Haven.Browser.BrowserTabPrivacy.Standard &&
+            tab.Privacy == Haven.Core.BrowserTabPrivacy.Standard &&
             StringComparer.Ordinal.Equals(tab.ProfileId, _homeProfileId));
         if (second is null)
         {
@@ -79,6 +91,25 @@ public sealed partial class BrowseChrome
         if (_paneTabIds.Count == 0) return Publish();
         _paneTabIds.Clear();
         return await SavePaneLayoutCoreAsync("Split view closed. Both tabs remain open.", token).ConfigureAwait(false);
+    }
+
+    private async Task<BrowseChromeSnapshot> ToggleSplitOrientationCoreAsync(CancellationToken token)
+    {
+        ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
+        if (!HasSplitView) return Publish();
+        _splitOrientation = _splitOrientation == Haven.Core.SplitOrientation.Horizontal
+            ? Haven.Core.SplitOrientation.Vertical : Haven.Core.SplitOrientation.Horizontal;
+        return await SavePaneLayoutCoreAsync("Split orientation changed.", token).ConfigureAwait(false);
+    }
+
+    private async Task<BrowseChromeSnapshot> AdjustPrimaryPaneCoreAsync(int direction, CancellationToken token)
+    {
+        ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
+        if (!HasSplitView) return Publish();
+        var next = _primaryPaneRatio + PaneRatioStep * direction;
+        _primaryPaneRatio = Math.Clamp(next, Haven.Core.WorkspaceLayoutSnapshot.MinimumPaneRatio,
+            Haven.Core.WorkspaceLayoutSnapshot.MaximumPaneRatio);
+        return await SavePaneLayoutCoreAsync("Split pane size saved.", token).ConfigureAwait(false);
     }
 
     private async Task<BrowseChromeSnapshot> SavePaneLayoutCoreAsync(string status, CancellationToken token)

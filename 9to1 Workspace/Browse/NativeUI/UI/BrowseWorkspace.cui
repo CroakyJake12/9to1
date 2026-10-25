@@ -217,11 +217,16 @@
           <Text Text="Split view" FontWeight="Bold" />
           <Container Type="Wrap" CellGap="4">
             <Button id="BrowseToggleSplitViewButton" action="9to1.Browse.ToggleSplitView" Interactive="{Binding Can.ToggleSplitView}" AccessibleName="{Binding ToggleSplitLabel}">Split view</Button>
-            <Button id="BrowseFocusSplitPrimaryButton" action="9to1.Browse.FocusSplitPrimary" Interactive="{Binding Can.FocusSplitPrimary}" AccessibleName="{Binding SplitPrimaryLabel}">Left pane</Button>
-            <Button id="BrowseFocusSplitSecondaryButton" action="9to1.Browse.FocusSplitSecondary" Interactive="{Binding Can.FocusSplitSecondary}" AccessibleName="{Binding SplitSecondaryLabel}">Right pane</Button>
+            <Button id="BrowseFocusSplitPrimaryButton" action="9to1.Browse.FocusSplitPrimary" Text="{Binding SplitPrimaryLabel}" Interactive="{Binding Can.FocusSplitPrimary}" AccessibleName="{Binding SplitPrimaryLabel}" />
+            <Button id="BrowseFocusSplitSecondaryButton" action="9to1.Browse.FocusSplitSecondary" Text="{Binding SplitSecondaryLabel}" Interactive="{Binding Can.FocusSplitSecondary}" AccessibleName="{Binding SplitSecondaryLabel}" />
             <Button id="BrowseSwapSplitPanesButton" action="9to1.Browse.SwapSplitPanes" Interactive="{Binding Can.SwapSplitPanes}">Swap panes</Button>
+            <Button id="BrowseToggleSplitOrientationButton" action="9to1.Browse.ToggleSplitOrientation" Text="{Binding SplitOrientationLabel}" Interactive="{Binding Can.ToggleSplitOrientation}" AccessibleName="Change split orientation" />
+            <Button id="BrowseNarrowPrimaryPaneButton" action="9to1.Browse.NarrowPrimaryPane" Interactive="{Binding Can.NarrowPrimaryPane}" AccessibleName="Narrow primary split pane">Narrow primary</Button>
+            <Text Text="{Binding SplitRatioLabel}" />
+            <Button id="BrowseWidenPrimaryPaneButton" action="9to1.Browse.WidenPrimaryPane" Interactive="{Binding Can.WidenPrimaryPane}" AccessibleName="Widen primary split pane">Widen primary</Button>
             <Button id="BrowseCloseSplitViewButton" action="9to1.Browse.CloseSplitView" Interactive="{Binding Can.CloseSplitView}">Close split</Button>
           </Container>
+          <Text FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap">Keyboard: Alt+Shift+Left or Right resizes side-by-side panes; Alt+Shift+Up or Down resizes stacked panes. The orientation button is keyboard accessible.</Text>
           <Button id="BrowseRetrySplitLayoutButton" action="9to1.Browse.SaveSplitViewLayout" IsVisible="{Binding HasUnsavedSplitViewLayout}" Interactive="{Binding Can.SaveSplitViewLayout}">Retry saving split layout</Button>
           <Button id="BrowseRetryTabPlacementButton" action="9to1.Browse.SaveTabPlacement" IsVisible="{Binding HasUnsavedTabPlacement}" Interactive="{Binding Can.SaveTabPlacement}">Retry saving tab layout</Button>
           <Container Type="Wrap" CellGap="4">

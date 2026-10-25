@@ -83,6 +83,8 @@ public sealed record BrowseChromeSnapshot(
     string Status)
 {
     public IReadOnlyList<Guid> PaneTabIds { get; init; } = [];
+    public Haven.Core.SplitOrientation SplitOrientation { get; init; } = Haven.Core.SplitOrientation.Vertical;
+    public double PrimaryPaneRatio { get; init; } = 0.5;
     public BrowseTabSnapshot SelectedTab => Tabs.Single(tab => tab.Id == SelectedTabId);
 }
 
@@ -106,6 +108,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private readonly BrowserRecoveryLimiter _recovery = new(3, TimeSpan.FromMinutes(1));
     private readonly List<TabRuntime> _tabs = [];
     private readonly List<Guid> _paneTabIds = [];
+    private Haven.Core.SplitOrientation _splitOrientation = Haven.Core.SplitOrientation.Vertical;
+    private double _primaryPaneRatio = 0.5;
     private IReadOnlyList<BrowserDownloadRecord> _downloads = [];
     private Guid _selectedTabId;
     private string _popupStatus = "No popup request.";
@@ -209,8 +213,15 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 else chrome.RestoreStandaloneClosedTabs();
                 if (tabSessionPersistence is not null && projected?.PaneTabIds is { Count: 2 } panes &&
                     panes[0] != panes[1] && panes.All(id => chrome._tabs.Any(tab => tab.Id == id &&
-                        tab.Privacy == BrowserTabPrivacy.Standard && StringComparer.Ordinal.Equals(tab.ProfileId, homeProfileId))))
+                        tab.Privacy == BrowserTabPrivacy.Standard && StringComparer.Ordinal.Equals(tab.ProfileId, homeProfileId))) &&
+                    panes.Contains(chrome._selectedTabId) &&
+                    (projected.SplitOrientation is null || Enum.IsDefined(projected.SplitOrientation.Value)) &&
+                    (projected.PrimaryPaneRatio is null || IsValidPaneRatio(projected.PrimaryPaneRatio.Value)))
+                {
                     chrome._paneTabIds.AddRange(panes);
+                    chrome._splitOrientation = projected.SplitOrientation ?? Haven.Core.SplitOrientation.Vertical;
+                    chrome._primaryPaneRatio = projected.PrimaryPaneRatio ?? 0.5;
+                }
             }
             chrome._status = chrome._tabs[0].EngineState == BrowseEngineState.Ready
                 ? "Browse is ready."
@@ -959,7 +970,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             ? _data.SaveSessionTabsAsync(tabs, closedTabs.Select(item =>
                 new BrowserClosedTabState(item.Tab, item.Index, item.EngineOverride?.ToString())), token)
             : _tabSessionPersistence.SaveAsync(new BrowseTabSessionProjection(tabs, selectedTabId)
-                { ClosedTabs = closedTabs, PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()) }, token);
+                { ClosedTabs = closedTabs, PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()),
+                    SplitOrientation = _splitOrientation, PrimaryPaneRatio = _primaryPaneRatio }, token);
         if (original is null) throw new InvalidOperationException("The workspace owner supplied no original session save task.");
         RetainAppSource(original); return original;
     }
@@ -992,7 +1004,12 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             selected.FindQuery,
             selected.ZoomPercent,
             _popupStatus,
-            _status) { PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()) };
+            _status)
+        {
+            PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()),
+            SplitOrientation = _splitOrientation,
+            PrimaryPaneRatio = _primaryPaneRatio
+        };
     }
 
     private static BrowseSecuritySnapshot SecurityFor(TabRuntime tab) =>
@@ -1033,6 +1050,9 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         if (!address.IsWeb)
             throw new InvalidOperationException("This action requires an HTTP or HTTPS page.");
     }
+    private static bool IsValidPaneRatio(double ratio) => double.IsFinite(ratio) &&
+        ratio >= Haven.Core.WorkspaceLayoutSnapshot.MinimumPaneRatio &&
+        ratio <= Haven.Core.WorkspaceLayoutSnapshot.MaximumPaneRatio;
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
     private void ThrowIfCannotAccept() => ObjectDisposedException.ThrowIf(_nativeRetiring || _disposed, this);
 

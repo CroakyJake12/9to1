@@ -165,10 +165,13 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
     {
         var a = Tab("A"); var b = Tab("B"); var original = Session([a, b]);
         var paneIds = new[] { b.Id, a.Id };
-        var split = Projection([Project(a), Project(b)], b.Id) with { PaneTabIds = paneIds };
+        var split = Projection([Project(a), Project(b)], b.Id) with
+        { PaneTabIds = paneIds, SplitOrientation = SplitOrientation.Vertical, PrimaryPaneRatio = 0.65 };
         var merged = Merge(original, split, a.Id, b.Id);
         var layout = merged.Windows[0].Layout;
         Assert.Equal(WorkspaceLayoutKind.Split, layout.Kind);
+        Assert.Equal(SplitOrientation.Vertical, layout.Orientation);
+        Assert.Equal(0.65, layout.PrimaryRatio, precision: 2);
         Assert.Equal(paneIds, layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
         Assert.Equal(b.Id, merged.Windows[0].SelectedTabId);
 
@@ -177,6 +180,10 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
         Assert.Throws<InvalidDataException>(() => Merge(original, crossProfile, a.Id, b.Id));
         Assert.Throws<InvalidDataException>(() => Merge(original,
             split with { PaneTabIds = [a.Id, Guid.NewGuid()] }, a.Id, b.Id));
+        Assert.Throws<InvalidDataException>(() => Merge(original,
+            split with { PrimaryPaneRatio = 0.1 }, a.Id, b.Id));
+        Assert.Throws<InvalidDataException>(() => Merge(original,
+            split with { SplitOrientation = (SplitOrientation)99 }, a.Id, b.Id));
     }
 
     [Fact]

@@ -55,6 +55,14 @@ internal static class UnifiedWorkspaceSessionProjection
                 !StringComparer.Ordinal.Equals(current.Tabs.Single(tab => tab.Id == id).ProfileId,
                     current.Tabs.Single(tab => tab.Id == paneTabIds[0]).ProfileId))))
             throw new InvalidDataException("Split panes must be open standard tabs in the same profile, with focus inside the split.");
+        var splitOrientation = current.SplitOrientation ?? (owningWindow.Layout.Kind == WorkspaceLayoutKind.Split
+            ? owningWindow.Layout.Orientation : SplitOrientation.Vertical);
+        var primaryPaneRatio = current.PrimaryPaneRatio ?? (owningWindow.Layout.Kind == WorkspaceLayoutKind.Split
+            ? owningWindow.Layout.PrimaryRatio : 0.5);
+        if (paneTabIds.Count == 2 && (!Enum.IsDefined(splitOrientation) || !double.IsFinite(primaryPaneRatio) ||
+            primaryPaneRatio < WorkspaceLayoutSnapshot.MinimumPaneRatio ||
+            primaryPaneRatio > WorkspaceLayoutSnapshot.MaximumPaneRatio))
+            throw new InvalidDataException("Split orientation and primary pane ratio must be valid and bounded.");
 
         var otherReferences = original.Windows.Where(window => window.Id != windowId)
             .SelectMany(WindowReferences).ToHashSet();
@@ -111,9 +119,8 @@ internal static class UnifiedWorkspaceSessionProjection
             var existingPaneIds = owningWindow.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.Id).ToArray();
             var panes = paneTabIds.Select((tabId, order) => new WorkspacePaneSnapshot(
                 order < existingPaneIds.Length ? existingPaneIds[order] : StableId(windowId, "pane-" + order), tabId, order)).ToArray();
-            layout = layout with { Kind = WorkspaceLayoutKind.Split, Orientation = SplitOrientation.Horizontal,
-                PrimaryRatio = double.IsFinite(layout.PrimaryRatio) ? Math.Clamp(layout.PrimaryRatio,
-                    WorkspaceLayoutSnapshot.MinimumPaneRatio, WorkspaceLayoutSnapshot.MaximumPaneRatio) : 0.5,
+            layout = layout with { Kind = WorkspaceLayoutKind.Split, Orientation = splitOrientation,
+                PrimaryRatio = primaryPaneRatio,
                 Panes = ReadOnly(panes) };
         }
         else
@@ -177,6 +184,9 @@ internal static class UnifiedWorkspaceSessionProjection
         var paneIds = window.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId).ToArray();
         var rows = tabs.Where(tab => paneIds.Contains(tab.Id)).ToArray();
         return paneIds[0] != paneIds[1] && rows.Length == 2 && selectedTabId is { } selected && paneIds.Contains(selected) &&
+            Enum.IsDefined(window.Layout.Orientation) && double.IsFinite(window.Layout.PrimaryRatio) &&
+            window.Layout.PrimaryRatio >= WorkspaceLayoutSnapshot.MinimumPaneRatio &&
+            window.Layout.PrimaryRatio <= WorkspaceLayoutSnapshot.MaximumPaneRatio &&
             rows.All(tab => tab.Privacy == BrowserTabPrivacy.Standard &&
                 StringComparer.Ordinal.Equals(tab.ProfileId, rows[0].ProfileId)) ? paneIds : [];
     }
