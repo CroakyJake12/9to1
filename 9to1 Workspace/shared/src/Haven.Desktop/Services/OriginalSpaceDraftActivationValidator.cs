@@ -33,7 +33,8 @@ internal sealed class OriginalSpaceDraftActivationValidator(IServiceProvider ser
             var resolved = await originals.AwaitAsync(resolvedTask).ConfigureAwait(false);
 
             if (draft.LayoutDocument is { Nodes.Count: > 0 } layout)
-                _ = SpaceUserMessageGraph.Compile(current.Id, checked(current.Revision + 1), layout);
+                SpaceUserMessageGraph.Compile(current.Id, checked(current.Revision + 1), layout)
+                    .ValidateContextDependencies(resolved.Policy);
 
             await ValidateModelAsync(resolved.Policy.Model, originals, Own, Retain, cancellationToken).ConfigureAwait(false);
             await ValidateCapabilitiesAsync(resolved.Policy.Capabilities, originals, cancellationToken).ConfigureAwait(false);
