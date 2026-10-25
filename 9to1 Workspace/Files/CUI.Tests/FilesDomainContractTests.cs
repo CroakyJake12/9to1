@@ -14,6 +14,8 @@ internal static class FilesDomainContractTests
 		ActionCatalogDeclaresPurgeAsDestructiveAndPagesItsActions();
 		ProviderRegistryReportsUnavailableAndUnsupportedOperations();
 		await OperationJournalPersistsAndDeduplicatesOnlyIdenticalRequests();
+		await OperationJournalSequenceSurvivesTransitionsAndRestart();
+		await OperationJournalRecoversStaleCursorAndRejectsDuplicateLegacySequences();
 		await SyncCursorPersistsAndCannotRegress();
 		await FolderColorMetadataUsesStableIdentityAndResets();
 		await MaterializationRegistryPreservesCanonicalIdentityAndProtectsLocalChanges();
@@ -127,6 +129,87 @@ internal static class FilesDomainContractTests
 			Check.Equal(FilesOperationState.Committed, committed.State);
 			await Check.ThrowsAsync<InvalidOperationException>(() => firstJournal.TransitionAsync(operation.Id, FilesOperationState.Pending, DateTimeOffset.UtcNow));
 			Check.Equal(11, (await new FilesOperationJournal(path).ListPendingAsync()).Count);
+		}
+		finally
+		{
+			Directory.Delete(directory, recursive: true);
+		}
+	}
+
+	private static async Task OperationJournalSequenceSurvivesTransitionsAndRestart()
+	{
+		string directory = CreateTempDirectory();
+		try
+		{
+			string path = Path.Combine(directory, "journal.json");
+			var journal = new FilesOperationJournal(path);
+			FilesOperation first = await journal.EnqueueAsync(NewOperation("first"));
+			FilesOperation second = await journal.EnqueueAsync(NewOperation("second"));
+			Check.Equal(1L, first.Sequence);
+			Check.Equal(2L, second.Sequence);
+			await journal.TransitionAsync(first.Id, FilesOperationState.Running, DateTimeOffset.UtcNow.AddSeconds(1));
+
+			FilesOperation third = await journal.EnqueueAsync(NewOperation("third"));
+			FilesOperation fourth = await new FilesOperationJournal(path).EnqueueAsync(NewOperation("fourth"));
+			Check.Equal(3L, third.Sequence);
+			Check.Equal(4L, fourth.Sequence);
+			IReadOnlyList<FilesOperation> pending = await new FilesOperationJournal(path).ListPendingAsync();
+			Check.True(pending.Select(operation => operation.Sequence).SequenceEqual(new long[] { 1, 2, 3, 4 }));
+		}
+		finally
+		{
+			Directory.Delete(directory, recursive: true);
+		}
+	}
+
+	private static async Task OperationJournalRecoversStaleCursorAndRejectsDuplicateLegacySequences()
+	{
+		string directory = CreateTempDirectory();
+		try
+		{
+			string stalePath = Path.Combine(directory, "stale-cursor.json");
+			FilesOperation acknowledged = NewOperation("acknowledged") with
+			{
+				Sequence = 1,
+				State = FilesOperationState.Committed,
+			};
+			FilesOperation pending = NewOperation("pending") with { Sequence = 2 };
+			var staleStore = new VersionedJsonStateStore<FilesOperationJournalState>(stalePath, 3, static () => new FilesOperationJournalState());
+			await staleStore.UpdateAsync(_ => new FilesOperationJournalState
+			{
+				Operations = new Dictionary<string, FilesOperation>(StringComparer.Ordinal)
+				{
+					[acknowledged.Id.ToString()] = acknowledged,
+					[pending.Id.ToString()] = pending,
+				},
+				NextSequence = 1,
+			});
+			FilesOperation recovered = await new FilesOperationJournal(stalePath).EnqueueAsync(NewOperation("after-stale-cursor"));
+			Check.Equal(3L, recovered.Sequence);
+			FilesOperationJournalState recoveredState = await staleStore.ReadAsync();
+			Check.Equal(1L, recoveredState.Operations[acknowledged.Id.ToString()].Sequence);
+			Check.Equal(FilesOperationState.Committed, recoveredState.Operations[acknowledged.Id.ToString()].State);
+
+			string duplicatePath = Path.Combine(directory, "duplicate-sequence.json");
+			FilesOperation duplicateA = NewOperation("legacy-a") with { Sequence = 7 };
+			FilesOperation duplicateB = NewOperation("legacy-b") with { Sequence = 7 };
+			var duplicateStore = new VersionedJsonStateStore<FilesOperationJournalState>(duplicatePath, 3, static () => new FilesOperationJournalState());
+			await duplicateStore.UpdateAsync(_ => new FilesOperationJournalState
+			{
+				Operations = new Dictionary<string, FilesOperation>(StringComparer.Ordinal)
+				{
+					[duplicateA.Id.ToString()] = duplicateA,
+					[duplicateB.Id.ToString()] = duplicateB,
+				},
+				NextSequence = 8,
+			});
+			string before = await File.ReadAllTextAsync(duplicatePath);
+			var duplicateJournal = new FilesOperationJournal(duplicatePath);
+			await Check.ThrowsAsync<InvalidDataException>(() => duplicateJournal.EnqueueAsync(NewOperation("must-not-repeat")));
+			await Check.ThrowsAsync<InvalidDataException>(() => duplicateJournal.ListPendingAsync());
+			await Check.ThrowsAsync<InvalidDataException>(() => duplicateJournal.TransitionAsync(
+				duplicateA.Id, FilesOperationState.Running, DateTimeOffset.UtcNow.AddSeconds(1)));
+			Check.Equal(before, await File.ReadAllTextAsync(duplicatePath));
 		}
 		finally
 		{

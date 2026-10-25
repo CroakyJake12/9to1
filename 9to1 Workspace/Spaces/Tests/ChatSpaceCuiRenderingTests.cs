@@ -55,7 +55,11 @@ public sealed class ChatSpaceCuiRenderingTests
         {
             var first = Message(Guid.NewGuid(), "You", "Hello");
             var second = Message(Guid.NewGuid(), "Haven", "Hi there", canRegenerate: true);
-            var state = State(first, second);
+            var stopped = Message(Guid.NewGuid(), "Assistant Main", "Partial reply") with
+                { IsStreaming = false, ProgressLabel = "Stopped · partial response" };
+            var interrupted = Message(Guid.NewGuid(), "Haven", "Partial interrupted reply") with
+                { IsStreaming = false, ProgressLabel = "Interrupted · partial response" };
+            var state = State(first, second, stopped, interrupted);
             var bindings = new ChatSpaceCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
 
             using var loader = new CuiControlLoader();
@@ -80,6 +84,8 @@ public sealed class ChatSpaceCuiRenderingTests
                 var rendered = string.Join(" | ", texts) + $" [grids={root.GetVisualDescendants().OfType<Grid>().Count()} borders={root.GetVisualDescendants().OfType<Border>().Count()}]";
                 Assert.True(texts.Contains("Hello"), $"message body did not bind. Rendered: {rendered}");
                 Assert.True(texts.Contains("Hi there"), $"assistant body did not bind. Rendered: {rendered}");
+                Assert.True(texts.Contains("Stopped · partial response"), $"stopped partial activity did not bind. Rendered: {rendered}");
+                Assert.True(texts.Contains("Interrupted · partial response"), $"interrupted partial activity did not bind. Rendered: {rendered}");
 
                 // The conversation title and the composer state are bound too, so this is a real
                 // projection rather than a hardcoded shell.
@@ -190,6 +196,22 @@ public sealed class ChatSpaceCuiRenderingTests
         };
         var readyBindings = new ChatSpaceCuiBindings(() => ready, (_, _, _) => ValueTask.CompletedTask);
         Assert.True(readyBindings.IsActionAvailable("chat.send"));
+    }
+
+    [Fact]
+    public void Stop_action_requires_actual_controller_availability_even_when_the_composer_is_busy()
+    {
+        var state = State() with { Composer = new ChatSpaceComposer(string.Empty, [], "model-a", true) };
+        var unsupported = new ChatSpaceCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
+        Assert.False(unsupported.IsActionAvailable("chat.stop"));
+        var canStop = false;
+        var bindings = new ChatSpaceCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask,
+            canStop: () => canStop);
+        Assert.False(bindings.IsActionAvailable("chat.stop"));
+        canStop = true;
+        Assert.True(bindings.IsActionAvailable("chat.stop"));
+        canStop = false;
+        Assert.False(bindings.IsActionAvailable("chat.stop"));
     }
 
     [Fact]

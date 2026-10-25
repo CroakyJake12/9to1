@@ -26,6 +26,7 @@ public sealed class FilesOperationJournal
 		FilesOperation? accepted = null;
 		await _store.UpdateAsync(state =>
 		{
+			long nextSequence = GetNextSequence(state);
 			string key = operation.Id.ToString();
 			if (state.Operations.TryGetValue(key, out FilesOperation? existing))
 			{
@@ -35,11 +36,11 @@ public sealed class FilesOperationJournal
 				return state;
 			}
 
-			accepted = operation with { Sequence = state.NextSequence };
+			accepted = operation with { Sequence = nextSequence };
 			return new FilesOperationJournalState
 			{
 				Operations = new Dictionary<string, FilesOperation>(state.Operations, StringComparer.Ordinal) { [key] = accepted },
-				NextSequence = checked(state.NextSequence + 1),
+				NextSequence = checked(nextSequence + 1),
 			};
 		}, cancellationToken).ConfigureAwait(false);
 		return accepted!;
@@ -56,6 +57,7 @@ public sealed class FilesOperationJournal
 		FilesOperation? updated = null;
 		await _store.UpdateAsync(state =>
 		{
+			long nextSequence = GetNextSequence(state);
 			string key = operationId.ToString();
 			if (!state.Operations.TryGetValue(key, out FilesOperation? current))
 				throw new KeyNotFoundException($"Files operation {key} was not found.");
@@ -78,6 +80,7 @@ public sealed class FilesOperationJournal
 			return new FilesOperationJournalState
 			{
 				Operations = new Dictionary<string, FilesOperation>(state.Operations, StringComparer.Ordinal) { [key] = updated },
+				NextSequence = nextSequence,
 			};
 		}, cancellationToken).ConfigureAwait(false);
 		return updated!;
@@ -86,6 +89,7 @@ public sealed class FilesOperationJournal
 	public async Task<IReadOnlyList<FilesOperation>> ListPendingAsync(CancellationToken cancellationToken = default)
 	{
 		FilesOperationJournalState state = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);
+		_ = GetNextSequence(state);
 		return state.Operations.Values
 			.Where(static operation => operation.State is FilesOperationState.Pending or FilesOperationState.Running)
 			.OrderBy(static operation => operation.Sequence)
@@ -103,6 +107,31 @@ public sealed class FilesOperationJournal
 		first.InversePayload == second.InversePayload &&
 		first.PermissionInheritancePolicy == second.PermissionInheritancePolicy &&
 		first.Payload == second.Payload;
+
+	/// <summary>
+	/// Recovers a stale allocation cursor from persisted operations without changing any
+	/// operation's identity or sequence. Corrupt historical assignments fail closed: they
+	/// cannot be repaired by renumbering work that may already have been acknowledged.
+	/// </summary>
+	private static long GetNextSequence(FilesOperationJournalState state)
+	{
+		if (state.NextSequence <= 0)
+			throw new InvalidDataException("Files operation journal has an invalid next sequence.");
+
+		var sequences = new HashSet<long>();
+		long maxSequence = 0;
+		foreach (FilesOperation operation in state.Operations.Values)
+		{
+			if (operation.Sequence <= 0)
+				throw new InvalidDataException($"Files operation {operation.Id} has a missing or regressed sequence; journal writes are blocked to preserve its history.");
+			if (!sequences.Add(operation.Sequence))
+				throw new InvalidDataException($"Files operation journal contains duplicate sequence {operation.Sequence}; journal writes are blocked to preserve operation history.");
+			maxSequence = Math.Max(maxSequence, operation.Sequence);
+		}
+
+		long firstUnused = checked(maxSequence + 1);
+		return Math.Max(state.NextSequence, firstUnused);
+	}
 
 	private static bool CanTransition(FilesOperationState current, FilesOperationState next) => current switch
 	{

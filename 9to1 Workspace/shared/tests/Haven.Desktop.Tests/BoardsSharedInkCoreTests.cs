@@ -21,9 +21,9 @@ public sealed class BoardsSharedInkCoreTests
     {
         await using var rig = new Rig();
         await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync("Shared Boards ink")).Succeeded);
+        Assert.True((await core.CreateAsync("Shared Boards ink", token: TestContext.Current.CancellationToken)).Succeeded);
         core.ConfigureSharedInk(true);
-        var inserted = await core.InsertSharedDrawingAsync();
+        var inserted = await core.InsertSharedDrawingAsync(token: TestContext.Current.CancellationToken);
         Assert.True(inserted.Succeeded); Assert.NotEqual(Guid.Empty, inserted.Value);
         var expected = Snapshot(core);
         var layer = inserted.Value;
@@ -31,34 +31,34 @@ public sealed class BoardsSharedInkCoreTests
         Assert.Equal(NotesBlockKind.Canvas, expected.Content.Block.Kind);
         Assert.Empty(expected.Content.Block.Canvas!.Strokes);
         Assert.Empty(expected.Content.Block.SharedProductivityBundles!);
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         expected = Snapshot(core);
         var engine = Engine();
         var bundle = Bundle(engine, expected);
         Assert.True((await core.AppendSharedDrawingAsync(expected, bundle,
-            source => Canonical(engine, expected, source))).Succeeded);
+            source => Canonical(engine, expected, source), token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(core.IsDirty);
         var savedRevision = core.DurableRevision;
         Assert.True(JsonElement.DeepEquals(bundle, Assert.Single(Snapshot(core).Content.Bundles)));
-        var stored = await rig.NewRepository().LoadAsync(core.DocumentId!.Value, default);
+        var stored = await rig.NewRepository().LoadAsync(core.DocumentId!.Value, TestContext.Current.CancellationToken);
         Assert.NotNull(stored);
         Assert.True(JsonElement.DeepEquals(bundle, Assert.Single(Drawing(stored, layer).SharedProductivityBundles!)));
 
-        Assert.True((await core.UndoRichTextAsync()).Value);
+        Assert.True((await core.UndoRichTextAsync(token: TestContext.Current.CancellationToken)).Value);
         Assert.True(core.IsDirty); Assert.Equal(savedRevision, core.DurableRevision);
         Assert.Empty(Snapshot(core).Content.Bundles);
-        Assert.True((await core.SaveAsync()).Succeeded);
-        var undone = await rig.NewRepository().LoadAsync(core.DocumentId.Value, default);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
+        var undone = await rig.NewRepository().LoadAsync(core.DocumentId.Value, TestContext.Current.CancellationToken);
         Assert.Equal(savedRevision + 1, undone!.Version);
         Assert.Empty(Drawing(undone, layer).SharedProductivityBundles!);
-        Assert.True((await core.RedoRichTextAsync()).Value);
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.RedoRichTextAsync(token: TestContext.Current.CancellationToken)).Value);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.Equal(savedRevision + 2, core.DurableRevision);
 
         await using var reopened = new BoardsBrowserCore(rig.NewRepository());
-        Assert.True((await reopened.OpenAsync(core.DocumentId.Value)).Succeeded);
+        Assert.True((await reopened.OpenAsync(core.DocumentId.Value, token: TestContext.Current.CancellationToken)).Succeeded);
         reopened.ConfigureSharedInk(true);
-        Assert.True((await reopened.SelectSharedDrawingAsync(layer)).Succeeded);
+        Assert.True((await reopened.SelectSharedDrawingAsync(layer, token: TestContext.Current.CancellationToken)).Succeeded);
         var restored = Snapshot(reopened);
         Assert.Equal(layer, restored.Content.Block.Id);
         Assert.Equal(core.DocumentId, restored.Content.Document.Id);
@@ -75,36 +75,36 @@ public sealed class BoardsSharedInkCoreTests
     {
         await using var rig = new Rig();
         await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded);
-        Assert.False((await core.InsertSharedDrawingAsync()).Succeeded);
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.False((await core.InsertSharedDrawingAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         core.ConfigureSharedInk(true);
-        var inserted = await core.InsertSharedDrawingAsync(); Assert.True(inserted.Succeeded);
+        var inserted = await core.InsertSharedDrawingAsync(token: TestContext.Current.CancellationToken); Assert.True(inserted.Succeeded);
         var layer = inserted.Value; var page = core.ActivePageId!.Value;
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         var engine = Engine();
         foreach (var layout in new[] { BoardsPageLayoutMode.Locked, BoardsPageLayoutMode.Unlocked })
         {
-            Assert.True((await core.SetLayoutModeAsync(page, layout)).Succeeded);
-            Assert.True((await core.SelectSharedDrawingAsync(layer)).Succeeded);
+            Assert.True((await core.SetLayoutModeAsync(page, layout, token: TestContext.Current.CancellationToken)).Succeeded);
+            Assert.True((await core.SelectSharedDrawingAsync(layer, token: TestContext.Current.CancellationToken)).Succeeded);
             var expected = Snapshot(core); var bundle = Bundle(engine, expected);
             Assert.True((await core.AppendSharedDrawingAsync(expected, bundle,
-                source => Canonical(engine, expected, source))).Succeeded);
+                source => Canonical(engine, expected, source), token: TestContext.Current.CancellationToken)).Succeeded);
         }
         Assert.Equal(2, Snapshot(core).Content.Bundles.Count);
-        Assert.True((await core.SetEditModeAsync(page, BoardsPageEditMode.View)).Succeeded);
-        Assert.True((await core.SelectSharedDrawingAsync(layer)).Succeeded);
+        Assert.True((await core.SetEditModeAsync(page, BoardsPageEditMode.View, token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await core.SelectSharedDrawingAsync(layer, token: TestContext.Current.CancellationToken)).Succeeded);
         var view = Snapshot(core); var original = JsonSerializer.Serialize(core.GetDocumentSnapshot());
         var called = false;
-        Assert.False((await core.AppendSharedDrawingAsync(view, Bundle(engine, view), source => { called = true; return source; })).Succeeded);
-        Assert.False((await core.InsertSharedDrawingAsync()).Succeeded);
+        Assert.False((await core.AppendSharedDrawingAsync(view, Bundle(engine, view), source => { called = true; return source; }, token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.False((await core.InsertSharedDrawingAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(called); Assert.Equal(original, JsonSerializer.Serialize(core.GetDocumentSnapshot()));
-        Assert.True((await core.SetEditModeAsync(page, BoardsPageEditMode.Edit)).Succeeded);
-        Assert.True((await core.SelectSharedDrawingAsync(layer)).Succeeded);
+        Assert.True((await core.SetEditModeAsync(page, BoardsPageEditMode.Edit, token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await core.SelectSharedDrawingAsync(layer, token: TestContext.Current.CancellationToken)).Succeeded);
         var capable = Snapshot(core);
         core.ConfigureSharedInk(false);
-        Assert.False((await core.AppendSharedDrawingAsync(capable, Bundle(engine, capable), source => { called = true; return source; })).Succeeded);
+        Assert.False((await core.AppendSharedDrawingAsync(capable, Bundle(engine, capable), source => { called = true; return source; }, token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(called);
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
     }
 
     [Fact]
@@ -112,30 +112,30 @@ public sealed class BoardsSharedInkCoreTests
     {
         await using var rig = new Rig();
         await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true);
-        var inserted = await core.InsertSharedDrawingAsync(); Assert.True(inserted.Succeeded);
-        var layer = inserted.Value; Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true);
+        var inserted = await core.InsertSharedDrawingAsync(token: TestContext.Current.CancellationToken); Assert.True(inserted.Succeeded);
+        var layer = inserted.Value; Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         var expected = Snapshot(core); var engine = Engine(); var bundle = Bundle(engine, expected);
         var paragraph = expected.Content.Owner.Blocks().First(block => block.Kind == NotesBlockKind.Paragraph);
-        Assert.True((await core.SelectRichTextAsync(paragraph.Id, 0, 0)).Succeeded);
-        Assert.True((await core.SelectRichTextAsync(layer, 0, 0)).Succeeded);
+        Assert.True((await core.SelectRichTextAsync(paragraph.Id, 0, 0, token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await core.SelectRichTextAsync(layer, 0, 0, token: TestContext.Current.CancellationToken)).Succeeded);
         var called = false;
         JsonElement Validate(JsonElement source) { called = true; return source; }
-        Assert.False((await core.AppendSharedDrawingAsync(expected, bundle, Validate)).Succeeded);
+        Assert.False((await core.AppendSharedDrawingAsync(expected, bundle, Validate, token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(called); Assert.Empty(Snapshot(core).Content.Bundles);
 
         await using var foreign = new BoardsBrowserCore(rig.NewRepository());
-        Assert.True((await foreign.OpenAsync(core.DocumentId!.Value)).Succeeded); foreign.ConfigureSharedInk(true);
-        Assert.True((await foreign.SelectSharedDrawingAsync(layer)).Succeeded);
-        Assert.False((await foreign.AppendSharedDrawingAsync(Snapshot(core), bundle, Validate)).Succeeded);
+        Assert.True((await foreign.OpenAsync(core.DocumentId!.Value, token: TestContext.Current.CancellationToken)).Succeeded); foreign.ConfigureSharedInk(true);
+        Assert.True((await foreign.SelectSharedDrawingAsync(layer, token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.False((await foreign.AppendSharedDrawingAsync(Snapshot(core), bundle, Validate, token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(called); Assert.Empty(Snapshot(foreign).Content.Bundles);
         expected = Snapshot(core);
         var document = core.GetDocumentSnapshot()!;
-        var second = await core.AddPageAsync(document.Sections[0].Id, "Second page"); Assert.True(second.Succeeded);
-        Assert.True((await core.SelectPageAsync(second.Value)).Succeeded);
-        Assert.False((await core.AppendSharedDrawingAsync(expected, bundle, Validate)).Succeeded);
+        var second = await core.AddPageAsync(document.Sections[0].Id, "Second page", token: TestContext.Current.CancellationToken); Assert.True(second.Succeeded);
+        Assert.True((await core.SelectPageAsync(second.Value, token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.False((await core.AppendSharedDrawingAsync(expected, bundle, Validate, token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(called);
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
     }
 
     [Fact]
@@ -143,9 +143,9 @@ public sealed class BoardsSharedInkCoreTests
     {
         await using var rig = new Rig();
         await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true);
-        var inserted = await core.InsertSharedDrawingAsync(); Assert.True(inserted.Succeeded);
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true);
+        var inserted = await core.InsertSharedDrawingAsync(token: TestContext.Current.CancellationToken); Assert.True(inserted.Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         var expected = Snapshot(core); var engine = Engine(); var bundle = Bundle(engine, expected);
         var paragraph = expected.Content.Owner.Blocks().First(block => block.Kind == NotesBlockKind.Paragraph);
         var result = await core.AppendSharedDrawingAsync(expected, bundle, source =>
@@ -154,13 +154,13 @@ public sealed class BoardsSharedInkCoreTests
             expected.Content.Owner.SelectBlock(paragraph.Id);
             Assert.True(expected.Content.Owner.InsertDocumentText("reentrant"));
             return canonical;
-        });
+        }, token: TestContext.Current.CancellationToken);
         Assert.False(result.Succeeded); Assert.Equal("StaleDrawing", result.Code);
         var draft = core.GetDocumentSnapshot()!;
         Assert.Empty(Drawing(draft, inserted.Value).SharedProductivityBundles!);
         Assert.Contains("reentrant", string.Concat(draft.Sections.SelectMany(section => section.Pages)
             .SelectMany(page => page.Blocks).Single(block => block.Id == paragraph.Id).Runs.Select(run => run.Text)));
-        Assert.True(core.IsDirty); Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True(core.IsDirty); Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
     }
 
     [Fact]
@@ -169,47 +169,47 @@ public sealed class BoardsSharedInkCoreTests
         await using var rig = new Rig();
         // A conflicted core intentionally remains a preserved dirty owner; Dispose must refuse it.
         var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync("Original")).Succeeded); core.ConfigureSharedInk(true);
-        var inserted = await core.InsertSharedDrawingAsync(); Assert.True(inserted.Succeeded);
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.CreateAsync("Original", token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true);
+        var inserted = await core.InsertSharedDrawingAsync(token: TestContext.Current.CancellationToken); Assert.True(inserted.Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         var expected = Snapshot(core); var engine = Engine(); var bundle = Bundle(engine, expected);
         var otherRepository = rig.NewRepository();
-        var winner = await otherRepository.LoadAsync(core.DocumentId!.Value, default);
+        var winner = await otherRepository.LoadAsync(core.DocumentId!.Value, TestContext.Current.CancellationToken);
         Assert.NotNull(winner); winner.Title = "External winner";
-        var receipt = await otherRepository.SaveAsync(winner, "Concurrent canonical edit", default);
-        var winningBytes = await File.ReadAllBytesAsync(receipt.CurrentPath);
-        var rejected = await core.AppendSharedDrawingAsync(expected, bundle, source => Canonical(engine, expected, source));
+        var receipt = await otherRepository.SaveAsync(winner, "Concurrent canonical edit", TestContext.Current.CancellationToken);
+        var winningBytes = await File.ReadAllBytesAsync(receipt.CurrentPath, cancellationToken: TestContext.Current.CancellationToken);
+        var rejected = await core.AppendSharedDrawingAsync(expected, bundle, source => Canonical(engine, expected, source), token: TestContext.Current.CancellationToken);
         Assert.False(rejected.Succeeded); Assert.Equal("RevisionConflict", rejected.Code);
         Assert.True(core.IsDirty); Assert.False(core.HasUnknownCommitOutcome);
         Assert.Equal(expected.Content.Version, core.DurableRevision);
         Assert.True(JsonElement.DeepEquals(bundle, Assert.Single(Snapshot(core).Content.Bundles)));
-        Assert.Equal(winningBytes, await File.ReadAllBytesAsync(receipt.CurrentPath));
-        var actualWinner = await otherRepository.LoadAsync(winner.Id, default);
+        Assert.Equal(winningBytes, await File.ReadAllBytesAsync(receipt.CurrentPath, cancellationToken: TestContext.Current.CancellationToken));
+        var actualWinner = await otherRepository.LoadAsync(winner.Id, TestContext.Current.CancellationToken);
         Assert.Equal("External winner", actualWinner!.Title);
         Assert.Empty(Drawing(actualWinner, inserted.Value).SharedProductivityBundles!);
         await Assert.ThrowsAsync<InvalidOperationException>(() => core.DisposeAsync().AsTask());
-        Assert.True((await core.UndoRichTextAsync()).Value);
+        Assert.True((await core.UndoRichTextAsync(token: TestContext.Current.CancellationToken)).Value);
         Assert.Empty(Snapshot(core).Content.Bundles); Assert.True(core.IsDirty);
-        Assert.Equal(winningBytes, await File.ReadAllBytesAsync(receipt.CurrentPath));
+        Assert.Equal(winningBytes, await File.ReadAllBytesAsync(receipt.CurrentPath, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task Page_layer_append_extent_undo_redo_and_independent_reopen_preserve_block_and_stroke_identity()
     {
         await using var rig = new Rig(); await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync("Page ink")).Succeeded); core.ConfigureSharedInk(true);
+        Assert.True((await core.CreateAsync("Page ink", token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true);
         var initial = PageSnapshot(core); var pageId = initial.Content.Page.Id;
         var blockIds = initial.Content.Page.Blocks.Select(block => block.Id).ToArray();
         Assert.Null(initial.Content.Layer); Assert.Equal(initial.Content.LayerId, PageSnapshot(core).Content.LayerId);
         var engine = Engine(); var bundle = PageBundle(engine, initial);
         Assert.True((await core.ReplacePageSharedDrawingAsync(initial, [bundle], source => CanonicalPage(engine, initial, source),
-            width: 1400, height: 1800)).Succeeded);
+            width: 1400, height: 1800, token: TestContext.Current.CancellationToken)).Succeeded);
         var saved = PageSnapshot(core); Assert.False(core.IsDirty);
         Assert.Equal(blockIds, saved.Content.Page.Blocks.Select(block => block.Id));
         Assert.Equal(1400, saved.Content.Page.CanvasWidth); Assert.Equal(1800, saved.Content.Page.CanvasHeight);
         Assert.True(saved.Content.Layer!.Locked); Assert.Equal(0, saved.Content.Layer.X); Assert.Equal(0, saved.Content.Layer.Y);
         var layerId = saved.Content.LayerId;
-        var loaded = (await rig.NewRepository().LoadAsync(core.DocumentId!.Value, default))!;
+        var loaded = (await rig.NewRepository().LoadAsync(core.DocumentId!.Value, TestContext.Current.CancellationToken))!;
         // Optional Root evidence export: all assertions still execute without it.
         // Frozen old-writer probe requires these exact new-produced canonical bytes.
         var compatibilityOutput = Environment.GetEnvironmentVariable("NINETOONE_BOARDS_OLD_WRITER_FIXTURE_OUTPUT");
@@ -220,12 +220,12 @@ public sealed class BoardsSharedInkCoreTests
         }
         var stored = loaded.Sections.SelectMany(section => section.Pages).Single(page => page.Id == pageId);
         Assert.True(JsonElement.DeepEquals(bundle, Assert.Single(NotesSharedInkLayer.Read(loaded, stored.Id)!.Bundles)));
-        Assert.True((await core.UndoRichTextAsync()).Value); Assert.True(core.IsDirty);
+        Assert.True((await core.UndoRichTextAsync(token: TestContext.Current.CancellationToken)).Value); Assert.True(core.IsDirty);
         Assert.Null(PageSnapshot(core).Content.Layer); Assert.Equal(900, PageSnapshot(core).Content.Page.CanvasHeight);
-        Assert.True((await core.SaveAsync()).Succeeded);
-        Assert.True((await core.RedoRichTextAsync()).Value); Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await core.RedoRichTextAsync(token: TestContext.Current.CancellationToken)).Value); Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         await using var reopened = new BoardsBrowserCore(rig.NewRepository());
-        Assert.True((await reopened.OpenAsync(core.DocumentId.Value)).Succeeded); reopened.ConfigureSharedInk(true);
+        Assert.True((await reopened.OpenAsync(core.DocumentId.Value, token: TestContext.Current.CancellationToken)).Succeeded); reopened.ConfigureSharedInk(true);
         var restored = PageSnapshot(reopened);
         Assert.Equal(layerId, restored.Content.LayerId); Assert.Equal(pageId, restored.Content.Page.Id);
         Assert.Equal(1800, restored.Content.Height); Assert.Equal(blockIds, restored.Content.Page.Blocks.Select(block => block.Id));
@@ -236,41 +236,41 @@ public sealed class BoardsSharedInkCoreTests
     public async Task Page_ink_works_in_both_layout_modes_but_View_and_cancellation_deny_mutations()
     {
         await using var rig = new Rig(); await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
         foreach (var layout in new[] { BoardsPageLayoutMode.Locked, BoardsPageLayoutMode.Unlocked })
         {
-            Assert.True((await core.SetLayoutModeAsync(core.ActivePageId!.Value, layout)).Succeeded);
+            Assert.True((await core.SetLayoutModeAsync(core.ActivePageId!.Value, layout, token: TestContext.Current.CancellationToken)).Succeeded);
             var expected = PageSnapshot(core); var next = PageBundle(engine, expected);
             Assert.True((await core.ReplacePageSharedDrawingAsync(expected, [.. expected.Content.Bundles, next],
-                source => CanonicalPage(engine, expected, source))).Succeeded);
+                source => CanonicalPage(engine, expected, source), token: TestContext.Current.CancellationToken)).Succeeded);
         }
         Assert.Equal(2, PageSnapshot(core).Content.Bundles.Count);
-        Assert.True((await core.SetEditModeAsync(core.ActivePageId!.Value, BoardsPageEditMode.View)).Succeeded);
+        Assert.True((await core.SetEditModeAsync(core.ActivePageId!.Value, BoardsPageEditMode.View, token: TestContext.Current.CancellationToken)).Succeeded);
         var view = PageSnapshot(core); var before = JsonSerializer.Serialize(core.GetDocumentSnapshot()); var called = false;
-        Assert.False((await core.ReplacePageSharedDrawingAsync(view, [], values => { called = true; return values; })).Succeeded);
+        Assert.False((await core.ReplacePageSharedDrawingAsync(view, [], values => { called = true; return values; }, token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(called); Assert.Equal(before, JsonSerializer.Serialize(core.GetDocumentSnapshot()));
-        Assert.True((await core.SetEditModeAsync(core.ActivePageId.Value, BoardsPageEditMode.Edit)).Succeeded);
+        Assert.True((await core.SetEditModeAsync(core.ActivePageId.Value, BoardsPageEditMode.Edit, token: TestContext.Current.CancellationToken)).Succeeded);
         using var stop = new CancellationTokenSource(); stop.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => core.ReplacePageSharedDrawingAsync(PageSnapshot(core), [],
             values => { called = true; return values; }, stop.Token));
         Assert.False(called); Assert.Equal(2, PageSnapshot(core).Content.Bundles.Count);
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
     }
 
     [Fact]
     public async Task Page_erase_is_one_original_undo_boundary_and_keeps_full_surviving_bundle()
     {
         await using var rig = new Rig(); await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
         var initial = PageSnapshot(core); var first = PageBundle(engine, initial); var second = PageBundle(engine, initial, 220);
-        Assert.True((await core.ReplacePageSharedDrawingAsync(initial, [first, second], values => CanonicalPage(engine, initial, values))).Succeeded);
+        Assert.True((await core.ReplacePageSharedDrawingAsync(initial, [first, second], values => CanonicalPage(engine, initial, values), token: TestContext.Current.CancellationToken)).Succeeded);
         var expected = PageSnapshot(core); var layer = expected.Content.LayerId;
-        Assert.True((await core.ReplacePageSharedDrawingAsync(expected, [second], values => CanonicalPage(engine, expected, values))).Succeeded);
+        Assert.True((await core.ReplacePageSharedDrawingAsync(expected, [second], values => CanonicalPage(engine, expected, values), token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.True(JsonElement.DeepEquals(second, Assert.Single(PageSnapshot(core).Content.Bundles)));
-        Assert.True((await core.UndoRichTextAsync()).Value); Assert.Equal(2, PageSnapshot(core).Content.Bundles.Count);
-        Assert.Equal(layer, PageSnapshot(core).Content.LayerId); Assert.True((await core.SaveAsync()).Succeeded);
-        Assert.True((await core.RedoRichTextAsync()).Value); Assert.True((await core.SaveAsync()).Succeeded);
-        var stored = (await rig.NewRepository().LoadAsync(core.DocumentId!.Value, default))!;
+        Assert.True((await core.UndoRichTextAsync(token: TestContext.Current.CancellationToken)).Value); Assert.Equal(2, PageSnapshot(core).Content.Bundles.Count);
+        Assert.Equal(layer, PageSnapshot(core).Content.LayerId); Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await core.RedoRichTextAsync(token: TestContext.Current.CancellationToken)).Value); Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
+        var stored = (await rig.NewRepository().LoadAsync(core.DocumentId!.Value, TestContext.Current.CancellationToken))!;
         var retained = NotesSharedInkLayer.Read(stored, Assert.Single(stored.Sections.SelectMany(section => section.Pages)).Id)!;
         Assert.True(JsonElement.DeepEquals(second, Assert.Single(retained.Bundles)));
     }
@@ -279,26 +279,26 @@ public sealed class BoardsSharedInkCoreTests
     public async Task Page_capture_rejects_returned_selection_page_and_reentrant_owner_changes()
     {
         await using var rig = new Rig(); await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
         var old = PageSnapshot(core); var original = old.Content.Page.Blocks[0];
-        Assert.True((await core.SelectRichTextAsync(original.Id, 0, 0)).Succeeded);
+        Assert.True((await core.SelectRichTextAsync(original.Id, 0, 0, token: TestContext.Current.CancellationToken)).Succeeded);
         var called = false;
-        Assert.False((await core.ReplacePageSharedDrawingAsync(old, [PageBundle(engine, old)], values => { called = true; return values; })).Succeeded);
+        Assert.False((await core.ReplacePageSharedDrawingAsync(old, [PageBundle(engine, old)], values => { called = true; return values; }, token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(called);
         var current = PageSnapshot(core); var bundle = PageBundle(engine, current);
         var reentrant = await core.ReplacePageSharedDrawingAsync(current, [bundle], values =>
         {
             var captured = CanonicalPage(engine, current, values);
             current.Content.Owner.InsertDocumentText("same original draft"); return captured;
-        });
+        }, token: TestContext.Current.CancellationToken);
         Assert.False(reentrant.Succeeded); Assert.Null(PageSnapshot(core).Content.Layer); Assert.True(core.IsDirty);
         Assert.Contains("same original draft", core.NativeRichEditor!.Blocks().First().PlainText);
-        Assert.True((await core.SaveAsync()).Succeeded);
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
         var expected = PageSnapshot(core); var doc = core.GetDocumentSnapshot()!;
-        var second = await core.AddPageAsync(doc.Sections[0].Id, "Next page"); Assert.True(second.Succeeded);
-        Assert.True((await core.SelectPageAsync(second.Value)).Succeeded);
-        Assert.False((await core.ReplacePageSharedDrawingAsync(expected, [bundle], values => { called = true; return values; })).Succeeded);
-        Assert.False(called); Assert.True((await core.SaveAsync()).Succeeded);
+        var second = await core.AddPageAsync(doc.Sections[0].Id, "Next page", token: TestContext.Current.CancellationToken); Assert.True(second.Succeeded);
+        Assert.True((await core.SelectPageAsync(second.Value, token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.False((await core.ReplacePageSharedDrawingAsync(expected, [bundle], values => { called = true; return values; }, token: TestContext.Current.CancellationToken)).Succeeded);
+        Assert.False(called); Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded);
     }
 
     [Fact]
@@ -327,19 +327,19 @@ public sealed class BoardsSharedInkCoreTests
     public async Task Real_repository_conflict_retains_undoable_page_erase_and_exact_winning_bytes()
     {
         await using var rig = new Rig(); var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
         var initial = PageSnapshot(core); var bundle = PageBundle(engine, initial);
-        Assert.True((await core.ReplacePageSharedDrawingAsync(initial, [bundle], values => CanonicalPage(engine, initial, values))).Succeeded);
-        var expected = PageSnapshot(core); var other = rig.NewRepository(); var winner = (await other.LoadAsync(core.DocumentId!.Value, default))!;
-        winner.Title = "Concurrent winner"; var receipt = await other.SaveAsync(winner, "Concurrent edit", default);
-        var bytes = await File.ReadAllBytesAsync(receipt.CurrentPath);
-        var refused = await core.ReplacePageSharedDrawingAsync(expected, [], values => values);
+        Assert.True((await core.ReplacePageSharedDrawingAsync(initial, [bundle], values => CanonicalPage(engine, initial, values), token: TestContext.Current.CancellationToken)).Succeeded);
+        var expected = PageSnapshot(core); var other = rig.NewRepository(); var winner = (await other.LoadAsync(core.DocumentId!.Value, TestContext.Current.CancellationToken))!;
+        winner.Title = "Concurrent winner"; var receipt = await other.SaveAsync(winner, "Concurrent edit", TestContext.Current.CancellationToken);
+        var bytes = await File.ReadAllBytesAsync(receipt.CurrentPath, cancellationToken: TestContext.Current.CancellationToken);
+        var refused = await core.ReplacePageSharedDrawingAsync(expected, [], values => values, token: TestContext.Current.CancellationToken);
         Assert.False(refused.Succeeded); Assert.Equal("RevisionConflict", refused.Code); Assert.True(core.IsDirty);
-        Assert.Empty(PageSnapshot(core).Content.Bundles); Assert.Equal(bytes, await File.ReadAllBytesAsync(receipt.CurrentPath));
+        Assert.Empty(PageSnapshot(core).Content.Bundles); Assert.Equal(bytes, await File.ReadAllBytesAsync(receipt.CurrentPath, cancellationToken: TestContext.Current.CancellationToken));
         await Assert.ThrowsAsync<InvalidOperationException>(() => core.DisposeAsync().AsTask());
-        Assert.True((await core.UndoRichTextAsync()).Value);
+        Assert.True((await core.UndoRichTextAsync(token: TestContext.Current.CancellationToken)).Value);
         Assert.True(JsonElement.DeepEquals(bundle, Assert.Single(PageSnapshot(core).Content.Bundles)));
-        Assert.Equal(bytes, await File.ReadAllBytesAsync(receipt.CurrentPath));
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(receipt.CurrentPath, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -375,18 +375,18 @@ public sealed class BoardsSharedInkCoreTests
     {
         await using var rig = new Rig(); var repository = new LostPageAcknowledgementRepository(rig.Repository);
         var core = new BoardsBrowserCore(repository, unknownOutcome: error => error is LostPageAcknowledgement);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true);
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true);
         var expected = PageSnapshot(core); var engine = Engine(); var bundle = PageBundle(engine, expected);
         repository.LoseNext = true;
-        var result = await core.ReplacePageSharedDrawingAsync(expected, [bundle], values => CanonicalPage(engine, expected, values));
+        var result = await core.ReplacePageSharedDrawingAsync(expected, [bundle], values => CanonicalPage(engine, expected, values), token: TestContext.Current.CancellationToken);
         Assert.False(result.Succeeded); Assert.Equal("CommitOutcomeUnknown", result.Code); Assert.True(core.IsDirty);
         Assert.True(core.HasUnknownCommitOutcome); Assert.Null(core.CapturePageSharedDrawing());
-        var saved = (await rig.NewRepository().LoadAsync(core.DocumentId!.Value, default))!;
+        var saved = (await rig.NewRepository().LoadAsync(core.DocumentId!.Value, TestContext.Current.CancellationToken))!;
         var layer = NotesSharedInkLayer.Read(saved, Assert.Single(saved.Sections.SelectMany(section => section.Pages)).Id)!;
         Assert.True(JsonElement.DeepEquals(bundle, Assert.Single(layer.Bundles)));
-        var count = repository.SaveCount; Assert.False((await core.SaveAsync()).Succeeded); Assert.Equal(count, repository.SaveCount);
+        var count = repository.SaveCount; Assert.False((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded); Assert.Equal(count, repository.SaveCount);
         var called = false;
-        Assert.False((await core.ReplacePageSharedDrawingAsync(expected, [bundle], values => { called = true; return values; })).Succeeded);
+        Assert.False((await core.ReplacePageSharedDrawingAsync(expected, [bundle], values => { called = true; return values; }, token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.False(called); Assert.Equal(count, repository.SaveCount);
         await Assert.ThrowsAsync<InvalidOperationException>(() => core.DisposeAsync().AsTask());
         // This deliberately retained unknown owner is not certified closed by a test fixture.
@@ -479,7 +479,7 @@ public sealed class BoardsSharedInkCoreTests
     public async Task Incompatible_retained_page_layer_diagnostic_does_not_replace_genuine_text_or_save_outcome()
     {
         await using var rig = new Rig(); await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true);
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true);
         var owner = core.NativeRichEditor!; var page = owner.Document.Sections.SelectMany(section => section.Pages).Single();
         var id = Guid.NewGuid();
         page.CanvasObjects.Add(new NotesCanvasObject { Id = id, Kind = NotesCanvasObjectKind.Ink, Locked = true });
@@ -489,10 +489,10 @@ public sealed class BoardsSharedInkCoreTests
         owner.Document.Metadata[NotesSharedInkLayer.MetadataKey(page.Id)] = raw;
         core.PropertyChanged += (sender, args) => { core.CapturePageSharedDrawing(); };
         Assert.Null(core.CapturePageSharedDrawing()); Assert.NotNull(core.PageInkDiagnostic); Assert.Null(core.ErrorCode);
-        Assert.True((await core.InsertRichTextAsync("Unrelated valid text")).Succeeded);
+        Assert.True((await core.InsertRichTextAsync("Unrelated valid text", token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.Null(core.ErrorCode); Assert.True(core.IsDirty);
-        Assert.True((await core.SaveAsync()).Succeeded); Assert.Null(core.ErrorCode); Assert.False(core.IsDirty); Assert.Equal("Saved", core.Status);
-        var stored = (await rig.NewRepository().LoadAsync(core.DocumentId!.Value, default))!;
+        Assert.True((await core.SaveAsync(token: TestContext.Current.CancellationToken)).Succeeded); Assert.Null(core.ErrorCode); Assert.False(core.IsDirty); Assert.Equal("Saved", core.Status);
+        var stored = (await rig.NewRepository().LoadAsync(core.DocumentId!.Value, TestContext.Current.CancellationToken))!;
         Assert.Single(Assert.Single(stored.Sections.SelectMany(section => section.Pages)).CanvasObjects);
         Assert.Equal(raw, stored.Metadata[NotesSharedInkLayer.MetadataKey(page.Id)]);
         Assert.Null(core.CapturePageSharedDrawing()); Assert.NotNull(core.PageInkDiagnostic);
@@ -502,27 +502,27 @@ public sealed class BoardsSharedInkCoreTests
     public async Task Unchanged_schema1_writer_clone_migration_repository_and_package_paths_preserve_opaque_page_extension()
     {
         await using var rig = new Rig(); await using var core = new BoardsBrowserCore(rig.Repository);
-        Assert.True((await core.CreateAsync()).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
+        Assert.True((await core.CreateAsync(token: TestContext.Current.CancellationToken)).Succeeded); core.ConfigureSharedInk(true); var engine = Engine();
         var expected = PageSnapshot(core); var bundle = PageBundle(engine, expected);
-        Assert.True((await core.ReplacePageSharedDrawingAsync(expected, [bundle], values => CanonicalPage(engine, expected, values))).Succeeded);
+        Assert.True((await core.ReplacePageSharedDrawingAsync(expected, [bundle], values => CanonicalPage(engine, expected, values), token: TestContext.Current.CancellationToken)).Succeeded);
         Assert.Null(typeof(NotesCanvasObject).GetProperty("SharedInkLayer")); // No new unknown DTO property for old writers to drop.
         var id = core.DocumentId!.Value; var pageId = core.ActivePageId!.Value; var key = NotesSharedInkLayer.MetadataKey(pageId);
-        var oldKnownDto = (await rig.NewRepository().LoadAsync(id, default))!;
+        var oldKnownDto = (await rig.NewRepository().LoadAsync(id, TestContext.Current.CancellationToken))!;
         var raw = oldKnownDto.Metadata[key]; var layerId = NotesSharedInkLayer.Read(oldKnownDto, pageId)!.LayerId;
         var oldWriter = new WriteDocumentEditor(oldKnownDto, pageId);
         Assert.True(oldWriter.InsertDocumentText("ordinary old editor edit")); Assert.True(oldWriter.Undo()); Assert.Equal(raw, oldKnownDto.Metadata[key]);
         Assert.True(oldWriter.Redo()); Assert.Equal(raw, oldKnownDto.Metadata[key]);
-        await rig.NewRepository().SaveAsync(oldKnownDto, "Known schema1 writer path", default);
-        var independentlyLoaded = (await rig.NewRepository().LoadAsync(id, default))!;
+        await rig.NewRepository().SaveAsync(oldKnownDto, "Known schema1 writer path", TestContext.Current.CancellationToken);
+        var independentlyLoaded = (await rig.NewRepository().LoadAsync(id, TestContext.Current.CancellationToken))!;
         Assert.Equal(1, independentlyLoaded.SchemaVersion); Assert.Equal(raw, independentlyLoaded.Metadata[key]);
         Assert.Equal(layerId, Assert.Single(independentlyLoaded.Sections.SelectMany(section => section.Pages).Single(page => page.Id == pageId).CanvasObjects).Id);
         var migrated = new NotesDocumentMigrator().Migrate(independentlyLoaded, 1).Document;
         Assert.Equal(raw, migrated.Metadata[key]); Assert.Equal(1, migrated.SchemaVersion);
         var package = new WriteNativeDocumentPackageStore(); var path = Path.Combine(rig.DataDirectory, "retained.9to1w");
-        Assert.True((await package.SaveAsync(migrated, path)).IsSuccess);
-        var opened = await package.OpenAsync(path); Assert.True(opened.IsSuccess); Assert.Equal(raw, opened.Value!.Metadata[key]);
+        Assert.True((await package.SaveAsync(migrated, path, cancellationToken: TestContext.Current.CancellationToken)).IsSuccess);
+        var opened = await package.OpenAsync(path, cancellationToken: TestContext.Current.CancellationToken); Assert.True(opened.IsSuccess); Assert.Equal(raw, opened.Value!.Metadata[key]);
         await using var newReader = new BoardsBrowserCore(rig.NewRepository());
-        Assert.True((await newReader.OpenAsync(id)).Succeeded); newReader.ConfigureSharedInk(true);
+        Assert.True((await newReader.OpenAsync(id, token: TestContext.Current.CancellationToken)).Succeeded); newReader.ConfigureSharedInk(true);
         Assert.Equal(layerId, PageSnapshot(newReader).Content.LayerId);
         Assert.True(JsonElement.DeepEquals(bundle, Assert.Single(PageSnapshot(newReader).Content.Bundles)));
         // This runs unchanged production paths. OLD65-COMPAT-PROBE separately binds

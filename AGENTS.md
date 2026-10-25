@@ -1,3 +1,18 @@
+## Owner resume — 25 October 2026
+
+The owner explicitly resumes existing 9to1 implementation with GPT-6.1 Sol and
+GPT-6 Luna subagents, aiming to complete the active apps as soon as possible.
+This supersedes the 24 October cloud stop for this resumed work. Preserve local
+work, the active separate Thunder worker, and frozen source backups; do not
+restart the old OpenCode cadence or overwrite native source. Continue meaningful
+implementation and basic smoke checks. Full independent acceptance remains paused.
+Use the attached Progress Tracker as a source-backed queue; its historical model
+and execution wording does not override this new request or the canonical spec.
+Begin from the reconciled a4a0f7c integrated candidate and retained current changes.
+Record exact ownership in the existing coordination ledger and integrate compatible
+completed changes into main after applicable basic checks. Never infer100% from
+an app entry, source-only patch, old logs, or successful package generation.
+
 ## Cloud stop and local-team takeover — owner decision, 24 October 2026
 
 The owner requests the cloud worker checkpoint and STOP to avoid conflicts with

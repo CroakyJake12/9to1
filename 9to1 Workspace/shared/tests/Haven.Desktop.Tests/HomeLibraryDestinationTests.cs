@@ -36,7 +36,7 @@ public sealed class HomeLibraryDestinationTests
             await settlement!.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal(index.Rows[0].ArtifactId, queued!.ObjectId);
             Assert.Equal("boards", queued.OwnerApp); Assert.Equal("boards.notebook", queued.TargetRouteId);
-            Assert.Equal(1, index.Rows.Count); // Home navigation did not create a second artifact.
+            Assert.Single(index.Rows); // Home navigation did not create a second artifact.
             Assert.Equal(1, authorization.Opens);
         }
         finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }

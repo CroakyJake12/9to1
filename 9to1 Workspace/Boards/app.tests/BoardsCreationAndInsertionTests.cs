@@ -102,6 +102,55 @@ public sealed class BoardsCreationAndInsertionTests
     }
 
     [Fact]
+    public async Task Adapter_page_and_section_creation_use_the_shared_undo_redo_history()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "structure-history.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            var viewModel = new BoardsViewModel(adapter);
+            var originalSectionId = adapter.Document.Sections[0].Id;
+            var originalPageId = adapter.Document.Sections[0].Pages[0].Id;
+            var originalBlockId = adapter.Document.Sections[0].Pages[0].Blocks[0].Id;
+            adapter.Document.Sections[0].Pages[0].Blocks[0].Text = "Keep this content";
+            adapter.MarkDirty();
+            await adapter.SaveAsync();
+
+            await viewModel.DispatchAsync("AddPage", null);
+            var addedPageId = viewModel.SelectedPageId;
+            Assert.Equal(2, adapter.Document.Sections[0].Pages.Count);
+            Assert.Equal(adapter.Document.Sections[0].Pages[1].Blocks[0].Id, viewModel.SelectedBlockId);
+            Assert.True(adapter.CanUndo);
+
+            await viewModel.DispatchAsync("Undo", null);
+            Assert.Single(adapter.Document.Sections[0].Pages);
+            Assert.Equal(originalPageId, adapter.Document.Sections[0].Pages[0].Id);
+            Assert.Equal(originalPageId, viewModel.SelectedPageId);
+            Assert.Equal(originalBlockId, viewModel.SelectedBlockId);
+            Assert.Equal("Keep this content", adapter.Document.Sections[0].Pages[0].Blocks[0].Text);
+
+            await viewModel.DispatchAsync("Redo", null);
+            Assert.Equal(new[] { originalPageId, addedPageId }, adapter.Document.Sections[0].Pages.Select(page => page.Id));
+            Assert.Contains(adapter.Document.Sections.SelectMany(section => section.Pages), page => page.Id == viewModel.SelectedPageId);
+
+            await viewModel.DispatchAsync("AddSection", null);
+            var addedSectionId = viewModel.Session.Document.Sections.Last().Id;
+            Assert.Equal(2, adapter.Document.Sections.Count);
+            await viewModel.DispatchAsync("Undo", null);
+            Assert.Single(adapter.Document.Sections);
+            Assert.Equal(originalSectionId, adapter.Document.Sections[0].Id);
+            await viewModel.DispatchAsync("Redo", null);
+            Assert.Equal(new[] { originalSectionId, addedSectionId }, adapter.Document.Sections.Select(section => section.Id));
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
     public async Task Creating_distinct_board_preserves_current_file_and_refuses_existing_target()
     {
         var root = TempDirectory();
