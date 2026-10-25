@@ -90,32 +90,38 @@ public sealed partial class ChatCloudPermissionCallerTests
     {
         var token = TestContext.Current.CancellationToken;
         await using var rig = new Rig(temporary: false);
-        rig.Capture.AskDuringCapture = false;
-        rig.Client.RunApprovedOwnedFrame = true;
         var offered = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key,
             Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
         rig.Client.AvailableModels = [offered];
         var disposal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        rig.Client.OriginalDispose = disposal.Task;
         var directory = Path.Combine(Path.GetTempPath(), "native-task-pause-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         var drafts = new NativeComposerDraftStore();
         var page = CreateNativeComposerPage(rig, directory, drafts);
-        Task? pausing = null, producer = null;
+        Task? pausing = null, producer = null, resuming = null;
         try
         {
             await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10));
             page.ConfigureTaskMode();
             page.SelectModel(offered);
             await page.SubmitOriginalInstructionAsync("Review this same task");
+            var initialSend = (Task)typeof(NewChatPage).GetField("_originalSend", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+            await initialSend.WaitAsync(TimeSpan.FromSeconds(10), token);
+            var waiting = Assert.IsType<ChatCanonicalPermissionWaitingObservation>(page.CanonicalPermissionWaiting);
+            await rig.Owner.ApproveOriginalAsync(waiting.PermissionRequest.Id, token);
+            var bindings = page.OriginalTaskComposer.Bindings;
+            await bindings.DispatchAsync("composer.refresh-task-controls", null, token);
+            Assert.True(bindings.IsActionAvailable("composer.resume"));
+            rig.Client.RunApprovedOwnedFrame = true;
+            rig.Client.OriginalDispose = disposal.Task;
+            resuming = bindings.DispatchAsync("composer.resume", null, token).AsTask();
             await rig.Client.DisposeEntered.Task.WaitAsync(token);
             var lease = NativeComposerIssuedLease(page);
-            producer = InitialHostedProducer(lease);
+            producer = ActualHostedProducer(NativeComposerIssuedResumeLease(page));
             var initial = (await rig.Tasks.GetByContextAsync(page.ConversationId, token))!;
             var copied = (TaskRunOriginalInitialChatObservationLease)typeof(object)
                 .GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(lease, null)!;
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => rig.Service.PauseObservedTaskComposerAsync(copied, token));
-            var bindings = page.OriginalTaskComposer.Bindings;
             page.SetDraft("queued instruction to preserve");
             await bindings.DispatchAsync("composer.queue", null);
             page.SetDraft("Preserve this unsent instruction");
@@ -166,6 +172,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         {
             disposal.TrySetResult();
             if (pausing is not null) _ = await Record.ExceptionAsync(() => pausing);
+            if (resuming is not null) _ = await Record.ExceptionAsync(() => resuming);
             page.RequestRetirement();
             _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
             if (producer is not null) _ = await Record.ExceptionAsync(() => producer);
