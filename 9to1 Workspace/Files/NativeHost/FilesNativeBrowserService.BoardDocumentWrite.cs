@@ -364,6 +364,30 @@ public sealed partial class FilesNativeBrowserService
                     }
                     return new(false, null, operation.Approval.Code, operation.Approval.Message);
                 }
+
+                // Home review may complete after another Files owner has advanced this same
+                // item. Observe the canonical row again before re-authorizing its old revision
+                // scope, so the user receives a truthful conflict rather than a generic ACL
+                // failure. This is still pre-claim: no execution capability, byte leaf or Files
+                // mutation exists for the approved stale intent.
+                var reviewedCurrent = await source.Observe(() => workspace.Provider.GetForOriginalStoreAsync(
+                    operation.Page.StoreID, operation.OriginalRow.Id, token)).ConfigureAwait(false);
+                if (!reviewedCurrent.IsSuccess || reviewedCurrent.Value is not { Kind: HostedItemKind.File } latestRow ||
+                    latestRow.Id != operation.OriginalRow.Id || latestRow.ParentId != operation.OriginalRow.ParentId ||
+                    latestRow.Name != operation.OriginalRow.Name || !IsBoardDocumentCandidate(latestRow) ||
+                    latestRow.CurrentRevisionId?.ToString() != operation.ExpectedRevision ||
+                    NormalizeSha256(latestRow.ContentHash) != operation.ExpectedSha256)
+                {
+                    lock (_gate)
+                    {
+                        if (_operations.TryGetValue(operation.OperationKey, out var retained) && ReferenceEquals(retained, operation))
+                            _operations.Remove(operation.OperationKey);
+                        operation.Retired = true;
+                    }
+                    CryptographicOperations.ZeroMemory(operation.Payload);
+                    return new(false, null, "FilesRevisionConflict",
+                        "The selected Files board changed while Home review was open. Reopen its current revision before saving.", true);
+                }
                 await RequireWrite(token).ConfigureAwait(false);
 
                 var capability = await source.Observe(() => _broker.BeginExecutionCapabilityAsync(

@@ -1,13 +1,18 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Runtime.ExceptionServices;
+using CakeOS.Apps.Boards.Contract;
 using Haven.Application;
 using Haven.Desktop.Services;
+using Haven.Infrastructure.Native.Linux;
 using HavenOS.Home;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
 
 namespace Haven.Desktop.Tests;
@@ -299,6 +304,239 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
                 await rig.Keep(source.DisposeAsync().AsTask());
             }
         });
+
+    [Fact]
+    public Task Home_selected_board_save_uses_real_review_and_files_CAS_preserves_old_bytes_and_reopens_same_file()
+        => Run(async rig =>
+        {
+            if (!OperatingSystem.IsLinux()) return;
+            var documentId = Guid.NewGuid();
+            var initial = BoardBytes(documentId, "Original");
+            var uploaded = await rig.UploadAsync("selected.9to1board", initial, "application/json");
+            var physical = new FilesOriginalBoardDocumentPhysicalOwner();
+            var trust = rig.Graph!.GetRequiredService<HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService>();
+            var reviews = new List<string>();
+            async Task Review(HomePermissionAuthorization request, CancellationToken token)
+            {
+                Assert.Equal(HomePermissionRequestState.PendingApproval, request.State);
+                reviews.Add(request.RequestId);
+                Assert.True((await trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept,
+                    cancellationToken: token)).Succeeded);
+            }
+            await using var flow = await CreateBoardFlowAsync(rig, uploaded, physical, Review);
+            await using var lease = await flow.SelectAsync(uploaded);
+
+            var firstBytes = BoardBytes(documentId, "First edit");
+            var first = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), firstBytes, rig.Token));
+            Assert.True(first.Committed, first.Message);
+            Assert.NotNull(first.NewRevision);
+            var firstRevision = Guid.Parse(first.NewRevision!);
+            Assert.NotEqual(uploaded.RevisionId.Value, firstRevision);
+            Assert.Equal(uploaded.FileId.Value, lease.FileId);
+            Assert.Equal(firstRevision, lease.RevisionId);
+            Assert.Single(reviews);
+
+            Assert.Equal(initial, await rig.ReadPhysicalAsync("selected.9to1board"));
+            var firstLeaf = $".9to1-board-{firstRevision:N}.content";
+            Assert.Equal(firstBytes, await rig.ReadPhysicalAsync(firstLeaf));
+            var firstItem = (await rig.Keep(rig.Workspace.Provider.GetForOriginalStoreAsync(
+                rig.Workspace.Configuration.StoreId, new(lease.FileId), rig.Token))).Value!;
+            Assert.Equal(firstRevision, firstItem.CurrentRevisionId!.Value.Value);
+            var firstContent = (await rig.Keep(rig.Workspace.Provider.GetCurrentArtifactContentForOriginalStoreAsync(
+                rig.Workspace.Configuration.StoreId, new(lease.FileId), firstItem.CurrentRevisionId, rig.Token))).Value!;
+            Assert.Equal(firstLeaf, firstContent.ProviderContentReference);
+            Assert.Equal(uploaded.ParentFolderId, firstItem.ParentId);
+
+            var reopened = await rig.ReadCurrentBoardAsync(lease.FileId);
+            try
+            {
+                Assert.Equal(firstRevision, reopened.RevisionId);
+                Assert.Equal(firstBytes, reopened.Bytes);
+                Assert.Equal("First edit", HavenBoardDocumentCodec.Deserialize(reopened.Bytes).RichNotes!.Title);
+            }
+            finally { CryptographicOperations.ZeroMemory(reopened.Bytes); }
+
+            var secondBytes = BoardBytes(documentId, "Second edit");
+            var second = await rig.Keep(lease.SaveAsync(lease.SourceId, firstRevision.ToString("D"), secondBytes, rig.Token));
+            Assert.True(second.Committed, second.Message);
+            Assert.NotNull(second.NewRevision);
+            var secondRevision = Guid.Parse(second.NewRevision!);
+            Assert.NotEqual(firstRevision, secondRevision);
+            Assert.Equal(secondRevision, lease.RevisionId);
+            Assert.Equal(reviews.Count, 2);
+            Assert.NotEqual(reviews[0], reviews[1]);
+            Assert.Equal(firstBytes, await rig.ReadPhysicalAsync(firstLeaf));
+            var secondLeaf = $".9to1-board-{secondRevision:N}.content";
+            Assert.Equal(secondBytes, await rig.ReadPhysicalAsync(secondLeaf));
+            var finalItem = (await rig.Keep(rig.Workspace.Provider.GetForOriginalStoreAsync(
+                rig.Workspace.Configuration.StoreId, new(lease.FileId), rig.Token))).Value!;
+            Assert.Equal(secondRevision, finalItem.CurrentRevisionId!.Value.Value);
+            var finalContent = (await rig.Keep(rig.Workspace.Provider.GetCurrentArtifactContentForOriginalStoreAsync(
+                rig.Workspace.Configuration.StoreId, new(lease.FileId), finalItem.CurrentRevisionId, rig.Token))).Value!;
+            Assert.Equal(secondLeaf, finalContent.ProviderContentReference);
+        });
+
+    [Fact]
+    public Task Declined_board_review_creates_no_revision_and_a_fresh_review_can_commit()
+        => Run(async rig =>
+        {
+            if (!OperatingSystem.IsLinux()) return;
+            var documentId = Guid.NewGuid();
+            var initial = BoardBytes(documentId, "Original");
+            var uploaded = await rig.UploadAsync("declined.9to1board", initial, "application/json");
+            var physical = new FilesOriginalBoardDocumentPhysicalOwner();
+            var trust = rig.Graph!.GetRequiredService<HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService>();
+            var reviews = new List<string>();
+            var choice = HomeApprovalChoice.Decline;
+            async Task Review(HomePermissionAuthorization request, CancellationToken token)
+            {
+                reviews.Add(request.RequestId);
+                Assert.True((await trust.DecideAsync(request.RequestId, choice,
+                    cancellationToken: token)).Succeeded);
+            }
+            await using var flow = await CreateBoardFlowAsync(rig, uploaded, physical, Review);
+            await using var lease = await flow.SelectAsync(uploaded);
+            var revised = BoardBytes(documentId, "Reviewed later");
+            var denied = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), revised, rig.Token));
+            Assert.False(denied.Committed);
+            Assert.NotEqual("FILES_BOARD_WRITE_OUTCOME_UNKNOWN", denied.Code);
+            Assert.Equal(uploaded.RevisionId.Value, lease.RevisionId);
+            Assert.Equal(uploaded.RevisionId.Value, ((await rig.Keep(rig.Workspace.Provider.GetForOriginalStoreAsync(
+                rig.Workspace.Configuration.StoreId, uploaded.FileId, rig.Token))).Value!).CurrentRevisionId!.Value.Value);
+            Assert.Equal(initial, await rig.ReadPhysicalAsync("declined.9to1board"));
+            Assert.Empty(await rig.ListBoardRevisionLeavesAsync());
+            Assert.Single(reviews);
+
+            choice = HomeApprovalChoice.Accept;
+            var accepted = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), revised, rig.Token));
+            Assert.True(accepted.Committed, accepted.Message);
+            Assert.NotNull(accepted.NewRevision);
+            Assert.Equal(2, reviews.Count);
+            Assert.NotEqual(reviews[0], reviews[1]);
+            Assert.Equal(initial, await rig.ReadPhysicalAsync("declined.9to1board"));
+            Assert.Equal(revised, await rig.ReadPhysicalAsync($".9to1-board-{Guid.Parse(accepted.NewRevision!):N}.content"));
+        });
+
+    [Fact]
+    public Task Actual_files_revision_and_parent_revision_races_are_conflicts_without_clobbering_current_bytes()
+        => Run(async rig =>
+        {
+            if (!OperatingSystem.IsLinux()) return;
+            await AssertBoardRaceAsync(rig, "stale-item.9to1board", advanceParentOnly: false);
+            await AssertBoardRaceAsync(rig, "stale-parent.9to1board", advanceParentOnly: true);
+        });
+
+    private static async Task AssertBoardRaceAsync(Rig rig, string name, bool advanceParentOnly)
+    {
+        var documentId = Guid.NewGuid();
+        var initial = BoardBytes(documentId, "Original");
+        var uploaded = await rig.UploadAsync(name, initial, "application/json");
+        var oldLeaves = await rig.ListBoardRevisionLeavesAsync();
+        var physical = new FilesOriginalBoardDocumentPhysicalOwner();
+        var trust = rig.Graph!.GetRequiredService<HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService>();
+        var competing = BoardBytes(documentId, advanceParentOnly ? "Original" : "Concurrent writer");
+        var raced = false;
+        async Task Review(HomePermissionAuthorization request, CancellationToken token)
+        {
+            if (advanceParentOnly)
+                await rig.UploadAsync("parent-race-" + Guid.NewGuid().ToString("N") + ".txt", [7, 8, 9]);
+            else
+                await rig.ReplaceAsync(uploaded, competing);
+            raced = true;
+            Assert.True((await trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept,
+                cancellationToken: token)).Succeeded);
+        }
+        await using var flow = await CreateBoardFlowAsync(rig, uploaded, physical, Review);
+        await using var lease = await flow.SelectAsync(uploaded);
+        var proposal = BoardBytes(documentId, "Must not publish");
+        var result = await rig.Keep(lease.SaveAsync(lease.SourceId, lease.RevisionId.ToString("D"), proposal, rig.Token));
+        Assert.True(raced);
+        Assert.False(result.Committed);
+        Assert.True(result.Conflict, result.Code + ": " + result.Message);
+        var current = (await rig.Keep(rig.Workspace.Provider.GetForOriginalStoreAsync(
+            rig.Workspace.Configuration.StoreId, uploaded.FileId, rig.Token))).Value!;
+        var currentContent = (await rig.Keep(rig.Workspace.Provider.GetCurrentArtifactContentForOriginalStoreAsync(
+            rig.Workspace.Configuration.StoreId, uploaded.FileId, current.CurrentRevisionId, rig.Token))).Value!;
+        if (advanceParentOnly)
+        {
+            Assert.Equal(uploaded.RevisionId.Value, current.CurrentRevisionId!.Value.Value);
+            Assert.Equal(initial, await rig.ReadPhysicalAsync(name));
+            Assert.Equal(name, currentContent.ProviderContentReference);
+        }
+        else
+        {
+            Assert.NotEqual(uploaded.RevisionId.Value, current.CurrentRevisionId!.Value.Value);
+            Assert.Equal(competing, await rig.ReadPhysicalAsync("race-" + uploaded.FileId.Value.ToString("N") + ".content"));
+            Assert.Equal("race-" + uploaded.FileId.Value.ToString("N") + ".content", currentContent.ProviderContentReference);
+        }
+        var newLeaves = (await rig.ListBoardRevisionLeavesAsync()).Except(oldLeaves, StringComparer.Ordinal).ToArray();
+        if (advanceParentOnly)
+        {
+            var unreferenced = Assert.Single(newLeaves);
+            Assert.Equal(proposal, await rig.ReadPhysicalAsync(unreferenced));
+            Assert.NotEqual(unreferenced, currentContent.ProviderContentReference);
+        }
+        else
+        {
+            // The item changed during Home review, so the owner returns a pre-claim
+            // conflict without materializing candidate bytes.
+            Assert.Empty(newLeaves);
+        }
+    }
+
+    private static byte[] BoardBytes(Guid documentId, string title)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var document = new HavenBoardDocument(HavenBoardDocument.FormatIdentity, HavenBoardDocument.CurrentSchemaVersion,
+            documentId, now, now, null, HavenRichNotes.Create(title));
+        return JsonSerializer.SerializeToUtf8Bytes(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+    }
+
+    private static async Task<BoardWriteFlow> CreateBoardFlowAsync(Rig rig, FilesUploadedContent uploaded,
+        FilesOriginalBoardDocumentPhysicalOwner physical,
+        Func<HomePermissionAuthorization, CancellationToken, Task> review)
+    {
+        var graph = rig.Graph!;
+        var boardRead = new NativeHomeFilesBoardReadSource(rig.Browser, rig.Workspace.Actor);
+        var writer = rig.Browser.CreateOriginalBoardDocumentWriteOwner(physical);
+        var writes = new NativeHomeFilesBoardWriteSource(rig.Browser, writer, rig.Workspace.Actor);
+        var profiles = graph.GetRequiredService<IAuthenticatedResourceActorSource>();
+        async Task<bool> Current(CancellationToken token) => await profiles.GetCurrentAsync(token) == rig.Workspace.Actor;
+        var library = new NativeHomeFilesLibrarySource(rig.Browser, rig.Workspace.Actor,
+            graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true,
+            boardRead, writes, review, body => body(), rig.Retain);
+        return new BoardWriteFlow(rig, uploaded, library, boardRead, writes, writer, physical);
+    }
+
+    private sealed class BoardWriteFlow(Rig rig, FilesUploadedContent uploaded,
+        NativeHomeFilesLibrarySource library, NativeHomeFilesBoardReadSource boardRead,
+        NativeHomeFilesBoardWriteSource writes, FilesNativeBrowserService.BoardDocumentWriteOwner writer,
+        FilesOriginalBoardDocumentPhysicalOwner physical) : IAsyncDisposable
+    {
+        internal async Task<NativeHomeFilesBoardWriteLease> SelectAsync(FilesUploadedContent selected)
+        {
+            Assert.Equal(uploaded.FileId, selected.FileId);
+            var rows = await rig.Keep(library.SearchAsync(new HomeLibraryQuery(Text: selected.Name), rig.Token));
+            var row = Assert.Single(rows, item => item.ArtifactType == "9to1 board document");
+            Assert.True(await rig.Keep(library.CanOpenAsync(row.OpenLink, rig.Token)));
+            var target = await rig.Keep(library.ResolveOriginalOpenTargetAsync(row.OpenLink, rig.Token));
+            Assert.NotNull(target);
+            Assert.Equal(selected.FileId.Value, target.FileId);
+            Assert.Equal(selected.RevisionId.Value, target.RevisionId);
+            var prepared = await rig.Keep(library.PrepareOriginalBoardWriteAsync(row.OpenLink, rig.Token));
+            Assert.NotNull(prepared);
+            return writes.TakePrepared(prepared.Value, rig.Workspace.Configuration.StoreId,
+                rig.Folder.Value, selected.FileId.Value, selected.RevisionId.Value);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await rig.Keep(writes.DrainPreparedAsync());
+            await rig.Keep(library.DisposeAsync().AsTask());
+            await rig.Keep(writer.CloseAndDrainAsync());
+            await rig.Keep(physical.CloseAndDrainAsync());
+        }
+    }
     private sealed class UnusedLibraryRouter : IHomeDeepLinkRouter
     {
         public Task<HomeFeatureNavigationResult> OpenAsync(HomeDeepLink link, CancellationToken token = default) =>
@@ -325,6 +563,16 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
         internal void Retain(Task actual) { lock (_gate) _raw.Add(actual); }
         internal Task<T> Keep<T>(Task<T> actual) { Retain(actual); return actual; }
         internal Task Keep(Task actual) { Retain(actual); return actual; }
+        internal async Task<byte[]> ReadPhysicalAsync(string relative)
+        {
+            if (Path.IsPathFullyQualified(relative) || relative.Split(['/', '\\']).Any(part => part is ".." or "." or ""))
+                throw new ArgumentException("Test helper accepts only a direct leaf name.", nameof(relative));
+            return await Keep(File.ReadAllBytesAsync(Path.Combine(_directory, relative), Token));
+        }
+        internal Task<string[]> ListBoardRevisionLeavesAsync() => Keep(Task.Run(() => Directory
+            .EnumerateFiles(_directory, ".9to1-board-*.content", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName).Where(name => name is not null).Cast<string>()
+            .OrderBy(name => name, StringComparer.Ordinal).ToArray(), Token));
         internal async Task InitializeAsync()
         {
             Directory.CreateDirectory(Root); Directory.CreateDirectory(Chosen);
@@ -333,11 +581,25 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             var services = new ServiceCollection();
             services.AddSingleton<IHomeCoreStateStore>(home); services.AddSingleton(profiles);
             services.AddSingleton<IAuthenticatedResourceActorSource>(profiles);
-            services.AddSingleton(new HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService(home, (_, _) => null));
+            var filesPolicy = new FilesNativeBrowserActionPolicySource();
+            var trust = new HomePermissionTrustService(home, filesPolicy.TryGet);
+            services.AddSingleton(trust); services.AddSingleton<IHomeActionPolicySource>(filesPolicy);
             services.AddSingleton<IHomeLocalStoreEvidenceSource, HomeLocalStoreEvidenceRegistry>();
             services.AddSingleton<HomeLocalStoreOwnership>();
             services.AddSingleton<IResourceStoreOwnershipAuthority, HomeResourceStoreOwnershipAuthority>();
-            services.AddSingleton<ResourceAuthorizationService>(); services.AddFilesNativeHost();
+            services.AddSingleton<ResourceAuthorizationService>(); services.AddSingleton<HomeResourceOperationBroker>();
+            services.AddFilesNativeHost();
+            // The production write owner requires this same real Home execution broker. Replace
+            // only the composition's legacy broker-less browser registration, retaining its
+            // original Files authority, actor, resource resolver and folder reader.
+            services.RemoveAll<FilesNativeBrowserService>();
+            services.AddSingleton(provider => new FilesNativeBrowserService(
+                provider.GetRequiredService<NativeFilesWorkspaceAuthority>(),
+                provider.GetRequiredService<IAuthenticatedResourceActorSource>(),
+                provider.GetRequiredService<ResourceAuthorizationService>(),
+                provider.GetRequiredService<ICompatibilityPackageContentSource>(),
+                provider.GetRequiredService<FilesOriginalChildFolderReadSource>(),
+                provider.GetRequiredService<HomeResourceOperationBroker>()));
             Graph = services.BuildServiceProvider();
             var configured = await Keep(Graph.GetRequiredService<NativeFilesWorkspaceService>().ConfigureNewAsync(Chosen,
                 Graph.GetRequiredService<HomeLocalStoreOwnership>(), Token));
@@ -366,6 +628,30 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             var authority = await Keep(Authority.CaptureCommitAuthorityAsync(Workspace.Actor, Workspace.Provider, () => true, Token).AsTask());
             var committed = await Keep(Workspace.Provider.CommitUploadedContentAsync(upload,
                 [new(Folder, parent.CurrentRevisionId)], authority, Token)); Assert.True(committed.IsSuccess); return upload;
+        }
+        internal async Task ReplaceAsync(FilesUploadedContent selected, byte[] suppliedBytes)
+        {
+            var reference = "race-" + selected.FileId.Value.ToString("N") + ".content";
+            await Keep(File.WriteAllBytesAsync(Path.Combine(_directory, reference), suppliedBytes, Token));
+            var current = (await Keep(Workspace.Provider.GetForOriginalStoreAsync(
+                Workspace.Configuration.StoreId, selected.FileId, Token))).Value!;
+            var parent = (await Keep(Workspace.Provider.GetForOriginalStoreAsync(Folder, Token))).Value!;
+            var replacement = new FilesUploadedContent(selected.FileId, selected.ParentFolderId, selected.Name,
+                selected.MimeType, new(Guid.NewGuid()), current.CurrentRevisionId, Workspace.Actor.ActorId,
+                DateTimeOffset.UtcNow, suppliedBytes.Length, Convert.ToHexString(SHA256.HashData(suppliedBytes)), reference);
+            var authority = await Keep(Authority.CaptureCommitAuthorityAsync(Workspace.Actor, Workspace.Provider,
+                () => true, Token).AsTask());
+            var committed = await Keep(Workspace.Provider.CommitUploadedContentAsync(replacement,
+                [new(selected.FileId, current.CurrentRevisionId), new(Folder, parent.CurrentRevisionId)], authority, Token));
+            Assert.True(committed.IsSuccess, committed.Error?.Message);
+        }
+        internal async Task<FilesOriginalBoardDocumentRead> ReadCurrentBoardAsync(HostedItemId fileId)
+        {
+            var page = await Keep(Browser.ListAsync(Workspace.Actor, Folder.Value, token: Token,
+                expectedStoreId: Workspace.Configuration.StoreId));
+            var row = Assert.Single(page.Items, item => item.Id == fileId);
+            return await Keep(Browser.ReadOriginalBoardDocumentWithinSourceAsync(page, row, Workspace.Actor,
+                () => true, body => body(), Retain, Token));
         }
         internal async Task<(byte[] Home, byte[] Drive)> BytesAsync() =>
             (await Keep(File.ReadAllBytesAsync(HomePath, Token)), await Keep(File.ReadAllBytesAsync(DrivePath, Token)));
