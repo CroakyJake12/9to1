@@ -9,12 +9,14 @@ public sealed partial class BrowseNativeOwnershipTests
     [Fact]
     public async Task Canonical_tab_groups_keep_guid_membership_order_name_and_collapse_state_through_operations()
     {
-        var session = new TabSessionFixture(new([], null) { Groups = [] });
-        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile",
+        var first = Guid.NewGuid(); var second = Guid.NewGuid(); var third = Guid.NewGuid();
+        var session = new TabSessionFixture(new BrowseTabSessionProjection([
+            new(first, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(second, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(third, "Third", "https://third.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
+        ], third) { Groups = [] });
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile-a",
             tabSessionPersistence: session);
-        var first = (await chrome.NewTabAsync(false)).SelectedTabId;
-        var second = (await chrome.NewTabAsync(false)).SelectedTabId;
-        var third = (await chrome.NewTabAsync(false)).SelectedTabId;
         await chrome.CreateTabGroupAsync("Research");
         var group = Assert.Single(chrome.State.Groups);
         var stableId = group.Id;
@@ -31,6 +33,7 @@ public sealed partial class BrowseNativeOwnershipTests
         Assert.Equal("Project notes", Assert.Single(chrome.State.Groups).Name);
         Assert.True(Assert.Single(chrome.State.Groups).IsCollapsed);
         Assert.Equal(new[] { first, second, third }, Assert.Single(chrome.State.Groups).OrderedTabIds);
+        Assert.Equal("profile-b", chrome.State.Tabs.Single(tab => tab.Id == third).ProfileId);
         Assert.All(chrome.State.Tabs.Where(tab => tab.GroupId == stableId), tab =>
         { Assert.Equal("Project notes", tab.GroupName); Assert.True(tab.IsGroupCollapsed); });
         Assert.Equal(new[] { first, second, third }, session.Saves[^1].Groups!.Single().OrderedTabIds);
