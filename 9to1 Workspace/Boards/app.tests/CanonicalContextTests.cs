@@ -25,7 +25,7 @@ public sealed class CanonicalContextTests
             loader.SetBindingContext(vm); loader.SetActionDispatcher(vm);
             var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
             Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
-            var loadedRoot = Assert.IsType<Control>(root);
+            var loadedRoot = Assert.IsAssignableFrom<Control>(root);
             loader.WireBindings(loadedRoot);
             vm.Attach(loadedRoot);
             var controls = loadedRoot.GetLogicalDescendants().OfType<Control>().ToArray();
