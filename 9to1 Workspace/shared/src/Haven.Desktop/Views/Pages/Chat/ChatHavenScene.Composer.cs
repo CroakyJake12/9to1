@@ -24,6 +24,9 @@ internal sealed partial class ChatHavenScene
         public bool HasAdd { get; set; } = true;
         public bool CanStop => ActiveTask is { } task ? task.CanStop : _scene._isSending;
         public bool CanSteer => ActiveTask?.CanSteer == true;
+        public bool CanResume => ActiveTask?.CanResume == true;
+        public ValueTask Resume() => ActiveTask is { CanResume: true } task ? task.Resume() :
+            ValueTask.FromException(new InvalidOperationException("This task has no available original continuation."));
         public bool CanQueue => ActiveTask is { } task ? task.CanQueue :
             _scene._isSending && !_scene._safetyLocked && !string.IsNullOrWhiteSpace(_scene.Input.Text);
         public string StopAccessibleName => ActiveTask is null ? "Stop current response" : "Stop task";

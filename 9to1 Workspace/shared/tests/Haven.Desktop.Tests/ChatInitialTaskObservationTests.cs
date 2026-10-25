@@ -2,6 +2,8 @@ using System.Reflection;
 using Haven.Application;
 using Haven.Core;
 using Xunit;
+using Haven.Desktop.Services;
+using Haven.Desktop.Views.Pages.Tasks;
 
 namespace Haven.Desktop.Tests;
 
@@ -9,6 +11,86 @@ namespace Haven.Desktop.Tests;
 /// catalogue, repositories and transport are controlled; no installed model/account/provider acceptance.</summary>
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [Fact]
+    public async Task Same_initial_issuer_resume_rechecks_revision_and_observer_retirement_keeps_the_same_producer_owned()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var conversation = await PersistInitialTaskConversationAsync(rig);
+        var initial = await StartInitialTaskObservationAsync(rig.Service, rig, conversation, token);
+        var events = new List<ChatStreamEvent>();
+        await foreach (var value in initial.ObserveOriginalEventsAsync(token)) events.Add(value);
+        await initial.WaitForOriginalObservationAsync(token);
+        await initial.DetachAndDrainAsync();
+        var original = (await rig.Tasks.GetByContextAsync(conversation.Id, token))!;
+        var request = Assert.Single(events, value => value.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(request.Id, token);
+        var controls = Assert.IsType<TaskRunOriginalRunControlAvailability>(await rig.Service.GetObservedTaskComposerControlsAsync(initial, token));
+        Assert.True(controls.CanResumeUnstartedOriginal);
+        var stale = controls with { CanonicalTaskContext = controls.CanonicalTaskContext with { PersistenceRevision = controls.CanonicalTaskContext.PersistenceRevision + 1 } };
+        await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Service.StartObservedTaskComposerResumeAsync(initial, stale, token));
+        Assert.Equal(original.Attempts.Count, (await rig.Tasks.GetAsync(original.TaskId, token))!.Attempts.Count);
+        var copied = (TaskRunOriginalInitialChatObservationLease)typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(initial, null)!;
+        Assert.Throws<UnauthorizedAccessException>(() => rig.Service.GetObservedTaskComposerControlsAsync(copied, token));
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var held = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.Client.RunApprovedOwnedFrame = true;
+        CancellationToken actualProducerToken = default;
+        rig.Capture.ApprovedProviderBody = actual => { actualProducerToken = actual; entered.TrySetResult(); return held.Task; };
+        SpaceOriginalRunResumeObservation? observer = null;
+        Task? childClose = null, close = null, producer = null;
+        var acquired = new TaskCompletionSource<TaskRunOriginalResumeObservationLease>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var retiring = false;
+        var parent = new DesktopOriginalWorkLifetime(() =>
+        {
+            retiring = true;
+            observer!.RequestRetirement(); childClose = observer.CloseAndDrainAsync(); return childClose;
+        }, () => Task.CompletedTask);
+        var observing = parent.RunAsync(async owner =>
+        {
+            observer = new(actual => rig.Service.IsIssuedObservedTaskComposerResume(initial, actual),
+                () => rig.Service.DemandExternalObservedTaskComposerJoin(initial), owner,
+                original.TaskId, original.ExecutionId, original.ContextId,
+                () => rig.Service.StartObservedTaskComposerResumeAsync(initial, controls, token), () => retiring);
+            observer.BeginOriginalAcquisition();
+            acquired.SetResult((await owner.AwaitAsync(observer.ActualAcquisition))!);
+            _ = await owner.AwaitAsync(observer.ActualObservation);
+        });
+        try
+        {
+            await entered.Task.WaitAsync(token);
+            var lease = await acquired.Task.WaitAsync(token);
+            Assert.True(rig.Service.IsIssuedObservedTaskComposerResume(initial, lease));
+            producer = ActualHostedProducer(lease);
+            close = parent.CloseAndDrainAsync();
+            await close.WaitAsync(token);
+            await observing.WaitAsync(token);
+            Assert.True(childClose!.IsCompletedSuccessfully);
+            Assert.False(producer.IsCompleted);
+            Assert.False(actualProducerToken.IsCancellationRequested);
+            Assert.False(held.Task.IsCompleted);
+            Assert.Equal(TaskRunOriginalResumeObservationDisposition.ObservationDetached, (await lease.WaitAsync()).Disposition);
+            var running = (await rig.Tasks.GetAsync(original.TaskId, token))!;
+            Assert.Equal(original.ExecutionId, running.ExecutionId);
+            Assert.Equal(original.ContextId, running.ContextId);
+            Assert.Equal(TaskExecutionLifecycle.Running, running.State);
+            held.SetResult(false);
+            await producer.WaitAsync(token);
+            var unsupported = Assert.IsType<TaskRunOriginalRunControlAvailability>(await rig.Service.GetObservedTaskComposerControlsAsync(initial, token));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => rig.Service.StartObservedTaskComposerResumeAsync(initial,
+                unsupported with { CanResumeUnstartedOriginal = true }, token));
+            Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User);
+        }
+        finally
+        {
+            held.TrySetResult(false);
+            if (producer is not null) _ = await Record.ExceptionAsync(() => producer);
+            if (observer is not null) observer.RequestRetirement();
+            _ = await Record.ExceptionAsync(() => close ??= parent.CloseAndDrainAsync());
+            _ = await Record.ExceptionAsync(() => observing);
+        }
+    }
+
     [Theory]
     [InlineData(TaskFollowUpMode.Queue)]
     [InlineData(TaskFollowUpMode.Steer)]

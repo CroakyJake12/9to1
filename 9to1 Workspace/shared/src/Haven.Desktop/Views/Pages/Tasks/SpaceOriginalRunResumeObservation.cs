@@ -10,7 +10,8 @@ namespace Haven.Desktop.Views.Pages.Tasks;
 internal sealed class SpaceOriginalRunResumeObservation
 {
     private readonly object _gate = new();
-    private readonly TaskExecutionCoordinator _source;
+    private readonly Func<TaskRunOriginalResumeObservationLease, bool> _isIssued;
+    private readonly Action _demandSourceJoin;
     private readonly DesktopOriginalWorkLifetime.Original _sceneOriginal;
     private readonly Func<Task<TaskRunOriginalResumeObservationLease>> _acquire;
     private readonly Guid _taskId, _runId, _contextId;
@@ -29,8 +30,15 @@ internal sealed class SpaceOriginalRunResumeObservation
     internal SpaceOriginalRunResumeObservation(TaskExecutionCoordinator source,
         DesktopOriginalWorkLifetime.Original sceneOriginal, Guid taskId, Guid runId, Guid contextId,
         Func<Task<TaskRunOriginalResumeObservationLease>> acquire, Func<bool> sceneIsRetiring)
+        : this((source ?? throw new ArgumentNullException(nameof(source))).IsIssuedOriginalRunResumeObservation,
+            source.DemandExternalOriginalProcessJoin, sceneOriginal, taskId, runId, contextId, acquire, sceneIsRetiring) { }
+
+    internal SpaceOriginalRunResumeObservation(Func<TaskRunOriginalResumeObservationLease, bool> isIssued,
+        Action demandSourceJoin, DesktopOriginalWorkLifetime.Original sceneOriginal, Guid taskId, Guid runId, Guid contextId,
+        Func<Task<TaskRunOriginalResumeObservationLease>> acquire, Func<bool> sceneIsRetiring)
     {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _isIssued = isIssued ?? throw new ArgumentNullException(nameof(isIssued));
+        _demandSourceJoin = demandSourceJoin ?? throw new ArgumentNullException(nameof(demandSourceJoin));
         _sceneOriginal = sceneOriginal ?? throw new ArgumentNullException(nameof(sceneOriginal));
         if (taskId == Guid.Empty || runId == Guid.Empty || contextId == Guid.Empty) throw new ArgumentException("Retain the original Task/Run/context identities.");
         (_taskId, _runId, _contextId) = (taskId, runId, contextId);
@@ -43,6 +51,7 @@ internal sealed class SpaceOriginalRunResumeObservation
         ActualObservation = ObserveOriginalAsync();
     }
 
+    internal Task<TaskRunOriginalResumeObservationLease?> ActualAcquisition => _actualAcquisition;
     internal Task<TaskRunOriginalResumeObservationResult?> ActualObservation { get; }
     internal Task? OriginalClose => _retirement.OriginalClose;
     internal bool CanPruneHealthy
@@ -143,7 +152,7 @@ internal sealed class SpaceOriginalRunResumeObservation
     private void DemandIssued(TaskRunOriginalResumeObservationLease actualLease)
     {
         ArgumentNullException.ThrowIfNull(actualLease);
-        if (!_source.IsIssuedOriginalRunResumeObservation(actualLease))
+        if (!_isIssued(actualLease))
             throw new InvalidOperationException("The SAME Task coordinator did not issue this original observation.");
         DemandContext(actualLease.CanonicalTaskContext);
     }
@@ -247,7 +256,7 @@ internal sealed class SpaceOriginalRunResumeObservation
         // detach originals; unrelated inherited business ancestry is no join.
         bool sourceAcquisitionPending;
         lock (_gate) sourceAcquisitionPending = _actualSourceFactoryEntered && !_actualAcquisition.IsCompleted;
-        if (sourceAcquisitionPending) _source.DemandExternalOriginalProcessJoin();
+        if (sourceAcquisitionPending) _demandSourceJoin();
     }
     internal Task CloseAndDrainAsync()
     {
