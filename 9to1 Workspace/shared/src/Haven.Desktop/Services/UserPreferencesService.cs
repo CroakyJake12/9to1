@@ -60,6 +60,13 @@ public sealed record HavenPreferenceSnapshot(
     PermissionMode BrowserPermission,
     PermissionMode ComputerPermission);
 
+/// <summary>How a Space submits follow-up work while a task is active.</summary>
+public enum SpaceSubmitMode
+{
+    Steer = 1,
+    Queue = 2
+}
+
 /// <summary>
 /// Represents user preferences service and keeps its related state and behavior together.
 /// </summary>
@@ -572,6 +579,41 @@ public sealed partial class UserPreferencesService
         Save();
     }
 
+    /// <summary>Returns this Space's saved active-task submit mode. An unsaved Research Space defaults
+    /// to Steer; an unsaved non-Research Space returns null so its existing DEC-006 default remains in force.</summary>
+    public SpaceSubmitMode? GetSpaceSubmitMode(Guid spaceId, bool isResearch)
+    {
+        if (spaceId == Guid.Empty) throw new ArgumentException("A stable Space ID is required.", nameof(spaceId));
+        if (_preferences.SpaceSubmitModes is { } modes && modes.TryGetValue(spaceId, out var saved) && Enum.IsDefined(saved))
+            return saved;
+        return isResearch ? SpaceSubmitMode.Steer : null;
+    }
+
+    /// <summary>Persists one typed submit-mode override under the stable Space ID.</summary>
+    public void SetSpaceSubmitMode(Guid spaceId, SpaceSubmitMode mode)
+    {
+        if (spaceId == Guid.Empty) throw new ArgumentException("A stable Space ID is required.", nameof(spaceId));
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unsupported Space submit mode.");
+        var modes = _preferences.SpaceSubmitModes is { } existing
+            ? new Dictionary<Guid, SpaceSubmitMode>(existing)
+            : [];
+        modes[spaceId] = mode;
+        _preferences = _preferences with { SpaceSubmitModes = modes };
+        Save();
+    }
+
+    /// <summary>Removes one saved Space override so the applicable Research/DEC-006 default resumes.</summary>
+    public bool ClearSpaceSubmitMode(Guid spaceId)
+    {
+        if (spaceId == Guid.Empty) throw new ArgumentException("A stable Space ID is required.", nameof(spaceId));
+        if (_preferences.SpaceSubmitModes is not { } existing || !existing.ContainsKey(spaceId)) return false;
+        var modes = new Dictionary<Guid, SpaceSubmitMode>(existing);
+        modes.Remove(spaceId);
+        _preferences = _preferences with { SpaceSubmitModes = modes };
+        Save();
+        return true;
+    }
+
     /// <summary>Persists a registry key without deleting it when that app is temporarily unavailable.</summary>
     public void SetDefaultTabAppKey(string? appKey)
     {
@@ -788,6 +830,8 @@ public sealed partial class UserPreferencesService
         /// Gets or updates default effort, the bindable or domain state represented by this property.
         /// </summary>
         public string DefaultEffort { get; init; } = EffortLevel.Medium.ToString();
+        /// <summary>Per-Space active-task submit overrides; missing entries retain the relevant default.</summary>
+        public Dictionary<Guid, SpaceSubmitMode> SpaceSubmitModes { get; init; } = [];
         /// <summary>
         /// Gets or updates auto switch compatible models, the bindable or domain state represented by this property.
         /// </summary>
