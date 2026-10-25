@@ -66,7 +66,8 @@
               <Button Type="Menu Item" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" Interactive="{Binding CanRetryBoardCreationSettlement}" AccessibleName="Retry finishing the created Board save" />
               <Button Type="Menu Item" Content="Check saved Board" Action="CheckSavedBoard" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
               <Button Type="Menu Item" Content="Open saved Board" Action="OpenRecordedBoard" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
-              <Button Type="Menu Item" Content="Canvas (coming later)" Interactive="False" AccessibleName="Canvas unavailable, coming later" AccessibleDescription="Canvas is not available in this Boards host yet." />
+              <Button Type="Menu Item" Content="Attach existing Canvas…" Action="AddCanvasPage" Interactive="{Binding CanAddCanvasPage}" AccessibleName="Attach an existing Canvas as a page" />
+              <Button Type="Menu Item" Content="New Canvas…" Action="CreateCanvasPage" Interactive="{Binding CanAddCanvasPage}" AccessibleName="Create a Canvas as a page" />
               <Button Type="Menu Item" Content="Section" Action="AddSection" AccessibleName="Create a section" />
             </Button>
           </Container>
