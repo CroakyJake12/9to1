@@ -109,6 +109,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
     {
         if (!IsIssuedOriginalGraphPublicationRecovery(sameRecovery) || sameRecovery is not GraphPublicationRecovery recovery)
             throw new UnauthorizedAccessException("Refresh the actual protected Home publication recovery observation.");
+        var creationGraphs = _creationGraphs ?? throw new InvalidOperationException("The original Home graph recovery owner is unavailable.");
         var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
         return Admit(source, async () =>
         {
@@ -122,7 +123,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
                 throw new UnauthorizedAccessException("Select the exact current Automation row used to inspect this durable Home publication.");
             await source.Read(() => RevalidateOriginalSavedGraphReadWithinSourceAsync(recovery.Read,
                 source.Run, source.Retain, token)).ConfigureAwait(false);
-            if (!await source.Read(() => _creationGraphs!.IsPublishedSavedCurrentAsync(recovery.Publication, token)).ConfigureAwait(false))
+            if (!await source.Read(() => creationGraphs.IsPublishedSavedCurrentAsync(recovery.Publication, token)).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The durable Home publication is no longer current; no binding review was started.");
             var snapshot = await ReadSnapshotAsync(recovery.Read.Actor, recovery.Read.OriginalStoreIdentity,
                 recovery.AutomationId, RawText(recovery.Read.Selection.Row.RetainedProtectedDescriptors, "id"),
@@ -145,7 +146,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             await source.JoinAllAsync().ConfigureAwait(false);
             var intent = new Intent(this, recovery.Read.Selection, kind, Guid.NewGuid(), snapshot, proposed: proposed,
                 graphPublication: new(recovery.Publication));
-            source.Run(() => { _intents.Add(intent, intent); _creationGraphs.BindPublishedSavedIntent(intent, recovery.Publication); });
+            source.Run(() => { _intents.Add(intent, intent); creationGraphs.BindPublishedSavedIntent(intent, recovery.Publication); });
             var acknowledgment = await source.Read(() => CommitOriginalChangeWithinSourceAsync(intent,
                 source.Run, source.Retain, token)).ConfigureAwait(false);
             if (!_commits.TryGetValue(intent, out var commit) || commit.Atomic is not { } atomic ||
