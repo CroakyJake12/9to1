@@ -59,7 +59,7 @@ internal sealed partial class OriginalSpaceRequestPolicySource
 
     private async Task<(OriginalSpacePolicySnapshot Snapshot, ContextCustody? Custody)> CaptureContextAsync(
         Owners owners, Authority authority, Conversation conversation, OriginalSpacePolicySnapshot policy,
-        CloudflareOriginalTaskLedger originals, CancellationToken token)
+        OriginalSpaceContextBudget budget, CloudflareOriginalTaskLedger originals, CancellationToken token)
     {
         if (!SpaceRequestPolicyConstraints.RequiresTypedContext(policy.Policy)) return (policy, null);
         var current = await originals.AwaitAsync(originals.Invoke(() => owners.Spaces.ReadExistingAsync(policy.Lineage.SpaceId, token))).ConfigureAwait(false);
@@ -71,31 +71,34 @@ internal sealed partial class OriginalSpaceRequestPolicySource
             if (_contextFailures.Count >= 64)
                 throw Block("SPACE_CONTEXT_RECOVERY_REQUIRED", "Retained original context failures need recovery before another protected read.");
         var configuration = BuildCanonicalConfiguration(current);
-        var available = policy.Policy.Sources.Where(reference => reference.IncludedAutomatically).ToArray();
-        // MaximumRetrievedItems counts selected external context objects, not characters,
-        // configuration or the user's current prompt. No unsupported source is opened.
-        var requested = available.Take(policy.Policy.Context.MaximumRetrievedItems ?? available.Length).ToArray();
-        if (requested.Length > 32) throw Block("SPACE_CONTEXT_ITEM_BOUND", "This original source supports at most 32 configured context items per request. Set a smaller retrieval limit.");
+        // The configured retrieval limit and the request's measured byte allocation are
+        // separate. All selection decisions retain their original stable source identity.
+        var collection = new OriginalSpaceContextCollection(current.Id, configuration, policy.Policy.Sources,
+            policy.Policy.Context.MaximumRetrievedItems, budget);
         var custody = new ContextCustody();
         try { return await custody.WithinAsync(originals, async () =>
         {
-            var items = new List<OriginalSpaceContextItem>();
-            foreach (var reference in requested)
+            foreach (var reference in collection.RequestedSources)
             {
                 await DemandAuthorityAsync(owners, authority, originals, token).ConfigureAwait(false);
                 if (reference.Kind != SpaceContextReferenceKind.BoardPage || reference.OwnerAppId != "boards" ||
                     !Guid.TryParseExact(reference.CanonicalEntityId, "D", out var id) || id == Guid.Empty ||
                     reference.CanonicalEntityId != id.ToString("D") ||
                     reference.Permission is not (SpaceContextPermission.Read or SpaceContextPermission.ReadWrite))
-                    throw Block("SPACE_CONTEXT_SOURCE_OWNER_UNAVAILABLE", "This configured source needs its genuine owning-app body-read adapter. Only canonical Boards notebook IDs are supported here; no path or artifact metadata was treated as content.");
+                {
+                    // No IO or metadata-as-content substitute for an unsupported owner.
+                    // The typed omission remains inspectable and the model is told that
+                    // the source set is incomplete. Permission/authority read failures
+                    // below still block the whole dispatch rather than becoming omissions.
+                    collection.OmitUnavailable(reference);
+                    continue;
+                }
                 var item = await ReadBoardsContextAsync(owners, authority, conversation, reference, id, custody, originals, token).ConfigureAwait(false);
-                items.Add(item);
-                if (items.Sum(value => (long)value.Text.Length) + configuration.Length > 131_072)
-                    throw Block("SPACE_CONTEXT_TEXT_BOUND", "The reviewed source bodies exceed this request's context bound. Reduce the source set; no content was silently truncated.");
+                collection.TryInclude(item); // Whole body or an explicit byte-budget omission; never an unlabeled excerpt.
             }
             // Current selection has no qualified explicit input on this route yet. In
             // particular, DO NOT query the foreground OS while the composer has focus.
-            var capture = new OriginalSpaceCapturedContext(current.Id, configuration, items, available.Length - requested.Length);
+            var capture = collection.Complete();
             var snapshot = new OriginalSpacePolicySnapshot(policy.Policy, policy.Lineage, capture);
             capture.ValidateAgainst(snapshot);
             await DemandAuthorityAsync(owners, authority, originals, token).ConfigureAwait(false);

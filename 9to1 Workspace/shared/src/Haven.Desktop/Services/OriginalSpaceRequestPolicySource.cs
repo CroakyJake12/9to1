@@ -27,6 +27,10 @@ internal sealed partial class OriginalSpaceRequestPolicySource(IServiceProvider 
     }
 
     public Task<IOriginalSpaceRequestPolicyInput> CaptureAsync(Conversation conversation, Action<Action> acquireOriginal, CancellationToken token) =>
+        CaptureAsync(conversation, OriginalSpaceContextBudget.Default, acquireOriginal, token);
+
+    public Task<IOriginalSpaceRequestPolicyInput> CaptureAsync(Conversation conversation, OriginalSpaceContextBudget budget,
+        Action<Action> acquireOriginal, CancellationToken token) =>
         Run(acquireOriginal, async originals =>
         {
             if (conversation.Id == Guid.Empty || conversation.SpaceId is not { } id || id == Guid.Empty)
@@ -36,7 +40,7 @@ internal sealed partial class OriginalSpaceRequestPolicySource(IServiceProvider 
             var snapshot = await ReadPolicyAsync(owners, id, originals, token).ConfigureAwait(false);
             await DemandAuthorityAsync(owners, authority, originals, token).ConfigureAwait(false);
             await DemandVersionPinsAsync(snapshot, originals, token).ConfigureAwait(false);
-            var context = await CaptureContextAsync(owners, authority, conversation, snapshot, originals, token).ConfigureAwait(false);
+            var context = await CaptureContextAsync(owners, authority, conversation, snapshot, budget, originals, token).ConfigureAwait(false);
             await DemandAuthorityAsync(owners, authority, originals, token).ConfigureAwait(false);
             return (IOriginalSpaceRequestPolicyInput)new Input(this, owners, authority, conversation.Id, id, context.Snapshot, context.Custody);
         });

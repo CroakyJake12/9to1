@@ -122,6 +122,139 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Equal("{\"Temperature\":0.7,\"ContextLimit\":32768,\"ActionLimit\":24}", JsonSerializer.Serialize(new GenerationOptions()));
     }
 
+    [Fact]
+    public async Task More_than_32_small_reviewed_sources_reach_the_actual_transport_with_stable_ids()
+    {
+        var fixture = CollectionFixture(64, new(131_072));
+        foreach (var reference in fixture.Collection.RequestedSources)
+            Assert.True(fixture.Collection.TryInclude(Body(reference, "reviewed body " + reference.ContextId)));
+        var context = fixture.Collection.Complete();
+        Assert.Equal(64, context.Items.Count);
+        Assert.Equal(0, context.OmittedSourceCount);
+        var snapshot = new OriginalSpacePolicySnapshot(fixture.Policy, fixture.Lineage, context);
+        var source = new ContextPolicySource(snapshot);
+        var rig = new ContextRig(source);
+        await rig.SendAsync(new() { ContextLimit = 262_144 });
+        var request = Assert.Single(rig.Transport.Requests);
+        Assert.Equal(131_072, source.RequestedBudget!.MaximumUtf8Bytes);
+        Assert.All(context.Items, row => Assert.Contains(row.ContextId.ToString(), request.SystemPrompt ?? "", StringComparison.Ordinal));
+        Assert.Equal(context.Sha256, request.Options!.RequestedSpaceContextSha256);
+    }
+
+    [Fact]
+    public void Request_byte_budget_omits_a_whole_large_source_and_still_admits_a_later_small_source()
+    {
+        var fixture = CollectionFixture(3, new(2_400));
+        var sources = fixture.Collection.RequestedSources;
+        Assert.True(fixture.Collection.TryInclude(Body(sources[0], "first")));
+        Assert.False(fixture.Collection.TryInclude(Body(sources[1], new string('x', 4_000))));
+        Assert.True(fixture.Collection.TryInclude(Body(sources[2], "last")));
+        var context = fixture.Collection.Complete();
+        Assert.Equal(new[] { sources[0].ContextId, sources[2].ContextId }, context.Items.Select(row => row.ContextId));
+        var omitted = Assert.Single(context.Omissions);
+        Assert.Equal(sources[1].ContextId, omitted.ContextId);
+        Assert.Equal(OriginalSpaceContextOmissionReason.RequestByteBudget, omitted.Reason);
+        Assert.Equal(1, context.OmittedSourceCount);
+        Assert.Equal(1, context.OmittedByByteBudgetCount);
+        Assert.True(context.RegisteredByteCount <= 2_400);
+        Assert.DoesNotContain(new string('x', 100), context.BuildRegisteredContext(true), StringComparison.Ordinal);
+        Assert.Contains("1 source(s) omitted", context.Notice, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Encoded_unicode_and_json_metadata_count_toward_the_actual_byte_allocation()
+    {
+        var fixture = CollectionFixture(1, new(2_000));
+        var reference = Assert.Single(fixture.Collection.RequestedSources);
+        var text = new string('漢', 350);
+        Assert.True(text.Length < 2_000);
+        Assert.False(fixture.Collection.TryInclude(Body(reference, text)));
+        var context = fixture.Collection.Complete();
+        Assert.Empty(context.Items);
+        Assert.Equal(OriginalSpaceContextOmissionReason.RequestByteBudget, Assert.Single(context.Omissions).Reason);
+    }
+
+    [Fact]
+    public void Item_limit_and_unavailable_owner_have_truthful_separate_outcomes_without_placeholder_bodies()
+    {
+        var fixture = CollectionFixture(5, new(8_000), maximum: 2);
+        Assert.Equal(2, fixture.Collection.RequestedSources.Count);
+        Assert.Equal(3, fixture.Collection.OmittedByItemLimit);
+        fixture.Collection.OmitUnavailable(fixture.Collection.RequestedSources[0]);
+        Assert.True(fixture.Collection.TryInclude(Body(fixture.Collection.RequestedSources[1], "real body")));
+        var context = fixture.Collection.Complete();
+        Assert.Single(context.Items);
+        Assert.Equal(4, context.OmittedSourceCount);
+        Assert.Equal(3, context.OmittedByItemLimitCount);
+        Assert.Equal(1, context.UnavailableSourceCount);
+        Assert.Equal(OriginalSpaceContextOmissionReason.SourceOwnerUnavailable, Assert.Single(context.Omissions).Reason);
+        context.ValidateAgainst(new(fixture.Policy, fixture.Lineage, context));
+    }
+
+    [Fact]
+    public void Incomplete_duplicate_and_foreign_body_outcomes_cannot_complete_a_context_capture()
+    {
+        var fixture = CollectionFixture(2, new(8_000));
+        Assert.Throws<InvalidOperationException>(() => fixture.Collection.Complete());
+        var body = Body(fixture.Collection.RequestedSources[0], "first");
+        Assert.Throws<InvalidOperationException>(() => fixture.Collection.TryInclude(body with { CanonicalEntityId = Guid.NewGuid().ToString("D") }));
+        Assert.True(fixture.Collection.TryInclude(body));
+        Assert.Throws<InvalidOperationException>(() => fixture.Collection.TryInclude(body));
+        fixture.Collection.OmitUnavailable(fixture.Collection.RequestedSources[1]);
+        Assert.Single(fixture.Collection.Complete().Items);
+    }
+
+    [Fact]
+    public void Configuration_over_the_request_allocation_is_a_structured_refusal_before_any_source_read()
+    {
+        var error = Assert.Throws<SpaceRequestPolicyBlockedException>(() =>
+            new OriginalSpaceContextCollection(Guid.NewGuid(), new string('x', 3_000), [], null, new(2_000)));
+        Assert.Equal("SPACE_CONTEXT_REQUEST_BUDGET_EXCEEDED", error.Code);
+    }
+
+    [Fact]
+    public async Task Legacy_capture_over_a_smaller_request_allocation_is_blocked_before_transport()
+    {
+        var snapshot = ContextSnapshot(new string('x', 8_000));
+        var rig = new ContextRig(new ContextPolicySource(snapshot));
+        var error = await Record.ExceptionAsync(() => rig.SendAsync(new() { ContextLimit = 4_096 }));
+        Assert.NotNull(error);
+        Assert.True(ContainsSpaceCode(error!, "SPACE_CONTEXT_REQUEST_BUDGET_EXCEEDED"));
+        Assert.Empty(rig.Transport.Requests);
+    }
+
+    [Fact]
+    public void Legacy_capture_digest_stays_identical_and_new_capture_binds_omission_decisions()
+    {
+        var old = ContextSnapshot("same body").CapturedContext!;
+        var expected = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(
+            new { old.SpaceId, old.Configuration, old.Items, old.OmittedSourceCount }))).ToLowerInvariant();
+        Assert.Equal(expected, old.Sha256);
+        var fixture = CollectionFixture(2, new(8_000));
+        fixture.Collection.OmitUnavailable(fixture.Collection.RequestedSources[0]);
+        fixture.Collection.TryInclude(Body(fixture.Collection.RequestedSources[1], "same body"));
+        var context = fixture.Collection.Complete();
+        var changed = new OriginalSpaceCapturedContext(context.SpaceId, context.Configuration, context.Items,
+            context.OmittedSourceCount, context.Budget,
+            [context.Omissions[0] with { Reason = OriginalSpaceContextOmissionReason.RequestByteBudget }]);
+        Assert.NotEqual(context.Sha256, changed.Sha256);
+    }
+
+    private static (OriginalSpaceContextCollection Collection, EffectiveSpacePolicy Policy, OriginalSpacePolicyLineage Lineage)
+        CollectionFixture(int count, OriginalSpaceContextBudget budget, int? maximum = null)
+    {
+        var id = Guid.NewGuid();
+        var references = Enumerable.Range(0, count).Select(_ => new SpaceContextReference(Guid.NewGuid(),
+            SpaceContextReferenceKind.BoardPage, "boards", Guid.NewGuid().ToString("D"), "7",
+            SpaceContextPermission.Read, SpaceContextIndexState.Ready, true, DateTimeOffset.UtcNow)).ToArray();
+        var policy = new EffectiveSpacePolicy(id, new(null), new(SpaceWebAccessPolicy.Disabled, true, false, maximum),
+            new([SpaceMemoryScope.Conversation]), [], references, [id]);
+        return (new(id, "Actual Space configuration", references, maximum, budget), policy, new(id, [new(id, 1)]));
+    }
+    private static OriginalSpaceContextItem Body(SpaceContextReference reference, string text) =>
+        new(reference.ContextId, OriginalSpaceContextItemKind.ConfiguredSource, reference.OwnerAppId,
+            reference.CanonicalEntityId, reference.RevisionToken!, "Actual source", text);
+
     private static OriginalSpacePolicySnapshot ContextSnapshot(string text, bool sourceOnly = false,
         bool includeSelection = false, int? maximum = null)
     {
@@ -141,6 +274,10 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         internal OriginalSpacePolicySnapshot Snapshot = snapshot;
         internal int Validations;
         internal bool Revoked;
+        internal OriginalSpaceContextBudget? RequestedBudget;
+        public Task<IOriginalSpaceRequestPolicyInput> CaptureAsync(Conversation conversation, OriginalSpaceContextBudget budget,
+            Action<Action> acquire, CancellationToken token)
+        { RequestedBudget = budget; return CaptureAsync(conversation, acquire, token); }
         public Task<IOriginalSpaceRequestPolicyInput> CaptureAsync(Conversation conversation, Action<Action> acquire, CancellationToken token) =>
             Task.FromResult<IOriginalSpaceRequestPolicyInput>(new Input(this, conversation.Id, Snapshot));
         public async Task<OriginalSpacePolicySnapshot> ReadAsync(IOriginalSpaceRequestPolicyInput input, Conversation conversation,
