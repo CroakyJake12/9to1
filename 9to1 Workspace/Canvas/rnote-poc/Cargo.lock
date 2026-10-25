@@ -319,7 +319,9 @@ dependencies = [
  "nalgebra 0.34.2",
  "rnote-compose",
  "rnote-engine",
+ "roxmltree 0.21.1",
  "serde_json",
+ "slotmap",
 ]
 
 [[package]]

@@ -64,6 +64,11 @@ typedef struct {
 } CakeCanvasViewport;
 
 uint32_t cake_canvas_abi_version(void);
+/* ABI 3 describes the existing layouts/core bridge, not full Canvas acceptance.
+ * These feature families expose selection export and read-only targeting only;
+ * they do NOT promise keyed mutation or detached split-erase support. */
+uint32_t cake_canvas_selection_api_version(void);
+uint32_t cake_canvas_quick_erase_api_version(void);
 void* cake_canvas_engine_new(void);
 void cake_canvas_engine_free(void* handle);
 
@@ -71,6 +76,43 @@ CakeCanvasStatus cake_canvas_engine_from_rnote(
     const uint8_t* data,
     size_t len,
     void** out_handle
+);
+
+/* Real donor Xournal++ import. Input is gzip-compressed .xopp; dpi is 1..2400.
+ * Compressed and expanded input are bounded to 256 MiB. Failure clears
+ * out_handle; success transfers one owned engine, released by engine_free.
+ * Current admission is one page/unnamed layer, plain solid background, pen/image/
+ * text. Unsupported properties/entities/schema or failed conversions refuse the
+ * ENTIRE import. Plain background colour is preserved in the donor snapshot.
+ * Broader Xournal++ parity/compatibility reporting remains an acceptance gate. */
+CakeCanvasStatus cake_canvas_engine_from_xopp(
+    const uint8_t* data, size_t len, double dpi, void** out_handle
+);
+
+/* Each handle must be a live engine owned by this library; callers serialize
+ * access and release it once. All non-null pointers identify valid, correctly
+ * aligned caller-owned storage for the declared length. Foreign/stale pointers
+ * are outside this ABI's safety contract. Output buffers must be empty before a
+ * call. Successful nonempty buffers belong to the library; use buffer_release.
+ * Failure clears outputs. Reading/exporting an unfinished stroke is refused. */
+
+/* Packed native slotmap keys: exactly len/8 little-endian u64 values, at most
+ * one million. stroke_keys orders numerically; rendered_stroke_keys orders by
+ * genuine donor layer/chronology. Empty documents return a null, zero buffer. */
+CakeCanvasStatus cake_canvas_stroke_keys(const void* handle, CakeCanvasBuffer* out_buffer);
+CakeCanvasStatus cake_canvas_rendered_stroke_keys(const void* handle, CakeCanvasBuffer* out_buffer);
+
+/* Topmost donor hitbox at finite document coordinates. An ordinary miss is OK
+ * with *out_key == 0; this read does not delete content or change history. */
+CakeCanvasStatus cake_canvas_quick_erase_target(
+    const void* handle, double x, double y, uint64_t* out_key
+);
+
+/* A full-fidelity native .rnote containing exactly the requested live entities.
+ * Keys are a nonempty, unique, nonzero array of at most one million native u64
+ * values. Unknown/trashed keys fail; the original engine/history are untouched. */
+CakeCanvasStatus cake_canvas_export_selected_strokes(
+    const void* handle, const uint64_t* keys, size_t count, CakeCanvasBuffer* out_buffer
 );
 
 CakeCanvasStatus cake_canvas_set_stroke_tool(void* handle, uint32_t tool);
