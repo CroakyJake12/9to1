@@ -25,9 +25,23 @@ public sealed class CuiThemeRolePresentationTests
         var chosenPalette = CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, theme, "#168B4F", "app.boards");
         Assert.Equal(Color.Parse("#168B4F"), chosenPalette.Accent);
         Assert.NotEqual(defaultPalette.Accent, chosenPalette.Accent);
+        Assert.Null(chosenPalette.SurfaceAccent);
         foreach (var appearance in Enum.GetValues<CuiAppearance>())
-            Assert.Equal(CuiSurfacePaletteCatalog.For("Boards", appearance, theme, "#7026D9", "app.boards"),
-                CuiSurfacePaletteCatalog.For("Boards", appearance, theme, null, "app.boards"));
+        {
+            var explicitPurple = CuiSurfacePaletteCatalog.For("Boards", appearance, theme, "#7026D9", "app.boards");
+            var appDefault = CuiSurfacePaletteCatalog.For("Boards", appearance, theme, null, "app.boards");
+            Assert.Equal(explicitPurple.Accent, appDefault.Accent);
+            Assert.Equal(explicitPurple.AccentSecondary, appDefault.AccentSecondary);
+            Assert.Equal(explicitPurple.AccentStrong, appDefault.AccentStrong);
+            Assert.Equal(explicitPurple.AccentSoft, appDefault.AccentSoft);
+            Assert.Null(explicitPurple.SurfaceAccent);
+            if (theme == CuiTheme.Glow)
+            {
+                var tint = Assert.IsType<Color>(appDefault.SurfaceAccent);
+                Assert.True(tint.R > 112 && tint.B < 217);
+            }
+            else Assert.Null(appDefault.SurfaceAccent);
+        }
     }
 
     [Theory]

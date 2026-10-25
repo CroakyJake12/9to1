@@ -49,7 +49,8 @@ public sealed record CuiPalette(
     Color AccentBorder,
     Color Attention,
     Color AttentionBorder,
-    CuiTheme Theme = CuiTheme.Glow)
+    CuiTheme Theme = CuiTheme.Glow,
+    Color? SurfaceAccent = null)
 {
     /// <summary>Ink for an opaque primitive button, using existing palette roles only.</summary>
     public Color ButtonForeground => ResolveButtonForeground(Button);
@@ -172,9 +173,15 @@ public static class CuiSurfacePaletteCatalog
         var secondary = anchors?.Secondary ?? Color.Parse(hue.Secondary);
         var strong = anchors?.Strong ?? Color.Parse(hue.Strong);
         var soft = anchors?.Soft ?? Color.Parse(hue.Soft);
+        var appIdentity = CuiAppAccentCatalog.Find(owningAppId ?? surface)?.AppId;
+        // Boards' default Glow background is a muted red-violet. This is a
+        // surface identity, not an action accent or a saved user preference.
+        // Explicit user accents retain their complete existing derivation.
+        Color? surfaceAccent = theme == CuiTheme.Glow && appIdentity == "app.boards" && accentOverride is null
+            ? Blend(accent, Colors.Red, .18) : null;
         if (anchors is not null)
-            hue = hue with { Tide = Blend(Colors.White, accent, .28).ToString() };
-        var palette = Assemble(hue, appearance, theme, accent, secondary, strong, soft);
+            hue = hue with { Tide = Blend(Colors.White, surfaceAccent ?? accent, .28).ToString() };
+        var palette = Assemble(hue, appearance, theme, accent, secondary, strong, soft, surfaceAccent);
         return theme == CuiTheme.Glow ? palette : Express(palette, appearance);
     }
 
@@ -194,8 +201,10 @@ public static class CuiSurfacePaletteCatalog
         Color accent,
         Color secondary,
         Color strong,
-        Color soft)
+        Color soft,
+        Color? surfaceAccent)
     {
+        var surface = surfaceAccent ?? accent;
         if (appearance == CuiAppearance.SuperBright)
         {
             var superBrightTide = Blend(Colors.White, Color.Parse(hue.Tide), 0.62);
@@ -206,7 +215,7 @@ public static class CuiSurfacePaletteCatalog
                 Color.Parse("#FFFFFFFF"), Color.Parse("#FFF8FAF8"), Color.Parse("#FFF1F5F2"), Color.Parse("#FFE9F0EB"),
                 Color.Parse("#FFC8D2CA"), Color.Parse("#FFA9B7AC"), superBrightSoft, Blend(superBrightSoft, secondary, 0.28),
                 Blend(superBrightSoft, secondary, 0.48), WithAlpha(accent, 0xB8), WithAlpha(accent, 0x94),
-                Color.Parse("#FFFFF59B"), Color.Parse("#FFD7C92B"), theme);
+                Color.Parse("#FFFFF59B"), Color.Parse("#FFD7C92B"), theme, surfaceAccent);
         }
 
         if (appearance == CuiAppearance.Bright)
@@ -217,41 +226,41 @@ public static class CuiSurfacePaletteCatalog
                 Color.Parse("#F5FFFFFF"), Color.Parse("#EBFFFFFF"), Color.Parse("#FFF5F7F5"), Color.Parse("#FFF0F4F1"),
                 Color.Parse("#FFDDE4DE"), Color.Parse("#FFBFCAC1"), soft, Blend(soft, secondary, 0.24),
                 Blend(soft, secondary, 0.42), WithAlpha(accent, 0x99), WithAlpha(accent, 0x80),
-                Color.Parse("#FFFFF9A8"), Color.Parse("#FFE4DF52"), theme);
+                Color.Parse("#FFFFF9A8"), Color.Parse("#FFE4DF52"), theme, surfaceAccent);
         }
 
         if (appearance == CuiAppearance.Dark)
         {
-            var darkTide = Blend(Color.Parse("#FF0B0E17"), accent, 0.27);
+            var darkTide = Blend(Color.Parse("#FF0B0E17"), surface, 0.27);
             var darkSoft = Blend(Color.Parse("#FF171A2A"), accent, 0.22);
-            var darkPanel = Blend(Color.Parse("#FF161A2A"), accent, 0.09);
-            var darkPanel2 = Blend(Color.Parse("#FF1C2238"), accent, 0.14);
-            var darkPanel3 = Blend(Color.Parse("#FF232A45"), accent, 0.18);
-            var darkHover = Blend(Color.Parse("#FF2A3354"), accent, 0.22);
+            var darkPanel = Blend(Color.Parse("#FF161A2A"), surface, 0.09);
+            var darkPanel2 = Blend(Color.Parse("#FF1C2238"), surface, 0.14);
+            var darkPanel3 = Blend(Color.Parse("#FF232A45"), surface, 0.18);
+            var darkHover = Blend(Color.Parse("#FF2A3354"), surface, 0.22);
             return new CuiPalette(
                 Color.Parse("#FF0B0E17"), darkTide, secondary, accent, strong, darkSoft, Color.Parse("#FFFFFFFF"),
                 Color.Parse("#FFF8F8FC"), Color.Parse("#FFD5D7E4"), Color.Parse("#FFA7ABC0"), Color.Parse("#FF858BA4"),
                 WithAlpha(darkPanel, 0xF5), WithAlpha(darkPanel2, 0xF0), darkPanel3, darkHover,
                 Color.Parse("#FF323B5E"), Color.Parse("#FF505B82"), darkSoft, Blend(darkSoft, accent, 0.25),
                 Blend(darkSoft, accent, 0.45), WithAlpha(secondary, 0xCC), WithAlpha(secondary, 0xA0),
-                Color.Parse("#FF45451E"), Color.Parse("#FFB9B54C"), theme);
+                Color.Parse("#FF45451E"), Color.Parse("#FFB9B54C"), theme, surfaceAccent);
         }
 
         // SuperDark
         var superDarkBase = Color.Parse("#FF06090D");
-        var superDarkTide = Blend(Color.Parse("#FF0B0E18"), accent, 0.25);
+        var superDarkTide = Blend(Color.Parse("#FF0B0E18"), surface, 0.25);
         var superDarkSoft = Blend(Color.Parse("#FF121526"), accent, 0.20);
-        var superDarkPanel = Blend(Color.Parse("#FF0C0F1A"), accent, 0.10);
-        var superDarkPanel2 = Blend(Color.Parse("#FF121628"), accent, 0.15);
-        var superDarkPanel3 = Blend(Color.Parse("#FF191E34"), accent, 0.20);
-        var superDarkHover = Blend(Color.Parse("#FF222941"), accent, 0.24);
+        var superDarkPanel = Blend(Color.Parse("#FF0C0F1A"), surface, 0.10);
+        var superDarkPanel2 = Blend(Color.Parse("#FF121628"), surface, 0.15);
+        var superDarkPanel3 = Blend(Color.Parse("#FF191E34"), surface, 0.20);
+        var superDarkHover = Blend(Color.Parse("#FF222941"), surface, 0.24);
         return new CuiPalette(
             superDarkBase, superDarkTide, secondary, accent, strong, superDarkSoft, Color.Parse("#FF020705"),
             Color.Parse("#FFF9F9FD"), Color.Parse("#FFD6D8E6"), Color.Parse("#FFA9AEC4"), Color.Parse("#FF8990AA"),
             WithAlpha(superDarkPanel, 0xF5), WithAlpha(superDarkPanel2, 0xF5), superDarkPanel3, superDarkHover,
             Color.Parse("#FF2D3551"), Color.Parse("#FF4A5577"), superDarkSoft, Blend(superDarkSoft, accent, 0.22),
             Blend(superDarkSoft, accent, 0.40), WithAlpha(secondary, 0xD8), WithAlpha(secondary, 0xA8),
-            Color.Parse("#FF363611"), Color.Parse("#FFC9C343"), theme);
+            Color.Parse("#FF363611"), Color.Parse("#FFC9C343"), theme, surfaceAccent);
     }
 
     /// <summary>

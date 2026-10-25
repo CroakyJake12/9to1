@@ -363,10 +363,13 @@ public static class CuiThemeResourceApplier
         // Surface roles carry Glow's visible tonal gradients. Keep the solid
         // palette tokens as contrast/document-colour anchors; a surface does
         // not become a primary action and no outline or effect is introduced.
+        var accent = palette.SurfaceAccent ?? palette.Accent;
+        var strong = palette.SurfaceAccent is { } surface ? Blend(surface, Colors.Black, .25) : palette.AccentStrong;
+        var secondary = palette.SurfaceAccent is { } tint ? Blend(tint, Colors.White, .22) : palette.AccentSecondary;
         IBrush Surface(Color colour, double strength) => CreateGradientBrush(new(
-            Blend(colour, palette.AccentStrong, .025),
-            Blend(colour, palette.Accent, strength * .45),
-            Blend(colour, palette.AccentSecondary, strength),
+            Blend(colour, strong, .025),
+            Blend(colour, accent, strength * .45),
+            Blend(colour, secondary, strength),
             new RelativePoint(0, 0, RelativeUnit.Relative),
             new RelativePoint(1, 1, RelativeUnit.Relative)));
         resources["CuiShellMaterial"] = Surface(palette.TideBase, .09);
