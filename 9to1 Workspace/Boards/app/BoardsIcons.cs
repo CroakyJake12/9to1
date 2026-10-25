@@ -47,12 +47,14 @@ public static class BoardsIcons
     public const string Theme = "palette";
     public const string File = "file";
     public const string Info = "info";
+    public static IReadOnlyList<string> SectionIconChoices { get; } = Array.AsReadOnly(
+        new[] { "boards", "section", "folder", "file", "chat", "study", "calendar", "target", "bookmark", "shield", "play" });
 
-    public static Control Glyph(string glyph, double size = 14, string? accessibleName = null)
+    public static Control Glyph(string glyph, double size = 14, string? accessibleName = null, string? colorOverride = null)
     {
         var icon = new Image
         {
-            Source = BoardsCuiIconResolver.CreateIcon(glyph, BoardsCuiIconResolver.SemanticBrush(glyph)),
+            Source = BoardsCuiIconResolver.CreateIcon(glyph, BoardsCuiIconResolver.SemanticBrush(glyph, colorOverride: colorOverride)),
             Width = size,
             Height = size,
             Stretch = Avalonia.Media.Stretch.Uniform,
@@ -61,6 +63,7 @@ public static class BoardsIcons
         };
         if (!string.IsNullOrEmpty(accessibleName))
             Avalonia.Automation.AutomationProperties.SetName(icon, accessibleName);
+        BoardsCuiIconResolver.ObserveSemanticIcon(icon, glyph, colorOverride);
         return icon;
     }
 

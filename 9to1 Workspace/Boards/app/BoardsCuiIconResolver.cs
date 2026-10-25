@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Input;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Themes;
 using Haven.UI;
@@ -17,7 +18,8 @@ public static class BoardsCuiIconResolver
     private const string BoardsBrandResourceRoot = "CakeOS.Apps.Boards.Embedding.Assets.OwnerAppIcons.";
     private static readonly HashSet<string> FilledSilhouetteKeys = new(StringComparer.OrdinalIgnoreCase)
     {
-        "more", "grip", "section", "align-left", "align-center", "align-right", "bulleted-list",
+        "more", "grip", "section", "boards", "folder", "file", "chat", "study", "calendar",
+        "target", "bookmark", "shield", "play", "align-left", "align-center", "align-right", "bulleted-list",
     };
     private static readonly Dictionary<string, Bitmap> BoardsBrandBitmaps = new(StringComparer.Ordinal);
     private static readonly object BoardsBrandBitmapGate = new();
@@ -38,12 +40,15 @@ public static class BoardsCuiIconResolver
             throw new InvalidOperationException("A Boards catalog icon requires the scoped CUI text brush.");
         var key = source[5..];
         if (target is Image imageControl)
-            BoardsSemanticIconObservers.GetValue(imageControl, static control => new BoardsSemanticIconObserver(control)).Start(key);
+            ObserveSemanticIcon(imageControl, key);
         return CreateIcon(key, SemanticBrush(key, target));
     }
 
+    internal static void ObserveSemanticIcon(Image target, string key, string? colorOverride = null) =>
+        BoardsSemanticIconObservers.GetValue(target, static control => new BoardsSemanticIconObserver(control)).Start(key, colorOverride);
+
     /// <summary>Color an icon by its action meaning, using the live CUI palette and contrast state.</summary>
-    public static IBrush SemanticBrush(string key, Control? target = null)
+    public static IBrush SemanticBrush(string key, Control? target = null, string? colorOverride = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         var normalized = key.Trim().ToLowerInvariant();
@@ -67,13 +72,16 @@ public static class BoardsCuiIconResolver
             _ => "CuiTextBrush",
         };
         var palette = BoardsTheme.SharedPalette;
-        var background = BackgroundColor(target, palette.Panel2);
-        var desired = role == "BoardsDangerIconBrush"
+        var backgrounds = BackgroundColors(target, palette.Panel2);
+        var background = backgrounds[0];
+        var desired = colorOverride is not null
+            ? Color.Parse(colorOverride)
+            : role == "BoardsDangerIconBrush"
             ? Color.Parse(BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FFFF918A" : "#FFB3261E")
             : FindBrush(role, target) is { } brush
                 ? RepresentativeColor(brush, background)
                 : PaletteColor(normalized, palette);
-        return new SolidColorBrush(CuiContrast.EnsureForegroundContrast(desired, background, 3d));
+        return new SolidColorBrush(ContrastSafeColor(desired, backgrounds, 3d));
     }
 
     private static IBrush? FindBrush(string name, Control? target)
@@ -92,22 +100,57 @@ public static class BoardsCuiIconResolver
         return Application.Current?.TryGetResource("CuiHighContrast", null, out var global) == true && global is true;
     }
 
-    private static Color BackgroundColor(Control? target, Color fallback)
+    private static IReadOnlyList<Color> BackgroundColors(Control? target, Color fallback)
     {
-        return FindBrush("CuiPanel2Brush", target) is { } brush
-            ? RepresentativeColor(brush, fallback)
-            : fallback;
+        var colors = new List<Color>();
+        foreach (var resourceName in new[]
+                 {
+                     "CuiPanel2Brush", "CuiFloatingSurfaceMaterial", "CuiSurfaceMaterial",
+                     "CuiWorkspaceMaterial", "CuiShellMaterial"
+                 })
+        {
+            if (FindBrush(resourceName, target) is { } brush)
+                AddBrushColors(colors, brush);
+        }
+        if (colors.Count == 0) colors.Add(fallback);
+        return colors.Distinct().ToArray();
     }
 
     private static Color RepresentativeColor(IBrush brush, Color background)
     {
-        if (brush is SolidColorBrush solid) return solid.Color;
-        if (brush is GradientBrush gradient && gradient.GradientStops.Count > 0)
+        if (brush is ISolidColorBrush solid) return solid.Color;
+        if (brush is IGradientBrush gradient && gradient.GradientStops.Count > 0)
             return gradient.GradientStops
                 .Select(stop => stop.Color)
                 .OrderByDescending(color => CuiContrast.Ratio(color, background))
                 .First();
         return background;
+    }
+
+    private static void AddBrushColors(List<Color> colors, IBrush brush)
+    {
+        switch (brush)
+        {
+            case ISolidColorBrush solid:
+                colors.Add(solid.Color);
+                break;
+            case IGradientBrush gradient:
+                colors.AddRange(gradient.GradientStops.Select(stop => stop.Color));
+                break;
+        }
+    }
+
+    private static Color ContrastSafeColor(Color desired, IReadOnlyList<Color> backgrounds, double minimumRatio)
+    {
+        var candidates = new List<Color> { desired, Colors.Black, Colors.White };
+        candidates.AddRange(backgrounds.Select(background =>
+            CuiContrast.EnsureForegroundContrast(desired, background, minimumRatio)));
+        var best = candidates
+            .Distinct()
+            .Select(candidate => (Color: candidate, MinimumRatio: backgrounds.Min(background => CuiContrast.Ratio(candidate, background))))
+            .OrderByDescending(candidate => candidate.MinimumRatio)
+            .First();
+        return best.MinimumRatio >= minimumRatio ? best.Color : desired;
     }
 
     private static Color PaletteColor(string key, CuiPalette palette) => key switch
@@ -265,14 +308,17 @@ public static class BoardsCuiIconResolver
         private readonly Image _target;
         private readonly List<IDisposable> _subscriptions = [];
         private string _key = string.Empty;
+        private string? _colorOverride;
         private bool _started;
         private bool _attached;
+        private bool _observingEnabled;
 
         public BoardsSemanticIconObserver(Image target) => _target = target;
 
-        public void Start(string key)
+        public void Start(string key, string? colorOverride)
         {
             _key = key;
+            _colorOverride = colorOverride;
             if (!_started)
             {
                 _started = true;
@@ -291,6 +337,8 @@ public static class BoardsCuiIconResolver
             Detach();
             _attached = true;
             BoardsTheme.Changed += OnThemeChanged;
+            _target.PropertyChanged += OnTargetPropertyChanged;
+            _observingEnabled = true;
             foreach (var key in ResourceKeys)
                 _subscriptions.Add(_target.GetResourceObservable(key).Subscribe(this));
             Refresh();
@@ -301,7 +349,15 @@ public static class BoardsCuiIconResolver
             foreach (var subscription in _subscriptions) subscription.Dispose();
             _subscriptions.Clear();
             if (_attached) BoardsTheme.Changed -= OnThemeChanged;
+            if (_observingEnabled) _target.PropertyChanged -= OnTargetPropertyChanged;
+            _observingEnabled = false;
             _attached = false;
+        }
+
+        private void OnTargetPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs args)
+        {
+            if (ReferenceEquals(args.Property, InputElement.IsEffectivelyEnabledProperty))
+                Refresh();
         }
 
         private void OnThemeChanged() => Refresh();
@@ -320,7 +376,7 @@ public static class BoardsCuiIconResolver
         {
             try
             {
-                _target.Source = CreateIcon(_key, SemanticBrush(_key, _target));
+                _target.Source = CreateIcon(_key, SemanticBrush(_key, _target, _colorOverride));
             }
             catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
             {
@@ -377,7 +433,9 @@ public static class BoardsCuiIconResolver
         {
             Geometry = geometry,
             Brush = filledSilhouette ? brush : null,
-            Pen = filledSilhouette ? null : new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round),
+            // Keep the authored open details visible on filled silhouettes (for example the
+            // dividers in the Boards mark and the lines in the section glyph).
+            Pen = new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round),
         })
         {
             Viewbox = source.ViewBox is { } viewBox
