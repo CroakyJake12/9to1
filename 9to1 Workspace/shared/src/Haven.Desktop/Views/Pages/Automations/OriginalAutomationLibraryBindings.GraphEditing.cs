@@ -362,12 +362,19 @@ internal sealed partial class OriginalAutomationLibraryBindings
                     if (!_work.IsRetiring && epoch == _epoch)
                     {
                         _graphPublicationStatus = completed.Message;
-                        if (completed.Kind is CanonicalAutomationGraphPublicationCompletionKind.SavedDisabled or CanonicalAutomationGraphPublicationCompletionKind.ActiveGraphDisabled)
+                        if (completed.Kind is CanonicalAutomationGraphPublicationCompletionKind.SavedDisabled or
+                            CanonicalAutomationGraphPublicationCompletionKind.ActiveGraphDisabled or
+                            CanonicalAutomationGraphPublicationCompletionKind.GraphPublishedBindingPending)
                         {
-                            // Old SQL/library revisions are no longer selectable. A
-                            // fresh original READ is required before further edits.
+                            // The local editor and SQL/library selection are stale
+                            // after a durable Home publication, whether its binding
+                            // completed or needs a fresh recovery review. A fresh
+                            // original READ is required before further edits.
                             _epoch++; _issued.Clear(); _rows = []; _next = null; _currentPage = null; _creationRows = [];
-                            ClearSelection(); _status = "Graph publication completed. Refresh the library to open its current saved revision.";
+                            ClearSelection();
+                            _status = completed.Kind == CanonicalAutomationGraphPublicationCompletionKind.GraphPublishedBindingPending
+                                ? "The Home graph was published, but its Automation link still needs review. Refresh the library and reopen the Automation to recover the existing publication."
+                                : "Graph publication completed. Refresh the library to open its current saved revision.";
                         }
                         else if (completed.Kind == CanonicalAutomationGraphPublicationCompletionKind.DeclinedBeforeEffect)
                             _graphEditStatus = completed.Message + " Your local draft is preserved; submit this action again to request a fresh Home review.";
