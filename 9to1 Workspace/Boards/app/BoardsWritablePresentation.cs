@@ -75,6 +75,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     public Task DrainRenderingAsync() => _renderQueue?.DrainAsync() ?? Task.CompletedTask;
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default) =>
         _disposed ? Task.FromResult(true) : _embeddedArtifacts.TryPrepareToCloseAsync(cancellationToken);
+    public Task<IBoardsPresentationClosePreparation?> PrepareToCloseAsync(CancellationToken cancellationToken = default) =>
+        _disposed ? Task.FromResult<IBoardsPresentationClosePreparation?>(CompletedBoardsPresentationClosePreparation.Instance) : _embeddedArtifacts.PrepareToCloseAsync(cancellationToken);
     /// <summary>Returns the detached document supplied when this presentation opened.</summary>
     public HavenBoardDocument Document => HavenBoardDocumentCodec.Deserialize(_initialDocumentBytes);
     public Task<HavenBoardDocument> GetCurrentDocumentAsync(CancellationToken cancellationToken = default) =>

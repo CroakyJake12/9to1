@@ -3023,6 +3023,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("PageTitle", page.Title);
             Set("IsNativePage", string.Equals(page.PageType, HavenRichPageTypes.Native, StringComparison.Ordinal));
             Set("IsWritePage", string.Equals(page.PageType, HavenRichPageTypes.Write, StringComparison.Ordinal));
+            Set("IsEmbeddedArtifactPage", page.PageType is HavenRichPageTypes.Write or HavenRichPageTypes.Canvas);
             Set("ShowNativeAuthoring", ShowNativeAuthoring);
             RefreshPageBreadcrumb();
             Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock layout" : "Lock layout");

@@ -76,6 +76,53 @@ public sealed class EmbeddedPresentationLifecycleTests
         }
     }
 
+    [Fact]
+    public async Task Embedded_close_preparation_aborts_cleanly_or_commits_only_after_outer_acceptance()
+    {
+        var (bytes, sectionId, embeddedPageId, _, reference) = MakeBoardWithEmbeddedWrite();
+        TestUiThread.Run(() => { });
+        var owner = new DelayedEmbeddedHost(reference);
+        var presentation = PumpUi(TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
+            bytes, "files:document-close-gate", "revision-1",
+            (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")),
+            embeddedArtifactHost: owner)));
+        var window = TestUiThread.Run(() => MountAndAssert(presentation.Content, "Embedded lifecycle content"));
+        try
+        {
+            PumpUi(TestUiThread.Run(() => presentation.WaitUntilReadyAsync()));
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+            TestUiThread.Run(() => presentation.ViewModel.SelectPage(sectionId, embeddedPageId));
+            PumpUntilUi(owner.OpenStarted.Task);
+            owner.CompleteOpen();
+            PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()));
+            Assert.True(owner.Session.RevalidateCount > 0);
+
+            var aborted = PumpUi(TestUiThread.Run(() => presentation.PrepareToCloseAsync()));
+            Assert.NotNull(aborted);
+            Assert.True(aborted!.IsCurrent);
+            Assert.Equal(0, owner.Session.CloseCount);
+            PumpUi(TestUiThread.Run(() => aborted.AbortAsync()));
+            Assert.Equal(1, owner.Session.AbortCloseCount);
+            Assert.Equal(0, owner.Session.CloseCount);
+
+            var accepted = PumpUi(TestUiThread.Run(() => presentation.PrepareToCloseAsync()));
+            Assert.NotNull(accepted);
+            PumpUi(TestUiThread.Run(() => accepted!.CommitAsync()));
+            Assert.Equal(1, owner.Session.BeginCloseCount);
+            Assert.Equal(1, owner.Session.CloseCount);
+            Assert.Equal(1, owner.Session.DisposeCount);
+            var remainsMounted = TestUiThread.Run(() =>
+                BoardsCuiControlFinder.FindByAutomationId<Panel>(presentation.Content, "EmbeddedArtifactHost")?.Children
+                    .Contains(owner.Session.Content) ?? false);
+            Assert.False(remainsMounted);
+        }
+        finally
+        {
+            TestUiThread.Run(window.Close);
+            await DrainAndDisposeAsync(presentation.DisposeAsync().AsTask());
+        }
+    }
+
     private static Window MountAndAssert(Control content, string expectedText)
     {
         var window = new Window { Width = 1200, Height = 800, Content = content };
@@ -165,9 +212,37 @@ public sealed class EmbeddedPresentationLifecycleTests
         public bool IsPublicationCurrent => true;
         public int CloseCount { get; private set; }
         public int DisposeCount { get; private set; }
-        public Task<bool> TryPrepareToCloseAsync(CancellationToken ct = default) => Task.FromResult(true);
+        public int RevalidateCount { get; private set; }
+        public int BeginCloseCount { get; private set; }
+        public int AbortCloseCount { get; private set; }
+        public Task<bool> RevalidateAsync(CancellationToken ct = default)
+        {
+            RevalidateCount++;
+            return Task.FromResult(true);
+        }
+        public Task<IBoardsEmbeddedArtifactClosePreparation?> PrepareToCloseAsync(CancellationToken ct = default) =>
+            Task.FromResult<IBoardsEmbeddedArtifactClosePreparation?>(new ClosePreparation(this));
         public Task CloseAndDrainAsync() { CloseCount++; return Task.CompletedTask; }
         public ValueTask DisposeAsync() { DisposeCount++; return ValueTask.CompletedTask; }
+
+        private sealed class ClosePreparation(DelayedEmbeddedSession owner) : IBoardsEmbeddedArtifactClosePreparation
+        {
+            private int _finished;
+            public bool IsCurrent => Volatile.Read(ref _finished) == 0;
+            public Task BeginCloseAsync(CancellationToken ct = default)
+            {
+                if (Interlocked.Exchange(ref _finished, 1) != 0)
+                    throw new InvalidOperationException("Preparation already finished.");
+                owner.BeginCloseCount++;
+                return Task.CompletedTask;
+            }
+            public Task AbortAsync()
+            {
+                if (Interlocked.Exchange(ref _finished, 1) == 0) owner.AbortCloseCount++;
+                return Task.CompletedTask;
+            }
+            public ValueTask DisposeAsync() => new(AbortAsync());
+        }
     }
 
     private static T PumpUi<T>(Task<T> task) => TestUiThread.Run(() =>

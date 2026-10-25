@@ -46,6 +46,8 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     public Task DrainRenderingAsync() => _renderQueue?.DrainAsync() ?? Task.CompletedTask;
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default) =>
         _disposed ? Task.FromResult(true) : _embeddedArtifacts.TryPrepareToCloseAsync(cancellationToken);
+    public Task<IBoardsPresentationClosePreparation?> PrepareToCloseAsync(CancellationToken cancellationToken = default) =>
+        _disposed ? Task.FromResult<IBoardsPresentationClosePreparation?>(CompletedBoardsPresentationClosePreparation.Instance) : _embeddedArtifacts.PrepareToCloseAsync(cancellationToken);
 
     public static async Task<BoardsReadOnlyPresentation> OpenReadOnlyDocumentAsync(
         ReadOnlyMemory<byte> verifiedDocument, CancellationToken ct = default,

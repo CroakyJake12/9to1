@@ -57,6 +57,27 @@ public sealed class HavenRichBoardTests
     }
 
     [Fact]
+    public void Canvas_page_accepts_only_a_canvas_owner_reference()
+    {
+        var notes = HavenRichNotes.Create("Canvas board");
+        var section = notes.Sections[0];
+        var reference = new Haven.Application.BoardEmbeddedArtifactReference("canvas", Guid.NewGuid(),
+            new Haven.Application.BoardEmbeddedArtifactRevision(Sequence: null, VersionId: Guid.NewGuid()));
+
+        var page = HavenRichNotesOps.AddEmbeddedArtifactPage(notes, section.Id,
+            HavenRichPageTypes.Canvas, reference, "Whiteboard");
+
+        Assert.Equal(HavenRichPageTypes.Canvas, page.PageType);
+        Assert.Equal("canvas", page.EmbeddedArtifact!.ApplicationId);
+        Assert.Equal(reference.ArtifactId, page.EmbeddedArtifact.ArtifactId);
+        HavenRichNotesValidator.Validate(notes);
+        Assert.Throws<InvalidOperationException>(() => HavenRichNotesOps.AddEmbeddedArtifactPage(
+            notes, section.Id, HavenRichPageTypes.Canvas,
+            new Haven.Application.BoardEmbeddedArtifactReference("write", Guid.NewGuid(),
+                new Haven.Application.BoardEmbeddedArtifactRevision(Sequence: 1, VersionId: null))));
+    }
+
+    [Fact]
     public async Task Student_acceptance_ALevel_Maths_survives_close_reopen_edit_and_copy()
     {
         var root = TempDirectory();
