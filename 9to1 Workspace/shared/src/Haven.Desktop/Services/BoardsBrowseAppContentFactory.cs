@@ -70,12 +70,10 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                     throw new UnauthorizedAccessException("The selected writable board belongs to another original Home profile.");
                 }
                 var writeLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
-                BoardEmbeddedWritePageOwner? embeddedOwner = null;
+                IBoardsEmbeddedArtifactHost? embeddedOwner = null;
                 try
                 {
-                    embeddedOwner = new BoardEmbeddedWritePageOwner(_provider, _home, request.ProfileId,
-                        request.TabId, _appLifetime, writeLifetime.Token,
-                        () => !writeLifetime.IsCancellationRequested, _theme);
+                    embeddedOwner = CreateEmbeddedArtifactHost(request, writeLifetime.Token);
                     return new BoardsWritableRichDocumentBrowseAppContentSession(
                         request, address, writeLease, writeLifetime, embeddedOwner);
                 }
@@ -99,12 +97,10 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                 throw new UnauthorizedAccessException("The selected rich board belongs to another original Home profile.");
             }
             var readLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
-            BoardEmbeddedWritePageOwner? readEmbeddedOwner = null;
+            IBoardsEmbeddedArtifactHost? readEmbeddedOwner = null;
             try
             {
-                readEmbeddedOwner = new BoardEmbeddedWritePageOwner(_provider, _home, request.ProfileId,
-                    request.TabId, _appLifetime, readLifetime.Token,
-                    () => !readLifetime.IsCancellationRequested, _theme);
+                readEmbeddedOwner = CreateEmbeddedArtifactHost(request, readLifetime.Token);
                 return new BoardsRichDocumentBrowseAppContentSession(
                     request, address, lease, readLifetime, readEmbeddedOwner);
             }
@@ -138,5 +134,24 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             return new BoardsBrowseAppContentSession(request, address, route, lifetime, _reduceMotion, _theme);
         }
         catch { lifetime.Dispose(); throw; }
+    }
+
+    private IBoardsEmbeddedArtifactHost CreateEmbeddedArtifactHost(
+        BrowseAppContentRequest request, CancellationToken tabLifetime)
+    {
+        var writeOwner = new BoardEmbeddedWritePageOwner(_provider, _home, request.ProfileId,
+            request.TabId, _appLifetime, tabLifetime,
+            () => !tabLifetime.IsCancellationRequested, _theme);
+        try
+        {
+            return new NativeCanvasBoardEmbeddedArtifactHost(writeOwner, _provider, _home,
+                request.ProfileId, request.TabId, _appLifetime, tabLifetime,
+                () => !tabLifetime.IsCancellationRequested, _theme);
+        }
+        catch
+        {
+            writeOwner.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            throw;
+        }
     }
 }
