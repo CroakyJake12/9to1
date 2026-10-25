@@ -8,6 +8,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <ProjectReference Include="../CUI/HavenOS.Files.CUI.csproj" />
     <ProjectReference Include="../../Dev/HavenOS.Dev.csproj" />
+    <ProjectReference Include="../../Boards/contract/CakeOS.Apps.Boards.Contract.csproj" />
     <ProjectReference Include="../../Mail/HavenOS.Mail.csproj" />
     <ProjectReference Include="../../Home/HavenOS.Home.csproj" />
     <ProjectReference Include="../../shared/src/Haven.Application/Haven.Application.csproj" />
