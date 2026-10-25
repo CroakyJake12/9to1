@@ -250,7 +250,7 @@ public sealed class SpaceBuilderCanonicalSourceTests
         await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
-            using var loader = new CuiControlLoader(); loader.SetBindingContext(bindings);
+            using var loader = new CuiControlLoader(); loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
             var (tree, diagnostics) = loader.TryLoad(SpaceBuilderCuiDocument.Load()); Assert.Empty(diagnostics);
             var root = Assert.IsAssignableFrom<Control>(tree); loader.WireBindings(root);
             var window = new Window { Content = root, Width = 1100, Height = 1000 };
