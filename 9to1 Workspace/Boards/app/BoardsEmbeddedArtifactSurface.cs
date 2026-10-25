@@ -76,9 +76,10 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
             }
 
             viewModel.SetEmbeddedPageStatus(false, string.Empty);
-            if (_session is not null && _pageId == pageId && Equals(_reference, reference) && _mode == mode)
+            if (_session is { } retainedSession && pageId is { } retainedPageId &&
+                pageType is { } retainedPageType && reference is { } retainedReference &&
+                _pageId == retainedPageId && Equals(_reference, retainedReference) && _mode == mode)
             {
-                var retainedSession = _session;
                 try
                 {
                     if (await retainedSession.RevalidateAsync() && retainedSession.IsPublicationCurrent)
@@ -86,7 +87,7 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                         var isStillCurrent = await DispatchUiAsync(() =>
                         {
                             if (!ReferenceEquals(_session, retainedSession) ||
-                                !IsCurrentSelection(pageId, sectionId, pageType, reference, mode))
+                                !IsCurrentSelection(retainedPageId, sectionId, retainedPageType, retainedReference, mode))
                                 return false;
                             var currentSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? surface;
                             if (!currentSurface.AuthoredChildren.Contains(retainedSession.Content))
@@ -101,11 +102,11 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                     await DispatchUiAsync(() =>
                     {
                         if (!ReferenceEquals(_session, retainedSession) ||
-                            !IsCurrentSelection(pageId, sectionId, pageType, reference, mode))
+                            !IsCurrentSelection(retainedPageId, sectionId, retainedPageType, retainedReference, mode))
                             return true;
                         var currentSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? surface;
                         currentSurface.RemoveChild(retainedSession.Content);
-                        _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
+                        _failedSelection = new FailedSelection(retainedPageId, sectionId, retainedPageType, retainedReference, mode);
                         viewModel.SetEmbeddedPageStatus(true,
                             "The linked artifact could not be revalidated: " + FirstLine(error.Message));
                         return true;
@@ -115,11 +116,11 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                 await DispatchUiAsync(() =>
                 {
                     if (!ReferenceEquals(_session, retainedSession) ||
-                        !IsCurrentSelection(pageId, sectionId, pageType, reference, mode))
+                        !IsCurrentSelection(retainedPageId, sectionId, retainedPageType, retainedReference, mode))
                         return true;
                     var unavailableSurface = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(_root, "EmbeddedArtifactHost") ?? surface;
                     unavailableSurface.RemoveChild(retainedSession.Content);
-                    _failedSelection = new FailedSelection(pageId!, sectionId, pageType, reference, mode);
+                    _failedSelection = new FailedSelection(retainedPageId, sectionId, retainedPageType, retainedReference, mode);
                     viewModel.SetEmbeddedPageStatus(true, "The linked artifact is unavailable at its pinned revision or current permissions. Reopen it from its owner to refresh access.");
                     return true;
                 });
