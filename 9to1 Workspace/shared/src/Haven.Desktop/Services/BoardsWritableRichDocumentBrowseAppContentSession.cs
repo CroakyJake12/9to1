@@ -251,6 +251,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         private bool _accepted, _aborted;
         private Task? _abort;
         internal bool Accepted => _accepted;
+        internal IBoardsPresentationClosePreparation? Nested => nested;
         public IBrowseAppContentSession Session => owner;
         public bool IsCurrent => !_accepted && !_aborted && !owner._closing && !owner._lifetime.IsCancellationRequested &&
             ReferenceEquals(owner._prepared, this) && (nested is null || nested.IsCurrent) &&

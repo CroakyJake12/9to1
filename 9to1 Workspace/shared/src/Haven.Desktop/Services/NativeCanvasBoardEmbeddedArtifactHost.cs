@@ -29,6 +29,7 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
     private readonly object _gate = new();
     private readonly List<Task> _operations = [];
     private readonly List<CanvasEmbeddedSession> _canvasSessions = [];
+    private readonly List<RetainedCanvasChooser> _retainedChoosers = [];
     private Control? _owningControl;
     private bool _retiring;
     private Task? _close;
@@ -109,7 +110,9 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
             !ReferenceEquals(_home.Services.GetService(typeof(NativeFilesWorkspaceAuthority)), authority))
             throw new UnauthorizedAccessException("Canvas must use the same original Home Files owners.");
 
-        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _tabLifetime, token);
+        // Cancellation of the one-shot Board action must not revoke a still-visible owner
+        // chooser while it has a Home/native operation that can refuse close.
+        var lifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _tabLifetime);
         var route = new NativeCanvasDesktopRoute(_provider, _home, files, authority,
             _profileId, _appLifetime, lifetime.Token);
         route.BindOriginalPresentationOwner(this);
@@ -177,10 +180,6 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
         }
         finally
         {
-            if (dialog is not null)
-                try { await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false); }
-                catch (Exception error) { failures.Add(error); }
-
             if (choice is not null && !accepted)
             {
                 try
@@ -188,7 +187,12 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
                     if (preparation is null)
                         preparation = await AwaitOnUiAsync(() => choice.PrepareCloseAsync(CancellationToken.None)).ConfigureAwait(false);
                     if (preparation is null)
-                        throw new InvalidOperationException("Canvas chooser refused owner cleanup; retain it for recovery.");
+                        throw new InvalidOperationException("Canvas chooser still has original Home/native work; retain its visible owner and refuse cleanup.");
+                    if (dialog is not null)
+                    {
+                        await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false);
+                        dialog = null;
+                    }
                     await AwaitOnUiAsync(preparation.BeginClose).ConfigureAwait(false);
                     accepted = true;
                     await AwaitOnUiAsync(choice.CloseAndDrainAsync).ConfigureAwait(false);
@@ -196,22 +200,33 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
                 catch (Exception error) { failures.Add(error); }
             }
 
-            if (surface is not null)
+            if (choice is null && surface is not null)
             {
-                try
-                {
-                    if (!accepted)
-                        await AwaitOnUiAsync(() => surface.CloseAndDrainAsync()).ConfigureAwait(false);
-                }
+                try { await AwaitOnUiAsync(() => surface.CloseAndDrainAsync()).ConfigureAwait(false); }
                 catch (Exception error) { failures.Add(error); }
             }
-            try { await route.CloseAndDrainAsync().ConfigureAwait(false); }
-            catch (Exception error) { failures.Add(error); }
-            try { lifetime.Cancel(); }
-            catch (Exception error) { failures.Add(error); }
+
+            if (choice is null || accepted)
+            {
+                if (dialog is not null)
+                    try { await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false); }
+                    catch (Exception error) { failures.Add(error); }
+                try { await route.CloseAndDrainAsync().ConfigureAwait(false); }
+                catch (Exception error) { failures.Add(error); }
+                try { lifetime.Cancel(); }
+                catch (Exception error) { failures.Add(error); }
+                try { lifetime.Dispose(); }
+                catch (Exception error) { failures.Add(error); }
+            }
+
             if (failures.Count > 0)
             {
                 if (primary is not null) failures.Insert(0, primary);
+                if (choice is not null && !accepted)
+                {
+                    var retained = new RetainedCanvasChooser(route, lifetime, choice, surface!, dialog, dialogTask, preparation);
+                    lock (_gate) _retainedChoosers.Add(retained);
+                }
                 throw new AggregateException("Canvas chooser operation or its original owner cleanup failed.", failures);
             }
         }
@@ -363,6 +378,17 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
                     await session.CloseAndDrainAsync().ConfigureAwait(false);
                 }
                 await session.DisposeAsync().ConfigureAwait(false);
+            }
+            catch (Exception error) { failures.Add(error); }
+        }
+        RetainedCanvasChooser[] choosers;
+        lock (_gate) choosers = _retainedChoosers.ToArray();
+        foreach (var chooser in choosers)
+        {
+            try
+            {
+                await chooser.CloseAndDrainAsync().ConfigureAwait(false);
+                lock (_gate) _retainedChoosers.Remove(chooser);
             }
             catch (Exception error) { failures.Add(error); }
         }
@@ -614,4 +640,37 @@ internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArt
 
     private void Remove(CanvasEmbeddedSession session)
     { lock (_gate) _canvasSessions.Remove(session); }
+
+    private sealed class RetainedCanvasChooser(NativeCanvasDesktopRoute route,
+        CancellationTokenSource lifetime, CanvasEmbeddedArtifactChoiceSession choice,
+        CanvasHostSurface surface, Window? dialog, Task? dialogTask,
+        CanvasHostSurface.ClosePreparation? preparation)
+    {
+        private readonly SemaphoreSlim _gate = new(1, 1);
+        private CanvasHostSurface.ClosePreparation? _preparation = preparation;
+        private bool _closed;
+
+        public async Task CloseAndDrainAsync()
+        {
+            await _gate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (_closed) return;
+                if (_preparation is null && choice.IsAlive)
+                    _preparation = await AwaitOnUiAsync(() => choice.PrepareCloseAsync(CancellationToken.None)).ConfigureAwait(false);
+                if (_preparation is null && choice.IsAlive)
+                    throw new InvalidOperationException("Canvas still has pending Home/native work; keep its chooser owner retained.");
+                if (dialog is not null)
+                    await CloseDialogAsync(dialog, dialogTask).ConfigureAwait(false);
+                if (_preparation is not null && choice.IsAlive)
+                    await AwaitOnUiAsync(_preparation.BeginClose).ConfigureAwait(false);
+                await AwaitOnUiAsync(choice.CloseAndDrainAsync).ConfigureAwait(false);
+                await route.CloseAndDrainAsync().ConfigureAwait(false);
+                lifetime.Cancel();
+                lifetime.Dispose();
+                _closed = true;
+            }
+            finally { _gate.Release(); }
+        }
+    }
 }

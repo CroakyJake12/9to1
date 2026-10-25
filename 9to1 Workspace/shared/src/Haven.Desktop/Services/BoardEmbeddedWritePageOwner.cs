@@ -104,7 +104,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             await RevalidateAsync(originals, token).ConfigureAwait(false);
             await Dispatcher.UIThread.InvokeAsync(() => openedPage.SetEmbeddedReadOnly(mode == BoardEmbeddedArtifactMode.View)).GetTask().ConfigureAwait(false);
             DemandOwnerCurrent();
-            var session = new EmbeddedWriteSession(this, openedPage, repository, reference, lifetime);
+            var session = new EmbeddedWriteSession(this, openedPage, repository, reference, mode, lifetime);
             lock (_gate) _sessions.Add(session);
             page = null; repository = null; lifetime = null!;
             return (IBoardsEmbeddedArtifactSession)session;
@@ -372,7 +372,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
     }
 
     private Task<T> RunAsync<T>(Func<CloudflareOriginalTaskLedger, CancellationToken, Task<T>> body,
-        CancellationToken caller)
+        CancellationToken caller, bool allowDuringRetirement = false)
     {
         ArgumentNullException.ThrowIfNull(body);
         caller.ThrowIfCancellationRequested();
@@ -380,7 +380,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
         Task<T> actual;
         lock (_gate)
         {
-            ObjectDisposedException.ThrowIf(_retiring || _close is not null, this);
+            if (!allowDuringRetirement) ObjectDisposedException.ThrowIf(_retiring || _close is not null, this);
             if (_operations.Count >= 128) throw new InvalidOperationException("Settle original embedded Write operations before retrying.");
             originals = new(); originals.BindOriginalOwner(this);
             originals.BindOriginalCallerCallback(action => CloudflareOriginalExecutionGuard.InvokeOriginal(this,
@@ -420,8 +420,10 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
         {
             try
             {
-                if (!await session.TryPrepareToCloseAsync(CancellationToken.None).ConfigureAwait(false))
+                var preparation = await session.PrepareToCloseAsync(CancellationToken.None).ConfigureAwait(false);
+                if (preparation is null)
                     throw new InvalidOperationException("An embedded Write page refused close; preserve its draft and keep the host alive.");
+                await preparation.BeginCloseAsync(CancellationToken.None).ConfigureAwait(false);
                 await session.CloseAndDrainAsync().ConfigureAwait(false);
             }
             catch (Exception error) { failures.Add(error); }
@@ -485,12 +487,14 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
 
     private sealed class EmbeddedWriteSession(BoardEmbeddedWritePageOwner owner, WritePage page,
         NotesOriginalWriteWorkspaceRepository repository, BoardEmbeddedArtifactReference openedReference,
-        CancellationTokenSource lifetime) : IBoardsEmbeddedArtifactSession
+        BoardEmbeddedArtifactMode mode, CancellationTokenSource lifetime) : IBoardsEmbeddedArtifactSession
     {
         private readonly object _sync = new();
-        private bool _prepared, _closed;
-        private bool _pageDrained, _repositoryDisposed, _lifetimeDisposed;
-        private Task? _close;
+        private volatile bool _closed;
+        private bool _repositoryDisposed, _lifetimeDisposed;
+        private WriteClosePreparation? _preparation;
+        private Task<IBoardsEmbeddedArtifactClosePreparation?>? _prepareTask;
+        private Task? _pageClose, _close;
 
         public Control Content => page;
         public BoardEmbeddedArtifactReference CurrentReference
@@ -498,7 +502,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             get
             {
                 owner.DemandOwnerCurrent();
-                if (page.Document is not { } current || current.Id != openedReference.ArtifactId || current.Version < 1)
+                if (page.Document is not { } current || current.Id != openedReference.ArtifactId || current.Version < 0)
                     throw new UnauthorizedAccessException("The original Write page lost its selected Notes identity.");
                 return new("write", current.Id, new BoardEmbeddedArtifactRevision(current.Version, null));
             }
@@ -513,14 +517,164 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             }
         }
 
+        public Task<bool> RevalidateAsync(CancellationToken ct = default) =>
+            owner.RunAsync((originals, token) => RevalidateCurrentAsync(originals, token), ct,
+                allowDuringRetirement: true);
+
+        private async Task<bool> RevalidateCurrentAsync(CloudflareOriginalTaskLedger originals, CancellationToken token)
+        {
+            try
+            {
+                if (!IsPublicationCurrent) return false;
+                await owner.RevalidateAsync(originals, token).ConfigureAwait(false);
+                var current = await originals.AwaitAsync(originals.Invoke(() =>
+                    repository.RevalidateCurrentAsync(openedReference.ArtifactId, token))).ConfigureAwait(false);
+                var document = await AwaitOnUiAsync(() => Task.FromResult(page.Document)).ConfigureAwait(false);
+                if (document is null || document.Id != openedReference.ArtifactId ||
+                    document.Version != current.Version || current.Id != openedReference.ArtifactId)
+                    return false;
+                await owner.RevalidateAsync(originals, token).ConfigureAwait(false);
+                return IsPublicationCurrent;
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+            catch (UnauthorizedAccessException) { return false; }
+            catch (InvalidOperationException) { return false; }
+        }
+
         public async Task<bool> TryPrepareToCloseAsync(CancellationToken ct = default)
         {
-            lock (_sync) { if (_closed) return true; _prepared = false; }
-            if (!IsPublicationCurrent) return false;
-            var prepared = await AwaitOnUiAsync(() => page.PrepareToCloseAsync(
-                "Save embedded Write page before closing", ct)).ConfigureAwait(false);
-            lock (_sync) _prepared = prepared;
-            return prepared;
+            var preparation = await PrepareToCloseAsync(ct).ConfigureAwait(false);
+            if (preparation is null) return false;
+            await preparation.AbortAsync().ConfigureAwait(false);
+            return true;
+        }
+
+        public Task<IBoardsEmbeddedArtifactClosePreparation?> PrepareToCloseAsync(CancellationToken ct = default)
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+            lock (_sync)
+            {
+                if (_closed) return Task.FromResult<IBoardsEmbeddedArtifactClosePreparation?>(null);
+                if (_preparation is { } current)
+                    return Task.FromResult<IBoardsEmbeddedArtifactClosePreparation?>(current);
+                if (_prepareTask is { IsCompleted: false }) return _prepareTask;
+                var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _prepareTask = PrepareCoreAsync(start.Task, ct);
+                start.SetResult();
+                return _prepareTask;
+            }
+        }
+
+        private async Task<IBoardsEmbeddedArtifactClosePreparation?> PrepareCoreAsync(Task start, CancellationToken caller)
+        {
+            await start.ConfigureAwait(false);
+            return await owner.RunAsync<IBoardsEmbeddedArtifactClosePreparation?>(async (originals, token) =>
+            {
+                if (!await RevalidateCurrentAsync(originals, token).ConfigureAwait(false)) return null;
+                var frozen = false;
+                var retained = false;
+                try
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() => page.SetEmbeddedReadOnly(true)).GetTask().ConfigureAwait(false);
+                    frozen = true;
+                    if (!await AwaitOnUiAsync(() => page.PrepareToCloseAsync(
+                        "Save embedded Write page before closing", token)).ConfigureAwait(false))
+                        return null;
+                    if (!await RevalidateCurrentAsync(originals, token).ConfigureAwait(false)) return null;
+                    var document = await AwaitOnUiAsync(() => Task.FromResult(page.Document)).ConfigureAwait(false);
+                    if (document is null || document.Id != openedReference.ArtifactId) return null;
+                    new BoardEmbeddedArtifactReference("write", document.Id,
+                        new BoardEmbeddedArtifactRevision(document.Version, null)).Validate();
+                    var preparation = new WriteClosePreparation(this);
+                    lock (_sync)
+                    {
+                        if (_closed || _preparation is not null) return null;
+                        _preparation = preparation;
+                        retained = true;
+                    }
+                    return preparation;
+                }
+                finally
+                {
+                    if (frozen && !retained)
+                        await RestoreModeAsync().ConfigureAwait(false);
+                }
+            }, caller, allowDuringRetirement: true).ConfigureAwait(false);
+        }
+
+        private async Task RestoreModeAsync()
+        {
+            var readOnly = mode == BoardEmbeddedArtifactMode.View || !owner.IsCurrentPublication();
+            await Dispatcher.UIThread.InvokeAsync(() => page.SetEmbeddedReadOnly(readOnly)).GetTask().ConfigureAwait(false);
+        }
+
+        private Task BeginPageCloseAsync(WriteClosePreparation preparation, CancellationToken ct)
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+            lock (_sync)
+            {
+                if (preparation.Accepted) return _pageClose ?? Task.FromException(
+                    new InvalidOperationException("The accepted original Write close task is absent."));
+                if (_pageClose is not null) return _pageClose;
+                if (!ReferenceEquals(_preparation, preparation) || !preparation.IsCurrent)
+                    return Task.FromException(new InvalidOperationException("The original Write close preparation is stale."));
+                var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _pageClose = BeginPageCloseCoreAsync(start.Task, preparation, ct);
+                start.SetResult();
+                return _pageClose;
+            }
+        }
+
+        private async Task BeginPageCloseCoreAsync(Task start, WriteClosePreparation preparation, CancellationToken ct)
+        {
+            await start.ConfigureAwait(false);
+            try
+            {
+                if (!await RevalidateAsync(ct).ConfigureAwait(false))
+                    throw new UnauthorizedAccessException("The selected Write artifact changed before its embedded close was accepted.");
+                var dispatch = Dispatcher.UIThread.InvokeAsync<Task>(() =>
+                {
+                    Dispatcher.UIThread.VerifyAccess();
+                    if (!preparation.IsCurrent)
+                        throw new InvalidOperationException("The original Write close preparation is no longer current.");
+                    preparation.MarkAccepted();
+                    return page.CloseAndDrainAsync();
+                }).GetTask();
+                var actual = await dispatch.ConfigureAwait(false);
+                await actual.ConfigureAwait(false);
+            }
+            catch
+            {
+                if (!preparation.Accepted)
+                    lock (_sync) if (ReferenceEquals(_preparation, preparation)) _pageClose = null;
+                throw;
+            }
+        }
+
+        private Task AbortPreparationAsync(WriteClosePreparation preparation)
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+            lock (_sync)
+            {
+                if (preparation.Accepted)
+                    return Task.FromException(new InvalidOperationException("An accepted original Write close cannot be aborted."));
+                if (_closed) return Task.CompletedTask;
+                if (!ReferenceEquals(_preparation, preparation))
+                    return Task.FromException(new InvalidOperationException("The original Write preparation is no longer retained."));
+                return AbortPreparationCoreAsync(preparation);
+            }
+        }
+
+        private async Task AbortPreparationCoreAsync(WriteClosePreparation preparation)
+        {
+            await RestoreModeAsync().ConfigureAwait(false);
+            lock (_sync)
+            {
+                if (preparation.Accepted)
+                    throw new InvalidOperationException("An accepted original Write close cannot be aborted.");
+                if (ReferenceEquals(_preparation, preparation)) _preparation = null;
+                preparation.MarkAborted();
+            }
         }
 
         public Task CloseAndDrainAsync()
@@ -530,7 +684,8 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
             {
                 if (_close is not null) return _close;
                 if (_closed) return Task.CompletedTask;
-                if (!_prepared) throw new InvalidOperationException("The embedded Write close gate must accept before draining its owner.");
+                if (_preparation is not { Accepted: true } || _pageClose is null)
+                    throw new InvalidOperationException("The retained Write close preparation must be accepted before owner drain.");
                 return _close = CloseCoreAsync();
             }
         }
@@ -539,11 +694,7 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
         {
             try
             {
-                if (!_pageDrained)
-                {
-                    await AwaitOnUiAsync(() => page.CloseAndDrainAsync()).ConfigureAwait(false);
-                    _pageDrained = true;
-                }
+                await _pageClose!.ConfigureAwait(false);
                 if (!_repositoryDisposed)
                 {
                     await repository.DisposeAsync().ConfigureAwait(false);
@@ -567,9 +718,52 @@ internal sealed class BoardEmbeddedWritePageOwner : IBoardsEmbeddedArtifactHost,
 
         public async ValueTask DisposeAsync()
         {
-            if (!await TryPrepareToCloseAsync().ConfigureAwait(false))
-                throw new InvalidOperationException("The embedded Write page refused disposal; preserve its draft.");
+            if (_closed) return;
+            var preparation = await PrepareToCloseAsync(CancellationToken.None).ConfigureAwait(false)
+                ?? throw new InvalidOperationException("The embedded Write page refused disposal; preserve its draft.");
+            await preparation.BeginCloseAsync(CancellationToken.None).ConfigureAwait(false);
             await CloseAndDrainAsync().ConfigureAwait(false);
+        }
+
+        private sealed class WriteClosePreparation(EmbeddedWriteSession owner) : IBoardsEmbeddedArtifactClosePreparation
+        {
+            private readonly object _gate = new();
+            private int _accepted, _aborted;
+            private Task? _begin, _abort;
+            internal bool Accepted => Volatile.Read(ref _accepted) != 0;
+            public bool IsCurrent => !Accepted && Volatile.Read(ref _aborted) == 0 &&
+                !owner.lifetime.IsCancellationRequested && !owner._closed &&
+                ReferenceEquals(owner._preparation, this) && owner.owner.IsCurrentPublication();
+
+            public Task BeginCloseAsync(CancellationToken cancellationToken = default)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                lock (_gate)
+                {
+                    if (_begin is not null) return _begin;
+                    if (!IsCurrent) return Task.FromException(new InvalidOperationException("The original Write close preparation is stale."));
+                    return _begin = owner.BeginPageCloseAsync(this, cancellationToken);
+                }
+            }
+
+            public Task AbortAsync()
+            {
+                CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+                lock (_gate)
+                {
+                    if (_abort is not null) return _abort;
+                    if (Accepted) return Task.FromException(new InvalidOperationException("An accepted original Write close cannot be aborted."));
+                    if (_aborted) return Task.CompletedTask;
+                    return _abort = owner.AbortPreparationAsync(this);
+                }
+            }
+
+            internal void MarkAccepted() => Interlocked.Exchange(ref _accepted, 1);
+            internal void MarkAborted() => Interlocked.Exchange(ref _aborted, 1);
+            public async ValueTask DisposeAsync()
+            {
+                if (!Accepted && Volatile.Read(ref _aborted) == 0) await AbortAsync().ConfigureAwait(false);
+            }
         }
     }
 }
