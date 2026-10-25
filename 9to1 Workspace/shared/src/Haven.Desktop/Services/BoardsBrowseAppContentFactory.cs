@@ -70,8 +70,23 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                     throw new UnauthorizedAccessException("The selected writable board belongs to another original Home profile.");
                 }
                 var writeLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
-                try { return new BoardsWritableRichDocumentBrowseAppContentSession(request, address, writeLease, writeLifetime); }
-                catch { writeLifetime.Dispose(); writeLease.DisposeAsync().AsTask().GetAwaiter().GetResult(); throw; }
+                BoardEmbeddedWritePageOwner? embeddedOwner = null;
+                try
+                {
+                    embeddedOwner = new BoardEmbeddedWritePageOwner(_provider, _home, request.ProfileId,
+                        request.TabId, _appLifetime, writeLifetime.Token,
+                        () => !writeLifetime.IsCancellationRequested, _theme);
+                    return new BoardsWritableRichDocumentBrowseAppContentSession(
+                        request, address, writeLease, writeLifetime, embeddedOwner);
+                }
+                catch
+                {
+                    if (embeddedOwner is not null)
+                        embeddedOwner.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                    writeLifetime.Dispose();
+                    writeLease.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                    throw;
+                }
             }
             if (_takePreparedBoardRead is null || address.StoreId is not { } store ||
                 address.ParentFolderId is not { } parent || address.FileId is not { } file ||
@@ -84,8 +99,23 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
                 throw new UnauthorizedAccessException("The selected rich board belongs to another original Home profile.");
             }
             var readLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
-            try { return new BoardsRichDocumentBrowseAppContentSession(request, address, lease, readLifetime); }
-            catch { readLifetime.Dispose(); lease.DisposeAsync().GetAwaiter().GetResult(); throw; }
+            BoardEmbeddedWritePageOwner? readEmbeddedOwner = null;
+            try
+            {
+                readEmbeddedOwner = new BoardEmbeddedWritePageOwner(_provider, _home, request.ProfileId,
+                    request.TabId, _appLifetime, readLifetime.Token,
+                    () => !readLifetime.IsCancellationRequested, _theme);
+                return new BoardsRichDocumentBrowseAppContentSession(
+                    request, address, lease, readLifetime, readEmbeddedOwner);
+            }
+            catch
+            {
+                if (readEmbeddedOwner is not null)
+                    readEmbeddedOwner.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                readLifetime.Dispose();
+                lease.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                throw;
+            }
         }
         // All borrowed resolution and identity checks precede the per-tab lifetime acquisition.
         var notes = _provider.GetRequiredService<NotesRepository>();
