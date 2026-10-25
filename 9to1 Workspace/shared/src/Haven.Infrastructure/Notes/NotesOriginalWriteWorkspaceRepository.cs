@@ -76,6 +76,19 @@ public sealed class NotesOriginalWriteWorkspaceRepository : INotesRepository, IA
         return RunAsync<NotesDocument?>(async token => await ReadPinnedAsync(token).ConfigureAwait(false), cancellationToken);
     }
 
+    /// <summary>Rechecks the currently selected revision through the same Home-reviewed
+    /// original library-read action. This deliberately bypasses only this adapter's cache;
+    /// the canonical Notes owner and Home admission still issue and settle the read.</summary>
+    public Task<NotesDocument> RevalidateCurrentAsync(Guid documentId, CancellationToken cancellationToken = default)
+    {
+        DemandSelected(documentId);
+        return RunAsync(async token =>
+        {
+            _cachedRead = null;
+            return await ReadPinnedAsync(token).ConfigureAwait(false);
+        }, cancellationToken);
+    }
+
     public Task<NotesSaveResult> SaveAsync(NotesDocument document, string reason, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
