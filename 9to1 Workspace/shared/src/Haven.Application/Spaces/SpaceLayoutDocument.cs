@@ -15,6 +15,10 @@ public sealed record SpaceLayoutPort(
 
 public sealed record SpaceLayoutNode(Guid Id, string Category, string Title)
 {
+    // Empty TypeId preserves legacy structural nodes; such nodes are not executable until
+    // migrated to an installed, registered node schema.
+    public string TypeId { get; init; } = string.Empty;
+    public int SchemaVersion { get; init; } = 1;
     public string Subtitle { get; init; } = string.Empty;
     public double X { get; init; }
     public double Y { get; init; }
@@ -33,5 +37,21 @@ public sealed record SpaceLayoutEdge(Guid Id, Guid FromNodeId, string FromPortId
 
 public sealed record SpaceLayoutDocument(IReadOnlyList<SpaceLayoutNode> Nodes, IReadOnlyList<SpaceLayoutEdge> Edges)
 {
-    public static SpaceLayoutDocument Empty { get; } = new([], []);
+    public const int MaximumNodes = 500;
+    public const int MaximumEdges = 2000;
+    public const int CurrentSchemaVersion = 1;
+
+    public Guid GraphId { get; init; }
+    public int SchemaVersion { get; init; } = CurrentSchemaVersion;
+    public long Revision { get; init; }
+    public SpaceLayoutRevisionState State { get; init; } = SpaceLayoutRevisionState.Draft;
+    public string? ConnectionProfileId { get; init; }
+    public IReadOnlyList<SpaceLayoutGroup> Groups { get; init; } = [];
+    public IReadOnlyList<SpaceLayoutComment> Comments { get; init; } = [];
+
+    public static SpaceLayoutDocument Empty => new([], []);
 }
+
+public enum SpaceLayoutRevisionState { Draft = 0, Active = 1 }
+public sealed record SpaceLayoutGroup(Guid Id, string Title, IReadOnlyList<Guid> NodeIds, string? Color = null);
+public sealed record SpaceLayoutComment(Guid Id, string Text, double X, double Y, double Width = 220, double Height = 100);
