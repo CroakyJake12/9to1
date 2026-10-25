@@ -50,12 +50,20 @@ public static class BlockRenderer
             if (IsListKind(block.Kind))
             {
                 var run = new List<RichBoardBlock>();
+                var runStart = index;
                 while (index < blocks.Count && IsListKind(blocks[index].Kind))
                     run.Add(blocks[index++]);
-                host.Children.Add(WithSelection(vm, run[0].Id, BuildChecklistRun(vm, run), run[^1].Id));
+                // Keep each contract block as its own row so pointer reordering
+                // and the authored per-block keyboard actions address the same
+                // stable identity. The shared add-item affordance remains after
+                // the contiguous list run.
+                for (var offset = 0; offset < run.Count; offset++)
+                    host.Children.Add(WithSelection(vm, run[offset].Id, BuildChecklistRow(vm, run[offset]),
+                        run[offset].Id, runStart + offset, host));
+                host.Children.Add(BuildChecklistAddButton(vm, run[0].Id));
                 continue;
             }
-            host.Children.Add(WithSelection(vm, block.Id, BuildBlock(vm, block)));
+            host.Children.Add(WithSelection(vm, block.Id, BuildBlock(vm, block), block.Id, index, host));
             index++;
         }
 
@@ -90,20 +98,22 @@ public static class BlockRenderer
 
     /// <summary>Subtle selection outline: transparent until selected, then an accent bar.</summary>
     private static Control WithSelection(
-        BoardsViewModel vm, string selectId, Control inner, string? insertAfterBlockId = null)
+        BoardsViewModel vm, string selectId, Control inner, string insertAfterBlockId, int blockIndex, StackPanel host)
     {
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
         var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*") };
+        Control? gripControl = null;
         if (vm.IsEditMode)
         {
             var insert = ToolbarBuilder.CreateInsertButton(
-                vm, "Insert a block after this note", insertAfterBlockId ?? selectId);
+                vm, "Insert a block after this note", insertAfterBlockId);
             insert.Margin = new Thickness(0, 2, 2, 0);
             insert.Opacity = selected ? 1 : 0.65;
             Grid.SetColumn(insert, 0);
             row.Children.Add(insert);
 
             var grip = BlockGripCui.Build(vm, selectId);
+            gripControl = grip;
             grip.Margin = new Thickness(0, 2, 4, 0);
             Grid.SetColumn(grip, 1);
             row.Children.Add(grip);
@@ -119,6 +129,9 @@ public static class BlockRenderer
             Margin = new Thickness(0, 0, 0, 10),
             Background = Brushes.Transparent,
         };
+        border.Tag = new BlockReorderRow(selectId, blockIndex);
+        if (gripControl is not null)
+            BlockReorderPointer.Attach(gripControl, host, vm, selectId, blockIndex);
         return border;
     }
 
@@ -306,12 +319,8 @@ public static class BlockRenderer
 
     // ----- Checklist -----
 
-    private static Control BuildChecklistRun(BoardsViewModel vm, List<RichBoardBlock> run)
+    private static Control BuildChecklistAddButton(BoardsViewModel vm, string firstBlockId)
     {
-        var shell = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(0, 4, 0, 4) };
-        foreach (var item in run)
-            shell.Children.Add(BuildChecklistRow(vm, item));
-        var parentKey = ParentKey(run[0].Id);
         var add = new Button
         {
             Content = "+ Add item",
@@ -325,9 +334,8 @@ public static class BlockRenderer
         add.IsVisible = vm.IsEditMode;
         ToolTip.SetTip(add, "Add a checklist item");
         AutomationProperties.SetName(add, "Add checklist item");
-        add.Click += async (_, _) => await vm.AddChecklistItemAsync(parentKey);
-        shell.Children.Add(add);
-        return shell;
+        add.Click += async (_, _) => await vm.AddChecklistItemAsync(ParentKey(firstBlockId));
+        return add;
     }
 
     private static Control BuildChecklistRow(BoardsViewModel vm, RichBoardBlock item)

@@ -149,8 +149,8 @@ public sealed class BoardsBlockActionsTests
             var page = adapter.Document.Sections.Single().Pages.Single(); var before = adapter.Snapshot;
             var disk = await File.ReadAllBytesAsync(path);
             var first = adapter.CaptureBlockAction(page.Id, "block-a")!;
-            Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(first, BoardBlockAction.MoveUp, () => true)).Code);
             var last = adapter.CaptureBlockAction(page.Id, "block-c")!;
+            Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(first, BoardBlockAction.MoveUp, () => true)).Code);
             Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(last, BoardBlockAction.MoveDown, () => true)).Code);
             Assert.False((await adapter.ApplyBlockActionAsync(first, BoardBlockAction.Delete, () => true)).Applied);
             var current = adapter.CaptureBlockAction(page.Id, "block-b")!;
@@ -168,6 +168,46 @@ public sealed class BoardsBlockActionsTests
             current = adapter.CaptureBlockAction(page.Id, "block-b")!;
             Blocks(adapter)[1].Text = "newer unsaved edit";
             Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Delete, () => true)).Applied);
+            Assert.False(adapter.CanUndo);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
+    public async Task Typed_block_move_uses_one_undo_step_and_cancelled_move_is_inert()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-block-pointer-move-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var path = Path.Combine(root, "pointer.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            await SeedAsync(store, path);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            var pageId = adapter.Document.Sections.Single().Pages.Single().Id;
+            var original = adapter.Snapshot;
+
+            using var cancelled = new CancellationTokenSource();
+            cancelled.Cancel();
+            var cancellationTarget = adapter.CaptureBlockAction(pageId, "block-b")!;
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+                await adapter.ApplyBlockMoveAsync(cancellationTarget, 2, () => true, cancelled.Token));
+            Assert.Equal(original, adapter.Snapshot);
+            Assert.False(adapter.CanUndo);
+
+            var deniedTarget = adapter.CaptureBlockAction(pageId, "block-b")!;
+            var denied = await adapter.ApplyBlockMoveAsync(deniedTarget, 2, () => false);
+            Assert.False(denied.Applied);
+            Assert.Equal(original, adapter.Snapshot);
+            Assert.False(adapter.CanUndo);
+
+            var target = adapter.CaptureBlockAction(pageId, "block-a")!;
+            var moved = await adapter.ApplyBlockMoveAsync(target, 2, () => true);
+            Assert.True(moved.Applied);
+            Assert.Equal(new[] { "block-b", "block-c", "block-a" }, Blocks(adapter).Select(block => block.Id));
+            Assert.True(adapter.CanUndo);
+            Assert.True(await adapter.UndoAsync());
+            Assert.Equal(original, adapter.Snapshot);
             Assert.False(adapter.CanUndo);
         }
         finally { Directory.Delete(root, recursive: true); }

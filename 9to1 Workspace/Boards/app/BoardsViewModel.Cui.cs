@@ -73,7 +73,8 @@ public sealed partial class BoardsViewModel
         var blocks = CurrentPage().Blocks;
         var index = blocks.FindIndex(block => block.Id == SelectedBlockId);
         var eligible = index >= 0 && !SelectedBlockId.Contains(':') &&
-            blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph";
+            blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
+                "checklist" or "bulleted" or "numbered";
         var available = _isEditMode && eligible && _session is ContractSessionAdapter && !_blockActionBusy && BlockActionEditingAllowed();
         Set("CanManageSelectedBlock", available);
         Set("CanMoveBlockUp", available && index > 0);
@@ -113,6 +114,33 @@ public sealed partial class BoardsViewModel
                     Interlocked.Read(ref _textRangeEpoch) == epoch, cancellationToken);
             if (!result.Applied) { Set("StatusText", "Block action refused: " + result.Code); return true; }
             _selectedBlockId = result.SelectedBlockId ?? string.Empty;
+            InvalidateTextRange();
+            RefreshAfterEdit();
+            return true;
+        }
+        finally { _blockActionBusy = false; RefreshCuiBlockActions(); }
+    }
+
+    internal async ValueTask<bool> DispatchCuiBlockMoveAsync(
+        BoardBlockMoveRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!_isEditMode || _blockActionBusy || !BlockActionEditingAllowed() ||
+            _session is not ContractSessionAdapter adapter ||
+            SelectedPageId != request.Target.PageId || SelectedBlockId != request.Target.BlockId)
+        { Set("StatusText", "Select an editable flow block."); return false; }
+        var epoch = Interlocked.Read(ref _textRangeEpoch);
+        _blockActionBusy = true; RefreshCuiBlockActions();
+        try
+        {
+            var result = await adapter.ApplyBlockMoveAsync(request.Target, request.DestinationIndex,
+                () => !_textRangeDetached && SelectedPageId == request.Target.PageId && SelectedBlockId == request.Target.BlockId &&
+                    Interlocked.Read(ref _textRangeEpoch) == epoch, cancellationToken);
+            if (!result.Applied)
+            {
+                if (result.Code is not "NoChange") Set("StatusText", "Block move refused: " + result.Code);
+                return false;
+            }
+            _selectedBlockId = result.SelectedBlockId ?? request.Target.BlockId;
             InvalidateTextRange();
             RefreshAfterEdit();
             return true;

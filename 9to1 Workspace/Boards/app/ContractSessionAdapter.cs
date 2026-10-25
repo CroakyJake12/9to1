@@ -12,6 +12,7 @@ namespace CakeOS.Apps.Boards.App;
 
 public enum BoardBlockAction { MoveUp, MoveDown, Duplicate, Delete }
 public sealed record BoardBlockActionRequest(BoardBlockActionTarget Target, BoardBlockAction Action);
+public sealed record BoardBlockMoveRequest(BoardBlockActionTarget Target, int DestinationIndex);
 public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string PageId, string BlockId,
     string ViewStamp, int ViewIndex, int ViewCount);
 public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId);
@@ -320,24 +321,45 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         finally { _mergeGate.Release(); }
     }
 
-    private BoardBlockActionTarget? _issuedBlockAction;
+    // Each rendered grip gets one exact ticket for this view. Keep the whole
+    // current-view set so rendering later rows cannot invalidate earlier ones.
+    private readonly object _blockActionTicketGate = new();
+    private readonly List<BoardBlockActionTarget> _issuedBlockActions = [];
+    private string? _issuedBlockActionViewStamp;
+    private bool IsIssuedBlockAction(BoardBlockActionTarget target)
+    {
+        lock (_blockActionTicketGate)
+            return _issuedBlockActions.Any(issued => ReferenceEquals(target, issued));
+    }
     private string BlockActionStamp() => Convert.ToHexString(
         System.Security.Cryptography.SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(_view, Json)));
 
     /// <summary>A transient current-owner ticket, never another document/history.
-    /// Composite list-row and ink projection ids are not whole contract blocks.</summary>
+    /// Projection child ids and ink identities are not whole contract blocks.</summary>
     public BoardBlockActionTarget? CaptureBlockAction(string pageId, string blockId)
     {
-        if (_disposed) { _issuedBlockAction = null; return null; }
+        if (_disposed) return null;
         var page = _view.Sections.SelectMany(section => section.Pages).FirstOrDefault(value => value.Id == pageId);
         var index = page?.Blocks.FindIndex(block => block.Id == blockId) ?? -1;
         if (page is null || index < 0 || blockId.Contains(':') ||
-            page.Blocks[index].Kind is not ("paragraph" or "heading" or "table" or "image" or "divider" or "graph"))
-        { _issuedBlockAction = null; return null; }
-        var candidate = new BoardBlockActionTarget(_textOwner, DocumentVersion, pageId, blockId,
-            BlockActionStamp(), index, page.Blocks.Count);
-        if (candidate != _issuedBlockAction) _issuedBlockAction = candidate;
-        return _issuedBlockAction;
+            page.Blocks[index].Kind is not ("paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
+                "checklist" or "bulleted" or "numbered"))
+        { return null; }
+        var viewStamp = BlockActionStamp();
+        lock (_blockActionTicketGate)
+        {
+            if (!string.Equals(_issuedBlockActionViewStamp, viewStamp, StringComparison.Ordinal))
+            {
+                _issuedBlockActions.Clear();
+                _issuedBlockActionViewStamp = viewStamp;
+            }
+            var candidate = new BoardBlockActionTarget(_textOwner, DocumentVersion, pageId, blockId,
+                viewStamp, index, page.Blocks.Count);
+            var issued = _issuedBlockActions.FirstOrDefault(value => value == candidate);
+            if (issued is not null) return issued;
+            _issuedBlockActions.Add(candidate);
+            return candidate;
+        }
     }
 
     public async ValueTask<BoardBlockActionResult> ApplyBlockActionAsync(BoardBlockActionTarget target,
@@ -349,7 +371,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            bool CurrentView() => !_disposed && ReferenceEquals(target, _issuedBlockAction) &&
+            bool CurrentView() => !_disposed && IsIssuedBlockAction(target) &&
                 target.OwnerId == _textOwner && originStillEditable() && target.ViewStamp == BlockActionStamp();
             if (!CurrentView() || target.Revision != DocumentVersion) return new(false, "StaleOrReadOnly", null);
             if ((action == BoardBlockAction.MoveUp && target.ViewIndex == 0) ||
@@ -391,6 +413,42 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
             if (!applied) return new(false, "StaleOrReadOnly", null);
             RefreshView();
             return new(true, "Applied", selected);
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>Moves one issued stable block ticket to a final page index as one undoable mutation.</summary>
+    public async ValueTask<BoardBlockActionResult> ApplyBlockMoveAsync(BoardBlockActionTarget target,
+        int destinationIndex, Func<bool> originStillEditable, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(target); ArgumentNullException.ThrowIfNull(originStillEditable);
+        if (_disposed) return new(false, "Disposed", null);
+        if (destinationIndex < 0 || destinationIndex >= target.ViewCount)
+            return new(false, "InvalidDestination", null);
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            bool CurrentView() => !_disposed && IsIssuedBlockAction(target) &&
+                target.OwnerId == _textOwner && originStillEditable() && target.ViewStamp == BlockActionStamp();
+            if (!CurrentView() || target.Revision != DocumentVersion) return new(false, "StaleOrReadOnly", null);
+            if (destinationIndex == target.ViewIndex) return new(false, "NoChange", target.BlockId);
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var version = DocumentVersion;
+            bool Applicable(HavenRichNotes rich)
+            {
+                if (!CurrentView() || rich.Version != version) return false;
+                var page = rich.Sections.SelectMany(section => section.Pages).FirstOrDefault(value => value.Id == target.PageId);
+                var index = page?.Blocks.FindIndex(block => block.Id == target.BlockId) ?? -1;
+                return page is not null && index >= 0 && destinationIndex < page.Blocks.Count;
+            }
+            if (!Applicable(_real.Rich)) return new(false, "StaleOrBoundary", null);
+            var applied = await _real.MutateIfAsync(Applicable, rich =>
+            {
+                HavenRichNotesOps.MoveBlock(rich, target.PageId, target.BlockId, destinationIndex);
+            }, cancellationToken).ConfigureAwait(false);
+            if (!applied) return new(false, "StaleOrReadOnly", null);
+            RefreshView();
+            return new(true, "Applied", target.BlockId);
         }
         finally { _mergeGate.Release(); }
     }
@@ -770,7 +828,11 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     {
         // Undo/redo can restore equal revision/content; never revive an issued range.
         _issuedTextSelection = null;
-        _issuedBlockAction = null;
+        lock (_blockActionTicketGate)
+        {
+            _issuedBlockActions.Clear();
+            _issuedBlockActionViewStamp = null;
+        }
         Projector.Project(_real.Rich, _view);
         _baselineJson = JsonSerializer.Serialize(_view, Json);
     }
