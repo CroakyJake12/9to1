@@ -124,7 +124,7 @@ internal sealed partial class OriginalAutomationLibraryBindings
         _graphStatus = $"Home records an audited {recovery.Kind} publication of {graph.Nodes.Count} nodes and {graph.Connections.Count} connections. The saved Automation still points to revision {recovery.ExpectedGraphRevision}; review recovery to bind the existing Home revision. No graph will be republished.";
         _graphNodeTitle = "Published Home graph is retained for recovery";
         _graphAllDiagnostics = [new("graph-publication-binding-pending", "binding.recovery.required",
-            "The durable Home graph publication is audited, but its separate Automation definition binding did not complete.", null, null)];
+            "The durable Home graph publication is audited, but its separate Automation definition binding did not complete.")];
         RefreshGraphDiagnostics();
     }
     private object? GraphValue(string path) => path switch

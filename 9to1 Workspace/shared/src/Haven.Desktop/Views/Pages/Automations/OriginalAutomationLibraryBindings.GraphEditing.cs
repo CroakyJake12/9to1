@@ -3,6 +3,7 @@ using System.Text.Json;
 using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Application.NodeGraph;
+using Haven.Core;
 using Haven.Desktop.Services;
 
 namespace Haven.Desktop.Views.Pages.Automations;
