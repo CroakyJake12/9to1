@@ -142,17 +142,18 @@ public sealed class VisualCaptureTests
             ?? throw new InvalidOperationException("The authored EditorScroll host did not create its CUI-owned ScrollViewer. Runtime tree:\n" + tree);
         Assert.True(editorScroll.Bounds.Width > width * 0.70,
             $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
-        var widthDifference = Math.Abs(pageCard.Bounds.Width - editorScroll.Viewport.Width);
-        Assert.True(widthDifference <= 1,
-            $"The seamless page width {pageCard.Bounds.Width} did not fill its editor viewport {editorScroll.Viewport.Width}.");
+        var toolbarFrame = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "FormattingToolbar")
+            ?? throw new InvalidOperationException("Missing authored FormattingToolbar. Runtime tree:\n" + tree);
+        Assert.True(Math.Abs(pageCard.Bounds.Left - toolbarFrame.Bounds.Left) <= 1,
+            $"The page panel left edge {pageCard.Bounds.Left} did not align with toolbar {toolbarFrame.Bounds.Left}.");
+        Assert.True(Math.Abs(pageCard.Bounds.Right - toolbarFrame.Bounds.Right) <= 1,
+            $"The page panel right edge {pageCard.Bounds.Right} did not align with toolbar {toolbarFrame.Bounds.Right}.");
+        Assert.True(pageCard.Bounds.Width - editorScroll.Viewport.Width >= 12,
+            $"The document viewport did not retain its native scrollbar gutter inside the full-width panel (panel={pageCard.Bounds.Width}, viewport={editorScroll.Viewport.Width}).");
         Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
-        Assert.Equal(new Thickness(0), pageCard.Margin);
-        Assert.Equal(new Thickness(0), pageCard.Padding);
-        Assert.Equal(new Thickness(0), pageCard.BorderThickness);
-        Assert.Equal(new CornerRadius(0), pageCard.CornerRadius);
         var contentLayer = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "DocumentContentLayer")
             ?? throw new InvalidOperationException("Missing authored DocumentContentLayer. Runtime tree:\n" + tree);
-        Assert.Equal(new Thickness(40, 32), contentLayer.Margin);
+        Assert.Equal(new Thickness(40, 36), contentLayer.Margin);
         Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
         var topBar = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "TopBar")
             ?? throw new InvalidOperationException("Missing authored standalone TopBar. Runtime tree:\n" + tree);

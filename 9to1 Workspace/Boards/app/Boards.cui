@@ -9,12 +9,8 @@
     <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr" Background="{Resource CuiPanelBrush}">
       <!-- Top document bar: file actions, title, save state, global actions -->
       <Container padding="12 6" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="{Resource CuiPanelBrush}" BorderWidth="0">
-        <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto Auto" CellGap="2">
-          <Container Type="Grid" ColumnSizes="1fr Auto" Column="0" Row="0" ColumnSpan="2" CellGap="8">
-            <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
-            <Text ID="SaveState" Column="1" Text="{Binding SaveStateText, fallback=Saved}" FontSize="11" VerticalAlignment="Center" Margin="0 0 8 0" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
-          </Container>
-          <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" Row="1" CellGap="4" VerticalAlignment="Center">
+        <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto" CellGap="2">
+          <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" Row="0" CellGap="8" VerticalAlignment="Center">
             <Container Type="Menu" ID="FileMenu">
               <Button Type="Menu Item" ID="FileMenuButton" Content="File" Interactive="{Binding CanEdit}" AccessibleName="Board file menu">
                 <Button Type="Menu Item" Content="Open…" Action="OpenBoard" />
@@ -24,10 +20,11 @@
                 <Button Type="Menu Item" Content="Exit" Action="CloseWindow" />
               </Button>
             </Container>
+            <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
             <Button Type="Menu Item" ID="UndoButton" IconSource="icon:undo" IconOnly="True" Action="Undo" Interactive="{Binding IsEditMode}" AccessibleName="Undo" Tooltip="Undo" />
             <Button Type="Menu Item" ID="RedoButton" IconSource="icon:redo" IconOnly="True" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" Tooltip="Redo" />
           </Container>
-          <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" Row="1" CellGap="6" VerticalAlignment="Center">
+          <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" Row="0" CellGap="6" VerticalAlignment="Center">
             <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="6" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="8 4" CornerRadius="10">
               <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
               <Input ID="EditViewToggle" Type="Switch" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
@@ -53,7 +50,10 @@
         <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="12">
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="icon:boards" Width="20" Height="20" VerticalAlignment="Center" AccessibleName="Current Board" />
-            <Input id="BoardTitleBox" column="1" accessible-name="Board title" font-size="15" font-weight="SemiBold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
+            <Container Type="Vertical Stack" ID="BoardIdentity" Column="1" CellGap="0" VerticalAlignment="Center">
+              <Input id="BoardTitleBox" accessible-name="Board title" font-size="15" font-weight="SemiBold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
+              <Text ID="SaveState" Text="{Binding SaveStateText, fallback=Saved}" FontSize="11" VerticalAlignment="Center" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
             <Container Type="Menu" ID="BoardSwitcherMenu" Column="2">
             <Button Type="Menu Item" ID="BoardSwitcher" IconSource="icon:chevron-down" Width="32" Height="32" Padding="0" Background="Transparent" BorderWidth="0" CornerRadius="6" IsEnabled="{Binding CanOpenBoardMenu}" Interactive="{Binding CanOpenBoardMenu}" AccessibleName="Current Board actions" HorizontalAlignment="Center">
               <Button Type="Menu Item" ID="BoardSwitcherCreate" Content="New Board…" Action="NewBoard" IsEnabled="{Binding CanCreateBoard}" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
@@ -67,7 +67,7 @@
             </Container>
           </Container>
           <Input id="NavSearchBox" Row="1" accessible-name="Search sections and pages" placeholdertext="Search pages" margin="0 0 4 0" padding="14 11" cornerradius="18" background="{Resource CuiPanel2Brush}" foreground="{Resource CuiTextBrush}" borderwidth="0" Type="Text" ID="NavSearchBox" />
-          <Container verticalalignment="Stretch" Type="Overlay" Row="2" VerticalScrolling="True" HorizontalScrolling="False">
+          <Container verticalalignment="Stretch" Type="Overlay" Row="2" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6">
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
           <Container Type="Menu" Row="3" Margin="0 8 0 0">
@@ -84,8 +84,8 @@
         </Container>
       </Container>
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
-      <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
-        <Container Type="Grid" Row="0" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiPanel2Brush}" BorderWidth="0" Padding="8 4" Margin="12 4" CornerRadius="14">
+        <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
+        <Container Type="Grid" Row="0" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiPanel2Brush}" BorderWidth="0" Padding="8 4" Margin="16 4 14 4" CornerRadius="14">
           <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="0" VerticalAlignment="Center" AccessibleName="Text formatting">
             <Button ID="RangeBold" Content="B" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
             <Button ID="RangeItalic" Content="I" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" FontStyle="Italic" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic" />
@@ -184,8 +184,8 @@
             </Container>
           </If>
         </Container>
-        <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" Row="2" VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiPanelBrush}">
-          <Container horizontalalignment="Stretch" cornerradius="22" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Background="{Resource CuiPanel2Brush}" BorderWidth="0">
+        <Container horizontalalignment="Stretch" cornerradius="22" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Row="2" Background="{Resource CuiPanel2Brush}" BorderWidth="0">
+          <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
             <Container Type="Grid" ID="PageSurface">
               <Container margin="40 36" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
@@ -202,7 +202,7 @@
           </Container>
         </Container>
       </Container>
-      <Container Type="Vertical Stack" ID="LandingHost" Row="1" Column="1" Active="{Binding IsLanding}" VerticalScrolling="True" HorizontalScrolling="False" Padding="32 28" Background="{Resource CuiPanelBrush}" CellGap="12">
+      <Container Type="Vertical Stack" ID="LandingHost" Row="1" Column="1" Active="{Binding IsLanding}" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Padding="32 28" Background="{Resource CuiPanelBrush}" CellGap="12">
         <Text Text="Your boards" FontSize="30" FontWeight="Bold" />
         <Text Text="Open a saved workspace or create a new board." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
         <Container Type="Wrap" CellGap="8">
