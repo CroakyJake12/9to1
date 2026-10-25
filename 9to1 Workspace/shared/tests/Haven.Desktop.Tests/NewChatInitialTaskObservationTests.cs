@@ -85,6 +85,55 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Native_task_stream_publication_withdrawal_preserves_only_actual_callback_failures(bool foreignFailure)
+    {
+        await using var rig = new Rig(temporary: false);
+        var directory = Path.Combine(Path.GetTempPath(), "native-task-publication-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var page = CreateNativeComposerPage(rig, directory, new NativeComposerDraftStore());
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            var publications = 0;
+            var actualFailure = new OperationCanceledException("Actual foreign callback cancellation", new CancellationToken(true));
+            var publish = typeof(NewChatPage).GetMethod("PublishOriginalInitialTaskUiAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            var run = typeof(NewChatPage).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                .Single(method => method.Name == "RunChatOriginalAsync" && !method.IsGenericMethod &&
+                    method.GetParameters()[0].ParameterType == typeof(Func<Task>));
+            // Actual admitted page work and its actual dispatcher callback. Withdrawal inside
+            // the callback deterministically exercises the successful-await/retirement boundary.
+            Func<Task> body = () => (Task)publish.Invoke(page, [(Action)(() =>
+            {
+                publications++;
+                page.RequestRetirement();
+                if (foreignFailure) throw actualFailure;
+            })])!;
+            var command = (Task)run.Invoke(page, [body])!;
+            if (foreignFailure)
+            {
+                var commandFailure = await Assert.ThrowsAnyAsync<Exception>(() => command.WaitAsync(TimeSpan.FromSeconds(10)));
+                var closeFailure = await Assert.ThrowsAnyAsync<Exception>(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+                Assert.Contains(Leaves(commandFailure), cause => ReferenceEquals(cause, actualFailure));
+                Assert.Contains(Leaves(closeFailure), cause => ReferenceEquals(cause, actualFailure));
+            }
+            else
+            {
+                await command.WaitAsync(TimeSpan.FromSeconds(10));
+                await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            }
+            Assert.Equal(1, publications);
+        }
+        finally
+        {
+            page.RequestRetirement();
+            _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
+            Directory.Delete(directory, true);
+        }
+    }
+
     private static TaskRunOriginalInitialChatObservationLease NativeComposerIssuedLease(NewChatPage page)
     {
         var presentation = typeof(NewChatPage).GetField("_currentOriginalInitialTaskPresentation", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;

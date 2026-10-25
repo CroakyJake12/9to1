@@ -1396,13 +1396,27 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             Guid? bufferedMessageId = null;
             var nextDeltaFlushAt = Environment.TickCount64 + 50;
 
+            // The actual Tasks observer may withdraw presentation while a queued UI
+            // callback settles. Join that exact callback without demanding a new publication
+            // afterwards; its accepted-publication scope checks the same live owner before
+            // applying anything. Source/callback faults still propagate through AwaitAsync.
+            async Task AwaitOriginalStreamPublicationAsync(Task actual)
+            {
+                if (initialTaskObservation is null) await AwaitChatOriginalAsync(actual);
+                else await RequireChatOriginal().AwaitAsync(actual).ConfigureAwait(false);
+            }
+
+            Task InvokeOriginalStreamUiAsync(Action publication) => initialTaskObservation is null
+                ? InvokeOriginalChatUiAsync(publication)
+                : PublishOriginalInitialTaskUiAsync(publication);
+
             async Task FlushDeltasAsync()
             {
                 if (initialTaskObservation is { IsPresentationRetiring: true }) { deltaBuffer.Clear(); return; }
                 if (bufferedMessageId is not { } messageId || deltaBuffer.Length == 0) return;
                 var delta = deltaBuffer.ToString();
                 deltaBuffer.Clear();
-                await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() => ApplyOriginalObservedStreamEvent(ChatStreamEvent.AssistantDelta(messageId, delta))));
+                await AwaitOriginalStreamPublicationAsync(InvokeOriginalStreamUiAsync(() => ApplyOriginalObservedStreamEvent(ChatStreamEvent.AssistantDelta(messageId, delta))));
             }
 
             void ApplyOriginalObservedStreamEvent(ChatStreamEvent actual)
@@ -1417,11 +1431,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 if (initialTaskObservation is { IsPresentationRetiring: true }) return;
                 if (streamEvent.Kind == ChatStreamEventKind.AssistantDelta && streamEvent.MessageId is { } deltaMessageId)
                 {
-                    if (bufferedMessageId is not null && bufferedMessageId != deltaMessageId) await AwaitChatOriginalAsync(FlushDeltasAsync());
+                    if (bufferedMessageId is not null && bufferedMessageId != deltaMessageId) await AwaitOriginalStreamPublicationAsync(FlushDeltasAsync());
                     bufferedMessageId = deltaMessageId;
                     deltaBuffer.Append(streamEvent.Delta);
                     if (Environment.TickCount64 < nextDeltaFlushAt) return;
-                    await AwaitChatOriginalAsync(FlushDeltasAsync());
+                    await AwaitOriginalStreamPublicationAsync(FlushDeltasAsync());
                     nextDeltaFlushAt = Environment.TickCount64 + 50;
                     return;
                 }
@@ -1429,8 +1443,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 // actual conversation/message writes, so it is never accepted-input evidence.
                 if (streamEvent.Kind is ChatStreamEventKind.PreflightFailed or ChatStreamEventKind.PermissionRequired)
                     sendReportedFailure = true;
-                await AwaitChatOriginalAsync(FlushDeltasAsync());
-                await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() => ApplyOriginalObservedStreamEvent(streamEvent)));
+                await AwaitOriginalStreamPublicationAsync(FlushDeltasAsync());
+                await AwaitOriginalStreamPublicationAsync(InvokeOriginalStreamUiAsync(() => ApplyOriginalObservedStreamEvent(streamEvent)));
             }
             if (originalConversation.Mode == HavenMode.Tasks)
             {
@@ -1498,7 +1512,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                }), PublishOriginalStreamEventAsync).ConfigureAwait(false);
             }
             if (!_originalWork.IsRetiring)
-                await AwaitChatOriginalAsync(FlushDeltasAsync());
+                await AwaitOriginalStreamPublicationAsync(FlushDeltasAsync());
             if (!sendReportedFailure && committedUserMessageId is { } userMessageId && acceptedSend.Consumed.AttachmentIds.Length != 0)
                 await AwaitChatOriginalAsync(AssociatePendingAttachmentsWithUserMessageAsync(userMessageId, acceptedSend, RequireChatOriginal().Token));
             // A refused preflight or a FAILED write after the presentation-only event never
@@ -1531,6 +1545,14 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 await RequireChatOriginal().AwaitAsync(FinishOriginalInitialTaskObservationAsync(initialTaskObservation));
             await RequireChatOriginal().AwaitAsync(FinishOriginalSendAsync(originalSendCancellation));
         }
+    }
+
+    private async Task PublishOriginalInitialTaskUiAsync(Action publication)
+    {
+        var original = RequireChatOriginal();
+        var actual = Dispatcher.UIThread.InvokeAsync(() =>
+            original.RunAcceptedPublicationCallback(publication)).GetTask();
+        await original.AwaitAsync(actual).ConfigureAwait(false);
     }
 
     private void OnDualToggleRequested(object? sender, EventArgs e) => RunOriginalChatNotification(() => OnDualToggleRequestedOriginalBody(sender, e));
