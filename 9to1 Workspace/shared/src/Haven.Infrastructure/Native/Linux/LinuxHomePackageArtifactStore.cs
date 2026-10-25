@@ -121,6 +121,9 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
                     throw new IOException("The original package stage changed during validation.");
                 LinuxOriginalDownloadPaths.Flush(directory);
                 DemandCurrent();
+                // Release before transferring descriptor ownership to the result, so
+                // an unlock failure cannot strand a stage that was never returned.
+                publicationLock.Dispose();
                 return new(this, stageLeaf, directory, identity, files, entrypointRelativePath, identities);
             }
             catch { directory.Dispose(); throw; }
@@ -150,6 +153,7 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
                 _ = ValidateFiles(stage.Directory, stage.Leaf, stage.Files, stage.Entrypoint, stage.FileIdentities, cancellationToken);
                 if (!stage.Identity.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(stage.Directory)))
                     throw new IOException("The original package directory changed during publication validation.");
+                LinuxOriginalDownloadPaths.Flush(stage.Directory);
                 var current = ObserveActiveCore();
                 if (expectedActive is null ? current is not null :
                     current is null || !expectedActive.Identity.SameReadVersion(current.Identity))
@@ -213,53 +217,74 @@ public sealed partial class LinuxHomePackageArtifactStore : IDisposable
         // Enumeration supplies names only. Every directory/file is separately opened
         // beneath the SAME retained descriptor with NO_SYMLINKS/NO_MAGICLINKS/NO_XDEV.
         var observed = new HashSet<string>(StringComparer.Ordinal);
-        var pending = new Stack<string>(); pending.Push("");
-        while (pending.TryPop(out var parent))
+        var heldDirectories = new List<(SafeFileHandle Handle, string Path, LinuxOriginalDownloadIdentity Identity)>();
+        try
         {
-            token.ThrowIfCancellationRequested();
-            foreach (var entry in Directory.EnumerateFileSystemEntries(Path.Combine(path, parent)))
-            {
-                var relative = Path.GetRelativePath(path, entry);
-                if (observed.Count >= expected.Count || !expected.Contains(relative) || !observed.Add(relative))
-                    throw new InvalidDataException("The staged package contains an extra or redirected entry.");
-                if (!directories.Contains(relative)) continue;
-                using var child = LinuxOriginalDownloadPaths.OpenAt(directory, relative, LinuxOriginalDownloadPaths.DirectoryFlags(mutable: true));
-                LinuxOriginalDownloadPaths.DemandPath(child, entry, directory: true);
-                LinuxOriginalDownloadPaths.DemandOwner(child, _uid, privateDirectory: true);
-                pending.Push(relative);
-            }
-        }
-        if (!expected.SetEquals(observed)) throw new InvalidDataException("The complete staged package cohort is missing entries.");
-        var identities = new Dictionary<string, LinuxOriginalDownloadIdentity>(StringComparer.Ordinal);
-        foreach (var file in files)
-        {
-            token.ThrowIfCancellationRequested();
-            using var held = LinuxOriginalDownloadPaths.OpenAt(directory, file.RelativePath, 0x80000UL | 0x800UL);
-            var before = LinuxOriginalDownloadPaths.ReadIdentity(held);
-            if (!before.IsRegular || before.Links != 1 || before.Size != (ulong)file.Bytes ||
-                file.RelativePath == entrypoint && (before.Mode & 0x40) == 0 ||
-                originals is not null && !originals[file.RelativePath].SameReadVersion(before))
-                throw new InvalidDataException("The staged package file, size, executable mode or retained identity differs.");
-            LinuxOriginalDownloadPaths.DemandOwner(held, _uid);
-            LinuxOriginalDownloadPaths.DemandPath(held, Path.Combine(path, file.RelativePath), directory: false);
-            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            var buffer = new byte[65536]; long offset = 0;
-            while (offset < file.Bytes)
+            var pending = new Stack<string>(); pending.Push("");
+            while (pending.TryPop(out var parent))
             {
                 token.ThrowIfCancellationRequested();
-                var read = RandomAccess.Read(held, buffer.AsSpan(0, (int)Math.Min(buffer.Length, file.Bytes - offset)), offset);
-                if (read == 0) throw new EndOfStreamException("The staged package file was truncated.");
-                hash.AppendData(buffer, 0, read); offset += read;
+                foreach (var entry in Directory.EnumerateFileSystemEntries(Path.Combine(path, parent)))
+                {
+                    var relative = Path.GetRelativePath(path, entry);
+                    if (observed.Count >= expected.Count || !expected.Contains(relative) || !observed.Add(relative))
+                        throw new InvalidDataException("The staged package contains an extra or redirected entry.");
+                    if (!directories.Contains(relative)) continue;
+                    var child = LinuxOriginalDownloadPaths.OpenAt(directory, relative, LinuxOriginalDownloadPaths.DirectoryFlags(mutable: true));
+                    try
+                    {
+                        LinuxOriginalDownloadPaths.DemandPath(child, entry, directory: true);
+                        LinuxOriginalDownloadPaths.DemandOwner(child, _uid, privateDirectory: true);
+                        heldDirectories.Add((child, entry, LinuxOriginalDownloadPaths.ReadIdentity(child)));
+                    }
+                    catch { child.Dispose(); throw; }
+                    pending.Push(relative);
+                }
             }
-            if (!Convert.ToHexString(hash.GetHashAndReset()).Equals(file.Sha256, StringComparison.OrdinalIgnoreCase) ||
-                !before.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(held)))
-                throw new InvalidDataException("The staged package file failed integrity or changed during its read.");
-            LinuxOriginalDownloadPaths.DemandPath(held, Path.Combine(path, file.RelativePath), directory: false);
-            LinuxOriginalDownloadPaths.Flush(held);
-            identities.Add(file.RelativePath, before);
+            if (!expected.SetEquals(observed)) throw new InvalidDataException("The complete staged package cohort is missing entries.");
+            var identities = new Dictionary<string, LinuxOriginalDownloadIdentity>(StringComparer.Ordinal);
+            foreach (var file in files)
+            {
+                token.ThrowIfCancellationRequested();
+                using var held = LinuxOriginalDownloadPaths.OpenAt(directory, file.RelativePath, 0x80000UL | 0x800UL);
+                var before = LinuxOriginalDownloadPaths.ReadIdentity(held);
+                if (!before.IsRegular || before.Links != 1 || before.Size != (ulong)file.Bytes ||
+                    file.RelativePath == entrypoint && (before.Mode & 0x40) == 0 ||
+                    originals is not null && !originals[file.RelativePath].SameReadVersion(before))
+                    throw new InvalidDataException("The staged package file, size, executable mode or retained identity differs.");
+                LinuxOriginalDownloadPaths.DemandOwner(held, _uid);
+                LinuxOriginalDownloadPaths.DemandPath(held, Path.Combine(path, file.RelativePath), directory: false);
+                using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                var buffer = new byte[65536]; long offset = 0;
+                while (offset < file.Bytes)
+                {
+                    token.ThrowIfCancellationRequested();
+                    var read = RandomAccess.Read(held, buffer.AsSpan(0, (int)Math.Min(buffer.Length, file.Bytes - offset)), offset);
+                    if (read == 0) throw new EndOfStreamException("The staged package file was truncated.");
+                    hash.AppendData(buffer, 0, read); offset += read;
+                }
+                if (!Convert.ToHexString(hash.GetHashAndReset()).Equals(file.Sha256, StringComparison.OrdinalIgnoreCase) ||
+                    !before.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(held)))
+                    throw new InvalidDataException("The staged package file failed integrity or changed during its read.");
+                LinuxOriginalDownloadPaths.DemandPath(held, Path.Combine(path, file.RelativePath), directory: false);
+                LinuxOriginalDownloadPaths.Flush(held);
+                identities.Add(file.RelativePath, before);
+            }
+            // Persist nested namespace entries after their payloads, then let the owner
+            // flush the stage and publication parent. Retain their original identities
+            // until this final pass rather than trusting an earlier pathname traversal.
+            foreach (var child in heldDirectories.AsEnumerable().Reverse())
+            {
+                token.ThrowIfCancellationRequested();
+                LinuxOriginalDownloadPaths.DemandPath(child.Handle, child.Path, directory: true);
+                if (!child.Identity.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(child.Handle)))
+                    throw new IOException("The original nested package directory changed during validation.");
+                LinuxOriginalDownloadPaths.Flush(child.Handle);
+            }
+            LinuxOriginalDownloadPaths.DemandPath(directory, path, directory: true);
+            return identities;
         }
-        LinuxOriginalDownloadPaths.DemandPath(directory, path, directory: true);
-        return identities;
+        finally { foreach (var child in heldDirectories.AsEnumerable().Reverse()) child.Handle.Dispose(); }
     }
 
     private static IEnumerable<string> ParentDirectories(string relative)

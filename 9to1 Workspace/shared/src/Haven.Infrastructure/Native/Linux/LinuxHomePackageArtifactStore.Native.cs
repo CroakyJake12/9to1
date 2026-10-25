@@ -8,9 +8,12 @@ public sealed partial class LinuxHomePackageArtifactStore
 {
     private sealed class DirectoryLock(SafeFileHandle directory) : IDisposable
     {
+        private bool _released;
         public void Dispose()
         {
+            if (_released) return;
             if (Flock(directory, 8) != 0) throw new Win32Exception(Marshal.GetLastPInvokeError(), "Release original package publication lock.");
+            _released = true;
         }
     }
     private static IDisposable LockDirectory(SafeFileHandle directory)
