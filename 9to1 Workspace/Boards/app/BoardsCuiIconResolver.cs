@@ -39,8 +39,8 @@ public static class BoardsCuiIconResolver
         if (!target.TryFindResource("CuiTextBrush", out var resource) || resource is not IBrush)
             throw new InvalidOperationException("A Boards catalog icon requires the scoped CUI text brush.");
         var key = source[5..];
-        if (target is Image imageControl)
-            ObserveSemanticIcon(imageControl, key);
+        if (target is Image semanticIcon)
+            ObserveSemanticIcon(semanticIcon, key);
         return CreateIcon(key, SemanticBrush(key, target));
     }
 
