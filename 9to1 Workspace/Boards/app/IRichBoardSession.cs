@@ -25,6 +25,8 @@ public sealed class RichBoardSection
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Title { get; set; } = "Untitled section";
+    public string IconKey { get; set; } = HavenRichSectionIcons.Default;
+    public string? IconColor { get; set; }
     public List<RichBoardPage> Pages { get; set; } = [];
 }
 
@@ -265,6 +267,8 @@ public interface IRichBoardSession : IAsyncDisposable
     bool CanRedo { get; }
     ValueTask<bool> UndoAsync(CancellationToken cancellationToken = default);
     ValueTask<bool> RedoAsync(CancellationToken cancellationToken = default);
+    ValueTask SetSectionIconAsync(string sectionId, string iconKey, string? iconColor,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Optional session capability contract for immutable embedded document views.</summary>

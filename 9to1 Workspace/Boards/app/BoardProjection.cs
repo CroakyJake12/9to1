@@ -19,6 +19,8 @@ internal static class Projector
         {
             Id = s.Id,
             Title = s.Title,
+            IconKey = s.IconKey,
+            IconColor = s.IconColor,
             Pages = s.Pages.Select(page => ProjectPage(rich, page)).ToList()
         }).ToList();
     }
@@ -313,7 +315,9 @@ internal static class MergeDeltas
             // Full replacement (e.g. New board): rebuild from the working model.
             rich.Sections.Clear();
             foreach (var section in view.Sections)
+            {
                 ImportSectionTree(rich, section);
+            }
             HavenRichNotesOps.TouchNotes(rich);
             return;
         }
@@ -323,6 +327,7 @@ internal static class MergeDeltas
             if (!contractSections.TryGetValue(viewSection.Id, out var contractSection))
             {
                 contractSection = HavenRichNotesOps.ImportSection(rich, viewSection.Id, viewSection.Title);
+                HavenRichNotesOps.SetSectionIcon(rich, contractSection.Id, viewSection.IconKey, viewSection.IconColor);
                 foreach (var viewPage in viewSection.Pages)
                     ImportPageTree(contractSection, viewPage);
                 continue;
@@ -330,6 +335,9 @@ internal static class MergeDeltas
             if (baselineSections.TryGetValue(viewSection.Id, out var baselineSection) &&
                 viewSection.Title != baselineSection.Title)
                 HavenRichNotesOps.RenameSection(rich, contractSection.Id, viewSection.Title);
+            if (baselineSections.TryGetValue(viewSection.Id, out baselineSection) &&
+                (viewSection.IconKey != baselineSection.IconKey || viewSection.IconColor != baselineSection.IconColor))
+                HavenRichNotesOps.SetSectionIcon(rich, contractSection.Id, viewSection.IconKey, viewSection.IconColor);
             MergePages(rich, contractSection, viewSection,
                 baselineSection?.Pages.ToDictionary(p => p.Id, StringComparer.Ordinal)
                 ?? new Dictionary<string, RichBoardPage>(StringComparer.Ordinal));
@@ -696,6 +704,7 @@ internal static class MergeDeltas
     private static void ImportSectionTree(HavenRichNotes rich, RichBoardSection viewSection)
     {
         var section = HavenRichNotesOps.ImportSection(rich, viewSection.Id, viewSection.Title);
+        HavenRichNotesOps.SetSectionIcon(rich, section.Id, viewSection.IconKey, viewSection.IconColor);
         foreach (var viewPage in viewSection.Pages)
             ImportPageTree(section, viewPage);
     }

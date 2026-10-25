@@ -1609,6 +1609,71 @@ public sealed class ContractAdapterTests
         finally { DeleteDirectory(root); }
     }
 
+    [Fact]
+    public async Task Section_icon_metadata_is_bounded_undoable_and_survives_save_reopen()
+    {
+        var root = TempDirectory();
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "section-icon.9to1board");
+            string sectionId;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var section = Assert.Single(adapter.Document.Sections);
+                sectionId = section.Id;
+                Assert.Equal(HavenRichSectionIcons.Default, section.IconKey);
+                Assert.Null(section.IconColor);
+
+                await adapter.SetSectionIconAsync(sectionId, "calendar", "#a1B2c3");
+                section = Assert.Single(adapter.Document.Sections);
+                Assert.Equal("calendar", section.IconKey);
+                Assert.Equal("#A1B2C3", section.IconColor);
+
+                Assert.True(await adapter.UndoAsync());
+                section = Assert.Single(adapter.Document.Sections);
+                Assert.Equal(HavenRichSectionIcons.Default, section.IconKey);
+                Assert.Null(section.IconColor);
+                Assert.True(await adapter.RedoAsync());
+                section = Assert.Single(adapter.Document.Sections);
+                Assert.Equal("calendar", section.IconKey);
+                Assert.Equal("#A1B2C3", section.IconColor);
+
+                await Assert.ThrowsAsync<ArgumentException>(async () =>
+                    await adapter.SetSectionIconAsync(sectionId, "arbitrary-catalog-key", null));
+                await Assert.ThrowsAsync<ArgumentException>(async () =>
+                    await adapter.SetSectionIconAsync(sectionId, "folder", "red"));
+                Assert.Equal("calendar", Assert.Single(adapter.Document.Sections).IconKey);
+                Assert.Equal("#A1B2C3", Assert.Single(adapter.Document.Sections).IconColor);
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var restored = Assert.Single(reopened.Document.Sections);
+            Assert.Equal(sectionId, restored.Id);
+            Assert.Equal("calendar", restored.IconKey);
+            Assert.Equal("#A1B2C3", restored.IconColor);
+        }
+        finally { DeleteDirectory(root); }
+    }
+
+    [Fact]
+    public void Legacy_section_payload_uses_theme_default_and_color_schema_is_strict()
+    {
+        var legacy = JsonSerializer.Deserialize<HavenRichNotes>(
+            "{\"title\":\"Legacy\",\"sections\":[{\"id\":\"sec-legacy\",\"title\":\"Legacy section\",\"pages\":[{\"id\":\"page-legacy\",\"title\":\"Page\",\"blocks\":[]}]}]}")!;
+        var section = Assert.Single(legacy.Sections);
+        Assert.Equal(HavenRichSectionIcons.Default, section.IconKey);
+        Assert.Null(section.IconColor);
+        HavenRichNotesValidator.Validate(legacy);
+
+        Assert.True(HavenRichSectionIcons.IsSupportedColor("#012aBc"));
+        Assert.True(HavenRichSectionIcons.IsSupportedColor(null));
+        Assert.False(HavenRichSectionIcons.IsSupportedColor("#abc"));
+        Assert.False(HavenRichSectionIcons.IsSupportedColor("#01234g"));
+        Assert.False(HavenRichSectionIcons.IsSupported("../../path"));
+    }
+
     private static string TempDirectory()
     {
         var root = Path.Combine(Path.GetTempPath(), "cakeos-adapter-tests", Guid.NewGuid().ToString("N"));

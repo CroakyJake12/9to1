@@ -161,6 +161,26 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         return ValueTask.FromResult(true);
     }
 
+    public ValueTask SetSectionIconAsync(string sectionId, string iconKey, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var section = Document.Sections.FirstOrDefault(candidate => candidate.Id == sectionId)
+            ?? throw new KeyNotFoundException("Section was not found.");
+        if (!HavenRichSectionIcons.IsSupported(iconKey))
+            throw new ArgumentException("Section icon key is not supported.", nameof(iconKey));
+        if (!HavenRichSectionIcons.IsSupportedColor(iconColor))
+            throw new ArgumentException("Section icon color must be null or a six-digit #RRGGBB value.", nameof(iconColor));
+        var normalizedColor = iconColor?.ToUpperInvariant();
+        if (section.IconKey == iconKey && section.IconColor == normalizedColor)
+            return ValueTask.CompletedTask;
+        MarkDirty();
+        section.IconKey = iconKey;
+        section.IconColor = normalizedColor;
+        return ValueTask.CompletedTask;
+    }
+
     public async ValueTask DisposeAsync()
     {
         bool flush;

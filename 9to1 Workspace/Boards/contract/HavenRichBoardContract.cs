@@ -29,7 +29,37 @@ public sealed class HavenRichSection
 {
     public string Id { get; set; } = "sec-" + Guid.NewGuid().ToString("N")[..12];
     public string Title { get; set; } = "Section 1";
+    /// <summary>Closed-silhouette icon key shown for this section in navigation.</summary>
+    public string IconKey { get; set; } = HavenRichSectionIcons.Default;
+    /// <summary>Optional explicit section icon color; null follows the active theme.</summary>
+    public string? IconColor { get; set; }
     public List<HavenRichPage> Pages { get; set; } = [new HavenRichPage()];
+}
+
+/// <summary>Finite catalog of section icon silhouettes supported by the Boards renderer.</summary>
+public static class HavenRichSectionIcons
+{
+    public const string Default = "boards";
+    private static readonly HashSet<string> SupportedKeys = new(StringComparer.Ordinal)
+    {
+        "boards", "section", "folder", "file", "chat", "study", "calendar", "target", "bookmark", "shield", "play"
+    };
+
+    public static bool IsSupported(string? key) => key is not null && SupportedKeys.Contains(key);
+
+    public static bool IsSupportedColor(string? color)
+    {
+        if (color is null) return true;
+        if (color.Length != 7 || color[0] != '#') return false;
+        for (var index = 1; index < color.Length; index++)
+        {
+            var value = color[index];
+            if (!((value >= '0' && value <= '9') || (value >= 'a' && value <= 'f') ||
+                  (value >= 'A' && value <= 'F')))
+                return false;
+        }
+        return true;
+    }
 }
 
 public sealed class HavenRichPage
@@ -292,6 +322,10 @@ public static class HavenRichNotesValidator
         {
             RequireId(section.Id, "Section");            if (string.IsNullOrWhiteSpace(section.Title))
                 throw new InvalidOperationException("Rich board sections must have non-empty titles.");
+            if (!HavenRichSectionIcons.IsSupported(section.IconKey))
+                throw new InvalidOperationException($"Section icon key '{section.IconKey}' is not supported.");
+            if (!HavenRichSectionIcons.IsSupportedColor(section.IconColor))
+                throw new InvalidOperationException("Section icon color must be null or a six-digit #RRGGBB value.");
             if (section.Pages.Count == 0)
                 throw new InvalidOperationException($"Section '{section.Title}' must contain at least one page.");
 
@@ -692,6 +726,23 @@ public static partial class HavenRichNotesOps
     {
         RequireSection(notes, sectionId).Title =
             string.IsNullOrWhiteSpace(title) ? "Untitled section" : title.Trim();
+        Touch(notes);
+    }
+
+    public static void SetSectionIcon(HavenRichNotes notes, string sectionId, string iconKey, string? iconColor)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        if (!HavenRichSectionIcons.IsSupported(iconKey))
+            throw new ArgumentException("Section icon key is not in the supported Boards silhouette catalog.", nameof(iconKey));
+        if (!HavenRichSectionIcons.IsSupportedColor(iconColor))
+            throw new ArgumentException("Section icon color must be null or a six-digit #RRGGBB value.", nameof(iconColor));
+
+        var section = RequireSection(notes, sectionId);
+        var normalizedColor = iconColor?.ToUpperInvariant();
+        if (section.IconKey == iconKey && section.IconColor == normalizedColor)
+            return;
+        section.IconKey = iconKey;
+        section.IconColor = normalizedColor;
         Touch(notes);
     }
 
