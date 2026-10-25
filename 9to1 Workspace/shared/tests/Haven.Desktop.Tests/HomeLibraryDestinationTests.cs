@@ -110,6 +110,31 @@ public sealed class HomeLibraryDestinationTests
         finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
     }
     [AvaloniaFact]
+    public async Task Library_row_discloses_actual_recent_shared_and_generated_metadata()
+    {
+        var id = Guid.NewGuid().ToString("D");
+        var link = new HomeDeepLink(HomeRoute.Library, "boards", id, "open", "boards.notebook");
+        var row = new HomeArtifactReference("boards", id, "Shared notebook", "Boards notebook", "Team space",
+            "fixture-profile", "Morgan", DateTimeOffset.UnixEpoch, IsRecent: true, IsPinned: true,
+            IsShared: true, IsGenerated: true, Tags: ["team"], OpenLink: link);
+        var page = Page(new Index([row]), new(), (_, _) => true); Window? window = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page);
+            Assert.Equal("Recent", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                control => HasAuthoredIdentity(control, "home-library-recent")).Text);
+            Assert.Equal("Pinned", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                control => HasAuthoredIdentity(control, "home-library-pinned")).Text);
+            Assert.Equal("Shared", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                control => HasAuthoredIdentity(control, "home-library-shared")).Text);
+            Assert.Equal("Morgan", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                control => HasAuthoredIdentity(control, "home-library-shared-by")).Text);
+            Assert.Equal("Generated", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                control => HasAuthoredIdentity(control, "home-library-generated")).Text);
+        }
+        finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
+    }
+    [AvaloniaFact]
     public async Task Library_rechecks_permission_before_open_and_removes_the_now_unavailable_projection()
     {
         var index = new Index(1); var authorization = new Authorization(); var queued = false;

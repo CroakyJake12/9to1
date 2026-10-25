@@ -19,7 +19,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
     private sealed record LibraryRow(string Key, string DisplayName, string OwnerApp, string ArtifactType,
-        string LastModified, string? Location, string? Owner, string? SharedBy, bool IsPinned, HomeDeepLink Target);
+        string LastModified, string? Location, string? Owner, string? SharedBy, bool IsRecent, bool IsPinned,
+        bool IsShared, bool IsGenerated, HomeDeepLink Target);
 
     private readonly HomeLibraryService _library;
     private readonly IHomeOriginalLibrarySource? _source;
@@ -172,7 +173,10 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             "location" => row.Location,
             "owner" => row.Owner,
             "sharedby" => row.SharedBy,
+            "isrecent" => row.IsRecent,
             "ispinned" => row.IsPinned,
+            "isshared" => row.IsShared,
+            "isgenerated" => row.IsGenerated,
             "target" => row.Target,
             _ => null
         };
@@ -364,7 +368,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         var queryMatches = QueryInputsMatchCurrentPage();
         _rows = _page?.Items.Select(item => new LibraryRow(item.OwnerApp + "/" + item.ArtifactId,
             item.DisplayName, item.OwnerApp, item.ArtifactType, item.LastModified.ToLocalTime().ToString("g"),
-            item.Location, item.Owner, item.SharedBy, item.IsPinned, item.OpenLink)).ToArray() ?? [];
+            item.Location, item.Owner, item.SharedBy, item.IsRecent, item.IsPinned, item.IsShared, item.IsGenerated,
+            item.OpenLink)).ToArray() ?? [];
         _bindings.Set("LibraryRows", _rows);
         _bindings.Set("IsBoardFolderSelection", _selectBoardFolder is not null);
         var notice = _page?.Succeeded == true ? _source?.AvailabilityNotice : null;

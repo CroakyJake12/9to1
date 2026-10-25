@@ -170,7 +170,15 @@
                               </Container>
                               <Text Text="{Binding artifact.Location}" Foreground="{Resource CuiTextSoftBrush}" />
                               <Text Text="{Binding artifact.Owner}" Foreground="{Resource CuiTextSoftBrush}" />
-                              <If Condition="{Binding artifact.IsPinned}"><Text Text="Pinned" Foreground="{Resource CuiTextSoftBrush}" /></If>
+                              <If Condition="{Binding artifact.IsRecent}"><Text id="home-library-recent" Text="Recent" Foreground="{Resource CuiTextSoftBrush}" /></If>
+                              <If Condition="{Binding artifact.IsPinned}"><Text id="home-library-pinned" Text="Pinned" Foreground="{Resource CuiTextSoftBrush}" /></If>
+                              <If Condition="{Binding artifact.IsShared}">
+                                <Container Type="Horizontal Stack" CellGap="4">
+                                  <Text id="home-library-shared" Text="Shared by" Foreground="{Resource CuiTextSoftBrush}" />
+                                  <Text id="home-library-shared-by" Text="{Binding artifact.SharedBy}" Foreground="{Resource CuiTextSoftBrush}" />
+                                </Container>
+                              </If>
+                              <If Condition="{Binding artifact.IsGenerated}"><Text id="home-library-generated" Text="Generated" Foreground="{Resource CuiTextSoftBrush}" /></If>
                             </Container>
                           </Button>
                           <Button id="home-library-toggle-pin" action="ToggleHomeLibraryPin" parameter="{Binding artifact.Target}" Content="Pin / unpin" IsEnabled="{Binding CanToggleHomeLibraryPin, fallback=false}" AccessibleName="Pin or unpin this artifact" />
