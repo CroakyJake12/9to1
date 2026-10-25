@@ -57,7 +57,7 @@ internal sealed class NativeHomeFilesBoardWriteLease : IAsyncDisposable
             if (!StringComparer.Ordinal.Equals(sourceId, SourceId) ||
                 !StringComparer.Ordinal.Equals(expectedRevision, _revision))
                 return new(false, null, "FilesRevisionConflict", "The selected Files board revision advanced; reopen its current revision.", true);
-            if (document.Length is <= 0 or > Files.NativeHost.FilesNativeBrowserService.MaximumBoardDocumentBytes)
+            if (document.Length is <= 0 or > FilesNativeBrowserService.MaximumBoardDocumentBytes)
                 return new(false, null, "FilesBoardDocumentSize", "The rich board exceeds the supported Files document size.");
             await _read.DemandCurrentAsync(token).ConfigureAwait(false);
             var result = await _save(SourceId, _revision, _sha256, DocumentId, document, token).ConfigureAwait(false);
