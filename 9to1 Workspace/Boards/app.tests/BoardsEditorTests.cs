@@ -299,10 +299,12 @@ public sealed class BoardsEditorTests
         var toolbarHost = components.Single(component => component.Name == "ToolbarHost");
         Assert.True(toolbarHost.Properties.TryGetValue("HorizontalScrolling", out var horizontalScrolling)
             && horizontalScrolling is CuiLiteralValue horizontalLiteral
-            && bool.TryParse(horizontalLiteral.Value, out var horizontalEnabled) && horizontalEnabled);
+            && bool.TryParse(horizontalLiteral.Value, out var horizontalEnabled) && !horizontalEnabled);
         Assert.True(toolbarHost.Properties.TryGetValue("VerticalScrolling", out var verticalScrolling)
             && verticalScrolling is CuiLiteralValue verticalLiteral
             && bool.TryParse(verticalLiteral.Value, out var verticalEnabled) && !verticalEnabled);
+        Assert.True(toolbarHost.Properties.TryGetValue("Orientation", out var toolbarOrientation)
+            && toolbarOrientation is CuiLiteralValue { Value: "Horizontal" });
         var boardSwitcher = components.Single(component => component.Name == "BoardSwitcher");
         Assert.True(boardSwitcher.Properties.TryGetValue("IconSource", out var boardIcon)
             && boardIcon is CuiLiteralValue { Value: "icon:chevron-down" });
@@ -330,7 +332,7 @@ public sealed class BoardsEditorTests
                   <Container Type="Vertical Stack">
                     <Input Type="Text" ID="BoardTitleBox" Value="Title" />
                     <Container Type="Vertical Stack" ID="NavHost" />
-                    <Container Type="Vertical Stack" ID="ToolbarHost" />
+                    <Container Type="Wrap" Orientation="Horizontal" ID="ToolbarHost" />
                     <Container Type="Vertical Stack" ID="ContextHost" />
                     <Container Type="Vertical Stack" ID="BlocksHost" />
                   </Container>
@@ -339,7 +341,7 @@ public sealed class BoardsEditorTests
                 "boards-host-lookup.cui").Root);
             return FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "BlocksHost") is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "NavHost") is { LayoutType: "Vertical Stack" }
-                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Vertical Stack" }
+                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Wrap", Layout: WrapPanel }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ContextHost") is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<TextBox>(root, "BoardTitleBox") is not null;
         });

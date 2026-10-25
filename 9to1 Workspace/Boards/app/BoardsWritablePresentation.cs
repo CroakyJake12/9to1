@@ -253,7 +253,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             await BlockRenderer.RebuildAsync(blocks, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "NavHost") is { } nav)
             NavBuilder.Rebuild(nav, ViewModel);
-        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
+        if (BoardsCuiControlFinder.FindByAutomationId<WrapPanel>(Content, "ToolbarHost") is { } toolbar)
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(Content, "EmbeddedArtifactHost") is { } embedded)
             await _embeddedArtifacts.RenderAsync(embedded);
