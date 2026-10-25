@@ -145,6 +145,7 @@ public static class CuiThemeResourceApplier
         {
             ApplyComponentResources(resources, palette, expression, settings);
             ApplyButtonForegroundResources(resources, palette);
+            ApplyButtonRoleResources(resources, palette, settings);
             var effectiveMotionScale = settings.EffectiveMotionScale(expression.MotionDurationScale);
             resources["CuiMotionDurationScale"] = effectiveMotionScale;
             resources["HavenMotionDurationScale"] = effectiveMotionScale;
@@ -172,7 +173,7 @@ public static class CuiThemeResourceApplier
         SetGradient("CuiAccentSecondaryBrush", accents.Secondary);
         SetGradient("CuiAccentTertiaryBrush", accents.Tertiary);
         SetGradient("CuiAccentPrimaryHoverBrush", Shift(accents.Primary, accents.Secondary.Start, 0.16));
-        SetGradient("CuiAccentSecondaryHoverBrush", Shift(accents.Secondary, accents.Primary.Start, 0.18));
+        SetGradient("CuiAccentSecondaryHoverBrush", Shift(accents.Secondary, Colors.White, 0.08));
         SetGradient("CuiAccentTertiaryHoverBrush", Shift(accents.Tertiary, accents.Secondary.Start, 0.70));
         SetGradient("CuiAccentPressedBrush", Shift(accents.Primary, accents.Tertiary.Middle, 0.22));
         SetColour("CuiAccentPrimaryColor", accents.Primary.Middle);
@@ -240,9 +241,9 @@ public static class CuiThemeResourceApplier
 
         var accents = palette.AccentPalette;
         ApplyAccentToResources(resources, accents);
-        ApplyButtonForegroundResources(resources, palette);
-        ApplyLegacyScopeAliases(resources);
         ApplyComponentResources(resources, palette, expression, settings);
+        ApplyButtonForegroundResources(resources, palette);
+        ApplyButtonRoleResources(resources, palette, settings);
         ApplyLegacyScopeAliases(resources);
     }
 
@@ -256,7 +257,8 @@ public static class CuiThemeResourceApplier
         resources["CuiButtonVerticalContentAlignment"] = Avalonia.Layout.VerticalAlignment.Center;
         resources["CuiButtonHorizontalContentAlignment"] = Avalonia.Layout.HorizontalAlignment.Center;
         resources["CuiControlBorderWidth"] = new Thickness((settings.HighContrast ? 2 : 1) * settings.DisplayScale);
-        resources["CuiControlBorderBrush"] = professional && !settings.HighContrast ? Brushes.Transparent : resources["CuiLineBrush"];
+        resources["CuiControlBorderBrush"] = (professional || palette.Theme == CuiTheme.Glow) && !settings.HighContrast
+            ? Brushes.Transparent : resources["CuiLineBrush"];
         resources["CuiChoiceBorderBrush"] = new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.LineStrong, palette.Panel, 3));
         resources["CuiInputRadius"] = new CornerRadius(professional
             ? (34d * settings.DisplayScale) / 2d // default single-line control → full capsule
@@ -355,7 +357,94 @@ public static class CuiThemeResourceApplier
     }
 
     private static Color InputSurface(CuiPalette palette) =>
-        palette.Theme == CuiTheme.Professional ? palette.TideColour : palette.Button;
+        palette.Theme switch
+        {
+            CuiTheme.Professional => palette.TideColour,
+            CuiTheme.Glow => palette.Panel3,
+            _ => palette.Button
+        };
+
+    // Ordinary navigation and tools stay quiet. Accent roles are an explicit
+    // action hierarchy, shared by global and descendant theme dictionaries.
+    private static void ApplyButtonRoleResources(IResourceDictionary resources, CuiPalette palette, CuiAccessibilitySettings settings)
+    {
+        var glow = palette.Theme == CuiTheme.Glow && !settings.HighContrast;
+        if (glow)
+        {
+            resources["CuiButtonBrush"] = new SolidColorBrush(palette.Panel);
+            resources["CuiButtonHoverBrush"] = new SolidColorBrush(palette.PanelHover);
+            resources["CuiButtonPressedBrush"] = new SolidColorBrush(palette.Panel3);
+            foreach (var state in new[] { "", "Hover", "Pressed" })
+                resources[$"CuiButton{state}ForegroundBrush"] = resources["CuiTextBrush"];
+            // The third tier is a dark accent surface, rather than another
+            // bright primary pill. Its label keeps a softer accent identity.
+            var accent = palette.AccentPalette.Tertiary;
+            resources["CuiAccentTertiaryBrush"] = CreateGradientBrush(new(
+                Blend(palette.Panel, accent.Start, .18),
+                Blend(palette.Panel, accent.Middle, .22),
+                Blend(palette.Panel, accent.End, .18), accent.StartPoint, accent.EndPoint));
+        }
+        foreach (var role in new[] { "Primary", "Secondary", "Tertiary" })
+        {
+            resources[$"CuiAccent{role}ForegroundBrush"] = role == "Tertiary" && glow
+                ? new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.AccentSecondary, palette.Panel, 4.5))
+                : resources["CuiAccentForegroundBrush"];
+            resources[$"CuiAccent{role}HoverForegroundBrush"] = resources["CuiAccentForegroundBrush"];
+            resources[$"CuiAccent{role}PressedForegroundBrush"] = resources["CuiAccentForegroundBrush"];
+            var gradient = role switch
+            {
+                "Primary" => palette.AccentPalette.Primary,
+                "Secondary" => palette.AccentPalette.Secondary,
+                _ => palette.AccentPalette.Tertiary
+            };
+            if (glow)
+            {
+                // Keep the requested white action label readable for bright
+                // user accents too; custom authored fills are applied later.
+                resources[$"CuiAccent{role}HoverBrush"] = CreateGradientBrush(ReadableActionGradient(
+                    role == "Tertiary" ? Shift(gradient, palette.AccentSecondary, .70) : Shift(gradient, Colors.White, .08)));
+                if (role != "Tertiary") resources[$"CuiAccent{role}Brush"] = CreateGradientBrush(ReadableActionGradient(gradient));
+            }
+            resources[$"CuiAccent{role}PressedBrush"] = CreateGradientBrush(glow
+                ? ReadableActionGradient(Shift(gradient, Colors.White, .12))
+                : Shift(gradient, palette.AccentStrong, .18));
+            // Both global and scoped resources publish the same accent colours.
+            var colour = gradient.Middle;
+            resources[$"CuiAccent{role}GlowColor"] = WithAlpha(colour, 0x70);
+            resources[$"HavenAccent{role}GlowColor"] = resources[$"CuiAccent{role}GlowColor"];
+            resources[$"CuiAccent{role}HoverEffect"] = glow && !settings.ReduceMotion
+                ? new DropShadowEffect { Color = colour, BlurRadius = 14, Opacity = .3, OffsetX = 0, OffsetY = 0 }
+                : null;
+        }
+        resources["CuiAccentTextBrush"] = Brushes.Transparent;
+        resources["CuiAccentTextHoverBrush"] = Brushes.Transparent;
+        resources["CuiAccentTextPressedBrush"] = Brushes.Transparent;
+        resources["CuiAccentTextForegroundBrush"] = settings.HighContrast ? resources["CuiTextBrush"]
+            : new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.AccentSecondary, palette.Panel, 4.5));
+        resources["CuiAccentTextHoverForegroundBrush"] = settings.HighContrast ? resources["CuiTextBrush"]
+            : new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.Accent, palette.Panel, 4.5));
+        resources["CuiAccentTextPressedForegroundBrush"] = resources["CuiAccentTextHoverForegroundBrush"];
+        var negative = CuiAccentGradient.Horizontal(Color.Parse("#CF2537"), Color.Parse("#C82132"), Color.Parse("#A91629"));
+        resources["CuiAccentNegativeBrush"] = CreateGradientBrush(negative);
+        resources["CuiAccentNegativeHoverBrush"] = CreateGradientBrush(Shift(negative, Color.Parse("#F54758"), .28));
+        resources["CuiAccentNegativePressedBrush"] = CreateGradientBrush(Shift(negative, Color.Parse("#F54758"), .4));
+        foreach (var state in new[] { "", "Hover", "Pressed" })
+        {
+            resources[$"CuiAccentNegative{state}ForegroundBrush"] = settings.HighContrast ? resources["CuiTextBrush"] : Brushes.White;
+            if (settings.HighContrast) resources[$"CuiAccentNegative{state}Brush"] = resources["CuiPanelBrush"];
+        }
+        resources["CuiAccentNegativeHoverEffect"] = glow && !settings.ReduceMotion
+            ? new DropShadowEffect { Color = negative.Middle, BlurRadius = 14, Opacity = .3, OffsetX = 0, OffsetY = 0 }
+            : null;
+        resources["CuiButtonMotionDuration"] = TimeSpan.FromMilliseconds(180 * settings.EffectiveMotionScale(CuiThemeCatalog.Resolve(palette.Theme).MotionDurationScale));
+    }
+
+    private static CuiAccentGradient ReadableActionGradient(CuiAccentGradient gradient) => gradient with
+    {
+        Start = CuiContrast.EnsureForegroundContrast(gradient.Start, Colors.White, 4.5),
+        Middle = CuiContrast.EnsureForegroundContrast(gradient.Middle, Colors.White, 4.5),
+        End = CuiContrast.EnsureForegroundContrast(gradient.End, Colors.White, 4.5)
+    };
 
     private static void ApplyButtonForegroundResources(IResourceDictionary resources, CuiPalette palette)
     {
@@ -381,6 +470,14 @@ public static class CuiThemeResourceApplier
         foreach (var (legacy, semantic) in new (string, string)[]
         {
             ("HavenBackgroundBrush", "CuiBackgroundBrush"),
+            ("HavenBackgroundPrimaryBrush", "CuiBackgroundBrush"),
+            ("HavenBackgroundSecondaryBrush", "CuiPanel2Brush"),
+            ("HavenBackgroundElevatedBrush", "CuiPanelBrush"),
+            ("HavenInputSurfaceBrush", "CuiInputSurfaceBrush"),
+            ("HavenStateHoverBrush", "CuiButtonHoverBrush"),
+            ("HavenStatePressedBrush", "CuiButtonPressedBrush"),
+            ("HavenStateSelectedBrush", "CuiSelectionBrush"),
+            ("HavenAccentForegroundBrush", "CuiAccentForegroundBrush"),
             ("HavenTextBrush", "CuiTextBrush"), ("HavenTextSoftBrush", "CuiTextSoftBrush"),
             ("HavenTextPrimaryBrush", "CuiTextBrush"), ("HavenTextSecondaryBrush", "CuiTextSoftBrush"),
             ("HavenTextMutedBrush", "CuiMutedBrush"), ("HavenBorderSubtleBrush", "CuiLineBrush"),
@@ -442,7 +539,7 @@ public static class CuiThemeResourceApplier
         resources["CuiAccentSecondaryBrush"] = CreateGradientBrush(accents.Secondary);
         resources["CuiAccentTertiaryBrush"] = CreateGradientBrush(accents.Tertiary);
         resources["CuiAccentPrimaryHoverBrush"] = CreateGradientBrush(Shift(accents.Primary, accents.Secondary.Start, 0.16));
-        resources["CuiAccentSecondaryHoverBrush"] = CreateGradientBrush(Shift(accents.Secondary, accents.Primary.Start, 0.18));
+        resources["CuiAccentSecondaryHoverBrush"] = CreateGradientBrush(Shift(accents.Secondary, Colors.White, 0.08));
         resources["CuiAccentTertiaryHoverBrush"] = CreateGradientBrush(Shift(accents.Tertiary, accents.Secondary.Start, 0.70));
         resources["CuiAccentPressedBrush"] = CreateGradientBrush(Shift(accents.Primary, accents.Tertiary.Middle, 0.22));
         resources["CuiAccentPrimaryColor"] = accents.Primary.Middle;
