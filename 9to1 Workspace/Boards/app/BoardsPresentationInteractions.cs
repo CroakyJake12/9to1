@@ -20,6 +20,7 @@ public sealed class BoardInkInteractionController : IDisposable
     private bool _disposed;
     private readonly List<(double X, double Y, double Pressure)> _points = [];
     private readonly ConcurrentDictionary<Task, byte> _operations = new();
+    private readonly SemaphoreSlim _renderGate = new(1, 1);
     private string? _drawingPageId;
     private double _drawingZoom = 1, _drawingPanX, _drawingPanY, _drawingWidth = 2.5;
     private string _drawingColor = "#FF111111", _drawingTool = "Pen";
@@ -46,33 +47,40 @@ public sealed class BoardInkInteractionController : IDisposable
     public async Task RenderAsync()
     {
         if (_disposed) return;
-        var pageId = _viewModel.SelectedPageId;
-        var panX = _viewModel.InkPanX;
-        var panY = _viewModel.InkPanY;
-        var zoom = _viewModel.InkZoom;
-        var strokes = await _viewModel.GetInkStrokesAsync(pageId).ConfigureAwait(true);
-        if (_disposed || !string.Equals(pageId, _viewModel.SelectedPageId, StringComparison.Ordinal)) return;
-        if (panX != _viewModel.InkPanX || panY != _viewModel.InkPanY || zoom != _viewModel.InkZoom)
+        await _renderGate.WaitAsync().ConfigureAwait(true);
+        try
         {
-            await RenderAsync().ConfigureAwait(true);
-            return;
-        }
+            while (!_disposed)
+            {
+                var pageId = _viewModel.SelectedPageId;
+                var panX = _viewModel.InkPanX;
+                var panY = _viewModel.InkPanY;
+                var zoom = _viewModel.InkZoom;
+                var strokes = await _viewModel.GetInkStrokesAsync(pageId).ConfigureAwait(true);
+                if (_disposed) return;
+                if (!string.Equals(pageId, _viewModel.SelectedPageId, StringComparison.Ordinal) ||
+                    panX != _viewModel.InkPanX || panY != _viewModel.InkPanY || zoom != _viewModel.InkZoom)
+                    continue;
 
-        _overlay.Children.Clear();
-        var canDraw = _viewModel.IsDrawMode && _viewModel.CanEdit && _viewModel.IsEditMode;
-        _overlay.IsHitTestVisible = canDraw;
-        ToolTip.SetTip(_overlay, canDraw ? "Draw directly over this page" : "Use Draw to annotate this page");
-        AutomationProperties.SetName(_overlay, "Page drawing layer");
-        var requiredHeight = 0d;
-        foreach (var stroke in strokes)
-        {
-            if (stroke.Points.Count == 0) continue;
-            requiredHeight = Math.Max(requiredHeight,
-                stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48);
-            BoardInkOverlayRenderer.AddRenderedStroke(_overlay, stroke, panX, panY, zoom);
+                _overlay.Children.Clear();
+                var canDraw = _viewModel.IsDrawMode && _viewModel.CanEdit && _viewModel.IsEditMode;
+                _overlay.IsHitTestVisible = canDraw;
+                ToolTip.SetTip(_overlay, canDraw ? "Draw directly over this page" : "Use Draw to annotate this page");
+                AutomationProperties.SetName(_overlay, "Page drawing layer");
+                var requiredHeight = 0d;
+                foreach (var stroke in strokes)
+                {
+                    if (stroke.Points.Count == 0) continue;
+                    requiredHeight = Math.Max(requiredHeight,
+                        stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48);
+                    BoardInkOverlayRenderer.AddRenderedStroke(_overlay, stroke, panX, panY, zoom);
+                }
+                if (requiredHeight > _overlay.Bounds.Height + 1) _overlay.Height = requiredHeight;
+                else if (_overlay.Height > 0 && requiredHeight < _overlay.Bounds.Height - 24) _overlay.Height = double.NaN;
+                return;
+            }
         }
-        if (requiredHeight > _overlay.Bounds.Height + 1) _overlay.Height = requiredHeight;
-        else if (_overlay.Height > 0 && requiredHeight < _overlay.Bounds.Height - 24) _overlay.Height = double.NaN;
+        finally { _renderGate.Release(); }
     }
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
