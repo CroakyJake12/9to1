@@ -8,6 +8,7 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using CakeOS.Cui.Runtime;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
 
@@ -93,13 +94,30 @@ public sealed class BoardsVisualTests
             });
             foreach (var command in new[]
             {
-                "Paragraph style", "Bold", "Italic", "Underline", "Strikethrough",
+                "Paragraph style",
                 "Subscript", "Superscript", "Font family", "Font size",
                 "Text colour", "Highlight colour", "Bulleted list", "Numbered list",
                 "Align left", "Align center", "Align right",
                 "Decrease indent", "Increase indent", "Insert",
             })
                 Assert.Contains(command, found);
+
+            var authoredTextCommands = Ui(() =>
+            {
+                using var loader = new CuiControlLoader(BoardsCuiDocuments.CreateControlRegistry());
+                loader.SetBindingContext(vm);
+                loader.SetActionDispatcher(vm);
+                var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
+                Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
+                var authoredRoot = Assert.IsAssignableFrom<Control>(root);
+                loader.WireBindings(authoredRoot);
+                vm.Attach(authoredRoot);
+                var ids = new[] { "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike" };
+                var foundIds = ids.Where(id => BoardsCuiControlFinder.FindByAutomationId<Button>(authoredRoot, id) is not null).ToArray();
+                vm.Detach();
+                return foundIds;
+            });
+            Assert.Equal(new[] { "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike" }, authoredTextCommands);
         }
         finally
         {
@@ -237,6 +255,7 @@ public sealed class BoardsVisualTests
                     ["1,1"] = new() { CoveredByCellId = "cell-anchor" }
                 }
             };
+            session.Document.Sections[0].Pages[0].Blocks.Clear();
             session.Document.Sections[0].Pages[0].Blocks.Add(block);
             var result = Ui(() =>
             {
