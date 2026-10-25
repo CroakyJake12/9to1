@@ -38,13 +38,21 @@ public sealed partial class FileDeveloperWorkspaceStore
         ReadOnlySpan<byte> actualHomeProtectedKey)
     {
         ArgumentNullException.ThrowIfNull(draft);
-        if (!ValidEditorProject(project) || !ValidRecoveryScope(scope) || generation < 1 || !ValidRecoveryPayload(draft))
+        if (!ValidEditorProject(project) || !ValidRecoveryScope(scope) || generation < 1)
             throw new ArgumentException("A current saved project, actual task partition and bounded valid draft are required.");
         if (actualHomeProtectedKey.Length != 32)
             throw new ArgumentException("The original protected-key owner must supply a 256-bit key.", nameof(actualHomeProtectedKey));
         // Snapshot caller-owned collections before any serialisation; source writes and review
         // passes remain exclusively with their existing owning services.
-        var captured = draft with { Tabs = Array.AsReadOnly(draft.Tabs.ToArray()) };
+        ArgumentNullException.ThrowIfNull(draft.Tabs);
+        var capturedTabs = Array.AsReadOnly(draft.Tabs.ToArray());
+        var captured = draft with { Tabs = capturedTabs };
+        if (!ValidRecoveryPayload(captured))
+            throw new ArgumentException("A current saved project, actual task partition and bounded valid draft are required.");
+        var selectedRelativePath = captured.SelectedRelativePath;
+        if (selectedRelativePath is not null)
+            captured = captured with { SelectedRelativePath = capturedTabs.Single(tab =>
+                EditorPathComparer.Equals(tab.RelativePath, selectedRelativePath)).RelativePath };
         byte[] plain = [], associated = [], encrypted = [];
         try
         {
@@ -99,7 +107,13 @@ public sealed partial class FileDeveloperWorkspaceStore
             var draft = JsonSerializer.Deserialize<DeveloperDraftRecoveryPayload>(plain, JsonOptions);
             if (draft is null || !ValidRecoveryPayload(draft))
                 throw new InvalidDataException("The protected recovery payload has an invalid shape; no tabs were restored.");
-            return draft with { Tabs = Array.AsReadOnly(draft.Tabs.ToArray()) };
+            var capturedTabs = Array.AsReadOnly(draft.Tabs.ToArray());
+            return draft with
+            {
+                Tabs = capturedTabs,
+                SelectedRelativePath = draft.SelectedRelativePath is null ? null :
+                    capturedTabs.Single(tab => EditorPathComparer.Equals(tab.RelativePath, draft.SelectedRelativePath)).RelativePath
+            };
         }
         finally
         {
@@ -233,8 +247,8 @@ public sealed partial class FileDeveloperWorkspaceStore
         value.Tabs.All(tab => tab is not null && SafeEditorPath(tab.RelativePath) && tab.DraftText is not null &&
             tab.DraftText.Length <= DeveloperSourceReviewSession.MaximumTextCharacters &&
             tab.OriginalSha256 is { Length: 64 } && tab.OriginalSha256.All(Uri.IsHexDigit)) &&
-        value.Tabs.Select(tab => tab.RelativePath).Distinct(StringComparer.Ordinal).Count() == value.Tabs.Count &&
-        (value.SelectedRelativePath is null || value.Tabs.Any(tab => StringComparer.Ordinal.Equals(tab.RelativePath, value.SelectedRelativePath)));
+        value.Tabs.Select(tab => tab.RelativePath).Distinct(EditorPathComparer).Count() == value.Tabs.Count &&
+        (value.SelectedRelativePath is null || value.Tabs.Any(tab => EditorPathComparer.Equals(tab.RelativePath, value.SelectedRelativePath)));
     private static bool ValidRecoverySnapshot(DeveloperDraftRecoverySnapshot? value, Guid workspaceId) => value is not null &&
         value.FormatVersion == DraftRecoveryFormatVersion && ValidRecoveryScope(value.Scope) &&
         value.ProjectReference is { WorkspaceRevision: >= 1, ProjectRevision: >= 1 } project &&

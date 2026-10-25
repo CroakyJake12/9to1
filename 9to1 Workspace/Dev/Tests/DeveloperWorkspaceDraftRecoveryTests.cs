@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using Haven.Application;
@@ -43,6 +44,48 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     }
 
     [Fact]
+    public async Task RestartAfterExternalMultiFileEdit_RetainsBothUnsavedDraftsAndCurrentDiskWithoutAdoption()
+    {
+        var sourceRoot = Path.Combine(_root, "source");
+        var sourceDirectory = Path.Combine(sourceRoot, "src");
+        Directory.CreateDirectory(sourceDirectory);
+        var main = Path.Combine(sourceDirectory, "Main.cui");
+        var other = Path.Combine(sourceRoot, "readme.md");
+        const string originalMain = "<Page><Text>Saved version</Text></Page>";
+        const string originalOther = "# Saved notes";
+        await File.WriteAllTextAsync(main, originalMain);
+        await File.WriteAllTextAsync(other, originalOther);
+        var (store, project) = await CreateAsync(sourceRoot); var scope = Scope();
+        static string Digest(string text) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+        var payload = new DeveloperDraftRecoveryPayload([
+            new("src/Main.cui", Digest(await File.ReadAllTextAsync(main)), "<Page><Text>Unsaved draft</Text></Page>", true),
+            new("readme.md", Digest(await File.ReadAllTextAsync(other)), "# Unsaved notes", false)
+        ], "src/Main.cui");
+        var snapshot = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, payload, _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, snapshot, 0)).Succeeded);
+        // Simulate another writer after the last protected recovery commit and a fresh store on restart.
+        const string externalMain = "<Page><Text>External saved change</Text></Page>";
+        await File.WriteAllTextAsync(main, externalMain);
+        var sourceBeforeRecovery = await File.ReadAllBytesAsync(main);
+        var metadataBeforeRecovery = await File.ReadAllBytesAsync(PathFor(project));
+        var restarted = new FileDeveloperWorkspaceStore(_root);
+        var retained = await restarted.GetDraftRecoveryAsync(project, scope);
+        Assert.True(retained.Succeeded, retained.Error?.Message);
+        var recovered = FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, scope, retained.Value!, _key);
+
+        Assert.Equal(payload.Tabs.ToArray(), recovered.Tabs.ToArray());
+        Assert.Equal(payload.SelectedRelativePath, recovered.SelectedRelativePath);
+        Assert.NotEqual(recovered.Tabs[0].OriginalSha256, Digest(await File.ReadAllTextAsync(main)));
+        Assert.Equal(recovered.Tabs[1].OriginalSha256, Digest(await File.ReadAllTextAsync(other)));
+        Assert.Equal(sourceBeforeRecovery, await File.ReadAllBytesAsync(main));
+        Assert.Equal(originalOther, await File.ReadAllTextAsync(other));
+        Assert.Equal(metadataBeforeRecovery, await File.ReadAllBytesAsync(PathFor(project)));
+        Assert.DoesNotContain(payload.Tabs[0].DraftText, await File.ReadAllTextAsync(PathFor(project)));
+        Assert.Empty((await restarted.GetAsync(project.Reference.WorkspaceId)).Value!.OpenEditors);
+        // Decryption retains conflicting versions; only the existing explicit source owner may adopt or write.
+    }
+
+    [Fact]
     public async Task WrongProfileOrTask_IsAbsentAndCannotDecryptByChangingCopiedHeader()
     {
         var (store, project) = await CreateAsync(); var scope = Scope();
@@ -57,6 +100,69 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
         var otherTask = scope with { TaskId = Guid.NewGuid() };
         Assert.Null((await store.GetDraftRecoveryAsync(project, otherTask)).Value);
         Assert.ThrowsAny<CryptographicException>(() => FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, otherTask, snapshot with { Scope = otherTask }, _key));
+    }
+
+    [Fact]
+    public async Task RecoveryTabPaths_UseHostFilesystemCaseSemanticsAndNormalizeSelection()
+    {
+        var (_, project) = await CreateAsync(); var scope = Scope();
+        var caseDistinctTabs = new DeveloperDraftRecoveryPayload(
+            [new("src/Main.cui", new string('a', 64), "first", false),
+             new("src/main.cui", new string('b', 64), "second", false)], "src/Main.cui");
+
+        if (OperatingSystem.IsWindows())
+            Assert.Throws<ArgumentException>(() => FileDeveloperWorkspaceStore.ProtectDraftRecovery(
+                project, scope, 1, caseDistinctTabs, _key));
+        else
+        {
+            var distinct = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, caseDistinctTabs, _key);
+            Assert.Equal(2, FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, scope, distinct, _key).Tabs.Count);
+        }
+
+        var singleTabCaseVariantSelection = new DeveloperDraftRecoveryPayload(
+            [new("src/Main.cui", new string('a', 64), "draft", false)], "SRC/MAIN.CUI");
+        if (OperatingSystem.IsWindows())
+        {
+            var snapshot = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1,
+                singleTabCaseVariantSelection, _key);
+            var reopened = FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, scope, snapshot, _key);
+            Assert.Equal("src/Main.cui", reopened.SelectedRelativePath);
+        }
+        else Assert.Throws<ArgumentException>(() => FileDeveloperWorkspaceStore.ProtectDraftRecovery(
+            project, scope, 1, singleTabCaseVariantSelection, _key));
+    }
+
+    [Fact]
+    public async Task ProtectRecovery_ValidatesTheExactDetachedCallerPayloadItEncrypts()
+    {
+        var (_, project) = await CreateAsync(); var scope = Scope();
+        var valid = new DeveloperDraftRecoveryTab("src/Main.cui", new string('a', 64), "complete draft", true);
+        var changed = new DeveloperDraftRecoveryTab("../outside.cui", new string('b', 64), "invalid later view", true);
+        var changingTabs = new ChangesAfterInitialValidEnumerations([valid], [changed]);
+        var payload = new DeveloperDraftRecoveryPayload(changingTabs, valid.RelativePath);
+
+        var snapshot = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, payload, _key);
+        var recovered = FileDeveloperWorkspaceStore.UnprotectDraftRecovery(project, scope, snapshot, _key);
+
+        Assert.Single(recovered.Tabs);
+        Assert.Equal(valid, recovered.Tabs[0]);
+        Assert.Equal(valid.RelativePath, recovered.SelectedRelativePath);
+    }
+
+    private sealed class ChangesAfterInitialValidEnumerations(
+        IReadOnlyList<DeveloperDraftRecoveryTab> valid, IReadOnlyList<DeveloperDraftRecoveryTab> later) :
+        IReadOnlyList<DeveloperDraftRecoveryTab>
+    {
+        private int _enumerations;
+        public int Count => valid.Count;
+        public DeveloperDraftRecoveryTab this[int index] =>
+            (_enumerations < 3 ? valid : later)[index];
+        public IEnumerator<DeveloperDraftRecoveryTab> GetEnumerator()
+        {
+            var observed = Interlocked.Increment(ref _enumerations) <= 3 ? valid : later;
+            return observed.GetEnumerator();
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     [Fact]
@@ -203,6 +309,110 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     }
 
     [Fact]
+    public async Task CancellationDuringProtectedKeyPreparation_PreservesReopenablePriorGeneration()
+    {
+        var (store, project) = await CreateAsync(); var scope = Scope();
+        var first = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload("last durable draft"), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, first, 0)).Succeeded);
+        var before = await File.ReadAllBytesAsync(PathFor(project));
+        using var cancellation = new CancellationTokenSource();
+        DeveloperDraftRecoverySnapshot? prepared = null;
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            store.PrepareAndSaveDraftRecoveryAsync(project, scope, 1, (_, token) =>
+            {
+                Assert.Equal(cancellation.Token, token);
+                var next = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2,
+                    Payload("prepared but cancelled"), _key);
+                prepared = next;
+                cancellation.Cancel();
+                Assert.True(token.IsCancellationRequested);
+                return Task.FromResult(next);
+            }, cancellation.Token));
+
+        Assert.True(cancellation.IsCancellationRequested);
+        Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project)));
+        // A fresh store simulates reopening after the interrupted preparation. The old
+        // authenticated generation remains available and the cancelled draft is absent.
+        var reopened = new FileDeveloperWorkspaceStore(_root);
+        var retained = await reopened.GetDraftRecoveryAsync(project, scope);
+        Assert.True(retained.Succeeded, retained.Error?.Message);
+        Assert.Equal(first, retained.Value);
+        Assert.Equal("last durable draft", FileDeveloperWorkspaceStore
+            .UnprotectDraftRecovery(project, scope, retained.Value!, _key).Tabs[0].DraftText);
+        Assert.NotNull(prepared);
+        Assert.Null(((IDeveloperProjectOriginalMetadataTransitionStore)store).GetOriginalMetadataTransition(prepared!));
+
+        // Reopen does not relax the generation CAS: a later valid writer wins once,
+        // while a stale recovery attempt cannot overwrite or strand that winner.
+        var winner = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2, Payload("winner after reopen"), _key);
+        Assert.True((await reopened.SaveDraftRecoveryAsync(project, winner, 1)).Succeeded);
+        var conflict = await reopened.SaveDraftRecoveryAsync(project,
+            FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2, Payload("stale after reopen"), _key), 1);
+        Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, conflict.Error!.Code);
+        var afterConflict = await new FileDeveloperWorkspaceStore(_root).GetDraftRecoveryAsync(project, scope);
+        Assert.Equal(winner, afterConflict.Value);
+        Assert.Equal("winner after reopen", FileDeveloperWorkspaceStore
+            .UnprotectDraftRecovery(project, scope, afterConflict.Value!, _key).Tabs[0].DraftText);
+    }
+
+    [Fact]
+    public async Task CancellationWhileKeyPreparationAwaits_PreservesReceiptAndReleasesLockForRetry()
+    {
+        var (store, project) = await CreateAsync(); var scope = Scope();
+        var first = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload("durable before async wait"), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, first, 0)).Succeeded);
+        var originalStore = (IDeveloperProjectOriginalMetadataTransitionStore)store;
+        var originalReceipt = originalStore.GetOriginalMetadataTransition(first);
+        Assert.NotNull(originalReceipt);
+        var before = await File.ReadAllBytesAsync(PathFor(project));
+        using var cancellation = new CancellationTokenSource();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var pending = store.PrepareAndSaveDraftRecoveryAsync(project, scope, 1, async (_, token) =>
+        {
+            Assert.Equal(cancellation.Token, token);
+            entered.TrySetResult();
+            // This is deliberately a genuinely pending original-owner operation. Once
+            // cancellation is observed by the caller, releasing it returns a candidate;
+            // the store's own post-await cancellation check must still protect the commit.
+            await release.Task.ConfigureAwait(false);
+            return FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2,
+                Payload("prepared during async wait"), _key);
+        }, cancellation.Token);
+
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(pending.IsCompleted);
+            cancellation.Cancel();
+            Assert.False(pending.IsCompleted);
+        }
+        finally { release.TrySetResult(); }
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+
+        Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project)));
+        Assert.Same(originalReceipt, originalStore.GetOriginalMetadataTransition(first));
+        Assert.True(originalStore.IsIssuedOriginalMetadataTransition(originalReceipt!, first));
+        // Reopen the same canonical workspace directory (not a second recovery store).
+        var reopened = new FileDeveloperWorkspaceStore(_root);
+        var retained = await reopened.GetDraftRecoveryAsync(project, scope);
+        Assert.True(retained.Succeeded, retained.Error?.Message);
+        Assert.Equal(first, retained.Value);
+        Assert.Equal("durable before async wait", FileDeveloperWorkspaceStore
+            .UnprotectDraftRecovery(project, scope, retained.Value!, _key).Tabs[0].DraftText);
+
+        // A post-cancellation retry on the same store proves the awaited owner released
+        // both its process lock and cross-process lock; then stale CAS remains enforced.
+        var winner = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2, Payload("retry after async cancellation"), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, winner, 1)).Succeeded);
+        var stale = await store.SaveDraftRecoveryAsync(project,
+            FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2, Payload("stale retry"), _key), 1);
+        Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, stale.Error!.Code);
+        Assert.Equal(winner, (await reopened.GetDraftRecoveryAsync(project, scope)).Value);
+    }
+
+    [Fact]
     public async Task OriginalMetadataReceipt_UsesExactRawBeforeAndActualWriterAfterWithoutAuthorityChange()
     {
         var (store, project) = await CreateAsync(); var scope = Scope();
@@ -316,10 +526,10 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
     }
 
     private string PathFor(DeveloperResolvedProject project) => Path.Combine(_root, "workspaces", project.Reference.WorkspaceId.ToString("N") + ".json");
-    private async Task<(FileDeveloperWorkspaceStore Store, DeveloperResolvedProject Project)> CreateAsync()
+    private async Task<(FileDeveloperWorkspaceStore Store, DeveloperResolvedProject Project)> CreateAsync(string? sourceRoot = null)
     {
         var store = new FileDeveloperWorkspaceStore(_root);
-        var root = new DeveloperWorkspaceRoot(Guid.NewGuid(), Path.GetFullPath(Path.GetTempPath()));
+        var root = new DeveloperWorkspaceRoot(Guid.NewGuid(), Path.GetFullPath(sourceRoot ?? Path.GetTempPath()));
         var project = new DeveloperProject(Guid.NewGuid(), "cui-app", "Example", [root.RootId], "CUI", null,
             "cui", ["linux"], [], [], [], null);
         var created = await store.CreateAsync(DeveloperWorkspace.Create([root]) with { Projects = [project] });
