@@ -106,6 +106,80 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Task_permission_published_original_response_from_another_view_refreshes_the_same_dashboard_and_unsubscribes_on_close()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var eventRows = new ObservationEventRows();
+        await using var hub = new ExecutionEventHub(eventRows);
+        await using var rig = new Rig(temporary: false, originalEvents: hub);
+        using var paths = new ObservationPaths();
+        ExecutionEvent? decisionPublication = null;
+        EventHandler<ExecutionEvent> observed = (_, value) =>
+        { if (value.SafeMetadata?.GetValueOrDefault("permissionPhase") == "decision") decisionPublication = value; };
+        hub.Published += observed;
+        await rig.RunAsync(tools: false);
+        var task = rig.Service.CurrentCanonicalTask!;
+        var request = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        var registry = new SpaceRegistry(new ObservationSettings());
+        _ = await registry.GetAllAsync(cancellationToken: token);
+        var preferences = new UserPreferencesService(paths); preferences.SetShownTasks(TaskShownScope.AllTasks);
+        var source = new SpaceTaskWorkspaceService(registry, rig.Conversations, rig.Tasks);
+        var page = new SpaceTasksDashboardPage(source, rig.Tasks, SpaceRegistry.TasksSpaceId,
+            _ => Task.CompletedTask, null, null, preferences, _ => Task.CompletedTask);
+        var window = new Window { Width = 1000, Height = 800, Content = page };
+        try
+        {
+            window.Show(); await page.ActivateAsync(token);
+            Assert.True(Assert.Single(page.CurrentObservations).PermissionReview!.CanRespond);
+            ObservationAuthoredControls(page.Scene.Root!).OfType<Button>().Single(button =>
+                AutomationProperties.GetAutomationId(button) == "tasks-tile-review-permission").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualPermissionReview).WaitAsync(token);
+            // This decision bypasses the dashboard presentation, using the SAME actual
+            // existing owner that another view/console uses. Hub publication is a hint;
+            // the dashboard must re-read the current original permission owner.
+            var actual = await rig.Owner.DenyOriginalAsync(request.Id, token);
+            Assert.Equal(PermissionDecisionKind.Denied, actual.Kind);
+            var refreshing = Assert.IsAssignableFrom<Task>(page.ActualPermissionInvalidation);
+            await refreshing.WaitAsync(token);
+            var row = Assert.Single(page.CurrentObservations);
+            Assert.Equal(task.TaskId, row.Snapshot!.TaskId); Assert.Equal(task.ExecutionId, row.Snapshot.ExecutionId);
+            Assert.False(row.PermissionReview!.CanRespond);
+            Assert.Equal(PermissionDecisionKind.Denied, row.PermissionReview.AcknowledgedDecision!.Kind);
+            Assert.DoesNotContain(ObservationAuthoredControls(page.Scene.Root!).OfType<Button>(),
+                button => AutomationProperties.GetAutomationId(button) == "tasks-tile-review-permission");
+            Assert.Equal(TaskExecutionLifecycle.Suspended, (await rig.Tasks.GetAsync(task.TaskId, token))!.State);
+            Assert.Equal(0, rig.Client.Dispatches);
+            var answers = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>().ToArray();
+            Assert.False(answers.Single(button => AutomationProperties.GetAutomationId(button) == "tasks-permission-allow").IsEffectivelyEnabled);
+            Assert.False(answers.Single(button => AutomationProperties.GetAutomationId(button) == "tasks-permission-deny").IsEffectivelyEnabled);
+            answers.Single(button => AutomationProperties.GetAutomationId(button) == "tasks-permission-close").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            page.RequestRetirement(); await page.CloseAndDrainAsync();
+            Assert.NotNull(decisionPublication);
+            Assert.True(hub.TryPublish(decisionPublication! with { EventId = Guid.NewGuid() }));
+            Assert.Same(refreshing, page.ActualPermissionInvalidation); // Retired watch cannot start another source read.
+            Assert.Null(page.Scene.Root);
+        }
+        finally
+        {
+            page.RequestRetirement(); await page.CloseAndDrainAsync();
+            window.Content = null; window.Close(); hub.Published -= observed;
+        }
+    }
+
+    private sealed class ObservationEventRows : IExecutionEventRepository
+    {
+        private readonly List<ExecutionEvent> _events = [];
+        public Task AppendAsync(IReadOnlyList<ExecutionEvent> values, CancellationToken token)
+        { token.ThrowIfCancellationRequested(); lock (_events) _events.AddRange(values); return Task.CompletedTask; }
+        public Task<IReadOnlyList<ExecutionEvent>> GetExecutionAsync(Guid executionId, CancellationToken token)
+        { lock (_events) return Task.FromResult<IReadOnlyList<ExecutionEvent>>(_events.Where(value => value.ExecutionId == executionId).ToArray()); }
+        public Task<IReadOnlyList<ExecutionSummary>> SearchExecutionsAsync(string? query, int limit, CancellationToken token) =>
+            throw new NotSupportedException();
+    }
+
     [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
