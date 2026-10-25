@@ -13,11 +13,16 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         var document = DeveloperWorkbenchCuiDocument.Load();
         var nodes = Descendants(document.Components).ToArray();
         var commands = nodes.SelectMany(value => value.Actions.Values).Select(value => value.Name).ToArray();
-        string[] expected = ["dev.refresh", "dev.tree", "dev.git-status", "dev.git-diff", "dev.git-branches", "dev.open-source",
-            "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command", "dev.run-tests",
-            "dev.run-stage", "dev.create-branch", "dev.switch-branch",
-            "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin",
-            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result", "dev.inspect-recovered-draft", "dev.reconcile-recovered-draft", "dev.use-merged-recovered-draft", "dev.go-to-source-location", "dev.select-build-stage"];
+        string[] expected = [
+            "dev.refresh", "dev.tree", "dev.git-status", "dev.git-diff",
+            "dev.git-branches", "dev.project-folder-up", "dev.open-project-entry", "dev.project-entries-previous",
+            "dev.project-entries-next", "dev.open-source", "dev.search", "dev.open-search-result",
+            "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
+            "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
+            "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.preview-edit",
+            "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command",
+            "dev.run-tests", "dev.select-build-stage", "dev.run-stage", "dev.create-branch",
+            "dev.switch-branch"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
         Assert.Equal(nodes.Length, nodes.Select(value => value.StableId).Distinct().Count());
     }
@@ -95,6 +100,23 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         Assert.Contains(run.Actions.Values, value => value.Name == "dev.run-stage");
         Assert.Contains(run.Properties, pair => pair.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
             && pair.Value is CuiBindingValue binding && binding.Path == "CanRunSavedStage");
+    }
+
+    [Fact]
+    public void Literal_find_and_replace_use_the_real_current_draft_actions_and_selection_availability()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        foreach (var (id, binding) in new[] { ("dev-source-find", "SourceFindQuery"), ("dev-source-replacement", "SourceReplaceText") })
+        {
+            var input = Assert.Single(nodes, value => value.Name == id);
+            Assert.Equal("Input", input.Type);
+            Assert.Contains(input.Properties, pair => pair.Key.Equals("Value", StringComparison.OrdinalIgnoreCase)
+                && pair.Value is CuiBindingValue value && value.Path == binding);
+        }
+        var replace = Assert.Single(nodes, value => value.Name == "dev-replace-source-match");
+        Assert.Contains(replace.Actions.Values, value => value.Name == "dev.replace-source-match");
+        Assert.Contains(replace.Properties, pair => pair.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
+            && pair.Value is CuiBindingValue value && value.Path == "CanReplaceSourceMatch");
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)

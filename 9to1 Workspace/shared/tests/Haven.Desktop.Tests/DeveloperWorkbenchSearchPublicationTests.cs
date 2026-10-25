@@ -384,6 +384,41 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Literal_find_and_replace_edit_the_same_unreviewed_draft_and_never_write_saved_source()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
+        DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string saved = "alpha alpha\nALPHA"; f.Tools.TextValue = saved;
+            page = await SearchPublicationPage(f, reader.Owner);
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            page.TrySetValue("SourceFindQuery", "alpha"); page.TrySetValue("SourceReplaceText", "beta");
+            await page.DispatchAsync("dev.find-next-source", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out var selection)); Assert.Equal(0, Assert.IsType<CuiTextSelection>(selection).Start);
+            Assert.True(page.IsActionAvailable("dev.replace-source-match"));
+            await page.DispatchAsync("dev.replace-source-match", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("beta alpha\nALPHA", draft);
+            Assert.False(page.IsActionAvailable("dev.replace-source-match")); Assert.False(page.IsActionAvailable("dev.apply-edit"));
+            await page.DispatchAsync("dev.find-next-source", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out selection)); Assert.Equal(5, Assert.IsType<CuiTextSelection>(selection).Start);
+            page.TrySetValue("DraftText", "prefix beta alpha\nALPHA");
+            Assert.False(page.IsActionAvailable("dev.replace-source-match"));
+            page.TrySetValue("SourceFindMatchCase", false); page.TrySetValue("SourceReplaceText", "z");
+            await page.DispatchAsync("dev.replace-all-source", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out draft)); Assert.Equal("prefix beta z\nz", draft);
+            Assert.True(page.HasUnsavedWork); Assert.False(page.IsActionAvailable("dev.apply-edit"));
+            Assert.Equal(saved, f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));
