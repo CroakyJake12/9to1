@@ -122,6 +122,12 @@
                   <Container id="library-page" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="12">
                     <Text Text="Library" FontSize="28" FontWeight="Bold" />
                     <Text Text="Authorised references to your artifacts. Items open in their owning app." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                    <If Condition="{Binding IsBoardFolderSelection}">
+                      <Container Type="Vertical Stack" CellGap="4">
+                        <Text Text="New Board file name (.9to1board)" FontWeight="SemiBold" />
+                        <Input id="library-board-create-name" Type="Text" Value="New board" AccessibleName="New Board file name" Width="320" />
+                      </Container>
+                    </If>
                     <Container Type="Wrap" CellGap="8">
                       <Input id="library-search" placeholder-text="Search artifacts" accessible-name="Search Library" width="280" Type="Text" />
                       <Input id="library-owner-filter" placeholder-text="Owner app ID" accessible-name="Filter Library by owner app ID" width="150" Type="Text" />

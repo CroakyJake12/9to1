@@ -37,9 +37,15 @@ public sealed class HomeLibraryDestinationTests
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
             Assert.True(page.IsSelectionMode);
             Assert.False(page.IsActionAvailable("ToggleHomeLibraryPin"));
+            var name = Assert.Single(page.GetVisualDescendants().OfType<TextBox>(), control =>
+                CuiRuntimeIdentity.GetStableId(control) == "id:library-board-create-name");
+            name.Text = "  Q4 planning  ";
             await page.DispatchAsync("OpenHomeLibraryArtifact", row.OpenLink);
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Same(link, await page.FolderSelection);
+            Assert.Equal("Q4 planning", page.SelectedBoardCreateDisplayName);
+            name.Text = "changed after selection";
+            Assert.Equal("Q4 planning", page.SelectedBoardCreateDisplayName);
         }
         finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
     }
