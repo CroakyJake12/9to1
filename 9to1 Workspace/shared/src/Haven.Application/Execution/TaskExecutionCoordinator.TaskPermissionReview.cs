@@ -61,7 +61,7 @@ public sealed partial class TaskExecutionCoordinator
         ArgumentNullException.ThrowIfNull(reviewed);
         if (!ReferenceEquals(reviewed.Issuer, this) || !_issuedPermissionReviews.TryGetValue(reviewed, out _))
             throw new UnauthorizedAccessException("This Task owner did not issue the exact permission review.");
-        return StartOriginalProcessStage("respond-original-task-permission", cancellationToken, async token =>
+        return StartOriginalProcessStage<TaskRunOriginalTaskPermissionResponse>("respond-original-task-permission", cancellationToken, async token =>
         {
             var stage = RequireOriginalProcessStage();
             var expected = reviewed.CanonicalTaskContext;
