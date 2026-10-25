@@ -185,7 +185,7 @@
             </Container>
           </If>
         </Container>
-        <Container horizontalalignment="Stretch" cornerradius="22" padding="20 12" margin="6 12 14 12" Type="Overlay" ID="PageCard" Row="2" Background="{Resource CuiSurfaceMaterial}" BorderWidth="0">
+        <Container horizontalalignment="Stretch" cornerradius="22" padding="20 12" margin="16 6 14 12" Type="Overlay" ID="PageCard" Row="2" Background="{Resource CuiSurfaceMaterial}" BorderWidth="0">
           <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
             <Container Type="Grid" ID="PageSurface">
               <Container margin="76 20" Type="Vertical Stack" ID="DocumentContentLayer">
