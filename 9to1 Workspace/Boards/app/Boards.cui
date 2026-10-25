@@ -173,7 +173,7 @@
           </If>
         </Container>
         <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" Row="2" VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiBackgroundBrush}">
-          <Container horizontalalignment="Stretch" cornerradius="26 0 0 0" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Background="{Resource CuiPanelBrush}" BorderWidth="0">
+          <Container horizontalalignment="Stretch" cornerradius="26" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Background="{Resource CuiPanelBrush}" BorderWidth="0">
             <Container Type="Grid" ID="PageSurface">
               <Container margin="40 36" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
