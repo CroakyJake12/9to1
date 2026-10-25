@@ -288,8 +288,7 @@ public sealed partial class BrowseChrome
     }
 
     private static bool IsGroupable(TabRuntime? tab) => tab is { Privacy: Haven.Core.BrowserTabPrivacy.Standard, IsHome: false };
-    private static bool IsGroupCompatible(TabRuntime first, TabRuntime second) => IsGroupable(first) && IsGroupable(second) &&
-        StringComparer.Ordinal.Equals(first.ProfileId, second.ProfileId);
+    private static bool IsGroupCompatible(TabRuntime first, TabRuntime second) => IsGroupable(first) && IsGroupable(second);
 
     private Guid[] OrderedGroupMembers(string groupKey) => _tabs.Where(tab => tab.Privacy == Haven.Core.BrowserTabPrivacy.Standard &&
         StringComparer.Ordinal.Equals(tab.Group, groupKey)).Select(tab => tab.Id).ToArray();

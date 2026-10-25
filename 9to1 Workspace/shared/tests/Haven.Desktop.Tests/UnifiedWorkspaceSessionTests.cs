@@ -15,7 +15,8 @@ public sealed class UnifiedWorkspaceSessionTests
     {
         var groupId = Guid.NewGuid();
         var first = UnifiedWorkspaceTabState.Merge(null, Browser("First") with { Group = groupId.ToString("D") }) with { GroupId = groupId };
-        var second = UnifiedWorkspaceTabState.Merge(null, Browser("Second") with { Group = groupId.ToString("D") }) with { GroupId = groupId };
+        var second = UnifiedWorkspaceTabState.Merge(null, Browser("Second") with
+            { Group = groupId.ToString("D"), ProfileId = "other-profile" }) with { GroupId = groupId };
         var group = new TabGroupSnapshot(groupId, "Research", false, [first.Id, second.Id]);
         var window = Window(WorkspaceWindowKind.Main, [first.Id, second.Id]);
         var repository = new Repository { Restored = new(WorkspaceSessionSnapshot.CurrentSchemaVersion,
@@ -39,6 +40,10 @@ public sealed class UnifiedWorkspaceSessionTests
         Assert.Equal(groupId, savedGroup.Id); Assert.Equal("Project notes", savedGroup.Name); Assert.True(savedGroup.IsCollapsed);
         Assert.Equal(new[] { second.Id, first.Id }, savedGroup.OrderedTabIds);
         Assert.All(final.Tabs, tab => Assert.Equal(groupId, tab.GroupId));
+        Assert.Equal("profile", UnifiedWorkspaceTabState.TryProject(final.Tabs.Single(tab => tab.Id == first.Id), "profile", out var projectedFirst)
+            ? projectedFirst!.ProfileId : null);
+        Assert.Equal("other-profile", UnifiedWorkspaceTabState.TryProject(final.Tabs.Single(tab => tab.Id == second.Id), "profile", out var projectedSecond)
+            ? projectedSecond!.ProfileId : null);
     }
 
     [AvaloniaFact]
