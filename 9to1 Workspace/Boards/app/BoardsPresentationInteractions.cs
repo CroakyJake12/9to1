@@ -249,9 +249,9 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
     private readonly Control _root;
     private readonly BoardsViewModel _viewModel;
     private readonly Func<string, Task> _dispatch;
-    private readonly TextBox? _titleBox, _searchBox;
+    private readonly TextBox? _titleBox, _pageTitleBox, _searchBox;
     private readonly EventHandler<KeyEventArgs> _rootKeyDown;
-    private readonly EventHandler<TextChangedEventArgs>? _titleChanged, _searchChanged;
+    private readonly EventHandler<TextChangedEventArgs>? _titleChanged, _pageTitleChanged, _searchChanged;
     private Window? _window;
     private EventHandler<KeyEventArgs>? _windowKeyDown;
     private readonly ConcurrentDictionary<Task, byte> _actions = new();
@@ -263,11 +263,17 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _dispatch = dispatch ?? (command => viewModel.DispatchAsync(command, null).AsTask());
         _titleBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "BoardTitleBox");
+        _pageTitleBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "PageTitleBox");
         _searchBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "NavSearchBox");
         if (_titleBox is not null)
         {
             _titleChanged = (_, _) => viewModel.EditText("BoardTitleBox", _titleBox.Text ?? string.Empty);
             _titleBox.TextChanged += _titleChanged;
+        }
+        if (_pageTitleBox is not null)
+        {
+            _pageTitleChanged = (_, _) => viewModel.EditText("PageTitleBox", _pageTitleBox.Text ?? string.Empty);
+            _pageTitleBox.TextChanged += _pageTitleChanged;
         }
         if (_searchBox is not null)
         {
@@ -334,6 +340,7 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
         _disposed = true;
         _root.RemoveHandler(InputElement.KeyDownEvent, _rootKeyDown);
         if (_titleBox is not null && _titleChanged is not null) _titleBox.TextChanged -= _titleChanged;
+        if (_pageTitleBox is not null && _pageTitleChanged is not null) _pageTitleBox.TextChanged -= _pageTitleChanged;
         if (_searchBox is not null && _searchChanged is not null) _searchBox.TextChanged -= _searchChanged;
         if (_window is not null && _windowKeyDown is not null) _window.KeyDown -= _windowKeyDown;
     }

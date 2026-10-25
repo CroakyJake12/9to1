@@ -28,6 +28,7 @@ public sealed class CanonicalContextTests
             var loadedRoot = Assert.IsAssignableFrom<Control>(root);
             loader.WireBindings(loadedRoot);
             vm.Attach(loadedRoot);
+            using var textOwner = new BoardsTextAndKeyboardOwner(loadedRoot, vm);
             var controls = loadedRoot.GetLogicalDescendants().OfType<Control>().ToArray();
             var pageTitle = Assert.Single(controls.OfType<TextBox>(), control => AutomationProperties.GetName(control) == "Page title");
             pageTitle.Text = "Editable page heading";

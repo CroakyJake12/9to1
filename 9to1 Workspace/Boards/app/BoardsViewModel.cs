@@ -1024,7 +1024,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case "PageTitleBox":
             {
                 var pageTitle = text.Length <= 2048 ? text : text[..2048];
-                CurrentPage().Title = pageTitle;
+                var page = CurrentPage();
+                if (string.Equals(page.Title, pageTitle, StringComparison.Ordinal)) return;
+                page.Title = pageTitle;
                 Set("PageTitle", pageTitle);
                 RefreshPageBreadcrumb();
                 NavRebuildRequested?.Invoke();
