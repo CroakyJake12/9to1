@@ -806,12 +806,123 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
 
     // Reuse the existing complete production graph rather than null/pretend reader dependencies.
     // Its original Home/Files state is never replaced, and its lifetime is explicitly joined.
-    private static async Task<(DeveloperManualSourceReadOwner Owner, IAsyncDisposable Lifetime)> ActualOptionalReaderFixture()
+    [AvaloniaFact]
+    public async Task Current_project_file_navigation_captures_actual_manifest_pages_and_opens_through_manual_Home_READ()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine Home/Files/kernel fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(true); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            var saved = Assert.IsType<DeveloperResolvedProject>(reader.Saved);
+            // Fixture seeding only; production Find/Open performs no raw filesystem IO.
+            for (var index = 0; index < 105; index++)
+                await File.WriteAllTextAsync(Path.Combine(saved.Root.Location, $"match-{index:D3}.cs"), "captured source " + index, OriginalTestBodyToken);
+            page = await ManualFileNavigationPage(f, reader);
+            Assert.Equal(Guid.Empty, SearchPublicationField("_taskId").GetValue(page));
+            page.TrySetValue("FileNavigationQuery", "seed");
+            var findSeed = page.DispatchAsync("dev.find-project-file", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(findSeed); await findSeed;
+            object[] Rows() { Assert.True(page.TryGetValue("FileNavigationMatches", out var value)); return Assert.IsAssignableFrom<System.Collections.IEnumerable>(value).Cast<object>().ToArray(); }
+            string Key(object row) => Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            string PathOf(object row) => Assert.IsType<string>(row.GetType().GetProperty("RelativePath")!.GetValue(row));
+            var seedKey = Key(Assert.Single(Rows()));
+            var openSeed = page.DispatchAsync("dev.open-file-navigation-result", seedKey, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(openSeed); await openSeed;
+            Assert.True(page.TryGetValue("DraftText", out var original)); Assert.Equal("existing independent source\n", original);
+            page.TrySetValue("DraftText", "unsaved manual source must survive");
+            var seed = Assert.Single(NativeSourceTabs(page)); var oldLayout = TabLayout(page);
+            page.TrySetValue("FileNavigationQuery", "match");
+            var find = page.DispatchAsync("dev.find-project-file", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(find); await find;
+            Assert.Equal(oldLayout, TabLayout(page)); Assert.Equal(50, Rows().Length);
+            Assert.Equal("match-000.cs", PathOf(Rows()[0]));
+            await page.DispatchAsync("dev.file-navigation-next", null, OriginalTestBodyToken);
+            Assert.Equal(50, Rows().Length); Assert.Equal("match-050.cs", PathOf(Rows()[0]));
+            var oldPageKey = Key(Rows()[0]);
+            await page.DispatchAsync("dev.file-navigation-next", null, OriginalTestBodyToken);
+            Assert.Equal(5, Rows().Length); Assert.False(page.IsActionAvailable("dev.file-navigation-next"));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => page.DispatchAsync("dev.open-file-navigation-result", oldPageKey, OriginalTestBodyToken).AsTask());
+            await page.DispatchAsync("dev.file-navigation-previous", null, OriginalTestBodyToken);
+            var current = Rows()[0];
+            var open = page.DispatchAsync("dev.open-file-navigation-result", Key(current), OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(open); await open;
+            Assert.True(page.TryGetValue("DraftText", out var opened)); Assert.Equal("captured source 50", opened);
+            Assert.Contains(seed, NativeSourceTabs(page));
+            var manual = seed.GetType().GetField("Manual")!.GetValue(seed)!;
+            Assert.Equal("unsaved manual source must survive", manual.GetType().GetProperty("Draft")!.GetValue(manual));
+            Assert.Equal(0, f.Owner.ExecuteCalls); Assert.Equal(0, f.Tools.ReadCalls); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Current_project_file_navigation_rejects_query_changed_during_real_Home_READ_without_adopting_source()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine Home/Files/kernel fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(true); DeveloperProjectWorkbenchPage? page = null;
+        var sawRefusal = false; Task? open = null;
+        try
+        {
+            page = await ManualFileNavigationPage(f, reader); page.TrySetValue("FileNavigationQuery", "seed");
+            var find = page.DispatchAsync("dev.find-project-file", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(find); await find;
+            Assert.True(page.TryGetValue("FileNavigationMatches", out var value));
+            var row = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(value).Cast<object>());
+            var key = Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            open = page.DispatchAsync("dev.open-file-navigation-result", key, OriginalTestBodyToken).AsTask();
+            await reader.ObserveRead(open); Assert.False(open.IsCompleted);
+            page.TrySetValue("FileNavigationQuery", "newer query");
+            await reader.AcceptRead(open);
+            await Assert.ThrowsAnyAsync<Exception>(() => open!); sawRefusal = true;
+            Assert.Empty(NativeSourceTabs(page)); Assert.Null(SearchPublicationField("_selectedSourceTab").GetValue(page));
+            Assert.True(page.TryGetValue("FileNavigationMatches", out value)); Assert.Empty(Assert.IsAssignableFrom<System.Collections.IEnumerable>(value).Cast<object>());
+            Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Tools.WriteCalls);
+        }
+        finally
+        {
+            try
+            {
+                if (open is { IsCompleted: false })
+                {
+                    await reader.AcceptRead(open);
+                    try { await open; } catch { /* The same retained page original is joined below. */ }
+                }
+                if (page is not null)
+                {
+                    var close = page.CloseAndDrainAsync();
+                    if (sawRefusal) await Assert.ThrowsAnyAsync<Exception>(() => close); else await close;
+                }
+            }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    private static async Task<DeveloperProjectWorkbenchPage> ManualFileNavigationPage(Fixture fixture, ActualReaderFixture reader)
+    {
+        await fixture.Dev.CloseAndDrainAsync();
+        fixture.Dev = new(reader.SavedStore!, new(fixture.ConversationSource, fixture.Containers), fixture.Tasks, fixture.Owner, new(fixture.Tools));
+        Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> unused =
+            (_, _, _) => throw new InvalidOperationException("Manual navigation must use the genuine Home/Files reader, not Task document identity.");
+        var constructor = typeof(DeveloperProjectWorkbenchPage).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
+            .Single(value => value.GetParameters().Length == 16 && value.GetParameters()[9].ParameterType == typeof(DeveloperManualSourceReadOwner));
+        var page = (DeveloperProjectWorkbenchPage)constructor.Invoke([fixture.Dev, fixture.Tasks, reader.Saved!, new SearchPublicationNoReadiness(), unused,
+            (Action)(() => { }), OriginalTestBodyToken, null, null, reader.Owner, null, null, null, null, null, null]);
+        SearchPublicationField("_active").SetValue(page, true); // Command component only; no native frame witness.
+        return page;
+    }
+
+    private sealed record ActualReaderFixture(DeveloperManualSourceReadOwner Owner, IAsyncDisposable Lifetime,
+        DeveloperResolvedProject? Saved, FileDeveloperWorkspaceStore? SavedStore, Func<Task, Task> AcceptRead, Func<Task, Task> ObserveRead);
+    private static async Task<ActualReaderFixture> ActualOptionalReaderFixture(bool canonicalSavedProject = false)
     {
         var type = typeof(Haven.Desktop.Tests.FilesDeveloperOriginalSourcePublicationTests)
             .GetNestedType("Rig", BindingFlags.NonPublic)!;
         var method = type.GetMethod("CreateAsync", BindingFlags.Static | BindingFlags.NonPublic)!;
-        var actual = (Task)method.Invoke(null, [null, false, true, true, null])!;
+        var actual = (Task)method.Invoke(null, [null, canonicalSavedProject, true, true, null])!;
         await actual;
         var rig = actual.GetType().GetProperty("Result")!.GetValue(actual)!;
         try
@@ -822,7 +933,23 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
                 (FilesDeveloperOriginalSourceSelection)Required(typeof(FilesDeveloperOriginalSourceSelection)),
                 (IDeveloperProjectOriginalReadAdmissionSource)Required(typeof(IDeveloperProjectOriginalReadAdmissionSource)),
                 (IDeveloperProjectOriginalPhysicalCaptureSource)Required(typeof(IDeveloperProjectOriginalPhysicalCaptureSource)));
-            return (reader, (IAsyncDisposable)rig);
+            async Task AcceptRead(Task operation)
+            {
+                var decide = type.GetMethod("DecideNextAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+                var original = (Task)decide.Invoke(rig, [operation, HavenOS.Home.Core.HomeDeveloperProjectReadAdmissionSource.ReadAction,
+                    HavenOS.Home.PermissionsTrustNotifications.HomeApprovalChoice.Accept])!;
+                await original;
+            }
+            async Task ObserveRead(Task operation)
+            {
+                var observe = type.GetMethod("ObservePendingAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+                var original = (Task)observe.Invoke(rig, [operation, HavenOS.Home.Core.HomeDeveloperProjectReadAdmissionSource.ReadAction])!;
+                await original;
+            }
+            return new(reader, (IAsyncDisposable)rig,
+                canonicalSavedProject ? (DeveloperResolvedProject)type.GetProperty("Saved", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(rig)! : null,
+                canonicalSavedProject ? (FileDeveloperWorkspaceStore)type.GetProperty("SavedStore", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(rig)! : null,
+                AcceptRead, ObserveRead);
         }
         catch { await ((IAsyncDisposable)rig).DisposeAsync(); throw; }
     }

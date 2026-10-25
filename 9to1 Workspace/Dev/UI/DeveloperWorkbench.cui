@@ -48,6 +48,19 @@
       <Object id="dev-new-file-source" type="ReadOnlyText" text="{Binding NewFileSource}" font-family="monospace" min-height="100" accessible-name="Exact reviewed source to create; blank for an empty source file" />
       <Button id="dev-create-new-source-file" action="dev.create-new-source-file" content="Create reviewed file" Interactive="{Binding CanCreateNewFile}" />
       <Text text="{Binding NewFileStatus}" text-wrapping="Wrap" accessible-name="Actual reviewed CREATE and cold source open status" />
+      <Text text="Go to file" font-size="18" />
+      <Input id="dev-file-navigation-query" Type="Text" Value="{Binding FileNavigationQuery}" placeholdertext="Literal filename or path fragment" accessible-name="Find an existing file across the current project" />
+      <Button id="dev-find-project-file" action="dev.find-project-file" content="Find files" Interactive="{Binding CanFindProjectFile}" />
+      <Text text="{Binding FileNavigationStatus}" text-wrapping="Wrap" accessible-name="Actual project file capture and navigation status" />
+      <Container Type="Vertical Stack" CellGap="4" max-height="240" VerticalScrolling="True" accessible-name="Matching captured project file paths">
+        <Repeat id="dev-file-navigation-matches" Source="{Binding FileNavigationMatches}" As="fileMatch" Key="{Binding fileMatch.SelectionKey}">
+          <Button id="dev-open-file-navigation-result" action="dev.open-file-navigation-result" content="{Binding fileMatch.RelativePath}" accessible-name="{Binding fileMatch.AccessibleName}" Interactive="{Binding fileMatch.CanOpen}" horizontal-content-alignment="Left" />
+        </Repeat>
+      </Container>
+      <Container Type="Wrap" CellGap="6">
+        <Button id="dev-file-navigation-previous" action="dev.file-navigation-previous" content="Previous matching files" Interactive="{Binding CanFileNavigationPrevious}" />
+        <Button id="dev-file-navigation-next" action="dev.file-navigation-next" content="Next matching files" Interactive="{Binding CanFileNavigationNext}" />
+      </Container>
       <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
       <Button id="dev-open-source" action="dev.open-source" content="Open source" Interactive="{Binding CanOpenSource}" />
       <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />
