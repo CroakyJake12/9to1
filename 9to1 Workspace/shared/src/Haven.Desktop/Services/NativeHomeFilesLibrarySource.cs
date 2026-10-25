@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Browser;
+using Haven.Core;
 using Haven.Desktop.Views.Pages.Home;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
