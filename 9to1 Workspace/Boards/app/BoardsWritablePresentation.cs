@@ -107,11 +107,22 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             // exact source and expected revision again before publishing new immutable bytes.
             var isolatedBytes = bytes.ToArray();
             host!.LastSaveReceipt = null;
-            var receipt = await save(sourceId, expectedRevision, isolatedBytes, token).ConfigureAwait(false);
+            BoardsExternalSaveReceipt? receipt;
+            try
+            {
+                receipt = await save(sourceId, expectedRevision, isolatedBytes, token).ConfigureAwait(false);
+            }
+            finally
+            {
+                // Home/Files clones the transfer synchronously before its first await.
+                // Clear only this facade-owned transfer buffer; the session draft stays intact.
+                System.Security.Cryptography.CryptographicOperations.ZeroMemory(isolatedBytes);
+            }
             if (receipt is null)
                 throw new InvalidDataException("The external save returned no receipt.");
-            var invalidRevision = string.IsNullOrWhiteSpace(receipt.NewRevision) ||
-                string.Equals(receipt.NewRevision, expectedRevision, StringComparison.Ordinal);
+            var newRevision = receipt.NewRevision;
+            var invalidRevision = string.IsNullOrWhiteSpace(newRevision) ||
+                string.Equals(newRevision, expectedRevision, StringComparison.Ordinal);
             if (!receipt.Committed || receipt.Conflict || invalidRevision)
             {
                 host!.LastSaveReceipt = receipt.Committed
@@ -133,8 +144,10 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
                 throw new InvalidOperationException(failure);
             }
 
-            expectedRevision = receipt.NewRevision;
-            host!._sourceRevision = receipt.NewRevision;
+            if (newRevision is null)
+                throw new InvalidDataException("The external source did not confirm a new board revision.");
+            expectedRevision = newRevision;
+            host!._sourceRevision = newRevision;
             host!.LastSaveReceipt = receipt;
             return true;
         }).ConfigureAwait(false);
