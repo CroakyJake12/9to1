@@ -812,7 +812,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _homeCreationOperationInProgress = true;
         RefreshHomeBoardCreationAvailability();
         try { ApplyHomeBoardCreationResult(await host.InspectUnknownCreationAsync(cancellationToken)); }
-        catch (OperationCanceledException) { throw; }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception error)
         {
             Set("StatusText", "Unable to confirm whether this Board was saved. Creating another is disabled while Home checks. " + FirstLine(error.Message));
@@ -2037,7 +2037,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
     }
 
-    private async Task<bool> SetSectionIconColorAsync(HavenRichSection section, string? iconColor,
+    private async Task<bool> SetSectionIconColorAsync(RichBoardSection section, string? iconColor,
         CancellationToken cancellationToken)
     {
         if (section.GeneratedIcon is null)
