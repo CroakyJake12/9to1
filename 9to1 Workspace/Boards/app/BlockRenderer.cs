@@ -25,8 +25,6 @@ public static class BlockRenderer
     private const double GraphWidth = 420;
     private const double GraphHeight = 260;
     private const double BlockGutterTargetSize = 32;
-    private const double QuietBlockGutterOpacity = 0.56;
-    private const double QuietInsertOpacity = 0.76;
     private const double ChecklistCheckboxFirstLineOffset = 7;
 
     public static async Task RebuildAsync(StackPanel host, BoardsViewModel vm)
@@ -120,15 +118,15 @@ public static class BlockRenderer
                 ?? throw new InvalidOperationException("The insert affordance must remain a button.");
             ConfigureBlockGutterButton(insert, insertAction: true);
             insert.Margin = new Thickness(0);
-            insert.Opacity = selected ? 1 : QuietInsertOpacity;
+            insert.Opacity = 0;
 
             var grip = BlockGripCui.Build(vm, selectId);
             gripControl = grip;
             grip.MinWidth = BlockGutterTargetSize;
             grip.MinHeight = BlockGutterTargetSize;
             grip.HorizontalAlignment = HorizontalAlignment.Left;
-            grip.VerticalAlignment = VerticalAlignment.Top;
-            grip.Opacity = selected ? 1 : QuietBlockGutterOpacity;
+            grip.VerticalAlignment = VerticalAlignment.Center;
+            grip.Opacity = 0;
             if (grip.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.Name == "BlockGripToggle") is { } toggle)
                 ConfigureBlockGutterButton(toggle, insertAction: false);
             grip.Margin = new Thickness(0, 0, 4, 0);
@@ -175,8 +173,8 @@ public static class BlockRenderer
         var focused = false;
         void UpdateGutterEmphasis()
         {
-            var opacity = selected || hovering || focused ? 1 : QuietBlockGutterOpacity;
-            if (insert is not null) insert.Opacity = selected || hovering || focused ? 1 : QuietInsertOpacity;
+            var opacity = hovering || focused ? 1 : 0;
+            if (insert is not null) insert.Opacity = opacity;
             if (gripControl is not null) gripControl.Opacity = opacity;
         }
         border.PointerEntered += (_, _) => { hovering = true; UpdateGutterEmphasis(); };
@@ -232,7 +230,7 @@ public static class BlockRenderer
         button.MaxHeight = BlockGutterTargetSize;
         button.Padding = new Thickness(0);
         button.HorizontalAlignment = HorizontalAlignment.Center;
-        button.VerticalAlignment = VerticalAlignment.Top;
+        button.VerticalAlignment = VerticalAlignment.Center;
         if (insertAction && button.Content is Image addGlyph)
         {
             addGlyph.Width = 18;
@@ -437,6 +435,14 @@ public static class BlockRenderer
             HorizontalAlignment = HorizontalAlignment.Left,
         };
         add.IsVisible = vm.IsEditMode;
+        add.Opacity = 0;
+        var hovering = false;
+        var focused = false;
+        void UpdateVisibility() => add.Opacity = hovering || focused ? 1 : 0;
+        add.PointerEntered += (_, _) => { hovering = true; UpdateVisibility(); };
+        add.PointerExited += (_, _) => { hovering = false; UpdateVisibility(); };
+        add.GotFocus += (_, _) => { focused = true; UpdateVisibility(); };
+        add.LostFocus += (_, _) => { focused = false; UpdateVisibility(); };
         ToolTip.SetTip(add, "Add a checklist item");
         AutomationProperties.SetName(add, "Add checklist item");
         add.Click += async (_, _) => await vm.AddChecklistItemAsync(ParentKey(firstBlockId));
@@ -562,13 +568,14 @@ public static class BlockRenderer
         rows = Math.Clamp(rows, 1, 100);
         cols = Math.Clamp(cols, 1, 50);
 
+        var tableCornerRadius = new CornerRadius(Math.Clamp(block.TableStyle.CornerRadius, 0, 16));
         var tableBorder = new Border
         {
+            Name = "BoardTableFrame_" + block.Id,
             BorderBrush = TableBorderBrush(block),
             BorderThickness = new Thickness(Math.Clamp(block.TableStyle.BorderWidth > 0 ? block.TableStyle.BorderWidth : 1, 0.5, 8)),
-            CornerRadius = new CornerRadius(Math.Clamp(block.TableStyle.CornerRadius, 0, 16)),
+            CornerRadius = tableCornerRadius,
             Margin = new Thickness(0, 4, 0, 4),
-            ClipToBounds = true,
             Width = block.TableStyle.Width > 0 ? block.TableStyle.Width : double.NaN,
             HorizontalAlignment = block.TableStyle.Alignment switch
             {
@@ -682,7 +689,16 @@ public static class BlockRenderer
                 Grid.SetColumnSpan(frame, columnSpan);
                 grid.Children.Add(frame);
             }
-        tableBorder.Child = grid;
+        // Clip cell fills to the rounded table interior without clipping the
+        // outer stroke itself. Clipping the frame can shave the border at its
+        // corners and at the maximum stroke width.
+        tableBorder.Child = new Border
+        {
+            Name = "BoardTableClip_" + block.Id,
+            CornerRadius = tableCornerRadius,
+            ClipToBounds = true,
+            Child = grid,
+        };
         shell.Children.Add(tableBorder);
         return shell;
     }

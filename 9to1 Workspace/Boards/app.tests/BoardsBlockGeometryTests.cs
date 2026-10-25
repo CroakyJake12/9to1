@@ -15,7 +15,7 @@ namespace CakeOS.Apps.Boards.App.Tests;
 public sealed class BoardsBlockGeometryTests
 {
     [Fact]
-    public async Task Block_gutter_targets_stay_compact_and_top_aligned_beside_a_tall_table()
+    public async Task Block_gutter_targets_stay_compact_center_aligned_and_reveal_on_focus()
     {
         await using var session = new InMemoryRichBoardSession();
         await session.OpenAsync("memory://boards/block-gutter-geometry");
@@ -48,7 +48,7 @@ public sealed class BoardsBlockGeometryTests
 
             Border Row(string id) => Assert.Single(host.GetLogicalDescendants().OfType<Border>(), border =>
                 border.Tag is BlockReorderRow row && row.BlockId == id);
-            (double Height, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double Opacity,
+            (double Height, double GridHeight, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double GripRootTop, double Opacity,
                 int GripColumn, int InsertColumn, bool HasCanonicalGripGlyph, bool GripHasNoSurface,
                 double GripGlyphSize, string? GripGlyphName, double AddGlyphSize,
                 string InsertLayout) MeasureRow(string id)
@@ -65,8 +65,8 @@ public sealed class BoardsBlockGeometryTests
                 var insertLayout = $"Width={insert.Width}, Height={insert.Height}, MinHeight={insert.MinHeight}, " +
                     $"MaxHeight={insert.MaxHeight}, Bounds={insert.Bounds}, Padding={insert.Padding}, " +
                     $"BorderThickness={insert.BorderThickness}, Margin={insert.Margin}";
-                return (border.Bounds.Height, insert.Bounds.Height, insert.Bounds.Top,
-                    gripButton.Bounds.Height, gripButton.Bounds.Top, insert.Opacity,
+                return (border.Bounds.Height, grid.Bounds.Height, insert.Bounds.Height, insert.Bounds.Top,
+                    gripButton.Bounds.Height, gripButton.Bounds.Top, gripRoot.Bounds.Top, insert.Opacity,
                     Grid.GetColumn(gripRoot), Grid.GetColumn(insert), glyph.Source is not null,
                     gripButton.Background is ISolidColorBrush gripBrush && gripBrush.Color.A == 0,
                     glyph.Width, AutomationProperties.GetName(glyph), addGlyph.Width, insertLayout);
@@ -76,11 +76,15 @@ public sealed class BoardsBlockGeometryTests
             var tallRow = MeasureRow("tall-table");
             var shortInsert = Assert.Single(Row("short-note").GetLogicalDescendants().OfType<Button>(), button =>
                 AutomationProperties.GetName(button) == "Insert");
+            var shortGripRoot = Assert.Single(Assert.IsType<Grid>(Row("short-note").Child).Children, child =>
+                child.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle"));
+            var hiddenGripOpacity = shortGripRoot.Opacity;
             Assert.True(shortInsert.Focus());
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             var focusedOpacity = shortInsert.Opacity;
+            var focusedGripOpacity = shortGripRoot.Opacity;
             window.Close();
-            return (shortRow, tallRow, focusedOpacity);
+            return (shortRow, tallRow, hiddenGripOpacity, focusedOpacity, focusedGripOpacity);
         });
 
         Assert.True(actual.tallRow.Height > actual.shortRow.Height + 100,
@@ -97,11 +101,15 @@ public sealed class BoardsBlockGeometryTests
         Assert.Equal(14, actual.tallRow.GripGlyphSize);
         Assert.Equal("Drag block handle", actual.tallRow.GripGlyphName);
         Assert.Equal(18, actual.tallRow.AddGlyphSize);
-        Assert.InRange(actual.tallRow.InsertTop, 0, 2);
-        Assert.InRange(actual.tallRow.GripTop, 0, 2);
-        Assert.Equal(0.76, actual.shortRow.Opacity, precision: 2);
-        Assert.Equal(1, actual.tallRow.Opacity);
+        Assert.Equal((actual.shortRow.GridHeight - 32) / 2, actual.shortRow.InsertTop, precision: 1);
+        Assert.Equal(actual.shortRow.InsertTop, actual.shortRow.GripRootTop, precision: 1);
+        Assert.Equal((actual.tallRow.GridHeight - 32) / 2, actual.tallRow.InsertTop, precision: 1);
+        Assert.Equal(actual.tallRow.InsertTop, actual.tallRow.GripRootTop, precision: 1);
+        Assert.Equal(0, actual.shortRow.Opacity);
+        Assert.Equal(0, actual.tallRow.Opacity);
+        Assert.Equal(0, actual.hiddenGripOpacity);
         Assert.Equal(1, actual.focusedOpacity);
+        Assert.Equal(1, actual.focusedGripOpacity);
     }
 
     [Fact]
@@ -129,6 +137,11 @@ public sealed class BoardsBlockGeometryTests
             var check = Assert.Single(host.GetLogicalDescendants().OfType<CheckBox>(), item => item.Name == "done_long-checklist-label");
             var text = Assert.Single(host.GetLogicalDescendants().OfType<TextBox>(), item => item.Name == "chk_long-checklist-label");
             var row = Assert.IsType<Grid>(check.Parent);
+            var addItem = Assert.Single(host.GetLogicalDescendants().OfType<Button>(), button =>
+                AutomationProperties.GetName(button) == "Add checklist item");
+            var addItemHiddenOpacity = addItem.Opacity;
+            Assert.True(addItem.Focus());
+            var addItemFocusedOpacity = addItem.Opacity;
             var gap = text.Bounds.Left - check.Bounds.Right;
             var textHeight = text.Bounds.Height;
             var textColumn = Grid.GetColumn(text);
@@ -138,12 +151,15 @@ public sealed class BoardsBlockGeometryTests
             var textTop = text.Bounds.Top;
             window.Close();
             return (Gap: gap, TextHeight: textHeight, ColumnWidth: columnDefinition.Width, CheckWidth: checkWidth,
-                CheckTop: checkTop, TextTop: textTop, TextWrapping: text.TextWrapping);
+                CheckTop: checkTop, TextTop: textTop, TextWrapping: text.TextWrapping,
+                AddItemHiddenOpacity: addItemHiddenOpacity, AddItemFocusedOpacity: addItemFocusedOpacity);
         });
 
         Assert.InRange(actual.Gap, 8, 12);
         Assert.Equal(24, actual.CheckWidth);
         Assert.Equal(actual.TextTop + 7, actual.CheckTop);
+        Assert.Equal(0, actual.AddItemHiddenOpacity);
+        Assert.Equal(1, actual.AddItemFocusedOpacity);
         Assert.True(actual.TextHeight > 36, $"Expected the long label to wrap; height={actual.TextHeight}.");
         Assert.Equal(GridUnitType.Star, actual.ColumnWidth.GridUnitType);
         Assert.Equal(Avalonia.Media.TextWrapping.Wrap, actual.TextWrapping);
@@ -251,8 +267,16 @@ public sealed class BoardsBlockGeometryTests
                     StringComparer.Ordinal);
                 var tableText = ColorOf(BoardsTheme.ContrastText("#FF654321"));
                 var cellText = ColorOf(BoardsTheme.ContrastText("#FF222222"));
+                var tableFrame = Assert.Single(host.GetVisualDescendants().OfType<Border>(), border =>
+                    border.Name == "BoardTableFrame_override-table");
+                var tableClip = Assert.IsType<Border>(tableFrame.Child);
+                var frameClips = tableFrame.ClipToBounds;
+                var contentClips = tableClip.ClipToBounds;
+                var outerBounds = tableFrame.Bounds;
+                var innerBounds = tableClip.Bounds;
                 window.Close();
-                return (Cells: cellsByAppearance, TableText: tableText, CellText: cellText);
+                return (Cells: cellsByAppearance, TableText: tableText, CellText: cellText,
+                    OuterClips: frameClips, InnerClips: contentClips, OuterBounds: outerBounds, InnerBounds: innerBounds);
             });
 
             Assert.Equal<Color?>(palette.AccentSoft, actual.Cells["cell_theme-table_0_0"].Background);
@@ -265,6 +289,10 @@ public sealed class BoardsBlockGeometryTests
             Assert.Equal<Color?>(Color.Parse("#FF222222"), actual.Cells["cell_override-table_1_1"].Background);
             Assert.Equal(actual.TableText, actual.Cells["cell_override-table_0_0"].Foreground);
             Assert.Equal(actual.CellText, actual.Cells["cell_override-table_1_1"].Foreground);
+            Assert.False(actual.OuterClips);
+            Assert.True(actual.InnerClips);
+            Assert.True(actual.OuterBounds.Width >= actual.InnerBounds.Width);
+            Assert.True(actual.OuterBounds.Height >= actual.InnerBounds.Height);
         }
         finally
         {
