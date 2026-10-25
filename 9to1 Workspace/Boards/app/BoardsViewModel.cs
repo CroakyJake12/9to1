@@ -11,6 +11,7 @@
 // on the LAST '_' (documented in BlockRenderer).
 
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Avalonia.Controls;
@@ -77,6 +78,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
         Set("CanToggleEditMode", CanToggleEditMode);
+        Set("CanChangeLayoutMode", CanChangeLayoutMode);
         Set("ModeLabel", _isEditMode ? "Editing" : "Viewing");
         Set("ModeToggleAccessibleName", _isEditMode ? "Switch to Viewing mode" : "Switch to Editing mode");
         Set("RecentBoardsLoaded", false);
@@ -235,6 +237,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         ? $"Link created {pending.ApplicationName} to original section…"
         : "Link created page to original section…";
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
+    public bool CanChangeLayoutMode => IsNativePage && _isEditMode && CanEdit && _session is ContractSessionAdapter;
+    public bool IsVerticalLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Locked, StringComparison.Ordinal);
+    public bool IsFreeLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Unlocked, StringComparison.Ordinal);
     public string SelectedPageType => CurrentPage().PageType;
     public Haven.Application.BoardEmbeddedArtifactReference? SelectedEmbeddedArtifact => CurrentPage().EmbeddedArtifact;
     public bool ShowNativeAuthoring => _isEditMode &&
@@ -533,6 +538,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case "ToggleCanvasLock":
                 await ToggleCanvasLockAsync(cancellationToken);
                 break;
+            case "SetLayoutMode":
+                await SetLayoutModeAsync(Convert.ToString(parameter, CultureInfo.InvariantCulture) ?? string.Empty, cancellationToken);
+                break;
             case "AddInkDot":
                 AddInkStroke();
                 break;
@@ -808,6 +816,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("IsEditMode", enabled);
         Set("IsEditingMode", enabled);
         Set("IsViewingMode", !enabled);
+        Set("CanChangeLayoutMode", CanChangeLayoutMode);
         RefreshEmbeddedPageLinkState();
         Set("ShowNativeAuthoring", ShowNativeAuthoring);
         Set("ModeLabel", enabled ? "Editing" : "Viewing");
@@ -3173,6 +3182,101 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         RefreshAfterEdit();
     }
 
+    public async Task SetLayoutModeAsync(string mode, CancellationToken cancellationToken = default)
+    {
+        if (!RequireEditMode() || !IsNativePage) return;
+        if (_session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", "Page layout changes need the contract session.");
+            return;
+        }
+        if (mode is not (HavenRichPageLayoutModes.Locked or HavenRichPageLayoutModes.Unlocked))
+        {
+            Set("StatusText", "Choose Vertical or Free page layout.");
+            return;
+        }
+        try
+        {
+            await adapter.SetLayoutModeAsync(SelectedPageId, mode, cancellationToken);
+            Set("StatusText", mode == HavenRichPageLayoutModes.Locked
+                ? "Page blocks use vertical flow. Saved free placements remain in place."
+                : "Free placement is on. Drag a block handle to place it on the page.");
+            RefreshAfterEdit();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Set("StatusText", "Page layout could not be changed: " + FirstLine(ex.Message));
+        }
+    }
+
+    public async Task PlaceBlockAsync(string blockId, double x, double y, double width, double height,
+        int zOrder, CancellationToken cancellationToken = default)
+        => await PlaceBlockAsync(SelectedPageId, blockId, x, y, width, height, zOrder, cancellationToken);
+
+    public async Task PlaceBlockAsync(string pageId, string blockId, double x, double y, double width, double height,
+        int zOrder, CancellationToken cancellationToken = default)
+    {
+        if (!RequireEditMode() || !IsNativePage || IsVerticalLayout) return;
+        if (!string.Equals(pageId, SelectedPageId, StringComparison.Ordinal))
+        {
+            Set("StatusText", "The page changed before the block placement finished. Select the page and try again.");
+            return;
+        }
+        if (_session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", "Block placement needs the contract session.");
+            return;
+        }
+        try
+        {
+            await adapter.PlaceBlockAsync(pageId, blockId, x, y, width, height, zOrder, cancellationToken);
+            RefreshAfterEdit();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Set("StatusText", "Block placement could not be saved: " + FirstLine(ex.Message));
+        }
+    }
+
+    public async Task MoveBlockToVerticalFlowAsync(string blockId, CancellationToken cancellationToken = default)
+        => await MoveBlockToVerticalFlowAsync(SelectedPageId, blockId, cancellationToken);
+
+    public async Task MoveBlockToVerticalFlowAsync(string pageId, string blockId, CancellationToken cancellationToken = default)
+    {
+        if (!RequireEditMode() || !IsNativePage) return;
+        if (!string.Equals(pageId, SelectedPageId, StringComparison.Ordinal))
+        {
+            Set("StatusText", "The page changed before the block move finished. Select the page and try again.");
+            return;
+        }
+        if (_session is not ContractSessionAdapter adapter)
+        {
+            Set("StatusText", "Block layout changes need the contract session.");
+            return;
+        }
+        try
+        {
+            await adapter.SetBlockFlowLayoutAsync(pageId, blockId, cancellationToken);
+            RefreshAfterEdit();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Set("StatusText", "Block could not be returned to vertical flow: " + FirstLine(ex.Message));
+        }
+    }
+
     private bool RequireCanvasUnlocked()
     {
         if (!CurrentPage().IsCanvasLocked) return true;
@@ -3516,15 +3620,18 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("PageListText", string.Join("  |  ", CurrentSection().Pages.Select(p => p.Title)));
             Set("PageTitle", page.Title);
             Set("IsNativePage", string.Equals(page.PageType, HavenRichPageTypes.Native, StringComparison.Ordinal));
+            Set("CanChangeLayoutMode", CanChangeLayoutMode);
+            Set("IsVerticalLayout", IsVerticalLayout);
+            Set("IsFreeLayout", IsFreeLayout);
             Set("IsWritePage", string.Equals(page.PageType, HavenRichPageTypes.Write, StringComparison.Ordinal));
             Set("IsEmbeddedArtifactPage", page.PageType is HavenRichPageTypes.Write or HavenRichPageTypes.Canvas);
             Set("ShowNativeAuthoring", ShowNativeAuthoring);
             RefreshPageBreadcrumb();
-            Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock layout" : "Lock layout");
-            Set("CanvasLockStatus", page.IsCanvasLocked ? "Layout locked · unlock to move boxes; drawing remains available." : "Layout unlocked");
+            Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock freeform objects" : "Lock freeform objects");
+            Set("CanvasLockStatus", page.IsCanvasLocked ? "Freeform objects are locked; drawing remains available." : "Freeform objects can be moved.");
             Set("CanvasLockAccessibleName", page.IsCanvasLocked
-                ? "Unlock freeform box positions; drawing remains available"
-                : "Lock freeform box positions; drawing remains available");
+                ? "Unlock freeform object positions; drawing remains available"
+                : "Lock freeform object positions; drawing remains available");
             Set("HeadingText", heading?.Text ?? string.Empty);
             Set("ParaText", para?.Text ?? string.Empty);
             Set("Check1Text", checks.Count > 0 ? checks[0].Text : string.Empty);

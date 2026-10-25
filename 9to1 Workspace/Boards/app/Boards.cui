@@ -2,6 +2,8 @@
   <Actions>
     <Action name="OpenRecentBoard" command="OpenRecentBoard" parameter="{Binding board.Target}" />
     <Action name="OpenRecentPage" command="OpenRecentPage" parameter="{Binding page.Target}" />
+    <Action name="SetVerticalLayout" command="SetLayoutMode" parameter="Locked" />
+    <Action name="SetFreeLayout" command="SetLayoutMode" parameter="Unlocked" />
   </Actions>
   <Page>
     <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr" Background="{Resource CuiPanelBrush}">
@@ -30,12 +32,16 @@
               <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
               <Input ID="EditViewToggle" Type="Switch" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
             </Container>
-            <Button ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
+            <Container Type="Horizontal Stack" ID="LayoutModeToggleGroup" CellGap="2" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="3" CornerRadius="10" AccessibleName="Page layout mode">
+              <Button ID="VerticalLayoutToggle" Content="Vertical" Action="SetVerticalLayout" Selected="{Binding IsVerticalLayout}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="Use vertical flow layout" Tooltip="Keep blocks in vertical document flow" />
+              <Button ID="FreeLayoutToggle" Content="Free" Action="SetFreeLayout" Selected="{Binding IsFreeLayout}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="Use free block placement" Tooltip="Unlock spatial placement for page blocks" />
+            </Container>
             <Button ID="ThemeButton" Content="Appearance" Action="ToggleTheme" AccessibleName="Toggle light or dark appearance" />
             <Container Type="Menu" ID="MoreMenu">
               <Button Type="Menu Item" ID="OverflowButton" Content="More" AccessibleName="More board actions">
                 <Button Type="Menu Item" Content="Styles…" Action="ManageStyles" />
                 <Button Type="Menu Item" Content="Toggle light or dark appearance" Action="ToggleTheme" />
+                <Button Type="Menu Item" ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
                 <Button Type="Menu Item" ID="MoreBoardProperties" Content="Board properties…" Action="BoardProperties" />
               </Button>
             </Container>
@@ -179,15 +185,17 @@
           </If>
         </Container>
         <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" Row="2" VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiPanelBrush}">
-          <Container horizontalalignment="Stretch" cornerradius="26" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Background="{Resource CuiPanel2Brush}" BorderWidth="0">
+          <Container horizontalalignment="Stretch" cornerradius="22" padding="20" margin="16 12 14 12" Type="Overlay" ID="PageCard" Background="{Resource CuiPanel2Brush}" BorderWidth="0">
             <Container Type="Grid" ID="PageSurface">
               <Container margin="40 36" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
                 <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />
                 <Container Type="Vertical Stack" ID="EmbeddedArtifactHost" />
-                <Container Type="Vertical Stack" ID="BlocksHost" Active="{Binding IsNativePage}" />
-                <Container Type="Absolute" ID="AbsoluteBlocksHost" Active="{Binding IsNativePage}" />
+                <Container Type="Grid" ID="PageBlocksSurface" RowSizes="Auto">
+                  <Container Type="Vertical Stack" ID="BlocksHost" Row="0" Active="{Binding IsNativePage}" />
+                  <Container Type="Absolute" ID="AbsoluteBlocksHost" Row="0" XInherited="True" YInherited="True" Active="{Binding IsNativePage}" />
+                </Container>
               </Container>
               <Container Type="Absolute" ID="InkOverlayLayer" Active="{Binding IsNativePage}" />
             </Container>
