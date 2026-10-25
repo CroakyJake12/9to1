@@ -8,6 +8,7 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.ViewModels;
+using Haven.Desktop.Views.Pages.Chat;
 using HavenOS.Apps.Dev;
 using HavenOS.Apps.Spaces.Development;
 using HavenOS.Apps.Spaces.Tasks;
@@ -34,6 +35,12 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     private readonly Guid? _projectReferenceId;
     private readonly ICuiSceneReadiness _readiness;
     private readonly CuiSceneHost _host;
+    private readonly ChatComposerCuiView _composerView;
+    private Task? _composerClose;
+    private long _instructionVersion;
+    private long _acceptedInstructionVersion = -1;
+    private bool _followUpAdmissionPending;
+    private long _followUpAdmissionVersion = -1;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly object _gate = new();
     [ThreadStatic] private static List<SpaceTaskWidgetPage>? _sourceCallbacks;
@@ -65,8 +72,11 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         _development = development; _projectReferenceId = originalProjectReferenceId; _openDev = openSameProjectInDev;
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         Document = SpaceTaskWidgetCuiDocument.Load();
-        _host = new CuiSceneHost();
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
+        _composerView = new ChatComposerCuiView(new TaskComposerSource(this));
+        var controls = new CuiControlRegistry();
+        controls.BindAuthoredControl("task-composer-mount", _ => _composerView);
+        _host = new CuiSceneHost(controls);
         AutomationProperties.SetAutomationId(this, "SpaceCanonicalTaskWidget");
         AutomationProperties.SetName(this, "Space task and development workspace");
         Content = _host;
@@ -125,6 +135,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     }
 
     public CuiDocument Document { get; }
+    internal ChatComposerCuiView OriginalComposer => _composerView;
     internal CuiSceneHost OriginalHost => _host; // Root's genuine native-frame producer binds this exact host.
     public new event PropertyChangedEventHandler? PropertyChanged;
     public FollowUpDecision? AcknowledgedFollowUp { get; private set; }
@@ -150,6 +161,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                     InvokeOriginalSource(() => { _canonical.SnapshotChanged += OnSnapshotChanged; _subscribed = true; return true; });
             }
             await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
+            await original.AwaitAsync(_composerView.InitializeAsync(scope.Token)).ConfigureAwait(false);
             Task? showJoin = null;
             var dispatcher = Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -280,7 +292,12 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         _work.RunSynchronous(original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
-            _instruction = instruction; NotifyOriginal(original, generation);
+            lock (_gate)
+            {
+                if (_instruction == instruction) return;
+                _instruction = instruction; _instructionVersion++;
+            }
+            NotifyOriginal(original, generation);
         });
         return true;
     }
@@ -293,7 +310,8 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             {
                 "task.refresh" => true,
                 "task.pause" or "task.stop" or "task.resume-original" => IsOriginalRunControlAvailable(command),
-                "task.steer" or "task.queue" => _source.HasConfiguredCommandOwner && _observation?.Snapshot?.OwnerBinding is not null,
+                "task.steer" or "task.queue" => !_followUpAdmissionPending && _instructionVersion != _acceptedInstructionVersion &&
+                    !string.IsNullOrWhiteSpace(_instruction) && _source.HasConfiguredCommandOwner && _observation?.Snapshot?.OwnerBinding is not null,
                 "dev.open" => _openDev is not null && _developerView is not null,
                 _ => false
             };
@@ -303,34 +321,65 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     {
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This task operation is unavailable.");
         long generation; lock (_gate) generation = _generation;
-        var capturedInstruction = _instruction; var captured = _observation; var project = _developerView;
-        return new(_work.RunAsync(async original =>
+        string capturedInstruction; long instructionVersion;
+        var followUp = command is "task.steer" or "task.queue";
+        lock (_gate)
         {
-            original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
-            using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
-            if (command == "task.refresh") await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
-            else if (command is "task.steer" or "task.queue")
+            if (followUp && (_followUpAdmissionPending || _instructionVersion == _acceptedInstructionVersion))
+                throw new InvalidOperationException("This follow-up is already pending or acknowledged. Edit the draft before another submission.");
+            capturedInstruction = _instruction; instructionVersion = _instructionVersion;
+            if (followUp) { _followUpAdmissionPending = true; _followUpAdmissionVersion = instructionVersion; }
+        }
+        var captured = _observation; var project = _developerView;
+        try { return new(_work.RunAsync(async original =>
+        {
+            try
             {
-                var snapshot = captured?.Snapshot ?? throw new InvalidOperationException("No original canonical task was captured.");
-                var reply = await original.AwaitAsync(InvokeOriginalSource(() => _source.SubmitFollowUpAsync(_spaceId, _conversationId,
-                    snapshot.TaskId, snapshot.ExecutionId, snapshot.PersistenceRevision, capturedInstruction,
-                    command == "task.steer" ? TaskFollowUpMode.Steer : TaskFollowUpMode.Queue, scope.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
-                AcknowledgedFollowUp = reply; // Actual CAS reply survives subsequent UI failure/withdrawal.
-                await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
+                original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
+                using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
+                if (followUp)
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => NotifyOriginal(original, generation)).GetTask()).ConfigureAwait(false);
+                if (command == "task.refresh") await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
+                else if (command is "task.steer" or "task.queue")
+                {
+                    var snapshot = captured?.Snapshot ?? throw new InvalidOperationException("No original canonical task was captured.");
+                    var reply = await original.AwaitAsync(InvokeOriginalSource(() => _source.SubmitFollowUpAsync(_spaceId, _conversationId,
+                        snapshot.TaskId, snapshot.ExecutionId, snapshot.PersistenceRevision, capturedInstruction,
+                        command == "task.steer" ? TaskFollowUpMode.Steer : TaskFollowUpMode.Queue, scope.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                    AcknowledgedFollowUp = reply; // Actual CAS reply survives subsequent UI failure/withdrawal.
+                    lock (_gate)
+                    {
+                        _acceptedInstructionVersion = instructionVersion;
+                        // A real ACK clears only the exact admitted draft. New text typed
+                        // while the owner was pending belongs to the next instruction.
+                        if (_instructionVersion == instructionVersion)
+                        { _instruction = ""; _instructionVersion++; }
+                    }
+                    await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
+                }
+                else if (command is "task.pause" or "task.stop" or "task.resume-original")
+                {
+                    var same = captured?.Snapshot ?? throw new InvalidOperationException("No original Task/Run was captured.");
+                    await DispatchOriginalRunControlAsync(original, generation, command, same, scope.Token).ConfigureAwait(false);
+                }
+                else if (command == "dev.open")
+                {
+                    var current = await original.AwaitAsync(InvokeOriginalSource(() => _development!.OpenAsync(_spaceId,
+                        project!.ContextReferenceId, scope.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                    original.DemandPublication();
+                    await original.AwaitAsync(InvokeOriginalSource(() => _openDev!(current))).ConfigureAwait(false);
+                }
             }
-            else if (command is "task.pause" or "task.stop" or "task.resume-original")
-            {
-                var same = captured?.Snapshot ?? throw new InvalidOperationException("No original Task/Run was captured.");
-                await DispatchOriginalRunControlAsync(original, generation, command, same, scope.Token).ConfigureAwait(false);
-            }
-            else if (command == "dev.open")
-            {
-                var current = await original.AwaitAsync(InvokeOriginalSource(() => _development!.OpenAsync(_spaceId,
-                    project!.ContextReferenceId, scope.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
-                original.DemandPublication();
-                await original.AwaitAsync(InvokeOriginalSource(() => _openDev!(current))).ConfigureAwait(false);
-            }
-        }));
+            finally { if (followUp) ReleaseFollowUpAdmission(instructionVersion); }
+        })); }
+        catch { if (followUp) ReleaseFollowUpAdmission(instructionVersion); throw; }
+    }
+
+    private void ReleaseFollowUpAdmission(long version)
+    {
+        lock (_gate)
+            if (_followUpAdmissionVersion == version)
+            { _followUpAdmissionPending = false; _followUpAdmissionVersion = -1; }
     }
 
     public Task<DeveloperOperationResult<DeveloperActionObservation>> ExecuteOriginalDeveloperCommandAsync(
@@ -355,6 +404,9 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
 
     private void NotifyOriginal(DesktopOriginalWorkLifetime.Original original, long generation)
     {
+        original.DemandPublication(); DemandCurrent(generation);
+        try { InvokeOriginalSource(() => { _composerView.RefreshSurface(); return true; }); }
+        catch (Exception error) { original.Retain(error); }
         foreach (var callback in PropertyChanged?.GetInvocationList() ?? [])
         {
             original.DemandPublication(); DemandCurrent(generation);
@@ -392,11 +444,12 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         var failures = new List<Exception>();
         RequestOriginalResumeObservationRetirement(failures); // Request every observer, never the business producer.
         Task? nativeClose = null, hostClose = null;
+        try { _composerClose ??= _composerView.CloseAsync(); } catch (Exception error) { failures.Add(error); }
         if (readiness is not null)
             try { lock (_gate) nativeClose = _nativeReadinessClose ??= readiness.RequestOriginalRetirementTask(); }
             catch (Exception error) { failures.Add(error); }
         try { hostClose = _hostClose ??= _host.CloseOriginalAsync(); } catch (Exception error) { failures.Add(error); }
-        return JoinOriginalPresentationChildrenAsync([nativeClose, hostClose], failures);
+        return JoinOriginalPresentationChildrenAsync([nativeClose, hostClose, _composerClose], failures);
     }
     private static async Task JoinOriginalPresentationChildrenAsync(Task?[] actualTasks, List<Exception> failures)
     {
@@ -424,11 +477,13 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         if (readiness is not null && actualReadinessClose is null)
             try { lock (_gate) actualReadinessClose = _nativeReadinessClose ??= readiness.RequestOriginalRetirementTask(); }
             catch (Exception error) { childFailures.Add(error); }
-        await JoinOriginalPresentationChildrenAsync([actualReadinessClose, observerClose], childFailures).ConfigureAwait(false);
+        Task? composerClose = null;
+        try { composerClose = _composerClose ??= _composerView.CloseAsync(); } catch (Exception error) { childFailures.Add(error); }
+        await JoinOriginalPresentationChildrenAsync([actualReadinessClose, observerClose, composerClose], childFailures).ConfigureAwait(false);
         if (_hostClose is not { IsCompletedSuccessfully: true })
             throw new InvalidOperationException("The actual task-widget host close did not acknowledge retirement.");
         var actual = InvokeOriginalSource(() => Dispatcher.UIThread.InvokeAsync(() =>
-            OwnNestedOriginalSource(() => { if (ReferenceEquals(Content, _host)) Content = null; })).GetTask());
+            OwnNestedOriginalSource(() => { if (ReferenceEquals(Content, _host)) Content = null; _composerView.Dispose(); })).GetTask());
         await JoinOriginalDispatcherCloseAsync(actual).ConfigureAwait(false);
     }
     internal static async Task JoinOriginalDispatcherCloseAsync(Task actual)

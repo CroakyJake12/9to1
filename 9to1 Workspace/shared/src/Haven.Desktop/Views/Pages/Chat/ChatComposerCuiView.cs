@@ -31,15 +31,25 @@ public interface IChatComposerSource
     string Placeholder { get; }
     bool IsSending { get; }
     bool CanStop => IsSending;
+    string StopAccessibleName => "Stop current response";
+    string StopTooltip => "Stop the active response; retain its saved input and partial reply";
     bool HasPendingMessage => !string.IsNullOrWhiteSpace(Draft);
     bool CanQueue => IsSending && CanStop && HasPendingMessage && CanSend && !IsEditing;
     bool IsSafetyLocked { get; }
     bool HasAdd { get; }
+    bool HasSettings => true;
+    bool HasFormatting => true;
+    bool CanSteer => false;
+    bool CanPause => false;
+    bool CanResume => false;
     bool CanSend { get; }
     bool IsEditing { get; }
     IReadOnlyList<ChatComposerChip> Chips { get; }
     ValueTask Send();
     ValueTask Stop();
+    ValueTask Steer() => ValueTask.FromException(new NotSupportedException("This source has no canonical task steering command."));
+    ValueTask Pause() => ValueTask.FromException(new NotSupportedException("This source has no canonical task pause command."));
+    ValueTask Resume() => ValueTask.FromException(new NotSupportedException("This source has no canonical task continuation command."));
     ValueTask Add();
     ValueTask OpenSettings();
     ValueTask CloseSettings();
@@ -114,11 +124,18 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 value = _source.CanSend;
                 return true;
             case "Composer.ShowSend":
-                value = !_source.IsSending && _source.HasPendingMessage;
+                value = !_source.IsSending && _source.HasPendingMessage && _source.CanSend;
                 return true;
+            case "Composer.HasAdd": value = _source.HasAdd; return true;
+            case "Composer.HasSettings": value = _source.HasSettings; return true;
+            case "Composer.CanSteer": value = _source.CanSteer; return true;
+            case "Composer.CanPause": value = _source.CanPause; return true;
+            case "Composer.CanResume": value = _source.CanResume; return true;
             case "Composer.CanQueue":
                 value = _source.CanQueue;
                 return true;
+            case "Composer.StopAccessibleName": value = _source.StopAccessibleName; return true;
+            case "Composer.StopTooltip": value = _source.StopTooltip; return true;
             case "Composer.CanStop":
                 value = _source.CanStop;
                 return true;
@@ -135,7 +152,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 value = _source.IsEditing ? "Update the message being edited" : "Send message";
                 return true;
             case "Composer.ShowFormatting":
-                value = _expanded && (_focused || _settingsOpen || _emojiOpen);
+                value = _source.HasFormatting && _expanded && (_focused || _settingsOpen || _emojiOpen);
                 return true;
             case "Composer.ShowSettings":
                 value = _settingsOpen;
@@ -201,9 +218,12 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             "composer.send" => !_source.IsSending && _source.HasPendingMessage && _source.CanSend,
             "composer.queue" => _source.CanQueue,
             "composer.stop" => _source.CanStop,
+            "composer.steer" => _source.CanSteer,
+            "composer.pause" => _source.CanPause,
+            "composer.resume" => _source.CanResume,
             "composer.add" => _source.HasAdd,
-            "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => true,
-            "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => true,
+            "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => _source.HasFormatting,
+            "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => _source.HasSettings,
             _ => true
         };
     }
@@ -218,7 +238,13 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return _source.Send();
             case "composer.stop" when _source.CanStop:
                 return StopProjectedAsync();
-            case "composer.send" or "composer.queue" or "composer.stop":
+            case "composer.steer" when _source.CanSteer:
+                return _source.Steer();
+            case "composer.pause" when _source.CanPause:
+                return _source.Pause();
+            case "composer.resume" when _source.CanResume:
+                return _source.Resume();
+            case "composer.send" or "composer.queue" or "composer.stop" or "composer.steer" or "composer.pause" or "composer.resume":
                 return ValueTask.FromException(new InvalidOperationException("This conversation action is no longer available."));
             case "composer.add":
                 return _source.Add();
