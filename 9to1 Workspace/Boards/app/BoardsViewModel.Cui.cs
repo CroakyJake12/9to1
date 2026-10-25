@@ -180,6 +180,7 @@ public sealed partial class BoardsViewModel
 
     public bool TrySetValue(string path, object? value)
     {
+        if (_disposed) return false;
         var key = path[(path.LastIndexOf('.') + 1)..];
         if (key == "LandingSearchQuery")
         {

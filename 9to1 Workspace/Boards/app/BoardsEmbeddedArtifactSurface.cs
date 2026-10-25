@@ -142,10 +142,23 @@ internal sealed class BoardsEmbeddedArtifactSurface(IBoardsEmbeddedArtifactHost?
                     await CloseUnpublishedAsync(opened);
                     return;
                 }
+                // The selected page's CUI `Active` branch may have queued its
+                // layout swap while the owner opened asynchronously. Wait for
+                // Avalonia's render pass, then resolve the currently mounted
+                // authored host rather than attaching to the previous branch.
+                await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+                if (!IsCurrentSelection(pageId, sectionId, pageType, reference, mode) ||
+                    !await opened.RevalidateAsync() || !opened.IsPublicationCurrent)
+                {
+                    await CloseUnpublishedAsync(opened);
+                    return;
+                }
                 var currentSurface = BoardsCuiControlFinder.FindByAutomationId<Panel>(_root, "EmbeddedArtifactHost");
                 if (currentSurface is null)
                 {
                     await CloseUnpublishedAsync(opened);
+                    viewModel.SetEmbeddedPageStatus(true,
+                        "The linked page host is not available in the current Board view. Select the page again to reopen it.");
                     return;
                 }
                 _session = opened;

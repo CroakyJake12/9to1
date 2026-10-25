@@ -180,7 +180,7 @@
                 <Text ID="PageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" AccessibleName="Current Board and page" />
                 <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />
-                <Container Type="Vertical Stack" ID="EmbeddedArtifactHost" Active="{Binding IsEmbeddedArtifactPage}" />
+                <Container Type="Vertical Stack" ID="EmbeddedArtifactHost" />
                 <Container Type="Vertical Stack" ID="BlocksHost" Active="{Binding IsNativePage}" />
               </Container>
               <Container Type="Absolute" ID="InkOverlayLayer" Active="{Binding IsNativePage}" />

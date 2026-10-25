@@ -54,6 +54,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private string _landingSearchQuery = string.Empty;
     private (string PageId, string BlockId, int CaretIndex)? _pendingTextFocus;
     private bool _homeCreationOperationInProgress;
+    private bool _disposed;
 
     private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
     private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
@@ -68,6 +69,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("IsEditMode", _isEditMode);
         Set("ModeLabel", _isEditMode ? "Edit" : "View");
         Set("RecentBoardsLoaded", false);
+        Set("EmbeddedPageUnavailable", false);
+        Set("EmbeddedPageMessage", string.Empty);
         Set("CanAddWritePage", CanAddWritePage);
         RefreshHomeBoardCreationAvailability();
         _session.StatusChanged += (_, status) =>
@@ -265,6 +268,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (_disposed) return;
         if (!CanEdit && command is ("ToggleEditView" or "ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or
             "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or "FileMenu" or
             "OverflowMenu" or "BoardProperties" or "CloseWindow"))
@@ -892,13 +896,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var name = textBox.Name ?? string.Empty;
             EventHandler<TextChangedEventArgs> textHandler = (_, _) =>
             {
-                if (_syncing)
+                if (_syncing || _disposed || !ReferenceEquals(_attachedRoot, root) || _textRangeDetached)
                     return;
                 EditText(name, textBox.Text ?? string.Empty);
             };
             EventHandler<FocusChangedEventArgs> focusHandler = (_, _) =>
             {
-                if (_syncing)
+                if (_syncing || _disposed || !ReferenceEquals(_attachedRoot, root) || _textRangeDetached)
                     return;
                 FocusBlockFromControl(name);
             };
@@ -941,6 +945,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             catch { /* Detach is best-effort. */ }
         }
         _detachers.Clear();
+    }
+
+    /// <summary>Ends this editor lifetime after queued UI events have been drained.</summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        Detach();
     }
 
     /// <summary>Push current binding values into live controls without re-firing edits.</summary>
@@ -1147,6 +1159,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void EditText(string controlName, string text)
     {
+        if (_disposed) return;
         if (!_isEditMode && controlName != "NavSearchBox") return;
         switch (controlName)
         {
@@ -1343,6 +1356,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void EditCheck(string controlName, bool done)
     {
+        if (_disposed) return;
         if (!_isEditMode) return;
         switch (controlName)
         {
