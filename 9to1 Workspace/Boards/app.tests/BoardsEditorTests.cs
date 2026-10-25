@@ -243,6 +243,11 @@ public sealed class BoardsEditorTests
             .Where(c => expected.Contains(c.Name, StringComparer.Ordinal))
             .ToArray();
         Assert.Equal(expected.Length, components.Length);
+        var toolbarHost = components.Single(component => component.Name == "ToolbarHost");
+        Assert.True(toolbarHost.Properties.TryGetValue("HorizontalScrolling", out var horizontalScrolling)
+            && horizontalScrolling is CakeOS.Cui.Language.CuiLiteralValue { Value: "true" });
+        Assert.True(toolbarHost.Properties.TryGetValue("VerticalScrolling", out var verticalScrolling)
+            && verticalScrolling is CakeOS.Cui.Language.CuiLiteralValue { Value: "false" });
 
         var found = await OnUiThreadAsync(() =>
         {
