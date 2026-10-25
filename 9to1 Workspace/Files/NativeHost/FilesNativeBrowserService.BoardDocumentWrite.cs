@@ -367,7 +367,7 @@ public sealed partial class FilesNativeBrowserService
                 if (operation.Approval.RequestId.Length == 0)
                     throw new InvalidOperationException("Home returned no retained Files board save request.");
                 if (operation.Approval.State == HomePermissionRequestState.PendingApproval)
-                    await source.Observe(() => presentReview(operation.Approval, token)).ConfigureAwait(false);
+                    await source.ObserveVoid(() => presentReview(operation.Approval, token)).ConfigureAwait(false);
                 operation.Approval = await source.Observe(() => _broker.GetAuthorizationAsync(
                     operation.Approval.RequestId, token)).ConfigureAwait(false);
                 if (!operation.Approval.IsAllowed)
@@ -439,7 +439,7 @@ public sealed partial class FilesNativeBrowserService
                     if (!await source.Observe(() => exactFence.ValidateAsync(token).AsTask()).ConfigureAwait(false))
                         throw new UnauthorizedAccessException("The claimed Home Files write fence is no longer current.");
                     operation.Validated = true;
-                    var destination = IssueDestination(operation, originalBinding.DirectoryPath, row, expectedRevision,
+                    var destination = IssueDestination(operation, originalBinding.DirectoryPath, row, new(expectedRevision),
                         operation.NewRevisionId, operation.DocumentId, operation.Payload.Length, operation.PayloadSha256);
                     operation.Materialization = await source.ObserveProduct(
                         () => _physicalOwner.MaterializeOriginalBoardDocumentWithinSourceAsync(destination, operation.Payload,
@@ -457,7 +457,7 @@ public sealed partial class FilesNativeBrowserService
                         throw new InvalidDataException("The original Files physical owner returned another board materialization.");
                     var exactMaterialization = operation.Materialization
                         ?? throw new InvalidOperationException("The physical Files owner returned no retained materialization.");
-                    await source.Observe(() => _physicalOwner.RevalidateOriginalBoardDocumentWithinSourceAsync(
+                    await source.ObserveVoid(() => _physicalOwner.RevalidateOriginalBoardDocumentWithinSourceAsync(
                         exactMaterialization, source.OriginalSynchronousScope, source.RetainOriginalTask, token)).ConfigureAwait(false);
                     await RequireWrite(token).ConfigureAwait(false);
 
@@ -494,13 +494,13 @@ public sealed partial class FilesNativeBrowserService
                 finally
                 {
                     if (operation.Materialization is { } materialization)
-                        try { await source.Observe(() => materialization.CloseAndDrainAsync()).ConfigureAwait(false); }
+                        try { await source.ObserveVoid(() => materialization.CloseAndDrainAsync()).ConfigureAwait(false); }
                         catch (Exception error) { failures.Add(error); }
                     if (operation.Mapping is { } mapping)
-                        try { await source.Observe(() => mapping.DisposeAsync().AsTask()).ConfigureAwait(false); }
+                        try { await source.ObserveVoid(() => mapping.DisposeAsync().AsTask()).ConfigureAwait(false); }
                         catch (Exception error) { failures.Add(error); }
                     if (fence is not null)
-                        try { await source.Observe(() => fence.DisposeAsync().AsTask()).ConfigureAwait(false); }
+                        try { await source.ObserveVoid(() => fence.DisposeAsync().AsTask()).ConfigureAwait(false); }
                         catch (Exception error) { failures.Add(error); }
                 }
 
