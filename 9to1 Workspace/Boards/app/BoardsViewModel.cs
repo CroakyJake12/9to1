@@ -237,6 +237,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         ? $"Link created {pending.ApplicationName} to original section…"
         : "Link created page to original section…";
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
+    public bool IsNativePage => string.Equals(CurrentPage().PageType, HavenRichPageTypes.Native, StringComparison.Ordinal);
     public bool CanChangeLayoutMode => IsNativePage && _isEditMode && CanEdit && _session is ContractSessionAdapter;
     public bool IsVerticalLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Locked, StringComparison.Ordinal);
     public bool IsFreeLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Unlocked, StringComparison.Ordinal);
