@@ -348,6 +348,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetCuiPropertyValue(path, out value)) return true;
             if (TryGetCuiAnalysisValue(path, out value)) return true;
             if (TryGetCuiPreviewValue(path, out value)) return true;
+            if (TryGetFileNavigationValue(path, out value)) return true;
             value = path switch
             {
                 "ProjectTitle" => _project.Project.Name,
@@ -454,7 +455,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             });
             return true;
         }
-        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "SourceFindQuery" or "SourceReplaceText" or "CuiPropertyDraftValue" or "NewFileName" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
+        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "FileNavigationQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "SourceFindQuery" or "SourceReplaceText" or "CuiPropertyDraftValue" or "NewFileName" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
         long generation; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
         {
@@ -471,6 +472,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             // until the path once again names the actually open source.
                             StoreSelectedTab(); _sourcePath = text; break;
                         case "NewFileName": ChangeNewFileName(text); break;
+                        case "FileNavigationQuery": ChangeFileNavigationQuery(text); break;
                         case "SearchQuery": if (!StringComparer.Ordinal.Equals(_searchQuery, text)) { _searchQuery = text; InvalidateProjectSearch(); } break;
                         case "RecoveredMergedDraft": UpdateRecoveryMerge(text); break;
                         case "SourceLocation": _sourceLocation = text; break;
@@ -498,6 +500,10 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (!_active || _work.IsRetiring) return false;
             if (command == "dev.stop-manual-run") return _manualRunStop is not null && !_manualRunStop.IsCancellationRequested;
             if (_pending) return false;
+            if (command == "dev.find-project-file") return _manualReader is not null && DeveloperProjectFileNavigation.IsValidQuery(_fileNavigationQuery);
+            if (command == "dev.open-file-navigation-result") return _manualReader is not null && CurrentFileNavigationObservation() is { Result.Matches.Count: > 0 };
+            if (command == "dev.file-navigation-previous") return CurrentFileNavigationObservation() is not null && _fileNavigationPage > 0;
+            if (command == "dev.file-navigation-next") return CurrentFileNavigationObservation() is { } fileResults && fileResults.Result.Matches.Count > (_fileNavigationPage + 1) * FileNavigationPageSize;
             if (command == "dev.new-run-target") return CanConfigureRunTarget();
             if (command == "dev.edit-run-target") return CanConfigureRunTarget() && _selectedRunTarget is { } editable &&
                 DeveloperRunConfigurationSelection.Observe(_project).Value?.Any(choice => choice.SelectionKey == editable.SelectionKey) == true;
@@ -575,6 +581,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);
         if (command == "dev.analyze-cui-draft") return DispatchCuiAnalysisAsync(cancellationToken);
         if (command == "dev.preview-cui-draft") return DispatchCuiPreviewAsync(cancellationToken);
+        if (command is "dev.find-project-file" or "dev.file-navigation-previous" or "dev.file-navigation-next") return DispatchFileNavigationAsync(command, cancellationToken);
         if (command is "dev.go-to-cui-problem" or "dev.go-to-cui-element") return DispatchCuiSourceNavigationAsync(command, parameter, cancellationToken);
         if (command is "dev.undo-source-edit" or "dev.redo-source-edit") return DispatchDraftHistoryAsync(command, cancellationToken);
         if (command is "dev.find-next-source" or "dev.find-previous-source" or "dev.replace-source-match" or "dev.replace-all-source")
@@ -589,6 +596,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         string? projectFolder = null, entryPath = null;
         IReadOnlyList<DeveloperManualSaveRequest>? saveReviewed = null;
         SearchSelection? searchSelection = null;
+        FileNavigationSelection? fileNavigationSelection = null;
         DeveloperProjectSearchOptions searchOptions; long searchGeneration;
         lock (_gate)
         {
@@ -598,6 +606,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 if (parameter is not string key || !Guid.TryParse(key, out var tabId) || _sourceTabs.All(tab => tab.Id != tabId))
                     throw new InvalidOperationException("The source tab is not owned by this open project.");
                 requestedTab = tabId;
+            }
+            if (command == "dev.open-file-navigation-result")
+            {
+                fileNavigationSelection = CaptureFileNavigationSelection(parameter);
+                entryPath = fileNavigationSelection.RelativePath; command = "dev.open-source";
             }
             if (command == "dev.open-project-entry")
             {
@@ -646,7 +659,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (_manual)
                 return DispatchManualAsync(command, path, query, manualBeforeText, manualDraftText, manualBeforeSha256,
                     manualAfterSha256, manualReviewed, manualReviewRevision, saveReviewed, generation,
-                    searchOptions, searchGeneration, searchSelection, cancellationToken);
+                    searchOptions, searchGeneration, searchSelection, fileNavigationSelection, cancellationToken);
             return new(_work.RunAsync(async original =>
             {
                 original.BindPublicationGuard(() => IsCurrent(generation));
@@ -679,6 +692,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                         // A tab switch performs the same genuine authorized fresh read as Open;
                         // it never discloses a cached document merely from a copied view ID.
                         if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
+                        if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
                         var document = await original.AwaitAsync(InvokeOriginalSource(() => _resolveDocument(project, path, cancellationToken))).ConfigureAwait(false);
                         if (!document.Succeeded || document.Value is null) throw new InvalidOperationException(document.Error?.Message ?? "No current registered document identity was resolved.");
                         original.DemandPublication();
@@ -688,11 +702,13 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                         try
                         {
                             if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, prepared.Snapshot.OriginalText);
+                            if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
                             var published = false;
                             await PublishAsync(original, () =>
                             {
                                 original.DemandPublication();
                                 if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, prepared.Snapshot.OriginalText);
+                                if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
                                 StoreSelectedTab();
                                 var tab = _sourceTabs.SingleOrDefault(item => item.Editor is { } owned && owned.Project == project.Reference &&
                                     owned.Document == prepared.Snapshot.Document);
@@ -827,7 +843,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         string manualBeforeText, string manualDraftText, string manualBeforeSha256, string manualAfterSha256,
         bool manualReviewed, long manualReviewRevision, IReadOnlyList<DeveloperManualSaveRequest>? saveReviewed,
         long generation, DeveloperProjectSearchOptions searchOptions, long searchGeneration,
-        SearchSelection? searchSelection, CancellationToken cancellationToken)
+        SearchSelection? searchSelection, FileNavigationSelection? fileNavigationSelection, CancellationToken cancellationToken)
     {
         return new(_work.RunAsync(async original =>
         {
@@ -851,12 +867,15 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 if (command is "dev.open-source" or "dev.select-source-tab")
                 {
                     if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
+                    if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
                     var text = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.ReadFileAsync(project, path, cancellationToken))).ConfigureAwait(false);
                     if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, text);
+                    if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
                     var beforeSha = DeveloperManualSourceEditOwner.Sha256(text);
                     await PublishAsync(original, () =>
                     {
                         if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
+                        if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
                         StoreSelectedTab();
                         var tab = _sourceTabs.SingleOrDefault(item => StringComparer.Ordinal.Equals(item.Path, path));
                         if (tab?.Manual is { } retained && !StringComparer.Ordinal.Equals(retained.Baseline, text))
@@ -970,6 +989,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             .OrderByDescending(entry => entry.IsDirectory).ThenBy(entry => entry.Name, StringComparer.Ordinal).ToArray();
     private void PublishProjectTree(IReadOnlyList<DeveloperProjectTreeEntry> entries)
     {
+        _fileNavigationObservation = null;
+        _fileNavigationStatus = "The project file capture changed. Find the current query again.";
         _projectEntries = entries;
         if (!string.IsNullOrEmpty(_projectFolder) && !entries.Any(entry => entry.IsDirectory && entry.RelativePath == _projectFolder)) _projectFolder = "";
         _projectEntryPage = 0; RebuildProjectFolderEntries();

@@ -8,6 +8,22 @@ namespace HavenOS.Apps.Dev.Tests;
 public sealed class DeveloperWorkbenchCuiDocumentTests
 {
     [Fact]
+    public void Current_project_go_to_file_has_bound_query_results_and_actual_open_and_page_actions()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var input = Assert.Single(nodes, node => node.Name == "dev-file-navigation-query");
+        Assert.Equal("Input", input.Type);
+        Assert.Contains(input.Properties.Values, value => value is CuiBindingValue binding && binding.Path == "FileNavigationQuery");
+        var results = Assert.Single(nodes, node => node.Name == "dev-file-navigation-matches");
+        Assert.NotNull(results.Repeat); Assert.Equal("fileMatch", results.Repeat!.ItemName);
+        foreach (var name in new[] { "find-project-file", "open-file-navigation-result", "file-navigation-previous", "file-navigation-next" })
+        {
+            var node = Assert.Single(nodes, value => value.Name == "dev-" + name);
+            Assert.Contains(node.Actions.Values, action => action.Name == "dev." + name);
+        }
+    }
+
+    [Fact]
     public void Static_draft_preview_has_a_typed_native_slot_explicit_subset_and_actual_diagnostics()
     {
         var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
@@ -30,7 +46,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         string[] expected = [
             "dev.refresh", "dev.tree", "dev.git-status", "dev.git-diff",
             "dev.git-branches", "dev.project-folder-up", "dev.open-project-entry", "dev.project-entries-previous",
-            "dev.project-entries-next", "dev.review-new-source-file", "dev.create-new-source-file", "dev.open-source", "dev.search", "dev.open-search-result",
+            "dev.project-entries-next", "dev.review-new-source-file", "dev.create-new-source-file", "dev.find-project-file", "dev.open-file-navigation-result", "dev.file-navigation-previous", "dev.file-navigation-next", "dev.open-source", "dev.search", "dev.open-search-result",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin", "dev.inspect-recovered-draft",
             "dev.use-merged-recovered-draft", "dev.reconcile-recovered-draft", "dev.go-to-source-location", "dev.find-previous-source",
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
