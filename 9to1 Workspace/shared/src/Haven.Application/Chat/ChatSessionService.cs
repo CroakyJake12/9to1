@@ -1070,7 +1070,7 @@ public sealed partial class ChatSessionService(
             PublishBoundEvent(new ExecutionEvent(Guid.NewGuid(), execution.OperationId, Guid.NewGuid(), promptActionId,
                 ExecutionOrigin.Haven, ExecutionActionType.Planning, ExecutionActionStatus.Completed,
                 "Derived current user-message request", null,
-                $"{userMessageDerivation.OmittedTextElements} Unicode text element(s) omitted by the active graph.",
+                $"Truncation omitted {userMessageDerivation.OmittedTextElements} Unicode text element(s); typed transformation provenance is recorded.",
                 "spaces.user-message-graph", DateTimeOffset.UtcNow, SafeMetadata: new Dictionary<string, string>
                 {
                     ["spaceId"] = userMessageDerivation.SpaceId.ToString("D"),
@@ -1079,6 +1079,8 @@ public sealed partial class ChatSessionService(
                     ["graphRevision"] = userMessageDerivation.GraphRevision.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     ["userMessageId"] = userMessageDerivation.UserMessageId.ToString("D"),
                     ["inputSha256"] = userMessageDerivation.InputSha256, ["outputSha256"] = userMessageDerivation.OutputSha256,
+                    ["moreResultsOmitted"] = userMessageDerivation.Trace.Any(item => item.MoreResultsOmitted).ToString(),
+                    ["hasNumericUncertainty"] = userMessageDerivation.Trace.Any(item => item.HasUncertainty).ToString(),
                     ["trace"] = System.Text.Json.JsonSerializer.Serialize(userMessageDerivation.Trace)
                 }));
         }
