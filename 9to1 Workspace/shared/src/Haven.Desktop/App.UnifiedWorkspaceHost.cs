@@ -805,6 +805,8 @@ public sealed partial class App
                     : boardRead.DiscardPreparedAsync(queuedBoard.Token));
                 return accepted;
             }, source, theme, PrepareFilesNavigation);
+            if (request.Address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal))
+                page.SetInitialQuery("files", "9to1 board document");
             return page;
         }
         private async Task PresentHomeLibraryReviewAsync(HomeNativeApprovalWindowOwner approvals,
