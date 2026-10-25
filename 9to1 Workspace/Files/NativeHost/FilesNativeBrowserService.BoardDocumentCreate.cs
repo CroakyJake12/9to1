@@ -63,8 +63,12 @@ public sealed partial class FilesNativeBrowserService
             internal IFilesOriginalBoardDocumentMaterialization? Materialization;
             internal FilesResult<FilesRevision>? ActualResult;
             internal HomeExecutionOutcome? ActualOutcome;
+            internal Exception? AuditFailure;
             internal FilesOriginalBoardDocumentCreateReceipt? Receipt;
             internal Task<FilesOriginalBoardDocumentCreateReceipt>? Task;
+            internal Task<FilesOriginalBoardDocumentCreateSettlementResult>? SettlementTask;
+            internal FilesOriginalBoardDocumentCreateAttempt Attempt = new();
+            internal IReadOnlyList<Exception> CleanupFailures = Array.Empty<Exception>();
             internal bool Claimed, Validated, AuditRecorded, Retired, ExactCommitReceipt;
             internal Action<Action> Scope = null!;
             internal Action<Task> Retain = null!;
@@ -85,8 +89,10 @@ public sealed partial class FilesNativeBrowserService
         private readonly IFilesOriginalBoardDocumentCreatePhysicalOwner _physicalOwner;
         private readonly ConditionalWeakTable<IFilesOriginalBoardDocumentCreateDestination, CreateOperation> _issued = new();
         private readonly ConditionalWeakTable<FilesOriginalBoardDocumentCreateReceipt, CreateOperation> _receipts = new();
+        private readonly ConditionalWeakTable<FilesOriginalBoardDocumentCreateAttempt, CreateOperation> _attempts = new();
         private readonly Dictionary<string, CreateOperation> _operations = new(StringComparer.Ordinal);
         private readonly List<Task<FilesOriginalBoardDocumentCreateReceipt>> _active = [];
+        private readonly List<Task<FilesOriginalBoardDocumentCreateSettlementResult>> _activeSettlements = [];
         private readonly AsyncLocal<CreateOperation?> _executing = new();
         private readonly object _gate = new();
         private bool _retiring;
@@ -116,22 +122,28 @@ public sealed partial class FilesNativeBrowserService
             DemandExternalOriginalRetirementJoin();
             TaskCompletionSource? start = null;
             Task original;
+            Task<FilesOriginalBoardDocumentCreateSettlementResult>[] settlements;
             lock (_gate)
             {
                 if (_close is not null) return _close;
                 _retiring = true;
+                settlements = _activeSettlements.ToArray();
                 start = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                original = _close = DrainAsync(start.Task, _active.ToArray());
+                original = _close = DrainAsync(start.Task, _active.ToArray(), settlements);
             }
             start.SetResult();
             return original;
         }
 
-        private async Task DrainAsync(Task start, Task<FilesOriginalBoardDocumentCreateReceipt>[] active)
+        private async Task DrainAsync(Task start, Task<FilesOriginalBoardDocumentCreateReceipt>[] active,
+            Task<FilesOriginalBoardDocumentCreateSettlementResult>[] settlements)
         {
             await start.ConfigureAwait(false);
             var errors = new List<Exception>();
             foreach (var task in active)
+                try { await task.ConfigureAwait(false); }
+                catch (Exception error) { CanonicalSqliteOriginalStoreOwner.Capture(errors, task, error); }
+            foreach (var task in settlements)
                 try { await task.ConfigureAwait(false); }
                 catch (Exception error) { CanonicalSqliteOriginalStoreOwner.Capture(errors, task, error); }
             lock (_gate)
@@ -191,7 +203,6 @@ public sealed partial class FilesNativeBrowserService
             TaskCompletionSource start = new(TaskCreationOptions.RunContinuationsAsynchronously);
             Task<FilesOriginalBoardDocumentCreateReceipt> actual;
             Task<FilesOriginalBoardDocumentCreateReceipt>? existingTask = null;
-            CreateOperation? retryOperation = null;
             lock (_gate)
             {
                 if (_retiring) { CryptographicOperations.ZeroMemory(payload); throw new ObjectDisposedException(nameof(BoardDocumentCreateOwner)); }
@@ -200,7 +211,7 @@ public sealed partial class FilesNativeBrowserService
                     if (existing.Task is { IsCompleted: false } pending)
                     { existingTask = pending; CryptographicOperations.ZeroMemory(payload); }
                     else if (existing.ExactCommitReceipt && existing.Receipt is not null && !existing.AuditRecorded)
-                    { retryOperation = existing; CryptographicOperations.ZeroMemory(payload); }
+                    { existingTask = existing.Task ?? throw new InvalidOperationException("The retained create attempt has no task to recover."); CryptographicOperations.ZeroMemory(payload); }
                     else if (existing.ExactCommitReceipt && existing.Receipt is { } committed && existing.AuditRecorded)
                     {
                         if (!_receipts.TryGetValue(committed, out _)) _receipts.Add(committed, existing);
@@ -215,7 +226,7 @@ public sealed partial class FilesNativeBrowserService
                         CryptographicOperations.ZeroMemory(payload);
                     }
                 }
-                if (existingTask is null && retryOperation is null)
+                if (existingTask is null)
                 {
                     if (_operations.Values.Any(item => item.ActualOutcome is not null && !item.AuditRecorded))
                     {
@@ -236,16 +247,11 @@ public sealed partial class FilesNativeBrowserService
                     actual = Run(start.Task);
                     operation.Task = actual;
                     _operations.Add(key, operation); _active.Add(actual);
+                    _attempts.Add(operation.Attempt, operation);
                 }
                 else actual = null!;
             }
             if (existingTask is not null) { retain(existingTask); return existingTask; }
-            if (retryOperation is not null)
-            {
-                var retryTask = RetryAuditAsync(retryOperation, scope, retain, token);
-                retain(retryTask);
-                return retryTask;
-            }
             try { operation.Source.Run(() => retain(actual)); }
             finally { start.SetResult(); }
             return actual;
@@ -264,18 +270,74 @@ public sealed partial class FilesNativeBrowserService
             }
         }
 
-        private async Task<FilesOriginalBoardDocumentCreateReceipt> RetryAuditAsync(CreateOperation operation,
-            Action<Action> scope, Action<Task> retain, CancellationToken token)
+        /// <summary>Retries only Home's retained audit for the same issued create attempt. This
+        /// accepts no payload, folder, name, or new request and can never publish another file.</summary>
+        public Task<FilesOriginalBoardDocumentCreateSettlementResult> RetryCreateSettlementWithinSourceAsync(
+            FilesOriginalBoardDocumentCreateAttempt sameAttempt, Action<Action> scope, Action<Task> retain,
+            CancellationToken token)
         {
-            var receipt = operation.Receipt ?? throw new InvalidOperationException("No exact Files board-create receipt is available to settle.");
-            var source = FilesOriginalParentSourceCallbacks.Create(scope, retain);
-            var settled = await source.Observe(() => _broker.RetryCompletionAuditAsync(
-                operation.Capability ?? throw new InvalidOperationException("The original Home create capability is unavailable."), token)).ConfigureAwait(false);
-            if (!settled.Succeeded) throw new InvalidOperationException("Files created the board, but Home has not settled the create audit: " + settled.Message);
-            operation.AuditRecorded = true;
+            ArgumentNullException.ThrowIfNull(sameAttempt); ArgumentNullException.ThrowIfNull(scope); ArgumentNullException.ThrowIfNull(retain);
+            if (!_attempts.TryGetValue(sameAttempt, out var operation) || !ReferenceEquals(operation.Owner, this) ||
+                !ReferenceEquals(operation.Attempt, sameAttempt))
+                throw new UnauthorizedAccessException("Use the exact Files board-create attempt issued by this owner.");
+            Task<FilesOriginalBoardDocumentCreateSettlementResult> recovery;
             lock (_gate)
-                if (!_receipts.TryGetValue(receipt, out _)) _receipts.Add(receipt, operation);
-            return receipt;
+            {
+                if (operation.SettlementTask is { } existing && !existing.IsFaulted && !existing.IsCanceled)
+                { retain(existing); return existing; }
+                recovery = RetryCreateSettlementCoreAsync(operation, scope, retain, token);
+                operation.SettlementTask = recovery;
+                _activeSettlements.RemoveAll(task => task.IsCompletedSuccessfully || task.IsFaulted || task.IsCanceled);
+                _activeSettlements.Add(recovery);
+            }
+            retain(recovery);
+            return recovery;
+        }
+
+        private async Task<FilesOriginalBoardDocumentCreateSettlementResult> RetryCreateSettlementCoreAsync(
+            CreateOperation operation, Action<Action> scope, Action<Task> retain, CancellationToken token)
+        {
+            if (!operation.AuditRecorded)
+            {
+                var capability = operation.Capability;
+                if (capability is null || operation.ActualOutcome is null)
+                    throw new FilesOriginalBoardDocumentCreateSettlementException(operation.Attempt,
+                        FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown, operation.Receipt,
+                        operation.CleanupFailures, new InvalidOperationException("The retained create has no exact terminal Home outcome to retry."));
+                var source = FilesOriginalParentSourceCallbacks.Create(scope, retain);
+                HomePermissionOperationResult settled;
+                try
+                {
+                    settled = await source.Observe(() => _broker.RetryCompletionAuditAsync(capability, token)).ConfigureAwait(false);
+                }
+                catch (Exception error)
+                {
+                    operation.AuditFailure = error;
+                    throw new FilesOriginalBoardDocumentCreateSettlementException(operation.Attempt,
+                        FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, operation.Receipt,
+                        operation.CleanupFailures, error);
+                }
+                if (!settled.Succeeded)
+                {
+                    operation.AuditFailure = new InvalidOperationException(settled.Message);
+                    throw new FilesOriginalBoardDocumentCreateSettlementException(operation.Attempt,
+                        FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, operation.Receipt,
+                        operation.CleanupFailures, operation.AuditFailure);
+                }
+                operation.AuditRecorded = true;
+            }
+
+            var state = operation.ExactCommitReceipt && operation.Receipt is { } receipt
+                ? operation.CleanupFailures.Count == 0
+                    ? FilesOriginalBoardDocumentCreateSettlementState.Committed
+                    : FilesOriginalBoardDocumentCreateSettlementState.CommittedWithCleanupIssues
+                : operation.ActualResult is { IsSuccess: false }
+                    ? FilesOriginalBoardDocumentCreateSettlementState.NotCreated
+                    : FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown;
+            if (operation.Receipt is { } committed)
+                lock (_gate)
+                    if (!_receipts.TryGetValue(committed, out _)) _receipts.Add(committed, operation);
+            return new(state, operation.Receipt, operation.CleanupFailures);
         }
 
         /// <summary>UI eligibility only: returns true when this exact current issued folder row
@@ -355,23 +417,72 @@ public sealed partial class FilesNativeBrowserService
                     var audit = await source.Observe(() => _broker.CompleteExecutionAsync(claimed,
                         outcome, CancellationToken.None)).ConfigureAwait(false);
                     operation.AuditRecorded = audit.Succeeded;
-                    if (!audit.Succeeded) cleanup.Add(new InvalidOperationException(audit.Message));
+                    if (!audit.Succeeded) operation.AuditFailure = new InvalidOperationException(audit.Message);
                 }
                 else if (operation.Capability is { } unclaimed)
                     await source.Observe(() => _broker.AbortUnclaimedExecutionAsync(unclaimed, CancellationToken.None)).ConfigureAwait(false);
             }
-            catch (Exception cause) { cleanup.Add(cause); }
+            catch (Exception cause)
+            {
+                if (operation.Claimed && !operation.AuditRecorded) operation.AuditFailure = cause;
+                else cleanup.Add(cause);
+            }
+            operation.CleanupFailures = Array.AsReadOnly(cleanup.ToArray());
+
+            if (operation.ExactCommitReceipt && operation.AuditRecorded && operation.Receipt is { } completedReceipt)
+                lock (_gate)
+                    if (!_receipts.TryGetValue(completedReceipt, out _)) _receipts.Add(completedReceipt, operation);
 
             if (failure is not null)
             {
+                if (operation.Claimed)
+                {
+                    var reportedFaults = operation.ExactCommitReceipt
+                        ? Array.AsReadOnly(new[] { failure }.Concat(cleanup).ToArray())
+                        : operation.CleanupFailures;
+                    operation.CleanupFailures = reportedFaults;
+                    var state = !operation.AuditRecorded
+                        ? FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending
+                        : operation.ExactCommitReceipt
+                            ? FilesOriginalBoardDocumentCreateSettlementState.CommittedWithCleanupIssues
+                            : operation.ActualResult is { IsSuccess: false }
+                                ? FilesOriginalBoardDocumentCreateSettlementState.NotCreated
+                                : FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown;
+                    throw new FilesOriginalBoardDocumentCreateSettlementException(operation.Attempt, state,
+                        operation.ExactCommitReceipt ? operation.Receipt : null, operation.CleanupFailures,
+                        operation.AuditFailure is { } auditFailure
+                            ? new AggregateException([failure, auditFailure, .. cleanup])
+                            : reportedFaults.Count == 1 ? failure : new AggregateException(reportedFaults));
+                }
                 if (cleanup.Count != 0) throw new AggregateException("The Files board create did not return a receipt and one or more settlement steps failed.", [failure, .. cleanup]);
                 throw failure;
             }
-            if (receipt is null) throw new InvalidOperationException("Files did not return the exact new-board receipt.");
+            if (receipt is null)
+            {
+                if (operation.Claimed)
+                {
+                    var state = !operation.AuditRecorded
+                        ? FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending
+                        : operation.ActualResult is { IsSuccess: false }
+                            ? FilesOriginalBoardDocumentCreateSettlementState.NotCreated
+                            : FilesOriginalBoardDocumentCreateSettlementState.OutcomeUnknown;
+                    throw new FilesOriginalBoardDocumentCreateSettlementException(operation.Attempt, state, null,
+                        operation.CleanupFailures, cleanup.Count == 0
+                            ? new InvalidOperationException("Files did not return the exact new-board receipt.")
+                            : new AggregateException("Files did not return the exact new-board receipt and cleanup reported errors.", cleanup));
+                }
+                if (cleanup.Count != 0)
+                    throw new AggregateException("Files did not return a new-board receipt and cleanup reported errors.", cleanup);
+                throw new InvalidOperationException("Files did not return the exact new-board receipt.");
+            }
             if (!operation.AuditRecorded)
-                throw new InvalidOperationException("Files created the board, but Home has not settled its creation audit. Retry the same request without recreating the artifact.");
-            // A confirmed Files receipt and settled Home audit remain authoritative even if
-            // disposal reports an owner cleanup issue; the caller still revalidates before routing.
+                throw new FilesOriginalBoardDocumentCreateSettlementException(operation.Attempt,
+                    FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, receipt,
+                    operation.CleanupFailures, operation.AuditFailure ?? new InvalidOperationException("Home has not settled the terminal create audit."));
+            if (operation.CleanupFailures.Count != 0)
+                throw new FilesOriginalBoardDocumentCreateSettlementException(operation.Attempt,
+                    FilesOriginalBoardDocumentCreateSettlementState.CommittedWithCleanupIssues, receipt,
+                    operation.CleanupFailures, new AggregateException(operation.CleanupFailures));
             return receipt;
         }
 

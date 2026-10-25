@@ -133,6 +133,50 @@ public sealed class FilesNativeBoardDocumentCreateTests
         Assert.DoesNotContain(refreshed.Items, item => item.Name == "Stale page.9to1board");
     }
 
+    [LinuxFact]
+    public async Task Failed_create_audit_is_retried_by_exact_attempt_without_publishing_a_second_file()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var source = await rig.OpenBoardFolderAsync();
+        var creator = rig.Creator = rig.Browser.CreateOriginalBoardDocumentCreateOwner(rig.Physical);
+        var bytes = BoardBytes(Guid.NewGuid(), "Audit retry");
+        var approvals = 0;
+        async Task Review(HomePermissionAuthorization request, CancellationToken token)
+        {
+            approvals++;
+            Assert.True((await rig.Trust.DecideAsync(request.RequestId, HomeApprovalChoice.Accept,
+                cancellationToken: token)).Succeeded);
+        }
+        rig.FailingHomeStore.FailNextBoardCreateAudit = true;
+
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => rig.Keep(
+            creator.CreateBoardDocumentWithinSourceAsync(source.Page, source.Folder, rig.Workspace.Actor,
+                "Audit retry", bytes, () => true, Review, "home-board-create-audit-retry",
+                body => body(), rig.Retain, rig.Token)));
+        var pending = FindSettlement(failure);
+
+        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.HomeAuditPending, pending.State);
+        var exactReceipt = Assert.IsType<FilesOriginalBoardDocumentCreateReceipt>(pending.Receipt);
+        var current = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, exactReceipt.ParentFolderId,
+            token: rig.Token, expectedStoreId: exactReceipt.FilesStoreId));
+        Assert.Single(current.Items, item => item.Id.Value == exactReceipt.FileId);
+
+        var settled = await rig.Keep(creator.RetryCreateSettlementWithinSourceAsync(pending.Attempt,
+            body => body(), rig.Retain, rig.Token));
+
+        Assert.Equal(FilesOriginalBoardDocumentCreateSettlementState.Committed, settled.State);
+        Assert.Same(exactReceipt, settled.Receipt);
+        Assert.True(creator.IsIssuedCreateReceipt(exactReceipt));
+        Assert.Equal(1, approvals);
+        Assert.Equal(1, rig.FailingHomeStore.BoardCreateAuditFailureCount);
+        await rig.Keep(creator.RevalidateCreatedBoardWithinSourceAsync(exactReceipt,
+            body => body(), rig.Retain, rig.Token));
+        var final = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, exactReceipt.ParentFolderId,
+            token: rig.Token, expectedStoreId: exactReceipt.FilesStoreId));
+        Assert.Single(final.Items, item => item.Id.Value == exactReceipt.FileId);
+        Assert.Single(final.Items, item => item.Name == exactReceipt.DisplayName);
+    }
+
     private static byte[] BoardBytes(Guid id, string title)
     {
         var now = DateTimeOffset.UtcNow;
@@ -150,6 +194,15 @@ public sealed class FilesNativeBoardDocumentCreateTests
             return;
         }
         Assert.IsType<UnauthorizedAccessException>(cause);
+    }
+
+    private static FilesOriginalBoardDocumentCreateSettlementException FindSettlement(Exception cause)
+    {
+        if (cause is FilesOriginalBoardDocumentCreateSettlementException settlement) return settlement;
+        if (cause is AggregateException aggregate)
+            foreach (var inner in aggregate.InnerExceptions)
+                try { return FindSettlement(inner); } catch (InvalidOperationException) { }
+        throw new InvalidOperationException("The exact typed Files board-create settlement outcome was not preserved.", cause);
     }
 
     private sealed class Rig : IAsyncDisposable
@@ -173,6 +226,7 @@ public sealed class FilesNativeBoardDocumentCreateTests
         internal FilesNativeBrowserService Browser { get; private set; } = null!;
         internal FilesOriginalBoardDocumentPhysicalOwner Physical { get; } = new();
         internal HomePermissionTrustService Trust { get; private set; } = null!;
+        internal FailBoardCreateAuditStore FailingHomeStore { get; private set; } = null!;
         internal void Retain(Task actual) { lock (_gate) _retained.Add(actual); }
         internal Task<T> Keep<T>(Task<T> actual) { Retain(actual); return actual; }
         internal async Task<(byte[] Home, byte[] Drive)> ReadBytesAsync() =>
@@ -210,12 +264,13 @@ public sealed class FilesNativeBoardDocumentCreateTests
             {
                 Directory.CreateDirectory(rig._chosen);
                 var home = new FileHomeCoreStateStore(rig._homePath);
+                rig.FailingHomeStore = new FailBoardCreateAuditStore(home);
                 var profiles = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
                 var services = new ServiceCollection();
-                services.AddSingleton<IHomeCoreStateStore>(home); services.AddSingleton(profiles);
+                services.AddSingleton<IHomeCoreStateStore>(rig.FailingHomeStore); services.AddSingleton(profiles);
                 services.AddSingleton<IAuthenticatedResourceActorSource>(profiles);
                 var policy = new FilesNativeBrowserActionPolicySource();
-                rig.Trust = new HomePermissionTrustService(home, policy.TryGet);
+                rig.Trust = new HomePermissionTrustService(rig.FailingHomeStore, policy.TryGet);
                 services.AddSingleton(rig.Trust); services.AddSingleton<IHomeActionPolicySource>(policy);
                 services.AddSingleton<IHomeLocalStoreEvidenceSource, HomeLocalStoreEvidenceRegistry>();
                 services.AddSingleton<HomeLocalStoreOwnership>();
@@ -258,5 +313,34 @@ public sealed class FilesNativeBoardDocumentCreateTests
             if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
         }
         internal FilesNativeBrowserService.BoardDocumentCreateOwner? Creator { get; set; }
+    }
+
+    private sealed class FailBoardCreateAuditStore(IHomeCoreStateStore inner) : IHomeCoreStateStore
+    {
+        private int _failNextBoardCreateAudit;
+        private int _boardCreateAuditFailureCount;
+        internal bool FailNextBoardCreateAudit
+        {
+            set => Interlocked.Exchange(ref _failNextBoardCreateAudit, value ? 1 : 0);
+        }
+        internal int BoardCreateAuditFailureCount => Volatile.Read(ref _boardCreateAuditFailureCount);
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken cancellationToken = default) => inner.ReadAsync(cancellationToken);
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+            AuthenticatedResourceActor expectedActor, IHomeStateCommitActorGuard guard,
+            CancellationToken cancellationToken = default)
+            => inner.WriteGuardedAsync(record, expectedRecordRevision, expectedActor, guard, cancellationToken);
+        public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+            CancellationToken cancellationToken = default)
+        {
+            if (record.RecordType == "home.permissions-trust" &&
+                record.Payload.GetRawText().Contains("FILES_BOARD_CREATED", StringComparison.Ordinal) &&
+                Interlocked.Exchange(ref _failNextBoardCreateAudit, 0) != 0)
+            {
+                Interlocked.Increment(ref _boardCreateAuditFailureCount);
+                return Task.FromResult(HomeStateWriteResult.Failed(new(HomeCoreErrorCode.HomeServiceUnavailable,
+                    "Controlled one-shot board create audit failure.", record.RecordId, true)));
+            }
+            return inner.WriteAsync(record, expectedRecordRevision, cancellationToken);
+        }
     }
 }
