@@ -7,6 +7,13 @@ using Haven.Application;
 
 namespace HavenOS.Home.Core;
 
+// Exact pre-admission socket-reader outcomes. Hosts may count these as rejected
+// unauthenticated connections; an unrelated API timeout or I/O failure is not one.
+internal sealed class HomeUnixCoreFirstFrameTimeoutException(Exception cause)
+    : TimeoutException("Home Core first frame deadline exceeded.", cause);
+internal sealed class HomeUnixCoreFirstFrameEndedException(Exception cause)
+    : EndOfStreamException("The peer closed before its complete first Home frame.", cause);
+
 /// <summary>Additive accepting-host seam, not a listener or a default DI registration.
 /// One original reader owns every frame on the SAME accepted socket. Legacy discovery
 /// remains the default. Core authority is issued only by the canonical original-session issuer.</summary>
@@ -36,10 +43,11 @@ public static class HomeUnixCoreTransport
             byte[] first;
             try { first = await HomeUnixDiscoveryTransport.ReadFrameAsync(stream, firstDeadline.Token).ConfigureAwait(false); }
             catch (OperationCanceledException error) when (error.CancellationToken == firstDeadline.Token && firstClock.IsCancellationRequested)
-            { throw new TimeoutException("Home Core first frame deadline exceeded.", error); }
+            { throw new HomeUnixCoreFirstFrameTimeoutException(error); }
             catch (OperationCanceledException error) when (error.CancellationToken == firstDeadline.Token &&
                 !firstClock.IsCancellationRequested && lifetime.IsCancellationRequested)
             { throw new OperationCanceledException("Original Home connection ended before its first frame.", error, lifetime.Token); }
+            catch (EndOfStreamException error) { throw new HomeUnixCoreFirstFrameEndedException(error); }
             bool core;
             try { core = HomeUnixCoreProtocol.HasProtocol(first); }
             catch (JsonException) { core = false; } // Same legacy invalid-request response.
