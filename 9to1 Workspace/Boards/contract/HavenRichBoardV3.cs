@@ -769,6 +769,7 @@ public static partial class HavenRichNotesOps
     {
         var table = RequireTable(notes, pageId, blockId);
         if (table.Rows.Count <= 1 || index < 0 || index >= table.Rows.Count) return false;
+        if (HasMergedCells(table) && index != table.Rows.Count - 1) return false;
         if (RowIntersectsMerge(table, index)) return false;
         table.Rows.RemoveAt(index);
         if (index < table.RowHeights.Count) table.RowHeights.RemoveAt(index);
@@ -815,6 +816,7 @@ public static partial class HavenRichNotesOps
         var table = RequireTable(notes, pageId, blockId);
         var width = table.Rows[0].Cells.Count;
         if (width <= 1 || index < 0 || index >= width) return false;
+        if (HasMergedCells(table) && index != width - 1) return false;
         if (ColumnIntersectsMerge(table, index)) return false;
         foreach (var row in table.Rows)
             row.Cells.RemoveAt(index);
