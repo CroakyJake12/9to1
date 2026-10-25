@@ -247,27 +247,37 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
             return (null, new DeveloperOperationError(DeveloperOperationErrorCode.InvalidInput,
                 "WorkspaceID cannot be empty.", string.Empty, true, false));
 
+        var admission = AcquireOriginalMetadataWriteAdmission(workspaceId);
+        if (admission is null)
+            return (null, new DeveloperOperationError(DeveloperOperationErrorCode.RevisionConflict,
+                "A genuine manual Run is entering native Start. Workspace metadata was preserved; retry after that finite original settles.", workspaceId.ToString("D"), true, true));
         var processLock = _locks.GetOrAdd(workspaceId, static _ => new SemaphoreSlim(1, 1));
-        await processLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var entered = false;
         try
         {
+            await processLock.WaitAsync(cancellationToken).ConfigureAwait(false); entered = true;
             Directory.CreateDirectory(_workspaceDirectory);
             var lockPath = Path.Combine(_workspaceDirectory, workspaceId.ToString("N") + ".lock");
             var fileLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None,
                 1, FileOptions.Asynchronous | FileOptions.DeleteOnClose);
-            return (new ReleasingFileLock(fileLock, processLock), null);
+            return (new ReleasingFileLock(fileLock, processLock, admission), null);
         }
         catch (IOException)
         {
-            processLock.Release();
+            if (entered) processLock.Release(); admission.Dispose();
             return (null, new DeveloperOperationError(DeveloperOperationErrorCode.RevisionConflict,
                 "Another Dev process is updating this workspace. Reload and retry.", workspaceId.ToString("D"), true, true));
         }
         catch (UnauthorizedAccessException exception)
         {
-            processLock.Release();
+            if (entered) processLock.Release(); admission.Dispose();
             return (null, new DeveloperOperationError(DeveloperOperationErrorCode.StorageUnavailable,
                 SafeMessage(exception), workspaceId.ToString("D"), true, false));
+        }
+        catch
+        {
+            if (entered) processLock.Release(); admission.Dispose();
+            throw;
         }
     }
 
@@ -333,12 +343,16 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
         [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
         IReadOnlyList<DeveloperDraftRecoverySnapshot>? DraftRecoveries = null);
 
-    private sealed class ReleasingFileLock(FileStream file, SemaphoreSlim processLock) : IAsyncDisposable
+    private sealed class ReleasingFileLock(FileStream file, SemaphoreSlim processLock, IDisposable admission) : IAsyncDisposable
     {
         public async ValueTask DisposeAsync()
         {
-            await file.DisposeAsync().ConfigureAwait(false);
-            processLock.Release();
+            var errors = new List<Exception>();
+            try { await file.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { errors.Add(error); }
+            try { processLock.Release(); } catch (Exception error) { errors.Add(error); }
+            try { admission.Dispose(); } catch (Exception error) { errors.Add(error); }
+            if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+            if (errors.Count > 1) throw new AggregateException("Canonical metadata lock and independent admission cleanup failed.", errors);
         }
     }
 }

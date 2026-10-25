@@ -50,6 +50,43 @@ public sealed class DeveloperRunConfigurationSelectionTests
         Assert.Empty(DeveloperRunConfigurationSelection.Observe(empty).Value!);
     }
 
+    [Fact]
+    public void Declaration_review_creates_exact_local_target_and_refuses_unselected_or_changed_existing_identity()
+    {
+        var project = Project(); var emptyProject = project.Project with { RunConfigurationIds = [] };
+        project = project with { Project = emptyProject, Workspace = project.Workspace with { Projects = [emptyProject] } };
+        const string command = "printf 'exact reviewed command\n'";
+        var reviewed = DeveloperRunConfigurationEdit.Prepare(project, "manual-run", command, 45);
+        Assert.True(reviewed.Succeeded, reviewed.Error?.Message);
+        Assert.Equal(command, reviewed.Value!.Configuration.Command); Assert.Equal(45, reviewed.Value.Configuration.TimeoutSeconds);
+        Assert.Null(reviewed.Value.BeforeDefinitionSha256); Assert.True(DeveloperRunConfigurationEdit.IsCurrent(project, reviewed.Value));
+        Assert.Empty(project.Project.RunConfigurationIds); Assert.Empty(project.Workspace.RunConfigurations);
+        var configuration = reviewed.Value.Configuration;
+        var declaredProject = emptyProject with { RunConfigurationIds = [configuration.Id] };
+        var declared = project with { Project = declaredProject, Workspace = project.Workspace with { Projects = [declaredProject], RunConfigurations = [configuration] } };
+        Assert.False(DeveloperRunConfigurationEdit.Prepare(declared, configuration.Id, "printf other", 45).Succeeded);
+        var edit = DeveloperRunConfigurationEdit.Prepare(declared, configuration.Id, "printf other", 45,
+            DeveloperRunConfigurationSelection.Digest(configuration));
+        Assert.True(edit.Succeeded); Assert.Equal(configuration.Revision + 1, edit.Value!.Configuration.Revision);
+        var altered = declared with { Workspace = declared.Workspace with { RunConfigurations = [configuration with { Command = "changed without revision" }] } };
+        Assert.False(DeveloperRunConfigurationEdit.IsCurrent(altered, edit.Value));
+    }
+
+    [Fact]
+    public void Declaration_edit_cannot_drop_unsupported_provider_arguments_or_dependencies_to_make_a_target_run()
+    {
+        var project = Project();
+        foreach (var configuration in new[] { Configuration(project) with { Arguments = ["--keep-me"] },
+            Configuration(project) with { PreLaunchTaskIds = ["keep-stage"] }, Configuration(project) with { ProviderId = "another-owner" } })
+        {
+            var saved = project with { Workspace = project.Workspace with { RunConfigurations = [configuration] } };
+            var reviewed = DeveloperRunConfigurationEdit.Prepare(saved, configuration.Id, "printf replacement", 37,
+                DeveloperRunConfigurationSelection.Digest(configuration));
+            Assert.False(reviewed.Succeeded); Assert.NotNull(reviewed.Error);
+            Assert.Equal(configuration, Assert.Single(saved.Workspace.RunConfigurations));
+        }
+    }
+
     private static DeveloperResolvedProject Project()
     {
         var root = new DeveloperWorkspaceRoot(Guid.NewGuid(), Path.GetFullPath("selected-run-root"));

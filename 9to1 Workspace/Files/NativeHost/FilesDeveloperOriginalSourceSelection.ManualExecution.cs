@@ -7,6 +7,33 @@ namespace HavenOS.Files.NativeHost;
 public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperProjectOriginalManualExecutionSource
 {
     private readonly HashSet<ManualExecution> _manualExecutions = [];
+    private readonly HashSet<ManualExecution> _manualPinAcquisitions = [];
+    private readonly Dictionary<Guid, ManualMetadataUpdate> _manualMetadataUpdates = [];
+    private sealed class ManualMetadataUpdate(FilesDeveloperOriginalSourceSelection owner, Guid workspace) : IDisposable
+    {
+        public void Dispose()
+        {
+            lock (owner._gate)
+                if (owner._manualMetadataUpdates.TryGetValue(workspace, out var actual) && ReferenceEquals(actual, this))
+                    owner._manualMetadataUpdates.Remove(workspace);
+        }
+    }
+    public IDisposable AcquireOriginalManualMetadataUpdate(IDeveloperProjectOriginalReadSelection value,
+        IDeveloperProjectOriginalExistingSourceCapture capture, AuthenticatedResourceActor actor)
+    {
+        var selection = Require(value);
+        lock (_gate)
+        {
+            if (selection.Registered is not { } descriptor || descriptor.OriginalActor != actor || !IsIssuedOriginal(capture) ||
+                !_captures.TryGetValue(capture, out var selected) || !ReferenceEquals(selected, selection))
+                throw new UnauthorizedAccessException("The SAME current registered project READ/capture is required for metadata exclusion.");
+            var workspace = descriptor.WorkspaceId;
+            if (_manualMetadataUpdates.ContainsKey(workspace) || _manualPinAcquisitions.Any(run => run.Selection.Registered!.WorkspaceId == workspace) ||
+                _manualExecutions.Any(run => run.Selection.Registered!.WorkspaceId == workspace && run.LivePins.Count != 0))
+                throw new InvalidOperationException("This workspace has an in-flight manual Run start pin or another metadata update. Inspect that original before changing targets.");
+            var reservation = new ManualMetadataUpdate(this, workspace); _manualMetadataUpdates.Add(workspace, reservation); return reservation;
+        }
+    }
     private sealed class ManualExecution(Selection selection, IDeveloperProjectOriginalReadAdmission read,
         IDeveloperProjectOriginalExistingSourceCapture capture, RegisteredWitness witness, DeveloperRunTargetChoice choice)
         : IDeveloperProjectOriginalManualExecutionBinding
@@ -18,6 +45,8 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
         internal ResourceScope Scope { get; } = new("dev.project.console", "dev-manual-run:" + Guid.NewGuid().ToString("D"),
             witness.Read.OriginalWorkspaceDocumentSha256 + ":" + witness.Read.OriginalRegisteredRootFingerprint + ":" + choice.DefinitionSha256, ResourceAccess.Execute);
         internal readonly Dictionary<IDeveloperWorkspaceOriginalExecutionCommitPin, Task> Pins = new(ReferenceEqualityComparer.Instance);
+        internal readonly HashSet<IDeveloperWorkspaceOriginalExecutionCommitPin> LivePins = new(ReferenceEqualityComparer.Instance);
+        internal readonly Dictionary<IDeveloperWorkspaceOriginalExecutionCommitPin, IDisposable> MetadataPins = new(ReferenceEqualityComparer.Instance);
         public string CanonicalRoot => selection.Root.OriginalProjectRoot;
         public AuthenticatedResourceActor OriginalActor => selection.Workspace.Actor;
         public string ConfigurationId => choice.Configuration.Id;
@@ -97,36 +126,60 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
         => Start<IDeveloperWorkspaceOriginalExecutionCommitPin>(async sources =>
     {
         var original = RequireManual(binding);
-        await RevalidateBody(original.Selection, original.OriginalActor, sources, token).ConfigureAwait(false);
-        await sources.ObserveVoid(() => reads.ValidateOriginalAsync(original.Selection, original.Read, token)).ConfigureAwait(false);
-        var native = original.Witness.Native;
-        Task<IDeveloperOriginalCurrentProjectNativeRead>? acquisition = null;
-        IDeveloperOriginalCurrentProjectNativeRead? retained = null;
+        lock (_gate)
+        {
+            if (_manualMetadataUpdates.ContainsKey(original.Selection.Registered!.WorkspaceId) || original.Pins.Count != 0 ||
+                !_manualPinAcquisitions.Add(original))
+                throw new InvalidOperationException("The manual start pin is already retained or this workspace is changing target metadata.");
+        }
+        IDisposable? metadataPin = null;
         try
         {
-            var pin = await sources.ObserveProduct(() => acquisition = native.CaptureRegisteredOriginalWithinSourceAsync(original.Selection,
-                original.Read, sources.OriginalSynchronousScope, sources.RetainOriginalTask, token), actual =>
+            _ = sources.Invoke(() => metadataPin = (_registeredStore ?? throw new UnauthorizedAccessException("The actual saved store retired."))
+                .AcquireOriginalRunMetadataReadPin(original.Selection.Registered!.WorkspaceId));
+            await RevalidateBody(original.Selection, original.OriginalActor, sources, token).ConfigureAwait(false);
+            await sources.ObserveVoid(() => reads.ValidateOriginalAsync(original.Selection, original.Read, token)).ConfigureAwait(false);
+            var native = original.Witness.Native;
+            Task<IDeveloperOriginalCurrentProjectNativeRead>? acquisition = null;
+            IDeveloperOriginalCurrentProjectNativeRead? retained = null;
+            try
             {
-                if (acquisition is null || !native.IsOwnedRegisteredOriginalRead(original.Selection, acquisition, actual))
-                    throw new UnauthorizedAccessException("The original native execution pin has no private historical custody.");
-                retained = actual;
-                lock (_gate) original.Pins.Add(actual, acquisition);
-            }).ConfigureAwait(false);
-            if (acquisition is null || !native.IsIssuedRegisteredOriginalRead(original.Selection, acquisition, pin))
-                throw new UnauthorizedAccessException("The original native execution pin was not privately issued.");
-            if (pin.OriginalWorkspaceDocumentSha256 != original.Witness.Read.OriginalWorkspaceDocumentSha256 ||
-                pin.OriginalRegisteredRootFingerprint != original.Witness.Read.OriginalRegisteredRootFingerprint)
-                throw new UnauthorizedAccessException("The saved declaration, registration or root changed during Run review.");
-            DemandOriginalManualExecutionPin(original, pin); return pin;
+                var pin = await sources.ObserveProduct(() => acquisition = native.CaptureRegisteredOriginalWithinSourceAsync(original.Selection,
+                    original.Read, sources.OriginalSynchronousScope, sources.RetainOriginalTask, token), actual =>
+                {
+                    if (acquisition is null || !native.IsOwnedRegisteredOriginalRead(original.Selection, acquisition, actual))
+                        throw new UnauthorizedAccessException("The original native execution pin has no private historical custody.");
+                    retained = actual;
+                    lock (_gate)
+                    {
+                        original.Pins.Add(actual, acquisition);
+                        original.MetadataPins.Add(actual, metadataPin ?? throw new InvalidOperationException("No canonical metadata exclusion was acquired."));
+                        metadataPin = null; // SAME private guard transfers before any later refusal.
+                    }
+                }).ConfigureAwait(false);
+                if (acquisition is null || !native.IsIssuedRegisteredOriginalRead(original.Selection, acquisition, pin))
+                    throw new UnauthorizedAccessException("The original native execution pin was not privately issued.");
+                if (pin.OriginalWorkspaceDocumentSha256 != original.Witness.Read.OriginalWorkspaceDocumentSha256 ||
+                    pin.OriginalRegisteredRootFingerprint != original.Witness.Read.OriginalRegisteredRootFingerprint)
+                    throw new UnauthorizedAccessException("The saved declaration, registration or root changed during Run review.");
+                DemandOriginalManualExecutionPin(original, pin);
+                lock (_gate) original.LivePins.Add(pin);
+                return pin;
+            }
+            catch (Exception error)
+            {
+                // A callback can refuse after the native acquisition actually succeeded. Close the
+                // SAME late product before this operation settles; the global native issuer is borrowed.
+                if (retained is not null)
+                    try { await sources.ObserveVoid(() => CloseOriginalManualExecutionPinAsync(original, retained)).ConfigureAwait(false); }
+                    catch (Exception close) { throw new AggregateException("Manual native pin acquisition and independent late cleanup failed.", error, close); }
+                throw;
+            }
         }
-        catch (Exception error)
+        finally
         {
-            // A callback can refuse after the native acquisition actually succeeded. Close the
-            // SAME late product before this operation settles; the global native issuer is borrowed.
-            if (retained is not null)
-                try { await sources.ObserveVoid(() => CloseOriginalManualExecutionPinAsync(original, retained)).ConfigureAwait(false); }
-                catch (Exception close) { throw new AggregateException("Manual native pin acquisition and independent late cleanup failed.", error, close); }
-            throw;
+            try { if (metadataPin is not null) _ = sources.Invoke(() => { metadataPin.Dispose(); return true; }); }
+            finally { lock (_gate) _manualPinAcquisitions.Remove(original); }
         }
     });
     public void DemandOriginalManualExecutionPin(IDeveloperProjectOriginalManualExecutionBinding binding,
@@ -138,6 +191,11 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
         if (pin is not IDeveloperOriginalCurrentProjectNativeRead read ||
             !original.Witness.Native.IsIssuedRegisteredOriginalRead(original.Selection, acquisition, read))
             throw new UnauthorizedAccessException("The original manual execution pin retired.");
+        IDisposable metadataPin;
+        lock (_gate)
+            if (!original.MetadataPins.TryGetValue(pin, out metadataPin!)) throw new UnauthorizedAccessException("The canonical metadata exclusion retired.");
+        (_registeredStore ?? throw new UnauthorizedAccessException("The SAME saved store retired."))
+            .DemandOriginalRunMetadataReadPin(original.Selection.Registered!.WorkspaceId, metadataPin);
         read.DemandOriginalExecutionBinding();
     }
     public Task CloseOriginalManualExecutionPinAsync(IDeveloperProjectOriginalManualExecutionBinding binding,
@@ -158,6 +216,10 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
         await sources.ObserveVoid(() => close = read.DisposeAsync().AsTask()).ConfigureAwait(false);
         if (close is null || !original.Witness.Native.IsClosedRegisteredOriginalRead(original.Selection, acquisition, read, close))
             throw new InvalidOperationException("The genuine manual execution native pin close is unverified.");
+        IDisposable? metadataPin;
+        lock (_gate) original.MetadataPins.TryGetValue(pin, out metadataPin);
+        if (metadataPin is not null) _ = sources.Invoke(() => { metadataPin.Dispose(); return true; });
+        lock (_gate) { original.MetadataPins.Remove(pin); original.LivePins.Remove(pin); } // Verified actual close precedes exclusion release.
         return true;
     });
 }
