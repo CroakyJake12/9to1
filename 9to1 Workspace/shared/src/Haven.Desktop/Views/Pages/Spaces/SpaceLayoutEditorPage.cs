@@ -313,7 +313,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
                     button.SetState(HavenElementState.Selected, selected);
                     button.Accessibility.AccessibleName = $"{key}: {value}";
                     button.Accessibility.Description = selected ? "Current registered value." : "Select this registered value.";
-                    EventHandler handler = (_, _) =>
+                    EventHandler optionHandler = (_, _) =>
                     {
                         Editor.UpdateNode(node.Id, current =>
                         {
@@ -328,13 +328,13 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
                             option.Button.Accessibility.Description = isSelected ? "Current registered value." : "Select this registered value.";
                         }
                     };
-                    button.Invoked += handler;
-                    _configurationOptionButtons.Add((button, node.Id, key, value, handler));
+                    button.Invoked += optionHandler;
+                    _configurationOptionButtons.Add((button, node.Id, key, value, optionHandler));
                     _configurationInspector.Add(button);
                 }
                 continue;
             }
-            var input = new HavenInput { Name = $"Spaces.Layout.NodeConfiguration.{node.Id:D}.{key}", Placeholder = type };
+            var input = new HavenInput { Name = $"Spaces.Layout.NodeConfiguration.{node.Id:D}.{key}", Placeholder = type ?? "value" };
             input.Accessibility.AccessibleName = labelText;
             input.Text = node.Metadata.GetValueOrDefault(key, string.Empty);
             EventHandler handler = (_, _) => Editor.UpdateNode(node.Id, current =>
@@ -404,7 +404,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
                 var value = result.TypedNodeOutputs.GetValueOrDefault(item.NodeId);
                 var typed = value?.JsonValue is { } json ? " · value=" + json.GetRawText() : string.Empty;
                 var flags = item.MoreResultsOmitted ? " · more results omitted" : string.Empty;
-                if (item.HasNumericUncertainty) flags += " · numeric uncertainty";
+                if (item.HasUncertainty) flags += " · numeric uncertainty";
                 return $"{item.TypeId}: {item.State}; {item.InputTextElements} → {item.OutputTextElements} text elements; {item.OutputDataType}; SHA-256 {item.OutputSha256 ?? "unavailable"}{flags}{typed}";
             })));
         }

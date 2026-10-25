@@ -91,8 +91,8 @@ internal sealed partial class OriginalSpaceRequestPolicySource
                 await DemandAuthorityAsync(owners, authority, originals, token).ConfigureAwait(false);
                 if (reference.Kind == SpaceContextReferenceKind.File && reference.OwnerAppId == "files")
                 {
-                    var item = await ReadFilesContextAsync(owners, authority, reference, collection, custody, originals, token).ConfigureAwait(false);
-                    if (item is not null && collection.TryInclude(item.Item)) custody.Add(item.Browser, item.Preview);
+                    var filesItem = await ReadFilesContextAsync(owners, authority, reference, collection, custody, originals, token).ConfigureAwait(false);
+                    if (filesItem is not null && collection.TryInclude(filesItem.Item)) custody.Add(filesItem.Browser, filesItem.Preview);
                     continue;
                 }
                 if (reference.Kind != SpaceContextReferenceKind.BoardPage || reference.OwnerAppId != "boards" ||
@@ -162,7 +162,7 @@ internal sealed partial class OriginalSpaceRequestPolicySource
         var row = selected.Row;
         if (selected.Page.StoreID != storeId || selected.Page.ParentID != parentFolderId || selected.Page.IsTrash ||
             row.Id.Value != fileId || row.ParentId?.Value != parentFolderId || row.Kind != HostedItemKind.File ||
-            row.CurrentRevisionId?.Value.Value != revisionId)
+            row.CurrentRevisionId?.Value != revisionId)
             throw Block("SPACE_CONTEXT_FILES_CHANGED", "The current Files row no longer matches the attached Space reference.");
 
         var observedDigest = NormalizeContextFilesDigest(row.ContentHash);
