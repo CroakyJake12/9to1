@@ -1268,7 +1268,9 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
             var task = new DeveloperTaskDefinition("fixture-build", "Fixture build", "workspace", "local", original.Root.RootId.ToString("D"), [],
                 [new("compile", DeveloperBuildStageKind.Compile, "Compile", [], "printf 'saved-stage-ready'; printf 'stage-error' >&2; printf compiled > stage-built.txt", [], TimeSpan.FromSeconds(10)),
                  new("test", DeveloperBuildStageKind.Test, "Tests", [], "printf 'actual test failure' >&2; exit 7", [], TimeSpan.FromSeconds(10)),
-                 new("package", DeveloperBuildStageKind.Package, "Package", ["compile"], "printf package > must-not-start.txt", [], TimeSpan.FromSeconds(10))], true);
+                 new("package", DeveloperBuildStageKind.Package, "Package", ["compile"], "printf package > must-not-start.txt", [], TimeSpan.FromSeconds(10)),
+                 new("diagnostics", DeveloperBuildStageKind.Compile, "Reported problems", [],
+                     "printf 'seed.txt(1,10): error DEVFIX001: fixture reported problem\\n../outside.cs(1,1): warning DEVFIX002: outside project\\n'; exit 3", [], TimeSpan.FromSeconds(10))], true);
             var saved = await Keep(SavedStore.SaveAsync(original.Workspace with { Tasks = [task] }, original.Workspace.Revision, Token));
             Assert.True(saved.Succeeded, saved.Error?.Message);
             var workspace = Assert.IsType<DeveloperWorkspace>(saved.Value);

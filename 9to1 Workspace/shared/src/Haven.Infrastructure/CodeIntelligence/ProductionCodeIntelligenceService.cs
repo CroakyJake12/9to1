@@ -29,7 +29,7 @@ public sealed class ProductionCodeIntelligenceService(
     /// </summary>
     private static readonly Regex BuildDiagnosticPattern = new(
         "^(?<file>.+?)\\((?<line>\\d+),(?<column>\\d+)(?:,(?<endLine>\\d+),(?<endColumn>\\d+))?\\):\\s*(?<severity>error|warning)\\s+(?<code>[^: ]+):\\s*(?<message>.*?)(?:\\s+\\[[^]]+\\])?$",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(50));
 
     /// <summary>
     /// Retrieves status async for the current operation.
@@ -253,38 +253,70 @@ public sealed class ProductionCodeIntelligenceService(
     /// <summary>
     /// Performs the parse build diagnostics step owned by this component.
     /// </summary>
-    internal static IReadOnlyList<CodeDiagnostic> ParseBuildDiagnostics(string output, string workspaceRoot)
+    internal static IReadOnlyList<CodeDiagnostic> ParseBuildDiagnostics(string output, string workspaceRoot) =>
+        ParseBuildDiagnosticsCore(output, workspaceRoot, int.MaxValue, int.MaxValue, int.MaxValue, false, CancellationToken.None).Diagnostics;
+
+    /// <summary>Pure decoding of already captured .NET/MSBuild process output. It performs no IO,
+    /// starts no compiler/server and grants no document identity or source-revision mapping.
+    /// Unknown formats stay in the original output; malformed locations never become navigation.</summary>
+    public static CapturedBuildDiagnostics ParseCapturedBuildDiagnostics(string output, string workspaceRoot,
+        CancellationToken cancellationToken = default) =>
+        ParseBuildDiagnosticsCore(output, workspaceRoot, 2_000_100, 16_384, 200, true, cancellationToken);
+
+    // One decoder serves both callers. The existing build-service API keeps all valid rows;
+    // only the captured-output workbench entry applies its explicit UI/input/list bounds.
+    private static CapturedBuildDiagnostics ParseBuildDiagnosticsCore(string output, string workspaceRoot,
+        int maximumCharacters, int maximumLineCharacters, int maximumProblems, bool deduplicate, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(output); ArgumentException.ThrowIfNullOrWhiteSpace(workspaceRoot);
+        cancellationToken.ThrowIfCancellationRequested();
         var root = Path.GetFullPath(workspaceRoot);
-        var result = new List<CodeDiagnostic>();
-        foreach (var line in output.ReplaceLineEndings("\n").Split('\n'))
+        var truncated = output.Length > maximumCharacters;
+        using var lines = new StringReader(truncated ? output[..maximumCharacters] : output);
+        var result = new List<CodeDiagnostic>(); var seen = new HashSet<CodeDiagnostic>();
+        var rejected = 0; var unmatched = 0;
+        while (lines.ReadLine() is { } line)
         {
-            var match = BuildDiagnosticPattern.Match(line.Trim());
-            if (!match.Success) continue;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (line.Length > maximumLineCharacters) { rejected++; truncated = true; continue; }
+            Match match;
+            try { match = BuildDiagnosticPattern.Match(line.Trim()); }
+            catch (RegexMatchTimeoutException) { rejected++; truncated = true; continue; }
+            if (!match.Success) { if (!string.IsNullOrWhiteSpace(line)) unmatched++; continue; }
             var rawPath = match.Groups["file"].Value.Trim();
-            var fullPath = Path.IsPathRooted(rawPath)
-                ? Path.GetFullPath(rawPath)
-                : Path.GetFullPath(Path.Combine(root, rawPath));
-            var relative = IsWithinRoot(root, fullPath) ? Path.GetRelativePath(root, fullPath) : rawPath;
-            var lineNumber = Math.Max(0, int.Parse(match.Groups["line"].Value, System.Globalization.CultureInfo.InvariantCulture) - 1);
-            var column = Math.Max(0, int.Parse(match.Groups["column"].Value, System.Globalization.CultureInfo.InvariantCulture) - 1);
-            var endLine = match.Groups["endLine"].Success
-                ? Math.Max(lineNumber, int.Parse(match.Groups["endLine"].Value, System.Globalization.CultureInfo.InvariantCulture) - 1)
-                : lineNumber;
-            var endColumn = match.Groups["endColumn"].Success
-                ? Math.Max(0, int.Parse(match.Groups["endColumn"].Value, System.Globalization.CultureInfo.InvariantCulture) - 1)
-                : column + 1;
-            result.Add(new CodeDiagnostic(
-                relative,
-                new CodeRange(new CodePosition(lineNumber, column), new CodePosition(endLine, endColumn)),
-                match.Groups["severity"].Value.Equals("error", StringComparison.OrdinalIgnoreCase)
-                    ? CodeDiagnosticSeverity.Error
-                    : CodeDiagnosticSeverity.Warning,
-                match.Groups["code"].Value,
-                "dotnet build",
-                match.Groups["message"].Value.Trim()));
+            if (rawPath.Length is 0 or > 4096 || rawPath.Any(char.IsControl) ||
+                !TryCoordinate(match.Groups["line"], out var startLine) || !TryCoordinate(match.Groups["column"], out var startColumn))
+            { rejected++; continue; }
+            var endLine = startLine; var endColumn = startColumn + 1;
+            if (match.Groups["endLine"].Success &&
+                (!TryCoordinate(match.Groups["endLine"], out endLine) || !TryCoordinate(match.Groups["endColumn"], out endColumn) ||
+                 endLine < startLine || endLine == startLine && endColumn < startColumn))
+            { rejected++; continue; }
+            string relative;
+            try
+            {
+                var fullPath = Path.IsPathRooted(rawPath) ? Path.GetFullPath(rawPath) : Path.GetFullPath(Path.Combine(root, rawPath));
+                relative = IsWithinRoot(root, fullPath) ? Path.GetRelativePath(root, fullPath) : rawPath;
+            }
+            catch (Exception error) when (error is ArgumentException or NotSupportedException or PathTooLongException)
+            { rejected++; continue; }
+            var diagnostic = new CodeDiagnostic(relative,
+                new CodeRange(new CodePosition(startLine, startColumn), new CodePosition(endLine, endColumn)),
+                match.Groups["severity"].Value.Equals("error", StringComparison.OrdinalIgnoreCase) ? CodeDiagnosticSeverity.Error : CodeDiagnosticSeverity.Warning,
+                match.Groups["code"].Value, "dotnet build", match.Groups["message"].Value.Trim());
+            if (deduplicate && !seen.Add(diagnostic)) continue; // MSBuild often repeats the same row in its summary.
+            if (result.Count >= maximumProblems) { truncated = true; break; }
+            result.Add(diagnostic);
         }
-        return result;
+        return new(Array.AsReadOnly(result.ToArray()), unmatched, rejected, truncated);
+
+        static bool TryCoordinate(Group group, out int coordinate)
+        {
+            coordinate = 0;
+            if (!int.TryParse(group.Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture,
+                    out var oneBased) || oneBased < 1 || oneBased == int.MaxValue) return false;
+            coordinate = oneBased - 1; return true;
+        }
     }
 
     /// <summary>
@@ -354,3 +386,8 @@ public sealed class ProductionCodeIntelligenceService(
                || normalizedPath.StartsWith(normalizedRoot + Path.DirectorySeparatorChar, comparison);
     }
 }
+
+/// <summary>Decoded reported locations only. These rows do not certify a build or identify
+/// the saved source version a compiler read. Original process output remains authoritative.</summary>
+public sealed record CapturedBuildDiagnostics(IReadOnlyList<CodeDiagnostic> Diagnostics,
+    int UnmatchedLineCount, int RejectedLineCount, bool Truncated);

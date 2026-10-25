@@ -41,8 +41,10 @@ public sealed partial class DeveloperProjectWorkbenchPage
                             body => InvokeOriginalSource(() => { body(); return true; }), stop.Token))).ConfigureAwait(false);
                         // Actual terminal/lifecycle evidence is retained before any UI callback.
                         lock (_gate) { OriginalManualStageObservation = observed; _originalManualStages.Add(observed); }
+                        var buildProblems = await CaptureBuildProblemsAsync(original, project, observed, observed.Process).ConfigureAwait(false);
                         await PublishAsync(original, () =>
                         {
+                            _buildProblems = buildProblems;
                             _processStatus = observed.ProcessSucceeded ? $"{selected.Stage.Label} finished."
                                 : observed.Process is { TimedOut: true } ? "The stage timed out. Its output is kept below."
                                 : observed.Process is { } process ? $"The stage exited with code {process.ExitCode}. Check the output below."

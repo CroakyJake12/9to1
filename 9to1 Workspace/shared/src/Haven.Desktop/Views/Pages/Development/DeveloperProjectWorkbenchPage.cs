@@ -352,6 +352,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetCuiAnalysisValue(path, out value)) return true;
             if (TryGetCuiPreviewValue(path, out value)) return true;
             if (TryGetFileNavigationValue(path, out value)) return true;
+            if (TryGetBuildProblemsValue(path, out value)) return true;
             value = path switch
             {
                 "ProjectTitle" => _project.Project.Name,
@@ -510,6 +511,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (command == "dev.use-lf-endings") return CanUseLineEndings(DeveloperTextLineEndingTarget.Lf);
             if (command == "dev.use-crlf-endings") return CanUseLineEndings(DeveloperTextLineEndingTarget.CrLf);
             if (command == "dev.find-project-file") return _manualReader is not null && DeveloperProjectFileNavigation.IsValidQuery(_fileNavigationQuery);
+            if (command == "dev.open-build-problem") return CurrentBuildProblems() is { Report.Diagnostics.Count: > 0 } && (_manual ? _manualReader is not null : _review is not null);
             if (command == "dev.open-file-navigation-result") return _manualReader is not null && CurrentFileNavigationObservation() is { Result.Matches.Count: > 0 };
             if (command == "dev.file-navigation-previous") return CurrentFileNavigationObservation() is not null && _fileNavigationPage > 0;
             if (command == "dev.file-navigation-next") return CurrentFileNavigationObservation() is { } fileResults && fileResults.Result.Matches.Count > (_fileNavigationPage + 1) * FileNavigationPageSize;
@@ -611,6 +613,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         IReadOnlyList<DeveloperManualSaveRequest>? saveReviewed = null;
         SearchSelection? searchSelection = null;
         FileNavigationSelection? fileNavigationSelection = null;
+        BuildProblemSelection? buildProblemSelection = null;
         DeveloperProjectSearchOptions searchOptions; long searchGeneration;
         lock (_gate)
         {
@@ -620,6 +623,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 if (parameter is not string key || !Guid.TryParse(key, out var tabId) || _sourceTabs.All(tab => tab.Id != tabId))
                     throw new InvalidOperationException("The source tab is not owned by this open project.");
                 requestedTab = tabId;
+            }
+            if (command == "dev.open-build-problem")
+            {
+                buildProblemSelection = CaptureBuildProblemSelection(parameter);
+                entryPath = buildProblemSelection.RelativePath; command = "dev.open-source";
             }
             if (command == "dev.open-file-navigation-result")
             {
@@ -673,7 +681,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (_manual)
                 return DispatchManualAsync(command, path, query, manualBeforeText, manualDraftText, manualBeforeSha256,
                     manualAfterSha256, manualReviewed, manualReviewRevision, saveReviewed, generation,
-                    searchOptions, searchGeneration, searchSelection, fileNavigationSelection, cancellationToken);
+                    searchOptions, searchGeneration, searchSelection, fileNavigationSelection, buildProblemSelection, cancellationToken);
             return new(_work.RunAsync(async original =>
             {
                 original.BindPublicationGuard(() => IsCurrent(generation));
@@ -707,6 +715,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                         // it never discloses a cached document merely from a copied view ID.
                         if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
                         if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
+                        if (buildProblemSelection is not null) DemandBuildProblemSelection(buildProblemSelection, project);
                         var document = await original.AwaitAsync(InvokeOriginalSource(() => _resolveDocument(project, path, cancellationToken))).ConfigureAwait(false);
                         if (!document.Succeeded || document.Value is null) throw new InvalidOperationException(document.Error?.Message ?? "No current registered document identity was resolved.");
                         original.DemandPublication();
@@ -717,12 +726,14 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                         {
                             if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, prepared.Snapshot.OriginalText);
                             if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
+                            if (buildProblemSelection is not null) DemandBuildProblemSelection(buildProblemSelection, project);
                             var published = false;
                             await PublishAsync(original, () =>
                             {
                                 original.DemandPublication();
                                 if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, prepared.Snapshot.OriginalText);
                                 if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
+                                if (buildProblemSelection is not null) DemandBuildProblemSelection(buildProblemSelection, project);
                                 StoreSelectedTab();
                                 var tab = _sourceTabs.SingleOrDefault(item => item.Editor is { } owned && owned.Project == project.Reference &&
                                     owned.Document == prepared.Snapshot.Document);
@@ -742,10 +753,12 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                                     _sourceTabs.Add(tab);
                                 }
                                 else tab.Editor = value;
+                                var previousBuildSelection = _selectedSourceTab == tab.Id ? _editorTextSelection : null;
                                 _project = project; SelectTab(tab); published = true;
                                 if (searchSelection is not null) NavigateOpenedSearchMatch(searchSelection);
                                 _status = searchSelection is null ? "Source opened. Other unsaved drafts are kept."
                                     : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
+                                if (buildProblemSelection is not null) NavigateOpenedBuildProblem(buildProblemSelection, prepared.Snapshot.OriginalText, previousBuildSelection);
                             }).ConfigureAwait(false);
                             if (published) await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false);
                             return;
@@ -788,12 +801,14 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                     }, _businessToken);
                     var observed = DemandValue(await original.AwaitAsync(operation).ConfigureAwait(false));
                     OriginalDeveloperObservation = observed;
+                    var buildProblems = command is "dev.run-command" or "dev.run-tests" or "dev.run-stage"
+                        ? await CaptureBuildProblemsAsync(original, project, observed, observed.OriginalProcessResult).ConfigureAwait(false) : null;
                     await PublishAsync(original, () =>
                     {
                         _project = project;
                         if (command == "dev.tree") _files = observed.OriginalToolResult?.Output ?? "No original tree output was returned.";
                         else if (command == "dev.search") _searchResults = observed.OriginalToolResult?.Output ?? "No original search output was returned.";
-                        else SetProcessObservation(observed);
+                        else SetProcessObservation(observed, buildProblems);
                         _status = observed.RequiresOutcomeInspection ? "The original outcome requires inspection; it will not be automatically replayed." : "Original operation recorded in the same task.";
                     }).ConfigureAwait(false);
                 }
@@ -850,14 +865,13 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             throw new InvalidOperationException("The matched saved source changed. Its existing draft is preserved; search again.");
     }
 
-    /// <summary>Manual (no-AI) action dispatch: confined read/tree/search over the saved project root
-    /// plus refresh. Every other action is unavailable and fails closed with no effects — mutations
-    /// and process execution require a separate current authorized Task/execution authority.</summary>
+    /// <summary>Normal manual source actions retain the genuine authorized read/edit owners.
+    /// Declared process routes are separately admitted before this source dispatcher.</summary>
     private ValueTask DispatchManualAsync(string command, string path, string query,
         string manualBeforeText, string manualDraftText, string manualBeforeSha256, string manualAfterSha256,
         bool manualReviewed, long manualReviewRevision, IReadOnlyList<DeveloperManualSaveRequest>? saveReviewed,
         long generation, DeveloperProjectSearchOptions searchOptions, long searchGeneration,
-        SearchSelection? searchSelection, FileNavigationSelection? fileNavigationSelection, CancellationToken cancellationToken)
+        SearchSelection? searchSelection, FileNavigationSelection? fileNavigationSelection, BuildProblemSelection? buildProblemSelection, CancellationToken cancellationToken)
     {
         return new(_work.RunAsync(async original =>
         {
@@ -882,14 +896,17 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                 {
                     if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
                     if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
+                    if (buildProblemSelection is not null) DemandBuildProblemSelection(buildProblemSelection, project);
                     var text = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.ReadFileAsync(project, path, cancellationToken))).ConfigureAwait(false);
                     if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, text);
                     if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
+                    if (buildProblemSelection is not null) DemandBuildProblemSelection(buildProblemSelection, project);
                     var beforeSha = DeveloperManualSourceEditOwner.Sha256(text);
                     await PublishAsync(original, () =>
                     {
                         if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
                         if (fileNavigationSelection is not null) DemandFileNavigationSelection(fileNavigationSelection, project);
+                        if (buildProblemSelection is not null) DemandBuildProblemSelection(buildProblemSelection, project);
                         StoreSelectedTab();
                         var tab = _sourceTabs.SingleOrDefault(item => StringComparer.Ordinal.Equals(item.Path, path));
                         if (tab?.Manual is { } retained && !StringComparer.Ordinal.Equals(retained.Baseline, text))
@@ -903,10 +920,12 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             tab = new(Guid.NewGuid(), path, null, new(text, text, text, "", beforeSha, "", 1, -1, false)) { GroupId = group };
                             _sourceTabs.Add(tab);
                         }
+                        var previousBuildSelection = _selectedSourceTab == tab.Id ? _editorTextSelection : null;
                         _project = project; SelectTab(tab);
                         if (searchSelection is not null) NavigateOpenedSearchMatch(searchSelection);
                         _status = searchSelection is null ? "Source opened. Other unsaved drafts are kept."
                             : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
+                        if (buildProblemSelection is not null) NavigateOpenedBuildProblem(buildProblemSelection, text, previousBuildSelection);
                     }).ConfigureAwait(false);
                     await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
                 }
@@ -1334,8 +1353,9 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     }
     private static T DemandValue<T>(DeveloperOperationResult<T> result) where T : class => result.Succeeded && result.Value is { } value
         ? value : throw new InvalidOperationException(result.Error?.Message ?? "No original Dev result was returned.");
-    private void SetProcessObservation(DeveloperActionObservation observed)
+    private void SetProcessObservation(DeveloperActionObservation observed, BuildProblemObservation? buildProblems = null)
     {
+        _buildProblems = buildProblems;
         if (observed.OriginalProcessResult is not { } process)
         { _processStatus = "No original process result is available; no build or test success was inferred."; _processOutput = observed.OriginalToolResult?.Output ?? ""; return; }
         _processStatus = process.TimedOut ? "Original process timed out; outcome remains unresolved." : process.ExitCode == 0 ? "Original process exited 0." : $"Original process exited {process.ExitCode}; command/test failed.";

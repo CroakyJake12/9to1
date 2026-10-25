@@ -1065,6 +1065,104 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Manual_reported_build_problems_use_actual_process_and_fresh_READ_keep_dirty_draft_and_reject_old_or_outside_rows()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine Home/Files/kernel fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(true, savedStages: true); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            page = await ManualFileNavigationPage(f, reader);
+            Assert.True(page.TryGetValue("SavedBuildStages", out var stages));
+            var stage = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(stages).Cast<object>(),
+                item => (string)item.GetType().GetProperty("Label")!.GetValue(item)! == "Fixture build / Reported problems");
+            await page.DispatchAsync("dev.select-build-stage", stage.GetType().GetProperty("SelectionKey")!.GetValue(stage), OriginalTestBodyToken);
+            async Task RunReportedOutput()
+            {
+                var run = page.DispatchAsync("dev.run-stage", null, OriginalTestBodyToken).AsTask();
+                await reader.AcceptRead(run); await reader.AcceptExecute(run); await run;
+            }
+            object[] Problems()
+            {
+                Assert.True(page.TryGetValue("BuildProblems", out var rows));
+                return Assert.IsAssignableFrom<System.Collections.IEnumerable>(rows).Cast<object>().ToArray();
+            }
+            string Key(object row) => Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            object SourceRow() => Assert.Single(Problems(), row => ((string)row.GetType().GetProperty("Label")!.GetValue(row)!).StartsWith("seed.txt:", StringComparison.Ordinal));
+            await RunReportedOutput();
+            var observed = Assert.IsType<DeveloperManualStageObservation>(typeof(DeveloperProjectWorkbenchPage)
+                .GetProperty("OriginalManualStageObservation", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            Assert.Equal(3, observed.Process!.ExitCode); Assert.False(observed.ProcessSucceeded);
+            Assert.Contains("DEVFIX001", observed.Process.StandardOutput); Assert.True(page.TryGetValue("BuildProblemsStatus", out var status));
+            Assert.Contains("current content may differ", Assert.IsType<string>(status));
+            var outside = Assert.Single(Problems(), row => ((string)row.GetType().GetProperty("Label")!.GetValue(row)!).Contains("DEVFIX002", StringComparison.Ordinal));
+            Assert.False(Assert.IsType<bool>(outside.GetType().GetProperty("CanOpen")!.GetValue(outside)));
+            Assert.Throws<InvalidOperationException>(() => { _ = page.DispatchAsync("dev.open-build-problem", Key(outside), OriginalTestBodyToken); });
+            Assert.Empty(NativeSourceTabs(page));
+            var oldKey = Key(SourceRow());
+            var open = page.DispatchAsync("dev.open-build-problem", oldKey, OriginalTestBodyToken).AsTask();
+            await reader.ObserveRead(open); Assert.False(open.IsCompleted); Assert.Empty(NativeSourceTabs(page));
+            await reader.AcceptRead(open); await open;
+            var tab = Assert.Single(NativeSourceTabs(page));
+            Assert.True(page.TryGetValue("DraftText", out var text)); Assert.Equal("existing independent source\n", text);
+            Assert.True(page.TryGetValue("EditorTextSelection", out var selection));
+            Assert.Equal(9, Assert.IsType<CuiTextSelection>(selection).Start);
+            await RunReportedOutput(); Assert.NotEqual(oldKey, Key(SourceRow()));
+            Assert.Throws<InvalidOperationException>(() => { _ = page.DispatchAsync("dev.open-build-problem", oldKey, OriginalTestBodyToken); });
+            page.TrySetValue("DraftText", "unsaved source kept intact"); page.TrySetValue("SourceLocation", "1:3");
+            await page.DispatchAsync("dev.go-to-source-location", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("EditorTextSelection", out var retainedSelection)); Assert.Equal(2, Assert.IsType<CuiTextSelection>(retainedSelection).Start);
+            var dirtyOpen = page.DispatchAsync("dev.open-build-problem", Key(SourceRow()), OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(dirtyOpen); await dirtyOpen;
+            Assert.True(page.TryGetValue("DraftText", out text)); Assert.Equal("unsaved source kept intact", text);
+            Assert.True(page.TryGetValue("EditorTextSelection", out selection)); Assert.Same(retainedSelection, selection);
+            Assert.True(page.TryGetValue("Status", out status)); Assert.Contains("reported location was not selected", Assert.IsType<string>(status));
+            Assert.Same(tab, Assert.Single(NativeSourceTabs(page))); Assert.True(page.HasUnsavedWork);
+            Assert.Equal(Guid.Empty, SearchPublicationField("_taskId").GetValue(page)); Assert.Equal(0, f.Owner.ExecuteCalls);
+            Assert.Equal(0, f.Tools.ReadCalls); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+            // The real command deliberately emits an MSBuild-format fixture then exits 3.
+            // This checks real process -> decoder -> authorized Open, not an actual compiler pass.
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Reported_build_location_absent_from_fresh_saved_source_opens_actual_text_without_clamping()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine Home/Files/kernel fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(true, savedStages: true); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            page = await ManualFileNavigationPage(f, reader); Assert.True(page.TryGetValue("SavedBuildStages", out var stages));
+            var stage = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(stages).Cast<object>(),
+                item => (string)item.GetType().GetProperty("Label")!.GetValue(item)! == "Fixture build / Reported problems");
+            await page.DispatchAsync("dev.select-build-stage", stage.GetType().GetProperty("SelectionKey")!.GetValue(stage), OriginalTestBodyToken);
+            var run = page.DispatchAsync("dev.run-stage", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(run); await reader.AcceptExecute(run); await run;
+            // External saved-source change after the real command's captured reported location.
+            await File.WriteAllTextAsync(Path.Combine(reader.Saved!.Root.Location, "seed.txt"), "tiny", OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("BuildProblems", out var rows));
+            var row = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(rows).Cast<object>(),
+                item => ((string)item.GetType().GetProperty("Label")!.GetValue(item)!).StartsWith("seed.txt:", StringComparison.Ordinal));
+            var open = page.DispatchAsync("dev.open-build-problem", row.GetType().GetProperty("SelectionKey")!.GetValue(row), OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(open); await open;
+            Assert.True(page.TryGetValue("DraftText", out var actual)); Assert.Equal("tiny", actual);
+            Assert.True(page.TryGetValue("EditorTextSelection", out var selection)); Assert.Null(selection);
+            Assert.True(page.TryGetValue("Status", out var status)); Assert.Contains("not present", Assert.IsType<string>(status));
+            Assert.Single(NativeSourceTabs(page)); Assert.False(page.HasUnsavedWork);
+            Assert.Equal(0, f.Tools.ReadCalls); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static async Task<DeveloperProjectWorkbenchPage> ManualFileNavigationPage(Fixture fixture, ActualReaderFixture reader)
     {
         await fixture.Dev.CloseAndDrainAsync();
