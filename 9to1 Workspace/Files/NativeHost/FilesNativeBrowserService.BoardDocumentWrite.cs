@@ -367,8 +367,8 @@ public sealed partial class FilesNativeBrowserService
                     effect = "save-selected-board-document"
                 });
                 operation.Arguments = arguments;
-                operation.Approval ??= await source.Observe(() => _broker.AuthorizeForActorAsync(
-                    operation.Actor, "files", "files.board.write", operation.Scopes, arguments,
+                operation.Approval ??= await source.Observe(() => _broker.AuthorizeOriginalWriteForActorAsync(
+                    operation.Actor, writeContext, "files", "files.board.write", operation.Scopes, arguments,
                     $"Save board ‘{row.Name}’ to its selected Files revision.", null, operation.SessionId, token)).ConfigureAwait(false);
                 if (operation.Approval.RequestId.Length == 0)
                     throw new InvalidOperationException("Home returned no retained Files board save request.");
