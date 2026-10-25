@@ -346,6 +346,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetRunTargetValue(path, out value)) return true;
             if (TryGetRunEditValue(path, out value)) return true;
             if (TryGetCuiPropertyValue(path, out value)) return true;
+            if (TryGetCuiChildrenValue(path, out value)) return true;
             if (TryGetCuiAnalysisValue(path, out value)) return true;
             if (TryGetCuiPreviewValue(path, out value)) return true;
             if (TryGetFileNavigationValue(path, out value)) return true;
@@ -455,7 +456,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             });
             return true;
         }
-        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "FileNavigationQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "SourceFindQuery" or "SourceReplaceText" or "CuiPropertyDraftValue" or "NewFileName" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
+        if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "FileNavigationQuery" or "DraftText" or "RecoveredMergedDraft" or "SourceLocation" or "SourceFindQuery" or "SourceReplaceText" or "CuiPropertyDraftValue" or "CuiNewTextId" or "CuiNewTextValue" or "NewFileName" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
         long generation; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
         {
@@ -473,6 +474,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
                             StoreSelectedTab(); _sourcePath = text; break;
                         case "NewFileName": ChangeNewFileName(text); break;
                         case "FileNavigationQuery": ChangeFileNavigationQuery(text); break;
+                        case "CuiNewTextId": _cuiNewTextId = text; break;
+                        case "CuiNewTextValue": _cuiNewTextValue = text; break;
                         case "SearchQuery": if (!StringComparer.Ordinal.Equals(_searchQuery, text)) { _searchQuery = text; InvalidateProjectSearch(); } break;
                         case "RecoveredMergedDraft": UpdateRecoveryMerge(text); break;
                         case "SourceLocation": _sourceLocation = text; break;
@@ -513,6 +516,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (command == "dev.run-selected-target") return (!_manual || _manualProcessOwner is not null) && IsSelectedRunTargetCurrent(_project);
             if (command == "dev.review-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && HasNewFileSlot(_newFileName) && DeveloperNewSourceFile.Prepare(_newFileName, _newFileCuiTemplate).Succeeded;
             if (command == "dev.create-new-source-file") return _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && CurrentNewFileReview();
+            if (command == "dev.add-cui-text-child") return CanConfigureCuiTextChild() && !string.IsNullOrWhiteSpace(_cuiNewTextId) && _cuiNewTextId.Length <= 128 && _cuiNewTextValue.Length <= DeveloperCuiPropertyEditor.MaximumPropertyCharacters;
             if (command == "dev.select-cui-property") return CurrentCuiPropertyInspection()?.Properties.Take(100).Any(property => property.CanEdit) == true;
             if (command == "dev.change-cui-property") return SelectedCuiProperty() is { CanEdit: true } property && property.Value != _cuiPropertyDraftValue;
             if (command == "dev.preview-cui-draft") return _cuiPreviewSlot is not null && CurrentSourceTab() is { } preview && DeveloperCuiDraftPreviewCompiler.Supports(preview.Path, CurrentEditorText());
@@ -578,6 +582,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         if (command == "dev.stop-manual-run") return StopManualRun();
         if (command is "dev.review-new-source-file" or "dev.create-new-source-file") return DispatchNewSourceFileAsync(command, cancellationToken);
         if (command == "dev.select-cui-property") return SelectCuiProperty(parameter);
+        if (command == "dev.add-cui-text-child") return DispatchCuiTextChildAsync(cancellationToken);
         if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);
         if (command == "dev.analyze-cui-draft") return DispatchCuiAnalysisAsync(cancellationToken);
         if (command == "dev.preview-cui-draft") return DispatchCuiPreviewAsync(cancellationToken);

@@ -747,6 +747,56 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Cui_designer_adds_compiled_literal_Text_to_same_draft_with_undo_preview_and_no_source_write()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The established optional Home/Files fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            const string prefix = "<Cui>\r\n<!-- keep this comment and existing entities -->\r\n<Page><Container id='box' Type='Vertical Stack' margin='9'><Text id='kept' text='A &amp; B' />";
+            const string suffix = "</Container></Page>\r\n</Cui>";
+            const string saved = prefix + suffix; f.Tools.TextValue = saved;
+            page = await SearchPublicationPage(f, reader.Owner, new PreviewComponentReadiness()); await page.ActivateAsync(OriginalTestBodyToken);
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            var reads = f.Tools.ReadCalls; var preparations = f.Owner.PrepareCalls;
+            await page.DispatchAsync("dev.analyze-cui-draft", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("CuiDraftOutline", out var outline));
+            var row = Assert.Single(Assert.IsAssignableFrom<System.Collections.IEnumerable>(outline).Cast<object>(),
+                item => ((string)item.GetType().GetProperty("Label")!.GetValue(item)!).Contains("box — Container", StringComparison.Ordinal));
+            var key = Assert.IsType<string>(row.GetType().GetProperty("SelectionKey")!.GetValue(row));
+            await page.DispatchAsync("dev.go-to-cui-element", key, OriginalTestBodyToken);
+            page.TrySetValue("CuiNewTextId", "kept");
+            await page.DispatchAsync("dev.add-cui-text-child", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out var unchanged)); Assert.Equal(saved, unchanged);
+            Assert.True(page.TryGetValue("CuiTextChildStatus", out var refusal)); Assert.Contains("already exists", Assert.IsType<string>(refusal));
+            const string value = "Child < & \" ' \t\r\n😀";
+            page.TrySetValue("CuiNewTextId", "new-child"); page.TrySetValue("CuiNewTextValue", value);
+            await page.DispatchAsync("dev.add-cui-text-child", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out var result)); var draft = Assert.IsType<string>(result);
+            Assert.StartsWith(prefix, draft); Assert.EndsWith(suffix, draft);
+            Assert.Equal(saved, draft.Remove(prefix.Length, draft.Length - saved.Length)); Assert.True(page.HasUnsavedWork);
+            Assert.True(page.IsActionAvailable("dev.undo-source-edit")); Assert.False(page.IsActionAvailable("dev.apply-edit"));
+            // Actual compiler/artifact/scene; readiness is controlled for this component,
+            // without claiming a native frame or replacing any source permission owner.
+            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            var slot = Assert.IsType<ContentControl>(SearchPublicationField("_cuiPreviewSlot").GetValue(page));
+            var preview = Assert.IsType<CuiSceneHost>(slot.Content);
+            Assert.Contains(Assert.IsAssignableFrom<Control>(preview.Content).GetVisualDescendants().OfType<TextBlock>(), node => node.Name == "new-child" && node.Text == value);
+            await page.DispatchAsync("dev.undo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out unchanged)); Assert.Equal(saved, unchanged);
+            await page.DispatchAsync("dev.redo-source-edit", null, OriginalTestBodyToken);
+            Assert.True(page.TryGetValue("DraftText", out result)); Assert.Equal(draft, result);
+            Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(preparations, f.Owner.PrepareCalls);
+            Assert.Equal(saved, f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private sealed class PreviewComponentReadiness : ICuiSceneReadiness
     {
         public bool HoldNext;
