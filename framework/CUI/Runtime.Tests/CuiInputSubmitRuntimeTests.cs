@@ -32,11 +32,11 @@ public sealed class CuiInputSubmitRuntimeTests
             {
                 window.Show(); Pump(window); Assert.True(input.Focus());
                 input.Text = "first";
-                window.KeyPress(Key.Enter, RawInputModifiers.None); await loader.WhenActionsIdleAsync().WaitAsync(Bound);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null); await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 input.Text = "second";
-                window.KeyPress(Key.Enter, RawInputModifiers.Control); await loader.WhenActionsIdleAsync().WaitAsync(Bound);
+                window.KeyPress(Key.Enter, RawInputModifiers.Control, PhysicalKey.Enter, null); await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 input.Text = "third";
-                window.KeyPress(Key.Enter, RawInputModifiers.Alt); await loader.WhenActionsIdleAsync().WaitAsync(Bound);
+                window.KeyPress(Key.Enter, RawInputModifiers.Alt, PhysicalKey.Enter, null); await loader.WhenActionsIdleAsync().WaitAsync(Bound);
 
                 Assert.Equal(3, requests.Count);
                 Assert.All(requests, request => { Assert.Same(input, request.Sender); Assert.Equal(Key.Enter, request.Key); });
@@ -60,10 +60,10 @@ public sealed class CuiInputSubmitRuntimeTests
             try
             {
                 window.Show(); Pump(window); Assert.True(input.Focus()); input.Text = "draft"; input.CaretIndex = input.Text.Length;
-                window.KeyPress(Key.Enter, RawInputModifiers.Shift);
+                window.KeyPress(Key.Enter, RawInputModifiers.Shift, PhysicalKey.Enter, null);
                 Assert.Equal("draft\n", input.Text);
-                window.KeyPress(Key.Enter, RawInputModifiers.Control | RawInputModifiers.Alt);
-                window.KeyPress(Key.Enter, RawInputModifiers.Meta);
+                window.KeyPress(Key.Enter, RawInputModifiers.Control | RawInputModifiers.Alt, PhysicalKey.Enter, null);
+                window.KeyPress(Key.Enter, RawInputModifiers.Meta, PhysicalKey.Enter, null);
                 await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 Assert.Equal(0, calls);
                 Assert.Equal("draft\n", input.Text);
@@ -86,12 +86,12 @@ public sealed class CuiInputSubmitRuntimeTests
                 window.Show(); Pump(window); Assert.True(input.Focus());
                 var presenter = Assert.Single(input.GetVisualDescendants().OfType<TextPresenter>());
                 presenter.PreeditText = "にほん";
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 presenter.PreeditText = null;
                 input.IsReadOnly = true;
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 input.IsReadOnly = false; input.IsEnabled = false;
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 Assert.Equal(0, calls);
             }
@@ -114,8 +114,8 @@ public sealed class CuiInputSubmitRuntimeTests
             try
             {
                 window.Show(); Pump(window); Assert.True(input.Focus());
-                window.KeyPress(Key.Enter, RawInputModifiers.None); await entered.Task.WaitAsync(Bound);
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null); await entered.Task.WaitAsync(Bound);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 Assert.Equal(1, calls);
                 Assert.False(loader.WhenActionsIdleAsync().IsCompleted);
                 release.SetResult(); await loader.WhenActionsIdleAsync().WaitAsync(Bound);
@@ -149,16 +149,16 @@ public sealed class CuiInputSubmitRuntimeTests
             {
                 window.Show(); Pump(window); Assert.True(input.Focus());
                 input.Text = "first draft";
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 await firstEntered.Task.WaitAsync(Bound);
 
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 Assert.Equal(1, calls); // repeat on same exact edit revision is suppressed
 
                 input.Text = "second draft";
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 await secondEntered.Task.WaitAsync(Bound);
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 Assert.Equal(2, calls); // the second revision is also deduplicated
                 Assert.False(loader.WhenActionsIdleAsync().IsCompleted);
 
@@ -189,13 +189,13 @@ public sealed class CuiInputSubmitRuntimeTests
             {
                 window.Show(); Pump(window); Assert.True(input.Focus());
                 input.Text = "same draft";
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 input.Text = string.Empty;
                 input.Text = "same draft";
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 await loader.WhenActionsIdleAsync().WaitAsync(Bound);
-                window.KeyPress(Key.Enter, RawInputModifiers.None);
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 Assert.Equal(2, calls);
             }
