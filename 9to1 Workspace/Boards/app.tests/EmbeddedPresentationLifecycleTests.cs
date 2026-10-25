@@ -172,12 +172,14 @@ public sealed class EmbeddedPresentationLifecycleTests
 
     private static T PumpUi<T>(Task<T> task) => TestUiThread.Run(() =>
     {
-        while (!task.IsCompleted)
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        while (!task.IsCompleted && DateTime.UtcNow < deadline)
         {
             Dispatcher.UIThread.RunJobs();
             Thread.Sleep(1);
         }
         Dispatcher.UIThread.RunJobs();
+        Assert.True(task.IsCompleted, "Boards presentation operation timed out while pumping the UI dispatcher.");
         return task.GetAwaiter().GetResult();
     });
 
@@ -186,12 +188,14 @@ public sealed class EmbeddedPresentationLifecycleTests
         var cleanup = Task.Run(async () => await task.ConfigureAwait(false));
         TestUiThread.Run(() =>
         {
-            while (!cleanup.IsCompleted)
+            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+            while (!cleanup.IsCompleted && DateTime.UtcNow < deadline)
             {
                 Dispatcher.UIThread.RunJobs();
                 Thread.Sleep(1);
             }
             Dispatcher.UIThread.RunJobs();
+            Assert.True(cleanup.IsCompleted, "Boards presentation cleanup timed out while pumping the UI dispatcher.");
         });
         await cleanup.ConfigureAwait(false);
     }
