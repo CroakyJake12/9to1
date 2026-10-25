@@ -90,13 +90,7 @@ public sealed class SpaceBuilderController
         cancellationToken.ThrowIfCancellationRequested();
         SpaceBuilderState snapshot;
         long editVersion;
-        lock (_gate)
-        {
-            if (!ReferenceEquals(_state.ValidationIssues, structural))
-                return ["The Space draft changed while local validation was finishing; validate the current edit again."];
-            snapshot = _state;
-            editVersion = _editVersion;
-        }
+        lock (_gate) { snapshot = _state; editVersion = _editVersion; }
         List<string> issues = [];
         if (!snapshot.IsLoaded || snapshot.DraftRevision is not { } expectedRevision)
             issues.Add("Load the existing Space before validating its draft.");
@@ -172,7 +166,13 @@ public sealed class SpaceBuilderController
 
         SpaceBuilderState snapshot;
         long editVersion;
-        lock (_gate) { snapshot = _state; editVersion = _editVersion; }
+        lock (_gate)
+        {
+            if (!ReferenceEquals(_state.ValidationIssues, structural))
+                return ["The Space draft changed while local validation was finishing; validate the current edit again."];
+            snapshot = _state;
+            editVersion = _editVersion;
+        }
         if (snapshot.HasUnsupportedActivationDependencies)
             return structural; // The current host still has no graph/share/generated-surface owner.
 
