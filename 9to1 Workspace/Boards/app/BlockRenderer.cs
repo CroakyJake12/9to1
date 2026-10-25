@@ -533,6 +533,11 @@ public static class BlockRenderer
             Margin = new Thickness(Math.Max(0, block.IndentLevel) * 20, 0, 0, 0),
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
+        // The page title is authored by CUI and has a zero horizontal inset.
+        // Keep native block text on that same visible text column even when a
+        // CUI theme supplies a stronger default TextBox padding.
+        CuiPropertyPresentation.Set(box, "Padding", new Thickness(0, 6),
+            CuiPropertyLevel.Instance, "Boards document text column alignment");
         var family = !string.IsNullOrEmpty(block.FontFamily) ? block.FontFamily : style?.FontFamily;
         if (!string.IsNullOrEmpty(family))
             box.FontFamily = new FontFamily(family);
