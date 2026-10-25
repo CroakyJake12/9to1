@@ -39,6 +39,32 @@ public sealed class LinuxHomePackageRemovalTests
         Assert.False(File.Exists(statePath)); Assert.False(File.Exists(rig.StatePath));
         Assert.False(File.Exists(Path.Combine(rig.Root, "unregistered-root.sock")));
     }
+    [LinuxFact]
+    public async Task Original_Root_retention_refusal_faults_the_owned_start_before_any_actual_socket_connection()
+    {
+        using var rig = new LinuxHomeBootstrapActivationOwnerTests.Rig();
+        var endpoint = Path.Combine(rig.Root, "r.sock");
+        using var listener = new System.Net.Sockets.Socket(System.Net.Sockets.AddressFamily.Unix,
+            System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Unspecified);
+        listener.Bind(new System.Net.Sockets.UnixDomainSocketEndPoint(endpoint)); listener.Listen(1);
+        var statePath = Path.Combine(rig.Root, "absent-user-state.json");
+        var store = new FileHomeCoreStateStore(statePath);
+        var profiles = new HomeLocalProfileIdentity(store, new OperatingSystemPrincipalSource());
+        var client = new LinuxHomeRootClient(endpoint, rig.Token);
+        client.BindOriginalHomeInventory(store, profiles, new(store, profiles, [client]));
+        var refusal = new IOException("Fixture declines custody before any Root channel exists.");
+        try
+        {
+            var observed = Assert.Throws<IOException>(() => {
+                _ = client.ConnectOriginalWithinSourceAsync(body => body(), _ => throw refusal, rig.Token);
+            });
+            Assert.Same(refusal, observed);
+            await Assert.ThrowsAsync<AggregateException>(() => client.CloseAndDrainAsync());
+            Assert.False(listener.Poll(0, System.Net.Sockets.SelectMode.SelectRead));
+            Assert.False(File.Exists(statePath));
+        }
+        finally { listener.Dispose(); File.Delete(endpoint); }
+    }
     private sealed class LinuxAdminFactAttribute : FactAttribute
     { public LinuxAdminFactAttribute() { if (!OperatingSystem.IsLinux() || GetEuid() != 0) Skip = "Requires actual Linux UID0 isolated signed-file fixture."; } }
     [LinuxAdminFact]
