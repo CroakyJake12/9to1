@@ -92,8 +92,7 @@ internal sealed partial class OriginalSpaceRequestPolicySource
         return (IReadOnlyList<SpaceBuilderFilesSourceOption>)Array.AsReadOnly(choices
             .OrderBy(choice => choice.Location, StringComparer.OrdinalIgnoreCase)
             .ThenBy(choice => choice.Label, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(choice => choice.Id, StringComparer.Ordinal)
-            .Take(128).ToArray());
+            .ThenBy(choice => choice.Id, StringComparer.Ordinal).ToArray());
 
         void Own(Action body) => originals.Invoke(() => { body(); return true; });
         void Retain(Task task) => originals.Track(task);
