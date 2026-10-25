@@ -125,11 +125,17 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                             Enum.IsDefined(parsed) ? parsed : (BrowseEngineKind?)null;
                         return new BrowseClosedTabProjection(browserTab, tab.Index, engine);
                     }).ToArray();
+                var panes = window.Layout.Kind == WorkspaceLayoutKind.Split && window.Layout.Panes.Count == 2
+                    ? window.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId).ToArray()
+                    : [];
+                if (panes.Length != 2 || panes[0] == panes[1] || panes.Any(id => !projected.Any(tab => tab.Id == id &&
+                    tab.Privacy == BrowserTabPrivacy.Standard && StringComparer.Ordinal.Equals(tab.ProfileId, ProfileId))))
+                    panes = [];
                 // Load does not authorize deletion. Browse can refuse a restored
                 // row; only tabs it actually publishes in Save become managed.
                 return (BrowseTabSessionProjection?)new BrowseTabSessionProjection(Array.AsReadOnly(projected.ToArray()),
                     projected.Any(tab => tab.Id == window.SelectedTabId) ? window.SelectedTabId : null)
-                { ClosedTabs = Array.AsReadOnly(closed) };
+                { ClosedTabs = Array.AsReadOnly(closed), PaneTabIds = Array.AsReadOnly(panes) };
             }));
 
         public Task SaveAsync(BrowseTabSessionProjection projection, CancellationToken cancellationToken)
@@ -139,7 +145,8 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
             var captured = projection with
             {
                 Tabs = Array.AsReadOnly(projection.Tabs.ToArray()),
-                ClosedTabs = Array.AsReadOnly(projection.ClosedTabs.ToArray())
+                ClosedTabs = Array.AsReadOnly(projection.ClosedTabs.ToArray()),
+                PaneTabIds = projection.PaneTabIds is null ? null : Array.AsReadOnly(projection.PaneTabIds.ToArray())
             };
             return owner.Admit(async operation =>
             {

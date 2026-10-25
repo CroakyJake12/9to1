@@ -10,6 +10,9 @@ public sealed record BrowseClosedTabProjection(BrowserTabState Tab, int Index, B
 public sealed record BrowseTabSessionProjection(IReadOnlyList<BrowserTabState> Tabs, Guid? SelectedTabId)
 {
     public IReadOnlyList<BrowseClosedTabProjection> ClosedTabs { get; init; } = [];
+    /// <summary>Tab identities currently occupying the two durable split panes.</summary>
+    /// <summary>Null means a legacy producer omitted pane state; empty explicitly collapses the split.</summary>
+    public IReadOnlyList<Guid>? PaneTabIds { get; init; }
 }
 
 /// <summary>The shared host adapts its existing WorkspaceSessionSnapshot owner.

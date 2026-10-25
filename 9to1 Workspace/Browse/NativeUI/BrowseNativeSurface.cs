@@ -177,13 +177,16 @@ internal sealed class BrowseEngineViewport : ContentControl
     private readonly BrowseNativeWorkspace _workspace;
     private CuiSceneHost? _findKeyScope;
     private readonly Grid _surfaces = new();
+    private readonly Border _splitDivider = new() { Background = Brushes.Gray, Width = 1, IsVisible = false };
     private readonly Dictionary<IBrowseEngineTab, Control> _originalViews = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<IBrowseAppContentSession, Border> _originalAppViews = new(ReferenceEqualityComparer.Instance);
     private readonly TextBlock _unavailable = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(24),
         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
     public BrowseEngineViewport(BrowseNativeWorkspace workspace)
     {
-        _workspace = workspace; Content = _surfaces; _surfaces.Children.Add(_unavailable);
+        _workspace = workspace; Content = _surfaces;
+        _surfaces.ColumnDefinitions = new ColumnDefinitions("*,1,*");
+        _surfaces.Children.Add(_unavailable); _surfaces.Children.Add(_splitDivider);
         AttachedToVisualTree += OnAttached; DetachedFromVisualTree += OnDetached;
     }
     private void OnAttached(object? sender, VisualTreeAttachmentEventArgs args)
@@ -249,6 +252,9 @@ internal sealed class BrowseEngineViewport : ContentControl
         if (!_workspace.IsReady) return;
         var state = _workspace.State; var current = new HashSet<IBrowseEngineTab>(ReferenceEqualityComparer.Instance);
         var currentApps = new HashSet<IBrowseAppContentSession>(ReferenceEqualityComparer.Instance);
+        var split = state.PaneTabIds.Count == 2;
+        _splitDivider.IsVisible = split;
+        Grid.SetColumn(_splitDivider, 1); Grid.SetRowSpan(_splitDivider, 1);
         var selectedHasView = false;
         foreach (var tab in state.Tabs)
         {
@@ -267,8 +273,10 @@ internal sealed class BrowseEngineViewport : ContentControl
                         _originalAppViews.Add(app, mountedApp); _surfaces.Children.Add(mountedApp);
                     }
                     else if (!ReferenceEquals(mountedApp.Child, view)) throw new InvalidOperationException("The app replaced its original native view.");
-                    mountedApp.IsVisible = tab.Id == state.SelectedTabId;
-                    if (mountedApp.IsVisible) selectedHasView = true;
+                    var visible = split ? state.PaneTabIds.Contains(tab.Id) : tab.Id == state.SelectedTabId;
+                    mountedApp.IsVisible = visible;
+                    PlaceInPane(mountedApp, state.PaneTabIds, tab.Id);
+                    if (tab.Id == state.SelectedTabId && mountedApp.IsVisible) selectedHasView = true;
                 }
                 else if (_originalAppViews.TryGetValue(app, out var retained)) retained.IsVisible = false;
             }
@@ -282,8 +290,10 @@ internal sealed class BrowseEngineViewport : ContentControl
                 _originalViews.Add(original, originalView); _surfaces.Children.Add(originalView);
             }
             else if (!ReferenceEquals(mounted, originalView)) throw new InvalidOperationException("The same engine replaced its original native view.");
-            originalView.IsVisible = tab.Id == state.SelectedTabId && tab.Address.IsWeb && tab.EngineState == BrowseEngineState.Ready;
-            if (originalView.IsVisible) selectedHasView = true;
+            originalView.IsVisible = (split ? state.PaneTabIds.Contains(tab.Id) : tab.Id == state.SelectedTabId) &&
+                tab.Address.IsWeb && tab.EngineState == BrowseEngineState.Ready;
+            PlaceInPane(originalView, state.PaneTabIds, tab.Id);
+            if (tab.Id == state.SelectedTabId && originalView.IsVisible) selectedHasView = true;
         }
         foreach (var original in _originalViews.Keys.Where(original => !current.Contains(original)).ToArray())
         {
@@ -303,5 +313,16 @@ internal sealed class BrowseEngineViewport : ContentControl
         _unavailable.IsVisible = !selectedHasView && selected.NativePage == Haven.Browser.BrowserNativePage.None;
         _unavailable.Text = !selected.Address.IsWeb || selected.EngineState == BrowseEngineState.Crashed ? selected.Status :
             "The native " + (selected.Engine == BrowseEngineKind.Gecko ? "Firefox" : "Chromium") + " renderer is not connected. Tab identity, bookmarks and browser settings are retained.";
+        PlaceInPane(_unavailable, state.PaneTabIds, selected.Id);
+    }
+
+    private static void PlaceInPane(Control view, IReadOnlyList<Guid> paneTabIds, Guid tabId)
+    {
+        if (paneTabIds.Count != 2)
+        {
+            Grid.SetColumn(view, 0); Grid.SetColumnSpan(view, 3); return;
+        }
+        var pane = Array.IndexOf(paneTabIds.ToArray(), tabId);
+        Grid.SetColumn(view, pane == 1 ? 2 : 0); Grid.SetColumnSpan(view, 1);
     }
 }

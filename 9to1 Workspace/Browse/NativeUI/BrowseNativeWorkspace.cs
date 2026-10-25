@@ -108,6 +108,15 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "PinTabLabel" => selected.IsPinned ? "Unpin selected tab" : "Pin selected tab",
             "TabPinned" => selected.IsPinned,
             "HasUnsavedTabPlacement" => _chrome.HasUnsavedTabPlacement,
+            "HasUnsavedSplitViewLayout" => _chrome.HasUnsavedSplitViewLayout,
+            "HasSplitView" => _chrome.HasSplitView,
+            "ToggleSplitLabel" => _chrome.HasSplitView ? "Close split view" : "Split selected tab with another tab",
+            "SplitPrimaryLabel" => _snapshot.PaneTabIds.Count == 2
+                ? "Focus left pane: " + (_snapshot.Tabs.FirstOrDefault(tab => tab.Id == _snapshot.PaneTabIds[0])?.Title ?? "Tab")
+                : "Focus left pane",
+            "SplitSecondaryLabel" => _snapshot.PaneTabIds.Count == 2
+                ? "Focus right pane: " + (_snapshot.Tabs.FirstOrDefault(tab => tab.Id == _snapshot.PaneTabIds[1])?.Title ?? "Tab")
+                : "Focus right pane",
             "ToolsOpen" => _toolsOpen,
             "IsLoading" => selected.IsLoading,
             "IsNotLoading" => !selected.IsLoading,
@@ -286,6 +295,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.MoveTabLeft" => _chrome.CanMoveTab(tab.Id, -1),
             "9to1.Browse.MoveTabRight" => _chrome.CanMoveTab(tab.Id, 1),
             "9to1.Browse.SaveTabPlacement" => _chrome.HasUnsavedTabPlacement,
+            "9to1.Browse.ToggleSplitView" => _chrome.HasSplitView || _chrome.CanSplitSelectedTab,
+            "9to1.Browse.SaveSplitViewLayout" => _chrome.HasUnsavedSplitViewLayout,
+            "9to1.Browse.FocusSplitPrimary" or "9to1.Browse.FocusSplitSecondary" or
+                "9to1.Browse.SwapSplitPanes" or "9to1.Browse.CloseSplitView" => _chrome.HasSplitView,
             "9to1.Browse.CloseTab" => tab.IsCloseable,
             "9to1.Browse.CloseTabRow" => _snapshot.Tabs.Any(item => item.IsCloseable),
             "9to1.Browse.ShowDownloadInFiles" => _originalDownloadFilesService is not null,
@@ -404,6 +417,16 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     if (closingTarget.TabId == tabId) _addressDraft = false;
                     break;
                 case "9to1.Browse.ReopenClosedTab": await Operation(() => _chrome.ReopenClosedTabAsync(token)); _addressDraft = false; break;
+                case "9to1.Browse.ToggleSplitView": await Operation(() => _chrome.ToggleSplitViewAsync(token)); break;
+                case "9to1.Browse.SaveSplitViewLayout": await Operation(() => _chrome.SaveSplitViewLayoutAsync(token)); break;
+                case "9to1.Browse.FocusSplitPrimary":
+                    if (_snapshot.PaneTabIds.Count == 2) await Operation(() => _chrome.FocusSplitPaneAsync(_snapshot.PaneTabIds[0], token));
+                    break;
+                case "9to1.Browse.FocusSplitSecondary":
+                    if (_snapshot.PaneTabIds.Count == 2) await Operation(() => _chrome.FocusSplitPaneAsync(_snapshot.PaneTabIds[1], token));
+                    break;
+                case "9to1.Browse.SwapSplitPanes": await Operation(() => _chrome.SwapSplitPanesAsync(token)); break;
+                case "9to1.Browse.CloseSplitView": await Operation(() => _chrome.CloseSplitViewAsync(token)); break;
                 case "9to1.Browse.ToggleTabPinned":
                 case "9to1.Browse.MoveTabLeft":
                 case "9to1.Browse.MoveTabRight":
