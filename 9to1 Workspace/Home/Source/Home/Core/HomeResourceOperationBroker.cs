@@ -24,7 +24,8 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
         => ReferenceEquals(resources, expectedResources) && ReferenceEquals(permissions, expectedPermissions);
 
     private sealed record Binding(AuthenticatedResourceActor Actor, string TargetAppId, string ActionId, ResourceScope[] Scopes, string Digest,
-        HomePermissionRequestSubmission? OriginalSubmission = null, HomePermissionActionPolicy? OriginalPolicy = null);
+        HomePermissionRequestSubmission? OriginalSubmission = null, HomePermissionActionPolicy? OriginalPolicy = null,
+        IOriginalCanonicalWriteContext? OriginalWriteContext = null);
     private readonly ConcurrentDictionary<HomeResourceExecutionCapability, Binding> _executions = new();
     private readonly ConcurrentDictionary<string, Binding> _bindings = new();
     private readonly ConcurrentDictionary<string, HomeResourceExecutionCapability> _rejectedBegins = new();
@@ -45,9 +46,24 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
             sessionId, cancellationToken);
     }
 
+    /// <summary>Admits an original-owner write whose canonical resolver requires the exact
+    /// private write observation. The observation stays process-local in this broker binding;
+    /// Home review receives only its ordinary canonical resource scope.</summary>
+    public Task<HomePermissionAuthorization> AuthorizeOriginalWriteForActorAsync(
+        AuthenticatedResourceActor expectedActor, IOriginalCanonicalWriteContext originalWriteContext,
+        string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
+        string preview, string? backupId, string sessionId, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        ArgumentNullException.ThrowIfNull(originalWriteContext);
+        return AuthorizeCoreAsync(expectedActor, targetAppId, actionId, scopes, arguments, preview, backupId,
+            sessionId, cancellationToken, originalWriteContext);
+    }
+
     private async Task<HomePermissionAuthorization> AuthorizeCoreAsync(AuthenticatedResourceActor? expectedActor,
         string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
-        string preview, string? backupId, string sessionId, CancellationToken cancellationToken)
+        string preview, string? backupId, string sessionId, CancellationToken cancellationToken,
+        IOriginalCanonicalWriteContext? originalWriteContext = null)
     {
         ArgumentNullException.ThrowIfNull(scopes);
         if (_bindings.Count + _rejectedBegins.Count >= 1024) throw new InvalidOperationException("Too many outstanding resource approval requests.");
@@ -60,9 +76,12 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
         var scopeSnapshot = capturedScopes.ToArray();
         var capturedArguments = arguments.Clone();
         var digest = Digest(capturedArguments);
-        var actor = expectedActor is null
-            ? await resources.AuthorizeAsync(actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false)
-            : await resources.AuthorizeForActorAsync(expectedActor, actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false);
+        var actor = originalWriteContext is not null
+            ? expectedActor is null ? null : await resources.AuthorizeOriginalWriteForActorAsync(
+                expectedActor, originalWriteContext, actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false)
+            : expectedActor is null
+                ? await resources.AuthorizeAsync(actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false)
+                : await resources.AuthorizeForActorAsync(expectedActor, actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false);
         if (actor is null) throw new UnauthorizedAccessException("The authenticated actor lacks current canonical resource access.");
         if (expectedActor is not null && actor != expectedActor)
             throw new UnauthorizedAccessException("The originating owner actor changed before Home review admission.");
@@ -78,7 +97,8 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
         var originalPolicy = permissions.ResolveTrustedActionPolicy(submission.Scope.TargetAppId, submission.Scope.ActionName);
         var result = await permissions.AuthorizeAsync(submission, cancellationToken).ConfigureAwait(false);
         if (result.State is HomePermissionRequestState.PendingApproval or HomePermissionRequestState.Approved)
-            _bindings[result.RequestId] = new(actor, targetAppId, actionId, scopeSnapshot, digest, submission, originalPolicy);
+            _bindings[result.RequestId] = new(actor, targetAppId, actionId, scopeSnapshot, digest, submission, originalPolicy,
+                originalWriteContext);
         return result;
     }
 
@@ -102,7 +122,7 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
         CancellationToken cancellationToken = default)
     {
         if (_executions.Count >= 1024 || !_bindings.TryGetValue(requestId, out var binding) || binding.Digest != Digest(arguments)) return null;
-        var current = await resources.AuthorizeForActorAsync(binding.Actor, binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
+        var current = await ReauthorizeBindingAsync(binding, cancellationToken).ConfigureAwait(false);
         if (current != binding.Actor) return null;
         var approval = await permissions.GetAuthorizationAsync(requestId, cancellationToken).ConfigureAwait(false);
         if (!approval.IsAllowed || !_bindings.TryRemove(requestId, out var consumed) || consumed != binding) return null;
@@ -124,6 +144,12 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
         }
         return _executions.TryAdd(capability, binding) ? capability : null;
     }
+
+    private ValueTask<AuthenticatedResourceActor?> ReauthorizeBindingAsync(Binding binding, CancellationToken token) =>
+        binding.OriginalWriteContext is { } originalWriteContext
+            ? resources.AuthorizeOriginalWriteForActorAsync(binding.Actor, originalWriteContext,
+                binding.ActionId, binding.Scopes, token)
+            : resources.AuthorizeForActorAsync(binding.Actor, binding.ActionId, binding.Scopes, token);
 
     /// <summary>Originating host recovery for a failed dispatch admission. This request ID identifies
     /// only an already-consumed local negative outcome; it cannot reconstruct a capability or invoke an owner.</summary>
@@ -199,7 +225,7 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
             return new(HomeResourceClaimDisposition.Unavailable, null);
         try
         {
-            var current = await resources.AuthorizeForActorAsync(binding.Actor, binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
+            var current = await ReauthorizeBindingAsync(binding, cancellationToken).ConfigureAwait(false);
             if (current == binding.Actor && await permissions.IsExecutionCurrentAsync(capability.RequestId, cancellationToken).ConfigureAwait(false))
             {
                 // Observe full original durable intent before claiming. Legacy bindings with no
