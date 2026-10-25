@@ -991,6 +991,41 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Manual_Git_buttons_use_genuine_original_process_owner_without_Task_and_preserve_dirty_source()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine Home/Files/kernel fixture requires Linux.");
+        var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture(true); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            var saved = Assert.IsType<DeveloperResolvedProject>(reader.Saved);
+            var git = Directory.CreateDirectory(Path.Combine(saved.Root.Location, ".git")).FullName;
+            Directory.CreateDirectory(Path.Combine(git, "objects")); Directory.CreateDirectory(Path.Combine(git, "refs", "heads"));
+            await File.WriteAllTextAsync(Path.Combine(git, "HEAD"), "ref: refs/heads/main\n", OriginalTestBodyToken);
+            await File.WriteAllTextAsync(Path.Combine(git, "config"), "[core]\nrepositoryformatversion = 0\nbare = false\n", OriginalTestBodyToken);
+            page = await ManualFileNavigationPage(f, reader);
+            page.TrySetValue("SourcePath", "seed.txt"); var open = page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(open); await open; page.TrySetValue("DraftText", "unsaved editor text");
+            var tab = Assert.Single(NativeSourceTabs(page)); Assert.True(page.IsActionAvailable("dev.git-status"));
+            Assert.False(page.IsActionAvailable("dev.create-branch")); Assert.False(page.IsActionAvailable("dev.switch-branch"));
+            var inspect = page.DispatchAsync("dev.git-status", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(inspect); await reader.AcceptExecute(inspect); await inspect;
+            var observed = Assert.IsType<DeveloperManualGitObservation>(typeof(DeveloperProjectWorkbenchPage)
+                .GetProperty("OriginalManualGitObservation", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            Assert.True(observed.ProcessSucceeded); Assert.Equal(DeveloperProjectGitInspectionKind.Status, observed.Operation);
+            Assert.True(page.TryGetValue("ProcessOutput", out var output)); Assert.Contains("seed.txt", Assert.IsType<string>(output));
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("unsaved editor text", draft);
+            Assert.Same(tab, Assert.Single(NativeSourceTabs(page))); Assert.True(page.HasUnsavedWork);
+            Assert.Equal(Guid.Empty, SearchPublicationField("_taskId").GetValue(page)); Assert.Equal(0, f.Owner.ExecuteCalls);
+            Assert.Equal(0, f.Tools.ReadCalls); Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+        }
+        finally
+        {
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static async Task<DeveloperProjectWorkbenchPage> ManualFileNavigationPage(Fixture fixture, ActualReaderFixture reader)
     {
         await fixture.Dev.CloseAndDrainAsync();
@@ -1000,13 +1035,14 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var constructor = typeof(DeveloperProjectWorkbenchPage).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
             .Single(value => value.GetParameters().Length == 16 && value.GetParameters()[9].ParameterType == typeof(DeveloperManualSourceReadOwner));
         var page = (DeveloperProjectWorkbenchPage)constructor.Invoke([fixture.Dev, fixture.Tasks, reader.Saved!, new SearchPublicationNoReadiness(), unused,
-            (Action)(() => { }), OriginalTestBodyToken, null, null, reader.Owner, null, null, null, null, null, null]);
+            (Action)(() => { }), OriginalTestBodyToken, null, null, reader.Owner, null, null, null, null, null, reader.ProcessOwner]);
         SearchPublicationField("_active").SetValue(page, true); // Command component only; no native frame witness.
         return page;
     }
 
     private sealed record ActualReaderFixture(DeveloperManualSourceReadOwner Owner, IAsyncDisposable Lifetime,
-        DeveloperResolvedProject? Saved, FileDeveloperWorkspaceStore? SavedStore, Func<Task, Task> AcceptRead, Func<Task, Task> ObserveRead);
+        DeveloperResolvedProject? Saved, FileDeveloperWorkspaceStore? SavedStore, Func<Task, Task> AcceptRead, Func<Task, Task> ObserveRead,
+        DeveloperManualProjectProcessOwner ProcessOwner, Func<Task, Task> AcceptExecute);
     private static async Task<ActualReaderFixture> ActualOptionalReaderFixture(bool canonicalSavedProject = false)
     {
         var type = typeof(Haven.Desktop.Tests.FilesDeveloperOriginalSourcePublicationTests)
@@ -1036,10 +1072,17 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
                 var original = (Task)observe.Invoke(rig, [operation, HavenOS.Home.Core.HomeDeveloperProjectReadAdmissionSource.ReadAction])!;
                 await original;
             }
+            async Task AcceptExecute(Task operation)
+            {
+                var decide = type.GetMethod("DecideNextAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+                var original = (Task)decide.Invoke(rig, [operation, HavenOS.Home.Core.HomeDeveloperManualProjectExecutionAdmissionSource.RunAction,
+                    HavenOS.Home.PermissionsTrustNotifications.HomeApprovalChoice.Accept])!;
+                await original;
+            }
             return new(reader, (IAsyncDisposable)rig,
                 canonicalSavedProject ? (DeveloperResolvedProject)type.GetProperty("Saved", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(rig)! : null,
                 canonicalSavedProject ? (FileDeveloperWorkspaceStore)type.GetProperty("SavedStore", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(rig)! : null,
-                AcceptRead, ObserveRead);
+                AcceptRead, ObserveRead, (DeveloperManualProjectProcessOwner)Required(typeof(DeveloperManualProjectProcessOwner)), AcceptExecute);
         }
         catch { await ((IAsyncDisposable)rig).DisposeAsync(); throw; }
     }

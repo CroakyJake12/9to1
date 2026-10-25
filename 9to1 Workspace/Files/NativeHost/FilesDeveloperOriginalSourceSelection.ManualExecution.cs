@@ -6,8 +6,8 @@ namespace HavenOS.Files.NativeHost;
 
 public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperProjectOriginalManualExecutionSource
 {
-    private readonly HashSet<ManualExecution> _manualExecutions = [];
-    private readonly HashSet<ManualExecution> _manualPinAcquisitions = [];
+    private readonly HashSet<ManualExecutionBase> _manualExecutions = [];
+    private readonly HashSet<ManualExecutionBase> _manualPinAcquisitions = [];
     private readonly Dictionary<Guid, ManualMetadataUpdate> _manualMetadataUpdates = [];
     private sealed class ManualMetadataUpdate(FilesDeveloperOriginalSourceSelection owner, Guid workspace) : IDisposable
     {
@@ -34,26 +34,37 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
             var reservation = new ManualMetadataUpdate(this, workspace); _manualMetadataUpdates.Add(workspace, reservation); return reservation;
         }
     }
-    private sealed class ManualExecution(Selection selection, IDeveloperProjectOriginalReadAdmission read,
-        IDeveloperProjectOriginalExistingSourceCapture capture, RegisteredWitness witness, DeveloperRunTargetChoice choice)
-        : IDeveloperProjectOriginalManualExecutionBinding
+    private abstract class ManualExecutionBase(Selection selection, IDeveloperProjectOriginalReadAdmission read,
+        IDeveloperProjectOriginalExistingSourceCapture capture, RegisteredWitness witness, string definitionSha256, string purpose)
     {
         internal Selection Selection => selection;
         internal IDeveloperProjectOriginalReadAdmission Read => read;
         internal IDeveloperProjectOriginalExistingSourceCapture Capture => capture;
         internal RegisteredWitness Witness => witness;
-        internal ResourceScope Scope { get; } = new("dev.project.console", "dev-manual-run:" + Guid.NewGuid().ToString("D"),
-            witness.Read.OriginalWorkspaceDocumentSha256 + ":" + witness.Read.OriginalRegisteredRootFingerprint + ":" + choice.DefinitionSha256, ResourceAccess.Execute);
+        internal ResourceScope Scope { get; } = new("dev.project.console", purpose + ":" + Guid.NewGuid().ToString("D"),
+            witness.Read.OriginalWorkspaceDocumentSha256 + ":" + witness.Read.OriginalRegisteredRootFingerprint + ":" + definitionSha256, ResourceAccess.Execute);
         internal readonly Dictionary<IDeveloperWorkspaceOriginalExecutionCommitPin, Task> Pins = new(ReferenceEqualityComparer.Instance);
         internal readonly HashSet<IDeveloperWorkspaceOriginalExecutionCommitPin> LivePins = new(ReferenceEqualityComparer.Instance);
         internal readonly Dictionary<IDeveloperWorkspaceOriginalExecutionCommitPin, IDisposable> MetadataPins = new(ReferenceEqualityComparer.Instance);
         public string CanonicalRoot => selection.Root.OriginalProjectRoot;
         public AuthenticatedResourceActor OriginalActor => selection.Workspace.Actor;
+        public string DefinitionSha256 => definitionSha256;
+        public abstract string Command { get; }
+        public abstract int TimeoutSeconds { get; }
+    }
+    private sealed class ManualExecution(Selection selection, IDeveloperProjectOriginalReadAdmission read,
+        IDeveloperProjectOriginalExistingSourceCapture capture, RegisteredWitness witness, DeveloperRunTargetChoice choice)
+        : ManualExecutionBase(selection, read, capture, witness, choice.DefinitionSha256, "dev-manual-run"), IDeveloperProjectOriginalManualExecutionBinding
+    {
         public string ConfigurationId => choice.Configuration.Id;
         public long ConfigurationRevision => choice.Configuration.Revision;
-        public string DefinitionSha256 => choice.DefinitionSha256;
-        public string Command => choice.Configuration.Command!;
-        public int TimeoutSeconds => choice.Configuration.TimeoutSeconds ?? 120;
+        public override string Command => choice.Configuration.Command!;
+        public override int TimeoutSeconds => choice.Configuration.TimeoutSeconds ?? 120;
+    }
+    private ManualExecutionBase RequireManualBase(ManualExecutionBase binding)
+    {
+        lock (_gate) return !_retiring && _manualExecutions.Contains(binding) && IsIssuedOriginal(binding.Capture) && IsIssuedOriginal(binding.Selection)
+            ? binding : throw new UnauthorizedAccessException("SAME live Files manual process issuance required.");
     }
     private ManualExecution RequireManual(IDeveloperProjectOriginalManualExecutionBinding binding)
     {
@@ -123,9 +134,12 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
     });
     public Task<IDeveloperWorkspaceOriginalExecutionCommitPin> AcquireOriginalManualExecutionPinAsync(
         IDeveloperProjectOriginalManualExecutionBinding binding, CancellationToken token)
+        => AcquireManualExecutionPinCoreAsync(binding, token);
+    private Task<IDeveloperWorkspaceOriginalExecutionCommitPin> AcquireManualExecutionPinCoreAsync(object binding, CancellationToken token)
         => Start<IDeveloperWorkspaceOriginalExecutionCommitPin>(async sources =>
     {
-        var original = RequireManual(binding);
+        var original = binding is ManualExecutionBase owned ? RequireManualBase(owned)
+            : throw new UnauthorizedAccessException("Foreign manual process binding.");
         lock (_gate)
         {
             if (_manualMetadataUpdates.ContainsKey(original.Selection.Registered!.WorkspaceId) || original.Pins.Count != 0 ||
@@ -162,7 +176,7 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
                 if (pin.OriginalWorkspaceDocumentSha256 != original.Witness.Read.OriginalWorkspaceDocumentSha256 ||
                     pin.OriginalRegisteredRootFingerprint != original.Witness.Read.OriginalRegisteredRootFingerprint)
                     throw new UnauthorizedAccessException("The saved declaration, registration or root changed during Run review.");
-                DemandOriginalManualExecutionPin(original, pin);
+                DemandManualExecutionPinCore(original, pin);
                 lock (_gate) original.LivePins.Add(pin);
                 return pin;
             }
@@ -171,7 +185,7 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
                 // A callback can refuse after the native acquisition actually succeeded. Close the
                 // SAME late product before this operation settles; the global native issuer is borrowed.
                 if (retained is not null)
-                    try { await sources.ObserveVoid(() => CloseOriginalManualExecutionPinAsync(original, retained)).ConfigureAwait(false); }
+                    try { await sources.ObserveVoid(() => CloseManualExecutionPinCoreAsync(original, retained)).ConfigureAwait(false); }
                     catch (Exception close) { throw new AggregateException("Manual native pin acquisition and independent late cleanup failed.", error, close); }
                 throw;
             }
@@ -184,8 +198,11 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
     });
     public void DemandOriginalManualExecutionPin(IDeveloperProjectOriginalManualExecutionBinding binding,
         IDeveloperWorkspaceOriginalExecutionCommitPin pin)
+        => DemandManualExecutionPinCore(binding, pin);
+    private void DemandManualExecutionPinCore(object binding, IDeveloperWorkspaceOriginalExecutionCommitPin pin)
     {
-        var original = RequireManual(binding); Task acquisition;
+        var original = binding is ManualExecutionBase owned ? RequireManualBase(owned)
+            : throw new UnauthorizedAccessException("Foreign manual process binding."); Task acquisition;
         lock (_gate)
             if (!original.Pins.TryGetValue(pin, out acquisition!)) throw new UnauthorizedAccessException("Foreign manual execution pin.");
         if (pin is not IDeveloperOriginalCurrentProjectNativeRead read ||
@@ -199,13 +216,14 @@ public sealed partial class FilesDeveloperOriginalSourceSelection : IDeveloperPr
         read.DemandOriginalExecutionBinding();
     }
     public Task CloseOriginalManualExecutionPinAsync(IDeveloperProjectOriginalManualExecutionBinding binding,
-        IDeveloperWorkspaceOriginalExecutionCommitPin pin) => Start(async sources =>
+        IDeveloperWorkspaceOriginalExecutionCommitPin pin) => CloseManualExecutionPinCoreAsync(binding, pin);
+    private Task CloseManualExecutionPinCoreAsync(object binding, IDeveloperWorkspaceOriginalExecutionCommitPin pin) => Start(async sources =>
     {
         // Historical private ownership permits cleanup after issuer retirement; eligibility does not.
-        ManualExecution original; Task acquisition;
+        ManualExecutionBase original; Task acquisition;
         lock (_gate)
         {
-            original = binding is ManualExecution owned && _manualExecutions.Contains(owned) ? owned
+            original = binding is ManualExecutionBase owned && _manualExecutions.Contains(owned) ? owned
                 : throw new UnauthorizedAccessException("Foreign manual execution binding close.");
             if (!original.Pins.TryGetValue(pin, out acquisition!)) throw new UnauthorizedAccessException("Foreign manual execution pin close.");
         }

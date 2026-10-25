@@ -8,6 +8,20 @@ namespace HavenOS.Apps.Dev.Tests;
 public sealed class DeveloperWorkbenchCuiDocumentTests
 {
     [Fact]
+    public void Git_inspection_buttons_use_actual_shared_availability_and_common_cancellable_output_surface()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        foreach (var id in new[] { "dev-git-status", "dev-git-diff", "dev-git-branches" })
+        {
+            var button = Assert.Single(nodes, node => node.Name == id);
+            Assert.Contains(button.Properties.Values, value => value is CuiBindingValue binding && binding.Path == "CanInspectGit");
+        }
+        var stop = Assert.Single(nodes, node => node.Name == "dev-stop-manual-run");
+        Assert.Contains(stop.Actions.Values, action => action.Name == "dev.stop-manual-run");
+        Assert.Contains(stop.Properties.Values, value => value is CuiBindingValue binding && binding.Path == "CanStopManualRun");
+    }
+
+    [Fact]
     public void Draft_line_ending_inspection_and_conversions_are_real_actions_with_current_draft_status()
     {
         var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Haven.Application;
 using HavenOS.Home.PermissionsTrustNotifications;
 
@@ -6,7 +5,7 @@ namespace HavenOS.Home.Core;
 
 /// <summary>Task-free manual console execution. Genuine registered Files issuance, explicit Home
 /// high-risk per-action review and claim, then a separately held finite native-start entry.</summary>
-public sealed class HomeDeveloperManualProjectExecutionAdmissionSource :
+public sealed partial class HomeDeveloperManualProjectExecutionAdmissionSource :
     IDeveloperProjectOriginalManualExecutionAdmissionSource, IWorkspaceManualProcessFinalFenceValidator,
     ICanonicalResourceAccessResolver, IAsyncDisposable
 {
@@ -38,13 +37,14 @@ public sealed class HomeDeveloperManualProjectExecutionAdmissionSource :
         foreach (var run in runs) run.DemandExternalJoin();
     }
     public Task<IDeveloperProjectOriginalManualExecutionAdmission> AcquireOriginalManualExecutionAsync(
-        IDeveloperProjectOriginalManualExecutionBinding binding, CancellationToken token)
+        IDeveloperProjectOriginalManualExecutionBinding binding, CancellationToken token) => AcquireManualProcessAsync(new ConsoleBinding(binding), token);
+    private Task<IDeveloperProjectOriginalManualExecutionAdmission> AcquireManualProcessAsync(ProcessBinding binding, CancellationToken token)
     {
         DemandExternalOriginalManualExecutionJoin();
         lock (_sync)
         {
             if (_sealed) throw new ObjectDisposedException(nameof(HomeDeveloperManualProjectExecutionAdmissionSource));
-            if (_runs.Any(x => ReferenceEquals(x.Binding, binding)))
+            if (_runs.Any(x => ReferenceEquals(x.Binding.Original, binding.Original)))
                 throw new UnauthorizedAccessException("A manual Run binding is single-use; inspect its original outcome before requesting a new reviewed operation.");
             if (_runs.Count >= 128) throw new InvalidOperationException("Manual process admission custody is full.");
             var run = new Run(this, binding); _runs.Add(run);
@@ -106,7 +106,7 @@ public sealed class HomeDeveloperManualProjectExecutionAdmissionSource :
     public ValueTask DisposeAsync() => new(CloseAndDrainOriginalManualExecutionsAsync());
 
     internal sealed class Run(HomeDeveloperManualProjectExecutionAdmissionSource owner,
-        IDeveloperProjectOriginalManualExecutionBinding binding) : IDeveloperProjectOriginalManualExecutionAdmission
+        ProcessBinding binding) : IDeveloperProjectOriginalManualExecutionAdmission
     {
         private readonly object _gate = new();
         private readonly CloudflareOriginalTaskLedger _sources = new();
@@ -122,7 +122,7 @@ public sealed class HomeDeveloperManualProjectExecutionAdmissionSource :
         private CancellationTokenSource? _stop;
         private bool _sealed; private Task? _close;
         private ProcessResult? _result; private WorkspaceToolPhysicalOutcome? _outcome;
-        internal IDeveloperProjectOriginalManualExecutionBinding Binding => binding;
+        internal ProcessBinding Binding => binding;
         internal IDeveloperProjectOriginalManualExecutionSource Files => _files;
         public Guid OperationId { get; } = Guid.NewGuid();
         public IWorkspaceToolFinalFence OriginalFence => _fence ?? throw new UnauthorizedAccessException("Manual Home Run is not admitted.");
@@ -159,9 +159,9 @@ public sealed class HomeDeveloperManualProjectExecutionAdmissionSource :
         private async Task ValidateSourceAsync(AuthenticatedResourceActor actor, CancellationToken token)
         {
             DemandLive();
-            if (!_sources.Invoke(() => ReferenceEquals(owner._files(), _files) && _files.IsIssuedOriginalManualExecution(binding)))
+            if (!_sources.Invoke(() => ReferenceEquals(owner._files(), _files) && binding.IsIssued(_files)))
                 throw new UnauthorizedAccessException("The SAME configured Files manual execution issuer retired.");
-            await _sources.AwaitAsync(_sources.Invoke(() => _files.RevalidateOriginalManualExecutionAsync(binding, actor, token))).ConfigureAwait(false);
+            await _sources.AwaitAsync(_sources.Invoke(() => binding.RevalidateAsync(_files, actor, token))).ConfigureAwait(false);
             DemandLive();
         }
         private async Task<IDeveloperProjectOriginalManualExecutionAdmission> AcquireAsync(Task begin, CancellationToken token)
@@ -173,17 +173,14 @@ public sealed class HomeDeveloperManualProjectExecutionAdmissionSource :
                 _stop = _sources.Invoke(() => CancellationTokenSource.CreateLinkedTokenSource(token));
                 _actor = await ActorAsync(_stop.Token).ConfigureAwait(false);
                 await ValidateSourceAsync(_actor, _stop.Token).ConfigureAwait(false);
-                var scopes = _sources.Invoke(() => _files.GetOriginalManualExecutionScopes(binding)).ToArray();
+                var scopes = _sources.Invoke(() => binding.Scopes(_files)).ToArray();
                 if (scopes.Length != 1 || scopes[0].Kind != "dev.project.console" || scopes[0].Access != ResourceAccess.Execute ||
                     string.IsNullOrWhiteSpace(scopes[0].Id) || string.IsNullOrWhiteSpace(scopes[0].Revision))
                     throw new UnauthorizedAccessException("Files must issue one exact registered-project console execution scope.");
                 lock (_gate) _scopes = scopes;
-                var arguments = JsonSerializer.SerializeToElement(new { operationId = OperationId, binding.ConfigurationId,
-                    binding.ConfigurationRevision, binding.DefinitionSha256, binding.CanonicalRoot, binding.Command, binding.TimeoutSeconds,
-                    scope = scopes[0], limits = "one local declared console process; retained output/exit; no prelaunch, preview or remote execution" });
+                var arguments = _sources.Invoke(() => binding.ReviewArguments(OperationId, scopes[0]));
                 var review = _sources.Invoke(() => owner._broker.PrepareReviewForActor(_actor, "dev", RunAction, scopes, arguments,
-                    "Run this exact saved console command at the verified project root. It can change files and invoke programs with your local account. READ and source WRITE approvals do not authorize this process.",
-                    null, "dev:manual-run:" + _actor.AuthenticationRevision));
+                    binding.ReviewText, null, binding.ReceiptPrefix + _actor.AuthenticationRevision));
                 var observed = await _sources.AwaitAsync(_sources.Invoke(() => owner._broker.AuthorizePreparedReviewAsync(review, _stop.Token))).ConfigureAwait(false);
                 var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
                 while (observed.State == HomePreparedReviewState.RequestObserved && observed.Request?.State == HomePermissionRequestState.PendingApproval)
@@ -269,8 +266,8 @@ public sealed class HomeDeveloperManualProjectExecutionAdmissionSource :
                     var state = succeeded ? HomePermissionRequestState.Succeeded : _outcome?.KnownNoEffect == true && _fence?.HasStarted != true
                         ? HomePermissionRequestState.Cancelled : HomePermissionRequestState.Failed;
                     var audit = await _closing.AwaitAsync(_closing.Invoke(() => owner._broker.CompleteExecutionAsync(capability,
-                        new(state, succeeded ? "DEV_MANUAL_RUN_EXIT_ZERO" : "DEV_MANUAL_RUN_INSPECT_OR_FAILED",
-                            known ? $"Original console process exited {_result?.ExitCode}; timed out: {_result?.TimedOut}. Output remains with its manual Run owner."
+                        new(state, succeeded ? binding.SuccessCode : binding.FailureCode,
+                            known ? $"Original project process exited {_result?.ExitCode}; timed out: {_result?.TimedOut}. Output remains with its manual Run owner."
                                 : "No settled original process outcome proves success. Inspect this operation; it is never automatically replayed.", []), CancellationToken.None))).ConfigureAwait(false);
                     if (!audit.Succeeded) throw new InvalidOperationException("Manual Run Home completion audit failed: " + audit.Code);
                 }

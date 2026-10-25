@@ -17,10 +17,11 @@
       <Container Type="Wrap">
         <Button id="dev-refresh" action="dev.refresh" content="Refresh project" />
         <Button id="dev-tree" action="dev.tree" content="Project files" />
-        <Button id="dev-git-status" action="dev.git-status" content="Git status" />
-        <Button id="dev-git-diff" action="dev.git-diff" content="Working-tree diff" />
-        <Button id="dev-git-branches" action="dev.git-branches" content="Branches" />
+        <Button id="dev-git-status" action="dev.git-status" content="Git status" Interactive="{Binding CanInspectGit}" />
+        <Button id="dev-git-diff" action="dev.git-diff" content="Working-tree diff" Interactive="{Binding CanInspectGit}" />
+        <Button id="dev-git-branches" action="dev.git-branches" content="Branches" Interactive="{Binding CanInspectGit}" />
       </Container>
+      <Text text="Git shows saved files. Unsaved editor changes are kept separately." text-wrapping="Wrap" />
       <Text text="{Binding Files}" text-wrapping="Wrap" accessible-name="Observed project file tree" IsVisible="{Binding ShowLegacyFiles}" />
       <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding ShowProjectExplorer}" accessible-name="Project explorer">
         <Container Type="Wrap" CellGap="6">
@@ -202,7 +203,6 @@
       <Button id="dev-save-run-target" action="dev.save-run-target" content="Save reviewed declaration" Interactive="{Binding CanSaveRunTarget}" />
       <Text text="{Binding RunEditStatus}" text-wrapping="Wrap" />
       <Button id="dev-run-selected-target" action="dev.run-selected-target" content="Run selected target" Interactive="{Binding CanRunSelectedTarget}" />
-      <Button id="dev-stop-manual-run" action="dev.stop-manual-run" content="Stop manual Run" Interactive="{Binding CanStopManualRun}" />
       <Input id="dev-terminal-command" placeholdertext="Explicit command in this project" accessible-name="Terminal command" Type="Text" Value="{Binding Command}" />
       <Button id="dev-terminal-run" action="dev.run-command" content="Run command" />
       <Input id="dev-test-command" placeholdertext="Explicit test command" accessible-name="Test command" Type="Text" Value="{Binding TestCommand}" />
@@ -224,6 +224,7 @@
         <Button id="dev-create-branch" action="dev.create-branch" content="Create branch" />
         <Button id="dev-switch-branch" action="dev.switch-branch" content="Switch branch" />
       </Container>
+      <Button id="dev-stop-manual-run" action="dev.stop-manual-run" content="Stop command" Interactive="{Binding CanStopManualRun}" />
       <Text text="{Binding ProcessStatus}" text-wrapping="Wrap" accessible-name="Observed command exit and timeout" />
       <Object type="ReadOnlyText" id="dev-terminal-output" text="{Binding ProcessOutput}" font-family="monospace" min-height="180" accessible-name="Actual standard output and error" />
       <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Development operation status" />
