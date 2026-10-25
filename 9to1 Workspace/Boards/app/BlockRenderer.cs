@@ -96,7 +96,7 @@ public static class BlockRenderer
                 // Locked vertical mode keeps item rows independently reorderable.
                 // Free mode treats the canonical list parent as one spatial block,
                 // so one handle moves the complete list and its add-item affordance.
-                if (vm.LayoutMode == HavenRichPageLayoutModes.Unlocked && absoluteBlocksHost is not null)
+                if (vm.IsFreeLayout && absoluteBlocksHost is not null)
                 {
                     var list = new StackPanel { Orientation = Orientation.Vertical };
                     foreach (var item in run) list.Children.Add(BuildChecklistRow(vm, item));
@@ -182,7 +182,7 @@ public static class BlockRenderer
         control.Height = height;
         control.HorizontalAlignment = HorizontalAlignment.Left;
         control.VerticalAlignment = VerticalAlignment.Top;
-        Panel.SetZIndex(control, block.ZOrder);
+        control.ZIndex = block.ZOrder;
 
         var left = block.X - BlockGutterLeadingInset;
         var top = block.Y - BlockContentTopInset;
@@ -379,7 +379,7 @@ public static class BlockRenderer
         if (gripControl is not null)
         {
             if (placementBlock is not null && placementBlockId is not null && absoluteBlocksHost is not null &&
-                vm.LayoutMode == HavenRichPageLayoutModes.Unlocked)
+                vm.IsFreeLayout)
             {
                 if (vm.IsEditMode)
                     BlockPlacementGesture.Attach(gripControl, border, inner, absoluteBlocksHost, vm,
