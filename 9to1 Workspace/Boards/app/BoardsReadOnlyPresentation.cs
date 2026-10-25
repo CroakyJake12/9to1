@@ -19,8 +19,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     private readonly ContractSessionAdapter _session;
     private readonly CuiControlLoader _loader;
     private BoardsPresentationRenderQueue? _renderQueue;
-    private BoardInkInteractionController? _inkInteraction;
-    private BoardsTextAndKeyboardOwner? _inputOwner;
+    private BoardsEmbeddedSurfaceLifecycle? _surfaceLifecycle;
     private bool _disposed;
 
     private BoardsReadOnlyPresentation(HavenBoardDocument document, ContractSessionAdapter session,
@@ -86,9 +85,6 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
 
     private void WireSurface(Control root)
     {
-        _inputOwner = new BoardsTextAndKeyboardOwner(root, ViewModel);
-        if (FindByAutomationId<Canvas>(root, "InkOverlayLayer") is { } ink)
-            _inkInteraction = new BoardInkInteractionController(ink, ViewModel);
         _renderQueue = new BoardsPresentationRenderQueue(RenderAsync, error =>
         {
             if (!_disposed) ViewModel.Set("StatusText", "Boards view could not be refreshed: " + error.Message.Split('\n')[0]);
@@ -96,6 +92,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         ViewModel.RebuildRequested += QueueRender;
         ViewModel.NavRebuildRequested += QueueRender;
         ViewModel.SelectionChanged += QueueRender;
+        _surfaceLifecycle = new BoardsEmbeddedSurfaceLifecycle(root, ViewModel, QueueRender);
     }
 
     private void QueueRender()
@@ -106,16 +103,17 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
 
     private async Task RenderAsync()
     {
-        if (_disposed) return;
+        if (_disposed || _surfaceLifecycle?.IsReady != true) return;
         var blocks = FindByAutomationId<StackPanel>(Content, "BlocksHost");
-        if (blocks is not null) await BlockRenderer.RebuildAsync(blocks, ViewModel);
+        if (blocks is null) return;
+        await BlockRenderer.RebuildAsync(blocks, ViewModel);
         if (FindByAutomationId<StackPanel>(Content, "NavHost") is { } nav)
             NavBuilder.Rebuild(nav, ViewModel);
         if (FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
         ViewModel.RefreshCuiContext();
         if (FindByAutomationId<Canvas>(Content, "InkOverlayLayer") is { } ink)
-            await (_inkInteraction?.RenderAsync() ?? BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel));
+            await (_surfaceLifecycle!.InkInteraction?.RenderAsync() ?? BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel));
     }
 
     private static T? FindByAutomationId<T>(Control root, string id) where T : Control
@@ -136,11 +134,9 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         _renderQueue?.Dispose();
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            _inputOwner?.Dispose();
-            _inkInteraction?.Dispose();
+            _surfaceLifecycle?.Dispose();
         });
-        await (_inputOwner?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
-        await (_inkInteraction?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+        await (_surfaceLifecycle?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         await (_renderQueue?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(_loader.Dispose);

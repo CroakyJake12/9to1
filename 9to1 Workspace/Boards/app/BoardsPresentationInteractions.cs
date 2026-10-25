@@ -431,3 +431,70 @@ public sealed class BoardsPresentationRenderQueue : IDisposable
         }
     }
 }
+
+/// <summary>Waits until the embedded compiled CUI has attached and realized its named
+/// surfaces before installing interactive owners or asking the renderer to populate them.</summary>
+public sealed class BoardsEmbeddedSurfaceLifecycle : IDisposable
+{
+    private readonly Control _root;
+    private readonly BoardsViewModel _viewModel;
+    private readonly Action _ready;
+    private readonly EventHandler<VisualTreeAttachmentEventArgs> _attached;
+    private readonly EventHandler _layoutUpdated;
+    private BoardsTextAndKeyboardOwner? _inputOwner;
+    private BoardInkInteractionController? _inkInteraction;
+    private bool _disposed;
+
+    public BoardsEmbeddedSurfaceLifecycle(Control root, BoardsViewModel viewModel, Action ready)
+    {
+        _root = root ?? throw new ArgumentNullException(nameof(root));
+        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        _ready = ready ?? throw new ArgumentNullException(nameof(ready));
+        _attached = (_, _) => TryInitialize();
+        _layoutUpdated = (_, _) => TryInitialize();
+        _root.AttachedToVisualTree += _attached;
+        _root.LayoutUpdated += _layoutUpdated;
+        TryInitialize();
+    }
+
+    public bool IsReady { get; private set; }
+    public BoardInkInteractionController? InkInteraction => _inkInteraction;
+
+    private void TryInitialize()
+    {
+        if (_disposed || IsReady || !_root.IsAttachedToVisualTree()) return;
+        if (FindByAutomationId<StackPanel>(_root, "BlocksHost") is null ||
+            FindByAutomationId<Canvas>(_root, "InkOverlayLayer") is not { } ink)
+            return;
+
+        _inputOwner = new BoardsTextAndKeyboardOwner(_root, _viewModel);
+        _inkInteraction = new BoardInkInteractionController(ink, _viewModel);
+        IsReady = true;
+        _root.LayoutUpdated -= _layoutUpdated;
+        _ready();
+    }
+
+    public async Task DrainAsync()
+    {
+        await (_inputOwner?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+        await (_inkInteraction?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _root.AttachedToVisualTree -= _attached;
+        _root.LayoutUpdated -= _layoutUpdated;
+        _inputOwner?.Dispose();
+        _inkInteraction?.Dispose();
+    }
+
+    private static T? FindByAutomationId<T>(Control root, string id) where T : Control
+    {
+        if (root is T candidate && AutomationProperties.GetAutomationId(candidate) == id) return candidate;
+        foreach (var child in root.GetVisualDescendants().OfType<Control>())
+            if (child is T control && AutomationProperties.GetAutomationId(control) == id) return control;
+        return null;
+    }
+}
