@@ -2,6 +2,8 @@
   <Actions>
     <Action name="AttachBoardsSource" command="space-builder.source.attach" parameter="{Binding source.input}" />
     <Action name="RemoveContextSource" command="space-builder.source.remove" parameter="{Binding context.id}" />
+    <Action name="MoveContextSourceUp" command="space-builder.source.move-up" parameter="{Binding context.moveUp}" />
+    <Action name="MoveContextSourceDown" command="space-builder.source.move-down" parameter="{Binding context.moveDown}" />
     <Action name="RemoveLegacyFile" command="space-builder.legacy-file.remove" parameter="{Binding legacy.path}" />
     <Action name="RemoveCapability" command="space-builder.capability.remove" parameter="{Binding cap.key}" />
     <Action name="AttachSkill" command="space-builder.skill.attach" parameter="{Binding skill.id}" />
@@ -153,7 +155,7 @@
         </Container>
         <Container Type="Vertical Stack" CellGap="8" Active="{Binding builder.view.isAdvanced}">
           <Text text="Canonical context sources" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-          <Text text="Choose a real Boards notebook through Home. Adding a read reference does not grant body access; using it requires a new original Home review and local inference. Current selection is not captured on this route. Up to 128 current notebooks are shown, newest first." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="Choose a real Boards notebook through Home. Adding a read reference does not grant body access; using it requires a new original Home review and local inference. Current selection is not captured on this route. Up to 128 current notebooks are shown, newest first. Move attached sources to set priority within this Space; inherited parent sources keep their own order." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           <Button id="space-builder-browse-boards" content="Choose or refresh Boards sources" action="space-builder.source.browse" Interactive="{Binding builder.canBrowseSources}" accessible-name="Choose canonical Boards sources" />
           <Repeat id="space-builder-boards-options" Source="{Binding builder.boardOptions}" As="source" Key="{Binding source.id}">
             <Container Type="Horizontal Stack" CellGap="8">
@@ -167,8 +169,12 @@
               <Text text="{Binding context.label}" foreground="{Resource CuiTextBrush}" />
               <Text text="{Binding context.revision}" foreground="{Resource CuiTextSoftBrush}" />
               <Text text="{Binding context.policy}" foreground="{Resource CuiTextSoftBrush}" />
+              <Text text="Priority" foreground="{Resource CuiTextSoftBrush}" />
+              <Text text="{Binding context.order}" foreground="{Resource CuiTextSoftBrush}" />
               <Input id="space-builder-context-included" Type="Switch" Checked="{Binding context.included, mode=TwoWay}" Interactive="{Binding builder.canSetContextIncluded}" accessible-name="Include this canonical source automatically" />
               <Text text="Include automatically" foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-builder-source-move-up" content="Move up" action="MoveContextSourceUp" IsEnabled="{Binding context.canMoveUp}" accessible-name="Increase this source's context priority" />
+              <Button id="space-builder-source-move-down" content="Move down" action="MoveContextSourceDown" IsEnabled="{Binding context.canMoveDown}" accessible-name="Decrease this source's context priority" />
               <Button id="space-builder-remove-context-source" content="Remove reference" action="RemoveContextSource" Interactive="{Binding builder.canEdit}" accessible-name="Remove this source reference without deleting its notebook" />
             </Container>
           </Repeat>

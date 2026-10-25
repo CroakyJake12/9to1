@@ -41,6 +41,38 @@ public sealed class SpaceBuilderCanonicalSourceTests
     }
 
     [Fact]
+    public async Task Context_source_priority_survives_reload_and_controls_the_real_item_limit()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30)); var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Ordered sources", cancellationToken: token);
+        var editor = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await editor.LoadAsync(token));
+        var first = Reference();
+        var second = Reference() with { ContextId = Guid.NewGuid(), CanonicalEntityId = Guid.NewGuid().ToString("D") };
+        Assert.True(editor.AttachContextReference(first, space.Revision));
+        Assert.True(editor.AttachContextReference(second, space.Revision));
+        Assert.True(editor.SetField(SpaceBuilderField.MaximumRetrievedItems, "1"));
+        var draftRevision = editor.State.DraftRevision!.Value;
+
+        Assert.True(editor.MoveContextReference(space.Id, draftRevision, second.ContextId, 1, -1));
+        Assert.False(editor.MoveContextReference(space.Id, draftRevision, second.ContextId, 1, -1)); // Stale position cannot reorder a different current source.
+        Assert.Empty((await registry.GetAsync(space.Id, token))!.ContextReferences ?? []); // Active policy is untouched before explicit activation.
+        Assert.True(await editor.SaveAsync(token));
+
+        var current = (await files.OpenRegistry().GetAsync(space.Id, token))!;
+        Assert.Equal(space.ActiveConfigurationRevision, current.ActiveConfigurationRevision);
+        Assert.Empty(current.ContextReferences ?? []);
+        var reopened = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await reopened.LoadAsync(token));
+        Assert.Equal(new[] { second.ContextId, first.ContextId }, reopened.State.Draft.ContextReferences.Select(reference => reference.ContextId));
+        var collection = new OriginalSpaceContextCollection(space.Id, "ordered source test",
+            reopened.State.Draft.ContextReferences, 1, new OriginalSpaceContextBudget(4_096, 1));
+        Assert.Equal(second.ContextId, Assert.Single(collection.RequestedSources).ContextId);
+    }
+
+    [Fact]
     public async Task Removing_legacy_reference_does_not_delete_or_read_the_original_file()
     {
         using var files = new SpaceDetailsTestFiles();

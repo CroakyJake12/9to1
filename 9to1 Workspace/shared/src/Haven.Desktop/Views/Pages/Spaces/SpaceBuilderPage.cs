@@ -395,6 +395,27 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             }
             return;
         }
+        if (command is "space-builder.source.move-up" or "space-builder.source.move-down")
+        {
+            if (parameter is not SpaceBuilderContextOrderRequest order)
+                throw new InvalidOperationException("The source order command did not carry its current draft identity.");
+            lock (_gate)
+            {
+                if (!CanMutate()) throw new InvalidOperationException("This Space draft cannot be edited now.");
+                _work.RunSynchronous(original =>
+                {
+                    original.BindPublicationGuard(IsPresentationCurrent);
+                    original.DemandPublication();
+                    var offset = command == "space-builder.source.move-up" ? -1 : 1;
+                    var moved = Source(() => _controller.MoveContextReference(order.SpaceId, order.DraftRevision,
+                        order.ContextId, order.ExpectedIndex, offset));
+                    if (moved) _editEpoch++;
+                    else _controller.ReportSourceStatus("The source order changed before this action was applied. Review the current order and try again.");
+                });
+            }
+            RefreshBindings();
+            return;
+        }
         if (command == "space-builder.capability.remove" && parameter is string compositeKey)
         {
             var parts = compositeKey.Split(':', 2);

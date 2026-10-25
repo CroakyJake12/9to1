@@ -846,6 +846,30 @@ public sealed class SpaceBuilderController
         return true;
     }
 
+    /// <summary>Changes priority among the same canonical references. OriginalSpaceContextCollection
+    /// preserves this order when applying a maximum source count; no identity or owner authority changes.</summary>
+    public bool MoveContextReference(Guid expectedSpaceId, long expectedDraftRevision, Guid contextId, int expectedIndex, int offset)
+    {
+        if (offset is not (-1 or 1)) throw new ArgumentOutOfRangeException(nameof(offset));
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit || _state.SpaceId != expectedSpaceId || _state.DraftRevision != expectedDraftRevision ||
+                expectedIndex < 0 || expectedIndex >= _state.Draft.ContextReferences.Count) return false;
+            var rows = _state.Draft.ContextReferences.ToArray();
+            if (rows[expectedIndex].ContextId != contextId) return false;
+            var targetIndex = expectedIndex + offset;
+            if (targetIndex < 0 || targetIndex >= rows.Length) return false;
+            (rows[expectedIndex], rows[targetIndex]) = (rows[targetIndex], rows[expectedIndex]);
+            var draft = _state.Draft with { ContextReferences = Array.AsReadOnly(rows) };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, Preview = null, ValidationIssues = [], HasChanges = draft != _baseline,
+                StatusMessage = "Canonical source priority changed. Earlier included references in this Space are considered before later local references; inherited parent order remains ahead. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
     public bool DetachLegacyFileReference(string path)
     {
         SpaceBuilderState next;

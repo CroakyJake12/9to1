@@ -129,9 +129,14 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.context.maximumRetrievedItems" => state.Draft.ContextPolicy.MaximumRetrievedItems?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             "builder.boardOptions" => _sourceOptions(),
             "builder.canBrowseSources" => _isCurrent() && state.CanEdit && !state.IsBusy && _canBrowseSources(),
-            "builder.contextReferences" => state.Draft.ContextReferences.Select(reference => new SpaceBuilderContextReferenceRow
+            "builder.contextReferences" => state.Draft.ContextReferences.Select((reference, index) => new
             {
                 id = reference.ContextId.ToString("D"),
+                order = index + 1,
+                canMoveUp = _isCurrent() && state.CanEdit && index > 0,
+                canMoveDown = _isCurrent() && state.CanEdit && index < state.Draft.ContextReferences.Count - 1,
+                moveUp = new SpaceBuilderContextOrderRequest(state.SpaceId, state.DraftRevision ?? -1, reference.ContextId, index),
+                moveDown = new SpaceBuilderContextOrderRequest(state.SpaceId, state.DraftRevision ?? -1, reference.ContextId, index),
                 label = _sourceOptions().FirstOrDefault(option => option.Id == reference.CanonicalEntityId)?.Label ??
                     (reference.OwnerAppId + " / " + reference.CanonicalEntityId),
                 revision = reference.RevisionToken ?? "Current version at read",
@@ -356,6 +361,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         "space-builder.back" => _isCurrent() && _canGoBack(),
         "space-builder.source.browse" or "space-builder.source.attach" => _isCurrent() && _state().CanEdit && !_state().IsBusy && _canBrowseSources(),
         "space-builder.source.remove" or "space-builder.legacy-file.remove" => _isCurrent() && _state().CanEdit,
+        "space-builder.source.move-up" or "space-builder.source.move-down" => _isCurrent() && _state().CanEdit,
         "space-builder.capability.remove" => _isCurrent() && _state().CanEdit,
         "space-builder.skill.attach" or "space-builder.plugin.attach" => _isCurrent() && _state().CanEdit,
         "space-builder.example.add" or "space-builder.example.remove" => _isCurrent() && _state().CanEdit,
@@ -425,6 +431,8 @@ public sealed class SpaceBuilderContextReferenceRow
     public string policy { get; init; } = string.Empty;
     public bool included { get; init; }
 }
+
+public sealed record SpaceBuilderContextOrderRequest(Guid SpaceId, long DraftRevision, Guid ContextId, int ExpectedIndex);
 
 public sealed class SpaceBuilderModelCapabilityRow
 {
