@@ -88,6 +88,7 @@ public sealed partial class UserPreferencesService
     private JsonObject _preferenceBaseline = new();
     private HavenUiAppearance? _homeAppearancePresentation;
     private CuiTheme? _homeThemePresentation;
+    private CuiAccentPreference? _homeAccentPresentation;
 
     /// <summary>Typed recovery state for corrupt, unreadable or incompatible preference data.</summary>
     public UserPreferenceRecoveryState RecoveryState { get; private set; } = UserPreferenceRecoveryState.None;
@@ -176,6 +177,11 @@ public sealed partial class UserPreferencesService
         if (!Enum.IsDefined(appearance))
             throw new ArgumentOutOfRangeException(nameof(appearance), appearance, "Unknown CUI appearance.");
 
+        // An explicit legacy appearance choice becomes the active process preference
+        // until the authoritative native Home context publishes its next observation.
+        _homeAppearancePresentation = null;
+        _homeThemePresentation = null;
+        _homeAccentPresentation = null;
         _preferences = _preferences with
         {
             HavenUiAppearance = appearance,
@@ -203,6 +209,11 @@ public sealed partial class UserPreferencesService
         // made an unknown saved value resolve to a loud identity instead of Professional.
         // CuiThemeCatalog.Parse falls back to Professional and accepts every legacy name.
         var theme = CuiThemeCatalog.Parse(themeName);
+        // An explicit legacy theme choice supersedes the last native Home presentation
+        // cache; otherwise the service getters would continue reporting the old theme.
+        _homeAppearancePresentation = null;
+        _homeThemePresentation = null;
+        _homeAccentPresentation = null;
 
         _preferences = _preferences with { HavenUiThemeName = CuiThemeCatalog.Name(theme) };
         // Publication (including CUI active theme) happens only after successful persistence
@@ -237,6 +248,7 @@ public sealed partial class UserPreferencesService
     /// </summary>
     public void ApplyAccentOverride(bool enabled, string? paletteName, bool save = true)
     {
+        _homeAccentPresentation = null;
         var parsed = AccentColourCatalog.Parse(paletteName);
         _preferences = _preferences with
         {
@@ -278,18 +290,27 @@ public sealed partial class UserPreferencesService
         // palette/resource state claiming an uncommitted preference.
         if (save) Save();
 
-        // Publish CUI global theme/accent state after successful persistence.
-        CuiSurfacePaletteCatalog.ActiveTheme = CuiThemeCatalog.Parse(_preferences.HavenUiThemeName);
-        var parsedAccent = AccentColourCatalog.Parse(_preferences.AccentColourName);
-        CuiSurfacePaletteCatalog.OverrideAccent = _preferences.OverrideAccentColour && parsedAccent is not null;
-        CuiSurfacePaletteCatalog.AccentOverride = _preferences.OverrideAccentColour && parsedAccent is not null
-            ? (CuiAccentColour)(int)parsedAccent.Value
-            : null;
+        // A native Home observation remains the active presentation for unrelated
+        // preference writes. Explicit legacy appearance/theme choices clear these
+        // caches before entering ApplyCore.
+        var activeTheme = _homeThemePresentation ?? CuiThemeCatalog.Parse(_preferences.HavenUiThemeName);
+        var activeAppearance = _homeAppearancePresentation ?? appearance;
+        var activeAccent = _homeAccentPresentation;
+        var cuiAppearance = (CuiAppearance)activeAppearance;
+        CuiSurfacePaletteCatalog.ActiveTheme = activeTheme;
+        var parsedAccent = activeAccent is null
+            ? AccentColourCatalog.Parse(_preferences.AccentColourName)
+            : ResolveLegacyAccent(activeAccent);
+        var useLegacyAccent = activeAccent is null
+            ? _preferences.OverrideAccentColour && parsedAccent is not null
+            : activeAccent.Mode == CuiAccentOverrideMode.AllApps && parsedAccent is not null;
+        CuiSurfacePaletteCatalog.OverrideAccent = useLegacyAccent;
+        CuiSurfacePaletteCatalog.AccentOverride = useLegacyAccent ? (CuiAccentColour)(int)parsedAccent!.Value : null;
 
         // Publish personalisation into the shared state consulted by every
         // palette resolution (surfaces, tidal background, generated UI).
-        HavenPersonalisation.Theme = Theme;
-        HavenPersonalisation.OverrideAccent = _preferences.OverrideAccentColour;
+        HavenPersonalisation.Theme = LegacyThemeFor(activeTheme);
+        HavenPersonalisation.OverrideAccent = CuiSurfacePaletteCatalog.OverrideAccent;
         HavenPersonalisation.Accent = parsedAccent;
         HavenPersonalisation.FontFamilyName = _preferences.FontFamilyName;
         HavenUiFont.SetUserFamily(_preferences.FontFamilyName);
@@ -299,23 +320,29 @@ public sealed partial class UserPreferencesService
         var application = Avalonia.Application.Current;
         if (application is not null)
         {
-            // Keep the retained CUI scene scopes on the same four-position
-            // preference as the legacy Haven token pipeline. Applying the complete
-            // global CUI palette publishes one PaletteChanged notification after
-            // all resources are coherent; inherited scenes refresh from that event.
-            CuiThemeScopeApplier.ApplyGlobalTheme(
-                CuiSurfacePaletteCatalog.ActiveTheme,
-                appearanceOverride: (CuiAppearance)appearance);
-            application.RequestedThemeVariant = appearance is HavenUiAppearance.Dark or HavenUiAppearance.SuperDark
-                ? ThemeVariant.Dark
-                : ThemeVariant.Light;
-            application.Resources["HavenUiAppearance"] = appearance;
-            application.Resources["HavenUiTheme"] = HavenThemeCatalog.Name(Theme);
+            application.Resources["HavenUiAppearance"] = activeAppearance;
+            application.Resources["HavenUiTheme"] = HavenThemeCatalog.Name(LegacyThemeFor(activeTheme));
             application.Resources["HavenFontFamily"] = HavenUiFont.Resolve(HavenUiFont.DefaultFamily);
-            HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Home, appearance));
+            // The HUI applier owns the pre-merge palette aliases. Apply it first;
+            // the completed CUI palette then republishes its canonical legacy aliases
+            // so the HUI pass cannot mutate CuiBackgroundBrush through shared brushes.
+            HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Home, activeAppearance));
+            try { AppearanceChanged?.Invoke(this, EventArgs.Empty); }
+            finally
+            {
+                // AppearanceChanged may refresh a surface-specific TidalBackground,
+                // whose legacy palette aliases share the app CUI brushes. Republish the
+                // canonical Home palette last so that callback cannot overwrite it.
+                if (activeAccent is null)
+                    CuiThemeScopeApplier.ApplyGlobalTheme(activeTheme, appearanceOverride: cuiAppearance);
+                else
+                    CuiThemeScopeApplier.ApplyGlobalTheme(activeTheme, appearanceOverride: cuiAppearance, accentPreference: activeAccent);
+                application.RequestedThemeVariant = cuiAppearance is CuiAppearance.Dark or CuiAppearance.SuperDark
+                    ? ThemeVariant.Dark
+                    : ThemeVariant.Light;
+            }
         }
-
-        AppearanceChanged?.Invoke(this, EventArgs.Empty);
+        else AppearanceChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>Publishes an already-authorised native Home theme observation to process presentation.
@@ -327,6 +354,7 @@ public sealed partial class UserPreferencesService
         var legacyAccent = ResolveLegacyAccent(current.EffectiveAccent);
         _homeAppearancePresentation = (HavenUiAppearance)effectiveAppearance;
         _homeThemePresentation = current.Theme.BaseTheme;
+        _homeAccentPresentation = current.EffectiveAccent;
 
         CuiSurfacePaletteCatalog.ActiveTheme = current.Theme.BaseTheme;
         CuiSurfacePaletteCatalog.OverrideAccent = current.EffectiveAccent.Mode == CuiAccentOverrideMode.AllApps && legacyAccent is not null;
@@ -339,20 +367,26 @@ public sealed partial class UserPreferencesService
         HavenPersonalisation.FontFamilyName = current.Accessibility.InterfaceFontFamilyOverride;
         HavenUiFont.SetUserFamily(current.Accessibility.InterfaceFontFamilyOverride);
 
-        CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme,
-            accessibility: current.Accessibility,
-            appearanceOverride: current.Appearance,
-            accentPreference: current.EffectiveAccent,
-            customTheme: current.Theme.CustomTheme);
         if (Avalonia.Application.Current is { } application)
         {
-            application.RequestedThemeVariant = CuiSceneVisualResources.Variant(effectiveAppearance);
             application.Resources["HavenUiAppearance"] = (HavenUiAppearance)effectiveAppearance;
             application.Resources["HavenUiTheme"] = HavenThemeCatalog.Name(HavenPersonalisation.Theme);
             application.Resources["HavenFontFamily"] = HavenUiFont.Resolve(HavenUiFont.DefaultFamily);
             HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Home, (HavenUiAppearance)effectiveAppearance));
         }
-        AppearanceChanged?.Invoke(this, EventArgs.Empty);
+        try { AppearanceChanged?.Invoke(this, EventArgs.Empty); }
+        finally
+        {
+            // The legacy event may refresh the actual surface backdrop and mutate shared
+            // alias brushes. The Home owner publishes its full CUI snapshot after it.
+            CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme,
+                accessibility: current.Accessibility,
+                appearanceOverride: current.Appearance,
+                accentPreference: current.EffectiveAccent,
+                customTheme: current.Theme.CustomTheme);
+            if (Avalonia.Application.Current is { } themedApplication)
+                themedApplication.RequestedThemeVariant = CuiSceneVisualResources.Variant(effectiveAppearance);
+        }
     }
 
     private static HavenAccentColour? ResolveLegacyAccent(CuiAccentPreference preference)

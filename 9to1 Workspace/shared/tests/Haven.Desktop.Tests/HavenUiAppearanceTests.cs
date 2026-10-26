@@ -87,8 +87,11 @@ public sealed class HavenUiAppearanceTests
 
             var cuiAppearance = (CuiAppearance)appearance;
             Assert.Equal(cuiAppearance.ToString(), Avalonia.Application.Current!.Resources["CuiAppearance"]);
-            Assert.Equal(CuiSurfacePaletteCatalog.For("Home", cuiAppearance, theme).TideBase,
+            var expectedBackground = CuiSurfacePaletteCatalog.For("Home", cuiAppearance, theme).TideBase;
+            Assert.Equal(expectedBackground,
                 Assert.IsAssignableFrom<ISolidColorBrush>(Avalonia.Application.Current.Resources["CuiBackgroundBrush"]).Color);
+            Assert.Equal(expectedBackground,
+                Assert.IsAssignableFrom<ISolidColorBrush>(Avalonia.Application.Current.Resources["HavenBackgroundPrimaryBrush"]).Color);
             Assert.Equal(theme, CuiSurfacePaletteCatalog.ActiveTheme);
             Assert.True(CuiSurfacePaletteCatalog.OverrideAccent);
             Assert.Equal(CuiAccentColour.Blue, CuiSurfacePaletteCatalog.AccentOverride);

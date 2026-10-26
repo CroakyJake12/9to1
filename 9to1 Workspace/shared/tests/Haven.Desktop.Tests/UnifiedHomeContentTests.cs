@@ -714,6 +714,7 @@ public sealed class UnifiedHomeContentTests
         {
             var projectorRoot = Path.Combine(root, "projector");
             Directory.CreateDirectory(projectorRoot);
+            await File.WriteAllBytesAsync(Path.Combine(projectorRoot, "preferences.json"), originalPreferenceBytes);
             var projection = new UserPreferencesService(new ThemeProjectionPaths(projectorRoot));
             CuiThemeScopeApplier.ApplyGlobalTheme(CuiTheme.Professional, appearanceOverride: CuiAppearance.Dark);
             await using (var local = new NativeHomeThemePreferences(file,
@@ -743,7 +744,7 @@ public sealed class UnifiedHomeContentTests
                 Assert.Equal(HavenAccentColour.Blue, HavenPersonalisation.Accent);
                 Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow, "#2563EB").TideBase,
                     Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
-                Assert.Equal(SurfacePaletteCatalog.For(HavenSurface.Home, HavenUiAppearance.Bright).TideBase,
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow, "#2563EB").TideBase,
                     Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["HavenBackgroundPrimaryBrush"]).Color);
                 Assert.Equal(originalPreferenceBytes, await File.ReadAllBytesAsync(file));
 
@@ -755,8 +756,23 @@ public sealed class UnifiedHomeContentTests
                 Assert.Equal(ThemeVariant.Dark, app.RequestedThemeVariant);
                 Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, "#2563EB").TideBase,
                     Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
-                Assert.Equal(SurfacePaletteCatalog.For(HavenSurface.Home, HavenUiAppearance.Dark).TideBase,
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, "#2563EB").TideBase,
                     Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["HavenBackgroundPrimaryBrush"]).Color);
+
+                projection.SetFontPreference(null, save: false);
+                Assert.Equal(CuiTheme.Glow, CuiSurfacePaletteCatalog.ActiveTheme);
+                Assert.Equal(CuiAccentColour.Blue, CuiSurfacePaletteCatalog.AccentOverride);
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, "#2563EB").TideBase,
+                    Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
+                projection.ApplyThemeChoice("Professional", save: false);
+                Assert.Equal(HavenUiTheme.Glow, projection.Theme); // Legacy projection of CUI-only Professional.
+                Assert.Equal(HavenUiAppearance.Bright, projection.Appearance);
+                Assert.Equal(CuiTheme.Professional, CuiSurfacePaletteCatalog.ActiveTheme);
+                projection.ApplyAppearance(HavenUiAppearance.SuperBright, save: false);
+                Assert.Equal(HavenUiAppearance.SuperBright, projection.Appearance);
+                Assert.Equal(CuiTheme.Professional, CuiSurfacePaletteCatalog.ActiveTheme);
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.SuperBright, CuiTheme.Professional).TideBase,
+                    Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
             }
         }
         finally
