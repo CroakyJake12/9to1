@@ -179,6 +179,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             {
                 original.DemandPublication();
                 lock (_gate) { if (_readSequence != sequence || shown != _shownScope) return; }
+                ReconcilePermissionReview(rows);
                 _currentObservations = rows;
                 _observations = rows.OfType<SpaceTaskObservation>().ToArray(); // Preserve the legacy Space-only API.
                 _nextCursor = next;
@@ -216,6 +217,49 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             }
             original.ThrowRetained();
         }
+    }
+    private void ReconcilePermissionReview(IReadOnlyList<ITaskContextObservation> refreshedRows)
+    {
+        if (!_permissionOpen) return;
+        var selected = _permissionSelection;
+        var selectedTask = selected?.Snapshot;
+        var requestId = _permissionReview?.Request.Id ?? selected?.PermissionReview?.Request.Id;
+        if (selectedTask is null || requestId is null)
+        {
+            ClosePermissionReview();
+            return;
+        }
+
+        var refreshed = refreshedRows.SingleOrDefault(row => row.Snapshot is { } task &&
+            task.TaskId == selectedTask.TaskId && task.ExecutionId == selectedTask.ExecutionId &&
+            task.ContextId == selectedTask.ContextId);
+        var currentTask = refreshed?.Snapshot;
+        var review = refreshed?.PermissionReview;
+        var reviewedContext = review?.CanonicalTaskContext;
+        if (refreshed is null || !refreshed.HasCurrentCommandIdentity || currentTask is null || review is null ||
+            currentTask.TaskId != selectedTask.TaskId || currentTask.ExecutionId != selectedTask.ExecutionId ||
+            currentTask.ContextId != selectedTask.ContextId || refreshed.OriginSpaceId != selected?.OriginSpaceId ||
+            currentTask.PersistenceRevision != selectedTask.PersistenceRevision || review.Request.Id != requestId ||
+            reviewedContext is null || reviewedContext.TaskId != currentTask.TaskId ||
+            reviewedContext.ExecutionId != currentTask.ExecutionId || reviewedContext.ContextId != currentTask.ContextId ||
+            reviewedContext.PersistenceRevision != currentTask.PersistenceRevision)
+        {
+            // IDs or a historical binding alone cannot keep a permission surface
+            // alive. The new page must carry a fresh exact current-principal review.
+            ClosePermissionReview();
+            return;
+        }
+
+        _permissionSelection = refreshed;
+        _permissionReview = review;
+        _permissionTitle = refreshed.Title;
+        _permissionResponded = !review.CanRespond;
+        _permissionStatus = review.AcknowledgedDecision?.Kind switch
+        {
+            PermissionDecisionKind.Allowed => "Permission allowed. Resume the task separately when ready.",
+            PermissionDecisionKind.Denied => "Permission denied. The task remains suspended.",
+            _ => review.CanRespond ? "Review the scope and consequences before choosing." : "This request cannot accept another response."
+        };
     }
     private void OnScopeRequested(object? sender, TaskShownScope shown)
     {
