@@ -1,3 +1,15 @@
+## Scoped desktop recovery — 26 October 2026
+
+The owner has authorized fixes for the supplied desktop recordings plus Dulche
+model discovery, Hugging Face browsing/install with encrypted profile credentials,
+a compact attachment menu and device-colour emoji. Read the [current requirements](docs/specification/owner-references/2026-10-26-desktop-recovery/requirements.md)
+and [recovery evidence and remaining failures](docs/development/desktop-recordings-2026-10-26.md).
+This permission covers the existing isolated recovery branch; the broader local
+handoff/HOLD and Thunder custody below remain in effect. Basic affected checks
+continue; full acceptance stays paused. The inspected desktop checkouts were clean
+and already published. Do not ask for another push from those same checkouts or
+claim the installed desktop was updated without a real package/install receipt.
+
 ## Current local transition — 25 October 2026
 
 The owner requests local development takeover because cloud usage is low.

@@ -84,6 +84,7 @@ public sealed class HomeHuggingFaceBrowserTests
 
             Click(browser, "hf-token-remove");
             await service.TokenRemoved.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await WaitForUiAsync(() => !install.IsEnabled, "token removal to disable gated installation");
             Assert.False(install.IsEnabled);
         }
         finally { window.Close(); }
