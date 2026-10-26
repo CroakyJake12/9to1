@@ -762,6 +762,32 @@ public sealed class LlamaCppPreviewBootstrapTests
         Assert.Contains("disabled", health.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [LinuxPreviewTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Readiness_requires_current_provider_admission_before_any_socket_or_starting_probe(bool configured)
+    {
+        var configurations = new FakeProviderConfigurationStore();
+        if (configured)
+            await configurations.UpsertAsync(new ProviderConfiguration(
+                "llama-cpp", ModelProviderKind.OpenAICompatible, "Local llama.cpp", "http://127.0.0.1:18080/v1/",
+                IsEnabled: false, IsLocal: true, AllowCloudFallback: false,
+                new Dictionary<string, string>(), DateTimeOffset.UtcNow), CancellationToken.None);
+        var socket = Path.Combine(Path.GetTempPath(), "missing-" + Guid.NewGuid().ToString("N") + ".sock");
+        var provider = new LlamaCppModelProvider(new(Enabled: true, SocketPath: socket,
+            ExpectedExecutableSha256: new string('0', 64), ModelPath: "/nonexistent/model.gguf",
+            ExpectedModelSha256: new string('0', 64), ModelAlias: "fixture"), configurations);
+        var failure = await Assert.ThrowsAsync<InvalidOperationException>(() => provider.ObserveOriginalEndpointReadinessAsync(
+            CancellationToken.None, new FixtureStartingContext(socket)));
+        Assert.Contains("disabled", failure.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed class FixtureStartingContext(string socket) : ILlamaCppStartReadinessContext
+    {
+        public string SocketPath => socket;
+        public bool IsOwnedChildStarting => throw new InvalidOperationException("The disabled-provider gate must precede even the starting-context probe.");
+    }
+
     [Fact]
     public async Task Same_early_provider_stays_disabled_when_no_verified_state()
     {

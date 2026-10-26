@@ -348,10 +348,7 @@ public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModel
 
     private async Task<LocalModelEndpointObservation> ObserveEndpointBodyAsync(CancellationToken token)
     {
-        ValidateOptions();
-        var configuration = await ObserveOriginalAsync(() => _configurations.GetAsync(Id, token)).ConfigureAwait(false);
-        RequireOriginalLinuxPeerPath();
-        if (configuration is not { IsEnabled: true }) throw new InvalidOperationException("The actual local provider is disabled in the configuration store.");
+        await RequireConfiguredEndpointAsync(token).ConfigureAwait(false);
         // IsLocal and Endpoint values in configuration are observations only; neither controls transport.
         await ValidateActualPeerAsync(token).ConfigureAwait(false);
         _ = await GetJsonAsync("health", token).ConfigureAwait(false);
@@ -571,7 +568,9 @@ public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModel
     private async Task<(bool Ready, string? Message)> ProbeReadinessAsync(
         CancellationToken token, ILlamaCppStartReadinessContext? starting)
     {
-        ValidateOptions();
+        // Health/startup probes obey the SAME current configuration admission as catalogue and
+        // generation. A disabled provider must not touch the socket or become a Starting outcome.
+        await RequireConfiguredEndpointAsync(token).ConfigureAwait(false);
         var request = new HttpRequestMessage(HttpMethod.Get, "health");
         HttpResponseMessage? response = null;
         Task<HttpResponseMessage>? responseTask = null;
@@ -648,6 +647,14 @@ public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModel
         // retained and throw here rather than being silently dropped by an early return.
         ThrowOriginal(errors, responseTask?.IsCanceled == true && token.IsCancellationRequested && errors.Count == 1);
         return outcome;
+    }
+    private async Task RequireConfiguredEndpointAsync(CancellationToken token)
+    {
+        ValidateOptions();
+        var configuration = await ObserveOriginalAsync(() => _configurations.GetAsync(Id, token)).ConfigureAwait(false);
+        RequireOriginalLinuxPeerPath();
+        if (configuration is not { IsEnabled: true })
+            throw new InvalidOperationException("The actual local provider is disabled in the configuration store.");
     }
     /// <summary>Reads the 503 body with owned custody using the SAME acquire/join + real DisposeAsync cleanup
     /// pattern as <see cref="ReadBoundedJsonAsync"/>, retaining body-read IO/foreign-cancel and independent
@@ -1305,7 +1312,6 @@ public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModel
     [DllImport("libc", SetLastError = true)] private static extern int getsockopt(int socket, int level, int option, out PeerCredentials credentials, ref uint length);
     [DllImport("libc")] private static extern uint geteuid();
 }
-
 
 
 
