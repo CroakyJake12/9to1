@@ -1,0 +1,8 @@
+/home/jacob/Documents/GitHub/9to1/9to1 Workspace/Canvas/rnote-poc/target/release/deps/unicode_properties-a90bfa1fe2dbd500.d: /home/jacob/.local/share/unsloth-custom-20261014/native-tools/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-properties-0.1.4/src/lib.rs /home/jacob/.local/share/unsloth-custom-20261014/native-tools/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-properties-0.1.4/src/tables.rs
+
+/home/jacob/Documents/GitHub/9to1/9to1 Workspace/Canvas/rnote-poc/target/release/deps/libunicode_properties-a90bfa1fe2dbd500.rlib: /home/jacob/.local/share/unsloth-custom-20261014/native-tools/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-properties-0.1.4/src/lib.rs /home/jacob/.local/share/unsloth-custom-20261014/native-tools/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-properties-0.1.4/src/tables.rs
+
+/home/jacob/Documents/GitHub/9to1/9to1 Workspace/Canvas/rnote-poc/target/release/deps/libunicode_properties-a90bfa1fe2dbd500.rmeta: /home/jacob/.local/share/unsloth-custom-20261014/native-tools/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-properties-0.1.4/src/lib.rs /home/jacob/.local/share/unsloth-custom-20261014/native-tools/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-properties-0.1.4/src/tables.rs
+
+/home/jacob/.local/share/unsloth-custom-20261014/native-tools/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-properties-0.1.4/src/lib.rs:
+/home/jacob/.local/share/unsloth-custom-20261014/native-tools/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-properties-0.1.4/src/tables.rs:

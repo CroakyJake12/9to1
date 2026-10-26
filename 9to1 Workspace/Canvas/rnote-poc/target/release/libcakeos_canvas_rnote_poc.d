@@ -1,0 +1,1 @@
+/home/jacob/Documents/GitHub/9to1/9to1\ Workspace/Canvas/rnote-poc/target/release/libcakeos_canvas_rnote_poc.so: /home/jacob/Documents/GitHub/9to1/9to1\ Workspace/Canvas/rnote-poc/src/ffi.rs /home/jacob/Documents/GitHub/9to1/9to1\ Workspace/Canvas/rnote-poc/src/lib.rs
