@@ -210,6 +210,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                     UpdateAddress(page.Controller.State.Selection?.Id);
                     SetRootContent(page);
                     _routeEpoch++;
+                    if (page.Controller.State.Selection?.Id == SpaceRegistry.StudySpaceId)
+                        await OpenStudyWorkspaceAsync(Haven.Desktop.Views.Pages.Study.StudyWorkspaceRoute.Overview, null, token);
                 }
                 _page = _root;
                 _published = true;
@@ -341,6 +343,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 try { await builder.DisposeAsync(); if (failures.Count == 0) lock (_gate) { _ownedBuilders.Remove(builder); _builderCloses.Remove(builder); } }
                 catch (Exception error) { failures.Add(error); }
             if (failures.Count == 0) lock (_gate) { _buildersBySpace.Clear(); }
+            if (_studyPage is not null)
+                try { await _studyPage.CloseAsync(); }
+                catch (Exception error) { failures.Add(error); }
             if (_spacesPage is IAsyncDisposable spacesDisposable)
                 try { await spacesDisposable.DisposeAsync(); }
                 catch (Exception error) { failures.Add(error); }
@@ -596,6 +601,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
 #if !ANDROID
                     await RetireAssistantPresentationOnUiAsync();
 #endif
+                    if (_studyPage?.HasDraft == true) { ReportWorkspaceActionRefusal("Create the subject or clear its name before leaving Study."); return; }
                     await ExecuteActionOnUiAsync(action, linked.Token);
                 }
                 finally { ExecutingCommand.Value = previous; }
@@ -622,6 +628,14 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         var actualSpace = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(registeredSpaceId, token)
             ?? throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
         if (actualSpace.IsArchived) throw new SpacesWorkspaceActionRefusal("The selected Space is archived.");
+        if (registeredSpaceId == SpaceRegistry.StudySpaceId)
+        {
+            var currentChat = _chatPage;
+            if (currentChat is not null) await currentChat.PrepareWorkspaceNavigationAsync();
+            if (!ReferenceEquals(currentChat, _chatPage)) throw new SpacesWorkspaceActionRefusal("The current chat changed while saving its draft.");
+            await OpenStudyWorkspaceAsync(Haven.Desktop.Views.Pages.Study.StudyWorkspaceRoute.Overview, null, token);
+            return;
+        }
         var factory = NewChatSessionFactory();
         var page = await factory.CreateNewAsync(token);
         _ownedChats.Add(page);
@@ -830,6 +844,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private async Task<IReadOnlyList<SpacesHomeSidebarRow>> ReadSpaceSidebarItemsAsync(SpacesHomeSelection selection,
         CancellationToken token)
     {
+        var rows = selection.Id == SpaceRegistry.StudySpaceId
+            ? new List<SpacesHomeSidebarRow>(await ReadStudySidebarAsync(selection, token).ConfigureAwait(false))
+            : new List<SpacesHomeSidebarRow>();
         var attached = selection.Capabilities
             .Where(capability => string.Equals(capability.Kind, nameof(SpaceCapabilityKind.Plugin), StringComparison.Ordinal)
                                  && !capability.IsDisabled
@@ -837,10 +854,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             .Select(capability => capability.Id)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
-        if (attached.Length == 0) return [];
+        if (attached.Length == 0) return rows;
         var extensions = _services.GetRequiredService<ExtensionManager>();
         var canOpen = _hostQueueNavigation is not null;
-        var rows = new List<SpacesHomeSidebarRow>();
         foreach (var packageId in attached)
         {
             var package = await extensions.GetPackageAsync(packageId, token).ConfigureAwait(false);
@@ -1323,6 +1339,11 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         var space = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(spaceId, token)
             ?? throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
         if (space.IsArchived) throw new SpacesWorkspaceActionRefusal("The selected Space is archived.");
+        if (spaceId == SpaceRegistry.StudySpaceId)
+        {
+            await WithStudyNavigationPreparationAsync(() => StartStudySessionAsync(null, null, token), token);
+            return;
+        }
         var page = await NewChatSessionFactory().CreateNewAsync(token);
         _ownedChats.Add(page);
         var published = false;
@@ -1566,6 +1587,13 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         Dispatcher.UIThread.VerifyAccess();
         token.ThrowIfCancellationRequested();
         DemandAlive();
+        if (sidebarItemId.StartsWith("study:", StringComparison.Ordinal) &&
+            _spacesPage?.Controller.State.Selection?.Id == SpaceRegistry.StudySpaceId)
+        {
+            await OpenStudySidebarAsync(sidebarItemId, token);
+            return;
+        }
+        if (_studyPage?.HasDraft == true) throw new SpacesWorkspaceActionRefusal("Create the subject or clear its name before leaving Study.");
         var initialActor = await ReadSidebarHomeActorAsync(token);
         if (_spacesPage?.Controller.State.Selection is not { } selection)
             throw new SpacesWorkspaceActionRefusal("Select a Space before opening one of its sidebar items.");
@@ -1701,6 +1729,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                     DemandAlive();
                     try
                     {
+                        if (_studyPage?.HasDraft == true)
+                            throw new SpacesWorkspaceActionRefusal("Create the subject or clear its name before leaving Study.");
                         if (command == "spaces.new-chat") await NewConversationOnUiAsync((Guid)target, linked.Token);
                         else if (command == "spaces.tasks.open") await OpenSidebarTaskOnUiAsync((TaskOpenTicket)target, linked.Token);
                         else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync((HistoryOpenTicket)target, linked.Token);

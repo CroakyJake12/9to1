@@ -180,6 +180,8 @@
     <Compile Include="AppOriginalPreviewBootstrapBackgroundLifetimeTests.cs" />
     <Compile Include="AppStartupTransitionCloseReplannerTests.cs" />
     <Compile Include="SpacesBrowseAppContentSessionRetirementTests.cs" />
+    <Compile Include="StudyWorkspaceProjectionTests.cs" />
+    <Compile Include="FilesNativeBrowserSurfaceTests.cs" />
     <Compile Include="SpacesRailSvgIconsTests.cs" />
     <!-- Lane4 shared header/Assistants rail read projections (source-only, NOT RUN). -->
     <Compile Include="AssistantRailIconProjectionTests.cs" />

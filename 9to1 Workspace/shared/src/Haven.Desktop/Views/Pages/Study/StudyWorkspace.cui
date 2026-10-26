@@ -1,0 +1,51 @@
+<Cui id="study.workspace" version="1">
+  <Actions>
+    <Action name="OpenStudyRow" command="spaces.study.open" parameter="{Binding row.intent}" />
+    <Action name="NewStudySession" command="spaces.study.open" parameter="{Binding study.newSession}" />
+    <Action name="CreateStudySubject" command="spaces.study.open" parameter="{Binding study.createSubject}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page id="study-workspace" role="main" accessible-name="Study workspace">
+      <Container Type="Vertical Stack" Padding="24" CellGap="12" VerticalScrolling="True" Background="{Resource CuiBackgroundBrush}">
+        <Text Text="{Binding study.title}" FontSize="28" Foreground="{Resource CuiTextBrush}" />
+        <Text Text="{Binding study.summary}" Foreground="{Resource CuiTextSoftBrush}" />
+        <Button action="NewStudySession"><Text Text="New Study session" /></Button>
+        <If Condition="{Binding study.canCreateSubject}">
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input Type="Text" Value="{Binding study.subjectName, mode=TwoWay}" placeholdertext="Subject name" accessible-name="New subject name" Width="260" />
+            <Button action="CreateStudySubject"><Text Text="Create subject" /></Button>
+          </Container>
+        </If>
+        <If Condition="{Binding study.cards}">
+          <Container Type="Wrap" CellGap="16">
+        <Repeat Source="{Binding study.rows}" As="row" Key="{Binding row.id}">
+          <Container Type="Vertical Stack" Width="330" MinHeight="150" Padding="20" CellGap="12" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="8">
+            <Text Text="{Binding row.title}" FontSize="22" Foreground="{Resource CuiTextBrush}" />
+            <Text Text="{Binding row.detail}" Foreground="{Resource CuiTextSoftBrush}" />
+            <If Condition="{Binding row.canOpen}">
+              <Button action="OpenStudyRow"><Text Text="{Binding row.openLabel}" /></Button>
+            </If>
+          </Container>
+        </Repeat>
+          </Container>
+        </If>
+        <If Condition="{Binding study.cards}" Negate="true">
+          <Container Type="Vertical Stack" CellGap="10">
+        <Repeat Source="{Binding study.rows}" As="row" Key="{Binding row.id}">
+          <Container Type="Vertical Stack" Padding="12" CellGap="5" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="8">
+            <Text Text="{Binding row.title}" FontSize="18" Foreground="{Resource CuiTextBrush}" />
+            <Text Text="{Binding row.detail}" Foreground="{Resource CuiTextSoftBrush}" />
+            <If Condition="{Binding row.canOpen}">
+              <Button action="OpenStudyRow"><Text Text="{Binding row.openLabel}" /></Button>
+            </If>
+          </Container>
+        </Repeat>
+          </Container>
+        </If>
+        <If Condition="{Binding study.empty}">
+          <Text Text="{Binding study.emptyMessage}" Foreground="{Resource CuiTextSoftBrush}" />
+        </If>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>
