@@ -74,19 +74,30 @@ public sealed partial class BrowseNativeOwnershipTests
     public async Task Split_view_keeps_each_existing_tab_in_its_original_profile()
     {
         var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
-        var factory = new ChromiumFixtureFactory();
+        var factory = new ChromiumFixtureFactory(); var paths = new PreservedPaths();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
         var session = new TabSessionFixture(new BrowseTabSessionProjection([
             new(firstId, "First", "https://shared.example/first", BrowserTabPrivacy.Standard, string.Empty,
                 DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
             new(secondId, "Second", "https://shared.example/second", BrowserTabPrivacy.Standard, string.Empty,
                 DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
         ], firstId));
-        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), factory, homeProfileId: "profile-a",
+        await using var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: "profile-a",
             tabSessionPersistence: session);
+        var firstOwner = Assert.IsType<FixtureTab>(chrome.ObserveOriginalEngine(firstId));
+        var secondOwner = Assert.IsType<FixtureTab>(chrome.ObserveOriginalEngine(secondId));
+        var firstRequest = Assert.Single(factory.Requests, request => request.TabId == firstId);
+        var secondRequest = Assert.Single(factory.Requests, request => request.TabId == secondId);
+        Assert.NotEqual(firstRequest.ProfileDirectory, secondRequest.ProfileDirectory);
         Assert.True(chrome.CanSplitSelectedTab);
         await chrome.ToggleSplitViewAsync();
         Assert.Equal(new[] { firstId, secondId }, chrome.State.PaneTabIds);
-        Assert.NotEqual(factory.Requests[0].ProfileDirectory, factory.Requests[1].ProfileDirectory);
+        Assert.Same(firstOwner, chrome.ObserveOriginalEngine(firstId));
+        Assert.Same(secondOwner, chrome.ObserveOriginalEngine(secondId));
+        Assert.Equal("profile-a", chrome.State.Tabs.Single(tab => tab.Id == firstId).ProfileId);
+        Assert.Equal("profile-b", chrome.State.Tabs.Single(tab => tab.Id == secondId).ProfileId);
+        Assert.Equal(2, factory.Hosts.Count);
     }
 
     [Fact]
