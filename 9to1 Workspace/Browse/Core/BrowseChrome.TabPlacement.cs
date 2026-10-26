@@ -96,6 +96,61 @@ public sealed partial class BrowseChrome
         }
     }
 
+    /// <summary>Whether two current tab identities may be exchanged by the native tab strip.</summary>
+    public bool CanSwapTabs(Guid firstTabId, Guid secondTabId)
+    {
+        if (_disposed || _nativeRetiring || firstTabId == secondTabId) return false;
+        lock (_nativeSourceGate)
+        {
+            var first = _tabs.FirstOrDefault(tab => tab.Id == firstTabId);
+            var second = _tabs.FirstOrDefault(tab => tab.Id == secondTabId);
+            return first is not null && second is not null && IsSamePlacementOwner(first, second);
+        }
+    }
+
+    /// <summary>Whether a center drop can join the exact two current tabs without crossing a
+    /// privacy/profile/pin boundary or bypassing the canonical group-session owner.</summary>
+    public bool CanGroupTabs(Guid firstTabId, Guid secondTabId)
+    {
+        if (!CanManageTabGroups || firstTabId == secondTabId) return false;
+        lock (_nativeSourceGate)
+        {
+            var first = _tabs.FirstOrDefault(tab => tab.Id == firstTabId);
+            var second = _tabs.FirstOrDefault(tab => tab.Id == secondTabId);
+            return first is not null && second is not null && IsSamePlacementOwner(first, second) &&
+                IsGroupCompatible(first, second) &&
+                (!TryGetGroupId(first.Group, out var firstGroup) || !TryGetGroupId(second.Group, out var secondGroup) || firstGroup == secondGroup);
+        }
+    }
+
+    /// <summary>Exchanges the two current rows in place. This never inserts across either
+    /// row's privacy, profile, or pin section.</summary>
+    public Task<BrowseChromeSnapshot> SwapTabsAsync(Guid firstTabId, Guid secondTabId, CancellationToken token = default)
+    {
+        ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
+        if (!CanSwapTabs(firstTabId, secondTabId))
+            throw new InvalidOperationException("Tabs can be exchanged only within the same privacy, profile, and pinned section.");
+        var admittedOrder = CapturePlacementOrder();
+        return RetainContentTransition(() => SwapTabsCoreAsync(firstTabId, secondTabId, admittedOrder, token), token);
+    }
+
+    private async Task<BrowseChromeSnapshot> SwapTabsCoreAsync(Guid firstTabId, Guid secondTabId, string admittedOrder, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        lock (_nativeSourceGate)
+        {
+            if (!string.Equals(admittedOrder, CapturePlacementOrder(), StringComparison.Ordinal))
+                throw new InvalidOperationException("Tab placement changed before this exchange; use the current tab controls.");
+            var first = DemandPlaceableTab(firstTabId); var second = DemandPlaceableTab(secondTabId);
+            if (!IsSamePlacementOwner(first, second))
+                throw new InvalidOperationException("Tabs can be exchanged only within the same privacy, profile, and pinned section.");
+            var firstIndex = _tabs.IndexOf(first); var secondIndex = _tabs.IndexOf(second);
+            (_tabs[firstIndex], _tabs[secondIndex]) = (_tabs[secondIndex], _tabs[firstIndex]);
+            _tabPlacementRevision = checked(_tabPlacementRevision + 1); _tabPlacementNeedsSave = true;
+        }
+        return await SaveTabPlacementCoreAsync("Tab order saved.", token).ConfigureAwait(false);
+    }
+
     private async Task<BrowseChromeSnapshot> MoveTabRelativeCoreAsync(Guid tabId, Guid targetTabId, bool beforeTarget,
         string admittedOrder, CancellationToken token)
     {
@@ -147,6 +202,47 @@ public sealed partial class BrowseChrome
 
     public Task<BrowseChromeSnapshot> CreateTabGroupAsync(string name, CancellationToken token = default) =>
         RetainContentTransition(() => CreateTabGroupCoreAsync(name, token), token);
+
+    /// <summary>Joins the exact tabs selected by a native center drop. Existing membership is
+    /// retained if one row already belongs to a group; unrelated groups are never merged implicitly.</summary>
+    public Task<BrowseChromeSnapshot> GroupTabsAsync(Guid firstTabId, Guid secondTabId, string name = "New group",
+        CancellationToken token = default) =>
+        RetainContentTransition(() => GroupTabsCoreAsync(firstTabId, secondTabId, name, token), token);
+
+    private async Task<BrowseChromeSnapshot> GroupTabsCoreAsync(Guid firstTabId, Guid secondTabId, string name, CancellationToken token)
+    {
+        ThrowIfCannotAccept(); token.ThrowIfCancellationRequested(); DemandGroupPersistence();
+        if (firstTabId == secondTabId) throw new ArgumentException("A tab group needs two different tabs.", nameof(secondTabId));
+        var normalized = NormalizeGroupName(name);
+        var first = RequireTab(firstTabId); var second = RequireTab(secondTabId);
+        if (!IsGroupable(first) || !IsGroupable(second))
+            throw new InvalidOperationException("Only standard tabs outside Home can join a tab group.");
+        if (!IsSamePlacementOwner(first, second))
+            throw new InvalidOperationException("Tabs can be grouped only within the same privacy, profile, and pinned section.");
+        var firstHasGroup = TryGetGroupId(first.Group, out var firstGroupId);
+        var secondHasGroup = TryGetGroupId(second.Group, out var secondGroupId);
+        if (firstHasGroup && secondHasGroup && firstGroupId != secondGroupId)
+            throw new InvalidOperationException("Tabs in different groups cannot be merged by a drop.");
+        if (firstHasGroup && secondHasGroup) return Publish();
+
+        var groupId = firstHasGroup ? firstGroupId : secondHasGroup ? secondGroupId : Guid.NewGuid();
+        if (!firstHasGroup && !secondHasGroup)
+        {
+            first.Group = groupId.ToString("D"); second.Group = groupId.ToString("D");
+            _tabGroups.Add(new BrowseTabGroupProjection(groupId, normalized, false,
+                Array.AsReadOnly(OrderedGroupMembers(groupId.ToString("D")))));
+        }
+        else
+        {
+            var ungrouped = firstHasGroup ? second : first;
+            ungrouped.Group = groupId.ToString("D");
+            var group = _tabGroups.SingleOrDefault(item => item.Id == groupId)
+                ?? throw new InvalidOperationException("The current tab group is no longer available.");
+            ReplaceGroupMembers(group);
+        }
+        await SaveGroupChangeAsync("Tabs grouped.", token).ConfigureAwait(false);
+        return Publish();
+    }
 
     public Task<BrowseChromeSnapshot> MoveSelectedTabToGroupAsync(Guid groupId, CancellationToken token = default) =>
         RetainContentTransition(() => MoveTabToGroupCoreAsync(_selectedTabId, groupId, token), token);

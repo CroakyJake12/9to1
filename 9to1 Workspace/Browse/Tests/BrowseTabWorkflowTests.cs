@@ -89,6 +89,27 @@ public sealed partial class BrowseNativeOwnershipTests
     }
 
     [Fact]
+    public async Task Native_drop_opens_exact_standard_pair_in_receiving_side_order_and_rejects_private_tabs()
+    {
+        var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
+        var session = new TabSessionFixture(new BrowseTabSessionProjection([
+            new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
+        ], firstId));
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile-a", tabSessionPersistence: session);
+        var privateId = (await chrome.NewTabAsync(true)).SelectedTabId;
+        await chrome.SelectTabAsync(firstId);
+
+        await chrome.OpenSplitViewForTabsAsync(secondId, firstId);
+        Assert.Equal(new[] { secondId, firstId }, chrome.State.PaneTabIds);
+        Assert.Equal(firstId, chrome.State.SelectedTabId);
+        Assert.Equal(new[] { secondId, firstId }, session.Saves[^1].PaneTabIds);
+        await chrome.CloseSplitViewAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => chrome.OpenSplitViewForTabsAsync(privateId, firstId));
+        Assert.Empty(chrome.State.PaneTabIds);
+    }
+
+    [Fact]
     public async Task Split_view_accepts_existing_standard_tabs_from_a_noncurrent_profile()
     {
         var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();

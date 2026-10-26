@@ -20,6 +20,7 @@ namespace HavenOS.Apps.Browse;
 public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged, IAsyncDisposable
 {
+    public enum TabDropZone { None, Swap, SplitBefore, Group, SplitAfter, Invalid }
     private static readonly AsyncLocal<CommandInvocation?> LogicalDriver = new();
     private sealed class CommandInvocation(BrowseNativeWorkspace owner, CommandInvocation? parent)
     {
@@ -311,7 +312,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.MoveTabLeft" => _chrome.CanMoveTab(tab.Id, -1),
             "9to1.Browse.MoveTabRight" => _chrome.CanMoveTab(tab.Id, 1),
             "9to1.Browse.SaveTabPlacement" => _chrome.HasUnsavedTabPlacement,
-            "9to1.Browse.ReorderTab" => _ready && !_busy && !_retiring && !_disposed,
+            "9to1.Browse.ReorderTab" or "9to1.Browse.DropTab" => _ready && !_busy && !_retiring && !_disposed,
             "9to1.Browse.CreateTabGroup" => _chrome.CanCreateTabGroup && !string.IsNullOrWhiteSpace(_groupName),
             "9to1.Browse.UngroupSelectedTab" => _chrome.CanUngroupSelectedTab,
             "9to1.Browse.JoinSelectedTabToGroup" => _chrome.CanManageTabGroups,
@@ -379,6 +380,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (command == "9to1.Browse.ReorderTab" &&
             (parameter is not TabReorderSelection reorder || !ReferenceEquals(reorder.Owner, this) ||
              !IsCurrentTabTarget(reorder.Source) || !IsCurrentTabTarget(reorder.Target)))
+        { _status = "The tab rows changed. Drag their current rows again."; Changed(); return ValueTask.CompletedTask; }
+        if (command == "9to1.Browse.DropTab" &&
+            (parameter is not TabDropSelection drop || !ReferenceEquals(drop.Owner, this) ||
+             !IsCurrentTabTarget(drop.Source) || !IsCurrentTabTarget(drop.Target)))
         { _status = "The tab rows changed. Drag their current rows again."; Changed(); return ValueTask.CompletedTask; }
         if ((command is "9to1.Browse.JoinSelectedTabToGroup" or "9to1.Browse.RenameTabGroup" or
             "9to1.Browse.ToggleTabGroupCollapsed" or "9to1.Browse.DissolveTabGroup") && !IsCurrentGroupTarget(parameter))
@@ -477,6 +482,22 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     var reorderTarget = (TabReorderSelection)parameter!;
                     await Operation(() => _chrome.MoveTabRelativeAsync(reorderTarget.Source.TabId, reorderTarget.Target.TabId,
                         reorderTarget.BeforeTarget, token));
+                    break;
+                case "9to1.Browse.DropTab":
+                    if (parameter is not TabDropSelection drop || !ReferenceEquals(drop.Owner, this) ||
+                        !IsCurrentTabTarget(drop.Source) || !IsCurrentTabTarget(drop.Target))
+                    { _status = "The tab rows changed before the drop completed; use their current rows."; break; }
+                    switch (drop.Zone)
+                    {
+                        case TabDropZone.Swap:
+                            await Operation(() => _chrome.SwapTabsAsync(drop.Source.TabId, drop.Target.TabId, token)); break;
+                        case TabDropZone.SplitBefore:
+                            await Operation(() => _chrome.OpenSplitViewForTabsAsync(drop.Source.TabId, drop.Target.TabId, token)); break;
+                        case TabDropZone.SplitAfter:
+                            await Operation(() => _chrome.OpenSplitViewForTabsAsync(drop.Target.TabId, drop.Source.TabId, token)); break;
+                        case TabDropZone.Group:
+                            await Operation(() => _chrome.GroupTabsAsync(drop.Source.TabId, drop.Target.TabId, token: token)); break;
+                    }
                     break;
                 case "9to1.Browse.CreateTabGroup":
                     await Operation(() => _chrome.CreateTabGroupAsync(_groupName, token)); break;
@@ -776,6 +797,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     private sealed record TabSelection(BrowseNativeWorkspace Owner, Guid TabId, long Epoch, bool IsPinned, string PlacementStamp);
     private sealed record TabReorderSelection(BrowseNativeWorkspace Owner, TabSelection Source, TabSelection Target, bool BeforeTarget);
+    private sealed record TabDropSelection(BrowseNativeWorkspace Owner, TabSelection Source, TabSelection Target, TabDropZone Zone);
     private sealed record TabGroupSelection(BrowseNativeWorkspace Owner, Guid GroupId, long Epoch);
     public sealed record TabGroupRow(object Target, string Key, string Name, string Summary, bool IsCollapsed, bool CanJoinSelected);
     private void IssueCurrentRows()
@@ -854,6 +876,40 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         return DispatchAsync("9to1.Browse.ReorderTab",
             new TabReorderSelection(this, (TabSelection)source.Target, (TabSelection)target.Target, beforeTarget), token);
     }
+    public bool CanDropTabRows(TabRow source, TabRow target, TabDropZone zone)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (ReferenceEquals(source, target) || !_tabRows.Any(row => ReferenceEquals(row, source)) ||
+            !_tabRows.Any(row => ReferenceEquals(row, target)) || source.Target is not TabSelection sourceTarget ||
+            target.Target is not TabSelection targetTarget || !IsCurrentTabTarget(sourceTarget) || !IsCurrentTabTarget(targetTarget)) return false;
+        return zone switch
+        {
+            TabDropZone.Swap => _chrome.CanSwapTabs(sourceTarget.TabId, targetTarget.TabId),
+            TabDropZone.SplitBefore or TabDropZone.SplitAfter => _chrome.CanSplitSelectedTab &&
+                _chrome.State.Tabs.Any(tab => tab.Id == sourceTarget.TabId && tab.Privacy == BrowserTabPrivacy.Standard) &&
+                _chrome.State.Tabs.Any(tab => tab.Id == targetTarget.TabId && tab.Privacy == BrowserTabPrivacy.Standard),
+            TabDropZone.Group => _chrome.CanGroupTabs(sourceTarget.TabId, targetTarget.TabId),
+            _ => false
+        };
+    }
+    public void SetTabDropIndicator(TabRow? target, TabDropZone zone)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var current = target is not null && _tabRows.Any(row => ReferenceEquals(row, target)) && IsCurrentTabTarget(target.Target)
+            ? target : null;
+        var changed = false;
+        foreach (var row in _tabRows)
+            changed |= row.SetDropZone(ReferenceEquals(row, current) ? zone : TabDropZone.None);
+        if (changed) Changed();
+    }
+    public ValueTask ApplyTabDropAsync(TabRow source, TabRow target, TabDropZone zone, CancellationToken token = default)
+    {
+        Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
+        if (!CanDropTabRows(source, target, zone) || source.Target is not TabSelection sourceTarget ||
+            target.Target is not TabSelection targetTarget)
+        { _status = "That drop is unavailable for these current tabs."; Changed(); return ValueTask.CompletedTask; }
+        return DispatchAsync("9to1.Browse.DropTab", new TabDropSelection(this, sourceTarget, targetTarget, zone), token);
+    }
     private static bool IsTabPlacementCommand(string command) => command is
         "9to1.Browse.ToggleTabPinned" or "9to1.Browse.MoveTabLeft" or "9to1.Browse.MoveTabRight";
     private static string TabPlacementStamp(BrowseChromeSnapshot snapshot) => string.Join(";", snapshot.Tabs.Select(tab =>
@@ -877,7 +933,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,
                 "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label,
                 "Background" => row.Background, "Foreground" => row.Foreground,
-                "CloseForeground" => row.CloseForeground, _ => null };
+                "CloseForeground" => row.CloseForeground, "DropSwap" => row.DropSwap,
+                "DropSplitBefore" => row.DropSplitBefore, "DropGroup" => row.DropGroup,
+                "DropSplitAfter" => row.DropSplitAfter, "DropBrush" => row.DropBrush, _ => null };
         else if (item is SavedEntryRow saved && _bookmarkRows.Concat(_historyRows).Concat(_downloadRows).Any(current => ReferenceEquals(current, saved)))
             value = path switch { "Key" => saved.Key, "Label" => saved.Label, "Detail" => saved.Detail, "Target" => saved.Target,
                 "RemoveLabel" => saved.Target is SavedEntrySelection { Kind: SavedEntryKind.History }
@@ -935,9 +993,37 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             return (Color.Parse("#FFF2F2F2"), Colors.Black, Colors.Black);
         return (palette.Accent, palette.AccentInk, palette.AccentInk);
     }
-
-    public sealed record TabRow(object Target, string Key, string Label, bool Selected)
+    private static Color TabDropAccentColor()
     {
+        var appearance = Application.Current?.ActualThemeVariant == ThemeVariant.Dark ||
+            Application.Current?.RequestedThemeVariant == ThemeVariant.Dark ? CuiAppearance.SuperDark : CuiAppearance.SuperBright;
+        return CuiSurfacePaletteCatalog.For("Browse", appearance, CuiSurfacePaletteCatalog.ActiveTheme).Accent;
+    }
+
+    public sealed record TabRow(object Target, string Key, string Label, bool Selected) : INotifyPropertyChanged
+    {
+        private TabDropZone _dropZone;
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public TabDropZone DropZone => _dropZone;
+        public bool DropSwap => _dropZone is TabDropZone.Swap or TabDropZone.Invalid;
+        public bool DropSplitBefore => _dropZone == TabDropZone.SplitBefore;
+        public bool DropGroup => _dropZone is TabDropZone.Group or TabDropZone.Invalid;
+        public bool DropSplitAfter => _dropZone == TabDropZone.SplitAfter;
+        public IBrush DropBrush => _dropZone == TabDropZone.Invalid
+            ? new SolidColorBrush(Color.FromArgb(88, 220, 38, 38))
+            : new SolidColorBrush(Color.FromArgb(72, TabDropAccentColor().R, TabDropAccentColor().G, TabDropAccentColor().B));
+        internal bool SetDropZone(TabDropZone zone)
+        {
+            if (_dropZone == zone) return false;
+            _dropZone = zone;
+            PropertyChanged?.Invoke(this, new(nameof(DropZone)));
+            PropertyChanged?.Invoke(this, new(nameof(DropSwap)));
+            PropertyChanged?.Invoke(this, new(nameof(DropSplitBefore)));
+            PropertyChanged?.Invoke(this, new(nameof(DropGroup)));
+            PropertyChanged?.Invoke(this, new(nameof(DropSplitAfter)));
+            PropertyChanged?.Invoke(this, new(nameof(DropBrush)));
+            return true;
+        }
         public string Description { get; init; } = Label;
         public bool CanClose { get; init; }
         public Color BackgroundColor { get; init; } = Colors.Transparent;
