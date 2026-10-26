@@ -143,10 +143,10 @@ internal sealed class CuiHoverFeedback : IDisposable
 
     private void UpdateOptIn()
     {
-        if (_requiredClass is null) { if (_frame.IsAttachedToVisualTree) Attach(); return; }
+        if (_requiredClass is null) { if (_frame.IsAttachedToVisualTree()) Attach(); return; }
         if (_owner.Classes.Contains(_requiredClass))
         {
-            if (_frame.IsAttachedToVisualTree) Attach();
+            if (_frame.IsAttachedToVisualTree()) Attach();
         }
         else Detach();
     }

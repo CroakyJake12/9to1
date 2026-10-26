@@ -51,3 +51,18 @@ a separate native verification requirement.
 - Hovering a tab applies one continuous effect across its label and close area.
   The close control may add its own local cue when directly hovered, while keeping
   selected/focus states and the close hit target intact.
+
+## Tab dragging clarification
+
+The 14.616-second supplied Firefox tab-strip recording is an interaction reference,
+not evidence of the current 9to1 build. Show a moving tab preview while held and
+continuous target feedback. Keep generous targets:
+
+- Far left or far right of a target tab: swap positions, with an edge marker.
+- Centre-left or centre-right: split the dragged and target tabs on that side,
+  lighting the receiving half of the target.
+- Centre: create a group or add to its existing group, lighting the whole target.
+
+Use current canonical tab identities and existing profile/privacy/pinned rules.
+Cancel or retire previews on Escape, capture loss, navigation/close and detach;
+visual feedback must not consume close clicks or become a drop target itself.
