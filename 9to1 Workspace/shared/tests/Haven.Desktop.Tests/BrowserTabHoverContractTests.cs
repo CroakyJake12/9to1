@@ -121,12 +121,15 @@ public sealed class BrowserTabHoverContractTests
         var view = new BrowserView();
         // Keep BrowserView's real authored tab list and DataTemplate, but mount only
         // that subtree: the browser engine sibling requires GTK and is unrelated to
-        // testing pointer behavior in this headless Avalonia host.
+        // testing pointer behavior in this headless Avalonia host. Keep it under the
+        // real BrowserView owner so its scoped DefaultTheme styles still apply.
+        var originalContent = view.Content;
         var list = Assert.IsAssignableFrom<ItemsControl>(view.FindControl<ItemsControl>("HorizontalTabsList"));
         var scroll = Assert.IsAssignableFrom<ScrollViewer>(list.Parent);
         scroll.Content = null;
+        view.Content = list;
         list.ItemsSource = new[] { new BrowserTabItem("One", "", false, true) };
-        var window = new Window { Width = 500, Height = 120, Content = list };
+        var window = new Window { Width = 500, Height = 120, Content = view };
         try
         {
             window.Show();
@@ -167,6 +170,8 @@ public sealed class BrowserTabHoverContractTests
         }
         finally
         {
+            window.Content = null;
+            view.Content = originalContent;
             window.Close();
         }
     }
