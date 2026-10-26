@@ -85,10 +85,12 @@ public sealed partial class BrowseNativeOwnershipTests
             new(currentSecond, "Current profile again", "https://three.example/", BrowserTabPrivacy.Standard,
                 string.Empty, DateTimeOffset.UtcNow) { ProfileId = currentProfile }
         ], currentFirst);
-        var currentDirectory = Path.Combine(paths.BrowserProfileDirectory, "engines", "chromium");
         Directory.CreateDirectory(paths.BrowserProfileDirectory);
         var legacyData = Path.Combine(paths.BrowserProfileDirectory, "legacy-profile-data.fixture");
         await File.WriteAllTextAsync(legacyData, "keep existing default-profile data");
+        var currentProfileRoot = BrowserProfileStorage.ResolveProfileDirectory(paths, currentProfile);
+        Assert.NotEqual(paths.BrowserProfileDirectory, currentProfileRoot);
+        var currentDirectory = Path.Combine(currentProfileRoot, "engines", "chromium");
         string otherDirectory;
 
         await using (var firstRun = await BrowseChrome.CreateAsync(paths, factory,
@@ -172,6 +174,8 @@ public sealed partial class BrowseNativeOwnershipTests
     {
         var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
         const string profileA = "legacy-owner-a"; const string profileB = "new-home-profile-b";
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
         var origin = new Uri("https://shared-origin.example/"); var tabA = Guid.NewGuid(); var tabB = Guid.NewGuid();
         var onlyA = new BrowseTabSessionProjection([
             new(tabA, "A", origin.AbsoluteUri, BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow)
