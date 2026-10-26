@@ -48,3 +48,6 @@ a separate native verification requirement.
   with an unrelated theme palette colour (for example, turning white black).
   Preserve app/custom colours, enabled/selected/focus state and theme effects,
   including Glow. Verify light, dark and explicitly coloured surfaces.
+- Hovering a tab applies one continuous effect across its label and close area.
+  The close control may add its own local cue when directly hovered, while keeping
+  selected/focus states and the close hit target intact.

@@ -26,7 +26,10 @@ internal sealed class NativePopupProbeApplication : Application
             {
                 await ChatAddMenuNativePopupTests.RunAsync(requireNativePopup: true,
                     captureDirectory: Environment.GetEnvironmentVariable("HAVEN_NATIVE_POPUP_CAPTURE_DIR"));
+                await ChatThemeAdaptationTests.RunAsync(
+                    Environment.GetEnvironmentVariable("HAVEN_NATIVE_POPUP_CAPTURE_DIR"));
                 Console.WriteLine("Native chat Add menu popup regression passed.");
+                Console.WriteLine("Native chat Home theme cycle regression passed.");
             }
             catch (Exception error)
             {
