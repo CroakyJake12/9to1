@@ -39,6 +39,18 @@ public sealed class HomeDiscoverCuiRenderTests
             var models = Find<ListBox>(page, "discover-models");
             Assert.Equal(2, models.ItemCount);
             Assert.True(models.Bounds.Width > 0 && models.Bounds.Height > 0);
+            var huggingFaceQuery = Find<TextBox>(page, "hf-query");
+            var huggingFaceSearch = Find<Button>(page, "hf-search");
+            var huggingFaceToken = Find<TextBox>(page, "hf-token");
+            Assert.Equal('•', huggingFaceToken.PasswordChar);
+            var huggingFaceQueryOrigin = huggingFaceQuery.TranslatePoint(default, window);
+            var huggingFaceSearchOrigin = huggingFaceSearch.TranslatePoint(default, window);
+            Assert.NotNull(huggingFaceQueryOrigin);
+            Assert.NotNull(huggingFaceSearchOrigin);
+            Assert.InRange(huggingFaceQueryOrigin.Value.Y, 0, height - huggingFaceQuery.Bounds.Height);
+            Assert.InRange(huggingFaceSearchOrigin.Value.Y, 0, height - huggingFaceSearch.Bounds.Height);
+            Assert.True(huggingFaceQuery.Bounds.Width > 0 && huggingFaceSearch.Bounds.Width > 0,
+                "The Home-owned public Hugging Face search controls must be laid out in the initial Discover viewport.");
             foreach (var id in new[] { "discover-search", "discover-category", "discover-locality", "discover-refresh", "discover-manage" })
             {
                 var control = Find<Control>(page, id);

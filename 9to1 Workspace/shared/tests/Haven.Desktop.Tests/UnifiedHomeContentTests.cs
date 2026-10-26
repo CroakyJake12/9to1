@@ -1444,6 +1444,8 @@ public sealed class UnifiedHomeContentTests
             window = Show(page);
             Assert.NotNull(discover);
             Assert.Contains(page.GetVisualDescendants().OfType<HomeDiscoverPage>(), item => ReferenceEquals(item, discover));
+            Assert.Single(discover!.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "hf-query");
+            Assert.Equal('•', Assert.Single(discover.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "hf-token").PasswordChar);
             Assert.True(catalogue.Reads > 0, "The genuine Models page must activate its owned catalogue source.");
             Assert.Equal(0, catalogue.Actions);
 

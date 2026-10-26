@@ -1,7 +1,7 @@
 <Cui id="home.discover" version="1">
   <Theme Name="user_preference">
     <Page AccessibleName="Home Discover models">
-      <Container id="discover-root" Type="Grid" RowSizes="Auto Auto Auto 1fr Auto Auto" Margin="24 74 24 24" CellGap="12" VerticalScrolling="True">
+      <Container id="discover-root" Type="Grid" RowSizes="Auto Auto Auto Auto 1fr Auto" Margin="24 74 24 24" CellGap="12" VerticalScrolling="True">
         <Container Type="Vertical Stack" CellGap="4">
           <Text Text="Discover" FontSize="28" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
           <Text Text="Explore models reported by registered providers, then browse and install verified Hugging Face GGUF files into Dulche." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
@@ -14,12 +14,12 @@
           <Button id="discover-manage" Content="Manage providers" AccessibleName="Open shared model and provider settings" />
         </Container>
         <Text id="discover-status" Row="2" Text="Open Discover to read registered providers." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-        <Input id="discover-models" Row="3" Type="List" MinHeight="150" AccessibleName="Models; select entries to compare their reported metadata" />
-        <Container Row="4" Type="Vertical Stack" VerticalScrolling="True" MaxHeight="220" CellGap="8">
+        <Container id="discover-huggingface-mount" Row="3" Type="Vertical Stack" AccessibleName="Hugging Face model search and verified installation" />
+        <Input id="discover-models" Row="4" Type="List" MinHeight="150" AccessibleName="Models; select entries to compare their reported metadata" />
+        <Container Row="5" Type="Vertical Stack" VerticalScrolling="True" MaxHeight="220" CellGap="8">
           <Button id="discover-compare" Content="Compare selected" AccessibleName="Refresh and compare selected models" IsEnabled="False" />
           <Text id="discover-details" Text="Select a model to inspect its provider, capability and location information." TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
         </Container>
-        <Container id="discover-huggingface-mount" Row="5" Type="Vertical Stack" AccessibleName="Hugging Face model search and verified installation" />
       </Container>
     </Page>
   </Theme>
