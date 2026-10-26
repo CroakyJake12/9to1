@@ -2,7 +2,9 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Layout;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Language;
 
 namespace CakeOS.Cui.Runtime;
@@ -23,6 +25,7 @@ public static class CuiLayoutProperties
         private readonly CuiEffectivePropertyStore _store;
         private readonly HashSet<string> _owned = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<(string, CuiPropertyLevel, string), string> _lastLiterals = [];
+        private bool _bringIntoView, _revealPending, _disposed;
         public Projection(Control control)
         { _control = control; _store = CuiPropertyPresentation.For(control); }
         private Grid RequireGrid() => (_control as CuiContainerControl)?.Layout as Grid ?? _control as Grid
@@ -59,7 +62,7 @@ public static class CuiLayoutProperties
                     value = double.Parse(text, CultureInfo.InvariantCulture); type = typeof(double); initial = 0d;
                     if (!double.IsFinite((double)value) || (double)value is < 0 or > 64) throw new FormatException("ScrollBarThickness must be from 0 to 64 DIP.");
                     break;
-                case "HorizontalScrolling": case "VerticalScrolling": case "HorizontalOverflowArrows": case "FollowAtEnd":
+                case "HorizontalScrolling": case "VerticalScrolling": case "HorizontalOverflowArrows": case "FollowAtEnd": case "BringIntoView":
                     if (_control is not CuiContainerControl) return false;
                     value = bool.Parse(text); type = typeof(bool); initial = false; break;
                 default: return false;
@@ -109,8 +112,52 @@ public static class CuiLayoutProperties
                 case "HorizontalOverflowArrows": ((CuiContainerControl)_control).SetHorizontalOverflowArrows((bool)property.Value!); break;
                 case "ScrollBarThickness": ((CuiContainerControl)_control).SetScrollBarThickness((double)property.Value!); break;
                 case "FollowAtEnd": ((CuiContainerControl)_control).SetFollowAtEnd((bool)property.Value!); break;
+                case "BringIntoView": SetBringIntoView((bool)property.Value!); break;
             }
         }
-        public void Dispose() { }
+        // Declarative, one-shot viewport reveal. The app supplies the state (for example selection),
+        // never a native-control search or focus command. Wait for actual layout after Repeat has
+        // inserted/arranged the SAME element; ongoing manual scrolling does not retrigger a true value.
+        private void SetBringIntoView(bool enabled)
+        {
+            if (_disposed || _bringIntoView == enabled) return;
+            _bringIntoView = enabled;
+            if (enabled)
+            {
+                _control.AttachedToVisualTree += OnRevealAttached;
+                _control.DetachedFromVisualTree += OnRevealDetached;
+                RequestReveal();
+            }
+            else
+            {
+                _control.AttachedToVisualTree -= OnRevealAttached;
+                _control.DetachedFromVisualTree -= OnRevealDetached;
+                CancelReveal();
+            }
+        }
+        private void OnRevealAttached(object? sender, VisualTreeAttachmentEventArgs args) => RequestReveal();
+        private void OnRevealDetached(object? sender, VisualTreeAttachmentEventArgs args) => CancelReveal();
+        private void RequestReveal()
+        {
+            if (!_bringIntoView || _revealPending) return;
+            _revealPending = true;
+            _control.LayoutUpdated += RevealAfterLayout;
+            _control.InvalidateArrange(); // A selection-only binding need not otherwise cause layout.
+        }
+        private void CancelReveal()
+        {
+            _revealPending = false;
+            _control.LayoutUpdated -= RevealAfterLayout;
+        }
+        private void RevealAfterLayout(object? sender, EventArgs args)
+        {
+            if (!_bringIntoView || !_revealPending || TopLevel.GetTopLevel(_control) is null || !_control.IsEffectivelyVisible
+                || !_control.IsMeasureValid || !_control.IsArrangeValid || _control.Bounds.Width <= 0 || _control.Bounds.Height <= 0) return;
+            var viewport = _control.GetVisualAncestors().OfType<ScrollContentPresenter>().FirstOrDefault();
+            if (viewport is not null && (!viewport.IsArrangeValid || viewport.Viewport.Width <= 0 || viewport.Viewport.Height <= 0)) return;
+            CancelReveal(); // Retire the request before changing offset can cause another layout.
+            viewport?.BringDescendantIntoView(_control, new Rect(_control.Bounds.Size));
+        }
+        public void Dispose() { SetBringIntoView(false); _disposed = true; }
     }
 }

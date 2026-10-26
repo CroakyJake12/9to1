@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -13,6 +14,79 @@ namespace CakeOS.Cui.Runtime.Tests;
 
 public sealed class CuiHorizontalOverflowTests
 {
+    [Fact]
+    public async Task Authored_reveal_waits_for_layout_then_reveals_once_without_focus_or_manual_scroll_snapback()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader();
+            var loaded = loader.LoadMarkup(RevealMarkup);
+            Assert.Empty(loaded.Diagnostics);
+            var container = Assert.IsType<CuiContainerControl>(loaded.Root);
+            var target = Assert.IsType<CuiContainerControl>(container.AuthoredChildren.Last());
+            var focus = new Button { Content = "Keep focus", Height = 30 };
+            var window = new Window { Content = new StackPanel { Children = { focus, container } }, Width = 240, Height = 140 };
+            try
+            {
+                window.Show(); focus.Focus(); Pump(window);
+                var scroll = Assert.Single(container.GetVisualDescendants().OfType<ScrollViewer>());
+                var presenter = Assert.Single(scroll.GetVisualDescendants().OfType<ScrollContentPresenter>());
+                AssertVisible(); Assert.True(focus.IsFocused);
+                scroll.Offset = default; Pump(window);
+                Assert.Equal(0, scroll.Offset.X); // An unchanged true is not a permanent scroll lock.
+                Set(false); Set(true); Pump(window);
+                AssertVisible(); Assert.True(focus.IsFocused);
+                scroll.Offset = default; Set(true); Pump(window);
+                Assert.Equal(0, scroll.Offset.X);
+                Set(false); Set(true); Set(false); Pump(window);
+                Assert.Equal(0, scroll.Offset.X); // Stale pending state was withdrawn before layout.
+
+                void Set(bool value) => Assert.True(CuiLayoutProperties.SetLiteral(target, "BringIntoView", value.ToString(),
+                    CuiPropertyLevel.Overlay, "fixture current selection"));
+                void AssertVisible()
+                {
+                    Assert.True(scroll.Offset.X > 0);
+                    var origin = target.TranslatePoint(default, presenter)!.Value;
+                    Assert.InRange(origin.X, -.5, presenter.Bounds.Width - target.Bounds.Width + .5);
+                }
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Pending_reveal_is_withdrawn_on_detach_or_disposal_before_layout()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader();
+            var loaded = loader.LoadMarkup(RevealMarkup);
+            Assert.Empty(loaded.Diagnostics);
+            var container = Assert.IsType<CuiContainerControl>(loaded.Root);
+            var target = Assert.IsType<CuiContainerControl>(container.AuthoredChildren.Last());
+            var window = new Window { Content = container, Width = 240, Height = 90 };
+            try
+            {
+                window.Show(); Pump(window);
+                var scroll = Assert.Single(container.GetVisualDescendants().OfType<ScrollViewer>());
+                Set(false); scroll.Offset = default; Pump(window);
+                Set(true); Assert.True(container.RemoveChild(target)); Pump(window);
+                Assert.Equal(0, scroll.Offset.X);
+                Set(false); container.AddChild(target); Pump(window);
+                Assert.Equal(0, scroll.Offset.X);
+                Set(true); CuiLayoutProperties.Detach(target); Pump(window);
+                Assert.Equal(0, scroll.Offset.X);
+                Assert.Same(scroll, Assert.Single(container.GetVisualDescendants().OfType<ScrollViewer>()));
+
+                void Set(bool value) => Assert.True(CuiLayoutProperties.SetLiteral(target, "BringIntoView", value.ToString(),
+                    CuiPropertyLevel.Overlay, "fixture current selection"));
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
     [Fact]
     public async Task Arrows_follow_actual_direction_extent_and_resize_without_replacing_the_viewport()
     {
@@ -147,6 +221,8 @@ public sealed class CuiHorizontalOverflowTests
         Assert.Equal(ScrollBarVisibility.Auto, Assert.IsType<ScrollViewer>(container.Child).HorizontalScrollBarVisibility);
     }
 
+    private const string RevealMarkup = "<Container Type='Horizontal Stack' HorizontalScrolling='True' HorizontalOverflowArrows='True' Height='60'>" +
+        "<Button Text='First' Width='250'/><Container Type='Overlay' Width='80' Height='40' bring-into-view='True'><Button Text='Selected'/></Container></Container>";
     private static readonly string Markup = "<Container Type='Horizontal Stack' HorizontalScrolling='True' " +
         "VerticalScrolling='False' horizontal-overflow-arrows='True'>" +
         string.Concat(Enumerable.Range(0, 6).Select(index => $"<Button Content='Item {index}' Width='100' Height='40'/>")) + "</Container>";
