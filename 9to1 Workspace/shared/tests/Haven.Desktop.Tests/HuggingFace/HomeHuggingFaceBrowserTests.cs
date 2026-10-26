@@ -36,7 +36,7 @@ public sealed class HomeHuggingFaceBrowserTests
             fileList.SelectedIndex = 0;
             Click(browser, "hf-install");
             await service.InstallCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            await WaitForUiAsync(() => Find<TextBlock>(browser, "hf-install-status").Text.Contains("Awaiting Dulche engine observation", StringComparison.Ordinal),
+            await WaitForUiAsync(() => Find<TextBlock>(browser, "hf-install-status").Text?.Contains("Awaiting Dulche engine observation", StringComparison.Ordinal) == true,
                 "the completed install status to reach the UI");
             var status = Find<TextBlock>(browser, "hf-install-status").Text;
             Assert.Contains("Awaiting Dulche engine observation", status);
@@ -76,7 +76,7 @@ public sealed class HomeHuggingFaceBrowserTests
             Assert.Equal(string.Empty, token.Text);
             Assert.False(token.IsUndoEnabled);
             await service.TokenSaved.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            await WaitForUiAsync(() => install.IsEnabled && Find<TextBlock>(browser, "hf-token-status").Text.Contains("saved securely", StringComparison.OrdinalIgnoreCase),
+            await WaitForUiAsync(() => install.IsEnabled && Find<TextBlock>(browser, "hf-token-status").Text?.Contains("saved securely", StringComparison.OrdinalIgnoreCase) == true,
                 "the saved token state to reach the gated install controls");
             Assert.Equal("hf-secret-value", service.SavedToken);
             Assert.DoesNotContain("hf-secret-value", Find<TextBlock>(browser, "hf-token-status").Text);
@@ -241,12 +241,12 @@ public sealed class HomeHuggingFaceBrowserTests
         var deadline = DateTime.UtcNow.AddSeconds(5);
         while (DateTime.UtcNow < deadline)
         {
-            await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+            await Dispatcher.UIThread.InvokeAsync(() => Dispatcher.UIThread.RunJobs());
             if (condition()) return;
             await Task.Delay(10);
         }
 
-        await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+        await Dispatcher.UIThread.InvokeAsync(() => Dispatcher.UIThread.RunJobs());
         Assert.True(condition(), $"Timed out waiting for {expectedState}.");
     }
 
