@@ -138,3 +138,7 @@ PR #38's existing [Android compile run](https://github.com/CroakyJake12/9to1/act
 2. Verify native Board creation/save/reopen and stale-parent conflict handling; Files setup; Spaces attachment layering, history, emoji interactions and model-manager destination; browser engines; provider enumeration/inference and Dashboard planner; Web Automations storage; account services; manual Build project opening; and ordinary shutdown.
 3. Fix and test the remaining `RetryAuditAndReceiptAsync` conflict-flag classification separately. Resolve the persistent cancellation/generic feedback lifetime and investigate SQLite recovery without deleting user data or weakening checks.
 4. Repeat critical workflows after a cold restart. Capture screenshots/logs and mark each substep separately. Focused tests and isolated X11 startup pass; all installed-app workflows above remain **NOT VERIFIED**. No overall acceptance claim is supported.
+
+## Current x64 test package
+
+The owner-requested [26 October x64 test package](desktop-test-build-2026-10-26.md) is built from `59d66496` and delivered privately through OneDrive. Package payload verification and native X11 startup/normal shutdown passed. Installation on the owner's desktop, full app workflows and independent acceptance remain unverified; the linked delivery record lists the absent native runtime dependencies explicitly.
