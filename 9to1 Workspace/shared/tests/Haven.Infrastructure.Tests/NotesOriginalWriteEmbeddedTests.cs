@@ -13,7 +13,7 @@ public sealed partial class NotesOriginalStoreTests
     {
         await using var home = await HomeRig.CreateAsync();
         var document = NotesDocument.Create("Write catalogue entry");
-        document.Version = (await home.Notes.Owner.SaveAsync(document, "Create test document", home.Token)).Version;
+        document.Version = (await home.Verified.SaveAsync(document, "Create test document", home.Token)).Version;
         var request = await home.Notes.Owner.PrepareOriginalLibraryReadAsync(null, home.Token);
         var review = await home.Admission.RequestWriteLibrarySnapshotAsync(request, home.SessionId, home.Token);
         Assert.Equal(HomePermissionRequestState.PendingApproval, review.Authorization.State);
@@ -36,7 +36,7 @@ public sealed partial class NotesOriginalStoreTests
     {
         await using var home = await HomeRig.CreateAsync();
         var initial = NotesDocument.Create("Original Write document");
-        initial.Version = (await home.Notes.Owner.SaveAsync(initial, "Create test document", home.Token)).Version;
+        initial.Version = (await home.Verified.SaveAsync(initial, "Create test document", home.Token)).Version;
         var retained = new List<Task>();
         void Scope(Action body) => body();
         void Retain(Task task) => retained.Add(task);
@@ -86,7 +86,7 @@ public sealed partial class NotesOriginalStoreTests
     {
         await using var home = await HomeRig.CreateAsync();
         var initial = NotesDocument.Create("Read-only Write document");
-        initial.Version = (await home.Notes.Owner.SaveAsync(initial, "Create test document", home.Token)).Version;
+        initial.Version = (await home.Verified.SaveAsync(initial, "Create test document", home.Token)).Version;
         void Scope(Action body) => body();
         void Retain(Task _) { }
 
