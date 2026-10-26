@@ -355,6 +355,7 @@ public sealed class CuiOwnedTemplateTests
                 item = Assert.Single(root!.GetVisualDescendants().OfType<MenuItem>());
                 var authored = new SolidColorBrush(Colors.White);
                 CuiPropertyPresentation.Set(item, "Background", authored, CuiPropertyLevel.Instance, "authored menu row");
+                Assert.True(item.TryFindResource("CuiMenuSelectionBrush", out var selectedBrush));
                 var frame = Assert.Single(item.GetVisualDescendants().OfType<CuiMaterialBorder>());
                 var point = item.TranslatePoint(new Point(item.Bounds.Width / 2, item.Bounds.Height / 2), window)!.Value;
                 window.MouseMove(point); window.UpdateLayout();
@@ -365,12 +366,16 @@ public sealed class CuiOwnedTemplateTests
                 window.MouseDown(point, Avalonia.Input.MouseButton.Left); window.UpdateLayout();
                 Assert.Contains(":pressed", item.Classes);
                 Assert.Null(frame.HoverTint);
-                Assert.Same(authored, item.Background);
+                // Pointer press moves the MenuItem into its real selected state. Its CUI selection
+                // brush is expected to win over the authored rest fill while hover feedback is off.
+                Assert.True(item.IsSelected);
+                Assert.Same(selectedBrush, item.Background);
 
                 window.MouseUp(point, Avalonia.Input.MouseButton.Left); window.UpdateLayout();
                 Assert.DoesNotContain(":pressed", item.Classes);
                 Assert.NotNull(frame.HoverTint);
-                Assert.Same(authored, item.Background);
+                Assert.True(item.IsSelected);
+                Assert.Same(selectedBrush, item.Background);
             }
             finally { window.Close(); if (item is not null) CuiPropertyPresentation.Detach(item); }
         }, CancellationToken.None);
