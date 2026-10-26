@@ -37,6 +37,7 @@ using Haven.Desktop.Views.Pages.Terminal;
 using Haven.Desktop.Views.Pages.WorkspaceEditor;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.Infrastructure;
+using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Views.Shell;
@@ -53,7 +54,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private readonly IWorkspaceStateRepository _workspaceState;
     private readonly IWorkspaceToolService _workspaceTools;
     private readonly IProjectIntelligenceService _projectIntelligence;
-    private readonly IOllamaClient _ollama;
+    private readonly IProviderModelClient _ollama;
+    private readonly HomeModelSelectionSource? _homeModelSelectionSource;
     private readonly ChatSessionService _sessions;
     private readonly IConversationSafetyService _conversationSafety;
     private readonly IConversationVersioningService _conversationVersioning;
@@ -219,7 +221,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         IModeRegistry modeRegistry,
         IModeUsageRepository modeUsage,
         IPinRepository pins,
-        AgentTaskRuntimeService? agentRuntime = null)
+        AgentTaskRuntimeService? agentRuntime = null,
+        HomeModelSelectionSource? homeModelSelectionSource = null)
     {
         _eventBus = bus;
         _bus = bus;
@@ -227,6 +230,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _containers = containers;
         _catalog = catalog;
         _agentRuntime = agentRuntime;
+        _homeModelSelectionSource = homeModelSelectionSource;
         _automations = automations;
         _workspaceState = workspaceState;
         _workspaceTools = workspaceTools;
@@ -2023,7 +2027,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         var page = new NewDashboardPage(
             _bus, _modeRegistry, _modeUsage, _pins, _conversations, _versionedSettings,
             _dashboard, _dashboardLayout, _dashboardProviders);
-        page.EnableDashboardAssistant(new DashboardEditPlanner(_ollama, () => _preferences.DefaultModel));
+        if (_homeModelSelectionSource is { } selection)
+            page.EnableDashboardAssistant(new DashboardEditPlanner(_ollama, selection));
         page.DashboardActionRequested += (_, actionKey) => StartOriginalShellEvent(async original =>
         {
             switch (actionKey.Trim().ToLowerInvariant())
