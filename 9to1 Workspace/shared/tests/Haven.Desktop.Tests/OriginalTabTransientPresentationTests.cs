@@ -7,6 +7,25 @@ namespace Haven.Desktop.Tests;
 public sealed class OriginalTabTransientPresentationTests
 {
     [AvaloniaFact]
+    public async Task Close_reservation_preserves_pending_choice_and_abort_allows_new_admission()
+    {
+        var host = new OriginalTabTransientPresentation(); host.BindOriginal(new TextBlock());
+        var picker = new TextBlock();
+        var selected = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var active = host.PresentAsync(picker, _ => selected.Task, TestContext.Current.CancellationToken);
+        Assert.Null(host.TryReserveClose());
+        Assert.False(active.IsCompleted); Assert.Same(picker, host.VisibleContent);
+        selected.SetResult(true); Assert.True(await active);
+        using (var preparation = host.TryReserveClose())
+        {
+            Assert.NotNull(preparation);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => host.PresentAsync(new TextBlock(),
+                _ => Task.FromResult(true), TestContext.Current.CancellationToken));
+        }
+        Assert.True(await host.PresentAsync(new TextBlock(), _ => Task.FromResult(true), TestContext.Current.CancellationToken));
+    }
+
+    [AvaloniaFact]
     public async Task Selection_uses_stable_origin_container_and_cancellation_restores_original()
     {
         var host = new OriginalTabTransientPresentation();

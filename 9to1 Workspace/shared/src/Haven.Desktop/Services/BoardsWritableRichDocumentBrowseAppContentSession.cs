@@ -25,6 +25,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     private Task? _initialization, _close;
     private Task<IBrowseAppContentClosePreparation?>? _preparationTask;
     private ClosePreparation? _prepared;
+    private IDisposable? _transientCloseReservation;
     private Task? _titleRefresh;
     private int _titleVersion;
     private string _title = "Boards — Files document";
@@ -169,13 +170,15 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
 
     public Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
     {
-        TransientPresentation.CancelPending();
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        cancellationToken.ThrowIfCancellationRequested();
         lock (_gate)
         {
             if (_close is not null || _closing) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
             if (_prepared is { } prepared) return Task.FromResult<IBrowseAppContentClosePreparation?>(prepared);
             if (_preparationTask is { IsCompleted: false }) return _preparationTask;
+            _transientCloseReservation = TransientPresentation.TryReserveClose();
+            if (_transientCloseReservation is null) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _preparationTask = PrepareDriverAsync(start.Task, cancellationToken);
             start.SetResult();
@@ -184,6 +187,15 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     }
 
     private async Task<IBrowseAppContentClosePreparation?> PrepareDriverAsync(Task start, CancellationToken token)
+    {
+        try { return await PrepareCoreAsync(start, token).ConfigureAwait(false); }
+        finally
+        {
+            lock (_gate)
+                if (_prepared is null) { _transientCloseReservation?.Dispose(); _transientCloseReservation = null; }
+        }
+    }
+    private async Task<IBrowseAppContentClosePreparation?> PrepareCoreAsync(Task start, CancellationToken token)
     {
         await start.ConfigureAwait(false);
         var initialization = OriginalInitialization;
@@ -246,6 +258,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             if (!preparation.IsCurrent) throw new InvalidOperationException("The original Boards close preparation is no longer current.");
             preparation.MarkAccepted();
             _closing = true;
+            _transientCloseReservation?.Dispose(); _transientCloseReservation = null;
             _published = false;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _close = CloseCoreAsync(start.Task);
@@ -286,7 +299,11 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             {
                 if (!IsCurrent && !ReferenceEquals(owner._prepared, this))
                     throw new InvalidOperationException("The original Boards preparation is no longer current.");
-                if (ReferenceEquals(owner._prepared, this)) owner._prepared = null;
+                if (ReferenceEquals(owner._prepared, this))
+                {
+                    owner._prepared = null;
+                    owner._transientCloseReservation?.Dispose(); owner._transientCloseReservation = null;
+                }
                 _aborted = true;
             }
         }
@@ -310,7 +327,6 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
 
     public Task CloseAndDrainAsync()
     {
-        TransientPresentation.CancelPending();
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         lock (_gate)
         {

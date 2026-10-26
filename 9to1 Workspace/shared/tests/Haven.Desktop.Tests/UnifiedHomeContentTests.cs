@@ -377,6 +377,26 @@ public sealed class UnifiedHomeContentTests
     // Actual canonical CUI/native preference file/factory routes. The explicit admission
     // callbacks in these component cases are controlled; actual Home authority has separate cases.
     [AvaloniaFact]
+    public async Task Guard_refusal_and_close_veto_preserve_pending_original_tab_choice()
+    {
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token).CreateSession(Request()));
+        await session.InitializeAsync(TestContext.Current.CancellationToken);
+        var host = Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView);
+        var picker = new TextBlock();
+        var decision = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var pending = host.PresentAsync(picker, token => decision.Task.WaitAsync(token), lifetime.Token);
+        using (CloudflareOriginalExecutionGuard.EnterOriginal(session))
+            await Assert.ThrowsAsync<InvalidOperationException>(() => session.TryPrepareToCloseAsync(TestContext.Current.CancellationToken));
+        Assert.False(pending.IsCompleted); Assert.Same(picker, host.VisibleContent);
+        Assert.False(await session.TryPrepareToCloseAsync(TestContext.Current.CancellationToken));
+        Assert.False(pending.IsCompleted); Assert.Same(picker, host.VisibleContent);
+        decision.SetResult(true); Assert.True(await pending);
+        Assert.True(await session.TryPrepareToCloseAsync(TestContext.Current.CancellationToken));
+        await session.CloseAndDrainAsync(); Assert.True(session.CanRetireOriginalView);
+    }
+
+    [AvaloniaFact]
     public async Task Settings_rail_saves_through_the_same_canonical_appearance_source_and_retains_its_page()
     {
         var root = Path.Combine(Path.GetTempPath(), "home-settings-route-" + Guid.NewGuid().ToString("N"));

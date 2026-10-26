@@ -21,6 +21,28 @@ internal sealed class OriginalTabTransientPresentation : Grid
     internal OriginalTabTransientPresentation()
     { Children.Add(_originalLayer); Children.Add(_transientLayer); }
     private CancellationTokenSource? _pending;
+    private bool _closeReserved;
+    internal IDisposable? TryReserveClose()
+    {
+        lock (_gate)
+        {
+            if (_pending is not null || _closeReserved) return null;
+            _closeReserved = true;
+            return new CloseReservation(this);
+        }
+    }
+    private sealed class CloseReservation(OriginalTabTransientPresentation owner) : IDisposable
+    {
+        private bool _released;
+        public void Dispose()
+        {
+            lock (owner._gate)
+            {
+                if (_released) return;
+                _released = true; owner._closeReserved = false;
+            }
+        }
+    }
     internal Control BindOriginal(Control original)
     {
         Dispatcher.UIThread.VerifyAccess();
@@ -34,10 +56,13 @@ internal sealed class OriginalTabTransientPresentation : Grid
         CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess();
-        if (_original is null || _pending is not null || page.Parent is not null)
-            throw new InvalidOperationException("The original tab is not available for a transient presentation.");
         using var pending = CancellationTokenSource.CreateLinkedTokenSource(token);
-        lock (_gate) _pending = pending;
+        lock (_gate)
+        {
+            if (_original is null || _pending is not null || _closeReserved || page.Parent is not null)
+                throw new InvalidOperationException("The original tab is not available for a transient presentation.");
+            _pending = pending;
+        }
         _transientLayer.Child = page;
         _originalLayer.IsVisible = false;
         _originalLayer.IsHitTestVisible = false;

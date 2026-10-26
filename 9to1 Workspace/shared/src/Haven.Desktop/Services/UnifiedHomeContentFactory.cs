@@ -145,19 +145,23 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         }
         public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
         {
-            TransientPresentation.CancelPending();
             DemandExternalJoin();
+            cancellationToken.ThrowIfCancellationRequested();
             lock (_gate)
             {
                 if (_preparation is not null && !_preparation.IsCompletedSuccessfully) return _preparation;
                 if (!IsPublicationCurrent) return Task.FromResult(false);
+                var reservation = TransientPresentation.TryReserveClose();
+                if (reservation is null) return Task.FromResult(false);
                 var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                _preparation = _work.RunAsync(original => PrepareAsync(original, start.Task, cancellationToken));
+                try { _preparation = _work.RunAsync(original => PrepareAsync(original, start.Task, cancellationToken, reservation)); }
+                catch { reservation.Dispose(); throw; }
                 start.SetResult(); return _preparation;
             }
         }
-        private async Task<bool> PrepareAsync(DesktopOriginalWorkLifetime.Original original, Task start, CancellationToken caller)
+        private async Task<bool> PrepareAsync(DesktopOriginalWorkLifetime.Original original, Task start, CancellationToken caller, IDisposable reservation)
         {
+            using var closeReservation = reservation;
             await start.ConfigureAwait(false);
                 using var sourcePhase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
                 using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, caller, _owner._hostLifetime);
