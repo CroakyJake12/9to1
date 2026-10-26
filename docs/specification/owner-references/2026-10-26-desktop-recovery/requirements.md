@@ -43,3 +43,8 @@ a separate native verification requirement.
   white background while its content was dark; that capture alone is not evidence
   of a fully initialized product light theme. Retain the owner's broader report
   and verify actual application surfaces rather than correcting only the probe.
+
+- Hover modifies the element's current effective colour instead of replacing it
+  with an unrelated theme palette colour (for example, turning white black).
+  Preserve app/custom colours, enabled/selected/focus state and theme effects,
+  including Glow. Verify light, dark and explicitly coloured surfaces.

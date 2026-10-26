@@ -256,7 +256,7 @@ public sealed class ChatAddMenuNativePopupTests
         }
 
         var overlays = window.GetVisualDescendants().OfType<Avalonia.Controls.Primitives.OverlayPopupHost>()
-            .Select(overlay => $"{overlay.GetType().Name}: attached={overlay.IsAttachedToVisualTree()}, bounds={overlay.Bounds}, content={overlay.Content?.GetType().Name}, template={overlay.Template?.GetType().Name}, children={string.Join(',', overlay.GetVisualChildren().Select(child => child.GetType().Name))}");
+            .Select(overlay => $"{overlay.GetType().Name}: attached={overlay.IsAttachedToVisualTree()}, bounds={overlay.Bounds}, content={overlay.Content?.GetType().Name}, template={overlay.Template?.GetType().Name}, visible={overlay.IsEffectivelyVisible}, measureValid={overlay.IsMeasureValid}, parent={overlay.GetVisualParent()?.GetType().Name}:{overlay.GetVisualParent()?.Bounds}, children={string.Join(';', overlay.GetVisualDescendants().Select(child => $"{child.GetType().Name}[{child.Bounds}; templatedParent={(child as Avalonia.Controls.Primitives.TemplatedControl)?.TemplatedParent?.GetType().Name}; content={(child as Avalonia.Controls.Presenters.ContentPresenter)?.Content?.GetType().Name}]"))}");
         Assert.True(popupHost.IsAttachedToVisualTree(), "The popup host did not attach to its rendering tree after bounded dispatcher settlement. " + string.Join("; ", overlays));
         Assert.True(popupHost.Bounds.Width > 0 && popupHost.Bounds.Height > 0,
             "The popup host did not receive non-empty layout after bounded dispatcher settlement.");
