@@ -24,9 +24,7 @@ public sealed class HuggingFaceModelCtlImporter : IHuggingFaceModelImporter
     public HuggingFaceModelCtlImporter(string? scriptPath = null, string? pythonPath = null,
         string? modelRoot = null, string? runtimeDirectory = null)
     {
-        _script = Path.GetFullPath(scriptPath ?? (OperatingSystem.IsWindows()
-            ? Path.Combine(AppContext.BaseDirectory, "inference", "modelctl.py")
-            : LlamaCppPreviewBootstrap.ModelCtlScriptPath));
+        _script = Path.GetFullPath(scriptPath ?? LlamaCppRuntimeLayout.ReadExplicitEnvironment().ModelCtlPath);
         _python = Path.GetFullPath(pythonPath ?? (OperatingSystem.IsWindows()
             ? Path.Combine(AppContext.BaseDirectory, "python", "python.exe")
             : LlamaCppPreviewBootstrap.ModelCtlPythonPath));

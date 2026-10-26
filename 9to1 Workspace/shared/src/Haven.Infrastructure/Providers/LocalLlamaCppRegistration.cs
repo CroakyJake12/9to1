@@ -36,7 +36,7 @@ public static class LocalLlamaCppRegistration
     }
 
     /// <summary>Preview composition for the app-relative local chat bootstrap on the confirmed Linux
-    /// arm64 target. It reconciles the canonical bundle manifest/receipt and the canonical per-user
+    /// ARM64 or explicitly selected actual Linux x64 target. It reconciles the canonical bundle manifest/receipt and the canonical per-user
     /// modelctl store (no invented schema), feeds the SAME routed provider (LlamaCppModelProvider) and
     /// the SAME owned child-process runtime (LlamaCppRuntime), and exposes an async lifecycle that the
     /// App/Home original lifetime invokes. Discovery/hashing is NEVER performed synchronously during DI
@@ -46,7 +46,7 @@ public static class LocalLlamaCppRegistration
     public static IServiceCollection AddHavenPreviewLocalLlamaCpp(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton(_ => new LlamaCppPreviewBootstrap());
+        services.AddSingleton(_ => LlamaCppRuntimeLayout.ReadExplicitEnvironment().CreateBootstrap());
         services.AddSingleton<LlamaCppPreviewBootstrapState>();
 
         // SAME provider/source/catalogue as the explicit-option endpoint path; no duplicate engine id.
