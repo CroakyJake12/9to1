@@ -12,6 +12,40 @@ namespace Haven.Desktop.Tests;
 
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [Fact]
+    public async Task Conversation_permission_review_requires_a_fresh_matching_current_principal_observation()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(tools: false);
+        var originalTask = rig.Service.CurrentCanonicalTask!;
+        var request = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        var spaces = new SpaceRegistry(new ObservationSettings());
+        var space = await spaces.CreateAsync("Task permission authorization", cancellationToken: token);
+        var conversation = rig.Conversation with
+        {
+            Mode = HavenMode.Tasks,
+            Kind = ConversationKind.Task,
+            SpaceId = space.Id,
+            IsTemporary = false
+        };
+        rig.Conversations.Current = conversation;
+        var source = new SpaceTaskWorkspaceService(spaces, rig.Conversations, rig.Tasks);
+
+        // The task still carries its historical owner binding, but this is now a
+        // different authenticated actor. That binding must not surface the request.
+        rig.Actors.Current = rig.Actors.Current! with { ActorId = "different-current-actor" };
+        var observation = await source.ReadAsync(space.Id, conversation.Id, token);
+
+        Assert.Equal(originalTask.TaskId, observation.Snapshot!.TaskId);
+        Assert.Equal(originalTask.ExecutionId, observation.Snapshot.ExecutionId);
+        Assert.NotNull(observation.Snapshot.OwnerBinding);
+        Assert.False(observation.HasCurrentCommandIdentity);
+        Assert.Null(observation.PermissionReview);
+        Assert.True(rig.Owner.CanRespond(request.Id)); // Still pending at its actual owner; this read disclosed no action.
+        Assert.Equal(0, rig.Client.Dispatches);
+    }
+
     [AvaloniaFact]
     public async Task Space_task_widget_reviews_and_denies_same_actual_pending_permission_without_resuming()
     {
@@ -60,6 +94,10 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.True(widget.IsActionAvailable("task.deny-permission"));
 
             var currentObservation = await source.ReadAsync(space.Id, conversation.Id, token);
+            Assert.True(currentObservation.HasCurrentCommandIdentity);
+            Assert.Equal(originalTask.TaskId, currentObservation.Snapshot!.TaskId);
+            Assert.Equal(originalTask.ExecutionId, currentObservation.Snapshot.ExecutionId);
+            Assert.Equal(originalRequest.Id, currentObservation.PermissionReview!.Request.Id);
             var mismatched = currentObservation with
             { Snapshot = currentObservation.Snapshot! with { TaskId = Guid.NewGuid() } };
             typeof(SpaceTaskWidgetPage).GetMethod("ReconcilePermissionReview", BindingFlags.Instance | BindingFlags.NonPublic)!

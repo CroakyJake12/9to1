@@ -529,7 +529,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             "CanPauseOriginal" => IsActionAvailable("task.pause") == true,
             "CanStopOriginal" => IsActionAvailable("task.stop") == true,
             "CanResumeOriginal" => IsActionAvailable("task.resume-original") == true,
-            "HasPermissionReview" => _observation?.PermissionReview is { } permission &&
+            "HasPermissionReview" => _observation is { HasCurrentCommandIdentity: true, PermissionReview: { } permission } &&
                 (permission.CanRespond || permission.AcknowledgedDecision is not null),
             "PermissionOpen" => _permissionOpen,
             "PermissionTitle" => _permissionReview?.Request.Title ?? "Task permission review",
@@ -597,8 +597,8 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             {
                 "task.refresh" => true,
                 "task.pause" or "task.stop" or "task.resume-original" or "task.end-pass" => IsOriginalRunControlAvailable(command),
-                "task.review-permission" => !_permissionPending && _observation?.PermissionReview is not null &&
-                    _observation.Snapshot?.OwnerBinding is not null,
+                "task.review-permission" => !_permissionPending && _observation is
+                    { HasCurrentCommandIdentity: true, PermissionReview: not null, Snapshot: { OwnerBinding: not null } },
                 "task.allow-permission" or "task.deny-permission" => !_permissionPending && _permissionOpen && !_permissionResponded &&
                     _permissionReview is { CanRespond: true } && _permissionSelection is not null &&
                     _permissionSelection.Snapshot is not null && PermissionActionDeclared(command),
