@@ -151,16 +151,25 @@ public sealed class HomeOnboardingCuiController : ICuiResultReportingDispatcher
     /// <see cref="HomeOnboardingProceedState"/> outcome.</summary>
     private async ValueTask<CuiCommandOutcome> ProceedAsync(bool signInAttempt, CancellationToken cancellationToken)
     {
-        _proceeded = true;
         var opened = false;
         var unavailable = false;
         if (signInAttempt)
         {
-            opened = await _service.BeginSignInAsync(cancellationToken).ConfigureAwait(false);
+            try { opened = await _service.BeginSignInAsync(cancellationToken).ConfigureAwait(false); }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch
+            {
+                return new CuiCommandOutcome(false, false, "SignInFailed",
+                    "Sign-in did not complete. Try again, or choose Not Now to use local tools.", null);
+            }
             unavailable = !opened;
+            if (unavailable)
+                return new CuiCommandOutcome(false, false, "SignInUnavailable",
+                    "Sign-in is unavailable right now. Choose Not Now to use local tools.", null);
         }
 
         var eligible = await _service.HasEligibleLocalModelAsync(cancellationToken).ConfigureAwait(false);
+        _proceeded = true;
         _lastEligible = eligible;
         if (eligible)
         {
@@ -235,7 +244,7 @@ public sealed class HomeOnboardingCuiController : ICuiResultReportingDispatcher
                 "Onboarding has not run local discovery; cannot persist completion yet.", null);
         var eligible = _discovery?.EligibleModelAvailable == true || _lastEligible;
         var completion = await _service.PersistCompletionAsync(
-            _profileId, signedIn: false, modelEligible: eligible, manifestRevision: _manifestRevision,
+            _profileId, signedIn: _service.IsSignedIn, modelEligible: eligible, manifestRevision: _manifestRevision,
             cancellationToken).ConfigureAwait(false);
         if (completion.Succeeded)
         {

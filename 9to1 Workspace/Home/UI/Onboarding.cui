@@ -18,13 +18,13 @@
          step via the <Effects> block: an eligible local model auto-completes; otherwise the
          Download Models? step appears directly (no extra Continue/Discover tap). -->
     <Action name="signin" command="onboarding.signin" result="Result">
-      <Set Target="StepSignIn" Value="false" />
-      <Set Target="StatusText" Value="Sign-in opened in your browser." When="{Binding Result.Value.SignInOpened}" />
-      <Set Target="StatusText" Value="Sign-in is unavailable right now; local tools keep working." When="{Binding Result.Value.SignInUnavailable}" />
+      <Set Target="StepSignIn" Value="false" When="{Binding Result.Succeeded}" />
+      <Set Target="StatusText" Value="{Binding Result.Message}" When="!{Binding Result.Succeeded}" />
     </Action>
 
     <Action name="notnow" command="onboarding.notnow" result="Result">
       <Set Target="StepSignIn" Value="false" />
+      <Set Target="StatusText" Value="" />
     </Action>
 
     <!-- Eligible auto-complete: only reached via the eligible <Effect>. On a failed durable commit
@@ -82,6 +82,7 @@
 
             <!-- Normal first-run flow: shown only when no structured recovery is active. -->
             <If Condition="!{Binding RecoveryRequired}">
+              <Container id="onboarding-steps" Type="Vertical Stack">
 
             <!-- WELCOME -->
             <If Condition="{Binding StepWelcome}">
@@ -109,7 +110,7 @@
             <If Condition="{Binding StepDownload}">
               <Container id="onboarding-download" Type="Vertical Stack">
                 <Text id="onboarding-download-title" text="Download Models?" font-size="30" font-weight="Bold" foreground="{Resource CuiTextBrush}" text-wrapping="Wrap" text-alignment="Center" />
-                <Text id="onboarding-download-copy" text="Local models give you unlimited on-device AI. Downloads are not available in this build; continue without one and install from Settings later." foreground="{Resource CuiTextSoftBrush}" margin="0 8 0 20" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-download-copy" text="Local models give you unlimited on-device AI. Recommended models are not available yet. You can browse and install models in Home’s model settings." foreground="{Resource CuiTextSoftBrush}" margin="0 8 0 20" text-wrapping="Wrap" text-alignment="Center" />
                 <Button id="onboarding-continue" action="continue-no-model" min-height="44" max-width="380" horizontal-alignment="Center" padding="16 12" accessible-name="Continue without downloading a model">
                   <Text text="Continue without downloading" text-wrapping="Wrap" text-alignment="Center" />
                 </Button>
@@ -117,6 +118,7 @@
             </If>
 
               <Text id="onboarding-status" text="{Binding StatusText}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
+              </Container>
             </If>
           </Container>
         </Container>

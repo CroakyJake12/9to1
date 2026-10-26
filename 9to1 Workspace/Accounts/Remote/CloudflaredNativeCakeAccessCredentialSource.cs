@@ -1,13 +1,14 @@
 using System.Diagnostics;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace NineToOne.Accounts.Native;
 
 /// <summary>
-/// Explicit Windows Access helper owner. Access is not CAKE identity or authority.
+/// Explicit pinned native Access helper owner. Access is not CAKE identity or authority.
 /// Await CloseAndDrainAsync from an independent owner, never from an operation it joins.
 /// </summary>
 public sealed class CloudflaredNativeCakeAccessCredentialSource : INativeCakeAccessCredentialSource
@@ -16,6 +17,10 @@ public sealed class CloudflaredNativeCakeAccessCredentialSource : INativeCakeAcc
     public const string OfficialSourceCommit = "96d39adbc812dc7363834bda908970c1a2560a72";
     public const string OfficialWindowsSha256 = "f096265ec2fcbe9bb6e2d64268db167ced3fcbb83d894bdb9e2fcdb26f2ea7e2";
     public const long OfficialWindowsBytes = 55366080;
+    public const string OfficialLinuxX64Sha256 = "77e26d8d900e0b8469f416239d14b5f296525fdf79fee6f511ef55609e3fbac2";
+    public const long OfficialLinuxX64Bytes = 40122749;
+    public const string OfficialLinuxArm64Sha256 = "aaeb2d7d0da3614634c7e03ab13487a1522c2e79165ed2929cfe23d5e95b326d";
+    public const long OfficialLinuxArm64Bytes = 37685657;
     public const string ApplicationOrigin = "https://cake-id-release-validation.jcbailey008.workers.dev/";
     private const string ProtectedApplication = ApplicationOrigin + "account";
     private const int MaximumCaptureBytes = 16384;
@@ -44,7 +49,21 @@ public sealed class CloudflaredNativeCakeAccessCredentialSource : INativeCakeAcc
     // The integrator supplies a reviewed, protected absolute helper path; no discovery,
     // download, PATH search, environment read or default provider is performed here.
     public CloudflaredNativeCakeAccessCredentialSource(string trustedAbsoluteExecutablePath)
-        : this(trustedAbsoluteExecutablePath, new SystemCloudflaredOwnedHelperHost(), requireWindows: true) { }
+        : this(trustedAbsoluteExecutablePath, new SystemCloudflaredOwnedHelperHost())
+    { _ = ReviewedPlatformPin(); }
+
+    public static bool IsPlatformSupported =>
+        OperatingSystem.IsWindows() && RuntimeInformation.ProcessArchitecture == Architecture.X64 ||
+        OperatingSystem.IsLinux() && RuntimeInformation.ProcessArchitecture is Architecture.X64 or Architecture.Arm64;
+
+    internal static (long Bytes, string Sha256) ReviewedPlatformPin() =>
+        (OperatingSystem.IsWindows(), OperatingSystem.IsLinux(), RuntimeInformation.ProcessArchitecture) switch
+        {
+            (true, _, Architecture.X64) => (OfficialWindowsBytes, OfficialWindowsSha256),
+            (_, true, Architecture.X64) => (OfficialLinuxX64Bytes, OfficialLinuxX64Sha256),
+            (_, true, Architecture.Arm64) => (OfficialLinuxArm64Bytes, OfficialLinuxArm64Sha256),
+            _ => throw new PlatformNotSupportedException("No reviewed Access helper is available for this platform.")
+        };
 
     internal CloudflaredNativeCakeAccessCredentialSource(string path, ICloudflaredOwnedHelperHost host,
         bool requireWindows = false, TimeProvider? clock = null)
@@ -464,6 +483,7 @@ internal sealed class SystemCloudflaredOwnedHelperHost : ICloudflaredOwnedHelper
         List<Exception> causes = [];
         try
         {
+            var pin = CloudflaredNativeCakeAccessCredentialSource.ReviewedPlatformPin();
             // No PATH/cache/environment lookup. Refuse reparse-point inputs.
             for (var node = new FileInfo(path) as FileSystemInfo; node is not null;
                  node = node is FileInfo file ? file.Directory : ((DirectoryInfo)node).Parent)
@@ -471,7 +491,7 @@ internal sealed class SystemCloudflaredOwnedHelperHost : ICloudflaredOwnedHelper
                     throw new IOException("The reviewed helper path contains a reparse point.");
             original = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
                 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
-            if (original.Length != CloudflaredNativeCakeAccessCredentialSource.OfficialWindowsBytes)
+            if (original.Length != pin.Bytes)
                 throw new IOException("Access helper length does not match the reviewed release.");
             var actual = SHA256.HashDataAsync(original, token).AsTask();
             byte[] hash;
@@ -482,12 +502,21 @@ internal sealed class SystemCloudflaredOwnedHelperHost : ICloudflaredOwnedHelper
                     ExceptionDispatchInfo.Capture(compound).Throw();
                 throw;
             }
-            if (Convert.ToHexStringLower(hash) != CloudflaredNativeCakeAccessCredentialSource.OfficialWindowsSha256)
+            if (Convert.ToHexStringLower(hash) != pin.Sha256)
                 throw new IOException("Access helper SHA256 does not match the reviewed release.");
+            if (OperatingSystem.IsLinux())
+            {
+                var mode = File.GetUnixFileMode(path);
+                if ((mode & (UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute)) == 0 ||
+                    (mode & (UnixFileMode.UserWrite | UnixFileMode.GroupWrite | UnixFileMode.OtherWrite)) != 0)
+                    throw new IOException("The reviewed Linux Access helper must be executable and read-only.");
+            }
             token.ThrowIfCancellationRequested();
             // Retain the SAME read lease through native settlement. On Windows the
             // share mode refuses file writes/deletion; protected directory custody
-            // is still needed for the path-based CreateProcess image boundary.
+            // is still needed for the path-based native image boundary on every OS.
+            // Linux share modes do not prevent replacement; the immutable runtime slot
+            // and protected parent directories retain that custody.
             var lease = original; original = null; return lease;
         }
         catch (Exception error) { causes.Add(error); }
