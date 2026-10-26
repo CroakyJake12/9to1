@@ -419,6 +419,7 @@ public sealed class UnifiedHomeContentTests
     [AvaloniaFact]
     public async Task Settings_rail_saves_through_the_same_canonical_appearance_source_and_retains_its_page()
     {
+        var testToken = TestContext.Current.CancellationToken;
         var root = Path.Combine(Path.GetTempPath(), "home-settings-route-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var file = Path.Combine(root, "preferences.json");
@@ -437,12 +438,14 @@ public sealed class UnifiedHomeContentTests
             window = Show(session.OriginalNativeView);
             page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-settings")
                 .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
             Assert.NotNull(settings);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
-            Assert.Contains(settings!.GetVisualDescendants(), control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
+            Assert.Contains(settings!.GetVisualDescendants().OfType<Control>(), control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
             AppearanceOption(settings, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
             Assert.True(settings.LastWrite!.ConfirmedWrite!.Succeeded);
             Assert.Equal(1, settings.LastWrite.ConfirmedWrite.Value!.Preference.Revision);
             var saved = HomeNativePreferenceFile.Read(file);
@@ -452,6 +455,7 @@ public sealed class UnifiedHomeContentTests
             Assert.Single(Directory.EnumerateFiles(root, "*.json"));
             await page.DispatchAsync("home.apps", null);
             await page.DispatchAsync("home.settings", null);
+            SettleFixtureLayout(window);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
             Assert.True(await session.TryPrepareToCloseAsync());
             await session.CloseAndDrainAsync();
@@ -1235,6 +1239,7 @@ public sealed class UnifiedHomeContentTests
     [AvaloniaFact]
     public async Task Authored_Events_rail_uses_canonical_source_and_retains_its_destination_between_sections()
     {
+        var testToken = TestContext.Current.CancellationToken;
         using var lifetime = new CancellationTokenSource();
         var activity = new HomeActivityFixture();
         HomeEventsDestinationPage? destination = null;
@@ -1251,7 +1256,8 @@ public sealed class UnifiedHomeContentTests
             window = Show(session.OriginalNativeView);
             var rail = page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-events");
             rail.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await page.WhenActionsIdleAsync();
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
             Assert.NotNull(destination);
             Assert.Contains(page.GetVisualDescendants().OfType<HomeEventsDestinationPage>(), item => ReferenceEquals(item, destination));
             var observed = Assert.Single(destination!.Current!.Items);
@@ -1263,13 +1269,15 @@ public sealed class UnifiedHomeContentTests
                 identity.Contains("id:home-events-rows|key:", StringComparison.Ordinal) &&
                 identity.EndsWith("/id:home-event-row", StringComparison.Ordinal));
             row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await destination.WhenActionsIdleAsync();
+            await destination.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
             Assert.Equal(activity.Event.EventId, destination.SelectedEventId);
             var open = destination.GetVisualDescendants().OfType<Button>().Single(button => CuiRuntimeIdentity.GetStableId(button) == "id:events-open-selected");
             Assert.False(open.IsEnabled);
             Assert.DoesNotContain(destination.GetVisualDescendants(), control => control is ListBox);
             await page.DispatchAsync("home.apps", null);
             await page.DispatchAsync("home.events", null);
+            SettleFixtureLayout(window);
             Assert.Same(destination, Assert.Single(page.GetVisualDescendants().OfType<HomeEventsDestinationPage>()));
             Assert.Equal(activity.Event.EventId, destination.SelectedEventId);
             Assert.True(await session.TryPrepareToCloseAsync());
@@ -1332,6 +1340,7 @@ public sealed class UnifiedHomeContentTests
             Assert.Single(page.Current!.Items);
             activity.Allowed = false;
             await page.DispatchAsync("RefreshEvents", null, testToken);
+            SettleFixtureLayout(window);
             Assert.Empty(page.Current!.Items);
             Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), button =>
                 CuiRuntimeIdentity.GetStableId(button) is { } identity &&
@@ -2168,6 +2177,15 @@ public sealed class UnifiedHomeContentTests
         public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
         public string LogsDirectory => Path.Combine(DataDirectory, "logs");
         public string LegacyStatePath => Path.Combine(DataDirectory, "missing.json");
+    }
+
+    private static void SettleFixtureLayout(Window window)
+    {
+        // Domain/loader action completion does not perform Avalonia's template/layout pass.
+        // Keep assertions on the actual mounted visual tree after deferred presenters settle.
+        window.UpdateLayout();
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
     }
 
     private static Window Show(Control page)
