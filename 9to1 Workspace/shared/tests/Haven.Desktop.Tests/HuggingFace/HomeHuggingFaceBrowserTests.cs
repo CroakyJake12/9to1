@@ -264,14 +264,14 @@ public sealed class HomeHuggingFaceBrowserTests
             Assert.Equal("profile-a", profileId);
             LastQuery = query;
             SearchCompleted.TrySetResult();
-            return Task.FromResult<IReadOnlyList<HuggingFaceModelSummary>>([_summary with { Gated }]);
+            return Task.FromResult<IReadOnlyList<HuggingFaceModelSummary>>([_summary with { Gated = Gated }]);
         }
 
         public Task<HuggingFaceModelDetails> GetDetailsAsync(string profileId, string repositoryId, CancellationToken cancellationToken)
         {
             Assert.Equal("profile-a", profileId);
             DetailsCompleted.TrySetResult();
-            return Task.FromResult(_details with { Gated });
+            return Task.FromResult(_details with { Gated = Gated });
         }
 
         public async Task<HuggingFaceInstallResult> InstallAsync(string profileId, HuggingFaceModelDetails model,

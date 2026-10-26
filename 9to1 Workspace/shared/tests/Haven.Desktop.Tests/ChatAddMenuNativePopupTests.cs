@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Chat;
 using Haven.UI;
+using Container = Haven.UI.Components.Container;
 using HavenButton = Haven.UI.Components.Button;
 using HavenText = Haven.UI.Components.Text;
 using NativeButton = Avalonia.Controls.Button;
