@@ -31,10 +31,10 @@ public sealed class CuiLocalStateCompilationTests
     }
 
     [Fact]
-    public void Compile_rejects_unsupported_non_bool_local_variable()
+    public void Compile_rejects_unsupported_local_variable()
     {
         var result = new CuiCompiler().Compile(
-            "<Cui><Variable Type=\"int\" ID=\"Count\">0</Variable><Page /></Cui>",
+            "<Cui><Variable Type=\"complex\" ID=\"Count\">0</Variable><Page /></Cui>",
             "bad.cui", Options());
 
         Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "CUIC030");

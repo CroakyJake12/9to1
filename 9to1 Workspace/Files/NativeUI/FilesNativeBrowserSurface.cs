@@ -67,7 +67,11 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(hostLifetime);
         _search.Width = double.NaN;
         _sort.Width = 160;
-        _items.HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+        _items.ContainerPrepared += (_, args) =>
+        {
+            if (args.Container is ListBoxItem row)
+                row.HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+        };
         _items.ItemTemplate = new FuncDataTemplate<HostedItemMetadata>((item, _) => BuildDetailsRow(item));
         SizeChanged += (_, _) => Changed();
         _items.SelectionChanged += (_, _) =>
