@@ -119,13 +119,13 @@ public sealed class BrowserTabHoverContractTests
     public void Mounted_browser_tab_row_tints_as_one_surface_and_keeps_close_target_separate()
     {
         var view = new BrowserView();
-        var list = view.GetVisualDescendants().OfType<ItemsControl>()
-            .Single(control => control.Name == "HorizontalTabsList");
-        list.ItemsSource = new[] { new BrowserTabItem("One", "", false, true) };
         var window = new Window { Width = 500, Height = 120, Content = view };
         try
         {
             window.Show();
+            var list = view.GetVisualDescendants().OfType<ItemsControl>()
+                .Single(control => control.Name == "HorizontalTabsList");
+            list.ItemsSource = new[] { new BrowserTabItem("One", "", false, true) };
             window.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
 

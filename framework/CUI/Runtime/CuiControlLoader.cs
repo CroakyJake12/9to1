@@ -106,15 +106,23 @@ public sealed partial class CuiControlLoader : IDisposable
     private int _currentLayer;
     private string? _currentRepeatIdentity;
     private PropertyChangedEventHandler? _bindingChangedHandler;
+    private bool _listeningForGlobalPalette;
 
     public void SetThemePreferenceContext(CuiThemePreferenceContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (ReferenceEquals(context, _themePreference)) return;
         if (_themePreference is not null) _themePreference.Changed -= ThemePreferenceChanged;
+        if (_listeningForGlobalPalette)
+        {
+            CuiThemeResourceApplier.PaletteChanged -= GlobalPaletteChanged;
+            _listeningForGlobalPalette = false;
+        }
         _themePreference = context; context.Changed += ThemePreferenceChanged;
         ThemePreferenceChanged(this, EventArgs.Empty);
     }
+
+    private void GlobalPaletteChanged(object? sender, EventArgs args) => ThemePreferenceChanged(sender, args);
 
     private CuiThemeResolution ResolveTheme(string name)
     {
@@ -435,6 +443,11 @@ public sealed partial class CuiControlLoader : IDisposable
             Attempt(_lifetime.Cancel);
             ActionFailed = null;
             if (_themePreference is not null) Attempt(() => _themePreference.Changed -= ThemePreferenceChanged);
+            if (_listeningForGlobalPalette)
+            {
+                Attempt(() => CuiThemeResourceApplier.PaletteChanged -= GlobalPaletteChanged);
+                _listeningForGlobalPalette = false;
+            }
             if (_bindingContext is INotifyPropertyChanged observable && _bindingChangedHandler is not null)
                 Attempt(() => observable.PropertyChanged -= _bindingChangedHandler);
             _bindingChangedHandler = null;
@@ -4397,6 +4410,11 @@ public sealed partial class CuiControlLoader : IDisposable
         var name = _themeNames.Count > 0 ? _themeNames.Peek() : "user_preference";
         _controlThemeNames[control] = name;
         ApplyResolvedTheme(control, ResolveTheme(name));
+        if (_themePreference is null && !_listeningForGlobalPalette)
+        {
+            CuiThemeResourceApplier.PaletteChanged += GlobalPaletteChanged;
+            _listeningForGlobalPalette = true;
+        }
     }
 
     /// <summary>

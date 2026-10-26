@@ -768,7 +768,7 @@ public sealed class UnifiedHomeContentTests
                     Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
                 projection.ApplyThemeChoice("Professional", save: false);
                 Assert.Equal(HavenUiTheme.Glow, projection.Theme); // Legacy projection of CUI-only Professional.
-                Assert.Equal(HavenUiAppearance.Bright, projection.Appearance);
+                Assert.Equal(HavenUiAppearance.Dark, projection.Appearance); // Keep the current Home appearance across a theme-only change.
                 Assert.Equal(CuiTheme.Professional, CuiSurfacePaletteCatalog.ActiveTheme);
                 projection.ApplyAppearance(HavenUiAppearance.SuperBright, save: false);
                 Assert.Equal(HavenUiAppearance.SuperBright, projection.Appearance);

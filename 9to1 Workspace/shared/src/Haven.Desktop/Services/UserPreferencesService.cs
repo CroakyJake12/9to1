@@ -209,11 +209,10 @@ public sealed partial class UserPreferencesService
         // made an unknown saved value resolve to a loud identity instead of Professional.
         // CuiThemeCatalog.Parse falls back to Professional and accepts every legacy name.
         var theme = CuiThemeCatalog.Parse(themeName);
-        // An explicit legacy theme choice supersedes the last native Home presentation
-        // cache; otherwise the service getters would continue reporting the old theme.
-        _homeAppearancePresentation = null;
+        // A theme change is independent from the native Home appearance/accent settings.
+        // Retain those authoritative observations while replacing only the selected theme;
+        // clearing them would make the presentation fall back to stale legacy preferences.
         _homeThemePresentation = null;
-        _homeAccentPresentation = null;
 
         _preferences = _preferences with { HavenUiThemeName = CuiThemeCatalog.Name(theme) };
         // Publication (including CUI active theme) happens only after successful persistence
