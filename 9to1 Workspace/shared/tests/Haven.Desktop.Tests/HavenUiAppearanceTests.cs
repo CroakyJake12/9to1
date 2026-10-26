@@ -105,10 +105,10 @@ public sealed class HavenUiAppearanceTests
         using var paths = new TemporaryPaths();
         var preferences = new UserPreferencesService(paths);
         preferences.ApplyThemeChoice("Glow", save: false);
-        preferences.ApplyAppearance(HavenUiAppearance.Dark, save: false);
+        preferences.ApplyAppearance(HavenUiAppearance.Bright, save: false);
 
         var app = Avalonia.Application.Current!;
-        var homeBackground = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow).TideBase;
+        var homeBackground = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow).TideBase;
         var browseBackground = SurfacePaletteCatalog.For(HavenSurface.Browse, HavenUiAppearance.Dark).TideBase;
         Assert.NotEqual(homeBackground, browseBackground);
         var cUIBrush = Assert.IsAssignableFrom<ISolidColorBrush>(app.Resources["CuiBackgroundBrush"]);
@@ -116,7 +116,7 @@ public sealed class HavenUiAppearanceTests
         Assert.Same(cUIBrush, app.Resources["HavenBackgroundPrimaryBrush"]);
 
         var window = new Window();
-        using var tidal = new TidalBackground(window, HavenUiAppearance.Bright, publishHavenPalette: false);
+        using var tidal = new TidalBackground(window, HavenUiAppearance.Dark, publishHavenPalette: false);
         tidal.SetSurface(HavenSurface.Browse);
 
         // Browse has its own legacy HUI palette. The CUI-owned MainWindow uses

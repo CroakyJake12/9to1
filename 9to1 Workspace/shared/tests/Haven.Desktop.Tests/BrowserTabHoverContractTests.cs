@@ -119,17 +119,21 @@ public sealed class BrowserTabHoverContractTests
     public void Mounted_browser_tab_row_tints_as_one_surface_and_keeps_close_target_separate()
     {
         var view = new BrowserView();
-        var window = new Window { Width = 500, Height = 120, Content = view };
+        // Keep BrowserView's real authored tab list and DataTemplate, but mount only
+        // that subtree: the browser engine sibling requires GTK and is unrelated to
+        // testing pointer behavior in this headless Avalonia host.
+        var list = Assert.IsAssignableFrom<ItemsControl>(view.FindControl<ItemsControl>("HorizontalTabsList"));
+        var scroll = Assert.IsAssignableFrom<ScrollViewer>(list.Parent);
+        scroll.Content = null;
+        list.ItemsSource = new[] { new BrowserTabItem("One", "", false, true) };
+        var window = new Window { Width = 500, Height = 120, Content = list };
         try
         {
             window.Show();
-            var list = view.GetVisualDescendants().OfType<ItemsControl>()
-                .Single(control => control.Name == "HorizontalTabsList");
-            list.ItemsSource = new[] { new BrowserTabItem("One", "", false, true) };
             window.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
 
-            var row = view.GetVisualDescendants().OfType<HavenAdaptiveSurface>()
+            var row = list.GetVisualDescendants().OfType<HavenAdaptiveSurface>()
                 .Single(control => control.Classes.Contains("browserTabGroup"));
             var tint = row.GetVisualDescendants().OfType<Border>()
                 .Single(control => control.Classes.Contains("browserTabHoverTint"));
