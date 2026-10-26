@@ -341,8 +341,9 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             }).GetTask()).ConfigureAwait(false);
             var reviewed = await original.AwaitAsync(InvokeOriginalSource(() =>
                 _source.ReadPermissionReviewAsync(captured, token, OwnNestedOriginalSource))).ConfigureAwait(false);
-            if (reviewed.CanonicalTaskContext.TaskId != task.TaskId || reviewed.CanonicalTaskContext.ExecutionId != task.ExecutionId ||
-                reviewed.CanonicalTaskContext.ContextId != task.ContextId || reviewed.Request.Id != pending.Request.Id)
+            if (!captured.HasCurrentCommandIdentity || reviewed.CanonicalTaskContext.TaskId != task.TaskId ||
+                reviewed.CanonicalTaskContext.ExecutionId != task.ExecutionId || reviewed.CanonicalTaskContext.ContextId != task.ContextId ||
+                reviewed.CanonicalTaskContext.PersistenceRevision != task.PersistenceRevision || reviewed.Request.Id != pending.Request.Id)
                 throw new InvalidOperationException("The pending permission changed; refresh the task before responding.");
             await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -364,7 +365,8 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                     await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         if (_permissionSequence != sequence) return;
-                        _permissionReview = null; _permissionStatus = "The permission request could not be reviewed. Refresh and try again.";
+                        ClosePermissionReview();
+                        _permissionStatus = "The permission request changed or could not be authorized. Refresh and review it again.";
                         NotifyOriginal(original, generation);
                     }).GetTask()).ConfigureAwait(false);
                 }
@@ -470,6 +472,18 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             return;
         }
         var oldId = _permissionReview?.Request.Id ?? _permissionSelection.PermissionReview?.Request.Id;
+        if (!observation.HasCurrentCommandIdentity || selected.PersistenceRevision != current.PersistenceRevision)
+        {
+            // A prior real ACK remains independently inspectable even though its
+            // now-stale review surface and response actions must be retired.
+            var acknowledged = AcknowledgedPermissionResponse;
+            ClosePermissionReview();
+            if (oldId is { } requestId && acknowledged is not null && acknowledged.RequestId == requestId &&
+                acknowledged.TaskId == current.TaskId && acknowledged.ExecutionId == current.ExecutionId &&
+                acknowledged.ContextId == current.ContextId)
+                _permissionStatus = PermissionDecisionStatus(acknowledged.Decision);
+            return;
+        }
         if (oldId is null || observation.PermissionReview is not { } refreshed || refreshed.Request.Id != oldId)
         {
             ClosePermissionReview();
