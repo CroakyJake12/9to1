@@ -65,6 +65,24 @@ public sealed class DeveloperManualProjectEntryAdapter(
     /// either recovers the completed identity or reports a blocked state for honest inspection.</summary>
     public async Task<DeveloperProjectReference> RegisterExistingFolderAsync(
         Guid filesStoreId, Guid destinationFolderId, string existingProjectRoot, CancellationToken token)
+        => await RegisterExistingFolderCoreAsync(filesStoreId, destinationFolderId, existingProjectRoot, null, token).ConfigureAwait(false);
+
+    /// <summary>Registers an existing folder only after a caller-specific preflight has inspected
+    /// the SAME real, issued Files capture. The callback runs after actual READ/capture and before
+    /// allocating a retained setup identity or preparing the Home journal. It is not a permission
+    /// source and cannot substitute a capture.</summary>
+    public Task<DeveloperProjectReference> RegisterExistingFolderWithCapturePreflightAsync(
+        Guid filesStoreId, Guid destinationFolderId, string existingProjectRoot,
+        Func<IDeveloperProjectOriginalExistingSourceCapture, CancellationToken, Task> preflight,
+        CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(preflight);
+        return RegisterExistingFolderCoreAsync(filesStoreId, destinationFolderId, existingProjectRoot, preflight, token);
+    }
+
+    private async Task<DeveloperProjectReference> RegisterExistingFolderCoreAsync(
+        Guid filesStoreId, Guid destinationFolderId, string existingProjectRoot,
+        Func<IDeveloperProjectOriginalExistingSourceCapture, CancellationToken, Task>? preflight, CancellationToken token)
     {
         // Pure-argument validation precedes dependency null checks so an invalid request fails
         // with a precise ArgumentException/OperationCanceledException before any owner is touched.
@@ -97,10 +115,7 @@ public sealed class DeveloperManualProjectEntryAdapter(
             }
             else
             {
-                setupId = Guid.NewGuid(); workspaceId = Guid.NewGuid();
-                _retainedSetupId = setupId; _retainedWorkspaceId = workspaceId; _retainedProjectRoot = root;
-                // A fresh unrelated attempt inherits no prior completion/fault state.
-                _retainedCompletionConfirmed = false; _retainedCompletionUncertain = false;
+                setupId = Guid.Empty; workspaceId = Guid.Empty;
                 isRetry = false;
             }
         }
@@ -121,6 +136,20 @@ public sealed class DeveloperManualProjectEntryAdapter(
         {
             read = await reads.AcquireOriginalAsync(selection, token).ConfigureAwait(false);
             var capture = await selections.CaptureOriginalAsync(selection, read, token).ConfigureAwait(false);
+            if (!selections.IsIssuedOriginal(capture) || capture.OriginalExistingProjectRoot != root)
+                throw new UnauthorizedAccessException("The configured Files owner did not issue the exact selected project capture.");
+            await selections.RevalidateOriginalAsync(capture, destination.OriginalActor, token).ConfigureAwait(false);
+            if (preflight is not null)
+                await preflight(capture, token).ConfigureAwait(false);
+
+            // A refusal/cancellation during genuine-capture preflight leaves no retained setup
+            // attempt behind, so the user can correct the target and retry without journal repair.
+            lock (_gate)
+            {
+                setupId = Guid.NewGuid(); workspaceId = Guid.NewGuid();
+                _retainedSetupId = setupId; _retainedWorkspaceId = workspaceId; _retainedProjectRoot = root;
+                _retainedCompletionConfirmed = false; _retainedCompletionUncertain = false;
+            }
             var prepared = await journal.PrepareExistingOriginalAsync(setupId,
                 destination.OriginalActor, destination.OriginalStoreId, destination.OriginalConfigurationDigest,
                 destination.OriginalFolderId, destination.OriginalFolderRevision, capture, workspaceId, 0,
