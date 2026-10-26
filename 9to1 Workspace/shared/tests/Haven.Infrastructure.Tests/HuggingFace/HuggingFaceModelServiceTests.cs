@@ -20,7 +20,7 @@ public sealed class HuggingFaceModelServiceTests
     {
         using var fixture = new Fixture();
         fixture.Secrets.FailReads = true;
-        fixture.Handler.Send = (request, _) =>
+        fixture.Handler.Respond = (request, _) =>
         {
             Assert.Null(request.Headers.Authorization);
             Assert.Equal("huggingface.co", request.RequestUri!.Host);
@@ -38,7 +38,7 @@ public sealed class HuggingFaceModelServiceTests
         using var fixture = new Fixture();
         await fixture.Service.SaveTokenAsync("profile-a", Token, CancellationToken.None);
         var hosts = new List<string>();
-        fixture.Handler.Send = (request, _) =>
+        fixture.Handler.Respond = (request, _) =>
         {
             hosts.Add(request.RequestUri!.Host);
             if (request.RequestUri.AbsolutePath.StartsWith("/api/", StringComparison.Ordinal)) return Reply(Metadata());
@@ -70,7 +70,7 @@ public sealed class HuggingFaceModelServiceTests
     public async Task Unapproved_redirect_is_refused_before_a_second_request(string location)
     {
         using var fixture = new Fixture(); var calls = 0;
-        fixture.Handler.Send = (_, _) =>
+        fixture.Handler.Respond = (_, _) =>
         {
             calls++;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Found) { Headers = { Location = new Uri(location) } });
@@ -87,7 +87,7 @@ public sealed class HuggingFaceModelServiceTests
     public async Task Gated_errors_are_actionable_and_do_not_echo_remote_bodies(int status, HuggingFaceModelError expected)
     {
         using var fixture = new Fixture();
-        fixture.Handler.Send = (_, _) => Task.FromResult(new HttpResponseMessage((HttpStatusCode)status) { Content = new StringContent(Token) });
+        fixture.Handler.Respond = (_, _) => Task.FromResult(new HttpResponseMessage((HttpStatusCode)status) { Content = new StringContent(Token) });
         var error = await Assert.ThrowsAsync<HuggingFaceModelException>(() => fixture.Service.GetDetailsAsync("profile-a", "owner/model", CancellationToken.None));
         Assert.Equal(expected, error.Code); Assert.DoesNotContain(Token, error.ToString()); Assert.Null(error.InnerException);
     }
@@ -109,7 +109,7 @@ public sealed class HuggingFaceModelServiceTests
             bytes[fault == "magic" ? 0 : 4] = 9;
             pin = pin with { Sha256 = Convert.ToHexStringLower(SHA256.HashData(bytes)) };
         }
-        fixture.Handler.Send = (request, _) => request.RequestUri!.AbsolutePath.StartsWith("/api/", StringComparison.Ordinal)
+        fixture.Handler.Respond = (request, _) => request.RequestUri!.AbsolutePath.StartsWith("/api/", StringComparison.Ordinal)
             ? Reply(Metadata(pin)) : Bytes(bytes);
         var error = await Assert.ThrowsAsync<HuggingFaceModelException>(() => fixture.Service.InstallAsync("profile-a", Details, pin, null, CancellationToken.None));
         Assert.Equal(HuggingFaceModelError.IntegrityFailure, error.Code); Assert.Equal(0, fixture.Importer.Count);
@@ -150,7 +150,7 @@ public sealed class HuggingFaceModelServiceTests
     {
         using var fixture = new Fixture(_ => throw new IOException(Token));
         var invalid = Gguf.ToArray(); invalid[^1] ^= 1;
-        fixture.Handler.Send = (request, _) => request.RequestUri!.AbsolutePath.StartsWith("/api/", StringComparison.Ordinal) ? Reply(Metadata()) : Bytes(invalid);
+        fixture.Handler.Respond = (request, _) => request.RequestUri!.AbsolutePath.StartsWith("/api/", StringComparison.Ordinal) ? Reply(Metadata()) : Bytes(invalid);
         var error = await Assert.ThrowsAsync<HuggingFaceModelException>(() => fixture.Service.InstallAsync("profile-a", Details, File, null, CancellationToken.None));
         Assert.Equal(HuggingFaceModelError.IntegrityFailure, error.Code); Assert.DoesNotContain(Token, error.ToString());
         Assert.Equal(0, fixture.Importer.Count);
@@ -238,9 +238,9 @@ public sealed class HuggingFaceModelServiceTests
     private static Task<HttpResponseMessage> Bytes(byte[] value) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(value) });
     private sealed class Handler : HttpMessageHandler
     {
-        public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> Send { get; set; } = (request, _) =>
+        public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> Respond { get; set; } = (request, _) =>
             request.RequestUri!.AbsolutePath.StartsWith("/api/", StringComparison.Ordinal) ? Reply(Metadata()) : Bytes(Gguf);
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Send(request, cancellationToken);
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Respond(request, cancellationToken);
     }
     private sealed class Secrets : IProviderSecretStore
     {

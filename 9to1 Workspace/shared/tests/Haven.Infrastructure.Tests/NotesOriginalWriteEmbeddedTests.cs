@@ -24,7 +24,11 @@ public sealed partial class NotesOriginalStoreTests
         var snapshot = await home.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission!, home.Verified, home.Token);
         Assert.Null(snapshot.SelectedDocument);
         Assert.Single(snapshot.Metadata, row => row.Summary.Id == document.Id && row.Summary.Version == document.Version);
-        Assert.False(request.Outcome!.DocumentWasRead);
+        // Outcome is private to the real owner. Home rejects a terminal audit that
+        // reports DocumentWasRead for this metadata-only request; inspect that public receipt.
+        Assert.Null(snapshot.AuditWarning);
+        Assert.Equal(HomePermissionRequestState.Succeeded,
+            (await home.Admission.GetLibrarySnapshotAuthorizationAsync(review, home.Token)).State);
     }
 
     [LinuxNotesFact]
