@@ -22,6 +22,43 @@ This is a local recovery handoff for the two 9to1 recordings and the historical 
 
 Public HF API metadata was actually queried without credentials. No gated account download, model inference, desktop installation or Thunder request was performed. Service tests use deterministic HTTP fixtures plus the real canonical importer and encrypted Linux store; UI fixtures establish interaction behavior only.
 
+### Live themes, menu routing and tab interactions
+
+The recovery now wires the attachment menu's **Specialists, Assistants, Skills,
+Plugin and Apps** labels to the real catalogues. The actual unified Spaces host
+receives the Assistants route; partial initialization is retired before the prior
+chat is restored. The programmatic attachment popup has the composer as its real
+logical parent so the native popup and overlay fallback share resource/template
+ownership. Native and fallback execution still require their separate checks.
+
+Home appearance changes publish to both retained HUI content and existing CUI
+scenes. Explicit scene overrides remain authoritative. The CUI-owned window's
+TidalBackground now animates its gradient without recolouring global CUI aliases
+on navigation. Hover adds a subtle wash derived from the effective brush, leaving
+its authored fill and foreground intact; menu selection retains a keyboard cue.
+Tab title and close parts share one row surface. The compatibility BrowserView's
+base tint opacity is now a style, so pointer-over can actually override it.
+
+The native Browse drag path retains canonical tab identities and shows a moving
+preview. Generous horizontal target zones select edge swap, left split, group,
+right split and edge swap. Split previews illuminate only the receiving half;
+group previews illuminate the entire target. Directional splits explicitly open
+side by side. Existing cross-profile split behavior is preserved: each tab keeps
+its own engine/profile directory. Swap/group retain their stricter placement
+rules. Preview cancellation and actual pointer-driven outcomes have owning checks;
+source implementation alone does not establish an installed-desktop pass.
+
+A separate confirmed Write defect was fixed: the final read fence now receives
+the exact reviewed wrapped arguments, including the raw Notes request. The
+selected-read and selector-substitution regressions passed **4/4** at `343e4daf`
+(`notes-read-fence-2`). Authorization, digest/schema and ownership checks remain.
+
+All checks retain exact source, command, logs and TRX in the existing private
+coordination evidence. Failed fixture compiles and assertions are retained. These
+are fresh component checks with partial dependency coverage, **not reusable
+acceptance results**. The next handoff must read the current receipt index rather
+than treat the older pass counts above as proof for every later change.
+
 ### Remaining runtime and infrastructure limits
 
 The existing ARM preview bootstrap requires ARM64 artefacts and owns a different runtime contract from the model-free x64 broker package. Do not relax its architecture guard to make x64 appear ready. Reconcile the actual installed x64 package and runtime owner before claiming local chat works. The discovery evidence adapter currently projects its first eligible installed model, not a full model-store inventory.
@@ -38,13 +75,13 @@ PR #38's existing [Android compile run](https://github.com/CroakyJake12/9to1/act
 | BOARD-SAVE-01 | Additional defect reproduced during this recovery pass: the real Files-backed Board save timed out waiting on its own Home-store lease. Recordings do not show a save result. | Local fix removes only the reentrant `RequireWrite` after Home's fence is acquired; preclaim authorization and final CAS guard remain. Save suites: `58/59` desktop-save-5 (stale-parent conflict-flag failure), then `59/59 PASS` desktop-save-6. `fb04ea0d` fixes normal-return conflict classification. | **Focused save verification passed; native workflow unverified.** Test a real disposable Board save/reopen and stale parent race in the installed app. Remaining source-only issue: `RetryAuditAndReceiptAsync` currently reports every known provider failure as `Conflict=true`; narrow to actual `RevisionConflict`, then cover and rerun focused save checks. Keep this separate from the fixed normal-return classification. |
 | WEB-01 | A 00:26–00:35: Google URL tab remains on Firefox renderer placeholder; Gecko unavailable. At 01:21–01:23 settings offer Firefox/Chromium; changing default states it applies to new tabs. | Browse settings and unavailable-renderer UI are represented in source. No successful engine render is evidenced. | **Unverified.** Test installed Firefox and Chromium independently, including a harmless page, reload, navigation, new-tab default, and explicit existing-tab engine selection. |
 | AI-01 | A 00:52–00:57: Dashboard “Edit with 9to1” attempt; historical log records refusal at `127.0.0.1:11434`. | The recorded source used `IOllamaClient` and could choose an arbitrary discovered model. Recovery now consumes the exact Home route through `IProviderModelClient`, carries reasoning constraints, disables fallback and persistent memory reads, bounds the response, and rejects plans if the selection changes during generation. | **Implementation changed; installed runtime unverified.** Exercise the configured Home/Dulche route and an unreachable state. Unsupported reasoning remains a refusal, not a silent fallback. |
-| AI-02 | A 00:59–01:01: Discover says 9 configured providers, 0 models, and Ollama could not be queried. | Provider/model discovery UI and result contract exist. | **Unverified.** Separately test saved configuration, reachability, valid empty response, partial-provider failure, enumeration, and inference against an actually configured service. |
+| AI-02 | A 00:59–01:01: Discover says 9 configured providers, 0 models, and Ollama could not be queried. | Verified installed Dulche artefacts remain visible when runtime discovery fails; HF catalogue/install and protected optional credentials are implemented. | **Focused service/UI checks only.** Native x64 runtime and installed provider inference remain unverified. |
 | AI-03 | A 01:53: bottom status says route snapshot scope/category does not match request. | Local change compares those two contract tokens case-insensitively, preserving exact route/provider/model IDs. Home picker contract tests passed `20/20` at `6ca07929`. | **Focused contract test passed; runtime unverified.** Trace actual request/response scope/category and preserve strict identity validation. |
 | FILES-01 | A 01:13: Files explicitly asks for an empty workspace folder. | Files setup is a real prerequisite flow; this screen alone is not evidence that Files source is missing. | **Unverified.** Complete setup in a disposable empty folder, confirm configuration and browsing, then test Board creation from both setup states. |
 | STORE-01 | A around 01:37–01:38: generic action failure appears. The long SQLite/OpenFailed cold-recovery details are historical-log evidence, not independently legible in reviewed frames. | CUI runtime has a generic fallback action failure (`CuiControlLoader.cs`); this does not corroborate the SQLite cause. | **Unverified.** Reproduce Web Automations with an isolated profile; inspect principal, directory/file type/link/key pairing, locks, owner/source recovery and cleanup. Preserve data and underlying errors. Do not attribute to model connectivity. |
 | ACCOUNT-01 | A 01:42–01:46: user management unavailable; account view reports CAKE sign-in and owner Access transport unavailable; profile/plan/billing/username/icon features unavailable. | Account and user-management fallback surfaces are represented in the source. | **Unverified.** Establish intended optional services versus missing wiring/artifacts; test configured transport or record the external-service blocker accurately. |
 | FEEDBACK-01 | A ~01:44–end and B 00:00–end: generic “action could not complete” banner persists across page/Spaces changes; origin is unknown. | `CuiControlLoader.cs` emits that exact generic fallback when no more specific action failure is available. Emitter does not establish which action failed or banner lifetime owner. | **Unverified.** Capture originating action/diagnostic and test scoped dismissal/lifetime across navigation while retaining diagnostic history. |
-| SPACES-01 | B 00:01–00:03: attachment popover is under composer/status text; no click result shown. | Attachment and model-unavailable surfaces exist. Current local edit groups Spaces task-permission content, not popup stacking. | **Unverified.** Test overlay order and pointer/keyboard activation of each choice; verify destination. Keep popup layering intentional. |
+| SPACES-01 | B 00:01–00:03: attachment popover is under composer/status text; no click result shown. | The composer now owns a compact native popup and its logical-parent fallback; catalogue routes and retirement are covered separately. | **Implementation changed.** Historical X11 popup smoke is recorded; rerun current native/fallback checks and verify the installed destination before acceptance. |
 | SPACES-02 | B 00:08, 00:10–00:11, and ~00:31: multiple saved-chat rows overlap Search/Clear and recent-chat notice. | History/search/conversation UI exists; local edit groups the history area in a vertical stack. | **Unverified.** Test multiple rows, search/clear, selection, scrolling, and empty state in the running candidate. |
 | SPACES-03 | B 00:11–00:18: emoji UI expands composer; grid edge clips a visible row. Whether inline placement violates spec is not established. | Emoji/composer UI exists; no source/spec finding here proves intended popup placement. | **Partially observed; behavior unverified.** Check V2 behavior, sizing, scroll, focus, insertion, dismissal, draft preservation, and unobstructed controls. |
 | SPACES-04 | B 00:00–00:37 and 00:39–00:47: local models unavailable message and Manage local models action are visible; destination is not shown. | Recovery action/model manager surfaces exist. | **Unverified.** Activate action and verify a usable model-manager destination and routing policy; do not assume all Spaces modes require local inference. |
