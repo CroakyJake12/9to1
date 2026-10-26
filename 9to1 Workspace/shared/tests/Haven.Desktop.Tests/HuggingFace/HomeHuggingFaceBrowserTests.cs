@@ -69,6 +69,9 @@ public sealed class HomeHuggingFaceBrowserTests
             token.Text = "hf-secret-value";
             Click(browser, "hf-token-save");
             Assert.Equal(string.Empty, token.Text);
+            token.Undo();
+            Assert.Equal(string.Empty, token.Text);
+            Assert.False(token.IsUndoEnabled);
             await service.TokenSaved.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal("hf-secret-value", service.SavedToken);
             Assert.DoesNotContain("hf-secret-value", Find<TextBlock>(browser, "hf-token-status").Text);

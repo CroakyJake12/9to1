@@ -22,7 +22,7 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
     private readonly ListBox _files = new();
     private readonly TextBlock _installStatus = new();
     private readonly ProgressBar _installProgress = new() { Minimum = 0, Maximum = 100, IsVisible = false };
-    private readonly TextBox _token = new() { PasswordChar = '•', RevealPassword = false };
+    private readonly TextBox _token = new() { PasswordChar = '•', RevealPassword = false, IsUndoEnabled = false };
     private readonly TextBlock _tokenStatus = new();
     private readonly TextBlock _browserStatus = new();
     private readonly Button _searchButton = new();

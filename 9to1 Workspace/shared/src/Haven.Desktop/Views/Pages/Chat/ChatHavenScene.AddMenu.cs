@@ -96,7 +96,7 @@ internal sealed partial class ChatHavenScene
     private void OpenAddMenuPopupIfAttached(bool focusPopup)
     {
         if (_retiringAddMenuPopup || _disposed || !_addMenu.IsOpen || _addMenuPopup is null
-            || !_composerView.IsAttachedToVisualTree()) return;
+            || !ComposerView.IsAttachedToVisualTree()) return;
 
         if (_addMenuPopup.IsOpen)
         {
@@ -135,7 +135,7 @@ internal sealed partial class ChatHavenScene
         }
     }
 
-    private Control? FindComposerAddButton() => _composerView.GetVisualDescendants().OfType<Control>()
+    private Control? FindComposerAddButton() => ComposerView.GetVisualDescendants().OfType<Control>()
         .FirstOrDefault(control => AutomationProperties.GetName(control) == "Add files or actions");
 
     private void FocusFirstAddMenuRow()
