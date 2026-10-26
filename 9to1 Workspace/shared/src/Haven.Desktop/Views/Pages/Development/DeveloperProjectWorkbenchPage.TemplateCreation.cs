@@ -121,7 +121,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                 original.Retain(error);
                 try
                 {
-                    await PublishAsync(original, () => _templateImportStatus =
+                    await PublishAsync(original, () =>
                     {
                         _templateImportFailed = true;
                         _templateImportStatus = "Template creation stopped: " + error.Message +
