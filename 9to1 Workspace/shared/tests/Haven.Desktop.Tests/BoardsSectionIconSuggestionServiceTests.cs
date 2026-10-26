@@ -63,7 +63,7 @@ public sealed class BoardsSectionIconSuggestionServiceTests
         using var tabLifetime = new CancellationTokenSource();
         var service = CreateService(client, () => actor, () => route, appLifetime.Token, tabLifetime.Token);
 
-        var result = await service.GenerateAsync("Pure Mathematics");
+        var result = await service.GenerateAsync("Pure Mathematics", TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal("local-a", result.ProviderId);
@@ -99,7 +99,7 @@ public sealed class BoardsSectionIconSuggestionServiceTests
         using var tabLifetime = new CancellationTokenSource();
         var service = CreateService(client, () => actor, () => route, appLifetime.Token, tabLifetime.Token);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GenerateAsync("Statistics"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GenerateAsync("Statistics", TestContext.Current.CancellationToken));
 
         Assert.NotNull(client.Request); // exactly one explicit local fake request; no fallback attempt
         Assert.False(client.Request!.Options!.RequestedRoutingConstraints!.AllowFallback);

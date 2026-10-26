@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.App;
@@ -104,6 +105,16 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         RefreshBindings();
     }
     internal bool IsAlive => !_work.IsRetiring;
+    /// <summary>Binds a native shell surface to the loaded Home CUI root's theme resources.
+    /// The returned binding belongs to the caller and should live only as long as its shell.</summary>
+    internal IDisposable BindWindowBackground(Window window)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentNullException.ThrowIfNull(window);
+        if (Content is not Control root)
+            throw new InvalidOperationException("The Home Library CUI root is not loaded.");
+        return window.Bind(Window.BackgroundProperty, root.GetResourceObservable("CuiBackgroundBrush"));
+    }
     internal HomeLibraryPage? Current => _page;
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;

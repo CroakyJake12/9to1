@@ -766,21 +766,23 @@ public sealed partial class App
                     state.Page ??= state.Source.CreateBoardFolderPickerPage(token => AdmitHomeAsync(origin, token), theme.Context);
                     var owner = TopLevel.GetTopLevel(this) as Window ?? throw new InvalidOperationException("The actual Home window is unavailable.");
                     var picker = new Window { Title = "Create board", Width = 760, Height = 560, Content = state.Page };
-                    // Match the CUI native host: the dialog owns an opaque, theme-backed surface.
-                    // A transparent top-level lets the Library behind it bleed through its labels.
-                    picker.Bind(Window.BackgroundProperty, picker.GetResourceObservable("CuiBackgroundBrush"));
                     var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                     picker.Closed += (_, _) => closed.TrySetResult();
-                    var shown = picker.ShowDialog(owner); _ = Track(shown);
                     HomeDeepLink? folder;
-                    try
                     {
-                        await state.Page.ActivateAsync(caller);
-                        var selected = state.Page.FolderSelection;
-                        var completed = await Task.WhenAny(selected, closed.Task).WaitAsync(caller);
-                        folder = ReferenceEquals(completed, selected) ? await selected : null;
+                        // Bind to the loaded Home root: its loader owns the selected Home theme
+                        // resources, while the dialog has no separate CUI resource scope.
+                        using var backgroundBinding = state.Page.BindWindowBackground(picker);
+                        var shown = picker.ShowDialog(owner); _ = Track(shown);
+                        try
+                        {
+                            await state.Page.ActivateAsync(caller);
+                            var selected = state.Page.FolderSelection;
+                            var completed = await Task.WhenAny(selected, closed.Task).WaitAsync(caller);
+                            folder = ReferenceEquals(completed, selected) ? await selected : null;
+                        }
+                        finally { picker.Close(); picker.Content = null; await shown; }
                     }
-                    finally { picker.Close(); picker.Content = null; await shown; }
                     if (folder is null) return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No Board was created.");
                     state.DisplayName = state.Page.SelectedBoardCreateDisplayName
                         ?? throw new InvalidOperationException("The original Board picker did not retain its accepted file name.");

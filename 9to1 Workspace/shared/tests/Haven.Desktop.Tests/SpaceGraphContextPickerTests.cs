@@ -198,7 +198,7 @@ public sealed class SpaceGraphContextPickerTests
             .Single(control => control.Name == id || AutomationProperties.GetAutomationId(control) == id);
     private static async Task ClickAsync(SpaceBuilderPage page, string id)
     {
-        if (page.GetVisualRoot() is Window window) window.UpdateLayout();
+        if (TopLevel.GetTopLevel(page) is Window window) window.UpdateLayout();
         Dispatcher.UIThread.RunJobs();
         Find<Button>(page, id).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await page.Host.CaptureOriginalActionSettlement(page.Show!).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
