@@ -161,6 +161,7 @@ internal sealed class CuiHoverFeedback : IDisposable
             thumb.DragStarted += DragStarted;
             thumb.DragCompleted += DragCompleted;
         }
+        if (_owner is MenuItem menuItem) menuItem.Classes.CollectionChanged += MenuItemClassesChanged;
         _store.Changed += EffectiveChanged;
         _subscriptions.Add(_owner.GetResourceObservable("CuiHighContrast").Subscribe(new Observer(_ => Refresh())));
         _subscriptions.Add(_owner.GetResourceObservable("CuiPanelBrush").Subscribe(new Observer(value =>
@@ -185,6 +186,7 @@ internal sealed class CuiHoverFeedback : IDisposable
             thumb.DragStarted -= DragStarted;
             thumb.DragCompleted -= DragCompleted;
         }
+        if (_owner is MenuItem menuItem) menuItem.Classes.CollectionChanged -= MenuItemClassesChanged;
         _dragging = false;
         _store.Changed -= EffectiveChanged;
         _backgroundBrushSubscription?.Dispose(); _backgroundBrushSubscription = null; _observedBackground = null;
@@ -209,6 +211,7 @@ internal sealed class CuiHoverFeedback : IDisposable
 
     private void DragStarted(object? sender, VectorEventArgs e) { _dragging = true; Refresh(); }
     private void DragCompleted(object? sender, VectorEventArgs e) { _dragging = false; Refresh(); }
+    private void MenuItemClassesChanged(object? sender, NotifyCollectionChangedEventArgs e) => Refresh();
 
     private void EffectiveChanged(object? sender, CuiEffectiveProperty property)
     {
@@ -272,6 +275,7 @@ internal sealed class CuiHoverFeedback : IDisposable
         var optedIn = _requiredClass is null || _owner.Classes.Contains(_requiredClass);
         var active = optedIn && _owner.IsEffectivelyEnabled && _owner.IsPointerOver
             && _owner is not Button { IsPressed: true }
+            && !(_owner is MenuItem && _owner.Classes.Contains(":pressed"))
             && !_dragging
             && !CuiPropertyPresentation.IsEmbeddedInput(_owner)
             && !chromeless;
