@@ -1,5 +1,7 @@
 ## Scoped desktop recovery — 26 October 2026
 
+The owner also requests a current **Linux x86-64 / amd64 `.deb` test build**, delivered through the existing private OneDrive project folder. This supersedes the older ARM test-copy target for this delivery only. Use the original application composition, retain package/source hashes and basic startup evidence, and include known limitations. Test delivery does not resume full acceptance or establish release readiness; do not relax the separate ARM runtime guards.
+
 The owner has authorized fixes for the supplied desktop recordings plus Dulche
 model discovery, Hugging Face browsing/install with encrypted profile credentials,
 a compact attachment menu and device-colour emoji. Read the [current requirements](docs/specification/owner-references/2026-10-26-desktop-recovery/requirements.md)
