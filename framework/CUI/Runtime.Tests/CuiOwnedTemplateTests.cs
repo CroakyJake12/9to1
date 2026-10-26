@@ -347,14 +347,14 @@ public sealed class CuiOwnedTemplateTests
             using var loader = new CuiControlLoader();
             var (root, diagnostics) = loader.LoadMarkup("<Theme Name='Professional'><Container Type='Menu'><Button Type='Menu Item' ID='row' Content='Open'/></Container></Theme>");
             Assert.Empty(diagnostics); Assert.NotNull(root);
-            var item = Assert.Single(root!.GetVisualDescendants().OfType<MenuItem>());
-            var authored = new SolidColorBrush(Colors.White);
-            CuiPropertyPresentation.Set(item, "Background", authored, CuiPropertyLevel.Instance, "authored menu row");
-            var frame = Assert.Single(item.GetVisualDescendants().OfType<CuiMaterialBorder>());
             var window = new Window { Content = root, Width = 280, Height = 100 };
             try
             {
                 window.Show(); window.UpdateLayout();
+                var item = Assert.Single(root!.GetVisualDescendants().OfType<MenuItem>());
+                var authored = new SolidColorBrush(Colors.White);
+                CuiPropertyPresentation.Set(item, "Background", authored, CuiPropertyLevel.Instance, "authored menu row");
+                var frame = Assert.Single(item.GetVisualDescendants().OfType<CuiMaterialBorder>());
                 var point = item.TranslatePoint(new Point(item.Bounds.Width / 2, item.Bounds.Height / 2), window)!.Value;
                 window.MouseMove(point); window.UpdateLayout();
                 Assert.True(item.IsPointerOver);
