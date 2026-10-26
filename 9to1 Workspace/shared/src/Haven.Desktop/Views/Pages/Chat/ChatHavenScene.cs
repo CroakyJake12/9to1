@@ -122,12 +122,8 @@ internal sealed partial class ChatHavenScene : IDisposable
         ContextCard.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(12)));
 
         AddMenuPrefab = _prefabs.Create("ChatAddMenu", "Chat-AddMenu");
-        AddMenuPrefab.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-        AddMenuPrefab.SetValue(HavenProperties.Height, HavenLength.Percent(100));
-        AddMenuPrefab.SetValue(HavenProperties.ZIndex, 100);
-        AddMenuPrefab.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.ChildrenOnly);
-        Root.Add(AddMenuPrefab);
         _addMenu = new ChatAddMenuSurface(AddMenuPrefab, composerOwnsSearch: true, showThreadSettings: false);
+        InitializeAddMenuPopup();
 
         ResolveProblems.Invoked += OnResolveInvoked;
         ContextToggle.Invoked += OnContextToggleInvoked;
@@ -737,12 +733,16 @@ internal sealed partial class ChatHavenScene : IDisposable
     }
     private void OnResolveInvoked(object? sender, EventArgs e) => ResolveProblemsRequested?.Invoke(this, EventArgs.Empty);
 
-    public void ShowAddMenu() => _addMenu.Show();
-    public void ShowMentionSearch(string query) => _addMenu.ShowMentionSearch(query);
+    public void ShowAddMenu() { _addMenu.Show(); OpenAddMenuPopupIfAttached(); }
+    public void ShowMentionSearch(string query) { _addMenu.ShowMentionSearch(query); OpenAddMenuPopupIfAttached(); }
 
     public void HideAddMenu() => _addMenu.Hide();
 
-    public void FilterCatalogue(string query) => _addMenu.FilterCatalogue(query);
+    public void FilterCatalogue(string query)
+    {
+        _addMenu.FilterCatalogue(query);
+        if (_addMenu.IsOpen) OpenAddMenuPopupIfAttached();
+    }
 
     private void OnSharedAddActionSelected(object? sender, AddMenu.AddMenuAction action) =>
         AddActionSelected?.Invoke(this, action);
@@ -937,6 +937,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         _addMenu.AddActionSelected -= OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
         _composerQueue?.Dispose();
+        RetireAddMenuPopup();
         _addMenu.Dispose();
         // Retire the authored recovery surface's command admission and start its child close. The
         // physical native mapping/view release follows the joined ACK path

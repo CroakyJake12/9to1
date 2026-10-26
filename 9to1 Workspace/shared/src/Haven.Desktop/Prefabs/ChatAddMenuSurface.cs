@@ -28,6 +28,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
     private ChatActionMode _currentActionMode = ChatActionMode.AllowBasicActions;
     private GenerativeUiResponseMode _currentVisualMode = GenerativeUiResponseMode.Auto;
     private bool _disposed;
+    private bool _isOpen;
 
     public ChatAddMenuSurface(Prefab prefab, bool composerOwnsSearch = false, bool showThreadSettings = true)
     {
@@ -103,6 +104,10 @@ internal sealed class ChatAddMenuSurface : IDisposable
 
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? CatalogItemSelected;
+    /// <summary>Raised after the shared surface has become hidden, including when an item or the
+    /// authored dismiss control closes it. Hosts may use this to retire an external popup layer.</summary>
+    public event EventHandler? Dismissed;
+    public bool IsOpen => _isOpen;
 
     public void SetCatalogue(
         IReadOnlyList<AgentDefinition> agents,
@@ -134,6 +139,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
 
     public void Show()
     {
+        _isOpen = true;
         _catalogAction = null;
         _searchAll = false;
         _externalQuery = string.Empty;
@@ -143,6 +149,8 @@ internal sealed class ChatAddMenuSurface : IDisposable
 
     public void Hide()
     {
+        var wasOpen = _isOpen;
+        _isOpen = false;
         _catalogAction = null;
         _searchAll = false;
         _lastSearch = string.Empty;
@@ -150,6 +158,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         CatalogSearch.Text = string.Empty;
         CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         Overlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        if (wasOpen) Dismissed?.Invoke(this, EventArgs.Empty);
     }
 
     public void ShowMentionSearch(string? query)
@@ -161,6 +170,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
             return;
         }
 
+        _isOpen = true;
         _catalogAction = null;
         _searchAll = true;
         _externalQuery = query?.Trim() ?? string.Empty;
