@@ -8,10 +8,10 @@
     <Container Name="ToolsHeading" Layout="Horizontal" Width="100%" Height="20px" Padding="5px 9px 0px 9px">
       <Text Name="ToolsHeadingLabel" Content="Tools" FontSize="10" FontWeight="600" Foreground="TextSecondary" />
     </Container>
-    <Button Name="Agents" Variant="Ghost" IconKey="agents" Content="Agents" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
-    <Button Name="Instructions" Variant="Ghost" IconKey="prompt" Content="Skills" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
-    <Button Name="Capabilities" Variant="Ghost" IconKey="bolt" Content="Capabilities / Plugins" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
-    <Button Name="Apps" Variant="Ghost" IconKey="rocket" Content="Apps" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="Agents" Variant="Ghost" IconKey="agents" Content="Specialists" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="Instructions" Variant="Ghost" IconKey="skills" Content="Skills" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="Capabilities" Variant="Ghost" IconKey="plugin" Content="Plugin" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="Apps" Variant="Ghost" IconKey="apps" Content="Apps" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
   <Container Name="OptionsPanel" Layout="Vertical" Width="100%" Gap="2px">
     <Text Name="OptionsHeading" Content="Options" FontSize="10" FontWeight="600" Foreground="TextSecondary" Padding="9px 7px 0px 7px" />
     <Text Name="CurrentResponseState" Content="Default agent · Basic actions · Auto" FontSize="10" Foreground="TextSecondary" Padding="7px 9px 2px 9px" />

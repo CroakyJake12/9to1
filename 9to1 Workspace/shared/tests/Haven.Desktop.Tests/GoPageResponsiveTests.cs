@@ -141,9 +141,9 @@ public sealed class GoPageResponsiveTests
             Assert.True(page.Route.MainMenu.Bounds.Bottom <= page.Route.Composer.Bounds.Y - 4);
             var addCommands = new HavenSceneRenderer().Render(page.SceneRoot);
             Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "agents" });
-            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "prompt" });
-            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "bolt" });
-            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "rocket" });
+            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "skills" });
+            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "plugin" });
+            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "apps" });
             Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "file" });
 
             ClickAt(router, new HavenPoint(
@@ -294,6 +294,11 @@ public sealed class GoPageResponsiveTests
             window.UpdateLayout();
             page.SetAddCatalogue([agent], [capability], [instruction], BuiltInModeSeed.Modes);
             var router = new HavenInputRouter(page.SceneRoot);
+
+            Assert.Equal("Specialists", page.Route.AgentsButton.Content);
+            Assert.Equal("Plugin", page.Route.CapabilitiesButton.Content);
+            Assert.Equal("Skills", page.Route.InstructionsButton.Content);
+            Assert.Equal("Apps", page.Route.AppsButton.Content);
 
             AssertCatalogueContains(page, window, router, page.Route.AgentsButton, "Agent One");
             AssertCatalogueContains(page, window, router, page.Route.CapabilitiesButton, "Capability One");

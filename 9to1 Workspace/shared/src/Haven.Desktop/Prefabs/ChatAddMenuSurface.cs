@@ -60,8 +60,10 @@ internal sealed class ChatAddMenuSurface : IDisposable
             CatalogSearch.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
             MenuTitle.Content = "Add";
             ToolsHeading.Content = "Tools";
+            AgentsButton.Content = "Specialists";
             InstructionsButton.Content = "Skills";
-            CapabilitiesButton.Content = "Capabilities / Plugins";
+            CapabilitiesButton.Content = "Plugin";
+            AppsButton.Content = "Apps";
             AttachFilesButton.Content = "Files";
         }
         else
@@ -214,7 +216,13 @@ internal sealed class ChatAddMenuSurface : IDisposable
         _externalQuery = string.Empty;
         _lastSearch = string.Empty;
         CatalogSearch.Text = string.Empty;
-        CatalogSearch.Placeholder = action == AddMenu.AddMenuAction.Agent ? "Search Agents" : "Search";
+        CatalogSearch.Placeholder = action switch
+        {
+            AddMenu.AddMenuAction.Agent => "Search Specialists",
+            AddMenu.AddMenuAction.Instruction => "Search Skills",
+            AddMenu.AddMenuAction.Capability => "Search Plugins",
+            _ => "Search"
+        };
         CatalogSearch.SetValue(
             HavenProperties.Visibility,
             !_composerOwnsSearch && action is not (AddMenu.AddMenuAction.AllowActions or AddMenu.AddMenuAction.VisualResponses)
@@ -431,9 +439,9 @@ internal sealed class ChatAddMenuSurface : IDisposable
     {
         AddMenu.AddMenuAction.File => "file",
         AddMenu.AddMenuAction.Agent => "agents",
-        AddMenu.AddMenuAction.Instruction => "prompt",
-        AddMenu.AddMenuAction.Capability => "bolt",
-        AddMenu.AddMenuAction.App => "rocket",
+        AddMenu.AddMenuAction.Instruction => "skills",
+        AddMenu.AddMenuAction.Capability => "plugin",
+        AddMenu.AddMenuAction.App => "apps",
         AddMenu.AddMenuAction.AllowActions => "bolt",
         AddMenu.AddMenuAction.VisualResponses => "browse",
         _ => "plus"
