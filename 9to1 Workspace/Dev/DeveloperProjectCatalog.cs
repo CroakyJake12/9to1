@@ -48,23 +48,30 @@ public sealed record DeveloperProjectTemplateQuery(
         var template = option.Template;
         return (string.IsNullOrWhiteSpace(SearchText) || Contains(template.DisplayName, SearchText) ||
                 Contains(template.TemplateId, SearchText) || Contains(template.ProjectTypeId, SearchText) ||
-                Contains(template.ProviderId, SearchText)) &&
-            Matches(ProjectType, template.ProjectTypeId) &&
-            Matches(ProviderId, template.ProviderId) &&
-            Matches(OrganisationTemplateId, template.OrganisationTemplateId) &&
+                Contains(template.ProviderId, SearchText) || ContainsAny(template.Languages, SearchText) ||
+                ContainsAny(template.Frameworks, SearchText) || ContainsAny(template.Platforms, SearchText) ||
+                ContainsAny(template.ProductSurfaces, SearchText) || ContainsAny(template.TargetRuntimes, SearchText) ||
+                Contains(template.OrganisationTemplateId, SearchText)) &&
+            MatchesIdentity(ProjectType, template.ProjectTypeId) &&
+            MatchesIdentity(ProviderId, template.ProviderId) &&
+            MatchesIdentity(OrganisationTemplateId, template.OrganisationTemplateId) &&
             MatchesAny(Language, template.Languages) && MatchesAny(Framework, template.Frameworks) &&
             MatchesAny(Platform, template.Platforms) && MatchesAny(ProductSurface, template.ProductSurfaces) &&
             MatchesAny(TargetRuntime, template.TargetRuntimes) &&
             (ToolchainsReady is null || option.CanCreate == ToolchainsReady.Value);
     }
 
-    private static bool Matches(string? expected, string? actual) => string.IsNullOrWhiteSpace(expected) ||
-        !string.IsNullOrWhiteSpace(actual) && actual.Contains(expected.Trim(), StringComparison.OrdinalIgnoreCase);
+    private static bool MatchesIdentity(string? expected, string? actual) => string.IsNullOrWhiteSpace(expected) ||
+        StringComparer.Ordinal.Equals(actual, expected.Trim());
 
     private static bool MatchesAny(string? expected, IEnumerable<string>? actual) =>
-        string.IsNullOrWhiteSpace(expected) || actual?.Any(value => Matches(expected, value)) == true;
+        string.IsNullOrWhiteSpace(expected) || actual?.Any(value =>
+            StringComparer.OrdinalIgnoreCase.Equals(value, expected.Trim())) == true;
 
-    private static bool Contains(string actual, string expected) =>
+    private static bool ContainsAny(IEnumerable<string>? values, string expected) =>
+        values?.Any(value => Contains(value, expected)) == true;
+
+    private static bool Contains(string? actual, string expected) => !string.IsNullOrWhiteSpace(actual) &&
         actual.Contains(expected.Trim(), StringComparison.OrdinalIgnoreCase);
 }
 

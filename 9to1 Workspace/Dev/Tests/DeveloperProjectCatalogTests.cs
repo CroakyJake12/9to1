@@ -42,7 +42,7 @@ public sealed class DeveloperProjectCatalogTests
             otherProvider
         ]);
 
-        var result = await catalog.SearchAsync(new(ProjectType: "desktop", TargetRuntime: "NET10", Platform: "linux",
+        var result = await catalog.SearchAsync(new(ProjectType: "desktop", TargetRuntime: "NET10.0", Platform: "linux",
             ProductSurface: "build", ProviderId: "provider.desktop", OrganisationTemplateId: "org.template.desktop",
             ToolchainsReady: true));
 
@@ -51,6 +51,16 @@ public sealed class DeveloperProjectCatalogTests
         var wrongProvider = await catalog.SearchAsync(new(ProviderId: "provider.web", ProjectType: "desktop"));
         Assert.True(wrongProvider.Succeeded);
         Assert.Empty(wrongProvider.Value!);
+
+        var partialProvider = await catalog.SearchAsync(new(ProviderId: "provider"));
+        Assert.True(partialProvider.Succeeded);
+        Assert.Empty(partialProvider.Value!);
+        var partialRuntime = await catalog.SearchAsync(new(TargetRuntime: "net10"));
+        Assert.True(partialRuntime.Succeeded);
+        Assert.Empty(partialRuntime.Value!);
+        var searchableMetadata = await catalog.SearchAsync(new(SearchText: "NET10.0"));
+        Assert.True(searchableMetadata.Succeeded);
+        Assert.Equal(selected, Assert.Single(searchableMetadata.Value!).Template);
     }
 
     [Fact]
