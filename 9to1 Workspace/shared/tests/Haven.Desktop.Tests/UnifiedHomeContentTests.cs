@@ -21,6 +21,7 @@ using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.HavenUI.Backend;
+using Haven.Desktop.HavenUI.Tokens;
 using Haven.Desktop.Events;
 using Haven.Desktop.Views.Pages.Home;
 using HavenOS.Apps.Browse;
@@ -689,6 +690,90 @@ public sealed class UnifiedHomeContentTests
     private static Button AppearanceOption(HomeSettingsDestinationPage page, string name) =>
         Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
             button.Name == "home-theme-option" && string.Equals(button.Content?.ToString(), name, StringComparison.Ordinal));
+
+    [AvaloniaFact]
+    public async Task Only_actual_home_owner_projects_native_theme_into_shared_CUI_and_legacy_resources()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-theme-projection-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file,
+            "{\"havenUiThemeName\":\"Glow\",\"havenUiAppearance\":1,\"overrideAccentColour\":true,\"accentColourName\":\"Blue\"}");
+        var originalPreferenceBytes = await File.ReadAllBytesAsync(file);
+        var app = Application.Current!;
+        var previousTheme = CuiSurfacePaletteCatalog.ActiveTheme;
+        var previousAppearance = CuiThemeScopeApplier.DetectAppearance();
+        var previousVariant = app.RequestedThemeVariant;
+        var previousCuiOverride = CuiSurfacePaletteCatalog.OverrideAccent;
+        var previousCuiAccent = CuiSurfacePaletteCatalog.AccentOverride;
+        var previousHavenTheme = HavenPersonalisation.Theme;
+        var previousHavenOverride = HavenPersonalisation.OverrideAccent;
+        var previousHavenAccent = HavenPersonalisation.Accent;
+        var resources = app.Resources.ToDictionary(pair => pair.Key, pair => pair.Value);
+        try
+        {
+            var projectorRoot = Path.Combine(root, "projector");
+            Directory.CreateDirectory(projectorRoot);
+            var projection = new UserPreferencesService(new ThemeProjectionPaths(projectorRoot));
+            CuiThemeScopeApplier.ApplyGlobalTheme(CuiTheme.Professional, appearanceOverride: CuiAppearance.Dark);
+            await using (var local = new NativeHomeThemePreferences(file,
+                new(HomeDataScope.DeviceLocal, "home-theme-projection-profile"), UserPreferencesService.ProjectLegacyHomeTheme,
+                _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback)))
+            {
+                await local.RefreshAsync();
+                await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+                Assert.Equal(CuiTheme.Professional, CuiSurfacePaletteCatalog.ActiveTheme);
+                Assert.Equal(CuiAppearance.Dark, CuiThemeScopeApplier.DetectAppearance());
+            }
+
+            await using (var owner = new NativeHomeThemePreferences(file,
+                new(HomeDataScope.DeviceLocal, "home-theme-projection-profile"), UserPreferencesService.ProjectLegacyHomeTheme,
+                _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback),
+                projection.ApplyHomeThemePresentation))
+            {
+                await owner.RefreshAsync();
+                await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+                Assert.Equal(CuiTheme.Glow, CuiSurfacePaletteCatalog.ActiveTheme);
+                Assert.Equal(CuiAppearance.Bright, CuiThemeScopeApplier.DetectAppearance());
+                Assert.Equal(ThemeVariant.Light, app.RequestedThemeVariant);
+                Assert.Equal(HavenUiTheme.Glow, HavenPersonalisation.Theme);
+                Assert.Equal(HavenUiAppearance.Bright, projection.Appearance);
+                Assert.Equal(HavenUiTheme.Glow, projection.Theme);
+                Assert.True(HavenPersonalisation.OverrideAccent);
+                Assert.Equal(HavenAccentColour.Blue, HavenPersonalisation.Accent);
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow, "#2563EB").TideBase,
+                    Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
+                Assert.Equal(SurfacePaletteCatalog.For(HavenSurface.Home, HavenUiAppearance.Bright).TideBase,
+                    Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["HavenBackgroundPrimaryBrush"]).Color);
+                Assert.Equal(originalPreferenceBytes, await File.ReadAllBytesAsync(file));
+
+                Assert.True((await owner.ApplySettingsAsync(AppearanceTarget(owner, "HomeAppearanceChoices", "Dark"))).Succeeded);
+                await owner.RefreshAsync();
+                await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+                Assert.Equal(CuiAppearance.Dark, CuiThemeScopeApplier.DetectAppearance());
+                Assert.Equal(HavenUiAppearance.Dark, projection.Appearance);
+                Assert.Equal(ThemeVariant.Dark, app.RequestedThemeVariant);
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, "#2563EB").TideBase,
+                    Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
+                Assert.Equal(SurfacePaletteCatalog.For(HavenSurface.Home, HavenUiAppearance.Dark).TideBase,
+                    Assert.IsAssignableFrom<SolidColorBrush>(app.Resources["HavenBackgroundPrimaryBrush"]).Color);
+            }
+        }
+        finally
+        {
+            CuiSurfacePaletteCatalog.OverrideAccent = previousCuiOverride;
+            CuiSurfacePaletteCatalog.AccentOverride = previousCuiAccent;
+            HavenPersonalisation.Theme = previousHavenTheme;
+            HavenPersonalisation.OverrideAccent = previousHavenOverride;
+            HavenPersonalisation.Accent = previousHavenAccent;
+            foreach (var key in app.Resources.Keys.ToArray())
+                if (!resources.ContainsKey(key)) app.Resources.Remove(key);
+            foreach (var pair in resources) app.Resources[pair.Key] = pair.Value;
+            app.RequestedThemeVariant = previousVariant;
+            CuiThemeScopeApplier.ApplyGlobalTheme(previousTheme, appearanceOverride: previousAppearance);
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
 
     [AvaloniaFact]
     public async Task Home_appearance_targets_save_the_real_native_file_preserve_other_settings_and_reopen_live_contexts()
@@ -1993,6 +2078,16 @@ public sealed class UnifiedHomeContentTests
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) => ValueTask.FromResult(
             new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "home-layout-fixture", "Explicit headless layout fixture"));
     }
+    private sealed class ThemeProjectionPaths(string root) : IAppPaths
+    {
+        public string DataDirectory => root;
+        public string DatabasePath => Path.Combine(root, "unused.db");
+        public string BrowserProfileDirectory => Path.Combine(root, "browser");
+        public string AttachmentsDirectory => Path.Combine(root, "attachments");
+        public string LogsDirectory => Path.Combine(root, "logs");
+        public string LegacyStatePath => Path.Combine(root, "legacy.json");
+    }
+
     private sealed class LayoutPaths : IAppPaths
     {
         public LayoutPaths() { Directory.CreateDirectory(DataDirectory); }

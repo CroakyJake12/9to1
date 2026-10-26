@@ -364,10 +364,11 @@ public sealed partial class App
             var availability = await CheckAsync(currentToken);
             if (availability.State != CuiSceneAvailabilityState.Ready) throw new InvalidOperationException(availability.Message);
             DemandCurrent();
-            _homeTheme = new NativeHomeThemePreferences(_services.GetRequiredService<UserPreferencesService>().HomeThemePreferencePath,
+            var userPreferences = _services.GetRequiredService<UserPreferencesService>();
+            _homeTheme = new NativeHomeThemePreferences(userPreferences.HomeThemePreferencePath,
                 new HomeThemeScope(HomeDataScope.DeviceLocal, _actor.ProfileId), UserPreferencesService.ProjectLegacyHomeTheme,
                 lifetime => new ValueTask<bool>(ObserveAppearanceAuthorityAsync(lifetime)),
-                callback => Dispatcher.UIThread.Post(callback));
+                callback => Dispatcher.UIThread.Post(callback), userPreferences.ApplyHomeThemePresentation);
             await Track(_homeTheme.RefreshAsync(currentToken));
             if (IsAcceptedStartupRetirement(currentToken)) return;
             currentToken.ThrowIfCancellationRequested(); DemandCurrent();
