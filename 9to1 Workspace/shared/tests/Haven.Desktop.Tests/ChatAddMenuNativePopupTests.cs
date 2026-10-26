@@ -57,6 +57,7 @@ public sealed class ChatAddMenuNativePopupTests
             var popupHost = Assert.IsType<HavenSceneControl>(scene.AddMenuPopupHost);
             await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.True(popup.IsOpen);
+            Assert.Same(scene.ComposerView, popup.Parent);
             Assert.False(popup.ShouldUseOverlayLayer);
             Assert.Same(scene.AddMenuPrefab, popupHost.Root);
             var popupTopLevel = TopLevel.GetTopLevel(popupHost);
@@ -177,6 +178,7 @@ public sealed class ChatAddMenuNativePopupTests
 
             Assert.Equal([Haven.Desktop.Views.Shell.TopRail.AddMenu.AddMenuAction.File], selected);
             Assert.False(popup.IsOpen);
+            Assert.Null(popup.Parent);
             Assert.Equal(HavenVisibility.Collapsed, scene.AddOverlay.GetValue(HavenProperties.Visibility));
             Assert.True(message.IsFocused);
 
@@ -205,6 +207,7 @@ public sealed class ChatAddMenuNativePopupTests
                 Key = Key.Escape
             });
             Assert.False(popup.IsOpen);
+            Assert.Null(popup.Parent);
             Assert.Equal(HavenVisibility.Collapsed, scene.AddOverlay.GetValue(HavenProperties.Visibility));
 
             // An explicit Add open takes keyboard focus for row navigation, then owner detachment
@@ -224,6 +227,7 @@ public sealed class ChatAddMenuNativePopupTests
             window.Content = new Border();
             window.UpdateLayout();
             Assert.False(popup.IsOpen);
+            Assert.Null(popup.Parent);
             Assert.Equal(HavenVisibility.Collapsed, scene.AddOverlay.GetValue(HavenProperties.Visibility));
         }
         finally

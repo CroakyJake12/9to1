@@ -118,12 +118,17 @@ internal sealed partial class ChatHavenScene
         _focusPopupOnOpen = focusPopup;
         try
         {
+            // ContentPresenter realizes overlay content only while logically attached.
+            // Keep this programmatic popup in the exact composer's logical tree, just
+            // as authored popup controls do; a native PopupRoot alone masks this gap.
+            ((ISetLogicalParent)_addMenuPopup).SetParent(ComposerView);
             _addMenuPopup.Open();
             _addMenuPopupTopLevel = TopLevel.GetTopLevel(_addMenuPopupHost!);
             if (focusPopup) FocusFirstAddMenuRow();
         }
         catch
         {
+            ((ISetLogicalParent)_addMenuPopup).SetParent(null);
             _addMenuPopupOwner = null;
             _addMenuPopupTopLevel = null;
             _addMenuPopupTarget = null;
@@ -174,6 +179,7 @@ internal sealed partial class ChatHavenScene
         _restoreFocusAfterPopupClose = null;
         _focusPopupOnOpen = false;
 
+        if (_addMenuPopup is not null) ((ISetLogicalParent)_addMenuPopup).SetParent(null);
         _addMenu.Hide();
         if (!restoreFocus || _disposed || owner is null || focus is null || !focus.Focusable
             || !focus.IsEffectivelyEnabled || !focus.IsEffectivelyVisible || !focus.IsAttachedToVisualTree()
@@ -208,6 +214,7 @@ internal sealed partial class ChatHavenScene
                 if (_addMenuPopup.IsOpen) _addMenuPopup.Close();
                 _addMenuPopup.Child = null;
                 _addMenuPopup.PlacementTarget = null;
+                ((ISetLogicalParent)_addMenuPopup).SetParent(null);
                 _addMenuPopup = null;
             }
             if (_addMenuPopupHost is not null)
