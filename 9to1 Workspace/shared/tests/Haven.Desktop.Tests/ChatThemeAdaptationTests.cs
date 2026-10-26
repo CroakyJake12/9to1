@@ -9,6 +9,7 @@ using Avalonia.VisualTree;
 using CakeOS.Cui.Themes;
 using CakeOS.Cui.Runtime;
 using Haven.Core;
+using Haven.Application;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Chat;
 using HavenOS.Home.Core;
