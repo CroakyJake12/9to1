@@ -885,9 +885,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         return zone switch
         {
             TabDropZone.Swap => _chrome.CanSwapTabs(sourceTarget.TabId, targetTarget.TabId),
-            TabDropZone.SplitBefore or TabDropZone.SplitAfter => _chrome.CanSplitSelectedTab &&
-                _chrome.State.Tabs.Any(tab => tab.Id == sourceTarget.TabId && tab.Privacy == BrowserTabPrivacy.Standard) &&
-                _chrome.State.Tabs.Any(tab => tab.Id == targetTarget.TabId && tab.Privacy == BrowserTabPrivacy.Standard),
+            TabDropZone.SplitBefore => _chrome.CanOpenSplitViewForTabs(sourceTarget.TabId, targetTarget.TabId),
+            TabDropZone.SplitAfter => _chrome.CanOpenSplitViewForTabs(targetTarget.TabId, sourceTarget.TabId),
             TabDropZone.Group => _chrome.CanGroupTabs(sourceTarget.TabId, targetTarget.TabId),
             _ => false
         };
@@ -1009,9 +1008,24 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         public bool DropSplitBefore => _dropZone == TabDropZone.SplitBefore;
         public bool DropGroup => _dropZone is TabDropZone.Group or TabDropZone.Invalid;
         public bool DropSplitAfter => _dropZone == TabDropZone.SplitAfter;
-        public IBrush DropBrush => _dropZone == TabDropZone.Invalid
-            ? new SolidColorBrush(Color.FromArgb(88, 220, 38, 38))
-            : new SolidColorBrush(Color.FromArgb(72, TabDropAccentColor().R, TabDropAccentColor().G, TabDropAccentColor().B));
+        public IBrush DropBrush
+        {
+            get
+            {
+                var accent = _dropZone == TabDropZone.Invalid ? Color.Parse("#FFDC2626") : TabDropAccentColor();
+                return new LinearGradientBrush
+                {
+                    StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                    EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                    GradientStops = new GradientStops
+                    {
+                        new(Color.FromArgb(12, accent.R, accent.G, accent.B), 0),
+                        new(Color.FromArgb(70, accent.R, accent.G, accent.B), .5),
+                        new(Color.FromArgb(12, accent.R, accent.G, accent.B), 1)
+                    }
+                };
+            }
+        }
         internal bool SetDropZone(TabDropZone zone)
         {
             if (_dropZone == zone) return false;

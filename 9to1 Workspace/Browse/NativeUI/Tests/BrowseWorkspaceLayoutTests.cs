@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
@@ -80,8 +81,10 @@ public sealed partial class BrowseNativeUiTests
             Assert.InRange(Math.Abs(InTargetRow("BrowseTabDropSplitBeforeHalf").Bounds.Width * 2 - targetRowVisual.Bounds.Width), 0, 1);
             Assert.False(InTargetRow("BrowseTabDropSplitAfterIndicator").IsVisible);
             workspace.SetTabDropIndicator(targetRow, BrowseNativeWorkspace.TabDropZone.Group); Layout();
-            Assert.True(InTargetRow("BrowseTabDropGroupIndicator").IsVisible);
-            Assert.InRange(Math.Abs(InTargetRow("BrowseTabDropGroupIndicator").Bounds.Width - targetRowVisual.Bounds.Width), 0, 1);
+            var groupGlow = Assert.IsAssignableFrom<CuiContainerControl>(InTargetRow("BrowseTabDropGroupIndicator"));
+            Assert.True(groupGlow.IsVisible);
+            Assert.InRange(Math.Abs(groupGlow.Bounds.Width - targetRowVisual.Bounds.Width), 0, 1);
+            Assert.IsAssignableFrom<IGradientBrush>(groupGlow.Background);
             workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None); Layout();
             var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
             var targetOrigin = targetRowVisual.TranslatePoint(default, window)!.Value;
@@ -112,6 +115,159 @@ public sealed partial class BrowseNativeUiTests
             void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
         }
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(.25, true)]
+    [InlineData(.75, false)]
+    public async Task Dragging_to_an_inner_edge_splits_the_exact_pair_on_the_receiving_half(double relativeX, bool sourceReceivesFirst)
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var source = TabButton(window, workspace, sourceId.ToString("D"));
+            var target = TabButton(window, workspace, targetId.ToString("D"));
+            var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(targetId.ToString("D"), out var targetRow));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var targetOrigin = targetVisual.TranslatePoint(default, window)!.Value;
+            var dropPoint = targetOrigin + new Vector(targetVisual.Bounds.Width * relativeX, targetVisual.Bounds.Height / 2);
+            var firstPreviewPoint = targetOrigin + new Vector(targetVisual.Bounds.Width * (sourceReceivesFirst ? .22 : .78), targetVisual.Bounds.Height / 2);
+
+            window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
+            window.MouseMove(firstPreviewPoint); Layout();
+            var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>().Where(popup => popup.IsOpen));
+            var anchor = window.GetVisualDescendants().OfType<Control>().Single(control => control.Name == "BrowseTabDragAnchor");
+            var anchorPoint = anchor.TranslatePoint(default, window)!.Value;
+            Assert.InRange(Math.Abs(anchorPoint.X - firstPreviewPoint.X), 0, .5);
+            Assert.InRange(Math.Abs(anchorPoint.Y - firstPreviewPoint.Y), 0, .5);
+            window.MouseMove(dropPoint); Layout();
+            anchorPoint = anchor.TranslatePoint(default, window)!.Value;
+            Assert.InRange(Math.Abs(anchorPoint.X - dropPoint.X), 0, .5);
+            Assert.InRange(Math.Abs(anchorPoint.Y - dropPoint.Y), 0, .5);
+            Assert.True(sourceReceivesFirst ? targetRow!.DropSplitBefore : targetRow!.DropSplitAfter);
+            var targetControls = targetVisual.GetVisualDescendants().OfType<Control>();
+            var half = targetControls.Single(control => control.Name == (sourceReceivesFirst ? "BrowseTabDropSplitBeforeHalf" : "BrowseTabDropSplitAfterHalf"));
+            Assert.InRange(Math.Abs(half.Bounds.Width * 2 - targetVisual.Bounds.Width), 0, 1);
+            Assert.NotNull(preview.Child);
+            window.MouseUp(dropPoint, MouseButton.Left);
+            if (workspace.OriginalCommand is { } original) await Observe(original, window);
+            Layout();
+            Assert.Equal(sourceReceivesFirst ? new[] { sourceId, targetId } : new[] { targetId, sourceId }, chrome.State.PaneTabIds);
+            Assert.Equal(Haven.Core.SplitOrientation.Vertical, chrome.State.SplitOrientation);
+            Assert.Equal(targetId, chrome.State.SelectedTabId);
+            Assert.Equal(2, factory.Hosts.Count);
+            await chrome.CloseSplitViewAsync();
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Dragging_to_the_center_groups_the_exact_rows_and_lights_the_whole_row()
+    {
+        var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
+        var state = new BrowseTabSessionProjection([
+            new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" }
+        ], secondId);
+        var session = new NativeDragSession(state);
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory, homeProfileId: "profile-a", tabSessionPersistence: session);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var source = TabButton(window, workspace, firstId.ToString("D"));
+            var target = TabButton(window, workspace, secondId.ToString("D"));
+            var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(secondId.ToString("D"), out var targetRow));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var targetOrigin = targetVisual.TranslatePoint(default, window)!.Value;
+            var dropPoint = targetOrigin + new Vector(targetVisual.Bounds.Width * .5, targetVisual.Bounds.Height / 2);
+
+            window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
+            window.MouseMove(dropPoint); Layout();
+            Assert.True(targetRow!.DropGroup);
+            var groupGlow = Assert.IsAssignableFrom<CuiContainerControl>(targetVisual.GetVisualDescendants()
+                .OfType<Control>().Single(control => control.Name == "BrowseTabDropGroupIndicator"));
+            Assert.True(groupGlow.IsVisible);
+            Assert.InRange(Math.Abs(groupGlow.Bounds.Width - targetVisual.Bounds.Width), 0, 1);
+            Assert.IsAssignableFrom<IGradientBrush>(groupGlow.Background);
+            Assert.True(window.GetVisualDescendants().OfType<Popup>().Any(popup => popup.IsOpen));
+            window.MouseUp(dropPoint, MouseButton.Left);
+            if (workspace.OriginalCommand is { } original) await Observe(original, window);
+            Layout();
+            var group = Assert.Single(chrome.State.Groups);
+            Assert.Equal(new[] { firstId, secondId }, group.OrderedTabIds);
+            Assert.Equal(secondId, chrome.State.SelectedTabId);
+            Assert.Equal(new[] { firstId, secondId }, session.Saves[^1].Groups!.Single().OrderedTabIds);
+            Assert.Equal(2, factory.Hosts.Count);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Escape_cancels_an_active_split_drag_and_retires_its_native_preview()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var source = TabButton(window, workspace, sourceId.ToString("D"));
+            var target = TabButton(window, workspace, targetId.ToString("D"));
+            var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(targetId.ToString("D"), out var targetRow));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var dropPoint = targetVisual.TranslatePoint(default, window)!.Value + new Vector(targetVisual.Bounds.Width * .25, targetVisual.Bounds.Height / 2);
+            var before = chrome.State.Tabs.Select(tab => tab.Id).ToArray();
+
+            source.Focus(); window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
+            window.MouseMove(dropPoint); Layout();
+            Assert.True(targetRow!.DropSplitBefore);
+            Assert.True(window.GetVisualDescendants().OfType<Popup>().Any(popup => popup.IsOpen));
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
+            Layout();
+            Assert.False(targetRow!.DropSplitBefore);
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            Assert.Equal(before, chrome.State.Tabs.Select(tab => tab.Id));
+            Assert.Null(workspace.OriginalCommand);
+            window.MouseUp(dropPoint, MouseButton.Left); Layout();
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    private sealed class NativeDragSession(BrowseTabSessionProjection projection) : IBrowseTabSessionPersistence
+    {
+        public List<BrowseTabSessionProjection> Saves { get; } = [];
+        public Task<BrowseTabSessionProjection?> LoadAsync(CancellationToken cancellationToken)
+        { cancellationToken.ThrowIfCancellationRequested(); return Task.FromResult<BrowseTabSessionProjection?>(projection); }
+        public Task SaveAsync(BrowseTabSessionProjection updated, CancellationToken cancellationToken)
+        { cancellationToken.ThrowIfCancellationRequested(); Saves.Add(updated); return Task.CompletedTask; }
     }
 
     [AvaloniaFact]

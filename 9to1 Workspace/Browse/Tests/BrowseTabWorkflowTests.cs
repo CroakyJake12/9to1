@@ -92,20 +92,34 @@ public sealed partial class BrowseNativeOwnershipTests
     public async Task Native_drop_opens_exact_standard_pair_in_receiving_side_order_and_rejects_private_tabs()
     {
         var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
         var session = new TabSessionFixture(new BrowseTabSessionProjection([
             new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
             new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
         ], firstId));
-        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile-a", tabSessionPersistence: session);
+        await using var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: "profile-a", tabSessionPersistence: session);
+        Assert.NotEqual(factory.Requests[0].ProfileDirectory, factory.Requests[1].ProfileDirectory);
         var privateId = (await chrome.NewTabAsync(true)).SelectedTabId;
         await chrome.SelectTabAsync(firstId);
 
+        Assert.True(chrome.CanOpenSplitViewForTabs(secondId, firstId));
         await chrome.OpenSplitViewForTabsAsync(secondId, firstId);
         Assert.Equal(new[] { secondId, firstId }, chrome.State.PaneTabIds);
         Assert.Equal(firstId, chrome.State.SelectedTabId);
+        Assert.Equal(Haven.Core.SplitOrientation.Vertical, chrome.State.SplitOrientation);
         Assert.Equal(new[] { secondId, firstId }, session.Saves[^1].PaneTabIds);
         await chrome.CloseSplitViewAsync();
+        await chrome.ToggleSplitViewAsync();
+        await chrome.ToggleSplitOrientationAsync();
+        Assert.Equal(Haven.Core.SplitOrientation.Horizontal, chrome.State.SplitOrientation);
+        await chrome.CloseSplitViewAsync();
+        await chrome.OpenSplitViewForTabsAsync(secondId, firstId);
+        Assert.Equal(Haven.Core.SplitOrientation.Vertical, chrome.State.SplitOrientation);
+        await chrome.CloseSplitViewAsync();
         await Assert.ThrowsAsync<InvalidOperationException>(() => chrome.OpenSplitViewForTabsAsync(privateId, firstId));
+        Assert.False(chrome.CanOpenSplitViewForTabs(privateId, firstId));
         Assert.Empty(chrome.State.PaneTabIds);
     }
 
