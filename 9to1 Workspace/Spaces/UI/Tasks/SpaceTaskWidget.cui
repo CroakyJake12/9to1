@@ -1,4 +1,10 @@
 <Cui id="spaces.task-development" version="1">
+  <Actions>
+    <Action name="ReviewTaskPermission" command="task.review-permission" />
+    <Action name="AllowTaskPermission" command="task.allow-permission" />
+    <Action name="DenyTaskPermission" command="task.deny-permission" />
+    <Action name="CloseTaskPermission" command="task.close-permission" />
+  </Actions>
   <Page>
     <Container id="space-task-widget" margin="16" accessible-name="Space task and development workspace" Type="Vertical Stack" CellGap="12">
       <Text id="space-task-title" text="{Binding Title}" font-size="24" text-wrapping="Wrap" />
@@ -15,10 +21,34 @@
       <Text text="{Binding Continuation}" text-wrapping="Wrap" accessible-name="Continuation availability" />
       <Container id="task-composer-mount" Type="Vertical Stack" accessible-name="Task follow-up composer" />
       <Text text="{Binding FollowUps}" text-wrapping="Wrap" accessible-name="Steering and queued work" />
+      <If Condition="{Binding HasPermissionReview}">
+        <Button id="task-permission-review-trigger" action="ReviewTaskPermission" content="Review permission request" Interactive="{Binding CanReviewPermission}" accessible-name="Review this task's actual permission request and decision" />
+      </If>
       <Text text="Development workspace" font-size="18" />
       <Text text="{Binding Project}" text-wrapping="Wrap" accessible-name="Canonical Dev project" />
       <Button id="space-task-open-dev" action="dev.open" content="Open in Dev" accessible-name="Open this same project and task in Dev" Interactive="{Binding CanOpenDev}" />
       <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Task workspace result" />
     </Container>
+    <If Condition="{Binding PermissionOpen}">
+      <Container id="task-permission-review-popout" Type="Floating" Target="task-permission-review-trigger" Placement="Under" action="CloseTaskPermission">
+        <Container Type="Vertical Stack" Width="440" MaxWidth="480" MaxHeight="500" VerticalScrolling="True" Padding="18" CellGap="10" Background="{Resource CuiPanelBrush}" BorderBrush="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="14" accessible-name="Review task permission">
+          <Text id="task-permission-title" text="{Binding PermissionTitle}" font-size="18" font-weight="SemiBold" TextWrapping="Wrap" />
+          <Text id="task-permission-question" text="{Binding PermissionQuestion}" font-weight="SemiBold" TextWrapping="Wrap" />
+          <Text id="task-permission-requester" text="{Binding PermissionRequester}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text id="task-permission-provider" text="{Binding PermissionProvider}" TextWrapping="Wrap" />
+          <Text id="task-permission-sensitivity" text="{Binding PermissionSensitivity}" TextWrapping="Wrap" />
+          <Text id="task-permission-inputs" text="{Binding PermissionInputs}" TextWrapping="Wrap" />
+          <Text id="task-permission-allowed-actions" text="{Binding PermissionAllowedActions}" TextWrapping="Wrap" />
+          <Text id="task-permission-continuation" text="{Binding PermissionContinuation}" TextWrapping="Wrap" />
+          <Text id="task-permission-action" text="{Binding PermissionAction}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" accessible-name="Affected task, run and request identities" />
+          <Text id="task-permission-status" text="{Binding PermissionStatus}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container Type="Wrap" CellGap="8">
+            <Button id="task-permission-allow" content="Approve this request" action="AllowTaskPermission" Interactive="{Binding CanRespondPermission}" accessible-name="Approve only this reviewed task permission request" />
+            <Button id="task-permission-deny" content="Deny" action="DenyTaskPermission" Interactive="{Binding CanRespondPermission}" accessible-name="Deny this reviewed task permission request" />
+            <Button id="task-permission-close" content="Close" action="CloseTaskPermission" Interactive="{Binding CanClosePermission}" accessible-name="Close permission review and return to task" />
+          </Container>
+        </Container>
+      </Container>
+    </If>
   </Page>
 </Cui>

@@ -54,6 +54,11 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     private long _generation;
     private Guid? _originalTaskId, _originalRunId;
     private ITaskContextObservation? _observation;
+    private ITaskContextObservation? _permissionSelection;
+    private TaskRunOriginalTaskPermissionReview? _permissionReview;
+    private bool _permissionOpen, _permissionPending, _permissionResponded;
+    private long _permissionSequence;
+    private string _permissionStatus = "";
     private SpaceDeveloperView? _developerView;
     private string _instruction = "", _status = "";
     private Task? _hostClose, _nativeReadinessClose;
@@ -171,6 +176,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
     internal CuiSceneHost OriginalHost => _host; // Root's genuine native-frame producer binds this exact host.
     public new event PropertyChangedEventHandler? PropertyChanged;
     public FollowUpDecision? AcknowledgedFollowUp { get; private set; }
+    internal TaskRunOriginalTaskPermissionResponse? AcknowledgedPermissionResponse { get; private set; }
     public DeveloperOperationResult<DeveloperActionObservation>? OriginalDeveloperReply { get; private set; }
     private bool IsCurrent(long generation)
     { lock (_gate) return !_work.IsRetiring && _active && _generation == generation; }
@@ -246,6 +252,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                 _originalTaskId = snapshot.TaskId; _originalRunId = snapshot.ExecutionId;
             }
             _observation = observation; _developerView = project;
+            ReconcilePermissionReview(observation);
             NotifyOriginal(original, generation);
         }).GetTask()).ConfigureAwait(false);
         await RefreshOriginalRunControlsAsync(original, generation, observation, token).ConfigureAwait(false);
@@ -310,6 +317,191 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
         });
     }
 
+    private async Task ReviewPermissionAsync(DesktopOriginalWorkLifetime.Original original, long generation,
+        ITaskContextObservation? captured, CancellationToken token)
+    {
+        if (captured is null || !ReferenceEquals(captured, _observation) || captured.Snapshot is not { } task ||
+            captured.PermissionReview is not { } pending)
+            throw new InvalidOperationException("This task's pending permission changed before review.");
+        long sequence;
+        lock (_gate)
+        {
+            if (_permissionPending) throw new InvalidOperationException("A task permission review or response is already pending.");
+            _permissionPending = true; sequence = ++_permissionSequence;
+        }
+        try
+        {
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                original.DemandPublication();
+                if (_permissionSequence != sequence) return;
+                _permissionSelection = captured; _permissionReview = null; _permissionResponded = false;
+                _permissionOpen = true; _permissionStatus = "Loading the current owner-authorized permission request…";
+                NotifyOriginal(original, generation);
+            }).GetTask()).ConfigureAwait(false);
+            var reviewed = await original.AwaitAsync(InvokeOriginalSource(() =>
+                _source.ReadPermissionReviewAsync(captured, token, OwnNestedOriginalSource))).ConfigureAwait(false);
+            if (reviewed.CanonicalTaskContext.TaskId != task.TaskId || reviewed.CanonicalTaskContext.ExecutionId != task.ExecutionId ||
+                reviewed.CanonicalTaskContext.ContextId != task.ContextId || reviewed.Request.Id != pending.Request.Id)
+                throw new InvalidOperationException("The pending permission changed; refresh the task before responding.");
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                original.DemandPublication();
+                if (_permissionSequence != sequence) return;
+                _permissionReview = reviewed;
+                _permissionStatus = reviewed.CanRespond ? "Review the actual requested action and consequences before choosing."
+                    : PermissionDecisionStatus(reviewed.AcknowledgedDecision);
+                _permissionResponded = !reviewed.CanRespond;
+                NotifyOriginal(original, generation);
+            }).GetTask()).ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            original.Retain(error);
+            if (IsCurrent(generation))
+                try
+                {
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        if (_permissionSequence != sequence) return;
+                        _permissionReview = null; _permissionStatus = "The permission request could not be reviewed. Refresh and try again.";
+                        NotifyOriginal(original, generation);
+                    }).GetTask()).ConfigureAwait(false);
+                }
+                catch (Exception publishError) { original.Retain(publishError); }
+        }
+        finally
+        {
+            lock (_gate) _permissionPending = false;
+            if (IsCurrent(generation))
+                try { await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => NotifyOriginal(original, generation)).GetTask()).ConfigureAwait(false); }
+                catch (Exception publishError) { original.Retain(publishError); }
+        }
+        original.ThrowRetained();
+    }
+
+    private async Task RespondPermissionAsync(DesktopOriginalWorkLifetime.Original original, long generation,
+        bool approve, CancellationToken token)
+    {
+        var selected = _permissionSelection;
+        var reviewed = _permissionReview;
+        var acknowledged = false;
+        PermissionDecision? actualDecision = null;
+        long sequence;
+        lock (_gate)
+        {
+            if (_permissionPending || !_permissionOpen || _permissionResponded || selected is null || reviewed?.CanRespond != true)
+                throw new InvalidOperationException("No current owner-issued permission review is available.");
+            _permissionPending = true; sequence = _permissionSequence;
+        }
+        try
+        {
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => NotifyOriginal(original, generation)).GetTask()).ConfigureAwait(false);
+            var reply = await original.AwaitAsync(InvokeOriginalSource(() =>
+                _source.RespondPermissionReviewAsync(selected, reviewed, approve, token, OwnNestedOriginalSource))).ConfigureAwait(false);
+            if (reply.TaskId != reviewed.CanonicalTaskContext.TaskId || reply.ExecutionId != reviewed.CanonicalTaskContext.ExecutionId ||
+                reply.ContextId != reviewed.CanonicalTaskContext.ContextId || reply.RequestId != reviewed.Request.Id)
+                throw new InvalidDataException("The permission owner acknowledged a different Task/Run/request.");
+            AcknowledgedPermissionResponse = reply;
+            actualDecision = reply.Decision;
+            acknowledged = true;
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                original.DemandPublication();
+                if (_permissionSequence != sequence) return;
+                _permissionResponded = true; _permissionStatus = PermissionDecisionStatus(reply.Decision);
+                NotifyOriginal(original, generation);
+            }).GetTask()).ConfigureAwait(false);
+            try { await RefreshOriginalAsync(original, generation, token).ConfigureAwait(false); }
+            catch (Exception refreshError)
+            {
+                // The typed response ACK is already real. Preserve it and report the
+                // separate refresh failure rather than calling the decision unacknowledged.
+                original.Retain(refreshError);
+                if (IsCurrent(generation))
+                    try
+                    {
+                        await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            if (_permissionSequence != sequence) return;
+                            _permissionResponded = true;
+                            _permissionStatus = PermissionDecisionStatus(reply.Decision) + " The decision was recorded; the task view could not refresh.";
+                            NotifyOriginal(original, generation);
+                        }).GetTask()).ConfigureAwait(false);
+                    }
+                    catch (Exception publishError) { original.Retain(publishError); }
+            }
+        }
+        catch (Exception error)
+        {
+            original.Retain(error);
+            if (IsCurrent(generation))
+                try
+                {
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        if (_permissionSequence != sequence) return;
+                        _permissionStatus = acknowledged
+                            ? PermissionDecisionStatus(actualDecision) + " The decision was recorded, but the task view could not update."
+                            : "The permission response outcome could not be confirmed. Refresh and review the current request.";
+                        if (acknowledged) _permissionResponded = true;
+                        NotifyOriginal(original, generation);
+                    }).GetTask()).ConfigureAwait(false);
+                }
+                catch (Exception publishError) { original.Retain(publishError); }
+        }
+        finally
+        {
+            lock (_gate) _permissionPending = false;
+            if (IsCurrent(generation))
+                try { await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => NotifyOriginal(original, generation)).GetTask()).ConfigureAwait(false); }
+                catch (Exception publishError) { original.Retain(publishError); }
+        }
+        original.ThrowRetained();
+    }
+
+    private void ReconcilePermissionReview(ITaskContextObservation observation)
+    {
+        if (!_permissionOpen) return;
+        if (_permissionSelection?.Snapshot is not { } selected || observation.Snapshot is not { } current ||
+            selected.TaskId != current.TaskId || selected.ExecutionId != current.ExecutionId || selected.ContextId != current.ContextId)
+        {
+            ClosePermissionReview();
+            return;
+        }
+        var oldId = _permissionReview?.Request.Id ?? _permissionSelection.PermissionReview?.Request.Id;
+        if (oldId is null || observation.PermissionReview is not { } refreshed || refreshed.Request.Id != oldId)
+        {
+            ClosePermissionReview();
+            return;
+        }
+        _permissionSelection = observation; _permissionReview = refreshed;
+        _permissionResponded = !refreshed.CanRespond;
+        _permissionStatus = refreshed.CanRespond ? "Review the actual requested action and consequences before choosing."
+            : PermissionDecisionStatus(refreshed.AcknowledgedDecision);
+    }
+
+    private static string PermissionDecisionStatus(PermissionDecision? decision) => decision?.Kind switch
+    {
+        PermissionDecisionKind.Allowed => "Permission allowed. Resume the task separately when ready.",
+        PermissionDecisionKind.Denied => "Permission denied. The task remains suspended.",
+        _ => "This request cannot accept another response."
+    };
+
+    private bool PermissionActionDeclared(string command)
+    {
+        var expected = command == "task.allow-permission" ? "Approve" : "Deny";
+        return _permissionReview?.Request.AllowedActions.Any(action =>
+            string.Equals(action, expected, StringComparison.OrdinalIgnoreCase)) == true;
+    }
+
+    private void ClosePermissionReview()
+    {
+        lock (_gate) _permissionSequence++;
+        _permissionOpen = false; _permissionReview = null; _permissionSelection = null;
+        _permissionResponded = false; _permissionStatus = "";
+    }
+
     public bool TryGetValue(string path, out object? value)
     {
         var view = _observation; var task = view?.Snapshot;
@@ -337,6 +529,33 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             "CanPauseOriginal" => IsActionAvailable("task.pause") == true,
             "CanStopOriginal" => IsActionAvailable("task.stop") == true,
             "CanResumeOriginal" => IsActionAvailable("task.resume-original") == true,
+            "HasPermissionReview" => _observation?.PermissionReview is { } permission &&
+                (permission.CanRespond || permission.AcknowledgedDecision is not null),
+            "PermissionOpen" => _permissionOpen,
+            "PermissionTitle" => _permissionReview?.Request.Title ?? "Task permission review",
+            "PermissionQuestion" => _permissionReview?.Request.Explanation ?? "Loading the actual permission request…",
+            "PermissionRequester" => _permissionReview is { } review ? "Requested by " + review.Request.RequestingComponentName : "",
+            "PermissionProvider" => _permissionReview?.Request.ProviderName ?? "",
+            "PermissionSensitivity" => _permissionReview is { } sensitivityReview
+                ? $"Request type: {sensitivityReview.Request.Type}; sensitivity: {sensitivityReview.Request.Sensitivity}."
+                : "",
+            "PermissionInputs" => _permissionReview is { } inputReview && inputReview.Request.RequiredInputs.Count != 0
+                ? string.Join("\n", inputReview.Request.RequiredInputs.Select(input =>
+                    $"{input.Label} — {input.InputType}; {(input.Required ? "required" : "optional")}; {input.Sensitivity} sensitivity"))
+                : "No additional user inputs are declared by this request.",
+            "PermissionAllowedActions" => _permissionReview is { } optionReview
+                ? "Owner-declared choices: " + (optionReview.Request.AllowedActions.Count == 0 ? "none" : string.Join(", ", optionReview.Request.AllowedActions))
+                : "",
+            "PermissionContinuation" => _permissionReview is { } continuationReview
+                ? $"Request continuation advertised: {continuationReview.Request.CanResume}; retry advertised: {continuationReview.Request.CanRetry}. This permission decision does not itself resume the task or retry the provider."
+                : "",
+            "PermissionAction" => _permissionReview is { } actionReview
+                ? $"Action {actionReview.Request.ActionId:D}; request {actionReview.Request.Id:D}; task {actionReview.CanonicalTaskContext.TaskId:D}; run {actionReview.CanonicalTaskContext.ExecutionId:D}; context {actionReview.CanonicalTaskContext.ContextId:D}"
+                : "",
+            "PermissionStatus" => _permissionStatus,
+            "CanReviewPermission" => IsActionAvailable("task.review-permission") == true,
+            "CanRespondPermission" => IsActionAvailable("task.allow-permission") == true,
+            "CanClosePermission" => _permissionOpen && !_permissionPending && !_work.IsRetiring,
             "Instruction" => _instruction,
             "CanSubmit" => IsActionAvailable("task.steer") == true,
             "FollowUps" => task is null ? "" : string.Join("\n", task.Steers.Select(steer => $"Steer: {steer.Summary} — {steer.State}")
@@ -347,7 +566,11 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             _ => null
         };
         return path is "Title" or "Identities" or "Objective" or "Observation" or "Plan" or "Checkpoint" or "Attempts" or
-            "Recovery" or "Continuation" or "CanPauseOriginal" or "CanStopOriginal" or "CanResumeOriginal" or "Instruction" or "CanSubmit" or "FollowUps" or "Project" or "CanOpenDev" or "Status";
+            "Recovery" or "Continuation" or "CanPauseOriginal" or "CanStopOriginal" or "CanResumeOriginal" or
+            "HasPermissionReview" or "PermissionOpen" or "PermissionTitle" or "PermissionQuestion" or "PermissionRequester" or
+            "PermissionProvider" or "PermissionSensitivity" or "PermissionInputs" or "PermissionAllowedActions" or
+            "PermissionContinuation" or "PermissionAction" or "PermissionStatus" or "CanReviewPermission" or
+            "CanRespondPermission" or "CanClosePermission" or "Instruction" or "CanSubmit" or "FollowUps" or "Project" or "CanOpenDev" or "Status";
     }
     public bool TrySetValue(string path, object? value)
     {
@@ -374,6 +597,12 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             {
                 "task.refresh" => true,
                 "task.pause" or "task.stop" or "task.resume-original" or "task.end-pass" => IsOriginalRunControlAvailable(command),
+                "task.review-permission" => !_permissionPending && _observation?.PermissionReview is not null &&
+                    _observation.Snapshot?.OwnerBinding is not null,
+                "task.allow-permission" or "task.deny-permission" => !_permissionPending && _permissionOpen && !_permissionResponded &&
+                    _permissionReview is { CanRespond: true } && _permissionSelection is not null &&
+                    _permissionSelection.Snapshot is not null && PermissionActionDeclared(command),
+                "task.close-permission" => _permissionOpen && !_permissionPending,
                 "task.steer" or "task.queue" => _runControlCommand is not { HasLiveWork: true } &&
                     (command == "task.queue" || _observation?.Snapshot is
                         { State: not (TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled or TaskExecutionLifecycle.Failed) }) &&
@@ -408,6 +637,17 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                 if (followUp)
                     await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => NotifyOriginal(original, generation)).GetTask()).ConfigureAwait(false);
                 if (command == "task.refresh") await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
+                else if (command == "task.review-permission")
+                    await ReviewPermissionAsync(original, generation, captured, scope.Token).ConfigureAwait(false);
+                else if (command is "task.allow-permission" or "task.deny-permission")
+                    await RespondPermissionAsync(original, generation, command == "task.allow-permission", scope.Token).ConfigureAwait(false);
+                else if (command == "task.close-permission")
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        original.DemandPublication();
+                        ClosePermissionReview();
+                        NotifyOriginal(original, generation);
+                    }).GetTask()).ConfigureAwait(false);
                 else if (command is "task.steer" or "task.queue")
                 {
                     var snapshot = captured?.Snapshot ?? throw new InvalidOperationException("No original canonical task was captured.");

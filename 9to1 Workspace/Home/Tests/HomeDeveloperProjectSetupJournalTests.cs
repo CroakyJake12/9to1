@@ -139,6 +139,44 @@ public sealed partial class HomeDeveloperProjectSetupJournalTests
         Assert.Equal(body, JsonSerializer.Serialize(reopened.Intent)); Assert.Equal(writes, rig.Store.SetupWrites);
         Assert.Equal(0, rig.Captures.ResourceEffects);
     }
+
+    [Fact]
+    public async Task Existing_empty_project_registration_keeps_the_same_folder_and_workspace_journal()
+    {
+        await using var rig = await Rig.Create();
+        var source = new ExistingCapture(rig.Directory, emptyFiles: true);
+        rig.Captures = new(source);
+
+        var prepared = await rig.PrepareExisting(rig.OtherOwner(), source);
+        Assert.Null(prepared.Intent.Validate());
+        Assert.Empty(prepared.Intent.Files);
+        Assert.Equal(rig.Directory, prepared.Intent.OriginalExistingProjectRoot);
+        Assert.Equal(
+            new[] { DeveloperProjectSetupStepKind.CreateProjectFolder,
+             DeveloperProjectSetupStepKind.ObserveExistingProjectDirectory,
+             DeveloperProjectSetupStepKind.RegisterProjectFolder,
+             DeveloperProjectSetupStepKind.SaveDevWorkspace },
+            prepared.Intent.Steps.Select(value => value.Kind));
+
+        var original = JsonSerializer.Serialize(prepared.Intent);
+        var writes = rig.Store.SetupWrites;
+        var reopened = await rig.PrepareExisting(rig.OtherOwner(), source);
+        Assert.Equal(original, JsonSerializer.Serialize(reopened.Intent));
+        Assert.Equal(writes, rig.Store.SetupWrites);
+        Assert.Equal(0, rig.Captures.ResourceEffects);
+    }
+
+    [Fact]
+    public async Task Empty_copy_into_files_capture_is_still_rejected_before_journal_write()
+    {
+        await using var rig = await Rig.Create();
+        var source = new ExistingCapture(rig.Directory, emptyFiles: true);
+        rig.Captures = new(source);
+
+        await AssertOriginalCause<InvalidDataException>(() => rig.Prepare(source: source));
+        Assert.Equal(0, rig.Store.SetupWrites);
+        Assert.Equal(0, rig.Captures.ResourceEffects);
+    }
     [Fact]
     public async Task Previously_prepared_copy_mode_cannot_be_adopted_as_existing_registration()
     {
@@ -176,15 +214,15 @@ public sealed partial class HomeDeveloperProjectSetupJournalTests
         Assert.Contains(AllCauses(observed), value => value is T);
     }
 
-    private class Capture : IDeveloperProjectOriginalSourceCapture
+    private class Capture(bool emptyFiles = false) : IDeveloperProjectOriginalSourceCapture
     {
         public string OriginalCaptureReference => "actual-synthetic-capture-reference";
         public string OriginalCaptureDigest => new('a', 64);
         public ImmutableArray<string> OriginalFolderPaths => [];
-        public ImmutableArray<DeveloperProjectCapturedSourceFile> OriginalFiles =>
+        public ImmutableArray<DeveloperProjectCapturedSourceFile> OriginalFiles => emptyFiles ? [] :
             [new("main.cs", 12, new string('b', 64), "actual-source-file-reference")];
     }
-    private sealed class ExistingCapture(string root) : Capture, IDeveloperProjectOriginalExistingSourceCapture
+    private sealed class ExistingCapture(string root, bool emptyFiles = false) : Capture(emptyFiles), IDeveloperProjectOriginalExistingSourceCapture
     {
         internal string Root = root;
         public string OriginalExistingProjectRoot => Root;

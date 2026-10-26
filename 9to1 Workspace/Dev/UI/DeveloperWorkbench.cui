@@ -48,6 +48,7 @@
       <Text text="{Binding NewFileReview}" text-wrapping="Wrap" accessible-name="Reviewed new-file path root template byte length and source hash" />
       <Object id="dev-new-file-source" type="ReadOnlyText" text="{Binding NewFileSource}" font-family="monospace" min-height="100" accessible-name="Exact reviewed source to create; blank for an empty source file" />
       <Button id="dev-create-new-source-file" action="dev.create-new-source-file" content="Create reviewed file" Interactive="{Binding CanCreateNewFile}" />
+      <Text id="dev-template-import-status" text="{Binding TemplateImportStatus}" text-wrapping="Wrap" accessible-name="Template file creation outcomes" />
       <Text text="{Binding NewFileStatus}" text-wrapping="Wrap" accessible-name="Actual reviewed CREATE and cold source open status" />
       <Text text="Go to file" font-size="18" />
       <Input id="dev-file-navigation-query" Type="Text" Value="{Binding FileNavigationQuery}" placeholdertext="Literal filename or path fragment" accessible-name="Find an existing file across the current project" />

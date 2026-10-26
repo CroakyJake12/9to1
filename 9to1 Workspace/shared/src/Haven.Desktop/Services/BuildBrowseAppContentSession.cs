@@ -39,6 +39,10 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
     private readonly CancellationTokenSource _lifetime;
     private readonly CancellationToken _token;
     private Func<string, CancellationToken, Task<DeveloperProjectReference>>? _manualEntryAgent;
+    private Func<string, DeveloperProjectTemplateMaterialization, CancellationToken, Task<DeveloperProjectReference>>? _templateEntryAgent;
+    private Func<DeveloperProjectReference, DeveloperProjectTemplateMaterialization, Task>? _templateOpenAgent;
+    private DeveloperProjectCatalog? _templateCatalog;
+    private DeveloperProjectTemplateMaterializer? _templateMaterializer;
     private readonly object _gate = new();
     private readonly Border _view = new();
     private readonly List<DeveloperProjectWorkbenchPage> _workbenches = [];
@@ -79,6 +83,23 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
     {
         ArgumentNullException.ThrowIfNull(agent);
         lock (_gate) _manualEntryAgent = agent;
+    }
+
+    /// <summary>Attaches the template route to the same manual registration and workbench owners.
+    /// The template payload supplies source text only; registration uses the existing Home/Files
+    /// setup journal and every file is later created by the workbench's distinct reviewed CREATE.</summary>
+    internal void AttachTemplateProjectAgents(DeveloperProjectCatalog catalog,
+        DeveloperProjectTemplateMaterializer materializer,
+        Func<string, DeveloperProjectTemplateMaterialization, CancellationToken, Task<DeveloperProjectReference>> register,
+        Func<DeveloperProjectReference, DeveloperProjectTemplateMaterialization, Task> open)
+    {
+        ArgumentNullException.ThrowIfNull(catalog); ArgumentNullException.ThrowIfNull(materializer);
+        ArgumentNullException.ThrowIfNull(register); ArgumentNullException.ThrowIfNull(open);
+        lock (_gate)
+        {
+            _templateCatalog = catalog; _templateMaterializer = materializer;
+            _templateEntryAgent = register; _templateOpenAgent = open;
+        }
     }
 
     private IBuildBorrowedResources Borrowed
@@ -177,7 +198,8 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
                 OpenExistingManualProjectAsync,
                 _token, _token,
                 actual => { if (retained is not null && !ReferenceEquals(retained, actual)) throw new InvalidOperationException("The Build landing factory acquired multiple different partial pages."); retained = actual; _landing = actual; },
-                ManualEntryAgent);
+                ManualEntryAgent, _templateCatalog, _templateMaterializer,
+                _templateEntryAgent, _templateOpenAgent);
             if (!ReferenceEquals(retained, landing))
                 throw new InvalidOperationException("The SAME Build landing page was not retained before publication.");
             await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
@@ -285,7 +307,8 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
         return Dispatcher.UIThread.InvokeAsync<Task>(() => OpenExistingManualProjectCoreAsync(reference, _token)).GetTask().Unwrap();
     }
 
-    private async Task OpenExistingManualProjectCoreAsync(DeveloperProjectReference reference, CancellationToken caller)
+    private async Task OpenExistingManualProjectCoreAsync(DeveloperProjectReference reference, CancellationToken caller,
+        DeveloperProjectTemplateMaterialization? template = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         DemandAlive();
@@ -295,14 +318,15 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
         var resolved = await ResolveAsync(reference, token);
         DemandAlive(); token.ThrowIfCancellationRequested();
         await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
-        await AcquireManualWorkbenchAsync(resolved, token);
+        await AcquireManualWorkbenchAsync(resolved, token, template);
         if (_landing is { } landing) landing.Deactivate();
     }
 
     /// <summary>Acquires the SAME compiled-CUI workbench in manual mode for the exact resolved saved
     /// project. Every acquired candidate (including a failed activation) is retained and drained at
     /// close; the published live page is set only after successful activation and swap.</summary>
-    private async Task AcquireManualWorkbenchAsync(DeveloperResolvedProject resolved, CancellationToken token)
+    private async Task AcquireManualWorkbenchAsync(DeveloperResolvedProject resolved, CancellationToken token,
+        DeveloperProjectTemplateMaterialization? template = null)
     {
         var readiness = Borrowed.BorrowOriginalHomeReadiness();
         DeveloperProjectWorkbenchPage? retained = null;
@@ -318,6 +342,17 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
         if (!ReferenceEquals(retained, page))
             throw new InvalidOperationException("The SAME Build manual workbench page was not retained before publication.");
         await page.ActivateAsync(token);
+        if (template is not null)
+        {
+            try { await page.CreateTemplateProjectFilesAsync(template, token); }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception) when (page.HasRetainedTemplateImportFailure)
+            {
+                // Keep the UI open on the same saved project so its exact partial CREATE result
+                // is visible. The page's retained original import task owns and surfaces this
+                // exception again during close/drain; unretained startup errors propagate.
+            }
+        }
         await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
         DemandAlive(); token.ThrowIfCancellationRequested();
         _view.Child = page;
@@ -325,6 +360,14 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
         lock (_gate) _page = page;
         _published = true;
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
+    }
+
+    internal Task OpenExistingManualTemplateProjectAsync(DeveloperProjectReference reference,
+        DeveloperProjectTemplateMaterialization materialization)
+    {
+        DemandAlive(); ArgumentNullException.ThrowIfNull(reference); ArgumentNullException.ThrowIfNull(materialization);
+        return Dispatcher.UIThread.InvokeAsync<Task>(() =>
+            OpenExistingManualProjectCoreAsync(reference, _token, materialization)).GetTask().Unwrap();
     }
 
     /// <summary>Genuine host Spaces navigation for the saved-reference picker's Open Space action.

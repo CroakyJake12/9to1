@@ -373,7 +373,11 @@ public sealed record SpaceTaskObservation(
     Guid SpaceId, long SpaceRevision, Conversation Conversation, TaskExecutionSnapshot? Snapshot,
     TaskExecutionProjection? Projection, bool OriginalAttemptRetained) : ITaskContextObservation
 {
-    public bool HasCurrentCommandIdentity => Snapshot?.OwnerBinding is not null;
+    // This conversation-keyed read has not asked the canonical task observation owner
+    // to authorize the current principal. A saved owner binding is historical provenance,
+    // not evidence that the identity is current. The exact selection path supplies the
+    // positive value only after a fresh owner-authorized task read.
+    public bool HasCurrentCommandIdentity => false;
     public Guid ContextId => Conversation.Id;
     public Guid? OriginSpaceId => SpaceId;
     public long? OriginSpaceRevision => SpaceRevision;

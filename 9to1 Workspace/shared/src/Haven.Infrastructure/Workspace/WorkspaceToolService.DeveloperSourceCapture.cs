@@ -308,7 +308,9 @@ public sealed partial class WorkspaceToolService
                     if (original.WindowsRoot is not null)
                         await Observe(original, () => VisitWindows(original, logical, admission, folders, files, held, token)).ConfigureAwait(false);
                     else await Observe(original, () => Visit(original.OriginalProjectRoot, "", 0)).ConfigureAwait(false);
-                    if (files.Count == 0) throw new InvalidOperationException("Select a nonempty bounded source project; empty capture was not published.");
+                    // An exact empty manifest is a valid observation of an existing project
+                    // directory. The Home setup model still restricts zero-file registration
+                    // to RegisterExisting; this capture grants no setup or file-write authority.
                     await Observe(original, () => admissions.ValidateOriginalAsync(logical, admission, token)).ConfigureAwait(false);
                     Invoke(() => { DemandCurrent(original); return true; });
                     var capture = new Capture(this, original, logical, folders.ToImmutableArray(), files.ToImmutableArray(), held.ToArray());

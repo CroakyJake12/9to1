@@ -97,6 +97,7 @@
     <!-- Actual Spaces native composer + initial task observation tests share the existing
          canonical permission-caller fixture and its real nested Rig; keep the complete partial. -->
     <Compile Include="ChatCloudPermissionCallerTests.cs;ChatInitialTaskObservationTests.cs;NewChatInitialTaskObservationTests.cs" />
+    <Compile Include="SpaceTaskWidgetPermissionReviewTests.cs" />
     <Compile Include="CanonicalHostedResumeObservationTests.cs" />
     <!-- Canonical workspace-session projection and persistence coverage (same production types). -->
     <Compile Include="UnifiedWorkspaceSessionTests.cs;UnifiedWorkspaceSessionProjectionTests.cs" />
@@ -122,6 +123,7 @@
     <Compile Include="FilesDeveloperOriginalCurrentProjectNativeTests.cs;FilesDeveloperOriginalExecutionPinTests.cs;FilesDeveloperOriginalWorkspaceMetadataSetupProducerTests.cs;FilesDeveloperOriginalProjectRegistrationProducerTests.cs" />
     <!-- Genuine separate manual Home WRITE + protected SQLite create-only composition, including its original rig. -->
     <Compile Include="CanonicalCompatibleTaskContextCompositionTests.Rig.cs;CanonicalCompatibleTaskContextCompositionTests.Tests.cs" />
+    <Compile Include="DeveloperTemplateProjectEntryAdapterTests.cs" />
     <Compile Include="OriginalAutomationLibraryDesktopTests.cs" />
     <Compile Include="OriginalAutomationLibraryChangesTests.cs" />
     <Compile Include="OriginalAutomationLibraryChangesTests.Decline.cs" />

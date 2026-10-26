@@ -38,7 +38,8 @@ public sealed record DeveloperProjectSetupIntent(
         if (!Guid.TryParse(OriginalDestinationFolderRevision, out var revision) || revision == Guid.Empty ||
             !IsHash(OriginalFilesConfigurationDigest) || !IsHash(OriginalSourceDigest) || string.IsNullOrWhiteSpace(OriginalSourceCaptureReference))
             return "Original source capture, Files configuration and destination revision are required.";
-        if (!SafeName(ProjectName) || Files.IsDefaultOrEmpty || Files.Length > MaximumFiles || Folders.IsDefault || Folders.Length > MaximumFolders ||
+        if (!SafeName(ProjectName) || Files.IsDefault || Files.Length > MaximumFiles ||
+            (Files.Length == 0 && Mode != DeveloperProjectSetupMode.RegisterExisting) || Folders.IsDefault || Folders.Length > MaximumFolders ||
             Steps.IsDefaultOrEmpty || Steps.Length > MaximumSteps)
             return "This bounded registration requires a safe project name and a finite original plan; unsupported size is refused, not truncated.";
         if (!Enum.IsDefined(Mode) || Mode == DeveloperProjectSetupMode.RegisterExisting &&

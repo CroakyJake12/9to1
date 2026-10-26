@@ -164,6 +164,21 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
                     throw new InvalidOperationException("The configured Files root has no canonical write destination folder for a new manual project.");
                 return await manualAdapter.RegisterExistingFolderAsync(configuration.StoreId, writeFolder.Value, root, ct);
             });
+            var templateProvider = new DeveloperCuiProjectTemplateProvider();
+            var templateCatalog = new DeveloperProjectCatalog([templateProvider]);
+            var templateMaterializer = new DeveloperProjectTemplateMaterializer([templateProvider]);
+            var templateEntry = new DeveloperTemplateProjectEntryAdapter(manualAdapter, templateMaterializer);
+            session.AttachTemplateProjectAgents(templateCatalog, templateMaterializer,
+                async (root, materialization, ct) =>
+                {
+                    var configuration = await files.GetConfigurationAsync(ct)
+                        ?? throw new UnauthorizedAccessException("The original configured Files workspace is unavailable.");
+                    if (!configuration.AppFolders.TryGetValue("write", out var writeFolder) || writeFolder.Value == Guid.Empty)
+                        throw new InvalidOperationException("The configured Files root has no canonical write destination folder for a template project.");
+                    return await templateEntry.RegisterExistingFolderAsync(configuration.StoreId, writeFolder.Value,
+                        root, materialization, ct);
+                },
+                session.OpenExistingManualTemplateProjectAsync);
             return session;
         }
         catch { lifetime.Dispose(); throw; }
