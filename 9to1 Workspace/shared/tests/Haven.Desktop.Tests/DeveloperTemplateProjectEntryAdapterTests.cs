@@ -24,7 +24,7 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
         await creation;
         var rig = creation.GetType().GetProperty("Result")!.GetValue(creation)!;
         var graph = (ServiceProvider)Get(rig, "Graph");
-        var projectRoot = (string)Get(rig, "ProjectRoot");
+        var projectRoot = (string)rigType.GetField("ProjectRoot", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(rig)!;
         var filesRoot = Directory.GetParent(projectRoot)!.FullName;
         var authority = graph.GetRequiredService<NativeFilesWorkspaceAuthority>();
         var workspace = (await authority.GetCurrentAsync(CancellationToken.None))!;
@@ -37,8 +37,8 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
         try
         {
             var manualRoot = CreateTarget(filesRoot, "manual-nonempty", "manual data");
-            var manualOperation = manual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], manualRoot, CancellationToken.None);
+            var manualOperation = Keep(rig, manual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], manualRoot, CancellationToken.None));
             await Decide(rig, manualOperation, HomeDeveloperProjectReadAdmissionSource.ReadAction);
             await Decide(rig, manualOperation, HomeDeveloperProjectSetupPermissionSource.SetupAction);
             await manualOperation;
@@ -49,10 +49,10 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             var manualSetupRecordsBefore = await SetupRecordCount(graph);
             var manualMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(manualRoot));
             var templateOnManual = new DeveloperTemplateProjectEntryAdapter(manual, materializer);
-            var mismatch = templateOnManual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], manualRoot, manualMaterialization, CancellationToken.None);
+            var mismatch = Keep(rig, templateOnManual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], manualRoot, manualMaterialization, CancellationToken.None));
             await Decide(rig, mismatch, HomeDeveloperProjectReadAdmissionSource.ReadAction);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => mismatch);
+            Expect(rig, await Assert.ThrowsAsync<InvalidOperationException>(() => mismatch));
             Assert.Equal(manualSetupId, manual.RetainedSetupId);
             Assert.Equal(manualSetupRecordsBefore, await SetupRecordCount(graph));
 
@@ -66,19 +66,19 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             var driveBefore = File.ReadAllBytes(drivePath);
             var devBefore = Snapshot(savedStore.OriginalWorkspaceMetadataDirectory);
             var setupRecordsBefore = await SetupRecordCount(graph);
-            var rejected = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None);
-            var concurrentRejected = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None);
+            var rejected = Keep(rig, freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None));
+            var concurrentRejected = Keep(rig, freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None));
             using var cancelledWaiter = new CancellationTokenSource();
             var cancelledAttempt = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
                 workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, cancelledWaiter.Token);
             cancelledWaiter.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelledAttempt);
             await Decide(rig, rejected, HomeDeveloperProjectReadAdmissionSource.ReadAction);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => rejected);
+            Expect(rig, await Assert.ThrowsAsync<InvalidOperationException>(() => rejected));
             await Decide(rig, concurrentRejected, HomeDeveloperProjectReadAdmissionSource.ReadAction);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => concurrentRejected);
+            Expect(rig, await Assert.ThrowsAsync<InvalidOperationException>(() => concurrentRejected));
             Assert.Null(freshManual.RetainedSetupId);
             Assert.Null(freshManual.RetainedWorkspaceId);
             Assert.Equal(driveBefore, File.ReadAllBytes(drivePath));
@@ -90,8 +90,10 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             var emptyMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(emptyRoot));
             var accepted = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
                 workspace.Configuration.AppFolders["write"], emptyRoot, emptyMaterialization, CancellationToken.None);
+            Keep(rig, accepted);
             var concurrentAccepted = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
                 workspace.Configuration.AppFolders["write"], emptyRoot, emptyMaterialization, CancellationToken.None);
+            Keep(rig, concurrentAccepted);
             await Decide(rig, accepted, HomeDeveloperProjectReadAdmissionSource.ReadAction);
             await Decide(rig, accepted, HomeDeveloperProjectSetupPermissionSource.SetupAction);
             var acceptedReference = await accepted;
@@ -225,6 +227,20 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
 
     private static object Get(object instance, string property)
         => instance.GetType().GetProperty(property, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!.GetValue(instance)!;
+
+    private static Task Keep(object rig, Task operation)
+    {
+        var method = rig.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .Single(candidate => candidate.Name == "Keep" && !candidate.IsGenericMethod &&
+                candidate.GetParameters().Length == 1 && candidate.GetParameters()[0].ParameterType == typeof(Task));
+        return (Task)method.Invoke(rig, [operation])!;
+    }
+
+    private static void Expect(object rig, Exception error)
+    {
+        var method = rig.GetType().GetMethod("Expect", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!;
+        method.Invoke(rig, [error]);
+    }
 
     private static async Task Decide(object rig, Task operation, string action)
     {
