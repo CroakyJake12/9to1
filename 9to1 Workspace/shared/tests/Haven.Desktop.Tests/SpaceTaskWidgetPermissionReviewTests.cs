@@ -378,6 +378,69 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Tasks_dashboard_successful_refresh_retires_open_review_when_current_command_identity_changes()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        using var paths = new ObservationPaths();
+        await rig.RunAsync(tools: false);
+        var task = rig.Service.CurrentCanonicalTask!;
+        var originalActor = rig.Actors.Current!;
+        var request = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        var registry = new SpaceRegistry(new ObservationSettings());
+        _ = await registry.GetAllAsync(cancellationToken: token);
+        var preferences = new UserPreferencesService(paths);
+        preferences.SetShownTasks(TaskShownScope.AllTasks);
+        var source = new SpaceTaskWorkspaceService(registry, rig.Conversations, rig.Tasks);
+        var page = new SpaceTasksDashboardPage(source, rig.Tasks, SpaceRegistry.TasksSpaceId,
+            _ => Task.CompletedTask, null, null, preferences, _ => Task.CompletedTask);
+        var window = new Window { Width = 1000, Height = 800, Content = page };
+        try
+        {
+            window.Show(); await page.ActivateAsync(token); window.UpdateLayout();
+            var reviewButton = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>()
+                .Single(button => AutomationProperties.GetAutomationId(button) == "tasks-tile-review-permission");
+            reviewButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualPermissionReview).WaitAsync(token);
+            Assert.True(page.Scene.TryGetValue("ReviewOpen", out var initiallyOpen)); Assert.Equal(true, initiallyOpen);
+            Assert.True(page.Scene.TryGetValue("ReviewExplanation", out var initialExplanation));
+            Assert.Equal(request.Explanation, initialExplanation);
+            Assert.True(page.Scene.IsActionAvailable("tasks.deny-permission"));
+
+            // Renew authentication for the same principal. The canonical page read
+            // succeeds for historical observation but no longer proves current command
+            // identity; matching TaskID/RunID and saved owner binding are insufficient.
+            rig.Actors.Current = originalActor with { AuthenticationRevision = "genuine-renewed-session" };
+            await page.RefreshOriginalAsync(token);
+
+            var refreshed = Assert.Single(page.CurrentObservations);
+            Assert.Equal(task.TaskId, refreshed.Snapshot!.TaskId);
+            Assert.Equal(task.ExecutionId, refreshed.Snapshot.ExecutionId);
+            Assert.False(refreshed.HasCurrentCommandIdentity);
+            Assert.Null(refreshed.PermissionReview);
+            Assert.True(page.Scene.TryGetValue("ReviewOpen", out var open)); Assert.Equal(false, open);
+            Assert.True(page.Scene.TryGetValue("ReviewExplanation", out var retiredExplanation));
+            Assert.NotEqual(request.Explanation, retiredExplanation);
+            Assert.False(page.Scene.IsActionAvailable("tasks.allow-permission"));
+            Assert.False(page.Scene.IsActionAvailable("tasks.deny-permission"));
+            Assert.True(page.Scene.TryGetValue("CanRespondReview", out var canRespond)); Assert.Equal(false, canRespond);
+            Assert.True(rig.Owner.CanRespond(request.Id));
+            var current = (await rig.Tasks.GetAsync(task.TaskId, token))!;
+            Assert.Equal(TaskExecutionLifecycle.Suspended, current.State);
+            Assert.Empty(current.Attempts);
+            Assert.Equal(0, rig.Client.Dispatches); Assert.Equal(0, rig.Workspace.Effects);
+        }
+        finally
+        {
+            rig.Actors.Current = originalActor;
+            page.RequestRetirement();
+            await page.CloseAndDrainAsync();
+            window.Content = null; window.Close();
+        }
+    }
+
     private sealed class PermissionReviewUnavailableReadiness : ICuiSceneReadiness
     {
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) =>
