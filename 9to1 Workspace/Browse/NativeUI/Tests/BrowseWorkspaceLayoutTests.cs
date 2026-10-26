@@ -2,6 +2,7 @@ using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -131,6 +132,68 @@ public sealed partial class BrowseNativeUiTests
             await Retire(window);
 
             void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(720)]
+    [InlineData(1440)]
+    [InlineData(2048)]
+    public async Task Creating_eleven_tabs_reveals_the_selected_full_row_without_focus_theft_or_manual_scroll_snapback(int width)
+    {
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), new FixtureFactory());
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        window.Width = width;
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var viewport = Assert.IsType<CuiContainerControl>(Authored(window, "BrowseTabViewport"));
+            var scroll = Assert.Single(viewport.GetVisualDescendants().OfType<ScrollViewer>());
+            var presenter = Assert.Single(scroll.GetVisualDescendants().OfType<ScrollContentPresenter>());
+            var firstId = chrome.State.SelectedTabId;
+            var add = Find(window, "BrowseNewTabButton");
+            add.Focus();
+            for (var index = 0; index < 10; index++)
+            {
+                await Click(window, workspace, add);
+                await JoinTabNotificationsAsync(workspace, window); Layout();
+                AssertSelectedRowVisible();
+                Assert.True(add.IsFocused, "Revealing a selected tab must not move keyboard focus.");
+            }
+            Assert.Equal(11, chrome.State.Tabs.Count);
+            Assert.True(scroll.Offset.X > 0);
+            Assert.Equal(ScrollBarVisibility.Hidden, scroll.HorizontalScrollBarVisibility);
+            var lastId = chrome.State.SelectedTabId;
+            var lastButton = TabButton(window, workspace, lastId.ToString("D"));
+            var originalLastOwner = chrome.ObserveOriginalEngine(lastId);
+            // Manual arrow browsing must remain usable while the same selection stays active.
+            var left = viewport.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "CuiOverflowLeft");
+            left.Focus();
+            window.KeyPress(Key.Home, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.Home, RawInputModifiers.None, PhysicalKey.None, null); Layout();
+            Assert.Equal(0, scroll.Offset.X);
+            Layout(); Assert.Equal(0, scroll.Offset.X);
+            await chrome.SelectTabAsync(firstId); await JoinTabNotificationsAsync(workspace, window); Layout();
+            AssertSelectedRowVisible();
+            await chrome.SelectTabAsync(lastId); await JoinTabNotificationsAsync(workspace, window); Layout();
+            AssertSelectedRowVisible();
+            Assert.Same(lastButton, TabButton(window, workspace, lastId.ToString("D")));
+            Assert.Same(originalLastOwner, chrome.ObserveOriginalEngine(lastId));
+            Assert.Same(scroll, Assert.Single(viewport.GetVisualDescendants().OfType<ScrollViewer>()));
+            await Retire(window);
+
+            void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+            void AssertSelectedRowVisible()
+            {
+                var button = TabButton(window, workspace, chrome.State.SelectedTabId.ToString("D"));
+                var row = button.GetVisualAncestors().OfType<CuiContainerControl>().First();
+                var origin = row.TranslatePoint(default, presenter)!.Value;
+                Assert.True(origin.X >= -.5 && origin.X + row.Bounds.Width <= presenter.Bounds.Width + .5,
+                    $"Selected row {origin.X}..{origin.X + row.Bounds.Width} lies outside viewport 0..{presenter.Bounds.Width}.");
+            }
         }
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
     }
