@@ -729,10 +729,10 @@ public sealed partial class ChatCloudPermissionCallerTests
             var before = _rows.TryGetValue(value.TaskId, out var json) ? JsonSerializer.Deserialize<TaskExecutionSnapshot>(json) : null;
             if (value.State == TaskExecutionLifecycle.Completed && HeldCompletionWrite is { } completing)
             {
-                var actual = CommitHeldFollowUpAsync(value, before?.PersistenceRevision ?? 0, completing.Task);
-                OriginalCompletionWrite = actual;
+                var completionWriteTask = CommitHeldFollowUpAsync(value, before?.PersistenceRevision ?? 0, completing.Task);
+                OriginalCompletionWrite = completionWriteTask;
                 CompletionWriteEntered.TrySetResult();
-                return actual;
+                return completionWriteTask;
             }
             if (value.State == TaskExecutionLifecycle.Cancelled && before?.State == TaskExecutionLifecycle.Suspended && HeldTerminalWrite is { } terminal)
             {
