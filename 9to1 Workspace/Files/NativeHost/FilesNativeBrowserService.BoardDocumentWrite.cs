@@ -563,7 +563,8 @@ public sealed partial class FilesNativeBrowserService
                 return committed
                     ? new(true, operation.NewRevisionId, "Saved", "Saved to the selected Files board revision.")
                     : new(false, null, operation.ActualResult?.Error?.Code.ToString() ?? "FilesWriteOutcomeUnknown",
-                        operation.ActualResult?.Error?.Message ?? "The Files write result is unknown; reopen the current revision.", !known);
+                        operation.ActualResult?.Error?.Message ?? "The Files write result is unknown; reopen the current revision.",
+                        !known || operation.ActualResult?.Error?.Code == FilesErrorCode.RevisionConflict);
             }
             finally { _saveGate.Release(); }
         }
