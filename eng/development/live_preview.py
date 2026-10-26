@@ -64,6 +64,15 @@ def create_json(path, value):
         stream.write(encoded(value))
         stream.flush()
         os.fsync(stream.fileno())
+    sync_directory(path.parent)
+
+
+def sync_directory(path):
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
 
 def private_root(value):
@@ -195,6 +204,34 @@ def config(root):
     return value
 
 
+def test_profile_parent(root, cfg, runtime=None):
+    require(cfg.get("test_profile_parent"), "Configure an explicit private test-profile parent before resetting")
+    parent = private_root(cfg["test_profile_parent"])
+    require(parent == parent.resolve(), "Test-profile parent must be canonical, without symlink parents")
+    data = absolute(cfg["data_directory"])
+    require(parent != root and root not in parent.parents and parent not in root.parents
+            and parent != data and data not in parent.parents,
+            "Test-profile parent must be separate from launcher state and not inside an existing profile")
+    if runtime:
+        require(parent != runtime and parent not in runtime.parents and runtime not in parent.parents,
+                "Test-profile parent and immutable runtime must be separate")
+    return parent
+
+
+def configure_test_profiles(root_value, parent_value):
+    """Opt in an existing copy to fresh profiles; does not close or start anything."""
+    root = private_root(root_value)
+    with operation(root):
+        before = config(root)
+        after = {**before, "test_profile_parent": str(absolute(parent_value))}
+        test_profile_parent(root, after)
+        receipt = root / "profile-configuration" / (str(uuid.uuid4()) + ".json")
+        create_json(receipt, {"schema": "9to1.live-preview-test-profile-configuration/v1", "at": now(),
+                              "before": before, "after": after, "application_started": False})
+        atomic(root / "config.json", after)
+    return {"test_profile_parent": after["test_profile_parent"], "receipt": str(receipt), "application_started": False}
+
+
 def current(root):
     path = root / "current.json"
     if not path.exists():
@@ -285,7 +322,7 @@ def refuse_existing_app():
             continue
 
 
-def start_locked(root, manifest_path, reviewed_failure=None):
+def start_locked(root, manifest_path, reviewed_failure=None, profile_reset=None):
     require(sys.platform == "linux" and platform.machine().lower() in ("x86_64", "amd64"), "Linux x86-64 is required")
     previous = current(root)
     if previous:
@@ -298,19 +335,26 @@ def start_locked(root, manifest_path, reviewed_failure=None):
     manifest, digest = validate_manifest(manifest_path)
     if reviewed_failure:
         require(digest == reviewed_failure["candidate_manifest_sha256"], "Reviewed replacement manifest changed")
-    data = absolute(config(root)["data_directory"])
+    if profile_reset:
+        require(digest == profile_reset["candidate_manifest_sha256"], "Reset replacement manifest changed")
+    cfg = config(root)
+    data = absolute(cfg["data_directory"])
     require(data == data.resolve() and data.is_dir() and not data.is_symlink(), "Configured profile path changed")
     runtime = absolute(manifest["runtime_directory"])
     require(runtime != data and runtime not in data.parents and data not in runtime.parents
             and runtime != root and runtime not in root.parents and root not in runtime.parents,
             "Immutable runtime, application data and launcher state must be separate")
     refuse_existing_app()
-    run_id = str(uuid.uuid4())
+    run_id = profile_reset["new_run_id"] if profile_reset else str(uuid.uuid4())
     directory = root / "runs" / run_id
     directory.mkdir(mode=0o700, parents=True)
     value = {"run_id": run_id, "manifest": str(absolute(manifest_path)), "manifest_sha256": digest}
+    value["profile"] = {key: cfg[key] for key in ("data_directory", "profile_observation", "profile_confirmation")}
     if reviewed_failure:
         value["recovery"] = reviewed_failure["audit_pin"]
+    if profile_reset:
+        require(profile_reset["new_data_directory"] == str(data), "Planned reset profile changed")
+        value["profile_reset"] = profile_reset["request_pin"]
     atomic(root / "current.json", value)
     with (directory / "guardian.log").open("xb") as log:
         _guardians[:] = [guardian for guardian in _guardians if guardian.poll() is None]
@@ -409,7 +453,15 @@ def supervise(root_value, run_id):
         executable = None
         try:
             manifest, digest = validate_manifest(run["manifest"], run["manifest_sha256"])
-            cfg = config(root)
+            cfg = run.get("profile", config(root))  # New runs pin their profile before the guardian is allocated.
+            data = absolute(cfg["data_directory"])
+            require(data == data.resolve() and data.is_dir() and data.stat().st_uid == os.getuid(), "Pinned run profile changed")
+            if run.get("profile_reset"):
+                pin = run["profile_reset"]
+                require(hashed(absolute(pin["path"])) == pin["sha256"], "Profile-reset request receipt changed")
+                request = read_json(absolute(pin["path"]))
+                require(request["new_run_id"] == run_id and request["new_data_directory"] == str(data)
+                        and request["candidate_manifest_sha256"] == digest, "Guardian reset/profile/runtime identity mismatch")
             executable = str(absolute(manifest["runtime_directory"]) / "Haven")
             environment = dict(os.environ, HAVEN_DATA_DIR=cfg["data_directory"])
             refuse_existing_app()
@@ -425,6 +477,8 @@ def supervise(root_value, run_id):
                            "data_directory": cfg["data_directory"], "profile_observation": cfg["profile_observation"], "started_at": now()}
                 if run.get("recovery"):
                     launch["recovery"] = run["recovery"]
+                if run.get("profile_reset"):
+                    launch["profile_reset"] = run["profile_reset"]
                 create_json(directory / "launch.json", launch)
                 code = child.wait()
             create_json(directory / "exit.json", {"run_id": run_id, "process": identity, "exit_code": code, "ended_at": now()})
@@ -492,6 +546,128 @@ def reload(root_value, manifest_path, timeout=90, close=request_normal_close):
         return start_locked(root, manifest_path)
 
 
+def reset_profile(root_value, manifest_path, expected_run_id, timeout=90, close=request_normal_close):
+    """One normal-close/fresh-profile cycle. Never erases a profile or recovers a failed exit."""
+    require(0 < timeout <= 300, "Close timeout must be positive and at most 300 seconds")
+    root = private_root(root_value)
+    with operation(root):
+        manifest, digest = validate_manifest(manifest_path)  # Before any close/profile side effect.
+        before = config(root)
+        parent = test_profile_parent(root, before, absolute(manifest["runtime_directory"]))
+        old_run = current(root)
+        require(old_run and old_run["run_id"] == expected_run_id, "Expected current run changed; stale reset refused")
+        state = status(root)
+        require(state["state"] in ("RUNNING", "EXITED_CLEANLY"), "Fresh-profile reset requires a running or cleanly exited owned run; failed exits require Root review")
+        old_directory = run_directory(root, old_run)
+        launch_path = old_directory / "launch.json"
+        launch = read_json(launch_path)
+        require(launch["data_directory"] == before["data_directory"], "Configured profile differs from the owned run")
+        reset_id, new_run_id = str(uuid.uuid4()), str(uuid.uuid4())
+        new_data = parent / ("profile-" + reset_id)
+        require(not new_data.exists() and not new_data.is_symlink(), "Fresh test profile must be create-new")
+        after = {**before, "data_directory": str(new_data),
+                 "profile_observation": "Fresh isolated onboarding test profile from one-shot reset " + reset_id,
+                 "profile_confirmation": "OPERATOR_RECORDED_NOT_APP_CONFIRMED"}
+        journal = root / "profile-resets" / reset_id
+        request_path = journal / "request.json"
+        request = {"schema": "9to1.live-preview-profile-reset/v1", "at": now(), "reset_id": reset_id,
+                   "operation": "NORMAL_CLOSE_CREATE_NEW_TEST_PROFILE", "old_run": old_run,
+                   "old_launch": {"path": str(launch_path), "sha256": hashed(launch_path)},
+                   "old_data_directory": before["data_directory"], "new_data_directory": str(new_data),
+                   "new_run_id": new_run_id, "candidate_manifest": str(absolute(manifest_path)),
+                   "candidate_manifest_sha256": digest, "config_before": before, "config_after": after}
+        create_json(request_path, request)  # Durable plan BEFORE close; never rewrites historical run receipts.
+        try:
+            if state["state"] == "RUNNING":
+                close(launch, before["window_title"])
+                deadline = time.monotonic() + timeout
+                while time.monotonic() < deadline:
+                    state = status(root)
+                    if state["state"] not in ("RUNNING", "EXIT_RECEIPT_PENDING"):
+                        break
+                    time.sleep(.05)
+            require(state["state"] == "EXITED_CLEANLY", "Normal close was vetoed, timed out or failed; no profile reset or replacement attempted")
+            require_clean_terminal_run(launch, timeout)
+            refuse_existing_app()
+            require(current(root) == old_run and config(root) == before, "Run/config changed during normal close")
+            validate_manifest(manifest_path, digest)
+            require(test_profile_parent(root, before, absolute(manifest["runtime_directory"])) == parent, "Test-profile parent changed")
+            create_json(journal / "closed.json", {"at": now(), "old_run_id": old_run["run_id"],
+                        "old_exit": {"path": str(old_directory / "exit.json"), "sha256": hashed(old_directory / "exit.json")},
+                        "normal_close_verified": True})
+            new_data.mkdir(mode=0o700)  # Never exist_ok, copy, rename, clear, or delete an existing profile.
+            sync_directory(parent)
+            require(new_data == new_data.resolve() and stat.S_IMODE(new_data.stat().st_mode) == 0o700, "Fresh profile must be private and canonical")
+            atomic(root / "config.json", after)
+            result = start_locked(root, manifest_path, profile_reset={"new_run_id": new_run_id,
+                "new_data_directory": str(new_data), "candidate_manifest_sha256": digest,
+                "request_pin": {"path": str(request_path), "sha256": hashed(request_path)}})
+            require(result.get("run_id") == new_run_id and result.get("data_directory") == str(new_data), "Reset successor identity was not observed")
+            require(result.get("state") == "RUNNING", "Reset successor did not remain running; retained exit/custody requires review")
+            create_json(journal / "result.json", {"at": now(), "result": result, "old_run_id": old_run["run_id"],
+                        "new_run_id": new_run_id, "old_data_directory": before["data_directory"], "new_data_directory": str(new_data),
+                        "stage": "SUCCESSOR_OBSERVED", "onboarding_acceptance": "NOT_VERIFIED"})
+            return {**result, "activation": request["operation"], "reset_receipt": str(request_path),
+                    "old_data_directory": before["data_directory"], "old_run_id": old_run["run_id"]}
+        except Exception as error:
+            # Roll back configuration only when the successor cannot have used it.
+            # A live, receipt-failed or still-starting child retains its new profile/custody.
+            try:
+                rollback = reset_config_after_failure(root, old_run, new_run_id, before, after)
+                create_json(journal / "failure.json", {"at": now(), "error": str(error), "config_disposition": rollback,
+                            "old_run_id": old_run["run_id"], "new_run_id": new_run_id,
+                            "old_data_directory": before["data_directory"], "new_data_directory": str(new_data),
+                            "new_profile_preserved": new_data.exists()})
+            except Exception as custody_error:
+                if hasattr(error, "add_note"):
+                    error.add_note("Reset failure reconciliation also failed; retain all custody for review: " + repr(custody_error))
+            raise
+
+
+def require_clean_terminal_run(launch, timeout):
+    original = process_identity(launch["process"]["pid"])
+    require(not original or original["state"] == "Z" and original["start_ticks"] == launch["process"]["start_ticks"],
+            "Clean exit receipt conflicts with a live/reused application PID")
+    deadline = time.monotonic() + min(timeout, 3)
+    while True:
+        guardian = process_identity(launch["guardian"]["pid"])
+        if not guardian or guardian["state"] == "Z" and guardian["start_ticks"] == launch["guardian"]["start_ticks"]:
+            break
+        require(guardian["start_ticks"] == launch["guardian"]["start_ticks"] and time.monotonic() < deadline,
+                "Original guardian is not terminal or its PID was reused")
+        time.sleep(.02)
+    require(not remaining_group(launch["process"]) and not remaining_group(launch["guardian"]),
+            "Old run retains process-group members; no fresh profile activation")
+
+
+def reset_config_after_failure(root, old_run, new_run_id, before, after):
+    cfg = config(root)
+    if cfg == before:
+        return "ORIGINAL_CONFIG_UNCHANGED"
+    if cfg != after:
+        return "CONFIG_CHANGED_EXTERNALLY_REQUIRES_REVIEW"
+    if current(root) == old_run:
+        atomic(root / "config.json", before)
+        return "ROLLED_BACK_BEFORE_SUCCESSOR_ALLOCATION"
+    run = current(root)
+    if not run or run["run_id"] != new_run_id:
+        return "SUCCESSOR_CUSTODY_CHANGED_REQUIRES_REVIEW"
+    directory = run_directory(root, run)
+    try:
+        with operation(directory):  # An in-flight guardian owns this lock through its child's terminal receipt.
+            error = read_json(directory / "error.json") if (directory / "error.json").exists() else {}
+            if (directory / "launch.json").exists() or (directory / "exit.json").exists() or error.get("process") is not None:
+                return "NEW_PROFILE_USED_RETAINED_FOR_REVIEW"
+            if not (directory / "error.json").exists():
+                create_json(directory / "error.json", {"run_id": new_run_id, "process": None,
+                            "error": "Reset aborted before guardian launch; original config restored", "at": now()})
+            # The durable error plus per-run lock fences a delayed guardian before it can spawn.
+            atomic(root / "config.json", before)
+            return "ROLLED_BACK_NO_CHILD_FAILED_RUN_RETAINED"
+    except Refusal:
+        return "GUARDIAN_PENDING_NEW_PROFILE_RETAINED_FOR_REVIEW"
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -515,6 +691,13 @@ def main():
     recovery = commands.add_parser("recover-failed")
     for name in ("state-root", "manifest", "review-receipt", "review-sha256"):
         recovery.add_argument("--" + name, required=True)
+    profiles = commands.add_parser("configure-test-profiles")
+    profiles.add_argument("--state-root", required=True)
+    profiles.add_argument("--test-profile-parent", required=True)
+    reset = commands.add_parser("reset-profile")
+    for name in ("state-root", "manifest", "expected-run-id"):
+        reset.add_argument("--" + name, required=True)
+    reset.add_argument("--timeout", type=float, default=90)
     args = parser.parse_args()
     os.umask(0o077)
     try:
@@ -530,6 +713,10 @@ def main():
             result = reload(args.state_root, args.manifest, args.timeout)
         elif args.command == "recover-failed":
             result = recover_failed(args.state_root, args.manifest, args.review_receipt, args.review_sha256)
+        elif args.command == "configure-test-profiles":
+            result = configure_test_profiles(args.state_root, args.test_profile_parent)
+        elif args.command == "reset-profile":
+            result = reset_profile(args.state_root, args.manifest, args.expected_run_id, args.timeout)
         else:
             supervise(args.state_root, args.run_id)
             return
