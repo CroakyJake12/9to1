@@ -126,7 +126,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.Same(originalTargetOwner, chrome.ObserveOriginalEngine(third));
             Assert.False(targetRow.DropSwapBefore || targetRow.DropSwapAfter, "Retiring the drag must clear its edge marker.");
             Assert.False(source.IsPressed);
-            await Click(window, workspace, TabButton(window, workspace, second.ToString("D"))); Layout();
+            await ClickTabWithPointerAsync(window, workspace, TabButton(window, workspace, second.ToString("D"))); Layout();
             Assert.Equal(second, chrome.State.SelectedTabId);
             await Retire(window);
 
@@ -290,7 +290,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.False(source.IsPressed);
             Assert.Null(pointer!.Captured);
             window.MouseUp(dropPoint, MouseButton.Left); Layout();
-            await Click(window, workspace, TabButton(window, workspace, sourceId.ToString("D"))); Layout();
+            await ClickTabWithPointerAsync(window, workspace, TabButton(window, workspace, sourceId.ToString("D"))); Layout();
             Assert.Equal(sourceId, chrome.State.SelectedTabId);
             await Retire(window);
         }
@@ -357,6 +357,17 @@ public sealed partial class BrowseNativeUiTests
             if (child is CuiContainerControl container)
                 foreach (var descendant in AuthoredTabDescendants(container)) yield return descendant;
         }
+    }
+
+    private static async Task ClickTabWithPointerAsync(BrowseNativeWindow window, BrowseNativeWorkspace workspace, Button source)
+    {
+        var point = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+        StartTabDrag(window, source, point);
+        window.MouseUp(point, MouseButton.Left);
+        await Observe(Loader(window).WhenActionsIdleAsync(), window);
+        Assert.NotNull(workspace.OriginalCommand);
+        await Observe(workspace.OriginalCommand!, window);
+        Assert.False(source.IsPressed);
     }
 
     private static void StartTabDrag(BrowseNativeWindow window, Button source, Point point)
