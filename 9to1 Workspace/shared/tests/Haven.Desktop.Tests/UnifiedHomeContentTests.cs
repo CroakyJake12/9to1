@@ -1516,14 +1516,20 @@ public sealed class UnifiedHomeContentTests
             Assert.Equal("browse://home/models", refusedNewTab.SelectedTab.Address.Value);
             Assert.Equal(tabCount, refusedNewTab.Tabs.Count);
             Assert.Contains("not registered", refusedNewTab.Status, StringComparison.Ordinal);
-            var refusedNested = await chrome.NavigateAsync("browse://home/settings", lifetime.Token)
-                .WaitAsync(TimeSpan.FromSeconds(20), lifetime.Token);
+            // Settings is a recognised Home route, but this composition has no Settings owner.
+            // Its genuine factory refusal remains an original failure, rather than an optimistic status.
+            var refusal = await Assert.ThrowsAsync<NotSupportedException>(() =>
+                chrome.NavigateAsync("browse://home/settings", lifetime.Token)
+                    .WaitAsync(TimeSpan.FromSeconds(20), lifetime.Token));
+            var refusedNested = chrome.State;
             Assert.Equal("browse://home/models", refusedNested.SelectedTab.Address.Value);
             Assert.Equal(tabCount, refusedNested.Tabs.Count);
-            Assert.Contains("not registered", refusedNested.Status, StringComparison.Ordinal);
+            Assert.Same(session, chrome.ObserveOriginalAppContent(refusedNested.SelectedTabId));
+            Assert.True(session.IsPublicationCurrent);
+            Assert.False(session.CanRetireOriginalView);
             var rejected = Assert.Single(factory.Refusals);
             Assert.Equal("browse://home/settings", rejected.Address.Value);
-            Assert.IsType<NotSupportedException>(rejected.Failure);
+            Assert.Same(rejected.Failure, refusal);
         }
         finally
         {
@@ -1758,8 +1764,15 @@ public sealed class UnifiedHomeContentTests
                 Assert.Equal("Clear app search", AutomationProperties.GetName(clear));
                 Assert.True(clear.Focus(), "The query-visible Clear action must remain keyboard-focusable.");
                 Assert.Equal("19 apps", count.Text);
-                var filteredTile = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
-                    control => control.Name == "home-app-tile" && control.IsEffectivelyVisible);
+                // Search includes descriptions: Canvas mentions whiteboards/study boards.
+                // Both genuine catalogue matches must remain, with exactly one Boards tile.
+                var filteredTiles = page.GetVisualDescendants().OfType<Button>()
+                    .Where(control => control.Name == "home-app-tile" && control.IsEffectivelyVisible).ToArray();
+                Assert.Equal(new[] { "Boards", "Canvas" }, filteredTiles.Select(tile =>
+                    Assert.Single(tile.GetVisualDescendants().OfType<TextBlock>()).Text)
+                    .OrderBy(name => name, StringComparer.Ordinal));
+                var filteredTile = Assert.Single(filteredTiles,
+                    control => AutomationProperties.GetName(control) == "Open Boards");
                 Assert.Equal("Boards", Assert.Single(filteredTile.GetVisualDescendants().OfType<TextBlock>()).Text);
                 AssertSearchGeometry();
                 clear.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

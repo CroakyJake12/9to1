@@ -7,6 +7,8 @@
   <Variable Type="boolean" ID="StepDownload">false</Variable>
   <Variable Type="commandstate" ID="Result"></Variable>
   <Variable Type="string" ID="StatusText"></Variable>
+  <Variable Type="boolean" ID="ShowSignInStatus">false</Variable>
+  <Variable Type="boolean" ID="ShowStoredStatus">false</Variable>
 
   <Actions>
     <Action name="start">
@@ -19,13 +21,15 @@
          Download Models? step appears directly (no extra Continue/Discover tap). -->
     <Action name="signin" command="onboarding.signin" result="Result">
       <Set Target="StepSignIn" Value="false" When="{Binding Result.Succeeded}" />
-      <Set Target="StatusText" Value="" When="{Binding Result.Succeeded}" />
-      <Set Target="StatusText" Value="{Binding Result.Message}" When="!{Binding Result.Succeeded}" />
+      <Set Target="ShowStoredStatus" Value="false" />
+      <Set Target="ShowSignInStatus" Value="false" When="{Binding Result.Succeeded}" />
+      <Set Target="ShowSignInStatus" Value="true" When="!{Binding Result.Succeeded}" />
     </Action>
 
     <Action name="notnow" command="onboarding.notnow" result="Result">
       <Set Target="StepSignIn" Value="false" />
-      <Set Target="StatusText" Value="" />
+      <Set Target="ShowSignInStatus" Value="false" />
+      <Set Target="ShowStoredStatus" Value="false" />
     </Action>
 
     <!-- Eligible auto-complete: only reached via the eligible <Effect>. On a failed durable commit
@@ -34,6 +38,8 @@
     <Action name="finish-eligible" command="onboarding.complete" result="Result">
       <Set Target="StepDownload" Value="true" When="!{Binding Result.Succeeded}" />
       <Set Target="StatusText" Value="We could not save your setup yet; please retry." When="!{Binding Result.Succeeded}" />
+      <Set Target="ShowSignInStatus" Value="false" />
+      <Set Target="ShowStoredStatus" Value="true" When="!{Binding Result.Succeeded}" />
     </Action>
 
     <!-- Download Models? -> continue without downloading (durable completion). The step is kept
@@ -41,6 +47,8 @@
          commit publishes Home (host waits on CompletionTask). -->
     <Action name="continue-no-model" command="onboarding.complete" result="Result">
       <Set Target="StatusText" Value="We could not save your setup yet; please retry." When="!{Binding Result.Succeeded}" />
+      <Set Target="ShowSignInStatus" Value="false" />
+      <Set Target="ShowStoredStatus" Value="true" When="!{Binding Result.Succeeded}" />
     </Action>
 
     <Action name="show-download">
@@ -49,6 +57,8 @@
 
     <Action name="retry-recovery" command="onboarding.retry" result="Result">
       <Set Target="StatusText" Value="State recovered; starting fresh." When="{Binding Result.Succeeded}" />
+      <Set Target="ShowSignInStatus" Value="false" When="{Binding Result.Succeeded}" />
+      <Set Target="ShowStoredStatus" Value="true" When="{Binding Result.Succeeded}" />
     </Action>
 
     <Action name="quit-app" command="onboarding.quit" />
@@ -118,7 +128,19 @@
               </Container>
             </If>
 
-              <Text id="onboarding-status" text="{Binding StatusText}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
+              <!-- Set remains literal-only. Render the genuine command message directly;
+                   successful sign-in/local continuation selects an empty status control. -->
+              <If Condition="{Binding ShowSignInStatus}">
+                <Text id="onboarding-status" text="{Binding Result.Message}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
+              </If>
+              <Else>
+                <If Condition="{Binding ShowStoredStatus}">
+                  <Text id="onboarding-status" text="{Binding StatusText}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
+                </If>
+                <Else>
+                  <Text id="onboarding-status" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
+                </Else>
+              </Else>
               </Container>
             </If>
           </Container>

@@ -155,6 +155,7 @@ public sealed class HomeDashboardCuiRenderTests
     [InlineData(390, 844, CuiAppearance.SuperDark)]
     public async Task Actual_dashboard_loads_authored_Cui_and_keeps_existing_edit_intent(int width, int height, CuiAppearance appearance)
     {
+        var testToken = TestContext.Current.CancellationToken;
         var previous = CuiThemeScopeApplier.DetectAppearance();
         var previousTheme = CuiSurfacePaletteCatalog.ActiveTheme;
         CuiThemeScopeApplier.ApplyGlobalTheme(CuiTheme.Professional, appearanceOverride: appearance);
@@ -167,22 +168,25 @@ public sealed class HomeDashboardCuiRenderTests
         try
         {
             window.Show();
-            await page.ActivateAsync(CancellationToken.None);
+            await page.ActivateAsync(testToken);
             window.Measure(new Size(width, height));
             window.Arrange(new Rect(0, 0, width, height));
-            window.UpdateLayout();
+            SettleDashboardLayout(window);
             var root = Assert.Single(page.GetLogicalDescendants().OfType<CuiContainerControl>(),
                 item => item.Name == "dashboard-root");
             Assert.True(root.Bounds.Width > 0 && root.Bounds.Height > 0);
             Assert.True(root.Bounds.Width <= width);
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item =>
                 item.Name == "dashboard-welcome" && item.Text?.StartsWith("Good ", StringComparison.Ordinal) == true);
-            var edit = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "dashboard-edit-with-ai");
+            // Customise intentionally removes its tools from the visible tree. Inspect
+            // the SAME retained authored control before exposing it through the real action.
+            var edit = Assert.Single(AuthoredDashboardControls(page).OfType<Button>(),
+                item => item.Name == "dashboard-edit-with-ai");
             Assert.False(edit.IsEffectivelyVisible);
             var arrange = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "dashboard-arrange-widgets");
             Assert.Equal("Customise", arrange.Content);
             arrange.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            window.UpdateLayout();
+            SettleDashboardLayout(window);
             Assert.True(edit.IsEffectivelyVisible);
             Assert.Equal("Done", arrange.Content);
             var requested = 0;
@@ -204,7 +208,7 @@ public sealed class HomeDashboardCuiRenderTests
                     $"{id} is outside the {width}px dashboard.");
             }
             arrange.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            window.UpdateLayout();
+            SettleDashboardLayout(window);
             Assert.Equal("Customise", arrange.Content);
             Assert.False(edit.IsEffectivelyVisible);
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item =>
@@ -216,6 +220,7 @@ public sealed class HomeDashboardCuiRenderTests
     [AvaloniaFact]
     public async Task Reopening_during_cancelled_refresh_reads_again_and_rejects_the_old_result()
     {
+        var testToken = TestContext.Current.CancellationToken;
         using var bus = new HavenEventBus();
         var source = new SnapshotRepository(blockFirstRead: true);
         using var page = CreatePage(bus, source);
@@ -223,25 +228,27 @@ public sealed class HomeDashboardCuiRenderTests
         try
         {
             window.Show();
-            var firstActivation = page.ActivateAsync(CancellationToken.None);
+            var firstActivation = page.ActivateAsync(testToken);
+            await source.FirstReadEntered.Task.WaitAsync(TimeSpan.FromSeconds(20), testToken);
             Assert.Equal(1, source.Reads);
             page.Deactivate();
-            var reopened = page.ActivateAsync(CancellationToken.None);
+            var reopened = page.ActivateAsync(testToken);
             source.FirstRead.SetResult(Snapshot(91));
-            await Task.WhenAll(firstActivation, reopened);
-            window.UpdateLayout();
+            await Task.WhenAll(firstActivation, reopened).WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleDashboardLayout(window);
 
             Assert.Equal(2, source.Reads);
             Assert.DoesNotContain(page.GetVisualDescendants().OfType<TextBlock>(), item => item.Text == "91");
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item =>
                 item.Name == "dashboard-widget-status" && item.Text?.Contains("live widgets", StringComparison.Ordinal) == true);
         }
-        finally { window.Close(); }
+        finally { source.FirstRead.TrySetResult(Snapshot()); window.Close(); }
     }
 
     [AvaloniaFact]
     public async Task Close_waits_for_the_actual_held_snapshot_before_detaching_the_dashboard()
     {
+        var testToken = TestContext.Current.CancellationToken;
         using var bus = new HavenEventBus();
         var source = new SnapshotRepository(blockFirstRead: true);
         var page = CreatePage(bus, source);
@@ -249,7 +256,8 @@ public sealed class HomeDashboardCuiRenderTests
         window.Show();
         try
         {
-            var activation = page.ActivateAsync(CancellationToken.None);
+            var activation = page.ActivateAsync(testToken);
+            await source.FirstReadEntered.Task.WaitAsync(TimeSpan.FromSeconds(20), testToken);
             Assert.Equal(1, source.Reads);
             var close = page.CloseAndDrainAsync();
             Assert.Same(close, page.OriginalClose);
@@ -310,16 +318,39 @@ public sealed class HomeDashboardCuiRenderTests
     private static NewDashboardPage CreatePage(HavenEventBus bus, IDashboardRepository source) =>
         new(bus, null!, null!, null!, null!, new TestSettings(), source, new TestLayout(), []);
 
+    private static void SettleDashboardLayout(Window window)
+    {
+        window.UpdateLayout();
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+    }
+
+    private static IEnumerable<Control> AuthoredDashboardControls(Control root)
+    {
+        var seen = new HashSet<Control>(ReferenceEqualityComparer.Instance);
+        var pending = new Stack<Control>(); pending.Push(root);
+        while (pending.TryPop(out var control))
+        {
+            if (!seen.Add(control)) continue;
+            yield return control;
+            foreach (var child in control.GetLogicalChildren().OfType<Control>()) pending.Push(child);
+            if (control is CuiContainerControl container)
+                foreach (var child in container.AuthoredChildren) pending.Push(child);
+        }
+    }
+
     private static DashboardSnapshot Snapshot(int tasksDueToday = 3) =>
         new(DateTimeOffset.UtcNow, 0, 0, 0, 0, 0, tasksDueToday, 0, 0, 0, 0, 0, TimeSpan.Zero, [], []);
 
     private sealed class SnapshotRepository(bool blockFirstRead = false) : IDashboardRepository
     {
         public int Reads { get; private set; }
+        public TaskCompletionSource FirstReadEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource<DashboardSnapshot> FirstRead { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<DashboardSnapshot> GetSnapshotAsync(DateTimeOffset now, CancellationToken cancellationToken)
         {
             Reads++;
+            if (Reads == 1) FirstReadEntered.TrySetResult();
             // Deliberately ignore cancellation for the first read to exercise stale-result rejection.
             return blockFirstRead && Reads == 1 ? FirstRead.Task : Task.FromResult(Snapshot());
         }

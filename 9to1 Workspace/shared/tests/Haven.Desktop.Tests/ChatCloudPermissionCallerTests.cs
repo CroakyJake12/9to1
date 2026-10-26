@@ -618,6 +618,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         public int Dispatches; public int StreamDisposals;
         public IReadOnlyList<ModelDescriptor> AvailableModels = [];
         public bool RunApprovedOwnedFrame;
+        public Func<OllamaChatRequest, CancellationToken, Task<bool>>? OrdinaryProviderBody;
         public Task? OriginalDispose;
         public TaskCompletionSource? NextDisposeEntered = null;
         public Task<OllamaToolResponse>? OriginalToolFailure;
@@ -645,6 +646,11 @@ public sealed partial class ChatCloudPermissionCallerTests
             public ValueTask<bool> MoveNextAsync() => new(MoveOriginalAsync());
             private async Task<bool> MoveOriginalAsync()
             {
+                if (request.ExecutionContext is null && owner.OrdinaryProviderBody is { } ordinary)
+                {
+                    owner.Dispatches++;
+                    return await ordinary(request, token);
+                }
                 if (owner.RunApprovedOwnedFrame)
                     return await owner._capture.RunApprovedOriginalFrameAsync(request.ExecutionContext!, () => owner.Dispatches++, token);
                 await owner._capture.AskAsync(request.ExecutionContext!, token); owner.Dispatches++; return false;
@@ -708,6 +714,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         public TaskCompletionSource? HeldFollowUpWrite;
         public TaskCompletionSource? HeldTerminalWrite;
         public TaskCompletionSource? HeldCompletionWrite;
+        public Task? OriginalCompletionWrite;
         public TaskCompletionSource CompletionWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource TerminalWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource FollowUpWriteEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -722,8 +729,10 @@ public sealed partial class ChatCloudPermissionCallerTests
             var before = _rows.TryGetValue(value.TaskId, out var json) ? JsonSerializer.Deserialize<TaskExecutionSnapshot>(json) : null;
             if (value.State == TaskExecutionLifecycle.Completed && HeldCompletionWrite is { } completing)
             {
+                var actual = CommitHeldFollowUpAsync(value, before?.PersistenceRevision ?? 0, completing.Task);
+                OriginalCompletionWrite = actual;
                 CompletionWriteEntered.TrySetResult();
-                return CommitHeldFollowUpAsync(value, before?.PersistenceRevision ?? 0, completing.Task);
+                return actual;
             }
             if (value.State == TaskExecutionLifecycle.Cancelled && before?.State == TaskExecutionLifecycle.Suspended && HeldTerminalWrite is { } terminal)
             {
