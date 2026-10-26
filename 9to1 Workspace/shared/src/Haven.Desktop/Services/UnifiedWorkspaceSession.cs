@@ -159,6 +159,8 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
         public Task SaveAsync(BrowseTabSessionProjection projection, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(projection);
+            if (projection.SplitViews?.Any(split => split is null || split.PaneTabIds is null) == true)
+                throw new InvalidDataException("A split projection must contain typed split objects and pane lists.");
             // Detach at admission so a producer cannot alter a queued save's IDs.
             var captured = projection with
             {

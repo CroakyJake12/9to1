@@ -7,6 +7,51 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeOwnershipTests
 {
     [Fact]
+    public async Task Split_member_close_veto_preserves_the_exact_saved_split_and_original_app_session()
+    {
+        var apps = new PreparedFactory(); var session = new TabSessionFixture(null);
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), appContentFactory: apps, tabSessionPersistence: session);
+        await chrome.NavigateAsync("9to1://write/pending-document");
+        var document = chrome.State.SelectedTabId; var owner = Assert.Single(apps.Sessions);
+        var companion = (await chrome.NewTabAsync(false)).SelectedTabId;
+        await chrome.OpenSplitViewForTabsAsync(document, companion);
+        var originalSplit = Assert.Single(chrome.State.SplitViews); var savedCount = session.Saves.Count;
+        owner.Preparing = () => false;
+        try
+        {
+            await chrome.CloseTabAsync(document);
+            Assert.Equal(originalSplit.Id, Assert.Single(chrome.State.SplitViews).Id);
+            Assert.Equal(originalSplit.PaneTabIds, chrome.State.PaneTabIds);
+            Assert.Same(owner, chrome.ObserveOriginalAppContent(document)); Assert.Null(owner.OriginalClose);
+            Assert.Equal(savedCount, session.Saves.Count); Assert.True(owner.Edit());
+        }
+        finally { owner.Preparing = null; }
+    }
+
+    [Fact]
+    public async Task Failed_split_save_keeps_the_live_object_for_explicit_retry_and_retains_the_original_fault()
+    {
+        var session = new TabSessionFixture(null);
+        var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), tabSessionPersistence: session);
+        RetainedFailedOwners.Add(chrome);
+        var first = chrome.State.SelectedTabId; var second = (await chrome.NewTabAsync(false)).SelectedTabId;
+        await chrome.OpenSplitViewForTabsAsync(first, second);
+        var splitId = Assert.Single(chrome.State.SplitViews).Id;
+        var failure = new IOException("Actual saved-split owner write failed");
+        var original = Task.FromException(failure); session.NextSave = original;
+        Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => chrome.AdjustPrimaryPaneAsync(1)));
+        Assert.True(original.IsFaulted); Assert.True(chrome.HasUnsavedSplitViewLayout);
+        Assert.Equal(splitId, Assert.Single(chrome.State.SplitViews).Id);
+        Assert.Equal(.55, chrome.State.PrimaryPaneRatio, precision: 2);
+        await chrome.SaveSplitViewLayoutAsync();
+        Assert.False(chrome.HasUnsavedSplitViewLayout);
+        Assert.Equal(splitId, Assert.Single(session.Saves[^1].SplitViews!).Id);
+        Assert.Equal(.55, session.Saves[^1].SplitViews![0].PrimaryPaneRatio, precision: 2);
+        var closeFailure = await Assert.ThrowsAnyAsync<Exception>(() => chrome.DisposeAsync().AsTask());
+        Assert.True(HasExact(closeFailure, failure)); // Successful retry never erases the failed original task.
+    }
+
+    [Fact]
     public async Task Saved_split_object_survives_switching_and_cold_projection_restore_without_recreating_live_tabs()
     {
         var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory(includeGecko: true);

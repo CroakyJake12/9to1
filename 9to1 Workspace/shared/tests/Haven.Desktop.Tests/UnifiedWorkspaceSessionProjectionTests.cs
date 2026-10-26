@@ -12,6 +12,44 @@ namespace Haven.Desktop.Tests;
 public sealed class UnifiedWorkspaceSessionProjectionTests
 {
     [Fact]
+    public void Active_only_v1_split_migrates_once_with_exact_split_and_pane_ids_then_survives_inactive_save()
+    {
+        var a = Tab("A"); var b = Tab("B"); var outside = Tab("Outside"); var original = Session([a, b, outside]);
+        var splitId = Guid.NewGuid();
+        var panes = new[] { new WorkspacePaneSnapshot(Guid.NewGuid(), a.Id, 0), new WorkspacePaneSnapshot(Guid.NewGuid(), b.Id, 1) };
+        var legacy = original.Windows[0] with { SelectedTabId = b.Id,
+            Layout = new(splitId, WorkspaceLayoutKind.Split, SplitOrientation.Horizontal, .6, panes) };
+        original = original with { Windows = [legacy] };
+        var tabs = new[] { Project(a), Project(b), Project(outside) };
+        var projectedSplit = Assert.Single(UnifiedWorkspaceSessionProjection.ProjectSplitViews(legacy, tabs));
+        Assert.Equal(splitId, projectedSplit.Id); Assert.Equal(b.Id, projectedSplit.FocusedTabId);
+        var migrated = Merge(original, Projection(tabs, b.Id) with { PaneTabIds = [a.Id, b.Id],
+            SplitOrientation = SplitOrientation.Horizontal, PrimaryPaneRatio = .6, SplitViews = [projectedSplit] }, a.Id, b.Id, outside.Id);
+        var saved = Assert.Single(migrated.Windows[0].SplitViews);
+        Assert.Equal(splitId, saved.Id); Assert.Equal(panes.Select(pane => pane.Id), saved.Panes.Select(pane => pane.Id));
+        var inactive = Merge(migrated, Projection(tabs, outside.Id) with { PaneTabIds = [], SplitViews = [projectedSplit] }, a.Id, b.Id, outside.Id);
+        var reloaded = Assert.Single(UnifiedWorkspaceSessionProjection.ProjectSplitViews(inactive.Windows[0], tabs));
+        Assert.Equal(splitId, reloaded.Id); Assert.Equal(b.Id, reloaded.FocusedTabId);
+        Assert.Equal(JsonSerializer.Serialize(saved), JsonSerializer.Serialize(Assert.Single(inactive.Windows[0].SplitViews)));
+        Assert.Equal(WorkspaceLayoutKind.Single, inactive.Windows[0].Layout.Kind);
+        Assert.Throws<InvalidDataException>(() => Merge(original with { SchemaVersion = WorkspaceSessionSnapshot.CurrentSchemaVersion + 1 },
+            Projection(tabs, b.Id) with { PaneTabIds = [a.Id, b.Id], SplitViews = [projectedSplit] }, a.Id, b.Id, outside.Id));
+    }
+
+    [Fact]
+    public void Split_load_never_projects_a_private_member_or_reinterprets_malformed_saved_objects()
+    {
+        var a = Tab("A"); var b = Tab("B"); var original = Session([a, b]);
+        var window = original.Windows[0] with { SplitViews = [new(Guid.NewGuid(),
+            [new(Guid.NewGuid(), a.Id, 0), new(Guid.NewGuid(), b.Id, 1)], a.Id, SplitOrientation.Vertical, .5)] };
+        Assert.Empty(UnifiedWorkspaceSessionProjection.ProjectSplitViews(window, [Project(a), Project(b) with { Privacy = BrowserTabPrivacy.Private }]));
+        var before = JsonSerializer.Serialize(window);
+        Assert.Throws<InvalidDataException>(() => UnifiedWorkspaceSessionProjection.ProjectSplitViews(
+            window with { SplitViews = [window.SplitViews[0] with { Panes = [window.SplitViews[0].Panes[0], null!] }] }, [Project(a), Project(b)]));
+        Assert.Equal(before, JsonSerializer.Serialize(window));
+    }
+
+    [Fact]
     public void Inactive_split_objects_roundtrip_without_losing_navigation_profile_group_or_pane_identity()
     {
         var groupId = Guid.NewGuid();
@@ -112,6 +150,8 @@ public sealed class UnifiedWorkspaceSessionProjectionTests
         var before = JsonSerializer.Serialize(original);
         Assert.Throws<InvalidDataException>(() => Merge(original,
             projection with { Groups = [projection.Groups[0] with { Color = "invalid" }] }, a.Id));
+        Assert.Throws<InvalidDataException>(() => Merge(original with { Groups = [original.Groups[0] with { Color = "invalid" }] },
+            projection, a.Id)); // Omission does not legitimise malformed retained metadata.
         Assert.Equal(before, JsonSerializer.Serialize(original));
     }
 

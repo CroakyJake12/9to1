@@ -251,6 +251,7 @@ internal static class UnifiedWorkspaceSessionProjection
             if (!IsValidGroupColor(group.Color)) throw new InvalidDataException("A group colour must be an sRGB #RRGGBB value.");
             var color = group.Color is null ? (index >= 0 ? groups[index].Color : null)
                 : group.Color.Length == 0 ? null : group.Color.ToUpperInvariant();
+            if (!IsValidGroupColor(color)) throw new InvalidDataException("Retained group colour metadata must be migrated before it can be saved.");
             var updated = index >= 0
                 ? groups[index] with { Name = name, IsCollapsed = group.IsCollapsed, Color = color }
                 : new TabGroupSnapshot(group.Id, name, group.IsCollapsed, Array.Empty<Guid>()) { Color = color };
@@ -318,7 +319,7 @@ internal static class UnifiedWorkspaceSessionProjection
     internal static IReadOnlyList<BrowseSplitViewProjection> ProjectSplitViews(WorkspaceWindowSnapshot window,
         IReadOnlyList<BrowserTabState> tabs)
     {
-        var ids = tabs.Select(tab => tab.Id).ToHashSet();
+        var ids = tabs.Where(tab => tab.Privacy == BrowserTabPrivacy.Standard).Select(tab => tab.Id).ToHashSet();
         return ReadOnly(CanonicalSplitViews(window).Where(split => split.Panes.All(pane => ids.Contains(pane.TabId)))
             .Select(split => new BrowseSplitViewProjection(split.Id,
                 ReadOnly(split.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId).ToArray()),
@@ -329,6 +330,8 @@ internal static class UnifiedWorkspaceSessionProjection
     {
         if (window.SplitViews is null) throw new InvalidDataException("Saved split objects cannot be null.");
         var values = window.SplitViews;
+        if (values.Any(split => split is null || split.Panes is null || split.Panes.Any(pane => pane is null)))
+            throw new InvalidDataException("Saved splits must contain typed pane objects.");
         // The pre-extension v1 format stored just the visible split. Keep its exact
         // layout and pane identities for one-time additive migration, not a new tab.
         if (values.Count == 0 && window.Layout.Kind == WorkspaceLayoutKind.Split &&
@@ -380,6 +383,7 @@ internal static class UnifiedWorkspaceSessionProjection
                     .Append(updated).ToArray();
             }
         }
+        if (projected.Any(split => split is null)) throw new InvalidDataException("A split object cannot be null.");
         DemandUnique(projected.Select(split => split.Id), "projected split objects");
         var retained = prior.Where(split => !split.Panes.Any(pane => deletedIds.Contains(pane.TabId)) &&
             split.Panes.Any(pane => !currentIds.Contains(pane.TabId))).ToList();

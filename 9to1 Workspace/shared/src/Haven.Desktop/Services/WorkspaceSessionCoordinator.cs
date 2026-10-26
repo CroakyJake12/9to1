@@ -205,7 +205,9 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
         }
 
         using var callbackScope = EnterOriginalScope(null);
-        try { return CreateSnapshot(); }
+        // Ordinary saves need the same immutable input boundary as final close.
+        // Source-owned lists may change as soon as the repository callback runs.
+        try { return DetachSnapshot(CreateSnapshot()); }
         catch (OperationCanceledException error)
         {
             throw new AggregateException("A synchronous snapshot callback has no proven canceled original Task.", error);
@@ -260,7 +262,7 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
         // The coalesced actual task/seal exist before any snapshot delegate reentry.
         // Freeze complete DTO values now, before cancellation, older-save waits or Close.
         // Only persistence of this captured DTO waits for all preceding actual writes.
-        try { capture.Snapshot = DetachSnapshot(CaptureSnapshotOnUiThread()); }
+        try { capture.Snapshot = CaptureSnapshotOnUiThread(); }
         catch (Exception error) { capture.Failure = error; }
         finally { start.SetResult(); }
         return final;

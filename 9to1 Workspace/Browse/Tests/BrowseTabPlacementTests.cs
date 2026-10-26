@@ -7,6 +7,20 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeOwnershipTests
 {
     [Fact]
+    public async Task Malformed_saved_group_colour_is_refused_before_any_canonical_rewrite()
+    {
+        var groupId = Guid.NewGuid(); var tabId = Guid.NewGuid();
+        var projection = new BrowseTabSessionProjection([new(tabId, "Research", "https://research.example/",
+            BrowserTabPrivacy.Standard, groupId.ToString("D"), DateTimeOffset.UtcNow) { ProfileId = "profile" }], tabId)
+        { Groups = [new(groupId, "Research", false, [tabId]) { Color = new string('x', 4096) }] };
+        var session = new TabSessionFixture(projection);
+        await Assert.ThrowsAsync<InvalidDataException>(() => BrowseChrome.CreateAsync(new PreservedPaths(),
+            homeProfileId: "profile", tabSessionPersistence: session));
+        Assert.Empty(session.Saves); Assert.Equal(groupId, Assert.Single(projection.Groups!).Id);
+        Assert.Equal(4096, projection.Groups![0].Color!.Length); // Original evidence was not normalised away.
+    }
+
+    [Fact]
     public async Task Canonical_tab_groups_keep_guid_membership_order_name_and_collapse_state_through_operations()
     {
         var first = Guid.NewGuid(); var second = Guid.NewGuid(); var third = Guid.NewGuid();

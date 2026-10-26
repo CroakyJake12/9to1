@@ -11,6 +11,28 @@ namespace Haven.Desktop.Tests;
 
 public sealed class UnifiedWorkspaceSessionTests
 {
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Coordinator_ordinary_and_final_saves_detach_nested_split_lists_before_repository_callbacks(bool final)
+    {
+        var first = UnifiedWorkspaceTabState.Merge(null, Browser("First"));
+        var second = UnifiedWorkspaceTabState.Merge(null, Browser("Second"));
+        var outside = UnifiedWorkspaceTabState.Merge(null, Browser("Outside"));
+        var panes = new List<WorkspacePaneSnapshot> { new(Guid.NewGuid(), first.Id, 0), new(Guid.NewGuid(), second.Id, 1) };
+        var splitId = Guid.NewGuid();
+        var splits = new List<WorkspaceSplitViewSnapshot> { new(splitId, panes, second.Id, SplitOrientation.Vertical, .5) };
+        var source = new SplitSnapshotSource([first, second, outside],
+            Window(WorkspaceWindowKind.Main, [first.Id, second.Id, outside.Id]) with { SelectedTabId = outside.Id, SplitViews = splits });
+        var repository = new Repository { Write = (_, _) => { panes.Clear(); splits.Clear(); return Task.CompletedTask; } };
+        var coordinator = new WorkspaceSessionCoordinator(repository); coordinator.Register(source, WorkspaceWindowKind.Main, queueSave: false);
+        await (final ? coordinator.SaveFinalSnapshotAndSealAsync(CancellationToken.None) : coordinator.SaveNowAsync(CancellationToken.None));
+        var saved = Assert.Single(Assert.Single(Assert.Single(repository.Writes).Windows).SplitViews);
+        Assert.Equal(splitId, saved.Id); Assert.Equal(second.Id, saved.FocusedTabId);
+        Assert.Equal(new[] { first.Id, second.Id }, saved.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
+        Assert.Empty(panes); Assert.Empty(splits);
+    }
+
     [AvaloniaFact]
     public async Task Saved_split_returns_after_outside_selection_and_actual_sqlite_workspace_restart()
     {
@@ -346,6 +368,13 @@ public sealed class UnifiedWorkspaceSessionTests
         public string AttachmentsDirectory => Path.Combine(root, "attachments");
         public string LogsDirectory => Path.Combine(root, "logs");
         public string LegacyStatePath => Path.Combine(root, "legacy.json");
+    }
+    private sealed class SplitSnapshotSource(IReadOnlyList<TabSessionSnapshot> tabs, WorkspaceWindowSnapshot window) : IWorkspaceSessionSource
+    {
+        public bool IsDisposed => false;
+        public IReadOnlyList<TabSessionSnapshot> CreateTabSnapshots() => tabs;
+        public IReadOnlyList<TabGroupSnapshot> CreateGroupSnapshots() => [];
+        public IReadOnlyList<WorkspaceWindowSnapshot> CreateWindowSnapshots(WorkspaceWindowKind kind) => [window];
     }
     private static TabSessionSnapshot Row(string appKey, string state) => new(
         Guid.NewGuid(), appKey, "Saved", state, "{\"navigation\":true}", 42, null,
