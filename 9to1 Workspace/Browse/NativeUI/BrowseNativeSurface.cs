@@ -327,7 +327,7 @@ internal sealed class BrowseEngineViewport : ContentControl
                 }
             };
             _tabDragPreview = new Popup { PlacementTarget = _tabDragAnchor, Placement = PlacementMode.Bottom, IsLightDismissEnabled = false,
-                IsHitTestVisible = false, Child = preview };
+                IsHitTestVisible = false, TakesFocusFromNativeControl = false, Child = preview };
             CuiPopupPresentation.RequestTransparency(_tabDragPreview);
             _root.Children.Add(_tabDragPreview);
         }
