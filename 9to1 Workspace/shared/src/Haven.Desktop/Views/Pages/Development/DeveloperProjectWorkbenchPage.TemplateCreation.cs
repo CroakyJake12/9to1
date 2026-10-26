@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+using Haven.Desktop.Services;
 using HavenOS.Apps.Dev;
 
 namespace Haven.Desktop.Views.Pages.Development;
@@ -52,7 +53,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
         {
             original.BindPublicationGuard(() => IsCurrent(generation));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token,
-                cancellationToken, _connectionLifetime, _windowLifetime);
+                cancellationToken, _businessToken);
             var token = linked.Token;
             var reference = _project.Reference;
             try
