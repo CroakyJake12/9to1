@@ -35,14 +35,14 @@ public sealed class NewChatOriginalWorkLifetimeTests
                 cleanup.SetResult();
             });
         });
-        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         var close = owner.CloseAndDrainAsync();
         Assert.False(close.IsCompleted);
         Assert.False(actual.IsCompleted);
         release.SetResult();
-        await cleanup.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        await actual.WaitAsync(TimeSpan.FromSeconds(5));
-        await close.WaitAsync(TimeSpan.FromSeconds(5));
+        await cleanup.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await actual.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await close.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(0, published);
         Assert.Equal(1, cleaned);
         Assert.Throws<InvalidOperationException>(() => retained!.RunAcceptedSourceCallback(() => ++cleaned));

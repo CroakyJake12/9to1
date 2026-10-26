@@ -47,7 +47,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             await safety.SendCheckEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
             Assert.False(sending.IsCompleted);
             Assert.Equal(prompt, typeof(NewChatPage).GetField("_originalComposerText", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
-            Assert.Empty(rig.Conversations.Messages.Where(message => message.Role == MessageRole.User));
+            Assert.DoesNotContain(rig.Conversations.Messages, message => message.Role == MessageRole.User);
             Assert.Equal(0, rig.Client.Dispatches);
 
             // Resume the actual awaited safety dependency from a worker thread. The
