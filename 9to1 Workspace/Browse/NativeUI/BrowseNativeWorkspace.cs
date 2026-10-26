@@ -1027,9 +1027,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
                     GradientStops = new GradientStops
                     {
-                        new(Color.FromArgb(12, accent.R, accent.G, accent.B), 0),
-                        new(Color.FromArgb(70, accent.R, accent.G, accent.B), .5),
-                        new(Color.FromArgb(12, accent.R, accent.G, accent.B), 1)
+                        new(Color.FromArgb(36, accent.R, accent.G, accent.B), 0),
+                        new(Color.FromArgb(150, accent.R, accent.G, accent.B), .5),
+                        new(Color.FromArgb(36, accent.R, accent.G, accent.B), 1)
                     }
                 };
             }
