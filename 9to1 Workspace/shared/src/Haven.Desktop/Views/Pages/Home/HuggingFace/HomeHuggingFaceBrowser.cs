@@ -35,6 +35,7 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
     private CancellationTokenSource? _installCancellation;
     private HuggingFaceModelDetails? _selectedDetails;
     private HuggingFaceModelFile? _selectedFile;
+    private AuthenticatedResourceActor? _boundActor;
     private long _generation;
     private bool _hasToken;
     private bool _busy;
@@ -124,7 +125,12 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         try
         {
             var actor = await CurrentActorAsync(token);
-            if (actor is null) { SetText(_tokenStatus, "The active Home profile is unavailable."); return; }
+            if (actor is null) { ClearProfileState("The active Home profile is unavailable."); return; }
+            if (!Equals(_boundActor, actor))
+            {
+                ClearProfileState("The active profile changed. Search again to continue.");
+                _boundActor = actor;
+            }
             var hasToken = await _service!.HasTokenAsync(actor.ProfileId, token);
             if (!await IsCurrentActorAsync(actor, token)) { ClearProfileState("The active profile changed. Reopen Discover to continue."); return; }
             if (IsCurrent(generation, token))
@@ -135,7 +141,7 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
             }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
-        catch { if (IsCurrent(generation, token)) SetText(_tokenStatus, "Secure token status could not be checked."); }
+        catch { if (IsCurrent(generation, token)) ClearProfileState("Secure token status could not be checked."); }
         finally { EndOperation(generation); }
     }
 
@@ -144,9 +150,17 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         _generation++;
         CancelAndDispose(ref _operationCancellation);
         CancelAndDispose(ref _installCancellation);
+        _boundActor = null;
+        _hasToken = false;
+        _repositories.ItemsSource = Array.Empty<HuggingFaceModelSummary>();
+        ClearSelectedRepository();
         ClearTokenInput();
         _busy = false;
         _installProgress.IsVisible = false;
+        _installProgress.Value = 0;
+        SetText(_installStatus, "No installation is running.");
+        SetText(_tokenStatus, "Profile-bound token status is unavailable.");
+        SetText(_browserStatus, "Search is public; installation requires verified repository metadata.");
         SetEnabled(_cancelInstallButton, false);
         UpdateInstallAvailability();
     }
@@ -164,7 +178,12 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         try
         {
             var actor = await CurrentActorAsync(token);
-            if (actor is null) { SetText(_browserStatus, "The active Home profile is unavailable."); return; }
+            if (actor is null) { ClearProfileState("The active Home profile is unavailable."); return; }
+            if (!Equals(_boundActor, actor))
+            {
+                ClearProfileState("The active profile changed. Search again to continue.");
+                _boundActor = actor;
+            }
             var result = await _service!.SearchAsync(actor.ProfileId, query, token);
             if (!await IsCurrentActorAsync(actor, token)) { ClearProfileState("The active profile changed. Search again to continue."); return; }
             if (!IsCurrent(generation, token)) return;
@@ -186,7 +205,13 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         try
         {
             var actor = await CurrentActorAsync(token);
-            if (actor is null) { SetText(_repositoryDetails, "The active Home profile is unavailable."); return; }
+            if (actor is null) { ClearProfileState("The active Home profile is unavailable."); return; }
+            if (!Equals(_boundActor, actor))
+            {
+                ClearProfileState("The active profile changed. Search again before choosing a repository.");
+                _boundActor = actor;
+                return;
+            }
             var details = await _service!.GetDetailsAsync(actor.ProfileId, repository.RepositoryId, token);
             if (!await IsCurrentActorAsync(actor, token)) { ClearProfileState("The active profile changed. Search again to continue."); return; }
             if (!IsCurrent(generation, token)) return;
@@ -214,7 +239,13 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         try
         {
             var actor = await CurrentActorAsync(token);
-            if (actor is null) { SetText(_tokenStatus, "The active Home profile is unavailable."); return; }
+            if (actor is null) { ClearProfileState("The active Home profile is unavailable."); return; }
+            if (!Equals(_boundActor, actor))
+            {
+                ClearProfileState("The active profile changed. Reopen Discover before saving a token.");
+                _boundActor = actor;
+                return;
+            }
             await RunActorBoundAsync(actor, generation, token,
                 operationToken => _service!.SaveTokenAsync(actor.ProfileId, value.Trim(), operationToken));
             if (!await IsCurrentActorAsync(actor, token)) { ClearProfileState("The active profile changed. Reopen Discover to continue."); return; }
@@ -226,7 +257,11 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch { if (IsCurrent(generation, token)) SetText(_tokenStatus, "Could not save the token securely. The input was cleared."); }
-        finally { ClearTokenInput(); EndOperation(generation); }
+        finally
+        {
+            if (generation == _generation) ClearTokenInput();
+            EndOperation(generation);
+        }
     }
 
     private async Task RemoveTokenCoreAsync(CancellationToken cancellationToken)
@@ -237,7 +272,13 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         try
         {
             var actor = await CurrentActorAsync(token);
-            if (actor is null) { SetText(_tokenStatus, "The active Home profile is unavailable."); return; }
+            if (actor is null) { ClearProfileState("The active Home profile is unavailable."); return; }
+            if (!Equals(_boundActor, actor))
+            {
+                ClearProfileState("The active profile changed. Reopen Discover before changing token access.");
+                _boundActor = actor;
+                return;
+            }
             await RunActorBoundAsync(actor, generation, token,
                 operationToken => _service!.RemoveTokenAsync(actor.ProfileId, operationToken));
             if (!await IsCurrentActorAsync(actor, token)) { ClearProfileState("The active profile changed. Reopen Discover to continue."); return; }
@@ -254,11 +295,6 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
     private async Task InstallCoreAsync(CancellationToken cancellationToken)
     {
         if (!ReadyForHuggingFace() || _selectedDetails is not { } details || _selectedFile is not { } file) return;
-        if (details.Gated && !_hasToken)
-        {
-            SetText(_browserStatus, "This repository is gated. Save a token for an account that already has access before installing.");
-            return;
-        }
         var (generation, token) = BeginOperation(cancellationToken);
         var installCancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
         _installCancellation = installCancellation;
@@ -271,7 +307,29 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         try
         {
             var actor = await CurrentActorAsync(installCancellation.Token);
-            if (actor is null) { SetText(_installStatus, "The active Home profile is unavailable."); return; }
+            if (actor is null) { ClearProfileState("The active Home profile is unavailable."); return; }
+            if (!Equals(_boundActor, actor))
+            {
+                ClearProfileState("The active profile changed. Search again before installing.");
+                _boundActor = actor;
+                return;
+            }
+            var hasToken = await _service!.HasTokenAsync(actor.ProfileId, installCancellation.Token);
+            if (!await IsCurrentActorAsync(actor, installCancellation.Token))
+            {
+                ClearProfileState("The active profile changed. Installation was cancelled.");
+                return;
+            }
+            if (!IsCurrent(generation, installCancellation.Token)) return;
+            _hasToken = hasToken;
+            SetText(_tokenStatus, hasToken ? "A token is saved securely for this profile." : "No token is saved. Public search remains available.");
+            UpdateInstallAvailability();
+            if (details.Gated && !hasToken)
+            {
+                SetText(_browserStatus, "This repository is gated. Save a token for an account that already has access before installing.");
+                SetText(_installStatus, "Installation requires an authorized account token for this repository.");
+                return;
+            }
             var progress = new Progress<HuggingFaceInstallProgress>(value =>
             {
                 if (_disposed || generation != _generation || installCancellation.IsCancellationRequested) return;
@@ -298,9 +356,14 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         }
         finally
         {
-            if (ReferenceEquals(_installCancellation, installCancellation)) { _installCancellation = null; installCancellation.Dispose(); }
-            _busy = false;
-            if (IsCurrent(generation, CancellationToken.None)) { SetEnabled(_cancelInstallButton, false); UpdateInstallAvailability(); }
+            if (ReferenceEquals(_installCancellation, installCancellation))
+            {
+                _installCancellation = null;
+                installCancellation.Dispose();
+                _busy = false;
+                SetEnabled(_cancelInstallButton, false);
+                UpdateInstallAvailability();
+            }
             EndOperation(generation);
         }
     }
@@ -438,9 +501,13 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
 
     private void ClearProfileState(string status)
     {
+        _boundActor = null;
         _repositories.ItemsSource = Array.Empty<HuggingFaceModelSummary>();
         ClearSelectedRepository();
         _hasToken = false;
+        _installProgress.Value = 0;
+        _installProgress.IsVisible = false;
+        SetText(_installStatus, "No installation is running.");
         ClearTokenInput();
         SetText(_tokenStatus, "Profile-bound token status is unavailable.");
         SetText(_browserStatus, status);
@@ -456,7 +523,7 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
 
     private void UpdateInstallAvailability()
     {
-        SetEnabled(_installButton, !_busy && _service is not null && _profile is not null &&
+        SetEnabled(_installButton, !_busy && _service is not null && _profile is not null && _boundActor is not null &&
             _selectedDetails is not null && _selectedFile is not null && (!_selectedDetails.Gated || _hasToken));
         SetEnabled(_removeTokenButton, _hasToken && !_busy);
         SetEnabled(_saveTokenButton, !_busy && _service is not null && _profile is not null);

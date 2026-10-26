@@ -107,6 +107,89 @@ public sealed class HomeHuggingFaceBrowserTests
     }
 
     [AvaloniaFact]
+    public async Task Deactivate_clears_profile_A_selection_before_profile_B_activation()
+    {
+        var service = new FakeService { TokenAvailable = true };
+        using var browser = Create(service);
+        var window = new Window { Content = browser, Width = 900, Height = 760 };
+        window.Show();
+        try
+        {
+            await browser.ActivateAsync(CancellationToken.None);
+            await SearchAndSelectRepositoryAsync(browser, service);
+            Assert.Single(Find<ListBox>(browser, "hf-repositories").ItemsSource!.Cast<HuggingFaceModelSummary>());
+            Assert.Single(Find<ListBox>(browser, "hf-files").ItemsSource!.Cast<HuggingFaceModelFile>());
+
+            browser.Deactivate();
+            Assert.Empty(Find<ListBox>(browser, "hf-repositories").ItemsSource!.Cast<HuggingFaceModelSummary>());
+            Assert.Empty(Find<ListBox>(browser, "hf-files").ItemsSource!.Cast<HuggingFaceModelFile>());
+            Assert.False(Find<Button>(browser, "hf-install").IsEnabled);
+
+            service.CurrentActor = new("actor-b", "profile-b", null, null, "revision-b");
+            service.TokenAvailable = false;
+            await browser.ActivateAsync(CancellationToken.None);
+            Assert.Equal("profile-b", service.LastTokenProfile);
+            Assert.Contains("No token is saved", Find<TextBlock>(browser, "hf-token-status").Text);
+            Assert.Empty(Find<ListBox>(browser, "hf-repositories").ItemsSource!.Cast<HuggingFaceModelSummary>());
+            Assert.Empty(Find<ListBox>(browser, "hf-files").ItemsSource!.Cast<HuggingFaceModelFile>());
+            Assert.False(Find<Button>(browser, "hf-install").IsEnabled);
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Idle_authentication_revision_change_clears_old_selection_and_refreshes_token_state()
+    {
+        var service = new FakeService { TokenAvailable = true };
+        using var browser = Create(service);
+        var window = new Window { Content = browser, Width = 900, Height = 760 };
+        window.Show();
+        try
+        {
+            await browser.ActivateAsync(CancellationToken.None);
+            await SearchAndSelectRepositoryAsync(browser, service);
+            Find<ListBox>(browser, "hf-files").SelectedIndex = 0;
+            Assert.True(Find<Button>(browser, "hf-install").IsEnabled);
+
+            service.CurrentActor = service.CurrentActor with { AuthenticationRevision = "revision-b" };
+            service.TokenAvailable = false;
+            await browser.ActivateAsync(CancellationToken.None);
+            Assert.Equal("profile-a", service.LastTokenProfile);
+            Assert.Contains("No token is saved", Find<TextBlock>(browser, "hf-token-status").Text);
+            Assert.Empty(Find<ListBox>(browser, "hf-repositories").ItemsSource!.Cast<HuggingFaceModelSummary>());
+            Assert.Empty(Find<ListBox>(browser, "hf-files").ItemsSource!.Cast<HuggingFaceModelFile>());
+            Assert.False(Find<Button>(browser, "hf-install").IsEnabled);
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Gated_install_rechecks_token_for_the_captured_actor_instead_of_using_cached_status()
+    {
+        var service = new FakeService { TokenAvailable = true, Gated = true };
+        using var browser = Create(service);
+        var window = new Window { Content = browser, Width = 900, Height = 760 };
+        window.Show();
+        try
+        {
+            await browser.ActivateAsync(CancellationToken.None);
+            await SearchAndSelectRepositoryAsync(browser, service);
+            Find<ListBox>(browser, "hf-files").SelectedIndex = 0;
+            var install = Find<Button>(browser, "hf-install");
+            Assert.True(install.IsEnabled);
+
+            service.TokenAvailable = false; // Token was revoked outside this browser after activation.
+            Click(browser, "hf-install");
+            Assert.Equal("profile-a", service.LastTokenProfile);
+            Assert.Equal(0, service.InstallCalls);
+            Assert.False(install.IsEnabled);
+            Assert.Contains("No token is saved", Find<TextBlock>(browser, "hf-token-status").Text);
+            Assert.Contains("requires an authorized account token", Find<TextBlock>(browser, "hf-install-status").Text);
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
     public async Task Deactivation_cancels_in_flight_install_and_drops_late_ui_result()
     {
         var service = new FakeService { HoldInstall = true };
@@ -136,6 +219,15 @@ public sealed class HomeHuggingFaceBrowserTests
         _ => ValueTask.FromResult<AuthenticatedResourceActor?>(service.CurrentActor),
         async (body, token) => await body(token));
 
+    private static async Task SearchAndSelectRepositoryAsync(HomeHuggingFaceBrowser browser, FakeService service)
+    {
+        Find<TextBox>(browser, "hf-query").Text = "small instruct";
+        Click(browser, "hf-search");
+        await service.SearchCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Find<ListBox>(browser, "hf-repositories").SelectedIndex = 0;
+        await service.DetailsCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
     private static void Click(Control root, string id) => Find<Button>(root, id).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
     private static T Find<T>(Control root, string id) where T : Control =>
@@ -152,7 +244,9 @@ public sealed class HomeHuggingFaceBrowserTests
         public AuthenticatedResourceActor CurrentActor { get; set; } = new("actor-a", "profile-a", null, null, "revision-a");
         public string? LastQuery { get; private set; }
         public string? LastInstallProfile { get; private set; }
+        public string? LastTokenProfile { get; private set; }
         public string? SavedToken { get; private set; }
+        public int InstallCalls { get; private set; }
         public CancellationToken InstallToken { get; private set; }
         public TaskCompletionSource SearchCompleted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource DetailsCompleted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -181,6 +275,7 @@ public sealed class HomeHuggingFaceBrowserTests
             HuggingFaceModelFile file, IProgress<HuggingFaceInstallProgress>? progress, CancellationToken cancellationToken)
         {
             LastInstallProfile = profileId;
+            InstallCalls++;
             InstallToken = cancellationToken;
             InstallStarted.TrySetResult();
             try
@@ -194,7 +289,11 @@ public sealed class HomeHuggingFaceBrowserTests
             finally { InstallCompleted.TrySetResult(); }
         }
 
-        public Task<bool> HasTokenAsync(string profileId, CancellationToken cancellationToken) => Task.FromResult(TokenAvailable);
+        public Task<bool> HasTokenAsync(string profileId, CancellationToken cancellationToken)
+        {
+            LastTokenProfile = profileId;
+            return Task.FromResult(TokenAvailable);
+        }
         public Task SaveTokenAsync(string profileId, string token, CancellationToken cancellationToken)
         {
             SavedToken = token;
