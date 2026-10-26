@@ -164,8 +164,11 @@ public sealed class HomeRegisteredModelCatalogueSource(
 
     private static string Diagnostic(Exception exception)
     {
-        var value = $"{exception.GetType().Name}: {exception.Message}";
-        return value.Length <= 512 ? value : value[..512];
+        // Provider exceptions may contain bearer headers, URLs or local paths.
+        // Describe the failed operation without publishing transport details.
+        return exception is IOException
+            ? "The installed model could not be read. Check the local model store and retry."
+            : "The Dulche engine or installed-model evidence could not be queried. Retry or open model settings.";
     }
 
     private static string? Known(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;

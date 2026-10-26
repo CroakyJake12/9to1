@@ -937,7 +937,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         {
             var sources = _modelProviders.Providers.Select(provider =>
                 new HavenOS.Home.Discover.HomeRegisteredModelCatalogueSource(
-                    _modelProviders, provider.Id, () => !_privacy.Current.LocalOnlyMode));
+                    _modelProviders, provider.Id, () => !_privacy.Current.LocalOnlyMode, new HomeDulchePackagedModelEvidenceSource()));
             _homeDiscoverPage = new HomeDiscoverPage(new HavenOS.Home.Discover.HomeDiscoverCatalog(sources));
             _homeDiscoverPage.ManageProvidersRequested += (_, _) => StartOriginalShellEvent(original =>
             {
