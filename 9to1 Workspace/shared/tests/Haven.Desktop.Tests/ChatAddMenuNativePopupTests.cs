@@ -4,6 +4,8 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Chat;
@@ -18,7 +20,11 @@ namespace Haven.Desktop.Tests;
 public sealed class ChatAddMenuNativePopupTests
 {
     [AvaloniaFact]
-    public async Task Real_chat_add_menu_uses_native_popup_above_the_mounted_composer_and_retires_cleanly()
+    public Task Headless_chat_add_menu_uses_overlay_fallback_and_retires_cleanly() =>
+        RunAsync(requireNativePopup: false);
+
+    /// <summary>Runs the same production composer scenario in the headless test or native desktop probe.</summary>
+    public static async Task RunAsync(bool requireNativePopup, string? captureDirectory = null)
     {
         var resolver = new ChatGenUiNativeControlResolver();
         using var scene = new ChatHavenScene(resolver);
@@ -47,9 +53,21 @@ public sealed class ChatAddMenuNativePopupTests
             var popupHost = Assert.IsType<HavenSceneControl>(scene.AddMenuPopupHost);
             Assert.True(popup.IsOpen);
             Assert.False(popup.ShouldUseOverlayLayer);
-            Assert.False(popup.IsUsingOverlayLayer);
             Assert.Same(scene.AddMenuPrefab, popupHost.Root);
-            Assert.NotSame(window, TopLevel.GetTopLevel(popupHost));
+            var popupTopLevel = TopLevel.GetTopLevel(popupHost);
+            if (requireNativePopup)
+            {
+                Assert.False(popup.IsUsingOverlayLayer);
+                Assert.IsType<Avalonia.Controls.Primitives.PopupRoot>(popupTopLevel);
+                Assert.NotSame(window, popupTopLevel);
+            }
+            else
+            {
+                // The maintained HeadlessWindowImpl.CreatePopup() returns null, so Avalonia's
+                // production fallback must host the popup in the owner's overlay layer.
+                Assert.True(popup.IsUsingOverlayLayer);
+                Assert.Same(window, popupTopLevel);
+            }
             Assert.Same(addButton, popup.PlacementTarget);
             Assert.Equal(Avalonia.Controls.Primitives.PopupPositioning.PopupAnchor.TopLeft, popup.PlacementAnchor);
             Assert.Equal(Avalonia.Controls.Primitives.PopupPositioning.PopupGravity.TopRight, popup.PlacementGravity);
@@ -58,6 +76,16 @@ public sealed class ChatAddMenuNativePopupTests
             Assert.True(popupHost.SurfaceMetrics.Viewport.Width > 240);
             Assert.True(popupHost.SurfaceMetrics.Viewport.Height < window.ClientSize.Height);
             Assert.True(popupHost.IsVisible);
+
+            if (requireNativePopup && !string.IsNullOrWhiteSpace(captureDirectory))
+            {
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Render);
+                Directory.CreateDirectory(captureDirectory);
+                CaptureVisual(window, window.ClientSize, window.RenderScaling,
+                    Path.Combine(captureDirectory, "chat-add-menu-owner.png"));
+                CaptureVisual(popupHost, popupHost.Bounds.Size, window.RenderScaling,
+                    Path.Combine(captureDirectory, "chat-add-menu-native-popup.png"));
+            }
 
             // The compact menu remains a grouped list and category rows still drill into the real
             // shared catalogue without expanding or replacing the actual composer.
@@ -152,5 +180,14 @@ public sealed class ChatAddMenuNativePopupTests
             element.Bounds.Y + element.Bounds.Height / 2);
         router.PointerPressed(point);
         Assert.True(router.PointerReleased(point));
+    }
+
+    private static void CaptureVisual(Visual visual, Size size, double scaling, string path)
+    {
+        var pixelSize = new PixelSize(Math.Max(1, (int)Math.Ceiling(size.Width * scaling)),
+            Math.Max(1, (int)Math.Ceiling(size.Height * scaling)));
+        using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96 * scaling, 96 * scaling));
+        bitmap.Render(visual);
+        bitmap.Save(path);
     }
 }
