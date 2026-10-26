@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Haven.Application;
 using Haven.Application.Haven;
@@ -28,6 +29,7 @@ internal sealed record DashboardEditPlanResult(
 internal sealed class DashboardEditPlanner(IProviderModelClient models, HomeModelSelectionSource selection)
 {
     private const int MaxOperations = 16;
+    private const int MaxPlannerResponseBytes = 64 * 1024;
     private static readonly HashSet<string> AllowedActions = new(StringComparer.OrdinalIgnoreCase)
     {
         "show", "hide", "move", "resize", "reset-layout", "rename-page"
@@ -86,30 +88,44 @@ internal sealed class DashboardEditPlanner(IProviderModelClient models, HomeMode
                 string.Empty,
                 "Use only listed widget keys. Never invent data, widgets, actions, code, URLs or navigation."
             ]);
-            var response = await models.CompleteAsync(
-                new OllamaChatRequest(
-                    before.ProviderId + ":" + before.ModelId,
-                    [new OllamaMessage("user", prompt)],
-                    EffortLevel.Low,
-                    "You are 9to1's dashboard layout planner. Output strict JSON only. You may only use the explicitly allowed dashboard operations.",
-                    Options: new GenerationOptions(0.2, 4096, 0)
-                    {
-                        RequestedContextConstraints = new ModelRequestContextConstraints(AllowPersistentMemoryRead: false),
-                        RequestedRoutingConstraints = new ModelRequestRoutingConstraints(AllowFallback: false)
-                    })
+            var request = new OllamaChatRequest(
+                before.ProviderId + ":" + before.ModelId,
+                [new OllamaMessage("user", prompt)],
+                EffortLevel.Low,
+                "You are 9to1's dashboard layout planner. Output strict JSON only. You may only use the explicitly allowed dashboard operations.",
+                Options: new GenerationOptions(0.2, 4096, 0)
                 {
-                    ReasoningId = before.SelectedReasoningId,
-                    ReasoningTargetProviderId = before.ProviderId,
-                    ReasoningTargetModelName = before.ModelId,
-                },
-                cancellationToken).ConfigureAwait(false);
+                    RequestedContextConstraints = new ModelRequestContextConstraints(AllowPersistentMemoryRead: false),
+                    RequestedRoutingConstraints = new ModelRequestRoutingConstraints(AllowFallback: false)
+                })
+            {
+                ReasoningId = before.SelectedReasoningId,
+                ReasoningTargetProviderId = before.ProviderId,
+                ReasoningTargetModelName = before.ModelId,
+            };
+            var response = new StringBuilder();
+            var responseBytes = 0;
+            // The production provider bridge refuses CompleteAsync for an explicit reasoning ID.
+            // Keep the Home-selected ID on the supported named-reasoning stream path, with a
+            // bounded collector because this planner expects one small JSON document.
+            await foreach (var chunk in models.StreamChatAsync(request, cancellationToken).ConfigureAwait(false))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (chunk is null) return Fail("The selected model returned an invalid dashboard-plan stream.");
+                var chunkBytes = Encoding.UTF8.GetByteCount(chunk);
+                if (chunkBytes > MaxPlannerResponseBytes - responseBytes)
+                    return Fail("The selected model's dashboard plan exceeded the response size limit.");
+                response.Append(chunk);
+                responseBytes += chunkBytes;
+            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             var after = await selection.ResolveAsync(Interlocked.Increment(ref _selectionGeneration), cancellationToken)
                 .ConfigureAwait(false);
             if (!SameSelection(before, after))
                 return Fail("The selected Home model route changed while the dashboard edit was being planned. Try again.");
 
-            return ParseAndValidate(response, widgets);
+            return ParseAndValidate(response.ToString(), widgets);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
