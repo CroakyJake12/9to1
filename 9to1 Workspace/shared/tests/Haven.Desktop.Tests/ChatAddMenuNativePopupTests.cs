@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -51,6 +52,7 @@ public sealed class ChatAddMenuNativePopupTests
 
             var popup = Assert.IsType<Avalonia.Controls.Primitives.Popup>(scene.AddMenuPopup);
             var popupHost = Assert.IsType<HavenSceneControl>(scene.AddMenuPopupHost);
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.True(popup.IsOpen);
             Assert.False(popup.ShouldUseOverlayLayer);
             Assert.Same(scene.AddMenuPrefab, popupHost.Root);
@@ -180,6 +182,24 @@ public sealed class ChatAddMenuNativePopupTests
             element.Bounds.Y + element.Bounds.Height / 2);
         router.PointerPressed(point);
         Assert.True(router.PointerReleased(point));
+    }
+
+    private static async Task SettlePopupHostAsync(Window window, Control popupHost, bool requireNativePopup)
+    {
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            if (!requireNativePopup) AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+            if (popupHost.IsAttachedToVisualTree() && popupHost.Bounds.Width > 0 && popupHost.Bounds.Height > 0)
+                return;
+            await Task.Delay(10);
+        }
+
+        Assert.True(popupHost.IsAttachedToVisualTree(), "The popup host did not attach to its rendering tree after bounded dispatcher settlement.");
+        Assert.True(popupHost.Bounds.Width > 0 && popupHost.Bounds.Height > 0,
+            "The popup host did not receive non-empty layout after bounded dispatcher settlement.");
     }
 
     private static void CaptureVisual(Visual visual, Size size, double scaling, string path)
