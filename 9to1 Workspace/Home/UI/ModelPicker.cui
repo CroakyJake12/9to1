@@ -27,17 +27,17 @@
   <Theme Name="user_preference">
     <Page>
       <Container id="model-picker-root" background="{Resource CuiBackgroundBrush}" padding="24" Type="Vertical Stack">
-        <Container id="compact-model-picker" background="{Resource CuiPanelBrush}" padding="12" margin="0 0 0 16" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
+        <Container id="compact-model-picker" background="{Resource CuiPanelBrush}" padding="12" margin="0 0 0 16" Type="Vertical Stack" CellGap="8">
           <Text id="compact-model-picker-label" text="Model route" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 0" />
-          <Text id="compact-model-picker-selection" Column="1" text="{Binding State.SelectedRouteId, fallback=Choose a route}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-          <Button id="compact-model-picker-edit" Column="2" action="SelectCurrentRoute" content="Manage" accessible-name="Manage the selected model route" />
+          <Text id="compact-model-picker-selection" text="{Binding State.SelectedRouteId, fallback=Choose a route}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+          <Button id="compact-model-picker-edit" HorizontalAlignment="Left" action="SelectCurrentRoute" content="Manage" accessible-name="Manage the selected model route" />
         </Container>
-        <Container id="model-picker-header" margin="0 0 0 18" Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+        <Container id="model-picker-header" margin="0 0 0 18" Type="Vertical Stack" CellGap="8">
           <Container Type="Vertical Stack">
             <Text id="model-picker-title" text="AI models and routes" font-size="26" font-weight="Bold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
             <Text id="model-picker-description" text="Choose a model route for each kind of work. Route order applies only after eligibility and policy checks." foreground="{Resource CuiTextSoftBrush}" margin="0 5 0 14" TextWrapping="Wrap" />
           </Container>
-          <Button id="model-picker-refresh" Column="1" action="Refresh" content="Refresh" accessible-name="Refresh model routes" />
+          <Button id="model-picker-refresh" HorizontalAlignment="Left" action="Refresh" content="Refresh" accessible-name="Refresh model routes" />
         </Container>
         <Container id="model-picker-categories" margin="0 0 0 18" Type="Wrap">
           <Button id="category-chat" action="ChatCategory" content="Chat" accessible-name="Show chat routes" />
