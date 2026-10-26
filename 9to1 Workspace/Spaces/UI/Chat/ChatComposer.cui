@@ -61,7 +61,8 @@
                 Selected="{Binding FormattingOpen}" IsVisible="{Binding Composer.ShowFormatting}"
                 accessible-name="Open formatting toolbar" tooltip="Formatting" />
         <Button id="emoji-button" action="composer.emoji" IsVisible="{Binding Composer.ShowFormatting}"
-                content="{Binding EmojiIcon}" font-size="24" background="Transparent" Width="44" Height="44" Padding="6"
+                content="{Binding EmojiIcon}" font-size="24" font-family="{Binding Composer.EmojiFontFamily}"
+                background="Transparent" Width="44" Height="44" Padding="6"
                 CornerRadius="22" Selected="{Binding Composer.ShowEmoji}" Chromeless="true"
                 accessible-name="Insert emoji" tooltip="Insert emoji" />
       </Container>
@@ -128,7 +129,8 @@
         <Container id="emoji-grid-viewport" Type="Wrap" CellGap="6" MaxWidth="320" MaxHeight="150"
               VerticalScrolling="True" HorizontalScrolling="False">
           <Repeat Source="{Binding Items}" As="emoji" Key="{Binding emoji.Text}">
-            <Button action="composer.emoji-insert.Text" content="{Binding emoji.Text}" font-size="18" accessible-name="Insert {Binding emoji.Name}" />
+            <Button action="composer.emoji-insert.Text" content="{Binding emoji.Text}" font-size="18"
+                    font-family="{Binding Composer.EmojiFontFamily}" accessible-name="Insert {Binding emoji.Name}" />
           </Repeat>
         </Container>
         <!-- Real complete-catalogue paging: one bounded window is rendered; Prev/Next drive the typed

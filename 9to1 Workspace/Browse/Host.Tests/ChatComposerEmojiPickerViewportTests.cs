@@ -270,7 +270,11 @@ public sealed class ChatComposerEmojiPickerViewportTests
         {
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
-            OpenPicker(view, window);
+            var trigger = OpenPicker(view, window);
+
+            Assert.True(view.Bindings.TryGetValue("Composer.EmojiFontFamily", out var emojiFontValue));
+            var emojiFontFamily = Assert.IsType<string>(emojiFontValue);
+            Assert.Equal(emojiFontFamily, trigger.FontFamily?.Name);
 
             var viewport = FindContainer(view, "emoji-grid-viewport");
             Assert.NotNull(viewport);
@@ -278,6 +282,10 @@ public sealed class ChatComposerEmojiPickerViewportTests
             // The emitted cells form a real multi-column grid occupying multiple rows.
             var glyphs = EmojiCells(viewport!);
             Assert.True(glyphs.Length >= 6, "viewport must realize a bounded grid of emoji cells");
+            var unicodeGlyph = glyphs[0];
+            var glyphText = Assert.IsType<string>(unicodeGlyph.Content);
+            Assert.Contains(ComposerEmojiCatalogue.Entries, entry => entry.Text == glyphText);
+            Assert.Equal(emojiFontFamily, unicodeGlyph.FontFamily?.Name);
             var origins = glyphs.Select(button => OriginIn(button, viewport!)).ToArray();
             var rows = origins.Select(origin => origin.Y).Distinct().ToArray();
             Assert.True(rows.Length >= 2, "grid cells must occupy multiple rows");
