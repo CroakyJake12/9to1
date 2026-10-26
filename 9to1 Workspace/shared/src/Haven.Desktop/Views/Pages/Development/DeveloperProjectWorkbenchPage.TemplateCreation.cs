@@ -102,7 +102,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                     }).ConfigureAwait(false);
                 }
                 else
-                    await PublishAsync(original, () => _templateImportStatus =
+                    await PublishAsync(original, () =>
                         $"Created and verified {created.Count} template files through Home CREATE. No CUI source tab was selected. " + FormatTemplateFileOutcomes()).ConfigureAwait(false);
             }
             catch (OperationCanceledException error)
