@@ -31,12 +31,11 @@ public sealed class HavenSceneRenderer
         DrawAnimatedShadow(element, context, opacity, radius);
         DrawAnimatedGlow(element, context, opacity, radius);
         DrawAnimatedFill(element, HavenProperties.Background, context, element.Bounds, radius, opacity);
-        if (element is Button { } button
-            && button.State.HasFlag(HavenElementState.Hover)
-            && !button.State.HasFlag(HavenElementState.Pressed | HavenElementState.Disabled))
+        if (element is Button button
+            && (button.State & (HavenElementState.Pressed | HavenElementState.Disabled)) == 0)
         {
             var background = button.GetValue(HavenProperties.Background);
-            var hoverProgress = Math.Clamp((button.GetValue(HavenProperties.Scale) - 1d) / .018d, 0d, 1d);
+            var hoverProgress = Math.Clamp(button.GetValue(HavenProperties.HoverProgress), 0d, 1d);
             if (hoverProgress > 0d
                 && !string.Equals(background, "Transparent", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(background, "None", StringComparison.OrdinalIgnoreCase))

@@ -126,6 +126,7 @@ public sealed class Button : HavenElement, IHavenKeyboardInputTarget
         ClearValue(HavenProperties.Opacity, HavenValueSource.State);
         ClearValue(HavenProperties.Transition, HavenValueSource.State);
         ClearValue(HavenProperties.Animation, HavenValueSource.State);
+        ClearValue(HavenProperties.HoverProgress, HavenValueSource.State);
 
         var defaults = ButtonDefaults.For(Variant);
         if (State.HasFlag(HavenElementState.Disabled))
@@ -150,6 +151,7 @@ public sealed class Button : HavenElement, IHavenKeyboardInputTarget
 
         if (State.HasFlag(HavenElementState.Hover) && defaults.HoverEnabled)
         {
+            SetValue(HavenProperties.HoverProgress, 1d, HavenValueSource.State);
             SetValue(HavenProperties.Glow, defaults.HoverGlow, HavenValueSource.State);
             SetValue(HavenProperties.Scale, 1.018d, HavenValueSource.State);
             SetValue(HavenProperties.Transition, ButtonDefaults.HoverTransition, HavenValueSource.State);

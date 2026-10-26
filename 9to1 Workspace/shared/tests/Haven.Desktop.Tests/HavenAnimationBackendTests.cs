@@ -41,7 +41,7 @@ public sealed class HavenAnimationBackendTests
             Assert.Contains(buttonFills, command => command.Brush == new HavenTokenBrush("Accent") && command.Opacity == 1d);
             var hoverTint = Assert.Single(buttonFills, command => command.Brush is HavenContrastHoverBrush);
             Assert.IsType<HavenContrastHoverBrush>(hoverTint.Brush);
-            Assert.InRange(hoverTint.Opacity, 0d, .12d);
+            Assert.True(hoverTint.Opacity is > 0d and < .12d);
             Assert.Contains(commands, command => command is HavenGlowCommand { Glow.Opacity: > 0 and < 1 });
 
             var captureDirectory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR");
@@ -99,7 +99,7 @@ public sealed class HavenAnimationBackendTests
             Assert.Contains(commands, command => command is HavenFillRoundedRectCommand
             {
                 Brush: HavenContrastHoverBrush { Background: HavenTokenBrush { Token: "Accent" } },
-                Opacity: > 0
+                Opacity: > .11 and < .13
             });
             Assert.Contains(commands, command => command is HavenGlowCommand);
         }

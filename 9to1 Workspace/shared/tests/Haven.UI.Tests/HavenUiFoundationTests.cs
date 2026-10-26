@@ -91,8 +91,11 @@ public sealed class HavenUiFoundationTests
         var button = new Button { Variant = ButtonVariant.Tertiary };
         Assert.Equal("AccentMuted", button.GetValue(HavenProperties.Background));
         button.SetValue(HavenProperties.Background, "Danger", HavenValueSource.UserClass);
+        var foreground = button.GetValue(HavenProperties.Foreground);
         button.SetState(HavenElementState.Hover, true);
         Assert.Equal("Danger", button.GetValue(HavenProperties.Background));
+        Assert.Equal(foreground, button.GetValue(HavenProperties.Foreground));
+        Assert.Equal(1d, button.GetValue(HavenProperties.HoverProgress));
         Assert.Equal("AccentTertiaryGlow", button.GetValue(HavenProperties.Glow));
         Assert.Equal(1.018d, button.GetValue(HavenProperties.Scale));
         Assert.Equal(ButtonDefaults.HoverTransition, button.GetValue(HavenProperties.Transition));
@@ -100,6 +103,7 @@ public sealed class HavenUiFoundationTests
         Assert.Equal(.94, button.GetValue(HavenProperties.Scale));
         Assert.Equal(ButtonDefaults.PressedTransition, button.GetValue(HavenProperties.Transition));
         Assert.Equal("Danger", button.GetValue(HavenProperties.Background));
+        Assert.Equal(0d, button.GetValue(HavenProperties.HoverProgress));
     }
 
     [Fact]
@@ -121,6 +125,24 @@ public sealed class HavenUiFoundationTests
         Assert.Equal(new HavenTokenBrush("Danger"), tint.Background);
         Assert.DoesNotContain(commands.OfType<HavenFillRoundedRectCommand>(), command =>
             command.Bounds == transparent.Bounds && command.Brush is HavenContrastHoverBrush);
+    }
+
+    [Fact]
+    public void Pressed_and_disabled_buttons_suppress_derived_hover_tint()
+    {
+        var root = new Container();
+        var pressed = new Button();
+        pressed.SetState(HavenElementState.Hover, true);
+        pressed.SetState(HavenElementState.Pressed, true);
+        root.Add(pressed);
+        var disabled = new Button();
+        disabled.SetState(HavenElementState.Hover, true);
+        disabled.SetState(HavenElementState.Disabled, true);
+        root.Add(disabled);
+
+        var commands = new HavenSceneRenderer().Render(root);
+        Assert.DoesNotContain(commands.OfType<HavenFillRoundedRectCommand>(), command =>
+            command.Brush is HavenContrastHoverBrush);
     }
 
     [Fact]

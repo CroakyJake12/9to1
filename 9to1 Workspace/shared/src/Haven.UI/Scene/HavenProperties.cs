@@ -63,6 +63,7 @@ public static class HavenProperties
 
     public static readonly HavenProperty<bool> Enabled = Property(nameof(Enabled), true);
     public static readonly HavenProperty<bool?> Hover = Property<bool?>(nameof(Hover), null);
+    public static readonly HavenProperty<double> HoverProgress = Property(nameof(HoverProgress), 0d);
     public static readonly HavenProperty<HavenPointerEvents> PointerEvents = Property(nameof(PointerEvents), HavenPointerEvents.Auto);
     public static readonly HavenProperty<HavenCursor> Cursor = Property(nameof(Cursor), HavenCursor.Default);
     public static readonly HavenProperty<bool> Responsive = Property(nameof(Responsive), true);
