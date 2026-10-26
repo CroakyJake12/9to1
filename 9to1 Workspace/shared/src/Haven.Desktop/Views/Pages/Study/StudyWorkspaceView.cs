@@ -74,6 +74,9 @@ internal sealed class StudyWorkspaceView : UserControl, ICuiWritableBindingConte
     }
     internal bool Owns(StudyWorkspaceIntent intent) => _snapshot.Owns(intent);
 
+    // Snapshot rows are immutable; edits belong to the explicitly writable subject draft.
+    public bool TrySetItemValue(object item, string path, object? value) => false;
+
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         value = null;

@@ -6,29 +6,24 @@
   </Actions>
   <Theme Name="user_preference">
     <Page AccessibleName="Haven notifications">
-      <Container id="shared-panel-backdrop" Type="Grid" Background="#667F7F7F">
-        <Container Type="Vertical Stack" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" CellGap="12" Width="520" MaxHeight="600" Background="{Resource CuiBackgroundBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12">
-          <Container Type="Grid" ColumnSizes="1fr Auto">
-            <Text Text="Notifications" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
-            <Button action="CloseNotifications" Column="1" AccessibleName="Close notifications" Tooltip="Close notifications" Width="32" Height="32" Padding="4" FontSize="16" Background="Transparent" BorderWidth="0" CornerRadius="8">×</Button>
+      <!-- The shared panel shell owns the sole backdrop, frame, close action and
+           scrolling viewport. This document supplies notification content only. -->
+      <Container Type="Vertical Stack" CellGap="12" HorizontalAlignment="Stretch">
+        <Text Text="Notifications" FontSize="20" FontWeight="Bold" />
+        <Repeat Source="{Binding Notifications}" As="n" Key="{Binding n.Id}">
+          <Container Type="Vertical Stack" CellGap="4" Padding="12" Background="{Resource CuiPanelBrush}" CornerRadius="8" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+            <Text Text="{Binding n.Title}" FontWeight="SemiBold" />
+            <Text Text="{Binding n.Message}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Text Text="{Binding n.Time}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+              <Button action="MarkRead" Text="Mark read" Interactive="{Binding n.Unread}" AccessibleName="Mark this notification read" />
+              <Button action="Dismiss" Text="Dismiss" AccessibleName="Dismiss this notification" />
+            </Container>
           </Container>
-          <Container Type="Vertical Stack" CellGap="8" VerticalScrolling="True" HorizontalScrolling="False">
-            <Repeat Source="{Binding Notifications}" As="n" Key="{Binding n.Id}">
-              <Container Type="Vertical Stack" CellGap="4" Padding="12" Background="{Resource CuiPanelBrush}" CornerRadius="8" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
-                <Text Text="{Binding n.Title}" FontWeight="SemiBold" />
-                <Text Text="{Binding n.Message}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-                <Container Type="Horizontal Stack" CellGap="8">
-                  <Text Text="{Binding n.Time}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
-                  <Button action="MarkRead" Text="Mark read" Interactive="{Binding n.Unread}" AccessibleName="Mark this notification read" />
-                  <Button action="Dismiss" Text="Dismiss" AccessibleName="Dismiss this notification" />
-                </Container>
-              </Container>
-            </Repeat>
-            <If condition="{Binding Empty}">
-              <Text Text="No notifications." Foreground="{Resource CuiTextSoftBrush}" />
-            </If>
-          </Container>
-        </Container>
+        </Repeat>
+        <If condition="{Binding Empty}">
+          <Text Text="No notifications." Foreground="{Resource CuiTextSoftBrush}" />
+        </If>
       </Container>
     </Page>
   </Theme>
