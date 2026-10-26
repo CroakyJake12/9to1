@@ -348,10 +348,11 @@ public sealed class CuiOwnedTemplateTests
             var (root, diagnostics) = loader.LoadMarkup("<Theme Name='Professional'><Container Type='Menu'><Button Type='Menu Item' ID='row' Content='Open'/></Container></Theme>");
             Assert.Empty(diagnostics); Assert.NotNull(root);
             var window = new Window { Content = root, Width = 280, Height = 100 };
+            MenuItem? item = null;
             try
             {
                 window.Show(); window.UpdateLayout();
-                var item = Assert.Single(root!.GetVisualDescendants().OfType<MenuItem>());
+                item = Assert.Single(root!.GetVisualDescendants().OfType<MenuItem>());
                 var authored = new SolidColorBrush(Colors.White);
                 CuiPropertyPresentation.Set(item, "Background", authored, CuiPropertyLevel.Instance, "authored menu row");
                 var frame = Assert.Single(item.GetVisualDescendants().OfType<CuiMaterialBorder>());
@@ -371,7 +372,7 @@ public sealed class CuiOwnedTemplateTests
                 Assert.NotNull(frame.HoverTint);
                 Assert.Same(authored, item.Background);
             }
-            finally { window.Close(); CuiPropertyPresentation.Detach(item); }
+            finally { window.Close(); if (item is not null) CuiPropertyPresentation.Detach(item); }
         }, CancellationToken.None);
     }
 
