@@ -90,7 +90,7 @@
     <Compile Include="BoardsOriginalStoreSetupTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
-    <Compile Include="ChatHavenSceneTests.cs;ChatAddMenuNativePopupTests.cs" />
+    <Compile Include="ChatHavenSceneTests.cs;ChatAddMenuNativePopupTests.cs;GoPageResponsiveTests.cs" />
     <Compile Include="HuggingFace/*.cs" />
     <!-- Actual Spaces native composer + initial task observation tests share the existing
          canonical permission-caller fixture and its real nested Rig; keep the complete partial. -->
