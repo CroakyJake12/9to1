@@ -120,6 +120,19 @@ public sealed class SpaceTaskWorkspaceService(
                 context.ExecutionId == current.ExecutionId && context.ContextId == current.ContextId &&
                 context.PersistenceRevision == current.PersistenceRevision) permission = observed;
         }
+        if (permission is not null)
+        {
+            // Permission metadata can be delayed independently of the Task read.
+            // Recheck the same owner after that await so a revision changed in-flight
+            // cannot inherit current identity or leave its old request actionable.
+            var afterReview = await Join(() => canonical.ReadAuthorizedTaskObservationAsync(current.TaskId, token), scope).ConfigureAwait(false);
+            var afterTask = afterReview.Snapshot;
+            commandIdentity = afterReview.Disposition == TaskObservationDisposition.Authorized && afterReview.HasCurrentCommandIdentity &&
+                afterTask is not null && afterTask.TaskId == current.TaskId && afterTask.ExecutionId == current.ExecutionId &&
+                afterTask.ContextId == current.ContextId && afterTask.OwnerBinding == current.OwnerBinding &&
+                afterTask.PersistenceRevision == current.PersistenceRevision;
+            if (!commandIdentity) permission = null;
+        }
         var issued = selected ?? new TaskContextSelection(this, current.TaskId, current.ExecutionId, current.ContextId,
             origin, currentConversation is not null, current.OwnerBinding!);
         if (selected is null) _selections.Add(issued, new object());
@@ -238,6 +251,19 @@ public sealed class SpaceTaskWorkspaceService(
         var permission = snapshot?.OwnerBinding is not null && currentIdentity && canonical.HasCommandAuthority
             ? await Join(() => canonical.ReadOriginalTaskPermissionReviewAsync(snapshot.TaskId, snapshot.ExecutionId, cancellationToken), originalSourceCallbackScope).ConfigureAwait(false)
             : null;
+        if (permission is not null && snapshot is { } reviewedTask)
+        {
+            // The owner review read is a separate await from the current-principal
+            // observation. Revalidate exact revision after it before exposing details.
+            var afterReview = await Join(() => canonical.ReadAuthorizedTaskObservationAsync(reviewedTask.TaskId,
+                cancellationToken), originalSourceCallbackScope).ConfigureAwait(false);
+            var afterTask = afterReview.Snapshot;
+            currentIdentity = afterReview.Disposition == TaskObservationDisposition.Authorized && afterReview.HasCurrentCommandIdentity &&
+                afterTask is not null && afterTask.TaskId == reviewedTask.TaskId && afterTask.ExecutionId == reviewedTask.ExecutionId &&
+                afterTask.ContextId == reviewedTask.ContextId && afterTask.OwnerBinding == reviewedTask.OwnerBinding &&
+                afterTask.PersistenceRevision == reviewedTask.PersistenceRevision;
+            if (!currentIdentity) permission = null;
+        }
         return new(spaceId, currentSpace.Revision, currentConversation!, snapshot,
             snapshot is null ? null : TaskExecutionProjection.From(snapshot), originalRetained) { HasCurrentCommandIdentity = currentIdentity, Activity = activity,
                 PermissionReview = permission?.CanonicalTaskContext.PersistenceRevision == snapshot?.PersistenceRevision ? permission : null };

@@ -1,5 +1,7 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Core;
@@ -189,25 +191,27 @@ public sealed partial class ChatCloudPermissionCallerTests
             new PermissionReviewUnavailableReadiness(), expectedOriginalTaskId: originalTask.TaskId,
             expectedOriginalExecutionId: originalTask.ExecutionId);
         var window = new Window { Width = 960, Height = 720, Content = widget };
-        var heldActorRead = new TaskCompletionSource<AuthenticatedResourceActor?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var heldPermissionRead = new TaskCompletionSource<RemediationRequest?>(TaskCreationOptions.RunContinuationsAsynchronously);
         Exception? reviewFailure = null;
         try
         {
             window.Show();
             await widget.ActivateAsync(token);
-            rig.Actors.OriginalRead = heldActorRead.Task;
+            rig.RemediationRows.OriginalRead = heldPermissionRead.Task;
             var review = widget.DispatchAsync("task.review-permission", null, token).AsTask();
-            await rig.Actors.OriginalReadEntered.Task.WaitAsync(token);
+            await rig.RemediationRows.OriginalReadEntered.Task.WaitAsync(token);
             Assert.True(widget.TryGetValue("PermissionOpen", out var opened)); Assert.Equal(true, opened);
 
             // Revise the actual canonical task while the fresh principal observation
-            // for the review is blocked; this is a real owner write, not a forged view.
-            rig.Actors.OriginalRead = null;
+            // for the review is blocked inside the real owner metadata read; this is a
+            // real owner write, not a forged view or synthetic permission response.
+            rig.RemediationRows.OriginalRead = null;
             var queued = await rig.Tasks.SubmitFollowUpAsync(originalTask.TaskId,
                 "retain this queued work during review", TaskFollowUpMode.Queue, null, null, token);
             Assert.Equal(originalTask.TaskId, queued.Snapshot.TaskId);
             Assert.True(queued.Snapshot.PersistenceRevision > originalTask.PersistenceRevision);
-            heldActorRead.SetResult(rig.Actors.Current);
+            var actualRequest = Assert.IsType<RemediationRequest>(rig.RemediationRows.Rows.GetValueOrDefault(request.Id));
+            heldPermissionRead.SetResult(actualRequest);
             reviewFailure = await Record.ExceptionAsync(() => review);
 
             Assert.NotNull(reviewFailure);
@@ -226,8 +230,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
         finally
         {
-            heldActorRead.TrySetResult(rig.Actors.Current);
-            rig.Actors.OriginalRead = null;
+            heldPermissionRead.TrySetResult(rig.RemediationRows.Rows.GetValueOrDefault(request.Id));
+            rig.RemediationRows.OriginalRead = null;
             widget.RequestRetirement();
             var closeFailure = await Record.ExceptionAsync(() => widget.CloseAndDrainAsync());
             if (reviewFailure is null) Assert.Null(closeFailure);
