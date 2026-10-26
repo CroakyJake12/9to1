@@ -38,7 +38,7 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
         {
             var manualRoot = CreateTarget(filesRoot, "manual-nonempty", "manual data");
             var manualOperation = Keep(rig, manual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], manualRoot, CancellationToken.None));
+                workspace.Configuration.AppFolders["write"].Value, manualRoot, CancellationToken.None));
             await Decide(rig, manualOperation, HomeDeveloperProjectReadAdmissionSource.ReadAction);
             await Decide(rig, manualOperation, HomeDeveloperProjectSetupPermissionSource.SetupAction);
             await manualOperation;
@@ -50,7 +50,7 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             var manualMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(manualRoot));
             var templateOnManual = new DeveloperTemplateProjectEntryAdapter(manual, materializer);
             var mismatch = Keep(rig, templateOnManual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], manualRoot, manualMaterialization, CancellationToken.None));
+                workspace.Configuration.AppFolders["write"].Value, manualRoot, manualMaterialization, CancellationToken.None));
             await Decide(rig, mismatch, HomeDeveloperProjectReadAdmissionSource.ReadAction);
             Expect(rig, await Assert.ThrowsAsync<InvalidOperationException>(() => mismatch));
             Assert.Equal(manualSetupId, manual.RetainedSetupId);
@@ -67,12 +67,12 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             var devBefore = Snapshot(savedStore.OriginalWorkspaceMetadataDirectory);
             var setupRecordsBefore = await SetupRecordCount(graph);
             var rejected = Keep(rig, freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None));
+                workspace.Configuration.AppFolders["write"].Value, rejectedRoot, rejectedMaterialization, CancellationToken.None));
             var concurrentRejected = Keep(rig, freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None));
+                workspace.Configuration.AppFolders["write"].Value, rejectedRoot, rejectedMaterialization, CancellationToken.None));
             using var cancelledWaiter = new CancellationTokenSource();
             var cancelledAttempt = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, cancelledWaiter.Token);
+                workspace.Configuration.AppFolders["write"].Value, rejectedRoot, rejectedMaterialization, cancelledWaiter.Token);
             cancelledWaiter.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelledAttempt);
             await Decide(rig, rejected, HomeDeveloperProjectReadAdmissionSource.ReadAction);
@@ -84,15 +84,15 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             Assert.Equal(driveBefore, File.ReadAllBytes(drivePath));
             Assert.Equal(devBefore, Snapshot(savedStore.OriginalWorkspaceMetadataDirectory));
             Assert.Equal(setupRecordsBefore, await SetupRecordCount(graph));
-            Assert.Equal("preserve bytes", await File.ReadAllTextAsync(Path.Combine(rejectedRoot, "existing.txt")));
+            Assert.Equal("preserve bytes", await File.ReadAllTextAsync(Path.Combine(rejectedRoot, "existing.txt"), TestContext.Current.CancellationToken));
 
             var emptyRoot = Path.Combine(filesRoot, "template-empty"); Directory.CreateDirectory(emptyRoot);
             var emptyMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(emptyRoot));
             var accepted = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], emptyRoot, emptyMaterialization, CancellationToken.None);
+                workspace.Configuration.AppFolders["write"].Value, emptyRoot, emptyMaterialization, CancellationToken.None);
             accepted = (Task<DeveloperProjectReference>)Keep(rig, accepted);
             var concurrentAccepted = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
-                workspace.Configuration.AppFolders["write"], emptyRoot, emptyMaterialization, CancellationToken.None);
+                workspace.Configuration.AppFolders["write"].Value, emptyRoot, emptyMaterialization, CancellationToken.None);
             concurrentAccepted = (Task<DeveloperProjectReference>)Keep(rig, concurrentAccepted);
             await Decide(rig, accepted, HomeDeveloperProjectReadAdmissionSource.ReadAction);
             await Decide(rig, accepted, HomeDeveloperProjectSetupPermissionSource.SetupAction);
@@ -170,10 +170,11 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
     [Fact]
     public async Task Registration_RejectsForgedPayloadAndFolderNameThatDiffersFromReviewedProject()
     {
+        var token = TestContext.Current.CancellationToken;
         var provider = new DeveloperCuiProjectTemplateProvider();
-        var option = Assert.Single((await new DeveloperProjectCatalog([provider]).SearchAsync(new())).Value!);
+        var option = Assert.Single((await new DeveloperProjectCatalog([provider]).SearchAsync(new(), token)).Value!);
         var materializer = new DeveloperProjectTemplateMaterializer([provider]);
-        var prepared = await materializer.PrepareAsync(option, "Reviewed Project");
+        var prepared = await materializer.PrepareAsync(option, "Reviewed Project", token);
         Assert.True(prepared.Succeeded);
         var issued = prepared.Value!;
         var adapter = new DeveloperTemplateProjectEntryAdapter(null!, materializer);
