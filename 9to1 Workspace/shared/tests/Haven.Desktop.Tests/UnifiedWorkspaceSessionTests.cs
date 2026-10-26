@@ -3,6 +3,7 @@ using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
+using Haven.Infrastructure;
 using HavenOS.Apps.Browse;
 using Xunit;
 
@@ -10,6 +11,92 @@ namespace Haven.Desktop.Tests;
 
 public sealed class UnifiedWorkspaceSessionTests
 {
+    [AvaloniaFact]
+    public async Task Saved_split_returns_after_outside_selection_and_actual_sqlite_workspace_restart()
+    {
+        var directory = Directory.CreateTempSubdirectory("haven-saved-split-").FullName;
+        var paths = new SplitPaths(directory); var succeeded = false;
+        try
+        {
+            var database = new SqliteDatabase(paths); await database.InitializeAsync(CancellationToken.None);
+            var repository = new WorkspaceSessionRepository(database);
+            var first = UnifiedWorkspaceTabState.Merge(null, Browser("Research"));
+            var second = UnifiedWorkspaceTabState.Merge(null, Browser("Other profile") with { ProfileId = "other-profile" });
+            var outside = UnifiedWorkspaceTabState.Merge(null, Browser("Outside"));
+            var window = Window(WorkspaceWindowKind.Main, [first.Id, second.Id, outside.Id]);
+            await repository.SaveAsync(new(WorkspaceSessionSnapshot.CurrentSchemaVersion, [first, second, outside], [],
+                [window], DateTimeOffset.UnixEpoch), CancellationToken.None);
+            var coordinator = new WorkspaceSessionCoordinator(repository);
+            var session = new UnifiedWorkspaceSession(coordinator, await coordinator.LoadAsync(CancellationToken.None));
+            var port = session.OpenWindow(window.Id, "profile"); Guid splitId;
+            await using (var chrome = await BrowseChrome.CreateAsync(paths, homeProfileId: "profile", tabSessionPersistence: port))
+            {
+                await chrome.OpenSplitViewForTabsAsync(first.Id, second.Id);
+                splitId = Assert.Single(chrome.State.SplitViews).Id;
+                await chrome.FocusSplitPaneAsync(second.Id); await chrome.AdjustPrimaryPaneAsync(1);
+                await chrome.SelectTabAsync(outside.Id);
+                Assert.Empty(chrome.State.PaneTabIds); Assert.Single(chrome.State.SplitViews);
+            }
+            await session.SealAndDrainAsync(); await coordinator.SaveFinalSnapshotAndSealAsync(CancellationToken.None);
+            // A new repository and connection factory read the production workspace_session payload.
+            var coldRepository = new WorkspaceSessionRepository(new SqliteDatabase(paths));
+            var restored = await coldRepository.LoadAsync(CancellationToken.None);
+            var savedWindow = Assert.Single(restored!.Windows); var savedSplit = Assert.Single(savedWindow.SplitViews);
+            Assert.Equal(splitId, savedSplit.Id); Assert.Equal(outside.Id, savedWindow.SelectedTabId);
+            Assert.Equal(WorkspaceLayoutKind.Single, savedWindow.Layout.Kind); Assert.Equal(3, restored.Tabs.Count);
+            var coldCoordinator = new WorkspaceSessionCoordinator(coldRepository);
+            var coldSession = new UnifiedWorkspaceSession(coldCoordinator, await coldCoordinator.LoadAsync(CancellationToken.None));
+            var coldPort = coldSession.OpenWindow(window.Id, "profile");
+            await using (var chrome = await BrowseChrome.CreateAsync(paths, homeProfileId: "profile", tabSessionPersistence: coldPort))
+            {
+                Assert.Equal(outside.Id, chrome.State.SelectedTabId); Assert.Empty(chrome.State.PaneTabIds);
+                await chrome.SelectSplitViewAsync(splitId);
+                Assert.Equal(second.Id, chrome.State.SelectedTabId);
+                Assert.Equal(new[] { first.Id, second.Id }, chrome.State.PaneTabIds);
+                Assert.Equal(.55, chrome.State.PrimaryPaneRatio, precision: 2);
+                Assert.Equal("profile", chrome.State.Tabs.Single(tab => tab.Id == first.Id).ProfileId);
+                Assert.Equal("other-profile", chrome.State.Tabs.Single(tab => tab.Id == second.Id).ProfileId);
+                await chrome.CloseSplitViewAsync(); Assert.Empty(chrome.State.SplitViews); Assert.Equal(3, chrome.State.Tabs.Count);
+            }
+            await coldSession.SealAndDrainAsync(); await coldCoordinator.SaveFinalSnapshotAndSealAsync(CancellationToken.None);
+            Assert.Empty(Assert.Single((await coldRepository.LoadAsync(CancellationToken.None))!.Windows).SplitViews);
+            succeeded = true;
+        }
+        finally
+        {
+            // Preserve the actual database and WAL if the owning regression fails.
+            if (succeeded) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Queued_split_save_detaches_producer_lists_before_the_actual_prior_write_settles()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var repository = new Repository { Write = (_, count) =>
+        {
+            if (count != 1) return Task.CompletedTask;
+            entered.SetResult(); return release.Task;
+        } };
+        var coordinator = new WorkspaceSessionCoordinator(repository);
+        var session = new UnifiedWorkspaceSession(coordinator, null);
+        var port = session.OpenWindow(session.MainWindowId, "profile");
+        var a = Browser("A"); var b = Browser("B"); var outside = Browser("Outside");
+        var firstSave = port.SaveAsync(new([a, b, outside], outside.Id), CancellationToken.None);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var paneIds = new List<Guid> { a.Id, b.Id }; var id = Guid.NewGuid();
+        var splits = new List<BrowseSplitViewProjection> { new(id, paneIds, b.Id, SplitOrientation.Vertical, .5) };
+        var queued = port.SaveAsync(new([a, b, outside], outside.Id) { PaneTabIds = [], SplitViews = splits }, CancellationToken.None);
+        paneIds[0] = outside.Id; splits.Clear();
+        Assert.False(queued.IsCompleted); Assert.Single(repository.Writes);
+        release.SetResult(); await Task.WhenAll(firstSave, queued).WaitAsync(TimeSpan.FromSeconds(5));
+        await session.SealAndDrainAsync(); await coordinator.SaveFinalSnapshotAndSealAsync(CancellationToken.None);
+        var saved = Assert.Single(Assert.Single(repository.Writes[^1].Windows).SplitViews);
+        Assert.Equal(id, saved.Id); Assert.Equal(b.Id, saved.FocusedTabId);
+        Assert.Equal(new[] { a.Id, b.Id }, saved.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
+    }
+
     [AvaloniaFact]
     public async Task Browse_group_operations_update_the_existing_canonical_group_identity_and_membership()
     {
@@ -71,7 +158,10 @@ public sealed class UnifiedWorkspaceSessionTests
         Assert.Equal("profile", loaded.Tabs.Single(tab => tab.Id == first.Id).ProfileId);
         Assert.Equal("other-profile", loaded.Tabs.Single(tab => tab.Id == second.Id).ProfileId);
         await port.SaveAsync(loaded with { PaneTabIds = [second.Id, first.Id],
-            SplitOrientation = SplitOrientation.Vertical, PrimaryPaneRatio = 0.65 }, CancellationToken.None);
+            SplitOrientation = SplitOrientation.Vertical, PrimaryPaneRatio = 0.65,
+            // The same typed operation updates the durable object AND its active projection.
+            SplitViews = [Assert.Single(loaded.SplitViews!) with { PaneTabIds = [second.Id, first.Id],
+                Orientation = SplitOrientation.Vertical, PrimaryPaneRatio = 0.65 }] }, CancellationToken.None);
         var saved = repository.Writes[^1].Windows.Single();
         Assert.Equal(WorkspaceLayoutKind.Split, saved.Layout.Kind);
         Assert.Equal(SplitOrientation.Vertical, saved.Layout.Orientation);
@@ -248,6 +338,15 @@ public sealed class UnifiedWorkspaceSessionTests
     private static BrowserTabState Browser(string title) => new(
         Guid.NewGuid(), title, "https://example.org/", BrowserTabPrivacy.Standard,
         string.Empty, DateTimeOffset.UnixEpoch) { ProfileId = "profile" };
+    private sealed class SplitPaths(string root) : IAppPaths
+    {
+        public string DataDirectory => root;
+        public string DatabasePath => Path.Combine(root, "haven.db");
+        public string BrowserProfileDirectory => Path.Combine(root, "browser");
+        public string AttachmentsDirectory => Path.Combine(root, "attachments");
+        public string LogsDirectory => Path.Combine(root, "logs");
+        public string LegacyStatePath => Path.Combine(root, "legacy.json");
+    }
     private static TabSessionSnapshot Row(string appKey, string state) => new(
         Guid.NewGuid(), appKey, "Saved", state, "{\"navigation\":true}", 42, null,
         true, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch);

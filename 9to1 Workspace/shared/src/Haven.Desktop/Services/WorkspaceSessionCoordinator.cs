@@ -226,7 +226,9 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
                 Layout = window.Layout with
                 {
                     Panes = Array.AsReadOnly(window.Layout.Panes.ToArray())
-                }
+                },
+                SplitViews = Array.AsReadOnly(window.SplitViews.Select(split => split with
+                    { Panes = Array.AsReadOnly(split.Panes.ToArray()) }).ToArray())
             }).ToArray())
         };
 

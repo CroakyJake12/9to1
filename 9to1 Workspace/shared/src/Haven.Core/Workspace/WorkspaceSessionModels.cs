@@ -21,9 +21,17 @@ public sealed record TabGroupSnapshot(
     Guid Id,
     string Name,
     bool IsCollapsed,
-    IReadOnlyList<Guid> OrderedTabIds);
+    IReadOnlyList<Guid> OrderedTabIds)
+{
+    /// <summary>Optional sRGB #RRGGBB group accent, independent of tab profile and theme surfaces.</summary>
+    public string? Color { get; init; }
+}
 
 public sealed record WorkspacePaneSnapshot(Guid Id, Guid TabId, int Order);
+
+/// <summary>Durable presentation over existing tab identities, retained even when another tab is active.</summary>
+public sealed record WorkspaceSplitViewSnapshot(Guid Id, IReadOnlyList<WorkspacePaneSnapshot> Panes,
+    Guid FocusedTabId, SplitOrientation Orientation, double PrimaryRatio);
 
 public sealed record WorkspaceLayoutSnapshot(
     Guid Id,
@@ -47,6 +55,8 @@ public sealed record WorkspaceWindowSnapshot(
 {
     /// <summary>Bounded, private-free recovery metadata for recently closed tabs in this window.</summary>
     public IReadOnlyList<WorkspaceClosedTabSnapshot> RecentlyClosedTabs { get; init; } = [];
+    /// <summary>Additive v1 session metadata. Older active-only layouts migrate on the owning bridge's next save.</summary>
+    public IReadOnlyList<WorkspaceSplitViewSnapshot> SplitViews { get; init; } = [];
 }
 
 /// <summary>Recoverable tab identity and safe reopen metadata, not a live/open tab row.</summary>

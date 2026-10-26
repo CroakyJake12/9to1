@@ -12,6 +12,110 @@ namespace Haven.Desktop.Tests;
 public sealed class UnifiedWorkspaceSessionProjectionTests
 {
     [Fact]
+    public void Inactive_split_objects_roundtrip_without_losing_navigation_profile_group_or_pane_identity()
+    {
+        var groupId = Guid.NewGuid();
+        var a = Profiled(Tab("A"), "actual-profile") with { GroupId = groupId, NavigationJson = "{\"back\":[\"research\"]}" };
+        var b = Profiled(Tab("B"), "other-profile") with { GroupId = groupId };
+        var outside = Tab("Outside"); var original = Session([a, b, outside]) with
+        { Groups = [new(groupId, "Research", false, [a.Id, b.Id]) { Color = "#7254C7" }] };
+        var splitId = Guid.NewGuid();
+        var split = new BrowseSplitViewProjection(splitId, [b.Id, a.Id], b.Id, SplitOrientation.Horizontal, .65);
+        var projection = Projection([Project(a) with { Group = groupId.ToString("D") },
+            Project(b) with { Group = groupId.ToString("D"), ProfileId = "other-profile" }, Project(outside)], outside.Id) with
+        { PaneTabIds = [], SplitViews = [split], Groups = [new(groupId, "Research", true, [a.Id, b.Id]) { Color = "#7254C7" }] };
+        var merged = Merge(original, projection, a.Id, b.Id, outside.Id);
+        var window = merged.Windows[0]; var saved = Assert.Single(window.SplitViews);
+        Assert.Equal(WorkspaceLayoutKind.Single, window.Layout.Kind); Assert.Equal(outside.Id, window.SelectedTabId);
+        Assert.Equal(splitId, saved.Id); Assert.Equal(b.Id, saved.FocusedTabId);
+        Assert.Equal(new[] { b.Id, a.Id }, saved.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
+        Assert.Equal(a.NavigationJson, merged.Tabs.Single(tab => tab.Id == a.Id).NavigationJson);
+        Assert.Equal("#7254C7", Assert.Single(merged.Groups).Color); Assert.True(merged.Groups[0].IsCollapsed);
+        var cold = JsonSerializer.Deserialize<WorkspaceSessionSnapshot>(JsonSerializer.Serialize(merged))!;
+        var loaded = Assert.Single(UnifiedWorkspaceSessionProjection.ProjectSplitViews(cold.Windows[0], projection.Tabs));
+        Assert.Equal(splitId, loaded.Id); Assert.Equal(split.PaneTabIds, loaded.PaneTabIds);
+        var active = Merge(cold, projection with { SelectedTabId = b.Id, PaneTabIds = split.PaneTabIds,
+            SplitOrientation = split.Orientation, PrimaryPaneRatio = split.PrimaryPaneRatio }, a.Id, b.Id, outside.Id);
+        Assert.Equal(splitId, active.Windows[0].Layout.Id);
+        Assert.Equal(saved.Panes.Select(pane => pane.Id), active.Windows[0].Layout.Panes.Select(pane => pane.Id));
+        var unsplit = Merge(active, projection with { SplitViews = [] }, a.Id, b.Id, outside.Id);
+        Assert.Empty(unsplit.Windows[0].SplitViews); Assert.Equal(3, unsplit.Tabs.Count);
+    }
+
+    [Theory]
+    [InlineData("duplicate-id")]
+    [InlineData("overlap")]
+    [InlineData("foreign-member")]
+    [InlineData("foreign-object")]
+    [InlineData("private-member")]
+    [InlineData("invalid-focus")]
+    [InlineData("invalid-ratio")]
+    [InlineData("invalid-orientation")]
+    [InlineData("active-mismatch")]
+    public void Invalid_saved_split_projection_refuses_without_mutating_the_canonical_snapshot(string scenario)
+    {
+        var a = Tab("A"); var b = Tab("B"); var outside = Tab("Outside"); var remote = Tab("Remote"); var remoteOther = Tab("Remote other");
+        var original = Session([a, b, outside, remote, remoteOther]);
+        var main = original.Windows[0] with { OrderedTabIds = [a.Id, b.Id, outside.Id] };
+        var remoteSplitId = Guid.NewGuid();
+        var other = Window([remote.Id, remoteOther.Id], WorkspaceWindowKind.Normal) with
+        { SplitViews = [new(remoteSplitId, [new(Guid.NewGuid(), remote.Id, 0), new(Guid.NewGuid(), remoteOther.Id, 1)],
+            remote.Id, SplitOrientation.Vertical, .5)] };
+        original = original with { Windows = [main, other] };
+        var split = new BrowseSplitViewProjection(Guid.NewGuid(), [a.Id, b.Id], b.Id, SplitOrientation.Vertical, .5);
+        var projection = Projection([Project(a), Project(b), Project(outside)], outside.Id) with { PaneTabIds = [], SplitViews = [split] };
+        switch (scenario)
+        {
+            case "duplicate-id": projection = projection with { SplitViews = [split, split] }; break;
+            case "overlap": projection = projection with { SplitViews = [split, split with { Id = Guid.NewGuid(), PaneTabIds = [b.Id, outside.Id] }] }; break;
+            case "foreign-member": projection = projection with { SplitViews = [split with { PaneTabIds = [a.Id, remote.Id], FocusedTabId = a.Id }] }; break;
+            case "foreign-object": projection = projection with { SplitViews = [split with { Id = remoteSplitId }] }; break;
+            case "private-member": projection = projection with { Tabs = [Project(a), Project(b) with { Privacy = BrowserTabPrivacy.Private }, Project(outside)] }; break;
+            case "invalid-focus": projection = projection with { SplitViews = [split with { FocusedTabId = outside.Id }] }; break;
+            case "invalid-ratio": projection = projection with { SplitViews = [split with { PrimaryPaneRatio = double.NaN }] }; break;
+            case "invalid-orientation": projection = projection with { SplitViews = [split with { Orientation = (SplitOrientation)99 }] }; break;
+            case "active-mismatch": projection = projection with { SelectedTabId = a.Id }; break;
+        }
+        var before = JsonSerializer.Serialize(original);
+        Assert.Throws<InvalidDataException>(() => Merge(original, projection, a.Id, b.Id, outside.Id));
+        Assert.Equal(before, JsonSerializer.Serialize(original));
+    }
+
+    [Fact]
+    public void Unprojectable_saved_split_is_preserved_when_the_port_saves_its_other_tabs()
+    {
+        var a = Tab("A"); var opaque = Tab("Opaque") with { StateJson = "opaque future state" }; var outside = Tab("Outside");
+        var original = Session([a, opaque, outside]); var splitId = Guid.NewGuid();
+        var split = new WorkspaceSplitViewSnapshot(splitId, [new(Guid.NewGuid(), a.Id, 0), new(Guid.NewGuid(), opaque.Id, 1)],
+            a.Id, SplitOrientation.Vertical, .5);
+        original = original with { Windows = [original.Windows[0] with { SelectedTabId = outside.Id, SplitViews = [split] }] };
+        var projection = Projection([Project(a), Project(outside)], outside.Id) with { PaneTabIds = [], SplitViews = [] };
+        Assert.Empty(UnifiedWorkspaceSessionProjection.ProjectSplitViews(original.Windows[0], projection.Tabs));
+        var merged = Merge(original, projection, a.Id, outside.Id);
+        Assert.Equal(JsonSerializer.Serialize(split), JsonSerializer.Serialize(Assert.Single(merged.Windows[0].SplitViews)));
+        Assert.Equal(opaque, merged.Tabs.Single(tab => tab.Id == opaque.Id));
+    }
+
+    [Fact]
+    public void Group_colour_roundtrips_and_legacy_omission_does_not_erase_it()
+    {
+        var id = Guid.NewGuid(); var a = Tab("A") with { GroupId = id };
+        var original = Session([a]) with { Groups = [new(id, "Research", false, [a.Id]) { Color = "#7254C7" }] };
+        var row = Project(a) with { Group = id.ToString("D") };
+        var projection = Projection([row], a.Id) with { Groups = [new(id, "Renamed", true, [a.Id])] };
+        var retained = Merge(original, projection, a.Id);
+        Assert.Equal("#7254C7", Assert.Single(retained.Groups).Color);
+        var changed = Merge(retained, projection with { Groups = [projection.Groups[0] with { Color = "#12abEF" }] }, a.Id);
+        Assert.Equal("#12ABEF", Assert.Single(changed.Groups).Color);
+        var reset = Merge(changed, projection with { Groups = [projection.Groups[0] with { Color = string.Empty }] }, a.Id);
+        Assert.Null(Assert.Single(reset.Groups).Color);
+        var before = JsonSerializer.Serialize(original);
+        Assert.Throws<InvalidDataException>(() => Merge(original,
+            projection with { Groups = [projection.Groups[0] with { Color = "invalid" }] }, a.Id));
+        Assert.Equal(before, JsonSerializer.Serialize(original));
+    }
+
+    [Fact]
     public void First_projection_retains_unrepresented_rows_and_overlays_current_order_without_mutating_input()
     {
         var a = Tab("A"); var unseen = Tab("Unprojectable") with { StateJson = "opaque future state" };

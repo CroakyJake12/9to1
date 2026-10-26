@@ -104,6 +104,7 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                 var rows = owner._snapshot.Tabs.ToDictionary(tab => tab.Id);
                 var otherWindowReferences = owner._snapshot.Windows.Where(item => item.Id != windowId)
                     .SelectMany(item => item.OrderedTabIds.Concat(item.Layout.Panes.Select(pane => pane.TabId))
+                        .Concat(item.SplitViews.SelectMany(split => split.Panes.Select(pane => pane.TabId)))
                         .Concat(item.SelectedTabId is { } selected ? [selected] : Array.Empty<Guid>())
                         .Concat(item.RecentlyClosedTabs.Select(tab => tab.Id))).ToHashSet();
                 var projected = new List<BrowserTabState>();
@@ -140,7 +141,7 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                         ? groupId : Guid.Empty)).Where(id => id != Guid.Empty).ToHashSet();
                 var groups = owner._snapshot.Groups.Where(group => groupIds.Contains(group.Id))
                     .Select(group => new BrowseTabGroupProjection(group.Id, group.Name, group.IsCollapsed,
-                        Array.AsReadOnly(group.OrderedTabIds.Where(openIds.Contains).ToArray())))
+                        Array.AsReadOnly(group.OrderedTabIds.Where(openIds.Contains).ToArray())) { Color = group.Color ?? string.Empty })
                     .ToArray();
                 // Load does not authorize deletion. Browse can refuse a restored
                 // row; only tabs it actually publishes in Save become managed.
@@ -150,7 +151,8 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                     ClosedTabs = Array.AsReadOnly(closed), PaneTabIds = Array.AsReadOnly(panes),
                     SplitOrientation = panes.Length == 2 ? window.Layout.Orientation : null,
                     PrimaryPaneRatio = panes.Length == 2 ? window.Layout.PrimaryRatio : null,
-                    Groups = Array.AsReadOnly(groups)
+                    Groups = Array.AsReadOnly(groups),
+                    SplitViews = UnifiedWorkspaceSessionProjection.ProjectSplitViews(window, projected)
                 };
             }));
 
@@ -164,7 +166,9 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                 ClosedTabs = Array.AsReadOnly(projection.ClosedTabs.ToArray()),
                 PaneTabIds = projection.PaneTabIds is null ? null : Array.AsReadOnly(projection.PaneTabIds.ToArray()),
                 Groups = projection.Groups is null ? null : Array.AsReadOnly(projection.Groups.Select(group => group with
-                    { OrderedTabIds = Array.AsReadOnly(group.OrderedTabIds.ToArray()) }).ToArray())
+                    { OrderedTabIds = Array.AsReadOnly(group.OrderedTabIds.ToArray()) }).ToArray()),
+                SplitViews = projection.SplitViews is null ? null : Array.AsReadOnly(projection.SplitViews.Select(split => split with
+                    { PaneTabIds = Array.AsReadOnly(split.PaneTabIds.ToArray()) }).ToArray())
             };
             return owner.Admit(async operation =>
             {
@@ -294,6 +298,8 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
         {
             OrderedTabIds = Array.AsReadOnly(window.OrderedTabIds.ToArray()),
             Layout = window.Layout with { Panes = Array.AsReadOnly(window.Layout.Panes.ToArray()) },
+            SplitViews = Array.AsReadOnly(window.SplitViews.Select(split => split with
+                { Panes = Array.AsReadOnly(split.Panes.ToArray()) }).ToArray()),
             RecentlyClosedTabs = Array.AsReadOnly(window.RecentlyClosedTabs.ToArray())
         }).ToArray())
     };

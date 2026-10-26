@@ -8,7 +8,11 @@ namespace HavenOS.Apps.Browse;
 /// rich persistence schema. Private tabs and private selection are excluded.</summary>
 public sealed record BrowseClosedTabProjection(BrowserTabState Tab, int Index, BrowseEngineKind? EngineOverride);
 /// <summary>Projection of an existing canonical group. The GUID is its identity; ordered member IDs remain the workspace owner's data.</summary>
-public sealed record BrowseTabGroupProjection(Guid Id, string Name, bool IsCollapsed, IReadOnlyList<Guid> OrderedTabIds);
+public sealed record BrowseTabGroupProjection(Guid Id, string Name, bool IsCollapsed, IReadOnlyList<Guid> OrderedTabIds)
+{
+    /// <summary>Null preserves omitted legacy metadata; empty explicitly resets the optional colour.</summary>
+    public string? Color { get; init; }
+}
 
 /// <summary>A stable presentation object over two existing BrowserTabs, including while inactive.
 /// It owns no profile, navigation history, renderer or duplicate tab state.</summary>
