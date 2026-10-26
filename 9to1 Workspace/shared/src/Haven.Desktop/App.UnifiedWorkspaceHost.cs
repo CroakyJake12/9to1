@@ -44,7 +44,7 @@ public sealed partial class App
             var home = _actualWindowsHome ?? throw new InvalidOperationException("The original Home owner is unavailable.");
             WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(services, home);
             if (_actualUnifiedWorkspace is not null) throw new InvalidOperationException("The original unified host already exists.");
-            host = _actualUnifiedWorkspace = new(this, services, home, original.Token, window.AcquireOriginalWindowLifetime());
+            host = _actualUnifiedWorkspace = new(this, services, home, window, original.Token, window.AcquireOriginalWindowLifetime());
             return true;
         }));
         return host ?? throw new InvalidOperationException("No original unified host was retained.");
@@ -130,6 +130,7 @@ public sealed partial class App
         private readonly App _app;
         private readonly IServiceProvider _services;
         private readonly HomeNativeWindowsComposition _home;
+        private readonly MainWindow _actualWindow;
         private readonly CancellationToken _appLifetime, _windowLifetime;
         private readonly CancellationTokenSource _startupCancellation = new();
         private readonly object _gate = new();
@@ -153,10 +154,12 @@ public sealed partial class App
         private volatile bool _startupRetirement;
 
         internal UnifiedWorkspaceHost(App app, IServiceProvider services, HomeNativeWindowsComposition home,
-            CancellationToken appLifetime, CancellationToken windowLifetime)
+            MainWindow actualWindow, CancellationToken appLifetime, CancellationToken windowLifetime)
         {
             Dispatcher.UIThread.VerifyAccess();
+            ArgumentNullException.ThrowIfNull(actualWindow);
             _app = app; _services = services; _home = home;
+            _actualWindow = actualWindow;
             _appLifetime = appLifetime; _windowLifetime = windowLifetime;
             KeyDown += OnWorkspaceKeyDown;
             ShowStartupLoading();
@@ -385,7 +388,8 @@ public sealed partial class App
             var persistence = _session.OpenWindow(_session.MainWindowId, _actor.ProfileId);
             var files = FilesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
             var spaces = SpacesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
-                (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement));
+                (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
+                actualApp: _app, actualWindow: _actualWindow);
             var build = BuildBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement));
             var actualTheme = _homeTheme

@@ -9,6 +9,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Haven.Desktop.HavenUI.Backend;
+using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.UI;
@@ -134,6 +135,13 @@ public sealed class ChatAddMenuNativePopupTests
             var selectedAssistant = Assert.Single(selectedAssistants);
             Assert.Equal(AddMenu.AddMenuAction.Assistant, selectedAssistant.Kind);
             Assert.Same(assistant, selectedAssistant.Item);
+            Assert.True(SpacesBrowseAppContentSession.TryGetAssistantMenuSelection(selectedAssistant, out var selectedIdentity));
+            Assert.Equal(assistant.Identity, selectedIdentity);
+            var assistantRoute = SpacesBrowseAppContentSession.CreateAssistantRouteAddress(selectedIdentity);
+            Assert.True(SpacesBrowseAppContentSession.TryReadAssistantRoute(assistantRoute, out var restoredIdentity));
+            Assert.Equal(assistant.Identity, restoredIdentity);
+            Assert.Throws<FormatException>(() => SpacesBrowseAppContentSession.TryReadAssistantRoute(
+                Haven.Core.AppContentAddress.Parse("9to1://spaces/assistant/incomplete"), out _));
 
             scene.SetAssistantCatalogue(null);
             scene.ShowAddMenu();
@@ -147,6 +155,13 @@ public sealed class ChatAddMenuNativePopupTests
             var openAssistantsSelection = Assert.Single(selectedAssistants.Skip(1));
             Assert.Equal(AddMenu.AddMenuAction.Assistant, openAssistantsSelection.Kind);
             Assert.Equal("OpenAssistantsRequest", openAssistantsSelection.Item.GetType().Name);
+            Assert.True(SpacesBrowseAppContentSession.TryGetAssistantMenuSelection(openAssistantsSelection, out var openAssistantIdentity));
+            Assert.Null(openAssistantIdentity);
+            Assert.True(SpacesBrowseAppContentSession.TryReadAssistantRoute(
+                SpacesBrowseAppContentSession.CreateAssistantRouteAddress(openAssistantIdentity), out var restoredOpenIdentity));
+            Assert.Null(restoredOpenIdentity);
+            Assert.False(SpacesBrowseAppContentSession.TryGetAssistantMenuSelection(
+                new AddMenuSelection(AddMenu.AddMenuAction.Assistant, specialist), out _));
 
             // Mention-search/catalogue rows still come from the same ChatAddMenuSurface, and
             // selecting its real Files row closes the native host before forwarding the action.

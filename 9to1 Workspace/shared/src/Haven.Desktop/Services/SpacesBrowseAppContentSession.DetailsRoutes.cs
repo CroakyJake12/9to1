@@ -333,6 +333,9 @@ internal sealed partial class SpacesBrowseAppContentSession
                     {
                         var home = _spacesPage ?? throw new InvalidOperationException("The original Spaces Home is unavailable.");
                         await home.ActivateAsync(linked.Token);
+#if !ANDROID
+                        await RetireAssistantPresentationOnUiAsync();
+#endif
                         lock (_gate)
                         {
                             DemandAlive(); linked.Token.ThrowIfCancellationRequested();
