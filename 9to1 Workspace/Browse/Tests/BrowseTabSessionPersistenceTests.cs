@@ -98,9 +98,10 @@ public sealed partial class BrowseNativeOwnershipTests
             otherDirectory = factory.Requests[1].ProfileDirectory;
             Assert.Equal(currentDirectory, factory.Requests[2].ProfileDirectory);
             Assert.NotEqual(currentDirectory, otherDirectory);
-            Assert.True(otherDirectory.StartsWith(
+            Assert.StartsWith(
                 Path.Combine(paths.BrowserProfileDirectory, "profiles") + Path.DirectorySeparatorChar,
-                StringComparison.Ordinal));
+                otherDirectory,
+                StringComparison.Ordinal);
             Assert.Equal("keep existing default-profile data", await File.ReadAllTextAsync(legacyData));
         }
 
@@ -219,12 +220,12 @@ public sealed partial class BrowseNativeOwnershipTests
     }
 
     [Fact]
-    public void Unattributed_legacy_data_is_reported_and_never_autoassigned_to_a_profile()
+    public async Task Unattributed_legacy_data_is_reported_and_never_autoassigned_to_a_profile()
     {
         var paths = new PreservedPaths();
         using (var legacy = new BrowserSitePermissionStore(paths))
-            legacy.SetDecisionAsync(new Uri("https://legacy.example/"), BrowserSitePermissionKind.Camera,
-                BrowserSitePermissionDecision.Allow, default).GetAwaiter().GetResult();
+            await legacy.SetDecisionAsync(new Uri("https://legacy.example/"), BrowserSitePermissionKind.Camera,
+                BrowserSitePermissionDecision.Allow, default);
         var original = File.ReadAllBytes(Path.Combine(paths.DataDirectory, "browser-site-permissions.json"));
         Assert.True(BrowserProfileStorage.HasUnassignedLegacyData(paths));
         var profileDirectory = BrowserProfileStorage.ResolveProfileDirectory(paths, "unverified-profile");
@@ -240,7 +241,7 @@ public sealed partial class BrowseNativeOwnershipTests
         var first = Task.Run(() => BrowserProfileStorage.ResolveProfileDirectory(paths, "concurrent-a"));
         var second = Task.Run(() => BrowserProfileStorage.ResolveProfileDirectory(paths, "concurrent-b"));
         var roots = await Task.WhenAll(first, second);
-        Assert.Single(roots.Where(path => StringComparer.Ordinal.Equals(path, paths.BrowserProfileDirectory)));
+        Assert.Single(roots, path => StringComparer.Ordinal.Equals(path, paths.BrowserProfileDirectory));
         Assert.NotEqual(roots[0], roots[1]);
     }
 
