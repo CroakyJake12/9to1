@@ -1065,84 +1065,142 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         long routeEpoch, CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess();
-        var actualApp = _actualApp;
-        var actualWindow = _actualWindow;
-        if (actualApp is null || actualWindow is null)
+        var priorChat = chat ?? _chatPage;
+        NativeAssistantsDesktopPage? page = _assistantPage;
+        var pageWasAlreadyPublished = page is not null && ReferenceEquals(_publishedAssistantRoute?.Page, page);
+        var publishedThisOperation = false;
+        try
         {
-            chat?.SetAssistantCatalogue(null, "Assistants is unavailable in this host.");
-            ReportWorkspaceActionRefusal("Assistants is unavailable in this host.");
-            if (chat is null) RestoreSpacesAfterAssistantRefusal();
+            var actualApp = _actualApp;
+            var actualWindow = _actualWindow;
+            if (actualApp is null || actualWindow is null)
+            {
+                chat?.SetAssistantCatalogue(null, "Assistants is unavailable in this host.");
+                ReportWorkspaceActionRefusal("Assistants is unavailable in this host.");
+                if (chat is null) RestoreSpacesAfterAssistantRefusal();
+                return;
+            }
+            if (chat is not null && (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, chat) || _routeEpoch != routeEpoch))
+                throw new OperationCanceledException("The originating Chat route changed before Assistants could open.", token);
+            var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+            var expectedActor = _historyOriginalActor
+                ?? throw new SpacesHistoryAuthorityRefusal("The original Home profile actor is unavailable.");
+            if (await home.Profiles.GetCurrentAsync(token) != expectedActor)
+                throw new SpacesHistoryAuthorityRefusal("The authenticated Home profile changed before Assistants could open.");
+            var acquisition = await actualApp.CreateOriginalAssistantsControllerAsync(_services, home, token);
+            token.ThrowIfCancellationRequested();
+            if (acquisition is null)
+            {
+                chat?.SetAssistantCatalogue(null, "Assistants is not ready in this Home profile. Complete setup and retry.");
+                ReportWorkspaceActionRefusal("Assistants is not ready in this Home profile. Complete setup and retry.");
+                if (chat is null) RestoreSpacesAfterAssistantRefusal();
+                return;
+            }
+            var newPage = page is null || page.OriginalClose is not null;
+            if (newPage)
+            {
+                NativeAssistantsDesktopPage? captured = null;
+                void Capture(NativeAssistantsDesktopPage actual)
+                {
+                    if (captured is not null && !ReferenceEquals(captured, actual))
+                        throw new InvalidOperationException("The actual Assistant page factory supplied multiple pages.");
+                    captured = actual;
+                    page = actual;
+                    _assistantPage = actual;
+                    actualApp.RetainOriginalAssistantsPresentation(acquisition.OriginalController, actual);
+                }
+                page = NativeAssistantsDesktopPage.BindOriginal(_services, home, acquisition.OriginalDenHost,
+                    acquisition.OriginalOpenedDen, acquisition.OriginalController, _appLifetime, _windowLifetime,
+                    actualWindow, Capture, migration: acquisition.OriginalMigration,
+                    migrationUnavailableReason: acquisition.OriginalMigration is null ? "The original saved Agent migration source is not configured." : null,
+                    memoryManagement: acquisition.OriginalMemoryManagement,
+                    memoryUnavailableReason: acquisition.OriginalMemoryManagement is null ? "The original local Assistant memory source is not configured." : null,
+                    miniComputerManagement: acquisition.OriginalMiniComputerManagement,
+                    miniComputerUnavailableReason: acquisition.OriginalMiniComputerManagement is null ? "The original protected Mini Computer catalogue and operation source is not configured." : null,
+                    generatedUiHost: acquisition.OriginalGeneratedUiHost);
+                if (!ReferenceEquals(page, captured)) throw new InvalidOperationException("The actual Assistant page was not captured before native publication.");
+                _assistantPage = page;
+                await page.InitializeAsync(token);
+            }
+            else if (!ReferenceEquals(page!.OriginalController, acquisition.OriginalController) ||
+                     !page.IsOriginalComposition(_services, home) || !page.IsOriginalWindow(actualWindow, _appLifetime, _windowLifetime))
+            {
+                throw new UnauthorizedAccessException("Retain the SAME actual Assistants page, acquisition, Home and native Window.");
+            }
+            if (identity is { } selected)
+                await acquisition.OriginalController.OpenAssistantAsync(selected, token);
+            token.ThrowIfCancellationRequested();
+            if (await home.Profiles.GetCurrentAsync(token) != expectedActor)
+                throw new SpacesHistoryAuthorityRefusal("The authenticated Home profile changed before the Assistant page could publish.");
+            if (chat is not null && (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, chat) || _routeEpoch != routeEpoch))
+                throw new OperationCanceledException("The originating Chat route changed before the Assistant page could publish.", token);
+            var address = CreateAssistantRouteAddress(identity);
+            var actualPage = page ?? throw new InvalidOperationException("The actual Assistant page was not acquired.");
+            actualPage.PublishOriginalTab(() =>
+            {
+                if (_spacesPage is null || !_spacesPage.TryMountSpaceWorkspace(actualPage))
+                    throw new InvalidOperationException("The retained Spaces workspace region is unavailable for Assistants.");
+                SetRootContent(_spacesPage);
+                lock (_gate)
+                {
+                    _publishedAssistantRoute = new(actualPage, address, chat ?? _chatPage, identity);
+                    _publishedChatRoute = null;
+                    _chatPage = null;
+                    _address = address;
+                    _routeEpoch++;
+                }
+            });
+            publishedThisOperation = true;
+            PublishStateChanged();
+        }
+        catch (Exception openingFailure)
+        {
+            // A newly captured native page has acquired real App ownership, even if initialization,
+            // cancellation, actor revalidation, selection, or publication later fails. Retire that
+            // exact partial page before permitting a later menu action to construct a replacement.
+            // A page that was already successfully published remains mounted and owned if changing
+            // its selected Assistant fails.
+            var partial = page ?? _assistantPage;
+            if (partial is not null && !pageWasAlreadyPublished && !publishedThisOperation &&
+                ReferenceEquals(_assistantPage, partial))
+            {
+                try { await RetireFailedAssistantOpenOnUiAsync(partial, priorChat); }
+                catch (Exception cleanupFailure)
+                {
+                    throw new AggregateException("Opening the Assistant failed and its partial native page did not retire cleanly.",
+                        openingFailure, cleanupFailure);
+                }
+            }
+            throw;
+        }
+    }
+
+    private async Task RetireFailedAssistantOpenOnUiAsync(NativeAssistantsDesktopPage page, NewChatPage? priorChat)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        await page.CloseAndDrainAsync();
+        if (ReferenceEquals(_spacesPage?.SpaceWorkspaceContent, page))
+            _spacesPage.ClearSpaceWorkspace(page);
+        if (ReferenceEquals(_assistantPage, page)) _assistantPage = null;
+        lock (_gate)
+        {
+            if (_publishedAssistantRoute is { } route && ReferenceEquals(route.Page, page))
+                _publishedAssistantRoute = null;
+            _publishedChatRoute = null;
+            _chatPage = null;
+        }
+        if (!_closing && priorChat is not null && _ownedChats.Contains(priorChat) &&
+            _spacesPage is { } home && home.TryMountSpaceWorkspace(priorChat))
+        {
+            SetRootContent(home);
+            lock (_gate) PublishChatPage(priorChat);
             return;
         }
-        if (chat is not null && (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, chat) || _routeEpoch != routeEpoch))
-            throw new OperationCanceledException("The originating Chat route changed before Assistants could open.", token);
-        var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
-        var expectedActor = _historyOriginalActor
-            ?? throw new SpacesHistoryAuthorityRefusal("The original Home profile actor is unavailable.");
-        if (await home.Profiles.GetCurrentAsync(token) != expectedActor)
-            throw new SpacesHistoryAuthorityRefusal("The authenticated Home profile changed before Assistants could open.");
-        var acquisition = await actualApp.CreateOriginalAssistantsControllerAsync(_services, home, token);
-        token.ThrowIfCancellationRequested();
-        if (acquisition is null)
+        if (_spacesPage is { } spaces)
         {
-            chat?.SetAssistantCatalogue(null, "Assistants is not ready in this Home profile. Complete setup and retry.");
-            ReportWorkspaceActionRefusal("Assistants is not ready in this Home profile. Complete setup and retry.");
-            if (chat is null) RestoreSpacesAfterAssistantRefusal();
-            return;
+            SetRootContent(spaces);
+            lock (_gate) UpdateAddress(spaces.Controller.State.Selection?.Id);
         }
-        var page = _assistantPage;
-        var newPage = page is null || page.OriginalClose is not null;
-        if (newPage)
-        {
-            NativeAssistantsDesktopPage? captured = null;
-            void Capture(NativeAssistantsDesktopPage actual)
-            {
-                if (captured is not null && !ReferenceEquals(captured, actual))
-                    throw new InvalidOperationException("The actual Assistant page factory supplied multiple pages.");
-                captured = actual;
-                actualApp.RetainOriginalAssistantsPresentation(acquisition.OriginalController, actual);
-            }
-            page = NativeAssistantsDesktopPage.BindOriginal(_services, home, acquisition.OriginalDenHost,
-                acquisition.OriginalOpenedDen, acquisition.OriginalController, _appLifetime, _windowLifetime,
-                actualWindow, Capture, migration: acquisition.OriginalMigration,
-                migrationUnavailableReason: acquisition.OriginalMigration is null ? "The original saved Agent migration source is not configured." : null,
-                memoryManagement: acquisition.OriginalMemoryManagement,
-                memoryUnavailableReason: acquisition.OriginalMemoryManagement is null ? "The original local Assistant memory source is not configured." : null,
-                miniComputerManagement: acquisition.OriginalMiniComputerManagement,
-                miniComputerUnavailableReason: acquisition.OriginalMiniComputerManagement is null ? "The original protected Mini Computer catalogue and operation source is not configured." : null,
-                generatedUiHost: acquisition.OriginalGeneratedUiHost);
-            if (!ReferenceEquals(page, captured)) throw new InvalidOperationException("The actual Assistant page was not captured before native publication.");
-            _assistantPage = page;
-            await page.InitializeAsync(token);
-        }
-        else if (!ReferenceEquals(page!.OriginalController, acquisition.OriginalController) ||
-                 !page.IsOriginalComposition(_services, home) || !page.IsOriginalWindow(actualWindow, _appLifetime, _windowLifetime))
-        {
-            throw new UnauthorizedAccessException("Retain the SAME actual Assistants page, acquisition, Home and native Window.");
-        }
-        if (identity is { } selected)
-            await acquisition.OriginalController.OpenAssistantAsync(selected, token);
-        token.ThrowIfCancellationRequested();
-        if (await home.Profiles.GetCurrentAsync(token) != expectedActor)
-            throw new SpacesHistoryAuthorityRefusal("The authenticated Home profile changed before the Assistant page could publish.");
-        if (chat is not null && (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, chat) || _routeEpoch != routeEpoch))
-            throw new OperationCanceledException("The originating Chat route changed before the Assistant page could publish.", token);
-        var address = CreateAssistantRouteAddress(identity);
-        page!.PublishOriginalTab(() =>
-        {
-            if (_spacesPage is null || !_spacesPage.TryMountSpaceWorkspace(page))
-                throw new InvalidOperationException("The retained Spaces workspace region is unavailable for Assistants.");
-            SetRootContent(_spacesPage);
-            lock (_gate)
-            {
-                _publishedAssistantRoute = new(page, address, chat ?? _chatPage, identity);
-                _publishedChatRoute = null;
-                _chatPage = null;
-                _address = address;
-                _routeEpoch++;
-            }
-        });
-        PublishStateChanged();
     }
 
     private void RestoreSpacesAfterAssistantRefusal()
