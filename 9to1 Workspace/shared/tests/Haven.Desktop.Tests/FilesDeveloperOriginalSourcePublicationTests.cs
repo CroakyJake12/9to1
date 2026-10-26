@@ -1082,9 +1082,12 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
         internal string SavedRegistryPath => _savedRegistryPath ?? throw new InvalidOperationException("No actual project registry observation was captured.");
 
         internal static async Task<Rig> CreateAsync(string? existingTarget = null,
-            bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true, string? manualRunCommand = null)
+            bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true,
+            string? manualRunCommand = null, bool enableActualProjectSetup = false)
         {
             if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This fixture requires the genuine Linux Home/Files native owners.");
+            if (enableActualProjectSetup && (!canonicalSavedProject || !bindSavedStore))
+                throw new ArgumentException("The actual setup fixture requires the canonical saved-project Files binding.", nameof(enableActualProjectSetup));
             var rig = new Rig();
             try
             {
@@ -1107,6 +1110,7 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 var readPolicy = new HomeDeveloperProjectReadActionPolicySource();
                 var editPolicy = new HomeDeveloperProjectEditActionPolicySource();
                 var runPolicy = new HomeDeveloperManualProjectExecutionActionPolicySource();
+                var setupPolicy = enableActualProjectSetup ? new HomeDeveloperProjectSetupActionPolicySource() : null;
                 var runResolver = new HomeDeveloperManualProjectExecutionResourceResolver(() => runs ?? throw new InvalidOperationException("Actual manual Run owner is not resolved."));
                 var readResolver = new HomeDeveloperProjectReadResourceResolver(() => reads ?? throw new InvalidOperationException("Actual READ owner is not resolved."));
                 var editResolver = new HomeDeveloperProjectEditResourceResolver(() => edits ?? throw new InvalidOperationException("Actual WRITE owner is not resolved."));
@@ -1114,9 +1118,11 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                     () => rig.Graph.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>());
                 var resolvers = new List<ICanonicalResourceAccessResolver> { readResolver, editResolver, runResolver };
                 if (canonicalSavedProject && bindSavedStore) resolvers.Add(destinationResolver);
+                var policies = new List<IHomeActionPolicySource> { readPolicy, editPolicy, runPolicy };
+                if (setupPolicy is not null) policies.Add(setupPolicy);
                 rig._registration = CloudflareLocalDomainRegistration.CreateOriginal(
                     new FileHomeCoreStateStore(Path.Combine(homeRoot, "state.json")), new OperatingSystemPrincipalSource(), new Paths(rig._root),
-                    originalResolvers: resolvers, originalPolicies: [readPolicy, editPolicy, runPolicy],
+                    originalResolvers: resolvers, originalPolicies: policies,
                     configureOriginalStores: identity =>
                     {
                         files = new(identity.StateStore, identity.Profiles);
@@ -1141,22 +1147,38 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                     provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), editResolver, editPolicy);
                 services.AddHavenOwnedDeveloperManualExecution(rig.Home,
                     provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), runResolver, runPolicy);
+                if (setupPolicy is not null)
+                    services.AddHavenOwnedDeveloperSetups(rig.Home,
+                        provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
+                        provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                        provider => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(), setupPolicy);
                 services.AddSingleton<DeveloperManualProjectProcessOwner>(provider => new(provider.GetRequiredService<NativeFilesWorkspaceService>(),
                     provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
                     provider.GetRequiredService<HomeDeveloperManualProjectExecutionAdmissionSource>(),
                     Assert.IsAssignableFrom<IWorkspaceOriginalInvocationSource>(provider.GetRequiredService<IWorkspaceToolService>())));
                 Func<IServiceProvider, IDeveloperProjectOriginalPhysicalCaptureSource> kernelFactory = provider =>
-                    Assert.IsType<WorkspaceToolService>(provider.GetRequiredService<IWorkspaceToolService>()).CreateOriginalDeveloperCaptureSource(
-                        provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
-                        // Pure join guards retain the SAME cycle owner after DI admission closes.
-                        () => rig.Selections
-                            ?? throw new InvalidOperationException("The SAME retained Files source selection owner is unavailable."),
-                        () => throw new NotSupportedException("Project setup is not invoked by the source publication fixture."),
+                {
+                    var workspaceTool = Assert.IsType<WorkspaceToolService>(provider.GetRequiredService<IWorkspaceToolService>());
+                    // Pure join guards retain the SAME cycle owner after DI admission closes.
+                    Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections = () => rig.Selections
+                        ?? throw new InvalidOperationException("The SAME retained Files source selection owner is unavailable.");
+                    if (enableActualProjectSetup)
+                        return workspaceTool.CreateOriginalDeveloperCaptureSource(
+                            provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(), selections,
+                            () => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
+                            () => provider.GetRequiredService<FileDeveloperWorkspaceStore>(),
+                            () => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(),
+                            provider.GetRequiredService<IDeveloperProjectOriginalEditAdmissionSource>());
+                    return workspaceTool.CreateOriginalDeveloperCaptureSource(
+                        provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(), selections,
+                        () => throw new NotSupportedException("Project setup is not enabled by this source publication fixture."),
                         provider.GetRequiredService<IDeveloperProjectOriginalEditAdmissionSource>());
+                };
                 if (canonicalSavedProject && bindSavedStore)
                 {
-                    // Exercise the actual production four-argument source factory. Setup-only
-                    // callbacks remain unavailable and are never replaced with successful doubles.
+                    // Exercise the actual production Files setup/source factory. Its same-cycle
+                    // setup callbacks are real only when this fixture explicitly enables setup;
+                    // otherwise the absent capability remains fail-closed.
                     services.AddFilesOriginalDeveloperSetups(destinationResolver, kernelFactory,
                         provider => provider.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
                         provider => provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),

@@ -17,10 +17,10 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
     [LinuxFact]
     public async Task Real_template_entry_preflights_before_effects_and_manual_entry_cannot_be_recovered_as_template()
     {
-        var rigType = typeof(FilesDeveloperOriginalDirectorySetupProducerTests)
+        var rigType = typeof(FilesDeveloperOriginalSourcePublicationTests)
             .GetNestedType("Rig", BindingFlags.NonPublic)!;
         var create = rigType.GetMethod("CreateAsync", BindingFlags.Static | BindingFlags.NonPublic)!;
-        var creation = (Task)create.Invoke(null, [null, true, true, true, null])!;
+        var creation = (Task)create.Invoke(null, [null, true, true, true, null, true])!;
         await creation;
         var rig = creation.GetType().GetProperty("Result")!.GetValue(creation)!;
         var graph = (ServiceProvider)Get(rig, "Graph");
@@ -28,8 +28,8 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
         var filesRoot = Directory.GetParent(projectRoot)!.FullName;
         var authority = graph.GetRequiredService<NativeFilesWorkspaceAuthority>();
         var workspace = (await authority.GetCurrentAsync(CancellationToken.None))!;
-        var store = (IDeveloperWorkspaceStore)Get(rig, "SavedStore");
-        var manual = NewManualAdapter(graph, store);
+        var savedStore = (FileDeveloperWorkspaceStore)Get(rig, "SavedStore");
+        var manual = NewManualAdapter(graph, savedStore);
         var provider = new DeveloperCuiProjectTemplateProvider();
         var catalog = new DeveloperProjectCatalog([provider]);
         var materializer = new DeveloperProjectTemplateMaterializer([provider]);
@@ -59,12 +59,12 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             // A fresh template adapter gets no retained attempt from a generic manual project.
             // The actual READ/capture runs, then refusal precedes journal, Files, and Dev writes.
             var rejectedRoot = CreateTarget(filesRoot, "template-nonempty", "preserve bytes");
-            var freshManual = NewManualAdapter(graph, store);
+            var freshManual = NewManualAdapter(graph, savedStore);
             var freshTemplate = new DeveloperTemplateProjectEntryAdapter(freshManual, materializer);
             var rejectedMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(rejectedRoot));
             var drivePath = Path.Combine(filesRoot, ".9to1-files", "drive.json");
             var driveBefore = File.ReadAllBytes(drivePath);
-            var devBefore = Snapshot(store.OriginalWorkspaceMetadataDirectory);
+            var devBefore = Snapshot(savedStore.OriginalWorkspaceMetadataDirectory);
             var setupRecordsBefore = await SetupRecordCount(graph);
             var rejected = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
                 workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None);
@@ -82,7 +82,7 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             Assert.Null(freshManual.RetainedSetupId);
             Assert.Null(freshManual.RetainedWorkspaceId);
             Assert.Equal(driveBefore, File.ReadAllBytes(drivePath));
-            Assert.Equal(devBefore, Snapshot(store.OriginalWorkspaceMetadataDirectory));
+            Assert.Equal(devBefore, Snapshot(savedStore.OriginalWorkspaceMetadataDirectory));
             Assert.Equal(setupRecordsBefore, await SetupRecordCount(graph));
             Assert.Equal("preserve bytes", await File.ReadAllTextAsync(Path.Combine(rejectedRoot, "existing.txt")));
 
