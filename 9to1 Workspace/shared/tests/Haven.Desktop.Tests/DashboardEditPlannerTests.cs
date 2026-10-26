@@ -80,7 +80,7 @@ public sealed class DashboardEditPlannerTests
         var planner = new DashboardEditPlanner(model, new SelectionFixture(hasRoute: false).Source);
         var result = await planner.PlanAsync("Move Plan", "Home", Views(), Layout(), CancellationToken.None);
         Assert.False(result.Succeeded);
-        Assert.Contains("Home model", result.Message);
+        Assert.Contains("selected by Home", result.Message);
         Assert.Equal(0, model.CompleteCalls);
         Assert.Equal(0, model.StreamCalls);
         Assert.Equal(0, model.CatalogueCalls);
