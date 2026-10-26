@@ -12,6 +12,9 @@ public sealed class HuggingFaceModelCtlImporterTests
     [LinuxModelLayoutFact]
     public async Task Selected_bundle_root_serves_bootstrap_and_HF_import_into_the_same_explicit_Home_model_store()
     {
+        // The custom test attribute supplies a truthful skip; this guard also proves native API
+        // reachability to the platform analyzer without suppressing CA1416.
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("Linux modelctl storage fixture required.");
         var root = Directory.CreateTempSubdirectory("haven-selected-model-layout-").FullName;
         var previousBundle = Environment.GetEnvironmentVariable(LlamaCppRuntimeLayout.BundleRootEnvironmentVariable);
         var previousModels = Environment.GetEnvironmentVariable("HAVEN_MODEL_ROOT");
