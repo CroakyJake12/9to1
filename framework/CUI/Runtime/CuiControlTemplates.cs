@@ -95,7 +95,7 @@ public static class CuiControlTemplates
         var frame = new CuiMaterialBorder { Child = content };
         Bind(frame, Border.BackgroundProperty, owner, "Background"); Bind(frame, Border.BorderBrushProperty, owner, "BorderBrush");
         Bind(frame, Border.BorderThicknessProperty, owner, "BorderThickness"); Bind(frame, Border.CornerRadiusProperty, owner, "CornerRadius");
-        if (owner is Button or TextBox or SelectingItemsControl or ListBoxItem or RangeBase or MenuItem or Thumb or NumericUpDown)
+        if (owner is Button or TextBox or ComboBox or ListBoxItem or RangeBase or MenuItem or Thumb or NumericUpDown)
             _ = new CuiHoverFeedback(owner, frame);
         return frame;
     }

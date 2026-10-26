@@ -1,8 +1,10 @@
+using System.Collections.Specialized;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using CakeOS.Cui.Themes;
@@ -103,19 +105,49 @@ internal sealed class CuiButtonFeedback
 /// <summary>Applies a background-only hover wash derived from the current effective brush. The
 /// source brush and foreground stay untouched, so authored colours and text contrast remain owned
 /// by the normal CUI cascade.</summary>
-internal sealed class CuiHoverFeedback
+internal sealed class CuiHoverFeedback : IDisposable
 {
     private readonly Control _owner;
     private readonly CuiMaterialBorder _frame;
     private readonly CuiEffectivePropertyStore _store;
     private readonly List<IDisposable> _subscriptions = [];
     private bool _active;
+    private bool _dragging;
+    private IDisposable? _backgroundBrushSubscription;
+    private IDisposable? _panelBrushSubscription;
+    private IBrush? _observedBackground;
+    private IBrush? _observedPanel;
+    private readonly string? _requiredClass;
 
     public CuiHoverFeedback(Control owner, CuiMaterialBorder frame)
+        : this(owner, frame, CuiPropertyPresentation.For(owner), null)
     {
-        _owner = owner; _frame = frame; _store = CuiPropertyPresentation.For(owner);
-        frame.AttachedToVisualTree += (_, _) => Attach();
-        frame.DetachedFromVisualTree += (_, _) => Detach();
+    }
+
+    internal CuiHoverFeedback(Control owner, CuiMaterialBorder frame, CuiEffectivePropertyStore store, string? requiredClass)
+    {
+        _owner = owner; _frame = frame; _store = store; _requiredClass = requiredClass;
+        frame.AttachedToVisualTree += FrameAttached;
+        frame.DetachedFromVisualTree += FrameDetached;
+        if (_requiredClass is not null)
+        {
+            owner.Classes.CollectionChanged += ClassesChanged;
+            UpdateOptIn();
+        }
+    }
+
+    private void FrameAttached(object? sender, VisualTreeAttachmentEventArgs e) => UpdateOptIn();
+    private void FrameDetached(object? sender, VisualTreeAttachmentEventArgs e) => Detach();
+    private void ClassesChanged(object? sender, NotifyCollectionChangedEventArgs e) => UpdateOptIn();
+
+    private void UpdateOptIn()
+    {
+        if (_requiredClass is null) { if (_frame.IsAttachedToVisualTree) Attach(); return; }
+        if (_owner.Classes.Contains(_requiredClass))
+        {
+            if (_frame.IsAttachedToVisualTree) Attach();
+        }
+        else Detach();
     }
 
     private void Attach()
@@ -123,8 +155,22 @@ internal sealed class CuiHoverFeedback
         if (_active) return;
         _active = true;
         _owner.PropertyChanged += OwnerChanged;
+        if (_owner is Thumb thumb)
+        {
+            thumb.DragStarted += DragStarted;
+            thumb.DragCompleted += DragCompleted;
+        }
         _store.Changed += EffectiveChanged;
         _subscriptions.Add(_owner.GetResourceObservable("CuiHighContrast").Subscribe(new Observer(_ => Refresh())));
+        _subscriptions.Add(_owner.GetResourceObservable("CuiPanelBrush").Subscribe(new Observer(value =>
+        {
+            var brush = value as IBrush;
+            if (ReferenceEquals(brush, _observedPanel)) { Refresh(); return; }
+            _panelBrushSubscription?.Dispose(); _observedPanel = brush;
+            _panelBrushSubscription = WatchMutableBrush(brush, Refresh);
+            Refresh();
+        })));
+        ObserveBackgroundBrush();
         Refresh();
     }
 
@@ -133,10 +179,26 @@ internal sealed class CuiHoverFeedback
         if (!_active) return;
         _active = false;
         _owner.PropertyChanged -= OwnerChanged;
+        if (_owner is Thumb thumb)
+        {
+            thumb.DragStarted -= DragStarted;
+            thumb.DragCompleted -= DragCompleted;
+        }
+        _dragging = false;
         _store.Changed -= EffectiveChanged;
+        _backgroundBrushSubscription?.Dispose(); _backgroundBrushSubscription = null; _observedBackground = null;
+        _panelBrushSubscription?.Dispose(); _panelBrushSubscription = null; _observedPanel = null;
         foreach (var subscription in _subscriptions) subscription.Dispose();
         _subscriptions.Clear();
         _frame.SetHoverTint(null);
+    }
+
+    public void Dispose()
+    {
+        Detach();
+        _frame.AttachedToVisualTree -= FrameAttached;
+        _frame.DetachedFromVisualTree -= FrameDetached;
+        if (_requiredClass is not null) _owner.Classes.CollectionChanged -= ClassesChanged;
     }
 
     private void OwnerChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
@@ -144,33 +206,92 @@ internal sealed class CuiHoverFeedback
         if (change.Property.Name is "IsPointerOver" or "IsPressed" or "IsEnabled" or "IsEffectivelyEnabled") Refresh();
     }
 
+    private void DragStarted(object? sender, VectorEventArgs e) { _dragging = true; Refresh(); }
+    private void DragCompleted(object? sender, VectorEventArgs e) { _dragging = false; Refresh(); }
+
     private void EffectiveChanged(object? sender, CuiEffectiveProperty property)
     {
-        if (property.Name is "Background" or "Chromeless") Refresh();
+        if (property.Name == "Background") { ObserveBackgroundBrush(); Refresh(); }
+        else if (property.Name == "Chromeless") Refresh();
+    }
+
+    private void ObserveBackgroundBrush()
+    {
+        var brush = _store.Resolve("Background").Value as IBrush;
+        if (ReferenceEquals(brush, _observedBackground)) return;
+        _backgroundBrushSubscription?.Dispose(); _observedBackground = brush;
+        _backgroundBrushSubscription = WatchMutableBrush(brush, Refresh);
+    }
+
+    private static IDisposable? WatchMutableBrush(IBrush? brush, Action changed)
+    {
+        var subscriptions = new List<Action>();
+        if (brush is AvaloniaObject mutable)
+        {
+            EventHandler<AvaloniaPropertyChangedEventArgs> handler = (_, _) => changed();
+            mutable.PropertyChanged += handler;
+            subscriptions.Add(() => mutable.PropertyChanged -= handler);
+        }
+        if (brush is IGradientBrush gradient)
+        {
+            var stopSubscriptions = new List<Action>();
+            void RefreshStops()
+            {
+                foreach (var dispose in stopSubscriptions) dispose();
+                stopSubscriptions.Clear();
+                foreach (var stop in gradient.GradientStops)
+                {
+                    if (stop is not AvaloniaObject mutableStop) continue;
+                    EventHandler<AvaloniaPropertyChangedEventArgs> stopChanged = (_, _) => changed();
+                    mutableStop.PropertyChanged += stopChanged;
+                    stopSubscriptions.Add(() => mutableStop.PropertyChanged -= stopChanged);
+                }
+            }
+            RefreshStops();
+            if (gradient.GradientStops is INotifyCollectionChanged stops)
+            {
+                NotifyCollectionChangedEventHandler handler = (_, _) => { RefreshStops(); changed(); };
+                stops.CollectionChanged += handler;
+                subscriptions.Add(() => stops.CollectionChanged -= handler);
+            }
+            subscriptions.Add(() =>
+            {
+                foreach (var dispose in stopSubscriptions) dispose();
+                stopSubscriptions.Clear();
+            });
+        }
+        return subscriptions.Count == 0 ? null : new CallbackDisposable(() =>
+        { foreach (var dispose in subscriptions) dispose(); });
     }
 
     private void Refresh()
     {
         var chromeless = _store.Contains("Chromeless") && _store.Resolve("Chromeless").Value is true;
-        var active = _owner.IsEffectivelyEnabled && _owner.IsPointerOver
-            && _owner is not ButtonBase { IsPressed: true }
+        var highContrast = Resource("CuiHighContrast") is true;
+        var optedIn = _requiredClass is null || _owner.Classes.Contains(_requiredClass);
+        var active = optedIn && _owner.IsEffectivelyEnabled && _owner.IsPointerOver
+            && _owner is not Button { IsPressed: true }
+            && !_dragging
             && !CuiPropertyPresentation.IsEmbeddedInput(_owner)
-            && !chromeless
-            && Resource("CuiHighContrast") is not true;
-        _frame.SetHoverTint(active ? DeriveTint(_store.Resolve("Background").Value as IBrush) : null);
+            && !chromeless;
+        var background = _store.Resolve("Background").Value as IBrush;
+        var tint = DeriveTint(background, highContrast);
+        if (active && tint is null)
+            tint = DeriveTint(Resource("CuiPanelBrush") as IBrush, highContrast);
+        _frame.SetHoverTint(active ? tint : null);
     }
 
     private object? Resource(string key) => _owner.TryFindResource(key, out var value) ? value : null;
 
-    private static Color? DeriveTint(IBrush? brush)
+    private static Color? DeriveTint(IBrush? brush, bool highContrast)
     {
         var colour = Representative(brush);
         if (colour is null || colour.Value.A == 0) return null;
         var value = colour.Value;
         var luminance = .2126 * Linear(value.R / 255d) + .7152 * Linear(value.G / 255d) + .0722 * Linear(value.B / 255d);
         var tint = luminance > .5 ? Colors.Black : Colors.White;
-        // Preserve the effective hue and alpha; this subtle neutral wash only changes lightness.
-        var alpha = (byte)Math.Clamp(Math.Round(value.A * .075), 0, 20);
+        // This low-opacity neutral wash preserves the source hue while changing lightness.
+        var alpha = (byte)Math.Clamp(Math.Round(value.A * (highContrast ? .14 : .08)), 0, highContrast ? 36 : 20);
         return Color.FromArgb(alpha, tint.R, tint.G, tint.B);
     }
 
@@ -178,12 +299,19 @@ internal sealed class CuiHoverFeedback
 
     private static Color? Representative(IBrush? brush)
     {
-        if (brush is CuiMaterialBrush material) return material.Tint;
+        if (brush is CuiMaterialBrush material) return ScaleAlpha(material.Tint, material.TintOpacity);
         if (brush is CuiCustomMaterialBrush custom) return CustomRepresentative(custom.Fill);
-        if (brush is ISolidColorBrush solid) return solid.Color;
-        if (brush is IGradientBrush gradient) return Average(gradient.GradientStops.Select(stop => stop.Color));
+        if (brush is ISolidColorBrush solid) return ScaleAlpha(solid.Color, solid.Opacity);
+        if (brush is IGradientBrush gradient)
+        {
+            var average = Average(gradient.GradientStops.Select(stop => stop.Color));
+            return average is { } colour ? ScaleAlpha(colour, gradient.Opacity) : null;
+        }
         return null;
     }
+
+    private static Color ScaleAlpha(Color colour, double opacity) =>
+        Color.FromArgb((byte)Math.Clamp(Math.Round(colour.A * Math.Clamp(opacity, 0, 1)), 0, 255), colour.R, colour.G, colour.B);
 
     private static Color? CustomRepresentative(CuiCustomFill fill) => fill.Kind switch
     {
@@ -212,7 +340,7 @@ internal sealed class CuiHoverFeedback
             (byte)Math.Round(values.Average(colour => (double)colour.A)),
             (byte)Math.Round(values.Average(colour => (double)colour.R)),
             (byte)Math.Round(values.Average(colour => (double)colour.G)),
-            (byte)Math.Round(values.Average(colour => (double)colour.B));
+            (byte)Math.Round(values.Average(colour => (double)colour.B)));
     }
 
     private sealed class Observer(Action<object?> next) : IObserver<object?>
@@ -220,5 +348,11 @@ internal sealed class CuiHoverFeedback
         public void OnNext(object? value) => next(value);
         public void OnCompleted() { }
         public void OnError(Exception error) => throw error;
+    }
+
+    private sealed class CallbackDisposable(Action dispose) : IDisposable
+    {
+        private Action? _dispose = dispose;
+        public void Dispose() => Interlocked.Exchange(ref _dispose, null)?.Invoke();
     }
 }

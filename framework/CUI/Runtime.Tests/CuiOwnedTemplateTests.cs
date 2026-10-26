@@ -229,6 +229,27 @@ public sealed class CuiOwnedTemplateTests
                 Assert.Same(ink, button.Foreground);
                 Assert.Equal(Color.FromArgb(20, 0, 0, 0), frame.HoverTint);
                 Assert.Same(glow, frame.Effect);
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<CuiMaterialBorder>(),
+                    other => !ReferenceEquals(other, frame) && other.HoverTint is not null);
+
+                white.Color = Colors.Black;
+                Assert.Same(white, button.Background);
+                Assert.Equal(Color.FromArgb(20, 255, 255, 255), frame.HoverTint);
+                white.Color = Colors.White;
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), frame.HoverTint);
+
+                button.Resources["CuiHighContrast"] = true;
+                Assert.Equal(Color.FromArgb(36, 0, 0, 0), frame.HoverTint);
+                Assert.Same(white, button.Background);
+                Assert.Null(frame.Effect);
+                button.Resources["CuiHighContrast"] = false;
+                Assert.NotNull(frame.HoverTint);
+                Assert.Same(glow, frame.Effect);
+
+                var black = new SolidColorBrush(Colors.Black);
+                CuiPropertyPresentation.Set(button, "Background", black, CuiPropertyLevel.Instance, "authored black");
+                Assert.Same(black, button.Background);
+                Assert.Equal(Color.FromArgb(20, 255, 255, 255), frame.HoverTint);
 
                 var gradient = new LinearGradientBrush
                 {
@@ -236,21 +257,75 @@ public sealed class CuiOwnedTemplateTests
                 };
                 CuiPropertyPresentation.Set(button, "Background", gradient, CuiPropertyLevel.Instance, "authored gradient");
                 Assert.Same(gradient, button.Background);
-                Assert.NotNull(frame.HoverTint);
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), frame.HoverTint);
+                gradient.GradientStops[0].Color = Colors.Black;
+                Assert.Equal(Color.FromArgb(20, 255, 255, 255), frame.HoverTint);
 
                 var material = new CuiMaterialBrush(Colors.White, .8, 4, .01);
                 CuiPropertyPresentation.Set(button, "Background", material, CuiPropertyLevel.Instance, "authored material");
                 Assert.Same(material, button.Background);
                 Assert.NotNull(frame.HoverTint);
 
+                var customMaterial = new CuiCustomMaterialBrush(new CuiCustomFill(
+                    CuiCustomFillKind.SolidColour, new CuiCustomColour("#FFFFFF", 0, 4)));
+                CuiPropertyPresentation.Set(button, "Background", customMaterial, CuiPropertyLevel.Instance, "authored custom material");
+                Assert.Same(customMaterial, button.Background);
+                Assert.NotNull(frame.HoverTint);
+
                 window.MouseMove(new Point(-10, -10)); window.UpdateLayout();
                 Assert.Null(frame.HoverTint);
-                Assert.Same(material, button.Background);
+                Assert.Same(customMaterial, button.Background);
                 window.MouseMove(point); window.UpdateLayout();
                 Assert.NotNull(frame.HoverTint);
-                Assert.Same(material, button.Background);
+                Assert.Same(customMaterial, button.Background);
             }
             finally { window.Close(); CuiPropertyPresentation.Detach(button); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Hover_surface_opt_in_paints_only_the_authored_container_group()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var root = new CuiContainerControl("Vertical Stack") { Width = 300, Height = 120 };
+            var plain = new CuiContainerControl("Horizontal Stack") { Height = 48 };
+            var group = new CuiContainerControl("Horizontal Stack") { Height = 48 };
+            var title = new TextBlock { Text = "Workspace" };
+            plain.Layout.Children.Add(new TextBlock { Text = "Plain container" });
+            group.Layout.Children.Add(title);
+            group.Classes.Add("cui-hover-surface");
+            root.Layout.Children.Add(plain);
+            root.Layout.Children.Add(group);
+            foreach (var surface in new[] { root, plain, group }) CuiPropertyPresentation.Attach(surface);
+            var authored = new SolidColorBrush(Colors.White);
+            CuiPropertyPresentation.Set(group, "Background", authored, CuiPropertyLevel.Instance, "authored browser row");
+            var window = new Window { Content = root };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var point = title.TranslatePoint(new Point(2, 2), window)!.Value;
+                window.MouseMove(point); window.UpdateLayout();
+                Assert.True(group.IsPointerOver);
+                Assert.Same(authored, group.Background);
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), group.HoverTint);
+                Assert.Null(plain.HoverTint);
+
+                group.Classes.Remove("cui-hover-surface");
+                Assert.Null(group.HoverTint);
+                group.Classes.Add("cui-hover-surface");
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), group.HoverTint);
+
+                window.MouseMove(new Point(-10, -10)); window.UpdateLayout();
+                Assert.Null(group.HoverTint);
+                Assert.Same(authored, group.Background);
+            }
+            finally
+            {
+                window.Close();
+                foreach (var surface in new[] { root, plain, group }) CuiPropertyPresentation.Detach(surface);
+            }
         }, CancellationToken.None);
     }
 

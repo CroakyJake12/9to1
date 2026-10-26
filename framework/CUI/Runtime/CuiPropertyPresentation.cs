@@ -27,7 +27,11 @@ public static class CuiPropertyPresentation
         }
         return false;
     }
-    public static void Attach(Control control,bool ownsTemplate=true) => _ = Get(control,ownsTemplate);
+    public static void Attach(Control control,bool ownsTemplate=true)
+    {
+        var projection = Get(control,ownsTemplate);
+        projection.AttachOptInHoverSurface();
+    }
     internal static void ConfigurePart(Control control, TemplatePart part) => Get(control).ConfigurePart(part);
     public static void Detach(Control control)
     { if (Projections.TryGetValue(control, out var projection)) { projection.Dispose(); Projections.Remove(control); } }
@@ -90,6 +94,7 @@ public static class CuiPropertyPresentation
         private CuiInputFocusRequest? _focusRequest;
         private bool _selectOnFocusRequest;
         private readonly Control _control;
+        private CuiHoverFeedback? _optInHoverSurface;
         private readonly Dictionary<string, AvaloniaProperty> _mapped = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Action<object?>> _custom = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<AvaloniaProperty, IDisposable> _nativeFences = [];
@@ -338,6 +343,12 @@ public static class CuiPropertyPresentation
             UpdateState();
         }
 
+        public void AttachOptInHoverSurface()
+        {
+            if (_control is CuiContainerControl container)
+                _optInHoverSurface ??= new CuiHoverFeedback(container, container, Store, "cui-hover-surface");
+        }
+
         private void Watch(string key, string? property, string source = "CUI inherited theme", long order = 0)
         {
             object? previous = null;
@@ -521,6 +532,7 @@ public static class CuiPropertyPresentation
             _control is SelectingItemsControl && property.Name is "SelectedIndex" or "SelectedItem";
         public void Dispose()
         {
+            _optInHoverSurface?.Dispose();
             _focusRequest?.Dispose();
             _control.PropertyChanged-=NativeChanged;foreach(var subscription in _subscriptions)subscription.Dispose();_subscriptions.Clear();
             foreach(var fence in _nativeFences.Values)fence.Dispose();_nativeFences.Clear();
