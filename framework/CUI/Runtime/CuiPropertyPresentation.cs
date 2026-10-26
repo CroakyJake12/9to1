@@ -458,11 +458,8 @@ public static class CuiPropertyPresentation
             var rail = _control is Menu || _part is TemplatePart.RailButton or TemplatePart.ScrollBar or TemplatePart.EmbeddedInput;
             if (_part == TemplatePart.ScrollThumb)
             {
-                if (_control.IsPointerOver) State("Background","CuiScrollThumbHoverBrush");
                 if (_dragging) State("Background","CuiScrollThumbPressedBrush");
             }
-            else if (!rail && !_compoundFocus && !_chromeless && _control.IsPointerOver)
-            { State("Background", _control is TextBox or NumericUpDown or ComboBox ? "CuiInputSurfaceBrush" : _accentRole == CuiAccentRole.None ? "CuiButtonHoverBrush" : AccentStateBackground("Hover")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonHoverForegroundBrush" : AccentStateForeground("Hover")); }
             if (_selected || _control is ToggleButton { IsChecked: true } or ListBoxItem { IsSelected: true } or MenuItem { IsSelected: true })
             { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); if (!_compoundFocus) State("BorderColor", "CuiSelectionIndicatorBrush"); }
             if (!rail && !_compoundFocus && !_chromeless && _control is Button { IsPressed: true })
