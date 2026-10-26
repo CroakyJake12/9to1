@@ -110,7 +110,7 @@ public sealed class HomeLibraryDestinationTests
     }
 
     [AvaloniaFact]
-    public async Task Folder_selection_returns_only_the_same_current_Home_link_and_disables_pin_mutation()
+    public async Task Folder_selection_requires_explicit_confirmation_and_revalidates_the_same_current_Home_link()
     {
         var store = Guid.NewGuid(); var folder = Guid.NewGuid();
         var link = new HomeDeepLink(HomeRoute.Library, "files", store.ToString("D") + "/" + folder.ToString("D"),
@@ -119,7 +119,8 @@ public sealed class HomeLibraryDestinationTests
             "Boards", "Files folder", "Files", "fixture-profile", null, DateTimeOffset.UtcNow,
             false, false, false, false, [], link);
         var index = new Index([row]); var page = Page(index, new(), (_, _) => true);
-        page.SetFolderSelectionMode((selected, _) => Task.FromResult<HomeDeepLink?>(selected));
+        var checks = 0;
+        page.SetFolderSelectionMode((selected, _) => { checks++; return Task.FromResult<HomeDeepLink?>(selected); });
         Window? window = null;
         try
         {
@@ -131,6 +132,13 @@ public sealed class HomeLibraryDestinationTests
             name.Text = "  Q4 planning  ";
             await page.DispatchAsync("OpenHomeLibraryArtifact", row.OpenLink);
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(page.FolderSelection.IsCompleted);
+            Assert.Null(page.SelectedBoardCreateDisplayName);
+            Assert.Equal(1, checks);
+            Assert.True(FindAuthoredButton(page, "library-confirm-board-folder").IsEnabled);
+            Assert.True(FindAuthoredButton(page, "library-cancel-board-folder").IsEnabled);
+            await page.DispatchAsync("ConfirmBoardFolder", null);
+            Assert.Equal(2, checks);
             Assert.Same(link, await page.FolderSelection);
             Assert.Equal("Q4 planning", page.SelectedBoardCreateDisplayName);
             name.Text = "changed after selection";
@@ -312,6 +320,24 @@ public sealed class HomeLibraryDestinationTests
         }
         finally { try { await session.CloseAndDrainAsync(); } finally { window?.Close(); } }
     }
+    [AvaloniaFact]
+    public async Task Folder_picker_cancel_completes_without_a_folder_or_name()
+    {
+        var page = Page(new Index([]), new(), (_, _) => true);
+        var checks = 0;
+        page.SetFolderSelectionMode((link, _) => { checks++; return Task.FromResult<HomeDeepLink?>(link); });
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            await page.DispatchAsync("CancelBoardFolder", null);
+            Assert.Null(await page.FolderSelection);
+            Assert.Null(page.SelectedBoardCreateDisplayName);
+            Assert.Equal(0, checks);
+            Assert.False(page.IsActionAvailable("ConfirmBoardFolder"));
+        }
+        finally { await page.CloseAndDrainAsync(); }
+    }
+
     private static HomeLibraryDestinationPage Page(Index index, Authorization authorization, Func<HomeDeepLink, Task, bool> queue,
         IHomeLibraryPreferences? preferences = null, CuiThemePreferenceContext? theme = null) =>
         new(router => new(index, authorization, router, preferences ?? new Preferences()), _ => Task.CompletedTask, queue,

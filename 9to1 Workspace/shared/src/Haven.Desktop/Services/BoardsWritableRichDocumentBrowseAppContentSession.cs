@@ -10,9 +10,10 @@ namespace Haven.Desktop.Services;
 
 /// <summary>An editable rich Boards surface whose only persistence action is the selected
 /// Home Files revision callback. The exact file lease remains alive through tab retirement.</summary>
-internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrowseNativeAppContentSession,
+internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner,
     IBrowseAppContentClosePreparationParticipant
 {
+    public OriginalTabTransientPresentation TransientPresentation { get; } = new();
     private readonly BrowseAppContentRequest _request;
     private readonly CancellationTokenSource _lifetime;
     private readonly IBoardsEmbeddedArtifactHost? _embeddedHost;
@@ -64,7 +65,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         {
             Dispatcher.UIThread.VerifyAccess();
             if (!IsPublicationCurrent) throw new InvalidOperationException("The writable rich Boards document has not completed Home admission.");
-            return _presentation?.Content ?? throw new InvalidOperationException("The writable Boards presentation is unavailable.");
+            return TransientPresentation.BindOriginal(_presentation?.Content ?? throw new InvalidOperationException("The writable Boards presentation is unavailable."));
         }
     }
 
@@ -168,6 +169,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
 
     public Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
     {
+        TransientPresentation.CancelPending();
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         lock (_gate)
         {
@@ -308,6 +310,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
 
     public Task CloseAndDrainAsync()
     {
+        TransientPresentation.CancelPending();
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         lock (_gate)
         {

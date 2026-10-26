@@ -774,25 +774,20 @@ public sealed partial class App
                     state.Source ??= CreateBoardCreationSource(origin, state);
                     var theme = _homeTheme ?? throw new InvalidOperationException("The actual Home theme owner is absent.");
                     state.Page ??= state.Source.CreateBoardFolderPickerPage(token => AdmitHomeAsync(origin, token), theme.Context);
-                    var owner = TopLevel.GetTopLevel(this) as Window ?? throw new InvalidOperationException("The actual Home window is unavailable.");
-                    var picker = new Window { Title = "Create board", Width = 760, Height = 560, Content = state.Page };
-                    var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                    picker.Closed += (_, _) => closed.TrySetResult();
-                    HomeDeepLink? folder;
+                    var originalSession = _chrome?.ObserveOriginalAppContent(origin.TabId);
+                    if (originalSession is not IBrowseNativeAppContentSession { IsPublicationCurrent: true } native ||
+                        originalSession is not IOriginalTabTransientPresentationOwner presentationOwner ||
+                        originalSession.Address != origin.Address)
+                        throw new UnauthorizedAccessException("The originating tab no longer owns Board creation.");
+                    // Bind the stable container before transient admission; never reparent an
+                    // already mounted app view or replace its OriginalNativeView identity.
+                    _ = native.OriginalNativeView;
+                    var folder = await presentationOwner.TransientPresentation.PresentAsync(state.Page, async selectionToken =>
                     {
-                        // Bind to the loaded Home root: its loader owns the selected Home theme
-                        // resources, while the dialog has no separate CUI resource scope.
-                        using var backgroundBinding = state.Page.BindWindowBackground(picker);
-                        var shown = picker.ShowDialog(owner); _ = Track(shown);
-                        try
-                        {
-                            await state.Page.ActivateAsync(caller);
-                            var selected = state.Page.FolderSelection;
-                            var completed = await Task.WhenAny(selected, closed.Task).WaitAsync(caller);
-                            folder = ReferenceEquals(completed, selected) ? await selected : null;
-                        }
-                        finally { picker.Close(); picker.Content = null; await shown; }
-                    }
+                        state.Page.SetFilesSetupContinuation(setupToken => OpenBoardFilesSetupAsync(origin, originalSession, state.Page, selectionToken, setupToken));
+                        await state.Page.ActivateAsync(selectionToken);
+                        return await state.Page.FolderSelection.WaitAsync(selectionToken);
+                    }, caller);
                     if (folder is null) return new(BoardsHomeBoardCreationOutcome.CancelledBeforeCreate, "BoardCreateCancelled", "No Board was created.");
                     state.DisplayName = state.Page.SelectedBoardCreateDisplayName
                         ?? throw new InvalidOperationException("The original Board picker did not retain its accepted file name.");
@@ -928,6 +923,41 @@ public sealed partial class App
                 Parent, Alive, _boardReadSource, _boardWriteSource,
                 (authorization, token) => PresentHomeLibraryReviewAsync(approvals, authorization, token), WriteScope, Retain, create);
         }
+        private async Task OpenBoardFilesSetupAsync(BrowseAppContentRequest origin, IBrowseAppContentSession original,
+            HomeLibraryDestinationPage picker, CancellationToken selectionLifetime, CancellationToken token)
+        {
+            Dispatcher.UIThread.VerifyAccess(); DemandCurrent();
+            var chrome = _chrome ?? throw new InvalidOperationException("The canonical workspace is unavailable.");
+            if (!ReferenceEquals(chrome.ObserveOriginalAppContent(origin.TabId), original) || !original.IsPublicationCurrent)
+                throw new UnauthorizedAccessException("The originating Board tab retired.");
+            await AdmitHomeAsync(origin, token);
+            token.ThrowIfCancellationRequested();
+            if (!ReferenceEquals(chrome.ObserveOriginalAppContent(origin.TabId), original) || !original.IsPublicationCurrent)
+                throw new UnauthorizedAccessException("The originating Board tab retired during setup admission.");
+            var address = AppContentAddress.Parse("9to1://files");
+            var existing = chrome.State.Tabs.FirstOrDefault(tab => tab.Address == address &&
+                tab.ProfileId == origin.ProfileId && tab.Privacy == BrowserTabPrivacy.Standard);
+            var snapshot = existing is null ? await chrome.OpenContentAsync(address, true, sourceTabId: origin.TabId, cancellationToken: token) :
+                await chrome.SelectTabAsync(existing.Id, token);
+            if (chrome.ObserveOriginalAppContent(snapshot.SelectedTabId) is not FilesBrowseAppContentSession files ||
+                !files.IsPublicationCurrent)
+                throw new InvalidOperationException("The original Files setup tab was not admitted.");
+            var continuation = files.ContinueAfterOriginalWorkspaceSetupAsync(async () =>
+            {
+                DemandCurrent(); selectionLifetime.ThrowIfCancellationRequested();
+                if (!ReferenceEquals(chrome.ObserveOriginalAppContent(origin.TabId), original) || !original.IsPublicationCurrent)
+                    return;
+                // A previously configured Files tab may complete immediately. Join the
+                // original Set up Files click before admitting the picker refresh.
+                await picker.WhenActionsIdleAsync().WaitAsync(selectionLifetime);
+                await AdmitHomeAsync(origin, selectionLifetime);
+                if (!ReferenceEquals(chrome.ObserveOriginalAppContent(origin.TabId), original) || !original.IsPublicationCurrent) return;
+                await chrome.SelectTabAsync(origin.TabId, selectionLifetime);
+                await picker.RefreshBoardFoldersAsync(selectionLifetime);
+            }, selectionLifetime);
+            _ = Track(continuation);
+        }
+
         private async Task CloseBoardCreationSourcesAsync(List<Exception> failures)
         {
             BoardCreationState[] states; lock (_gate) states = _retainedBoardCreations.ToArray();

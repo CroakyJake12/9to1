@@ -393,8 +393,8 @@ public sealed class UnifiedHomeContentTests
         try
         {
             await session.InitializeAsync();
-            var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
-            window = Show(page);
+            var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+            window = Show(session.OriginalNativeView);
             page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-settings")
                 .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
@@ -1204,8 +1204,8 @@ public sealed class UnifiedHomeContentTests
         try
         {
             await session.InitializeAsync();
-            var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
-            window = Show(page);
+            var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+            window = Show(session.OriginalNativeView);
             var rail = page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-events");
             rail.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await page.WhenActionsIdleAsync();
@@ -1359,8 +1359,8 @@ public sealed class UnifiedHomeContentTests
             dashboard: () => new NewDashboardPage(bus, null!, null!, null!, null!, new EmptySettings(),
                 new EmptyDashboard(), new EmptyDashboardLayout(), [])).CreateSession(Request("browse://newtab")));
         await session.InitializeAsync();
-        var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
-        var window = Show(page);
+        var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+        var window = Show(session.OriginalNativeView);
         try
         {
             var mode = page.GetVisualDescendants().OfType<ComboBox>().Single(item => item.Name == "home-search-mode");
@@ -1440,8 +1440,8 @@ public sealed class UnifiedHomeContentTests
                 chrome.ObserveOriginalAppContent(admitted.SelectedTabId));
             Assert.NotNull(session);
             Assert.Equal("browse://home/models", session!.Address.Value);
-            var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
-            window = Show(page);
+            var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+            window = Show(session.OriginalNativeView);
             Assert.NotNull(discover);
             Assert.Contains(page.GetVisualDescendants().OfType<HomeDiscoverPage>(), item => ReferenceEquals(item, discover));
             Assert.Single(discover!.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "hf-query");
@@ -1509,8 +1509,8 @@ public sealed class UnifiedHomeContentTests
         Assert.Same(original, session.OriginalInitialization);
         Assert.Same(original, session.InitializeAsync());
         await original;
-        var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
-        var window = Show(page);
+        var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+        var window = Show(session.OriginalNativeView);
         // The launcher is authored canonical CUI (Repeat Panel="Wrap"), never a donor ListBox, so the
         // same catalogue rule is enforced against the tiles the page actually projects.
         var tiles = page.GetVisualDescendants().OfType<Button>()
@@ -1540,8 +1540,8 @@ public sealed class UnifiedHomeContentTests
         var source = new Registry();
         var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(source, lifetime.Token).CreateSession(Request()));
         await session.InitializeAsync();
-        var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
-        var window = Show(page);
+        var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+        var window = Show(session.OriginalNativeView);
         var button = HomeRailButton(page, "home-apps", "Apps");
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await page.WhenActionsIdleAsync();

@@ -136,6 +136,31 @@ internal sealed class FilesBrowseAppContentSession : IBrowseNativeAppContentSess
         _route.CheckPublicationCurrent(view); DemandAlive();
     }
 
+    // A presentation continuation, never setup authority. The actual Files session
+    // retains all picker/configure actions and its original actor/route/close checks.
+    internal async Task ContinueAfterOriginalWorkspaceSetupAsync(Func<Task> continuation, CancellationToken originLifetime)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(originLifetime, _token);
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        void Observe(object? sender, EventArgs args)
+        {
+            if (ReferenceEquals(sender, this) && IsPublicationCurrent && _view is not null)
+                ready.TrySetResult();
+        }
+        StateChanged += Observe;
+        try
+        {
+            Observe(this, EventArgs.Empty);
+            await ready.Task.WaitAsync(linked.Token);
+            DemandAlive(); linked.Token.ThrowIfCancellationRequested();
+            _route.CheckOriginalAppContentProfile(_request.ProfileId);
+            await continuation();
+        }
+        catch (OperationCanceledException) when (linked.IsCancellationRequested) { }
+        finally { StateChanged -= Observe; }
+    }
+
     private Task ChooseWorkspaceAsync(CancellationToken caller)
     {
         Dispatcher.UIThread.VerifyAccess();

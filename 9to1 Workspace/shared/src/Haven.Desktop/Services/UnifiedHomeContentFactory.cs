@@ -71,8 +71,9 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         return new Session(this, request);
     }
 
-    private sealed class Session : IBrowseNativeAppContentSession
+    private sealed class Session : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner
     {
+        public OriginalTabTransientPresentation TransientPresentation { get; } = new();
         private readonly UnifiedHomeContentFactory _owner;
         private readonly BrowseAppContentRequest _request;
         private readonly DesktopOriginalWorkLifetime _work;
@@ -103,7 +104,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
             {
                 Dispatcher.UIThread.VerifyAccess();
                 if (!IsPublicationCurrent) throw new InvalidOperationException("The original Home view is not admitted.");
-                return _page!;
+                return TransientPresentation.BindOriginal(_page!);
             }
         }
         public Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -144,6 +145,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         }
         public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
         {
+            TransientPresentation.CancelPending();
             DemandExternalJoin();
             lock (_gate)
             {
@@ -170,7 +172,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                 return allowed && IsPublicationCurrent;
         }
         public Task CloseAndDrainAsync()
-        { DemandExternalJoin(); _published = false; return _work.CloseAndDrainAsync(); }
+        { DemandExternalJoin(); TransientPresentation.CancelPending(); _published = false; return _work.CloseAndDrainAsync(); }
         private Task StopAsync() => OnUiAsync(async () =>
         {
             using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);

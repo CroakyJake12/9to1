@@ -76,7 +76,7 @@
     <Compile Include="BrowserTabHoverContractTests.cs" />
     <Compile Include="LinuxWorkspaceBoundaryAbiTests.cs" />
     <Compile Include="UnifiedHomeContentTests.cs;DesktopOriginalShutdownSequenceTests.cs" />
-    <Compile Include="FilesWorkspaceSetupTests.cs" />
+    <Compile Include="FilesWorkspaceSetupTests.cs;OriginalTabTransientPresentationTests.cs" />
     <Compile Include="DesktopBorrowerOriginalLifetimeTests.cs" />
     <Compile Include="OverlayControllerOriginalLifetimeTests.cs" />
     <Compile Include="WritePageOriginalLifetimeTests.cs;PresentPageOriginalLifetimeTests.cs;NativeSpacesPageLifecycleTests.cs;SpaceGeneratedSurfaceRendererTests.cs;OriginalInitialDocumentProductTests.cs;OriginalDocumentClosePreflightTests.cs" />
