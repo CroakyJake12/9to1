@@ -8,18 +8,19 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed class ExplicitChromiumRuntimeTests
 {
     public static bool IsLinuxX64 => OperatingSystem.IsLinux() && RuntimeInformation.ProcessArchitecture == Architecture.X64;
+    private sealed class LinuxX64FactAttribute : FactAttribute
+    { public LinuxX64FactAttribute() { if (!IsLinuxX64) Skip = "Requires Linux x64 runtime files."; } }
 
-    [Fact(SkipUnless = nameof(IsLinuxX64))]
+    [LinuxX64Fact]
     public void Exact_private_manifest_resolves_only_matching_binary_and_closure()
     {
-        if (!OperatingSystem.IsLinux()) return;
         using var fixture = new RuntimeFixture();
         Assert.Equal(fixture.Binary, ExplicitChromiumRuntime.Find(fixture.Manifest));
         File.AppendAllText(fixture.Binary, "changed");
         Assert.Null(ExplicitChromiumRuntime.Find(fixture.Manifest));
     }
 
-    [Fact(SkipUnless = nameof(IsLinuxX64))]
+    [LinuxX64Fact]
     public void Missing_or_unlisted_runtime_files_refuse_the_candidate()
     {
         using var fixture = new RuntimeFixture();
@@ -28,7 +29,7 @@ public sealed class ExplicitChromiumRuntimeTests
         Assert.Null(ExplicitChromiumRuntime.Find(fixture.Manifest));
     }
 
-    [Fact(SkipUnless = nameof(IsLinuxX64))]
+    [LinuxX64Fact]
     public void Symlinked_manifest_cannot_select_a_runtime()
     {
         using var fixture = new RuntimeFixture();

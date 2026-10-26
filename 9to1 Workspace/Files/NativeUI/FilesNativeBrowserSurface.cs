@@ -586,6 +586,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _sharingPage = null;
         WithdrawFolderTabsOnRetirement();
         _page = null; _originalPageCurrent = null; _items.SelectedItem = null; _items.ItemsSource = null;
+        RetireUnrepresentedDetailsRows();
         _query = ""; _search.Text = ""; _editName.Text = "";
         _moveSource = null; _showTechnicalDetails = false;
         if (_closing || _disposed || _lifetime.IsCancellationRequested)
@@ -603,6 +604,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             : _page.Items.OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase);
         _items.ItemsSource = ordered.ThenBy(item => item.Name, StringComparer.Ordinal)
             .ThenBy(item => item.Id.Value).ToArray();
+        RetireUnrepresentedDetailsRows();
         RequireOriginalAlive(CancellationToken.None);
         _items.SelectedItem = selected is not null && _page.Items.Any(item => ReferenceEquals(item, selected))
             ? selected : null;
@@ -736,7 +738,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         }
         // Retired metadata is withdrawn promptly while the original I/O remains owned and draining.
         try { await OnUiAsync(ClearSources); } catch (Exception error) { Add(failures, error); }
-        try { await OnUiAsync(() => { Content = null; foreach (var loader in _detailsRowLoaders.Keys.ToArray()) loader.Dispose(); _detailsRowLoaders.Clear(); }); } catch (Exception error) { Add(failures, error); }
+        try { await OnUiAsync(() => { Content = null; foreach (var loader in _detailsRowLoaders.Keys.ToArray()) loader.Dispose(); _detailsRowLoaders.Clear(); _detailsRowItems.Clear(); }); } catch (Exception error) { Add(failures, error); }
         foreach (var original in originalTasks)
             try { await original; } catch (Exception error) { Add(failures, error); }
         lock (_originalTasksSync)
@@ -775,6 +777,19 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     }
 
     private readonly Dictionary<CuiControlLoader, CuiViewModel> _detailsRowLoaders = [];
+    private readonly Dictionary<CuiControlLoader, HostedItemMetadata> _detailsRowItems = [];
+    private void RetireUnrepresentedDetailsRows()
+    {
+        // Only an actual ItemsSource replacement/withdrawal retires metadata rows.
+        // Ordinary Browse tab detach leaves ItemsSource and every loader intact.
+        var represented = _items.Items.OfType<HostedItemMetadata>().ToHashSet(ReferenceEqualityComparer.Instance);
+        foreach (var row in _detailsRowItems.ToArray())
+        {
+            if (represented.Contains(row.Value)) continue;
+            row.Key.Dispose(); // Failure stays in the existing original operation/close drain.
+            _detailsRowItems.Remove(row.Key); _detailsRowLoaders.Remove(row.Key);
+        }
+    }
     private bool _detailsRowsWide;
     private Control BuildDetailsRow(HostedItemMetadata? item)
     {
@@ -801,6 +816,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             loaded.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error))
         { loader.Dispose(); throw new InvalidDataException("The Files details row could not be rendered."); }
         _detailsRowLoaders.Add(loader, values);
+        _detailsRowItems.Add(loader, item);
         var root = loaded.Root;
         // Browse may detach this same Files view when selecting another tab.
         // Keep row bindings alive until the original surface performs its owning close.
