@@ -199,7 +199,9 @@ public sealed class ChatAddMenuNativePopupTests
             await Task.Delay(10);
         }
 
-        Assert.True(popupHost.IsAttachedToVisualTree(), "The popup host did not attach to its rendering tree after bounded dispatcher settlement.");
+        var overlays = window.GetVisualDescendants().OfType<Avalonia.Controls.Primitives.OverlayPopupHost>()
+            .Select(overlay => $"{overlay.GetType().Name}: attached={overlay.IsAttachedToVisualTree()}, bounds={overlay.Bounds}, content={overlay.Content?.GetType().Name}, template={overlay.Template?.GetType().Name}, children={string.Join(',', overlay.GetVisualChildren().Select(child => child.GetType().Name))}");
+        Assert.True(popupHost.IsAttachedToVisualTree(), "The popup host did not attach to its rendering tree after bounded dispatcher settlement. " + string.Join("; ", overlays));
         Assert.True(popupHost.Bounds.Width > 0 && popupHost.Bounds.Height > 0,
             "The popup host did not receive non-empty layout after bounded dispatcher settlement.");
     }
