@@ -21,9 +21,9 @@
   <Page id="BrowseRoot" AccessibleName="9to1 Haven browser">
     <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr Auto" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiBackgroundBrush}">
       <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs" AccessibleDescription="Drag a tab to swap at either outer edge, split on either inner edge, or group in the center. Invalid privacy, profile, or pinned boundaries are refused. Keyboard move controls are also available in More tools.">
-        <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
+        <Container id="BrowseTabViewport" Type="Overlay" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
-            <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8" Background="{Binding tab.Background}" Class="cui-hover-surface">
+            <Container id="BrowseTabRow" Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8" Background="{Binding tab.Background}" Class="cui-hover-surface">
               <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Chromeless="True" Background="Transparent" Color="{Binding tab.Foreground}" BorderWidth="0" CornerRadius="8" />
               <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Height="32" MinHeight="32" Width="30" MinWidth="30" Padding="4 4 6 4" FontSize="16" Chromeless="True" Background="Transparent" Color="{Binding tab.CloseForeground}" BorderWidth="0" CornerRadius="8">×</Button>
               <Container Type="Overlay" ColumnSpan="2" IsHitTestVisible="False">

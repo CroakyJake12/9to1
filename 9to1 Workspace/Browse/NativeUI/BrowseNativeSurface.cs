@@ -345,11 +345,16 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         if (_findKeyScope is not { } scope || !_tabDragActive)
         { _workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None); _tabDropTarget = null; _tabDropZone = BrowseNativeWorkspace.TabDropZone.None; return; }
-        foreach (var button in scope.GetVisualDescendants().OfType<Button>().Where(item => item.Name == "BrowseTabButton"))
+        // Hit-test the actual clipped viewport, so overflow arrows and rows
+        // outside its visible bounds cannot receive a drop. Avoid scanning the
+        // entire app scene for every held pointer movement.
+        var hit = scope.InputHitTest(point) as Visual;
+        var rowControl = hit?.GetSelfAndVisualAncestors().OfType<CuiContainerControl>()
+            .FirstOrDefault(control => control.Name == "BrowseTabRow");
+        var button = rowControl?.AuthoredChildren.OfType<Button>().FirstOrDefault(control => control.Name == "BrowseTabButton");
+        if (rowControl is not null && button is not null && rowControl.TranslatePoint(default, scope) is { } origin &&
+            TryGetTabRow(button, out var row) && row is not null)
         {
-            var rowControl = button.GetVisualAncestors().OfType<CuiContainerControl>().FirstOrDefault();
-            if (rowControl is null || rowControl.TranslatePoint(default, scope) is not { } origin ||
-                !new Rect(origin, rowControl.Bounds.Size).Contains(point) || !TryGetTabRow(button, out var row) || row is null) continue;
             var relativeX = Math.Clamp((point.X - origin.X) / Math.Max(1, rowControl.Bounds.Width), 0, 1);
             var zone = relativeX < .15 ? BrowseNativeWorkspace.TabDropZone.SwapBefore :
                 relativeX < .35 ? BrowseNativeWorkspace.TabDropZone.SplitBefore :

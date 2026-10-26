@@ -1,3 +1,11 @@
+## Live desktop development and parallel implementation — 26 October 2026
+
+The owner now requests a **live native development copy on the x64 PC**: report one bug, implement the fix, then rebuild/reload the SAME development instance for immediate retesting, rather than batching fixes into installers. An annotation dashboard is not the requested solution. Prepare/reuse supported local launch and coordination interfaces; verify actual running source/assembly identity and preserve the explicit profile and normal save/close lifecycle. Do not claim cloud source edits updated the PC without a local launch/reload receipt.
+
+The owner also explicitly requests two parallel workers continue real specification implementation while bugs are repaired. This permits the scoped Build template/project-creation and Spaces task-permission-widget work recorded in the existing ledger; it is not authority to revive old teams or Thunder. Avoid a programme-wide hold. Keep source scopes exclusive and the SDK allocation serial. Full independent acceptance remains paused; actual affected compilation and smoke checks continue.
+
+The first delivered test package (`59d66496`) has owner-reported lag, tab overflow and app navigation issues. Preserve its passing narrow startup/package checks and the new failures separately. The owner's package query confirms installation of that version, but did not identify the running executable; `/opt/9to1` in the recording versus `/usr/lib/haven` in the package remains an unresolved launch-identity observation, not proof of a stale app.
+
 ## Scoped desktop recovery — 26 October 2026
 
 The owner also requests a current **Linux x86-64 / amd64 `.deb` test build**, delivered through the existing private OneDrive project folder. This supersedes the older ARM test-copy target for this delivery only. Use the original application composition, retain package/source hashes and basic startup evidence, and include known limitations. Test delivery does not resume full acceptance or establish release readiness; do not relax the separate ARM runtime guards.

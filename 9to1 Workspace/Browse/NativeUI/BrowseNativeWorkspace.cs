@@ -900,10 +900,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         Dispatcher.UIThread.VerifyAccess();
         var current = target is not null && _tabRows.Any(row => ReferenceEquals(row, target)) && IsCurrentTabTarget(target.Target)
             ? target : null;
-        var changed = false;
+        // Each issued row publishes its own drop bindings. A workspace-wide
+        // refresh would replay every tab and remount pane layout on pointer moves.
         foreach (var row in _tabRows)
-            changed |= row.SetDropZone(ReferenceEquals(row, current) ? zone : TabDropZone.None);
-        if (changed) Changed();
+            row.SetDropZone(ReferenceEquals(row, current) ? zone : TabDropZone.None);
     }
     public ValueTask ApplyTabDropAsync(TabRow source, TabRow target, TabDropZone zone, CancellationToken token = default)
     {
