@@ -71,14 +71,14 @@ public sealed partial class MainWindow
             {
                 if (!_originalWindowShells.Any(owner => ReferenceEquals(owner, unified))) _originalWindowShells.Add(unified);
                 _shell = null;
-                SetupBackground(); MainContent.Content = unified;
+                SetupBackground(); Content = unified;
                 return;
             }
 #endif
             if (DataContext is not MainView actual) return;
             if (!_originalWindowShells.Any(shell => ReferenceEquals(shell, actual))) _originalWindowShells.Add(actual);
             _shell = actual;
-            SetupBackground(); MainContent.Content = actual;
+            SetupBackground(); Content = actual;
         }));
     }
     private void OnOriginalShellSurfaceChanged(object? sender, PropertyChangedEventArgs args)
@@ -186,7 +186,7 @@ public sealed partial class MainWindow
         ThrowWindowFailures(failures); // Unknown shell retains borrowed native/UI resources.
         try { _originalWindowWork.RunCloseCallback(() => _tidalBackground?.Dispose()); }
         catch (Exception error) { AddWindowFailure(failures, error); }
-        try { _originalWindowWork.RunCloseCallback(() => MainContent.Content = null); }
+        try { _originalWindowWork.RunCloseCallback(() => Content = null); }
         catch (Exception error) { AddWindowFailure(failures, error); }
         ThrowWindowFailures(failures);
         _tidalBackground = null; _shell = null; _actualSubscribedShell = null;

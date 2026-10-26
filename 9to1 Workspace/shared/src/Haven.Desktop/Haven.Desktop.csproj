@@ -171,5 +171,10 @@
   <ItemGroup>
     <AvaloniaResource Remove="App.axaml" />
     <AvaloniaXaml Remove="App.axaml" />
+    <!-- MainWindow is OS-only window chrome. Its canonical CUI workspace is mounted
+         through Window.Content; keep the legacy markup out of Avalonia's resource
+         and compiled-XAML generation. -->
+    <AvaloniaResource Remove="MainWindow.axaml" />
+    <AvaloniaXaml Remove="MainWindow.axaml" />
   </ItemGroup>
 </Project>

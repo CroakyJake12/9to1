@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Platform;
 using Microsoft.Extensions.DependencyInjection;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Services;
@@ -24,7 +25,15 @@ public sealed partial class MainWindow : Window, IDesktopOriginalRetirementParti
     {
         _preferences = preferences;
         _originalWindowWork = new(StopOriginalWindowSourcesAsync, CleanupOriginalWindowResourcesAsync);
-        InitializeComponent();
+        // This adapter is OS-only window chrome. The canonical CUI app is mounted
+        // through Window.Content below, so no AXAML/XAML document is parsed or
+        // precompiled here. Avalonia remains only the underlying windowing layer.
+        Width = 1440;
+        Height = 920;
+        MinWidth = 720;
+        MinHeight = 520;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://Haven.Desktop/Assets/haven.ico")));
         Title = DesktopProductIdentity.DisplayName;
         DataContextChanged += OnOriginalDataContextChanged;
     }
