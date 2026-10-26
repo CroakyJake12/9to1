@@ -32,7 +32,7 @@ public sealed class HuggingFaceModelCtlImporterTests
                     pathlib.Path(__file__).with_name('committed.ready').write_text(str(os.getpid()))
                     time.sleep(120)
                 raise SystemExit(result)
-                ""
+                """
             );
             byte[] bytes = [71, 71, 85, 70, 3, 0, 0, 0, 1, 2, 3];
             var local = Path.Combine(root, "selected model.gguf"); await File.WriteAllBytesAsync(local, bytes);
