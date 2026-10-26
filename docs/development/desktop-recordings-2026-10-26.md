@@ -29,7 +29,7 @@ Plugin and Apps** labels to the real catalogues. The actual unified Spaces host
 receives the Assistants route; partial initialization is retired before the prior
 chat is restored. The programmatic attachment popup has the composer as its real
 logical parent so the native popup and overlay fallback share resource/template
-ownership. Native and fallback execution still require their separate checks.
+ownership. The native X11 popup and headless fallback have separate passing checks; the installed desktop remains unverified.
 
 Home appearance changes publish to both retained HUI content and existing CUI
 scenes. Explicit scene overrides remain authoritative. The CUI-owned window's
@@ -59,6 +59,47 @@ are fresh component checks with partial dependency coverage, **not reusable
 acceptance results**. The next handoff must read the current receipt index rather
 than treat the older pass counts above as proof for every later change.
 
+### Latest focused verification and resume point
+
+The tab gesture checks now exercise real pointer input against the mounted CUI
+surface, including its actual drag preview and non-hit-testable indicators. The
+headless test host must commit a render frame before hit testing, and await the
+original workspace notifications before observing controls changed by core calls.
+Do not replace these steps with directly setting hover/drop flags. Accepted close
+retirement now rejoins the original close graph instead of inspecting disposed
+engines. The split/group gradient follows the current theme accent and stays
+visible on a light selected tab.
+
+| Check | Exact source | Result |
+|---|---|---|
+| Core tab identity, placement, profile and persistence | `8d22eabd` | 117/117 PASS |
+| Mounted pointer swap, split-left/right, group, Escape, navigation/close/disposal cleanup | `d7c718ef` | 12/12 PASS; three actual rendered captures |
+| Shared CUI appearance and effective-colour hover | `d1b7461d` | 27/27 PASS |
+| Desktop appearance, attachment popup fallback, routes and compatibility tab hover | `43fc0155` | 26/27 PASS; legacy compatibility button fill assertion remains failing |
+| Isolated native X11 attachment popup and Bright/Dark/Bright chat draft preservation | `5085e2a8` | PASS; four captures, normal exit |
+
+The native popup/theme source used by the last row has not changed since that
+check; later source changes concern Browse dragging, compatibility tab markup and
+test fixtures. This is an applicability observation, not promotion to immutable
+build reuse or installed-app acceptance. The compatibility hover test explicitly
+loads the compiled legacy theme; the active CUI tab surface is checked separately.
+The remaining legacy assertion expects a transparent title/close fill but receives
+`#ff292a2d`: the CUI effective-property projection outranks raw legacy AXAML values.
+Do not weaken that assertion or override the CUI property hierarchy just to pass it.
+Reconcile the compatibility adapter or move the behavior check to its actual
+canonical owner, with equivalent title/close coverage, before closing this item.
+All preceding failures are retained alongside successors, including setup errors
+and the genuine frozen-palette, menu-selection and close-retirement defects.
+
+Resume from the published recovery branch and the latest versioned private
+handoff in the existing coordination ledger. Read the retained check indexes,
+then reconcile Git, current CI, actual worker liveness and available disk before
+launching anything. The recovery procedure did reload instructions, state and
+worktrees after context compaction; it still reports unavailable historical
+execution exports/runners, so complete historical recovery is **not verified**.
+No automatic compaction hook, native desktop write access or installed release
+is claimed. SDK jobs remain serial and enforce the 256 MiB disk floor.
+
 ### Remaining runtime and infrastructure limits
 
 The existing ARM preview bootstrap requires ARM64 artefacts and owns a different runtime contract from the model-free x64 broker package. Do not relax its architecture guard to make x64 appear ready. Reconcile the actual installed x64 package and runtime owner before claiming local chat works. The discovery evidence adapter currently projects its first eligible installed model, not a full model-store inventory.
@@ -81,7 +122,7 @@ PR #38's existing [Android compile run](https://github.com/CroakyJake12/9to1/act
 | STORE-01 | A around 01:37–01:38: generic action failure appears. The long SQLite/OpenFailed cold-recovery details are historical-log evidence, not independently legible in reviewed frames. | CUI runtime has a generic fallback action failure (`CuiControlLoader.cs`); this does not corroborate the SQLite cause. | **Unverified.** Reproduce Web Automations with an isolated profile; inspect principal, directory/file type/link/key pairing, locks, owner/source recovery and cleanup. Preserve data and underlying errors. Do not attribute to model connectivity. |
 | ACCOUNT-01 | A 01:42–01:46: user management unavailable; account view reports CAKE sign-in and owner Access transport unavailable; profile/plan/billing/username/icon features unavailable. | Account and user-management fallback surfaces are represented in the source. | **Unverified.** Establish intended optional services versus missing wiring/artifacts; test configured transport or record the external-service blocker accurately. |
 | FEEDBACK-01 | A ~01:44–end and B 00:00–end: generic “action could not complete” banner persists across page/Spaces changes; origin is unknown. | `CuiControlLoader.cs` emits that exact generic fallback when no more specific action failure is available. Emitter does not establish which action failed or banner lifetime owner. | **Unverified.** Capture originating action/diagnostic and test scoped dismissal/lifetime across navigation while retaining diagnostic history. |
-| SPACES-01 | B 00:01–00:03: attachment popover is under composer/status text; no click result shown. | The composer now owns a compact native popup and its logical-parent fallback; catalogue routes and retirement are covered separately. | **Implementation changed.** Historical X11 popup smoke is recorded; rerun current native/fallback checks and verify the installed destination before acceptance. |
+| SPACES-01 | B 00:01–00:03: attachment popover is under composer/status text; no click result shown. | The composer now owns a compact native popup and its logical-parent fallback; catalogue routes and retirement are covered separately. | **Native/fallback focused checks passed.** X11 popup/theme check at `5085e2a8` and fallback check at `43fc0155` pass; verify the installed destination before acceptance. |
 | SPACES-02 | B 00:08, 00:10–00:11, and ~00:31: multiple saved-chat rows overlap Search/Clear and recent-chat notice. | History/search/conversation UI exists; local edit groups the history area in a vertical stack. | **Unverified.** Test multiple rows, search/clear, selection, scrolling, and empty state in the running candidate. |
 | SPACES-03 | B 00:11–00:18: emoji UI expands composer; grid edge clips a visible row. Whether inline placement violates spec is not established. | Emoji/composer UI exists; no source/spec finding here proves intended popup placement. | **Partially observed; behavior unverified.** Check V2 behavior, sizing, scroll, focus, insertion, dismissal, draft preservation, and unobstructed controls. |
 | SPACES-04 | B 00:00–00:37 and 00:39–00:47: local models unavailable message and Manage local models action are visible; destination is not shown. | Recovery action/model manager surfaces exist. | **Unverified.** Activate action and verify a usable model-manager destination and routing policy; do not assume all Spaces modes require local inference. |
