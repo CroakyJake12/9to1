@@ -34,6 +34,7 @@
                             IsVisible="{Binding IsSelected}" />
                     <hui:HavenButton Grid.Column="1"
                             Classes="chrome browserTabPart"
+                            Background="Transparent"
                             HorizontalContentAlignment="Left">
                       <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="Private" Foreground="{DynamicResource HavenAccentBrush}" FontSize="9" IsVisible="{Binding IsPrivate}" />
@@ -43,6 +44,7 @@
                     <hui:HavenButton Grid.Column="2"
                             Content="&#x00D7;"
                             Classes="chrome browserTabPart browserTabClose"
+                            Background="Transparent"
                             HorizontalAlignment="Right"
                             ToolTip.Tip="Close tab" />
                   </Grid>
@@ -158,6 +160,7 @@
                               IsVisible="{Binding IsSelected}" />
                       <hui:HavenButton Grid.Column="1"
                               Classes="chrome browserTabPart"
+                              Background="Transparent"
                               HorizontalContentAlignment="Stretch"
                               Padding="9,6">
                         <Grid RowDefinitions="Auto,Auto">
@@ -168,6 +171,7 @@
                       <hui:HavenButton Grid.Column="2"
                               Content="&#x00D7;"
                               Classes="chrome browserTabPart browserTabClose"
+                              Background="Transparent"
                               ToolTip.Tip="Close tab" />
                     </Grid>
                   </hui:HavenAdaptiveSurface>

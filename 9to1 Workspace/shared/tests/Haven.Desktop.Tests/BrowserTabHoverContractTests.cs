@@ -41,6 +41,7 @@ public sealed class BrowserTabHoverContractTests
                 .ToArray();
             Assert.Equal(2, parts.Length);
             Assert.Single(parts, element => HasClass((string?)element.Attribute("Classes"), "browserTabClose"));
+            Assert.All(parts, element => Assert.Equal("Transparent", (string?)element.Attribute("Background")));
             var tint = group.Descendants().Single(element => element.Name.LocalName == "Border" &&
                 HasClass((string?)element.Attribute("Classes"), "browserTabHoverTint"));
             Assert.Equal("False", (string?)tint.Attribute("IsHitTestVisible"));
