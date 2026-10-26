@@ -6,6 +6,7 @@ using Avalonia.Headless;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
+using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Xunit;
 
@@ -46,7 +47,7 @@ public sealed class CuiRecordedSurfaceLayoutTests
                 var title = Text(root, "Library");
                 var description = Text(root, "Authorised references to your artifacts. Items open in their owning app.");
                 AssertBefore(window, title, description, "The Library description must follow its heading.");
-                Assert.Empty(root.GetVisualDescendants().OfType<TextBlock>().Where(item => item.Text == "Choose Boards folder"));
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBlock>(), item => item.Text == "Choose Boards folder");
 
                 state.NotifyAll(); Pump(window);
                 Assert.Same(title, Text(root, "Library"));
@@ -63,7 +64,7 @@ public sealed class CuiRecordedSurfaceLayoutTests
                 AssertBefore(window, folderTitle, folderDescription, "Folder instructions must follow their heading.");
                 AssertBefore(window, folderDescription, fieldLabel, "The name label must follow the folder instructions.");
                 AssertBefore(window, fieldLabel, name, "The name input must follow its label.");
-                Assert.Empty(root.GetVisualDescendants().OfType<TextBlock>().Where(item => item.Text == "Library"));
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBlock>(), item => item.Text == "Library");
 
                 state.NotifyAll(); Pump(window);
                 Assert.Same(name, Assert.Single(root.GetVisualDescendants().OfType<TextBox>()));
@@ -123,7 +124,7 @@ public sealed class CuiRecordedSurfaceLayoutTests
                 state.Set("spaces.isTasksSpace", true);
                 state.NotifyAll(); Pump(window);
                 Assert.Empty(root.GetVisualDescendants().OfType<TextBox>());
-                Assert.Empty(root.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "open-space-conversation"));
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "open-space-conversation");
 
                 state.Set("spaces.isTasksSpace", false);
                 state.NotifyAll(); Pump(window);
@@ -227,6 +228,8 @@ public sealed class CuiRecordedSurfaceLayoutTests
     {
         var first = Bounds(window, before);
         var second = Bounds(window, after);
+        Assert.True(first.Width > 0 && first.Height > 0 && second.Width > 0 && second.Height > 0,
+            $"{message} Both controls must have actual rendered bounds. First={first}, second={second}.");
         Assert.True(first.Bottom <= second.Top + .5,
             $"{message} First={first}, second={second}.");
     }
