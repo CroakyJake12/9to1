@@ -16,6 +16,7 @@ internal sealed class GoHavenScene : IDisposable
     private readonly List<(HavenElement Element, EventHandler Handler)> _visualSubscriptions = [];
     private readonly HavenPrefabCatalog _prefabs;
     private readonly ChatAddMenuSurface _addMenu;
+    private readonly Container _addMenuOverlay;
     private bool _disposed;
 
     private sealed class DashedOutline : HavenElement, IHavenDrawCommandSource
@@ -87,14 +88,45 @@ internal sealed class GoHavenScene : IDisposable
         Root.Add(Chatbox);
 
         AddMenuPrefab = _prefabs.Create("ChatAddMenu", "Go-AddMenu");
-        AddMenuPrefab.SetValue(HavenProperties.Row, 0);
-        AddMenuPrefab.SetValue(HavenProperties.RowSpan, 4);
-        AddMenuPrefab.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-        AddMenuPrefab.SetValue(HavenProperties.Height, HavenLength.Percent(100));
-        AddMenuPrefab.SetValue(HavenProperties.ZIndex, 100);
-        AddMenuPrefab.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.ChildrenOnly);
-        Root.Add(AddMenuPrefab);
+        _addMenuOverlay = new Container { Name = "Go.AddMenu.Overlay", Layout = HavenLayout.Overlay };
+        _addMenuOverlay.SetValue(HavenProperties.Row, 0);
+        _addMenuOverlay.SetValue(HavenProperties.RowSpan, 4);
+        _addMenuOverlay.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+        _addMenuOverlay.SetValue(HavenProperties.Height, HavenLength.Percent(100));
+        _addMenuOverlay.SetValue(HavenProperties.LayoutParticipation, HavenLayoutParticipation.Overlay);
+        _addMenuOverlay.SetValue(HavenProperties.ZIndex, 100);
+        _addMenuOverlay.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.ChildrenOnly);
+        _addMenuOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+
+        var backdrop = new HavenButton
+        {
+            Name = "Go.AddMenu.Backdrop",
+            Variant = ButtonVariant.Text,
+            Content = string.Empty
+        };
+        backdrop.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+        backdrop.SetValue(HavenProperties.Height, HavenLength.Percent(100));
+        backdrop.SetValue(HavenProperties.Background, "Transparent");
+        backdrop.Accessibility.Focusable = false;
+        backdrop.Accessibility.AccessibleName = "Dismiss Add menu";
+        backdrop.Invoked += (_, _) => HideAddMenu();
+        _addMenuOverlay.Add(backdrop);
+
+        var menuSlot = new Container { Name = "Go.AddMenu.CardSlot", Layout = HavenLayout.Overlay };
+        menuSlot.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+        menuSlot.SetValue(HavenProperties.MaxWidth, HavenLength.Px(900));
+        menuSlot.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Center);
+        menuSlot.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.End);
+        menuSlot.SetValue(HavenProperties.Margin, HavenThickness.Parse("0px 0px 70px 0px"));
+        menuSlot.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.ChildrenOnly);
+        AddMenuPrefab.SetValue(HavenProperties.Width, HavenLength.Px(286));
+        AddMenuPrefab.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Start);
+        AddMenuPrefab.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.End);
+        menuSlot.Add(AddMenuPrefab);
+        _addMenuOverlay.Add(menuSlot);
+        Root.Add(_addMenuOverlay);
         _addMenu = new ChatAddMenuSurface(AddMenuPrefab);
+        _addMenu.Dismissed += OnAddMenuDismissed;
 
         AddButton.Invoked += OnAddInvoked;
         _addMenu.AddActionSelected += OnSharedAddActionSelected;
@@ -125,7 +157,7 @@ internal sealed class GoHavenScene : IDisposable
     public Input Instruction { get; }
     public HavenButton AddButton { get; }
     public HavenButton SendButton { get; }
-    public Container AddOverlay => _addMenu.Overlay;
+    public Container AddOverlay => _addMenuOverlay;
     public HavenButton DismissAddButton => _addMenu.DismissButton;
     public Container MainMenu => _addMenu.MainMenu;
     public Container CatalogPanel => _addMenu.CatalogPanel;
@@ -242,9 +274,16 @@ internal sealed class GoHavenScene : IDisposable
         AttachmentHost.SetValue(HavenProperties.Visibility, empty ? HavenVisibility.Collapsed : HavenVisibility.Visible);
     }
 
-    public void ShowAddMenu() => _addMenu.Show();
+    public void ShowAddMenu()
+    {
+        _addMenuOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+        _addMenu.Show();
+    }
 
     public void HideAddMenu() => _addMenu.Hide();
+
+    private void OnAddMenuDismissed(object? sender, EventArgs e) =>
+        _addMenuOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
 
     private Container BuildHero(bool compact)
     {
@@ -372,7 +411,9 @@ internal sealed class GoHavenScene : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        HideAddMenu();
         AddButton.Invoked -= OnAddInvoked;
+        _addMenu.Dismissed -= OnAddMenuDismissed;
         _addMenu.AddActionSelected -= OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
         _addMenu.Dispose();

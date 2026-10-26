@@ -132,11 +132,12 @@ public sealed class GoPageResponsiveTests
             window.UpdateLayout();
             Assert.Equal(HavenVisibility.Visible, page.Route.AddOverlay.GetValue(HavenProperties.Visibility));
             Assert.Equal(HavenLayoutParticipation.Overlay, page.Route.AddOverlay.GetValue(HavenProperties.LayoutParticipation));
+            Assert.True(page.Route.AddMenuPrefab.Bounds.Width < page.SceneHost.SurfaceMetrics.Viewport.Width);
             Assert.Equal(desiredBeforeOpen, page.SceneRoot.DesiredSize);
             Assert.Equal(composerBeforeOpen, page.Route.Composer.Bounds);
             Assert.True(page.Route.AddOverlay.Bounds.Bottom <= page.SceneHost.SurfaceMetrics.Viewport.Height + 0.5);
             Assert.True(page.Route.MainMenu.IsIncluded);
-            Assert.InRange(Math.Abs(page.Route.MainMenu.Bounds.X - page.Route.Composer.Bounds.X), 0, 1.0);
+            Assert.InRange(Math.Abs(page.Route.AddMenuPrefab.Bounds.X - page.Route.Composer.Bounds.X), 0, 1.0);
             Assert.True(page.Route.MainMenu.Bounds.Bottom <= page.Route.Composer.Bounds.Y - 4);
             var addCommands = new HavenSceneRenderer().Render(page.SceneRoot);
             Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "agents" });
