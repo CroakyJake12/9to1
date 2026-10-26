@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
+using CakeOS.Cui.Themes;
 using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Core;
@@ -64,6 +65,34 @@ public sealed class HavenUiAppearanceTests
         var reloaded = new UserPreferencesService(paths);
         Assert.Equal(HavenUiAppearance.SuperDark, reloaded.Appearance);
         Assert.Equal("haven-ui", reloaded.ThemeId);
+    }
+
+    [AvaloniaFact]
+    public void Preference_changes_republish_live_CUI_palette_without_losing_selected_theme()
+    {
+        using var paths = new TemporaryPaths();
+        var preferences = new UserPreferencesService(paths);
+        preferences.ApplyAccentOverride(true, "Blue", save: false);
+        var steps = new[]
+        {
+            (HavenUiAppearance.Bright, "Glow", CuiTheme.Glow),
+            (HavenUiAppearance.Dark, "Professional", CuiTheme.Professional),
+            (HavenUiAppearance.Bright, "Glow", CuiTheme.Glow)
+        };
+
+        foreach (var (appearance, themeName, theme) in steps)
+        {
+            preferences.ApplyThemeChoice(themeName, save: false);
+            preferences.ApplyAppearance(appearance, save: false);
+
+            var cuiAppearance = (CuiAppearance)appearance;
+            Assert.Equal(cuiAppearance.ToString(), Avalonia.Application.Current!.Resources["CuiAppearance"]);
+            Assert.Equal(CuiSurfacePaletteCatalog.For("Home", cuiAppearance, theme).TideBase,
+                Assert.IsAssignableFrom<ISolidColorBrush>(Avalonia.Application.Current.Resources["CuiBackgroundBrush"]).Color);
+            Assert.Equal(theme, CuiSurfacePaletteCatalog.ActiveTheme);
+            Assert.True(CuiSurfacePaletteCatalog.OverrideAccent);
+            Assert.Equal(CuiAccentColour.Blue, CuiSurfacePaletteCatalog.AccentOverride);
+        }
     }
 
     [AvaloniaFact]

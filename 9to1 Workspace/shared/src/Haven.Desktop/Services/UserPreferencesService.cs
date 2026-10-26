@@ -296,6 +296,13 @@ public sealed partial class UserPreferencesService
         var application = Avalonia.Application.Current;
         if (application is not null)
         {
+            // Keep the retained CUI scene scopes on the same four-position
+            // preference as the legacy Haven token pipeline. Applying the complete
+            // global CUI palette publishes one PaletteChanged notification after
+            // all resources are coherent; inherited scenes refresh from that event.
+            CuiThemeScopeApplier.ApplyGlobalTheme(
+                CuiSurfacePaletteCatalog.ActiveTheme,
+                appearanceOverride: (CuiAppearance)appearance);
             application.RequestedThemeVariant = appearance is HavenUiAppearance.Dark or HavenUiAppearance.SuperDark
                 ? ThemeVariant.Dark
                 : ThemeVariant.Light;

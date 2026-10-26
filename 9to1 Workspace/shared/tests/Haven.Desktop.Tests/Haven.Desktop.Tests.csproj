@@ -61,6 +61,7 @@
     <Compile Include="NativeHomeFilesBoardCreationIntegrationTests.cs" />
     <Compile Include="TaskObservationAuthorizationTests.cs" />
     <Compile Include="UserPreferencesServiceTaskScopeTests.cs" />
+    <Compile Include="HavenUiAppearanceTests.cs" />
     <Compile Include="StrataLoopbackProviderSettingsTests.cs" />
     <Compile Include="HomeLibraryDestinationTests.cs;DeveloperManualDraftRecoveryTests.cs" />
     <Compile Include="DeveloperSavedProjectsNavigationTests.cs;TaskRunEndPassTests.cs" />

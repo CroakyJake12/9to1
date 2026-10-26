@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Media;
+using CakeOS.Cui.Language;
 using CakeOS.Cui.Themes;
 using Xunit;
 
@@ -9,6 +10,42 @@ namespace CakeOS.Cui.Runtime.Tests;
 
 public sealed class CuiAppearancePreferenceTests
 {
+    [Fact]
+    public async Task Retained_inherited_scene_tracks_global_bright_dark_bright_and_keeps_explicit_appearance()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var previousTheme = CuiSurfacePaletteCatalog.ActiveTheme;
+            var previousOverride = CuiSurfacePaletteCatalog.OverrideAccent;
+            var previousAccent = CuiSurfacePaletteCatalog.AccentOverride;
+            using var inherited = new CuiSceneThemeBinding(Scene());
+            using var explicitAppearance = new CuiSceneThemeBinding(Scene(CuiAppearance.Dark));
+            try
+            {
+                foreach (var mode in new[] { CuiAppearance.Bright, CuiAppearance.Dark, CuiAppearance.Bright })
+                {
+                    CuiThemeScopeApplier.ApplyGlobalTheme(CuiTheme.Glow, appearanceOverride: mode);
+
+                    Assert.Equal(mode.ToString(), Resource(inherited.Resources, "CuiAppearance"));
+                    Assert.Equal(CuiSurfacePaletteCatalog.For("Home", mode, CuiTheme.Glow).TideBase,
+                        Colour(inherited.Resources, "CuiBackgroundBrush"));
+                    Assert.Equal(CuiAppearance.Dark.ToString(), Resource(explicitAppearance.Resources, "CuiAppearance"));
+                    Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow).TideBase,
+                        Colour(explicitAppearance.Resources, "CuiBackgroundBrush"));
+                }
+
+                Assert.Equal(CuiTheme.Glow, CuiSurfacePaletteCatalog.ActiveTheme);
+            }
+            finally
+            {
+                CuiSurfacePaletteCatalog.OverrideAccent = previousOverride;
+                CuiSurfacePaletteCatalog.AccentOverride = previousAccent;
+                CuiThemeScopeApplier.ApplyGlobalTheme(previousTheme);
+            }
+        }, CancellationToken.None);
+    }
+
     [Fact]
     public async Task Owned_appearance_refreshes_existing_scopes_and_preserves_document_controls_and_exact_global_mode()
     {
@@ -62,6 +99,24 @@ public sealed class CuiAppearancePreferenceTests
         Assert.True(control.Resources.TryGetResource(key, null, out var value));
         return Assert.IsAssignableFrom<ISolidColorBrush>(value).Color;
     }
+
+    private static Color Colour(ResourceDictionary resources, string key)
+    {
+        Assert.True(resources.TryGetResource(key, null, out var value));
+        return Assert.IsAssignableFrom<ISolidColorBrush>(value).Color;
+    }
+
+    private static object? Resource(ResourceDictionary resources, string key)
+    {
+        Assert.True(resources.TryGetResource(key, null, out var value));
+        return value;
+    }
+
+    private static CuiNativeScene Scene(CuiAppearance? appearance = null) => new(
+        "test.appearance-binding", "Appearance binding", "Home",
+        new CuiRichParser().Parse("<Button Content='Theme binding fixture'/>") ,
+        new CuiViewModel(), new CuiViewModel(), null!)
+    { Appearance = appearance };
 
     private sealed class Source : ICuiThemePreferenceSource
     {

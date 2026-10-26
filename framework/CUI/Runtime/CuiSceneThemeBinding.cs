@@ -26,6 +26,7 @@ internal sealed class CuiSceneThemeBinding : IDisposable
         _appliedPreference = scene.ThemePreference?.Current;
         Resources.MergedDictionaries.Add(CreateSnapshot(_appliedPreference));
         if (scene.ThemePreference is { } context) context.Changed += PreferenceChanged;
+        else CuiThemeResourceApplier.PaletteChanged += GlobalPaletteChanged;
     }
 
     private ResourceDictionary CreateSnapshot(CuiThemeResolution? resolution)
@@ -36,13 +37,13 @@ internal sealed class CuiSceneThemeBinding : IDisposable
 
     // Called after exact scene ownership is admitted as well as on Home events.
     // Changes observed before admission cannot publish, but must not be lost.
-    public void SynchronizeCurrent()
+    public void SynchronizeCurrent(bool force = false)
     {
         void Publish()
         {
             if (_disposed || _canPublish?.Invoke() == false) return;
             var resolution = _scene.ThemePreference?.Current;
-            if (ReferenceEquals(resolution, _appliedPreference)) return;
+            if (!force && ReferenceEquals(resolution, _appliedPreference)) return;
             // Build off-tree and replace one provider: observers never see a
             // partially populated palette. Failed callbacks remain owned by the
             // canonical context's retry/error tracking, not a detached UI task.
@@ -66,11 +67,13 @@ internal sealed class CuiSceneThemeBinding : IDisposable
     }
 
     private void PreferenceChanged(object? sender, EventArgs args) => SynchronizeCurrent();
+    private void GlobalPaletteChanged(object? sender, EventArgs args) => SynchronizeCurrent(force: true);
 
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
         if (_scene.ThemePreference is { } context) context.Changed -= PreferenceChanged;
+        else CuiThemeResourceApplier.PaletteChanged -= GlobalPaletteChanged;
     }
 }
