@@ -12,6 +12,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -116,13 +117,18 @@ public sealed class BrowserTabHoverContractTests
     }
 
     [AvaloniaFact]
-    public void Mounted_browser_tab_row_tints_as_one_surface_and_keeps_close_target_separate()
+    public void Mounted_legacy_browser_tab_row_uses_compiled_theme_and_keeps_close_target_separate()
     {
         var view = new BrowserView();
+        // The headless test app intentionally omits application XAML resources.
+        // Load the production compiled legacy theme into this owner explicitly;
+        // the active CUI browser hover path has its own integration coverage.
+        var defaultTheme = new Uri("avares://Haven/Styles/DefaultTheme.axaml");
+        view.Styles.Add(new StyleInclude(defaultTheme) { Source = defaultTheme });
+
         // Keep BrowserView's real authored tab list and DataTemplate, but mount only
         // that subtree: the browser engine sibling requires GTK and is unrelated to
-        // testing pointer behavior in this headless Avalonia host. Keep it under the
-        // real BrowserView owner so its scoped DefaultTheme styles still apply.
+        // testing pointer behavior in this headless Avalonia host.
         var originalContent = view.Content;
         var list = Assert.IsAssignableFrom<ItemsControl>(view.FindControl<ItemsControl>("HorizontalTabsList"));
         var scroll = Assert.IsAssignableFrom<ScrollViewer>(list.Parent);
