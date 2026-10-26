@@ -1,3 +1,14 @@
+## Local OpenCode PC takeover — 26 October 2026, latest owner direction
+
+The owner selects **OpenCode on pc** to move development/builds locally and support
+one-bug-at-a-time native reloads. Read [the current takeover](docs/development/opencode-pc-live-takeover-2026-10-26.md) and [the local launcher procedure](docs/development/live-preview.md).
+Cloud authoring/new SDK launches stop after the source handoff is pushed. Local work
+may continue under the existing coordinator after exact source/exclusive ownership
+is observed; no replacement coordinator or extra approval loop is required. Preserve
+parallel implementation, all WIP/failed checks, the installed package and user data.
+The new Build template flow is WIP with a documented nonempty-target preflight gap;
+finish that boundary before presenting it as complete. Full acceptance stays paused.
+
 ## Live desktop development and parallel implementation — 26 October 2026
 
 The owner now requests a **live native development copy on the x64 PC**: report one bug, implement the fix, then rebuild/reload the SAME development instance for immediate retesting, rather than batching fixes into installers. An annotation dashboard is not the requested solution. Prepare/reuse supported local launch and coordination interfaces; verify actual running source/assembly identity and preserve the explicit profile and normal save/close lifecycle. Do not claim cloud source edits updated the PC without a local launch/reload receipt.

@@ -1,0 +1,465 @@
+#!/usr/bin/env python3
+"""Own one already-built local Haven process. Never builds, installs or kills it."""
+import argparse
+import contextlib
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import shutil
+import stat
+import struct
+import subprocess
+import sys
+import time
+import uuid
+
+from workflow import atomic, encoded, now, process_identity, safe_relative
+
+_guardians = []  # Retain/reap only guardians launched by this helper invocation.
+
+class Refusal(Exception):
+    pass
+
+
+def require(condition, message):
+    if not condition:
+        raise Refusal(message)
+
+
+def absolute(value):
+    path = Path(value).expanduser()
+    require(path.is_absolute(), "An absolute local path is required")
+    return path
+
+
+def regular(path):
+    info = path.lstat()
+    require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid()
+            and not info.st_mode & 0o022, "Expected an owner-controlled regular file: " + str(path))
+    return info
+
+
+def hashed(path):
+    regular(path)
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def read_json(path):
+    require(regular(path).st_size <= 4 * 1024 * 1024, "Metadata exceeds its size bound")
+    return json.loads(path.read_bytes())
+
+
+def create_json(path, value):
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with path.open("xb") as stream:
+        os.chmod(path, 0o600)
+        stream.write(encoded(value))
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def private_root(value):
+    root = absolute(value)
+    info = root.lstat()
+    require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid() and not info.st_mode & 0o077,
+            "State root must be an existing private owner directory (0700)")
+    return root
+
+
+@contextlib.contextmanager
+def operation(root):
+    lock_path = root / "operation.lock"
+    if lock_path.exists() or lock_path.is_symlink():
+        regular(lock_path)
+    fd = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "a+b") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise Refusal("Another start/reload owns this development copy") from error
+        yield
+
+
+def init(root_value, data_value, window_title, profile_observation):
+    root = absolute(root_value)
+    root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    private_root(root)
+    data = absolute(data_value)
+    require(data != root and root not in data.parents and data not in root.parents,
+            "Application data and launcher state must be separate directories")
+    require(data == data.resolve() and data.is_dir() and not data.is_symlink()
+            and data.stat().st_uid == os.getuid(), "Choose an existing canonical owner profile path (resolve any symlink parents)")
+    require(isinstance(profile_observation, str) and 0 < len(profile_observation.strip()) <= 1000,
+            "Record the local worker's one-time profile-path observation")
+    require(isinstance(window_title, str) and 0 < len(window_title) <= 200
+            and not any(ord(character) < 32 for character in window_title), "Exact main-window title required")
+    with operation(root):
+        create_json(root / "config.json", {"schema": 1, "data_directory": str(data), "window_title": window_title,
+                                            "profile_observation": profile_observation.strip(), "profile_confirmation": "OPERATOR_RECORDED_NOT_APP_CONFIRMED"})
+    return {"state_root": str(root), "data_directory": str(data), "application_started": False}
+
+
+def build_proof(path, expected_hash, revision, runtime):
+    require(re.fullmatch(r"[0-9a-f]{64}", expected_hash or ""), "Exact build-receipt SHA-256 required")
+    require(hashed(path) == expected_hash, "Build receipt changed")
+    receipt = read_json(path)
+    command = receipt.get("command", [])
+    require(receipt.get("result") == "PASS" and receipt.get("exit_code") == 0
+            and receipt.get("admission", {}).get("result") == "PASS"
+            and receipt.get("source_revision") == revision, "A matching successful admitted owning build is required")
+    require(isinstance(command, list) and all(isinstance(argument, str) for argument in command)
+            and len(command) >= 3 and Path(command[0]).is_absolute() and Path(command[0]).name == "dotnet"
+            and command[1] in ("build", "publish")
+            and any(Path(argument).name == "Haven.Desktop.csproj" for argument in command[2:]), "Receipt must describe the normal Haven.Desktop owning build")
+    # Local trust boundary: the existing guard/worker supplies this receipt.
+    # These checks pin its contents; they do not authenticate an execution issuer.
+    pin = receipt.get("admission", {}).get("source_manifest")
+    if pin:
+        source_manifest = absolute(pin["path"])
+        require(hashed(source_manifest) == pin["sha256"] and regular(source_manifest).st_size == pin["bytes"],
+                "Retained owning source-manifest pin changed")
+    output = None
+    for index, argument in enumerate(command):
+        if argument in ("-o", "--output") and index + 1 < len(command):
+            output = command[index + 1]
+        elif argument.startswith("--output="):
+            output = argument.split("=", 1)[1]
+    require(output is not None and absolute(output) == runtime,
+            "Owning build receipt must name this exact runtime with --output/-o")
+
+
+def runtime_files(runtime):
+    require(runtime == runtime.resolve() and runtime.is_dir() and not runtime.is_symlink(), "Runtime must be a canonical real directory")
+    files = {}
+    total = 0
+    for folder, directories, names in os.walk(runtime, followlinks=False):
+        directory = Path(folder)
+        info = directory.lstat()
+        require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid() and not info.st_mode & 0o222,
+                "Runtime directories must be immutable (no write bits): " + str(directory))
+        for name in directories:
+            require(not (directory / name).is_symlink(), "Runtime directory links are refused")
+        for name in names:
+            path = directory / name
+            info = regular(path)
+            require(not info.st_mode & 0o222, "Runtime files must be immutable: " + str(path))
+            total += info.st_size
+            require(len(files) < 10000 and total <= 4 * 1024**3, "Runtime exceeds review bounds")
+            files[str(path.relative_to(runtime))] = {"bytes": info.st_size, "sha256": hashed(path), "mode": stat.S_IMODE(info.st_mode)}
+    require(all(name in files for name in ("Haven", "Haven.dll", "Haven.deps.json", "Haven.runtimeconfig.json")),
+            "The complete normal Haven runtime layout is required")
+    with (runtime / "Haven").open("rb") as stream:
+        header = stream.read(64)
+    require(len(header) == 64 and header[:6] == b"\x7fELF\x02\x01"
+            and struct.unpack_from("<H", header, 18)[0] == 62
+            and files["Haven"]["mode"] & 0o111, "Haven must be an executable Linux x86-64 ELF apphost")
+    return files
+
+
+def prepare(runtime_value, receipt_value, receipt_hash, revision, output_value):
+    runtime, receipt, output = map(absolute, (runtime_value, receipt_value, output_value))
+    require(re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", revision or ""), "Exact source revision required")
+    require(runtime not in output.parents and output != runtime, "Manifest belongs outside its immutable runtime")
+    build_proof(receipt, receipt_hash, revision, runtime)
+    value = {"schema": "9to1.live-preview-runtime/v1", "source_revision": revision, "runtime_directory": str(runtime),
+             "build_receipt": {"path": str(receipt), "sha256": receipt_hash}, "files": runtime_files(runtime), "prepared_at": now()}
+    create_json(output, value)
+    return {"manifest": str(output), "manifest_sha256": hashed(output), "source_revision": revision}
+
+
+def validate_manifest(value, expected_hash=None):
+    path = absolute(value)
+    digest = hashed(path)
+    require(expected_hash is None or digest == expected_hash, "Approved runtime manifest changed")
+    manifest = read_json(path)
+    require(manifest.get("schema") == "9to1.live-preview-runtime/v1", "Unknown runtime manifest")
+    runtime = absolute(manifest["runtime_directory"])
+    for name in manifest["files"]:
+        safe_relative(name)
+    build_proof(absolute(manifest["build_receipt"]["path"]), manifest["build_receipt"]["sha256"], manifest["source_revision"], runtime)
+    require(runtime_files(runtime) == manifest["files"], "Approved runtime bytes, modes or file set changed")
+    return manifest, digest
+
+
+def config(root):
+    value = read_json(root / "config.json")
+    require(value.get("schema") == 1, "Unknown launcher configuration")
+    return value
+
+
+def current(root):
+    path = root / "current.json"
+    if not path.exists():
+        return None
+    value = read_json(path)
+    require(re.fullmatch(r"[0-9a-f-]{36}", value.get("run_id", "")), "Invalid retained run identity")
+    return value
+
+
+def run_directory(root, run):
+    return root / "runs" / run["run_id"]
+
+
+def owned_process(launch):
+    expected = launch["process"]
+    actual = process_identity(expected["pid"])
+    require(actual and actual["state"] != "Z" and actual["start_ticks"] == expected["start_ticks"]
+            and actual["session"] == expected["session"], "Owned application PID/start identity is absent or changed")
+    proc = Path("/proc") / str(expected["pid"])
+    require(proc.stat().st_uid == os.getuid()
+            and str((proc / "exe").readlink()) == launch["executable"], "Owned executable identity changed")
+    return actual
+
+
+def status(root_value):
+    root = private_root(root_value)
+    value = current(root)
+    if not value:
+        return {"state": "NOT_STARTED", "data_directory": config(root)["data_directory"]}
+    directory = run_directory(root, value)
+    if not (directory / "launch.json").exists():
+        if (directory / "error.json").exists():
+            error = read_json(directory / "error.json")
+            exit_record = read_json(directory / "exit.json") if (directory / "exit.json").exists() else None
+            return {"state": "LAUNCH_ERROR_REQUIRES_REVIEW", **value, "error": error, "exit": exit_record}
+        return {"state": "STARTING_OR_BLOCKED", **value}
+    launch = read_json(directory / "launch.json")
+    result = {"run_id": value["run_id"], "source_revision": launch["source_revision"], "runtime_directory": launch["runtime_directory"],
+              "manifest_sha256": launch["manifest_sha256"], "runtime_hashes": launch["runtime_hashes"],
+              "process": launch["process"], "data_directory": launch["data_directory"],
+              "profile_observation": launch["profile_observation"], "profile_confirmation": "OPERATOR_RECORDED_NOT_APP_CONFIRMED"}
+    if (directory / "exit.json").exists():
+        exit_record = read_json(directory / "exit.json")
+        require(exit_record["run_id"] == value["run_id"] and exit_record["process"] == launch["process"], "Exit receipt identity mismatch")
+        return {"state": "EXITED_CLEANLY" if exit_record["exit_code"] == 0 else "EXIT_FAILED", "exit_code": exit_record["exit_code"], **result}
+    def pending_exit():
+        if (directory / "exit.json").exists():
+            return status(root)
+        guardian = process_identity(launch["guardian"]["pid"])
+        if (directory / "exit.json").exists():
+            return status(root)
+        require(guardian and guardian["start_ticks"] == launch["guardian"]["start_ticks"] and guardian["state"] != "Z",
+                "Application ended without its original guardian exit receipt; manual review required")
+        return {"state": "EXIT_RECEIPT_PENDING", **result}
+    actual = process_identity(launch["process"]["pid"])
+    if actual is None or actual["state"] == "Z":
+        return pending_exit()
+    try:
+        owned_process(launch)
+    except (FileNotFoundError, ProcessLookupError):
+        return pending_exit()
+    except Refusal:
+        actual = process_identity(launch["process"]["pid"])
+        if actual is None or actual["state"] == "Z":
+            return pending_exit()
+        raise
+    guardian = process_identity(launch["guardian"]["pid"])
+    if (directory / "exit.json").exists():
+        return status(root)
+    require(guardian and guardian["start_ticks"] == launch["guardian"]["start_ticks"] and guardian["state"] != "Z",
+            "Original guardian identity changed; no close/replacement attempted")
+    return {"state": "RUNNING", **result}
+
+
+def refuse_existing_app():
+    # Never adopt or close an installed/untracked copy, even on another profile.
+    for proc in Path("/proc").iterdir():
+        if not proc.name.isdigit():
+            continue
+        try:
+            if proc.stat().st_uid != os.getuid():
+                continue
+            executable = (proc / "exe").readlink().name
+            arguments = (proc / "cmdline").read_bytes().split(b"\0")
+            require(executable != "Haven" and not any(Path(os.fsdecode(arg)).name == "Haven.dll" for arg in arguments if arg),
+                    "An existing Haven process requires manual close/reconciliation: " + proc.name)
+        except (FileNotFoundError, ProcessLookupError, PermissionError):
+            continue
+
+
+def start_locked(root, manifest_path):
+    require(sys.platform == "linux" and platform.machine().lower() in ("x86_64", "amd64"), "Linux x86-64 is required")
+    previous = current(root)
+    if previous:
+        require(status(root)["state"] == "EXITED_CLEANLY", "Previous run has not exited cleanly; preserved state requires review")
+    manifest, digest = validate_manifest(manifest_path)
+    data = absolute(config(root)["data_directory"])
+    require(data == data.resolve() and data.is_dir() and not data.is_symlink(), "Configured profile path changed")
+    runtime = absolute(manifest["runtime_directory"])
+    require(runtime != data and runtime not in data.parents and data not in runtime.parents
+            and runtime != root and runtime not in root.parents and root not in runtime.parents,
+            "Immutable runtime, application data and launcher state must be separate")
+    refuse_existing_app()
+    run_id = str(uuid.uuid4())
+    directory = root / "runs" / run_id
+    directory.mkdir(mode=0o700, parents=True)
+    value = {"run_id": run_id, "manifest": str(absolute(manifest_path)), "manifest_sha256": digest}
+    atomic(root / "current.json", value)
+    with (directory / "guardian.log").open("xb") as log:
+        _guardians[:] = [guardian for guardian in _guardians if guardian.poll() is None]
+        _guardians.append(subprocess.Popen(
+            [sys.executable, "-B", str(Path(__file__).resolve()), "_supervise", "--state-root", str(root), "--run-id", run_id],
+            stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True, close_fds=True))
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        if (directory / "launch.json").exists():
+            return status(root)
+        if (directory / "error.json").exists():
+            raise Refusal("Application launch failed; retained details: " + str(directory / "error.json"))
+        time.sleep(0.05)
+    raise Refusal("Launch handshake timed out; retained ownership must be reconciled, not replaced")
+
+
+def start(root_value, manifest_path):
+    root = private_root(root_value)
+    with operation(root):
+        return start_locked(root, manifest_path)
+
+
+def supervise(root_value, run_id):
+    root = private_root(root_value)
+    run = current(root)
+    require(run and run["run_id"] == run_id, "Superseded launch refused")
+    directory = run_directory(root, run)
+    # This is only a per-run child-custody lock, separate from the SDK allocation.
+    with operation(directory):
+        require(not any((directory / name).exists() for name in ("launch.json", "exit.json", "error.json")),
+                "This retained run has already been launched; never duplicate its child")
+        child = None
+        identity = None
+        executable = None
+        try:
+            manifest, digest = validate_manifest(run["manifest"], run["manifest_sha256"])
+            cfg = config(root)
+            executable = str(absolute(manifest["runtime_directory"]) / "Haven")
+            environment = dict(os.environ, HAVEN_DATA_DIR=cfg["data_directory"])
+            refuse_existing_app()
+            with (directory / "application.log").open("xb") as log:
+                child = subprocess.Popen([executable], cwd=manifest["runtime_directory"], env=environment, stdin=subprocess.DEVNULL,
+                                         stdout=log, stderr=log, start_new_session=True, close_fds=True)
+                identity = process_identity(child.pid)
+                require(identity is not None, "Could not retain original application process identity")
+                launch = {"run_id": run_id, "source_revision": manifest["source_revision"], "runtime_directory": manifest["runtime_directory"],
+                          "manifest_sha256": digest, "build_receipt": manifest["build_receipt"], "executable": executable,
+                          "runtime_hashes": {name: manifest["files"][name]["sha256"] for name in ("Haven", "Haven.dll")},
+                          "process": identity, "guardian": process_identity(os.getpid()), "display": environment.get("DISPLAY"),
+                          "data_directory": cfg["data_directory"], "profile_observation": cfg["profile_observation"], "started_at": now()}
+                create_json(directory / "launch.json", launch)
+                code = child.wait()
+            create_json(directory / "exit.json", {"run_id": run_id, "process": identity, "exit_code": code, "ended_at": now()})
+        except Exception as error:
+            try:
+                create_json(directory / "error.json", {"run_id": run_id, "error": str(error), "process": identity,
+                                                       "executable": executable, "guardian": process_identity(os.getpid()), "at": now()})
+            finally:
+                # Even a failed launch-receipt write must not silently orphan the
+                # already started child. Wait/reap it without sending any signal.
+                if child is not None:
+                    code = child.wait()
+                    if not (directory / "exit.json").exists():
+                        create_json(directory / "exit.json", {"run_id": run_id, "process": identity, "exit_code": code, "ended_at": now()})
+            raise
+
+
+def command_output(arguments):
+    return subprocess.run(arguments, check=True, capture_output=True, text=True, timeout=5).stdout
+
+
+def window_matches(text, pid, title):
+    process = re.search(r"^_NET_WM_PID(?:\([^)]*\))?\s*=\s*(\d+)\s*$", text, re.M)
+    name = re.search(r'^_NET_WM_NAME(?:\([^)]*\))?\s*=\s*(".*")\s*$', text, re.M)
+    transient = re.search(r"^WM_TRANSIENT_FOR[^\n]*(0x[0-9a-fA-F]+)", text, re.M)
+    return bool(process and int(process[1]) == pid and name and json.loads(name[1]) == title
+                and "_NET_WM_WINDOW_TYPE_NORMAL" in text and not (transient and int(transient[1], 16)))
+
+
+def request_normal_close(launch, title):
+    owned_process(launch)
+    require(launch.get("display") and os.environ.get("DISPLAY") == launch["display"], "Use the same X11 DISPLAY as the launched app")
+    xprop, wmctrl = shutil.which("xprop"), shutil.which("wmctrl")
+    require(xprop and wmctrl, "Normal X11 close requires xprop and wmctrl; no signal fallback is provided")
+    windows = re.findall(r"0x[0-9a-fA-F]+", command_output([xprop, "-root", "_NET_CLIENT_LIST"]))
+    properties = ["_NET_WM_PID", "_NET_WM_NAME", "_NET_WM_WINDOW_TYPE", "WM_TRANSIENT_FOR"]
+    matches = [window for window in windows if window_matches(command_output([xprop, "-id", window, *properties]), launch["process"]["pid"], title)]
+    require(len(matches) == 1, "Exactly one normal main window with the owned PID and exact title is required")
+    owned_process(launch)
+    require(window_matches(command_output([xprop, "-id", matches[0], *properties]), launch["process"]["pid"], title), "Window identity changed before close")
+    command_output([wmctrl, "-ic", matches[0]])
+    return matches[0]
+
+
+def reload(root_value, manifest_path, timeout=90, close=request_normal_close):
+    require(0 < timeout <= 300, "Close timeout must be positive and at most 300 seconds")
+    root = private_root(root_value)
+    with operation(root):
+        _, digest = validate_manifest(manifest_path)  # Refuse a bad candidate before disturbing the live copy.
+        state = status(root)
+        if state["state"] == "RUNNING":
+            run = current(root)
+            launch = read_json(run_directory(root, run) / "launch.json")
+            close(launch, config(root)["window_title"])
+            deadline = time.monotonic() + timeout
+            while time.monotonic() < deadline:
+                state = status(root)
+                if state["state"] not in ("RUNNING", "EXIT_RECEIPT_PENDING"):
+                    break
+                time.sleep(0.05)
+            require(state["state"] == "EXITED_CLEANLY", "Normal close was vetoed, timed out or failed; no force/replacement was attempted")
+        else:
+            require(state["state"] == "EXITED_CLEANLY", "An owned clean exit is required before reload")
+        validate_manifest(manifest_path, digest)
+        return start_locked(root, manifest_path)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    setup = commands.add_parser("init")
+    setup.add_argument("--state-root", required=True)
+    setup.add_argument("--data-directory", required=True)
+    setup.add_argument("--window-title", default="9to1")
+    setup.add_argument("--profile-observation", required=True)
+    prepare_parser = commands.add_parser("prepare")
+    for name in ("runtime", "build-receipt", "receipt-sha256", "source-revision", "output"):
+        prepare_parser.add_argument("--" + name, required=True)
+    for name in ("start", "status", "reload", "_supervise"):
+        command = commands.add_parser(name)
+        command.add_argument("--state-root", required=True)
+        if name in ("start", "reload"):
+            command.add_argument("--manifest", required=True)
+        if name == "reload":
+            command.add_argument("--timeout", type=float, default=90)
+        if name == "_supervise":
+            command.add_argument("--run-id", required=True)
+    args = parser.parse_args()
+    os.umask(0o077)
+    try:
+        if args.command == "init":
+            result = init(args.state_root, args.data_directory, args.window_title, args.profile_observation)
+        elif args.command == "prepare":
+            result = prepare(args.runtime, args.build_receipt, args.receipt_sha256, args.source_revision, args.output)
+        elif args.command == "start":
+            result = start(args.state_root, args.manifest)
+        elif args.command == "status":
+            result = status(args.state_root)
+        elif args.command == "reload":
+            result = reload(args.state_root, args.manifest, args.timeout)
+        else:
+            supervise(args.state_root, args.run_id)
+            return
+        print(json.dumps(result, indent=2))
+    except Exception as error:
+        print("Live preview refused: " + str(error), file=sys.stderr)
+        raise SystemExit(2) from error
+
+
+if __name__ == "__main__":
+    main()
