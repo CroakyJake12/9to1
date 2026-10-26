@@ -17,7 +17,7 @@ import sys
 import time
 import uuid
 
-from workflow import atomic, encoded, now, process_identity, safe_relative
+from workflow import atomic, encoded, now, process_identity, remaining_group, safe_relative
 
 _guardians = []  # Retain/reap only guardians launched by this helper invocation.
 
@@ -309,6 +309,8 @@ def start_locked(root, manifest_path, reviewed_failure=None):
     directory = root / "runs" / run_id
     directory.mkdir(mode=0o700, parents=True)
     value = {"run_id": run_id, "manifest": str(absolute(manifest_path)), "manifest_sha256": digest}
+    if reviewed_failure:
+        value["recovery"] = reviewed_failure["audit_pin"]
     atomic(root / "current.json", value)
     with (directory / "guardian.log").open("xb") as log:
         _guardians[:] = [guardian for guardian in _guardians if guardian.poll() is None]
@@ -345,8 +347,17 @@ def recover_failed(root_value, manifest_path, review_value, review_hash):
         exit_hash = hashed(exit_path)
         original = process_identity(launch["process"]["pid"])
         require(not original or original["state"] == "Z"
-                or original["start_ticks"] != launch["process"]["start_ticks"],
-                "Failed run's original process is still live; no restart permitted")
+                and original["start_ticks"] == launch["process"]["start_ticks"],
+                "Failed run's original process is still live or its PID was reused; no restart permitted")
+        guardian = process_identity(launch["guardian"]["pid"])
+        require(not guardian or guardian["state"] == "Z"
+                and guardian["start_ticks"] == launch["guardian"]["start_ticks"],
+                "Failed run's guardian is not terminal or its PID was reused")
+        require(not remaining_group(launch["process"]) and not remaining_group(launch["guardian"]),
+                "Failed run retains process-group members; manual custody review required")
+        launch_hash = hashed(directory / "launch.json")
+        profile = config(root)["data_directory"]
+        require(launch["data_directory"] == profile, "Configured profile changed since the failed launch")
         require(re.fullmatch(r"[0-9a-f]{64}", review_hash or ""), "Exact local review receipt SHA-256 required")
         require(regular(review_path).st_size <= 4 * 1024 * 1024, "Review receipt exceeds its size bound")
         raw = review_path.read_bytes()
@@ -356,23 +367,31 @@ def recover_failed(root_value, manifest_path, review_value, review_hash):
                 and review.get("schema") == "9to1.live-preview-failed-run-review/v1"
                 and review.get("result") == "RETRY_SAFE"
                 and review.get("failed_run_id") == run["run_id"]
+                and review.get("failed_launch") == {"path": str(directory / "launch.json"), "sha256": launch_hash}
                 and review.get("failed_exit") == {"path": str(exit_path), "sha256": exit_hash}
+                and review.get("failed_process") == launch["process"]
+                and review.get("data_directory") == profile
                 and review.get("candidate_manifest_sha256") == candidate_hash
                 and isinstance(review.get("reviewer"), str) and bool(review["reviewer"].strip())
+                and isinstance(review.get("diagnosis"), str) and 0 < len(review["diagnosis"].strip()) <= 2000
                 and isinstance(review.get("reason"), str) and 0 < len(review["reason"].strip()) <= 2000,
                 "Explicit local review must bind this failed run, actual exit and exact replacement with a reviewer and reason")
         refuse_existing_app()
-        audit_path = root / "recoveries" / (str(uuid.uuid4()) + ".json")
+        audit_path = root / "recoveries" / (run["run_id"] + "-" + review_hash + ".json")
+        require(not audit_path.exists(), "This failed-run review was already consumed; a fresh local review is required")
         audit = {"schema": "9to1.live-preview-failed-run-recovery/v1", "at": now(),
                  "operation": "REVIEWED_FAILED_EXIT_RESTART_NOT_NORMAL_RELOAD",
                  "failed_run_id": run["run_id"], "failed_exit_sha256": exit_hash,
+                 "failed_launch_sha256": launch_hash, "failed_process": launch["process"], "data_directory": profile,
                  "candidate_manifest_sha256": candidate_hash,
                  "review_receipt": {"path": str(review_path), "sha256": review_hash},
-                 "reviewer": review["reviewer"], "reason": review["reason"],
+                 "reviewer": review["reviewer"], "reason": review["reason"], "diagnosis": review["diagnosis"],
+                 "stage": "REVIEW_RECORDED_BEFORE_ACTIVATION",
                  "normal_close_verified": False}
         create_json(audit_path, audit)  # Persist review before replacing current; old run remains untouched.
         require(hashed(review_path) == review_hash, "Review receipt changed before restart")
-        result = start_locked(root, manifest_path, reviewed_failure=audit)
+        result = start_locked(root, manifest_path, reviewed_failure={**audit,
+            "audit_pin": {"path": str(audit_path), "sha256": hashed(audit_path)}})
         return {**result, "activation": audit["operation"], "recovery_receipt": str(audit_path)}
 
 
@@ -403,7 +422,9 @@ def supervise(root_value, run_id):
                           "manifest_sha256": digest, "build_receipt": manifest["build_receipt"], "executable": executable,
                           "runtime_hashes": {name: manifest["files"][name]["sha256"] for name in ("Haven", "Haven.dll")},
                           "process": identity, "guardian": process_identity(os.getpid()), "display": environment.get("DISPLAY"),
-                          "data_directory": cfg["data_directory"], "profile_observation": cfg["profile_observation"], "started_at": now()}
+                           "data_directory": cfg["data_directory"], "profile_observation": cfg["profile_observation"], "started_at": now()}
+                if run.get("recovery"):
+                    launch["recovery"] = run["recovery"]
                 create_json(directory / "launch.json", launch)
                 code = child.wait()
             create_json(directory / "exit.json", {"run_id": run_id, "process": identity, "exit_code": code, "ended_at": now()})

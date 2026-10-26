@@ -169,10 +169,14 @@ gone. Installed/untracked Haven processes still block activation.
 
 The local review receipt must use schema
 `9to1.live-preview-failed-run-review/v1`, `result: RETRY_SAFE`, the exact
-`failed_run_id`, `failed_exit` object (`path` and actual `sha256`), exact
-`candidate_manifest_sha256`, and a nonempty `reviewer` and `reason`. These fields
+`failed_run_id`, `failed_launch` and `failed_exit` objects (`path` and actual
+`sha256`), exact retained `failed_process`, unchanged `data_directory`, exact
+`candidate_manifest_sha256`, and a nonempty `reviewer`, `diagnosis` and `reason`. These fields
 are a trusted local review input, not remote authentication or authority created
 by the launcher. Do not manufacture a review to bypass an unresolved failure.
+The original app and guardian must be terminal, with no remaining group members;
+a reused live PID also refuses recovery. Each pinned review is consumed at most
+once, and the successor launch retains the recovery audit pin.
 The replacement still needs its genuine guarded owning build/immutable approval
 and current execution admission. Preserve the failed run and its real exit code.
 

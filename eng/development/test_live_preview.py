@@ -145,11 +145,22 @@ int main(void) {
 
     def failed_run_review(self, first, following):
         exit_path = self.state / "runs" / first["run_id"] / "exit.json"
+        launch_path = exit_path.parent / "launch.json"
+        launch = preview.read_json(launch_path)
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            guardian = process_identity(launch["guardian"]["pid"])
+            if not guardian or guardian["state"] == "Z":
+                break
+            time.sleep(.01)
         review = self.root / "local-failure-review.json"
         atomic(review, {"schema": "9to1.live-preview-failed-run-review/v1", "result": "RETRY_SAFE",
                         "failed_run_id": first["run_id"],
+                        "failed_launch": {"path": str(launch_path), "sha256": preview.hashed(launch_path)},
                         "failed_exit": {"path": str(exit_path), "sha256": preview.hashed(exit_path)},
+                        "failed_process": launch["process"], "data_directory": str(self.data),
                         "candidate_manifest_sha256": preview.hashed(following),
+                        "diagnosis": "Actual fixture child intentionally exited7; no native Haven diagnosis",
                         "reviewer": "local fixture reviewer", "reason": "Explicit fixture-only review; no native Haven evidence"})
         return review
 
@@ -170,6 +181,10 @@ int main(void) {
         self.assertNotEqual(first["run_id"], second["run_id"])
         self.assertEqual("REVIEWED_FAILED_EXIT_RESTART_NOT_NORMAL_RELOAD", second["activation"])
         self.assertFalse(preview.read_json(Path(second["recovery_receipt"]))["normal_close_verified"])
+        successor = preview.read_json(preview.run_directory(self.state, preview.current(self.state)) / "launch.json")
+        self.assertEqual(str(second["recovery_receipt"]), successor["recovery"]["path"])
+        with self.assertRaises(preview.Refusal):
+            preview.recover_failed(self.state, following, review, preview.hashed(review))
         self.assertEqual(failed_bytes, exit_path.read_bytes())
         self.assertEqual("preserve me", (self.data / "user-document.txt").read_text())
 
@@ -182,6 +197,9 @@ int main(void) {
         before = preview.read_json(review)
         for patch in ({"failed_run_id": str(preview.uuid.uuid4())},
                       {"candidate_manifest_sha256": "0" * 64}, {"reason": ""},
+                      {"failed_process": {**before["failed_process"], "start_ticks": 0}},
+                      {"data_directory": "/wrong/profile"}, {"diagnosis": ""},
+                      {"failed_launch": {"path": "/wrong/launch", "sha256": "0" * 64}},
                       {"failed_exit": {"path": "/wrong/exit", "sha256": "0" * 64}}):
             atomic(review, {**before, **patch})
             with self.assertRaises(preview.Refusal):
@@ -197,13 +215,50 @@ int main(void) {
         following = self.runtime("b" * 40)
         exit_path = self.state / "runs" / first["run_id"] / "exit.json"
         atomic(exit_path, {"run_id": first["run_id"], "process": first["process"], "exit_code": 7})
-        review = self.failed_run_review(first, following)
+        review = self.root / "not-read-because-original-is-live.json"
         try:
             with self.assertRaisesRegex(preview.Refusal, "original process is still live"):
-                preview.recover_failed(self.state, following, review, preview.hashed(review))
+                preview.recover_failed(self.state, following, review, "0" * 64)
             self.assertEqual(first["run_id"], preview.current(self.state)["run_id"])
         finally:
             exit_path.unlink()  # Remove only this test's deliberately forged fixture record.
+
+    def test_failed_run_recovery_rejects_reused_pid_live_guardian_and_remaining_group(self):
+        first = preview.start(self.state, self.manifest)
+        following = self.runtime("b" * 40)
+        (self.data / "close.request").write_text("7")
+        self.wait_exit()
+        review = self.failed_run_review(first, following)
+        launch = preview.read_json(self.state / "runs" / first["run_id"] / "launch.json")
+        original_identity = process_identity
+        for field in ("process", "guardian"):
+            expected = launch[field]
+            def changed(pid):
+                return {**expected, "start_ticks": expected["start_ticks"] + 1, "state": "R"} if pid == expected["pid"] else original_identity(pid)
+            with mock.patch.object(preview, "process_identity", side_effect=changed):
+                with self.assertRaises(preview.Refusal):
+                    preview.recover_failed(self.state, following, review, preview.hashed(review))
+        with mock.patch.object(preview, "remaining_group", return_value=[{"fixture": "unsettled descendant"}]):
+            with self.assertRaisesRegex(preview.Refusal, "process-group members"):
+                preview.recover_failed(self.state, following, review, preview.hashed(review))
+        self.assertEqual(first["run_id"], preview.current(self.state)["run_id"])
+        self.assertFalse((self.state / "recoveries").exists())
+
+    def test_failed_run_review_is_one_shot_even_when_activation_does_not_start(self):
+        first = preview.start(self.state, self.manifest)
+        following = self.runtime("b" * 40)
+        (self.data / "close.request").write_text("7")
+        self.wait_exit()
+        review = self.failed_run_review(first, following)
+        with mock.patch.object(preview, "start_locked", side_effect=RuntimeError("fixture before activation")):
+            with self.assertRaisesRegex(RuntimeError, "before activation"):
+                preview.recover_failed(self.state, following, review, preview.hashed(review))
+        with self.assertRaisesRegex(preview.Refusal, "already consumed"):
+            preview.recover_failed(self.state, following, review, preview.hashed(review))
+        self.assertEqual(first["run_id"], preview.current(self.state)["run_id"])
+        audit = preview.read_json(next((self.state / "recoveries").glob("*.json")))
+        self.assertEqual("REVIEW_RECORDED_BEFORE_ACTIVATION", audit["stage"])
+        self.assertFalse(audit["normal_close_verified"])
 
     def test_changed_pid_identity_is_refused_before_any_close_request(self):
         preview.start(self.state, self.manifest)
