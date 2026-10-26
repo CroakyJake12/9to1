@@ -285,12 +285,19 @@ def refuse_existing_app():
             continue
 
 
-def start_locked(root, manifest_path):
+def start_locked(root, manifest_path, reviewed_failure=None):
     require(sys.platform == "linux" and platform.machine().lower() in ("x86_64", "amd64"), "Linux x86-64 is required")
     previous = current(root)
     if previous:
-        require(status(root)["state"] == "EXITED_CLEANLY", "Previous run has not exited cleanly; preserved state requires review")
+        state = status(root)
+        if state["state"] != "EXITED_CLEANLY":
+            require(state["state"] == "EXIT_FAILED" and reviewed_failure
+                    and reviewed_failure["failed_run_id"] == previous["run_id"]
+                    and hashed(run_directory(root, previous) / "exit.json") == reviewed_failure["failed_exit_sha256"],
+                    "Previous run has not exited cleanly; preserved state requires review")
     manifest, digest = validate_manifest(manifest_path)
+    if reviewed_failure:
+        require(digest == reviewed_failure["candidate_manifest_sha256"], "Reviewed replacement manifest changed")
     data = absolute(config(root)["data_directory"])
     require(data == data.resolve() and data.is_dir() and not data.is_symlink(), "Configured profile path changed")
     runtime = absolute(manifest["runtime_directory"])
@@ -322,6 +329,51 @@ def start(root_value, manifest_path):
     root = private_root(root_value)
     with operation(root):
         return start_locked(root, manifest_path)
+
+
+def recover_failed(root_value, manifest_path, review_value, review_hash):
+    """Explicit reviewed restart after a failed exit; never a normal-close receipt."""
+    root, review_path = private_root(root_value), absolute(review_value)
+    with operation(root):
+        _, candidate_hash = validate_manifest(manifest_path)
+        state = status(root)
+        require(state["state"] == "EXIT_FAILED", "Recovery requires an already recorded failed exit, never a running or cleanly closed app")
+        run = current(root)
+        directory = run_directory(root, run)
+        launch = read_json(directory / "launch.json")
+        exit_path = directory / "exit.json"
+        exit_hash = hashed(exit_path)
+        original = process_identity(launch["process"]["pid"])
+        require(not original or original["state"] == "Z"
+                or original["start_ticks"] != launch["process"]["start_ticks"],
+                "Failed run's original process is still live; no restart permitted")
+        require(re.fullmatch(r"[0-9a-f]{64}", review_hash or ""), "Exact local review receipt SHA-256 required")
+        require(regular(review_path).st_size <= 4 * 1024 * 1024, "Review receipt exceeds its size bound")
+        raw = review_path.read_bytes()
+        require(hashlib.sha256(raw).hexdigest() == review_hash, "Local failed-run review receipt changed")
+        review = json.loads(raw)
+        require(isinstance(review, dict)
+                and review.get("schema") == "9to1.live-preview-failed-run-review/v1"
+                and review.get("result") == "RETRY_SAFE"
+                and review.get("failed_run_id") == run["run_id"]
+                and review.get("failed_exit") == {"path": str(exit_path), "sha256": exit_hash}
+                and review.get("candidate_manifest_sha256") == candidate_hash
+                and isinstance(review.get("reviewer"), str) and bool(review["reviewer"].strip())
+                and isinstance(review.get("reason"), str) and 0 < len(review["reason"].strip()) <= 2000,
+                "Explicit local review must bind this failed run, actual exit and exact replacement with a reviewer and reason")
+        refuse_existing_app()
+        audit_path = root / "recoveries" / (str(uuid.uuid4()) + ".json")
+        audit = {"schema": "9to1.live-preview-failed-run-recovery/v1", "at": now(),
+                 "operation": "REVIEWED_FAILED_EXIT_RESTART_NOT_NORMAL_RELOAD",
+                 "failed_run_id": run["run_id"], "failed_exit_sha256": exit_hash,
+                 "candidate_manifest_sha256": candidate_hash,
+                 "review_receipt": {"path": str(review_path), "sha256": review_hash},
+                 "reviewer": review["reviewer"], "reason": review["reason"],
+                 "normal_close_verified": False}
+        create_json(audit_path, audit)  # Persist review before replacing current; old run remains untouched.
+        require(hashed(review_path) == review_hash, "Review receipt changed before restart")
+        result = start_locked(root, manifest_path, reviewed_failure=audit)
+        return {**result, "activation": audit["operation"], "recovery_receipt": str(audit_path)}
 
 
 def supervise(root_value, run_id):
@@ -439,6 +491,9 @@ def main():
             command.add_argument("--timeout", type=float, default=90)
         if name == "_supervise":
             command.add_argument("--run-id", required=True)
+    recovery = commands.add_parser("recover-failed")
+    for name in ("state-root", "manifest", "review-receipt", "review-sha256"):
+        recovery.add_argument("--" + name, required=True)
     args = parser.parse_args()
     os.umask(0o077)
     try:
@@ -452,6 +507,8 @@ def main():
             result = status(args.state_root)
         elif args.command == "reload":
             result = reload(args.state_root, args.manifest, args.timeout)
+        elif args.command == "recover-failed":
+            result = recover_failed(args.state_root, args.manifest, args.review_receipt, args.review_sha256)
         else:
             supervise(args.state_root, args.run_id)
             return

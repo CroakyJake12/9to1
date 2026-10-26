@@ -143,6 +143,68 @@ int main(void) {
         self.assertEqual(7, state["exit_code"])
         self.assertEqual(first["run_id"], state["run_id"])
 
+    def failed_run_review(self, first, following):
+        exit_path = self.state / "runs" / first["run_id"] / "exit.json"
+        review = self.root / "local-failure-review.json"
+        atomic(review, {"schema": "9to1.live-preview-failed-run-review/v1", "result": "RETRY_SAFE",
+                        "failed_run_id": first["run_id"],
+                        "failed_exit": {"path": str(exit_path), "sha256": preview.hashed(exit_path)},
+                        "candidate_manifest_sha256": preview.hashed(following),
+                        "reviewer": "local fixture reviewer", "reason": "Explicit fixture-only review; no native Haven evidence"})
+        return review
+
+    def test_explicit_failed_run_recovery_retains_nonzero_exit_and_profile_not_a_normal_reload(self):
+        first = preview.start(self.state, self.manifest)
+        following = self.runtime("b" * 40)
+        (self.data / "close.request").write_text("7")
+        self.assertEqual(7, self.wait_exit()["exit_code"])
+        exit_path = self.state / "runs" / first["run_id"] / "exit.json"
+        failed_bytes = exit_path.read_bytes()
+        with self.assertRaises(preview.Refusal):
+            preview.start(self.state, following)
+        with self.assertRaises(preview.Refusal):
+            preview.reload(self.state, following)
+        review = self.failed_run_review(first, following)
+        (self.data / "close.request").unlink()  # Fixture request only, not application or launcher state.
+        second = preview.recover_failed(self.state, following, review, preview.hashed(review))
+        self.assertNotEqual(first["run_id"], second["run_id"])
+        self.assertEqual("REVIEWED_FAILED_EXIT_RESTART_NOT_NORMAL_RELOAD", second["activation"])
+        self.assertFalse(preview.read_json(Path(second["recovery_receipt"]))["normal_close_verified"])
+        self.assertEqual(failed_bytes, exit_path.read_bytes())
+        self.assertEqual("preserve me", (self.data / "user-document.txt").read_text())
+
+    def test_failed_run_review_rejects_changed_wrong_or_stale_receipts_without_activation(self):
+        first = preview.start(self.state, self.manifest)
+        following = self.runtime("b" * 40)
+        (self.data / "close.request").write_text("7")
+        self.wait_exit()
+        review = self.failed_run_review(first, following)
+        before = preview.read_json(review)
+        for patch in ({"failed_run_id": str(preview.uuid.uuid4())},
+                      {"candidate_manifest_sha256": "0" * 64}, {"reason": ""},
+                      {"failed_exit": {"path": "/wrong/exit", "sha256": "0" * 64}}):
+            atomic(review, {**before, **patch})
+            with self.assertRaises(preview.Refusal):
+                preview.recover_failed(self.state, following, review, preview.hashed(review))
+            self.assertEqual(first["run_id"], preview.current(self.state)["run_id"])
+        atomic(review, before)
+        with self.assertRaisesRegex(preview.Refusal, "receipt changed"):
+            preview.recover_failed(self.state, following, review, "0" * 64)
+        self.assertFalse((self.state / "recoveries").exists())
+
+    def test_failed_run_recovery_refuses_live_original_even_if_an_exit_record_appears(self):
+        first = preview.start(self.state, self.manifest)
+        following = self.runtime("b" * 40)
+        exit_path = self.state / "runs" / first["run_id"] / "exit.json"
+        atomic(exit_path, {"run_id": first["run_id"], "process": first["process"], "exit_code": 7})
+        review = self.failed_run_review(first, following)
+        try:
+            with self.assertRaisesRegex(preview.Refusal, "original process is still live"):
+                preview.recover_failed(self.state, following, review, preview.hashed(review))
+            self.assertEqual(first["run_id"], preview.current(self.state)["run_id"])
+        finally:
+            exit_path.unlink()  # Remove only this test's deliberately forged fixture record.
+
     def test_changed_pid_identity_is_refused_before_any_close_request(self):
         preview.start(self.state, self.manifest)
         following = self.runtime("b" * 40)

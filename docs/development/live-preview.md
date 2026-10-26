@@ -158,6 +158,38 @@ version from a later Git checkout. Per-run launch, exit and log files remain
 under the private state's `runs/` directory; old builds and failures are retained.
 No automatic runtime-manifest watcher is enabled.
 
+### Explicit recovery after a failed process exit
+
+Ordinary `start` and `reload` still refuse a nonzero exit. If a local coordinator
+has inspected the retained failure, addressed its cause and verified that a
+specific replacement is safe to try, `recover-failed` records that **manual
+reviewed restart**, not a successful normal close/reload. It never closes or
+signals a running application and requires the failed original process to be
+gone. Installed/untracked Haven processes still block activation.
+
+The local review receipt must use schema
+`9to1.live-preview-failed-run-review/v1`, `result: RETRY_SAFE`, the exact
+`failed_run_id`, `failed_exit` object (`path` and actual `sha256`), exact
+`candidate_manifest_sha256`, and a nonempty `reviewer` and `reason`. These fields
+are a trusted local review input, not remote authentication or authority created
+by the launcher. Do not manufacture a review to bypass an unresolved failure.
+The replacement still needs its genuine guarded owning build/immutable approval
+and current execution admission. Preserve the failed run and its real exit code.
+
+```bash
+python3 -B eng/development/live_preview.py recover-failed \
+  --state-root "$HOME/.local/state/9to1-live-preview" \
+  --manifest /absolute/approved-REPAIRED-BUILD.json \
+  --review-receipt /absolute/actual-local-review.json \
+  --review-sha256 ACTUAL_REVIEW_SHA256
+```
+
+Review is bound to the exact failed exit and candidate before any activation.
+An append-only receipt under `recoveries/` retains the review; all original
+`runs/` launch, log and nonzero-exit files remain unchanged. The configured
+profile stays the same. This operation does **not** satisfy the separately
+required demonstration of a usable app's normal close/reload and native retest.
+
 ## Local worker handoff
 
 Give the existing authorized local worker this instruction:
