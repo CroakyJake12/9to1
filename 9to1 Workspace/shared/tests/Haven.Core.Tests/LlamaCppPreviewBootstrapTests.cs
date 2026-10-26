@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Haven.Application;
 using Haven.Infrastructure;
 
@@ -10,6 +11,150 @@ public sealed class LlamaCppPreviewBootstrapTests
 {
     private const int ArmAarch64ElfMachine = 183;
     private const int X86_64ElfMachine = 62;
+
+    [LinuxPreviewTheory]
+    [InlineData("")]
+    [InlineData("mixed-elf")]
+    [InlineData("mixed-relabelled-kind")]
+    [InlineData("host")]
+    [InlineData("platform")]
+    [InlineData("hash")]
+    [InlineData("missing-hash")]
+    [InlineData("size")]
+    [InlineData("missing-size")]
+    [InlineData("receipt-missing")]
+    [InlineData("receipt-empty")]
+    [InlineData("receipt-hash")]
+    [InlineData("receipt-asset-missing")]
+    [InlineData("receipt-bundle")]
+    [InlineData("receipt-state")]
+    public async Task Explicit_x64_discovery_checks_entire_targeted_closure_and_receipt_without_weakening_ARM(string defect)
+    {
+        var root = Directory.CreateTempSubdirectory("haven-preview-explicit-x64-").FullName;
+        try
+        {
+            var runtime = Path.Combine(root, "runtime");
+            var bundle = Path.Combine(runtime, "inference", "bundle");
+            var models = Path.Combine(root, "models");
+            var (assets, serverPath, serverSha) = await ScaffoldClosure(runtime, X86_64ElfMachine);
+            var manifest = JsonSerializer.SerializeToNode(CanonicalManifest(assets, "x86_64"))!;
+            var receipt = JsonSerializer.SerializeToNode(CanonicalReceipt(assets))!;
+            var dependency = manifest["assets"]![1]!;
+            switch (defect)
+            {
+                case "mixed-elf":
+                case "mixed-relabelled-kind":
+                    var path = Path.Combine(runtime, "llama.cpp", "libggml-base.so.0");
+                    WriteElf(path, ArmAarch64ElfMachine);
+                    dependency["expectedSha256"] = ComputeSha256(path);
+                    if (defect == "mixed-relabelled-kind") dependency["kind"] = "runtime.bundle";
+                    receipt["admittedAssets"]![dependency["logical"]!.GetValue<string>()]!["sha256"] = ComputeSha256(path);
+                    break;
+                case "host": manifest["host"]!["arch"] = "aarch64"; break;
+                case "platform": dependency["platform"]!["arch"] = "aarch64"; break;
+                case "hash": dependency["expectedSha256"] = new string('f', 64); break;
+                case "missing-hash": dependency.AsObject().Remove("expectedSha256"); break;
+                case "size": dependency["expectedSize"] = 1; break;
+                case "missing-size": dependency.AsObject().Remove("expectedSize"); break;
+                case "receipt-empty": receipt["admittedAssets"] = new JsonObject(); break;
+                case "receipt-hash": receipt["admittedAssets"]![manifest["assets"]![0]!["logical"]!.GetValue<string>()]!["sha256"] = new string('f', 64); break;
+                case "receipt-asset-missing": receipt["admittedAssets"]!.AsObject().Remove(dependency["logical"]!.GetValue<string>()); break;
+                case "receipt-bundle": receipt["bundleId"] = "different-bundle"; break;
+                case "receipt-state": receipt["state"] = "invalid"; break;
+            }
+            await JsonFileAsync(Path.Combine(bundle, "bundle-manifest.json"), manifest);
+            if (defect != "receipt-missing") await JsonFileAsync(Path.Combine(bundle, "bundle-receipt.json"), receipt);
+            byte[] bytes = [71, 71, 85, 70, 3, 0, 0, 0, 1, 2, 3];
+            var modelSha = Convert.ToHexStringLower(SHA256.HashData(bytes));
+            await ScaffoldModel(models, "selected", modelSha, bytes);
+            await JsonFileAsync(Path.Combine(models, "manifests", "selected.json"), ModelManifest("selected", modelSha, bytes.Length));
+            var x64 = new LlamaCppPreviewBootstrap(bundle, runtime, models, target: LlamaCppPreviewTarget.LinuxX64);
+            var discovery = await x64.DiscoverAsync(CancellationToken.None);
+            if (defect.Length == 0)
+            {
+                Assert.True(discovery.Available, string.Join("; ", discovery.Deficiencies));
+                Assert.Equal(serverPath, discovery.ExecutablePath);
+                Assert.Equal(serverSha, discovery.ExpectedExecutableSha256);
+                Assert.Equal(X86_64ElfMachine, discovery.ElfMachine);
+                Assert.True(x64.BuildEndpointOptions(discovery).Enabled);
+                Assert.True(x64.BuildRuntimeOptions(discovery).Enabled);
+                // Verification is not inference readiness: no child process is launched by discovery.
+            }
+            else
+            {
+                Assert.False(discovery.Available);
+                Assert.NotEmpty(discovery.Deficiencies);
+                Assert.False(x64.BuildEndpointOptions(discovery).Enabled);
+                Assert.False(x64.BuildRuntimeOptions(discovery).Enabled);
+            }
+            // Default ARM verification cannot accept even a fully matching, genuinely x64 closure.
+            var arm = new LlamaCppPreviewBootstrap(bundle, runtime, models);
+            Assert.False((await arm.DiscoverAsync(CancellationToken.None)).Available);
+            Assert.False(arm.BuildEndpointOptions(discovery).Enabled);
+            Assert.False(arm.BuildRuntimeOptions(discovery).Enabled);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
+    public void Explicit_bundle_layout_resolves_relative_to_app_not_working_directory_and_keeps_installed_defaults()
+    {
+        var app = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "haven-layout-app"));
+        var relative = LlamaCppRuntimeLayout.ReadExplicitEnvironment(_ => "private-assets", app);
+        var root = Path.Combine(app, "private-assets");
+        Assert.Equal(root, relative.RuntimeRoot);
+        Assert.Equal(Path.Combine(root, "inference", "bundle"), relative.BundleDirectory);
+        Assert.Equal(Path.Combine(root, "inference", "modelctl.py"), relative.ModelCtlPath);
+        Assert.Equal(Path.Combine(root, "default-models"), relative.SeedDirectory);
+        Assert.Equal(relative, LlamaCppRuntimeLayout.ReadExplicitEnvironment(_ => root, app));
+        var installed = LlamaCppRuntimeLayout.ReadExplicitEnvironment(_ => null, app);
+        Assert.Equal(LlamaCppPreviewBootstrap.RuntimeRoot, installed.RuntimeRoot);
+        Assert.Equal(LlamaCppPreviewBootstrap.BundleDir, installed.BundleDirectory);
+        Assert.Equal(LlamaCppPreviewBootstrap.DefaultSeedDir, installed.SeedDirectory);
+        if (OperatingSystem.IsLinux()) Assert.Equal(LlamaCppPreviewBootstrap.ModelCtlScriptPath, installed.ModelCtlPath);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LlamaCppPreviewBootstrap(target: (LlamaCppPreviewTarget)999));
+    }
+
+    public sealed class LinuxPreviewTheoryAttribute : TheoryAttribute
+    { public LinuxPreviewTheoryAttribute() { if (!OperatingSystem.IsLinux()) Skip = "Requires Linux AF_UNIX target discovery; no runtime or model inference is performed."; } }
+
+    [LinuxPreviewTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Default_ARM_discovery_keeps_ARM_closure_and_rejects_a_pinned_x64_dependency(bool mixed)
+    {
+        var root = Directory.CreateTempSubdirectory("haven-preview-arm-closure-").FullName;
+        try
+        {
+            var runtime = Path.Combine(root, "runtime");
+            var bundle = Path.Combine(runtime, "inference", "bundle");
+            var models = Path.Combine(root, "models");
+            var (assets, _, _) = await ScaffoldClosure(runtime, ArmAarch64ElfMachine);
+            var manifest = JsonSerializer.SerializeToNode(CanonicalManifest(assets))!;
+            var receipt = JsonSerializer.SerializeToNode(CanonicalReceipt(assets))!;
+            if (mixed)
+            {
+                var path = Path.Combine(runtime, "llama.cpp", "libggml-base.so.0");
+                WriteElf(path, X86_64ElfMachine);
+                var asset = manifest["assets"]![1]!;
+                asset["expectedSha256"] = ComputeSha256(path);
+                receipt["admittedAssets"]![asset["logical"]!.GetValue<string>()]!["sha256"] = ComputeSha256(path);
+            }
+            await JsonFileAsync(Path.Combine(bundle, "bundle-manifest.json"), manifest);
+            await JsonFileAsync(Path.Combine(bundle, "bundle-receipt.json"), receipt);
+            var bytes = new byte[64];
+            var hash = Convert.ToHexStringLower(SHA256.HashData(bytes));
+            await ScaffoldModel(models, "arm-model", hash, bytes);
+            await JsonFileAsync(Path.Combine(models, "manifests", "arm-model.json"), ModelManifest("arm-model", hash, bytes.Length));
+            var arm = new LlamaCppPreviewBootstrap(bundle, runtime, models);
+            var discovery = await arm.DiscoverAsync(CancellationToken.None);
+            Assert.Equal(!mixed, discovery.Available);
+            if (mixed) Assert.Contains(discovery.Deficiencies, item => item.Contains("e_machine 62", StringComparison.Ordinal));
+            var x64 = new LlamaCppPreviewBootstrap(bundle, runtime, models, target: LlamaCppPreviewTarget.LinuxX64);
+            Assert.False((await x64.DiscoverAsync(CancellationToken.None)).Available);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
 
     [Fact]
     public async Task Discovery_reports_actionable_degraded_when_no_canonical_bundle_or_model_exists()
@@ -53,7 +198,7 @@ public sealed class LlamaCppPreviewBootstrapTests
             await JsonFileAsync(Path.Combine(bundleDir, "bundle-manifest.json"),
                 CanonicalManifest(manifestAssets));
             await JsonFileAsync(Path.Combine(bundleDir, "bundle-receipt.json"),
-                CanonicalReceipt(serverSha));
+                CanonicalReceipt(manifestAssets));
 
             // --- Canonical per-user model store (content-addressed) ---
             var blobBytes = new byte[256];
@@ -104,10 +249,10 @@ public sealed class LlamaCppPreviewBootstrapTests
         Directory.CreateDirectory(bundleDir);
         try
         {
-            // Server is an x86_64 relabel; deps remain ARM64 so only the server axis fails.
+            // The entire x86_64 closure is relabelled as an ARM bundle; real ELF probes must refuse it.
             var (manifestAssets, _, serverSha) = await ScaffoldClosure(runtimeRoot, X86_64ElfMachine);
             await JsonFileAsync(Path.Combine(bundleDir, "bundle-manifest.json"), CanonicalManifest(manifestAssets));
-            await JsonFileAsync(Path.Combine(bundleDir, "bundle-receipt.json"), CanonicalReceipt(serverSha));
+            await JsonFileAsync(Path.Combine(bundleDir, "bundle-receipt.json"), CanonicalReceipt(manifestAssets));
 
             var blobBytes = new byte[64];
             new Random(7).NextBytes(blobBytes);
@@ -190,7 +335,7 @@ public sealed class LlamaCppPreviewBootstrapTests
             };
             await JsonFileAsync(Path.Combine(bundleDir, "bundle-manifest.json"),
                 CanonicalManifest(manifestAssets.Append(extra).ToArray()));
-            await JsonFileAsync(Path.Combine(bundleDir, "bundle-receipt.json"), CanonicalReceipt(serverSha));
+            await JsonFileAsync(Path.Combine(bundleDir, "bundle-receipt.json"), CanonicalReceipt(manifestAssets));
 
             var blobBytes = new byte[64];
             new Random(4).NextBytes(blobBytes);
@@ -414,7 +559,7 @@ public sealed class LlamaCppPreviewBootstrapTests
         {
             var (manifestAssets, _, serverSha) = await ScaffoldClosure(runtimeRoot, ArmAarch64ElfMachine);
             await JsonFileAsync(Path.Combine(bundleDir, "bundle-manifest.json"), CanonicalManifest(manifestAssets));
-            await JsonFileAsync(Path.Combine(bundleDir, "bundle-receipt.json"), CanonicalReceipt(serverSha));
+            await JsonFileAsync(Path.Combine(bundleDir, "bundle-receipt.json"), CanonicalReceipt(manifestAssets));
 
             var blobBytes = new byte[128];
             new Random(9).NextBytes(blobBytes);
@@ -678,13 +823,13 @@ public sealed class LlamaCppPreviewBootstrapTests
             modelRoot ?? Path.Combine(root, "models"),
             null, seedDir, null, defaultSeedSha256, defaultSeedSize, runner);
 
-    private static object CanonicalManifest(object[] assets) => new
+    private static object CanonicalManifest(object[] assets, string architecture = "aarch64") => new
     {
         manifestSchemaVersion = 1,
         bundleId = "dulche-llamacpp-runtime",
         bundleVersion = "0.4.0-b10809-linux-arm64",
         purpose = "bundled-dulche-runtime-model-assets",
-        host = new { os = "linux", arch = "aarch64" },
+        host = new { os = "linux", arch = architecture },
         state = "ready",
         admission = new { policy = "explicit-supplied-files", zeroHashAdmitted = false, inventedPins = 0, networkUsed = false },
         assets,
@@ -692,7 +837,7 @@ public sealed class LlamaCppPreviewBootstrapTests
         engineState = new { llamacpp = new { present = true, required = false } }
     };
 
-    private static object CanonicalReceipt(string serverSha) => new
+    private static object CanonicalReceipt(object[] declared) => new
     {
         receiptSchemaVersion = 1,
         packer = "haven-dulche-bundle",
@@ -701,12 +846,10 @@ public sealed class LlamaCppPreviewBootstrapTests
         bundleVersion = "0.4.0-b10809-linux-arm64",
         manifestSha256 = new string('a', 64),
         state = "ready",
-        assetCount = 4,
-        admittedAssets = new Dictionary<string, object>
-        {
-            ["arm64-llama-server"] = new { sha256 = serverSha, size = 72448L },
-            ["arm64-libggml-base.so.0.23.0"] = new { sha256 = new string('b', 64), size = 866592L }
-        },
+        assetCount = declared.Length,
+        admittedAssets = declared.Select(asset => JsonSerializer.SerializeToElement(asset)).ToDictionary(
+            asset => asset.GetProperty("logical").GetString()!,
+            asset => new { sha256 = asset.GetProperty("expectedSha256").GetString(), size = asset.GetProperty("expectedSize").GetInt64() }),
         missingRequiredCount = 0,
         engineState = new { llamacpp = new { present = true, required = false } },
         deterministic = true
@@ -801,15 +944,15 @@ public sealed class LlamaCppPreviewBootstrapTests
 
         object[] assets =
         [
-            BinaryAsset("arm64-llama-server", "llama.cpp/llama-server", serverPath, machine, ["runtime"]),
-            BinaryAsset("arm64-libggml-base.so", "llama.cpp/libggml-base.so.0", dep1Path, machine, ["runtime-dependency"]),
-            BinaryAsset("arm64-libggml-cpu-armv8.0_1.so", "llama.cpp/libggml-cpu-armv8.0_1.so", dep2Path, machine, ["runtime-dependency"]),
+            BinaryAsset((machine == X86_64ElfMachine ? "x64-" : "arm64-") + "llama-server", "llama.cpp/llama-server", serverPath, machine, ["runtime"]),
+            BinaryAsset((machine == X86_64ElfMachine ? "x64-" : "arm64-") + "libggml-base.so", "llama.cpp/libggml-base.so.0", dep1Path, machine, ["runtime-dependency"]),
+            BinaryAsset((machine == X86_64ElfMachine ? "x64-" : "arm64-") + "libggml-cpu", "llama.cpp/libggml-cpu-armv8.0_1.so", dep2Path, machine, ["runtime-dependency"]),
             new
             {
                 logical = "llamacpp-MIT-notice",
                 kind = "runtime.bundle",
                 engine = "llamacpp",
-                platform = new { os = "linux", arch = "aarch64" },
+                platform = new { os = "linux", arch = machine == X86_64ElfMachine ? "x86_64" : "aarch64" },
                 runtimeFormat = "opaque",
                 source = "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/LICENSE",
                 license = "MIT",
@@ -832,7 +975,7 @@ public sealed class LlamaCppPreviewBootstrapTests
             logical,
             kind = "runtime.binary",
             engine = "llamacpp",
-            platform = new { os = "linux", arch = "aarch64" },
+            platform = new { os = "linux", arch = machine == X86_64ElfMachine ? "x86_64" : "aarch64" },
             runtimeFormat = "elf",
             source = "https://github.com/ggml-org/llama.cpp/releases/tag/b10809",
             license = "MIT",

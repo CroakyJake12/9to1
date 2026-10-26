@@ -9,6 +9,76 @@ namespace Haven.Infrastructure.Tests;
 
 public sealed class HuggingFaceModelCtlImporterTests
 {
+    [LinuxModelLayoutFact]
+    public async Task Selected_bundle_root_serves_bootstrap_and_HF_import_into_the_same_explicit_Home_model_store()
+    {
+        var root = Directory.CreateTempSubdirectory("haven-selected-model-layout-").FullName;
+        var previousBundle = Environment.GetEnvironmentVariable(LlamaCppRuntimeLayout.BundleRootEnvironmentVariable);
+        var previousModels = Environment.GetEnvironmentVariable("HAVEN_MODEL_ROOT");
+        var previousRuntime = Environment.GetEnvironmentVariable("HAVEN_RUNTIME_DIR");
+        try
+        {
+            File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            var assets = Path.Combine(root, "assets");
+            var scripts = Directory.CreateDirectory(Path.Combine(assets, "inference")).FullName;
+            var canonical = FindCanonicalDirectory();
+            foreach (var name in new[] { "modelctl.py", "gguf.py", "model_lease.py" })
+                File.Copy(Path.Combine(canonical, name), Path.Combine(scripts, name));
+            var models = Path.Combine(root, "models");
+            Environment.SetEnvironmentVariable(LlamaCppRuntimeLayout.BundleRootEnvironmentVariable, assets);
+            Environment.SetEnvironmentVariable("HAVEN_MODEL_ROOT", models);
+            Environment.SetEnvironmentVariable("HAVEN_RUNTIME_DIR", Path.Combine(root, "leases"));
+            var layout = LlamaCppRuntimeLayout.ReadExplicitEnvironment();
+            var productionBootstrap = layout.CreateBootstrap();
+            Assert.Equal(Path.Combine(scripts, "modelctl.py"), productionBootstrap.ModelCtlPathValue);
+            Assert.Equal(models, productionBootstrap.ModelRoot);
+
+            // Small valid GGUF storage fixture, not an inference-capable model or runtime success.
+            byte[] bytes = [71, 71, 85, 70, 3, 0, 0, 0, 1, 2, 3];
+            var hash = Convert.ToHexStringLower(SHA256.HashData(bytes));
+            var seed = Directory.CreateDirectory(layout.SeedDirectory).FullName;
+            Directory.CreateDirectory(Path.Combine(seed, "notices"));
+            await File.WriteAllTextAsync(Path.Combine(seed, "notices", LlamaCppPreviewBootstrap.SeedLicenseNoticeFileName), "Fixture Apache-2.0 notice");
+            await File.WriteAllBytesAsync(Path.Combine(seed, hash + ".gguf"), bytes);
+            await File.WriteAllTextAsync(Path.Combine(seed, "fixture-seed.json"), JsonSerializer.Serialize(new
+            {
+                id = "fixture-seed", sha256 = hash, size = bytes.Length, license = "Apache-2.0",
+                displayName = "Storage fixture", source = "https://huggingface.co/owner/model",
+                redistribution = "review-required", capabilities = new[] { "unverified" }
+            }));
+            var bootstrap = new LlamaCppPreviewBootstrap(bundleDir: layout.BundleDirectory, runtimeRoot: layout.RuntimeRoot,
+                seedDir: seed, defaultSeedId: "fixture-seed", defaultSeedSha256: hash, defaultSeedSize: bytes.Length,
+                modelCtlPath: layout.ModelCtlPath);
+            Assert.True((await bootstrap.EnsureDefaultModelImportedAsync(CancellationToken.None)).IsImported);
+            Assert.Equal(SeedImportStatus.SkippedExistingModel,
+                (await bootstrap.EnsureDefaultModelImportedAsync(CancellationToken.None)).Status);
+
+            var local = Path.Combine(root, "downloaded model.gguf");
+            await File.WriteAllBytesAsync(local, bytes);
+            var request = new HuggingFaceModelImport(local, "hf-selected-root", "HF fixture", "Apache-2.0",
+                "https://huggingface.co/owner/model/blob/0123456789abcdef0123456789abcdef01234567/model.gguf", hash, bytes.Length);
+            // No scriptPath or modelRoot constructor override: exercise the production resolution.
+            await new HuggingFaceModelCtlImporter(runtimeDirectory: Path.Combine(root, "leases")).ImportAsync(request, CancellationToken.None);
+            using var manifest = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(models, "manifests", request.ModelId + ".json")));
+            Assert.Equal(hash, manifest.RootElement.GetProperty("sha256").GetString());
+            var evidence = await new HavenOS.Home.Core.HomeDulchePackagedModelEvidenceSource(preferredModelId: request.ModelId)
+                .FindEligibleAsync(CancellationToken.None);
+            Assert.NotNull(evidence);
+            Assert.Equal(request.ModelId, evidence.ModelId);
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(Path.Combine(models, "blobs", "sha256", hash[..2], hash + ".gguf")));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(LlamaCppRuntimeLayout.BundleRootEnvironmentVariable, previousBundle);
+            Environment.SetEnvironmentVariable("HAVEN_MODEL_ROOT", previousModels);
+            Environment.SetEnvironmentVariable("HAVEN_RUNTIME_DIR", previousRuntime);
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    public sealed class LinuxModelLayoutFactAttribute : FactAttribute
+    { public LinuxModelLayoutFactAttribute() { if (!OperatingSystem.IsLinux()) Skip = "Requires canonical Linux Python modelctl storage import, not inference."; } }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
