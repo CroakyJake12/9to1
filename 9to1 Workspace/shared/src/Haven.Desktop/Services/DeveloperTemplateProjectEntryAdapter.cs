@@ -1,3 +1,4 @@
+using Haven.Application;
 using HavenOS.Apps.Dev;
 
 namespace Haven.Desktop.Services;
@@ -26,7 +27,22 @@ public sealed class DeveloperTemplateProjectEntryAdapter(
                 string.IsNullOrWhiteSpace(file.RelativePath) || file.RelativePath.Contains('/') ||
                 !StringComparer.Ordinal.Equals(file.RelativePath, Path.GetFileName(file.RelativePath))))
             throw new InvalidDataException("This reviewed starter only supports direct project-root files.");
-        return manualEntry.RegisterExistingFolderAsync(filesStoreId, destinationFolderId,
-            existingProjectRoot, cancellationToken);
+        return manualEntry.RegisterExistingFolderWithCapturePreflightAsync(filesStoreId, destinationFolderId,
+            existingProjectRoot, (capture, token) =>
+            {
+                DemandEmptyTarget(capture, token);
+                return Task.CompletedTask;
+            }, cancellationToken);
+    }
+
+    internal static void DemandEmptyTarget(IDeveloperProjectOriginalExistingSourceCapture capture,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(capture);
+        cancellationToken.ThrowIfCancellationRequested();
+        // Only the configured Files/kernel capture, issued and revalidated by the manual owner,
+        // reaches this check. Both files and nested directories make a target nonempty.
+        if (capture.OriginalFiles.Length != 0 || capture.OriginalFolderPaths.Length != 0)
+            throw new InvalidOperationException("Choose an empty project folder before creating a template project.");
     }
 }
