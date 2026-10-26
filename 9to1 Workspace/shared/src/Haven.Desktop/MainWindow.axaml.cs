@@ -33,7 +33,7 @@ public sealed partial class MainWindow : Window, IDesktopOriginalRetirementParti
         MinWidth = 720;
         MinHeight = 520;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://Haven.Desktop/Assets/haven.ico")));
+        Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://Haven/Assets/haven.ico")));
         Title = DesktopProductIdentity.DisplayName;
         DataContextChanged += OnOriginalDataContextChanged;
     }
