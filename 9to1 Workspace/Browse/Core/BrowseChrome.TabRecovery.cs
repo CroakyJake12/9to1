@@ -106,7 +106,7 @@ public sealed partial class BrowseChrome
         }
         _tabs.Remove(tab); _tabs.Insert(Math.Clamp(closed.Index, 0, _tabs.Count), tab);
         NormalizeTabPlacement();
-        _selectedTabId = tab.Id;
+        SelectTabPresentation(tab.Id);
         await SaveEnginePreferencesAsync(token).ConfigureAwait(false);
         await SaveTabsAsync(token).ConfigureAwait(false);
         _status = tab.EngineState == BrowseEngineState.Ready ? "Closed tab reopened." : "Closed tab restored. " + tab.Status;

@@ -89,6 +89,8 @@ public sealed record BrowseChromeSnapshot(
     public Haven.Core.SplitOrientation SplitOrientation { get; init; } = Haven.Core.SplitOrientation.Vertical;
     public double PrimaryPaneRatio { get; init; } = 0.5;
     public IReadOnlyList<BrowseTabGroupProjection> Groups { get; init; } = [];
+    public IReadOnlyList<BrowseSplitViewProjection> SplitViews { get; init; } = [];
+    public Guid? ActiveSplitViewId { get; init; }
     public BrowseTabSnapshot SelectedTab => Tabs.Single(tab => tab.Id == SelectedTabId);
 }
 
@@ -218,17 +220,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             {
                 if (tabSessionPersistence is not null) chrome.RestoreClosedTabs(projected?.ClosedTabs ?? []);
                 else chrome.RestoreStandaloneClosedTabs();
-                if (tabSessionPersistence is not null && projected?.PaneTabIds is { Count: 2 } panes &&
-                    panes[0] != panes[1] && panes.All(id => chrome._tabs.Any(tab => tab.Id == id &&
-                        tab.Privacy == BrowserTabPrivacy.Standard)) &&
-                    panes.Contains(chrome._selectedTabId) &&
-                    (projected.SplitOrientation is null || Enum.IsDefined(projected.SplitOrientation.Value)) &&
-                    (projected.PrimaryPaneRatio is null || IsValidPaneRatio(projected.PrimaryPaneRatio.Value)))
-                {
-                    chrome._paneTabIds.AddRange(panes);
-                    chrome._splitOrientation = projected.SplitOrientation ?? Haven.Core.SplitOrientation.Vertical;
-                    chrome._primaryPaneRatio = projected.PrimaryPaneRatio ?? 0.5;
-                }
+                chrome.RestoreSplitViews(projected);
             }
             chrome._status = chrome._tabs[0].EngineState == BrowseEngineState.Ready
                 ? "Browse is ready."
@@ -384,8 +376,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         var privacy = isPrivate ? BrowserTabPrivacy.Private : BrowserTabPrivacy.Standard;
         var home = _internalContentFactory is not null ? NewTabAddress : AppContentAddress.Parse(_data.Settings.HomePage);
         var tab = await AddRuntimeAsync(Guid.NewGuid(), isPrivate ? "Private tab" : "New tab", home, privacy, string.Empty, cancellationToken).ConfigureAwait(false);
-        _paneTabIds.Clear();
-        _selectedTabId = tab.Id;
+        SelectTabPresentation(tab.Id);
         _status = isPrivate
             ? "Private tab opened. History, permissions, downloads, and tab state are not persisted by Browse."
             : "New tab opened.";
@@ -398,8 +389,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         ThrowIfCannotAccept();
         cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
-        _selectedTabId = tab.Id;
-        if (_paneTabIds.Count == 2 && !_paneTabIds.Contains(tab.Id)) _paneTabIds.Clear();
+        SelectTabPresentation(tab.Id);
         if (tab.EngineState == BrowseEngineState.Crashed)
             _status = "This tab's web renderer crashed. Recovery is available.";
         else
@@ -430,8 +420,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         BrowseEngineKind? engineOverride = _enginePolicy.TabOverrides.TryGetValue(tab.Id, out var explicitEngine) ? explicitEngine : null;
         await ReleaseContentAsync(tab).ConfigureAwait(false);
         _tabs.Remove(tab);
-        _paneTabIds.Remove(tab.Id);
-        if (_paneTabIds.Count < 2) _paneTabIds.Clear();
+        RemoveSplitViewForClosedTab(tab.Id);
         _enginePolicy.SetTabOverride(tab.Id, null);
         if (_tabs.Count == 0)
         {
@@ -456,7 +445,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         }
         else if (wasSelected)
         {
-            _selectedTabId = _tabs[Math.Clamp(index, 0, _tabs.Count - 1)].Id;
+            SelectTabPresentation(_tabs[Math.Clamp(index, 0, _tabs.Count - 1)].Id);
         }
         // Selection must already identify a surviving tab before any later I/O
         // can fail; callers must still be able to inspect the real remaining state.
@@ -514,7 +503,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         var activate = source.Id == _selectedTabId;
         if (IsHomeAddress(address) && _tabs.FirstOrDefault(tab => tab.IsHome) is { } home)
         {
-            if (activate) _selectedTabId = home.Id;
+            if (activate) SelectTabPresentation(home.Id);
             if (_tabSessionPersistence is not null) await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
             return Publish();
         }
@@ -522,7 +511,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         {
             var created = await AddRuntimeAsync(Guid.NewGuid(), address.Authority, address, source.Privacy,
                 source.Group, cancellationToken, source.ProfileId).ConfigureAwait(false);
-            if (activate) _selectedTabId = created.Id;
+            if (activate) SelectTabPresentation(created.Id);
             await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
             _status = created.Status; return Publish();
         }
@@ -655,7 +644,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         if (assessment.IsAllowed)
         {
             var tab = await AddRuntimeAsync(Guid.NewGuid(), requestedAddress.Host, AppContentAddress.Parse(requestedAddress.AbsoluteUri), opener.Privacy, opener.Group, cancellationToken, opener.ProfileId).ConfigureAwait(false);
-            _selectedTabId = tab.Id;
+            SelectTabPresentation(tab.Id);
             await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
         }
         Publish();
@@ -883,7 +872,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private async Task HandlePopupFromAsync(TabRuntime opener, Uri address)
     {
         if (_nativeRetiring || _disposed || !_tabs.Contains(opener)) return;
-        _selectedTabId = opener.Id;
+        SelectTabPresentation(opener.Id);
         await HandlePopupAsync(address).ConfigureAwait(false);
     }
 
@@ -964,6 +953,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         // persists its current snapshot, otherwise that old commit can restore
         // a closed or replaced tab after the user action succeeds.
         if (_lastOriginalPageCommit is { } originalCommit) await originalCommit.ConfigureAwait(false);
+        CaptureActiveSplitView();
         var tabs = CaptureStandardTabs();
         var openIds = tabs.Select(tab => tab.Id).ToHashSet();
         await SaveTabProjectionAsync(tabs, PersistedSelectedTabId(), CaptureClosedTabs(openIds), cancellationToken).ConfigureAwait(false);
@@ -979,7 +969,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             : _tabSessionPersistence.SaveAsync(new BrowseTabSessionProjection(tabs, selectedTabId)
                 { ClosedTabs = closedTabs, PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()),
                     SplitOrientation = _splitOrientation, PrimaryPaneRatio = _primaryPaneRatio,
-                    Groups = Array.AsReadOnly(CaptureTabGroups().ToArray()) }, token);
+                    Groups = Array.AsReadOnly(CaptureTabGroups().ToArray()),
+                    SplitViews = CaptureSplitViews() }, token);
         if (original is null) throw new InvalidOperationException("The workspace owner supplied no original session save task.");
         RetainAppSource(original); return original;
     }
@@ -1020,7 +1011,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             PaneTabIds = Array.AsReadOnly(_paneTabIds.ToArray()),
             SplitOrientation = _splitOrientation,
             PrimaryPaneRatio = _primaryPaneRatio,
-            Groups = Array.AsReadOnly(CaptureTabGroups().ToArray())
+            Groups = Array.AsReadOnly(CaptureTabGroups().ToArray()),
+            SplitViews = CaptureSplitViews(), ActiveSplitViewId = _activeSplitViewId
         };
     }
 
