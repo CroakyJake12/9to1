@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Reflection;
 using Haven.Application;
 using Haven.Desktop.Services;
 using HavenOS.Apps.Dev;
@@ -13,6 +14,104 @@ namespace Haven.Desktop.Tests;
 
 public sealed class DeveloperTemplateProjectEntryAdapterTests
 {
+    [LinuxFact]
+    public async Task Real_template_entry_preflights_before_effects_and_manual_entry_cannot_be_recovered_as_template()
+    {
+        var rigType = typeof(FilesDeveloperOriginalDirectorySetupProducerTests)
+            .GetNestedType("Rig", BindingFlags.NonPublic)!;
+        var create = rigType.GetMethod("CreateAsync", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var creation = (Task)create.Invoke(null, [null, true, true, true, null])!;
+        await creation;
+        var rig = creation.GetType().GetProperty("Result")!.GetValue(creation)!;
+        var graph = (ServiceProvider)Get(rig, "Graph");
+        var projectRoot = (string)Get(rig, "ProjectRoot");
+        var filesRoot = Directory.GetParent(projectRoot)!.FullName;
+        var authority = graph.GetRequiredService<NativeFilesWorkspaceAuthority>();
+        var workspace = (await authority.GetCurrentAsync(CancellationToken.None))!;
+        var store = (IDeveloperWorkspaceStore)Get(rig, "SavedStore");
+        var manual = NewManualAdapter(graph, store);
+        var provider = new DeveloperCuiProjectTemplateProvider();
+        var catalog = new DeveloperProjectCatalog([provider]);
+        var materializer = new DeveloperProjectTemplateMaterializer([provider]);
+
+        try
+        {
+            var manualRoot = CreateTarget(filesRoot, "manual-nonempty", "manual data");
+            var manualOperation = manual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], manualRoot, CancellationToken.None);
+            await Decide(rig, manualOperation, HomeDeveloperProjectReadAdmissionSource.ReadAction);
+            await Decide(rig, manualOperation, HomeDeveloperProjectSetupPermissionSource.SetupAction);
+            await manualOperation;
+            var manualSetupId = Assert.IsType<Guid>(manual.RetainedSetupId);
+
+            // The same manual owner serves both Build entry modes. A previous successful manual
+            // registration must not satisfy a later template request from retained identity alone.
+            var manualSetupRecordsBefore = await SetupRecordCount(graph);
+            var manualMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(manualRoot));
+            var templateOnManual = new DeveloperTemplateProjectEntryAdapter(manual, materializer);
+            var mismatch = templateOnManual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], manualRoot, manualMaterialization, CancellationToken.None);
+            await Decide(rig, mismatch, HomeDeveloperProjectReadAdmissionSource.ReadAction);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => mismatch);
+            Assert.Equal(manualSetupId, manual.RetainedSetupId);
+            Assert.Equal(manualSetupRecordsBefore, await SetupRecordCount(graph));
+
+            // A fresh template adapter gets no retained attempt from a generic manual project.
+            // The actual READ/capture runs, then refusal precedes journal, Files, and Dev writes.
+            var rejectedRoot = CreateTarget(filesRoot, "template-nonempty", "preserve bytes");
+            var freshManual = NewManualAdapter(graph, store);
+            var freshTemplate = new DeveloperTemplateProjectEntryAdapter(freshManual, materializer);
+            var rejectedMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(rejectedRoot));
+            var drivePath = Path.Combine(filesRoot, ".9to1-files", "drive.json");
+            var driveBefore = File.ReadAllBytes(drivePath);
+            var devBefore = Snapshot(store.OriginalWorkspaceMetadataDirectory);
+            var setupRecordsBefore = await SetupRecordCount(graph);
+            var rejected = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None);
+            var concurrentRejected = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, CancellationToken.None);
+            using var cancelledWaiter = new CancellationTokenSource();
+            var cancelledAttempt = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], rejectedRoot, rejectedMaterialization, cancelledWaiter.Token);
+            cancelledWaiter.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelledAttempt);
+            await Decide(rig, rejected, HomeDeveloperProjectReadAdmissionSource.ReadAction);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => rejected);
+            await Decide(rig, concurrentRejected, HomeDeveloperProjectReadAdmissionSource.ReadAction);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => concurrentRejected);
+            Assert.Null(freshManual.RetainedSetupId);
+            Assert.Null(freshManual.RetainedWorkspaceId);
+            Assert.Equal(driveBefore, File.ReadAllBytes(drivePath));
+            Assert.Equal(devBefore, Snapshot(store.OriginalWorkspaceMetadataDirectory));
+            Assert.Equal(setupRecordsBefore, await SetupRecordCount(graph));
+            Assert.Equal("preserve bytes", await File.ReadAllTextAsync(Path.Combine(rejectedRoot, "existing.txt")));
+
+            var emptyRoot = Path.Combine(filesRoot, "template-empty"); Directory.CreateDirectory(emptyRoot);
+            var emptyMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(emptyRoot));
+            var accepted = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], emptyRoot, emptyMaterialization, CancellationToken.None);
+            var concurrentAccepted = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"], emptyRoot, emptyMaterialization, CancellationToken.None);
+            await Decide(rig, accepted, HomeDeveloperProjectReadAdmissionSource.ReadAction);
+            await Decide(rig, accepted, HomeDeveloperProjectSetupPermissionSource.SetupAction);
+            var acceptedReference = await accepted;
+            Assert.NotNull(freshManual.RetainedSetupId);
+            var setupRecordsAfterFirst = await SetupRecordCount(graph);
+            await Decide(rig, concurrentAccepted, HomeDeveloperProjectReadAdmissionSource.ReadAction);
+            var recoveredReference = await concurrentAccepted;
+            Assert.Equal(acceptedReference.WorkspaceId, recoveredReference.WorkspaceId);
+            Assert.Equal(acceptedReference.ProjectId, recoveredReference.ProjectId);
+            Assert.Equal(setupRecordsAfterFirst, await SetupRecordCount(graph));
+        }
+        finally
+        {
+            var close = rig.GetType().GetMethod("DisposeAsync", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
+                .Invoke(rig, null)!;
+            if (close is ValueTask valueTask) await valueTask;
+            else await (Task)close;
+        }
+    }
+
     [LinuxFact]
     public async Task Empty_target_capture_is_admitted_but_real_file_or_subdirectory_capture_is_refused()
     {
@@ -98,6 +197,53 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
         services.AddSingleton<ResourceAuthorizationService>();
         services.AddFilesNativeHost();
         return services.BuildServiceProvider();
+    }
+
+    private static DeveloperManualProjectEntryAdapter NewManualAdapter(IServiceProvider graph, IDeveloperWorkspaceStore store)
+        => new(graph.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+            graph.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
+            graph.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
+            graph.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
+            graph.GetRequiredService<IDeveloperProjectOriginalSetupPermissionSource>(),
+            graph.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(), store);
+
+    private static async Task<DeveloperProjectTemplateMaterialization> PrepareTemplate(
+        DeveloperProjectCatalog catalog, DeveloperProjectTemplateMaterializer materializer, string projectName)
+    {
+        var option = Assert.Single((await catalog.SearchAsync(new())).Value!);
+        var result = await materializer.PrepareAsync(option, projectName);
+        Assert.True(result.Succeeded);
+        return result.Value!;
+    }
+
+    private static string CreateTarget(string filesRoot, string name, string content)
+    {
+        var path = Path.Combine(filesRoot, name); Directory.CreateDirectory(path);
+        File.WriteAllText(Path.Combine(path, "existing.txt"), content);
+        return path;
+    }
+
+    private static object Get(object instance, string property)
+        => instance.GetType().GetProperty(property, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!.GetValue(instance)!;
+
+    private static async Task Decide(object rig, Task operation, string action)
+    {
+        var method = rig.GetType().GetMethod("DecideNextAsync", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!;
+        var decision = (Task)method.Invoke(rig, [operation, action, HomeApprovalChoice.Accept])!;
+        await decision;
+    }
+
+    private static IReadOnlyDictionary<string, string> Snapshot(string directory)
+        => Directory.Exists(directory)
+            ? Directory.GetFiles(directory, "*", SearchOption.AllDirectories).ToDictionary(
+                path => Path.GetRelativePath(directory, path), path => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path))))
+            : new Dictionary<string, string>();
+
+    private static async Task<int> SetupRecordCount(IServiceProvider graph)
+    {
+        var read = await graph.GetRequiredService<IHomeCoreStateStore>().ReadAsync(CancellationToken.None);
+        Assert.True(read.IsSuccess);
+        return read.State!.Records.Count(record => record.RecordType == "home.dev-project-setup");
     }
 
     private static async Task<IDeveloperProjectOriginalExistingSourceCapture> CaptureAsync(
