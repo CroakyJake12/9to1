@@ -222,7 +222,7 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.AddHandler(InputElement.PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
-        _findKeyScope?.AddHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost, RoutingStrategies.Tunnel, handledEventsToo: true);
+        _findKeyScope?.AddHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost, RoutingStrategies.Direct, handledEventsToo: true);
     }
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
     {

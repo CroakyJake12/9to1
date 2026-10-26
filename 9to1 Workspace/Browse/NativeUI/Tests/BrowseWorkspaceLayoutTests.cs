@@ -98,7 +98,7 @@ public sealed partial class BrowseNativeUiTests
             var targetOrigin = targetRowVisual.TranslatePoint(default, window)!.Value;
             var dropPoint = targetOrigin + new Vector(targetRowVisual.Bounds.Width * relativeX, targetRowVisual.Bounds.Height / 2);
             StartTabDrag(window, source, sourcePoint);
-            window.MouseMove(dropPoint); Layout();
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
             var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             Assert.Equal(PlacementMode.Bottom, preview.Placement);
             Assert.False(preview.IsHitTestVisible);
@@ -165,13 +165,13 @@ public sealed partial class BrowseNativeUiTests
             var firstPreviewPoint = targetOrigin + new Vector(targetVisual.Bounds.Width * (sourceReceivesFirst ? .22 : .78), targetVisual.Bounds.Height / 2);
 
             StartTabDrag(window, source, sourcePoint);
-            window.MouseMove(firstPreviewPoint); Layout();
+            window.MouseMove(firstPreviewPoint, RawInputModifiers.LeftMouseButton); Layout();
             var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             var anchor = window.GetVisualDescendants().OfType<Control>().Single(control => control.Name == "BrowseTabDragAnchor");
             var anchorPoint = anchor.TranslatePoint(default, window)!.Value;
             Assert.InRange(Math.Abs(anchorPoint.X - firstPreviewPoint.X), 0, .5);
             Assert.InRange(Math.Abs(anchorPoint.Y - firstPreviewPoint.Y), 0, .5);
-            window.MouseMove(dropPoint); Layout();
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
             anchorPoint = anchor.TranslatePoint(default, window)!.Value;
             Assert.InRange(Math.Abs(anchorPoint.X - dropPoint.X), 0, .5);
             Assert.InRange(Math.Abs(anchorPoint.Y - dropPoint.Y), 0, .5);
@@ -225,7 +225,7 @@ public sealed partial class BrowseNativeUiTests
             var dropPoint = targetOrigin + new Vector(targetVisual.Bounds.Width * .5, targetVisual.Bounds.Height / 2);
 
             StartTabDrag(window, source, sourcePoint);
-            window.MouseMove(dropPoint); Layout();
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
             Assert.True(targetRow!.DropGroup);
             var groupGlow = Assert.IsAssignableFrom<CuiContainerControl>(targetVisual.GetVisualDescendants()
                 .OfType<Control>().Single(control => control.Name == "BrowseTabDropGroupIndicator"));
@@ -275,7 +275,7 @@ public sealed partial class BrowseNativeUiTests
             source.AddHandler(InputElement.PointerPressedEvent, (_, args) => pointer = args.Pointer,
                 Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
             source.Focus(); StartTabDrag(window, source, sourcePoint);
-            window.MouseMove(dropPoint); Layout();
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
             Assert.True(source.IsPressed);
             Assert.NotNull(pointer!.Captured);
             Assert.True(targetRow!.DropSplitBefore);
@@ -329,7 +329,7 @@ public sealed partial class BrowseNativeUiTests
             var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
             var dropPoint = targetVisual.TranslatePoint(default, window)!.Value + new Vector(targetVisual.Bounds.Width * .25, targetVisual.Bounds.Height / 2);
             StartTabDrag(window, source, sourcePoint);
-            window.MouseMove(dropPoint); Layout();
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
             Assert.True(targetRow!.DropSplitBefore);
             Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
 
