@@ -94,7 +94,7 @@ public sealed partial class BrowseNativeUiTests
             var dropPoint = targetOrigin + new Vector(targetRowVisual.Bounds.Width * relativeX, targetRowVisual.Bounds.Height / 2);
             window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
             window.MouseMove(dropPoint); Layout();
-            var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>().Where(popup => popup.IsOpen));
+            var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             Assert.Equal(PlacementMode.Bottom, preview.Placement);
             Assert.False(preview.IsHitTestVisible);
             Assert.IsType<Border>(preview.Child);
@@ -154,7 +154,7 @@ public sealed partial class BrowseNativeUiTests
 
             window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
             window.MouseMove(firstPreviewPoint); Layout();
-            var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>().Where(popup => popup.IsOpen));
+            var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             var anchor = window.GetVisualDescendants().OfType<Control>().Single(control => control.Name == "BrowseTabDragAnchor");
             var anchorPoint = anchor.TranslatePoint(default, window)!.Value;
             Assert.InRange(Math.Abs(anchorPoint.X - firstPreviewPoint.X), 0, .5);
@@ -216,7 +216,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.True(groupGlow.IsVisible);
             Assert.InRange(Math.Abs(groupGlow.Bounds.Width - targetVisual.Bounds.Width), 0, 1);
             Assert.IsAssignableFrom<IGradientBrush>(groupGlow.Background);
-            Assert.True(window.GetVisualDescendants().OfType<Popup>().Any(popup => popup.IsOpen));
+            Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             window.MouseUp(dropPoint, MouseButton.Left);
             if (workspace.OriginalCommand is { } original) await Observe(original, window);
             Layout();
@@ -261,7 +261,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.True(source.IsPressed);
             Assert.NotNull(pointer!.Captured);
             Assert.True(targetRow!.DropSplitBefore);
-            Assert.True(window.GetVisualDescendants().OfType<Popup>().Any(popup => popup.IsOpen));
+            Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
             window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
             Layout();
