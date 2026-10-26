@@ -6,6 +6,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
@@ -179,6 +180,7 @@ public sealed partial class BrowseNativeUiTests
             var targetControls = targetVisual.GetVisualDescendants().OfType<Control>();
             var half = targetControls.Single(control => control.Name == (sourceReceivesFirst ? "BrowseTabDropSplitBeforeHalf" : "BrowseTabDropSplitAfterHalf"));
             Assert.InRange(Math.Abs(half.Bounds.Width * 2 - targetVisual.Bounds.Width), 0, 1);
+            CaptureTabDragIfRequested(window, sourceReceivesFirst ? "split-left" : "split-right");
             Assert.NotNull(preview.Child);
             window.MouseUp(dropPoint, MouseButton.Left);
             if (workspace.OriginalCommand is { } original) await Observe(original, window);
@@ -232,6 +234,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.True(groupGlow.IsVisible);
             Assert.InRange(Math.Abs(groupGlow.Bounds.Width - targetVisual.Bounds.Width), 0, 1);
             Assert.IsAssignableFrom<IGradientBrush>(groupGlow.Background);
+            CaptureTabDragIfRequested(window, "group");
             Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             window.MouseUp(dropPoint, MouseButton.Left);
             if (workspace.OriginalCommand is { } original) await Observe(original, window);
@@ -347,6 +350,18 @@ public sealed partial class BrowseNativeUiTests
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
 
         void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    private static void CaptureTabDragIfRequested(BrowseNativeWindow window, string state)
+    {
+        var directory = Environment.GetEnvironmentVariable("NINETOONE_TAB_DRAG_CAPTURE_DIR");
+        if (string.IsNullOrWhiteSpace(directory)) return;
+        Directory.CreateDirectory(directory);
+        var scaling = window.RenderScaling;
+        var size = new PixelSize((int)Math.Ceiling(window.Bounds.Width * scaling), (int)Math.Ceiling(window.Bounds.Height * scaling));
+        using var frame = new RenderTargetBitmap(size, new Vector(96 * scaling, 96 * scaling));
+        frame.Render(window);
+        frame.Save(Path.Combine(directory, "browse-tab-drag-" + state + ".png"));
     }
 
     private static IEnumerable<Control> AuthoredTabDescendants(CuiContainerControl root)
