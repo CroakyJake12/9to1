@@ -31,6 +31,23 @@ public sealed class HavenSceneRenderer
         DrawAnimatedShadow(element, context, opacity, radius);
         DrawAnimatedGlow(element, context, opacity, radius);
         DrawAnimatedFill(element, HavenProperties.Background, context, element.Bounds, radius, opacity);
+        if (element is Button { } button
+            && button.State.HasFlag(HavenElementState.Hover)
+            && !button.State.HasFlag(HavenElementState.Pressed | HavenElementState.Disabled))
+        {
+            var background = button.GetValue(HavenProperties.Background);
+            var hoverProgress = Math.Clamp((button.GetValue(HavenProperties.Scale) - 1d) / .018d, 0d, 1d);
+            if (hoverProgress > 0d
+                && !string.Equals(background, "Transparent", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(background, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Add(new HavenFillRoundedRectCommand(
+                    button.Bounds,
+                    new HavenContrastHoverBrush(new HavenTokenBrush(background)),
+                    radius,
+                    opacity * hoverProgress * .12d));
+            }
+        }
         var borderWidth = ResolvePixels(element.GetValue(HavenProperties.BorderWidth));
         if (borderWidth > 0) DrawAnimatedStroke(element, context, element.Bounds, borderWidth, radius, opacity);
 

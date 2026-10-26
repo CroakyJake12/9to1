@@ -834,8 +834,17 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     {
         HavenTokenBrush token => HavenAvaloniaThemeResolver.Resolve(token.Token, scope),
         HavenSolidBrush solid => new SolidColorBrush(Color.FromArgb(solid.A, solid.R, solid.G, solid.B)),
+        HavenContrastHoverBrush hover => ResolveContrastHover(hover.Background, scope),
         _ => throw new InvalidOperationException($"Unsupported 9to1 brush '{brush.GetType().Name}'.")
     };
+
+    private static IBrush ResolveContrastHover(HavenBrush background, Control? scope)
+    {
+        var resolved = ResolveBrush(background, scope);
+        var color = HavenAvaloniaThemeResolver.EffectColor(resolved, "9to1 button hover background");
+        var luminance = (.2126d * color.R + .7152d * color.G + .0722d * color.B) / 255d;
+        return luminance >= .5d ? Brushes.Black : Brushes.White;
+    }
 
     private static Avalonia.Rect Rect(HavenRect rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
     private void UpdateSurfaceMetrics(double width, double height) => SurfaceMetrics = new(new HavenSize(Math.Max(0, width), Math.Max(0, height)), Math.Max(.01d, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1d), Platform);

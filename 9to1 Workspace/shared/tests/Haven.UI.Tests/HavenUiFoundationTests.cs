@@ -90,12 +90,37 @@ public sealed class HavenUiFoundationTests
     {
         var button = new Button { Variant = ButtonVariant.Tertiary };
         Assert.Equal("AccentMuted", button.GetValue(HavenProperties.Background));
+        button.SetValue(HavenProperties.Background, "Danger", HavenValueSource.UserClass);
         button.SetState(HavenElementState.Hover, true);
-        Assert.Equal("AccentTertiaryHover", button.GetValue(HavenProperties.Background));
+        Assert.Equal("Danger", button.GetValue(HavenProperties.Background));
+        Assert.Equal("AccentTertiaryGlow", button.GetValue(HavenProperties.Glow));
+        Assert.Equal(1.018d, button.GetValue(HavenProperties.Scale));
         Assert.Equal(ButtonDefaults.HoverTransition, button.GetValue(HavenProperties.Transition));
         button.SetState(HavenElementState.Pressed, true);
         Assert.Equal(.94, button.GetValue(HavenProperties.Scale));
         Assert.Equal(ButtonDefaults.PressedTransition, button.GetValue(HavenProperties.Transition));
+        Assert.Equal("Danger", button.GetValue(HavenProperties.Background));
+    }
+
+    [Fact]
+    public void Button_hover_tint_uses_its_effective_background_and_skips_transparent_buttons()
+    {
+        var root = new Container();
+        var custom = new Button { Variant = ButtonVariant.Tertiary };
+        custom.SetValue(HavenProperties.Background, "Danger", HavenValueSource.UserClass);
+        custom.SetState(HavenElementState.Hover, true);
+        root.Add(custom);
+        var transparent = new Button { Variant = ButtonVariant.Text };
+        transparent.SetState(HavenElementState.Hover, true);
+        root.Add(transparent);
+
+        var commands = new HavenSceneRenderer().Render(root);
+        var customFill = Assert.Single(commands.OfType<HavenFillRoundedRectCommand>(), command =>
+            command.Bounds == custom.Bounds && command.Brush is HavenContrastHoverBrush);
+        var tint = Assert.IsType<HavenContrastHoverBrush>(customFill.Brush);
+        Assert.Equal(new HavenTokenBrush("Danger"), tint.Background);
+        Assert.DoesNotContain(commands.OfType<HavenFillRoundedRectCommand>(), command =>
+            command.Bounds == transparent.Bounds && command.Brush is HavenContrastHoverBrush);
     }
 
     [Fact]
