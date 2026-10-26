@@ -341,7 +341,7 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
                 [review.Scope], review.Arguments, cancellationToken, review.TargetAppId).ConfigureAwait(false);
             if (claimed.Disposition != HomeResourceClaimDisposition.Claimed || claimed.Actor != review.Actor) return null;
             return review.Admission = new(_notes, review.Request, _store, _profiles, _ownership,
-                _broker, review.Actor, capability, review.TargetAppId, review.ActionId,
+                _broker, review.Actor, capability, review.TargetAppId, review.ActionId, review.Arguments,
                 source?.OriginalScope, source?.OriginalRetain);
         }
         finally { review.Gate.Release(); }
@@ -723,6 +723,7 @@ public sealed class HomeNotesLibraryReadAdmission
     private readonly HomeResourceExecutionCapability _capability;
     private readonly string _targetAppId;
     private readonly string _actionId;
+    private readonly JsonElement _reviewedArguments;
     private readonly Action<Action>? _originalScope;
     private readonly Action<Task>? _retain;
     private readonly SemaphoreSlim _completionGate = new(1, 1);
@@ -735,11 +736,11 @@ public sealed class HomeNotesLibraryReadAdmission
     internal HomeNotesLibraryReadAdmission(INotesOriginalStoreSource source, INotesOriginalLibraryReadRequest request,
         FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles, HomeResourceStoreOwnershipAuthority ownership,
         HomeResourceOperationBroker broker, AuthenticatedResourceActor actor, HomeResourceExecutionCapability capability,
-        string targetAppId, string actionId,
+        string targetAppId, string actionId, JsonElement reviewedArguments,
         Action<Action>? originalScope = null, Action<Task>? retain = null)
     { _source = source; _request = request; _store = store; _profiles = profiles; _ownership = ownership;
         _broker = broker; _actor = actor; _capability = capability; _targetAppId = targetAppId; _actionId = actionId;
-        _originalScope = originalScope; _retain = retain; }
+        _reviewedArguments = reviewedArguments.Clone(); _originalScope = originalScope; _retain = retain; }
 
     public ValueTask<bool> ValidateCommitFenceAsync(HomeClaimedResourceCommitFence fence, CancellationToken token = default) =>
         _originalScope is null ? fence.ValidateAsync(token) : fence.ValidateWithinOriginalSourceAsync(_originalScope, _retain!, token);
@@ -772,10 +773,10 @@ public sealed class HomeNotesLibraryReadAdmission
                     callbacks.Scope, callbacks.Retain, cancellationToken).AsTask())).ConfigureAwait(false)) return null;
         return await (callbacks is null
             ? HomeClaimedResourceCommitFence.CaptureNotesLibraryReadAsync(_broker, _store, _profiles,
-                _ownership, source, request, _capability, _actor, _targetAppId, _actionId, cancellationToken)
+                _ownership, source, request, _capability, _actor, _targetAppId, _actionId, cancellationToken, _reviewedArguments)
             : HomeClaimedResourceCommitFence.CaptureNotesLibraryReadWithinOriginalSourceAsync(_broker, _store, _profiles,
                 _ownership, source, request, _capability, _actor, callbacks.OriginalScope, callbacks.OriginalRetain,
-                _targetAppId, _actionId, cancellationToken)).ConfigureAwait(false);
+                _targetAppId, _actionId, cancellationToken, _reviewedArguments)).ConfigureAwait(false);
     }
 
     /// <summary>Narrows presentation of this completed read's already-returned metadata. This
