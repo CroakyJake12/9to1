@@ -74,8 +74,8 @@ public sealed partial class BrowseNativeUiTests
         {
             window.Show(); await Observe(window.InitializeAsync(), window); Layout();
             var home = chrome.State.SelectedTabId;
-            var second = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
-            var third = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var second = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var third = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
             var source = TabButton(window, workspace, second.ToString("D"));
             var target = TabButton(window, workspace, third.ToString("D"));
             var originalSourceOwner = chrome.ObserveOriginalEngine(second);
@@ -151,8 +151,8 @@ public sealed partial class BrowseNativeUiTests
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window); Layout();
-            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
-            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
             var source = TabButton(window, workspace, sourceId.ToString("D"));
             var target = TabButton(window, workspace, targetId.ToString("D"));
             var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
@@ -264,8 +264,8 @@ public sealed partial class BrowseNativeUiTests
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window); Layout();
-            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
-            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
             var source = TabButton(window, workspace, sourceId.ToString("D"));
             var target = TabButton(window, workspace, targetId.ToString("D"));
             var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
@@ -320,11 +320,11 @@ public sealed partial class BrowseNativeUiTests
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window); Layout();
-            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
-            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
             // Select the navigating owner before starting so navigation itself is
             // what invalidates the gesture, rather than a selected-tab change.
-            if (change == "navigate-source") { await chrome.SelectTabAsync(sourceId); Layout(); }
+            if (change == "navigate-source") { await chrome.SelectTabAsync(sourceId); await JoinTabNotificationsAsync(workspace, window); Layout(); }
             var source = TabButton(window, workspace, sourceId.ToString("D"));
             var target = TabButton(window, workspace, targetId.ToString("D"));
             var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
@@ -340,7 +340,7 @@ public sealed partial class BrowseNativeUiTests
             else if (change.StartsWith("close-", StringComparison.Ordinal))
                 await chrome.CloseTabAsync(change == "close-source" ? sourceId : targetId);
             else await chrome.NavigateAsync("https://changed.example/next");
-            Layout();
+            await JoinTabNotificationsAsync(workspace, window); Layout();
             Assert.False(targetRow.DropSplitBefore);
             Assert.DoesNotContain(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             window.MouseUp(dropPoint, MouseButton.Left); Layout();
@@ -351,6 +351,9 @@ public sealed partial class BrowseNativeUiTests
 
         void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
     }
+
+    private static Task JoinTabNotificationsAsync(BrowseNativeWorkspace workspace, BrowseNativeWindow window) =>
+        Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
 
     private static void CaptureTabDragIfRequested(BrowseNativeWindow window, string state)
     {

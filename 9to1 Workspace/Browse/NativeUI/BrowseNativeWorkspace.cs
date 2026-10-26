@@ -722,6 +722,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     public bool CanAdmitClose()
     {
         Dispatcher.UIThread.VerifyAccess(); DemandOriginalFilesExternalJoin();
+        // Accepted retirement owns the original close graph already. A later
+        // host-window close must rejoin it without observing disposed engines.
+        if (_disposed || _chrome.OriginalClose is not null) return true;
         if (_busy) { _status = "Wait for the current original browser action before closing."; Changed(); return false; }
         foreach (var tab in _snapshot.Tabs)
             if (_chrome.ObserveOriginalEngine(tab.Id) is IBrowseNativeEngineTab native && !native.CanRetireOriginalView)
