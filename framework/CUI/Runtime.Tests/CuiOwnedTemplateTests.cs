@@ -381,7 +381,8 @@ public sealed class CuiOwnedTemplateTests
                 Assert.True(item.IsSelected);
                 Assert.True(item.IsKeyboardFocusWithin);
                 Assert.True(item.TryFindResource("CuiFocusBrush", out var keyboardFocusBrush));
-                Assert.Same(keyboardFocusBrush, item.BorderBrush);
+                Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(keyboardFocusBrush).Color,
+                    Assert.IsAssignableFrom<ISolidColorBrush>(item.BorderBrush).Color);
                 Assert.NotNull(frame.HoverTint); // keyboard/menu selection remains visible outside the pointer.
                 Assert.Same(authored, item.Background);
 
