@@ -1,6 +1,10 @@
 using Haven.Application;
 using Haven.Core;
+using HavenOS.Home.Core;
 using HavenOS.Home.Discover;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Xunit;
 
 namespace HavenOS.Home.Tests;
@@ -84,6 +88,136 @@ public sealed class HomeRegisteredModelCatalogueSourceTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Verified_installed_Dulche_model_remains_visible_when_live_catalogue_is_empty_or_fails(bool fail)
+    {
+        using var store = new ModelStore();
+        var (root, sha) = store.WriteVerifiedModel();
+        var provider = DulcheProvider();
+        if (fail)
+            provider.Read = _ => Task.FromException<IReadOnlyList<ProviderModelDescriptor>>(new IOException("worker socket unavailable"));
+        var source = new HomeRegisteredModelCatalogueSource(new ModelProviderRegistry([provider]),
+            "llama-cpp", () => false, new HomeDulchePackagedModelEvidenceSource(root));
+
+        var result = await source.GetSnapshotAsync(CancellationToken.None);
+
+        var model = Assert.Single(result.Models);
+        Assert.Equal("llama-cpp", model.Identity.ProviderId);
+        Assert.Equal("local-model-q4", model.Identity.ModelId);
+        Assert.Equal(sha, model.Identity.ArtifactRevision);
+        Assert.Equal(HomeDiscoverInstallState.Installed, model.InstallState);
+        Assert.Equal(HomeDiscoverConnectionState.Unavailable, model.ConnectionState);
+        Assert.Empty(model.Categories!);
+        Assert.Empty(model.Capabilities!);
+        Assert.Empty(model.SupportedActions);
+        Assert.Equal(HomeDiscoverSourceState.Partial, result.State);
+        Assert.Equal(fail ? "Discover.ProviderUnavailable" : "Discover.ModelNotObserved", result.ErrorCode);
+        if (fail) Assert.Contains("worker socket unavailable", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task Matching_live_Dulche_model_keeps_only_observed_capabilities_and_is_marked_installed()
+    {
+        using var store = new ModelStore();
+        var (root, sha) = store.WriteVerifiedModel();
+        var provider = DulcheProvider();
+        provider.Models = [new("llama-cpp", true, new("local-model-q4", 32, "gguf", "", "Q4",
+            new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Streaming }, DateTimeOffset.UtcNow))];
+        var source = new HomeRegisteredModelCatalogueSource(new ModelProviderRegistry([provider]),
+            "llama-cpp", () => false, new HomeDulchePackagedModelEvidenceSource(root));
+
+        var result = await source.GetSnapshotAsync(CancellationToken.None);
+
+        var model = Assert.Single(result.Models);
+        Assert.Equal(sha, model.Identity.ArtifactRevision);
+        Assert.Equal(HomeDiscoverInstallState.Installed, model.InstallState);
+        Assert.Equal(HomeDiscoverConnectionState.Connected, model.ConnectionState);
+        Assert.Contains(HomeDiscoverCategory.Chat, model.Categories!);
+        Assert.Contains(nameof(ToolCapability.Streaming), model.Capabilities!);
+        Assert.Equal(HomeDiscoverSourceState.Available, result.State);
+        Assert.Null(result.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData(ModelEvidenceState.Missing)]
+    [InlineData(ModelEvidenceState.CorruptManifest)]
+    [InlineData(ModelEvidenceState.HashMismatch)]
+    public async Task Missing_or_unverified_Dulche_evidence_does_not_create_an_installed_model(ModelEvidenceState state)
+    {
+        using var store = new ModelStore();
+        var root = store.Root;
+        if (state != ModelEvidenceState.Missing)
+        {
+            store.WriteVerifiedModel();
+            if (state == ModelEvidenceState.CorruptManifest) store.CorruptManifest();
+            if (state == ModelEvidenceState.HashMismatch) store.TamperBlob();
+        }
+        var provider = DulcheProvider();
+        var source = new HomeRegisteredModelCatalogueSource(new ModelProviderRegistry([provider]),
+            "llama-cpp", () => false, new HomeDulchePackagedModelEvidenceSource(root));
+
+        var result = await source.GetSnapshotAsync(CancellationToken.None);
+
+        Assert.Empty(result.Models);
+        Assert.Equal(HomeDiscoverSourceState.Empty, result.State);
+    }
+
+    [Fact]
+    public async Task Packaged_evidence_is_not_projected_for_other_or_remote_providers()
+    {
+        using var store = new ModelStore();
+        var (root, _) = store.WriteVerifiedModel();
+        var evidence = new CountingEvidence(new HomeDulchePackagedModelEvidenceSource(root));
+        var provider = new Provider("ollama", true);
+        var source = new HomeRegisteredModelCatalogueSource(new ModelProviderRegistry([provider]),
+            "ollama", () => false, evidence);
+
+        var result = await source.GetSnapshotAsync(CancellationToken.None);
+
+        Assert.Empty(result.Models);
+        Assert.Equal(0, evidence.Reads);
+
+        var misregisteredDulche = new Provider("llama-cpp", false) { Kind = ModelProviderKind.OpenAICompatible };
+        var remoteSource = new HomeRegisteredModelCatalogueSource(new ModelProviderRegistry([misregisteredDulche]),
+            "llama-cpp", () => true, evidence);
+        var remoteResult = await remoteSource.GetSnapshotAsync(CancellationToken.None);
+        Assert.Empty(remoteResult.Models);
+        Assert.Equal(0, evidence.Reads);
+    }
+
+    [Fact]
+    public async Task Dulche_evidence_cancellation_is_observed_before_provider_query()
+    {
+        var pendingEvidence = new TaskCompletionSource<HomeDulcheModelEvidence?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var evidence = new CountingEvidence(_ => new ValueTask<HomeDulcheModelEvidence?>(pendingEvidence.Task));
+        var provider = DulcheProvider();
+        var source = new HomeRegisteredModelCatalogueSource(new ModelProviderRegistry([provider]),
+            "llama-cpp", () => false, evidence);
+        using var cancellation = new CancellationTokenSource();
+
+        var pending = source.GetSnapshotAsync(cancellation.Token);
+        cancellation.Cancel();
+        pendingEvidence.SetCanceled(cancellation.Token);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        Assert.Equal(0, provider.Reads);
+    }
+
+    [Fact]
+    public async Task Registry_provider_identity_change_during_Dulche_read_is_rejected()
+    {
+        using var store = new ModelStore();
+        var (root, _) = store.WriteVerifiedModel();
+        var provider = DulcheProvider();
+        var registry = new SwappingRegistry(provider);
+        var source = new HomeRegisteredModelCatalogueSource(registry, "llama-cpp", () => false,
+            new HomeDulchePackagedModelEvidenceSource(root));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => source.GetSnapshotAsync(CancellationToken.None));
+    }
+
     private static ProviderModelDescriptor Model(string id, bool local) =>
         new(id, local, new("same-name", 0, "", "", "", new HashSet<ToolCapability> { ToolCapability.Text }, DateTimeOffset.UtcNow));
 
@@ -91,11 +225,11 @@ public sealed class HomeRegisteredModelCatalogueSourceTests
     {
         public string Id => id;
         public string DisplayName => id;
-        public ModelProviderKind Kind => local ? ModelProviderKind.Ollama : ModelProviderKind.OpenAICompatible;
+        public ModelProviderKind Kind { get; init; } = local ? ModelProviderKind.Ollama : ModelProviderKind.OpenAICompatible;
         public bool IsLocal => local;
         public bool CanManageModels => true;
-        public IReadOnlyList<ProviderModelDescriptor> Models { get; init; } = [];
-        public Func<CancellationToken, Task<IReadOnlyList<ProviderModelDescriptor>>>? Read { get; init; }
+        public IReadOnlyList<ProviderModelDescriptor> Models { get; set; } = [];
+        public Func<CancellationToken, Task<IReadOnlyList<ProviderModelDescriptor>>>? Read { get; set; }
         public int Reads { get; private set; }
         public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
         { Reads++; return Read?.Invoke(cancellationToken) ?? Task.FromResult(Models); }
@@ -103,5 +237,65 @@ public sealed class HomeRegisteredModelCatalogueSourceTests
         public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    private static Provider DulcheProvider() => new("llama-cpp", true)
+    {
+        Kind = ModelProviderKind.OpenAICompatible
+    };
+
+    public enum ModelEvidenceState { Missing, CorruptManifest, HashMismatch }
+
+    private sealed class CountingEvidence : IHomeDulcheModelEvidenceSource
+    {
+        private readonly IHomeDulcheModelEvidenceSource? _inner;
+        private readonly Func<CancellationToken, ValueTask<HomeDulcheModelEvidence?>>? _read;
+        public CountingEvidence(IHomeDulcheModelEvidenceSource inner) => _inner = inner;
+        public CountingEvidence(Func<CancellationToken, ValueTask<HomeDulcheModelEvidence?>> read) => _read = read;
+        public int Reads { get; private set; }
+        public ValueTask<HomeDulcheModelEvidence?> FindEligibleAsync(CancellationToken cancellationToken)
+        {
+            Reads++;
+            return _read?.Invoke(cancellationToken) ?? _inner!.FindEligibleAsync(cancellationToken);
+        }
+    }
+
+    private sealed class SwappingRegistry(IModelProvider provider) : IModelProviderRegistry
+    {
+        private readonly IModelProvider _replacement = new Provider("llama-cpp", true) { Kind = ModelProviderKind.OpenAICompatible };
+        private int _lookups;
+        public IReadOnlyList<IModelProvider> Providers => [provider];
+        public IModelProvider? Find(string providerId) => Interlocked.Increment(ref _lookups) == 1 ? provider : _replacement;
+        public IModelProvider GetRequired(string providerId) => Find(providerId) ?? throw new InvalidOperationException();
+        public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ProviderModelDescriptor>>([]);
+    }
+
+    private sealed class ModelStore : IDisposable
+    {
+        private readonly string _root = Path.Combine(Path.GetTempPath(), "9to1-discover-dulche-" + Guid.NewGuid().ToString("N"));
+        private string? _manifestPath;
+        private string? _blobPath;
+        public string Root => _root;
+        public (string Root, string Sha256) WriteVerifiedModel()
+        {
+            var content = Encoding.UTF8.GetBytes("fake-dulche-model-" + Guid.NewGuid().ToString("N"));
+            var sha = Convert.ToHexString(SHA256.HashData(content)).ToLowerInvariant();
+            var blob = Path.Combine(sha[..2], sha + ".gguf").Replace('\\', '/');
+            _blobPath = Path.Combine(_root, "blobs", "sha256", blob);
+            Directory.CreateDirectory(Path.GetDirectoryName(_blobPath)!);
+            File.WriteAllBytes(_blobPath, content);
+            _manifestPath = Path.Combine(_root, "manifests", "local-model-q4.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(_manifestPath)!);
+            File.WriteAllText(_manifestPath, JsonSerializer.Serialize(new
+            {
+                id = "local-model-q4", displayName = "Local Q4", sha256 = sha, blob,
+                size = content.LongLength, license = "test", source = "test"
+            }));
+            return (_root, sha);
+        }
+        public void CorruptManifest() => File.WriteAllText(_manifestPath!, "{");
+        public void TamperBlob() => File.WriteAllText(_blobPath!, "changed-model-bytes");
+        public void Dispose() { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); }
     }
 }
