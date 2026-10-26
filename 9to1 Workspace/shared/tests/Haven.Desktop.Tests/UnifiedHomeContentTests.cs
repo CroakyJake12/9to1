@@ -1,3 +1,5 @@
+using Avalonia.Media;
+using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using Haven.Infrastructure;
 using System.Reflection;
@@ -700,7 +702,7 @@ public sealed class UnifiedHomeContentTests
         await File.WriteAllTextAsync(file,
             "{\"havenUiThemeName\":\"Glow\",\"havenUiAppearance\":1,\"overrideAccentColour\":true,\"accentColourName\":\"Blue\"}");
         var originalPreferenceBytes = await File.ReadAllBytesAsync(file);
-        var app = Application.Current!;
+        var app = Avalonia.Application.Current!;
         var previousTheme = CuiSurfacePaletteCatalog.ActiveTheme;
         var previousAppearance = CuiThemeScopeApplier.DetectAppearance();
         var previousVariant = app.RequestedThemeVariant;
@@ -722,7 +724,7 @@ public sealed class UnifiedHomeContentTests
                 _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback)))
             {
                 await local.RefreshAsync();
-                await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+                await Dispatcher.UIThread.InvokeAsync(() => Dispatcher.UIThread.RunJobs());
                 Assert.Equal(CuiTheme.Professional, CuiSurfacePaletteCatalog.ActiveTheme);
                 Assert.Equal(CuiAppearance.Dark, CuiThemeScopeApplier.DetectAppearance());
             }
@@ -733,7 +735,7 @@ public sealed class UnifiedHomeContentTests
                 projection.ApplyHomeThemePresentation))
             {
                 await owner.RefreshAsync();
-                await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+                await Dispatcher.UIThread.InvokeAsync(() => Dispatcher.UIThread.RunJobs());
                 Assert.Equal(CuiTheme.Glow, CuiSurfacePaletteCatalog.ActiveTheme);
                 Assert.Equal(CuiAppearance.Bright, CuiThemeScopeApplier.DetectAppearance());
                 Assert.Equal(ThemeVariant.Light, app.RequestedThemeVariant);
@@ -750,7 +752,7 @@ public sealed class UnifiedHomeContentTests
 
                 Assert.True((await owner.ApplySettingsAsync(AppearanceTarget(owner, "HomeAppearanceChoices", "Dark"))).Succeeded);
                 await owner.RefreshAsync();
-                await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+                await Dispatcher.UIThread.InvokeAsync(() => Dispatcher.UIThread.RunJobs());
                 Assert.Equal(CuiAppearance.Dark, CuiThemeScopeApplier.DetectAppearance());
                 Assert.Equal(HavenUiAppearance.Dark, projection.Appearance);
                 Assert.Equal(ThemeVariant.Dark, app.RequestedThemeVariant);
