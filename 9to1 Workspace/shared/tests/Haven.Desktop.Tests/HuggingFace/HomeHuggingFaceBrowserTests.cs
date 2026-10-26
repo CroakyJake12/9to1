@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Desktop.Views.Pages.Home;
@@ -35,6 +36,8 @@ public sealed class HomeHuggingFaceBrowserTests
             fileList.SelectedIndex = 0;
             Click(browser, "hf-install");
             await service.InstallCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await WaitForUiAsync(() => Find<TextBlock>(browser, "hf-install-status").Text.Contains("Awaiting Dulche engine observation", StringComparison.Ordinal),
+                "the completed install status to reach the UI");
             var status = Find<TextBlock>(browser, "hf-install-status").Text;
             Assert.Contains("Awaiting Dulche engine observation", status);
             Assert.Contains("no inference was started", status);
@@ -73,6 +76,8 @@ public sealed class HomeHuggingFaceBrowserTests
             Assert.Equal(string.Empty, token.Text);
             Assert.False(token.IsUndoEnabled);
             await service.TokenSaved.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await WaitForUiAsync(() => install.IsEnabled && Find<TextBlock>(browser, "hf-token-status").Text.Contains("saved securely", StringComparison.OrdinalIgnoreCase),
+                "the saved token state to reach the gated install controls");
             Assert.Equal("hf-secret-value", service.SavedToken);
             Assert.DoesNotContain("hf-secret-value", Find<TextBlock>(browser, "hf-token-status").Text);
             Assert.True(install.IsEnabled);
@@ -229,6 +234,20 @@ public sealed class HomeHuggingFaceBrowserTests
         await service.SearchCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Find<ListBox>(browser, "hf-repositories").SelectedIndex = 0;
         await service.DetailsCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    private static async Task WaitForUiAsync(Func<bool> condition, string expectedState)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (DateTime.UtcNow < deadline)
+        {
+            await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+            if (condition()) return;
+            await Task.Delay(10);
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(Dispatcher.UIThread.RunJobs);
+        Assert.True(condition(), $"Timed out waiting for {expectedState}.");
     }
 
     private static void Click(Control root, string id) => Find<Button>(root, id).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
