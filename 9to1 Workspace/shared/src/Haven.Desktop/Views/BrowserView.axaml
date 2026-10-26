@@ -25,6 +25,11 @@
                         Margin="0,0,5,0"
                         Padding="3">
                   <Grid ColumnDefinitions="3,*,Auto" MinWidth="155" MaxWidth="240">
+                    <Border Grid.ColumnSpan="3"
+                            Classes="browserTabHoverTint"
+                            Background="{DynamicResource HavenAccentTertiaryBrush}"
+                            Opacity="0"
+                            IsHitTestVisible="False" />
                     <hui:HavenAdaptiveSurface Background="{DynamicResource HavenAccentBrush}"
                             CornerRadius="3"
                             IsVisible="{Binding IsSelected}" />
@@ -145,6 +150,11 @@
                           CornerRadius="8"
                           Margin="0,0,0,6">
                     <Grid ColumnDefinitions="3,*,Auto" MinHeight="47">
+                      <Border Grid.ColumnSpan="3"
+                              Classes="browserTabHoverTint"
+                              Background="{DynamicResource HavenAccentTertiaryBrush}"
+                              Opacity="0"
+                              IsHitTestVisible="False" />
                       <hui:HavenAdaptiveSurface Background="{DynamicResource HavenAccentBrush}"
                               CornerRadius="3"
                               IsVisible="{Binding IsSelected}" />

@@ -7,6 +7,15 @@
 
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Haven.Desktop.HavenUI.Components;
+using Haven.Desktop.Views;
 
 namespace Haven.Desktop.Tests;
 
@@ -30,6 +39,13 @@ public sealed class BrowserTabHoverContractTests
                 .ToArray();
             Assert.Equal(2, parts.Length);
             Assert.Single(parts.Where(element => HasClass((string?)element.Attribute("Classes"), "browserTabClose")));
+            var tint = group.Descendants().Single(element => element.Name.LocalName == "Border" &&
+                HasClass((string?)element.Attribute("Classes"), "browserTabHoverTint"));
+            Assert.Equal("False", (string?)tint.Attribute("IsHitTestVisible"));
+            Assert.Equal("0", (string?)tint.Attribute("Opacity"));
+            Assert.Equal("{DynamicResource HavenAccentTertiaryBrush}", (string?)tint.Attribute("Background"));
+            Assert.True(tint.Parent!.Elements().ToList().IndexOf(tint) <
+                        tint.Parent.Elements().ToList().IndexOf(parts[0]));
 
             // Keep the selected indicator attached to the shared row.
             Assert.Contains(group.Descendants().Where(element => element.Name.LocalName == "HavenAdaptiveSurface"),
@@ -65,6 +81,12 @@ public sealed class BrowserTabHoverContractTests
             (string?)setter.Attribute("Property") == "Effect" &&
             ((string?)setter.Attribute("Value"))?.Contains("CuiAccentTertiaryHoverEffect", StringComparison.Ordinal) == true);
 
+        var overlayHover = hoverStyles.Single(style =>
+            (string?)style.Attribute("Selector") == "hui|HavenAdaptiveSurface.browserTabGroup:pointerover Border.browserTabHoverTint");
+        Assert.Contains(overlayHover.Elements(), setter =>
+            (string?)setter.Attribute("Property") == "Opacity" &&
+            (string?)setter.Attribute("Value") == "0.08");
+
         var sharedParts = styles.Single(style =>
             (string?)style.Attribute("Selector") == "hui|HavenAdaptiveSurface.browserTabGroup hui|HavenButton.browserTabPart");
         Assert.Contains(sharedParts.Elements(), setter =>
@@ -76,8 +98,78 @@ public sealed class BrowserTabHoverContractTests
         Assert.DoesNotContain(closeHover.Elements(), setter =>
             (string?)setter.Attribute("Property") == "Background");
         Assert.Contains(closeHover.Elements(), setter =>
+            (string?)setter.Attribute("Property") == "Effect");
+        var tertiaryHover = hoverStyles.Single(style =>
+            (string?)style.Attribute("Selector") == "hui|HavenTertiaryButton:pointerover");
+        Assert.DoesNotContain(tertiaryHover.Elements(), setter =>
+            (string?)setter.Attribute("Property") == "Foreground");
+        var dropdownHover = hoverStyles.Single(style =>
+            (string?)style.Attribute("Selector") == ":is(Button).havenDropdownItem:pointerover");
+        Assert.DoesNotContain(dropdownHover.Elements(), setter =>
             (string?)setter.Attribute("Property") == "Foreground");
     }
+
+    [AvaloniaFact]
+    public void Mounted_browser_tab_row_tints_as_one_surface_and_keeps_close_target_separate()
+    {
+        var view = new BrowserView();
+        var list = view.GetVisualDescendants().OfType<ItemsControl>()
+            .Single(control => control.Name == "HorizontalTabsList");
+        list.ItemsSource = [new BrowserTabItem("One", "", false, true)];
+        var window = new Window { Width = 500, Height = 120, Content = view };
+        try
+        {
+            window.Show();
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+
+            var row = view.GetVisualDescendants().OfType<HavenAdaptiveSurface>()
+                .Single(control => control.Classes.Contains("browserTabGroup"));
+            var tint = row.GetVisualDescendants().OfType<Border>()
+                .Single(control => control.Classes.Contains("browserTabHoverTint"));
+            var parts = row.GetVisualDescendants().OfType<HavenButton>()
+                .Where(control => control.Classes.Contains("browserTabPart")).ToArray();
+            Assert.Equal(2, parts.Length);
+            var close = Assert.Single(parts.Where(control => control.Classes.Contains("browserTabClose")));
+            var title = Assert.Single(parts.Where(control => !control.Classes.Contains("browserTabClose")));
+            var baseBackground = row.Background;
+            var selectedIndicator = row.GetVisualDescendants().OfType<HavenAdaptiveSurface>().Single();
+
+            MovePointer(window, title);
+            Assert.True(row.IsPointerOver);
+            Assert.True(title.IsPointerOver);
+            Assert.False(close.IsPointerOver);
+            Assert.Same(baseBackground, row.Background);
+            Assert.Equal(0.08, tint.Opacity, precision: 3);
+            Assert.Equal(Colors.Transparent, Assert.IsType<SolidColorBrush>(title.Background).Color);
+            Assert.Equal(Colors.Transparent, Assert.IsType<SolidColorBrush>(close.Background).Color);
+            Assert.True(selectedIndicator.IsVisible);
+
+            MovePointer(window, close);
+            Assert.True(row.IsPointerOver);
+            Assert.True(close.IsPointerOver);
+            Assert.True(close.IsHitTestVisible);
+            Assert.True(close.Focusable);
+            Assert.Same(baseBackground, row.Background);
+            Assert.Equal(0.08, tint.Opacity, precision: 3);
+            Assert.Equal(Colors.Transparent, Assert.IsType<SolidColorBrush>(close.Background).Color);
+            Assert.True(selectedIndicator.IsVisible);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    private static void MovePointer(Window window, Control control)
+    {
+        var point = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window);
+        Assert.NotNull(point);
+        window.MouseMove(point.Value);
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    private sealed record BrowserTabItem(string Title, string Group, bool IsPrivate, bool IsSelected);
 
     private static bool IsTypedHavenSelector(string? selector) => selector is not null &&
         (selector.Contains("hui|HavenButton", StringComparison.Ordinal) ||
