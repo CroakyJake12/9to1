@@ -44,11 +44,13 @@ public sealed class DeveloperManualProjectEntryAdapter(
     IDeveloperWorkspaceStore workspaces)
 {
     private readonly object _gate = new();
+    private readonly SemaphoreSlim _registrationGate = new(1, 1);
     private Guid? _retainedSetupId;
     private Guid? _retainedWorkspaceId;
     private string? _retainedProjectRoot;
     private bool _retainedCompletionConfirmed;   // positive terminal permission+READ completion proof for the retained attempt
     private bool _retainedCompletionUncertain;  // failure after acknowledged writes => explicit uncertain/blocked state
+    private bool _retainedTemplateAttempt;
 
     /// <summary>The retained once-created setup id of the current attempt, if any. Exposed to the
     /// visible landing so a partially effected attempt can be inspected rather than replaced.</summary>
@@ -84,6 +86,27 @@ public sealed class DeveloperManualProjectEntryAdapter(
         Guid filesStoreId, Guid destinationFolderId, string existingProjectRoot,
         Func<IDeveloperProjectOriginalExistingSourceCapture, CancellationToken, Task>? preflight, CancellationToken token)
     {
+        // Validate pure arguments before waiting for another attempt. The gate covers capture,
+        // preflight, journal preparation and terminal custody, so same-root calls cannot both
+        // observe an empty retained slot and prepare independent journals.
+        if (filesStoreId == Guid.Empty) throw new ArgumentException("Retain the actual configured Files store UUID.", nameof(filesStoreId));
+        if (destinationFolderId == Guid.Empty) throw new ArgumentException("Select the actual configured destination folder.", nameof(destinationFolderId));
+        if (!Path.IsPathFullyQualified(existingProjectRoot))
+            throw new ArgumentException("Select an existing absolute project path below the configured Files root.", nameof(existingProjectRoot));
+        token.ThrowIfCancellationRequested();
+        await _registrationGate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            return await RegisterExistingFolderSerializedAsync(filesStoreId, destinationFolderId,
+                existingProjectRoot, preflight, token).ConfigureAwait(false);
+        }
+        finally { _registrationGate.Release(); }
+    }
+
+    private async Task<DeveloperProjectReference> RegisterExistingFolderSerializedAsync(
+        Guid filesStoreId, Guid destinationFolderId, string existingProjectRoot,
+        Func<IDeveloperProjectOriginalExistingSourceCapture, CancellationToken, Task>? preflight, CancellationToken token)
+    {
         // Pure-argument validation precedes dependency null checks so an invalid request fails
         // with a precise ArgumentException/OperationCanceledException before any owner is touched.
         if (filesStoreId == Guid.Empty) throw new ArgumentException("Retain the actual configured Files store UUID.", nameof(filesStoreId));
@@ -105,28 +128,29 @@ public sealed class DeveloperManualProjectEntryAdapter(
         // Once-created attempt identity retained from preparation through terminal disposition.
         // A retry of the SAME folder reuses the exact ids; a different folder starts an unrelated
         // fresh attempt (the partially effected prior attempt remains recoverable by its retained id).
-        Guid setupId, workspaceId; bool isRetry;
+        Guid setupId, workspaceId; bool isRetry, retainedTemplateAttempt;
         lock (_gate)
         {
             if (_retainedSetupId is { } sid && _retainedWorkspaceId is { } wid
                 && _retainedProjectRoot is { } prior && string.Equals(prior, root, StringComparison.Ordinal))
             {
                 setupId = sid; workspaceId = wid; isRetry = true;
+                retainedTemplateAttempt = _retainedTemplateAttempt;
             }
             else
             {
                 setupId = Guid.Empty; workspaceId = Guid.Empty;
                 isRetry = false;
+                retainedTemplateAttempt = false;
             }
         }
 
         var selection = await selections.SelectOriginalExistingProjectAsync(filesStoreId, root, token).ConfigureAwait(false);
         var destination = await scopes.CaptureOriginalDestinationAsync(filesStoreId, new HostedItemId(destinationFolderId), token).ConfigureAwait(false);
 
-        // A generic retry of a persisted/partially effected attempt must NOT re-run steps or mint
-        // new ids. Inspect the retained journal and either recover the completed identity or surface
-        // an honest blocked state requiring recovery inspection (not fake success/replay).
-        if (isRetry)
+        // Generic manual retries preserve their established journal recovery path. Template retries
+        // still acquire a fresh real capture and repeat the empty-target check before recovery.
+        if (isRetry && preflight is null)
             return await RecoverRetainedAttemptAsync(setupId, workspaceId, root, destination.OriginalActor, token).ConfigureAwait(false);
 
         IDeveloperProjectOriginalReadAdmission? read = null;
@@ -142,6 +166,19 @@ public sealed class DeveloperManualProjectEntryAdapter(
             if (preflight is not null)
                 await preflight(capture, token).ConfigureAwait(false);
 
+            if (isRetry)
+            {
+                if (!retainedTemplateAttempt)
+                    throw new DeveloperManualAttemptBlockedException(setupId,
+                        "The retained project was registered through generic manual entry, not this template request; its real target was rechecked, but the attempt cannot be returned as a template project.",
+                        "RegistrationModeMismatch");
+                // Same template attempt: retain its exact IDs and use the normal positive-completion
+                // check. Never replay setup effects after an acknowledged/uncertain outcome.
+                await read.DisposeAsync().ConfigureAwait(false);
+                read = null;
+                return await RecoverRetainedAttemptAsync(setupId, workspaceId, root, destination.OriginalActor, token).ConfigureAwait(false);
+            }
+
             // A refusal/cancellation during genuine-capture preflight leaves no retained setup
             // attempt behind, so the user can correct the target and retry without journal repair.
             lock (_gate)
@@ -149,6 +186,7 @@ public sealed class DeveloperManualProjectEntryAdapter(
                 setupId = Guid.NewGuid(); workspaceId = Guid.NewGuid();
                 _retainedSetupId = setupId; _retainedWorkspaceId = workspaceId; _retainedProjectRoot = root;
                 _retainedCompletionConfirmed = false; _retainedCompletionUncertain = false;
+                _retainedTemplateAttempt = preflight is not null;
             }
             var prepared = await journal.PrepareExistingOriginalAsync(setupId,
                 destination.OriginalActor, destination.OriginalStoreId, destination.OriginalConfigurationDigest,
