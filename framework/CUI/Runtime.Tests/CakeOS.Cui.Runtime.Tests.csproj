@@ -22,6 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../../../9to1 Workspace/Home/UI/Home.cui" LogicalName="9T.W2.Home.cui" />
+    <EmbeddedResource Include="../../../9to1 Workspace/Spaces/UI/Home/SpacesHome.cui" LogicalName="9T.W2.SpacesHome.cui" />
     <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

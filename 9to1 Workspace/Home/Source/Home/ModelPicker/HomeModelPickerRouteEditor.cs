@@ -394,8 +394,12 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
         ArgumentNullException.ThrowIfNull(snapshot.Routes);
         if (snapshot.Revision < 0) throw new InvalidDataException("Model route snapshot has a negative revision.");
         if (string.IsNullOrWhiteSpace(snapshot.Scope) || string.IsNullOrWhiteSpace(snapshot.Category)
-            || (expectedScope is not null && !StringComparer.Ordinal.Equals(snapshot.Scope, expectedScope))
-            || (expectedCategory is not null && !StringComparer.Ordinal.Equals(snapshot.Category, expectedCategory)))
+            // Scope and capability category are identifier tokens at this API boundary. Producers may
+            // serialize enum names ("Chat") while callers use the desktop command spelling ("chat");
+            // compare only these two tokens case-insensitively. Route, provider and model identities
+            // remain exact ordinal values below and throughout editing.
+            || (expectedScope is not null && !StringComparer.OrdinalIgnoreCase.Equals(snapshot.Scope, expectedScope))
+            || (expectedCategory is not null && !StringComparer.OrdinalIgnoreCase.Equals(snapshot.Category, expectedCategory)))
             throw new InvalidDataException("Model route snapshot does not match the requested scope and category.");
         var routeIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var route in snapshot.Routes)

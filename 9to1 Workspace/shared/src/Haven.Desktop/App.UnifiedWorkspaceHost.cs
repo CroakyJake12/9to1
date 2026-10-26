@@ -765,7 +765,10 @@ public sealed partial class App
                     var theme = _homeTheme ?? throw new InvalidOperationException("The actual Home theme owner is absent.");
                     state.Page ??= state.Source.CreateBoardFolderPickerPage(token => AdmitHomeAsync(origin, token), theme.Context);
                     var owner = TopLevel.GetTopLevel(this) as Window ?? throw new InvalidOperationException("The actual Home window is unavailable.");
-                    var picker = new Window { Title = "Create board", Width = 760, Height = 560, Content = state.Page, Background = Avalonia.Media.Brushes.Transparent };
+                    var picker = new Window { Title = "Create board", Width = 760, Height = 560, Content = state.Page };
+                    // Match the CUI native host: the dialog owns an opaque, theme-backed surface.
+                    // A transparent top-level lets the Library behind it bleed through its labels.
+                    picker.Bind(Window.BackgroundProperty, picker.GetResourceObservable("CuiBackgroundBrush"));
                     var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                     picker.Closed += (_, _) => closed.TrySetResult();
                     var shown = picker.ShowDialog(owner); _ = Track(shown);
