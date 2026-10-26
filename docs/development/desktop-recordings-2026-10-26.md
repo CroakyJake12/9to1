@@ -12,6 +12,22 @@ This is a local recovery handoff for the two 9to1 recordings and the historical 
 - Focused test results reported for this pass: CUI layout `19/19` at `6ca07929`; Home picker category contract `20/20` at `6ca07929`; desktop-save-5 `58/59` at `db42fbfa` (stale parent conflict flag); desktop-save-6 `59/59 PASS` at `fb04ea0d`, total `53.756s`. A separate isolated X11 startup smoke at `e1ea0da1` rendered Welcome and exited `0` after `WM_DELETE_WINDOW`.
 - These checks are not installed-app acceptance. No GNOME/compositor, installed launcher, browser engine, model/provider, account/user, or real workspace workflow acceptance has been demonstrated. Do not mark these workflows fixed/verified from source or focused tests alone.
 
+## Current owner additions and implementation
+
+- **Attachment menu:** the actual Chat composer now opens a compact grouped list in an Avalonia popup anchored to Add. The card uses list rows instead of blue tiles, keeps the shared catalogues/search, and retires on dismissal or composer detachment. Go retains a transparent outside-click dismissal layer around the same compact card. Mention search preserves the composer caret. Native X11 and headless fallback have separate assertions; a headless pass cannot establish native window layering.
+- **Device emoji:** the shared font fallback tries the installed platform colour font before the bundled monochrome fallback. The composer trigger and picker explicitly select Segoe UI Emoji, Apple Color Emoji or Noto Color Emoji when installed. Unicode sequences, search and insertion remain unchanged. Missing device fonts retain licensed fallback coverage.
+- **Dulche discovery:** a SHA-verified installed local model is shown as installed even when its engine cannot be queried. That row stays unavailable, with no invented capabilities or inference readiness. Live matching models retain capabilities actually reported by their provider.
+- **Hugging Face:** the existing Discover page now searches public GGUF repositories, displays pinned revision/file/licence/size information and installs eligible single-file models through the canonical importer. Downloads verify expected length, SHA256 and GGUF headers. Unsupported shards/formats are excluded. Installation and inference readiness are separate states.
+- **Gated access:** optional tokens use the existing profile-scoped platform secure store (Linux AES-GCM with private key permissions; Windows Credential Manager). No plaintext fallback, settings persistence or token redisplay. Input is masked, cleared after submission and has undo disabled. Token presence is rechecked for the current actor; profile/auth changes retire stale operations. HF credentials are not forwarded to CDN redirects, process arguments or importer environment.
+
+Public HF API metadata was actually queried without credentials. No gated account download, model inference, desktop installation or Thunder request was performed. Service tests use deterministic HTTP fixtures plus the real canonical importer and encrypted Linux store; UI fixtures establish interaction behavior only.
+
+### Remaining runtime and infrastructure limits
+
+The existing ARM preview bootstrap requires ARM64 artefacts and owns a different runtime contract from the model-free x64 broker package. Do not relax its architecture guard to make x64 appear ready. Reconcile the actual installed x64 package and runtime owner before claiming local chat works. The discovery evidence adapter currently projects its first eligible installed model, not a full model-store inventory.
+
+PR #38's existing [Android compile run](https://github.com/CroakyJake12/9to1/actions/runs/40297375309) failed on broad desktop source inputs/missing compatible references; workflow invariants passed. No Android baseline comparison was executed, so the gate remains failing rather than waived as unrelated. Native GNOME, packaged browser engines, actual provider chat and installed-workflow acceptance remain outstanding.
+
 ## Bug matrix
 
 | ID | User-observed footage | Current source corroboration | Status and next check |
