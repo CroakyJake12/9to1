@@ -57,6 +57,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private readonly IProjectIntelligenceService _projectIntelligence;
     private readonly IProviderModelClient _ollama;
     private readonly HomeModelSelectionSource? _homeModelSelectionSource;
+    private readonly IHuggingFaceModelService? _huggingFaceModels;
+    private readonly HomeLocalProfileIdentity? _discoverProfiles;
     private readonly ChatSessionService _sessions;
     private readonly IConversationSafetyService _conversationSafety;
     private readonly IConversationVersioningService _conversationVersioning;
@@ -223,7 +225,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         IModeUsageRepository modeUsage,
         IPinRepository pins,
         AgentTaskRuntimeService? agentRuntime = null,
-        HomeModelSelectionSource? homeModelSelectionSource = null)
+        HomeModelSelectionSource? homeModelSelectionSource = null,
+        IHuggingFaceModelService? huggingFaceModels = null,
+        HomeLocalProfileIdentity? discoverProfiles = null)
     {
         _eventBus = bus;
         _bus = bus;
@@ -232,6 +236,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _catalog = catalog;
         _agentRuntime = agentRuntime;
         _homeModelSelectionSource = homeModelSelectionSource;
+        _huggingFaceModels = huggingFaceModels;
+        _discoverProfiles = discoverProfiles;
         _automations = automations;
         _workspaceState = workspaceState;
         _workspaceTools = workspaceTools;
@@ -939,7 +945,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             var sources = _modelProviders.Providers.Select(provider =>
                 new HavenOS.Home.Discover.HomeRegisteredModelCatalogueSource(
                     _modelProviders, provider.Id, () => !_privacy.Current.LocalOnlyMode, new HomeDulchePackagedModelEvidenceSource()));
-            _homeDiscoverPage = new HomeDiscoverPage(new HavenOS.Home.Discover.HomeDiscoverCatalog(sources));
+            _homeDiscoverPage = new HomeDiscoverPage(new HavenOS.Home.Discover.HomeDiscoverCatalog(sources), _huggingFaceModels, _discoverProfiles);
             _homeDiscoverPage.ManageProvidersRequested += (_, _) => StartOriginalShellEvent(original =>
             {
                 AcquireOriginalShellSynchronous(original, () => { OpenApplicationSettings(); return true; });

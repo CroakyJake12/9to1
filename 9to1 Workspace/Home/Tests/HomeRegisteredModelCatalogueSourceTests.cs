@@ -1,6 +1,7 @@
 using Haven.Application;
 using Haven.Core;
 using HavenOS.Home.Core;
+using HomeDiscoverQuery = HavenOS.Home.Discover.HomeDiscoverQuery;
 using HavenOS.Home.Discover;
 using System.Security.Cryptography;
 using System.Text;
