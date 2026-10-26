@@ -17,6 +17,7 @@ using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Events;
 using Haven.Desktop.Services;
+using Haven.Desktop.Prefabs;
 using Haven.Desktop.ViewModels;
 using Haven.Desktop.Views.Pages.Browser;
 using Haven.Desktop.Views.Pages.Catalog;
@@ -38,6 +39,7 @@ using Haven.Desktop.Views.Pages.WorkspaceEditor;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.Infrastructure;
 using HavenOS.Home.Core;
+using HavenOS.Apps.Assistants.Contracts;
 using HomeDiscoverPage = Haven.Desktop.Views.Pages.Home.HomeDiscoverPage;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -1028,6 +1030,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         page.ConversationStateChanged += OnNewChatConversationStateChanged;
         page.AddActionSelected += OnNewChatAddActionSelected;
         page.AddCatalogItemSelected += OnNewChatCatalogItemSelected;
+#if !ANDROID
+        page.AssistantCatalogueRequested += OnNewChatAssistantCatalogueRequested;
+#endif
         // The typed local-model recovery action routes to the shared Home model catalogue/Discover
         // surface, preserving this conversation, draft, selection and focus.
         page.ManageLocalModelsRequested += (_, _) => StartOriginalShellEvent(original =>
@@ -2014,6 +2019,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         page.Disposed += OnGoPageDisposed;
         page.AddRequested += OnGoAddRequested;
         page.AddCatalogItemSelected += OnGoCatalogItemSelected;
+#if !ANDROID
+        page.AssistantCatalogueRequested += OnNewChatAssistantCatalogueRequested;
+#endif
         page.AppShortcutInvoked += (_, app) => StartOriginalShellEvent(original =>
             original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => LaunchAppAsync(app, false))));
         StartOriginalShellEvent(original =>
@@ -2207,6 +2215,16 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private async void OnNewChatCatalogItemSelected(object? sender, AddMenuSelection selection)
     {
+        if ((sender is NewChatPage || sender is GoPage) && selection.Kind == AddMenu.AddMenuAction.Assistant)
+        {
+#if !ANDROID
+            if (selection.Item is AssistantDefinitionSnapshot assistant)
+                await OpenOriginalRegisteredAssistantsAsync(assistant.Identity);
+            else if (selection.Item is ChatAddMenuSurface.OpenAssistantsRequest)
+                await OpenOriginalRegisteredAssistantsAsync();
+#endif
+            return;
+        }
         // NewChatPage applies the selection before raising this event. Apps are
         // task context, so selecting one must not navigate away from the thread.
         await Task.CompletedTask;
@@ -2229,8 +2247,18 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private async void OnGoCatalogItemSelected(object? sender, AddMenuSelection selection)
     {
+        if (sender is GoPage && selection.Kind == AddMenu.AddMenuAction.Assistant)
+        {
+#if !ANDROID
+            if (selection.Item is AssistantDefinitionSnapshot assistant)
+                await OpenOriginalRegisteredAssistantsAsync(assistant.Identity);
+            else if (selection.Item is ChatAddMenuSurface.OpenAssistantsRequest)
+                await OpenOriginalRegisteredAssistantsAsync();
+#endif
+            return;
+        }
         // GoPage owns the pending task context and attaches Apps locally before
-        // raising this event. Nothing selected from Add may force navigation.
+        // raising this event. Ordinary selections keep the Go surface in place.
         await Task.CompletedTask;
     }
 

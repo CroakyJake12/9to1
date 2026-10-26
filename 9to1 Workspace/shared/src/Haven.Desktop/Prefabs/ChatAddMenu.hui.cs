@@ -13,6 +13,8 @@ public sealed class ChatAddMenuPrefab : HavenPrefabDefinition
         dismiss.Accessibility.Description = "Close the Add menu.";
         instance.GetComponent<Button>("CatalogBack").Accessibility.AccessibleName = "Back to Add menu";
         instance.GetComponent<Button>("Agents").Accessibility.AccessibleName = "Specialists";
+        instance.GetComponent<Button>("Assistants").Accessibility.AccessibleName = "Assistants";
+        instance.GetComponent<Button>("Assistants").Accessibility.Description = "Browse configured Assistants or open the Assistants workspace to create one.";
         instance.GetComponent<Button>("Instructions").Accessibility.AccessibleName = "Skills";
         instance.GetComponent<Button>("Capabilities").Accessibility.AccessibleName = "Plugin";
         instance.GetComponent<Button>("Apps").Accessibility.AccessibleName = "Apps";

@@ -2,12 +2,69 @@
 using Avalonia.Threading;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Shell;
+using HavenOS.Apps.Assistants.Contracts;
 
 namespace Haven.Desktop;
 
 public sealed partial class App
 {
-    internal Task OpenOriginalAssistantsForShellAsync(MainView actualShell, CancellationToken caller) =>
+    internal Task<IReadOnlyList<AssistantDefinitionSnapshot>?> ReadOriginalAssistantCatalogueForShellAsync(
+        MainView actualShell, CancellationToken caller) =>
+        _originalAppWork.RunAsync<IReadOnlyList<AssistantDefinitionSnapshot>?>(async original =>
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            var provider = _services ?? throw new InvalidOperationException("The actual App provider is unavailable.");
+            var home = _actualWindowsHome ?? throw new UnauthorizedAccessException("The actual Windows Home owner is unavailable.");
+            var window = _actualSameProcessNativeWindow
+                ?? throw new InvalidOperationException("The actual native App window is unavailable.");
+            void DemandCurrent()
+            {
+                Dispatcher.UIThread.VerifyAccess();
+                caller.ThrowIfCancellationRequested(); original.DemandPublication();
+                if (!ReferenceEquals(provider, _services) || !ReferenceEquals(home, _actualWindowsHome) ||
+                    !ReferenceEquals(actualShell, _actualSameProcessNativeShell) ||
+                    !ReferenceEquals(window, _actualSameProcessNativeWindow) ||
+                    !ReferenceEquals(window.DataContext, actualShell) || !window.IsVisible)
+                    throw new UnauthorizedAccessException("Retain the SAME actual App shell/window/provider/Home for Assistants.");
+                WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(provider, home);
+            }
+            DemandCurrent();
+            original.BindPublicationGuard(() => ReferenceEquals(actualShell, _actualSameProcessNativeShell) &&
+                ReferenceEquals(window, _actualSameProcessNativeWindow) && ReferenceEquals(window.DataContext, actualShell) &&
+                window.IsVisible && ReferenceEquals(provider, _services) && ReferenceEquals(home, _actualWindowsHome));
+            using var acquisition = CancellationTokenSource.CreateLinkedTokenSource(caller, original.Token);
+            var actual = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                () => CreateOriginalAssistantsControllerAsync(provider, home, acquisition.Token)));
+            DemandCurrent();
+            if (actual is null) return null;
+            void Scope(Action source) => AcquireOriginalAppSynchronous(original, () =>
+            {
+                DemandCurrent(); acquisition.Token.ThrowIfCancellationRequested(); source(); return true;
+            });
+            void Retain(Task source)
+            {
+                ArgumentNullException.ThrowIfNull(source);
+                lock (_actualStartupAcquisitionGate) _actualAssistantAcquisitionSources.Add(source);
+            }
+            async Task DemandSameHomeActorAsync()
+            {
+                var currentTask = AcquireOriginalAppSynchronous(original,
+                    () => home.Profiles.GetCurrentAsync(Scope, Retain, original.Token).AsTask());
+                var current = await original.AwaitAsync(currentTask);
+                if (current != actual.OriginalOpenedDen.Actor)
+                    throw new UnauthorizedAccessException("The actual Home actor changed while reading Assistants.");
+                DemandCurrent();
+            }
+            await DemandSameHomeActorAsync();
+            var snapshot = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                () => actual.OriginalController.InitializeAsync(original.Token)));
+            DemandCurrent();
+            await DemandSameHomeActorAsync();
+            return snapshot.Assistants;
+        });
+
+    internal Task OpenOriginalAssistantsForShellAsync(MainView actualShell, CancellationToken caller,
+        AssistantIdentity? selectedIdentity = null) =>
         _originalAppWork.RunAsync(async original =>
         {
             Dispatcher.UIThread.VerifyAccess();
@@ -67,7 +124,7 @@ public sealed partial class App
                         ? "The original local Assistant memory source is not configured." : null,
                     actual.OriginalMiniComputerManagement, actual.OriginalMiniComputerManagement is null
                         ? "The original protected Mini Computer catalogue and operation source are not configured." : null,
-                    actual.OriginalGeneratedUiHost)));
+                    actual.OriginalGeneratedUiHost, selectedIdentity)));
             DemandCurrent();
         });
 }

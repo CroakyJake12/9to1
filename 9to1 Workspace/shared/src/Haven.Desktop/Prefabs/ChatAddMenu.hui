@@ -9,6 +9,7 @@
       <Text Name="ToolsHeadingLabel" Content="Tools" FontSize="10" FontWeight="600" Foreground="TextSecondary" />
     </Container>
     <Button Name="Agents" Variant="Ghost" IconKey="agents" Content="Specialists" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="Assistants" Variant="Ghost" IconKey="chat" Content="Assistants" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
     <Button Name="Instructions" Variant="Ghost" IconKey="skills" Content="Skills" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
     <Button Name="Capabilities" Variant="Ghost" IconKey="plugin" Content="Plugin" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
     <Button Name="Apps" Variant="Ghost" IconKey="apps" Content="Apps" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />

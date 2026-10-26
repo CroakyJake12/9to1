@@ -31,7 +31,8 @@ public sealed partial class MainView
         ILegacyAgentMigrationController? actualMigration = null, string? migrationUnavailableReason = null,
         IAssistantMemoryManagementController? actualMemoryManagement = null, string? memoryUnavailableReason = null,
         IAssistantMiniComputerController? actualMiniComputerManagement = null, string? miniComputerUnavailableReason = null,
-        IAssistantGeneratedUiHost? actualGeneratedUiHost = null) =>
+        IAssistantGeneratedUiHost? actualGeneratedUiHost = null,
+        AssistantIdentity? selectedIdentity = null) =>
         _originalShellWork.RunAsync(async original =>
         {
             Dispatcher.UIThread.VerifyAccess();
@@ -103,6 +104,9 @@ public sealed partial class MainView
                     throw new UnauthorizedAccessException("Retain the SAME native Assistant page and scoped controller.");
                 if (isNew)
                     await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => actualPage.InitializeAsync(original.Token)));
+                if (selectedIdentity is { } assistantIdentity)
+                    await original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+                        () => actualScopedController.OpenAssistantAsync(assistantIdentity, original.Token)));
                 if (actualPage.OriginalInitialization?.IsCompletedSuccessfully != true)
                     throw new InvalidOperationException("The actual Assistant CUI initialization did not complete.");
                 await PublishOriginalCanonicalTabAsync(original, () => actualPage.PublishOriginalTab(() =>

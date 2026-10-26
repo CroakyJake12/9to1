@@ -2,6 +2,7 @@ using Haven.Core;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.UI;
 using Haven.UI.Components;
+using HavenOS.Apps.Assistants.Contracts;
 using HavenButton = Haven.UI.Components.Button;
 using HavenText = Haven.UI.Components.Text;
 
@@ -17,6 +18,9 @@ internal sealed class ChatAddMenuSurface : IDisposable
     private readonly bool _composerOwnsSearch;
     private readonly bool _showThreadSettings;
     private IReadOnlyList<AgentDefinition> _agents = [];
+    private IReadOnlyList<AssistantDefinitionSnapshot> _assistants = [];
+    private bool _assistantCatalogueAvailable;
+    private string _assistantCatalogueUnavailableMessage = "Open Assistants to load the configured list.";
     private IReadOnlyList<CapabilityDefinition> _capabilities = [];
     private IReadOnlyList<PromptDefinition> _instructions = [];
     private IReadOnlyList<ModeDefinition> _apps = [];
@@ -29,6 +33,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
     private GenerativeUiResponseMode _currentVisualMode = GenerativeUiResponseMode.Auto;
     private bool _disposed;
     private bool _isOpen;
+    private long _assistantCatalogueRequestGeneration;
 
     public ChatAddMenuSurface(Prefab prefab, bool composerOwnsSearch = false, bool showThreadSettings = true)
     {
@@ -48,6 +53,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         OptionsHeading = prefab.GetComponent<HavenText>("OptionsHeading");
         AttachFilesButton = prefab.GetComponent<HavenButton>("AttachFiles");
         AgentsButton = prefab.GetComponent<HavenButton>("Agents");
+        AssistantsButton = prefab.GetComponent<HavenButton>("Assistants");
         InstructionsButton = prefab.GetComponent<HavenButton>("Instructions");
         CapabilitiesButton = prefab.GetComponent<HavenButton>("Capabilities");
         AppsButton = prefab.GetComponent<HavenButton>("Apps");
@@ -84,6 +90,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         CatalogBackButton.Invoked += OnCatalogBackInvoked;
         AttachFilesButton.Invoked += OnAttachFilesInvoked;
         AgentsButton.Invoked += OnAgentsInvoked;
+        AssistantsButton.Invoked += OnAssistantsInvoked;
         InstructionsButton.Invoked += OnInstructionsInvoked;
         CapabilitiesButton.Invoked += OnCapabilitiesInvoked;
         AppsButton.Invoked += OnAppsInvoked;
@@ -108,6 +115,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
     public HavenText OptionsHeading { get; }
     public HavenButton AttachFilesButton { get; }
     public HavenButton AgentsButton { get; }
+    public HavenButton AssistantsButton { get; }
     public HavenButton InstructionsButton { get; }
     public HavenButton CapabilitiesButton { get; }
     public HavenButton AppsButton { get; }
@@ -117,10 +125,13 @@ internal sealed class ChatAddMenuSurface : IDisposable
 
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? CatalogItemSelected;
+    public event EventHandler? AssistantCatalogueRequested;
     /// <summary>Raised after the shared surface has become hidden, including when an item or the
     /// authored dismiss control closes it. Hosts may use this to retire an external popup layer.</summary>
     public event EventHandler? Dismissed;
     public bool IsOpen => _isOpen;
+    public bool IsAssistantCatalogueOpen => _isOpen && _catalogAction == AddMenu.AddMenuAction.Assistant;
+    public long AssistantCatalogueRequestGeneration => _assistantCatalogueRequestGeneration;
 
     public void SetCatalogue(
         IReadOnlyList<AgentDefinition> agents,
@@ -133,6 +144,17 @@ internal sealed class ChatAddMenuSurface : IDisposable
         _instructions = (instructions ?? []).Where(item => item.IsEnabled).OrderBy(item => item.Name).ToArray();
         _apps = (apps ?? []).Where(item => item.IsEnabled).OrderBy(item => item.Name).ToArray();
         if (_catalogAction is not null || _searchAll) RebuildCatalogue();
+    }
+
+    public void SetAssistantCatalogue(IReadOnlyList<AssistantDefinitionSnapshot>? assistants, string? unavailableMessage = null)
+    {
+        _assistantCatalogueAvailable = assistants is not null;
+        _assistantCatalogueUnavailableMessage = assistants is null
+            ? string.IsNullOrWhiteSpace(unavailableMessage) ? "Open Assistants to load the configured list." : unavailableMessage.Trim()
+            : string.Empty;
+        _assistants = (assistants ?? []).Where(item => item.Kind == ConfiguredIdentityKind.Assistant)
+            .OrderBy(item => item.Configuration.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+        if (_catalogAction == AddMenu.AddMenuAction.Assistant || _searchAll) RebuildCatalogue();
     }
 
     public void SetResponseState(string agentName, ChatActionMode actionMode, GenerativeUiResponseMode visualMode)
@@ -152,6 +174,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
 
     public void Show()
     {
+        _assistantCatalogueRequestGeneration++;
         _isOpen = true;
         _catalogAction = null;
         _searchAll = false;
@@ -165,6 +188,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
     public void Hide()
     {
         var wasOpen = _isOpen;
+        if (wasOpen) _assistantCatalogueRequestGeneration++;
         _isOpen = false;
         _catalogAction = null;
         _searchAll = false;
@@ -219,6 +243,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         CatalogSearch.Placeholder = action switch
         {
             AddMenu.AddMenuAction.Agent => "Search Specialists",
+            AddMenu.AddMenuAction.Assistant => "Search Assistants",
             AddMenu.AddMenuAction.Instruction => "Search Skills",
             AddMenu.AddMenuAction.Capability => "Search Plugins",
             _ => "Search"
@@ -262,6 +287,29 @@ internal sealed class ChatAddMenuSurface : IDisposable
                 AddCatalogHeading("Current: " + _currentAgentName);
                 AddCatalogRows(AddMenu.AddMenuAction.Agent, _agents.Where(item => Matches(item.Name, item.Description, query)), item => item.Name, item => item.Description);
                 break;
+            case AddMenu.AddMenuAction.Assistant:
+                if (!_assistantCatalogueAvailable)
+                {
+                    AddCatalogHeading(_assistantCatalogueUnavailableMessage);
+                    AddOpenAssistantsRow();
+                    break;
+                }
+                if (_assistants.Count == 0)
+                {
+                    AddCatalogHeading("No configured Assistants");
+                    AddOpenAssistantsRow();
+                    break;
+                }
+                var matchingAssistants = _assistants.Where(item => Matches(
+                    item.Configuration.Name, item.Configuration.Description, query)).ToArray();
+                if (matchingAssistants.Length == 0)
+                {
+                    AddCatalogHeading("No matching Assistants");
+                    break;
+                }
+                AddCatalogHeading("Open in Assistants");
+                AddAssistantRows(matchingAssistants);
+                break;
             case AddMenu.AddMenuAction.Capability:
                 AddCatalogRows(AddMenu.AddMenuAction.Capability, _capabilities.Where(item => Matches(item.Name, item.Description, query)), item => item.Name, item => item.Description);
                 break;
@@ -304,6 +352,19 @@ internal sealed class ChatAddMenuSurface : IDisposable
         }
     }
 
+    private void AddAssistantRows(IEnumerable<AssistantDefinitionSnapshot> assistants)
+    {
+        foreach (var assistant in assistants)
+        {
+            var button = MenuButton(assistant.Configuration.Name, 260, "chat");
+            button.Accessibility.Description = AssistantDescription(assistant.Configuration.Description);
+            var boxed = (object)assistant;
+            button.Invoked += (_, _) => SelectCatalogue(new AddMenuSelection(AddMenu.AddMenuAction.Assistant, boxed));
+            _catalogRows.Add((button, AddMenu.AddMenuAction.Assistant, boxed));
+            CatalogResults.Add(button);
+        }
+    }
+
     private void AddModeRow(string label, AddMenu.AddMenuAction action, object item)
     {
         var button = MenuButton(label, 260, IconFor(action));
@@ -318,6 +379,15 @@ internal sealed class ChatAddMenuSurface : IDisposable
         heading.SetValue(HavenProperties.FontWeight, 700);
         heading.SetValue(HavenProperties.Foreground, "TextSecondary");
         CatalogResults.Add(heading);
+    }
+
+    private void AddOpenAssistantsRow()
+    {
+        var button = MenuButton("Open Assistants", 260, "chat");
+        button.Accessibility.Description = "Open the Assistants workspace to create or choose an Assistant.";
+        button.Invoked += (_, _) => SelectCatalogue(new AddMenuSelection(
+            AddMenu.AddMenuAction.Assistant, OpenAssistantsRequest.Instance));
+        CatalogResults.Add(button);
     }
 
     private void RebuildMentionSearch(string query)
@@ -337,6 +407,8 @@ internal sealed class ChatAddMenuSurface : IDisposable
         }
 
         AddCandidates(AddMenu.AddMenuAction.Agent, _agents, item => item.Name, item => item.Description);
+        AddCandidates(AddMenu.AddMenuAction.Assistant, _assistants,
+            item => item.Configuration.Name, item => item.Configuration.Description);
         AddCandidates(AddMenu.AddMenuAction.Capability, _capabilities, item => item.Name, item => item.Description);
         AddCandidates(AddMenu.AddMenuAction.Instruction, _instructions, item => item.Name, item => item.Description);
         AddCandidates(AddMenu.AddMenuAction.App, _apps, item => item.Name, item => item.Description);
@@ -355,7 +427,9 @@ internal sealed class ChatAddMenuSurface : IDisposable
                      .Take(30))
         {
             var button = MenuButton(candidate.Name, 260, IconFor(candidate.Action));
-            button.Accessibility.Description = candidate.Description;
+            button.Accessibility.Description = candidate.Action == AddMenu.AddMenuAction.Assistant
+                ? AssistantDescription(candidate.Description)
+                : candidate.Description;
             var selection = new AddMenuSelection(candidate.Action, candidate.Item);
             button.Invoked += (_, _) => SelectCatalogue(selection);
             _catalogRows.Add((button, candidate.Action, candidate.Item));
@@ -439,6 +513,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
     {
         AddMenu.AddMenuAction.File => "file",
         AddMenu.AddMenuAction.Agent => "agents",
+        AddMenu.AddMenuAction.Assistant => "chat",
         AddMenu.AddMenuAction.Instruction => "skills",
         AddMenu.AddMenuAction.Capability => "plugin",
         AddMenu.AddMenuAction.App => "apps",
@@ -446,6 +521,17 @@ internal sealed class ChatAddMenuSurface : IDisposable
         AddMenu.AddMenuAction.VisualResponses => "browse",
         _ => "plus"
     };
+
+    private static string AssistantDescription(string description) =>
+        string.IsNullOrWhiteSpace(description)
+            ? "Open this Assistant and its main conversation."
+            : description.Trim() + " Open this Assistant and its main conversation.";
+
+    internal sealed record OpenAssistantsRequest
+    {
+        public static OpenAssistantsRequest Instance { get; } = new();
+        private OpenAssistantsRequest() { }
+    }
 
     private static string ActionModeSummary(ChatActionMode mode) => mode switch
     {
@@ -475,6 +561,12 @@ internal sealed class ChatAddMenuSurface : IDisposable
         AddActionSelected?.Invoke(this, AddMenu.AddMenuAction.File);
     }
     private void OnAgentsInvoked(object? sender, EventArgs e) => OpenCatalogue(AddMenu.AddMenuAction.Agent);
+    private void OnAssistantsInvoked(object? sender, EventArgs e)
+    {
+        OpenCatalogue(AddMenu.AddMenuAction.Assistant);
+        _assistantCatalogueRequestGeneration++;
+        AssistantCatalogueRequested?.Invoke(this, EventArgs.Empty);
+    }
     private void OnInstructionsInvoked(object? sender, EventArgs e) => OpenCatalogue(AddMenu.AddMenuAction.Instruction);
     private void OnCapabilitiesInvoked(object? sender, EventArgs e) => OpenCatalogue(AddMenu.AddMenuAction.Capability);
     private void OnAppsInvoked(object? sender, EventArgs e) => OpenCatalogue(AddMenu.AddMenuAction.App);
@@ -497,6 +589,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         CatalogBackButton.Invoked -= OnCatalogBackInvoked;
         AttachFilesButton.Invoked -= OnAttachFilesInvoked;
         AgentsButton.Invoked -= OnAgentsInvoked;
+        AssistantsButton.Invoked -= OnAssistantsInvoked;
         InstructionsButton.Invoked -= OnInstructionsInvoked;
         CapabilitiesButton.Invoked -= OnCapabilitiesInvoked;
         AppsButton.Invoked -= OnAppsInvoked;

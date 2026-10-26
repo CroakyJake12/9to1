@@ -4,6 +4,7 @@ using Haven.Desktop.Services;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.UI;
 using Haven.UI.Components;
+using HavenOS.Apps.Assistants.Contracts;
 using HavenButton = Haven.UI.Components.Button;
 using HavenText = Haven.UI.Components.Text;
 
@@ -131,10 +132,12 @@ internal sealed class GoHavenScene : IDisposable
         AddButton.Invoked += OnAddInvoked;
         _addMenu.AddActionSelected += OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected += OnSharedCatalogItemSelected;
+        _addMenu.AssistantCatalogueRequested += OnSharedAssistantCatalogueRequested;
     }
 
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? CatalogItemSelected;
+    public event EventHandler? AssistantCatalogueRequested;
     public event EventHandler<ModeDefinition>? AppShortcutInvoked;
 
     public Page Root { get; }
@@ -163,8 +166,11 @@ internal sealed class GoHavenScene : IDisposable
     public Container CatalogPanel => _addMenu.CatalogPanel;
     public Input CatalogSearch => _addMenu.CatalogSearch;
     public Container CatalogResults => _addMenu.CatalogResults;
+    public bool IsAssistantCatalogueOpen => _addMenu.IsAssistantCatalogueOpen;
+    public long AssistantCatalogueRequestGeneration => _addMenu.AssistantCatalogueRequestGeneration;
     public HavenButton AttachFilesButton => _addMenu.AttachFilesButton;
     public HavenButton AgentsButton => _addMenu.AgentsButton;
+    public HavenButton AssistantsButton => _addMenu.AssistantsButton;
     public HavenButton InstructionsButton => _addMenu.InstructionsButton;
     public HavenButton CapabilitiesButton => _addMenu.CapabilitiesButton;
     public HavenButton AppsButton => _addMenu.AppsButton;
@@ -257,6 +263,9 @@ internal sealed class GoHavenScene : IDisposable
         IReadOnlyList<PromptDefinition> instructions,
         IReadOnlyList<ModeDefinition> apps) =>
         _addMenu.SetCatalogue(agents, capabilities, instructions, apps);
+
+    public void SetAssistantCatalogue(IReadOnlyList<AssistantDefinitionSnapshot>? assistants, string? unavailableMessage = null) =>
+        _addMenu.SetAssistantCatalogue(assistants, unavailableMessage);
 
     public void SetResponseState(string agentName, ChatActionMode actionMode, GenerativeUiResponseMode visualMode) =>
         _addMenu.SetResponseState(agentName, actionMode, visualMode);
@@ -407,6 +416,9 @@ internal sealed class GoHavenScene : IDisposable
     private void OnSharedCatalogItemSelected(object? sender, AddMenuSelection selection) =>
         CatalogItemSelected?.Invoke(this, selection);
 
+    private void OnSharedAssistantCatalogueRequested(object? sender, EventArgs e) =>
+        AssistantCatalogueRequested?.Invoke(this, EventArgs.Empty);
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -416,6 +428,7 @@ internal sealed class GoHavenScene : IDisposable
         _addMenu.Dismissed -= OnAddMenuDismissed;
         _addMenu.AddActionSelected -= OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
+        _addMenu.AssistantCatalogueRequested -= OnSharedAssistantCatalogueRequested;
         _addMenu.Dispose();
         foreach (var (element, handler) in _visualSubscriptions) element.Invalidated -= handler;
         _visualSubscriptions.Clear();

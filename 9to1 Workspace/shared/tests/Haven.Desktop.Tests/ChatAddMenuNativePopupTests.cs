@@ -10,7 +10,9 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop.Views.Shell.TopRail;
 using Haven.UI;
+using HavenOS.Apps.Assistants.Contracts;
 using Container = Haven.UI.Components.Container;
 using HavenButton = Haven.UI.Components.Button;
 using HavenText = Haven.UI.Components.Text;
@@ -106,6 +108,45 @@ public sealed class ChatAddMenuNativePopupTests
             await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.Equal(HavenVisibility.Visible, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
                 .GetValue(HavenProperties.Visibility));
+
+            // The new Assistants category displays only canonical configured Assistant snapshots,
+            // and selecting one forwards the exact identity for the shell's guarded open route.
+            var assistant = new AssistantDefinitionSnapshot(
+                new AssistantIdentity("fixture-den", "personal", "configured-helper"), 7,
+                ConfiguredIdentityKind.Assistant,
+                new AssistantConfiguration { Name = "Configured Helper", Description = "A real configured row." }, []);
+            var specialist = new AssistantDefinitionSnapshot(
+                new AssistantIdentity("fixture-den", "personal", "configured-specialist"), 3,
+                ConfiguredIdentityKind.Specialist,
+                new AssistantConfiguration { Name = "Not an Assistant row" }, []);
+            scene.SetAssistantCatalogue([assistant, specialist]);
+            var selectedAssistants = new List<AddMenuSelection>();
+            scene.CatalogItemSelected += (_, selection) => selectedAssistants.Add(selection);
+            scene.ShowAddMenu();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Click(new HavenInputRouter(popupHost.Root!), scene.AddMenuPrefab.GetComponent<HavenButton>("Assistants"));
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            var assistantRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
+            Assert.Equal("Configured Helper", assistantRow.Content);
+            Assert.Contains("Open this Assistant", assistantRow.Accessibility.Description);
+            Click(new HavenInputRouter(popupHost.Root!), assistantRow);
+            window.UpdateLayout();
+            var selectedAssistant = Assert.Single(selectedAssistants);
+            Assert.Equal(AddMenu.AddMenuAction.Assistant, selectedAssistant.Kind);
+            Assert.Same(assistant, selectedAssistant.Item);
+
+            scene.SetAssistantCatalogue(null);
+            scene.ShowAddMenu();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Click(new HavenInputRouter(popupHost.Root!), scene.AddMenuPrefab.GetComponent<HavenButton>("Assistants"));
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.Contains("Open Assistants to load", scene.CatalogRows.Children.OfType<HavenText>().Single().Content);
+            var openAssistantsRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
+            Click(new HavenInputRouter(popupHost.Root!), openAssistantsRow);
+            window.UpdateLayout();
+            var openAssistantsSelection = Assert.Single(selectedAssistants.Skip(1));
+            Assert.Equal(AddMenu.AddMenuAction.Assistant, openAssistantsSelection.Kind);
+            Assert.Equal("OpenAssistantsRequest", openAssistantsSelection.Item.GetType().Name);
 
             // Mention-search/catalogue rows still come from the same ChatAddMenuSurface, and
             // selecting its real Files row closes the native host before forwarding the action.

@@ -18,6 +18,7 @@ using Haven.Desktop.ViewModels;
 using Haven.UI;
 using Haven.UI.Components;
 using Microsoft.Extensions.DependencyInjection;
+using HavenOS.Apps.Assistants.Contracts;
 
 namespace Haven.Desktop.Views.Pages.Chat;
 
@@ -221,6 +222,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public event EventHandler<ChatProjectionStateChangedEventArgs>? ProjectionStateChanged;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? AddCatalogItemSelected;
+    public event EventHandler? AssistantCatalogueRequested;
 
     public string? SelectedModelName => _selectedModel?.Name;
     public ModelDescriptor? SelectedModel => _selectedModel;
@@ -240,6 +242,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public Exception? ModelAvailabilityCause => _modelAvailabilityCause;
     public Guid ConversationId => _conversation.Id;
     public Conversation CurrentConversation => _conversation;
+    internal bool IsAssistantCatalogueOpen => !_disposed && !_originalWork.IsRetiring && _scene.IsAssistantCatalogueOpen;
+    internal long AssistantCatalogueRequestGeneration => _scene.AssistantCatalogueRequestGeneration;
     public bool IsTemporary => _conversation.IsTemporary;
     public bool HasStarted => _messages.Count > 0;
     public string ActiveAgentName => _activeAgent?.Name ?? "No Agent (Default)";
@@ -689,6 +693,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _scene.SetCatalogue(agents ?? [], capabilities ?? [], instructions ?? [], apps ?? []);
     }
 
+    public void SetAssistantCatalogue(IReadOnlyList<AssistantDefinitionSnapshot>? assistants, string? unavailableMessage = null)
+    {
+        if (_disposed || _originalWork.IsRetiring) return;
+        DemandOriginalChatCurrent();
+        _scene.SetAssistantCatalogue(assistants, unavailableMessage);
+    }
+
     public Task LoadConversationAsync(Conversation conversation) => AdmitOriginalConversationLoad(conversation);
 
     private async Task LoadConversationOriginalBodyAsync(Conversation conversation, OriginalDraftTransition? outgoing)
@@ -1136,6 +1147,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             if (_originalWork.IsRetiring) return;
             if (_activeMention is not null) ConsumeActiveMention();
             AddActionSelected?.Invoke(this, action);
+        };
+        _scene.AssistantCatalogueRequested += (_, _) =>
+        {
+            if (!_originalWork.IsRetiring) AssistantCatalogueRequested?.Invoke(this, EventArgs.Empty);
         };
         _scene.CatalogItemSelected += (_, selection) =>
         {

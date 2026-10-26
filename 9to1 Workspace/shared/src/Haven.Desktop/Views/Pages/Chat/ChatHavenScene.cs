@@ -7,6 +7,7 @@ using Haven.Desktop.Services;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.UI;
 using Haven.UI.Components;
+using HavenOS.Apps.Assistants.Contracts;
 using HavenButton = Haven.UI.Components.Button;
 using HavenText = Haven.UI.Components.Text;
 
@@ -133,6 +134,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         TaskHistory.Invoked += (_, _) => TaskHistoryRequested?.Invoke(this, EventArgs.Empty);
         _addMenu.AddActionSelected += OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected += OnSharedCatalogItemSelected;
+        _addMenu.AssistantCatalogueRequested += OnSharedAssistantCatalogueRequested;
         SetHasMessages(false);
         HideAddMenu();
     }
@@ -170,6 +172,8 @@ internal sealed partial class ChatHavenScene : IDisposable
     public HavenButton DismissAddButton => _addMenu.DismissButton;
     public Container CatalogPanel => _addMenu.CatalogPanel;
     public Container CatalogRows => _addMenu.CatalogResults;
+    public bool IsAssistantCatalogueOpen => _addMenu.IsAssistantCatalogueOpen;
+    public long AssistantCatalogueRequestGeneration => _addMenu.AssistantCatalogueRequestGeneration;
     public Input CatalogSearch => _addMenu.CatalogSearch;
 
     public event EventHandler? SendRequested;
@@ -183,6 +187,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     public event EventHandler<Guid>? ContextRemoveRequested;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? CatalogItemSelected;
+    public event EventHandler? AssistantCatalogueRequested;
     public event EventHandler<ChatMessageActionRequest>? MessageActionRequested;
     public event EventHandler<ChatMarkdownCodeActionRequest>? MarkdownCodeActionRequested;
 
@@ -360,6 +365,9 @@ internal sealed partial class ChatHavenScene : IDisposable
         IReadOnlyList<PromptDefinition> instructions,
         IReadOnlyList<ModeDefinition> apps) =>
         _addMenu.SetCatalogue(agents, capabilities, instructions, apps);
+
+    public void SetAssistantCatalogue(IReadOnlyList<AssistantDefinitionSnapshot>? assistants, string? unavailableMessage = null) =>
+        _addMenu.SetAssistantCatalogue(assistants, unavailableMessage);
 
     public void SetResponseState(string agentName, ChatActionMode actionMode, GenerativeUiResponseMode visualMode) =>
         _addMenu.SetResponseState(agentName, actionMode, visualMode);
@@ -754,6 +762,9 @@ internal sealed partial class ChatHavenScene : IDisposable
     private void OnSharedCatalogItemSelected(object? sender, AddMenuSelection selection) =>
         CatalogItemSelected?.Invoke(this, selection);
 
+    private void OnSharedAssistantCatalogueRequested(object? sender, EventArgs e) =>
+        AssistantCatalogueRequested?.Invoke(this, EventArgs.Empty);
+
     private Page BuildRoot()
     {
         const string markup = """
@@ -940,6 +951,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         ContextClose.Invoked -= OnContextCloseInvoked;
         _addMenu.AddActionSelected -= OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
+        _addMenu.AssistantCatalogueRequested -= OnSharedAssistantCatalogueRequested;
         _composerQueue?.Dispose();
         RetireAddMenuPopup();
         _addMenu.Dispose();

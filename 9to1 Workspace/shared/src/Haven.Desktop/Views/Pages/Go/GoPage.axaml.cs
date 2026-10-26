@@ -4,6 +4,7 @@ using Haven.Desktop.Events;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Shell.TopRail;
+using HavenOS.Apps.Assistants.Contracts;
 using Haven.UI;
 
 namespace Haven.Desktop.Views.Pages.Go;
@@ -42,6 +43,9 @@ public sealed partial class GoPage : UserControl, IDisposable, IAsyncDisposable,
     public event EventHandler? RefreshSuggestionsRequested;
     public event EventHandler<AddMenu.AddMenuAction>? AddRequested;
     public event EventHandler<AddMenuSelection>? AddCatalogItemSelected;
+    public event EventHandler? AssistantCatalogueRequested;
+    internal bool IsAssistantCatalogueOpen => !_disposed && _route.IsAssistantCatalogueOpen;
+    internal long AssistantCatalogueRequestGeneration => _route.AssistantCatalogueRequestGeneration;
     public event EventHandler<ModeDefinition>? AppShortcutInvoked;
     public event EventHandler? Disposed;
 
@@ -220,6 +224,9 @@ public sealed partial class GoPage : UserControl, IDisposable, IAsyncDisposable,
         _route.SetCatalogue(agents, capabilities, instructions, apps);
     }
 
+    public void SetAssistantCatalogue(IReadOnlyList<AssistantDefinitionSnapshot>? assistants, string? unavailableMessage = null) =>
+        RunOriginalGoSynchronous(() => _route.SetAssistantCatalogue(assistants, unavailableMessage));
+
     public void SetRefreshInProgress(bool inProgress)
     { if (_disposed) return; RunOriginalGoSynchronous(() => SetRefreshInProgressOriginal(inProgress)); }
 
@@ -276,6 +283,9 @@ public sealed partial class GoPage : UserControl, IDisposable, IAsyncDisposable,
         });
         _route.CatalogItemSelected += selection;
         _originalGoDetaches.Add(() => _route.CatalogItemSelected -= selection);
+        EventHandler assistantCatalogue = (_, _) => RunOriginalGoEvent(() => AssistantCatalogueRequested?.Invoke(this, EventArgs.Empty));
+        _route.AssistantCatalogueRequested += assistantCatalogue;
+        _originalGoDetaches.Add(() => _route.AssistantCatalogueRequested -= assistantCatalogue);
     }
 
     private void OnInputSubmitted(Haven.UI.Components.Input input) => RunOriginalGoEvent(() =>
