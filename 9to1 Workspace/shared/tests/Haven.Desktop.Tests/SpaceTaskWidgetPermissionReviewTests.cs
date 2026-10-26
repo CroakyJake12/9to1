@@ -237,6 +237,147 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaTheory]
+    [InlineData(true, PermissionDecisionKind.Allowed)]
+    [InlineData(false, PermissionDecisionKind.Denied)]
+    public async Task Tasks_dashboard_retains_exact_permission_ack_when_real_page_refresh_fails(bool approve,
+        PermissionDecisionKind expectedDecision)
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        using var paths = new ObservationPaths();
+        await rig.RunAsync(tools: false);
+        var task = rig.Service.CurrentCanonicalTask!;
+        var request = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        _ = await rig.Tasks.SubmitFollowUpAsync(task.TaskId, "preserve queued work", TaskFollowUpMode.Queue, null, null, token);
+        var registry = new SpaceRegistry(new ObservationSettings());
+        _ = await registry.GetAllAsync(cancellationToken: token);
+        var preferences = new UserPreferencesService(paths);
+        preferences.SetShownTasks(TaskShownScope.AllTasks);
+        var source = new SpaceTaskWorkspaceService(registry, rig.Conversations, rig.Tasks);
+        var page = new SpaceTasksDashboardPage(source, rig.Tasks, SpaceRegistry.TasksSpaceId,
+            _ => Task.CompletedTask, null, null, preferences, _ => Task.CompletedTask);
+        var window = new Window { Width = 1000, Height = 800, Content = page };
+        Exception? responseFailure = null;
+        try
+        {
+            window.Show(); await page.ActivateAsync(token); window.UpdateLayout();
+            var reviewButton = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>()
+                .Single(button => AutomationProperties.GetAutomationId(button) == "tasks-tile-review-permission");
+            reviewButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualPermissionReview).WaitAsync(token);
+            window.UpdateLayout();
+            var responseButton = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>().Single(button =>
+                AutomationProperties.GetAutomationId(button) == (approve ? "tasks-permission-allow" : "tasks-permission-deny"));
+
+            // Let the same real owner publish and return its decision, then fail the
+            // dashboard's subsequent canonical observation page.
+            rig.Events.OnEvent = entry =>
+            {
+                if (entry.SafeMetadata?.GetValueOrDefault("permissionPhase") == "decision")
+                    rig.Actors.OriginalRead = Task.FromException<AuthenticatedResourceActor?>(
+                        new IOException("controlled current-principal refresh failure after real decision"));
+            };
+            responseButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            responseFailure = await Record.ExceptionAsync(() => Assert.IsAssignableFrom<Task>(page.ActualPermissionResponse));
+
+            Assert.NotNull(responseFailure);
+            var ack = Assert.IsType<TaskRunOriginalTaskPermissionResponse>(page.AcknowledgedPermissionResponse);
+            Assert.Equal(task.TaskId, ack.TaskId); Assert.Equal(task.ExecutionId, ack.ExecutionId);
+            Assert.Equal(task.ContextId, ack.ContextId); Assert.Equal(request.Id, ack.RequestId);
+            Assert.Equal(expectedDecision, ack.Decision.Kind);
+            Assert.True(page.Scene.TryGetValue("Status", out var status));
+            var message = Assert.IsType<string>(status);
+            Assert.Contains("decision acknowledged", message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("couldn’t refresh", message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("no task was resumed", message, StringComparison.OrdinalIgnoreCase);
+            Assert.True(page.Scene.TryGetValue("ReviewOpen", out var open)); Assert.Equal(false, open);
+            Assert.Empty(page.CurrentObservations);
+            Assert.False(page.Scene.IsActionAvailable("tasks.allow-permission"));
+            Assert.False(page.Scene.IsActionAvailable("tasks.deny-permission"));
+            Assert.False(rig.Owner.CanRespond(request.Id));
+            var current = (await rig.Tasks.GetAsync(task.TaskId, token))!;
+            Assert.Equal(TaskExecutionLifecycle.Suspended, current.State); Assert.Empty(current.Attempts);
+            Assert.Equal("preserve queued work", Assert.Single(current.Queue).Summary);
+            Assert.Equal(0, rig.Client.Dispatches); Assert.Equal(0, rig.Workspace.Effects);
+        }
+        finally
+        {
+            rig.Actors.OriginalRead = null;
+            page.RequestRetirement();
+            var closeFailure = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
+            if (responseFailure is null) Assert.Null(closeFailure);
+            else Assert.NotNull(closeFailure);
+            window.Content = null; window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Tasks_dashboard_without_a_matching_permission_ack_reports_unknown_and_retires_stale_selection()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        using var paths = new ObservationPaths();
+        await rig.RunAsync(tools: false);
+        var task = rig.Service.CurrentCanonicalTask!;
+        var originalActor = rig.Actors.Current!;
+        var request = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        var registry = new SpaceRegistry(new ObservationSettings());
+        _ = await registry.GetAllAsync(cancellationToken: token);
+        var preferences = new UserPreferencesService(paths);
+        preferences.SetShownTasks(TaskShownScope.AllTasks);
+        var source = new SpaceTaskWorkspaceService(registry, rig.Conversations, rig.Tasks);
+        var page = new SpaceTasksDashboardPage(source, rig.Tasks, SpaceRegistry.TasksSpaceId,
+            _ => Task.CompletedTask, null, null, preferences, _ => Task.CompletedTask);
+        var window = new Window { Width = 1000, Height = 800, Content = page };
+        Exception? responseFailure = null;
+        try
+        {
+            window.Show(); await page.ActivateAsync(token); window.UpdateLayout();
+            var reviewButton = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>()
+                .Single(button => AutomationProperties.GetAutomationId(button) == "tasks-tile-review-permission");
+            reviewButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            await Assert.IsAssignableFrom<Task>(page.ActualPermissionReview).WaitAsync(token);
+            window.UpdateLayout();
+
+            // This is a fresh authorization refusal before the owner returns a decision.
+            rig.Actors.Current = rig.Actors.Current! with { ActorId = "different-current-actor" };
+            var deny = ObservationAuthoredControls(page.Scene.Root!).OfType<Button>()
+                .Single(button => AutomationProperties.GetAutomationId(button) == "tasks-permission-deny");
+            deny.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.Scene.WhenActionsIdleAsync();
+            responseFailure = await Record.ExceptionAsync(() => Assert.IsAssignableFrom<Task>(page.ActualPermissionResponse));
+
+            Assert.NotNull(responseFailure);
+            Assert.Null(page.AcknowledgedPermissionResponse);
+            Assert.True(page.Scene.TryGetValue("Status", out var status));
+            var message = Assert.IsType<string>(status);
+            Assert.Contains("outcome is unknown", message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("no matching decision acknowledgment", message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("acknowledged", message, StringComparison.OrdinalIgnoreCase);
+            Assert.True(page.Scene.TryGetValue("ReviewOpen", out var open)); Assert.Equal(false, open);
+            Assert.Empty(page.CurrentObservations);
+            Assert.False(page.Scene.IsActionAvailable("tasks.allow-permission"));
+            Assert.False(page.Scene.IsActionAvailable("tasks.deny-permission"));
+            Assert.True(rig.Owner.CanRespond(request.Id));
+            var current = (await rig.Tasks.GetAsync(task.TaskId, token))!;
+            Assert.Equal(TaskExecutionLifecycle.Suspended, current.State); Assert.Empty(current.Attempts);
+            Assert.Equal(0, rig.Client.Dispatches); Assert.Equal(0, rig.Workspace.Effects);
+        }
+        finally
+        {
+            rig.Actors.Current = originalActor;
+            page.RequestRetirement();
+            var closeFailure = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
+            if (responseFailure is null) Assert.Null(closeFailure);
+            else Assert.NotNull(closeFailure);
+            window.Content = null; window.Close();
+        }
+    }
+
     private sealed class PermissionReviewUnavailableReadiness : ICuiSceneReadiness
     {
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) =>

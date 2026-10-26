@@ -36,7 +36,7 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     private bool _navigationPending;
     private ITaskContextObservation? _permissionSelection;
     private TaskRunOriginalTaskPermissionReview? _permissionReview;
-    private bool _permissionOpen, _permissionWorkPending, _permissionResponded;
+    private bool _permissionOpen, _permissionWorkPending, _permissionResponsePending, _permissionResponded;
     private long _permissionSequence;
     private string _permissionTitle = "", _permissionStatus = "";
     private IDisposable? _permissionChanges;
@@ -157,7 +157,8 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
             await ReadOriginalPageAsync(original, generation, scope.Token).ConfigureAwait(false);
         });
     }
-    private async Task ReadOriginalPageAsync(DesktopOriginalWorkLifetime.Original original, long generation, CancellationToken token)
+    private async Task ReadOriginalPageAsync(DesktopOriginalWorkLifetime.Original original, long generation, CancellationToken token,
+        TaskRunOriginalTaskPermissionResponse? acknowledgedPermissionResponse = null)
     {
         long sequence; TaskShownScope shown; TaskObservationPageCursor? cursor;
         lock (_gate) { sequence = ++_readSequence; shown = _shownScope; cursor = _pageCursor; }
@@ -206,8 +207,10 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
                         _currentObservations = []; _observations = []; _nextCursor = null;
                         ClosePermissionReview();
                         _scene.SetRecent([]); PublishScope();
-                        _scene.SetStatus(error is UnauthorizedAccessException ? "The current profile cannot show this task context. Refresh after checking your profile."
-                            : "Tasks couldn’t refresh. Try again.");
+                        _scene.SetStatus(acknowledgedPermissionResponse is { } ack
+                            ? PermissionAcknowledgementStatus(ack) + " The task list couldn’t refresh; no task was resumed. Refresh to verify current state."
+                            : error is UnauthorizedAccessException ? "The current profile cannot show this task context. Refresh after checking your profile."
+                                : "Tasks couldn’t refresh. Try again.");
                     }).ConfigureAwait(false); }
                 catch (Exception publicationError) { original.Retain(publicationError); }
             }
@@ -262,7 +265,13 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     private void OnSnapshotChanged(object? sender, TaskExecutionSnapshot snapshot)
     {
         long generation;
-        lock (_gate) { if (!_active || _work.IsRetiring) return; generation = _generation; }
+        lock (_gate)
+        {
+            if (!_active || _work.IsRetiring) return;
+            if (_permissionResponsePending && _permissionSelection?.Snapshot is { } selected &&
+                selected.TaskId == snapshot.TaskId && selected.ExecutionId == snapshot.ExecutionId) return;
+            generation = _generation;
+        }
         // A canonical ACK is an observation. Fresh Space membership comes from the real read.
         _ = _work.RunAsync(async original =>
         {
@@ -272,8 +281,13 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
     }
     private void OnRunActivityInvalidated(object? sender, TaskRunActivityInvalidation hint)
     {
-        lock (_gate) if (!_active || _work.IsRetiring || !_currentObservations.Any(row =>
-            row.Snapshot is { } task && task.TaskId == hint.TaskId && task.ExecutionId == hint.ExecutionId && row.ContextId == hint.ContextId)) return;
+        lock (_gate)
+        {
+            if (!_active || _work.IsRetiring || !_currentObservations.Any(row =>
+                row.Snapshot is { } task && task.TaskId == hint.TaskId && task.ExecutionId == hint.ExecutionId && row.ContextId == hint.ContextId)) return;
+            if (_permissionResponsePending && _permissionSelection?.Snapshot is { } selected &&
+                selected.TaskId == hint.TaskId && selected.ExecutionId == hint.ExecutionId) return;
+        }
         _ = RefreshOriginalAsync(); // Hint is not state; the same source freshly authorizes and reads.
     }
     private void OnPermissionInvalidated(TaskPermissionReviewInvalidation hint)
@@ -283,6 +297,9 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         {
             if (!_active || _work.IsRetiring || !_currentObservations.Any(row =>
                 row.Snapshot is { } task && task.TaskId == hint.TaskId && task.ExecutionId == hint.ExecutionId)) return;
+            if (_permissionResponsePending && _permissionSelection?.Snapshot is { } selected &&
+                selected.TaskId == hint.TaskId && selected.ExecutionId == hint.ExecutionId &&
+                _permissionReview?.Request.Id == hint.RequestId) return;
             generation = _generation;
         }
         ActualPermissionInvalidation = _work.RunAsync(async original =>
@@ -364,6 +381,12 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         _permissionTitle = ""; _permissionStatus = ""; _permissionResponded = false;
         PublishPermissionReview();
     }
+    private static string PermissionAcknowledgementStatus(TaskRunOriginalTaskPermissionResponse reply) => reply.Decision.Kind switch
+    {
+        PermissionDecisionKind.Allowed => "Permission decision acknowledged: allowed.",
+        PermissionDecisionKind.Denied => "Permission decision acknowledged: denied.",
+        _ => "Permission response acknowledged with an unavailable decision state."
+    };
     private void OnPermissionReviewCloseRequested(object? sender, EventArgs args) => ClosePermissionReview();
     private void OnPermissionReviewRequested(object? sender, ITaskContextObservation selected)
     {
@@ -426,46 +449,60 @@ public sealed class SpaceTasksDashboardPage : UserControl, IActivatablePage, IDi
         {
             if (_permissionWorkPending || !_permissionOpen || _permissionResponded || selected is null || reviewed?.CanRespond != true)
                 throw new InvalidOperationException("No current reviewed permission response is available.");
-            _permissionWorkPending = true; generation = _generation; sequence = _permissionSequence;
+            _permissionWorkPending = true; _permissionResponsePending = true;
+            generation = _generation; sequence = _permissionSequence;
         }
         try { ActualPermissionResponse = _work.RunAsync(async original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation));
+            TaskRunOriginalTaskPermissionResponse? operationAcknowledgement = null;
             try
             {
                 await DispatchOriginalAsync(original, PublishPermissionReview).ConfigureAwait(false);
                 var reply = await original.AwaitAsync(InvokePhysicalSource(() => _source.RespondPermissionReviewAsync(
                     selected!, reviewed!, approve, original.Token, OwnNestedOriginalSource))).ConfigureAwait(false);
+                var expectedDecision = approve ? PermissionDecisionKind.Allowed : PermissionDecisionKind.Denied;
+                if (reply.TaskId != reviewed!.CanonicalTaskContext.TaskId || reply.ExecutionId != reviewed.CanonicalTaskContext.ExecutionId ||
+                    reply.ContextId != reviewed.CanonicalTaskContext.ContextId || reply.RequestId != reviewed.Request.Id ||
+                    reply.Decision.Kind != expectedDecision)
+                    throw new InvalidDataException("The actual permission response did not acknowledge this exact Task/Run/request decision.");
+                operationAcknowledgement = reply;
                 AcknowledgedPermissionResponse = reply; // The genuine source ACK survives optional UI withdrawal.
                 await DispatchOriginalAsync(original, () =>
                 {
                     if (_permissionSequence != sequence) return;
                     _permissionResponded = true;
-                    _permissionStatus = reply.Decision.Kind == PermissionDecisionKind.Allowed
-                        ? "Permission allowed. Resume the task separately when ready."
-                        : "Permission denied. The task remains suspended.";
+                    _permissionStatus = PermissionAcknowledgementStatus(reply) + " Resume the task separately when ready; this decision does not resume it.";
                     PublishPermissionReview();
                 }).ConfigureAwait(false);
-                await ReadOriginalPageAsync(original, generation, original.Token).ConfigureAwait(false);
+                await ReadOriginalPageAsync(original, generation, original.Token, operationAcknowledgement).ConfigureAwait(false);
             }
             catch (Exception error)
             {
                 original.Retain(error);
                 if (IsCurrent(generation))
                     try { await DispatchOriginalAsync(original, () =>
-                    { if (_permissionSequence == sequence) { _permissionResponded = true; _permissionStatus = "The response couldn’t be confirmed. Close and review the current request."; PublishPermissionReview(); } }).ConfigureAwait(false); }
+                    {
+                        if (_permissionSequence != sequence) return;
+                        _currentObservations = []; _observations = [];
+                        ClosePermissionReview();
+                        _scene.SetRecent([]);
+                        _scene.SetStatus(operationAcknowledgement is { } ack
+                            ? PermissionAcknowledgementStatus(ack) + " The dashboard could not refresh; no task was resumed. Refresh to verify current state."
+                            : "Permission response outcome is unknown: no matching decision acknowledgment was received. No retry was attempted; refresh and review the current owner state.");
+                    }).ConfigureAwait(false); }
                     catch (Exception projectionError) { original.Retain(projectionError); }
             }
             finally
             {
-                lock (_gate) _permissionWorkPending = false;
+                lock (_gate) { _permissionWorkPending = false; _permissionResponsePending = false; }
                 if (IsCurrent(generation))
                     try { await DispatchOriginalAsync(original, PublishPermissionReview).ConfigureAwait(false); }
                     catch (Exception projectionError) { original.Retain(projectionError); }
             }
             original.ThrowRetained();
         }); }
-        catch { lock (_gate) _permissionWorkPending = false; throw; }
+        catch { lock (_gate) { _permissionWorkPending = false; _permissionResponsePending = false; } throw; }
     }
 
     private void OnDelegateRequested(object? sender, string instruction)
