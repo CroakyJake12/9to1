@@ -47,6 +47,49 @@ public sealed class CuiAppearancePreferenceTests
     }
 
     [Fact]
+    public async Task Inherited_global_refresh_waits_for_admission_and_retries_after_callback_failure()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var previousTheme = CuiSurfacePaletteCatalog.ActiveTheme;
+            var previousAppearance = CuiThemeScopeApplier.DetectAppearance();
+            var previousOverride = CuiSurfacePaletteCatalog.OverrideAccent;
+            var previousAccent = CuiSurfacePaletteCatalog.AccentOverride;
+            var canPublish = false;
+            var updateAttempts = 0;
+            CuiThemeScopeApplier.ApplyGlobalTheme(CuiTheme.Glow, appearanceOverride: CuiAppearance.Dark);
+            using var binding = new CuiSceneThemeBinding(Scene(), () => canPublish, _ =>
+            {
+                updateAttempts++;
+                if (updateAttempts == 1) throw new InvalidOperationException("The owning scene is not ready yet.");
+            });
+            try
+            {
+                CuiThemeScopeApplier.ApplyGlobalTheme(CuiTheme.Glow, appearanceOverride: CuiAppearance.Bright);
+                Assert.Equal(CuiAppearance.Dark.ToString(), Resource(binding.Resources, "CuiAppearance"));
+                Assert.Equal(0, updateAttempts);
+
+                canPublish = true;
+                Assert.Throws<InvalidOperationException>(binding.SynchronizeCurrent);
+                Assert.Equal(1, updateAttempts);
+
+                binding.SynchronizeCurrent();
+                Assert.Equal(2, updateAttempts);
+                Assert.Equal(CuiAppearance.Bright.ToString(), Resource(binding.Resources, "CuiAppearance"));
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow).TideBase,
+                    Colour(binding.Resources, "CuiBackgroundBrush"));
+            }
+            finally
+            {
+                CuiSurfacePaletteCatalog.OverrideAccent = previousOverride;
+                CuiSurfacePaletteCatalog.AccentOverride = previousAccent;
+                CuiThemeScopeApplier.ApplyGlobalTheme(previousTheme, appearanceOverride: previousAppearance);
+            }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Owned_appearance_refreshes_existing_scopes_and_preserves_document_controls_and_exact_global_mode()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
