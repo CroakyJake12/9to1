@@ -380,7 +380,7 @@ public sealed partial class BrowseNativeUiTests
     private static async Task ClickTabWithPointerAsync(BrowseNativeWindow window, BrowseNativeWorkspace workspace, Button source)
     {
         var point = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
-        StartTabDrag(window, source, point);
+        point = StartTabDrag(window, source, point);
         window.MouseUp(point, MouseButton.Left);
         await Observe(Loader(window).WhenActionsIdleAsync(), window);
         Assert.NotNull(workspace.OriginalCommand);
@@ -388,8 +388,13 @@ public sealed partial class BrowseNativeUiTests
         Assert.False(source.IsPressed);
     }
 
-    private static void StartTabDrag(BrowseNativeWindow window, Button source, Point point)
+    private static Point StartTabDrag(BrowseNativeWindow window, Button source, Point point)
     {
+        // Layout alone does not commit the compositor's hit-test snapshot.
+        // Use the same jobs/render stabilization as the headless input adapter
+        // before checking or delivering the real pointer press.
+        using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+        point = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
         var hit = window.InputHitTest(point) as Visual;
         var hitPath = hit?.GetSelfAndVisualAncestors().OfType<Control>().ToArray() ?? [];
         Assert.Contains(source, hitPath);
@@ -398,6 +403,7 @@ public sealed partial class BrowseNativeUiTests
         Assert.True(source.IsPressed, "The real tab Button must receive the pointer press.");
         var viewport = window.GetVisualDescendants().OfType<Control>().Single(control => control.GetType().Name == "BrowseEngineViewport");
         Assert.NotNull(viewport.GetType().GetField("_tabDragSource", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(viewport));
+        return point;
     }
 
     private sealed class NativeDragSession(BrowseTabSessionProjection projection) : IBrowseTabSessionPersistence
