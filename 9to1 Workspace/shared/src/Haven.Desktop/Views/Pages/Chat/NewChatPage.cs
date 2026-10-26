@@ -1386,23 +1386,32 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(RestoreUnsentOriginalInstructionIfUnchanged));
         try
         {
-        _pendingInstruction = null;
-        _redoMessages.Clear();
-        // The send's own programmatic clear is NOT a user edit: it must not queue an autosave
-        // that deletes the canonical draft before the user message is actually accepted.
-        _originalSendInFlight = true;
-        PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
-        DemandOriginalChatPublication();
-        _bus.Fire("Chat.Composer.Send.Click");
-        DemandOriginalChatPublication();
-        _isSending = true;
-        _sendStartTick = Environment.TickCount64;
-        DemandOriginalChatPublication();
-        _sendProgressTimer.Start();
-        DemandOriginalChatPublication();
-        _sendCancellation = CancellationTokenSource.CreateLinkedTokenSource(RequireChatOriginal().Token);
-        originalSendCancellation = _sendCancellation;
-        RefreshVisualState();
+        // A shared-composer action can resume this original after asynchronous safety or
+        // session work on a pool thread. Composer/scene/timer state belongs to Avalonia's
+        // dispatcher, so admit the clear and sending projection through the same owned UI
+        // publication path before starting the canonical send. The accepted draft snapshot
+        // above remains the only draft this operation may retire or restore.
+        await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+        {
+            DemandOriginalChatPublication();
+            _pendingInstruction = null;
+            _redoMessages.Clear();
+            // The send's own programmatic clear is NOT a user edit: it must not queue an autosave
+            // that deletes the canonical draft before the user message is actually accepted.
+            _originalSendInFlight = true;
+            PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
+            DemandOriginalChatPublication();
+            _bus.Fire("Chat.Composer.Send.Click");
+            DemandOriginalChatPublication();
+            _isSending = true;
+            _sendStartTick = Environment.TickCount64;
+            DemandOriginalChatPublication();
+            _sendProgressTimer.Start();
+            DemandOriginalChatPublication();
+            _sendCancellation = CancellationTokenSource.CreateLinkedTokenSource(RequireChatOriginal().Token);
+            originalSendCancellation = _sendCancellation;
+            RefreshVisualState();
+        }));
 
         var now = DateTimeOffset.UtcNow;
         if (_messages.Count == 0)
@@ -1561,7 +1570,6 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         finally
         {
-            _originalSendInFlight = false;
             if (initialTaskObservation is not null)
                 await RequireChatOriginal().AwaitAsync(FinishOriginalInitialTaskObservationAsync(initialTaskObservation));
             await RequireChatOriginal().AwaitAsync(FinishOriginalSendAsync(originalSendCancellation));
