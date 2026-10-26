@@ -64,7 +64,7 @@ public sealed class HomeLibraryDestinationTests
         var source = new ThemeSource();
         using var theme = new CuiThemePreferenceContext(source);
         var primitiveBackground = new SolidColorBrush(Color.FromRgb(1, 2, 3));
-        var application = Application.Current!;
+        var application = global::Avalonia.Application.Current!;
         var hadPrimitiveBackground = application.Resources.TryGetValue("CuiBackgroundBrush", out var originalPrimitiveBackground);
         application.Resources["CuiBackgroundBrush"] = primitiveBackground;
         var page = Page(new Index(0), new(), (_, _) => true, theme: theme);
