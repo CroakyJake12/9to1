@@ -31,3 +31,15 @@ worktree was clean at 106dfeed, already in main. The 903c858a push contains gene
 Canvas outputs and an xdotool package, not app source fixes. Do not repeatedly ask
 for another push from those clean checkouts. Installed desktop behaviour remains
 a separate native verification requirement.
+
+## Later menu naming and light appearance clarification
+
+- Attachment menu labels are Specialists (formerly Agents), Assistants (add a real
+  catalogue/action), Skills, Plugin (singular) and Apps. Skills, Plugin and Apps
+  need distinct icons that match their functions; preserve the compact list design.
+- Repair incomplete light-mode adaptation through shared theme ownership. Check
+  live dark/light switching as well as startup colours, including popup surfaces,
+  composer, text and icons. The isolated native-probe owner window had a default
+  white background while its content was dark; that capture alone is not evidence
+  of a fully initialized product light theme. Retain the owner's broader report
+  and verify actual application surfaces rather than correcting only the probe.

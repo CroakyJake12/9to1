@@ -60,6 +60,9 @@ public static class CuiControlTemplates
         Add<MenuItem>(resources, MenuItem); Add<TabControl>(resources, Tabs); Add<TabItem>(resources, Header);
         Add<CuiMenuItem>(resources, (owner, scope) => MenuItem(owner, scope));
         Add<ContentControl>(resources, Content); Add<UserControl>(resources, Content);
+        // Overlay fallback hosts have their own style key; the base ContentControl
+        // resource is not an implicit theme for them. Keep their presenter CUI-owned.
+        Add<OverlayPopupHost>(resources, Content);
         Add<ToolTip>(resources, (owner, scope) => PopupFrame(owner, Presenter(owner, scope)));
         Add<NumericUpDown>(resources, Numeric); Add<ButtonSpinner>(resources, Spinner);
         Add<ProgressBar>(resources, Progress); Add<Separator>(resources, Separator);
