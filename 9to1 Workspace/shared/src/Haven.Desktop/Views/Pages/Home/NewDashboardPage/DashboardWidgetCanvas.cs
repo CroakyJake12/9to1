@@ -6,6 +6,9 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Haven.Core;
 using Haven.Desktop.Controls;
+using CakeOS.Cui;
+using CakeOS.Cui.Runtime;
+using Haven.Desktop.Views.Pages.Home;
 
 namespace Haven.Desktop.Dashboard;
 
@@ -199,21 +202,22 @@ internal static class DashboardWidgetLayoutEngine
     };
 }
 
-internal sealed class DashboardWidgetCanvas : Canvas
+internal sealed class DashboardWidgetCanvas : Canvas, IDisposable
 {
     private const double Gap = 12;
     private const double RowHeight = 118;
     private readonly Dictionary<string, DashboardWidgetViewState> _views = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Control> _frames = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<CuiControlLoader> _cardLoaders = [];
     private readonly Stack<IReadOnlyList<DashboardWidgetPlacement>> _undo = new();
     private readonly Stack<IReadOnlyList<DashboardWidgetPlacement>> _redo = new();
     private IReadOnlyList<DashboardWidgetPlacement> _placements = [];
     private bool _isCustomizing;
+    private string? _layoutIdentity;
 
     public DashboardWidgetCanvas()
     {
         HorizontalAlignment = HorizontalAlignment.Stretch;
-        MinHeight = 480;
         ClipToBounds = false;
         SizeChanged += (_, _) => ApplyGeometry();
     }
@@ -228,14 +232,20 @@ internal sealed class DashboardWidgetCanvas : Canvas
     public void SetWidgets(
         IReadOnlyList<DashboardWidgetViewState> views,
         IReadOnlyList<DashboardWidgetPlacement>? placements,
-        bool isCustomizing)
+        bool isCustomizing,
+        string? layoutIdentity = null)
     {
         _views.Clear();
         foreach (var view in views) _views[view.Definition.Key] = view;
-        _placements = DashboardWidgetLayoutEngine.EnsurePlacements(views.Select(view => view.Definition), placements);
+        var next = DashboardWidgetLayoutEngine.EnsurePlacements(views.Select(view => view.Definition), placements);
+        if (_layoutIdentity != layoutIdentity || !_placements.SequenceEqual(next))
+        {
+            _undo.Clear();
+            _redo.Clear();
+        }
+        _layoutIdentity = layoutIdentity;
+        _placements = next;
         _isCustomizing = isCustomizing;
-        _undo.Clear();
-        _redo.Clear();
         Rebuild();
     }
 
@@ -298,6 +308,7 @@ internal sealed class DashboardWidgetCanvas : Canvas
 
     private void Rebuild()
     {
+        DisposeCardLoaders();
         Children.Clear();
         _frames.Clear();
         foreach (var placement in _placements.Where(item => item.IsVisible).OrderBy(item => item.Row).ThenBy(item => item.Column))
@@ -332,72 +343,33 @@ internal sealed class DashboardWidgetCanvas : Canvas
             _ => view.Data?.Secondary ?? view.Definition.Description
         };
 
-        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 9 };
-        header.Children.Add(new HavenIcon { IconKey = view.Definition.IconKey, Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center });
-        var title = new TextBlock { Text = view.Definition.Title, FontWeight = FontWeight.SemiBold, FontSize = 15, VerticalAlignment = VerticalAlignment.Center };
-        Grid.SetColumn(title, 1);
-        header.Children.Add(title);
-        if (!string.IsNullOrWhiteSpace(stateBadge))
-        {
-            var badge = new TextBlock { Text = stateBadge, FontSize = 10, Classes = { "muted" }, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetColumn(badge, 2);
-            header.Children.Add(badge);
-        }
-
-        var valueStack = new StackPanel { Spacing = 3 };
-        valueStack.Children.Add(new TextBlock { Text = primary, FontSize = 28, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
-        valueStack.Children.Add(new TextBlock { Text = secondary, Classes = { "muted" }, TextWrapping = TextWrapping.Wrap, MaxLines = 2 });
-        if (view.State is DashboardWidgetDataState.Ready or DashboardWidgetDataState.Stale)
-            valueStack.Children.Add(new TextBlock { Text = view.Definition.Description, Classes = { "muted2" }, FontSize = 10, TextTrimming = TextTrimming.CharacterEllipsis });
-
-        var open = new HavenButton
-        {
-            Content = view.Definition.ProviderKey.Equals("custom-local", StringComparison.OrdinalIgnoreCase) ? "Edit" : "Open",
-            Classes = { "subtle" },
-            HorizontalAlignment = HorizontalAlignment.Left
-        };
-        open.Click += (_, _) => OpenRequested?.Invoke(view.Definition.ActionKey);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        actions.Children.Add(open);
-        if (_isCustomizing)
-        {
-            var hide = new HavenButton { Content = "Hide", Classes = { "subtle" } };
-            hide.Click += (_, _) => HideWidget(key);
-            actions.Children.Add(hide);
-        }
-
-        var resize = new Border
-        {
-            Width = 22,
-            Height = 22,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Background = Brushes.Transparent,
-            Child = new TextBlock { Text = "↘", FontSize = 13, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
-            IsVisible = _isCustomizing
-        };
-
-        var content = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), RowSpacing = 10 };
-        content.Children.Add(header);
-        Grid.SetRow(valueStack, 1);
-        content.Children.Add(valueStack);
-        var footer = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-        footer.Children.Add(actions);
-        Grid.SetColumn(resize, 1);
-        footer.Children.Add(resize);
-        Grid.SetRow(footer, 2);
-        content.Children.Add(footer);
-
-        var frame = new HavenAdaptiveSurface
-        {
-            Classes = { "dashboardTile" },
-            Padding = new Thickness(16),
-            ClipToBounds = true,
-            Tag = key,
-            Child = content
-        };
-        AttachDrag(header, frame, key);
-        AttachResize(resize, frame, key);
+        var values = new CuiViewModel();
+        values.Set("Title", view.Definition.Title);
+        values.Set("Description", view.Definition.Description);
+        values.Set("Badge", stateBadge ?? string.Empty);
+        values.Set("Primary", primary);
+        values.Set("Secondary", secondary);
+        values.Set("ShowDetail", _placements.Single(item => item.Key == key).Height > 1);
+        values.Set("IsCustomizing", _isCustomizing);
+        values.Set("OpenLabel", view.Definition.ProviderKey.Equals("custom-local", StringComparison.OrdinalIgnoreCase) ? "Edit" : "Open");
+        values.Set("OpenName", "Open " + view.Definition.Title);
+        values.Set("HideName", "Hide " + view.Definition.Title);
+        values.On("OpenWidget", _ => OpenRequested?.Invoke(view.Definition.ActionKey));
+        values.On("HideWidget", _ => HideWidget(key));
+        var loader = new CuiControlLoader();
+        _cardLoaders.Add(loader);
+        loader.SetBindingContext(values); loader.SetActionDispatcher(values);
+        Control? header = null, resize = null;
+        var compact = _placements.Single(item => item.Key == key).Height == 1;
+        loader.BindAuthoredControl(compact ? "widget-compact-drag-handle" : "widget-drag-handle", _ => header = new CuiContainerControl("Grid"));
+        loader.BindAuthoredControl(compact ? "widget-compact-resize-handle" : "widget-resize-handle", _ => resize = new Button());
+        var loaded = loader.TryLoad(DashboardCuiDocument.Fragment(compact ? "dashboard-widget-compact" : "dashboard-widget-card"));
+        if (loaded.Root is not { } frame || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The dashboard card CUI could not be rendered: " + string.Join("; ", loaded.Diagnostics.Select(item => item.Message)));
+        loader.WireBindings(frame);
+        frame.Tag = key;
+        AttachDrag(header!, frame, key);
+        AttachResize(resize!, frame, key);
         return frame;
     }
 
@@ -531,8 +503,8 @@ internal sealed class DashboardWidgetCanvas : Canvas
             narrowTop += frame.Height + Gap;
         }
 
-        var rows = _placements.Where(item => item.IsVisible).Select(item => item.Row + item.Height).DefaultIfEmpty(4).Max();
-        Height = Math.Max(480, IsNarrow ? narrowTop + 8 : rows * RowHeight + Math.Max(0, rows - 1) * Gap + 8);
+        var rows = _placements.Where(item => item.IsVisible).Select(item => item.Row + item.Height).DefaultIfEmpty(0).Max();
+        Height = rows == 0 ? 0 : IsNarrow ? Math.Max(0, narrowTop - Gap) : rows * RowHeight + Math.Max(0, rows - 1) * Gap;
     }
 
     // Pixel adaptation never rewrites the user's canonical six-column layout.
@@ -546,4 +518,11 @@ internal sealed class DashboardWidgetCanvas : Canvas
             return Math.Max(110, (available - Gap * (DashboardWidgetLayoutEngine.Columns - 1)) / DashboardWidgetLayoutEngine.Columns);
         }
     }
+
+    private void DisposeCardLoaders()
+    {
+        foreach (var loader in _cardLoaders) loader.Dispose();
+        _cardLoaders.Clear();
+    }
+    public void Dispose() => DisposeCardLoaders();
 }

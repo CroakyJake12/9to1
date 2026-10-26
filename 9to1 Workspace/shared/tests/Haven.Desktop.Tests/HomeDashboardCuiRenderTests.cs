@@ -11,11 +11,139 @@ using Haven.Core;
 using Haven.Desktop.Events;
 using Haven.Desktop.ViewModels;
 using Haven.Desktop.Views.Pages.Home;
+using Haven.Desktop.Services;
 
 namespace Haven.Desktop.Tests;
 
 public sealed class HomeDashboardCuiRenderTests
 {
+    [AvaloniaTheory]
+    [InlineData(340)]
+    [InlineData(760)]
+    [InlineData(1280)]
+    public async Task Device_model_cards_reflow_and_open_the_same_verified_review_without_installing(int width)
+    {
+        using var bus = new HavenEventBus();
+        using var page = CreatePage(bus, new SnapshotRepository());
+        var catalogue = new DeviceCatalogue();
+        page.EnableDeviceModelRecommendations(new(new DeviceProbe(), catalogue,
+            _ => ValueTask.FromResult<AuthenticatedResourceActor?>(DeviceActor), () => true));
+        var window = new Window { Width = width, Height = 900, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(CancellationToken.None);
+            window.UpdateLayout();
+            var cards = page.GetVisualDescendants().OfType<CuiContainerControl>().Where(control => control.Name?.StartsWith("dashboard-model-card", StringComparison.Ordinal) == true && control.Name != "dashboard-model-cards").ToArray();
+            Assert.Equal(3, cards.Length);
+            foreach (var card in cards)
+            {
+                var origin = card.TranslatePoint(default, page)!.Value;
+                Assert.InRange(origin.X, 0, width);
+                Assert.True(origin.X + card.Bounds.Width <= width + 1);
+                Assert.True(card.Bounds.Width > 0);
+                Assert.NotNull(card.Background);
+            }
+            Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), control => control.Text?.Contains("Fixture GPU", StringComparison.Ordinal) == true);
+            var review = cards[0].GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Review & install"));
+            review.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var loader = (CuiControlLoader)typeof(NewDashboardPage).GetField("_dashboardLoader", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(page)!;
+            await loader.WhenActionsIdleAsync();
+            window.UpdateLayout();
+            var files = page.GetVisualDescendants().OfType<ListBox>().Single(control => control.Name == "hf-files");
+            Assert.IsType<HuggingFaceModelFile>(files.SelectedItem);
+            Assert.Equal(0, catalogue.InstallCalls);
+            Assert.True(page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "hf-install").IsEnabled);
+        }
+        finally { window.Close(); }
+    }
+
+    [Fact]
+    public async Task Local_only_recommendations_observe_hardware_without_contacting_the_catalogue()
+    {
+        var catalogue = new DeviceCatalogue();
+        var source = new HomeDashboardModelSource(new DeviceProbe(), catalogue,
+            _ => ValueTask.FromResult<AuthenticatedResourceActor?>(DeviceActor), () => false);
+        var snapshot = await source.ReadAsync(CancellationToken.None);
+        Assert.Empty(snapshot.Models);
+        Assert.Equal(0, catalogue.Requests);
+        Assert.Contains("Local-only", snapshot.Status);
+        Assert.Equal(32 * LocalModelMemoryEstimator.GiB, snapshot.Hardware.TotalRamBytes);
+        Assert.Null(await source.Profile(CancellationToken.None));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Recommendation_source_rejects_late_results_after_profile_change_or_cancellation(bool cancelled)
+    {
+        var actor = DeviceActor;
+        using var cancellation = new CancellationTokenSource();
+        var catalogue = new DeviceCatalogue { HoldDetails = true };
+        var source = new HomeDashboardModelSource(new DeviceProbe(), catalogue,
+            _ => ValueTask.FromResult<AuthenticatedResourceActor?>(actor), () => true);
+        var loading = source.ReadAsync(cancellation.Token);
+        await catalogue.DetailsEntered.Task;
+        if (cancelled) cancellation.Cancel();
+        else actor = actor with { AuthenticationRevision = "new-authentication" };
+        catalogue.ReleaseDetails.TrySetResult();
+        var error = await Record.ExceptionAsync(() => loading);
+        if (cancelled) Assert.IsAssignableFrom<OperationCanceledException>(error);
+        else Assert.IsType<UnauthorizedAccessException>(error);
+        Assert.Equal(0, catalogue.InstallCalls);
+    }
+
+    [Fact]
+    public void Memory_fit_retains_unknown_exhaustion_headroom_and_individual_GPU_limits()
+    {
+        const long gb = LocalModelMemoryEstimator.GiB;
+        var hardware = DeviceProbe.Hardware;
+        Assert.Equal(LocalModelMemoryFit.Gpu, LocalModelMemoryEstimator.Estimate(gb, hardware).Kind);
+        Assert.Equal(LocalModelMemoryFit.Unknown, LocalModelMemoryEstimator.Estimate(gb, hardware with { AvailableRamBytes = null }).Kind);
+        Assert.Equal(LocalModelMemoryFit.TooLarge, LocalModelMemoryEstimator.Estimate(gb, hardware with { AvailableRamBytes = 0 }).Kind);
+        Assert.Equal(LocalModelMemoryFit.TooLarge, LocalModelMemoryEstimator.Estimate(gb, hardware with { AvailableRamBytes = 3 * gb }).Kind);
+        Assert.Equal(LocalModelMemoryFit.Cpu, LocalModelMemoryEstimator.Estimate(5 * gb,
+            hardware with { Gpus = [new("A", 8 * gb, 8 * gb), new("B", 8 * gb, 8 * gb)] }).Kind);
+        Assert.Equal(LocalModelMemoryFit.Unknown, LocalModelMemoryEstimator.Estimate(long.MaxValue, hardware).Kind);
+        var details = new HuggingFaceModelDetails("fixture/model", new string('b', 40), "MIT", false,
+            [new("mmproj.gguf", gb, new string('a', 64)), new("model-00001-of-00002.gguf", gb, new string('a', 64))]);
+        Assert.Empty(LocalModelMemoryEstimator.Rank(hardware, [(new("fixture/model", 10, 0, false), details)]));
+    }
+
+    private static readonly AuthenticatedResourceActor DeviceActor = new("fixture-actor", "fixture-profile", null, null, "fixture-authentication");
+    private sealed class DeviceProbe : ILocalModelHardwareProbe
+    {
+        internal static LocalModelHardware Hardware => new(DateTimeOffset.UtcNow, "X64", 8,
+            32 * LocalModelMemoryEstimator.GiB, 20 * LocalModelMemoryEstimator.GiB,
+            [new("Fixture GPU", 8 * LocalModelMemoryEstimator.GiB, 8 * LocalModelMemoryEstimator.GiB)]);
+        public Task<LocalModelHardware> ReadAsync(CancellationToken token) => Task.FromResult(Hardware);
+    }
+    private sealed class DeviceCatalogue : IHuggingFaceModelService
+    {
+        internal int Requests, InstallCalls;
+        internal bool HoldDetails;
+        internal TaskCompletionSource DetailsEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource ReleaseDetails = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<IReadOnlyList<HuggingFaceModelSummary>> SearchAsync(string profile, string query, CancellationToken token)
+        {
+            Requests++;
+            return Task.FromResult<IReadOnlyList<HuggingFaceModelSummary>>(Enumerable.Range(0, 3).Select(index =>
+                new HuggingFaceModelSummary("fixture/model-" + index, 100 - index, 0, false)).ToArray());
+        }
+        public async Task<HuggingFaceModelDetails> GetDetailsAsync(string profile, string id, CancellationToken token)
+        {
+            Requests++; DetailsEntered.TrySetResult();
+            if (HoldDetails) await ReleaseDetails.Task; // Deliberately late, uncancellable provider reply.
+            return new(id, new string('b', 40), "MIT", false, [new("model.Q4_K_M.gguf", LocalModelMemoryEstimator.GiB, new string('a', 64))]);
+        }
+        public Task<HuggingFaceInstallResult> InstallAsync(string profile, HuggingFaceModelDetails model, HuggingFaceModelFile file,
+            IProgress<HuggingFaceInstallProgress>? progress, CancellationToken token)
+        { InstallCalls++; throw new InvalidOperationException("Review must not install a model."); }
+        public Task<bool> HasTokenAsync(string profile, CancellationToken token) => Task.FromResult(false);
+        public Task SaveTokenAsync(string profile, string value, CancellationToken token) => throw new NotSupportedException();
+        public Task RemoveTokenAsync(string profile, CancellationToken token) => throw new NotSupportedException();
+    }
+
     [AvaloniaTheory]
     [InlineData(1280, 900, CuiAppearance.SuperBright)]
     [InlineData(1280, 900, CuiAppearance.Bright)]
@@ -50,6 +178,13 @@ public sealed class HomeDashboardCuiRenderTests
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item =>
                 item.Name == "dashboard-welcome" && item.Text?.StartsWith("Good ", StringComparison.Ordinal) == true);
             var edit = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == "dashboard-edit-with-ai");
+            Assert.False(edit.IsEffectivelyVisible);
+            var arrange = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "dashboard-arrange-widgets");
+            Assert.Equal("Customise", arrange.Content);
+            arrange.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            window.UpdateLayout();
+            Assert.True(edit.IsEffectivelyVisible);
+            Assert.Equal("Done", arrange.Content);
             var requested = 0;
             page.EditWithHavenRequested += (_, _) => requested++;
             edit.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -68,9 +203,10 @@ public sealed class HomeDashboardCuiRenderTests
                 Assert.True(origin.Value.X + control.Bounds.Width <= width + 1,
                     $"{id} is outside the {width}px dashboard.");
             }
-            var arrange = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "dashboard-arrange-widgets");
             arrange.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            Assert.Equal("Done arranging", arrange.Content);
+            window.UpdateLayout();
+            Assert.Equal("Customise", arrange.Content);
+            Assert.False(edit.IsEffectivelyVisible);
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item =>
                 item.Name == "dashboard-widget-status" && item.Text?.Contains("live widgets", StringComparison.Ordinal) == true);
         }
@@ -142,6 +278,9 @@ public sealed class HomeDashboardCuiRenderTests
         try
         {
             await page.ActivateAsync(CancellationToken.None);
+            page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "dashboard-arrange-widgets")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            window.UpdateLayout();
             page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "dashboard-add-page")
                 .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert.False(await page.TryPrepareToCloseAsync(CancellationToken.None));

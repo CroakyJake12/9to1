@@ -10,6 +10,44 @@ namespace Haven.Desktop.Tests.HuggingFace;
 
 public sealed class HomeHuggingFaceBrowserTests
 {
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Device_recommendation_reviews_exact_metadata_and_requires_explicit_install(bool changedRevision)
+    {
+        var service = new FakeService();
+        using var browser = Create(service);
+        var window = new Window { Content = browser, Width = 390, Height = 760 };
+        window.Show();
+        try
+        {
+            var details = await service.GetDetailsAsync("profile-a", "org/tiny-instruct-GGUF", CancellationToken.None);
+            var recommendation = new LocalModelRecommendation(changedRevision ? details with { CommitSha = "old-revision" } : details,
+                details.Files[0], new(LocalModelMemoryFit.Cpu, 1024, "Explicit test estimate"), 1200);
+            await browser.ReviewAsync(recommendation, service.CurrentActor, CancellationToken.None);
+            window.UpdateLayout();
+            Assert.Equal(0, service.InstallCalls);
+            var files = Find<ListBox>(browser, "hf-files");
+            var install = Find<Button>(browser, "hf-install");
+            if (changedRevision)
+            {
+                Assert.Null(files.SelectedItem);
+                Assert.False(install.IsEnabled);
+                Assert.Contains("changed since the recommendation", Find<TextBlock>(browser, "hf-browser-status").Text);
+            }
+            else
+            {
+                Assert.Equal(details.Files[0], files.SelectedItem);
+                Assert.True(install.IsEnabled);
+                Click(browser, "hf-install");
+                await service.InstallCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                Assert.Equal(1, service.InstallCalls);
+                Assert.Equal("profile-a", service.LastInstallProfile);
+            }
+        }
+        finally { window.Close(); }
+    }
+
     [AvaloniaFact]
     public async Task Public_search_and_install_show_verified_details_without_claiming_runtime_readiness()
     {

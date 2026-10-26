@@ -165,6 +165,23 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         UpdateInstallAvailability();
     }
 
+    /// <summary>Review a dashboard selection through the same profile-bound catalogue/install
+    /// surface. Re-fetch metadata and preselect only the exact inspected revision and file.</summary>
+    public async Task ReviewAsync(LocalModelRecommendation recommendation, AuthenticatedResourceActor expectedActor,
+        CancellationToken cancellationToken)
+    {
+        await ActivateAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed || !Equals(_boundActor, expectedActor) || !await IsCurrentActorAsync(expectedActor, cancellationToken))
+        {
+            ClearProfileState("The active profile changed. Refresh recommendations to continue.");
+            return;
+        }
+        _query.Text = recommendation.Repository.RepositoryId;
+        await LoadDetailsCoreAsync(new HuggingFaceModelSummary(recommendation.Repository.RepositoryId,
+            recommendation.Downloads, 0, recommendation.Repository.Gated), cancellationToken, recommendation);
+    }
+
     private async Task SearchCoreAsync(CancellationToken cancellationToken)
     {
         if (!ReadyForHuggingFace()) return;
@@ -196,7 +213,8 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
         finally { EndOperation(generation); }
     }
 
-    private async Task LoadDetailsCoreAsync(HuggingFaceModelSummary repository, CancellationToken cancellationToken)
+    private async Task LoadDetailsCoreAsync(HuggingFaceModelSummary repository, CancellationToken cancellationToken,
+        LocalModelRecommendation? recommendation = null)
     {
         if (!ReadyForHuggingFace()) return;
         var (generation, token) = BeginOperation(cancellationToken);
@@ -221,6 +239,13 @@ public sealed class HomeHuggingFaceBrowser : UserControl, IDisposable
             SetText(_browserStatus, details.Gated && !_hasToken
                 ? "This repository is gated. Save a token for an account that already has access before installing."
                 : "Choose the exact GGUF file to install. File size and SHA-256 are verified before import.");
+            if (recommendation is not null)
+            {
+                var file = details.CommitSha == recommendation.Repository.CommitSha
+                    ? details.Files.SingleOrDefault(item => item == recommendation.File) : null;
+                if (file is not null) _files.SelectedItem = file;
+                else SetText(_browserStatus, "This repository changed since the recommendation. Review its current files before choosing a download.");
+            }
             UpdateInstallAvailability();
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
