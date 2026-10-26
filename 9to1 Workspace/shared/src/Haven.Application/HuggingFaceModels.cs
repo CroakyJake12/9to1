@@ -20,7 +20,7 @@ public sealed record HuggingFaceModelFile(string Path, long Size, string Sha256)
 public enum HuggingFaceInstallPhase { Downloading, Validating, Importing, Installed }
 public sealed record HuggingFaceInstallProgress(HuggingFaceInstallPhase Phase, long ReceivedBytes, long TotalBytes);
 public sealed record HuggingFaceInstallResult(string ModelId, string RepositoryId, string CommitSha, string FilePath,
-    string Sha256, long Size, bool RuntimeObserved = false);
+    string Sha256, long Size, bool RuntimeObserved = false, bool CleanupPending = false);
 
 public enum HuggingFaceModelError
 {

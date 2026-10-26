@@ -127,6 +127,59 @@ public sealed class HuggingFaceModelServiceTests
     }
 
     [Fact]
+    public void Production_service_has_no_public_injected_transport_constructor() =>
+        Assert.Empty(typeof(HuggingFaceModelService).GetConstructors());
+
+    [Fact]
+    public async Task Installed_receipt_survives_cleanup_failure_with_safe_warning_and_private_recovery_marker()
+    {
+        using var fixture = new Fixture(_ => throw new IOException(Token + " https://private.invalid/signed?credential=fixture"));
+        var result = await fixture.Service.InstallAsync("profile-a", Details, File, null, CancellationToken.None);
+        Assert.True(result.CleanupPending); Assert.False(result.RuntimeObserved); Assert.Equal(1, fixture.Importer.Count);
+        var serialized = JsonSerializer.Serialize(result);
+        Assert.DoesNotContain(Token, serialized); Assert.DoesNotContain(fixture.Root, serialized); Assert.DoesNotContain("signed", serialized);
+        var staging = Assert.Single(Directory.GetDirectories(Path.Combine(fixture.Root, "HuggingFaceStaging")));
+        var marker = await System.IO.File.ReadAllTextAsync(Path.Combine(staging, "cleanup-pending.json"));
+        Assert.Contains("temporary-download-cleanup-failed", marker); Assert.Contains("\"installed\":true", marker);
+        Assert.DoesNotContain(Token, marker); Assert.DoesNotContain("private.invalid", marker);
+        if (!OperatingSystem.IsWindows()) Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, System.IO.File.GetUnixFileMode(Path.Combine(staging, "cleanup-pending.json")));
+    }
+
+    [Fact]
+    public async Task Cleanup_failure_preserves_primary_integrity_failure_and_records_only_safe_reason()
+    {
+        using var fixture = new Fixture(_ => throw new IOException(Token));
+        var invalid = Gguf.ToArray(); invalid[^1] ^= 1;
+        fixture.Handler.Send = (request, _) => request.RequestUri!.AbsolutePath.StartsWith("/api/", StringComparison.Ordinal) ? Reply(Metadata()) : Bytes(invalid);
+        var error = await Assert.ThrowsAsync<HuggingFaceModelException>(() => fixture.Service.InstallAsync("profile-a", Details, File, null, CancellationToken.None));
+        Assert.Equal(HuggingFaceModelError.IntegrityFailure, error.Code); Assert.DoesNotContain(Token, error.ToString());
+        Assert.Equal(0, fixture.Importer.Count);
+        var staging = Assert.Single(Directory.GetDirectories(Path.Combine(fixture.Root, "HuggingFaceStaging")));
+        var marker = await System.IO.File.ReadAllTextAsync(Path.Combine(staging, "cleanup-pending.json"));
+        Assert.Contains("\"installed\":false", marker); Assert.DoesNotContain(Token, marker);
+    }
+
+    [Fact]
+    public async Task Cleanup_failure_preserves_original_cancellation()
+    {
+        using var fixture = new Fixture(_ => throw new IOException(Token)); using var cancel = new CancellationTokenSource();
+        var progress = new ImmediateProgress(p => { if (p.Phase == HuggingFaceInstallPhase.Downloading) cancel.Cancel(); });
+        var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => fixture.Service.InstallAsync("profile-a", Details, File, progress, cancel.Token));
+        Assert.Equal(cancel.Token, error.CancellationToken); Assert.DoesNotContain(Token, error.ToString()); Assert.Equal(0, fixture.Importer.Count);
+        var staging = Assert.Single(Directory.GetDirectories(Path.Combine(fixture.Root, "HuggingFaceStaging")));
+        Assert.True(System.IO.File.Exists(Path.Combine(staging, "cleanup-pending.json")));
+    }
+
+    [Fact]
+    public async Task Broken_terminal_progress_observer_cannot_erase_an_installed_receipt()
+    {
+        using var fixture = new Fixture();
+        var progress = new ImmediateProgress(p => { if (p.Phase == HuggingFaceInstallPhase.Installed) throw new OperationCanceledException(Token); });
+        var result = await fixture.Service.InstallAsync("profile-a", Details, File, progress, CancellationToken.None);
+        Assert.Equal(1, fixture.Importer.Count); Assert.False(result.CleanupPending);
+    }
+
+    [Fact]
     public async Task Pin_substitution_and_traversal_are_rejected()
     {
         using var fixture = new Fixture();
@@ -226,10 +279,10 @@ public sealed class HuggingFaceModelServiceTests
         public Importer Importer { get; } = new();
         public HttpClient Http { get; }
         public HuggingFaceModelService Service { get; }
-        public Fixture()
+        public Fixture(Action<string>? deleteStaging = null)
         {
             if (!OperatingSystem.IsWindows()) System.IO.File.SetUnixFileMode(Root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            Http = new(Handler); Service = new(Http, Secrets, new TestPaths(Root), Importer);
+            Http = new(Handler); Service = new(Http, Secrets, new TestPaths(Root), Importer, deleteStaging: deleteStaging);
         }
         public void Dispose() { Service.Dispose(); Http.Dispose(); Directory.Delete(Root, recursive: true); }
     }

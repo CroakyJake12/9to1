@@ -22,6 +22,7 @@ public sealed partial class HuggingFaceModelService : IHuggingFaceModelService, 
     private readonly IAppPaths _paths;
     private readonly IHuggingFaceModelImporter _importer;
     private readonly bool _ownsClient;
+    private readonly Action<string> _deleteStaging;
 
     /// <summary>Production entry point. Reuses only the maintained protected platform stores.</summary>
     public static HuggingFaceModelService Create(IProviderSecretStore secrets, IAppPaths paths)
@@ -33,12 +34,12 @@ public sealed partial class HuggingFaceModelService : IHuggingFaceModelService, 
         return new(http, secrets, paths, new HuggingFaceModelCtlImporter(), ownsClient: true);
     }
 
-    /// <summary>Injected clients MUST disable automatic redirects and default credentials/headers.
-    /// The factory above is the production registration; injection supports transport controls.</summary>
-    public HuggingFaceModelService(HttpClient http, IProviderSecretStore secrets, IAppPaths paths,
-        IHuggingFaceModelImporter importer, bool ownsClient = false)
+    /// <summary>Test-only transport/cleanup seams; production callers use the fixed-policy factory.</summary>
+    internal HuggingFaceModelService(HttpClient http, IProviderSecretStore secrets, IAppPaths paths,
+        IHuggingFaceModelImporter importer, bool ownsClient = false, Action<string>? deleteStaging = null)
     {
         _http = http; _secrets = secrets; _paths = paths; _importer = importer; _ownsClient = ownsClient;
+        _deleteStaging = deleteStaging ?? (directory => Directory.Delete(directory, recursive: true));
         if (http.DefaultRequestHeaders.Authorization is not null || http.DefaultRequestHeaders.Contains("Cookie"))
             throw Error(HuggingFaceModelError.InvalidRequest);
     }
@@ -115,6 +116,9 @@ public sealed partial class HuggingFaceModelService : IHuggingFaceModelService, 
             if (selected is null || selected.Size != file.Size || !selected.Sha256.Equals(file.Sha256, StringComparison.OrdinalIgnoreCase))
                 throw Error(HuggingFaceModelError.InvalidMetadata);
             var staging = CreateStaging();
+            HuggingFaceInstallResult result;
+            var cleanupPending = false;
+            var installed = false;
             try
             {
                 var target = Path.Combine(staging, "download.gguf");
@@ -135,11 +139,38 @@ public sealed partial class HuggingFaceModelService : IHuggingFaceModelService, 
                 var id = "hf-" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(pinned.RepositoryId + "\n" + selected.Path + "\n" + selected.Sha256)))[..32];
                 await _importer.ImportAsync(new(target, id, pinned.RepositoryId + "/" + selected.Path, pinned.License,
                     source, selected.Sha256, selected.Size), cancellationToken);
-                progress?.Report(new(HuggingFaceInstallPhase.Installed, selected.Size, selected.Size));
-                return new HuggingFaceInstallResult(id, pinned.RepositoryId, pinned.CommitSha, selected.Path, selected.Sha256, selected.Size);
+                installed = true;
+                result = new HuggingFaceInstallResult(id, pinned.RepositoryId, pinned.CommitSha, selected.Path, selected.Sha256, selected.Size);
+                // The committed installation receipt takes priority over a cancelled or broken UI
+                // progress observer. Nothing after this point turns an installation into a failure.
+                try { progress?.Report(new(HuggingFaceInstallPhase.Installed, selected.Size, selected.Size)); }
+                catch { }
             }
-            finally { Directory.Delete(staging, recursive: true); }
+            finally
+            {
+                try { _deleteStaging(staging); }
+                catch
+                {
+                    cleanupPending = true;
+                    RetainCleanupReason(staging, installed);
+                }
+            }
+            return result with { CleanupPending = cleanupPending };
         });
+    }
+
+    private static void RetainCleanupReason(string staging, bool installed)
+    {
+        // Best-effort private recovery marker. Never retain exception text, credentials, HTTP
+        // addresses or signed URLs. The download already lives beneath a verified private parent.
+        try
+        {
+            var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
+            if (!OperatingSystem.IsWindows()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+            using var output = new FileStream(Path.Combine(staging, "cleanup-pending.json"), options);
+            JsonSerializer.Serialize(output, new { reason = "temporary-download-cleanup-failed", installed, recordedAt = DateTimeOffset.UtcNow });
+        }
+        catch { } // Recovery recording must also preserve the original operation outcome.
     }
 
     private static async Task DownloadAsync(HttpResponseMessage response, string target, HuggingFaceModelFile file,

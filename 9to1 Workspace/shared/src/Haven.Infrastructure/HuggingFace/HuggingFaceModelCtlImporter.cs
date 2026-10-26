@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -50,7 +51,7 @@ public sealed class HuggingFaceModelCtlImporter : IHuggingFaceModelImporter
         try
         {
             if (!Regex.IsMatch(request.ModelId, @"\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z") ||
-                !Regex.IsMatch(request.Sha256, @"\A[0-9a-f]{64}\z") || request.Size < 8 ||
+                !Regex.IsMatch(request.Sha256, @"\A[0-9a-f]{64}\z") || request.Size < 8 || request.Size > HuggingFaceModelService.MaximumModelBytes ||
                 !Uri.TryCreate(request.Source, UriKind.Absolute, out var source) || source.Scheme != "https" ||
                 source.Host != "huggingface.co" || !source.IsDefaultPort || source.Query.Length != 0 ||
                 source.Fragment.Length != 0 || source.UserInfo.Length != 0) Fail();
@@ -74,7 +75,8 @@ public sealed class HuggingFaceModelCtlImporter : IHuggingFaceModelImporter
             foreach (var arg in new[] { "-B", "-E", "-s", "-S", "-X", "utf8", _script, "--model-root", _modelRoot,
                 "--runtime-dir", _runtimeDirectory, "import", Path.GetFullPath(request.LocalPath), "--id", request.ModelId,
                 "--name", request.DisplayName, "--license", request.License, "--origin", request.Source,
-                "--capability", "chat", "--redistribution", "review-required" }) start.ArgumentList.Add(arg);
+                // GGUF validity is a storage admission, not evidence of chat/embedding support.
+                "--capability", "unverified", "--redistribution", "review-required" }) start.ArgumentList.Add(arg);
             using var process = new Process { StartInfo = start };
             if (!process.Start()) Fail();
             var stdout = DrainAsync(process.StandardOutput);
@@ -82,6 +84,20 @@ public sealed class HuggingFaceModelCtlImporter : IHuggingFaceModelImporter
             try
             {
                 await process.WaitForExitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
+                catch (InvalidOperationException) { } // The process may have just exited.
+                catch (System.ComponentModel.Win32Exception) when (process.HasExited) { }
+                await process.WaitForExitAsync(CancellationToken.None);
+                try { await Task.WhenAll(stdout, stderr); }
+                catch { } // Pipe cleanup cannot replace the caller's cancellation.
+                // modelctl atomically publishes only after validating/adopting the complete blob.
+                // Cancellation may race that commit. A genuine matching installed manifest and
+                // rehashed blob establish installation even if the child was killed before stdout.
+                if (await PublishedMatchesAsync(request, rehash: true)) return;
+                throw;
             }
             catch
             {
@@ -101,24 +117,41 @@ public sealed class HuggingFaceModelCtlImporter : IHuggingFaceModelImporter
             if (result.GetProperty("status").GetString() != "imported") Fail();
             var model = result.GetProperty("model");
             if (!Matches(model, request)) Fail();
-            // Inspect the actual canonical published manifest, not just a child's success string.
-            var manifestPath = Path.Combine(_modelRoot, "manifests", request.ModelId + ".json");
-            var manifestInfo = new FileInfo(manifestPath);
-            if (!manifestInfo.Exists || manifestInfo.LinkTarget is not null || manifestInfo.Length > 65536) Fail();
-            using var manifest = JsonDocument.Parse(await File.ReadAllTextAsync(manifestPath, CancellationToken.None));
-            if (!Matches(manifest.RootElement, request)) Fail();
-            var blob = Path.Combine(_modelRoot, "blobs", "sha256", request.Sha256[..2], request.Sha256 + ".gguf");
-            var blobInfo = new FileInfo(blob);
-            if (!blobInfo.Exists || blobInfo.LinkTarget is not null || blobInfo.Length != request.Size) Fail();
+            if (!await PublishedMatchesAsync(request, rehash: false)) Fail();
         }
         catch (OperationCanceledException) { throw; }
         catch (HuggingFaceModelException) { throw; }
         catch { Fail(); }
     }
 
+    private async Task<bool> PublishedMatchesAsync(HuggingFaceModelImport request, bool rehash)
+    {
+        try
+        {
+            // Inspect the actual canonical published manifest, not just a child's success string.
+            var manifestPath = Path.Combine(_modelRoot, "manifests", request.ModelId + ".json");
+            var manifestInfo = new FileInfo(manifestPath);
+            if (!manifestInfo.Exists || manifestInfo.LinkTarget is not null || manifestInfo.Length > 65536) return false;
+            using var manifest = JsonDocument.Parse(await File.ReadAllTextAsync(manifestPath, CancellationToken.None));
+            if (!Matches(manifest.RootElement, request)) return false;
+            var blob = Path.Combine(_modelRoot, "blobs", "sha256", request.Sha256[..2], request.Sha256 + ".gguf");
+            var blobInfo = new FileInfo(blob);
+            if (!blobInfo.Exists || blobInfo.LinkTarget is not null || blobInfo.Length != request.Size) return false;
+            if (rehash)
+            {
+                await using var stream = new FileStream(blob, FileMode.Open, FileAccess.Read, FileShare.Read);
+                if (Convert.ToHexStringLower(await SHA256.HashDataAsync(stream, CancellationToken.None)) != request.Sha256) return false;
+            }
+            return true;
+        }
+        catch { return false; }
+    }
+
     private static bool Matches(JsonElement model, HuggingFaceModelImport request) =>
         model.GetProperty("id").GetString() == request.ModelId && model.GetProperty("sha256").GetString() == request.Sha256 &&
         model.GetProperty("size").GetInt64() == request.Size && model.GetProperty("source").GetString() == request.Source &&
+        model.GetProperty("capabilities").ValueKind == JsonValueKind.Array &&
+        model.GetProperty("capabilities").GetArrayLength() == 1 && model.GetProperty("capabilities")[0].GetString() == "unverified" &&
         model.GetProperty("blob").GetString() == request.Sha256[..2] + "/" + request.Sha256 + ".gguf";
 
     private static async Task<string?> DrainAsync(StreamReader reader)

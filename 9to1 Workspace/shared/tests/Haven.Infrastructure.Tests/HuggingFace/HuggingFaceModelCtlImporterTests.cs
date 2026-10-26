@@ -9,8 +9,10 @@ namespace Haven.Infrastructure.Tests;
 
 public sealed class HuggingFaceModelCtlImporterTests
 {
-    [Fact]
-    public async Task Actual_canonical_Python_import_publishes_verified_manifest_and_receives_no_inherited_secrets()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Actual_canonical_Python_import_publishes_verified_manifest_even_when_cancellation_races_commit(bool cancelAfterCommit)
     {
         if (!OperatingSystem.IsLinux()) return;
         var root = Directory.CreateTempSubdirectory("haven-hf-modelctl-").FullName;
@@ -22,10 +24,14 @@ public sealed class HuggingFaceModelCtlImporterTests
             foreach (var name in new[] { "gguf.py", "model_lease.py" }) File.Copy(Path.Combine(canonical, name), Path.Combine(root, name));
             var wrapper = Path.Combine(root, "modelctl.py");
             await File.WriteAllTextAsync(wrapper, """
-                import json, os, pathlib, sys
+                import json, os, pathlib, sys, time
                 pathlib.Path(__file__).with_name('invocation.json').write_text(json.dumps({'argv': sys.argv, 'env': dict(os.environ)}))
                 from canonical_modelctl import main
-                raise SystemExit(main())
+                result = main()
+                if result == 0 and pathlib.Path(__file__).with_name('pause-after-commit').exists():
+                    pathlib.Path(__file__).with_name('committed.ready').write_text(str(os.getpid()))
+                    time.sleep(120)
+                raise SystemExit(result)
                 ""
             );
             byte[] bytes = [71, 71, 85, 70, 3, 0, 0, 0, 1, 2, 3];
@@ -35,10 +41,21 @@ public sealed class HuggingFaceModelCtlImporterTests
             var request = new HuggingFaceModelImport(local, "hf-fixture", "Fixture model", "apache-2.0",
                 "https://huggingface.co/owner/model/blob/0123456789abcdef0123456789abcdef01234567/model.gguf", hash, bytes.Length);
             var importer = new HuggingFaceModelCtlImporter(wrapper, "/usr/bin/python3", store, runtime);
-            await importer.ImportAsync(request, CancellationToken.None);
+            if (cancelAfterCommit) await File.WriteAllTextAsync(Path.Combine(root, "pause-after-commit"), "fixture");
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var import = importer.ImportAsync(request, cancellation.Token);
+            if (cancelAfterCommit)
+            {
+                while (!File.Exists(Path.Combine(root, "committed.ready")) && !import.IsCompleted)
+                    await Task.Delay(20, cancellation.Token);
+                Assert.True(File.Exists(Path.Combine(root, "committed.ready")));
+                cancellation.Cancel();
+            }
+            await import; // A genuine installed receipt wins over cancellation after the atomic commit.
             using var manifest = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(store, "manifests", "hf-fixture.json")));
             Assert.Equal(request.Source, manifest.RootElement.GetProperty("source").GetString());
             Assert.Equal(hash, manifest.RootElement.GetProperty("sha256").GetString());
+            Assert.Equal("unverified", Assert.Single(manifest.RootElement.GetProperty("capabilities").EnumerateArray()).GetString());
             Assert.Equal(bytes, await File.ReadAllBytesAsync(Path.Combine(store, "blobs", "sha256", hash[..2], hash + ".gguf")));
             using var invocation = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(root, "invocation.json")));
             var argv = invocation.RootElement.GetProperty("argv").EnumerateArray().Select(v => v.GetString()).ToArray();
