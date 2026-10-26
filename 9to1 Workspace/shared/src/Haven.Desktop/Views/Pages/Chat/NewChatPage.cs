@@ -1510,7 +1510,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             }
             else
             {
-                await RequireChatOriginal().ReadStreamAsync(_sessions.SendWithCommittedInputAsync(
+                await RequireChatOriginal().ReadStreamAsync(_sessions.SendWithCommittedInputFromOriginalAsync(
+                               callback => RequireChatOriginal().RunAcceptedPublicationCallback(callback),
                                originalConversation,
                                instruction,
                                admittedModel,

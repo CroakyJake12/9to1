@@ -319,6 +319,90 @@ public sealed partial class ChatSessionService(
             userInputCommitted: userInputCommitted);
     }
 
+    /// <summary>Runs the same committed-input ordinary Chat send through the exact
+    /// original ordinary invocation. The caller supplies the owning synchronous
+    /// callback scope; the returned stream retains the producer's sources through
+    /// iterator disposal and joins them before it settles.</summary>
+    public IAsyncEnumerable<ChatStreamEvent> SendWithCommittedInputFromOriginalAsync(
+        Action<Action> originalSynchronousScope,
+        Conversation conversation,
+        string prompt,
+        ModelDescriptor model,
+        EffortLevel effort,
+        IReadOnlyCollection<ActiveCapability> capabilities,
+        string agentName,
+        string agentInstructions,
+        DuoMode duoMode,
+        string? workspaceRoot,
+        string? projectContext,
+        string? projectInstructions,
+        IReadOnlyList<string>? images,
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<ActivePrompt>? prompts = null,
+        string? registeredContext = null,
+        GenerationOptions? generationOptions = null,
+        PermissionMode filePermission = PermissionMode.FullAccess,
+        PermissionMode commandPermission = PermissionMode.FullAccess,
+        PermissionMode browserPermission = PermissionMode.FullAccess,
+        IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
+        IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
+        ComputerUseRequest? computerUseRequest = null,
+        ProviderExecutionContext? executionContext = null,
+        TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation,
+        Func<ChatMessage, CancellationToken, Task>? userInputCommitted = null)
+    {
+        ArgumentNullException.ThrowIfNull(originalSynchronousScope);
+        if (taskExecutionIntent != TaskRunExecutionIntent.OrdinaryConversation || executionContext is not null)
+            throw new InvalidOperationException("The original ordinary Chat producer cannot issue a canonical task invocation.");
+        if (conversation.SpaceId is null)
+            return CreateOriginalSend(conversation, prompt, model, effort, capabilities, agentName,
+                agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images,
+                cancellationToken, prompts, registeredContext, generationOptions, filePermission,
+                commandPermission, browserPermission, explicitCapabilities, availableCapabilities,
+                computerUseRequest, executionContext, taskExecutionIntent, null,
+                userInputCommitted: userInputCommitted);
+        if (generationOptions?.RequestedRoutingConstraints is null)
+            throw new InvalidOperationException("This original source requires explicit constrained routing before provider discovery.");
+
+        var original = new ChatOrdinaryOriginalInvocation(this, cancellationToken, originalSynchronousScope);
+        original.Bind(CreateOriginalSend(conversation, prompt, model with { Capabilities = model.Capabilities.ToFrozenSet() },
+            effort, capabilities, agentName, agentInstructions, duoMode, workspaceRoot, projectContext,
+            projectInstructions, images, cancellationToken, prompts, registeredContext, generationOptions,
+            filePermission, commandPermission, browserPermission, explicitCapabilities, availableCapabilities,
+            computerUseRequest, executionContext, taskExecutionIntent, null, original,
+            userInputCommitted: userInputCommitted));
+        return ConsumeAndJoinOrdinaryOriginalAsync(original, cancellationToken);
+    }
+
+    private static async IAsyncEnumerable<ChatStreamEvent> ConsumeAndJoinOrdinaryOriginalAsync(
+        ChatOrdinaryOriginalInvocation original,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var iterator = original.ConsumeOriginal().GetAsyncEnumerator(cancellationToken);
+        try
+        {
+            while (await iterator.MoveNextAsync().ConfigureAwait(false))
+                yield return iterator.Current;
+        }
+        finally
+        {
+            await DisposeAndJoinOrdinaryOriginalAsync(iterator, original).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task DisposeAndJoinOrdinaryOriginalAsync(
+        IAsyncEnumerator<ChatStreamEvent> iterator,
+        ChatOrdinaryOriginalInvocation original)
+    {
+        var failures = new List<Exception>();
+        try { await iterator.DisposeAsync().ConfigureAwait(false); }
+        catch (Exception failure) { failures.Add(failure); }
+        try { await original.JoinOriginalSourcesAsync().ConfigureAwait(false); }
+        catch (Exception failure) { failures.Add(failure); }
+        if (failures.Count != 0)
+            throw new AggregateException("The original ordinary Chat producer did not settle cleanly.", failures);
+    }
+
     private IAsyncEnumerable<ChatStreamEvent> CreateOriginalSend(
         Conversation conversation, string prompt, ModelDescriptor model, EffortLevel effort,
         IReadOnlyCollection<ActiveCapability> capabilities, string agentName, string agentInstructions,
