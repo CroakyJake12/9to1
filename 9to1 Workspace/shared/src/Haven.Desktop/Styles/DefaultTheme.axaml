@@ -758,15 +758,13 @@
     <Setter Property="Foreground" Value="{DynamicResource HavenButtonForegroundBrush}" />
   </Style>
   <Style Selector="hui|HavenButton:pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenButtonHoverBrush}" />
-
+    <!-- Pointer-over color is derived by the Haven/CUI control presentation. -->
   </Style>
   <Style Selector="hui|HavenButton.primary, hui|HavenButton.accent">
     <Setter Property="Background" Value="{DynamicResource HavenAccentPrimaryBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}" />
   </Style>
   <Style Selector="hui|HavenButton.primary:pointerover, hui|HavenButton.accent:pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenAccentPrimaryHoverBrush}" />
     <Setter Property="Effect" Value="{DynamicResource CuiAccentPrimaryHoverEffect}" />
   </Style>
   <Style Selector="hui|HavenButton.danger, hui|HavenButton.stop">
@@ -780,9 +778,7 @@
   <Style Selector="hui|HavenButton.icon, hui|HavenButton.chrome">
     <Setter Property="MinWidth" Value="44"/><Setter Property="Width" Value="44"/><Setter Property="Height" Value="44"/><Setter Property="MinHeight" Value="44"/><Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="22"/><Setter Property="Background" Value="{DynamicResource HavenInputSurfaceBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}"/>
   </Style>
-  <Style Selector="hui|HavenButton.icon:pointerover, hui|HavenButton.chrome:pointerover"><Setter Property="Background" Value="{DynamicResource HavenPanelHoverBrush}"/></Style>
   <Style Selector="hui|HavenButton.sidebar"><Setter Property="MinHeight" Value="44"/><Setter Property="Padding" Value="14,10"/><Setter Property="CornerRadius" Value="14"/><Setter Property="HorizontalContentAlignment" Value="Left"/><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}"/></Style>
-  <Style Selector="hui|HavenButton.sidebar:pointerover"><Setter Property="Background" Value="{DynamicResource HavenPanelHoverBrush}"/></Style>
   <Style Selector="hui|HavenButton.chip"><Setter Property="MinHeight" Value="30"/><Setter Property="Padding" Value="12,4"/><Setter Property="CornerRadius" Value="15"/><Setter Property="FontSize" Value="11"/><Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryBrush}"/></Style>
 
   <Style Selector="hui|HavenPrimaryButton">
@@ -790,7 +786,6 @@
     <Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}" />
   </Style>
   <Style Selector="hui|HavenPrimaryButton:pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenAccentPrimaryHoverBrush}" />
     <Setter Property="Effect" Value="{DynamicResource CuiAccentPrimaryHoverEffect}" />
   </Style>
 
@@ -799,7 +794,6 @@
     <Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}" />
   </Style>
   <Style Selector="hui|HavenSecondaryButton:pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenAccentSecondaryHoverBrush}" />
     <Setter Property="Effect" Value="{DynamicResource CuiAccentSecondaryHoverEffect}" />
   </Style>
 
@@ -808,7 +802,6 @@
     <Setter Property="Foreground" Value="{DynamicResource HavenAccentSecondaryBrush}" />
   </Style>
   <Style Selector="hui|HavenTertiaryButton:pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryHoverBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}" />
     <Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}" />
   </Style>
@@ -838,7 +831,7 @@
     <Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}" />
   </Style>
   <Style Selector=":is(Button).havenIcon:pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenPanelHoverBrush}" />
+    <Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}" />
 
   </Style>
   <Style Selector=":is(Button).havenIcon.accent"><Setter Property="Background" Value="{DynamicResource HavenAccentPrimaryBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}"/></Style>
@@ -876,7 +869,7 @@
     <Setter Property="CornerRadius" Value="14" /><Setter Property="HorizontalContentAlignment" Value="Left" />
     <Setter Property="Background" Value="Transparent" /><Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}" />
   </Style>
-  <Style Selector=":is(Button).havenNavigation:pointerover"><Setter Property="Background" Value="{DynamicResource HavenPanelHoverBrush}" /></Style>
+  <Style Selector=":is(Button).havenNavigation:pointerover"><Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}" /></Style>
   <Style Selector=":is(Button).havenNavigation.selected"><Setter Property="Background" Value="{DynamicResource CuiMenuSelectionBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}"/></Style>
 
   <Style Selector=":is(Button).havenSuggestion">
@@ -886,12 +879,12 @@
     <Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}" />
   </Style>
   <Style Selector=":is(Button).havenSuggestion:pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryHoverBrush}" />
+    <Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}" />
 
   </Style>
   <Style Selector=":is(Button).havenChip"><Setter Property="MinHeight" Value="30"/><Setter Property="Padding" Value="12,4"/><Setter Property="CornerRadius" Value="15"/><Setter Property="FontSize" Value="11"/><Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryBrush}"/></Style>
   <Style Selector=":is(Button).havenMobileAction"><Setter Property="MinHeight" Value="44"/><Setter Property="Padding" Value="11,7"/><Setter Property="CornerRadius" Value="15"/><Setter Property="FontSize" Value="12"/><Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}"/></Style>
-  <Style Selector=":is(Button).havenMobileAction:pointerover"><Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryHoverBrush}"/></Style>
+  <Style Selector=":is(Button).havenMobileAction:pointerover"><Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}"/></Style>
 
   <Style Selector=":is(Button).havenTab">
     <Setter Property="MinHeight" Value="38" /><Setter Property="Padding" Value="14,7" />
@@ -903,6 +896,21 @@
   <Style Selector="hui|HavenTabView"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
   <Style Selector="hui|HavenTabItem"><Setter Property="MinHeight" Value="42"/><Setter Property="Padding" Value="14,8"/><Setter Property="FontWeight" Value="Bold"/><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource HavenTextSecondaryBrush}"/></Style>
   <Style Selector="hui|HavenTabItem:selected"><Setter Property="Foreground" Value="{DynamicResource HavenAccentSecondaryBrush}"/></Style>
+  <!-- Browser tab titles and close affordances share one row surface. -->
+  <Style Selector="hui|HavenAdaptiveSurface.browserTabGroup:pointerover">
+    <Setter Property="BorderBrush" Value="{DynamicResource HavenAccentTertiaryBrush}" />
+    <Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}" />
+  </Style>
+  <Style Selector="hui|HavenAdaptiveSurface.browserTabGroup hui|HavenButton.browserTabPart">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="hui|HavenAdaptiveSurface.browserTabGroup:pointerover hui|HavenButton.browserTabPart">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="hui|HavenAdaptiveSurface.browserTabGroup hui|HavenButton.browserTabClose:pointerover">
+    <Setter Property="Foreground" Value="{DynamicResource HavenAccentSecondaryBrush}" />
+    <Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}" />
+  </Style>
   <Style Selector="hui|HavenToggleButton"><Setter Property="MinHeight" Value="40"/><Setter Property="Padding" Value="14,7"/><Setter Property="CornerRadius" Value="20"/><Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}"/><Setter Property="FontWeight" Value="Bold"/></Style>
   <Style Selector="hui|HavenToggleButton:checked"><Setter Property="Background" Value="{DynamicResource HavenAccentPrimaryBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}"/></Style>
   <Style Selector="hui|HavenExpander"><Setter Property="Background" Value="{DynamicResource HavenBackgroundSecondaryBrush}"/><Setter Property="Padding" Value="12"/><Setter Property="CornerRadius" Value="18"/><Setter Property="FontWeight" Value="Bold"/></Style>
@@ -928,11 +936,9 @@
     <Setter Property="BorderThickness" Value="2" />
   </Style>
   <Style Selector=":is(hui|HavenTextInput):pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenStateHoverBrush}" />
     <Setter Property="BorderBrush" Value="Transparent" />
   </Style>
   <Style Selector=":is(hui|HavenTextInput):pointerover /template/ Border#PART_BorderElement">
-    <Setter Property="Background" Value="{DynamicResource HavenStateHoverBrush}" />
     <Setter Property="BorderBrush" Value="Transparent" />
     <Setter Property="BorderThickness" Value="1" />
   </Style>
@@ -940,7 +946,7 @@
   <Style Selector="hui|HavenSearchInput"><Setter Property="MinHeight" Value="46"/><Setter Property="Padding" Value="18,0"/><Setter Property="CornerRadius" Value="23"/></Style>
   <Style Selector="hui|HavenMultilineInput"><Setter Property="MinHeight" Value="112"/><Setter Property="Padding" Value="18,15"/><Setter Property="CornerRadius" Value="24"/><Setter Property="VerticalContentAlignment" Value="Top"/></Style>
   <Style Selector="hui|HavenComboBox, hui|HavenNumericInput, hui|HavenSelect"><Setter Property="MinHeight" Value="48"/><Setter Property="CornerRadius" Value="24"/><Setter Property="Background" Value="{DynamicResource HavenInputSurfaceBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}"/><Setter Property="BorderBrush" Value="Transparent"/><Setter Property="Padding" Value="18,0"/></Style>
-  <Style Selector="hui|HavenSelect:pointerover"><Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryHoverBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource HavenAccentSecondaryBrush}"/><Setter Property="BorderThickness" Value="1"/></Style>
+  <Style Selector="hui|HavenSelect:pointerover"><Setter Property="BorderBrush" Value="{DynamicResource HavenAccentSecondaryBrush}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}"/></Style>
   <Style Selector="hui|HavenSlider">
     <Setter Property="MinHeight" Value="44"/><Setter Property="Foreground" Value="{DynamicResource HavenAccentPrimaryBrush}"/><Setter Property="Background" Value="{DynamicResource HavenBackgroundElevatedBrush}"/>
     <Setter Property="Template">
@@ -1042,7 +1048,7 @@
     <Setter Property="MinHeight" Value="64"/><Setter Property="Padding" Value="18,12"/><Setter Property="CornerRadius" Value="16"/>
     <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Left"/><Setter Property="Background" Value="{DynamicResource HavenBackgroundSecondaryBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenTextPrimaryBrush}"/>
   </Style>
-  <Style Selector=":is(Button).havenDropdownItem:pointerover"><Setter Property="Background" Value="{DynamicResource HavenAccentSecondaryHoverBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}"/></Style>
+  <Style Selector=":is(Button).havenDropdownItem:pointerover"><Setter Property="Effect" Value="{DynamicResource CuiAccentSecondaryHoverEffect}"/><Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}"/></Style>
   <Style Selector=":is(Button).havenDropdownItem.selected"><Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource HavenAccentSecondaryBrush}"/><Setter Property="BorderThickness" Value="1"/></Style>
   <Style Selector=":is(Button).havenDropdownItem.important"><Setter Property="Background" Value="{DynamicResource HavenAccentPrimaryBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}"/></Style>
   <Style Selector=":is(Button).havenDropdownItem.negative"><Setter Property="Foreground" Value="{DynamicResource HavenDangerBrush}"/></Style>
@@ -1060,8 +1066,8 @@
     <Setter Property="CornerRadius" Value="20"/><Setter Property="Padding" Value="18"/><Setter Property="BoxShadow" Value="0 14 34 0 #66000000"/>
   </Style>
   <Style Selector=":is(hui|HavenCard):pointerover">
-    <Setter Property="Background" Value="{DynamicResource HavenStateHoverBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource HavenAccentTertiaryBrush}" />
+    <Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}" />
   </Style>
   <Style Selector="hui|HavenAdaptiveSurface.card, hui|HavenAdaptiveSurface.report-panel">
     <Setter Property="Background" Value="{DynamicResource HavenCardSurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource HavenBorderSubtleBrush}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="20"/><Setter Property="Padding" Value="18"/>

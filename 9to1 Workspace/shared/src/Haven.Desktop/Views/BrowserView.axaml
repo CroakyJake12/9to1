@@ -17,7 +17,8 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <hui:HavenAdaptiveSurface Background="{DynamicResource HavenPanelBrush}"
+                <hui:HavenAdaptiveSurface Classes="browserTabGroup"
+                        Background="{DynamicResource HavenPanelBrush}"
                         BorderBrush="{DynamicResource HavenLineBrush}"
                         BorderThickness="1"
                         CornerRadius="9"
@@ -28,7 +29,7 @@
                             CornerRadius="3"
                             IsVisible="{Binding IsSelected}" />
                     <hui:HavenButton Grid.Column="1"
-                            Classes="chrome"
+                            Classes="chrome browserTabPart"
                             HorizontalContentAlignment="Left">
                       <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="Private" Foreground="{DynamicResource HavenAccentBrush}" FontSize="9" IsVisible="{Binding IsPrivate}" />
@@ -37,7 +38,7 @@
                     </hui:HavenButton>
                     <hui:HavenButton Grid.Column="2"
                             Content="&#x00D7;"
-                            Classes="chrome"
+                            Classes="chrome browserTabPart browserTabClose"
                             HorizontalAlignment="Right"
                             ToolTip.Tip="Close tab" />
                   </Grid>
@@ -137,7 +138,8 @@
             <ItemsControl x:Name="VerticalTabsList" Margin="7,0">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <hui:HavenAdaptiveSurface Background="{DynamicResource HavenPanelBrush}"
+                  <hui:HavenAdaptiveSurface Classes="browserTabGroup"
+                          Background="{DynamicResource HavenPanelBrush}"
                           BorderBrush="{DynamicResource HavenLineBrush}"
                           BorderThickness="1"
                           CornerRadius="8"
@@ -147,7 +149,7 @@
                               CornerRadius="3"
                               IsVisible="{Binding IsSelected}" />
                       <hui:HavenButton Grid.Column="1"
-                              Classes="chrome"
+                              Classes="chrome browserTabPart"
                               HorizontalContentAlignment="Stretch"
                               Padding="9,6">
                         <Grid RowDefinitions="Auto,Auto">
@@ -157,7 +159,7 @@
                       </hui:HavenButton>
                       <hui:HavenButton Grid.Column="2"
                               Content="&#x00D7;"
-                              Classes="chrome"
+                              Classes="chrome browserTabPart browserTabClose"
                               ToolTip.Tip="Close tab" />
                     </Grid>
                   </hui:HavenAdaptiveSurface>
