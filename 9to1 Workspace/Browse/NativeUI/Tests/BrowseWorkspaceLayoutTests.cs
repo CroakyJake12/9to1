@@ -155,7 +155,7 @@ public sealed partial class BrowseNativeUiTests
             var presenter = Assert.Single(scroll.GetVisualDescendants().OfType<ScrollContentPresenter>());
             var firstId = chrome.State.SelectedTabId;
             var add = Find(window, "BrowseNewTabButton");
-            add.Focus();
+            Assert.True(add.Focus(), "The new-tab action must genuinely hold focus before testing its retention.");
             for (var index = 0; index < 10; index++)
             {
                 await Click(window, workspace, add);

@@ -1,5 +1,8 @@
 using System.Runtime.CompilerServices;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.VisualTree;
 
 namespace CakeOS.Cui.Runtime;
 
@@ -26,18 +29,72 @@ public static class CuiLifecycleProperties
         private const string CapabilityGate = "CUI owner capability restriction";
         private readonly Control _control;
         private int _denials;
-        private bool _interactive = true, _disposed;
+        private bool _interactive = true, _disposed, _restricted;
+        private TopLevel? _focusRoot;
+        private IDisposable? _focusObservation;
+        private Visual[] _focusAncestors = [];
         public IDisposable Restrict()
         {
             if (_disposed) throw new ObjectDisposedException(nameof(State));
             _denials++; ApplyInput(); return new Denial(this);
         }
         private void Release() { if (_disposed) return; _denials--; ApplyInput(); }
-        public void Dispose() => _disposed = true;
+        public void Dispose()
+        {
+            _disposed = true;
+            CancelFocusRestore();
+        }
+        private void CaptureFocus()
+        {
+            // Disabling a focused donor input clears keyboard focus. Remember only the
+            // exact live input that THIS gate is about to disable, never a default target.
+            if (!_control.IsFocused || TopLevel.GetTopLevel(_control) is not { } root) return;
+            _focusRoot = root;
+            _control.DetachedFromVisualTree += FocusOwnerDetached;
+            _focusAncestors = _control.GetSelfAndVisualAncestors().ToArray();
+            foreach (var ancestor in _focusAncestors) ancestor.PropertyChanged += FocusOwnerChanged;
+            if (root is Window window) window.Deactivated += FocusRootDeactivated;
+            // Observe all roots: focusing elsewhere then clearing focus must still cancel
+            // restoration, including focus in another window or a popup.
+            _focusObservation = InputElement.GotFocusEvent.AddClassHandler<InputElement>((_, args) =>
+            {
+                if (!ReferenceEquals(args.Source, _control)) CancelFocusRestore();
+            }, handledEventsToo: true);
+        }
+        private void FocusOwnerDetached(object? sender, VisualTreeAttachmentEventArgs args) => CancelFocusRestore();
+        private void FocusOwnerChanged(object? sender, AvaloniaPropertyChangedEventArgs args)
+        {
+            if ((args.Property == Visual.IsVisibleProperty || args.Property == Visual.OpacityProperty) &&
+                sender is Visual visual && (!visual.IsVisible || visual.Opacity <= 0))
+                CancelFocusRestore();
+        }
+        private void FocusRootDeactivated(object? sender, EventArgs args) => CancelFocusRestore();
+        private void CancelFocusRestore()
+        {
+            _focusObservation?.Dispose(); _focusObservation = null;
+            if (_focusRoot is Window window) window.Deactivated -= FocusRootDeactivated;
+            _focusRoot = null;
+            _control.DetachedFromVisualTree -= FocusOwnerDetached;
+            foreach (var ancestor in _focusAncestors) ancestor.PropertyChanged -= FocusOwnerChanged;
+            _focusAncestors = [];
+        }
+        private void RestoreFocus()
+        {
+            var root = _focusRoot;
+            CancelFocusRestore(); // Retire observation BEFORE invoking reentrant focus handlers.
+            if (root is not null && !_disposed && !_restricted && _denials == 0 && _interactive &&
+                ReferenceEquals(TopLevel.GetTopLevel(_control), root) && _control.IsEffectivelyVisible &&
+                _control.Opacity > 0 && _control.IsEffectivelyEnabled && _control.Focusable &&
+                root.FocusManager?.GetFocusedElement() is null)
+                _control.Focus();
+        }
         private void ApplyInput()
         {
             if (_disposed) return;
             var restricted = !_interactive || _denials > 0;
+            var wasRestricted = _restricted;
+            _restricted = restricted;
+            if (restricted && !wasRestricted) CaptureFocus();
             if (restricted)
             {
                 CuiPropertyPresentation.Set(_control, "IsHitTestVisible", false, CuiPropertyLevel.Overlay, InputGate, long.MaxValue);
@@ -52,6 +109,7 @@ public static class CuiLifecycleProperties
             }
             if (_denials > 0) CuiPropertyPresentation.Set(_control, "IsEnabled", false, CuiPropertyLevel.Overlay, CapabilityGate, long.MaxValue);
             else CuiPropertyPresentation.Remove(_control, "IsEnabled", CuiPropertyLevel.Overlay, CapabilityGate);
+            if (!restricted && wasRestricted) RestoreFocus();
         }
         private sealed class Denial(State state) : IDisposable
         { private bool _released; public void Dispose() { if (_released) return; _released = true; state.Release(); } }
@@ -65,11 +123,13 @@ public static class CuiLifecycleProperties
             CuiPropertyPresentation.Set(control, "Opacity", control.Opacity, CuiPropertyLevel.BuiltIn, "CUI built-in opacity");
             CuiPropertyPresentation.Register(control, "Active", typeof(bool), true, value =>
             {
+                if (value is false) CancelFocusRestore();
                 if (value is false) CuiPropertyPresentation.Set(control, "IsVisible", false, CuiPropertyLevel.Overlay, ActiveGate, long.MaxValue);
                 else CuiPropertyPresentation.Remove(control, "IsVisible", CuiPropertyLevel.Overlay, ActiveGate);
             });
             CuiPropertyPresentation.Register(control, "Hidden", typeof(bool), false, value =>
             {
+                if (value is true) CancelFocusRestore();
                 if (value is true) CuiPropertyPresentation.Set(control, "Opacity", 0d, CuiPropertyLevel.Overlay, HiddenGate, long.MaxValue);
                 else CuiPropertyPresentation.Remove(control, "Opacity", CuiPropertyLevel.Overlay, HiddenGate);
             });
