@@ -114,7 +114,11 @@ public sealed class HomeRegisteredModelCatalogueSourceTests
         Assert.Empty(model.SupportedActions);
         Assert.Equal(HomeDiscoverSourceState.Partial, result.State);
         Assert.Equal(fail ? "Discover.ProviderUnavailable" : "Discover.ModelNotObserved", result.ErrorCode);
-        if (fail) Assert.Contains("worker socket unavailable", result.ErrorMessage);
+        if (fail)
+        {
+            Assert.NotEmpty(result.ErrorMessage!);
+            Assert.DoesNotContain("worker socket unavailable", result.ErrorMessage);
+        }
     }
 
     [Fact]
