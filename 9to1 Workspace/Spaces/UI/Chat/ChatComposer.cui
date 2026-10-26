@@ -1,5 +1,7 @@
 <Cui id="spaces.chat.composer" version="1">
   <Actions>
+    <Action name="composer.layout-expand"><Set Target="InputColumn" Value="0" /><Set Target="InputSpan" Value="3" /><Set Target="ControlsRow" Value="2" /></Action>
+    <Action name="composer.layout-compact"><Set Target="InputColumn" Value="1" /><Set Target="InputSpan" Value="1" /><Set Target="ControlsRow" Value="1" /></Action>
     <Action name="shelf.activate" command="shelf.activate" />
     <Action name="shelf.next" command="shelf.next" />
     <Action name="composer.submit" command="composer.submit" parameter="{Binding Event}" />
@@ -25,14 +27,21 @@
     <Action name="composer.emoji-prev" command="query.previous" />
     <Action name="composer.emoji-next" command="query.next" />
   </Actions>
+  <Effects>
+    <Effect name="expand-composer" Condition="{Binding Composer.IsExpanded}" Action="composer.layout-expand" />
+    <Effect name="compact-composer" Condition="!{Binding Composer.IsExpanded}" Action="composer.layout-compact" />
+  </Effects>
+  <Variable Type="integer" ID="InputColumn">1</Variable>
+  <Variable Type="integer" ID="InputSpan">1</Variable>
+  <Variable Type="integer" ID="ControlsRow">1</Variable>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
   <Variable Type="bool" ID="SendModeOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
-  <Container id="composer-surface" Type="Overlay Float" padding="12"
+  <Container id="composer-surface" Type="Overlay Float" padding="8"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
-    <Container id="composer-body" Type="Vertical Stack" CellGap="8">
-    <Container id="chips-row" Type="Wrap" CellGap="6" MaxHeight="84" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
+    <Container id="composer-body" Type="Grid" ColumnSizes="Auto 1fr Auto" RowSizes="Auto Auto Auto Auto Auto Auto" CellGap="8">
+    <Container id="chips-row" ColumnSpan="3" Type="Wrap" CellGap="6" MaxHeight="84" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
         <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
           <Button action="composer.invoke-chip.Id" content="{Binding chip.Label}" font-size="11" Interactive="{Binding chip.Invokable}" accessible-name="{Binding chip.Label}" />
@@ -41,7 +50,7 @@
       </Repeat>
     </Container>
 
-    <Container id="input-column" Type="Vertical Stack" CellGap="4" MaxHeight="170">
+    <Container id="input-column" Row="1" Column="{Binding InputColumn}" ColumnSpan="{Binding InputSpan}" VerticalAlignment="Center" Type="Vertical Stack" CellGap="4" MaxHeight="170">
       <Input id="composer-input" Type="Text" AcceptsReturn="True" SubmitAction="composer.submit" Value="{Binding Composer.Draft}"
              placeholdertext="{Binding Composer.Placeholder}" embedded-input="true" BorderWidth="0"
              background="Transparent" padding="4" text-wrapping="Wrap" MinHeight="44" accessible-name="Message" />
@@ -49,8 +58,7 @@
 
 
 
-    <Container id="controls-row" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
-      <Container id="left-controls" Column="0" Type="Horizontal Stack" CellGap="6">
+      <Container id="left-controls" Row="{Binding ControlsRow}" Column="0" VerticalAlignment="Center" Type="Horizontal Stack" CellGap="6">
         <Button id="add-button" action="composer.add" IsVisible="{Binding Composer.HasAdd}" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="Transparent" Chromeless="true"
                 accessible-name="Add files or actions" tooltip="Add files or actions">
@@ -66,7 +74,7 @@
                 CornerRadius="22" Selected="{Binding Composer.ShowEmoji}" Chromeless="true"
                 accessible-name="Insert emoji" tooltip="Insert emoji" />
       </Container>
-      <Container id="right-controls" Column="2" Type="Horizontal Stack" CellGap="6">
+      <Container id="right-controls" Row="{Binding ControlsRow}" Column="2" VerticalAlignment="Center" Type="Horizontal Stack" CellGap="6">
         <Button id="send-mode-button" action="composer.toggle-send-mode" content="{Binding Composer.PreferredSendModeLabel}"
                 IsVisible="{Binding Composer.HasSendModePreference}" MinHeight="44" CornerRadius="22"
                 background="Transparent" Chromeless="true" accessible-name="Preferred Space send action"
@@ -105,16 +113,17 @@
           </Layer>
         </Container>
       </Container>
-    </Container>
 
+    <Container Row="3" ColumnSpan="3" Type="Vertical Stack">
     <If Condition="{Binding Composer.HasSendModePreference}">
       <Container id="send-mode-panel" Type="Horizontal Stack" CellGap="8" IsVisible="{Binding SendModeOpen}" accessible-name="Preferred Space send action choices">
         <Button action="composer.prefer-steer" content="Steer" MinHeight="44" accessible-name="Use Steer by default in this Space" />
         <Button action="composer.prefer-queue" content="Queue" MinHeight="44" accessible-name="Use Queue by default in this Space" />
       </Container>
     </If>
+    </Container>
 
-    <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
+    <Container id="emoji-panel" ColumnSpan="3" Row="4" Type="Vertical Stack" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
       <!-- The QueryViewport is the canonical CUI runtime state/query scope: it owns the search query
            string and opaque cursor; the authored Repeat/input/pager bind to its bounded window and
@@ -150,7 +159,7 @@
       </Container>
     </Container>
 
-    <Container id="settings-panel" Type="Wrap" CellGap="8" padding="8"
+    <Container id="settings-panel" ColumnSpan="3" Row="5" Type="Wrap" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowSettings}" accessible-name="Thread settings panel">
       <Button id="refresh-task-actions" action="composer.refresh-task-controls" content="Refresh task actions"
               IsVisible="{Binding Composer.CanRefreshTaskControls}" MinHeight="44"

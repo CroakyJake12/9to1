@@ -3023,6 +3023,7 @@ public sealed partial class CuiControlLoader : IDisposable
     {
         void RefreshAffectedBindings()
         {
+            var frame = _committedActionFrame;
             // Preserve conditional retirement before Repeat reconciliation: a hidden branch must not
             // read a newly supplied source or construct controls while its old owner is being retired.
             RefreshLiveConditionals(propertyName);
@@ -3044,6 +3045,9 @@ public sealed partial class CuiControlLoader : IDisposable
 
                 ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
             }
+            // External observed state participates in the same rising-edge effect contract
+            // as local mutations. Never dispatch an old notification into a replacement frame.
+            if (IsActionFrameCurrent(frame)) EvaluateEffects();
         }
 
         if (Dispatcher.UIThread.CheckAccess())

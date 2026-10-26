@@ -7,6 +7,8 @@
   <ItemGroup>
     <ProjectReference Include="../NativeHost/HavenOS.Files.NativeHost.csproj" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="../Source/Files/src/Files.App/Assets/FolderIcon.png" LogicalName="HavenOS.Files.NativeUI.Assets.FolderIcon.png" />
+    <EmbeddedResource Include="UI/FilesDetailsRow.cui" LogicalName="HavenOS.Files.NativeUI.UI.FilesDetailsRow.cui" />
     <EmbeddedResource Include="UI/FilesBrowser.cui" LogicalName="HavenOS.Files.NativeUI.UI.FilesBrowser.cui" />
   </ItemGroup>
 </Project>

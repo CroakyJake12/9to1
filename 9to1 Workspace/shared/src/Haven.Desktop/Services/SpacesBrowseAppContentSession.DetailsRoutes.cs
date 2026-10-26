@@ -143,7 +143,12 @@ internal sealed partial class SpacesBrowseAppContentSession
         switch (action.Kind)
         {
             case SpacesActionKind.Open:
-                await WithCurrentEditorPreparationAsync(() => ExecuteChatOnUiAsync(action, token), token);
+#if !ANDROID
+                if (action.Context.Scope.RegisteredSpaceId == SpaceRegistry.AgentSpaceId)
+                    await WithCurrentEditorPreparationAsync(() => OpenAssistantOnUiAsync(null, null, _routeEpoch, token), token);
+                else
+#endif
+                    await WithCurrentEditorPreparationAsync(() => ExecuteChatOnUiAsync(action, token), token);
                 break;
             case SpacesActionKind.EditDetails:
                 if (action.Context.Scope.RegisteredSpaceId is not { } id ||

@@ -72,12 +72,35 @@ public sealed class FilesNativeBrowserSurfaceTests
                 window.UpdateLayout();
                 var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
                 Assert.Equal(workspace.Configuration.AppFolders.Count, list.Items.Count);
-                list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == folder.Id);
+                Assert.True(view.TryGetValue("SidebarFolders", out var sidebar));
+                Assert.All(Assert.IsAssignableFrom<IEnumerable<HostedItemMetadata>>(sidebar), item =>
+                    Assert.Contains(list.Items.Cast<HostedItemMetadata>(), actual => ReferenceEquals(actual, item)));
+                Assert.True(view.TryGetValue("SidebarVisible", out var wideSidebar)); Assert.Equal(true, wideSidebar);
+                var rootFolder = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == folder.Id);
+                await Assert.ThrowsAsync<UnauthorizedAccessException>(() => view.DispatchAsync("9to1.Files.OpenSidebarFolder",
+                    rootFolder with { Name = "Forged display row" }, token).AsTask());
+                var rows = list.GetVisualDescendants().OfType<CuiContainerControl>()
+                    .Where(control => control.Name == "files-details-row").ToArray();
+                Assert.NotEmpty(rows);
+                var retainedRow = rows[0];
+                var metadata = list.Items.Cast<HostedItemMetadata>().Single(item => retainedRow.GetVisualDescendants()
+                    .OfType<TextBlock>().Any(text => text.Text == item.Name));
+                window.Content = null; window.Content = view; window.Width = 1000;
+                window.UpdateLayout(); Avalonia.Threading.Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                Assert.Contains(list.GetVisualDescendants(), control => ReferenceEquals(control, retainedRow));
+                Assert.Contains(retainedRow.GetVisualDescendants().OfType<TextBlock>(), text =>
+                    text.Text == metadata.ModifiedAt.ToLocalTime().ToString("g") && text.IsEffectivelyVisible);
+                window.Width = 520; window.UpdateLayout(); Avalonia.Threading.Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                Assert.True(view.TryGetValue("SidebarVisible", out var compactSidebar)); Assert.Equal(false, compactSidebar);
+                Assert.Equal(workspace.Configuration.AppFolders.Count, list.Items.Count);
+                window.Width = 720; window.UpdateLayout(); Avalonia.Threading.Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                list.SelectedItem = rootFolder;
                 Assert.True(view.IsActionAvailable("9to1.Files.Open"));
-                await view.DispatchAsync("9to1.Files.Open", null, token);
+                await view.DispatchAsync("9to1.Files.OpenSidebarFolder", rootFolder, token);
                 var displayed = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == file);
                 Assert.Equal(file, displayed.Id);
                 list.SelectedItem = displayed;
+                window.UpdateLayout(); Avalonia.Threading.Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
                 Assert.True(view.TryGetValue("SelectedDetails", out var details));
                 var detailsText = Assert.IsType<string>(details);
                 Assert.Contains(displayed.Name, detailsText);

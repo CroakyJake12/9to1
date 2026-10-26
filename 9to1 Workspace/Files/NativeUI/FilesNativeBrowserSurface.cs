@@ -65,8 +65,11 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         ArgumentNullException.ThrowIfNull(originalActor);
         _originalHostLifetime = hostLifetime;
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(hostLifetime);
-        _items.ItemTemplate = new FuncDataTemplate<HostedItemMetadata>((item, _) => new TextBlock
-        { Text = item is null ? "" : $"{(item.Kind == HostedItemKind.Folder ? "Folder" : item.Kind.ToString())}  {item.Name}", Margin = new(8) });
+        _search.Width = double.NaN;
+        _sort.Width = 160;
+        _items.HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+        _items.ItemTemplate = new FuncDataTemplate<HostedItemMetadata>((item, _) => BuildDetailsRow(item));
+        SizeChanged += (_, _) => Changed();
         _items.SelectionChanged += (_, _) =>
         {
             if (!OriginalAlive()) { Changed(); return; }
@@ -199,6 +202,24 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         if (TryGetFolderTabsValue(path, out value) || TryGetSharingValue(path, out value) || TryGetTextPreviewValue(path, out value)) return true;
         value = path switch
         {
+            "NavigationColumns" => Bounds.Width < 540 ? "Auto 1fr" : "Auto 1fr 260",
+            "SearchRow" => Bounds.Width < 540 ? 1 : 0,
+            "SearchColumn" => Bounds.Width < 540 ? 0 : 2,
+            "SearchColumnSpan" => Bounds.Width < 540 ? 2 : 1,
+            "CompactLayout" => Bounds.Width < 641,
+            "SidebarVisible" => Bounds.Width >= 641,
+            "BodyColumns" => Bounds.Width < 641 ? "1fr" : Bounds.Width < 1120 ? "240 1fr" : "240 1fr Auto",
+            "BodyRows" => Bounds.Width < 1120 ? "1fr Auto" : "1fr",
+            "MainColumn" => Bounds.Width < 641 ? 0 : 1,
+            "DetailsColumn" => Bounds.Width < 641 ? 0 : Bounds.Width < 1120 ? 1 : 2,
+            "DetailsRow" => Bounds.Width < 1120 ? 1 : 0,
+            "DetailsWidth" => Bounds.Width < 1120 ? Math.Max(208, Bounds.Width - (Bounds.Width < 641 ? 16 : 264)) : 280,
+            "DetailsMaxHeight" => Bounds.Width < 1120 ? 260 : Math.Max(260, Bounds.Height),
+            "HasSelection" => _items.SelectedItem is HostedItemMetadata selected && _page?.Items.Any(item => ReferenceEquals(item, selected)) == true,
+            "WideColumns" => Bounds.Width >= 900,
+            "ItemColumns" => Bounds.Width >= 900 ? "1fr 150 100 90" : "1fr 0 0 0",
+            "SidebarHeading" => "Folders in " + (_page?.FolderTitle ?? "Files"),
+            "SidebarFolders" => _page is { IsTrash: false } sidebarPage ? sidebarPage.Items.Where(item => item.Kind == HostedItemKind.Folder).ToArray() : Array.Empty<HostedItemMetadata>(),
             "FolderTitle" => _page?.FolderTitle ?? "Files",
             "SelectedDetails" => SelectedDetails,
             "Status" => _status,
@@ -224,7 +245,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             "PendingChange" => _page is null ? "" : _pendingMutation?.Description ?? "",
             _ => null
         };
-        return path is "SelectedDetails" or "FolderTitle" or "Status" or "CanNavigate" or "CanUp" or "CanBack" or "CanForward" or "CanMore" or "CanOpen"
+        return path is "NavigationColumns" or "SearchRow" or "SearchColumn" or "SearchColumnSpan" or "CompactLayout" or "SidebarVisible" or "BodyColumns" or "BodyRows" or "MainColumn" or "DetailsColumn" or "DetailsRow" or "DetailsWidth" or "DetailsMaxHeight" or "HasSelection" or "WideColumns" or "ItemColumns" or "SidebarHeading" or "SidebarFolders" or "SelectedDetails" or "FolderTitle" or "Status" or "CanNavigate" or "CanUp" or "CanBack" or "CanForward" or "CanMore" or "CanOpen"
             or "CanCreateFolder" or "CanRename" or "CanDelete" or "CanRestore" or "CanApply" or "CanCancelReview" or "CanRetryAudit" or "PendingChange"
             or "CanChooseMove" or "CanMove" or "CanCancelMove" or "MoveSelection" or "CanShowDetails" or "TechnicalDetailsLabel";
     }
@@ -251,7 +272,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     public bool? IsActionAvailable(string command) => IsFolderTabCommand(command) ? FolderTabActionAvailable(command)
         : IsSharingCommand(command) ? SharingActionAvailable(command) : command switch
     {
-        "9to1.Files.Home" or "9to1.Files.Trash" or "9to1.Files.Refresh" or "9to1.Files.Search" => Available && _pendingMutation is null,
+        "9to1.Files.OpenSidebarFolder" or "9to1.Files.Home" or "9to1.Files.Trash" or "9to1.Files.Refresh" or "9to1.Files.Search" => Available && _pendingMutation is null,
         "9to1.Files.Up" => Available && _pendingMutation is null && _page?.ParentID is not null,
         "9to1.Files.Back" => Available && _pendingMutation is null && _historyIndex > 0,
         "9to1.Files.Forward" => Available && _pendingMutation is null && _historyIndex + 1 < _history.Count,
@@ -282,6 +303,15 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     };
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command == "9to1.Files.OpenSidebarFolder")
+        {
+            Dispatcher.UIThread.VerifyAccess(); cancellationToken.ThrowIfCancellationRequested();
+            if (!Available || _pendingMutation is not null || _page?.IsTrash != false || parameter is not HostedItemMetadata folder ||
+                folder.Kind != HostedItemKind.Folder || !_page.Items.Any(item => ReferenceEquals(item, folder)))
+                throw new UnauthorizedAccessException("Choose a folder issued by the current Files page.");
+            RunOriginalNativeMutation(() => _items.SelectedItem = folder);
+            return DispatchAsync("9to1.Files.Open", null, cancellationToken);
+        }
         if (IsFolderTabCommand(command))
             return new(TrackOriginalAsync(() => InvokeFolderTabOriginalAsync(command, parameter, cancellationToken)));
         if (IsSharingCommand(command) || command == "9to1.Files.Apply" && IsPendingShareReview)
@@ -580,6 +610,17 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     }
     private void Changed()
     {
+        var wideRows = Bounds.Width >= 900;
+        if (OriginalAlive() && _detailsRowsWide != wideRows)
+        {
+            _detailsRowsWide = wideRows;
+            foreach (var row in _detailsRowLoaders.ToArray())
+            {
+                row.Value.Set("Columns", wideRows ? "1fr 150 100 90" : "1fr 0 0 0");
+                row.Value.Set("ShowMetadata", wideRows);
+                row.Key.RefreshBindings();
+            }
+        }
         WithdrawChangedOriginalTextPreview();
         // Refused-state withdrawal remains observable after retirement. A live publication
         // rechecks its original lifetime after each synchronous native notification.
@@ -695,7 +736,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         }
         // Retired metadata is withdrawn promptly while the original I/O remains owned and draining.
         try { await OnUiAsync(ClearSources); } catch (Exception error) { Add(failures, error); }
-        try { await OnUiAsync(() => Content = null); } catch (Exception error) { Add(failures, error); }
+        try { await OnUiAsync(() => { Content = null; foreach (var loader in _detailsRowLoaders.Keys.ToArray()) loader.Dispose(); _detailsRowLoaders.Clear(); }); } catch (Exception error) { Add(failures, error); }
         foreach (var original in originalTasks)
             try { await original; } catch (Exception error) { Add(failures, error); }
         lock (_originalTasksSync)
@@ -703,6 +744,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         // The scene/semaphore/lifetime are disposed only after original operations settle.
         try { await OnUiAsync(() => _scene?.Dispose()); } catch (Exception error) { Add(failures, error); }
         try { _originalHostRetirement.Dispose(); } catch (Exception error) { Add(failures, error); }
+        try { _folderIcon?.Dispose(); _folderIcon = null; } catch (Exception error) { Add(failures, error); }
         try { _operations.Dispose(); } catch (Exception error) { Add(failures, error); }
         try { _lifetime.Dispose(); } catch (Exception error) { Add(failures, error); }
         ThrowOriginalFailures(failures, "Original Files work and view close failed.");
@@ -719,6 +761,52 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     // Synchronous UI disposal begins, but never substitutes for, the owning awaited close.
     public void Dispose() => _ = CloseAndDrainAsync();
     public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+    private Avalonia.Media.Imaging.Bitmap? _folderIcon;
+    private Avalonia.Media.IImage? ResolveFilesImage(string source, Control target)
+    {
+        if (source != "files:folder") return null;
+        if (_folderIcon is null)
+        {
+            using var stream = typeof(FilesNativeBrowserSurface).Assembly.GetManifestResourceStream("HavenOS.Files.NativeUI.Assets.FolderIcon.png")
+                ?? throw new InvalidDataException("The maintained Files folder artwork is unavailable.");
+            _folderIcon = new Avalonia.Media.Imaging.Bitmap(stream);
+        }
+        return _folderIcon;
+    }
+
+    private readonly Dictionary<CuiControlLoader, CuiViewModel> _detailsRowLoaders = [];
+    private bool _detailsRowsWide;
+    private Control BuildDetailsRow(HostedItemMetadata? item)
+    {
+        if (item is null) return new TextBlock();
+        const string resource = "HavenOS.Files.NativeUI.UI.FilesDetailsRow.cui";
+        using var stream = typeof(FilesNativeBrowserSurface).Assembly.GetManifestResourceStream(resource)
+            ?? throw new InvalidDataException("The Files details row CUI is unavailable.");
+        using var reader = new StreamReader(stream);
+        var parser = new CuiRichParser(); var document = parser.Parse(reader.ReadToEnd(), resource);
+        var registry = new CuiControlRegistry();
+        registry.RegisterImageSourceResolver(ResolveFilesImage);
+        var loader = new CuiControlLoader(registry);
+        var values = new CuiViewModel();
+        values.Set("Columns", Bounds.Width >= 900 ? "1fr 150 100 90" : "1fr 0 0 0");
+        values.Set("ShowMetadata", Bounds.Width >= 900);
+        values.Set("IsFolder", item.Kind == HostedItemKind.Folder);
+        values.Set("Name", item.Name);
+        values.Set("Modified", item.ModifiedAt.ToLocalTime().ToString("g"));
+        values.Set("Kind", item.Kind == HostedItemKind.Folder ? "File folder" : string.IsNullOrEmpty(Path.GetExtension(item.Name)) ? item.Kind.ToString() : Path.GetExtension(item.Name).TrimStart('.').ToUpperInvariant() + " file");
+        values.Set("Size", item.SizeBytes is { } bytes ? $"{bytes:N0} B" : "—");
+        loader.SetBindingContext(values);
+        var loaded = loader.TryLoad(document);
+        if (loaded.Root is null || parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error) ||
+            loaded.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error))
+        { loader.Dispose(); throw new InvalidDataException("The Files details row could not be rendered."); }
+        _detailsRowLoaders.Add(loader, values);
+        var root = loaded.Root;
+        // Browse may detach this same Files view when selecting another tab.
+        // Keep row bindings alive until the original surface performs its owning close.
+        return root;
+    }
+
     private static CuiDocument LoadDocument()
     {
         const string name = "HavenOS.Files.NativeUI.UI.FilesBrowser.cui";

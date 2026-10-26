@@ -123,6 +123,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "status.message" => snapshot.StatusMessage,
             "selection.id" => snapshot.Selection?.Id,
             "selection.name" => snapshot.Selection?.Name ?? string.Empty,
+            "selection.iconSource" => IconSource(snapshot.BuiltIns.Concat(snapshot.CustomSpaces).FirstOrDefault(item => item.Id == snapshot.Selection?.Id)?.IconKey),
             "selection.description" => snapshot.Selection?.Description ?? string.Empty,
             "selection.isBuiltIn" => snapshot.Selection?.IsBuiltIn ?? false,
             "selection.canEdit" => snapshot.Selection?.CanEdit ?? false,

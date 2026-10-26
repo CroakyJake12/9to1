@@ -14,10 +14,12 @@ public class ChromiumRuntimeResolver
 
     private readonly ChromiumLocator _installed;
     private readonly BundledChromiumLocator _bundled;
+    private readonly bool _useExplicitRuntime;
 
     protected ChromiumRuntimeResolver(ChromiumLocator? installed = null,
                                       BundledChromiumLocator? bundled = null)
     {
+        _useExplicitRuntime = installed is null && bundled is null;
         _installed = installed ?? ChromiumLocator.Instance;
         _bundled = bundled ?? BundledChromiumLocator.Instance;
     }
@@ -43,6 +45,6 @@ public class ChromiumRuntimeResolver
     public virtual string? Find()
     {
         if (!OperatingSystem.IsLinux()) return null;
-        return _bundled.Find() ?? _installed.Find();
+        return (_useExplicitRuntime ? ExplicitChromiumRuntime.FindConfigured() : null) ?? _bundled.Find() ?? _installed.Find();
     }
 }

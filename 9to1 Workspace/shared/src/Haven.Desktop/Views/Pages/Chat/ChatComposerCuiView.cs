@@ -204,6 +204,9 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             case "Composer.Placeholder":
                 value = _source.Placeholder;
                 return true;
+            case "Composer.IsExpanded":
+                value = _focused || _source.HasPendingMessage || _source.Chips.Count > 0 || _source.IsSending || _settingsOpen || _emojiOpen;
+                return true;
             case "Composer.HasChips":
                 value = _source.Chips.Count > 0;
                 return true;
