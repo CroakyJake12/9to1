@@ -159,8 +159,9 @@ public sealed class DeveloperProjectTemplateMaterializer(
     {
         ArgumentNullException.ThrowIfNull(providers);
         var snapshot = providers.ToArray();
-        if (snapshot.Any(provider => provider is null || string.IsNullOrWhiteSpace(provider.ProviderId)))
-            throw new ArgumentException("Every template content provider must have a stable identity.", nameof(providers));
+        if (snapshot.Any(provider => provider is null || string.IsNullOrWhiteSpace(provider.ProviderId)) ||
+            snapshot.Select(provider => provider.ProviderId).Distinct(StringComparer.Ordinal).Count() != snapshot.Length)
+            throw new ArgumentException("Every template content provider must have a distinct, stable identity.", nameof(providers));
         return snapshot;
     }
 

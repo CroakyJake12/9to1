@@ -27,6 +27,57 @@ namespace Haven.Desktop.Tests;
 /// </summary>
 public sealed partial class CanonicalCompatibleTaskContextCompositionTests
 {
+    [Fact]
+    public async Task Build_template_composition_discovers_registered_content_providers_without_substituting_their_identity()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var extension = new RegisteredTemplateContentProvider();
+        using var services = new ServiceCollection()
+            .AddSingleton<IDeveloperProjectTemplateContentProvider>(extension)
+            .BuildServiceProvider();
+
+        var providers = BuildBrowseAppContentFactory.ResolveTemplateProviders(services);
+        Assert.Contains(providers, provider => ReferenceEquals(provider, extension));
+        Assert.Contains(providers, provider => provider is DeveloperCuiProjectTemplateProvider);
+        var catalog = new DeveloperProjectCatalog(providers);
+        var option = Assert.Single((await catalog.SearchAsync(new(ProviderId: extension.ProviderId), token).ConfigureAwait(false)).Value!);
+        Assert.Equal(extension.ProviderId, option.Template.ProviderId);
+        Assert.Equal("fixture-component", option.Template.TemplateId);
+        var materializer = new DeveloperProjectTemplateMaterializer(providers);
+        var prepared = await materializer.PrepareAsync(option, "Fixture Component", token).ConfigureAwait(false);
+        Assert.True(prepared.Succeeded);
+        Assert.Equal(extension.ProviderId, prepared.Value!.ProviderId);
+        Assert.Equal("Widget.cui", Assert.Single(prepared.Value.Files).RelativePath);
+    }
+
+    private sealed class RegisteredTemplateContentProvider : IDeveloperProjectTemplateContentProvider
+    {
+        internal const string ActualProviderId = "test.registered-template-provider";
+        private static readonly DeveloperProjectTemplate Template = new("fixture-component", "Fixture CUI component", "component",
+            ["CUI"], [], [], ["Build"], [], ActualProviderId, false, ["CUI runtime"]);
+        public string ProviderId => ActualProviderId;
+        public Task<IReadOnlyList<DeveloperProjectTemplate>> GetTemplatesAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<DeveloperProjectTemplate>>([Template]);
+        }
+        public Task<IReadOnlyList<DeveloperToolchainReadiness>> GetReadinessAsync(
+            DeveloperProjectTemplate template, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<DeveloperToolchainReadiness>>([]);
+        }
+        public Task<IReadOnlyList<DeveloperProjectTemplateFile>> GetFilesAsync(
+            DeveloperProjectTemplate template, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!StringComparer.Ordinal.Equals(template.ProviderId, ProviderId) ||
+                !StringComparer.Ordinal.Equals(template.TemplateId, Template.TemplateId))
+                throw new InvalidOperationException("Only this provider's exact template is supported.");
+            return Task.FromResult<IReadOnlyList<DeveloperProjectTemplateFile>>([new("Widget.cui", "<Cui version=\"1\" />")]);
+        }
+    }
+
     private sealed class BuildTestBorrowedResources : IBuildBorrowedResources
     {
         private readonly ICuiSceneReadiness _readiness;

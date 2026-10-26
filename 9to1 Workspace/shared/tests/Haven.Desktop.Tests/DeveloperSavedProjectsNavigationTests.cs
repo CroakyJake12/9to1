@@ -88,6 +88,103 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
         });
     }
 
+    [AvaloniaFact]
+    public async Task Template_catalogue_uses_typed_facets_and_provider_scoped_selection_keys()
+    {
+        await Run(async rig =>
+        {
+            var token = TestContext.Current.CancellationToken;
+            var landing = BuildLanding(rig);
+            var web = new NavigationTemplateProvider("provider.web", new("shared-template", "CUI Web", "web",
+                ["CUI"], [], ["Browser"], ["Build"], [], "provider.web", true, ["browser"], "org.web"));
+            var desktop = new NavigationTemplateProvider("provider.desktop", new("shared-template", "CUI Desktop", "desktop",
+                ["CUI"], [".NET"], ["Linux"], ["Build"],
+                [new("dotnet", "C#", ".NET SDK", null, null, true)], "provider.desktop", false, ["net10.0"], "org.desktop"),
+                [new("dotnet", DeveloperToolchainState.MissingCompilerOrRuntime, ">=10", null, "install-dotnet", "Install the required SDK.")]);
+            var providers = new IDeveloperProjectTemplateContentProvider[] { web, desktop };
+            var catalog = new DeveloperProjectCatalog(providers);
+            var materializer = new DeveloperProjectTemplateMaterializer(providers);
+            using var connection = new CancellationTokenSource(); using var window = new CancellationTokenSource();
+            var page = new DeveloperSavedProjectsPage(landing.Catalog, landing.Spaces, ReadyReadiness.Instance, () => { },
+                view => Task.CompletedTask, (space, settlement) => Task.CompletedTask, null, null,
+                connection.Token, window.Token, actual => { }, templateCatalog: catalog, templateMaterializer: materializer,
+                registerTemplateProject: (folder, payload, cancellation) => Task.FromResult(new DeveloperProjectReference(
+                    Guid.NewGuid(), 0, Guid.NewGuid(), 0, Guid.NewGuid())),
+                openTemplateProject: (reference, payload) => Task.CompletedTask);
+            try
+            {
+                await page.ActivateAsync(token);
+                Assert.True(page.TryGetValue("Templates", out var unfilteredObject));
+                var unfilteredRows = Assert.IsAssignableFrom<object[]>(unfilteredObject);
+                Assert.Equal(2, unfilteredRows.Length);
+                var selectionKeys = unfilteredRows.Select(row =>
+                {
+                    Assert.True(((ICuiRepeatItemBindingContext)page).TryGetItemValue(row, "SelectionKey", out var key));
+                    return Assert.IsType<string>(key);
+                }).ToArray();
+                Assert.Equal(2, selectionKeys.Distinct(StringComparer.Ordinal).Count());
+                Assert.True(page.TryGetValue("TemplateProviderOptions", out var providersObject));
+                var providerOptions = Assert.IsType<string[]>(providersObject);
+                var providerIndex = Array.IndexOf(providerOptions, "provider.desktop");
+                Assert.True(providerIndex > 0);
+                Assert.True(page.TrySetValue("TemplateProviderIndex", providerIndex));
+
+                Assert.True(page.TryGetValue("TemplateProjectTypeOptions", out var projectTypesObject));
+                var projectTypeIndex = Array.IndexOf(Assert.IsType<string[]>(projectTypesObject), "desktop");
+                Assert.True(projectTypeIndex > 0);
+                Assert.True(page.TrySetValue("TemplateProjectTypeIndex", projectTypeIndex));
+                Assert.True(page.TryGetValue("TemplateLanguageOptions", out var languagesObject));
+                var languageIndex = Array.IndexOf(Assert.IsType<string[]>(languagesObject), "CUI");
+                Assert.True(languageIndex > 0);
+                Assert.True(page.TrySetValue("TemplateLanguageIndex", languageIndex));
+                Assert.True(page.TryGetValue("TemplateFrameworkOptions", out var frameworksObject));
+                var frameworkIndex = Array.IndexOf(Assert.IsType<string[]>(frameworksObject), ".NET");
+                Assert.True(frameworkIndex > 0);
+                Assert.True(page.TrySetValue("TemplateFrameworkIndex", frameworkIndex));
+                Assert.True(page.TryGetValue("TemplateRuntimeOptions", out var runtimesObject));
+                var runtimeIndex = Array.IndexOf(Assert.IsType<string[]>(runtimesObject), "net10.0");
+                Assert.True(runtimeIndex > 0);
+                Assert.True(page.TrySetValue("TemplateRuntimeIndex", runtimeIndex));
+                Assert.True(page.TryGetValue("TemplatePlatformOptions", out var platformsObject));
+                var platformIndex = Array.IndexOf(Assert.IsType<string[]>(platformsObject), "Linux");
+                Assert.True(platformIndex > 0);
+                Assert.True(page.TrySetValue("TemplatePlatformIndex", platformIndex));
+                Assert.True(page.TryGetValue("TemplateOrganisationOptions", out var organisationObject));
+                var organisationIndex = Array.IndexOf(Assert.IsType<string[]>(organisationObject), "org.desktop");
+                Assert.True(organisationIndex > 0);
+                Assert.True(page.TrySetValue("TemplateOrganisationIndex", organisationIndex));
+                Assert.True(page.TrySetValue("TemplateReadinessIndex", 2));
+
+                Assert.True(page.TryGetValue("Templates", out var templatesObject));
+                var rows = Assert.IsAssignableFrom<object[]>(templatesObject);
+                var row = Assert.Single(rows);
+                Assert.True(((ICuiRepeatItemBindingContext)page).TryGetItemValue(row, "ProviderId", out var actualProvider));
+                Assert.Equal("provider.desktop", actualProvider);
+                Assert.True(((ICuiRepeatItemBindingContext)page).TryGetItemValue(row, "SelectionKey", out var keyObject));
+                Assert.True(page.TrySetValue("ManualFolderPath", Path.GetFullPath("template-project")));
+                await page.DispatchAsync("dev.templates.select", keyObject, token);
+                Assert.True(page.TryGetValue("SelectedTemplate", out var selectedObject));
+                Assert.Contains("provider.desktop", Assert.IsType<string>(selectedObject));
+                Assert.True(page.TryGetValue("TemplateFilterStatus", out var statusObject));
+                Assert.Contains("1 of 2", Assert.IsType<string>(statusObject));
+                Assert.True(page.IsActionAvailable("dev.templates.review"));
+            }
+            finally { await page.CloseAndDrainAsync(); }
+        });
+    }
+
+    private sealed class NavigationTemplateProvider(string providerId, DeveloperProjectTemplate template,
+        IReadOnlyList<DeveloperToolchainReadiness>? readiness = null) : IDeveloperProjectTemplateContentProvider
+    {
+        public string ProviderId => providerId;
+        public Task<IReadOnlyList<DeveloperProjectTemplate>> GetTemplatesAsync(CancellationToken cancellationToken)
+        { cancellationToken.ThrowIfCancellationRequested(); return Task.FromResult<IReadOnlyList<DeveloperProjectTemplate>>([template]); }
+        public Task<IReadOnlyList<DeveloperToolchainReadiness>> GetReadinessAsync(DeveloperProjectTemplate selected, CancellationToken cancellationToken)
+        { cancellationToken.ThrowIfCancellationRequested(); return Task.FromResult(readiness ?? Array.Empty<DeveloperToolchainReadiness>()); }
+        public Task<IReadOnlyList<DeveloperProjectTemplateFile>> GetFilesAsync(DeveloperProjectTemplate selected, CancellationToken cancellationToken)
+        { cancellationToken.ThrowIfCancellationRequested(); return Task.FromResult<IReadOnlyList<DeveloperProjectTemplateFile>>([new("Main.cui", "<Cui version=\"1\" />")]); }
+    }
+
     private sealed class NavigationMetadataStore(IReadOnlyList<DeveloperWorkspace> workspaces) : IDeveloperWorkspaceStore
     {
         internal int ListCalls, Writes;

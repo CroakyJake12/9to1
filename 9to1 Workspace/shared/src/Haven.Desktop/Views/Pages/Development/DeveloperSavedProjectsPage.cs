@@ -38,10 +38,29 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private readonly Func<DeveloperProjectReference, DeveloperProjectTemplateMaterialization, Task>? _openTemplateProject;
     private DeveloperProjectTemplateOption[] _templateOptions = [];
     private string _templateQuery = "";
+    private string[] _templateProviderChoices = ["All providers"];
+    private string?[] _templateProviderValues = [null];
+    private string[] _templateProjectTypeChoices = ["All project types"];
+    private string?[] _templateProjectTypeValues = [null];
+    private string[] _templateLanguageChoices = ["All languages"];
+    private string?[] _templateLanguageValues = [null];
+    private string[] _templateFrameworkChoices = ["All frameworks"];
+    private string?[] _templateFrameworkValues = [null];
+    private string[] _templateRuntimeChoices = ["All target runtimes"];
+    private string?[] _templateRuntimeValues = [null];
+    private string[] _templatePlatformChoices = ["All platforms"];
+    private string?[] _templatePlatformValues = [null];
+    private string[] _templateSurfaceChoices = ["All surfaces"];
+    private string?[] _templateSurfaceValues = [null];
+    private string[] _templateOrganisationChoices = ["All organisation templates"];
+    private string?[] _templateOrganisationValues = [null];
+    private int _templateProviderIndex, _templateProjectTypeIndex, _templateLanguageIndex, _templateFrameworkIndex, _templateRuntimeIndex, _templatePlatformIndex,
+        _templateSurfaceIndex, _templateOrganisationIndex, _templateReadinessIndex;
     private string _templateProjectName = "";
     private string _templateReviewStatus = "Select a provider template and review its exact files before creating a project.";
     private string _templateProjectStatus = "";
     private string _selectedTemplateId = "";
+    private string _selectedTemplateProviderId = "";
     private long _templateInputRevision;
     private bool _templateBusy, _templateCatalogAvailable;
     private TemplateReview? _templateReview;
@@ -244,10 +263,10 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             if (_readSequence != sequence) return;
             if (after.State != CuiSceneAvailabilityState.Ready) { _status = after.Message; _manualRows = []; _manualMetadataAvailable = false; _templateOptions = []; _templateCatalogAvailable = false; return; }
             _page = page; _manualRows = manualRows; _metadataAvailable = true; _manualMetadataAvailable = manualAvailable;
+            RebuildTemplateFacetsLocked(templates);
             _templateOptions = templates; _templateCatalogAvailable = templateAvailable; _manualCatalogStatus = manualCoverage;
-            if (!templates.Any(option => StringComparer.Ordinal.Equals(option.Template.TemplateId, _selectedTemplateId)))
-                _selectedTemplateId = "";
-            _templateReview = null;
+            if (!templates.Any(IsSelectedTemplate)) ClearTemplateSelectionLocked("Template catalogue refreshed. Select and review a current provider template.");
+            else _templateReview = null;
             _templateReviewStatus = templateAvailable
                 ? "Select a provider template and review its exact files before creating a project."
                 : "The project-template provider catalogue is unavailable. Refresh before creating from a template.";
@@ -280,6 +299,25 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                 "ManualBusy" => _manualBusy,
                 "Templates" => FilteredTemplateItems(),
                 "TemplateQuery" => _templateQuery,
+                "TemplateFilterStatus" => TemplateFilterStatus(),
+                "TemplateProviderOptions" => _templateProviderChoices.ToArray(),
+                "TemplateProviderIndex" => _templateProviderIndex,
+                "TemplateProjectTypeOptions" => _templateProjectTypeChoices.ToArray(),
+                "TemplateProjectTypeIndex" => _templateProjectTypeIndex,
+                "TemplateLanguageOptions" => _templateLanguageChoices.ToArray(),
+                "TemplateLanguageIndex" => _templateLanguageIndex,
+                "TemplateFrameworkOptions" => _templateFrameworkChoices.ToArray(),
+                "TemplateFrameworkIndex" => _templateFrameworkIndex,
+                "TemplateRuntimeOptions" => _templateRuntimeChoices.ToArray(),
+                "TemplateRuntimeIndex" => _templateRuntimeIndex,
+                "TemplatePlatformOptions" => _templatePlatformChoices.ToArray(),
+                "TemplatePlatformIndex" => _templatePlatformIndex,
+                "TemplateSurfaceOptions" => _templateSurfaceChoices.ToArray(),
+                "TemplateSurfaceIndex" => _templateSurfaceIndex,
+                "TemplateOrganisationOptions" => _templateOrganisationChoices.ToArray(),
+                "TemplateOrganisationIndex" => _templateOrganisationIndex,
+                "TemplateReadinessOptions" => new[] { "Any toolchain readiness", "Ready to create", "Required toolchain unavailable" },
+                "TemplateReadinessIndex" => _templateReadinessIndex,
                 "TemplateProjectName" => _templateProjectName,
                 "SelectedTemplate" => SelectedTemplateStatus(),
                 "CanReviewTemplate" => IsActionAvailable("dev.templates.review"),
@@ -292,7 +330,13 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         }
         return path is "Projects" or "Coverage" or "Status" or "CanRefresh" or "CanOpenSpace" or "CanCreateManual" or
             "ManualFolderPath" or "ManualStatus" or "RetainedAttempt" or "ManualBusy" or "ProjectQuery" or "ProjectFilterStatus" or "CanPreviousProjectPage" or "CanNextProjectPage" or
-            "Templates" or "TemplateQuery" or "TemplateProjectName" or "SelectedTemplate" or "CanReviewTemplate" or "CanCreateTemplateProject" or "TemplateReviewStatus" or "TemplateFiles" or "TemplateProjectStatus";
+            "Templates" or "TemplateQuery" or "TemplateFilterStatus" or
+            "TemplateProviderOptions" or "TemplateProviderIndex" or "TemplateProjectTypeOptions" or "TemplateProjectTypeIndex" or
+            "TemplateLanguageOptions" or "TemplateLanguageIndex" or "TemplateFrameworkOptions" or "TemplateFrameworkIndex" or
+            "TemplateRuntimeOptions" or "TemplateRuntimeIndex" or "TemplatePlatformOptions" or "TemplatePlatformIndex" or
+            "TemplateSurfaceOptions" or "TemplateSurfaceIndex" or "TemplateOrganisationOptions" or "TemplateOrganisationIndex" or
+            "TemplateReadinessOptions" or "TemplateReadinessIndex" or "TemplateProjectName" or "SelectedTemplate" or
+            "CanReviewTemplate" or "CanCreateTemplateProject" or "TemplateReviewStatus" or "TemplateFiles" or "TemplateProjectStatus";
     }
 
     /// <summary>Writable metadata inputs from the canonical landing document. A typed folder path
@@ -300,7 +344,24 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     /// Home admission. Filter writeback changes the visible page and withdraws hidden row keys.</summary>
     public bool TrySetValue(string path, object? value)
     {
-        if (value is not string text || path is not ("ManualFolderPath" or "ProjectQuery" or "TemplateQuery")) return false;
+        var indexCount = path switch
+        {
+            "TemplateProviderIndex" => _templateProviderChoices.Length,
+            "TemplateProjectTypeIndex" => _templateProjectTypeChoices.Length,
+            "TemplateLanguageIndex" => _templateLanguageChoices.Length,
+            "TemplateFrameworkIndex" => _templateFrameworkChoices.Length,
+            "TemplateRuntimeIndex" => _templateRuntimeChoices.Length,
+            "TemplatePlatformIndex" => _templatePlatformChoices.Length,
+            "TemplateSurfaceIndex" => _templateSurfaceChoices.Length,
+            "TemplateOrganisationIndex" => _templateOrganisationChoices.Length,
+            "TemplateReadinessIndex" => 3,
+            _ => 0
+        };
+        var stringInput = value is string && (path is "ManualFolderPath" or "ProjectQuery" or "TemplateQuery");
+        var filterInput = value is int selectedIndex && indexCount > 0 && selectedIndex >= 0 && selectedIndex < indexCount;
+        if (!stringInput && !filterInput) return false;
+        var text = value as string;
+        var index = value is int number ? number : 0;
         long generation; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
         {
@@ -309,19 +370,24 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             {
                 if (path == "ManualFolderPath")
                 {
-                    _manualFolderPath = text;
-                    _templateProjectName = Path.GetFileName(Path.TrimEndingDirectorySeparator(text));
+                    _manualFolderPath = text!;
+                    _templateProjectName = Path.GetFileName(Path.TrimEndingDirectorySeparator(text!));
                     _templateInputRevision = checked(_templateInputRevision + 1);
                     _templateReview = null;
                     _templateReviewStatus = "The target folder changed. Review the exact files for this folder again.";
                 }
-                else if (path == "ProjectQuery") { _projectQuery = text; _projectPage = 0; }
+                else if (path == "ProjectQuery") { _projectQuery = text!; _projectPage = 0; }
+                else if (path == "TemplateQuery")
+                {
+                    _templateQuery = text!;
+                    _templateInputRevision = checked(_templateInputRevision + 1);
+                    ClearTemplateSelectionLocked("Template input changed. Select and review the current filtered template again.");
+                }
                 else
                 {
-                    _templateQuery = text;
                     _templateInputRevision = checked(_templateInputRevision + 1);
-                    _templateReview = null;
-                    _templateReviewStatus = "Template input changed. Review the exact current files again.";
+                    SetTemplateFilterIndexLocked(path, index);
+                    ClearTemplateSelectionLocked("Template filters changed. Select and review a template from the current results.");
                 }
             }
             NotifyOriginal(original);
@@ -366,7 +432,9 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         {
             (matched, value) = path switch
             {
+                nameof(TemplateItem.SelectionKey) => (true, (object?)templateItem.SelectionKey),
                 nameof(TemplateItem.TemplateId) => (true, (object?)templateItem.TemplateId),
+                nameof(TemplateItem.ProviderId) => (true, templateItem.ProviderId),
                 nameof(TemplateItem.DisplayName) => (true, templateItem.DisplayName),
                 nameof(TemplateItem.Summary) => (true, templateItem.Summary),
                 _ => (false, (object?)null)
@@ -400,7 +468,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                 "dev.references.create-manual-project" => _metadataAvailable && _manualMetadataAvailable && !_manualBusy && _createManualProject is not null && _openExistingManual is not null && !string.IsNullOrWhiteSpace(_manualFolderPath),
                 "dev.templates.select" => _metadataAvailable && _templateCatalogAvailable && FilteredTemplateItems().Length > 0 && !_templateBusy,
                 "dev.templates.review" => _metadataAvailable && _templateCatalogAvailable && !_templateBusy &&
-                    _templateOptions.Any(option => StringComparer.Ordinal.Equals(option.Template.TemplateId, _selectedTemplateId)) && SafeProjectName(_templateProjectName),
+                    _templateOptions.Any(option => IsSelectedTemplate(option) && CurrentTemplateQuery().Matches(option)) && SafeProjectName(_templateProjectName),
                 "dev.templates.create" => _metadataAvailable && _templateCatalogAvailable && !_templateBusy && _registerTemplateProject is not null &&
                     _openTemplateProject is not null && !string.IsNullOrWhiteSpace(_manualFolderPath) && Path.IsPathFullyQualified(_manualFolderPath) && IsCurrentTemplateReview(),
                 _ => false
@@ -563,23 +631,133 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private TemplateItem[] FilteredTemplateItems()
     {
         if (!_templateCatalogAvailable) return [];
-        var query = _templateQuery.Trim();
-        return _templateOptions.Where(option => query.Length == 0 ||
-                option.Template.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                option.Template.TemplateId.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                option.Template.ProjectTypeId.Contains(query, StringComparison.OrdinalIgnoreCase))
+        var query = CurrentTemplateQuery();
+        return _templateOptions.Where(query.Matches)
             .OrderBy(option => option.Template.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .Select(option => new TemplateItem(option.Template.TemplateId, option.Template.DisplayName,
-                "Provider " + option.Template.ProviderId + " · " +
-                (option.Template.Languages.Count == 0 ? "provider-defined source" : string.Join(", ", option.Template.Languages)) +
-                " · " + (option.CanCreate ? "toolchains ready" : "required toolchain unavailable")))
+            .ThenBy(option => option.Template.ProviderId, StringComparer.Ordinal)
+            .ThenBy(option => option.Template.TemplateId, StringComparer.Ordinal)
+            .Select(option => new TemplateItem(TemplateSelectionKey(option.Template), option.Template.ProviderId,
+                option.Template.TemplateId, option.Template.DisplayName, TemplateSummary(option)))
             .ToArray();
     }
 
+    private string TemplateFilterStatus()
+    {
+        if (!_templateCatalogAvailable) return "Project-template catalogue unavailable; refresh after connecting providers.";
+        var visible = FilteredTemplateItems().Length;
+        return visible == 0
+            ? $"No templates match the current filters ({_templateOptions.Length} provider templates loaded)."
+            : $"Showing {visible} of {_templateOptions.Length} templates from the current provider catalogue.";
+    }
+
+    private static string TemplateSummary(DeveloperProjectTemplateOption option)
+    {
+        var template = option.Template;
+        var metadata = new List<string> { "Provider " + template.ProviderId, "Project type " + template.ProjectTypeId };
+        if (template.TargetRuntimes is { Count: > 0 }) metadata.Add("Runtime " + string.Join(", ", template.TargetRuntimes));
+        if (template.Platforms.Count > 0) metadata.Add("Platform " + string.Join(", ", template.Platforms));
+        if (template.ProductSurfaces.Count > 0) metadata.Add("Surface " + string.Join(", ", template.ProductSurfaces));
+        if (!string.IsNullOrWhiteSpace(template.OrganisationTemplateId)) metadata.Add("Organisation template " + template.OrganisationTemplateId);
+        if (template.Languages.Count > 0) metadata.Add("Language " + string.Join(", ", template.Languages));
+        metadata.Add(option.CanCreate ? "required toolchains ready" : "required toolchain unavailable");
+        return string.Join(" · ", metadata);
+    }
+
+    private DeveloperProjectTemplateQuery CurrentTemplateQuery() => new(
+        SearchText: _templateQuery,
+        Platform: SelectedFacet(_templatePlatformValues, _templatePlatformIndex),
+        ProductSurface: SelectedFacet(_templateSurfaceValues, _templateSurfaceIndex),
+        ToolchainsReady: _templateReadinessIndex switch { 1 => true, 2 => false, _ => null },
+        Language: SelectedFacet(_templateLanguageValues, _templateLanguageIndex),
+        Framework: SelectedFacet(_templateFrameworkValues, _templateFrameworkIndex),
+        ProjectType: SelectedFacet(_templateProjectTypeValues, _templateProjectTypeIndex),
+        TargetRuntime: SelectedFacet(_templateRuntimeValues, _templateRuntimeIndex),
+        ProviderId: SelectedFacet(_templateProviderValues, _templateProviderIndex),
+        OrganisationTemplateId: SelectedFacet(_templateOrganisationValues, _templateOrganisationIndex));
+
+    private static string? SelectedFacet(string?[] values, int index) =>
+        index > 0 && index < values.Length ? values[index] : null;
+
+    private void RebuildTemplateFacetsLocked(IReadOnlyList<DeveloperProjectTemplateOption> templates)
+    {
+        var provider = SelectedFacet(_templateProviderValues, _templateProviderIndex);
+        var projectType = SelectedFacet(_templateProjectTypeValues, _templateProjectTypeIndex);
+        var language = SelectedFacet(_templateLanguageValues, _templateLanguageIndex);
+        var framework = SelectedFacet(_templateFrameworkValues, _templateFrameworkIndex);
+        var runtime = SelectedFacet(_templateRuntimeValues, _templateRuntimeIndex);
+        var platform = SelectedFacet(_templatePlatformValues, _templatePlatformIndex);
+        var surface = SelectedFacet(_templateSurfaceValues, _templateSurfaceIndex);
+        var organisation = SelectedFacet(_templateOrganisationValues, _templateOrganisationIndex);
+        (_templateProviderChoices, _templateProviderValues) = BuildTemplateFacet(templates.Select(option => option.Template.ProviderId), "All providers");
+        (_templateProjectTypeChoices, _templateProjectTypeValues) = BuildTemplateFacet(templates.Select(option => option.Template.ProjectTypeId), "All project types");
+        (_templateLanguageChoices, _templateLanguageValues) = BuildTemplateFacet(templates.SelectMany(option => option.Template.Languages), "All languages");
+        (_templateFrameworkChoices, _templateFrameworkValues) = BuildTemplateFacet(templates.SelectMany(option => option.Template.Frameworks), "All frameworks");
+        (_templateRuntimeChoices, _templateRuntimeValues) = BuildTemplateFacet(
+            templates.SelectMany(option => option.Template.TargetRuntimes ?? Array.Empty<string>()), "All target runtimes");
+        (_templatePlatformChoices, _templatePlatformValues) = BuildTemplateFacet(templates.SelectMany(option => option.Template.Platforms), "All platforms");
+        (_templateSurfaceChoices, _templateSurfaceValues) = BuildTemplateFacet(templates.SelectMany(option => option.Template.ProductSurfaces), "All surfaces");
+        (_templateOrganisationChoices, _templateOrganisationValues) = BuildTemplateFacet(
+            templates.Select(option => option.Template.OrganisationTemplateId), "All organisation templates");
+        _templateProviderIndex = FindFacetIndex(_templateProviderValues, provider);
+        _templateProjectTypeIndex = FindFacetIndex(_templateProjectTypeValues, projectType);
+        _templateLanguageIndex = FindFacetIndex(_templateLanguageValues, language);
+        _templateFrameworkIndex = FindFacetIndex(_templateFrameworkValues, framework);
+        _templateRuntimeIndex = FindFacetIndex(_templateRuntimeValues, runtime);
+        _templatePlatformIndex = FindFacetIndex(_templatePlatformValues, platform);
+        _templateSurfaceIndex = FindFacetIndex(_templateSurfaceValues, surface);
+        _templateOrganisationIndex = FindFacetIndex(_templateOrganisationValues, organisation);
+    }
+
+    private static (string[] Choices, string?[] Values) BuildTemplateFacet(IEnumerable<string?> source, string allLabel)
+    {
+        var values = source.Where(value => !string.IsNullOrWhiteSpace(value)).Cast<string>()
+            .Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray();
+        return ([allLabel, .. values], [null, .. values]);
+    }
+
+    private static int FindFacetIndex(string?[] values, string? selected)
+    {
+        if (selected is null) return 0;
+        var index = Array.FindIndex(values, value => StringComparer.Ordinal.Equals(value, selected));
+        return index < 0 ? 0 : index;
+    }
+
+    private void SetTemplateFilterIndexLocked(string path, int index)
+    {
+        switch (path)
+        {
+            case "TemplateProviderIndex": _templateProviderIndex = index; break;
+            case "TemplateProjectTypeIndex": _templateProjectTypeIndex = index; break;
+            case "TemplateLanguageIndex": _templateLanguageIndex = index; break;
+            case "TemplateFrameworkIndex": _templateFrameworkIndex = index; break;
+            case "TemplateRuntimeIndex": _templateRuntimeIndex = index; break;
+            case "TemplatePlatformIndex": _templatePlatformIndex = index; break;
+            case "TemplateSurfaceIndex": _templateSurfaceIndex = index; break;
+            case "TemplateOrganisationIndex": _templateOrganisationIndex = index; break;
+            case "TemplateReadinessIndex": _templateReadinessIndex = index; break;
+            default: throw new InvalidOperationException("The project-template filter is not a writable facet.");
+        }
+    }
+
+    private void ClearTemplateSelectionLocked(string status)
+    {
+        _selectedTemplateId = "";
+        _selectedTemplateProviderId = "";
+        _templateReview = null;
+        _templateReviewStatus = status;
+    }
+
+    private bool IsSelectedTemplate(DeveloperProjectTemplateOption option) =>
+        StringComparer.Ordinal.Equals(option.Template.ProviderId, _selectedTemplateProviderId) &&
+        StringComparer.Ordinal.Equals(option.Template.TemplateId, _selectedTemplateId);
+
+    private static string TemplateSelectionKey(DeveloperProjectTemplate template) =>
+        template.ProviderId.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" +
+        template.ProviderId + template.TemplateId;
+
     private string SelectedTemplateStatus()
     {
-        var option = _templateOptions.SingleOrDefault(value =>
-            StringComparer.Ordinal.Equals(value.Template.TemplateId, _selectedTemplateId));
+        var option = _templateOptions.SingleOrDefault(IsSelectedTemplate);
         return option is null ? "No project template selected."
             : option.Template.DisplayName + " · provider " + option.Template.ProviderId +
               (option.CanCreate ? " · ready" : " · required toolchain unavailable");
@@ -598,6 +776,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         _templateMaterializer?.IsIssued(review.Materialization) == true &&
         review.InputRevision == _templateInputRevision &&
         StringComparer.Ordinal.Equals(review.TemplateId, _selectedTemplateId) &&
+        StringComparer.Ordinal.Equals(review.ProviderId, _selectedTemplateProviderId) &&
         StringComparer.Ordinal.Equals(review.ProjectName, _templateProjectName) &&
         StringComparer.Ordinal.Equals(review.FolderPath, _manualFolderPath) &&
         review.Files.Length > 0 && review.Files.All(file => file.RelativePath.Length > 0 && !file.RelativePath.Contains('/') && !file.RelativePath.Contains('\\'));
@@ -610,8 +789,12 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     {
         if (command == "dev.templates.select")
         {
-            if (parameter is not string templateId || !_templateOptions.Any(option =>
-                    StringComparer.Ordinal.Equals(option.Template.TemplateId, templateId)))
+            var selectedOption = parameter is string selectionKey
+                ? _templateOptions.SingleOrDefault(option =>
+                    StringComparer.Ordinal.Equals(TemplateSelectionKey(option.Template), selectionKey) &&
+                    CurrentTemplateQuery().Matches(option))
+                : null;
+            if (selectedOption is null)
                 throw new InvalidOperationException("Select a template from the current provider catalogue.");
             long generation; lock (_gate) generation = _generation;
             _work.RunSynchronous(original =>
@@ -619,7 +802,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                 original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
                 lock (_gate)
                 {
-                    _selectedTemplateId = templateId;
+                    _selectedTemplateId = selectedOption.Template.TemplateId;
+                    _selectedTemplateProviderId = selectedOption.Template.ProviderId;
                     _templateReview = null;
                     _templateInputRevision = checked(_templateInputRevision + 1);
                     _templateReviewStatus = "Template selection changed. Review its exact files before creation.";
@@ -639,8 +823,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         lock (_gate)
         {
             actionGeneration = _generation;
-            selected = _templateOptions.SingleOrDefault(option =>
-                StringComparer.Ordinal.Equals(option.Template.TemplateId, _selectedTemplateId));
+            selected = _templateOptions.SingleOrDefault(option => IsSelectedTemplate(option) && CurrentTemplateQuery().Matches(option));
             reviewed = _templateReview;
             projectName = _templateProjectName;
             folderPath = _manualFolderPath;
@@ -684,7 +867,11 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                             _templateReviewStatus = "This route currently supports direct project-root files only. The template was not registered or written.";
                             return;
                         }
-                        if (_templateInputRevision != inputRevision || !StringComparer.Ordinal.Equals(_selectedTemplateId, selected.Template.TemplateId) ||
+                        if (!StringComparer.Ordinal.Equals(prepared.Value.ProviderId, selected.Template.ProviderId) ||
+                            !StringComparer.Ordinal.Equals(prepared.Value.TemplateId, selected.Template.TemplateId) ||
+                            _templateInputRevision != inputRevision ||
+                            !StringComparer.Ordinal.Equals(_selectedTemplateId, selected.Template.TemplateId) ||
+                            !StringComparer.Ordinal.Equals(_selectedTemplateProviderId, selected.Template.ProviderId) ||
                             !StringComparer.Ordinal.Equals(_templateProjectName, projectName))
                         {
                             _templateReview = null;
@@ -693,7 +880,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                         }
                         var files = prepared.Value.Files.Select(file => new TemplateFileReviewItem(file.RelativePath,
                             $"{file.SizeBytes} bytes · SHA-256 {file.ContentSha256}", file.Text)).ToImmutableArray();
-                        _templateReview = new(prepared.Value.TemplateId, projectName, folderPath,
+                        _templateReview = new(prepared.Value.ProviderId, prepared.Value.TemplateId, projectName, folderPath,
                             _templateInputRevision, prepared.Value, files);
                         _templateReviewStatus = "Review every listed source file and the existing empty project folder before Create.";
                     }).ConfigureAwait(false);
@@ -764,9 +951,9 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         }));
     }
 
-    private sealed record TemplateItem(string TemplateId, string DisplayName, string Summary);
+    private sealed record TemplateItem(string SelectionKey, string ProviderId, string TemplateId, string DisplayName, string Summary);
     private sealed record TemplateFileReviewItem(string RelativePath, string Metadata, string Text);
-    private sealed record TemplateReview(string TemplateId, string ProjectName, string FolderPath,
+    private sealed record TemplateReview(string ProviderId, string TemplateId, string ProjectName, string FolderPath,
         long InputRevision, DeveloperProjectTemplateMaterialization Materialization,
         ImmutableArray<TemplateFileReviewItem> Files);
     private ValueTask ChangeProjectPage(string command)

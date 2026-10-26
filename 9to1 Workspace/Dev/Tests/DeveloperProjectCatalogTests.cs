@@ -30,6 +30,37 @@ public sealed class DeveloperProjectCatalogTests
         Assert.Equal(DeveloperOperationErrorCode.CapabilityUnavailable, result.Error!.Code);
     }
 
+    [Fact]
+    public async Task Search_AppliesTypedProjectRuntimeProviderAndOrganisationFiltersToActualProviderMetadata()
+    {
+        var selected = new DeveloperProjectTemplate("shared-template", "CUI Desktop", "desktop", ["CUI"], [], ["Linux"],
+            ["Build"], [], "provider.desktop", true, ["net10.0"], "org.template.desktop");
+        var otherProvider = new CatalogProvider("provider.web", [new DeveloperProjectTemplate("shared-template", "CUI Web", "web",
+            ["CUI"], [], ["Browser"], ["Build"], [], "provider.web", true, ["browser"], "org.template.web")]);
+        var catalog = new DeveloperProjectCatalog([
+            new CatalogProvider("provider.desktop", [selected]),
+            otherProvider
+        ]);
+
+        var result = await catalog.SearchAsync(new(ProjectType: "desktop", TargetRuntime: "NET10", Platform: "linux",
+            ProductSurface: "build", ProviderId: "provider.desktop", OrganisationTemplateId: "org.template.desktop",
+            ToolchainsReady: true));
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(selected, Assert.Single(result.Value!).Template);
+        var wrongProvider = await catalog.SearchAsync(new(ProviderId: "provider.web", ProjectType: "desktop"));
+        Assert.True(wrongProvider.Succeeded);
+        Assert.Empty(wrongProvider.Value!);
+    }
+
+    [Fact]
+    public void Catalog_RejectsDuplicateProviderIdentityInsteadOfSelectingAnArbitraryProvider()
+    {
+        var first = new CatalogProvider("duplicate", []);
+        var second = new CatalogProvider("duplicate", []);
+        Assert.Throws<ArgumentException>(() => new DeveloperProjectCatalog([first, second]));
+    }
+
     private sealed class TemplateProvider(bool omitReadiness = false) : IDeveloperProjectTemplateProvider
     {
         private readonly DeveloperProjectTemplate _template = new(
@@ -42,5 +73,22 @@ public sealed class DeveloperProjectCatalogTests
             DeveloperProjectTemplate template, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<DeveloperToolchainReadiness>>(omitReadiness ? [] :
                 [new("dotnet-sdk-10", DeveloperToolchainState.MissingCompilerOrRuntime, ">= 10.0", null, "install-dotnet", "Install .NET SDK 10 or later.")]);
+    }
+
+    private sealed class CatalogProvider(string providerId, IReadOnlyList<DeveloperProjectTemplate> templates)
+        : IDeveloperProjectTemplateProvider
+    {
+        public string ProviderId => providerId;
+        public Task<IReadOnlyList<DeveloperProjectTemplate>> GetTemplatesAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(templates);
+        }
+        public Task<IReadOnlyList<DeveloperToolchainReadiness>> GetReadinessAsync(
+            DeveloperProjectTemplate template, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<DeveloperToolchainReadiness>>([]);
+        }
     }
 }
