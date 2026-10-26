@@ -98,11 +98,12 @@ public sealed class ChatAddMenuNativePopupTests
             Assert.Same(popupHost, TopLevel.GetTopLevel(popupHost)?.FocusManager?.GetFocusedElement());
             var menuRouter = new HavenInputRouter(popupHost.Root!);
             Click(menuRouter, scene.AddMenuPrefab.GetComponent<HavenButton>("Agents"));
-            window.UpdateLayout();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.Equal(HavenVisibility.Visible, scene.CatalogPanel.GetValue(HavenProperties.Visibility));
             Assert.Equal(HavenVisibility.Collapsed, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
                 .GetValue(HavenProperties.Visibility));
             Click(menuRouter, scene.AddMenuPrefab.GetComponent<HavenButton>("CatalogBack"));
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.Equal(HavenVisibility.Visible, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
                 .GetValue(HavenProperties.Visibility));
 
@@ -111,7 +112,7 @@ public sealed class ChatAddMenuNativePopupTests
             var selected = new List<Haven.Desktop.Views.Shell.TopRail.AddMenu.AddMenuAction>();
             scene.AddActionSelected += (_, action) => selected.Add(action);
             scene.ShowMentionSearch("files");
-            window.UpdateLayout();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.True(popup.IsOpen);
             Assert.Equal(HavenVisibility.Visible, scene.CatalogPanel.GetValue(HavenProperties.Visibility));
             var fileRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
@@ -129,14 +130,14 @@ public sealed class ChatAddMenuNativePopupTests
             scene.Input.Text = "@f";
             scene.Input.PlaceCaretAtEnd();
             scene.ShowMentionSearch("f");
-            window.UpdateLayout();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.True(popup.IsOpen);
             Assert.True(message.IsFocused);
             Assert.Equal(2, message.CaretIndex);
             message.Text += "iles";
             message.CaretIndex = message.Text.Length;
             scene.ShowMentionSearch("files");
-            window.UpdateLayout();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.True(message.IsFocused);
             Assert.Equal("@files", scene.Input.Text);
             Assert.Equal(scene.Input.Text.Length, message.CaretIndex);
@@ -153,7 +154,7 @@ public sealed class ChatAddMenuNativePopupTests
             // An explicit Add open takes keyboard focus for row navigation, then owner detachment
             // retires the native host so it cannot leave an invisible layer intercepting input.
             scene.ShowAddMenu();
-            window.UpdateLayout();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.True(popup.IsOpen);
             Assert.Same(popupHost, TopLevel.GetTopLevel(popupHost)?.FocusManager?.GetFocusedElement());
             addButton.Focus();
@@ -162,7 +163,7 @@ public sealed class ChatAddMenuNativePopupTests
             Assert.True(addButton.IsFocused);
 
             scene.ShowAddMenu();
-            window.UpdateLayout();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.True(popup.IsOpen);
             window.Content = new Border();
             window.UpdateLayout();
@@ -189,6 +190,7 @@ public sealed class ChatAddMenuNativePopupTests
         for (var attempt = 0; attempt < 30; attempt++)
         {
             window.UpdateLayout();
+            popupHost.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
             if (!requireNativePopup) AvaloniaHeadlessPlatform.ForceRenderTimerTick();
             await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
