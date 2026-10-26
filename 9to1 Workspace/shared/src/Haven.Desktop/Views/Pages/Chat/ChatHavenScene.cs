@@ -733,15 +733,19 @@ internal sealed partial class ChatHavenScene : IDisposable
     }
     private void OnResolveInvoked(object? sender, EventArgs e) => ResolveProblemsRequested?.Invoke(this, EventArgs.Empty);
 
-    public void ShowAddMenu() { _addMenu.Show(); OpenAddMenuPopupIfAttached(); }
-    public void ShowMentionSearch(string query) { _addMenu.ShowMentionSearch(query); OpenAddMenuPopupIfAttached(); }
+    public void ShowAddMenu() { _addMenu.Show(); OpenAddMenuPopupIfAttached(focusPopup: true); }
+    public void ShowMentionSearch(string query)
+    {
+        _addMenu.ShowMentionSearch(query);
+        OpenAddMenuPopupIfAttached(focusPopup: false);
+    }
 
     public void HideAddMenu() => _addMenu.Hide();
 
     public void FilterCatalogue(string query)
     {
         _addMenu.FilterCatalogue(query);
-        if (_addMenu.IsOpen) OpenAddMenuPopupIfAttached();
+        if (_addMenu.IsOpen) OpenAddMenuPopupIfAttached(focusPopup: false);
     }
 
     private void OnSharedAddActionSelected(object? sender, AddMenu.AddMenuAction action) =>

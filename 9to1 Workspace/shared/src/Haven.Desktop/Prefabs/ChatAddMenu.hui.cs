@@ -8,7 +8,10 @@ public sealed class ChatAddMenuPrefab : HavenPrefabDefinition
 
     public override void OnCreated(Prefab instance)
     {
-        instance.GetComponent<Button>("Dismiss").Accessibility.AccessibleName = "Close Add menu";
+        var dismiss = instance.GetComponent<Button>("Dismiss");
+        dismiss.Accessibility.AccessibleName = "Close Add menu";
+        dismiss.Accessibility.Description = "Close the Add menu.";
+        instance.GetComponent<Button>("CatalogBack").Accessibility.AccessibleName = "Back to Add menu";
         instance.GetComponent<Button>("Agents").Accessibility.AccessibleName = "Agents";
         instance.GetComponent<Button>("Instructions").Accessibility.AccessibleName = "Instructions";
         instance.GetComponent<Button>("Capabilities").Accessibility.AccessibleName = "Capabilities";

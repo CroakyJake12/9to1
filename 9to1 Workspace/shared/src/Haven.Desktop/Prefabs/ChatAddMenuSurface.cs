@@ -38,11 +38,13 @@ internal sealed class ChatAddMenuSurface : IDisposable
         Overlay = prefab.GetComponent<Container>("AddOverlay");
         DismissButton = prefab.GetComponent<HavenButton>("Dismiss");
         MainMenu = prefab.GetComponent<Container>("MainMenu");
+        OptionsPanel = prefab.GetComponent<Container>("OptionsPanel");
         CatalogPanel = prefab.GetComponent<Container>("CatalogPanel");
+        CatalogBackButton = prefab.GetComponent<HavenButton>("CatalogBack");
         CatalogSearch = prefab.GetComponent<Input>("CatalogSearch");
         CatalogResults = prefab.GetComponent<Container>("CatalogResults");
         MenuTitle = prefab.GetComponent<HavenText>("MenuTitle");
-        ToolsHeading = prefab.GetComponent<HavenText>("ToolsHeading");
+        ToolsHeading = prefab.GetComponent<HavenText>("ToolsHeadingLabel");
         OptionsHeading = prefab.GetComponent<HavenText>("OptionsHeading");
         AttachFilesButton = prefab.GetComponent<HavenButton>("AttachFiles");
         AgentsButton = prefab.GetComponent<HavenButton>("Agents");
@@ -56,14 +58,20 @@ internal sealed class ChatAddMenuSurface : IDisposable
         if (_composerOwnsSearch)
         {
             CatalogSearch.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-            MenuTitle.Content = "Attach to Chat";
-            ToolsHeading.Content = "Browse";
+            MenuTitle.Content = "Add";
+            ToolsHeading.Content = "Tools";
             InstructionsButton.Content = "Skills";
             CapabilitiesButton.Content = "Capabilities / Plugins";
             AttachFilesButton.Content = "Files";
         }
+        else
+        {
+            MenuTitle.Content = "Manage Responses";
+            ToolsHeading.Content = "Available Tools";
+        }
         if (!_showThreadSettings)
         {
+            OptionsPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
             OptionsHeading.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
             AllowActionsButton.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
             VisualResponsesButton.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
@@ -71,6 +79,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         }
 
         DismissButton.Invoked += OnDismissInvoked;
+        CatalogBackButton.Invoked += OnCatalogBackInvoked;
         AttachFilesButton.Invoked += OnAttachFilesInvoked;
         AgentsButton.Invoked += OnAgentsInvoked;
         InstructionsButton.Invoked += OnInstructionsInvoked;
@@ -87,7 +96,9 @@ internal sealed class ChatAddMenuSurface : IDisposable
     public Container Overlay { get; }
     public HavenButton DismissButton { get; }
     public Container MainMenu { get; }
+    public Container OptionsPanel { get; }
     public Container CatalogPanel { get; }
+    public HavenButton CatalogBackButton { get; }
     public Input CatalogSearch { get; }
     public Container CatalogResults { get; }
     public HavenText MenuTitle { get; }
@@ -143,7 +154,9 @@ internal sealed class ChatAddMenuSurface : IDisposable
         _catalogAction = null;
         _searchAll = false;
         _externalQuery = string.Empty;
+        MainMenu.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        CatalogBackButton.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         Overlay.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
     }
 
@@ -157,6 +170,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         _externalQuery = string.Empty;
         CatalogSearch.Text = string.Empty;
         CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        MainMenu.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         Overlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         if (wasOpen) Dismissed?.Invoke(this, EventArgs.Empty);
     }
@@ -175,6 +189,8 @@ internal sealed class ChatAddMenuSurface : IDisposable
         _searchAll = true;
         _externalQuery = query?.Trim() ?? string.Empty;
         CatalogSearch.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        CatalogBackButton.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        MainMenu.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         Overlay.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         RebuildCatalogue();
@@ -204,8 +220,21 @@ internal sealed class ChatAddMenuSurface : IDisposable
             !_composerOwnsSearch && action is not (AddMenu.AddMenuAction.AllowActions or AddMenu.AddMenuAction.VisualResponses)
                 ? HavenVisibility.Visible
                 : HavenVisibility.Collapsed);
+        CatalogBackButton.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+        MainMenu.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         RebuildCatalogue();
+    }
+
+    private void OnCatalogBackInvoked(object? sender, EventArgs e)
+    {
+        _catalogAction = null;
+        _searchAll = false;
+        _externalQuery = string.Empty;
+        _lastSearch = string.Empty;
+        CatalogSearch.Text = string.Empty;
+        CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        MainMenu.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
     }
 
     private void RebuildCatalogue()
@@ -258,7 +287,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
     {
         foreach (var item in items)
         {
-            var button = MenuButton(label(item), 284);
+            var button = MenuButton(label(item), 260, IconFor(action));
             button.Accessibility.Description = description(item);
             var boxed = (object)item;
             button.Invoked += (_, _) => SelectCatalogue(new AddMenuSelection(action, boxed));
@@ -269,7 +298,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
 
     private void AddModeRow(string label, AddMenu.AddMenuAction action, object item)
     {
-        var button = MenuButton(label, 284);
+        var button = MenuButton(label, 260, IconFor(action));
         button.Invoked += (_, _) => SelectCatalogue(new AddMenuSelection(action, item));
         _catalogRows.Add((button, action, item));
         CatalogResults.Add(button);
@@ -306,7 +335,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
 
         if (SearchScore("Files", "Attach files from this device", query) >= 0)
         {
-            var files = MenuButton("Files", 284);
+            var files = MenuButton("Files", 260, "file");
             files.Accessibility.Description = "Attach files from this device";
             files.Invoked += OnAttachFilesInvoked;
             CatalogResults.Add(files);
@@ -317,7 +346,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
                      .ThenBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
                      .Take(30))
         {
-            var button = MenuButton(candidate.Name, 284);
+            var button = MenuButton(candidate.Name, 260, IconFor(candidate.Action));
             button.Accessibility.Description = candidate.Description;
             var selection = new AddMenuSelection(candidate.Action, candidate.Item);
             button.Invoked += (_, _) => SelectCatalogue(selection);
@@ -385,18 +414,30 @@ internal sealed class ChatAddMenuSurface : IDisposable
         CatalogItemSelected?.Invoke(this, selection);
     }
 
-    private static HavenButton MenuButton(string label, double width)
+    private static HavenButton MenuButton(string label, double width, string iconKey)
     {
-        var button = new HavenButton { Content = label, Variant = ButtonVariant.Tertiary };
+        var button = new HavenButton { Content = label, IconKey = iconKey, Variant = ButtonVariant.Ghost };
         button.Accessibility.AccessibleName = label;
         button.SetValue(HavenProperties.Width, HavenLength.Px(width));
-        button.SetValue(HavenProperties.MinHeight, HavenLength.Px(44));
-        button.SetValue(HavenProperties.Padding, HavenThickness.Parse("10px 12px"));
-        button.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(14)));
+        button.SetValue(HavenProperties.MinHeight, HavenLength.Px(34));
+        button.SetValue(HavenProperties.Padding, HavenThickness.Parse("6px 9px"));
+        button.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(8)));
         button.SetValue(HavenProperties.FontSize, 12d);
-        button.SetValue(HavenProperties.FontWeight, 700);
+        button.SetValue(HavenProperties.FontWeight, 500);
         return button;
     }
+
+    private static string IconFor(AddMenu.AddMenuAction action) => action switch
+    {
+        AddMenu.AddMenuAction.File => "file",
+        AddMenu.AddMenuAction.Agent => "agents",
+        AddMenu.AddMenuAction.Instruction => "prompt",
+        AddMenu.AddMenuAction.Capability => "bolt",
+        AddMenu.AddMenuAction.App => "rocket",
+        AddMenu.AddMenuAction.AllowActions => "bolt",
+        AddMenu.AddMenuAction.VisualResponses => "browse",
+        _ => "plus"
+    };
 
     private static string ActionModeSummary(ChatActionMode mode) => mode switch
     {
@@ -445,6 +486,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         if (_disposed) return;
         _disposed = true;
         DismissButton.Invoked -= OnDismissInvoked;
+        CatalogBackButton.Invoked -= OnCatalogBackInvoked;
         AttachFilesButton.Invoked -= OnAttachFilesInvoked;
         AgentsButton.Invoked -= OnAgentsInvoked;
         InstructionsButton.Invoked -= OnInstructionsInvoked;

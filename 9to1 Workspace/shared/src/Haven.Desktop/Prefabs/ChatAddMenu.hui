@@ -1,25 +1,27 @@
-<Container Name="AddOverlay" Layout="Overlay" LayoutParticipation="Overlay" Width="100%" Height="100%" Visibility="Collapsed" ZIndex="100">
-  <Button Name="Dismiss" Variant="Text" Content="" Width="100%" Height="100%" Background="Transparent" />
-  <Container Name="Panels" Layout="Horizontal" Width="100%" MaxWidth="900px" HorizontalAlignment="Center" VerticalAlignment="End" Gap="12px" Margin="0px 0px 70px 0px" PointerEvents="ChildrenOnly" ZIndex="101">
-    <Container Name="MainMenu" Layout="Vertical" Width="324px" Background="SurfaceRaised" BorderColor="Border" BorderWidth="1px" Radius="18px" Shadow="Card" Gap="8px" Padding="14px">
-      <Text Name="MenuTitle" Content="Manage Responses" FontSize="22" FontWeight="800" />
-      <Text Name="CurrentResponseState" Content="Default agent · Basic actions · Auto" FontSize="11" FontWeight="600" Foreground="TextSecondary" />
-      <Text Name="ToolsHeading" Content="Available Tools" FontSize="13" FontWeight="800" />
-
-      <Container Name="Tools" Layout="Grid" Columns="1fr 1fr" Rows="44px 44px" Width="296px" Gap="8px">
-        <Button Name="Agents" Variant="Tertiary" IconKey="agents" Content="Agents" Width="144px" MinHeight="44px" Padding="10px 12px" Radius="14px" FontSize="12" FontWeight="700" />
-        <Button Name="Instructions" Variant="Tertiary" IconKey="prompt" Content="Instructions" Column="1" Width="144px" MinHeight="44px" Padding="10px 12px" Radius="14px" FontSize="12" FontWeight="700" />
-        <Button Name="Capabilities" Variant="Tertiary" IconKey="bolt" Content="Capabilities" Row="1" Width="144px" MinHeight="44px" Padding="10px 12px" Radius="14px" FontSize="12" FontWeight="700" />
-        <Button Name="Apps" Variant="Tertiary" IconKey="rocket" Content="Apps" Row="1" Column="1" Width="144px" MinHeight="44px" Padding="10px 12px" Radius="14px" FontSize="12" FontWeight="700" />
-      </Container>
-      <Text Name="OptionsHeading" Content="Options" FontSize="13" FontWeight="800" />
-      <Button Name="AllowActions" Variant="Tertiary" IconKey="bolt" Content="Allow Actions  ›" Width="296px" MinHeight="44px" Padding="10px 12px" Radius="14px" FontSize="12" FontWeight="700" />
-      <Button Name="VisualResponses" Variant="Tertiary" IconKey="browse" Content="Prefer Visual Responses  ›" Width="296px" MinHeight="44px" Padding="10px 12px" Radius="14px" FontSize="12" FontWeight="700" />
-      <Button Name="AttachFiles" Variant="Primary" IconKey="file" Content="Attach File(s)" Width="296px" MinHeight="44px" Padding="10px 12px" Radius="14px" FontSize="12" FontWeight="700" />
+<Container Name="AddOverlay" Layout="Vertical" Width="286px" Background="SurfaceRaised" BorderColor="Border" BorderWidth="1px" Radius="16px" Shadow="Card" Gap="4px" Padding="7px" Visibility="Collapsed">
+  <Container Name="MenuHeader" Layout="Horizontal" Width="100%" Height="28px" Gap="6px" Padding="4px 8px" VerticalAlignment="Center">
+    <Text Name="MenuTitle" Content="Add" FontSize="11" FontWeight="700" Foreground="TextSecondary" VerticalAlignment="Center" />
+    <Button Name="Dismiss" Variant="Text" Content="×" Width="24px" Height="24px" MinHeight="24px" Padding="0px" Radius="6px" FontSize="15" />
+  </Container>
+  <Container Name="MainMenu" Layout="Vertical" Width="100%" Gap="2px">
+    <Button Name="AttachFiles" Variant="Ghost" IconKey="file" Content="Files" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Container Name="ToolsHeading" Layout="Horizontal" Width="100%" Height="20px" Padding="5px 9px 0px 9px">
+      <Text Name="ToolsHeadingLabel" Content="Tools" FontSize="10" FontWeight="600" Foreground="TextSecondary" />
     </Container>
-    <Container Name="CatalogPanel" Layout="Vertical" Width="320px" Background="SurfaceRaised" BorderColor="Border" BorderWidth="1px" Radius="18px" Shadow="Card" Gap="8px" Padding="12px" Visibility="Collapsed">
-      <Input Name="CatalogSearch" Height="42px" Placeholder="Search" />
-      <Container Name="CatalogResults" Layout="Vertical" MaxHeight="300px" Gap="4px" Overflow="Scroll" />
-    </Container>
+    <Button Name="Agents" Variant="Ghost" IconKey="agents" Content="Agents" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="Instructions" Variant="Ghost" IconKey="prompt" Content="Skills" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="Capabilities" Variant="Ghost" IconKey="bolt" Content="Capabilities / Plugins" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="Apps" Variant="Ghost" IconKey="rocket" Content="Apps" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+  <Container Name="OptionsPanel" Layout="Vertical" Width="100%" Gap="2px">
+    <Text Name="OptionsHeading" Content="Options" FontSize="10" FontWeight="600" Foreground="TextSecondary" Padding="9px 7px 0px 7px" />
+    <Text Name="CurrentResponseState" Content="Default agent · Basic actions · Auto" FontSize="10" Foreground="TextSecondary" Padding="7px 9px 2px 9px" />
+    <Button Name="AllowActions" Variant="Ghost" IconKey="bolt" Content="Allow Actions" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+    <Button Name="VisualResponses" Variant="Ghost" IconKey="browse" Content="Visual responses" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
+  </Container>
+  </Container>
+  <Container Name="CatalogPanel" Layout="Vertical" Width="100%" Gap="4px" Visibility="Collapsed">
+    <Button Name="CatalogBack" Variant="Text" IconKey="chevron-left" Content="Add" Width="100%" MinHeight="32px" Padding="5px 8px" Radius="7px" FontSize="11" HorizontalAlignment="Stretch" />
+    <Input Name="CatalogSearch" Height="36px" Placeholder="Search" />
+    <Container Name="CatalogResults" Layout="Vertical" MaxHeight="280px" Gap="2px" Overflow="Scroll" />
   </Container>
 </Container>

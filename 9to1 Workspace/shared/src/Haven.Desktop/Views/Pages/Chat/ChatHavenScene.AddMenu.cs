@@ -1,8 +1,10 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Desktop.HavenUI.Backend;
@@ -16,7 +18,11 @@ internal sealed partial class ChatHavenScene
     private Popup? _addMenuPopup;
     private HavenSceneControl? _addMenuPopupHost;
     private TopLevel? _addMenuPopupOwner;
+    private TopLevel? _addMenuPopupTopLevel;
+    private Control? _addMenuPopupTarget;
     private Control? _focusBeforeAddMenuPopup;
+    private bool? _restoreFocusAfterPopupClose;
+    private bool _focusPopupOnOpen;
     private bool _retiringAddMenuPopup;
 
     // These read-only seams let the owning Avalonia regression inspect the actual native popup
@@ -34,34 +40,34 @@ internal sealed partial class ChatHavenScene
         };
         _addMenuPopupHost.AddHandler(InputElement.KeyDownEvent, OnAddMenuPopupKeyDown,
             RoutingStrategies.Tunnel, handledEventsToo: true);
-        _addMenuPopupHost.LayoutUpdated += OnAddMenuPopupLayoutUpdated;
 
         _addMenuPopup = new Popup
         {
-            PlacementTarget = ComposerView,
             Placement = PlacementMode.AnchorAndGravity,
+            // The compact card opens above and left-aligns with the real CUI Add button. Avalonia
+            // flips/slides it when the available screen edge requires a safe alternate placement.
             PlacementAnchor = PopupPositioning.PopupAnchor.TopLeft,
-            // This keeps the full-client surface origin at the calculated window-client origin.
-            PlacementGravity = PopupPositioning.PopupGravity.BottomRight,
-            PlacementConstraintAdjustment = PopupPositioning.PopupPositionerConstraintAdjustment.None,
+            PlacementGravity = PopupPositioning.PopupGravity.TopRight,
+            PlacementConstraintAdjustment = PopupPositioning.PopupPositionerConstraintAdjustment.All,
+            VerticalOffset = -6,
             IsLightDismissEnabled = true,
             OverlayDismissEventPassThrough = false,
             WindowManagerAddShadowHint = false,
             Child = _addMenuPopupHost
         };
-        // The menu's authored root is transparent and fills the client area. Establish the native
-        // PopupRoot transparency before each open so its donor white default cannot cover the scene.
+        // The card owns its opaque surface; keep only the native PopupRoot backing transparent.
         CuiPopupPresentation.RequestTransparency(_addMenuPopup);
         _addMenuPopup.Closed += OnAddMenuPopupClosed;
         _addMenu.Dismissed += OnAddMenuDismissed;
+        ComposerView.AddHandler(InputElement.KeyDownEvent, OnComposerAddMenuKeyDown,
+            RoutingStrategies.Tunnel, handledEventsToo: true);
         ComposerView.AttachedToVisualTree += OnComposerAttachedToVisualTree;
         ComposerView.DetachedFromVisualTree += OnComposerDetachedFromVisualTree;
-        ComposerView.LayoutUpdated += OnComposerLayoutUpdated;
     }
 
     private void OnComposerAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
-        if (_addMenu.IsOpen) OpenAddMenuPopupIfAttached();
+        if (_addMenu.IsOpen) OpenAddMenuPopupIfAttached(_focusPopupOnOpen);
     }
 
     private void OnComposerDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
@@ -71,16 +77,6 @@ internal sealed partial class ChatHavenScene
         HideAddMenu();
     }
 
-    private void OnComposerLayoutUpdated(object? sender, EventArgs e)
-    {
-        if (_addMenuPopup?.IsOpen == true) UpdateAddMenuPopupGeometry();
-    }
-
-    private void OnAddMenuPopupLayoutUpdated(object? sender, EventArgs e)
-    {
-        if (_addMenuPopup?.IsOpen == true) UpdateAddMenuPopupGeometry();
-    }
-
     private void OnAddMenuPopupKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Handled || e.Key != Key.Escape || _addMenuPopup?.IsOpen != true) return;
@@ -88,89 +84,111 @@ internal sealed partial class ChatHavenScene
         HideAddMenu();
     }
 
+    private void OnComposerAddMenuKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || _focusPopupOnOpen || _addMenuPopup?.IsOpen != true) return;
+        e.Handled = true;
+        HideAddMenu();
+    }
+
     private void OnAddMenuDismissed(object? sender, EventArgs e) => CloseAddMenuPopup();
 
-    private void OpenAddMenuPopupIfAttached()
+    private void OpenAddMenuPopupIfAttached(bool focusPopup)
     {
-        if (_retiringAddMenuPopup || _disposed || !_addMenu.IsOpen || _addMenuPopup?.IsOpen == true
-            || !_composerView.IsAttachedToVisualTree() || _addMenuPopup is null)
+        if (_retiringAddMenuPopup || _disposed || !_addMenu.IsOpen || _addMenuPopup is null
+            || !_composerView.IsAttachedToVisualTree()) return;
+
+        if (_addMenuPopup.IsOpen)
+        {
+            // Mention search updates arrive on every composer edit. Keep its real input/caret as
+            // the keyboard owner; only an explicit Add-button invocation may move focus to a row.
+            _focusPopupOnOpen = focusPopup;
+            if (focusPopup) FocusFirstAddMenuRow();
             return;
+        }
 
-        var owner = TopLevel.GetTopLevel(_composerView);
-        if (owner is null || !UpdateAddMenuPopupGeometry(owner)) return;
+        var addButton = FindComposerAddButton();
+        if (addButton is null || TopLevel.GetTopLevel(addButton) is not { } owner) return;
 
+        _addMenuPopupTarget = addButton;
+        _addMenuPopup.PlacementTarget = addButton;
         _addMenuPopupOwner = owner;
         _focusBeforeAddMenuPopup = owner.FocusManager?.GetFocusedElement() as Control;
+        _restoreFocusAfterPopupClose = null;
+        _focusPopupOnOpen = focusPopup;
         try
         {
             _addMenuPopup.Open();
-            // The popup is a full-client input surface; making its host focusable gives Escape a
-            // reliable route when the catalogue's own search field is intentionally hidden.
-            _addMenuPopupHost?.Focus(NavigationMethod.Unspecified);
+            _addMenuPopupTopLevel = TopLevel.GetTopLevel(_addMenuPopupHost!);
+            if (focusPopup) FocusFirstAddMenuRow();
         }
         catch
         {
             _addMenuPopupOwner = null;
+            _addMenuPopupTopLevel = null;
+            _addMenuPopupTarget = null;
             _focusBeforeAddMenuPopup = null;
+            _restoreFocusAfterPopupClose = null;
+            _focusPopupOnOpen = false;
             _addMenu.Hide();
             throw;
         }
     }
 
-    private bool UpdateAddMenuPopupGeometry() =>
-        TopLevel.GetTopLevel(_composerView) is { } owner && UpdateAddMenuPopupGeometry(owner);
+    private Control? FindComposerAddButton() => _composerView.GetVisualDescendants().OfType<Control>()
+        .FirstOrDefault(control => AutomationProperties.GetName(control) == "Add files or actions");
 
-    private bool UpdateAddMenuPopupGeometry(TopLevel owner)
+    private void FocusFirstAddMenuRow()
     {
-        if (_addMenuPopup is null || _addMenuPopupHost is null
-            || !ReferenceEquals(TopLevel.GetTopLevel(_composerView), owner)) return false;
+        if (_addMenuPopupHost?.IsAttachedToVisualTree() == true)
+            _addMenuPopupHost.FocusElement(_addMenu.AttachFilesButton);
+    }
 
-        // Avalonia popup offsets are relative to PlacementTarget. Translate the actual composer
-        // into owner-client DIPs, then subtract that origin so the full-client HUI overlay keeps
-        // the exact coordinate space used by the scene (including monitor scaling and padding).
-        var composerOrigin = _composerView.TranslatePoint(default, owner);
-        var clientSize = owner.ClientSize;
-        if (composerOrigin is null || !double.IsFinite(clientSize.Width) || !double.IsFinite(clientSize.Height)
-            || clientSize.Width <= 0 || clientSize.Height <= 0) return false;
+    private bool PopupOwnsFocus()
+    {
+        var focused = _addMenuPopupTopLevel?.FocusManager?.GetFocusedElement() as Control;
+        return focused is not null && _addMenuPopupHost is not null
+            && (ReferenceEquals(focused, _addMenuPopupHost) || _addMenuPopupHost.IsVisualAncestorOf(focused)
+                || focused.GetLogicalAncestors().Any(ancestor => ReferenceEquals(ancestor, _addMenuPopupHost)));
+    }
 
-        var width = Math.Max(1, clientSize.Width);
-        var height = Math.Max(1, clientSize.Height);
-        if (!double.IsFinite(_addMenuPopup.Width) || Math.Abs(_addMenuPopup.Width - width) > 0.1)
-            _addMenuPopup.Width = width;
-        if (!double.IsFinite(_addMenuPopup.Height) || Math.Abs(_addMenuPopup.Height - height) > 0.1)
-            _addMenuPopup.Height = height;
-        if (!double.IsFinite(_addMenuPopupHost.Width) || Math.Abs(_addMenuPopupHost.Width - width) > 0.1)
-            _addMenuPopupHost.Width = width;
-        if (!double.IsFinite(_addMenuPopupHost.Height) || Math.Abs(_addMenuPopupHost.Height - height) > 0.1)
-            _addMenuPopupHost.Height = height;
-        if (Math.Abs(_addMenuPopup.HorizontalOffset + composerOrigin.Value.X) > 0.1)
-            _addMenuPopup.HorizontalOffset = -composerOrigin.Value.X;
-        if (Math.Abs(_addMenuPopup.VerticalOffset + composerOrigin.Value.Y) > 0.1)
-            _addMenuPopup.VerticalOffset = -composerOrigin.Value.Y;
-        return true;
+    private void CapturePopupFocusRestoreRequest()
+    {
+        if (_restoreFocusAfterPopupClose.HasValue) return;
+        var popupOwnsFocus = PopupOwnsFocus();
+        var ownerFocus = _addMenuPopupOwner?.FocusManager?.GetFocusedElement() as Control;
+        var ownerFocusUnchanged = ownerFocus is null || ReferenceEquals(ownerFocus, _focusBeforeAddMenuPopup);
+        _restoreFocusAfterPopupClose = popupOwnsFocus && ownerFocusUnchanged;
     }
 
     private void OnAddMenuPopupClosed(object? sender, EventArgs e)
     {
+        CapturePopupFocusRestoreRequest();
         var owner = _addMenuPopupOwner;
         var focus = _focusBeforeAddMenuPopup;
+        var restoreFocus = _restoreFocusAfterPopupClose == true;
         _addMenuPopupOwner = null;
+        _addMenuPopupTopLevel = null;
+        _addMenuPopupTarget = null;
         _focusBeforeAddMenuPopup = null;
+        _restoreFocusAfterPopupClose = null;
+        _focusPopupOnOpen = false;
 
         _addMenu.Hide();
-        if (_disposed || owner is null || focus is null || !focus.Focusable || !focus.IsEffectivelyEnabled
-            || !focus.IsEffectivelyVisible || !focus.IsAttachedToVisualTree()
+        if (!restoreFocus || _disposed || owner is null || focus is null || !focus.Focusable
+            || !focus.IsEffectivelyEnabled || !focus.IsEffectivelyVisible || !focus.IsAttachedToVisualTree()
             || !ReferenceEquals(TopLevel.GetTopLevel(focus), owner)) return;
 
-        // Restore only the pre-open focus target. A command that moved focus while dismissing the
-        // menu keeps its destination; popup teardown never steals focus back afterward.
-        if (!ReferenceEquals(owner.FocusManager?.GetFocusedElement(), focus))
+        // Restore only when the popup still owned focus and the owner has no newer focus target.
+        var ownerFocus = owner.FocusManager?.GetFocusedElement() as Control;
+        if (ownerFocus is null || ReferenceEquals(ownerFocus, focus))
             focus.Focus(NavigationMethod.Unspecified);
     }
 
     private void CloseAddMenuPopup()
     {
         if (_retiringAddMenuPopup || _addMenuPopup?.IsOpen != true) return;
+        CapturePopupFocusRestoreRequest();
         _addMenuPopup.Close();
     }
 
@@ -182,25 +200,29 @@ internal sealed partial class ChatHavenScene
         {
             ComposerView.AttachedToVisualTree -= OnComposerAttachedToVisualTree;
             ComposerView.DetachedFromVisualTree -= OnComposerDetachedFromVisualTree;
-            ComposerView.LayoutUpdated -= OnComposerLayoutUpdated;
+            ComposerView.RemoveHandler(InputElement.KeyDownEvent, OnComposerAddMenuKeyDown);
             _addMenu.Dismissed -= OnAddMenuDismissed;
             if (_addMenuPopup is not null)
             {
                 _addMenuPopup.Closed -= OnAddMenuPopupClosed;
                 if (_addMenuPopup.IsOpen) _addMenuPopup.Close();
                 _addMenuPopup.Child = null;
+                _addMenuPopup.PlacementTarget = null;
                 _addMenuPopup = null;
             }
             if (_addMenuPopupHost is not null)
             {
                 _addMenuPopupHost.RemoveHandler(InputElement.KeyDownEvent, OnAddMenuPopupKeyDown);
-                _addMenuPopupHost.LayoutUpdated -= OnAddMenuPopupLayoutUpdated;
                 _addMenuPopupHost.Root = null;
                 _addMenuPopupHost = null;
             }
             _addMenu.Hide();
             _addMenuPopupOwner = null;
+            _addMenuPopupTopLevel = null;
+            _addMenuPopupTarget = null;
             _focusBeforeAddMenuPopup = null;
+            _restoreFocusAfterPopupClose = null;
+            _focusPopupOnOpen = false;
         }
         finally { _retiringAddMenuPopup = false; }
     }
