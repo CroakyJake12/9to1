@@ -11,6 +11,31 @@ namespace CakeOS.Cui.Runtime.Tests;
 
 public sealed class CuiCanonicalBoundaryRuntimeTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Authored_bounds_clipping_projects_the_declared_boolean(bool clipped)
+    {
+        using var loader = new CuiControlLoader();
+        var loaded = loader.LoadMarkup($"<Container Type=\"Grid\" ClipToBounds=\"{clipped}\"><Text Text=\"Card content\"/></Container>");
+        Assert.Empty(loaded.Diagnostics);
+        Assert.Equal(clipped, Assert.IsType<CuiContainerControl>(loaded.Root).ClipToBounds);
+    }
+
+    [Fact]
+    public void Bound_bounds_clipping_updates_the_same_control()
+    {
+        var values = new CuiViewModel(); values.Set("ClipCard", true);
+        using var loader = new CuiControlLoader(); loader.SetBindingContext(values);
+        var loaded = loader.LoadMarkup("<Container Type=\"Grid\" ClipToBounds=\"{Binding ClipCard}\"/>");
+        Assert.Empty(loaded.Diagnostics);
+        var card = Assert.IsType<CuiContainerControl>(loaded.Root);
+        loader.WireBindings(card);
+        Assert.True(card.ClipToBounds);
+        values.Set("ClipCard", false);
+        Assert.False(card.ClipToBounds);
+    }
+
     [Fact]
     public void Theme_refresh_never_exposes_a_partial_palette_to_resource_observers()
     {

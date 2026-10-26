@@ -73,7 +73,9 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
 
     private sealed class Session : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner
     {
-        public OriginalTabTransientPresentation TransientPresentation { get; } = new();
+        private OriginalTabTransientPresentation? _transientPresentation;
+        public OriginalTabTransientPresentation TransientPresentation => _transientPresentation
+            ?? throw new InvalidOperationException("The original tab presentation has not initialized.");
         private readonly UnifiedHomeContentFactory _owner;
         private readonly BrowseAppContentRequest _request;
         private readonly DesktopOriginalWorkLifetime _work;
@@ -104,7 +106,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
             {
                 Dispatcher.UIThread.VerifyAccess();
                 if (!IsPublicationCurrent) throw new InvalidOperationException("The original Home view is not admitted.");
-                return TransientPresentation.BindOriginal(_page!);
+                return TransientPresentation;
             }
         }
         public Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -133,6 +135,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                         DemandCurrent();
                         var page = _page ?? throw new InvalidOperationException("The original Home page was not acquired.");
                         await original.AwaitAsync(page.InitializeAsync(linked.Token));
+                        _transientPresentation = new OriginalTabTransientPresentation();
+                        _transientPresentation.BindOriginal(page);
                         await original.AwaitAsync(CloudflareOriginalExecutionGuard.InvokeOriginal(this,
                             () => _owner._admit(_request, linked.Token)));
                         DemandCurrent(); linked.Token.ThrowIfCancellationRequested();
@@ -176,7 +180,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                 return allowed && IsPublicationCurrent;
         }
         public Task CloseAndDrainAsync()
-        { DemandExternalJoin(); TransientPresentation.CancelPending(); _published = false; return _work.CloseAndDrainAsync(); }
+        { DemandExternalJoin(); _transientPresentation?.CancelPending(); _published = false; return _work.CloseAndDrainAsync(); }
         private Task StopAsync() => OnUiAsync(async () =>
         {
             using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);

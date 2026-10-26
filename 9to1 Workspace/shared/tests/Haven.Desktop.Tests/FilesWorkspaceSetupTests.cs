@@ -326,6 +326,9 @@ public sealed class FilesWorkspaceSetupTests
                 });
             Files = files!;
             var services = new ServiceCollection(); services.AddSingleton(paths);
+            // Match the maintained infrastructure descriptor before the original Linux
+            // Home owner replaces it with its SAME-path Linux credential-store factory.
+            services.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
             services.AddHavenOwnedWindowsHomeDomain(Home, paths, Principal);
             services.AddSingleton(Files); services.AddSingleton(authority!); services.AddSingleton(resolver!);
             services.AddSingleton<HostLocalTaskActorSource>(); services.AddFilesNativeHost();

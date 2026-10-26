@@ -377,6 +377,26 @@ public sealed class UnifiedHomeContentTests
     // Actual canonical CUI/native preference file/factory routes. The explicit admission
     // callbacks in these component cases are controlled; actual Home authority has separate cases.
     [AvaloniaFact]
+    public async Task Route_free_Home_session_constructed_off_UI_initializes_its_stable_view_on_UI()
+    {
+        var testToken = TestContext.Current.CancellationToken;
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(testToken);
+        var factory = Factory(new(), lifetime.Token); var request = Request();
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(await Task.Run(
+            () => factory.CreateSession(request), testToken));
+        try
+        {
+        await session.InitializeAsync(testToken);
+        var view = Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView);
+        Assert.IsType<UnifiedHomePage>(view.OriginalContent);
+        Assert.Same(view, session.OriginalNativeView);
+        Assert.True(await session.TryPrepareToCloseAsync(testToken));
+        }
+        finally { await session.CloseAndDrainAsync(); }
+        Assert.True(session.CanRetireOriginalView);
+    }
+
+    [AvaloniaFact]
     public async Task Guard_refusal_and_close_veto_preserve_pending_original_tab_choice()
     {
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
@@ -420,7 +440,7 @@ public sealed class UnifiedHomeContentTests
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Assert.NotNull(settings);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
-            Assert.Contains(settings!.GetVisualDescendants(), control => control.Name == "home-appearance-settings");
+            Assert.Contains(settings!.GetVisualDescendants(), control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
             AppearanceOption(settings, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Assert.True(settings.LastWrite!.ConfirmedWrite!.Succeeded);
@@ -469,7 +489,7 @@ public sealed class UnifiedHomeContentTests
             window = new Window { Width = 520, Height = 520, Content = session.OriginalNativeView };
             window.Show(); Layout(); Assert.NotNull(settings);
             var fragment = Assert.Single(settings!.GetVisualDescendants().OfType<CuiContainerControl>(),
-                control => control.Name == "home-appearance-settings");
+                control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
             Assert.Equal("Vertical Stack", fragment.LayoutType);
             var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
@@ -480,7 +500,7 @@ public sealed class UnifiedHomeContentTests
             scroll.Offset = new Vector(0, scroll.Extent.Height); Layout();
             Assert.True(scroll.Offset.Y > 0);
             var refresh = Assert.Single(settings.GetVisualDescendants().OfType<Button>(),
-                control => control.Name == "home-appearance-refresh");
+                control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-refresh");
             var origin = refresh.TranslatePoint(default, scroll)!.Value;
             Assert.True(origin.Y >= -.5 && origin.Y + refresh.Bounds.Height <= scroll.Viewport.Height + .5,
                 $"The actual last action is clipped after scrolling: origin={origin}, bounds={refresh.Bounds}, viewport={scroll.Viewport}.");
@@ -711,7 +731,10 @@ public sealed class UnifiedHomeContentTests
 
     private static Button AppearanceOption(HomeSettingsDestinationPage page, string name) =>
         Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
-            button.Name == "home-theme-option" && string.Equals(button.Content?.ToString(), name, StringComparison.Ordinal));
+            CuiRuntimeIdentity.GetStableId(button) is { } identity &&
+            identity.Contains("id:home-theme-options|key:", StringComparison.Ordinal) &&
+            identity.EndsWith("/id:home-theme-option", StringComparison.Ordinal) &&
+            string.Equals(button.Content?.ToString(), name, StringComparison.Ordinal));
 
     [AvaloniaFact]
     public async Task Only_actual_home_owner_projects_native_theme_into_shared_CUI_and_legacy_resources()
@@ -1235,11 +1258,14 @@ public sealed class UnifiedHomeContentTests
             Assert.Equal(activity.Event, observed);
             Assert.True(activity.Reads > 0);
             Assert.Equal(0, navigations);
-            var row = destination.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-event-row");
+            var row = Assert.Single(destination.GetVisualDescendants().OfType<Button>(), button =>
+                CuiRuntimeIdentity.GetStableId(button) is { } identity &&
+                identity.Contains("id:home-events-rows|key:", StringComparison.Ordinal) &&
+                identity.EndsWith("/id:home-event-row", StringComparison.Ordinal));
             row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await destination.WhenActionsIdleAsync();
             Assert.Equal(activity.Event.EventId, destination.SelectedEventId);
-            var open = destination.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "events-open-selected");
+            var open = destination.GetVisualDescendants().OfType<Button>().Single(button => CuiRuntimeIdentity.GetStableId(button) == "id:events-open-selected");
             Assert.False(open.IsEnabled);
             Assert.DoesNotContain(destination.GetVisualDescendants(), control => control is ListBox);
             await page.DispatchAsync("home.apps", null);
@@ -1295,22 +1321,26 @@ public sealed class UnifiedHomeContentTests
     [AvaloniaFact]
     public async Task Events_refresh_rechecks_canonical_authorization_and_removes_revoked_rows()
     {
+        var testToken = TestContext.Current.CancellationToken;
         var activity = new HomeActivityFixture();
         var page = new HomeEventsDestinationPage(new HomeEventsService([activity], activity), _ => Task.CompletedTask);
         Window? window = null;
         try
         {
-            await page.ActivateAsync(TestContext.Current.CancellationToken);
+            await page.ActivateAsync(testToken);
             window = Show(page);
             Assert.Single(page.Current!.Items);
             activity.Allowed = false;
-            await page.DispatchAsync("RefreshEvents", null, TestContext.Current.CancellationToken);
+            await page.DispatchAsync("RefreshEvents", null, testToken);
             Assert.Empty(page.Current!.Items);
-            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-event-row");
-            var open = page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "events-open-selected");
+            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), button =>
+                CuiRuntimeIdentity.GetStableId(button) is { } identity &&
+                identity.Contains("id:home-events-rows|key:", StringComparison.Ordinal) &&
+                identity.EndsWith("/id:home-event-row", StringComparison.Ordinal));
+            var open = page.GetVisualDescendants().OfType<Button>().Single(button => CuiRuntimeIdentity.GetStableId(button) == "id:events-open-selected");
             Assert.False(open.IsEnabled);
             Assert.False(page.IsActionAvailable("OpenEventObject"));
-            Assert.True(await page.TryPrepareToCloseAsync(TestContext.Current.CancellationToken));
+            Assert.True(await page.TryPrepareToCloseAsync(testToken));
         }
         finally { await page.CloseAndDrainAsync(); window?.Close(); }
     }
@@ -1432,7 +1462,8 @@ public sealed class UnifiedHomeContentTests
     [AvaloniaFact]
     public async Task Central_Browse_dispatch_admits_only_browse_home_models_and_refuses_newtab_models_and_arbitrary_segments()
     {
-        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var testToken = TestContext.Current.CancellationToken;
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(testToken);
         var paths = new LayoutPaths();
         var catalogue = new OwnedRecoveryCatalogueFixture();
         BrowseChrome? chrome = null;
@@ -1487,10 +1518,10 @@ public sealed class UnifiedHomeContentTests
             {
                 if (chrome is not null)
                 {
-                    var preparation = await chrome.PrepareCloseAsync(TestContext.Current.CancellationToken)
-                        .WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
+                    var preparation = await chrome.PrepareCloseAsync(testToken)
+                        .WaitAsync(TimeSpan.FromSeconds(20), testToken);
                     Assert.NotNull(preparation);
-                    await preparation!.BeginClose().WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
+                    await preparation!.BeginClose().WaitAsync(TimeSpan.FromSeconds(20), testToken);
                     if (session is not null) Assert.True(session.CanRetireOriginalView);
                 }
             }

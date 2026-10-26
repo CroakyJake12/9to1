@@ -13,7 +13,9 @@ namespace Haven.Desktop.Services;
 internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner,
     IBrowseAppContentClosePreparationParticipant
 {
-    public OriginalTabTransientPresentation TransientPresentation { get; } = new();
+    private OriginalTabTransientPresentation? _transientPresentation;
+    public OriginalTabTransientPresentation TransientPresentation => _transientPresentation
+        ?? throw new InvalidOperationException("The original tab presentation has not initialized.");
     private readonly BrowseAppContentRequest _request;
     private readonly CancellationTokenSource _lifetime;
     private readonly IBoardsEmbeddedArtifactHost? _embeddedHost;
@@ -66,7 +68,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         {
             Dispatcher.UIThread.VerifyAccess();
             if (!IsPublicationCurrent) throw new InvalidOperationException("The writable rich Boards document has not completed Home admission.");
-            return TransientPresentation.BindOriginal(_presentation?.Content ?? throw new InvalidOperationException("The writable Boards presentation is unavailable."));
+            return TransientPresentation;
         }
     }
 
@@ -110,6 +112,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
                 var current = await presentation.GetCurrentDocumentAsync(linked.Token).ConfigureAwait(true);
                 _title = FormatTitle(current.RichNotes?.Title);
                 presentation.ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+                _transientPresentation = new OriginalTabTransientPresentation();
+                _transientPresentation.BindOriginal(presentation.Content);
                 _presentation = presentation;
                 _published = true;
                 CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
@@ -177,8 +181,6 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             if (_close is not null || _closing) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
             if (_prepared is { } prepared) return Task.FromResult<IBrowseAppContentClosePreparation?>(prepared);
             if (_preparationTask is { IsCompleted: false }) return _preparationTask;
-            _transientCloseReservation = TransientPresentation.TryReserveClose();
-            if (_transientCloseReservation is null) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _preparationTask = PrepareDriverAsync(start.Task, cancellationToken);
             start.SetResult();
@@ -206,7 +208,13 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         var presentation = _presentation;
         if (presentation is null) return CreateFailedInitializationPreparation();
         var dispatch = Dispatcher.UIThread.InvokeAsync<Task<IBoardsPresentationClosePreparation?>>(
-            () => presentation.PrepareToCloseAsync(token)).GetTask();
+            () =>
+            {
+                _transientCloseReservation = TransientPresentation.TryReserveClose();
+                return _transientCloseReservation is null
+                    ? Task.FromResult<IBoardsPresentationClosePreparation?>(null)
+                    : presentation.PrepareToCloseAsync(token);
+            }).GetTask();
         var actual = await dispatch.ConfigureAwait(false);
         var nested = await actual.ConfigureAwait(false);
         if (nested is null) return null;

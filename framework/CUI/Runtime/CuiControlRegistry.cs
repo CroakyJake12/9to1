@@ -379,7 +379,7 @@ public sealed class CuiControlRegistry
             "Type", "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "Margin", "Opacity", "Active",
             "Hidden", "Interactive", "IsVisible", "IsEnabled", "Focusable", "TabIndex", "AccessibleName", "AccessibleDescription",
             "Role", "AutomationId", "Tooltip", "HorizontalAlignment", "VerticalAlignment", "IsHitTestVisible", "Effect", "Shadow", "Layer", "Modal",
-            "Clip", "Cursor", "Rotate", "Scale", "ScaleX", "ScaleY", "Skew", "SkewX", "SkewY", "Translate",
+            "Clip", "ClipToBounds", "Cursor", "Rotate", "Scale", "ScaleX", "ScaleY", "Skew", "SkewX", "SkewY", "Translate",
             "TranslateX", "TranslateY", "Column", "Row", "ColumnSpan", "RowSpan", "X", "Y", "XPixel", "YPixel", "XPercent", "YPercent", "ActiveIndependently"
         };
         var container = common.Concat(new[]
@@ -510,7 +510,7 @@ public sealed class CuiControlRegistry
             ("Shadow", "shadow", typeof(Avalonia.Media.IEffect), true), ("Clip", "geometry", typeof(Avalonia.Media.Geometry), true),
             ("Cursor", "cursor", typeof(string), true), ("TextAlignment", "symbol", typeof(Avalonia.Media.TextAlignment), true),
             ("VerticalTextAlignment", "symbol", typeof(Avalonia.Media.AlignmentY), true),
-            ("IsHitTestVisible", "boolean", typeof(bool), true),
+            ("IsHitTestVisible", "boolean", typeof(bool), true), ("ClipToBounds", "boolean", typeof(bool), true),
             ("HorizontalScrolling", "boolean", typeof(bool), true), ("VerticalScrolling", "boolean", typeof(bool), true),
             ("HorizontalOverflowArrows", "boolean", typeof(bool), true),
             ("BringIntoView", "boolean", typeof(bool), true),
