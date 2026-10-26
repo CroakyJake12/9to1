@@ -34,15 +34,18 @@ public sealed class TidalBackground : IDisposable
     private Color _currentColor4;
     private HavenSurface _surface = HavenSurface.Home;
     private HavenUiAppearance _appearance;
+    private readonly bool _publishHavenPalette;
 
     private double _tidalPhase = 0;
     private const double TidalSpeed = 0.002; // About one slow rise-and-fall every 52 seconds.
     private const double ColorTransitionSpeed = 0.10; // Responsive without snapping when the active App changes.
 
-    public TidalBackground(Window window, HavenUiAppearance appearance = HavenUiAppearance.SuperDark)
+    public TidalBackground(Window window, HavenUiAppearance appearance = HavenUiAppearance.SuperDark,
+        bool publishHavenPalette = true)
     {
         _window = window;
         _appearance = appearance;
+        _publishHavenPalette = publishHavenPalette;
         _window.ActualThemeVariantChanged += OnActualThemeVariantChanged;
 
         // The first frame must already use the requested Haven appearance. The
@@ -76,7 +79,8 @@ public sealed class TidalBackground : IDisposable
         };
 
         _window.Background = _brush;
-        HavenUiResourceApplier.Apply(initialPalette);
+        if (_publishHavenPalette)
+            HavenUiResourceApplier.Apply(initialPalette);
 
         // Setup animation timer (~60fps)
         _animationTimer = new DispatcherTimer
@@ -110,7 +114,12 @@ public sealed class TidalBackground : IDisposable
         _targetColor2 = palette.TideBase;
         _targetColor3 = palette.TideColour;
         _targetColor4 = palette.TideColour;
-        HavenUiResourceApplier.Apply(palette);
+        // The legacy app-wide HUI aliases can share brush instances with the
+        // active CUI palette. The current CUI-owned MainWindow uses this class
+        // only for its private tide gradient and leaves global palette authority
+        // with CUI; older standalone HUI callers can retain the legacy publish.
+        if (_publishHavenPalette)
+            HavenUiResourceApplier.Apply(palette);
     }
 
     private void OnActualThemeVariantChanged(object? sender, EventArgs e) => ApplySurfacePalette();

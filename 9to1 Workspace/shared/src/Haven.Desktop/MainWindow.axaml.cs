@@ -33,7 +33,9 @@ public sealed partial class MainWindow : Window, IDesktopOriginalRetirementParti
     {
         if (_actualSubscribedShell is { } previous) previous.PropertyChanged -= OnOriginalShellSurfaceChanged;
         _tidalBackground?.Dispose();
-        _tidalBackground = new TidalBackground(this, _preferences?.Appearance ?? Haven.Core.HavenUiAppearance.SuperDark);
+        _tidalBackground = new TidalBackground(this,
+            _preferences?.Appearance ?? Haven.Core.HavenUiAppearance.SuperDark,
+            publishHavenPalette: false);
         if (_preferences is not null)
         {
             _preferences.AppearanceChanged -= OnAppearanceChanged;

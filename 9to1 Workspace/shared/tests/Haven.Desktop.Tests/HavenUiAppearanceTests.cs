@@ -7,6 +7,7 @@ using CakeOS.Cui.Themes;
 using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Core;
+using Haven.Desktop.Controls;
 using Haven.Desktop.Views.Pages.Settings;
 
 namespace Haven.Desktop.Tests;
@@ -96,6 +97,34 @@ public sealed class HavenUiAppearanceTests
             Assert.True(CuiSurfacePaletteCatalog.OverrideAccent);
             Assert.Equal(CuiAccentColour.Blue, CuiSurfacePaletteCatalog.AccentOverride);
         }
+    }
+
+    [AvaloniaFact]
+    public void CUI_owned_window_surface_navigation_does_not_republish_legacy_Haven_palette_globally()
+    {
+        using var paths = new TemporaryPaths();
+        var preferences = new UserPreferencesService(paths);
+        preferences.ApplyThemeChoice("Glow", save: false);
+        preferences.ApplyAppearance(HavenUiAppearance.Bright, save: false);
+
+        var app = Avalonia.Application.Current!;
+        var homeBackground = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow).TideBase;
+        var browseBackground = SurfacePaletteCatalog.For(HavenSurface.Browse, HavenUiAppearance.Bright).TideBase;
+        Assert.NotEqual(homeBackground, browseBackground);
+        var cUIBrush = Assert.IsAssignableFrom<ISolidColorBrush>(app.Resources["CuiBackgroundBrush"]);
+        Assert.Equal(homeBackground, cUIBrush.Color);
+        Assert.Same(cUIBrush, app.Resources["HavenBackgroundPrimaryBrush"]);
+
+        var window = new Window();
+        using var tidal = new TidalBackground(window, HavenUiAppearance.Bright, publishHavenPalette: false);
+        tidal.SetSurface(HavenSurface.Browse);
+
+        // Browse has its own legacy HUI palette. The CUI-owned MainWindow uses
+        // TidalBackground only for its animated gradient, so navigation cannot
+        // recolor the globally aliased CUI Home background through a shared brush.
+        Assert.Equal(homeBackground, cUIBrush.Color);
+        Assert.Equal(homeBackground,
+            Assert.IsAssignableFrom<ISolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
     }
 
     [AvaloniaFact]
