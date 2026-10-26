@@ -180,7 +180,7 @@ public sealed class GoPageResponsiveTests
             Assert.DoesNotContain(page.Route.Root.DescendantsAndSelf(), element => element is Video or Web);
             Assert.True(page.Route.Instruction.Accessibility.Focusable);
             Assert.Equal(HavenAccessibleRole.Input, page.Route.Instruction.Accessibility.Role);
-            Assert.Equal("Ask Haven anything", page.Route.Instruction.Accessibility.AccessibleName);
+            Assert.Equal("Ask 9to1 anything", page.Route.Instruction.Accessibility.AccessibleName);
             Assert.Equal(InputDefaults.FocusTransition, page.Route.Instruction.GetValue(HavenProperties.Transition));
 
             page.Route.Instruction.Text = "hello";
@@ -298,7 +298,7 @@ public sealed class GoPageResponsiveTests
             AssertCatalogueContains(page, window, router, page.Route.AgentsButton, "Agent One");
             AssertCatalogueContains(page, window, router, page.Route.CapabilitiesButton, "Capability One");
             AssertCatalogueContains(page, window, router, page.Route.InstructionsButton, "Instruction One");
-            AssertCatalogueContains(page, window, router, page.Route.AppsButton, "Chat", "Study", "Studio");
+            AssertCatalogueContains(page, window, router, page.Route.AppsButton, "Chat", "Study", "AI Studio");
         }
         finally
         {
