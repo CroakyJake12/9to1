@@ -39,7 +39,7 @@ public sealed class BrowserTabHoverContractTests
                                   HasClass((string?)element.Attribute("Classes"), "browserTabPart"))
                 .ToArray();
             Assert.Equal(2, parts.Length);
-            Assert.Single(parts.Where(element => HasClass((string?)element.Attribute("Classes"), "browserTabClose")));
+            Assert.Single(parts, element => HasClass((string?)element.Attribute("Classes"), "browserTabClose"));
             var tint = group.Descendants().Single(element => element.Name.LocalName == "Border" &&
                 HasClass((string?)element.Attribute("Classes"), "browserTabHoverTint"));
             Assert.Equal("False", (string?)tint.Attribute("IsHitTestVisible"));
@@ -121,7 +121,7 @@ public sealed class BrowserTabHoverContractTests
         var view = new BrowserView();
         var list = view.GetVisualDescendants().OfType<ItemsControl>()
             .Single(control => control.Name == "HorizontalTabsList");
-        list.ItemsSource = [new BrowserTabItem("One", "", false, true)];
+        list.ItemsSource = new[] { new BrowserTabItem("One", "", false, true) };
         var window = new Window { Width = 500, Height = 120, Content = view };
         try
         {
@@ -136,8 +136,8 @@ public sealed class BrowserTabHoverContractTests
             var parts = row.GetVisualDescendants().OfType<HavenButton>()
                 .Where(control => control.Classes.Contains("browserTabPart")).ToArray();
             Assert.Equal(2, parts.Length);
-            var close = Assert.Single(parts.Where(control => control.Classes.Contains("browserTabClose")));
-            var title = Assert.Single(parts.Where(control => !control.Classes.Contains("browserTabClose")));
+            var close = Assert.Single(parts, control => control.Classes.Contains("browserTabClose"));
+            var title = Assert.Single(parts, control => !control.Classes.Contains("browserTabClose"));
             var baseBackground = row.Background;
             var selectedIndicator = row.GetVisualDescendants().OfType<HavenAdaptiveSurface>().Single();
 
