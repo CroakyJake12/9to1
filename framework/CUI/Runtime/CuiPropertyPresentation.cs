@@ -73,6 +73,7 @@ public static class CuiPropertyPresentation
         else if (type == typeof(FontWeight)) parsed = Enum.Parse<FontWeight>(value,true);
         else if (type == typeof(double)) parsed = value.Equals("Auto", StringComparison.OrdinalIgnoreCase) ? double.NaN : double.Parse(value, CultureInfo.InvariantCulture);
         else if (type == typeof(bool)) parsed = bool.Parse(value);
+        else if (type == typeof(TextTrimming)) parsed = TextTrimming.Parse(value);
         else if (type == typeof(int)) parsed = int.Parse(value, CultureInfo.InvariantCulture);
         else if (type == typeof(decimal)) parsed = decimal.Parse(value, CultureInfo.InvariantCulture);
         else if (type == typeof(char)) parsed = value.Length == 1 ? value[0] : throw new FormatException("A CUI character requires exactly one character.");

@@ -1479,13 +1479,14 @@ public sealed class UnifiedHomeContentTests
         HomeDiscoverPage? discover = null;
         Window? window = null;
         IBrowseNativeAppContentSession? session = null;
+        var factory = new RefusalRecordingHomeFactory(Factory(new(), lifetime.Token,
+            discover: () => discover = new HomeDiscoverPage(new HomeDiscoverCatalog([catalogue]))));
         try
         {
             // The ACTUAL owning Discover page/catalogue is acquired by the normal Home factory.
             // This fixture reports an explicitly empty local catalogue, not a fabricated model.
             chrome = await BrowseChrome.CreateAsync(paths,
-                internalContentFactory: Factory(new(), lifetime.Token,
-                    discover: () => discover = new HomeDiscoverPage(new HomeDiscoverCatalog([catalogue]))),
+                internalContentFactory: factory,
                 homeProfileId: "central-route-profile", cancellationToken: lifetime.Token)
                 .WaitAsync(TimeSpan.FromSeconds(20), lifetime.Token);
 
@@ -1520,6 +1521,9 @@ public sealed class UnifiedHomeContentTests
             Assert.Equal("browse://home/models", refusedNested.SelectedTab.Address.Value);
             Assert.Equal(tabCount, refusedNested.Tabs.Count);
             Assert.Contains("not registered", refusedNested.Status, StringComparison.Ordinal);
+            var rejected = Assert.Single(factory.Refusals);
+            Assert.Equal("browse://home/settings", rejected.Address.Value);
+            Assert.IsType<NotSupportedException>(rejected.Failure);
         }
         finally
         {
@@ -1530,7 +1534,23 @@ public sealed class UnifiedHomeContentTests
                     var preparation = await chrome.PrepareCloseAsync(testToken)
                         .WaitAsync(TimeSpan.FromSeconds(20), testToken);
                     Assert.NotNull(preparation);
-                    await preparation!.BeginClose().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+                    if (factory.Refusals.Count == 0)
+                        await preparation!.BeginClose().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+                    else
+                    {
+                        // The real factory refusal is deliberately retained by Browse. Match
+                        // exact original causes; any additional cleanup failure still fails.
+                        var close = preparation!.BeginClose();
+                        var failure = await Record.ExceptionAsync(() => close.WaitAsync(TimeSpan.FromSeconds(20), testToken));
+                        var aggregate = Assert.IsType<AggregateException>(failure);
+                        var causes = aggregate.Flatten().InnerExceptions;
+                        Assert.NotEmpty(causes);
+                        Assert.All(causes, cause => Assert.Contains(factory.Refusals,
+                            refusal => ReferenceEquals(refusal.Failure, cause)));
+                        Assert.All(factory.Refusals, refusal => Assert.Contains(causes,
+                            cause => ReferenceEquals(refusal.Failure, cause)));
+                        Assert.True(close.IsFaulted);
+                    }
                     if (session is not null) Assert.True(session.CanRetireOriginalView);
                 }
             }
@@ -1708,7 +1728,7 @@ public sealed class UnifiedHomeContentTests
             if (width is 360 or 390 or 1280)
             {
                 // Real canonical Apps controls in the original owning page, including the query-visible Clear button.
-                var home = Assert.IsType<UnifiedHomePage>(page);
+                var home = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(page).OriginalContent);
                 var searchRow = Assert.Single(page.GetVisualDescendants().OfType<CuiContainerControl>(),
                     control => control.Name == "home-apps-search-row");
                 var search = Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
@@ -2186,6 +2206,20 @@ public sealed class UnifiedHomeContentTests
         window.UpdateLayout();
         Dispatcher.UIThread.RunJobs();
         window.UpdateLayout();
+    }
+
+    private sealed class RefusalRecordingHomeFactory(IBrowseInternalContentFactory original) : IBrowseInternalContentFactory
+    {
+        internal List<(AppContentAddress Address, Exception Failure)> Refusals { get; } = [];
+        public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
+        {
+            try { return original.CreateSession(request); }
+            catch (Exception failure)
+            {
+                Refusals.Add((request.Address, failure));
+                throw;
+            }
+        }
     }
 
     private static Window Show(Control page)

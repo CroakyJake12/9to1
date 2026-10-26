@@ -390,7 +390,7 @@ public sealed class CuiControlRegistry
         var text = common.Concat(new[]
         {
             "Text", "Foreground", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextDecoration",
-            "TextWrapping", "TextAlignment", "VerticalTextAlignment"
+            "TextWrapping", "TextTrimming", "MaxLines", "TextAlignment", "VerticalTextAlignment"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var input = common.Concat(new[]
         {
@@ -483,6 +483,8 @@ public sealed class CuiControlRegistry
             ("FontStyle", "font-style", typeof(Avalonia.Media.FontStyle), true),
             ("TextDecoration", "text-decoration", typeof(Avalonia.Media.TextDecorationCollection), true),
             ("TextWrapping", "symbol", typeof(Avalonia.Media.TextWrapping), true),
+            ("TextTrimming", "symbol", typeof(Avalonia.Media.TextTrimming), true),
+            ("MaxLines", "integer", typeof(int), true),
             ("AcceptsReturn", "boolean", typeof(bool), true), ("PlaceholderText", "text", typeof(string), true),
             ("Watermark", "text", typeof(string), true), ("PasswordChar", "text", typeof(string), true),
             ("Minimum", "number", typeof(double), true), ("Maximum", "number", typeof(double), true), ("Increment", "number", typeof(double), true),
@@ -550,6 +552,7 @@ public sealed class CuiControlRegistry
             "VerticalTextAlignment" => new[] { "Top", "Center", "Bottom" },
             "TextAlignment" => new[] { "Left", "Center", "Right", "Justify" },
             "TextWrapping" => new[] { "NoWrap", "Wrap", "WrapWithOverflow" },
+            "TextTrimming" => new[] { "None", "CharacterEllipsis", "WordEllipsis", "PrefixCharacterEllipsis", "PathSegmentEllipsis" },
             "FontStyle" => new[] { "Normal", "Italic", "Oblique" },
             "FontRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiFontRole>(),
             "AccentRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiAccentRole>(),

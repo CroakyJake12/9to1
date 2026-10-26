@@ -12,6 +12,33 @@ namespace CakeOS.Cui.Runtime.Tests;
 public sealed class CuiCanonicalBoundaryRuntimeTests
 {
     [Theory]
+    [InlineData("None", 0)]
+    [InlineData("CharacterEllipsis", 3)]
+    [InlineData("WordEllipsis", 1)]
+    public void Authored_text_trimming_and_line_limit_project_typed_values(string trimming, int maxLines)
+    {
+        using var loader = new CuiControlLoader();
+        var loaded = loader.LoadMarkup($"<Text Text=\"Long dashboard content\" TextTrimming=\"{trimming}\" MaxLines=\"{maxLines}\"/>");
+        Assert.Empty(loaded.Diagnostics);
+        var text = Assert.IsType<TextBlock>(loaded.Root);
+        Assert.Same(TextTrimming.Parse(trimming), text.TextTrimming);
+        Assert.Equal(maxLines, text.MaxLines);
+    }
+
+    [Fact]
+    public void Bound_text_trimming_and_line_limit_update_the_original_text()
+    {
+        var values = new CuiViewModel(); values.Set("Trimming", "CharacterEllipsis"); values.Set("Lines", 3);
+        using var loader = new CuiControlLoader(); loader.SetBindingContext(values);
+        var loaded = loader.LoadMarkup("<Text Text=\"Long dashboard content\" TextTrimming=\"{Binding Trimming}\" MaxLines=\"{Binding Lines}\"/>");
+        Assert.Empty(loaded.Diagnostics);
+        var text = Assert.IsType<TextBlock>(loaded.Root); loader.WireBindings(text);
+        Assert.Same(TextTrimming.CharacterEllipsis, text.TextTrimming); Assert.Equal(3, text.MaxLines);
+        values.Set("Trimming", "None"); values.Set("Lines", 1);
+        Assert.Same(TextTrimming.None, text.TextTrimming); Assert.Equal(1, text.MaxLines);
+    }
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void Authored_bounds_clipping_projects_the_declared_boolean(bool clipped)

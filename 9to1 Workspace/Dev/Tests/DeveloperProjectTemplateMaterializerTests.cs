@@ -59,12 +59,17 @@ public sealed class DeveloperProjectTemplateMaterializerTests
     public async Task Prepare_RejectsAmbiguousProviderAndInvalidProjectNameBeforeReadingContent()
     {
         var provider = new ContentProvider([new("main.cui", "<Cui version=\"1\" />")]);
-        var materializer = new DeveloperProjectTemplateMaterializer([provider, provider]);
-        var ambiguousProvider = await materializer.PrepareAsync(ReadyOption(), "Sample");
+        Assert.Throws<ArgumentException>("providers",
+            () => new DeveloperProjectTemplateMaterializer([provider, provider]));
+        Assert.Equal(0, provider.Calls);
+
+        var missingProvider = await new DeveloperProjectTemplateMaterializer([]).PrepareAsync(ReadyOption(), "Sample");
+        Assert.False(missingProvider.Succeeded);
+        Assert.Equal(DeveloperOperationErrorCode.CapabilityUnavailable, missingProvider.Error!.Code);
+        Assert.Equal(0, provider.Calls);
+
         var invalidName = await new DeveloperProjectTemplateMaterializer([provider]).PrepareAsync(ReadyOption(), "../Sample");
 
-        Assert.False(ambiguousProvider.Succeeded);
-        Assert.Equal(DeveloperOperationErrorCode.CapabilityUnavailable, ambiguousProvider.Error!.Code);
         Assert.False(invalidName.Succeeded);
         Assert.Equal(DeveloperOperationErrorCode.InvalidInput, invalidName.Error!.Code);
         Assert.Equal(0, provider.Calls);
