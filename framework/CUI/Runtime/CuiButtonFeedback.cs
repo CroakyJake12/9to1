@@ -273,7 +273,8 @@ internal sealed class CuiHoverFeedback : IDisposable
         var chromeless = _store.Contains("Chromeless") && _store.Resolve("Chromeless").Value is true;
         var highContrast = Resource("CuiHighContrast") is true;
         var optedIn = _requiredClass is null || _owner.Classes.Contains(_requiredClass);
-        var active = optedIn && _owner.IsEffectivelyEnabled && _owner.IsPointerOver
+        var selectedMenuItem = _owner is MenuItem { IsSelected: true };
+        var active = optedIn && _owner.IsEffectivelyEnabled && (_owner.IsPointerOver || selectedMenuItem)
             && _owner is not Button { IsPressed: true }
             && !(_owner is MenuItem && _owner.Classes.Contains(":pressed"))
             && !_dragging

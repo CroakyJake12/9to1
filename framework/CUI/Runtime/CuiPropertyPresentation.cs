@@ -200,11 +200,10 @@ public static class CuiPropertyPresentation
                 Watch("CuiPopupHorizontalOffset", "HorizontalOffset");
                 Watch("CuiPopupVerticalOffset", "VerticalOffset");
             }
-            // The generic Selected state (a single authored surface such as a tab pill) applies themed
-            // selection fill/border to any CUI control, including non-interactive composition
-            // containers. The selection brushes are therefore observed for every control; hover and
-            // pressed brushes remain interactive-control-only so a quiet container never paints an
-            // unwanted hover island.
+            // Generic selected surfaces and list rows use the theme selection fill/border. MenuItem
+            // keeps its authored background and uses the shared derived wash plus focus/selection
+            // border cue. Observe selection resources on every control; hover/pressed brushes remain
+            // interactive-control-only so quiet containers do not paint unwanted hover islands.
             Watch("CuiSelectionBrush", null); Watch("CuiMenuSelectionBrush", null); Watch("CuiSelectionIndicatorBrush", null);
             if (!interactive) return;
             Set("FocusAdorner", new FuncTemplate<Control>(() =>
@@ -472,7 +471,15 @@ public static class CuiPropertyPresentation
                 if (_dragging) State("Background","CuiScrollThumbPressedBrush");
             }
             if (_selected || _control is ToggleButton { IsChecked: true } or ListBoxItem { IsSelected: true } or MenuItem { IsSelected: true })
-            { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); if (!_compoundFocus) State("BorderColor", "CuiSelectionIndicatorBrush"); }
+            {
+                // MenuItem selection is an interaction cue, not ownership of its authored fill.
+                // Its border indicator and derived hover wash remain visible without replacing an
+                // authored/app background or foreground. Other selected controls keep their
+                // existing selection surface contract.
+                if (_control is not MenuItem)
+                    State("Background", _control is ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush");
+                if (!_compoundFocus) State("BorderColor", "CuiSelectionIndicatorBrush");
+            }
             if (!rail && !_compoundFocus && !_chromeless && _control is Button { IsPressed: true })
             { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonPressedBrush" : AccentStateBackground("Pressed")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonPressedForegroundBrush" : AccentStateForeground("Pressed")); }
             if (!_compoundFocus && _control.IsKeyboardFocusWithin)

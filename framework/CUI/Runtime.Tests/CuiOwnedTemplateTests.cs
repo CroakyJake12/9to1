@@ -339,7 +339,7 @@ public sealed class CuiOwnedTemplateTests
     }
 
     [Fact]
-    public async Task MenuItem_pressed_pseudo_class_suppresses_hover_wash_until_release()
+    public async Task MenuItem_selection_uses_derived_wash_and_pressed_state_suppresses_it()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
@@ -355,27 +355,40 @@ public sealed class CuiOwnedTemplateTests
                 item = Assert.Single(root!.GetVisualDescendants().OfType<MenuItem>());
                 var authored = new SolidColorBrush(Colors.White);
                 CuiPropertyPresentation.Set(item, "Background", authored, CuiPropertyLevel.Instance, "authored menu row");
-                Assert.True(item.TryFindResource("CuiMenuSelectionBrush", out var selectedBrush));
                 var frame = Assert.Single(item.GetVisualDescendants().OfType<CuiMaterialBorder>());
                 var point = item.TranslatePoint(new Point(item.Bounds.Width / 2, item.Bounds.Height / 2), window)!.Value;
                 window.MouseMove(point); window.UpdateLayout();
                 Assert.True(item.IsPointerOver);
+                Assert.True(item.IsSelected);
                 Assert.NotNull(frame.HoverTint);
                 Assert.Same(authored, item.Background);
 
                 window.MouseDown(point, Avalonia.Input.MouseButton.Left); window.UpdateLayout();
                 Assert.Contains(":pressed", item.Classes);
                 Assert.Null(frame.HoverTint);
-                // Pointer press moves the MenuItem into its real selected state. Its CUI selection
-                // brush is expected to win over the authored rest fill while hover feedback is off.
                 Assert.True(item.IsSelected);
-                Assert.Same(selectedBrush, item.Background);
+                Assert.Same(authored, item.Background);
 
                 window.MouseUp(point, Avalonia.Input.MouseButton.Left); window.UpdateLayout();
                 Assert.DoesNotContain(":pressed", item.Classes);
                 Assert.NotNull(frame.HoverTint);
                 Assert.True(item.IsSelected);
-                Assert.Same(selectedBrush, item.Background);
+                Assert.Same(authored, item.Background);
+
+                window.MouseMove(new Point(-10, -10)); window.UpdateLayout();
+                Assert.False(item.IsPointerOver);
+                item.IsSelected = true; // Exercise keyboard-selected state without pointer hover.
+                Assert.True(item.IsSelected);
+                Assert.True(item.IsKeyboardFocusWithin);
+                Assert.True(item.TryFindResource("CuiFocusBrush", out var keyboardFocusBrush));
+                Assert.Same(keyboardFocusBrush, item.BorderBrush);
+                Assert.NotNull(frame.HoverTint); // keyboard/menu selection remains visible outside the pointer.
+                Assert.Same(authored, item.Background);
+
+                CuiPropertyPresentation.Set(item, "IsEnabled", false, CuiPropertyLevel.Instance, "disable selected item");
+                Assert.False(item.IsEffectivelyEnabled);
+                Assert.Null(frame.HoverTint);
+                Assert.Same(authored, item.Background);
             }
             finally { window.Close(); if (item is not null) CuiPropertyPresentation.Detach(item); }
         }, CancellationToken.None);
