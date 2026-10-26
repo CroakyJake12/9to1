@@ -118,6 +118,9 @@ public sealed partial class BrowseNativeUiTests
             Assert.Equal(third, chrome.State.SelectedTabId);
             Assert.Equal(2, factory.Hosts.Count);
             Assert.False(targetRow.DropSwapBefore || targetRow.DropSwapAfter, "Retiring the drag must clear its edge marker.");
+            Assert.False(source.IsPressed);
+            await Click(window, workspace, TabButton(window, workspace, second.ToString("D"))); Layout();
+            Assert.Equal(second, chrome.State.SelectedTabId);
             await Retire(window);
 
             void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
@@ -250,8 +253,13 @@ public sealed partial class BrowseNativeUiTests
             var dropPoint = targetVisual.TranslatePoint(default, window)!.Value + new Vector(targetVisual.Bounds.Width * .25, targetVisual.Bounds.Height / 2);
             var before = chrome.State.Tabs.Select(tab => tab.Id).ToArray();
 
+            IPointer? pointer = null;
+            source.AddHandler(InputElement.PointerPressedEvent, (_, args) => pointer = args.Pointer,
+                Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
             source.Focus(); window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
             window.MouseMove(dropPoint); Layout();
+            Assert.True(source.IsPressed);
+            Assert.NotNull(pointer!.Captured);
             Assert.True(targetRow!.DropSplitBefore);
             Assert.True(window.GetVisualDescendants().OfType<Popup>().Any(popup => popup.IsOpen));
             window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
@@ -261,7 +269,11 @@ public sealed partial class BrowseNativeUiTests
             Assert.DoesNotContain(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
             Assert.Equal(before, chrome.State.Tabs.Select(tab => tab.Id));
             Assert.Null(workspace.OriginalCommand);
+            Assert.False(source.IsPressed);
+            Assert.Null(pointer!.Captured);
             window.MouseUp(dropPoint, MouseButton.Left); Layout();
+            await Click(window, workspace, TabButton(window, workspace, sourceId.ToString("D"))); Layout();
+            Assert.Equal(sourceId, chrome.State.SelectedTabId);
             await Retire(window);
         }
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }

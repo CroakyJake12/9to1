@@ -195,6 +195,7 @@ internal sealed class BrowseEngineViewport : ContentControl
     private readonly Dictionary<IBrowseAppContentSession, Border> _originalAppViews = new(ReferenceEqualityComparer.Instance);
     private BrowseNativeWorkspace.TabRow? _tabDragSource;
     private IPointer? _tabDragPointer;
+    private IInputElement? _tabDragCapture;
     private Point _tabDragStart;
     private bool _tabDragActive;
     private BrowseNativeWorkspace.TabRow? _tabDropTarget;
@@ -238,7 +239,7 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         if (!_workspace.IsReady || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
             !TryFindTabRow(args.Source, out _, out var row)) return;
-        _tabDragSource = row; _tabDragPointer = args.Pointer; _tabDragStart = args.GetPosition(this); _tabDragActive = false;
+        _tabDragSource = row; _tabDragPointer = args.Pointer; _tabDragCapture = args.Pointer.Captured; _tabDragStart = args.GetPosition(this); _tabDragActive = false;
     }
     private void OnTabPointerMoved(object? sender, PointerEventArgs args)
     {
@@ -362,12 +363,18 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         var preview = _tabDragPreview;
         var target = _tabDropTarget;
+        var pointer = _tabDragPointer; var capture = _tabDragCapture; var wasDrag = _tabDragActive;
         _tabDragPreview = null; _tabDropTarget = null; _tabDropZone = BrowseNativeWorkspace.TabDropZone.None;
-        _tabDragSource = null; _tabDragPointer = null; _tabDragActive = false;
+        _tabDragSource = null; _tabDragPointer = null; _tabDragCapture = null; _tabDragActive = false;
         if (preview is not null)
         {
             preview.IsOpen = false; preview.Child = null; _root.Children.Remove(preview);
         }
+        // Capture loss resets the donor Button's pressed state even when the
+        // drag consumed release or was cancelled before release. A normal click
+        // keeps its capture so the Button can still perform its own release.
+        if (wasDrag && pointer is not null && capture is not null && ReferenceEquals(pointer.Captured, capture))
+            pointer.Capture(null);
         target?.SetDropZone(BrowseNativeWorkspace.TabDropZone.None);
         _workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None);
     }
