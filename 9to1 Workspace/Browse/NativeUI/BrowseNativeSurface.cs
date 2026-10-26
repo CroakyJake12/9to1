@@ -222,7 +222,6 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.AddHandler(InputElement.PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
-        _findKeyScope?.AddHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost, RoutingStrategies.Direct, handledEventsToo: true);
     }
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
     {
@@ -231,7 +230,6 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTabPointerPressed);
         _findKeyScope?.RemoveHandler(InputElement.PointerMovedEvent, OnTabPointerMoved);
         _findKeyScope?.RemoveHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased);
-        _findKeyScope?.RemoveHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost);
         ClearTabDrag();
         _findKeyScope = null;
     }
@@ -239,7 +237,12 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         if (!_workspace.IsReady || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
             !TryFindTabRow(args.Source, out _, out var row)) return;
+        ClearTabDrag();
         _tabDragSource = row; _tabDragPointer = args.Pointer; _tabDragCapture = args.Pointer.Captured; _tabDragStart = args.GetPosition(this); _tabDragActive = false;
+        // Capture loss is direct and does not reach the scene when capture moves
+        // between sibling controls. Observe the exact captured input owner.
+        if (_tabDragCapture is InputElement captured)
+            captured.AddHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost, RoutingStrategies.Direct);
     }
     private void OnTabPointerMoved(object? sender, PointerEventArgs args)
     {
@@ -366,6 +369,8 @@ internal sealed class BrowseEngineViewport : ContentControl
         var pointer = _tabDragPointer; var capture = _tabDragCapture; var wasDrag = _tabDragActive;
         _tabDragPreview = null; _tabDropTarget = null; _tabDropZone = BrowseNativeWorkspace.TabDropZone.None;
         _tabDragSource = null; _tabDragPointer = null; _tabDragCapture = null; _tabDragActive = false;
+        if (capture is InputElement captured)
+            captured.RemoveHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost);
         if (preview is not null)
         {
             preview.IsOpen = false; preview.Child = null; _root.Children.Remove(preview);
