@@ -28,7 +28,6 @@
                     <Border Grid.ColumnSpan="3"
                             Classes="browserTabHoverTint"
                             Background="{DynamicResource HavenAccentTertiaryBrush}"
-                            Opacity="0"
                             IsHitTestVisible="False" />
                     <hui:HavenAdaptiveSurface Background="{DynamicResource HavenAccentBrush}"
                             CornerRadius="3"
@@ -153,7 +152,6 @@
                       <Border Grid.ColumnSpan="3"
                               Classes="browserTabHoverTint"
                               Background="{DynamicResource HavenAccentTertiaryBrush}"
-                              Opacity="0"
                               IsHitTestVisible="False" />
                       <hui:HavenAdaptiveSurface Background="{DynamicResource HavenAccentBrush}"
                               CornerRadius="3"

@@ -43,7 +43,7 @@ public sealed class BrowserTabHoverContractTests
             var tint = group.Descendants().Single(element => element.Name.LocalName == "Border" &&
                 HasClass((string?)element.Attribute("Classes"), "browserTabHoverTint"));
             Assert.Equal("False", (string?)tint.Attribute("IsHitTestVisible"));
-            Assert.Equal("0", (string?)tint.Attribute("Opacity"));
+            Assert.Null(tint.Attribute("Opacity"));
             Assert.Equal("{DynamicResource HavenAccentTertiaryBrush}", (string?)tint.Attribute("Background"));
             Assert.True(tint.Parent!.Elements().ToList().IndexOf(tint) <
                         tint.Parent.Elements().ToList().IndexOf(parts[0]));
@@ -87,6 +87,11 @@ public sealed class BrowserTabHoverContractTests
         Assert.Contains(overlayHover.Elements(), setter =>
             (string?)setter.Attribute("Property") == "Opacity" &&
             (string?)setter.Attribute("Value") == "0.08");
+        var overlayRest = styles.Single(style =>
+            (string?)style.Attribute("Selector") == "hui|HavenAdaptiveSurface.browserTabGroup Border.browserTabHoverTint");
+        Assert.Contains(overlayRest.Elements(), setter =>
+            (string?)setter.Attribute("Property") == "Opacity" &&
+            (string?)setter.Attribute("Value") == "0");
 
         var sharedParts = styles.Single(style =>
             (string?)style.Attribute("Selector") == "hui|HavenAdaptiveSurface.browserTabGroup hui|HavenButton.browserTabPart");

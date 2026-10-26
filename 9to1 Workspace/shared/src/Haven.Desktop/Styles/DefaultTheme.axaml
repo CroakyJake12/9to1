@@ -900,6 +900,9 @@
     <Setter Property="BorderBrush" Value="{DynamicResource HavenAccentTertiaryBrush}" />
     <Setter Property="Effect" Value="{DynamicResource CuiAccentTertiaryHoverEffect}" />
   </Style>
+  <Style Selector="hui|HavenAdaptiveSurface.browserTabGroup Border.browserTabHoverTint">
+    <Setter Property="Opacity" Value="0" />
+  </Style>
   <Style Selector="hui|HavenAdaptiveSurface.browserTabGroup:pointerover Border.browserTabHoverTint">
     <Setter Property="Opacity" Value="0.08" />
   </Style>
