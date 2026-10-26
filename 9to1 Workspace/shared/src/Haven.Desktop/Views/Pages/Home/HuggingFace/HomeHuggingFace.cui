@@ -1,0 +1,39 @@
+<Cui id="home.huggingface-browser" version="1">
+  <Theme Name="user_preference">
+    <Page AccessibleName="Hugging Face model browser">
+      <Container id="hf-browser-root" Type="Grid" RowSizes="Auto Auto 1fr Auto Auto Auto Auto Auto" Padding="14" CellGap="8" Background="{Resource CuiPanelBrush}" CornerRadius="12" VerticalScrolling="True" MaxHeight="520">
+        <Container Type="Vertical Stack" CellGap="2">
+          <Text Text="Hugging Face" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
+          <Text Text="Search public GGUF repositories, inspect exact files, and install a verified model into Dulche. Installation does not start inference." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Container Row="1" Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+          <Input id="hf-query" Type="Text" PlaceholderText="Search Hugging Face models" AccessibleName="Search Hugging Face public model repositories" />
+          <Button id="hf-search" Column="1" Content="Search" AccessibleName="Search public Hugging Face GGUF repositories" />
+        </Container>
+        <Input id="hf-repositories" Row="2" Type="List" Height="126" AccessibleName="Hugging Face GGUF repositories; select a repository to inspect its files" />
+        <Text id="hf-repository-details" Row="3" Text="Search repositories, then select one to inspect its commit, license, gating and files." TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+        <Input id="hf-files" Row="4" Type="List" Height="88" AccessibleName="Verified GGUF files; select the exact file to install" />
+        <Container id="hf-install-actions" Row="5" Type="Horizontal Stack" CellGap="8">
+          <Button id="hf-install" Content="Install selected file" AccessibleName="Install the selected verified Hugging Face GGUF file into Dulche" IsEnabled="False" />
+          <Button id="hf-cancel-install" Content="Cancel install" AccessibleName="Cancel the active Hugging Face model installation" IsEnabled="False" />
+        </Container>
+        <Container Row="6" Type="Vertical Stack" CellGap="4">
+          <Text id="hf-install-status" Text="No installation is running." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Input id="hf-install-progress" Type="Progress" AccessibleName="Hugging Face installation progress" Minimum="0" Maximum="100" Value="0" WriteBack="false" Height="10" IsVisible="False" />
+        </Container>
+        <Container Row="7" Type="Vertical Stack" CellGap="4" Padding="10 8 0 0" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 1 0 0">
+          <Text Text="Optional access token" FontWeight="SemiBold" Foreground="{Resource CuiTextBrush}" />
+          <Text Text="Public search works without a token. Gated downloads require a token for an account that already has repository access. The token is stored securely and never shown again." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Grid" ColumnSizes="1fr Auto Auto Auto" CellGap="6">
+            <Input id="hf-token" Type="Text" PasswordChar="•" PlaceholderText="Paste token; input stays masked" AccessibleName="Optional masked Hugging Face access token" />
+            <Button id="hf-token-save" Column="1" Content="Save token" AccessibleName="Save the masked Hugging Face token securely" />
+            <Button id="hf-token-clear" Column="2" Content="Clear" AccessibleName="Clear the unsaved masked token input" />
+            <Button id="hf-token-remove" Column="3" Content="Remove saved token" AccessibleName="Remove the saved Hugging Face token" IsEnabled="False" />
+          </Container>
+          <Text id="hf-token-status" Text="Checking secure token status…" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="hf-browser-status" Text="Search is public; installing a selected file requires verified repository metadata." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>
