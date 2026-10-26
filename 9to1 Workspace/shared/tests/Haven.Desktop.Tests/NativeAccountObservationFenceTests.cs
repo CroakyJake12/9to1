@@ -3,8 +3,11 @@ using System.Text.Json;
 using Haven.Desktop.Accounts;
 using HavenOS.Home;
 using HavenOS.Home.Core;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using NineToOne.Accounts.Native;
 using NineToOne.Accounts.Remote;
@@ -43,7 +46,7 @@ public sealed class NativeAccountObservationFenceTests
             Assert.True(await adapter.LaunchAuthAsync(TestContext.Current.CancellationToken));
             Assert.Equal(1, session.SignInCalls); // Existing shared session, no second OAuth flow.
         }
-        finally { pending.TrySetCanceled(); Directory.Delete(root, true); }
+        finally { pending.TrySetCanceled(TestContext.Current.CancellationToken); Directory.Delete(root, true); }
     }
 
     [Fact]
@@ -107,6 +110,51 @@ public sealed class NativeAccountObservationFenceTests
             Assert.False((await service.ReadCompletionAsync("synthetic-profile", TestContext.Current.CancellationToken)).Completion!.SignedIn);
         }
         finally { Directory.Delete(root, true); }
+    }
+
+    [AvaloniaFact]
+    public async Task Onboarding_successful_retry_clears_the_rendered_failure_before_model_download_choice()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "onboarding-retry-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var session = new ScriptedSession { IsAvailable = true,
+            OnSignIn = _ => Task.FromException<NativeCakeAccountSnapshot>(new IOException("synthetic offline")) };
+        var service = new HomeOnboardingService(new FileHomeCoreStateStore(Path.Combine(root, "home.json")),
+            browserLauncher: new NativeCakeOnboardingAdapter(session));
+        var mounted = FirstRunOnboardingFlow.Mount(service, "synthetic-profile");
+        var window = new Window { Width = 900, Height = 650, Content = mounted.Root };
+        T Find<T>(string name) where T : Control => mounted.Root.GetVisualDescendants().OfType<T>()
+            .Single(c => c.Name == name && c.IsEffectivelyVisible);
+        async Task Click(string name)
+        {
+            var button = Find<Button>(name);
+            Assert.True(button.IsEnabled);
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await mounted.WhenActionsIdleAsync();
+            Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+        }
+        try
+        {
+            window.Show(); window.UpdateLayout();
+            await Click("onboarding-start");
+            await Click("onboarding-signin-primary");
+            Assert.Contains("Sign-in did not complete", Find<TextBlock>("onboarding-status").Text);
+            Assert.NotNull(Find<Control>("onboarding-signin"));
+            session.OnSignIn = _ =>
+            {
+                var current = Snapshot(); session.Current = current;
+                return Task.FromResult(current);
+            };
+            await Click("onboarding-signin-primary");
+            Assert.Equal(2, session.SignInCalls);
+            Assert.NotNull(Find<Control>("onboarding-download"));
+            Assert.True(string.IsNullOrEmpty(Find<TextBlock>("onboarding-status").Text));
+            Assert.False(mounted.CompletionTask.IsCompleted);
+            await Click("onboarding-continue");
+            Assert.True(mounted.CompletionTask.IsCompletedSuccessfully);
+            Assert.True((await service.ReadCompletionAsync("synthetic-profile", TestContext.Current.CancellationToken)).Completion!.SignedIn);
+        }
+        finally { window.Close(); await mounted.RetireAsync(); Directory.Delete(root, true); }
     }
 
     [Fact]

@@ -19,6 +19,7 @@
          Download Models? step appears directly (no extra Continue/Discover tap). -->
     <Action name="signin" command="onboarding.signin" result="Result">
       <Set Target="StepSignIn" Value="false" When="{Binding Result.Succeeded}" />
+      <Set Target="StatusText" Value="" When="{Binding Result.Succeeded}" />
       <Set Target="StatusText" Value="{Binding Result.Message}" When="!{Binding Result.Succeeded}" />
     </Action>
 
