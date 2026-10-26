@@ -1,4 +1,8 @@
+using System.ComponentModel;
+using System.Text.Json;
 using Avalonia;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
@@ -7,6 +11,11 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
+using Haven.SharedHeader;
+using HavenOS.Home;
+using HavenOS.Home.Core;
 using Haven.Application.Haven;
 using Haven.Browser;
 using Xunit;
@@ -15,6 +24,115 @@ namespace HavenOS.Apps.Browse.Tests;
 
 public sealed partial class BrowseNativeUiTests
 {
+    // Presentation/command-boundary regression over the SAME shipped shell and model-picker
+    // documents. Fixture route data is explicit; this is not native provider/auth/host acceptance.
+    [AvaloniaTheory]
+    [InlineData(360, 520)]
+    [InlineData(720, 520)]
+    [InlineData(1440, 920)]
+    public async Task Shared_model_panel_bounds_scroll_and_keeps_its_close_action_reachable_without_mutating_the_route(int width, int height)
+    {
+        var bindings = new SharedPanelDocumentFixture();
+        using var shellLoader = new CuiControlLoader();
+        shellLoader.SetBindingContext(bindings); shellLoader.SetActionDispatcher(bindings);
+        var shell = shellLoader.TryLoad(HavenSharedHeaderDocuments.LoadShell());
+        Assert.NotNull(shell.Root);
+        Assert.DoesNotContain(shell.Diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+        shellLoader.WireBindings(shell.Root!);
+        var surface = HomeModelPickerCuiSurface.LoadDefault();
+        var route = new HomeModelRouteContract("fixture.route.with.a.long.stable.identifier.for.narrow.viewport.regression", 1,
+            "global", "chat", null, null,
+            Enumerable.Range(0, 6).Select(index => new HomeModelRouteCandidate("fixture-provider", "fixture-model-" + index,
+                "fixture-revision", true, index)).ToArray(), JsonSerializer.SerializeToElement(new { }));
+        surface.ApplyState(new(false, "Fixture", "Explicit model-picker layout fixture", new(1, "global", "chat", [route]),
+            route.RouteId, route, true, null));
+        surface.ApplyCatalogue(new HomeModelCataloguePage([new HomeModelPickerCatalogueEntry(
+            "fixture-provider", "fixture-model", "fixture-revision", "Explicit catalogue layout fixture",
+            "Fixture provider", null, new HashSet<string>(["text"]), 1024, "fixture", "local", "fixture")],
+            0, 50, false, 1), "Explicit catalogue fixture, not provider readiness");
+        var originalState = surface.State;
+        using var pickerLoader = new CuiControlLoader();
+        pickerLoader.SetBindingContext(surface); pickerLoader.SetActionDispatcher(bindings);
+        var picker = pickerLoader.TryLoad(surface.Document);
+        Assert.NotNull(picker.Root);
+        Assert.DoesNotContain(picker.Diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+        pickerLoader.WireBindings(picker.Root!);
+        var body = NamedContainer(shell.Root!, "shared-panel-host");
+        body.AddChild(picker.Root!); // The same authored mount contract used by the production host.
+        var window = new Window { Content = shell.Root, Width = width, Height = height };
+        try
+        {
+            window.Show(); Pump();
+            var frame = NamedContainer(shell.Root!, "shared-panel-frame");
+            var close = shell.Root!.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "shared-panel-close");
+            var scroll = Assert.Single(body.GetVisualDescendants().OfType<ScrollViewer>());
+            var viewport = Assert.Single(scroll.GetVisualDescendants().OfType<ScrollContentPresenter>());
+            AssertInside(frame, window); AssertInside(close, window);
+            Assert.True(close.IsCancel);
+            Assert.Equal(ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
+            Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+            foreach (var name in new[] { "compact-model-picker-edit", "model-picker-refresh", "model-catalogue-refresh",
+                "category-video", "save-model-route", "preview-video-route" })
+            {
+                var button = picker.Root!.GetVisualDescendants().OfType<Button>().Single(control => control.Name == name);
+                button.BringIntoView(); Pump();
+                AssertInside(button, viewport);
+                AssertInside(close, window); // The dismiss action does not scroll away with content.
+            }
+            using (var rendered = window.CaptureRenderedFrame()) Assert.NotNull(rendered);
+            var point = close.TranslatePoint(new Point(close.Bounds.Width / 2, close.Bounds.Height / 2), window)!.Value;
+            var hit = window.InputHitTest(point) as Visual;
+            Assert.Contains(close, hit!.GetSelfAndVisualAncestors());
+            window.MouseDown(point, MouseButton.Left); window.MouseUp(point, MouseButton.Left);
+            await shellLoader.WhenActionsIdleAsync(); Pump();
+            Assert.False(bindings.HasOpenPanel); Assert.Equal(1, bindings.CloseCommands);
+            Assert.Same(originalState, surface.State);
+            bindings.HasOpenPanel = true; Pump();
+            var save = picker.Root!.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "save-model-route");
+            save.BringIntoView(); Pump(); save.Focus();
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
+            await shellLoader.WhenActionsIdleAsync(); Pump();
+            Assert.False(bindings.HasOpenPanel); Assert.Equal(2, bindings.CloseCommands);
+            Assert.Same(originalState, surface.State);
+            Assert.True(surface.State.HasUnsavedChanges);
+        }
+        finally { window.Close(); }
+
+        void Pump() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+        static CuiContainerControl NamedContainer(Control root, string name) => root.GetVisualDescendants().OfType<CuiContainerControl>()
+            .Single(control => control.Name == name);
+        static void AssertInside(Control child, Control parent)
+        {
+            var origin = child.TranslatePoint(default, parent)!.Value;
+            Assert.True(origin.X >= -.5 && origin.X + child.Bounds.Width <= parent.Bounds.Width + .5,
+                $"{child.Name} spans {origin.X}..{origin.X + child.Bounds.Width} outside width {parent.Bounds.Width}.");
+            Assert.True(origin.Y >= -.5 && origin.Y + child.Bounds.Height <= parent.Bounds.Height + .5,
+                $"{child.Name} spans {origin.Y}..{origin.Y + child.Bounds.Height} outside height {parent.Bounds.Height}.");
+        }
+    }
+
+    private sealed class SharedPanelDocumentFixture : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
+    {
+        private bool _hasOpenPanel = true;
+        public bool HasOpenPanel
+        {
+            get => _hasOpenPanel;
+            set { _hasOpenPanel = value; PropertyChanged?.Invoke(this, new(nameof(HasOpenPanel))); }
+        }
+        public int CloseCommands { get; private set; }
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public bool TryGetValue(string path, out object? value)
+        { value = path == nameof(HasOpenPanel) ? HasOpenPanel : null; return value is not null; }
+        public ValueTask DispatchAsync(string command, object? parameter, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            Assert.Equal("9to1.Haven.ClosePanel", command);
+            CloseCommands++; HasOpenPanel = false;
+            return ValueTask.CompletedTask;
+        }
+    }
+
     private sealed class SharedControlsFakeGateway : IHavenSharedControlGateway
     {
         public int ModelOpens;

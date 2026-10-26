@@ -1,4 +1,7 @@
 <Cui id="haven-shared-panel-shell" product="9-1" version="1">
+  <Actions>
+    <Action name="CloseSharedPanel" command="9to1.Haven.ClosePanel" />
+  </Actions>
   <Theme Name="user_preference">
     <Page>
       <!-- The persistent shared-panel shell. The whole frame — the browser/scene content
@@ -8,8 +11,13 @@
            structure/backdrop/visibility is authored in C#. -->
       <Container id="shared-frame-root" Type="Overlay">
         <Container id="shared-scene-host" Type="Grid" ColumnSizes="1fr" RowSizes="1fr" />
-        <Container id="shared-shell-backdrop" Type="Overlay" IsVisible="{Binding HasOpenPanel}" Background="#667F7F7F">
-          <Container id="shared-panel-host" Type="Vertical Stack" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" CellGap="12" Width="520" MaxHeight="600" Background="{Resource CuiBackgroundBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12"/>
+        <Container id="shared-shell-backdrop" Type="Grid" IsVisible="{Binding HasOpenPanel}" Background="#667F7F7F">
+          <Container id="shared-panel-frame" Type="Grid" RowSizes="Auto 1fr" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="16" Padding="16" CellGap="12" MaxWidth="880" MaxHeight="720" Background="{Resource CuiBackgroundBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12">
+            <Container Type="Grid" ColumnSizes="1fr Auto">
+              <Button id="shared-panel-close" Column="1" action="CloseSharedPanel" CancelAction="True" AccessibleName="Close shared panel" Tooltip="Close panel (Esc)" MinHeight="36" Padding="12 6" CornerRadius="8">Close</Button>
+            </Container>
+            <Container id="shared-panel-host" Row="1" Type="Grid" ColumnSizes="1fr" RowSizes="Auto" VerticalScrolling="True" HorizontalScrolling="False" AccessibleName="Shared panel content" />
+          </Container>
         </Container>
       </Container>
     </Page>
