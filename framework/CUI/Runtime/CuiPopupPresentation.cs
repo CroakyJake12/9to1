@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Avalonia.Controls;
+using Avalonia.Controls.Diagnostics;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 
@@ -102,7 +103,18 @@ public static class CuiPopupPresentation
         ArgumentNullException.ThrowIfNull(popup);
         if (Requested.TryGetValue(popup, out _)) return;
         popup.BeforeShow += OnBeforeShow;
+        ((IPopupHostProvider)popup).PopupHostChanged += OnPopupHostChanged;
         Requested.Add(popup, new object());
+    }
+
+    private static void OnPopupHostChanged(IPopupHost? host)
+    {
+        if (host is not OverlayPopupHost overlay) return;
+        // Platforms without a native popup window use a different destination. It
+        // needs the same full CUI template admission as PopupRoot; otherwise its
+        // donor presenter never mounts the CUI content on the overlay path.
+        CuiPropertyPresentation.Attach(overlay);
+        overlay.UpdateLayout();
     }
 
     private static void OnBeforeShow(object? sender, Popup.PopupBeforeShowEventArgs args)
