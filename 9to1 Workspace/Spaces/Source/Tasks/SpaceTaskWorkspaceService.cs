@@ -260,7 +260,9 @@ public sealed class SpaceTaskWorkspaceService(
             _ => throw new UnauthorizedAccessException("An actual original task-context observation is required.")
         };
         if (current.ContextId != selected.ContextId || current.Snapshot?.TaskId != selected.Snapshot?.TaskId ||
-            current.Snapshot?.ExecutionId != selected.Snapshot?.ExecutionId || current.OriginSpaceId != selected.OriginSpaceId)
+            current.Snapshot?.ExecutionId != selected.Snapshot?.ExecutionId ||
+            current.Snapshot?.PersistenceRevision != selected.Snapshot?.PersistenceRevision ||
+            current.OriginSpaceId != selected.OriginSpaceId)
             throw new InvalidOperationException("The selected original Task/Run/context changed; refresh first.");
         return current;
     }
@@ -387,10 +389,9 @@ public sealed record SpaceTaskObservation(
     Guid SpaceId, long SpaceRevision, Conversation Conversation, TaskExecutionSnapshot? Snapshot,
     TaskExecutionProjection? Projection, bool OriginalAttemptRetained) : ITaskContextObservation
 {
-    // This conversation-keyed read has not asked the canonical task observation owner
-    // to authorize the current principal. A saved owner binding is historical provenance,
-    // not evidence that the identity is current. The exact selection path supplies the
-    // positive value only after a fresh owner-authorized task read.
+    // This observation is positive only when the canonical observation owner freshly
+    // authorized the current principal for this exact Task/Run/context/revision. A
+    // saved owner binding is provenance, not current identity or command authority.
     public bool HasCurrentCommandIdentity { get; init; }
     public Guid ContextId => Conversation.Id;
     public Guid? OriginSpaceId => SpaceId;

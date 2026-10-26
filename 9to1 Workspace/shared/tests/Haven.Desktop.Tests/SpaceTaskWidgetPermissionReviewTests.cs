@@ -53,6 +53,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig(temporary: false);
         await rig.RunAsync(tools: false);
         var originalTask = rig.Service.CurrentCanonicalTask!;
+        var originalActor = rig.Actors.Current!;
         var originalRequest = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
         var spaces = new SpaceRegistry(new ObservationSettings());
         var space = await spaces.CreateAsync("Task permission review", cancellationToken: token);
@@ -92,6 +93,22 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.True(widget.TryGetValue("PermissionAction", out var action));
             Assert.Contains(originalRequest.Id.ToString("D"), Assert.IsType<string>(action), StringComparison.Ordinal);
             Assert.True(widget.IsActionAvailable("task.deny-permission"));
+
+            // A live refresh after authentication changes must retire the already-open
+            // review, not just prevent opening a new one.
+            rig.Actors.Current = originalActor with { ActorId = "different-current-actor" };
+            await widget.DispatchAsync("task.refresh", null, token);
+            Assert.True(widget.TryGetValue("PermissionOpen", out open)); Assert.Equal(false, open);
+            Assert.True(widget.TryGetValue("PermissionQuestion", out var retiredQuestion));
+            Assert.NotEqual(originalRequest.Explanation, retiredQuestion);
+            Assert.False(widget.IsActionAvailable("task.review-permission"));
+            Assert.False(widget.IsActionAvailable("task.allow-permission"));
+            Assert.False(widget.IsActionAvailable("task.deny-permission"));
+            Assert.True(rig.Owner.CanRespond(originalRequest.Id));
+            rig.Actors.Current = originalActor;
+            await widget.DispatchAsync("task.refresh", null, token);
+            await widget.DispatchAsync("task.review-permission", null, token);
+            Assert.True(widget.TryGetValue("PermissionOpen", out open)); Assert.Equal(true, open);
 
             var currentObservation = await source.ReadAsync(space.Id, conversation.Id, token);
             Assert.True(currentObservation.HasCurrentCommandIdentity);
@@ -143,6 +160,77 @@ public sealed partial class ChatCloudPermissionCallerTests
             widget.RequestRetirement();
             var closeFailure = await Record.ExceptionAsync(() => widget.CloseAndDrainAsync());
             if (responseFailure is null) Assert.Null(closeFailure);
+            else Assert.NotNull(closeFailure);
+            window.Content = null;
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Space_task_permission_review_retires_when_exact_revision_changes_during_owner_read()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(tools: false);
+        var originalTask = rig.Service.CurrentCanonicalTask!;
+        var request = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        var spaces = new SpaceRegistry(new ObservationSettings());
+        var space = await spaces.CreateAsync("Task permission revision race", cancellationToken: token);
+        var conversation = rig.Conversation with
+        {
+            Mode = HavenMode.Tasks,
+            Kind = ConversationKind.Task,
+            SpaceId = space.Id,
+            IsTemporary = false
+        };
+        rig.Conversations.Current = conversation;
+        var source = new SpaceTaskWorkspaceService(spaces, rig.Conversations, rig.Tasks);
+        var widget = new SpaceTaskWidgetPage(source, rig.Tasks, space.Id, conversation.Id,
+            new PermissionReviewUnavailableReadiness(), expectedOriginalTaskId: originalTask.TaskId,
+            expectedOriginalExecutionId: originalTask.ExecutionId);
+        var window = new Window { Width = 960, Height = 720, Content = widget };
+        var heldActorRead = new TaskCompletionSource<AuthenticatedResourceActor?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Exception? reviewFailure = null;
+        try
+        {
+            window.Show();
+            await widget.ActivateAsync(token);
+            rig.Actors.OriginalRead = heldActorRead.Task;
+            var review = widget.DispatchAsync("task.review-permission", null, token).AsTask();
+            await rig.Actors.OriginalReadEntered.Task.WaitAsync(token);
+            Assert.True(widget.TryGetValue("PermissionOpen", out var opened)); Assert.Equal(true, opened);
+
+            // Revise the actual canonical task while the fresh principal observation
+            // for the review is blocked; this is a real owner write, not a forged view.
+            rig.Actors.OriginalRead = null;
+            var queued = await rig.Tasks.SubmitFollowUpAsync(originalTask.TaskId,
+                "retain this queued work during review", TaskFollowUpMode.Queue, null, null, token);
+            Assert.Equal(originalTask.TaskId, queued.Snapshot.TaskId);
+            Assert.True(queued.Snapshot.PersistenceRevision > originalTask.PersistenceRevision);
+            heldActorRead.SetResult(rig.Actors.Current);
+            reviewFailure = await Record.ExceptionAsync(() => review);
+
+            Assert.NotNull(reviewFailure);
+            Assert.True(widget.TryGetValue("PermissionOpen", out var open)); Assert.Equal(false, open);
+            Assert.False(widget.IsActionAvailable("task.allow-permission"));
+            Assert.False(widget.IsActionAvailable("task.deny-permission"));
+            Assert.True(widget.TryGetValue("PermissionStatus", out var status));
+            Assert.Contains("changed or could not be authorized", Assert.IsType<string>(status), StringComparison.OrdinalIgnoreCase);
+            Assert.Null(widget.AcknowledgedPermissionResponse);
+            Assert.True(rig.Owner.CanRespond(request.Id));
+            var current = (await rig.Tasks.GetAsync(originalTask.TaskId, token))!;
+            Assert.Equal(TaskExecutionLifecycle.Suspended, current.State);
+            Assert.Contains(current.Queue, item => item.Summary == "retain this queued work during review");
+            Assert.Equal(0, rig.Client.Dispatches);
+            Assert.Equal(0, rig.Workspace.Effects);
+        }
+        finally
+        {
+            heldActorRead.TrySetResult(rig.Actors.Current);
+            rig.Actors.OriginalRead = null;
+            widget.RequestRetirement();
+            var closeFailure = await Record.ExceptionAsync(() => widget.CloseAndDrainAsync());
+            if (reviewFailure is null) Assert.Null(closeFailure);
             else Assert.NotNull(closeFailure);
             window.Content = null;
             window.Close();
