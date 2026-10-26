@@ -38,6 +38,7 @@ using Haven.Desktop.Views.Pages.WorkspaceEditor;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.Infrastructure;
 using HavenOS.Home.Core;
+using HomeDiscoverPage = Haven.Desktop.Views.Pages.Home.HomeDiscoverPage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Views.Shell;
