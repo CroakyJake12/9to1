@@ -1179,6 +1179,8 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                     // Exercise the actual production Files setup/source factory. Its same-cycle
                     // setup callbacks are real only when this fixture explicitly enables setup;
                     // otherwise the absent capability remains fail-closed.
+                    if (enableActualProjectSetup)
+                        services.AddSingleton<FileDeveloperWorkspaceStore>(rig.SavedStore);
                     services.AddFilesOriginalDeveloperSetups(destinationResolver, kernelFactory,
                         provider => provider.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
                         provider => provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),

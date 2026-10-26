@@ -90,10 +90,10 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             var emptyMaterialization = await PrepareTemplate(catalog, materializer, Path.GetFileName(emptyRoot));
             var accepted = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
                 workspace.Configuration.AppFolders["write"], emptyRoot, emptyMaterialization, CancellationToken.None);
-            Keep(rig, accepted);
+            accepted = (Task<DeveloperProjectReference>)Keep(rig, accepted);
             var concurrentAccepted = freshTemplate.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
                 workspace.Configuration.AppFolders["write"], emptyRoot, emptyMaterialization, CancellationToken.None);
-            Keep(rig, concurrentAccepted);
+            concurrentAccepted = (Task<DeveloperProjectReference>)Keep(rig, concurrentAccepted);
             await Decide(rig, accepted, HomeDeveloperProjectReadAdmissionSource.ReadAction);
             await Decide(rig, accepted, HomeDeveloperProjectSetupPermissionSource.SetupAction);
             var acceptedReference = await accepted;
