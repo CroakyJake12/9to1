@@ -11,6 +11,45 @@ namespace Haven.Desktop.Tests;
 public sealed class NewChatOriginalWorkLifetimeTests
 {
     [Fact]
+    public async Task Retirement_keeps_same_pending_source_and_cleanup_scope_without_publishing()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cleanup = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cleaned = 0;
+        var published = 0;
+        NewChatOriginalWorkLifetime.Original? retained = null;
+        var owner = new NewChatOriginalWorkLifetime(() => Task.CompletedTask, () => Task.CompletedTask);
+        var actual = owner.RunAsync(async original =>
+        {
+            retained = original;
+            original.RunAcceptedSourceCallback(() => entered.SetResult());
+            // An actual accepted source may ignore cancellation while settling.
+            await original.AwaitAsync(release.Task);
+            original.RunAcceptedPublicationCallback(() => ++published);
+            original.RunAcceptedSourceCallback(() =>
+            {
+                Assert.Same(original, owner.Executing);
+                Assert.True(original.Token.IsCancellationRequested);
+                ++cleaned;
+                cleanup.SetResult();
+            });
+        });
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var close = owner.CloseAndDrainAsync();
+        Assert.False(close.IsCompleted);
+        Assert.False(actual.IsCompleted);
+        release.SetResult();
+        await cleanup.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await actual.WaitAsync(TimeSpan.FromSeconds(5));
+        await close.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(0, published);
+        Assert.Equal(1, cleaned);
+        Assert.Throws<InvalidOperationException>(() => retained!.RunAcceptedSourceCallback(() => ++cleaned));
+        Assert.Equal(1, cleaned);
+    }
+
+    [Fact]
     public async Task Close_starts_scoped_stop_then_joins_same_held_MoveNext_and_Dispose_once()
     {
         var cleanup = 0;
