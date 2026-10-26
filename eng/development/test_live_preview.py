@@ -24,6 +24,10 @@ class LivePreviewTests(unittest.TestCase):
 #include <stdlib.h>
 #include <unistd.h>
 int main(void) {
+    char observed[4096]; snprintf(observed, sizeof(observed), "%s/fixture-profile.txt", getenv("HAVEN_DATA_DIR"));
+    FILE *receipt = fopen(observed, "w");
+    if (!receipt) return 8;
+    fprintf(receipt, "%s\n", getenv("HAVEN_DATA_DIR")); fclose(receipt);
     char file[4096]; snprintf(file, sizeof(file), "%s/close.request", getenv("HAVEN_DATA_DIR"));
     for (int i = 0; i < 2000; i++) {
         FILE *input = fopen(file, "r");
@@ -52,6 +56,11 @@ int main(void) {
 
     def tearDown(self):
         (self.data / "close.request").write_text("0")
+        parent = self.root / "fresh-profiles"
+        if parent.is_dir():
+            for profile in parent.iterdir():
+                if profile.is_dir() and not profile.is_symlink():
+                    (profile / "close.request").write_text("0")
         run = preview.current(self.state)
         if run:
             directory = preview.run_directory(self.state, run)
@@ -103,6 +112,186 @@ int main(void) {
         (self.data / "close.request").write_text("0")
         self.assertEqual(0, self.wait_exit()["exit_code"])
         self.assertEqual("preserve me", (self.data / "user-document.txt").read_text())
+
+    def enable_fresh_profiles(self):
+        parent = self.root / "fresh-profiles"
+        parent.mkdir(mode=0o700)
+        preview.configure_test_profiles(self.state, parent)
+        return parent
+
+    def reset_close(self, launch, title):
+        preview.owned_process(launch)
+        self.assertEqual("9to1", title)
+        (Path(launch["data_directory"]) / "close.request").write_text("0")
+
+    def test_fresh_reset_normally_closes_and_uses_an_empty_private_create_new_profile_with_durable_identity(self):
+        parent = self.enable_fresh_profiles()
+        first = preview.start(self.state, self.manifest)
+        following = self.runtime("b" * 40)
+        original_start = preview.start_locked
+        def start(root, manifest, **kwargs):
+            fresh = Path(preview.config(root)["data_directory"])
+            self.assertEqual([], list(fresh.iterdir()), "No old onboarding, documents or secrets may be copied")
+            return original_start(root, manifest, **kwargs)
+        with mock.patch.object(preview, "start_locked", side_effect=start):
+            second = preview.reset_profile(self.state, following, first["run_id"], timeout=3, close=self.reset_close)
+        fresh = Path(second["data_directory"])
+        self.assertEqual(parent, fresh.parent); self.assertEqual(0o700, fresh.stat().st_mode & 0o777)
+        self.assertNotEqual(str(self.data), str(fresh)); self.assertEqual("b" * 40, second["source_revision"])
+        self.assertEqual("preserve me", (self.data / "user-document.txt").read_text())
+        self.assertNotEqual(first["run_id"], second["run_id"])
+        self.assertEqual(str(fresh), preview.config(self.state)["data_directory"])
+        observed = fresh / "fixture-profile.txt"
+        deadline = time.monotonic() + 3
+        while not observed.exists() and time.monotonic() < deadline:
+            time.sleep(.02)
+        self.assertEqual(str(fresh) + "\n", observed.read_text())  # Actual child environment, not native onboarding acceptance.
+        request_path = Path(second["reset_receipt"]); request = preview.read_json(request_path)
+        self.assertEqual(first["run_id"], request["old_run"]["run_id"])
+        self.assertEqual(second["run_id"], request["new_run_id"])
+        self.assertEqual(str(self.data), request["old_data_directory"])
+        self.assertEqual(str(fresh), request["new_data_directory"])
+        closed = preview.read_json(request_path.parent / "closed.json")
+        self.assertTrue(closed["normal_close_verified"])
+        self.assertEqual(closed["old_exit"]["sha256"], preview.hashed(Path(closed["old_exit"]["path"])))
+        launch = preview.read_json(preview.run_directory(self.state, preview.current(self.state)) / "launch.json")
+        self.assertEqual({"path": str(request_path), "sha256": preview.hashed(request_path)}, launch["profile_reset"])
+
+    def test_fresh_reset_is_one_shot_per_expected_run_and_repeated_cycles_preserve_every_profile(self):
+        parent = self.enable_fresh_profiles(); first = preview.start(self.state, self.manifest)
+        second = preview.reset_profile(self.state, self.manifest, first["run_id"], timeout=3, close=self.reset_close)
+        second_data = Path(second["data_directory"]); (second_data / "draft.txt").write_text("retain this draft")
+        close = mock.Mock()
+        with self.assertRaisesRegex(preview.Refusal, "stale reset"):
+            preview.reset_profile(self.state, self.manifest, first["run_id"], close=close)
+        close.assert_not_called()
+        third = preview.reset_profile(self.state, self.manifest, second["run_id"], timeout=3, close=self.reset_close)
+        self.assertNotEqual(second["data_directory"], third["data_directory"])
+        self.assertEqual("retain this draft", (second_data / "draft.txt").read_text())
+        self.assertEqual("preserve me", (self.data / "user-document.txt").read_text())
+        self.assertEqual(2, len(list(parent.iterdir())))
+
+    def test_fresh_reset_veto_does_not_change_config_create_a_profile_or_replace_the_owned_run(self):
+        parent = self.enable_fresh_profiles(); first = preview.start(self.state, self.manifest)
+        before = (self.state / "config.json").read_bytes()
+        with self.assertRaisesRegex(preview.Refusal, "vetoed, timed out or failed"):
+            preview.reset_profile(self.state, self.manifest, first["run_id"], timeout=.1, close=lambda *_: None)
+        self.assertEqual(before, (self.state / "config.json").read_bytes()); self.assertEqual([], list(parent.iterdir()))
+        self.assertEqual(first["run_id"], preview.status(self.state)["run_id"])
+        failure = preview.read_json(next((self.state / "profile-resets").glob("*/failure.json")))
+        self.assertEqual("ORIGINAL_CONFIG_UNCHANGED", failure["config_disposition"])
+
+    def test_fresh_reset_refuses_failed_exit_without_close_config_or_profile_side_effects(self):
+        parent = self.enable_fresh_profiles(); first = preview.start(self.state, self.manifest)
+        (self.data / "close.request").write_text("7"); self.assertEqual(7, self.wait_exit()["exit_code"])
+        exit_path = self.state / "runs" / first["run_id"] / "exit.json"; retained = exit_path.read_bytes()
+        before = (self.state / "config.json").read_bytes(); close = mock.Mock()
+        with self.assertRaisesRegex(preview.Refusal, "failed exits require Root review"):
+            preview.reset_profile(self.state, self.manifest, first["run_id"], close=close)
+        close.assert_not_called(); self.assertEqual(retained, exit_path.read_bytes())
+        self.assertEqual(before, (self.state / "config.json").read_bytes()); self.assertEqual([], list(parent.iterdir()))
+        self.assertFalse((self.state / "profile-resets").exists())
+
+    def test_fresh_reset_preallocation_failure_rolls_back_config_but_preserves_new_profile_and_failure(self):
+        parent = self.enable_fresh_profiles(); first = preview.start(self.state, self.manifest)
+        before = (self.state / "config.json").read_bytes()
+        with mock.patch.object(preview, "start_locked", side_effect=OSError("fixture before successor allocation")):
+            with self.assertRaisesRegex(OSError, "before successor allocation"):
+                preview.reset_profile(self.state, self.manifest, first["run_id"], timeout=3, close=self.reset_close)
+        self.assertEqual(before, (self.state / "config.json").read_bytes())
+        self.assertEqual(first["run_id"], preview.current(self.state)["run_id"]); self.assertEqual(1, len(list(parent.iterdir())))
+        failure = preview.read_json(next((self.state / "profile-resets").glob("*/failure.json")))
+        self.assertEqual("ROLLED_BACK_BEFORE_SUCCESSOR_ALLOCATION", failure["config_disposition"])
+
+    def test_fresh_reset_failed_guardian_spawn_restores_config_and_fences_a_delayed_guardian(self):
+        self.enable_fresh_profiles(); first = preview.start(self.state, self.manifest)
+        before = (self.state / "config.json").read_bytes()
+        with mock.patch.object(preview.subprocess, "Popen", side_effect=OSError("fixture guardian spawn failed")):
+            with self.assertRaisesRegex(OSError, "guardian spawn failed"):
+                preview.reset_profile(self.state, self.manifest, first["run_id"], timeout=3, close=self.reset_close)
+        self.assertEqual(before, (self.state / "config.json").read_bytes())
+        self.assertEqual("LAUNCH_ERROR_REQUIRES_REVIEW", preview.status(self.state)["state"])
+        failed_run = preview.current(self.state)
+        with self.assertRaisesRegex(preview.Refusal, "already been launched"):
+            preview.supervise(self.state, failed_run["run_id"])
+        with self.assertRaises(preview.Refusal):
+            preview.start(self.state, self.manifest)
+        self.assertEqual("preserve me", (self.data / "user-document.txt").read_text())
+
+    def test_fresh_reset_postlaunch_receipt_failure_retains_new_profile_and_live_child_custody(self):
+        self.enable_fresh_profiles(); first = preview.start(self.state, self.manifest)
+        original_create = preview.create_json
+        def failing_create(path, value):
+            if path.name == "result.json":
+                raise OSError("fixture result receipt failed after launch")
+            return original_create(path, value)
+        with mock.patch.object(preview, "create_json", side_effect=failing_create):
+            with self.assertRaisesRegex(OSError, "after launch"):
+                preview.reset_profile(self.state, self.manifest, first["run_id"], timeout=3, close=self.reset_close)
+        current = preview.status(self.state)
+        self.assertEqual("RUNNING", current["state"]); self.assertNotEqual(first["run_id"], current["run_id"])
+        self.assertEqual(current["data_directory"], preview.config(self.state)["data_directory"])
+        failure = preview.read_json(next((self.state / "profile-resets").glob("*/failure.json")))
+        self.assertIn(failure["config_disposition"], ("NEW_PROFILE_USED_RETAINED_FOR_REVIEW", "GUARDIAN_PENDING_NEW_PROFILE_RETAINED_FOR_REVIEW"))
+
+    def test_fresh_reset_requires_canonical_private_parent_and_revalidates_candidate_after_normal_close(self):
+        first = preview.start(self.state, self.manifest); close = mock.Mock()
+        with self.assertRaisesRegex(preview.Refusal, "explicit private test-profile parent"):
+            preview.reset_profile(self.state, self.manifest, first["run_id"], close=close)
+        close.assert_not_called()
+        parent = self.enable_fresh_profiles(); alias = self.root / "profile-alias"; alias.symlink_to(parent, target_is_directory=True)
+        with self.assertRaises(preview.Refusal):
+            preview.configure_test_profiles(self.state, alias)
+        before = (self.state / "config.json").read_bytes(); following = self.runtime("b" * 40)
+        def close_and_change(launch, title):
+            self.reset_close(launch, title)
+            target = self.root / "runtime-bbbb" / "Haven.dll"
+            target.chmod(0o644); target.write_text("changed after close"); target.chmod(0o444)
+        with self.assertRaisesRegex(preview.Refusal, "runtime bytes"):
+            preview.reset_profile(self.state, following, first["run_id"], timeout=3, close=close_and_change)
+        self.assertEqual(before, (self.state / "config.json").read_bytes()); self.assertEqual([], list(parent.iterdir()))
+
+    def test_fresh_reset_rejects_bad_runtime_and_nonprivate_parent_before_any_close_request(self):
+        parent = self.enable_fresh_profiles(); first = preview.start(self.state, self.manifest)
+        following = self.runtime("b" * 40); before = (self.state / "config.json").read_bytes(); close = mock.Mock()
+        parent.chmod(0o755)
+        with self.assertRaisesRegex(preview.Refusal, "private owner directory"):
+            preview.reset_profile(self.state, following, first["run_id"], close=close)
+        parent.chmod(0o700)
+        target = self.root / "runtime-bbbb" / "Haven.dll"
+        target.chmod(0o644); target.write_text("invalid before close"); target.chmod(0o444)
+        with self.assertRaisesRegex(preview.Refusal, "runtime bytes"):
+            preview.reset_profile(self.state, following, first["run_id"], close=close)
+        close.assert_not_called(); self.assertEqual(before, (self.state / "config.json").read_bytes())
+        self.assertEqual(first["run_id"], preview.current(self.state)["run_id"])
+        self.assertEqual([], list(parent.iterdir())); self.assertFalse((self.state / "profile-resets").exists())
+
+    def test_fresh_reset_refuses_a_false_clean_receipt_for_a_live_original(self):
+        parent = self.enable_fresh_profiles(); first = preview.start(self.state, self.manifest)
+        exit_path = self.state / "runs" / first["run_id"] / "exit.json"
+        atomic(exit_path, {"run_id": first["run_id"], "process": first["process"], "exit_code": 0})
+        before = (self.state / "config.json").read_bytes()
+        try:
+            with self.assertRaisesRegex(preview.Refusal, "live/reused application PID"):
+                preview.reset_profile(self.state, self.manifest, first["run_id"], timeout=.1, close=mock.Mock())
+            self.assertEqual(before, (self.state / "config.json").read_bytes()); self.assertEqual([], list(parent.iterdir()))
+        finally:
+            exit_path.unlink()  # Remove only this explicitly forged fixture record, never a real failed-run receipt.
+
+    def test_fresh_reset_rollback_retains_profile_when_exit_evidence_exists_without_a_launch_receipt(self):
+        # Explicit metadata-only control: a guardian may have spawned/reaped a child
+        # even if capturing its process identity and launch receipt failed.
+        parent = self.enable_fresh_profiles(); before = preview.config(self.state)
+        profile = parent / "profile-fixture"; profile.mkdir(mode=0o700)
+        after = {**before, "data_directory": str(profile)}; atomic(self.state / "config.json", after)
+        run_id = str(preview.uuid.uuid4()); directory = self.state / "runs" / run_id
+        directory.mkdir(parents=True, mode=0o700)
+        atomic(self.state / "current.json", {"run_id": run_id})
+        preview.create_json(directory / "error.json", {"process": None, "error": "Explicit fixture identity-capture failure"})
+        preview.create_json(directory / "exit.json", {"process": None, "exit_code": 7, "run_id": run_id})
+        disposition = preview.reset_config_after_failure(self.state, None, run_id, before, after)
+        self.assertEqual("NEW_PROFILE_USED_RETAINED_FOR_REVIEW", disposition)
+        self.assertEqual(after, preview.config(self.state)); self.assertTrue(profile.is_dir())
 
     def test_reload_waits_for_real_exit_zero_and_keeps_profile_and_history(self):
         first = preview.start(self.state, self.manifest)

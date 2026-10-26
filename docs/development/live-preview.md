@@ -158,6 +158,61 @@ version from a later Git checkout. Per-run launch, exit and log files remain
 under the private state's `runs/` directory; old builds and failures are retained.
 No automatic runtime-manifest watcher is enabled.
 
+### One-shot fresh-profile onboarding cycle
+
+The owner's 26 October testing request additionally permits a **new private test
+profile** approximately every half hour. This is opt-in and distinct from ordinary
+`reload`, which still preserves its current profile. No profile is emptied, deleted,
+copied or overwritten, including the installed profile and every earlier test profile.
+
+Root first creates/selects a canonical private (0700) test-profile parent outside
+the launcher state, immutable runtimes and existing profiles, then configures it:
+
+```bash
+python3 -B eng/development/live_preview.py configure-test-profiles \
+  --state-root "$HOME/.local/state/9to1-live-preview" \
+  --test-profile-parent /absolute/explicit-private-test-profiles
+```
+
+For each **one-shot** cycle, Root observes `status`, runs the existing current
+execution-admission check successfully, then invokes:
+
+```bash
+python3 -B eng/development/live_preview.py reset-profile \
+  --state-root "$HOME/.local/state/9to1-live-preview" \
+  --manifest /absolute/current-approved-runtime.json \
+  --expected-run-id ACTUAL_JUST_OBSERVED_RUN_ID \
+  --timeout 90
+```
+
+The helper verifies the exact approved runtime before requesting the same owned
+window's ordinary close. A save/close veto, timeout, nonzero exit, lost receipt,
+live/reused old PID, remaining process-group members or changed runtime prevents
+activation. **The observed native exit -11 on 26 October must still be reviewed by
+Root; reset-profile is not failed-run recovery and cannot bypass that refusal.**
+After a proven clean terminal exit it creates exactly one `profile-<UUID>` child
+of the configured parent, mode0700, with no copied state. The replacement uses
+the same launcher/current-run custody and a pinned per-run profile. Stale/replayed
+expected run IDs refuse instead of resetting a later copy. `HAVEN_DATA_DIR` requests
+the fresh app profile; Root must verify actual onboarding in Haven. This is not an
+OS/keychain/account reset and does not delete credentials stored elsewhere.
+
+Create-new `profile-resets/<UUID>/request.json`, `closed.json` and `result.json` (or
+`failure.json`) retain old/new run IDs, profile paths, exact runtime and original
+launch/exit pins. The successor launch also pins its reset request. Config rolls
+back only if the successor cannot have used the new profile. A pending guardian,
+live child or failed launch-receipt child retains the new profile and custody for
+review; a no-child failed attempt is fenced against delayed guardian launch and
+remains a visible launch error. A post-launch audit-write failure never force-closes
+the child or silently switches it back to the old profile. All profiles and failure
+receipts remain available for diagnosis.
+
+Root owns the separate explicit roughly1800-second local cycle wrapper. It must
+serialize on this same copy, obtain current execution admission immediately before
+each activation, and stop/report refusals rather than retrying around them. The
+timer performs no builds, model requests, engine startup, failed-run recovery or
+programme coordination; this helper does not install or start any timer.
+
 ### Explicit recovery after a failed process exit
 
 Ordinary `start` and `reload` still refuse a nonzero exit. If a local coordinator
