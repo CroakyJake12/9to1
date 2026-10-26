@@ -318,7 +318,7 @@ public sealed partial class HuggingFaceModelService : IHuggingFaceModelService, 
         {
             var owner = WindowsIdentity.GetCurrent().User ?? throw Error(HuggingFaceModelError.DownloadRejected);
             var security = directory.GetAccessControl();
-            if (!security.AreAccessRulesProtected || !security.GetOwner(typeof(SecurityIdentifier)).Equals(owner))
+            if (!security.AreAccessRulesProtected || !Equals(security.GetOwner(typeof(SecurityIdentifier)), owner))
                 throw Error(HuggingFaceModelError.DownloadRejected);
             foreach (FileSystemAccessRule rule in security.GetAccessRules(true, true, typeof(SecurityIdentifier)))
                 if (rule.AccessControlType == AccessControlType.Allow && !rule.IdentityReference.Equals(owner))
