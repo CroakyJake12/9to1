@@ -698,7 +698,7 @@ public sealed partial class App
                 _services.GetService<HomeModelSelectionSource>() is { } selection)
                 page.EnableDashboardAssistant(new DashboardEditPlanner(routedModels, selection));
             page.EnableDeviceModelRecommendations(new HomeDashboardModelSource(new Haven.Infrastructure.LocalModelHardwareProbe(),
-                _services.GetRequiredService<IHuggingFaceModelService>(), _home.Profiles,
+                _services.GetRequiredService<IHuggingFaceModelService>(), async token => await ObserveActorAsync(token),
                 () => !_services.GetRequiredService<IPrivacyPreferenceStore>().Current.LocalOnlyMode));
             return page;
         }

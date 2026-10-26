@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Haven.Core;
 using Haven.Desktop.Controls;
 using CakeOS.Cui;
+using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Desktop.Views.Pages.Home;
 

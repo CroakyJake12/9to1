@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
