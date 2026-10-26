@@ -347,10 +347,10 @@ internal sealed class BrowseEngineViewport : ContentControl
             if (rowControl is null || rowControl.TranslatePoint(default, scope) is not { } origin ||
                 !new Rect(origin, rowControl.Bounds.Size).Contains(point) || !TryGetTabRow(button, out var row) || row is null) continue;
             var relativeX = Math.Clamp((point.X - origin.X) / Math.Max(1, rowControl.Bounds.Width), 0, 1);
-            var zone = relativeX < .15 || relativeX >= .85 ? BrowseNativeWorkspace.TabDropZone.Swap :
+            var zone = relativeX < .15 ? BrowseNativeWorkspace.TabDropZone.SwapBefore :
                 relativeX < .35 ? BrowseNativeWorkspace.TabDropZone.SplitBefore :
                 relativeX < .65 ? BrowseNativeWorkspace.TabDropZone.Group :
-                relativeX < .85 ? BrowseNativeWorkspace.TabDropZone.SplitAfter : BrowseNativeWorkspace.TabDropZone.Swap;
+                relativeX < .85 ? BrowseNativeWorkspace.TabDropZone.SplitAfter : BrowseNativeWorkspace.TabDropZone.SwapAfter;
             if (_tabDragSource is not null && !_workspace.CanDropTabRows(_tabDragSource, row, zone))
                 zone = BrowseNativeWorkspace.TabDropZone.Invalid;
             _tabDropTarget = row; _tabDropZone = zone; _workspace.SetTabDropIndicator(row, zone); return;
@@ -360,13 +360,16 @@ internal sealed class BrowseEngineViewport : ContentControl
     }
     private void ClearTabDrag()
     {
-        _workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None);
-        _tabDropTarget = null; _tabDropZone = BrowseNativeWorkspace.TabDropZone.None;
-        if (_tabDragPreview is { } preview)
-        {
-            preview.IsOpen = false; preview.Child = null; _root.Children.Remove(preview); _tabDragPreview = null;
-        }
+        var preview = _tabDragPreview;
+        var target = _tabDropTarget;
+        _tabDragPreview = null; _tabDropTarget = null; _tabDropZone = BrowseNativeWorkspace.TabDropZone.None;
         _tabDragSource = null; _tabDragPointer = null; _tabDragActive = false;
+        if (preview is not null)
+        {
+            preview.IsOpen = false; preview.Child = null; _root.Children.Remove(preview);
+        }
+        target?.SetDropZone(BrowseNativeWorkspace.TabDropZone.None);
+        _workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None);
     }
     private async void OnFindKeyDown(object? sender, KeyEventArgs args)
     {
@@ -413,7 +416,19 @@ internal sealed class BrowseEngineViewport : ContentControl
         catch (Exception failure)
         { System.Diagnostics.Trace.TraceError("Browse retained its original page-find task: {0}", failure); }
     }
-    private void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => RefreshOriginalViews();
+    private void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (_tabDragSource is not null && !IsTabDragContextCurrent()) ClearTabDrag();
+        RefreshOriginalViews();
+    }
+    private bool IsTabDragContextCurrent()
+    {
+        if (!_workspace.IsReady || _tabDragSource is not { } source || !_workspace.IsCurrentTabRow(source)) return false;
+        if (_tabDropTarget is not { } target) return true;
+        if (!_workspace.IsCurrentTabRow(target)) return false;
+        return _tabDropZone is BrowseNativeWorkspace.TabDropZone.None or BrowseNativeWorkspace.TabDropZone.Invalid ||
+            _workspace.CanDropTabRows(source, target, _tabDropZone);
+    }
     private void RefreshOriginalViews()
     {
         if (!_workspace.IsReady) return;

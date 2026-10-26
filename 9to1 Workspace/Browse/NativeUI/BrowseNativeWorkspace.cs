@@ -20,7 +20,7 @@ namespace HavenOS.Apps.Browse;
 public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged, IAsyncDisposable
 {
-    public enum TabDropZone { None, Swap, SplitBefore, Group, SplitAfter, Invalid }
+    public enum TabDropZone { None, SwapBefore, SplitBefore, Group, SplitAfter, SwapAfter, Invalid }
     private static readonly AsyncLocal<CommandInvocation?> LogicalDriver = new();
     private sealed class CommandInvocation(BrowseNativeWorkspace owner, CommandInvocation? parent)
     {
@@ -489,7 +489,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     { _status = "The tab rows changed before the drop completed; use their current rows."; break; }
                     switch (drop.Zone)
                     {
-                        case TabDropZone.Swap:
+                        case TabDropZone.SwapBefore:
+                        case TabDropZone.SwapAfter:
                             await Operation(() => _chrome.SwapTabsAsync(drop.Source.TabId, drop.Target.TabId, token)); break;
                         case TabDropZone.SplitBefore:
                             await Operation(() => _chrome.OpenSplitViewForTabsAsync(drop.Source.TabId, drop.Target.TabId, token)); break;
@@ -812,13 +813,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     Description: tab.Title + " · " + (tab.Address.IsWeb
                         ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
                         : tab.IsHome ? "Home" : tab.Address.Authority) + (selected ? " · Selected tab" : string.Empty),
-                    Selected: selected, CanClose: tab.IsCloseable && !tab.IsPinned, Pinned: tab.IsPinned,
+                    Address: tab.Address.ToString(), Selected: selected, CanClose: tab.IsCloseable && !tab.IsPinned, Pinned: tab.IsPinned,
                     Background: appearance.Background, Foreground: appearance.Foreground,
                     CloseForeground: appearance.CloseForeground);
             }).ToArray();
         if (_tabRows.Length == actualRows.Length && _tabRows.Zip(actualRows).All(pair =>
             pair.First.Key == pair.Second.Key && pair.First.Label == pair.Second.Label &&
-            pair.First.Description == pair.Second.Description && pair.First.Selected == pair.Second.Selected &&
+            pair.First.Description == pair.Second.Description && pair.First.Address == pair.Second.Address && pair.First.Selected == pair.Second.Selected &&
             pair.First.CanClose == pair.Second.CanClose && pair.First.BackgroundColor == pair.Second.Background &&
             pair.First.ForegroundColor == pair.Second.Foreground && pair.First.CloseForegroundColor == pair.Second.CloseForeground)) return;
         var epoch = checked(++_rowEpoch);
@@ -826,7 +827,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _tabRows = actualRows.Select(row => new TabRow(
             new TabSelection(this, row.Id, epoch, row.Pinned, placementStamp), row.Key, row.Label, row.Selected)
         {
-            Description = row.Description, CanClose = row.CanClose,
+            Description = row.Description, Address = row.Address, CanClose = row.CanClose,
             BackgroundColor = row.Background, ForegroundColor = row.Foreground,
             CloseForegroundColor = row.CloseForeground
         }).ToArray();
@@ -884,7 +885,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             target.Target is not TabSelection targetTarget || !IsCurrentTabTarget(sourceTarget) || !IsCurrentTabTarget(targetTarget)) return false;
         return zone switch
         {
-            TabDropZone.Swap => _chrome.CanSwapTabs(sourceTarget.TabId, targetTarget.TabId),
+            TabDropZone.SwapBefore or TabDropZone.SwapAfter => _chrome.CanSwapTabs(sourceTarget.TabId, targetTarget.TabId),
             TabDropZone.SplitBefore => _chrome.CanOpenSplitViewForTabs(sourceTarget.TabId, targetTarget.TabId),
             TabDropZone.SplitAfter => _chrome.CanOpenSplitViewForTabs(targetTarget.TabId, sourceTarget.TabId),
             TabDropZone.Group => _chrome.CanGroupTabs(sourceTarget.TabId, targetTarget.TabId),
@@ -932,9 +933,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,
                 "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label,
                 "Background" => row.Background, "Foreground" => row.Foreground,
-                "CloseForeground" => row.CloseForeground, "DropSwap" => row.DropSwap,
+                "CloseForeground" => row.CloseForeground, "DropSwapBefore" => row.DropSwapBefore,
+                "DropSwapAfter" => row.DropSwapAfter, "DropInvalid" => row.DropInvalid,
                 "DropSplitBefore" => row.DropSplitBefore, "DropGroup" => row.DropGroup,
-                "DropSplitAfter" => row.DropSplitAfter, "DropBrush" => row.DropBrush, _ => null };
+                "DropSplitAfter" => row.DropSplitAfter, "DropBrush" => row.DropBrush,
+                "DropEdgeBrush" => row.DropEdgeBrush, "DropInvalidBrush" => row.DropInvalidBrush, _ => null };
         else if (item is SavedEntryRow saved && _bookmarkRows.Concat(_historyRows).Concat(_downloadRows).Any(current => ReferenceEquals(current, saved)))
             value = path switch { "Key" => saved.Key, "Label" => saved.Label, "Detail" => saved.Detail, "Target" => saved.Target,
                 "RemoveLabel" => saved.Target is SavedEntrySelection { Kind: SavedEntryKind.History }
@@ -1004,9 +1007,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         private TabDropZone _dropZone;
         public event PropertyChangedEventHandler? PropertyChanged;
         public TabDropZone DropZone => _dropZone;
-        public bool DropSwap => _dropZone is TabDropZone.Swap or TabDropZone.Invalid;
+        public bool DropSwapBefore => _dropZone == TabDropZone.SwapBefore;
+        public bool DropSwapAfter => _dropZone == TabDropZone.SwapAfter;
+        public bool DropInvalid => _dropZone == TabDropZone.Invalid;
         public bool DropSplitBefore => _dropZone == TabDropZone.SplitBefore;
-        public bool DropGroup => _dropZone is TabDropZone.Group or TabDropZone.Invalid;
+        public bool DropGroup => _dropZone == TabDropZone.Group;
         public bool DropSplitAfter => _dropZone == TabDropZone.SplitAfter;
         public IBrush DropBrush
         {
@@ -1026,19 +1031,34 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 };
             }
         }
+        public IBrush DropEdgeBrush => new SolidColorBrush(TabDropAccentColor());
+        public IBrush DropInvalidBrush => new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+            GradientStops = new GradientStops
+            {
+                new(Color.Parse("#22DC2626"), 0), new(Color.Parse("#77DC2626"), .5), new(Color.Parse("#22DC2626"), 1)
+            }
+        };
         internal bool SetDropZone(TabDropZone zone)
         {
             if (_dropZone == zone) return false;
             _dropZone = zone;
             PropertyChanged?.Invoke(this, new(nameof(DropZone)));
-            PropertyChanged?.Invoke(this, new(nameof(DropSwap)));
+            PropertyChanged?.Invoke(this, new(nameof(DropSwapBefore)));
+            PropertyChanged?.Invoke(this, new(nameof(DropSwapAfter)));
+            PropertyChanged?.Invoke(this, new(nameof(DropInvalid)));
             PropertyChanged?.Invoke(this, new(nameof(DropSplitBefore)));
             PropertyChanged?.Invoke(this, new(nameof(DropGroup)));
             PropertyChanged?.Invoke(this, new(nameof(DropSplitAfter)));
             PropertyChanged?.Invoke(this, new(nameof(DropBrush)));
+            PropertyChanged?.Invoke(this, new(nameof(DropInvalidBrush)));
+            PropertyChanged?.Invoke(this, new(nameof(DropEdgeBrush)));
             return true;
         }
         public string Description { get; init; } = Label;
+        public string Address { get; init; } = string.Empty;
         public bool CanClose { get; init; }
         public Color BackgroundColor { get; init; } = Colors.Transparent;
         public Color ForegroundColor { get; init; } = Colors.White;

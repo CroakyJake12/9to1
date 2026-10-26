@@ -27,7 +27,9 @@
               <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Chromeless="True" Background="Transparent" Color="{Binding tab.Foreground}" BorderWidth="0" CornerRadius="8" />
               <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Height="32" MinHeight="32" Width="30" MinWidth="30" Padding="4 4 6 4" FontSize="16" Chromeless="True" Background="Transparent" Color="{Binding tab.CloseForeground}" BorderWidth="0" CornerRadius="8">×</Button>
               <Container Type="Overlay" ColumnSpan="2" IsHitTestVisible="False">
-                <Container id="BrowseTabDropSwapIndicator" IsVisible="{Binding tab.DropSwap}" Background="{Binding tab.DropBrush}" CornerRadius="8" />
+                <Container id="BrowseTabDropSwapBeforeIndicator" IsVisible="{Binding tab.DropSwapBefore}" HorizontalAlignment="Left" Width="4" Background="{Binding tab.DropEdgeBrush}" CornerRadius="2" />
+                <Container id="BrowseTabDropSwapAfterIndicator" IsVisible="{Binding tab.DropSwapAfter}" HorizontalAlignment="Right" Width="4" Background="{Binding tab.DropEdgeBrush}" CornerRadius="2" />
+                <Container id="BrowseTabDropInvalidIndicator" IsVisible="{Binding tab.DropInvalid}" Background="{Binding tab.DropInvalidBrush}" CornerRadius="8" />
                 <Container id="BrowseTabDropSplitBeforeIndicator" Type="Grid" ColumnSizes="1fr 1fr" IsVisible="{Binding tab.DropSplitBefore}">
                   <Container id="BrowseTabDropSplitBeforeHalf" Column="0" Background="{Binding tab.DropBrush}" CornerRadius="8 0 0 8" />
                 </Container>

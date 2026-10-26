@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Browser;
+using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
 using Xunit;
 
@@ -56,8 +57,10 @@ public sealed partial class BrowseNativeUiTests
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
     }
 
-    [AvaloniaFact]
-    public async Task Dragging_a_current_tab_row_reorders_its_stable_id_without_selecting_or_recreating_it()
+    [AvaloniaTheory]
+    [InlineData(.07, true)]
+    [InlineData(.93, false)]
+    public async Task Dragging_to_either_outer_edge_swaps_the_exact_rows_with_a_narrow_marker(double relativeX, bool before)
     {
         var factory = new FixtureFactory();
         var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
@@ -88,7 +91,7 @@ public sealed partial class BrowseNativeUiTests
             workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None); Layout();
             var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
             var targetOrigin = targetRowVisual.TranslatePoint(default, window)!.Value;
-            var dropPoint = targetOrigin + new Vector(targetRowVisual.Bounds.Width * .93, targetRowVisual.Bounds.Height / 2);
+            var dropPoint = targetOrigin + new Vector(targetRowVisual.Bounds.Width * relativeX, targetRowVisual.Bounds.Height / 2);
             window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
             window.MouseMove(dropPoint); Layout();
             var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>().Where(popup => popup.IsOpen));
@@ -99,8 +102,13 @@ public sealed partial class BrowseNativeUiTests
             var anchorPoint = anchor.TranslatePoint(default, window)!.Value;
             Assert.InRange(Math.Abs(anchorPoint.X - dropPoint.X), 0, .5);
             Assert.InRange(Math.Abs(anchorPoint.Y - dropPoint.Y), 0, .5);
-            Assert.True(targetRow!.DropSwap, "The hovered far-edge zone should visibly light the entire target row for a swap.");
-            Assert.True(targetRowVisual.GetVisualDescendants().OfType<Control>().Single(control => control.Name == "BrowseTabDropSwapIndicator").IsVisible);
+            Assert.True(before ? targetRow!.DropSwapBefore : targetRow!.DropSwapAfter);
+            Assert.False(targetRow!.DropGroup);
+            var marker = InTargetRow(before ? "BrowseTabDropSwapBeforeIndicator" : "BrowseTabDropSwapAfterIndicator");
+            Assert.True(marker.IsVisible);
+            Assert.InRange(marker.Bounds.Width, 3, 5);
+            var markerOrigin = marker.TranslatePoint(default, targetRowVisual)!.Value;
+            Assert.InRange(Math.Abs(markerOrigin.X - (before ? 0 : targetRowVisual.Bounds.Width - marker.Bounds.Width)), 0, 1);
             Assert.Same(sourceRow, Assert.Single(Rows(workspace), row => row.Key == second.ToString("D")));
             Assert.Equal(new[] { home, second, third }, chrome.State.Tabs.Select(tab => tab.Id));
             window.MouseUp(dropPoint, MouseButton.Left);
@@ -109,7 +117,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.Equal(new[] { home, third, second }, chrome.State.Tabs.Select(tab => tab.Id));
             Assert.Equal(third, chrome.State.SelectedTabId);
             Assert.Equal(2, factory.Hosts.Count);
-            Assert.False(targetRow.DropSwap, "Retiring the drag must clear its indicator from the row.");
+            Assert.False(targetRow.DropSwapBefore || targetRow.DropSwapAfter, "Retiring the drag must clear its edge marker.");
             await Retire(window);
 
             void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
@@ -254,6 +262,53 @@ public sealed partial class BrowseNativeUiTests
             Assert.Equal(before, chrome.State.Tabs.Select(tab => tab.Id));
             Assert.Null(workspace.OriginalCommand);
             window.MouseUp(dropPoint, MouseButton.Left); Layout();
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("close-source")]
+    [InlineData("close-target")]
+    [InlineData("navigate-source")]
+    [InlineData("navigate-target")]
+    [InlineData("dispose")]
+    public async Task Changing_either_drag_owner_retires_the_preview_and_indicator(string change)
+    {
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), new FixtureFactory());
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            // Select the navigating owner before starting so navigation itself is
+            // what invalidates the gesture, rather than a selected-tab change.
+            if (change == "navigate-source") { await chrome.SelectTabAsync(sourceId); Layout(); }
+            var source = TabButton(window, workspace, sourceId.ToString("D"));
+            var target = TabButton(window, workspace, targetId.ToString("D"));
+            var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(targetId.ToString("D"), out var targetRow));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var dropPoint = targetVisual.TranslatePoint(default, window)!.Value + new Vector(targetVisual.Bounds.Width * .25, targetVisual.Bounds.Height / 2);
+            window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
+            window.MouseMove(dropPoint); Layout();
+            Assert.True(targetRow!.DropSplitBefore);
+            Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+
+            if (change == "dispose") await Observe(workspace.DisposeAsync().AsTask(), window);
+            else if (change.StartsWith("close-", StringComparison.Ordinal))
+                await chrome.CloseTabAsync(change == "close-source" ? sourceId : targetId);
+            else await chrome.NavigateAsync("https://changed.example/next");
+            Layout();
+            Assert.False(targetRow.DropSplitBefore);
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            window.MouseUp(dropPoint, MouseButton.Left); Layout();
+            Assert.Empty(workspace.State.PaneTabIds);
             await Retire(window);
         }
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }

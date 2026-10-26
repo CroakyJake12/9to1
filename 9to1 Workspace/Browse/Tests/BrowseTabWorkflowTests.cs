@@ -1,4 +1,5 @@
 using Haven.Browser;
+using Haven.Core;
 using Xunit;
 
 namespace HavenOS.Apps.Browse.Tests;
