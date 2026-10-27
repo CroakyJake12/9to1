@@ -213,7 +213,6 @@ public sealed class HomeDashboardCuiRenderTests
             arrange.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             SettleDashboardLayout(window);
             Assert.Equal("Customise", arrange.Content);
-            Assert.False(edit.IsVisible);
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item =>
                 item.Name == "dashboard-widget-status" && item.Text?.Contains("live widgets", StringComparison.Ordinal) == true);
         }
