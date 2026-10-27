@@ -574,16 +574,30 @@ public static class BlockRenderer
         box.KeyDown += async (_, args) =>
         {
             if (!vm.IsEditMode) return;
-            if (args.Key == Key.Enter && (args.KeyModifiers.HasFlag(KeyModifiers.Control) ||
-                                          box.SelectionStart == box.SelectionEnd))
+            if (args.Key == Key.Enter)
             {
-                args.Handled = true;
-                if (box.SelectionStart != box.SelectionEnd)
+                // Owner decision 27 October: Enter ends the current block and starts the
+                // next one; Shift+Enter adds a line break inside the same BlockID.
+                if (args.KeyModifiers.HasFlag(KeyModifiers.Shift))
                 {
-                    vm.Set("StatusText", "Collapse the selection before splitting this text block.");
+                    if (isHeading)
+                    {
+                        args.Handled = true;
+                        vm.Set("StatusText", "A heading stays on one line. Enter starts the next block.");
+                    }
                     return;
                 }
-                await vm.SplitTextBlockAtAsync(captured, box.CaretIndex);
+                if (args.KeyModifiers.HasFlag(KeyModifiers.Control) ||
+                    box.SelectionStart == box.SelectionEnd)
+                {
+                    args.Handled = true;
+                    if (box.SelectionStart != box.SelectionEnd)
+                    {
+                        vm.Set("StatusText", "Collapse the selection before splitting this text block.");
+                        return;
+                    }
+                    await vm.SplitTextBlockAtAsync(captured, box.CaretIndex);
+                }
             }
             else if (args.Key == Key.Back && box.SelectionStart == box.SelectionEnd && box.CaretIndex == 0)
             {
@@ -767,7 +781,18 @@ public static class BlockRenderer
             if (e.Key == Key.Enter)
             {
                 e.Handled = true;
-                await vm.ChecklistEnterAsync(viewId);
+                // UX27-BOARD-016/017: Enter splits the row at the caret (or adds the next
+                // same-kind row at the end); Shift+Enter stays inside the row as a soft break.
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                {
+                    var caret = Math.Clamp(text.CaretIndex, 0, text.Text?.Length ?? 0);
+                    var soft = (text.Text ?? string.Empty).Insert(caret, "\n");
+                    text.Text = soft;
+                    text.CaretIndex = caret + 1;
+                    vm.CommitListSoftBreak(viewId, soft);
+                }
+                else
+                    await vm.ListEnterAsync(viewId, text.CaretIndex);
             }
             else if (e.Key == Key.Back && string.IsNullOrEmpty(text.Text))
             {

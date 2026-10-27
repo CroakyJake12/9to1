@@ -1390,13 +1390,72 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     // ----- Generalized id-encoded editing (legacy names keep working) -----
 
+    /// <summary>
+    /// Splits a checklist/bulleted/numbered row at the caret into two same-kind rows,
+    /// the new one placed immediately after the original. Empty rows keep the existing
+    /// Enter behaviour of adding the next row. Uses the app projection + MarkDirty route,
+    /// the same supported structural-edit path as the insert menu.
+    /// </summary>
+    private void SplitListItemAt(RichBoardPage page, RichBoardBlock block, int caretIndex)
+    {
+        var text = block.Text ?? string.Empty;
+        var index = page.Blocks.IndexOf(block);
+        var caret = Math.Clamp(caretIndex, 0, text.Length);
+        if (caret <= 0 || caret >= text.Length)
+        {
+            // Enter at the end (or start of an empty row) adds the next row after this one.
+            var next = new RichBoardBlock
+            {
+                Kind = block.Kind,
+                Text = string.Empty,
+                Level = block.Level,
+                StyleId = block.StyleId,
+                Layout = block.Layout,
+            };
+            page.Blocks.Insert(index + 1, next);
+            _selectedBlockId = next.Id;
+            PushDocumentToBindings();
+            _session.MarkDirty();
+            RequestRebuild();
+            return;
+        }
+        var tail = text[caret..];
+        BoardTextRanges.ReplaceText(block, text[..caret]);
+        var sibling = new RichBoardBlock
+        {
+            Kind = block.Kind,
+            Text = tail,
+            Level = block.Level,
+            StyleId = block.StyleId,
+            Layout = block.Layout,
+        };
+        page.Blocks.Insert(index + 1, sibling);
+        _selectedBlockId = sibling.Id;
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
     public async Task<bool> SplitTextBlockAtAsync(string blockId, int caretIndex,
         CancellationToken cancellationToken = default)
     {
         if (!RequireEditMode()) return false;
         var page = CurrentPage();
         var block = page.Blocks.FirstOrDefault(item => item.Id == blockId);
-        if (block is null || block.Kind is not ("paragraph" or "heading")) return false;
+        if (block is null) return false;
+        // UX27-BOARD-016/017: Enter inside a list row splits that row into a same-kind
+        // sibling immediately after it. The renderer draws checklist, bulleted and
+        // numbered rows through one row builder, so all three share this behaviour.
+        if (IsListKind(block.Kind))
+        {
+            SplitListItemAt(page, block, caretIndex);
+            return true;
+        }
+        if (block.Kind is not ("paragraph" or "heading"))
+        {
+            Set("StatusText", $"A {block.Kind} block is not split by Enter. Use its own editor controls.");
+            return false;
+        }
         if (caretIndex < 0 || caretIndex > block.Text.Length) return false;
         if (block.Runs.Count > 0 && !string.Equals(string.Concat(block.Runs.Select(run => run.Text)), block.Text, StringComparison.Ordinal))
         {
@@ -2922,6 +2981,42 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         await AddChecklistItemAsync(parentKey);
     }
 
+    /// <summary>
+    /// Enter in a rendered list row (checklist, bulleted or numbered). Resolves the real
+    /// block behind the row's view id and splits it at the caret instead of appending a
+    /// checklist block at the end of the page.
+    /// </summary>
+    public Task ListEnterAsync(string viewBlockId, int caretIndex)
+    {
+        if (!RequireEditMode()) return Task.CompletedTask;
+        var block = FindChecklistBlock(viewBlockId);
+        if (block is null)
+        {
+            Set("StatusText", "That list row is no longer on this page. Choose a note and try again.");
+            return Task.CompletedTask;
+        }
+        SplitListItemAt(CurrentPage(), block, caretIndex);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Shift+Enter inside a list row keeps the text in the same BlockID with a soft line
+    /// break, so no sibling block is allocated.
+    /// </summary>
+    public void CommitListSoftBreak(string viewBlockId, string text)
+    {
+        if (!RequireEditMode()) return;
+        var block = FindChecklistBlock(viewBlockId);
+        if (block is null)
+            return;
+        if (string.Equals(block.Text, text, StringComparison.Ordinal))
+            return;
+        block.Text = text;
+        _selectedBlockId = block.Id;
+        PushDocumentToBindings();
+        _session.MarkDirty();
+    }
+
     /// <summary>Backspace on an empty checklist row removes it.</summary>
     public async Task ChecklistBackspaceAsync(string viewBlockId, string currentText)
     {
@@ -2931,8 +3026,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindChecklistBlock(viewBlockId);
         if (block is null)
             return;
-        // Never delete the final checklist row; clear it instead.
-        if (CurrentPage().Blocks.Count(b => b.Kind == "checklist") <= 1)
+        // Never delete the final list row; clear it instead.
+        if (CurrentPage().Blocks.Count(b => IsListKind(b.Kind)) <= 1)
         {
             block.Text = string.Empty;
             PushDocumentToBindings();
@@ -3917,13 +4012,22 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var page = CurrentPage();
         var direct = page.Blocks.FirstOrDefault(b => b.Id == tail);
         if (direct is not null)
-            return direct.Kind == "checklist" ? direct : null;
+            return IsListKind(direct.Kind) ? direct : null;
         var cut = tail.LastIndexOf('_');
         if (cut <= 0)
             return null;
         var viewId = tail[..cut] + ":" + tail[(cut + 1)..];
-        return page.Blocks.FirstOrDefault(b => b.Id == viewId && b.Kind == "checklist");
+        return page.Blocks.FirstOrDefault(b => b.Id == viewId && IsListKind(b.Kind));
     }
+
+    /// <summary>
+    /// The renderer draws checklist, bulleted and numbered rows through the same row
+    /// builder, so their edits and Enter handling must resolve every list kind.
+    /// Restricting this to "checklist" silently dropped text typed in a bulleted or
+    /// numbered row and turned Enter into a checkbox item.
+    /// </summary>
+    private static bool IsListKind(string kind) =>
+        kind is "checklist" or "bulleted" or "numbered";
 
     private static (string? ParentId, string ItemId) SplitItemId(string viewBlockId)
     {
