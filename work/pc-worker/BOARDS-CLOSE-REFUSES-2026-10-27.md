@@ -63,3 +63,49 @@ refusing, the only ways forward are a reviewed failed-restart (SIGKILL/SIGTERM r
   area rather than only in a log.
 - Then a scoped fix so an owner that cannot settle is reported and can be overridden by the user,
   instead of the window silently never closing.
+
+---
+
+# Convergence queue — branches still needing real reconciliation
+
+## Outstanding: `origin/astra/spaces-20261013`
+
+**Owner decision requested.** On 27 October the owner directed, "converge every branch into main;
+several things got fixed on other branches that are broken again." Seventeen remote frontier
+branches were merged into one integration candidate (`local/main-converge-20261027`, then carried
+into the live takeover line at `45e4b3e2cde4`). Every one of them was reconciled conflict by
+conflict with the merge options listed in each commit message. This branch is the single
+exception and is parked, not silently dropped.
+
+Branch inventory at the time of review:
+
+- `origin/astra/spaces-20261013` is 1265 commits behind `origin/main` and forks from an authoring
+  of Spaces, Chat and the private Dulche relay system as of 13 October.
+- Its committed content touches 432 files with 58629 insertions versus main, including whole new
+  files: `HomeSpaceGraphOwner.cs` / `.Association.cs` / `.Recovery.cs`, a private Dulche relay
+  runtime, a `.goal/` evidence library, and a distinct chat/Spaces composition.
+- Merging it as-is would conflict against all 17 branches already reconciled today plus main's
+  newer Spaces/Chat rewrites. The older authoring is a superset of neither side.
+
+Why this needs an owner response rather than an automatic ours/take-all merge:
+
+1. Several of its commits carry product statements whose later owner decisions supersede them
+   (private relay deployment in `04e2cb07`/`ca3763a8` predates the recorded Dulche product
+   owner decisions about bundled Dulche and the local default path).
+2. Its `.goal/` library documents a checkpoint process and golden rules that have never been
+   owner-amended into the 27 October expanded specification, so carrying them forward silently
+   would re-inject retired process authority.
+3. Reconciling it properly means deciding, file by file, whether the Space-chat message/action and
+   Spaces-shell composition in this older authoring is intended to survive alongside main's newer
+   authoring, or be retired with retained evidence.
+
+Options the owner may choose:
+
+- **(a) Retire the branch as preserved history** under the existing archive reference, retain it
+  as evidence, and record the retirement reason here.
+- **(b) Hand the branch to a dedicated reconciliation worker** (as the older-branch archive rule
+  already expects: "individual content reconciliation") to be merged commit-by-commit with
+  owner-reviewed semantics.
+- **(c) Merge it now as a best-effort superset** with the stated caveat that the Spaces/Chat
+  semantic ownership then has to be re-verified against the 27 October expanded spec before
+  anything is called current.
