@@ -25,6 +25,11 @@ public sealed class BoardInkInteractionController : IDisposable
     private string? _drawingPageId;
     private double _drawingZoom = 1, _drawingPanX, _drawingPanY, _drawingWidth = 2.5;
     private string _drawingColor = "#FF111111", _drawingTool = "Pen";
+    private bool _erasing;
+    private string? _erasingPageId;
+    private double _erasingZoom = 1, _erasingPanX, _erasingPanY;
+    private Point _lastErasePoint = new(double.NaN, double.NaN);
+    private int _eraseInFlight;
     private readonly EventHandler<PointerPressedEventArgs> _pressed;
     private readonly EventHandler<PointerEventArgs> _moved;
     private readonly EventHandler<PointerReleasedEventArgs> _released;
@@ -94,6 +99,14 @@ public sealed class BoardInkInteractionController : IDisposable
         var location = ToInkCoordinates(e.GetPosition(_overlay), _viewModel.InkPanX, _viewModel.InkPanY, _viewModel.InkZoom);
         if (string.Equals(_viewModel.InkTool, "Eraser", StringComparison.OrdinalIgnoreCase))
         {
+            _erasing = true;
+            _erasingPageId = pageId;
+            _erasingZoom = _viewModel.InkZoom;
+            _erasingPanX = _viewModel.InkPanX;
+            _erasingPanY = _viewModel.InkPanY;
+            _capturedPointer = e.Pointer;
+            e.Pointer.Capture(_overlay);
+            _lastErasePoint = new Point(double.NaN, double.NaN);
             Track(EraseAtAsync(pageId, location.X, location.Y));
             e.Handled = true;
             return;
@@ -123,15 +136,43 @@ public sealed class BoardInkInteractionController : IDisposable
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
+        if (_disposed) return;
+        if (_erasing)
+        {
+            // The owner drags the eraser across ink; a press-only hit test erased nothing unless
+            // the first sample landed exactly on a stored point. Erase continuously along the
+            // drag path, in the page's own ink space.
+            if (_erasingPageId is null) return;
+            var ink = ToInkCoordinates(e.GetPosition(_overlay), _erasingPanX, _erasingPanY, _erasingZoom);
+            if (!double.IsNaN(_lastErasePoint.X) &&
+                Math.Abs(ink.X - _lastErasePoint.X) < 1 && Math.Abs(ink.Y - _lastErasePoint.Y) < 1)
+            {
+                e.Handled = true;
+                return;
+            }
+            _lastErasePoint = ink;
+            Track(EraseAtAsync(_erasingPageId, ink.X, ink.Y));
+            e.Handled = true;
+            return;
+        }
         if (!_drawing || _disposed) return;
-        var ink = ToInkCoordinates(e.GetPosition(_overlay), _drawingPanX, _drawingPanY, _drawingZoom);
-        _points.Add((ink.X, ink.Y, ReadPressure(e, _overlay)));
+        var ink2 = ToInkCoordinates(e.GetPosition(_overlay), _drawingPanX, _drawingPanY, _drawingZoom);
+        _points.Add((ink2.X, ink2.Y, ReadPressure(e, _overlay)));
         RenderLiveStroke();
         e.Handled = true;
     }
 
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (_erasing)
+        {
+            _erasing = false;
+            _erasingPageId = null;
+            e.Pointer.Capture(null);
+            _capturedPointer = null;
+            e.Handled = true;
+            return;
+        }
         if (!_drawing) return;
         _drawing = false;
         e.Pointer.Capture(null);
@@ -175,10 +216,42 @@ public sealed class BoardInkInteractionController : IDisposable
 
     private async Task EraseAtAsync(string pageId, double x, double y)
     {
+        // A drag raises many move events; the contract erase merges the whole document each
+        // time, so coalesce to one follow-up pass and ignore points that barely moved.
+        if (Interlocked.CompareExchange(ref _eraseInFlight, 1, 0) != 0)
+        {
+            _pendingErase = (pageId, x, y);
+            return;
+        }
+        try
+        {
+            do
+            {
+                _pendingErase = null;
+                await EraseOnceAsync(pageId, x, y).ConfigureAwait(true);
+                var next = _pendingErase;
+                if (next is null) break;
+                (pageId, x, y) = next;
+            }
+            while (true);
+        }
+        finally { Interlocked.Exchange(ref _eraseInFlight, 0); }
+    }
+
+    private (string PageId, double X, double Y)? _pendingErase;
+
+    private async Task EraseOnceAsync(string pageId, double x, double y)
+    {
         try
         {
             if (_viewModel.Session is ContractSessionAdapter adapter)
-                await adapter.EraseInkAtPageAsync(pageId, x, y).ConfigureAwait(true);
+            {
+                // The overlay is drawn at the page's current zoom, so a fixed 12-unit radius is a
+                // different physical size at every zoom. Ask for a constant on-screen radius and
+                // let the contract test the stroke path, not just its stored sample points.
+                var radius = Math.Clamp(14 / Math.Max(_erasingZoom, 0.05), 6, 96);
+                await adapter.EraseInkAtPageAsync(pageId, x, y, radius).ConfigureAwait(true);
+            }
             else
                 await _viewModel.ClearInkAsync(pageId).ConfigureAwait(true);
             _viewModel.RefreshAfterEdit();

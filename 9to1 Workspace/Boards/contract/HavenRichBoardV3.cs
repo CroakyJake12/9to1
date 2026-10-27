@@ -1408,11 +1408,47 @@ public static partial class HavenRichNotesOps
     public static int EraseInkAt(HavenRichNotes notes, string pageId, double x, double y, double radius = 8)
     {
         var page = RequirePage(notes, pageId);
-        var removed = page.Ink.RemoveAll(stroke =>
-            stroke.Points.Any(point =>
-                Math.Abs(point.X - x) <= radius && Math.Abs(point.Y - y) <= radius));
+        if (radius < 0 || !double.IsFinite(radius))
+            throw new ArgumentOutOfRangeException(nameof(radius));
+        // Ink is stored as a sampled polyline. Testing only the stored sample points meant a
+        // pen-drawn stroke could pass straight under the eraser: the pointer lands between two
+        // samples and nothing is removed. Test the pointer against each stroke's actual path.
+        var removed = page.Ink.RemoveAll(stroke => StrokeHitsPoint(stroke, x, y, radius));
         if (removed > 0) TouchNotes(notes);
         return removed;
+    }
+
+    /// <summary>True when <paramref name="radius"/> around the point touches the stroke path.
+    /// A single-point stroke is treated as a dot of its own width.</summary>
+    private static bool StrokeHitsPoint(HavenRichInkStroke stroke, double x, double y, double radius)
+    {
+        var points = stroke.Points;
+        if (points.Count == 0) return false;
+        if (points.Count == 1)
+        {
+            var reach = radius + Math.Max(0, stroke.Width) / 2;
+            return Distance(points[0].X, points[0].Y, x, y) <= reach;
+        }
+        for (var index = 0; index + 1 < points.Count; index++)
+        {
+            if (DistanceToSegment(x, y, points[index].X, points[index].Y,
+                    points[index + 1].X, points[index + 1].Y) <= radius)
+                return true;
+        }
+        return false;
+    }
+
+    private static double Distance(double ax, double ay, double bx, double by) =>
+        Math.Sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
+
+    private static double DistanceToSegment(double px, double py, double ax, double ay, double bx, double by)
+    {
+        var dx = bx - ax;
+        var dy = by - ay;
+        var lengthSquared = dx * dx + dy * dy;
+        if (lengthSquared <= 0) return Distance(px, py, ax, ay);
+        var t = Math.Clamp(((px - ax) * dx + (py - ay) * dy) / lengthSquared, 0, 1);
+        return Distance(px, py, ax + t * dx, ay + t * dy);
     }
 
     public static void SetInkView(HavenRichNotes notes, string pageId, double panX, double panY, double zoom)
