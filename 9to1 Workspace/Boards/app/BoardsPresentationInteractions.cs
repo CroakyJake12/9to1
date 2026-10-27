@@ -66,6 +66,10 @@ public sealed class BoardInkInteractionController : IDisposable
                 _overlay.Children.Clear();
                 var canDraw = _viewModel.IsDrawMode && _viewModel.CanEdit && _viewModel.IsEditMode;
                 _overlay.IsHitTestVisible = canDraw;
+                // An empty absolute panel with no fill is not a hit-test target, so pen presses
+                // fell through to the text underneath and Draw looked dead. A transparent fill
+                // makes the sized layer receive them while Draw is on.
+                _overlay.Background = canDraw ? Brushes.Transparent : null;
                 ToolTip.SetTip(_overlay, canDraw ? "Draw directly over this page" : "Use Draw to annotate this page");
                 AutomationProperties.SetName(_overlay, "Page drawing layer");
                 var requiredHeight = 0d;
