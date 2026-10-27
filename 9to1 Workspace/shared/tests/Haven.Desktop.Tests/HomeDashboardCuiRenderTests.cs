@@ -180,7 +180,7 @@ public sealed class HomeDashboardCuiRenderTests
                 item.Name == "dashboard-welcome" && item.Text?.StartsWith("Good ", StringComparison.Ordinal) == true);
             // Customise intentionally removes its tools from the visible tree. Inspect
             // the SAME retained authored control before exposing it through the real action.
-            var edit = Assert.Single(AuthoredDashboardControls(page).OfType<Button>(),
+            var edit = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
                 item => item.Name == "dashboard-edit-with-ai");
             Assert.False(edit.IsEffectivelyVisible);
             var arrange = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "dashboard-arrange-widgets");
