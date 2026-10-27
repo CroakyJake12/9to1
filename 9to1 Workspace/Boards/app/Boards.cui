@@ -199,7 +199,10 @@
                   <Container Type="Absolute" ID="AbsoluteBlocksHost" Row="0" XInherited="True" YInherited="True" Active="{Binding IsNativePage}" />
                 </Container>
               </Container>
-              <Container Type="Absolute" ID="InkOverlayLayer" Active="{Binding IsNativePage}" />
+              <!-- Centre-origin scope for the drawing layer is the page surface itself, so a pen
+                   point and the stroke it renders share one coordinate space (same inheritance the
+                   authored AbsoluteBlocksHost uses). -->
+              <Container Type="Absolute" ID="InkOverlayLayer" XInherited="True" YInherited="True" Active="{Binding IsNativePage}" />
             </Container>
           </Container>
         </Container>

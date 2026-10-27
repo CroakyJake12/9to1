@@ -3,6 +3,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using System.Globalization;
 
@@ -24,15 +25,17 @@ public static class BoardInkOverlayRenderer
         overlay.Children.Clear();
         overlay.IsHitTestVisible = false;
         AutomationProperties.SetName(overlay, "Page drawing layer");
-        var requiredHeight = 0d;
+        var requiredHeight = strokes
+            .Where(stroke => stroke.Points.Count > 0)
+            .Select(stroke => stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48)
+            .DefaultIfEmpty(0d)
+            .Max();
+        ApplyOverlayExtent(overlay, requiredHeight);
         foreach (var stroke in strokes)
         {
             if (stroke.Points.Count == 0) continue;
-            requiredHeight = Math.Max(requiredHeight,
-                stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48);
             AddRenderedStroke(overlay, stroke, panX, panY, zoom);
         }
-        ApplyOverlayExtent(overlay, requiredHeight);
     }
 
     /// <summary>Sizes the absolute ink layer to the page it covers. The authored layer has no
@@ -150,16 +153,50 @@ public static class BoardInkOverlayRenderer
             return;
         }
 
-        // The authored Boards overlay is CUI's Absolute layout (CuiAbsolutePanel).
-        // Its pixel coordinates are centre-origin, so this adapter maps view pixels
-        // into the layout's canonical XPixel/YPixel properties.
-        var x = center.X - overlay.Bounds.Width / 2;
-        var y = overlay.Bounds.Height / 2 - center.Y;
+        // The authored Boards overlay is CUI's Absolute layout (CuiAbsolutePanel). Its pixel
+        // coordinates are centre-origin, but the centre belongs to the placement scope the panel
+        // resolves - the nearest ancestor Container with an inherited axis, otherwise the
+        // OUTERMOST container - and that scope's origin is added to the result. Assuming the
+        // layer's own bounds made every stroke land away from the pointer, which the owner saw
+        // as a constant pen offset. Resolve the same scope and convert through it.
+        var (xScope, yScope) = PlacementScopes(overlay);
+        var xOrigin = xScope is null ? default : xScope.TranslatePoint(default, overlay) ?? default;
+        var yOrigin = yScope is null ? default : yScope.TranslatePoint(default, overlay) ?? default;
+        var xLength = xScope?.Bounds.Width ?? overlay.Bounds.Width;
+        var yLength = yScope?.Bounds.Height ?? overlay.Bounds.Height;
+        var x = center.X - (xOrigin.X + xLength / 2);
+        var y = (yOrigin.Y + yLength / 2) - center.Y;
         if (!CuiLayoutProperties.SetLiteral(element, "XPixel", x.ToString(CultureInfo.InvariantCulture),
                 source: "Boards ink renderer") ||
             !CuiLayoutProperties.SetLiteral(element, "YPixel", y.ToString(CultureInfo.InvariantCulture),
                 source: "Boards ink renderer"))
             throw new InvalidOperationException("The Boards drawing overlay does not expose CUI absolute pixel placement.");
+    }
+
+    private static readonly System.Reflection.PropertyInfo? InheritXProperty =
+        typeof(CuiContainerControl).GetProperty("InheritX", System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+    private static readonly System.Reflection.PropertyInfo? InheritYProperty =
+        typeof(CuiContainerControl).GetProperty("InheritY", System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+
+    /// <summary>Mirrors CuiAbsolutePanel.ArrangeOverride scope selection so the renderer and the
+    /// runtime agree on which centre a pixel coordinate is measured from.</summary>
+    private static (CuiContainerControl? X, CuiContainerControl? Y) PlacementScopes(Panel overlay)
+    {
+        var ancestors = overlay.GetVisualAncestors().OfType<CuiContainerControl>().ToArray();
+        if (ancestors.Length == 0) return (null, null);
+        return (
+            ancestors.FirstOrDefault(container => AxisInherited(InheritXProperty, container)) ?? ancestors[^1],
+            ancestors.FirstOrDefault(container => AxisInherited(InheritYProperty, container)) ?? ancestors[^1]);
+    }
+
+    private static bool AxisInherited(System.Reflection.PropertyInfo? property, CuiContainerControl container)
+    {
+        if (property?.GetValue(container) is bool inherited) return inherited;
+        // Unknown axis flag: treat it as inherited so the nearest container wins, which is the
+        // authored intent for the page surface and its drawing layer.
+        return true;
     }
 
     private static Point ToOverlayCoordinates(double x, double y, double panX, double panY, double zoom) =>
