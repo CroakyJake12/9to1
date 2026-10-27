@@ -55,10 +55,6 @@ public static class BoardsTheme
 
     public static CuiTheme ResolvedPreference => _resolvedPreference ?? CuiTheme.Professional;
 
-    public static BoardsPalette Current => FromSharedPalette(SharedPalette);
-
-    public static event Action? Changed;
-
     /// <summary>Read the shared Haven theme choice into Boards' local resolver before the
     /// Boards CUI tree is built. This deliberately does NOT write the shared
     /// CuiSurfacePaletteCatalog: unrelated surfaces keep their host-owned theme.</summary>
