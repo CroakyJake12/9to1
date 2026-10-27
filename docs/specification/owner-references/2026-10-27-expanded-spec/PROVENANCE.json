@@ -15,7 +15,14 @@
     "original_local_path": "/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/spec-2026-10-27/9to1-v2-expanded-2026-10-27/",
     "repository_copy": "docs/specification/owner-references/2026-10-27-expanded-spec/",
     "native_google_doc": "read only, not edited by this package",
-    "web_versions_used": false
+    "web_versions_used": false,
+    "owner_resupply_confirmed": {
+      "observed_at": "2026-10-27T20:30:00+01:00",
+      "owner_local_path": "/home/jacob/Downloads/9to1_Development_Specification_v2_Expanded_2026-10-27.md",
+      "sha256": "8dfe5908b6a92cfbe6ee42e01c4b4902fb7c657aaa33d9662219568994b1cb9e",
+      "comparison": "byte-identical to the adopted repository copy",
+      "interpretation": "the owner supplied the same expanded specification directly; no content change to the adopted package"
+    }
   },
   "contents": {
     "master_markdown": {
