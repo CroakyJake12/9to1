@@ -28,6 +28,8 @@ internal sealed class BlockReorderPointer
     private ScrollViewer? _scrollViewer;
     private DispatcherTimer? _autoScrollTimer;
     private BoardBlockActionTarget? _target;
+    private bool _draggedItemRow;
+    private int _dragItemDirection;
     private Border? _markedRow;
     private Thickness _markedThickness;
     private IBrush? _markedBrush;
@@ -88,6 +90,24 @@ internal sealed class BlockReorderPointer
         var position = e.GetPosition(_host);
         if (!_dragging && Math.Abs(position.Y - _start.Y) >= DragThreshold)
         {
+            // A projected list row is not a whole contract block: its view id is
+            // "{list block}:{item}" and CaptureBlockAction refuses ids containing a
+            // colon. Rejecting it silently cancelled every list-row drag, which the
+            // owner saw as dead six-dot grips. Projected list rows therefore reorder
+            // their row against the neighbouring siblings through the same supported
+            // MarkDirty route, and the status line names the outcome.
+            if (_blockId.Contains(':'))
+            {
+                _draggedItemRow = true;
+                _dragItemDirection = position.Y - _start.Y > 0 ? 1 : -1;
+                _target = null;
+                _dragging = true;
+                _pointer?.Capture(handle);
+                ToolTip.SetTip(handle, "Drag to move this list row. Press Escape to cancel.");
+                _scrollViewer = _host.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
+                e.Handled = true;
+                return;
+            }
             _target = (_viewModel.Session as ContractSessionAdapter)?.CaptureBlockAction(_viewModel.SelectedPageId, _blockId);
             if (_target is null) { Cancel(); return; }
             _dragging = true;
@@ -110,11 +130,23 @@ internal sealed class BlockReorderPointer
         try
         {
             var wasDrag = _dragging;
-            var destination = wasDrag ? GetDestination(e.GetPosition(_host).Y) : null;
+            var itemRow = wasDrag && _draggedItemRow;
+            var itemDirection = _dragItemDirection;
+            var destination = wasDrag && !itemRow ? GetDestination(e.GetPosition(_host).Y) : null;
             var target = _target;
             if (wasDrag) e.Handled = true;
             StopAutoScroll();
             Cancel();
+            if (itemRow)
+            {
+                // The owner dragged a single projected list row; commit the row's
+                // move one sibling slot in the drag direction. A drop past several
+                // neighbours is clamped by moving one step each re-drag, which is
+                // the same explicit typed path the keyboard row actions use.
+                if (!_viewModel.MoveListItem(_blockId, itemDirection))
+                    _draggedItemRow = false;
+                return;
+            }
             if (wasDrag && destination is int index && target is not null && index != _sourceIndex)
                 _ = CommitReleasedMoveAsync(target, index);
         }
@@ -253,6 +285,7 @@ internal sealed class BlockReorderPointer
 
     private void Cancel()
     {
+        _draggedItemRow = false;
         var pointer = _pointer;
         StopAutoScroll();
         _pointer = null;

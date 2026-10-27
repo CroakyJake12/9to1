@@ -4096,6 +4096,61 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private static bool IsListKind(string kind) =>
         kind is "checklist" or "bulleted" or "numbered";
 
+    /// <summary>
+    /// Pointer reorder for one projected list row (checklist, bulleted or numbered). The rendered
+    /// row id is the projected <c>{list block}:{item}</c> id, and the whole-block actions address
+    /// the canonical list block, not the row. Moving a row therefore reorders the sibling rows of
+    /// its own list inside the view-model document and MarkDirty route, the same supported path
+    /// as ChecklistIndent. The status line names the outcome so a silent grip is distinguishable
+    /// from a refused drag.
+    /// </summary>
+    public bool MoveListItem(string viewBlockId, int delta)
+    {
+        if (!RequireEditMode()) return false;
+        var block = FindChecklistBlock(viewBlockId);
+        if (block is null)
+        {
+            Set("StatusText", "That list row is no longer on this page to drag.");
+            return false;
+        }
+        var (parentId, _) = SplitItemId(viewBlockId);
+        var parentIdResolved = parentId ?? block.Id;
+        if (delta == 0) { Set("StatusText", "Drag the row up or down to reorder it."); return false; }
+        var page = CurrentPage();
+        var sameRun = new List<RichBoardBlock>();
+        for (var index = 0; index < page.Blocks.Count; index++)
+        {
+            var candidate = page.Blocks[index];
+            if (IsListKind(candidate.Kind) && ParentKey(candidate.Id) == parentIdResolved)
+                sameRun.Add(candidate);
+        }
+        if (sameRun.Count < 2)
+        {
+            Set("StatusText", "The row has no sibling rows to reorder against.");
+            return false;
+        }
+        var position = sameRun.FindIndex(row => ReferenceEquals(row, block));
+        var swapWith = delta < 0
+            ? (position > 0 ? sameRun[position - 1] : null)
+            : (position >= 0 && position + 1 < sameRun.Count ? sameRun[position + 1] : null);
+        if (swapWith is null)
+        {
+            Set("StatusText", "The row is already at the " + (delta < 0 ? "top" : "bottom") + " of its list.");
+            return false;
+        }
+        var a = page.Blocks.IndexOf(block);
+        var b = page.Blocks.IndexOf(swapWith);
+        if (a < 0 || b < 0 || a == b) return false;
+        page.Blocks[a] = swapWith;
+        page.Blocks[b] = block;
+        _selectedBlockId = block.Id;
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+        Set("StatusText", "Moved the row " + (delta < 0 ? "up." : "down."));
+        return true;
+    }
+
     private static (string? ParentId, string ItemId) SplitItemId(string viewBlockId)
     {
         var colon = viewBlockId.IndexOf(':');
