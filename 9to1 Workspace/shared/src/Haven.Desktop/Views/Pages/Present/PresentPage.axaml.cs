@@ -29,7 +29,23 @@ public sealed partial class PresentPage : UserControl, IDisposable
     private bool _initialized;
     private Exception? _originalInitializationFailure;
     private bool _busy;
-    private bool _dirty;
+    private bool _dirtyFlag;
+
+    /// <summary>
+    /// Single dirty transition point. Every assignment routes the header save-state pill
+    /// through <see cref="RefreshSaveIndicator"/> so the indicator always reflects the
+    /// actual document state rather than a fixed label.
+    /// </summary>
+    private bool _dirty
+    {
+        get => _dirtyFlag;
+        set
+        {
+            if (_dirtyFlag == value) return;
+            _dirtyFlag = value;
+            PublishOriginalPresentSource(() => RefreshSaveIndicator());
+        }
+    }
     private bool _disposed;
 
     // Preserve the original public constructor as well as its source-call defaults.
@@ -73,8 +89,44 @@ public sealed partial class PresentPage : UserControl, IDisposable
         }
     }
 
-    public PresentDocument? Document { get; private set; }
+    private PresentDocument? _document;
+
+    /// <summary>
+    /// Assigning a deck is also the boundary for per-document save evidence: the previous
+    /// deck's saved timestamp or failure cannot carry over onto a newly opened document.
+    /// </summary>
+    public PresentDocument? Document
+    {
+        get => _document;
+        private set
+        {
+            if (ReferenceEquals(_document, value)) return;
+            _document = value;
+            _lastSavedAt = null;
+            _lastSaveFailure = null;
+            PublishOriginalPresentSource(() => RefreshSaveIndicator());
+        }
+    }
     public bool IsDirty => _dirty;
+
+    private DateTimeOffset? _lastSavedAt;
+    private string? _lastSaveFailure;
+
+    /// <summary>
+    /// Projects the real save state into the document header. Only a completed repository
+    /// save produces "Saved"; failures and pending edits stay visible instead of being
+    /// replaced by a reassuring label.
+    /// </summary>
+    private void RefreshSaveIndicator()
+    {
+        if (_disposed || _route is null) return;
+        if (Document is not { } document) { _route.SetSaveState("none"); return; }
+        if (Volatile.Read(ref _saveRunning) != 0) { _route.SetSaveState("saving"); return; }
+        if (_lastSaveFailure is { } failure) { _route.SetSaveState("failed", failure); return; }
+        if (_dirty) { _route.SetSaveState(document.Recovery.RecoveredFromBackup ? "recovered" : "unsaved"); return; }
+        if (_lastSavedAt is { } saved) { _route.SetSaveState("saved", $"{saved.LocalDateTime:t} · v{document.Version}"); return; }
+        _route.SetSaveState("saved", $"v{document.Version}");
+    }
     public PresentCompatibilityReport? LastCompatibilityReport { get; private set; }
     internal PresentHavenScene Route => _route;
     internal HavenSceneControl SceneHost => Scene;
@@ -102,6 +154,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         if (_disposed) return false;
         if (Document is not { } document || (!_dirty && !document.Recovery.RecoveredFromBackup)) return true;
         if (Interlocked.Exchange(ref _saveRunning, 1) != 0) return false;
+        PublishOriginalPresentSource(() => RefreshSaveIndicator());
         try
         {
             if (string.IsNullOrWhiteSpace(document.Title)) document.Title = "Untitled presentation";
@@ -119,6 +172,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
                 if (generation == _editGeneration) current.UpdatedAt = snapshot.UpdatedAt;
                 _dirty = generation != _editGeneration;
             }
+            if (Document?.Id == document.Id && generation == _editGeneration) { _lastSavedAt = result.SavedAt; _lastSaveFailure = null; }
             await RefreshDocumentsAsync(cancellationToken);
             if (Document?.Id == document.Id)
             {
@@ -126,10 +180,10 @@ public sealed partial class PresentPage : UserControl, IDisposable
                 PublishOriginalPresentSource(() => _route.SetStatus(_dirty ? "Newer changes remain unsaved. Save them before closing."
                     : $"Saved locally at {result.SavedAt.LocalDateTime:t} · v{result.Version}"));
             }
-            PublishOriginalPresentSource(() => _bus.Fire("Present.Saved")); return Document?.Id == document.Id && !_dirty;
+            PublishOriginalPresentSource(() => { RefreshSaveIndicator(); _bus.Fire("Present.Saved"); }); return Document?.Id == document.Id && !_dirty;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception ex) { RetainHandledOriginalPresentCause(ex); PublishOriginalPresentSource(() => _route.SetStatus("Couldn’t save this presentation: " + ex.Message)); return false; }
+        catch (Exception ex) { RetainHandledOriginalPresentCause(ex); _lastSaveFailure = ex.Message; PublishOriginalPresentSource(() => { _route.SetStatus("Couldn’t save this presentation: " + ex.Message); RefreshSaveIndicator(); }); return false; }
         finally { Interlocked.Exchange(ref _saveRunning, 0); RefreshFreehandMount(); }
     });
 
@@ -364,6 +418,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         PublishOriginalPresentSource(() => _route.SetWorkspaceDocument(Document, _slideIndex));
         PublishOriginalPresentSource(() => _route.SetWorkspaceSelection(Document, _slideIndex, _editor!.Selection.ElementIds));
         PublishSharedInkState(); RefreshFreehandMount();
+        PublishOriginalPresentSource(() => RefreshSaveIndicator());
     }
     private async Task RefreshDocumentsAsync(CancellationToken cancellationToken) => _documents = await AwaitOriginalPresentSource(() => _repository.ListAsync(cancellationToken));
     private int IndexOfDocument(Guid id) { for (var index = 0; index < _documents.Count; index++) if (_documents[index].Id == id) return index; return 0; }

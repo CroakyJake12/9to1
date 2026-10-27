@@ -24,6 +24,14 @@ public sealed partial class ChatCloudPermissionCallerTests
             Capabilities = new HashSet<ToolCapability> { ToolCapability.Text }
         };
         rig.Client.AvailableModels = [offered];
+        var ordinaryRequests = new List<OllamaChatRequest>();
+        rig.Client.OrdinaryProviderBody = (request, actualToken) =>
+        {
+            actualToken.ThrowIfCancellationRequested();
+            Assert.Null(request.ExecutionContext);
+            ordinaryRequests.Add(request);
+            return Task.FromResult(false);
+        };
         var safety = new HeldSendSafety();
         var directory = Path.Combine(Path.GetTempPath(), "ordinary-composer-send-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -47,7 +55,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             await safety.SendCheckEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
             Assert.False(sending.IsCompleted);
             Assert.Equal(prompt, typeof(NewChatPage).GetField("_originalComposerText", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
-            Assert.Empty(rig.Conversations.Messages.Where(message => message.Role == MessageRole.User));
+            Assert.DoesNotContain(rig.Conversations.Messages, message => message.Role == MessageRole.User);
             Assert.Equal(0, rig.Client.Dispatches);
 
             // Resume the actual awaited safety dependency from a worker thread. The
@@ -58,7 +66,11 @@ public sealed partial class ChatCloudPermissionCallerTests
 
             var committed = Assert.Single(rig.Conversations.Messages, message => message.Role == MessageRole.User);
             Assert.Equal(prompt, committed.Content);
-            Assert.True(rig.Client.Dispatches > 0);
+            Assert.Single(ordinaryRequests);
+            Assert.Equal(1, rig.Client.Dispatches);
+            Assert.Equal(0, rig.Capture.ChatCaptures);
+            Assert.Null(rig.Service.CurrentCanonicalTask);
+            Assert.Equal(1, rig.Client.StreamDisposals);
             Assert.False(page.IsSending);
             Assert.Null(drafts.Last);
         }

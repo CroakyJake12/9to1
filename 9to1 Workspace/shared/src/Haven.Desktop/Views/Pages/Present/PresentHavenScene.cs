@@ -26,7 +26,7 @@ internal sealed partial class PresentHavenScene : IDisposable
         Root.SetValue(HavenProperties.Responsive, true);
         Root.SetValue(HavenProperties.Overflow, HavenOverflow.Clip);
 
-        Header = new Container { Name = "Present.Header", Layout = HavenLayout.Grid, Columns = "Auto 1fr Auto", Rows = "Auto" };
+        Header = new Container { Name = "Present.Header", Layout = HavenLayout.Grid, Columns = "Auto 1fr Auto Auto", Rows = "Auto" };
         Header.SetValue(HavenProperties.Row, 0);
         Header.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         Header.SetValue(HavenProperties.Height, HavenLength.Px(58));
@@ -60,7 +60,35 @@ internal sealed partial class PresentHavenScene : IDisposable
         PositionText.SetValue(HavenProperties.Column, 2);
         PositionText.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         PositionText.SetValue(HavenProperties.Foreground, "TextSecondary");
-        Header.Add(PositionText); Root.Add(Header);
+        Header.Add(PositionText);
+
+        // Truthful document save state. The page drives this from the actual repository
+        // save result; it never carries reference text of its own.
+        SaveStatePill = new Container { Name = "Present.Header.SaveState", Layout = HavenLayout.Horizontal };
+        SaveStatePill.SetValue(HavenProperties.Column, 3);
+        SaveStatePill.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
+        SaveStatePill.SetValue(HavenProperties.Gap, HavenLength.Px(6));
+        SaveStatePill.SetValue(HavenProperties.MinHeight, HavenLength.Px(28));
+        SaveStatePill.SetValue(HavenProperties.Padding, HavenThickness.Parse("4px 10px"));
+        SaveStatePill.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(14)));
+        SaveStatePill.SetValue(HavenProperties.Background, "SurfaceSecondary");
+        SaveStatePill.SetValue(HavenProperties.BorderColor, "Border");
+        SaveStatePill.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1));
+        SaveStatePill.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.None);
+        SaveStateDot = new Container { Name = "Present.Header.SaveState.Dot", Layout = HavenLayout.Grid };
+        SaveStateDot.SetValue(HavenProperties.Width, HavenLength.Px(10));
+        SaveStateDot.SetValue(HavenProperties.Height, HavenLength.Px(10));
+        SaveStateDot.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(5)));
+        SaveStateDot.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
+        SaveStateDot.SetValue(HavenProperties.Background, "TextMuted");
+        SaveStatePill.Add(SaveStateDot);
+        SaveStateText = new HavenText { Name = "Present.Header.SaveState.Text", Level = TextLevel.Caption };
+        SaveStateText.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
+        SaveStateText.SetValue(HavenProperties.Foreground, "TextSecondary");
+        SaveStateText.Accessibility.AccessibleName = "Presentation save state";
+        SaveStatePill.Add(SaveStateText);
+        SetSaveState("unknown", "Opening…");
+        Header.Add(SaveStatePill); Root.Add(Header);
 
         DeckToolbar = NewToolbar("Present.Deck.Toolbar", 1);
         PreviousDeckButton = NewButton("Present.Deck.Previous", "Previous deck");
@@ -127,9 +155,9 @@ internal sealed partial class PresentHavenScene : IDisposable
         NotesHost.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(10)));
         NotesHost.SetValue(HavenProperties.Padding, HavenThickness.Parse("8px 10px"));
         NotesHost.SetValue(HavenProperties.Gap, HavenLength.Px(4));
-        NotesLabel = Caption("Speaker notes"); NotesHost.Add(NotesLabel);
+        NotesLabel = Caption("Slide Notes"); NotesHost.Add(NotesLabel);
         NotesInput = new Input { Name = "Present.Slide.Notes", Placeholder = "Add speaker notes...", Multiline = true };
-        NotesInput.Accessibility.AccessibleName = "Speaker notes";
+        NotesInput.Accessibility.AccessibleName = "Slide Notes";
         NotesInput.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         NotesInput.SetValue(HavenProperties.MinHeight, HavenLength.Px(72));
         NotesInput.SetValue(HavenProperties.MaxHeight, HavenLength.Px(118));
@@ -200,6 +228,7 @@ internal sealed partial class PresentHavenScene : IDisposable
     public event Action<string>? DeckTitleChanged; public event Action<string>? SlideTitleChanged; public event Action<string>? BodyChanged; public event Action<string>? NotesChanged;
 
     public Page Root { get; } public Container Header { get; } public Container DeckBadge { get; private set; } = null!; public Input DeckTitleInput { get; } public HavenText PositionText { get; }
+    public Container SaveStatePill { get; private set; } = null!; public Container SaveStateDot { get; private set; } = null!; public HavenText SaveStateText { get; private set; } = null!;
     public Container DeckToolbar { get; } public Container SlideToolbar { get; } public Container Workspace { get; } public Container SlidePane { get; } public Container EditorHost { get; } public Container NotesHost { get; } public Container InspectorPane { get; }
     internal PresentSlideCanvas SlideCanvas { get; }
     internal NativeHost SharedInkPreviewHost { get; }
@@ -225,6 +254,32 @@ internal sealed partial class PresentHavenScene : IDisposable
     }
 
     public void SetStatus(string text) => StatusText.Content = text ?? string.Empty;
+
+    /// <summary>
+    /// Reflects the actual document save state observed by the page. The pill never
+    /// invents a saved result: only a completed repository save produces "Saved".
+    /// </summary>
+    public void SetSaveState(string kind, string detail = "")
+    {
+        SaveStateKind = kind ?? "unknown";
+        var (label, dot, foreground) = SaveStateKind switch
+        {
+            "saved" => ("Saved", "Accent", "TextSecondary"),
+            "saving" => ("Saving…", "Warning", "TextSecondary"),
+            "unsaved" => ("Unsaved changes", "Warning", "TextSecondary"),
+            "failed" => ("Save failed", "Danger", "Danger"),
+            "recovered" => ("Recovered, unsaved", "Danger", "Danger"),
+            "none" => ("No deck open", "TextMuted", "TextMuted"),
+            _ => ("Save state unknown", "TextMuted", "TextMuted")
+        };
+        if (!string.IsNullOrWhiteSpace(detail)) label += " · " + detail;
+        SaveStateText.Content = label;
+        SaveStatePill.Accessibility.AccessibleName = "Presentation save state: " + label;
+        SaveStateDot.SetValue(HavenProperties.Background, dot);
+        SaveStateText.SetValue(HavenProperties.Foreground, foreground);
+    }
+
+    public string SaveStateKind { get; private set; } = "unknown";
     public void SetBusy(bool busy)
     {
         var enabled = !busy;

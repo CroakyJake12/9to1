@@ -40,11 +40,11 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
         Assert.Contains(providers, provider => ReferenceEquals(provider, extension));
         Assert.Contains(providers, provider => provider is DeveloperCuiProjectTemplateProvider);
         var catalog = new DeveloperProjectCatalog(providers);
-        var option = Assert.Single((await catalog.SearchAsync(new(ProviderId: extension.ProviderId), token).ConfigureAwait(false)).Value!);
+        var option = Assert.Single((await catalog.SearchAsync(new(ProviderId: extension.ProviderId), token)).Value!);
         Assert.Equal(extension.ProviderId, option.Template.ProviderId);
         Assert.Equal("fixture-component", option.Template.TemplateId);
         var materializer = new DeveloperProjectTemplateMaterializer(providers);
-        var prepared = await materializer.PrepareAsync(option, "Fixture Component", token).ConfigureAwait(false);
+        var prepared = await materializer.PrepareAsync(option, "Fixture Component", token);
         Assert.True(prepared.Succeeded);
         Assert.Equal(extension.ProviderId, prepared.Value!.ProviderId);
         Assert.Equal("Widget.cui", Assert.Single(prepared.Value.Files).RelativePath);
