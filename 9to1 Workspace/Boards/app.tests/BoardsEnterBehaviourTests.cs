@@ -23,7 +23,7 @@ public sealed class BoardsEnterBehaviourTests
         try
         {
             var path = Path.Combine(root, "maths.9to1board");
-            await using (var store = new JsonFileHavenBoardStore(root))
+            using (var store = new JsonFileHavenBoardStore(root))
             {
                 await SeedAsync(store, path);
                 await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
@@ -64,7 +64,7 @@ public sealed class BoardsEnterBehaviourTests
         try
         {
             var path = Path.Combine(root, "maths.9to1board");
-            await using var store = new JsonFileHavenBoardStore(root);
+            using var store = new JsonFileHavenBoardStore(root);
             await SeedAsync(store, path);
             await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
             var vm = new BoardsViewModel(adapter);
@@ -92,7 +92,7 @@ public sealed class BoardsEnterBehaviourTests
         try
         {
             var path = Path.Combine(root, "maths.9to1board");
-            await using var store = new JsonFileHavenBoardStore(root);
+            using var store = new JsonFileHavenBoardStore(root);
             await SeedAsync(store, path);
             await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
             var vm = new BoardsViewModel(adapter);
@@ -119,7 +119,7 @@ public sealed class BoardsEnterBehaviourTests
         try
         {
             var path = Path.Combine(root, "maths.9to1board");
-            await using var store = new JsonFileHavenBoardStore(root);
+            using var store = new JsonFileHavenBoardStore(root);
             await SeedAsync(store, path);
             await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
             var vm = new BoardsViewModel(adapter);
