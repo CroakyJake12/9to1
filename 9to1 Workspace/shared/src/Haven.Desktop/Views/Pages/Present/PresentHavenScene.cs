@@ -45,7 +45,8 @@ internal sealed partial class PresentHavenScene : IDisposable
         badgeLabel.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         badgeLabel.Accessibility.AccessibleName = "Presentation deck badge";
         badgeLabel.SetValue(HavenProperties.FontWeight, 700);
-        badgeLabel.SetValue(HavenProperties.Foreground, "AccentInk");
+        badgeLabel.SetValue(HavenProperties.Foreground, "AccentForeground");
+
         DeckBadge.Add(badgeLabel);
         Header.Add(DeckBadge);
         DeckTitleInput = new Input { Name = "Present.Deck.Title", Placeholder = "Untitled presentation" };
