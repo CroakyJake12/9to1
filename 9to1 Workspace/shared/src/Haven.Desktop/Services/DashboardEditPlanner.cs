@@ -1,7 +1,10 @@
+using System.Text;
 using System.Text.Json;
 using Haven.Application;
+using Haven.Application.Haven;
 using Haven.Core;
 using Haven.Desktop.Dashboard;
+using HavenOS.Home.Core;
 
 namespace Haven.Desktop.Services;
 
@@ -23,13 +26,15 @@ internal sealed record DashboardEditPlanResult(
     string Message,
     DashboardEditPlan? Plan = null);
 
-internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> defaultModel)
+internal sealed class DashboardEditPlanner(IProviderModelClient models, HomeModelSelectionSource selection)
 {
     private const int MaxOperations = 16;
+    private const int MaxPlannerResponseBytes = 64 * 1024;
     private static readonly HashSet<string> AllowedActions = new(StringComparer.OrdinalIgnoreCase)
     {
         "show", "hide", "move", "resize", "reset-layout", "rename-page"
     };
+    private long _selectionGeneration;
 
     public async Task<DashboardEditPlanResult> PlanAsync(
         string instruction,
@@ -46,12 +51,10 @@ internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> d
 
         try
         {
-            var available = await models.GetModelsAsync(cancellationToken).ConfigureAwait(false);
-            var preferred = defaultModel();
-            var model = available.FirstOrDefault(item => !string.IsNullOrWhiteSpace(preferred)
-                                                         && item.Name.Equals(preferred, StringComparison.OrdinalIgnoreCase))
-                        ?? available.FirstOrDefault();
-            if (model is null) return Fail("No model is available for Edit with Haven.");
+            var before = await selection.ResolveAsync(Interlocked.Increment(ref _selectionGeneration), cancellationToken)
+                .ConfigureAwait(false);
+            if (before?.Actor is null || string.IsNullOrWhiteSpace(before.ProviderId) || string.IsNullOrWhiteSpace(before.ModelId))
+                return Fail("No available model is selected by Home's Chat or Active route. Check model discovery and route configuration in Home.");
 
             var widgetContext = string.Join('\n', widgets.Select(view =>
             {
@@ -85,16 +88,44 @@ internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> d
                 string.Empty,
                 "Use only listed widget keys. Never invent data, widgets, actions, code, URLs or navigation."
             ]);
-            var response = await models.CompleteAsync(
-                new OllamaChatRequest(
-                    model.Name,
-                    [new OllamaMessage("user", prompt)],
-                    EffortLevel.Low,
-                    "You are 9to1's dashboard layout planner. Output strict JSON only. You may only use the explicitly allowed dashboard operations.",
-                    Options: new GenerationOptions(0.2, 4096, 0)),
-                cancellationToken).ConfigureAwait(false);
+            var request = new OllamaChatRequest(
+                before.ProviderId + ":" + before.ModelId,
+                [new OllamaMessage("user", prompt)],
+                EffortLevel.Low,
+                "You are 9to1's dashboard layout planner. Output strict JSON only. You may only use the explicitly allowed dashboard operations.",
+                Options: new GenerationOptions(0.2, 4096, 0)
+                {
+                    RequestedContextConstraints = new ModelRequestContextConstraints(AllowPersistentMemoryRead: false),
+                    RequestedRoutingConstraints = new ModelRequestRoutingConstraints(AllowFallback: false)
+                })
+            {
+                ReasoningId = before.SelectedReasoningId,
+                ReasoningTargetProviderId = before.ProviderId,
+                ReasoningTargetModelName = before.ModelId,
+            };
+            var response = new StringBuilder();
+            var responseBytes = 0;
+            // The production provider bridge refuses CompleteAsync for an explicit reasoning ID.
+            // Keep the Home-selected ID on the supported named-reasoning stream path, with a
+            // bounded collector because this planner expects one small JSON document.
+            await foreach (var chunk in models.StreamChatAsync(request, cancellationToken).ConfigureAwait(false))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (chunk is null) return Fail("The selected model returned an invalid dashboard-plan stream.");
+                var chunkBytes = Encoding.UTF8.GetByteCount(chunk);
+                if (chunkBytes > MaxPlannerResponseBytes - responseBytes)
+                    return Fail("The selected model's dashboard plan exceeded the response size limit.");
+                response.Append(chunk);
+                responseBytes += chunkBytes;
+            }
+            cancellationToken.ThrowIfCancellationRequested();
 
-            return ParseAndValidate(response, widgets);
+            var after = await selection.ResolveAsync(Interlocked.Increment(ref _selectionGeneration), cancellationToken)
+                .ConfigureAwait(false);
+            if (!SameSelection(before, after))
+                return Fail("The selected Home model route changed while the dashboard edit was being planned. Try again.");
+
+            return ParseAndValidate(response.ToString(), widgets);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -176,6 +207,16 @@ internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> d
     }
 
     private static DashboardEditPlanResult Fail(string message) => new(false, message);
+
+    private static bool SameSelection(HavenModelProjectionSnapshot before, HavenModelProjectionSnapshot? after) =>
+        after?.Actor is not null && Equals(before.Actor, after.Actor) &&
+        StringComparer.Ordinal.Equals(before.AuthenticationRevision, after.AuthenticationRevision) &&
+        StringComparer.Ordinal.Equals(before.ScopeName, after.ScopeName) &&
+        StringComparer.Ordinal.Equals(before.ScopeId, after.ScopeId) &&
+        StringComparer.Ordinal.Equals(before.RouteId, after.RouteId) && before.RouteRevision == after.RouteRevision &&
+        StringComparer.Ordinal.Equals(before.ProviderId, after.ProviderId) &&
+        StringComparer.Ordinal.Equals(before.ModelId, after.ModelId) &&
+        StringComparer.Ordinal.Equals(before.SelectedReasoningId, after.SelectedReasoningId);
 
     private sealed record PlannerPayload(string? Summary, List<OperationPayload>? Operations);
     private sealed record OperationPayload(

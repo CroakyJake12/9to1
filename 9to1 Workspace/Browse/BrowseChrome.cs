@@ -818,7 +818,16 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             {
                 try { await AttachAppContentAsync(tab, address, cancellationToken).ConfigureAwait(false); }
                 catch when (restoring && !cancellationToken.IsCancellationRequested)
-                { tab.EngineState = BrowseEngineState.Unsupported; tab.Status = "The saved native app could not start. Its route and original owner are retained."; }
+                {
+                    // Swallowed at restore-time by design, but never silently: retain the exact
+                    // cause for diagnostics and schedule bounded retries so a startup-transient
+                    // host admission cannot permanently kill every saved app tab.
+                    tab.RestoreAttachFailed = true;
+                    tab.EngineState = BrowseEngineState.Unsupported;
+                    tab.Status = "The saved native app could not start. Its route and original owner are retained.";
+                    RetainAppSource(SaveTabsAsync(CancellationToken.None));
+                    ScheduleSavedAppAttachRetry(tab, cancellationToken);
+                }
             }
             else if (IsEngineAvailable(tab.Engine))
                 await AttachHostAsync(tab, cancellationToken).ConfigureAwait(false);
@@ -840,6 +849,48 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 tab.Status = tab.Address.IsWeb ? "The tab engine could not finish starting." : "The original native app could not finish starting. Its owner is retained.";
             }
             throw;
+        }
+    }
+
+    /// <summary>Bounded startup-transient retry for restored native app content. Host
+    /// admission during app restore may legitimately be unavailable (retiring window,
+    /// resolver sequencing); a saved tab must regain its app rather than stay dead until
+    /// the next restart. Owners whose initialization already failed are released
+    /// best-effort before re-attaching; failures stay bounded and diagnosable.</summary>
+    private void ScheduleSavedAppAttachRetry(TabRuntime tab, CancellationToken cancellationToken)
+    {
+        _ = RetryAsync();
+        async Task RetryAsync()
+        {
+            const int MaxAttempts = 8;
+            for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+            {
+                try { await Task.Delay(TimeSpan.FromSeconds(attempt), cancellationToken).ConfigureAwait(false); }
+                catch (TaskCanceledException) { return; }
+                lock (_nativeSourceGate) { if (_nativeRetiring || _disposed) return; }
+                if (!_tabs.Contains(tab) || !tab.RestoreAttachFailed) return;
+                if (tab.AppOwner is not null && tab.EngineState == BrowseEngineState.NativeApp) return;
+                try
+                {
+                    using var transition = AdmitContentTransition();
+                    tab.RestoreAttachFailed = attempt == MaxAttempts;
+                    try { await ReleaseContentAsync(tab, preservePendingHosts: true).ConfigureAwait(false); }
+                    catch (Exception) { /* Release causes are already retained close state; re-attach may still succeed */ }
+                    try { await AttachAppContentAsync(tab, tab.Address, cancellationToken).ConfigureAwait(false); }
+                    catch (Exception) when (!cancellationToken.IsCancellationRequested)
+                    {
+                        tab.AppOwner = null;
+                        tab.EngineState = BrowseEngineState.Unsupported;
+                        tab.Status = $"The saved native app could not start (retry {attempt}/{MaxAttempts})"
+                            + ". Its route and original owner are retained.";
+                        continue;
+                    }
+                    Publish();
+                    return;
+                }
+                catch (ObjectDisposedException) { return; }
+                catch (InvalidOperationException) { return; }
+            }
         }
     }
 
@@ -1246,6 +1297,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         public bool IsLoading { get; set; }
         public bool HasOriginalCommittedPage { get; set; }
         public string Status { get; set; } = "Idle";
+        public bool RestoreAttachFailed { get; set; }
         public string FindQuery { get; set; } = string.Empty;
         public int ZoomPercent { get; set; } = 100;
         public Dictionary<(string Origin, BrowserSitePermissionKind Kind), BrowserSitePermissionDecision> PrivatePermissions { get; } = [];

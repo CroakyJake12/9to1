@@ -17,6 +17,7 @@ using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Events;
 using Haven.Desktop.Services;
+using Haven.Desktop.Prefabs;
 using Haven.Desktop.ViewModels;
 using Haven.Desktop.Views.Pages.Browser;
 using Haven.Desktop.Views.Pages.Catalog;
@@ -37,6 +38,9 @@ using Haven.Desktop.Views.Pages.Terminal;
 using Haven.Desktop.Views.Pages.WorkspaceEditor;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.Infrastructure;
+using HavenOS.Home.Core;
+using HavenOS.Apps.Assistants.Contracts;
+using HomeDiscoverPage = Haven.Desktop.Views.Pages.Home.HomeDiscoverPage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Views.Shell;
@@ -53,7 +57,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private readonly IWorkspaceStateRepository _workspaceState;
     private readonly IWorkspaceToolService _workspaceTools;
     private readonly IProjectIntelligenceService _projectIntelligence;
-    private readonly IOllamaClient _ollama;
+    private readonly IProviderModelClient _ollama;
+    private readonly HomeModelSelectionSource? _homeModelSelectionSource;
+    private readonly IHuggingFaceModelService? _huggingFaceModels;
+    private readonly HomeLocalProfileIdentity? _discoverProfiles;
     private readonly ChatSessionService _sessions;
     private readonly IConversationSafetyService _conversationSafety;
     private readonly IConversationVersioningService _conversationVersioning;
@@ -219,7 +226,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         IModeRegistry modeRegistry,
         IModeUsageRepository modeUsage,
         IPinRepository pins,
-        AgentTaskRuntimeService? agentRuntime = null)
+        AgentTaskRuntimeService? agentRuntime = null,
+        HomeModelSelectionSource? homeModelSelectionSource = null,
+        IHuggingFaceModelService? huggingFaceModels = null,
+        HomeLocalProfileIdentity? discoverProfiles = null)
     {
         _eventBus = bus;
         _bus = bus;
@@ -227,6 +237,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _containers = containers;
         _catalog = catalog;
         _agentRuntime = agentRuntime;
+        _homeModelSelectionSource = homeModelSelectionSource;
+        _huggingFaceModels = huggingFaceModels;
+        _discoverProfiles = discoverProfiles;
         _automations = automations;
         _workspaceState = workspaceState;
         _workspaceTools = workspaceTools;
@@ -933,8 +946,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         {
             var sources = _modelProviders.Providers.Select(provider =>
                 new HavenOS.Home.Discover.HomeRegisteredModelCatalogueSource(
-                    _modelProviders, provider.Id, () => !_privacy.Current.LocalOnlyMode));
-            _homeDiscoverPage = new HomeDiscoverPage(new HavenOS.Home.Discover.HomeDiscoverCatalog(sources));
+                    _modelProviders, provider.Id, () => !_privacy.Current.LocalOnlyMode, new HomeDulchePackagedModelEvidenceSource()));
+            _homeDiscoverPage = new HomeDiscoverPage(new HavenOS.Home.Discover.HomeDiscoverCatalog(sources), _huggingFaceModels, _discoverProfiles);
             _homeDiscoverPage.ManageProvidersRequested += (_, _) => StartOriginalShellEvent(original =>
             {
                 AcquireOriginalShellSynchronous(original, () => { OpenApplicationSettings(); return true; });
@@ -1017,6 +1030,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         page.ConversationStateChanged += OnNewChatConversationStateChanged;
         page.AddActionSelected += OnNewChatAddActionSelected;
         page.AddCatalogItemSelected += OnNewChatCatalogItemSelected;
+#if !ANDROID
+        page.AssistantCatalogueRequested += OnNewChatAssistantCatalogueRequested;
+#endif
         // The typed local-model recovery action routes to the shared Home model catalogue/Discover
         // surface, preserving this conversation, draft, selection and focus.
         page.ManageLocalModelsRequested += (_, _) => StartOriginalShellEvent(original =>
@@ -2003,6 +2019,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         page.Disposed += OnGoPageDisposed;
         page.AddRequested += OnGoAddRequested;
         page.AddCatalogItemSelected += OnGoCatalogItemSelected;
+#if !ANDROID
+        page.AssistantCatalogueRequested += OnNewChatAssistantCatalogueRequested;
+#endif
         page.AppShortcutInvoked += (_, app) => StartOriginalShellEvent(original =>
             original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => LaunchAppAsync(app, false))));
         StartOriginalShellEvent(original =>
@@ -2023,7 +2042,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         var page = new NewDashboardPage(
             _bus, _modeRegistry, _modeUsage, _pins, _conversations, _versionedSettings,
             _dashboard, _dashboardLayout, _dashboardProviders);
-        page.EnableDashboardAssistant(new DashboardEditPlanner(_ollama, () => _preferences.DefaultModel));
+        if (_homeModelSelectionSource is { } selection)
+            page.EnableDashboardAssistant(new DashboardEditPlanner(_ollama, selection));
         page.DashboardActionRequested += (_, actionKey) => StartOriginalShellEvent(async original =>
         {
             switch (actionKey.Trim().ToLowerInvariant())
@@ -2195,6 +2215,16 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private async void OnNewChatCatalogItemSelected(object? sender, AddMenuSelection selection)
     {
+        if ((sender is NewChatPage || sender is GoPage) && selection.Kind == AddMenu.AddMenuAction.Assistant)
+        {
+#if !ANDROID
+            if (selection.Item is AssistantDefinitionSnapshot assistant)
+                await OpenOriginalRegisteredAssistantsAsync(assistant.Identity);
+            else if (selection.Item is ChatAddMenuSurface.OpenAssistantsRequest)
+                await OpenOriginalRegisteredAssistantsAsync();
+#endif
+            return;
+        }
         // NewChatPage applies the selection before raising this event. Apps are
         // task context, so selecting one must not navigate away from the thread.
         await Task.CompletedTask;
@@ -2217,8 +2247,18 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private async void OnGoCatalogItemSelected(object? sender, AddMenuSelection selection)
     {
+        if (sender is GoPage && selection.Kind == AddMenu.AddMenuAction.Assistant)
+        {
+#if !ANDROID
+            if (selection.Item is AssistantDefinitionSnapshot assistant)
+                await OpenOriginalRegisteredAssistantsAsync(assistant.Identity);
+            else if (selection.Item is ChatAddMenuSurface.OpenAssistantsRequest)
+                await OpenOriginalRegisteredAssistantsAsync();
+#endif
+            return;
+        }
         // GoPage owns the pending task context and attaches Apps locally before
-        // raising this event. Nothing selected from Add may force navigation.
+        // raising this event. Ordinary selections keep the Go surface in place.
         await Task.CompletedTask;
     }
 

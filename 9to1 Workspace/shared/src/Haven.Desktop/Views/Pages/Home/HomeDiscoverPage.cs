@@ -10,6 +10,7 @@ using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Desktop.ViewModels;
 using HavenOS.Home.Discover;
+using HavenOS.Home.Core;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
@@ -17,6 +18,7 @@ namespace Haven.Desktop.Views.Pages.Home;
 public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposable
 {
     private readonly HomeDiscoverCatalog _catalog;
+    private readonly HomeHuggingFaceBrowser _huggingFace;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly CuiControlLoader _loader = new();
     private readonly TextBox _search = new();
@@ -32,10 +34,15 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     private long _generation;
     private bool _disposed;
 
-    public HomeDiscoverPage(HomeDiscoverCatalog catalog)
+    public HomeDiscoverPage(HomeDiscoverCatalog catalog, IHuggingFaceModelService? huggingFace = null,
+        HomeLocalProfileIdentity? homeProfiles = null)
     {
         _catalog = catalog;
         _work = new(StopDiscoverAsync, DetachDiscoverAsync);
+        Func<CancellationToken, ValueTask<AuthenticatedResourceActor?>>? currentProfile = homeProfiles is null
+            ? null
+            : token => homeProfiles.GetCurrentAsync(token);
+        _huggingFace = new HomeHuggingFaceBrowser(huggingFace, currentProfile, RunDiscoverAsync);
         using var stream = typeof(HomeDiscoverPage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Discover.cui")
             ?? throw new InvalidDataException("The Home Discover CUI document is missing.");
         using var reader = new StreamReader(stream);
@@ -52,13 +59,14 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         _loader.BindAuthoredControl("discover-refresh", _ => _refresh);
         _loader.BindAuthoredControl("discover-manage", _ => _manage);
         _loader.BindAuthoredControl("discover-compare", _ => _compare);
+        _loader.BindAuthoredControl("discover-huggingface-mount", _ => _huggingFace);
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("Home Discover could not be rendered: " + string.Join("; ", loaded.Diagnostics.Select(item => item.Message)));
         Content = loaded.Root;
         _models.ItemTemplate = new FuncDataTemplate<HomeDiscoverModel>((model, _) => new TextBlock
         {
-            Text = model is null ? string.Empty : $"{model.DisplayName ?? model.Name} · {model.Identity.ProviderId} · {model.Locality}",
+            Text = model is null ? string.Empty : $"{model.DisplayName ?? model.Name} · {model.Identity.ProviderId} · {model.Locality} · {model.InstallState} · {model.ConnectionState}",
             TextWrapping = TextWrapping.Wrap
         });
         _models.SelectionChanged += (_, _) =>
@@ -99,8 +107,8 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         var selected = SelectedModels().Select(model => model.Identity.StableKey).ToHashSet(StringComparer.Ordinal);
         var (generation, token) = StartRead(cancellationToken);
         _models.ItemsSource = Array.Empty<HomeDiscoverModel>();
-        SetDiscoverValue(_details, "Text", "Reading configured providers…");
-        SetDiscoverValue(_status, "Text", "Reading configured providers…");
+        SetDiscoverValue(_details, "Text", "Reading registered providers…");
+        SetDiscoverValue(_status, "Text", "Reading registered providers…");
         var category = _category.SelectedIndex > 0 ? (HomeDiscoverCategory?)(_category.SelectedIndex - 1) : null;
         var locality = _locality.SelectedIndex > 0 ? (HomeDiscoverLocality?)_locality.SelectedIndex : null;
         try
@@ -112,15 +120,16 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
                 _models.SelectedItems?.Add(model);
             var problems = page.Providers.Where(provider => provider.ErrorMessage is not null)
                 .Select(provider => $"{provider.DisplayName}: {provider.ErrorMessage}");
-            SetDiscoverValue(_status, "Text", $"{page.State} · {page.Models.Count} of {page.TotalCount} models · {page.Providers.Count} configured providers" +
+            SetDiscoverValue(_status, "Text", $"{page.State} · {page.Models.Count} of {page.TotalCount} models · {page.Providers.Count} registered providers" +
                 (page.NextPageToken is null ? string.Empty : ". Narrow your search to see more results.") +
                 string.Concat(problems.Select(problem => "\n" + problem)));
+            await _huggingFace.ActivateAsync(token);
             if (SelectedModels().Length == 0) SetDiscoverValue(_details, "Text", "Select models to compare. Only capabilities reported by providers are shown.");
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception)
         {
-            if (Current(generation, token)) SetDiscoverValue(_status, "Text", "Model discovery failed. Refresh to query the configured providers again.");
+            if (Current(generation, token)) SetDiscoverValue(_status, "Text", "Model discovery failed. Refresh to query the registered providers again.");
         }
     }
 
@@ -163,11 +172,11 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     private bool Current(long generation, CancellationToken token) => !_disposed && !_work.IsRetiring && !token.IsCancellationRequested && generation == _generation;
     private static string Describe(HomeDiscoverModel model) =>
         $"{model.DisplayName ?? model.Name} · {model.Identity.ProviderId}\n" +
-        $"Model ID: {model.Identity.ModelId} · {model.Locality} · {model.ConnectionState}\n" +
+        $"Model ID: {model.Identity.ModelId} · {model.Locality} · {model.InstallState} · {model.ConnectionState}\n" +
         $"Architecture: {model.Architecture ?? "Unknown"} · Parameters: {model.ParameterInformation ?? "Unknown"} · Format: {model.QuantizationOrFormat ?? "Unknown"}\n" +
         $"Context: {model.ContextLimit?.ToString() ?? "Unknown"} · Cost: {model.CostClass ?? "Unknown"} · Residency: {model.Residency ?? "Unknown"}\n" +
         $"Capabilities: {(model.Capabilities is { Count: > 0 } ? string.Join(", ", model.Capabilities.Order()) : "Unknown")}";
-    public void Deactivate() { _generation++; _readCancellation?.Cancel(); }
+    public void Deactivate() { _generation++; _readCancellation?.Cancel(); _huggingFace.Deactivate(); }
     public Task? OriginalClose => _work.OriginalClose;
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken)
     {
@@ -194,7 +203,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     private async Task DetachDiscoverAsync()
     {
         Task? actions = null;
-        await Dispatcher.UIThread.InvokeAsync(() => { _loader.Dispose(); actions = _loader.WhenActionsIdleAsync(); });
+        await Dispatcher.UIThread.InvokeAsync(() => { _huggingFace.Dispose(); _loader.Dispose(); actions = _loader.WhenActionsIdleAsync(); });
         if (actions is not null) await actions.ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(() => { _readCancellation?.Dispose(); Content = null; });
     }

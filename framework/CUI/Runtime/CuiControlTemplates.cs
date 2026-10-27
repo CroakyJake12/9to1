@@ -60,6 +60,9 @@ public static class CuiControlTemplates
         Add<MenuItem>(resources, MenuItem); Add<TabControl>(resources, Tabs); Add<TabItem>(resources, Header);
         Add<CuiMenuItem>(resources, (owner, scope) => MenuItem(owner, scope));
         Add<ContentControl>(resources, Content); Add<UserControl>(resources, Content);
+        // Overlay fallback hosts have their own style key; the base ContentControl
+        // resource is not an implicit theme for them. Keep their presenter CUI-owned.
+        Add<OverlayPopupHost>(resources, Content);
         Add<ToolTip>(resources, (owner, scope) => PopupFrame(owner, Presenter(owner, scope)));
         Add<NumericUpDown>(resources, Numeric); Add<ButtonSpinner>(resources, Spinner);
         Add<ProgressBar>(resources, Progress); Add<Separator>(resources, Separator);
@@ -92,6 +95,8 @@ public static class CuiControlTemplates
         var frame = new CuiMaterialBorder { Child = content };
         Bind(frame, Border.BackgroundProperty, owner, "Background"); Bind(frame, Border.BorderBrushProperty, owner, "BorderBrush");
         Bind(frame, Border.BorderThicknessProperty, owner, "BorderThickness"); Bind(frame, Border.CornerRadiusProperty, owner, "CornerRadius");
+        if (owner is Avalonia.Controls.Button or TextBox or ComboBox or ListBoxItem or RangeBase or Avalonia.Controls.MenuItem or Thumb or NumericUpDown)
+            _ = new CuiHoverFeedback(owner, frame);
         return frame;
     }
     private static ContentPresenter Presenter(TemplatedControl owner, INameScope scope, string name = "PART_ContentPresenter", string property = "Content")

@@ -514,7 +514,20 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
         async Task Review(HomePermissionAuthorization request, CancellationToken token)
         {
             if (advanceParentOnly)
-                await rig.UploadAsync("parent-race-" + Guid.NewGuid().ToString("N") + ".txt", [7, 8, 9]);
+            {
+                var beforeParent = (await rig.Keep(rig.Workspace.Provider.GetForOriginalStoreAsync(
+                    rig.Workspace.Configuration.StoreId, rig.Folder, token))).Value!;
+                var beforeBoard = (await rig.Keep(rig.Workspace.Provider.GetForOriginalStoreAsync(
+                    rig.Workspace.Configuration.StoreId, uploaded.FileId, token))).Value!;
+                var afterParent = await AdvanceParentRevisionAsync(rig, beforeParent, token);
+                var afterBoard = (await rig.Keep(rig.Workspace.Provider.GetForOriginalStoreAsync(
+                    rig.Workspace.Configuration.StoreId, uploaded.FileId, token))).Value!;
+                Assert.Equal(beforeParent.Id, afterParent.Id);
+                Assert.Equal(beforeParent.Name, afterParent.Name);
+                Assert.NotEqual(beforeParent.CurrentRevisionId, afterParent.CurrentRevisionId);
+                Assert.Equal(beforeBoard.CurrentRevisionId, afterBoard.CurrentRevisionId);
+                Assert.Equal(uploaded.RevisionId.Value, afterBoard.CurrentRevisionId!.Value.Value);
+            }
             else
                 await rig.ReplaceAsync(uploaded, competing);
             raced = true;
@@ -557,6 +570,38 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             // conflict without materializing candidate bytes.
             Assert.Empty(newLeaves);
         }
+    }
+
+    private static async Task<HostedItemMetadata> AdvanceParentRevisionAsync(Rig rig,
+        HostedItemMetadata originalParent, CancellationToken token)
+    {
+        var temporaryName = originalParent.Name + "-revision-race-" + Guid.NewGuid().ToString("N");
+
+        async Task<HostedItemMetadata> RenameAsync(HostedItemMetadata currentParent, string newName)
+        {
+            var page = await rig.Keep(rig.Browser.ListAsync(rig.Workspace.Actor, rig.Folder.Value,
+                token: token, expectedStoreId: rig.Workspace.Configuration.StoreId));
+            var authority = await rig.Keep(rig.Authority.CaptureCommitAuthorityAsync(rig.Workspace.Actor,
+                rig.Workspace.Provider, () => true, token).AsTask());
+            var now = DateTimeOffset.UtcNow;
+            var operation = new FilesOperation(new(Guid.NewGuid()), rig.Workspace.Actor.ActorId,
+                currentParent.Id, null, null, "Rename", currentParent.CurrentRevisionId, null,
+                FilesOperationState.Pending, now, now, null, null);
+            var committed = await rig.Keep(rig.Workspace.Provider.CommitNativeBrowserStructureAsync(operation,
+                newName, rig.Workspace.Configuration.StoreId, page.StoreRevision,
+                [new(currentParent.Id, currentParent.CurrentRevisionId)], authority, token));
+            Assert.True(committed.IsSuccess, committed.Error?.Message);
+            return (await rig.Keep(rig.Workspace.Provider.GetForOriginalStoreAsync(
+                rig.Workspace.Configuration.StoreId, currentParent.Id, token))).Value!;
+        }
+
+        var renamed = await RenameAsync(originalParent, temporaryName);
+        Assert.Equal(temporaryName, renamed.Name);
+        Assert.NotEqual(originalParent.CurrentRevisionId, renamed.CurrentRevisionId);
+        var restored = await RenameAsync(renamed, originalParent.Name);
+        Assert.Equal(originalParent.Name, restored.Name);
+        Assert.NotEqual(renamed.CurrentRevisionId, restored.CurrentRevisionId);
+        return restored;
     }
 
     private static byte[] BoardBytes(Guid documentId, string title)

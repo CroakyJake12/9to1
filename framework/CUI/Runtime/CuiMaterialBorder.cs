@@ -12,10 +12,40 @@ namespace CakeOS.Cui.Runtime;
 public class CuiMaterialBorder : Border
 {
     private MaterialLayer? _materialLayer;
+    private Border? _hoverLayer;
+    internal Color? HoverTint { get; private set; }
+
+    internal void SetHoverTint(Color? tint)
+    {
+        if (HoverTint == tint) return;
+        HoverTint = tint;
+        if (tint is null)
+        {
+            if (_hoverLayer is not null) _hoverLayer.IsVisible = false;
+            return;
+        }
+
+        if (_hoverLayer is null)
+        {
+            _hoverLayer = new Border
+            {
+                IsHitTestVisible = false,
+                Focusable = false,
+                ZIndex = int.MinValue + 1
+            };
+            VisualChildren.Insert(_materialLayer is null ? 0 : 1, _hoverLayer);
+        }
+        _hoverLayer.Background = new SolidColorBrush(tint.Value);
+        _hoverLayer.CornerRadius = CornerRadius;
+        _hoverLayer.IsVisible = true;
+        InvalidateArrange();
+    }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+        if (change.Property == CornerRadiusProperty && _hoverLayer is not null)
+            _hoverLayer.CornerRadius = CornerRadius;
         if (change.Property != BackgroundProperty && change.Property != CornerRadiusProperty && change.Property != BorderThicknessProperty) return;
         if (Background is CuiMaterialBrush or CuiCustomMaterialBrush)
         {
@@ -23,6 +53,8 @@ public class CuiMaterialBorder : Border
             {
                 _materialLayer = new MaterialLayer { IsHitTestVisible = false, Focusable = false, ZIndex = int.MinValue };
                 VisualChildren.Insert(0, _materialLayer);
+                if (_hoverLayer is not null)
+                    VisualChildren.Move(VisualChildren.IndexOf(_hoverLayer), 1);
             }
             _materialLayer.Material = Background; _materialLayer.Radius = CornerRadius;
             _materialLayer.IsVisible = true; _materialLayer.InvalidateVisual(); InvalidateArrange();
@@ -33,11 +65,15 @@ public class CuiMaterialBorder : Border
     protected override Size ArrangeOverride(Size finalSize)
     {
         var size = base.ArrangeOverride(finalSize);
+        var border = BorderThickness;
+        var rect = new Rect(border.Left, border.Top, Math.Max(0, finalSize.Width - border.Left - border.Right), Math.Max(0, finalSize.Height - border.Top - border.Bottom));
         if (_materialLayer is not null)
         {
-            var border = BorderThickness;
-            var rect = new Rect(border.Left, border.Top, Math.Max(0, finalSize.Width - border.Left - border.Right), Math.Max(0, finalSize.Height - border.Top - border.Bottom));
             _materialLayer.Measure(rect.Size); _materialLayer.Arrange(rect);
+        }
+        if (_hoverLayer is not null)
+        {
+            _hoverLayer.Measure(rect.Size); _hoverLayer.Arrange(rect);
         }
         return size;
     }

@@ -3,6 +3,8 @@ namespace Haven.UI;
 public abstract record HavenBrush;
 public sealed record HavenTokenBrush(string Token) : HavenBrush;
 public sealed record HavenSolidBrush(byte A, byte R, byte G, byte B) : HavenBrush;
+/// <summary>A subtle contrast tint chosen from the resolved effective surface colour.</summary>
+public sealed record HavenContrastHoverBrush(HavenBrush Background) : HavenBrush;
 public sealed record HavenPen(HavenBrush Brush, double Thickness);
 
 public enum HavenFillRule { EvenOdd, NonZero }

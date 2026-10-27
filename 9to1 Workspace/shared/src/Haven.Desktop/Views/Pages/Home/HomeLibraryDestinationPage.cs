@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.App;
@@ -29,6 +30,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     private readonly Func<HomeDeepLink, CancellationToken, Task>? _prepareNavigation;
     private readonly Func<HomeArtifactReference, CancellationToken, Task<BoardEmbeddedArtifactReference?>>? _selectArtifact;
     private Func<HomeDeepLink, CancellationToken, Task<HomeDeepLink?>>? _selectBoardFolder;
+    private HomeDeepLink? _selectedBoardFolder;
+    private Func<CancellationToken, Task>? _openFilesSetup;
     private IBoardsHomeBoardCreationHost? _boardCreationHost;
     private Func<ReadOnlyMemory<byte>>? _createBoardDraft;
     private readonly TaskCompletionSource<BoardEmbeddedArtifactReference?> _selection = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -104,10 +107,22 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         RefreshBindings();
     }
     internal bool IsAlive => !_work.IsRetiring;
+    /// <summary>Binds a native shell surface to the loaded Home CUI root's theme resources.
+    /// The returned binding belongs to the caller and should live only as long as its shell.</summary>
+    internal IDisposable BindWindowBackground(Window window)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentNullException.ThrowIfNull(window);
+        if (Content is not Control root)
+            throw new InvalidOperationException("The Home Library CUI root is not loaded.");
+        return window.Bind(Window.BackgroundProperty, root.GetResourceObservable("CuiBackgroundBrush"));
+    }
     internal HomeLibraryPage? Current => _page;
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
     internal Task<BoardEmbeddedArtifactReference?> Selection => _selection.Task;
+    internal void SetFilesSetupContinuation(Func<CancellationToken, Task> openFilesSetup) => _openFilesSetup = openFilesSetup;
+    internal Task RefreshBoardFoldersAsync(CancellationToken token) => DispatchAsync("RefreshLibrary", null, token).AsTask();
     internal Task<HomeDeepLink?> FolderSelection => _folderSelection.Task;
     internal bool IsSelectionMode => _selectArtifact is not null || _selectBoardFolder is not null;
     internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
@@ -192,6 +207,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     public bool? IsActionAvailable(string command) => IsAlive && _active && !_busy && (command switch
     {
         "SearchLibrary" or "RefreshLibrary" => true,
+        "OpenBoardFilesSetup" => _selectBoardFolder is not null && _source is Haven.Desktop.Services.NativeHomeFilesLibrarySource { RequiresWorkspaceSetup: true } && _openFilesSetup is not null,
+        "ConfirmBoardFolder" => _selectBoardFolder is not null && _selectedBoardFolder is not null && !_folderSelection.Task.IsCompleted,
+        "CancelBoardFolder" => _selectBoardFolder is not null && !_folderSelection.Task.IsCompleted,
         "CreateHomeLibraryBoard" => CanCreateHomeLibraryBoard,
         "RetryHomeLibraryBoardSettlement" => CanShowBoardCreationActions && _boardCreationHost?.CanRetryCreationSettlement == true,
         "InspectHomeLibraryBoardCreation" => CanShowBoardCreationActions && _boardCreationHost?.CanInspectUnknownCreation == true,
@@ -214,6 +232,47 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                if (command == "OpenBoardFilesSetup")
+                {
+                    _busy = true; RefreshBindings();
+                    await original.AwaitAsync(_openFilesSetup!(original.Token));
+                    if (original.IsAcceptedPublicationCurrent)
+                        original.RunAcceptedPublicationCallback(() => _status = "Complete Files setup in its tab. This Board choice is preserved; return here to refresh folders if setup is cancelled.");
+                    return;
+                }
+                if (command == "CancelBoardFolder")
+                {
+                    original.RunAcceptedPublicationCallback(() => _folderSelection.TrySetResult(null));
+                    return;
+                }
+                if (command == "ConfirmBoardFolder")
+                {
+                    var selectedLink = _selectedBoardFolder;
+                    if (selectedLink is null || _page?.Items.Any(item => ReferenceEquals(item.OpenLink, selectedLink)) != true)
+                        throw new UnauthorizedAccessException("Select a folder from the current Files results.");
+                    _busy = true; RefreshBindings();
+                    var checkedLink = await original.AwaitAsync(_selectBoardFolder!(selectedLink, original.Token));
+                    await original.AwaitAsync(_admit(original.Token));
+                    if (!original.IsAcceptedPublicationCurrent) return;
+                    if (!ReferenceEquals(checkedLink, selectedLink))
+                    {
+                        original.RunAcceptedPublicationCallback(() => { _selectedBoardFolder = null; _status = "The selected folder changed. Select it again."; });
+                        return;
+                    }
+                    var displayName = _boardCreateName.Text?.Trim();
+                    if (string.IsNullOrWhiteSpace(displayName) || displayName.Length > 120 ||
+                        displayName is "." or ".." || displayName.IndexOfAny(['/', '\\', '\0']) >= 0 || displayName.Any(char.IsControl))
+                    {
+                        original.RunAcceptedPublicationCallback(() => _status = "Enter a board file name of 1–120 characters without path separators.");
+                        return;
+                    }
+                    original.RunAcceptedPublicationCallback(() =>
+                    {
+                        SelectedBoardCreateDisplayName = displayName;
+                        _folderSelection.TrySetResult(selectedLink);
+                    });
+                    return;
+                }
                 if (command is "NextLibraryPage" or "PreviousLibraryPage" or "SearchLibrary" or "RefreshLibrary")
                 {
                     var offset = command == "NextLibraryPage" ? _query.Offset + _query.Limit :
@@ -259,18 +318,10 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
                         if (!ReferenceEquals(selectedFolder, selected.OpenLink) || selectedFolder.OwnerApp != "files" ||
                             selectedFolder.TargetRouteId != "files.folder")
                             throw new UnauthorizedAccessException("The original Files folder selection no longer matches this Library row.");
-                        var displayName = _boardCreateName.Text?.Trim();
-                        if (string.IsNullOrWhiteSpace(displayName) || displayName.Length > 120 ||
-                            displayName is "." or ".." || displayName.IndexOfAny(['/', '\\', '\0']) >= 0 ||
-                            displayName.Any(char.IsControl))
-                        {
-                            original.RunAcceptedPublicationCallback(() => _status = "Enter a board file name of 1–120 characters without path separators.");
-                            return;
-                        }
                         original.RunAcceptedPublicationCallback(() =>
                         {
-                            if (_folderSelection.TrySetResult(selectedFolder))
-                                SelectedBoardCreateDisplayName = displayName;
+                            _selectedBoardFolder = selectedFolder;
+                            _status = "Folder selected. Choose Create to save your Board, or Cancel to return.";
                         });
                     }
                     else if (original.IsAcceptedPublicationCurrent)
@@ -328,6 +379,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     }
     private async Task SearchAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken caller, int offset)
     {
+        _selectedBoardFolder = null;
         var generation = ++_generation;
         original.BindPublicationGuard(() => _active && IsAlive && generation == _generation);
         caller.ThrowIfCancellationRequested(); _busy = true; RefreshBindings();
@@ -364,7 +416,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         Sort = _sort.SelectedIndex switch { 1 => "oldest", 2 => "name", 3 => "type", _ => "recent" }
     };
     private bool QueryInputsMatchCurrentPage() => _page is not null && CurrentQuery(_query.Offset) == _query;
-    private void ClearUnavailable(string status) { _page = null; _status = status; RefreshBindings(); }
+    private void ClearUnavailable(string status) { _selectedBoardFolder = null; _page = null; _status = status; RefreshBindings(); }
     private void RefreshBindings()
     {
         var available = _active && IsAlive && !_busy;
@@ -375,6 +427,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             item.OpenLink)).ToArray() ?? [];
         _bindings.Set("LibraryRows", _rows);
         _bindings.Set("IsBoardFolderSelection", _selectBoardFolder is not null);
+        _bindings.Set("CanOpenBoardFilesSetup", available && _selectBoardFolder is not null && _source is Haven.Desktop.Services.NativeHomeFilesLibrarySource { RequiresWorkspaceSetup: true } && _openFilesSetup is not null);
+        _bindings.Set("CanConfirmBoardFolder", available && _selectedBoardFolder is not null && !_folderSelection.Task.IsCompleted);
+        _bindings.Set("CanCancelBoardFolder", available && _selectBoardFolder is not null && !_folderSelection.Task.IsCompleted);
         var notice = _page?.Succeeded == true ? _source?.AvailabilityNotice : null;
         var summary = string.IsNullOrWhiteSpace(notice) ? _status : _status + " " + notice;
         if (_page is not null && !queryMatches) summary += " Search to apply the changed filters.";

@@ -24,6 +24,24 @@ public sealed class FilesWorkspaceSetupTests
     public static bool UsesLinuxFilesSetupFixture => OperatingSystem.IsLinux();
 
     [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture.")]
+    public async Task Retired_origin_does_not_resume_after_later_original_Files_setup()
+    {
+        await using var rig = new Rig(); await rig.StartAsync();
+        var session = rig.Create(_ => Task.FromResult<string?>(rig.Empty));
+        await session.InitializeAsync().WaitAsync(Limit);
+        var setup = Assert.IsType<FilesWorkspaceSetupPage>(session.OriginalNativeView);
+        using var origin = new CancellationTokenSource(); var resumed = 0;
+        var continuation = session.ContinueAfterOriginalWorkspaceSetupAsync(() => { resumed++; return Task.CompletedTask; }, origin.Token);
+        origin.Cancel(); await continuation.WaitAsync(Limit);
+        await setup.DispatchAsync("files.setup.choose", null).AsTask().WaitAsync(Limit);
+        Assert.Equal(0, resumed);
+        Assert.NotNull(await rig.Files.GetConfigurationAsync());
+        Assert.True(await session.TryPrepareToCloseAsync().WaitAsync(Limit));
+        await session.CloseAndDrainAsync().WaitAsync(Limit);
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
         Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task First_use_cancel_and_nonempty_refusal_preserve_state_then_explicit_empty_choice_opens_real_Files()
     {
@@ -38,22 +56,28 @@ public sealed class FilesWorkspaceSetupTests
             Assert.True(session.IsPublicationCurrent); Assert.Equal("9to1://files", session.Address.ToString());
             Assert.Null(await rig.Files.GetConfigurationAsync());
             window.Content = setup; window.Show(); window.UpdateLayout();
+            var resumed = 0;
+            using var origin = new CancellationTokenSource();
+            var continuation = session.ContinueAfterOriginalWorkspaceSetupAsync(() => { resumed++; return Task.CompletedTask; }, origin.Token);
             var choose = Assert.Single(setup.GetVisualDescendants().OfType<Button>());
             Assert.Equal("Choose an empty folder", choose.Content);
             choose.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await setup.WhenActionsIdleAsync().WaitAsync(Limit);
             Assert.Contains("No folder selected", setup.Status);
+            Assert.False(continuation.IsCompleted); Assert.Equal(0, resumed);
             Assert.Null(await rig.Files.GetConfigurationAsync());
 
             selection = rig.Nonempty; var original = await File.ReadAllBytesAsync(rig.PreservedFile);
             await setup.DispatchAsync("files.setup.choose", null).AsTask().WaitAsync(Limit);
             Assert.Contains("existing empty local folder", setup.Status);
+            Assert.False(continuation.IsCompleted); Assert.Equal(0, resumed);
             Assert.Equal(original, await File.ReadAllBytesAsync(rig.PreservedFile));
             Assert.Single(Directory.EnumerateFileSystemEntries(rig.Nonempty));
             Assert.Null(await rig.Files.GetConfigurationAsync());
 
             selection = rig.Empty;
             await setup.DispatchAsync("files.setup.choose", null).AsTask().WaitAsync(Limit);
+            await continuation.WaitAsync(Limit); Assert.Equal(1, resumed);
             var configuration = Assert.IsType<NativeFilesWorkspaceConfiguration>(await rig.Files.GetConfigurationAsync());
             Assert.Equal(rig.Empty, configuration.RootDirectory);
             var binding = await rig.Home.LocalStoreOwnership.GetVerifiedAsync("files", configuration.StoreId.ToString("D"));
@@ -302,6 +326,9 @@ public sealed class FilesWorkspaceSetupTests
                 });
             Files = files!;
             var services = new ServiceCollection(); services.AddSingleton(paths);
+            // Match the maintained infrastructure descriptor before the original Linux
+            // Home owner replaces it with its SAME-path Linux credential-store factory.
+            services.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
             services.AddHavenOwnedWindowsHomeDomain(Home, paths, Principal);
             services.AddSingleton(Files); services.AddSingleton(authority!); services.AddSingleton(resolver!);
             services.AddSingleton<HostLocalTaskActorSource>(); services.AddFilesNativeHost();

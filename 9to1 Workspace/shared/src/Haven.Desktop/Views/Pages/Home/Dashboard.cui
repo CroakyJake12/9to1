@@ -1,46 +1,120 @@
 <Cui id="home.dashboard" version="1">
+  <Actions>
+    <Action name="ReviewModel" command="ReviewRecommendedModel" parameter="{Binding model.Key}" />
+  </Actions>
   <Theme Name="user_preference">
     <Page id="home-dashboard" AccessibleName="Home dashboard">
-      <Container id="dashboard-root" Type="Grid" RowSizes="Auto 1fr Auto" Background="{Resource CuiBackgroundBrush}">
-        <Container Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="8" Margin="24 74 24 0" Padding="8" Background="{Resource CuiPanelBrush}">
-          <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
-            <Container id="dashboard-page-tabs" Type="Horizontal Stack" />
-          </Container>
-          <Button id="dashboard-edit-page" Column="1" Content="Edit page" AccessibleName="Edit dashboard page" />
-          <Button id="dashboard-add-page" Column="2" Content="Add page" AccessibleName="Create dashboard page" />
-        </Container>
-        <Container id="dashboard-scroll" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Margin="24 18 24 16" CellGap="24">
+      <Container id="dashboard-root" Type="Grid" RowSizes="Auto 1fr" Background="{Resource CuiBackgroundBrush}">
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12" Margin="20 20 20 12" MaxWidth="1160" HorizontalAlignment="Stretch">
           <Container Type="Vertical Stack" CellGap="4">
-            <Text id="dashboard-welcome" Text="Welcome" FontSize="32" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
-            <Text id="dashboard-date" FontSize="15" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="dashboard-welcome" Text="Welcome" FontSize="28" FontWeight="Bold" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+            <Text id="dashboard-date" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
-          <Container id="dashboard-pinned-section" Type="Vertical Stack" IsVisible="False" CellGap="12">
-            <Container Type="Wrap" CellGap="12">
-              <Text Text="Pinned Apps and Activities" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
-              <Button id="dashboard-edit-pinned" Content="Edit pinned" AccessibleName="Edit pinned apps" />
-            </Container>
-            <Container id="dashboard-pinned-apps" Type="Wrap" />
-            <Text id="dashboard-pinned-empty" Text="Pin apps from the App launcher to keep them here." IsVisible="False" Foreground="{Resource CuiTextSoftBrush}" />
-          </Container>
-          <Container id="dashboard-widget-controls" Type="Vertical Stack" IsVisible="False" CellGap="8">
-            <Text Text="Widgets" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
-            <Text Text="Drag and resize while arranging. Changes save to this dashboard page." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-            <Container Type="Wrap" CellGap="8">
-              <Button id="dashboard-add-widget" Content="Add widget" AccessibleName="Add a dashboard widget" />
-              <Button id="dashboard-refresh-widgets" Content="Refresh" AccessibleName="Refresh dashboard widgets" />
-              <Button id="dashboard-undo-layout" Content="Undo" IsEnabled="False" AccessibleName="Undo dashboard layout change" />
-              <Button id="dashboard-redo-layout" Content="Redo" IsEnabled="False" AccessibleName="Redo dashboard layout change" />
-              <Button id="dashboard-arrange-widgets" Content="Arrange" AccessibleName="Arrange dashboard widgets" />
-            </Container>
-            <Text id="dashboard-widget-status" Text="Loading dashboard widgets…" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-          </Container>
-          <Container id="dashboard-live-widgets" Type="Vertical Stack" />
+          <Button id="dashboard-arrange-widgets" Column="1" Content="{Binding CustomiseLabel}" AccessibleName="Customise dashboard" VerticalAlignment="Center" Padding="12 8" CornerRadius="10" />
         </Container>
-        <Container Row="2" Type="Wrap" Margin="24 0 24 16" CellGap="8">
-          <Button id="dashboard-discover" Content="Discover models" AccessibleName="Open Home Discover model catalogue" />
-          <Button id="dashboard-edit-with-ai" Content="Edit with 9to1" AccessibleName="Edit dashboard with 9to1" Padding="20 10" />
+        <Container id="dashboard-scroll" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False">
+          <Container id="dashboard-content" Type="Vertical Stack" MaxWidth="1160" HorizontalAlignment="Stretch" Margin="20 4 20 24" CellGap="20">
+            <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False" IsVisible="{Binding ShowPageTabs}">
+              <Container id="dashboard-page-tabs" Type="Horizontal Stack" CellGap="6" />
+            </Container>
+            <Container id="dashboard-customise" Type="Vertical Stack" IsVisible="{Binding IsCustomizing}" CellGap="12" Padding="16" CornerRadius="12" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+              <Text Text="Make this dashboard yours" FontSize="17" FontWeight="SemiBold" Foreground="{Resource CuiTextBrush}" />
+              <Text Text="Drag a card by its heading, resize from its corner, or hide it. Changes save to the current page." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Container Type="Wrap" CellGap="8">
+                <Button id="dashboard-edit-page" Content="Edit page" AccessibleName="Edit dashboard page" />
+                <Button id="dashboard-add-page" Content="Add page" AccessibleName="Create dashboard page" />
+                <Button id="dashboard-edit-pinned" Content="Edit pinned" AccessibleName="Edit pinned apps" />
+                <Button id="dashboard-edit-with-ai" Content="Edit with 9to1" AccessibleName="Edit dashboard with 9to1" />
+              </Container>
+              <Container id="dashboard-widget-controls" Type="Wrap" IsVisible="False" CellGap="8">
+                <Button id="dashboard-add-widget" Content="Add widget" AccessibleName="Add a dashboard widget" />
+                <Button id="dashboard-undo-layout" Content="Undo" IsEnabled="False" AccessibleName="Undo dashboard layout change" />
+                <Button id="dashboard-redo-layout" Content="Redo" IsEnabled="False" AccessibleName="Redo dashboard layout change" />
+              </Container>
+            </Container>
+            <Container id="dashboard-pinned-section" Type="Vertical Stack" IsVisible="False" CellGap="12">
+              <Text Text="Pinned" FontSize="18" FontWeight="SemiBold" Foreground="{Resource CuiTextBrush}" />
+              <Container id="dashboard-pinned-apps" Type="Wrap" />
+              <Text id="dashboard-pinned-empty" Text="Pin apps from the App launcher to keep them here." IsVisible="False" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+            <Container id="dashboard-device-models" Type="Vertical Stack" IsVisible="{Binding HasModelSource}" CellGap="12">
+              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+                <Container Type="Vertical Stack" CellGap="4">
+                  <Text Text="Models for your device" FontSize="20" FontWeight="SemiBold" Foreground="{Resource CuiTextBrush}" />
+                  <Text Text="Local models selected against your available RAM and GPU memory." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button Column="1" action="RefreshRecommendations" Content="Refresh" AccessibleName="Refresh device-based model recommendations" VerticalAlignment="Center" />
+              </Container>
+              <Container Type="Vertical Stack" CellGap="4" Padding="14" CornerRadius="10" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+                <Text id="dashboard-device-summary" Text="{Binding DeviceSummary}" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+                <Text Text="{Binding DeviceMemory}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Container id="dashboard-model-cards" Type="Grid" ColumnSizes="{Binding ModelColumns}" RowSizes="Auto Auto Auto" CellGap="12">
+                <Repeat Source="{Binding RecommendedModels}" As="model" Key="{Binding model.Key}">
+                  <Container id="dashboard-model-card" Row="{Binding model.Row}" Column="{Binding model.Column}" Type="Grid" RowSizes="Auto 1fr Auto" Padding="16" CellGap="14" CornerRadius="14" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+                    <Container Type="Vertical Stack" CellGap="5">
+                      <Text Text="{Binding model.Publisher}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      <Text Text="{Binding model.Name}" FontSize="17" FontWeight="SemiBold" Foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+                    </Container>
+                    <Container Row="1" Type="Vertical Stack" CellGap="6">
+                      <Text Text="{Binding model.FitLabel}" FontWeight="SemiBold" Foreground="{Resource CuiAccentBrush}" TextWrapping="Wrap" />
+                      <Text Text="{Binding model.DownloadSize}" FontSize="12" Foreground="{Resource CuiTextBrush}" />
+                      <Text Text="{Binding model.Format}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      <Text Text="{Binding model.Explanation}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                    </Container>
+                    <Button id="dashboard-model-review" Row="2" action="ReviewModel" Content="Review &amp; install" AccessibleName="Review this recommended model and its verified download" HorizontalAlignment="Left" />
+                  </Container>
+                </Repeat>
+              </Container>
+              <Text id="dashboard-model-status" Text="{Binding ModelStatus}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              <Container Type="Vertical Stack" IsVisible="{Binding IsReviewingModel}" CellGap="8">
+                <Button action="CloseModelReview" Content="Close model review" HorizontalAlignment="Left" AccessibleName="Close model review" />
+                <Container id="dashboard-model-browser" Type="Vertical Stack" />
+              </Container>
+            </Container>
+            <Button id="dashboard-discover" Content="Browse all models" AccessibleName="Open Home Discover model catalogue" HorizontalAlignment="Left" />
+            <Container Type="Vertical Stack" CellGap="12">
+              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+                <Container Type="Vertical Stack" CellGap="3">
+                  <Text Text="Your day, at a glance" FontSize="18" FontWeight="SemiBold" Foreground="{Resource CuiTextBrush}" />
+                  <Text id="dashboard-widget-status" Text="Loading your latest activity…" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button id="dashboard-refresh-widgets" Column="1" Content="Refresh" AccessibleName="Refresh dashboard widgets" VerticalAlignment="Center" />
+              </Container>
+              <Container id="dashboard-live-widgets" Type="Vertical Stack" />
+            </Container>
+          </Container>
         </Container>
       </Container>
     </Page>
+    <!-- Named authored fragment, mounted by the dashboard's canonical layout adapter. -->
+    <Container id="dashboard-widget-card" Type="Grid" RowSizes="Auto 1fr Auto" Padding="16" CellGap="10" CornerRadius="14" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" ClipToBounds="True">
+      <Container id="widget-drag-handle" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" Tooltip="{Binding Description}">
+        <Text Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+        <Text Column="1" Text="{Binding Badge}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+      </Container>
+      <Container Row="1" Type="Vertical Stack" CellGap="5">
+        <Text Text="{Binding Primary}" FontSize="28" FontWeight="SemiBold" Foreground="{Resource CuiTextBrush}" TextTrimming="CharacterEllipsis" />
+        <Text Text="{Binding Secondary}" IsVisible="{Binding ShowDetail}" FontSize="12" TextWrapping="Wrap" MaxLines="3" Foreground="{Resource CuiTextSoftBrush}" />
+      </Container>
+      <Container Row="2" Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+        <Container Type="Wrap" CellGap="6">
+          <Button action="OpenWidget" Content="{Binding OpenLabel}" AccessibleName="{Binding OpenName}" Padding="10 5" MinHeight="28" />
+          <Button action="HideWidget" Content="Hide" IsVisible="{Binding IsCustomizing}" AccessibleName="{Binding HideName}" Padding="10 5" MinHeight="28" />
+        </Container>
+        <Button id="widget-resize-handle" Column="1" Content="↘" IsVisible="{Binding IsCustomizing}" AccessibleName="Resize dashboard widget" Tooltip="Drag to resize" Padding="4" MinWidth="28" MinHeight="28" />
+      </Container>
+    </Container>
+    <Container id="dashboard-widget-compact" Type="Grid" RowSizes="Auto 1fr" Padding="10" CellGap="6" CornerRadius="12" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" ClipToBounds="True">
+      <Container id="widget-compact-drag-handle" Type="Grid" ColumnSizes="1fr Auto" CellGap="6" Tooltip="{Binding Secondary}">
+        <Text Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Foreground="{Resource CuiTextBrush}" />
+        <Button Column="1" action="HideWidget" Content="Hide" IsVisible="{Binding IsCustomizing}" AccessibleName="{Binding HideName}" Padding="5 2" MinHeight="24" />
+      </Container>
+      <Container Row="1" Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="5" VerticalAlignment="Center">
+        <Text Text="{Binding Primary}" FontSize="22" FontWeight="SemiBold" Foreground="{Resource CuiTextBrush}" TextTrimming="CharacterEllipsis" />
+        <Button Column="1" action="OpenWidget" Content="{Binding OpenLabel}" AccessibleName="{Binding OpenName}" Padding="6 4" MinHeight="28" />
+        <Button id="widget-compact-resize-handle" Column="2" Content="↘" IsVisible="{Binding IsCustomizing}" AccessibleName="Resize dashboard widget" Tooltip="Drag to resize" Padding="3" MinWidth="24" MinHeight="28" />
+      </Container>
+    </Container>
   </Theme>
 </Cui>

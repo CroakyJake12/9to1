@@ -207,16 +207,15 @@ public sealed partial class App
             Dispatcher.UIThread.VerifyAccess();
             var theme = _homeTheme?.Context
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
-            var shellBindings = new SharedPanelShellBindings();
+            var shellBindings = new SharedPanelShellBindings(this);
             var shellLoader = new CuiControlLoader();
             try
             {
                 shellLoader.SetThemePreferenceContext(theme);
                 shellLoader.SetBindingContext(shellBindings);
-                // The authored shell has no actions; it must NOT register a dispatcher.
-                // SharedPanelShellBindings is a binding/INotifyPropertyChanged context only,
-                // so registering it as an ICuiActionDispatcher was a compile error. The shell
-                // is CUI-owned; the host only changes HasOpenPanel and mounts the active panel.
+                // The persistent CUI-owned close button remains outside the scrolled panel body.
+                // Its typed action reaches the SAME close/retirement owner as notifications.
+                shellLoader.SetActionDispatcher(shellBindings);
                 var loaded = shellLoader.TryLoad(HavenSharedPanelShellDocument.Load());
                 if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
                 {
@@ -1111,7 +1110,8 @@ public sealed partial class App
         /// <summary>Nonvisual binding context for the authored shared-panel shell. The authored
         /// shell drives backdrop/visibility from HasOpenPanel; the host only changes this value and
         /// mounts the active panel control into the authored host element.</summary>
-        private sealed class SharedPanelShellBindings : ICuiBindingContext, INotifyPropertyChanged
+        private sealed class SharedPanelShellBindings(UnifiedWorkspaceHost host)
+            : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
         {
             private bool _hasOpenPanel;
             public event PropertyChangedEventHandler? PropertyChanged;
@@ -1124,6 +1124,19 @@ public sealed partial class App
             {
                 value = path switch { "HasOpenPanel" => _hasOpenPanel, _ => null };
                 return value is not null;
+            }
+            public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                Dispatcher.UIThread.VerifyAccess();
+                if (command == "9to1.Haven.ClosePanel")
+                {
+                    // Dismissal is local presentation retirement, not a model/route mutation or
+                    // account operation. Do not make a backend read a prerequisite for closing.
+                    if (host.IsCurrent && HasOpenPanel) host.HideSharedPanel();
+                }
+                else host.PublishSharedRefusal("UnknownCommand", $"Unknown shared-panel command '{command}'.");
+                return ValueTask.CompletedTask;
             }
         }
 

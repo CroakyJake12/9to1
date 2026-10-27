@@ -124,6 +124,9 @@ internal sealed partial class SpacesBrowseAppContentSession
         }
         _ = await ReadHistoryHomeAuthorityAsync(token);
         token.ThrowIfCancellationRequested(); DemandTaskComposition();
+#if !ANDROID
+        await RetireAssistantPresentationOnUiAsync();
+#endif
         lock (_gate)
         {
             if (_spacesPage is not { } home || !home.TryMountSpaceWorkspace(page))

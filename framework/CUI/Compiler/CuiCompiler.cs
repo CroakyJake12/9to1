@@ -303,10 +303,10 @@ public sealed class CuiCompiler
                 || string.Equals(declaration.Type, "boolean", StringComparison.OrdinalIgnoreCase);
             var isCommandState = string.Equals(declaration.Type, "commandstate", StringComparison.OrdinalIgnoreCase);
             var isString = string.Equals(declaration.Type, "string", StringComparison.OrdinalIgnoreCase);
-            if (!isBool && !isCommandState && !isString)
+            if (!isBool && !isCommandState && !isString && !CuiLocalStateRules.IsInteger(declaration.Type))
             {
                 diagnostics.Error("CUIC030",
-                    $"Local variable '{declaration.Name}' has unsupported Type '{declaration.Type}'; supported types are bool, string and commandstate in this bounded slice.",
+                    $"Local variable '{declaration.Name}' has unsupported Type '{declaration.Type}'; supported types are bool, integer, string and commandstate in this bounded slice.",
                     declaration.Span);
                 continue;
             }
@@ -322,6 +322,8 @@ public sealed class CuiCompiler
                     $"Command-state local variable '{declaration.Name}' cannot carry a literal initializer.",
                     declaration.Span);
             }
+            if (CuiLocalStateRules.IsInteger(declaration.Type) && !CuiLocalStateRules.AcceptsLiteral(declaration.Type, declaration.Value))
+                diagnostics.Error("CUIC031", $"Local integer variable '{declaration.Name}' requires an Int32 literal.", declaration.Span);
             if (isBool && !bool.TryParse(declaration.Value, out _))
             {
                 diagnostics.Error("CUIC031",
@@ -363,8 +365,8 @@ public sealed class CuiCompiler
     /// <summary>
     /// Validates declarative orchestration wiring in the bounded slice: action result targets must
     /// reference a declared commandstate variable, Set targets must reference declared settable
-    /// bool/string variables, and each effect must reference a declared action whose condition (when
-    /// bound) reads a declared commandstate result variable. These are the same invariants enforced
+    /// bool/integer/string variables, and each effect must reference a declared action whose condition
+    /// reads a boolean local, a commandstate member or an external boolean binding. These are the same invariants enforced
     /// by V2 compiled-artifact admission, so authored documents fail early at compile time.
     /// </summary>
     private static void ValidateOrchestration(CuiDocument document, CuiDiagnosticBag diagnostics)
@@ -391,12 +393,12 @@ public sealed class CuiCompiler
                 {
                     if (set is null || string.IsNullOrWhiteSpace(set.Target)) continue;
                     if (!variableTypes.TryGetValue(set.Target, out var setType)
-                        || (!string.Equals(setType, "bool", StringComparison.OrdinalIgnoreCase)
-                            && !string.Equals(setType, "boolean", StringComparison.OrdinalIgnoreCase)
-                            && !string.Equals(setType, "string", StringComparison.OrdinalIgnoreCase)))
+                        || !CuiLocalStateRules.IsSettable(setType))
                         diagnostics.Error("CUIC043",
-                            $"Action '{action.Name}' Set target '{set.Target}' is not a declared settable bool/string variable.",
+                            $"Action '{action.Name}' Set target '{set.Target}' is not a declared settable bool/integer/string variable.",
                             set.Span);
+                    else if (set.Value is not CuiLiteralValue literal || !CuiLocalStateRules.AcceptsLiteral(setType, literal.Value))
+                        diagnostics.Error("CUIC043", $"Action '{action.Name}' Set value does not match '{setType}'.", set.Span);
                 }
             }
         }
@@ -417,11 +419,9 @@ public sealed class CuiCompiler
             }
             if (effect.Condition?.Test is CuiBindingValue binding && binding.Path is { Length: > 0 } path)
             {
-                var root = path.Split('.')[0];
-                if (!variableTypes.TryGetValue(root, out var conditionRootType)
-                    || !string.Equals(conditionRootType, "commandstate", StringComparison.OrdinalIgnoreCase))
+                if (!CuiLocalStateRules.AcceptsConditionPath(variableTypes, path))
                     diagnostics.Error("CUIC046",
-                        $"Effect '{effect.Name}' condition path '{path}' does not reference a declared commandstate result variable.",
+                        $"Effect '{effect.Name}' condition path '{path}' does not reference a boolean local, commandstate member, or external boolean binding.",
                         binding.Span);
             }
         }

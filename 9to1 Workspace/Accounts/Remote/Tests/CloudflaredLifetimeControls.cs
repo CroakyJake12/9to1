@@ -33,8 +33,28 @@ internal static class CloudflaredLifetimeControls
         ("helper_expiry_refuses_disclosure_without_restart", ExpiryAsync),
         ("helper_empty_missing_and_expired_token_output_are_refused", InvalidOutputAsync),
         ("helper_waiter_capacity_is_sticky_and_close_retains_refusal", CapacityAsync),
-        ("helper_wrong_origin_is_refused_before_pin_or_start", WrongOriginAsync)
+        ("helper_wrong_origin_is_refused_before_pin_or_start", WrongOriginAsync),
+        ("system_helper_rejects_wrong_length_and_tampered_platform_image", PlatformImageAsync)
     };
+
+    private static async Task PlatformImageAsync()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "cake-helper-pin-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "untrusted-helper");
+        try
+        {
+            var host = new SystemCloudflaredOwnedHelperHost();
+            await File.WriteAllTextAsync(path, "not an executable");
+            try { using var lease = await host.AcquirePinnedExecutableAsync(path, default); throw new Exception("Wrong length was admitted"); }
+            catch (IOException error) { Check.True(error.Message.Contains("length", StringComparison.Ordinal)); }
+            var pin = CloudflaredNativeCakeAccessCredentialSource.ReviewedPlatformPin();
+            using (var file = new FileStream(path, FileMode.Create, FileAccess.Write)) file.SetLength(pin.Bytes);
+            try { using var lease = await host.AcquirePinnedExecutableAsync(path, default); throw new Exception("Tampered image was admitted"); }
+            catch (IOException error) { Check.True(error.Message.Contains("SHA256", StringComparison.Ordinal)); }
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
 
     private static Task CoalescesAsync() => WithAsync(async rig =>
     {

@@ -19,13 +19,25 @@
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
   </Actions>
   <Page id="BrowseRoot" AccessibleName="9to1 Haven browser">
-    <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr Auto" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiBackgroundBrush}">
-      <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs" AccessibleDescription="Drag a tab to reorder it within its privacy, profile, and pinned section. Keyboard move controls are also available in More tools.">
-        <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
+    <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiBackgroundBrush}">
+      <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs" AccessibleDescription="Drag a tab to swap at either outer edge, split on either inner edge, or group in the center. Invalid privacy, profile, or pinned boundaries are refused. Keyboard move controls are also available in More tools.">
+        <Container id="BrowseTabViewport" Type="Overlay" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
-            <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8" Background="{Binding tab.Background}">
-              <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Background="Transparent" Color="{Binding tab.Foreground}" BorderWidth="0" CornerRadius="8" />
+            <Container id="BrowseTabRow" Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8" Background="{Binding tab.Background}" Class="cui-hover-surface" BringIntoView="{Binding tab.Selected}">
+              <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Chromeless="True" Background="Transparent" Color="{Binding tab.Foreground}" BorderWidth="0" CornerRadius="8" />
               <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Height="32" MinHeight="32" Width="30" MinWidth="30" Padding="4 4 6 4" FontSize="16" Chromeless="True" Background="Transparent" Color="{Binding tab.CloseForeground}" BorderWidth="0" CornerRadius="8">×</Button>
+              <Container Type="Overlay" ColumnSpan="2" IsHitTestVisible="False">
+                <Container id="BrowseTabDropSwapBeforeIndicator" Type="Overlay" IsVisible="{Binding tab.DropSwapBefore}" HorizontalAlignment="Left" Width="4" Background="{Binding tab.DropEdgeBrush}" CornerRadius="2" />
+                <Container id="BrowseTabDropSwapAfterIndicator" Type="Overlay" IsVisible="{Binding tab.DropSwapAfter}" HorizontalAlignment="Right" Width="4" Background="{Binding tab.DropEdgeBrush}" CornerRadius="2" />
+                <Container id="BrowseTabDropInvalidIndicator" Type="Overlay" IsVisible="{Binding tab.DropInvalid}" Background="{Binding tab.DropInvalidBrush}" CornerRadius="8" />
+                <Container id="BrowseTabDropSplitBeforeIndicator" Type="Grid" ColumnSizes="1fr 1fr" IsVisible="{Binding tab.DropSplitBefore}">
+                  <Container id="BrowseTabDropSplitBeforeHalf" Type="Overlay" Column="0" Background="{Binding tab.DropBrush}" CornerRadius="8 0 0 8" />
+                </Container>
+                <Container id="BrowseTabDropSplitAfterIndicator" Type="Grid" ColumnSizes="1fr 1fr" IsVisible="{Binding tab.DropSplitAfter}">
+                  <Container id="BrowseTabDropSplitAfterHalf" Type="Overlay" Column="1" Background="{Binding tab.DropBrush}" CornerRadius="0 8 8 0" />
+                </Container>
+                <Container id="BrowseTabDropGroupIndicator" Type="Overlay" IsVisible="{Binding tab.DropGroup}" Background="{Binding tab.DropBrush}" CornerRadius="8" />
+              </Container>
             </Container>
           </Repeat>
         </Container>
@@ -161,7 +173,6 @@
           </Container>
         </Container>
       </Container>
-      <Text Row="3" Column="0" Text="{Binding Status}" FontSize="11" AccessibleName="Browse operation status" />
     </Container>
 
     <Container id="BrowseProfileOverlay" Type="Overlay" IsVisible="{Binding ProfileMenuOpen}" AccessibleName="Profile menu" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 84 8 0">
@@ -295,6 +306,7 @@
           </Container>
           <Text Text="{Binding Security}" TextWrapping="Wrap" />
           <Text Text="{Binding Profile}" TextWrapping="Wrap" />
+          <Text Text="{Binding Status}" TextWrapping="Wrap" AccessibleName="Browse operation status" />
           <Text Text="{Binding EngineStatus}" TextWrapping="Wrap" />
           <Text Text="{Binding PopupStatus}" TextWrapping="Wrap" />
         </Container>

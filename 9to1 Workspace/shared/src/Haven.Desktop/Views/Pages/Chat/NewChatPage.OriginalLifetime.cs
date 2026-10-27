@@ -289,10 +289,21 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
     {
         var original = RequireChatOriginal();
         var failures = new List<Exception>();
-        try { _sendProgressTimer.Stop(); } catch (Exception error) { failures.Add(error); }
-        if (ReferenceEquals(_sendCancellation, actualCancellation)) _sendCancellation = null;
-        try { actualCancellation?.Dispose(); } catch (Exception error) { failures.Add(error); }
-        _isSending = false;
+        Task? uiCleanup = null;
+        try
+        {
+            uiCleanup = Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                try { _sendProgressTimer.Stop(); } catch (Exception error) { failures.Add(error); }
+                if (ReferenceEquals(_sendCancellation, actualCancellation)) _sendCancellation = null;
+                try { actualCancellation?.Dispose(); } catch (Exception error) { failures.Add(error); }
+                _isSending = false;
+                _originalSendInFlight = false;
+            }).GetTask();
+        }
+        catch (Exception error) { failures.Add(error); }
+        if (uiCleanup is not null)
+            try { await original.AwaitAsync(uiCleanup); } catch (Exception error) { failures.Add(error); }
         if (!_originalWork.IsRetiring)
         {
             Task? safety = null;

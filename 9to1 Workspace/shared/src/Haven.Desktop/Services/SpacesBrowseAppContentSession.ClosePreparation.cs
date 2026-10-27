@@ -48,6 +48,7 @@ internal sealed partial class SpacesBrowseAppContentSession
         lock (_gate)
         {
             DemandAlive();
+            if (_studyPage?.HasDraft == true) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
             if (!_published || _page is null || _initialization is { IsCompleted: false })
                 return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
             if (_activeDetailsPreparation is not null) return _cohortPreparation!;

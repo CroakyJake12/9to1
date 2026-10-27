@@ -8,10 +8,15 @@ public sealed class ChatAddMenuPrefab : HavenPrefabDefinition
 
     public override void OnCreated(Prefab instance)
     {
-        instance.GetComponent<Button>("Dismiss").Accessibility.AccessibleName = "Close Add menu";
-        instance.GetComponent<Button>("Agents").Accessibility.AccessibleName = "Agents";
-        instance.GetComponent<Button>("Instructions").Accessibility.AccessibleName = "Instructions";
-        instance.GetComponent<Button>("Capabilities").Accessibility.AccessibleName = "Capabilities";
+        var dismiss = instance.GetComponent<Button>("Dismiss");
+        dismiss.Accessibility.AccessibleName = "Close Add menu";
+        dismiss.Accessibility.Description = "Close the Add menu.";
+        instance.GetComponent<Button>("CatalogBack").Accessibility.AccessibleName = "Back to Add menu";
+        instance.GetComponent<Button>("Agents").Accessibility.AccessibleName = "Specialists";
+        instance.GetComponent<Button>("Assistants").Accessibility.AccessibleName = "Assistants";
+        instance.GetComponent<Button>("Assistants").Accessibility.Description = "Browse configured Assistants or open the Assistants workspace to create one.";
+        instance.GetComponent<Button>("Instructions").Accessibility.AccessibleName = "Skills";
+        instance.GetComponent<Button>("Capabilities").Accessibility.AccessibleName = "Plugin";
         instance.GetComponent<Button>("Apps").Accessibility.AccessibleName = "Apps";
         instance.GetComponent<Button>("AllowActions").Accessibility.AccessibleName = "Allow Actions";
         instance.GetComponent<Button>("VisualResponses").Accessibility.AccessibleName = "Prefer Visual Responses";

@@ -126,6 +126,27 @@ public static class LlamaCppLaunchPlanner
         return path;
     }
 
+    // A Unix-domain listener cannot create missing parent directories. Prepare
+    // only the configured socket parent; never touch an existing socket or other
+    // model/service state. Existing directory modes are preserved.
+    internal static void EnsureUnixSocketParent(string? socketPath)
+    {
+        if (socketPath is null) return;
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("Unix socket directories require Linux.");
+        var validated = NormalizeUnixSocketPath(socketPath)!;
+        var parent = Path.GetDirectoryName(validated)
+            ?? throw new ArgumentException("A Unix socket parent directory is required.", nameof(socketPath));
+        static void RefuseLinks(string directory)
+        {
+            for (DirectoryInfo? item = new(directory); item is not null; item = item.Parent)
+                if (item.LinkTarget is not null)
+                    throw new IOException("The configured Unix socket directory cannot cross symbolic links.");
+        }
+        RefuseLinks(parent);
+        Directory.CreateDirectory(parent, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        RefuseLinks(parent);
+    }
+
     private const int UnixSocketPathMaxBytes = 100;
 
     private static string RequireAbsolutePath(string? value, string parameterName)
@@ -237,6 +258,7 @@ public sealed class LlamaCppRuntime(LlamaCppRuntimeOptions options) : ILlamaCppR
 
             try
             {
+                LlamaCppLaunchPlanner.EnsureUnixSocketParent(plan.UnixSocketPath);
                 _process = Process.Start(startInfo);
                 return _process is null
                     ? GetStatus("llama.cpp did not return a process handle.")

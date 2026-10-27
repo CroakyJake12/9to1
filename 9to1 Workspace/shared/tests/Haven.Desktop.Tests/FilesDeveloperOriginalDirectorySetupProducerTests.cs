@@ -16,6 +16,20 @@ namespace Haven.Desktop.Tests;
 public sealed partial class FilesDeveloperOriginalDirectorySetupProducerTests
 {
     [LinuxDirectoryFact]
+    public async Task Empty_existing_project_produces_an_issued_zero_file_manifest_for_register_existing()
+    {
+        await using var rig = await Rig.Create(true, false, includeSourceFile: false);
+
+        Assert.Empty(rig.Capture.OriginalFiles);
+        Assert.Null(rig.Prepared.Intent.Validate());
+        Assert.Empty(rig.Prepared.Intent.Files);
+        Assert.DoesNotContain(rig.Prepared.Intent.Steps,
+            step => step.Kind is DeveloperProjectSetupStepKind.RegisterExistingFileMetadata or DeveloperProjectSetupStepKind.RegisterMaterialization);
+        Assert.True(rig.Selection.IsIssuedOriginal(rig.Capture));
+        Assert.Equal(rig.Prepared.Intent.OriginalExistingProjectRoot, rig.Capture.OriginalExistingProjectRoot);
+    }
+
+    [LinuxDirectoryFact]
     public async Task Real_same_source_directory_step_follows_folder_ack_and_preserves_source_git_root_and_remaining_plan()
     {
         await using var rig = await Rig.Create(true); var token = TestContext.Current.CancellationToken;
@@ -69,8 +83,8 @@ public sealed partial class FilesDeveloperOriginalDirectorySetupProducerTests
         internal FilesDeveloperOriginalFolderSetupProducer Effector = null!; internal HomeDeveloperProjectSetupJournal.Prepared Prepared = null!;
         internal FileDeveloperWorkspaceStore WorkspaceStore = null!;
         internal SetupSource Setups = new(); internal Permission Permission = null!; internal bool ExpectedFault;
-        internal static Task<Rig> Create(bool directoryConfigured) => Create(directoryConfigured, false);
-        internal static async Task<Rig> Create(bool directoryConfigured, bool workspaceConfigured)
+        internal static Task<Rig> Create(bool directoryConfigured) => Create(directoryConfigured, false, includeSourceFile: true);
+        internal static async Task<Rig> Create(bool directoryConfigured, bool workspaceConfigured, bool includeSourceFile = true)
         {
             var rig = new Rig { Root = Path.Combine(Path.GetTempPath(), "paired-dev-existing-" + Guid.NewGuid().ToString("N")) };
             Directory.CreateDirectory(rig.Root);
@@ -87,7 +101,8 @@ public sealed partial class FilesDeveloperOriginalDirectorySetupProducerTests
                 var authority = rig.Graph.GetRequiredService<NativeFilesWorkspaceAuthority>(); var workspace = (await authority.GetCurrentAsync(token))!;
                 rig.DrivePath = Path.Combine(chosen, ".9to1-files", "drive.json");
                 var project = Path.Combine(chosen, "ExistingProject"); Directory.CreateDirectory(project); Directory.CreateDirectory(Path.Combine(project, ".git"));
-                rig.SourcePath = Path.Combine(project, "Code.cs"); File.WriteAllText(rig.SourcePath, "original selected source");
+                rig.SourcePath = Path.Combine(project, "Code.cs");
+                if (includeSourceFile) File.WriteAllText(rig.SourcePath, "original selected source");
                 rig.WorkspaceStore = new FileDeveloperWorkspaceStore(Path.Combine(rig.Root, "Dev"));
                 var reads = new Reads(); rig.Kernel = workspaceConfigured
                     ? new WorkspaceToolService().CreateOriginalDeveloperCaptureSource(reads, () => rig.Selection, () => rig.Setups, () => rig.WorkspaceStore, () => rig.Effector)

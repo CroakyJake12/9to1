@@ -1,4 +1,4 @@
-using HistoryRow = HavenOS.Apps.Spaces.Home.SpacesHomeConversationRow;
+using HistoryRow = HavenOS.Apps.Spaces.SpacesHomeConversationRow;
 using Avalonia.VisualTree;
 using Avalonia.Automation;
 using System.Reflection;

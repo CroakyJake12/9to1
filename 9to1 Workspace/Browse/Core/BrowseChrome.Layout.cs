@@ -15,15 +15,52 @@ public sealed partial class BrowseChrome
     {
         get
         {
-            if (_disposed || _nativeRetiring || HasSplitView) return false;
+            lock (_nativeSourceGate)
+            {
+                if (_disposed || _nativeRetiring || HasSplitView) return false;
+                return _tabs.Any(tab => tab.Id != _selectedTabId && CanOpenSplitViewForTabs(_selectedTabId, tab.Id));
+            }
+        }
+    }
+
+    /// <summary>The canonical capability check for an exact two-tab split. Existing tabs keep
+    /// their own profiles and engines; cross-profile splits are supported, private tabs are not.</summary>
+    public bool CanOpenSplitViewForTabs(Guid receivingTabId, Guid otherTabId)
+    {
+        if (_disposed || _nativeRetiring || HasSplitView || receivingTabId == otherTabId) return false;
+        lock (_nativeSourceGate)
+        {
             var selected = _tabs.FirstOrDefault(tab => tab.Id == _selectedTabId);
-            return selected is { Privacy: Haven.Core.BrowserTabPrivacy.Standard } &&
-                _tabs.Any(tab => tab.Id != selected.Id && tab.Privacy == Haven.Core.BrowserTabPrivacy.Standard);
+            var receiving = _tabs.FirstOrDefault(tab => tab.Id == receivingTabId);
+            var other = _tabs.FirstOrDefault(tab => tab.Id == otherTabId);
+            return selected?.Privacy == Haven.Core.BrowserTabPrivacy.Standard &&
+                receiving?.Privacy == Haven.Core.BrowserTabPrivacy.Standard &&
+                other?.Privacy == Haven.Core.BrowserTabPrivacy.Standard;
         }
     }
 
     public Task<BrowseChromeSnapshot> ToggleSplitViewAsync(CancellationToken token = default) =>
         RetainContentTransition(() => HasSplitView ? CloseSplitViewCoreAsync(token) : OpenSplitViewCoreAsync(token), token);
+
+    /// <summary>Opens a split with the exact two standard tabs selected by a native drop gesture.
+    /// The first id occupies the receiving side; both existing tabs and sessions are retained.</summary>
+    public Task<BrowseChromeSnapshot> OpenSplitViewForTabsAsync(Guid receivingTabId, Guid otherTabId,
+        CancellationToken token = default) =>
+        RetainContentTransition(() => OpenSplitViewForTabsCoreAsync(receivingTabId, otherTabId, token), token);
+
+    private async Task<BrowseChromeSnapshot> OpenSplitViewForTabsCoreAsync(Guid receivingTabId, Guid otherTabId,
+        CancellationToken token)
+    {
+        ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
+        if (!CanOpenSplitViewForTabs(receivingTabId, otherTabId))
+            throw new InvalidOperationException("The current selected, receiving, and companion tabs must be standard tabs, with no split already open.");
+        var receiving = RequireTab(receivingTabId);
+        var other = RequireTab(otherTabId);
+        _paneTabIds.Clear(); _paneTabIds.Add(receiving.Id); _paneTabIds.Add(other.Id);
+        if (!_paneTabIds.Contains(_selectedTabId)) _selectedTabId = receiving.Id;
+        _splitOrientation = Haven.Core.SplitOrientation.Vertical;
+        return await SavePaneLayoutCoreAsync("Split view opened. Both panes keep their original tabs and sessions.", token).ConfigureAwait(false);
+    }
 
     public Task<BrowseChromeSnapshot> FocusSplitPaneAsync(Guid tabId, CancellationToken token = default) =>
         RetainContentTransition(() => FocusSplitPaneCoreAsync(tabId, token), token);

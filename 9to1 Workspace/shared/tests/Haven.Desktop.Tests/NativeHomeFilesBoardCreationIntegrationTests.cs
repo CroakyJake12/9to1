@@ -107,8 +107,15 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
                 Assert.Equal(2, Directory.GetFiles(rig.BoardsDirectory, ".9to1-board-*.content").Length);
                 Assert.Equal(2, reviews); // One create review and one explicit Save WRITE review.
             }
-            var currentReference = Assert.Single(await rig.Keep(rig.Library.SearchAsync(
-                new HomeLibraryQuery(OwnerApp: "files", ArtifactType: "9to1 board document"), rig.Token)));
+            var libraryService = rig.Library.CreateService(new UnusedLibraryRouter());
+            var currentPage = await rig.Keep(libraryService.SearchAsync(
+                new HomeLibraryQuery(OwnerApp: "files", ArtifactType: "9to1 board document"), rig.Token));
+            Assert.True(currentPage.Succeeded, currentPage.Message);
+            var currentReference = Assert.Single(currentPage.Items);
+            Assert.Equal("files", currentReference.OwnerApp);
+            Assert.Equal("9to1 board document", currentReference.ArtifactType);
+            Assert.Equal(receipt.FilesStoreId.ToString("D") + "/" + receipt.FileId.ToString("D"), currentReference.ArtifactId);
+            Assert.Equal(receipt.DisplayName, currentReference.DisplayName);
             var readToken = await rig.Keep(rig.Library.PrepareOriginalBoardReadAsync(currentReference.OpenLink, rig.Token))
                 ?? throw new InvalidOperationException("The current Home Library board row did not prepare a read.");
             var currentRow = Assert.Single(await rig.ListBoardsAsync());
@@ -507,6 +514,12 @@ public sealed class NativeHomeFilesBoardCreationIntegrationTests
             if (failures.Count != 0) throw new AggregateException("The original Home Files board creation owner did not drain cleanly.", failures);
             if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
         }
+    }
+
+    private sealed class UnusedLibraryRouter : IHomeDeepLinkRouter
+    {
+        public Task<HomeFeatureNavigationResult> OpenAsync(HomeDeepLink link, CancellationToken token = default) =>
+            throw new InvalidOperationException("This metadata query must not simulate native navigation success.");
     }
 
     private sealed class FailBoardCreateAuditObserver : IHomePersistedWriteObserver

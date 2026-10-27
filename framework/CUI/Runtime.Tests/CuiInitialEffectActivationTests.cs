@@ -80,6 +80,26 @@ public sealed class CuiInitialEffectActivationTests
     });
 
     [Fact]
+    public Task External_observed_state_rearms_and_dispatches_one_effect_per_rising_edge() => Run(async f =>
+    {
+        f.Model.Set("ExternalReady", false);
+        var root = f.Mount(Markup.Replace("Condition=\"{Binding Ready}\"", "Condition=\"{Binding ExternalReady}\""));
+        await f.Loader.WhenActionsIdleAsync();
+        Assert.Empty(f.Calls);
+        f.Model.Set("ExternalReady", true);
+        await f.Loader.WhenActionsIdleAsync();
+        Assert.Equal(new[] { "domain.inspect", "domain.follow" }, f.Calls);
+        f.Model.Set("Unrelated", 1);
+        await f.Loader.WhenActionsIdleAsync();
+        Assert.Equal(2, f.Calls.Count);
+        f.Model.Set("ExternalReady", false);
+        f.Model.Set("ExternalReady", true);
+        await f.Loader.WhenActionsIdleAsync();
+        Assert.Equal(new[] { "domain.inspect", "domain.follow", "domain.inspect" }, f.Calls);
+        Assert.Equal("Inspected", Find<TextBlock>(root, "outcome").Text);
+    });
+
+    [Fact]
     public Task Foreign_descendant_and_replaced_roots_cannot_activate_the_current_documents_effects() => Run(async f =>
     {
         var old = f.Load();

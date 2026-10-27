@@ -116,8 +116,9 @@ public sealed partial class HomeClaimedResourceCommitFence
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, string targetAppId, string actionId, CancellationToken cancellationToken) =>
-        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, targetAppId, actionId, cancellationToken, null, null);
+        AuthenticatedResourceActor originalActor, string targetAppId, string actionId, CancellationToken cancellationToken,
+        JsonElement? reviewedArguments = null) =>
+        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, targetAppId, actionId, cancellationToken, null, null, reviewedArguments);
 
     public static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadWithinOriginalSourceAsync(
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
@@ -133,15 +134,15 @@ public sealed partial class HomeClaimedResourceCommitFence
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
         AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain,
-        string targetAppId, string actionId, CancellationToken cancellationToken) =>
-        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, targetAppId, actionId, cancellationToken, scope, retain);
+        string targetAppId, string actionId, CancellationToken cancellationToken, JsonElement? reviewedArguments = null) =>
+        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, targetAppId, actionId, cancellationToken, scope, retain, reviewedArguments);
 
     private static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadCoreAsync(
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
         AuthenticatedResourceActor originalActor, string targetAppId, string actionId,
-        CancellationToken cancellationToken, Action<Action>? originalScope, Action<Task>? retain)
+        CancellationToken cancellationToken, Action<Action>? originalScope, Action<Task>? retain, JsonElement? reviewedArguments)
     {
         ArgumentNullException.ThrowIfNull(broker); ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(profiles); ArgumentNullException.ThrowIfNull(ownership);
@@ -175,7 +176,10 @@ public sealed partial class HomeClaimedResourceCommitFence
             return Deny();
         try
         {
-            var arguments = originalRequest.Arguments;
+            // A Write body read reviews an outer expectedVersion/request tuple. Retain that
+            // exact private approved intent for its digest; the original Notes request below
+            // still binds the selected owner-issued operation and cannot be substituted.
+            var arguments = reviewedArguments ?? originalRequest.Arguments;
             if (arguments.ValueKind != JsonValueKind.Object ||
                 admission.Submission.Impact.ArgumentsDigest != Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(arguments.GetRawText()))))
                 return Deny();
@@ -214,7 +218,8 @@ public sealed partial class HomeClaimedResourceCommitFence
                     : new[] { "documentId", "kind", "operationId", "storeId", "storeRevision", "versionId" };
                 if (!names.SequenceEqual(expectedNames)) return Deny();
             }
-            if (requestArguments.GetProperty("operationId").GetGuid() != originalRequest.OperationId ||
+            if (requestArguments.GetRawText() != originalRequest.Arguments.GetRawText() ||
+                requestArguments.GetProperty("operationId").GetGuid() != originalRequest.OperationId ||
                 requestArguments.GetProperty("storeId").GetGuid() != identity.StoreId ||
                 requestArguments.GetProperty("storeRevision").GetString() != scope.Revision)
                 return Deny();

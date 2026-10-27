@@ -65,6 +65,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
         _boardWriteScope is not null && _boardWriteRetain is not null;
     internal bool HasBoardCreateSource => _boardCreate is not null && _boardRead is not null &&
         _boardWrite is not null && _boardWriteReview is not null && _boardWriteScope is not null && _boardWriteRetain is not null;
+    internal bool RequiresWorkspaceSetup { get; private set; }
     public string? AvailabilityNotice => _boardRead is null || !_browser.HasOriginalBoardDocumentReadOwner
         ? "Files shows folder and supported raw text/code references from its current metadata. Text preview requires an existing local content anchor."
         : HasWritableBoardSource
@@ -104,6 +105,7 @@ internal sealed class NativeHomeFilesLibrarySource : IHomeOriginalLibrarySource
                     Own, Retain, caller))).ConfigureAwait(false);
             if (!_browser.IsIssuedOriginalHomeLibraryAvailability(available, _actor))
                 throw new InvalidDataException("The Files availability observation has a different original issuer.");
+            RequiresWorkspaceSetup = available.Code == "FilesSetupRequired";
             if (!available.IsAvailable || available.StoreId is not { } store || store == Guid.Empty)
                 throw Refuse(available.Code, available.Message);
             // Traverse only original canonical metadata pages. The existing shared Library

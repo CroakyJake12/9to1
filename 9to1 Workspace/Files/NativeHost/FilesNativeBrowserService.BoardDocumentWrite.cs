@@ -465,7 +465,10 @@ public sealed partial class FilesNativeBrowserService
                         ?? throw new InvalidOperationException("The physical Files owner returned no retained materialization.");
                     await source.ObserveVoid(() => _physicalOwner.RevalidateOriginalBoardDocumentWithinSourceAsync(
                         exactMaterialization, source.OriginalSynchronousScope, source.RetainOriginalTask, token)).ConfigureAwait(false);
-                    await RequireWrite(token).ConfigureAwait(false);
+                    // ValidateAsync has retained Home's physical read lease. Re-entering
+                    // RequireWrite here would read the same Home store and deadlock on our
+                    // own lease. The Files commit guard below checks the same original
+                    // destination/materialization and current Home fence under Files CAS.
 
                     var uploaded = new FilesUploadedContent(row.Id, selectedParent, row.Name, row.ContentType,
                         new(operation.NewRevisionId), new(expectedRevision), operation.Actor.ActorId, DateTimeOffset.UtcNow,
@@ -560,7 +563,8 @@ public sealed partial class FilesNativeBrowserService
                 return committed
                     ? new(true, operation.NewRevisionId, "Saved", "Saved to the selected Files board revision.")
                     : new(false, null, operation.ActualResult?.Error?.Code.ToString() ?? "FilesWriteOutcomeUnknown",
-                        operation.ActualResult?.Error?.Message ?? "The Files write result is unknown; reopen the current revision.", !known);
+                        operation.ActualResult?.Error?.Message ?? "The Files write result is unknown; reopen the current revision.",
+                        !known || operation.ActualResult?.Error?.Code == FilesErrorCode.RevisionConflict);
             }
             finally { _saveGate.Release(); }
         }

@@ -14,7 +14,9 @@ public sealed class SystemNativeCakeBrowserRequestSource:INativeCakeBrowserReque
  public void Request(Uri authorization,CancellationToken token)
  {
   token.ThrowIfCancellationRequested();
-  if(!OperatingSystem.IsWindows())throw new PlatformNotSupportedException("Native CAKE browser sign-in requires Windows");
+   if(!OperatingSystem.IsWindows()&&!OperatingSystem.IsLinux())throw new PlatformNotSupportedException("Native CAKE browser sign-in requires Windows or Linux");
+   if(!authorization.IsAbsoluteUri||authorization.Scheme!=Uri.UriSchemeHttps||authorization.UserInfo.Length!=0)
+    throw new ArgumentException("Native sign-in requires an absolute HTTPS authorization URI",nameof(authorization));
   // The system browser is borrowed. Dispose the returned process HANDLE, never its lifetime.
   using var handle=Process.Start(new ProcessStartInfo(authorization.AbsoluteUri){UseShellExecute=true});
  }

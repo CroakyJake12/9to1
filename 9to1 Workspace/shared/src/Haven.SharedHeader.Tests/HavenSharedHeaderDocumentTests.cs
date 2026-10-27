@@ -52,6 +52,9 @@ public sealed class HavenSharedHeaderDocumentTests
         Assert.Contains("shared-scene-host", names);
         Assert.Contains("shared-panel-host", names);
         Assert.Contains("shared-frame-root", names);
+        Assert.Contains("shared-panel-frame", names);
+        Assert.Contains("shared-panel-close", names);
+        Assert.Equal("9to1.Haven.ClosePanel", document.Actions["CloseSharedPanel"].Command);
     }
 
     [Fact]
@@ -67,6 +70,25 @@ public sealed class HavenSharedHeaderDocumentTests
         Assert.Equal("9to1.Haven.Dismiss", document.Actions["Dismiss"].Command);
         Assert.NotNull(document.Actions["MarkRead"].Parameter);
         Assert.NotNull(document.Actions["Dismiss"].Parameter);
+    }
+
+    [Fact]
+    public void Shell_compiles_a_persistent_accessible_cancel_action_outside_the_scroll_host()
+    {
+        var document = HavenSharedHeaderDocuments.LoadShell();
+        var components = document.Components.SelectMany(component => component.DescendantsAndSelf()).ToArray();
+        var frame = Assert.Single(components, component => component.Name == "shared-panel-frame");
+        var host = Assert.Single(components, component => component.Name == "shared-panel-host");
+        var close = Assert.Single(components, component => component.Name == "shared-panel-close");
+        Assert.Equal("9to1.Haven.ClosePanel", document.Actions["CloseSharedPanel"].Command);
+        Assert.Contains(close.Properties, property => property.Key.Equals("CancelAction", StringComparison.OrdinalIgnoreCase)
+            && property.Value is CuiLiteralValue literal && bool.TryParse(literal.Value, out var enabled) && enabled);
+        Assert.Contains(close.Properties, property => property.Key == "AccessibleName" && property.Value is CuiLiteralValue { Value: "Close shared panel" });
+        Assert.Contains(host.Properties, property => property.Key.Equals("VerticalScrolling", StringComparison.OrdinalIgnoreCase)
+            && property.Value is CuiLiteralValue literal && bool.TryParse(literal.Value, out var enabled) && enabled);
+        Assert.DoesNotContain(host.DescendantsAndSelf(), component => ReferenceEquals(component, close));
+        Assert.Contains(frame.DescendantsAndSelf(), component => ReferenceEquals(component, host));
+        Assert.Contains(frame.DescendantsAndSelf(), component => ReferenceEquals(component, close));
     }
 
     // ---- Refusal before controls/effects ----

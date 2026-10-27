@@ -1,6 +1,7 @@
 <Cui id="dev.saved-projects" version="1">
   <Actions>
     <Action name="dev.references.open-task" command="dev.references.open-task" parameter="{Binding item.SelectionKey}" />
+    <Action name="dev.templates.select" command="dev.templates.select" parameter="{Binding item.SelectionKey}" />
   </Actions>
   <Page id="dev-saved-projects-page" role="main" accessible-name="Saved development projects">
     <Container id="dev-saved-projects-root" margin="16" Type="Vertical Stack" CellGap="12">
@@ -31,6 +32,43 @@
       <Text text="Open an existing project folder as a manual project (no AI task or model). Reads use your real configured Files store and Home profile." text-wrapping="Wrap" accessible-name="Manual project help" />
       <Input id="dev-manual-folder" placeholdertext="Absolute path to an existing project folder" accessible-name="Existing project folder" Type="Text" Value="{Binding ManualFolderPath}" />
       <Button id="dev-create-manual" action="dev.references.create-manual-project" content="Open as manual project" Interactive="{Binding CanCreateManual}" />
+      <Text text="Create a starter in an empty existing project folder. Build registers that folder through the Home setup flow, then creates each reviewed file through the normal Home CREATE approval." text-wrapping="Wrap" accessible-name="Template project creation help" />
+      <Input id="dev-template-query" Type="Text" Value="{Binding TemplateQuery}" placeholdertext="Filter project templates" accessible-name="Filter project templates" />
+      <Container id="dev-template-filters-primary" Type="Horizontal Stack" CellGap="8">
+        <Input id="dev-template-provider-filter" Type="Select" ItemsSource="{Binding TemplateProviderOptions}" SelectedIndex="{Binding TemplateProviderIndex, mode=TwoWay, type=int}" accessible-name="Template provider filter" />
+        <Input id="dev-template-project-type-filter" Type="Select" ItemsSource="{Binding TemplateProjectTypeOptions}" SelectedIndex="{Binding TemplateProjectTypeIndex, mode=TwoWay, type=int}" accessible-name="Project type filter" />
+        <Input id="dev-template-language-filter" Type="Select" ItemsSource="{Binding TemplateLanguageOptions}" SelectedIndex="{Binding TemplateLanguageIndex, mode=TwoWay, type=int}" accessible-name="Language filter" />
+        <Input id="dev-template-framework-filter" Type="Select" ItemsSource="{Binding TemplateFrameworkOptions}" SelectedIndex="{Binding TemplateFrameworkIndex, mode=TwoWay, type=int}" accessible-name="Framework filter" />
+        <Input id="dev-template-runtime-filter" Type="Select" ItemsSource="{Binding TemplateRuntimeOptions}" SelectedIndex="{Binding TemplateRuntimeIndex, mode=TwoWay, type=int}" accessible-name="Target runtime filter" />
+      </Container>
+      <Container id="dev-template-filters-secondary" Type="Horizontal Stack" CellGap="8">
+        <Input id="dev-template-platform-filter" Type="Select" ItemsSource="{Binding TemplatePlatformOptions}" SelectedIndex="{Binding TemplatePlatformIndex, mode=TwoWay, type=int}" accessible-name="Platform filter" />
+        <Input id="dev-template-surface-filter" Type="Select" ItemsSource="{Binding TemplateSurfaceOptions}" SelectedIndex="{Binding TemplateSurfaceIndex, mode=TwoWay, type=int}" accessible-name="Product surface filter" />
+        <Input id="dev-template-organisation-filter" Type="Select" ItemsSource="{Binding TemplateOrganisationOptions}" SelectedIndex="{Binding TemplateOrganisationIndex, mode=TwoWay, type=int}" accessible-name="Organisation template filter" />
+        <Input id="dev-template-readiness-filter" Type="Select" ItemsSource="{Binding TemplateReadinessOptions}" SelectedIndex="{Binding TemplateReadinessIndex, mode=TwoWay, type=int}" accessible-name="Required toolchain readiness filter" />
+      </Container>
+      <Text id="dev-template-filter-status" text="{Binding TemplateFilterStatus}" text-wrapping="Wrap" accessible-name="Template filter results" />
+      <Repeat id="dev-project-templates" Source="{Binding Templates}" As="item" Key="{Binding item.SelectionKey}">
+        <Container id="dev-project-template-item" Type="Vertical Stack">
+          <Text id="dev-project-template-name" text="{Binding item.DisplayName}" />
+          <Text text="{Binding item.Summary}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+          <Button id="dev-select-project-template" action="dev.templates.select" content="Select template" accessible-name="Select project template" />
+        </Container>
+      </Repeat>
+      <Text text="Project name is the final folder name:" />
+      <Text text="{Binding TemplateProjectName}" accessible-name="Project name from selected folder" />
+      <Text text="{Binding SelectedTemplate}" accessible-name="Selected project template" />
+      <Button id="dev-review-project-template" action="dev.templates.review" content="Review template files" Interactive="{Binding CanReviewTemplate}" />
+      <Text text="{Binding TemplateReviewStatus}" text-wrapping="Wrap" accessible-name="Template review status" />
+      <Repeat id="dev-template-review-files" Source="{Binding TemplateFiles}" As="item" Key="{Binding item.RelativePath}">
+        <Container id="dev-template-review-file" Type="Vertical Stack">
+          <Text id="dev-template-review-path" text="{Binding item.RelativePath}" font-weight="Bold" />
+          <Text text="{Binding item.Metadata}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="dev-template-review-source" text="{Binding item.Text}" font-family="monospace" text-wrapping="Wrap" />
+        </Container>
+      </Repeat>
+      <Button id="dev-create-template-project" action="dev.templates.create" content="Create project from reviewed template" Interactive="{Binding CanCreateTemplateProject}" />
+      <Text text="{Binding TemplateProjectStatus}" text-wrapping="Wrap" accessible-name="Template project creation status" />
       <Text text="{Binding ManualStatus}" text-wrapping="Wrap" accessible-name="Manual project operation status" />
       <Text text="{Binding RetainedAttempt}" text-wrapping="Wrap" accessible-name="Retained manual setup recovery state" />
     </Container>

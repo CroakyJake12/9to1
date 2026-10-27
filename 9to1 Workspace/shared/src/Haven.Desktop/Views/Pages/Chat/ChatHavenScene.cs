@@ -7,6 +7,7 @@ using Haven.Desktop.Services;
 using Haven.Desktop.Views.Shell.TopRail;
 using Haven.UI;
 using Haven.UI.Components;
+using HavenOS.Apps.Assistants.Contracts;
 using HavenButton = Haven.UI.Components.Button;
 using HavenText = Haven.UI.Components.Text;
 
@@ -122,12 +123,8 @@ internal sealed partial class ChatHavenScene : IDisposable
         ContextCard.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(12)));
 
         AddMenuPrefab = _prefabs.Create("ChatAddMenu", "Chat-AddMenu");
-        AddMenuPrefab.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-        AddMenuPrefab.SetValue(HavenProperties.Height, HavenLength.Percent(100));
-        AddMenuPrefab.SetValue(HavenProperties.ZIndex, 100);
-        AddMenuPrefab.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.ChildrenOnly);
-        Root.Add(AddMenuPrefab);
         _addMenu = new ChatAddMenuSurface(AddMenuPrefab, composerOwnsSearch: true, showThreadSettings: false);
+        InitializeAddMenuPopup();
 
         ResolveProblems.Invoked += OnResolveInvoked;
         ContextToggle.Invoked += OnContextToggleInvoked;
@@ -137,6 +134,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         TaskHistory.Invoked += (_, _) => TaskHistoryRequested?.Invoke(this, EventArgs.Empty);
         _addMenu.AddActionSelected += OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected += OnSharedCatalogItemSelected;
+        _addMenu.AssistantCatalogueRequested += OnSharedAssistantCatalogueRequested;
         SetHasMessages(false);
         HideAddMenu();
     }
@@ -174,6 +172,8 @@ internal sealed partial class ChatHavenScene : IDisposable
     public HavenButton DismissAddButton => _addMenu.DismissButton;
     public Container CatalogPanel => _addMenu.CatalogPanel;
     public Container CatalogRows => _addMenu.CatalogResults;
+    public bool IsAssistantCatalogueOpen => _addMenu.IsAssistantCatalogueOpen;
+    public long AssistantCatalogueRequestGeneration => _addMenu.AssistantCatalogueRequestGeneration;
     public Input CatalogSearch => _addMenu.CatalogSearch;
 
     public event EventHandler? SendRequested;
@@ -187,6 +187,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     public event EventHandler<Guid>? ContextRemoveRequested;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? CatalogItemSelected;
+    public event EventHandler? AssistantCatalogueRequested;
     public event EventHandler<ChatMessageActionRequest>? MessageActionRequested;
     public event EventHandler<ChatMarkdownCodeActionRequest>? MarkdownCodeActionRequested;
 
@@ -364,6 +365,9 @@ internal sealed partial class ChatHavenScene : IDisposable
         IReadOnlyList<PromptDefinition> instructions,
         IReadOnlyList<ModeDefinition> apps) =>
         _addMenu.SetCatalogue(agents, capabilities, instructions, apps);
+
+    public void SetAssistantCatalogue(IReadOnlyList<AssistantDefinitionSnapshot>? assistants, string? unavailableMessage = null) =>
+        _addMenu.SetAssistantCatalogue(assistants, unavailableMessage);
 
     public void SetResponseState(string agentName, ChatActionMode actionMode, GenerativeUiResponseMode visualMode) =>
         _addMenu.SetResponseState(agentName, actionMode, visualMode);
@@ -737,18 +741,29 @@ internal sealed partial class ChatHavenScene : IDisposable
     }
     private void OnResolveInvoked(object? sender, EventArgs e) => ResolveProblemsRequested?.Invoke(this, EventArgs.Empty);
 
-    public void ShowAddMenu() => _addMenu.Show();
-    public void ShowMentionSearch(string query) => _addMenu.ShowMentionSearch(query);
+    public void ShowAddMenu() { _addMenu.Show(); OpenAddMenuPopupIfAttached(focusPopup: true); }
+    public void ShowMentionSearch(string query)
+    {
+        _addMenu.ShowMentionSearch(query);
+        OpenAddMenuPopupIfAttached(focusPopup: false);
+    }
 
     public void HideAddMenu() => _addMenu.Hide();
 
-    public void FilterCatalogue(string query) => _addMenu.FilterCatalogue(query);
+    public void FilterCatalogue(string query)
+    {
+        _addMenu.FilterCatalogue(query);
+        if (_addMenu.IsOpen) OpenAddMenuPopupIfAttached(focusPopup: false);
+    }
 
     private void OnSharedAddActionSelected(object? sender, AddMenu.AddMenuAction action) =>
         AddActionSelected?.Invoke(this, action);
 
     private void OnSharedCatalogItemSelected(object? sender, AddMenuSelection selection) =>
         CatalogItemSelected?.Invoke(this, selection);
+
+    private void OnSharedAssistantCatalogueRequested(object? sender, EventArgs e) =>
+        AssistantCatalogueRequested?.Invoke(this, EventArgs.Empty);
 
     private Page BuildRoot()
     {
@@ -936,7 +951,9 @@ internal sealed partial class ChatHavenScene : IDisposable
         ContextClose.Invoked -= OnContextCloseInvoked;
         _addMenu.AddActionSelected -= OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
+        _addMenu.AssistantCatalogueRequested -= OnSharedAssistantCatalogueRequested;
         _composerQueue?.Dispose();
+        RetireAddMenuPopup();
         _addMenu.Dispose();
         // Retire the authored recovery surface's command admission and start its child close. The
         // physical native mapping/view release follows the joined ACK path

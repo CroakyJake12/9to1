@@ -9,11 +9,44 @@ namespace Haven.Infrastructure.Tests;
 public sealed partial class NotesOriginalStoreTests
 {
     [LinuxNotesFact]
+    public async Task Write_body_read_retains_its_reviewed_version_wrapper_and_original_selected_request()
+    {
+        await using var home = await HomeRig.CreateAsync();
+        var selected = NotesDocument.Create("Reviewed Write body");
+        selected.Version = (await home.Verified.SaveAsync(selected, "Create selected test document", home.Token)).Version;
+        var other = NotesDocument.Create("Unselected Write body");
+        other.Version = (await home.Verified.SaveAsync(other, "Create unselected test document", home.Token)).Version;
+        var before = await home.CaptureNotesFilesAsync();
+        var request = await home.Notes.Owner.PrepareOriginalLibraryReadAsync(selected.Id, home.Token);
+        var review = await home.Admission.RequestWriteDocumentReadAsync(request, selected.Version, home.SessionId, home.Token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, review.Authorization.State);
+        Assert.True((await home.Permissions.DecideAsync(review.Authorization.RequestId,
+            HomeApprovalChoice.Accept, cancellationToken: home.Token)).Succeeded);
+        var admission = await home.Admission.BeginLibrarySnapshotAsync(review, home.Token);
+        Assert.NotNull(admission);
+
+        // Approval of the private wrapper never authorises a different owner-issued selector.
+        var differentRequest = await home.Notes.Owner.PrepareOriginalLibraryReadAsync(other.Id, home.Token);
+        Assert.False(admission!.IsBoundToOriginalNotes(home.Notes.Owner, differentRequest));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => home.Notes.Owner.ReadOriginalLibraryWithHomeAsync(
+            differentRequest, admission, home.Verified, home.Token));
+
+        var snapshot = await home.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission, home.Verified, home.Token);
+        Assert.NotNull(snapshot.SelectedDocument);
+        Assert.Equal(selected.Id, snapshot.SelectedDocument!.Id);
+        Assert.Equal(selected.Version, snapshot.SelectedDocument.Version);
+        Assert.Null(snapshot.AuditWarning);
+        Assert.Equal(HomePermissionRequestState.Succeeded,
+            (await home.Admission.GetLibrarySnapshotAuthorizationAsync(review, home.Token)).State);
+        await home.AssertNotesFilesUnchangedAsync(before);
+    }
+
+    [LinuxNotesFact]
     public async Task Embedded_Write_catalogue_review_returns_metadata_only_without_reading_a_document_body()
     {
         await using var home = await HomeRig.CreateAsync();
         var document = NotesDocument.Create("Write catalogue entry");
-        document.Version = (await home.Notes.Owner.SaveAsync(document, "Create test document", home.Token)).Version;
+        document.Version = (await home.Verified.SaveAsync(document, "Create test document", home.Token)).Version;
         var request = await home.Notes.Owner.PrepareOriginalLibraryReadAsync(null, home.Token);
         var review = await home.Admission.RequestWriteLibrarySnapshotAsync(request, home.SessionId, home.Token);
         Assert.Equal(HomePermissionRequestState.PendingApproval, review.Authorization.State);
@@ -24,7 +57,11 @@ public sealed partial class NotesOriginalStoreTests
         var snapshot = await home.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission!, home.Verified, home.Token);
         Assert.Null(snapshot.SelectedDocument);
         Assert.Single(snapshot.Metadata, row => row.Summary.Id == document.Id && row.Summary.Version == document.Version);
-        Assert.False(request.Outcome!.DocumentWasRead);
+        // Outcome is private to the real owner. Home rejects a terminal audit that
+        // reports DocumentWasRead for this metadata-only request; inspect that public receipt.
+        Assert.Null(snapshot.AuditWarning);
+        Assert.Equal(HomePermissionRequestState.Succeeded,
+            (await home.Admission.GetLibrarySnapshotAuthorizationAsync(review, home.Token)).State);
     }
 
     [LinuxNotesFact]
@@ -32,7 +69,7 @@ public sealed partial class NotesOriginalStoreTests
     {
         await using var home = await HomeRig.CreateAsync();
         var initial = NotesDocument.Create("Original Write document");
-        initial.Version = (await home.Notes.Owner.SaveAsync(initial, "Create test document", home.Token)).Version;
+        initial.Version = (await home.Verified.SaveAsync(initial, "Create test document", home.Token)).Version;
         var retained = new List<Task>();
         void Scope(Action body) => body();
         void Retain(Task task) => retained.Add(task);
@@ -82,7 +119,7 @@ public sealed partial class NotesOriginalStoreTests
     {
         await using var home = await HomeRig.CreateAsync();
         var initial = NotesDocument.Create("Read-only Write document");
-        initial.Version = (await home.Notes.Owner.SaveAsync(initial, "Create test document", home.Token)).Version;
+        initial.Version = (await home.Verified.SaveAsync(initial, "Create test document", home.Token)).Version;
         void Scope(Action body) => body();
         void Retain(Task _) { }
 

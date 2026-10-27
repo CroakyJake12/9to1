@@ -18,6 +18,7 @@ using Haven.Desktop.ViewModels;
 using Haven.UI;
 using Haven.UI.Components;
 using Microsoft.Extensions.DependencyInjection;
+using HavenOS.Apps.Assistants.Contracts;
 
 namespace Haven.Desktop.Views.Pages.Chat;
 
@@ -221,6 +222,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public event EventHandler<ChatProjectionStateChangedEventArgs>? ProjectionStateChanged;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? AddCatalogItemSelected;
+    public event EventHandler? AssistantCatalogueRequested;
 
     public string? SelectedModelName => _selectedModel?.Name;
     public ModelDescriptor? SelectedModel => _selectedModel;
@@ -240,6 +242,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public Exception? ModelAvailabilityCause => _modelAvailabilityCause;
     public Guid ConversationId => _conversation.Id;
     public Conversation CurrentConversation => _conversation;
+    internal bool IsAssistantCatalogueOpen => !_disposed && !_originalWork.IsRetiring && _scene.IsAssistantCatalogueOpen;
+    internal long AssistantCatalogueRequestGeneration => _scene.AssistantCatalogueRequestGeneration;
     public bool IsTemporary => _conversation.IsTemporary;
     public bool HasStarted => _messages.Count > 0;
     public string ActiveAgentName => _activeAgent?.Name ?? "No Agent (Default)";
@@ -687,6 +691,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _availableCapabilities = capabilities ?? [];
         _availableApps = apps ?? [];
         _scene.SetCatalogue(agents ?? [], capabilities ?? [], instructions ?? [], apps ?? []);
+    }
+
+    public void SetAssistantCatalogue(IReadOnlyList<AssistantDefinitionSnapshot>? assistants, string? unavailableMessage = null)
+    {
+        if (_disposed || _originalWork.IsRetiring) return;
+        DemandOriginalChatCurrent();
+        _scene.SetAssistantCatalogue(assistants, unavailableMessage);
     }
 
     public Task LoadConversationAsync(Conversation conversation) => AdmitOriginalConversationLoad(conversation);
@@ -1137,6 +1148,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             if (_activeMention is not null) ConsumeActiveMention();
             AddActionSelected?.Invoke(this, action);
         };
+        _scene.AssistantCatalogueRequested += (_, _) =>
+        {
+            if (!_originalWork.IsRetiring) AssistantCatalogueRequested?.Invoke(this, EventArgs.Empty);
+        };
         _scene.CatalogItemSelected += (_, selection) =>
         {
             if (_originalWork.IsRetiring) return;
@@ -1371,24 +1386,35 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(RestoreUnsentOriginalInstructionIfUnchanged));
         try
         {
-        _pendingInstruction = null;
-        _redoMessages.Clear();
-        // The send's own programmatic clear is NOT a user edit: it must not queue an autosave
-        // that deletes the canonical draft before the user message is actually accepted.
-        _originalSendInFlight = true;
-        PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
-        DemandOriginalChatPublication();
-        _bus.Fire("Chat.Composer.Send.Click");
-        DemandOriginalChatPublication();
-        _isSending = true;
-        _sendStartTick = Environment.TickCount64;
-        DemandOriginalChatPublication();
-        _sendProgressTimer.Start();
-        DemandOriginalChatPublication();
-        _sendCancellation = CancellationTokenSource.CreateLinkedTokenSource(RequireChatOriginal().Token);
-        originalSendCancellation = _sendCancellation;
-        RefreshVisualState();
+        // A shared-composer action can resume this original after asynchronous safety or
+        // session work on a pool thread. Composer/scene/timer state belongs to Avalonia's
+        // dispatcher, so admit the clear and sending projection through the same owned UI
+        // publication path before starting the canonical send. The accepted draft snapshot
+        // above remains the only draft this operation may retire or restore.
+        await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+        {
+            DemandOriginalChatPublication();
+            _pendingInstruction = null;
+            _redoMessages.Clear();
+            // The send's own programmatic clear is NOT a user edit: it must not queue an autosave
+            // that deletes the canonical draft before the user message is actually accepted.
+            _originalSendInFlight = true;
+            PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
+            DemandOriginalChatPublication();
+            _bus.Fire("Chat.Composer.Send.Click");
+            DemandOriginalChatPublication();
+            _isSending = true;
+            _sendStartTick = Environment.TickCount64;
+            DemandOriginalChatPublication();
+            _sendProgressTimer.Start();
+            DemandOriginalChatPublication();
+            _sendCancellation = CancellationTokenSource.CreateLinkedTokenSource(RequireChatOriginal().Token);
+            originalSendCancellation = _sendCancellation;
+            RefreshVisualState();
+        }));
 
+        var originalSendToken = (originalSendCancellation
+            ?? throw new InvalidOperationException("The original send cancellation source was not admitted.")).Token;
         var now = DateTimeOffset.UtcNow;
         if (_messages.Count == 0)
         {
@@ -1466,7 +1492,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 var actualCommandPermission = _preferences.CommandPermission;
                 var actualBrowserPermission = _preferences.BrowserPermission;
                 var actualCapabilities = ActiveCapabilitiesForCurrentChat();
-                var actualObservationToken = originalSendCancellation.Token;
+                var actualObservationToken = originalSendToken;
                 initialTaskObservation = CaptureOriginalInitialTaskObservation(originalConversation,
                     () => _sessions.StartObservedOriginalTaskSendAsync(originalConversation, instruction,
                         actualModel, actualEffort, [], actualAgentName, actualAgentInstructions, DuoMode.Solo,
@@ -1486,7 +1512,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             }
             else
             {
-                await RequireChatOriginal().ReadStreamAsync(_sessions.SendWithCommittedInputAsync(
+                var ordinarySendOwner = RequireChatOriginal();
+                await ordinarySendOwner.ReadStreamAsync(_sessions.SendWithCommittedInputFromOriginalAsync(
+                               ordinarySendOwner.RunAcceptedSourceCallback,
                                originalConversation,
                                instruction,
                                admittedModel,
@@ -1499,7 +1527,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                null,
                                null,
                                _attachedImages.Count == 0 ? null : _attachedImages.ToArray(),
-                               originalSendCancellation.Token,
+                               originalSendToken,
                                prompts: _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray(),
                                registeredContext: BuildRegisteredContext(),
                                generationOptions: _preferences.GenerationOptions,
@@ -1546,7 +1574,6 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         finally
         {
-            _originalSendInFlight = false;
             if (initialTaskObservation is not null)
                 await RequireChatOriginal().AwaitAsync(FinishOriginalInitialTaskObservationAsync(initialTaskObservation));
             await RequireChatOriginal().AwaitAsync(FinishOriginalSendAsync(originalSendCancellation));

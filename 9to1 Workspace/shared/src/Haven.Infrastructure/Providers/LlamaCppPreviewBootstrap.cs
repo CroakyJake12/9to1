@@ -9,7 +9,7 @@ using Haven.Core;
 namespace Haven.Infrastructure;
 
 /// <summary>
-/// Result of discovering/validating the staged Linux ARM64 Dulche preview assets against the
+/// Result of discovering/validating the explicitly targeted Linux Dulche preview assets against the
 /// canonical bundle manifest/receipt and the canonical per-user modelctl store. A field is only
 /// reported when actually read and verified; every missing/mismatched prerequisite is surfaced as an
 /// actionable deficiency, never hidden.
@@ -68,8 +68,9 @@ public sealed record ModelCtlResult(int ExitCode, string StdOut, string StdErr)
 public delegate Task<ModelCtlResult> ModelCtlRunner(ModelCtlRequest request, CancellationToken token);
 
 /// <summary>
-/// App/Home-owned bootstrap for the local chat preview on the owner-confirmed Linux ARM/aarch64
-/// target. It reconciles the EXISTING canonical contracts:
+/// App/Home-owned bootstrap for the local chat preview. Linux ARM/aarch64 remains the default;
+/// production on an actual x64 process explicitly selects the separate linux/x86_64 verifier.
+/// It reconciles the EXISTING canonical contracts:
 /// <list type="bullet">
 /// <item><description>Runtime bundle manifest/receipt at <c>/usr/lib/haven/inference/bundle</c>
 /// (existing schema; asset fields installPath, expectedSha256/sha256, expectedSize/size, platform,
@@ -95,6 +96,7 @@ public sealed class LlamaCppPreviewBootstrap
     public const string LlamaServerRelativeInstallPath = "llama.cpp/llama-server";
     public const string LlamaServerAbsolutePath = RuntimeRoot + "/" + LlamaServerRelativeInstallPath;
     public const int ArmAarch64ElfMachine = 183;
+    public const int X64ElfMachine = 62;
     public const int ElfClass64 = 2;
 
     public const string ModelRootRelative = "haven/models";
@@ -122,6 +124,9 @@ public sealed class LlamaCppPreviewBootstrap
     private readonly string _defaultSeedSha256;
     private readonly long _defaultSeedSize;
     private readonly ModelCtlRunner? _modelCtlRunner;
+    private readonly string _modelCtlPath;
+    private readonly int _expectedElfMachine;
+    private readonly string _expectedArchitecture;
 
     public LlamaCppPreviewBootstrap(
         string? bundleDir = null,
@@ -132,7 +137,9 @@ public sealed class LlamaCppPreviewBootstrap
         string? defaultSeedId = null,
         string? defaultSeedSha256 = null,
         long? defaultSeedSize = null,
-        ModelCtlRunner? modelCtlRunner = null)
+        ModelCtlRunner? modelCtlRunner = null,
+        LlamaCppPreviewTarget target = LlamaCppPreviewTarget.LinuxArm64,
+        string? modelCtlPath = null)
     {
         _bundleDir = bundleDir ?? BundleDir;
         _runtimeRoot = runtimeRoot ?? RuntimeRoot;
@@ -143,12 +150,20 @@ public sealed class LlamaCppPreviewBootstrap
         _defaultSeedSha256 = defaultSeedSha256 ?? DefaultSeedModelSha256;
         _defaultSeedSize = defaultSeedSize ?? DefaultSeedModelSize;
         _modelCtlRunner = modelCtlRunner;
+        (_expectedElfMachine, _expectedArchitecture) = target switch
+        {
+            LlamaCppPreviewTarget.LinuxArm64 => (ArmAarch64ElfMachine, "aarch64"),
+            LlamaCppPreviewTarget.LinuxX64 => (X64ElfMachine, "x86_64"),
+            _ => throw new ArgumentOutOfRangeException(nameof(target))
+        };
+        _modelCtlPath = modelCtlPath ?? ModelCtlScriptPath;
     }
 
     public bool IsLinux => OperatingSystem.IsLinux();
     public string ModelRoot => _modelRoot;
     public string BundleDirValue => _bundleDir;
     public string RuntimeRootValue => _runtimeRoot;
+    public string ModelCtlPathValue => _modelCtlPath;
 
     /// <summary>Raw owned worker transport socket (NOT the broker control socket).</summary>
     public string DefaultWorkerSocketPath
@@ -173,7 +188,7 @@ public sealed class LlamaCppPreviewBootstrap
 
         if (!IsLinux)
         {
-            deficiencies.Add("The verified local peer path is Linux AF_UNIX only; the confirmed target is Linux arm64/aarch64.");
+            deficiencies.Add($"The verified local peer path is Linux AF_UNIX only; the selected target is linux/{_expectedArchitecture}.");
             return new LlamaCppPreviewDiscovery(false, null, null, null, null, null, null, null, null, deficiencies);
         }
 
@@ -199,11 +214,11 @@ public sealed class LlamaCppPreviewBootstrap
             {
                 var manifest = manifestDoc.RootElement;
                 var host = manifest.TryGetProperty("host", out var hostProp) ? hostProp : default;
-                var hostArch = host.TryGetProperty("arch", out var hostArchProp) ? hostArchProp.GetString() : null;
-                var hostOs = host.TryGetProperty("os", out var hostOsProp) ? hostOsProp.GetString() : null;
+                var hostArch = host.ValueKind == JsonValueKind.Object && host.TryGetProperty("arch", out var hostArchProp) ? hostArchProp.GetString() : null;
+                var hostOs = host.ValueKind == JsonValueKind.Object && host.TryGetProperty("os", out var hostOsProp) ? hostOsProp.GetString() : null;
                 if (!string.Equals(hostOs, "linux", StringComparison.Ordinal)
-                    || !string.Equals(hostArch, "aarch64", StringComparison.Ordinal))
-                    deficiencies.Add("The canonical bundle host is not the confirmed linux/aarch64 target.");
+                    || !string.Equals(hostArch, _expectedArchitecture, StringComparison.Ordinal))
+                    deficiencies.Add($"The canonical bundle host is not the selected linux/{_expectedArchitecture} target.");
 
                 // Canonical script state: only an admitted, fully-present bundle (no missing required
                 // assets) is usable. The installed manifest carries state "ready"/"degraded"/"invalid".
@@ -239,7 +254,7 @@ public sealed class LlamaCppPreviewBootstrap
             && !string.IsNullOrWhiteSpace(modelSha)
             && !string.IsNullOrWhiteSpace(modelAlias)
             && elfClass == ElfClass64
-            && elfMachine == ArmAarch64ElfMachine;
+            && elfMachine == _expectedElfMachine;
 
         return new LlamaCppPreviewDiscovery(available, executablePath, executableSha, modelPath, modelSha,
             modelAlias, license, elfClass, elfMachine, deficiencies);
@@ -249,7 +264,7 @@ public sealed class LlamaCppPreviewBootstrap
     /// the discovery is fully verified; unavailable assets stay actionable degraded.</summary>
     public LlamaCppLocalEndpointOptions BuildEndpointOptions(LlamaCppPreviewDiscovery discovery)
     {
-        if (!IsLinux || !discovery.Available)
+        if (!IsLinux || !discovery.Available || discovery.ElfClass != ElfClass64 || discovery.ElfMachine != _expectedElfMachine)
             return new LlamaCppLocalEndpointOptions();
         return new LlamaCppLocalEndpointOptions(
             Enabled: true,
@@ -269,7 +284,7 @@ public sealed class LlamaCppPreviewBootstrap
     /// explicit callers are never forced into the bundled profile.</summary>
     public LlamaCppRuntimeOptions BuildRuntimeOptions(LlamaCppPreviewDiscovery discovery)
     {
-        if (!IsLinux || !discovery.Available)
+        if (!IsLinux || !discovery.Available || discovery.ElfClass != ElfClass64 || discovery.ElfMachine != _expectedElfMachine)
             return new LlamaCppRuntimeOptions();
         var bundledQwen =
             string.Equals(discovery.ModelAlias, DefaultSeedModelId, StringComparison.Ordinal)
@@ -365,7 +380,7 @@ public sealed class LlamaCppPreviewBootstrap
         // the process exit before returning; never fire-and-forget, shell, or recode the algorithm.
         var request = new ModelCtlRequest(
             ModelCtlPythonPath,
-            ModelCtlScriptPath,
+            _modelCtlPath,
             _modelRoot,
             DefaultRuntimeDir(),
             seedBlobPath,
@@ -462,7 +477,7 @@ public sealed class LlamaCppPreviewBootstrap
     private sealed record ClosureResult(string? ExecutablePath, string? ExecutableSha256, int? ElfClass, int? ElfMachine, string? License);
 
     /// <summary>Validates the FULL bounded runtime closure from the manifest: every declared asset must
-    /// be present, size/SHA-256/ELF(183) verified, bounded under the runtime root, with no extra or
+    /// be present, size/SHA-256/target ELF verified, bounded under the runtime root, with no extra or
     /// escaping files. Also reconciles the canonical receipt.</summary>
     private async Task<ClosureResult> ValidateRuntimeClosureAsync(
         JsonElement manifest, List<string> deficiencies, CancellationToken cancellationToken)
@@ -487,6 +502,8 @@ public sealed class LlamaCppPreviewBootstrap
         var closureRelativeDeclared = new HashSet<string>(StringComparer.Ordinal);
         foreach (var asset in assetsProp.EnumerateArray())
         {
+            if (asset.ValueKind != JsonValueKind.Object)
+            { deficiencies.Add("The canonical bundle contains a non-object asset."); continue; }
             var engine = asset.TryGetProperty("engine", out var engineProp) ? engineProp.GetString() : null;
             if (!string.Equals(engine, "llamacpp", StringComparison.Ordinal)) continue;
             var logical = asset.TryGetProperty("logical", out var logicalProp) ? logicalProp.GetString() : null;
@@ -495,7 +512,7 @@ public sealed class LlamaCppPreviewBootstrap
 
             var kind = asset.TryGetProperty("kind", out var kindProp) ? kindProp.GetString() : null;
             var isBinary = string.Equals(kind, "runtime.binary", StringComparison.Ordinal);
-            var isServer = isBinary && installPath.EndsWith("llama-server", StringComparison.Ordinal);
+            var isServer = isBinary && installPath == LlamaServerRelativeInstallPath;
             var normalized = installPath.Replace('\\', '/');
             if (!normalized.StartsWith(BundleClosureRelativeDir + "/", StringComparison.Ordinal))
             {
@@ -505,6 +522,12 @@ public sealed class LlamaCppPreviewBootstrap
             if (isServer)
                 license = asset.TryGetProperty("license", out var licProp) ? licProp.GetString() : null;
 
+            if (!asset.TryGetProperty("platform", out var platform) || platform.ValueKind != JsonValueKind.Object
+                || !platform.TryGetProperty("os", out var assetOs) || assetOs.GetString() != "linux"
+                || !platform.TryGetProperty("arch", out var assetArch) || assetArch.GetString() != _expectedArchitecture)
+                deficiencies.Add($"Bundle asset '{logical ?? installPath}' platform does not match linux/{_expectedArchitecture}.");
+            if (declared.ContainsKey(normalized) || declared.Values.Any(value => value.Logical == (logical ?? installPath)))
+            { deficiencies.Add($"Duplicate bundle asset identity: '{logical ?? installPath}'."); continue; }
             declared[normalized] = new DeclaredAsset(logical ?? installPath, isBinary, isServer,
                 ReadAssetSize(asset), ReadAssetHex(asset),
                 !asset.TryGetProperty("required", out var reqProp) || reqProp.GetBoolean());
@@ -519,7 +542,6 @@ public sealed class LlamaCppPreviewBootstrap
             var rel = kv.Key;
             var da = kv.Value;
             cancellationToken.ThrowIfCancellationRequested();
-            if (!da.Required) continue;
 
             var absolute = Path.GetFullPath(Path.Combine(_runtimeRoot, rel.Replace('/', Path.DirectorySeparatorChar)));
             if (!absolute.StartsWith(runtimePrefix, StringComparison.Ordinal)
@@ -537,7 +559,7 @@ public sealed class LlamaCppPreviewBootstrap
             }
             catch (IOException) { }
 
-            if (!final.StartsWith(runtimePrefix, StringComparison.Ordinal))
+            if (!final.StartsWith(closurePrefix, StringComparison.Ordinal))
             {
                 deficiencies.Add($"Declared closure asset '{rel}' symlink-target escapes the runtime root.");
                 continue;
@@ -546,10 +568,12 @@ public sealed class LlamaCppPreviewBootstrap
             var info = new FileInfo(final);
             if (!info.Exists)
             {
-                deficiencies.Add($"Declared closure asset is absent: '{rel}'.");
+                if (da.Required) deficiencies.Add($"Declared closure asset is absent: '{rel}'.");
                 continue;
             }
 
+            if (da.Size is null or <= 0 || !IsValidSha256Hex(da.Sha))
+                deficiencies.Add($"Declared closure asset '{rel}' lacks a valid size/SHA-256 pin.");
             if (da.Size is not null && info.Length != da.Size)
                 deficiencies.Add($"Declared closure asset '{rel}' size {info.Length} != declared {da.Size}.");
 
@@ -557,16 +581,18 @@ public sealed class LlamaCppPreviewBootstrap
             if (!string.IsNullOrWhiteSpace(da.Sha) && !string.Equals(actualSha, da.Sha, StringComparison.Ordinal))
                 deficiencies.Add($"Declared closure asset '{rel}' SHA-256 does not match the bundle pin.");
 
-            if (da.IsBinary)
+            // A native library cannot evade architecture verification by being relabelled as an
+            // opaque bundle asset. Non-ELF notices remain ordinary hash-verified data.
+            var elf = TryReadElfMachine(final);
+            if (da.IsBinary || elf is not null)
             {
-                var elf = TryReadElfMachine(final);
                 if (elf is null) deficiencies.Add($"Declared runtime asset '{rel}' is not a valid ELF header.");
                 else
                 {
                     var (k, m) = elf.Value;
                     if (k != ElfClass64) deficiencies.Add($"Declared runtime asset '{rel}' ELF class {k} is not 64-bit.");
-                    if (m != ArmAarch64ElfMachine)
-                        deficiencies.Add($"Declared runtime asset '{rel}' ELF e_machine {m} is not ARM AArch64 (183); an x86_64 binary is a mismatch even if renamed.");
+                    if (m != _expectedElfMachine)
+                        deficiencies.Add($"Declared runtime asset '{rel}' ELF e_machine {m} is not the selected {_expectedArchitecture} ({_expectedElfMachine}); relabelling cannot change architecture.");
                     else if (da.IsServer)
                     {
                         executablePath = absolute;
@@ -609,13 +635,13 @@ public sealed class LlamaCppPreviewBootstrap
             deficiencies.Add($"The bounded runtime closure directory is missing: '{closureRoot}'.");
         }
 
-        await ReconcileReceiptAsync(ReadBundleId(manifest), executableSha, deficiencies, cancellationToken).ConfigureAwait(false);
+        await ReconcileReceiptAsync(ReadBundleId(manifest), declared.Values, deficiencies, cancellationToken).ConfigureAwait(false);
 
         return new(executablePath, executableSha, elfClass, elfMachine, license);
     }
 
     private async Task ReconcileReceiptAsync(
-        string? bundleId, string? serverSha, List<string> deficiencies, CancellationToken cancellationToken)
+        string? bundleId, IEnumerable<DeclaredAsset> declared, List<string> deficiencies, CancellationToken cancellationToken)
     {
         var receiptPath = Path.Combine(_bundleDir, BundleReceiptFileName);
         if (!File.Exists(receiptPath))
@@ -627,21 +653,25 @@ public sealed class LlamaCppPreviewBootstrap
         if (doc is null) { deficiencies.Add("The canonical bundle receipt is not valid JSON."); return; }
 
         var r = doc.RootElement;
-        if (bundleId is not null && r.TryGetProperty("bundleId", out var idProp) && idProp.GetString() is { } rid
-            && !string.Equals(rid, bundleId, StringComparison.Ordinal))
-            deficiencies.Add($"The canonical bundle receipt bundleId '{rid}' does not match the manifest '{bundleId}'.");
+        if (string.IsNullOrWhiteSpace(bundleId) || !r.TryGetProperty("bundleId", out var idProp)
+            || !string.Equals(idProp.GetString(), bundleId, StringComparison.Ordinal))
+            deficiencies.Add("The canonical bundle receipt bundleId is missing or does not match the manifest.");
+        if (!r.TryGetProperty("state", out var state) || state.GetString() != "ready")
+            deficiencies.Add("The canonical bundle receipt is not ready.");
 
-        if (r.TryGetProperty("admittedAssets", out var assets) && assets.ValueKind == JsonValueKind.Object)
+        if (!r.TryGetProperty("admittedAssets", out var assets) || assets.ValueKind != JsonValueKind.Object)
+        { deficiencies.Add("The canonical bundle receipt has no admitted asset pins."); return; }
+        foreach (var asset in declared)
         {
-            foreach (var pair in assets.EnumerateObject())
+            if (!assets.TryGetProperty(asset.Logical, out var pin) || pin.ValueKind != JsonValueKind.Object)
             {
-                if (pair.Value.ValueKind != JsonValueKind.Object) continue;
-                var sha = pair.Value.TryGetProperty("sha256", out var sp) ? sp.GetString() : null;
-                if (!IsValidSha256Hex(sha)) continue;
-                if (pair.Name.EndsWith("llama-server", StringComparison.Ordinal) && serverSha is not null
-                    && !string.Equals(sha, serverSha, StringComparison.Ordinal))
-                    deficiencies.Add("The canonical bundle receipt llama-server hash does not match the verified installed binary.");
+                if (asset.Required) deficiencies.Add($"The canonical bundle receipt lacks asset '{asset.Logical}'.");
+                continue;
             }
+            var sha = pin.TryGetProperty("sha256", out var sp) ? sp.GetString() : null;
+            var size = pin.TryGetProperty("size", out var sz) && sz.TryGetInt64(out var value) ? value : (long?)null;
+            if (!IsValidSha256Hex(sha) || !string.Equals(sha, asset.Sha, StringComparison.Ordinal) || size is null or <= 0 || size != asset.Size)
+                deficiencies.Add($"The canonical bundle receipt asset '{asset.Logical}' size/SHA-256 does not match the bundle pin.");
         }
     }
 
@@ -709,7 +739,10 @@ public sealed class LlamaCppPreviewBootstrap
         {
             await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
                 64 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
-            return await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+            if (document.RootElement.ValueKind == JsonValueKind.Object) return document;
+            document.Dispose();
+            return null;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
         {

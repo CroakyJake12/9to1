@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Xunit;
 
@@ -182,14 +183,215 @@ public sealed class CuiOwnedTemplateTests
                 Assert.Same(owned, button.Template);
                 window.MouseMove(new Point(40, 40));
                 Assert.True(button.IsPointerOver);
-                Assert.NotEqual(Brushes.Lime, button.Background);
+                Assert.Same(Brushes.Red, button.Background);
+                var frame = Assert.Single(button.GetVisualDescendants().OfType<CuiMaterialBorder>());
+                Assert.NotNull(frame.HoverTint);
                 window.MouseDown(new Point(40, 40), Avalonia.Input.MouseButton.Left);
                 window.MouseUp(new Point(40, 40), Avalonia.Input.MouseButton.Left);
                 Assert.Equal(1, clicks);
                 window.MouseMove(new Point(-10, -10));
                 Assert.Same(Brushes.Red, button.Background);
+                Assert.Null(frame.HoverTint);
             }
             finally { window.Close(); CuiPropertyPresentation.Detach(button); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Hover_wash_preserves_authored_white_gradient_and_material_backgrounds()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader();
+            var (root, diagnostics) = loader.LoadMarkup("<Theme Name='Glow'><Page><Button ID='authored' Content='Custom colour'/></Page></Theme>");
+            Assert.Empty(diagnostics); Assert.NotNull(root);
+            var button = Assert.Single(root!.GetVisualDescendants().OfType<Button>());
+            var window = new Window { Content = root, Width = 300, Height = 120 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var frame = Assert.Single(button.GetVisualDescendants().OfType<CuiMaterialBorder>());
+                var white = new SolidColorBrush(Colors.White);
+                var ink = new SolidColorBrush(Colors.Black);
+                CuiPropertyPresentation.Set(button, "Background", white, CuiPropertyLevel.Instance, "authored white");
+                CuiPropertyPresentation.Set(button, "Foreground", ink, CuiPropertyLevel.Instance, "authored ink");
+                CuiPropertyPresentation.Set(button, "AccentRole", CuiAccentRole.Primary, CuiPropertyLevel.Instance, "glow action");
+                var glow = new DropShadowEffect { Color = Colors.Fuchsia, BlurRadius = 12, Opacity = .25 };
+                button.Resources["CuiTheme"] = CuiTheme.Glow;
+                button.Resources["CuiButtonMotionDuration"] = TimeSpan.Zero;
+                button.Resources["CuiAccentPrimaryHoverEffect"] = glow;
+                window.UpdateLayout();
+                var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value;
+                window.MouseMove(point); window.UpdateLayout();
+
+                Assert.True(button.IsPointerOver);
+                Assert.Same(white, button.Background);
+                Assert.Same(ink, button.Foreground);
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), frame.HoverTint);
+                AssertGlow(frame.Effect);
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<CuiMaterialBorder>(),
+                    other => !ReferenceEquals(other, frame) && other.HoverTint is not null);
+
+                white.Color = Colors.Black;
+                Assert.Same(white, button.Background);
+                Assert.Equal(Color.FromArgb(20, 255, 255, 255), frame.HoverTint);
+                white.Color = Colors.White;
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), frame.HoverTint);
+
+                button.Resources["CuiHighContrast"] = true;
+                Assert.Equal(Color.FromArgb(36, 0, 0, 0), frame.HoverTint);
+                Assert.Same(white, button.Background);
+                Assert.Null(frame.Effect);
+                button.Resources["CuiHighContrast"] = false;
+                Assert.NotNull(frame.HoverTint);
+                AssertGlow(frame.Effect);
+
+                var black = new SolidColorBrush(Colors.Black);
+                CuiPropertyPresentation.Set(button, "Background", black, CuiPropertyLevel.Instance, "authored black");
+                Assert.Same(black, button.Background);
+                Assert.Equal(Color.FromArgb(20, 255, 255, 255), frame.HoverTint);
+
+                var gradient = new LinearGradientBrush
+                {
+                    GradientStops = [new GradientStop(Colors.White, 0), new GradientStop(Colors.White, 1)]
+                };
+                CuiPropertyPresentation.Set(button, "Background", gradient, CuiPropertyLevel.Instance, "authored gradient");
+                Assert.Same(gradient, button.Background);
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), frame.HoverTint);
+                gradient.GradientStops[0].Color = Colors.Black;
+                Assert.Equal(Color.FromArgb(20, 255, 255, 255), frame.HoverTint);
+
+                var material = new CuiMaterialBrush(Colors.White, .8, 4, .01);
+                CuiPropertyPresentation.Set(button, "Background", material, CuiPropertyLevel.Instance, "authored material");
+                Assert.Same(material, button.Background);
+                Assert.NotNull(frame.HoverTint);
+
+                var customMaterial = new CuiCustomMaterialBrush(new CuiCustomFill(
+                    CuiCustomFillKind.SolidColour, new CuiCustomColour("#FFFFFF", 0, 4)));
+                CuiPropertyPresentation.Set(button, "Background", customMaterial, CuiPropertyLevel.Instance, "authored custom material");
+                Assert.Same(customMaterial, button.Background);
+                Assert.NotNull(frame.HoverTint);
+
+                window.MouseMove(new Point(-10, -10)); window.UpdateLayout();
+                Assert.Null(frame.HoverTint);
+                Assert.Same(customMaterial, button.Background);
+                window.MouseMove(point); window.UpdateLayout();
+                Assert.NotNull(frame.HoverTint);
+                Assert.Same(customMaterial, button.Background);
+            }
+            finally { window.Close(); CuiPropertyPresentation.Detach(button); }
+
+            static void AssertGlow(IEffect? effect)
+            {
+                var shadow = Assert.IsAssignableFrom<IDropShadowEffect>(effect);
+                Assert.Equal(Colors.Fuchsia, shadow.Color);
+                Assert.Equal(12d, shadow.BlurRadius);
+                Assert.Equal(.25, shadow.Opacity);
+            }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Hover_surface_opt_in_paints_only_the_authored_container_group()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var root = new CuiContainerControl("Vertical Stack") { Width = 300, Height = 120 };
+            var plain = new CuiContainerControl("Horizontal Stack") { Height = 48 };
+            var group = new CuiContainerControl("Horizontal Stack") { Height = 48 };
+            var title = new TextBlock { Text = "Workspace" };
+            plain.Layout.Children.Add(new TextBlock { Text = "Plain container" });
+            group.Layout.Children.Add(title);
+            group.Classes.Add("cui-hover-surface");
+            root.Layout.Children.Add(plain);
+            root.Layout.Children.Add(group);
+            foreach (var surface in new[] { root, plain, group }) CuiPropertyPresentation.Attach(surface);
+            var authored = new SolidColorBrush(Colors.White);
+            CuiPropertyPresentation.Set(group, "Background", authored, CuiPropertyLevel.Instance, "authored browser row");
+            var window = new Window { Content = root };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var point = title.TranslatePoint(new Point(2, 2), window)!.Value;
+                window.MouseMove(point); window.UpdateLayout();
+                Assert.True(group.IsPointerOver);
+                Assert.Same(authored, group.Background);
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), group.HoverTint);
+                Assert.Null(plain.HoverTint);
+
+                group.Classes.Remove("cui-hover-surface");
+                Assert.Null(group.HoverTint);
+                group.Classes.Add("cui-hover-surface");
+                Assert.Equal(Color.FromArgb(20, 0, 0, 0), group.HoverTint);
+
+                window.MouseMove(new Point(-10, -10)); window.UpdateLayout();
+                Assert.Null(group.HoverTint);
+                Assert.Same(authored, group.Background);
+            }
+            finally
+            {
+                window.Close();
+                foreach (var surface in new[] { root, plain, group }) CuiPropertyPresentation.Detach(surface);
+            }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task MenuItem_selection_uses_derived_wash_and_pressed_state_suppresses_it()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader();
+            var (root, diagnostics) = loader.LoadMarkup("<Theme Name='Professional'><Container Type='Menu'><Button Type='Menu Item' ID='row' Content='Open'/></Container></Theme>");
+            Assert.Empty(diagnostics); Assert.NotNull(root);
+            var window = new Window { Content = root, Width = 280, Height = 100 };
+            MenuItem? item = null;
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                item = Assert.Single(root!.GetVisualDescendants().OfType<MenuItem>());
+                var authored = new SolidColorBrush(Colors.White);
+                CuiPropertyPresentation.Set(item, "Background", authored, CuiPropertyLevel.Instance, "authored menu row");
+                var frame = Assert.Single(item.GetVisualDescendants().OfType<CuiMaterialBorder>());
+                var point = item.TranslatePoint(new Point(item.Bounds.Width / 2, item.Bounds.Height / 2), window)!.Value;
+                window.MouseMove(point); window.UpdateLayout();
+                Assert.True(item.IsPointerOver);
+                Assert.True(item.IsSelected);
+                Assert.NotNull(frame.HoverTint);
+                Assert.Same(authored, item.Background);
+
+                window.MouseDown(point, Avalonia.Input.MouseButton.Left); window.UpdateLayout();
+                Assert.Contains(":pressed", item.Classes);
+                Assert.Null(frame.HoverTint);
+                Assert.True(item.IsSelected);
+                Assert.Same(authored, item.Background);
+
+                window.MouseUp(point, Avalonia.Input.MouseButton.Left); window.UpdateLayout();
+                Assert.DoesNotContain(":pressed", item.Classes);
+                Assert.NotNull(frame.HoverTint);
+                Assert.True(item.IsSelected);
+                Assert.Same(authored, item.Background);
+
+                window.MouseMove(new Point(-10, -10)); window.UpdateLayout();
+                Assert.False(item.IsPointerOver);
+                item.IsSelected = true; // Exercise keyboard-selected state without pointer hover.
+                Assert.True(item.IsSelected);
+                Assert.True(item.IsKeyboardFocusWithin);
+                Assert.True(item.TryFindResource("CuiFocusBrush", out var keyboardFocusBrush));
+                Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(keyboardFocusBrush).Color,
+                    Assert.IsAssignableFrom<ISolidColorBrush>(item.BorderBrush).Color);
+                Assert.NotNull(frame.HoverTint); // keyboard/menu selection remains visible outside the pointer.
+                Assert.Same(authored, item.Background);
+
+                CuiPropertyPresentation.Set(item, "IsEnabled", false, CuiPropertyLevel.Instance, "disable selected item");
+                Assert.False(item.IsEffectivelyEnabled);
+                Assert.Null(frame.HoverTint);
+                Assert.Same(authored, item.Background);
+            }
+            finally { window.Close(); if (item is not null) CuiPropertyPresentation.Detach(item); }
         }, CancellationToken.None);
     }
 

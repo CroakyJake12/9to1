@@ -461,7 +461,9 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 new CuiRichParser().Parse("<Cui><Container Type=\"Vertical Stack\"><Text id=\"scene-availability\" text=\"{Binding AvailabilityMessage}\" accessible-name=\"Application availability\" /></Container></Cui>");
             var loaded = next.TryLoad(document);
             if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-                throw new InvalidDataException("The canonical CUI scene did not produce a usable root control.");
+                throw new InvalidDataException("The canonical CUI scene did not produce a usable root control. " +
+                    string.Join("; ", loaded.Diagnostics.Where(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error)
+                        .Select(diagnostic => $"{diagnostic.Code}: {diagnostic.Message}")));
             next.WireBindings(loaded.Root);
             // A failed replacement attempt must not freeze the retained scene.
             // Liveness follows the exact mounted binding, not the latest Show generation.
@@ -544,7 +546,9 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             root = publication.Root = loaded.Root;
             var ownsBackdrop = next.RootOwnsBackdrop;
             if (root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-                throw new InvalidDataException("The canonical CUI scene did not produce a usable root control.");
+                throw new InvalidDataException("The canonical CUI scene did not produce a usable root control. " +
+                    string.Join("; ", loaded.Diagnostics.Where(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error)
+                        .Select(diagnostic => $"{diagnostic.Code}: {diagnostic.Message}")));
             DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
             next.WireBindings(root);
             DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);

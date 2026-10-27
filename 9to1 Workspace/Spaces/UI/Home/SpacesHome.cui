@@ -55,8 +55,12 @@
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
       <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}" Background="{Resource CuiBackgroundBrush}">
-        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="0" Background="{Resource CuiBackgroundBrush}">
-          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="70" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
+        <Container id="spaces-layout" Type="Grid" RowSizes="72 1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="0" Background="{Resource CuiBackgroundBrush}">
+          <Container id="space-app-header" Type="Horizontal Stack" Column="1" ColumnSpan="2" Padding="24 14" CellGap="14" Background="{Resource CuiPanelBrush}" AccessibleName="Current Space">
+            <Image Source="{Binding selection.iconSource}" Width="32" Height="32" VerticalAlignment="Center" />
+            <Text Text="{Binding selection.name}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" />
+          </Container>
+          <Container id="spaces-sidebar" RowSpan="2" role="navigation" accessible-name="Spaces navigation" width="70" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
             <!--
               The top rail control is a deliberate viewing/managing action: it opens the SAME
               canonical management presentation (the authored space-details region). It never
@@ -102,7 +106,7 @@
             recent conversations. It stays visible while a Space conversation is mounted, and it
             never becomes a cross-Space history list because the rows are scoped to the selection.
           -->
-          <Container id="space-context-sidebar" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="12" CellGap="8" Background="{Resource CuiPanel3Brush}" IsVisible="{Binding spaces.sidebarExpanded}">
+          <Container id="space-context-sidebar" Row="1" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="12" CellGap="8" Background="{Resource CuiPanel3Brush}" IsVisible="{Binding spaces.sidebarExpanded}">
             <!--
               The header control displays the currently selected Space and switches Spaces when
               activated; the adjacent overflow control holds that Space's quick actions. Both popovers
@@ -137,7 +141,7 @@
             <Button id="space-new-chat" HorizontalContentAlignment="Stretch" action="NewChat" accessible-name="{Binding spaces.newConversationAccessibleLabel}" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Container Type="Horizontal Stack" CellGap="8">
                 <Image id="space-new-chat-icon" Source="icon:plus" Width="18" Height="18" VerticalAlignment="Center" />
-                <Text id="space-new-chat-label" text="{Binding spaces.newConversationLabel}" font-size="14" />
+                <Text id="space-new-chat-label" text="{Binding spaces.newConversationLabel}" font-size="16" font-weight="SemiBold" />
               </Container>
             </Button>
             <!--
@@ -150,7 +154,7 @@
               <Button id="open-space-sidebar-item" HorizontalContentAlignment="Stretch" action="OpenSidebarItem" accessible-name="{Binding item.openLabel}" Interactive="{Binding item.isActionable}" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
                 <Container id="space-sidebar-item-row" role="listitem" accessible-name="{Binding item.label}" Type="Horizontal Stack" CellGap="8">
                   <Image id="space-sidebar-item-icon" Source="{Binding item.iconSource}" Width="20" Height="20" VerticalAlignment="Center" accessible-name="{Binding item.label}" />
-                  <Text id="space-sidebar-item-label" text="{Binding item.label}" font-size="14" />
+                  <Text id="space-sidebar-item-label" text="{Binding item.label}" font-size="16" />
                 </Container>
               </Button>
             </Repeat>
@@ -182,8 +186,10 @@
                     </If>
                     <If Condition="!{Binding task.completed}">
                       <If Condition="{Binding task.permission}">
-                        <Button action="OpenSidebarTask" content="{Binding task.status}" foreground="{Resource CuiInformationBrush}" font-weight="SemiBold" Tooltip="{Binding task.detail}" accessible-name="{Binding task.status}" Background="{Resource CuiTransparentBrush}" BorderWidth="0" />
-                        <Button id="space-task-review" action="ReviewSidebarTask" content="Review permission" accessible-name="Review this task’s actual permission request" />
+                        <Container Type="Vertical Stack" CellGap="4">
+                          <Button action="OpenSidebarTask" content="{Binding task.status}" foreground="{Resource CuiInformationBrush}" font-weight="SemiBold" Tooltip="{Binding task.detail}" accessible-name="{Binding task.status}" Background="{Resource CuiTransparentBrush}" BorderWidth="0" />
+                          <Button id="space-task-review" action="ReviewSidebarTask" content="Review permission" accessible-name="Review this task’s actual permission request" />
+                        </Container>
                       </If>
                       <If Condition="!{Binding task.permission}">
                         <Button action="OpenSidebarTask" content="{Binding task.status}" font-weight="SemiBold" Tooltip="{Binding task.detail}" accessible-name="{Binding task.status}" Background="{Resource CuiTransparentBrush}" BorderWidth="0" />
@@ -222,35 +228,37 @@
               </Container>
             </If>
             <If Condition="!{Binding spaces.isTasksSpace}">
-            <Container id="space-recent-chats-heading-row" Type="Vertical Stack" Padding="8">
-              <Text id="space-recent-chats-heading" text="{Binding spaces.conversationHistoryHeading}" font-size="12" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
-              <If Condition="{Binding spaces.canSearchConversations}">
-                <Container id="space-history-search" Type="Vertical Stack" CellGap="6" accessible-name="Find saved chats in this Space">
-                  <Input id="space-history-query" Type="Text" Value="{Binding spaces.conversationQuery, mode=TwoWay}" placeholdertext="Find chat titles in this Space" accessible-name="Find saved chat titles in this Space" />
-                  <Container Type="Horizontal Stack" CellGap="6">
-                    <Button id="space-history-search-button" action="SearchConversationTitles" content="Search" accessible-name="Search saved chat titles in this Space" />
-                    <Button id="space-history-clear-button" action="ClearConversationSearch" content="Clear" accessible-name="Clear chat search and show recent chats" />
+              <Container Type="Vertical Stack" CellGap="4">
+                <Container id="space-recent-chats-heading-row" Type="Vertical Stack" Padding="8">
+                  <Text id="space-recent-chats-heading" text="{Binding spaces.conversationHistoryHeading}" font-size="14" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+                  <If Condition="{Binding spaces.canSearchConversations}">
+                    <Container id="space-history-search" Type="Vertical Stack" CellGap="6" accessible-name="Find saved chats in this Space">
+                      <Input id="space-history-query" Type="Text" Value="{Binding spaces.conversationQuery, mode=TwoWay}" placeholdertext="Find chat titles in this Space" accessible-name="Find saved chat titles in this Space" />
+                      <Container Type="Horizontal Stack" CellGap="6">
+                        <Button id="space-history-search-button" action="SearchConversationTitles" content="Search" accessible-name="Search saved chat titles in this Space" />
+                        <Button id="space-history-clear-button" action="ClearConversationSearch" content="Clear" accessible-name="Clear chat search and show recent chats" />
+                      </Container>
+                    </Container>
+                  </If>
+                  <Text id="space-history-notice" text="{Binding spaces.conversationHistoryNotice}" font-size="12" foreground="{Resource CuiTextSoftBrush}" accessible-name="Chat history search status" />
+                </Container>
+                <Container id="space-recent-chats-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
+                <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">
+                  <Container id="space-conversation-row" role="listitem" accessible-name="{Binding conversation.title}" Type="Vertical Stack" CellGap="2">
+                    <Button id="open-space-conversation" HorizontalContentAlignment="Stretch" action="OpenConversation" accessible-name="{Binding conversation.openLabel}" Selected="{Binding conversation.isCurrent}" Padding="12" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+                      <Container Type="Vertical Stack" CellGap="2">
+                        <Text id="space-conversation-title" text="{Binding conversation.title}" font-size="15" />
+                        <Text id="space-conversation-updated" text="{Binding conversation.updatedLabel}" foreground="{Resource CuiTextSoftBrush}" font-size="12" />
+                      </Container>
+                    </Button>
                   </Container>
-                </Container>
-              </If>
-              <Text id="space-history-notice" text="{Binding spaces.conversationHistoryNotice}" font-size="12" foreground="{Resource CuiTextSoftBrush}" accessible-name="Chat history search status" />
-            </Container>
-            <Container id="space-recent-chats-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
-            <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">
-              <Container id="space-conversation-row" role="listitem" accessible-name="{Binding conversation.title}" Type="Vertical Stack" CellGap="2">
-                <Button id="open-space-conversation" HorizontalContentAlignment="Stretch" action="OpenConversation" accessible-name="{Binding conversation.openLabel}" Selected="{Binding conversation.isCurrent}" Padding="12" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-                <Container Type="Vertical Stack" CellGap="2">
-                  <Text id="space-conversation-title" text="{Binding conversation.title}" font-size="14" />
-                  <Text id="space-conversation-updated" text="{Binding conversation.updatedLabel}" foreground="{Resource CuiTextSoftBrush}" font-size="12" />
-                </Container>
-              </Button>
+                </Repeat>
+                <If Condition="!{Binding spaces.hasConversations}">
+                  <Container id="space-empty-history-row" Type="Vertical Stack" Padding="8" CellGap="8">
+                    <Text id="space-conversations-empty" text="{Binding spaces.conversationHistoryEmpty}" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
+                </If>
               </Container>
-            </Repeat>
-            <If Condition="!{Binding spaces.hasConversations}">
-              <Container id="space-empty-history-row" Type="Vertical Stack" Padding="8" CellGap="8">
-                <Text id="space-conversations-empty" text="{Binding spaces.conversationHistoryEmpty}" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
-              </Container>
-            </If>
             </If>
           </Container>
 
@@ -261,8 +269,8 @@
             and the workspace, including its chat/history sidebar, stay on screen together. The
             summary returns when the workspace retires; nothing here invents a second navigation.
           -->
-          <Container id="space-app-content" accessible-name="Space workspace" Type="Overlay" Column="2" IsVisible="{Binding spaces.showWorkspace}" Background="{Resource CuiWorkspaceBrush}" CornerRadius="12" />
-          <Container id="space-details" accessible-name="Selected Space" Column="2" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10" IsVisible="{Binding spaces.showSummary}">
+          <Container id="space-app-content" Row="1" accessible-name="Space workspace" Type="Overlay" Column="2" IsVisible="{Binding spaces.showWorkspace}" Background="{Resource CuiWorkspaceBrush}" CornerRadius="12" />
+          <Container id="space-details" Row="1" accessible-name="Selected Space" Column="2" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10" IsVisible="{Binding spaces.showSummary}">
             <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
             <!-- While the manager is open over a mounted Space workspace, an explicit Return restores
                  the SAME mounted workspace/chat instance; it never detaches or changes the chat. -->

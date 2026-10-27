@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -184,19 +185,28 @@ internal sealed class BrowseEngineViewport : ContentControl
 {
     private readonly BrowseNativeWorkspace _workspace;
     private CuiSceneHost? _findKeyScope;
+    private readonly Grid _root = new();
     private readonly Grid _surfaces = new();
+    private readonly Canvas _dragAnchorLayer = new() { ClipToBounds = false, IsHitTestVisible = false };
+    private readonly Border _tabDragAnchor = new() { Name = "BrowseTabDragAnchor", Width = 1, Height = 1, Background = Brushes.Transparent,
+        IsHitTestVisible = false };
     private readonly Border _splitDivider = new() { Background = Brushes.Gray, Width = 1, IsVisible = false };
     private readonly Dictionary<IBrowseEngineTab, Control> _originalViews = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<IBrowseAppContentSession, Border> _originalAppViews = new(ReferenceEqualityComparer.Instance);
     private BrowseNativeWorkspace.TabRow? _tabDragSource;
     private IPointer? _tabDragPointer;
+    private IInputElement? _tabDragCapture;
     private Point _tabDragStart;
     private bool _tabDragActive;
+    private BrowseNativeWorkspace.TabRow? _tabDropTarget;
+    private BrowseNativeWorkspace.TabDropZone _tabDropZone;
+    private Popup? _tabDragPreview;
     private readonly TextBlock _unavailable = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(24),
         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
     public BrowseEngineViewport(BrowseNativeWorkspace workspace)
     {
-        _workspace = workspace; Content = _surfaces;
+        _workspace = workspace; _root.Children.Add(_surfaces); _root.Children.Add(_dragAnchorLayer);
+        _dragAnchorLayer.Children.Add(_tabDragAnchor); Content = _root;
         _surfaces.ColumnDefinitions = new ColumnDefinitions("*,1,*");
         _surfaces.RowDefinitions = new RowDefinitions("*,1,*");
         _surfaces.Children.Add(_unavailable); _surfaces.Children.Add(_splitDivider);
@@ -212,7 +222,6 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.AddHandler(InputElement.PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
-        _findKeyScope?.AddHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost, RoutingStrategies.Tunnel, handledEventsToo: true);
     }
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
     {
@@ -221,7 +230,6 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTabPointerPressed);
         _findKeyScope?.RemoveHandler(InputElement.PointerMovedEvent, OnTabPointerMoved);
         _findKeyScope?.RemoveHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased);
-        _findKeyScope?.RemoveHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost);
         ClearTabDrag();
         _findKeyScope = null;
     }
@@ -229,7 +237,12 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         if (!_workspace.IsReady || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
             !TryFindTabRow(args.Source, out _, out var row)) return;
-        _tabDragSource = row; _tabDragPointer = args.Pointer; _tabDragStart = args.GetPosition(this); _tabDragActive = false;
+        ClearTabDrag();
+        _tabDragSource = row; _tabDragPointer = args.Pointer; _tabDragCapture = args.Pointer.Captured; _tabDragStart = args.GetPosition(this); _tabDragActive = false;
+        // Capture loss is direct and does not reach the scene when capture moves
+        // between sibling controls. Observe the exact captured input owner.
+        if (_tabDragCapture is InputElement captured)
+            captured.AddHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost, RoutingStrategies.Direct);
     }
     private void OnTabPointerMoved(object? sender, PointerEventArgs args)
     {
@@ -240,36 +253,32 @@ internal sealed class BrowseEngineViewport : ContentControl
             var position = args.GetPosition(this);
             var deltaX = position.X - _tabDragStart.X; var deltaY = position.Y - _tabDragStart.Y;
             if (deltaX * deltaX + deltaY * deltaY < 64) return;
+            _tabDragActive = true;
+            ShowTabDragPreview(args.GetPosition(this));
         }
-        _tabDragActive = true; args.Handled = true;
+        else MoveTabDragAnchor(args.GetPosition(this));
+        UpdateTabDropTarget(args.GetPosition(_findKeyScope));
+        args.Handled = true;
     }
     private async void OnTabPointerReleased(object? sender, PointerReleasedEventArgs args)
     {
         var source = _tabDragSource;
         if (source is null || !ReferenceEquals(_tabDragPointer, args.Pointer)) return;
         var wasDrag = _tabDragActive;
+        if (wasDrag && _findKeyScope is { } currentScope) UpdateTabDropTarget(args.GetPosition(currentScope));
+        var target = _tabDropTarget;
+        var zone = _tabDropZone;
         ClearTabDrag();
         if (!wasDrag) return;
-        if (!_workspace.IsCurrentTabRow(source)) return; // Let a stale row's ordinary release continue through CUI.
+        if (!_workspace.IsCurrentTabRow(source)) return;
         args.Handled = true;
-        if (_findKeyScope is not { } scope) return;
-        var point = args.GetPosition(scope);
-        var tabButtons = scope.GetVisualDescendants().OfType<Button>()
-            .Where(button => button.Name == "BrowseTabButton")
-            .ToArray();
-        var targetIndex = Array.FindIndex(tabButtons, button => button.TranslatePoint(default, scope) is { } origin &&
-                new Rect(origin, button.Bounds.Size).Contains(point));
-        if ((uint)targetIndex >= (uint)tabButtons.Length || !TryGetTabRow(tabButtons[targetIndex], out var target) || target is null) return;
-        var targetButton = tabButtons[targetIndex];
-        var targetOrigin = targetButton.TranslatePoint(default, scope);
-        if (targetOrigin is null) return;
+        if (target is null || zone is BrowseNativeWorkspace.TabDropZone.None or BrowseNativeWorkspace.TabDropZone.Invalid ||
+            !_workspace.IsCurrentTabRow(target)) return;
         try
         {
-            await _workspace.ReorderTabRowsAsync(source, target,
-                point.X < targetOrigin.Value.X + targetButton.Bounds.Width / 2);
+            await _workspace.ApplyTabDropAsync(source, target, zone);
         }
-        catch (Exception failure)
-        { System.Diagnostics.Trace.TraceError("Browse retained its original drag-reorder task: {0}", failure); }
+        catch (Exception failure) { System.Diagnostics.Trace.TraceError("Browse retained its original tab-drop task: {0}", failure); }
     }
     private bool TryFindTabRow(object? source, out Button button, out BrowseNativeWorkspace.TabRow row)
     {
@@ -301,10 +310,88 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         if (ReferenceEquals(_tabDragPointer, args.Pointer)) ClearTabDrag();
     }
+    private void ShowTabDragPreview(Point position)
+    {
+        if (_tabDragSource is not { } source || _findKeyScope is not { } scope) return;
+        MoveTabDragAnchor(position);
+        if (_tabDragPreview is null)
+        {
+            var foreground = new SolidColorBrush(source.ForegroundColor);
+            var background = scope.TryFindResource("CuiPanelBrush", out var panel) && panel is IBrush panelBrush
+                ? panelBrush : Brushes.Transparent;
+            var preview = new Border
+            {
+                Width = 190, Height = 34, Padding = new Thickness(12, 4), CornerRadius = new CornerRadius(8),
+                BorderThickness = new Thickness(2), BorderBrush = foreground, Background = background,
+                Opacity = .92, IsHitTestVisible = false, Child = new TextBlock
+                {
+                    Text = source.Label, Foreground = foreground, TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                }
+            };
+            _tabDragPreview = new Popup { PlacementTarget = _tabDragAnchor, Placement = PlacementMode.Bottom, IsLightDismissEnabled = false,
+                IsHitTestVisible = false, TakesFocusFromNativeControl = false, Child = preview };
+            CuiPopupPresentation.RequestTransparency(_tabDragPreview);
+            _root.Children.Add(_tabDragPreview);
+        }
+        _tabDragPreview.IsOpen = true;
+    }
+    private void MoveTabDragAnchor(Point position)
+    {
+        Canvas.SetLeft(_tabDragAnchor, position.X);
+        Canvas.SetTop(_tabDragAnchor, position.Y);
+    }
+    private void UpdateTabDropTarget(Point point)
+    {
+        if (_findKeyScope is not { } scope || !_tabDragActive)
+        { _workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None); _tabDropTarget = null; _tabDropZone = BrowseNativeWorkspace.TabDropZone.None; return; }
+        // Hit-test the actual clipped viewport, so overflow arrows and rows
+        // outside its visible bounds cannot receive a drop. Avoid scanning the
+        // entire app scene for every held pointer movement.
+        var hit = scope.InputHitTest(point) as Visual;
+        var rowControl = hit?.GetSelfAndVisualAncestors().OfType<CuiContainerControl>()
+            .FirstOrDefault(control => control.Name == "BrowseTabRow");
+        var button = rowControl?.AuthoredChildren.OfType<Button>().FirstOrDefault(control => control.Name == "BrowseTabButton");
+        if (rowControl is not null && button is not null && rowControl.TranslatePoint(default, scope) is { } origin &&
+            TryGetTabRow(button, out var row) && row is not null)
+        {
+            var relativeX = Math.Clamp((point.X - origin.X) / Math.Max(1, rowControl.Bounds.Width), 0, 1);
+            var zone = relativeX < .15 ? BrowseNativeWorkspace.TabDropZone.SwapBefore :
+                relativeX < .35 ? BrowseNativeWorkspace.TabDropZone.SplitBefore :
+                relativeX < .65 ? BrowseNativeWorkspace.TabDropZone.Group :
+                relativeX < .85 ? BrowseNativeWorkspace.TabDropZone.SplitAfter : BrowseNativeWorkspace.TabDropZone.SwapAfter;
+            if (_tabDragSource is not null && !_workspace.CanDropTabRows(_tabDragSource, row, zone))
+                zone = BrowseNativeWorkspace.TabDropZone.Invalid;
+            _tabDropTarget = row; _tabDropZone = zone; _workspace.SetTabDropIndicator(row, zone); return;
+        }
+        _tabDropTarget = null; _tabDropZone = BrowseNativeWorkspace.TabDropZone.None;
+        _workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None);
+    }
     private void ClearTabDrag()
-    { _tabDragSource = null; _tabDragPointer = null; _tabDragActive = false; }
+    {
+        var preview = _tabDragPreview;
+        var target = _tabDropTarget;
+        var pointer = _tabDragPointer; var capture = _tabDragCapture; var wasDrag = _tabDragActive;
+        _tabDragPreview = null; _tabDropTarget = null; _tabDropZone = BrowseNativeWorkspace.TabDropZone.None;
+        _tabDragSource = null; _tabDragPointer = null; _tabDragCapture = null; _tabDragActive = false;
+        if (capture is InputElement captured)
+            captured.RemoveHandler(InputElement.PointerCaptureLostEvent, OnTabPointerCaptureLost);
+        if (preview is not null)
+        {
+            preview.IsOpen = false; preview.Child = null; _root.Children.Remove(preview);
+        }
+        // Capture loss resets the donor Button's pressed state even when the
+        // drag consumed release or was cancelled before release. A normal click
+        // keeps its capture so the Button can still perform its own release.
+        if (wasDrag && pointer is not null && capture is not null && ReferenceEquals(pointer.Captured, capture))
+            pointer.Capture(null);
+        target?.SetDropZone(BrowseNativeWorkspace.TabDropZone.None);
+        _workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None);
+    }
     private async void OnFindKeyDown(object? sender, KeyEventArgs args)
     {
+        if (_tabDragActive && args.Key == Key.Escape)
+        { ClearTabDrag(); args.Handled = true; return; }
         if (args.Handled || !_workspace.IsReady || _findKeyScope is not { } scope) return;
         var findBox = scope.GetLogicalDescendants().OfType<TextBox>()
             .SingleOrDefault(control => control.Name == "BrowseFindBox");
@@ -346,7 +433,19 @@ internal sealed class BrowseEngineViewport : ContentControl
         catch (Exception failure)
         { System.Diagnostics.Trace.TraceError("Browse retained its original page-find task: {0}", failure); }
     }
-    private void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => RefreshOriginalViews();
+    private void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (_tabDragSource is not null && !IsTabDragContextCurrent()) ClearTabDrag();
+        RefreshOriginalViews();
+    }
+    private bool IsTabDragContextCurrent()
+    {
+        if (!_workspace.IsReady || _tabDragSource is not { } source || !_workspace.IsCurrentTabRow(source)) return false;
+        if (_tabDropTarget is not { } target) return true;
+        if (!_workspace.IsCurrentTabRow(target)) return false;
+        return _tabDropZone is BrowseNativeWorkspace.TabDropZone.None or BrowseNativeWorkspace.TabDropZone.Invalid ||
+            _workspace.CanDropTabRows(source, target, _tabDropZone);
+    }
     private void RefreshOriginalViews()
     {
         if (!_workspace.IsReady) return;

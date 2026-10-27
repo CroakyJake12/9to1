@@ -270,7 +270,11 @@ public sealed class ChatComposerEmojiPickerViewportTests
         {
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
-            OpenPicker(view, window);
+            var trigger = OpenPicker(view, window);
+
+            Assert.True(view.Bindings.TryGetValue("Composer.EmojiFontFamily", out var emojiFontValue));
+            var emojiFontFamily = Assert.IsType<string>(emojiFontValue);
+            Assert.Equal(emojiFontFamily, trigger.FontFamily?.Name);
 
             var viewport = FindContainer(view, "emoji-grid-viewport");
             Assert.NotNull(viewport);
@@ -278,6 +282,10 @@ public sealed class ChatComposerEmojiPickerViewportTests
             // The emitted cells form a real multi-column grid occupying multiple rows.
             var glyphs = EmojiCells(viewport!);
             Assert.True(glyphs.Length >= 6, "viewport must realize a bounded grid of emoji cells");
+            var unicodeGlyph = glyphs[0];
+            var glyphText = Assert.IsType<string>(unicodeGlyph.Content);
+            Assert.Contains(ComposerEmojiCatalogue.Entries, entry => entry.Text == glyphText);
+            Assert.Equal(emojiFontFamily, unicodeGlyph.FontFamily?.Name);
             var origins = glyphs.Select(button => OriginIn(button, viewport!)).ToArray();
             var rows = origins.Select(origin => origin.Y).Distinct().ToArray();
             Assert.True(rows.Length >= 2, "grid cells must occupy multiple rows");
@@ -632,7 +640,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
     {
         // Every icon tool and the primary action share one consistent 44x44 hit target, while the
         // authored glyph extent is smaller and centered (icon extent and hit target are distinct).
-        var source = new DraftInsertingSource { CanSend = true };
+        var source = new DraftInsertingSource { Draft = "Send this message", CanSend = true };
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();
@@ -708,7 +716,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
     [AvaloniaFact]
     public async Task Primary_send_action_accessibility_reflects_real_operation_and_availability()
     {
-        var source = new DraftInsertingSource { CanSend = true, IsEditing = false };
+        var source = new DraftInsertingSource { Draft = "Send this message", CanSend = true, IsEditing = false };
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();
@@ -721,20 +729,22 @@ public sealed class ChatComposerEmojiPickerViewportTests
             var send = FindButton(view, "send-button");
             Assert.NotNull(send);
             Assert.True(send!.IsEnabled, "send must be enabled while CanSend");
-            Assert.Equal("Send message", send.GetValue(AutomationProperties.NameProperty)?.ToString());
+            Assert.Equal("Send, 1 of 1", send.GetValue(AutomationProperties.NameProperty)?.ToString());
 
-            // Edit state is the REAL current operation: accessible name becomes Update message.
+            // Edit state is the REAL current operation: the shelf announcement names the same
+            // contextual primary action and its current position.
             source.IsEditing = true;
             view.RefreshSurface(); Pump();
-            Assert.Equal("Update message", send.GetValue(AutomationProperties.NameProperty)?.ToString());
+            Assert.Equal("Update message, 1 of 1", send.GetValue(AutomationProperties.NameProperty)?.ToString());
 
-            // Availability is truthful and bound to CanSend, never hidden to force an arrow.
+            // Ineligible actions leave the shelf. The send slot does not remain as an inert button.
             source.CanSend = false;
             view.RefreshSurface(); Pump();
-            Assert.False(send.IsEnabled, "send must be disabled while drafting is not sendable");
+            Assert.False(send.IsVisible, "send must leave the shelf while drafting is not sendable");
 
             source.CanSend = true;
             view.RefreshSurface(); Pump();
+            Assert.True(send.IsVisible);
             Assert.True(send.IsEnabled);
             send.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert.Equal(1, source.SendCount);
@@ -787,7 +797,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
     public async Task Icon_tools_and_primary_action_are_keyboard_focus_reachable()
     {
         // The authored chrome must not suppress keyboard focus: each tool participates in focus.
-        var source = new DraftInsertingSource { CanSend = true };
+        var source = new DraftInsertingSource { Draft = "Send this message", CanSend = true };
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();

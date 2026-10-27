@@ -1,0 +1,277 @@
+using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Haven.Desktop.HavenUI.Backend;
+using Haven.Desktop.Services;
+using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop.Views.Shell.TopRail;
+using Haven.UI;
+using HavenOS.Apps.Assistants.Contracts;
+using Container = Haven.UI.Components.Container;
+using HavenButton = Haven.UI.Components.Button;
+using HavenText = Haven.UI.Components.Text;
+using NativeButton = Avalonia.Controls.Button;
+
+namespace Haven.Desktop.Tests;
+
+public sealed class ChatAddMenuNativePopupTests
+{
+    [AvaloniaFact]
+    public Task Headless_chat_add_menu_uses_overlay_fallback_and_retires_cleanly() =>
+        RunAsync(requireNativePopup: false);
+
+    /// <summary>Runs the same production composer scenario in the headless test or native desktop probe.</summary>
+    public static async Task RunAsync(bool requireNativePopup, string? captureDirectory = null)
+    {
+        var resolver = new ChatGenUiNativeControlResolver();
+        using var scene = new ChatHavenScene(resolver);
+        var host = new HavenSceneControl(new HavenDesktopImageResolver(), resolver) { Root = scene.Root };
+        var window = new Window { Width = 1000, Height = 760, Content = host };
+        try
+        {
+            window.Show();
+            window.UpdateLayout();
+            await scene.ComposerView.InitializeAsync();
+            window.UpdateLayout();
+
+            // The real canonical CUI composer is admitted through the same native resolver as the
+            // product page; this is not a stand-in control or an in-scene z-index assertion.
+            Assert.Contains(host.Children, child => ReferenceEquals(child, scene.ComposerView));
+            Assert.True(scene.ComposerView.IsAttachedToVisualTree());
+            var addButton = Assert.Single(scene.ComposerView.GetVisualDescendants().OfType<NativeButton>(), button =>
+                AutomationProperties.GetName(button) == "Add files or actions");
+            var message = Assert.Single(scene.ComposerView.GetVisualDescendants().OfType<TextBox>(), input =>
+                AutomationProperties.GetName(input) == "Message");
+            message.Focus();
+            addButton.RaiseEvent(new RoutedEventArgs(NativeButton.ClickEvent));
+            window.UpdateLayout();
+
+            var popup = Assert.IsType<Avalonia.Controls.Primitives.Popup>(scene.AddMenuPopup);
+            var popupHost = Assert.IsType<HavenSceneControl>(scene.AddMenuPopupHost);
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.True(popup.IsOpen);
+            Assert.Same(scene.ComposerView, popup.Parent);
+            Assert.False(popup.ShouldUseOverlayLayer);
+            Assert.Same(scene.AddMenuPrefab, popupHost.Root);
+            var popupTopLevel = TopLevel.GetTopLevel(popupHost);
+            if (requireNativePopup)
+            {
+                Assert.False(popup.IsUsingOverlayLayer);
+                Assert.IsType<Avalonia.Controls.Primitives.PopupRoot>(popupTopLevel);
+                Assert.NotSame(window, popupTopLevel);
+            }
+            else
+            {
+                // The maintained HeadlessWindowImpl.CreatePopup() returns null, so Avalonia's
+                // production fallback must host the popup in the owner's overlay layer.
+                Assert.True(popup.IsUsingOverlayLayer);
+                Assert.Same(window, popupTopLevel);
+            }
+            Assert.Same(addButton, popup.PlacementTarget);
+            Assert.Equal(Avalonia.Controls.Primitives.PopupPositioning.PopupAnchor.TopLeft, popup.PlacementAnchor);
+            Assert.Equal(Avalonia.Controls.Primitives.PopupPositioning.PopupGravity.TopRight, popup.PlacementGravity);
+            Assert.Equal(-6, popup.VerticalOffset);
+            Assert.True(popupHost.SurfaceMetrics.Viewport.Width < window.ClientSize.Width);
+            Assert.True(popupHost.SurfaceMetrics.Viewport.Width > 240);
+            Assert.True(popupHost.SurfaceMetrics.Viewport.Height < window.ClientSize.Height);
+            Assert.True(popupHost.IsVisible);
+
+            if (requireNativePopup && !string.IsNullOrWhiteSpace(captureDirectory))
+            {
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Render);
+                Directory.CreateDirectory(captureDirectory);
+                CaptureVisual(window, window.ClientSize, window.RenderScaling,
+                    Path.Combine(captureDirectory, "chat-add-menu-owner.png"));
+                CaptureVisual(popupHost, popupHost.Bounds.Size, window.RenderScaling,
+                    Path.Combine(captureDirectory, "chat-add-menu-native-popup.png"));
+            }
+
+            // The compact menu remains a grouped list and category rows still drill into the real
+            // shared catalogue without expanding or replacing the actual composer.
+            Assert.Equal("Add", scene.AddMenuPrefab.GetComponent<HavenText>("MenuTitle").Content);
+            Assert.Equal(HavenVisibility.Visible, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
+                .GetValue(HavenProperties.Visibility));
+            Assert.Equal(HavenVisibility.Collapsed, scene.CatalogSearch.GetValue(HavenProperties.Visibility));
+            Assert.Same(popupHost, TopLevel.GetTopLevel(popupHost)?.FocusManager?.GetFocusedElement());
+            var menuRouter = new HavenInputRouter(popupHost.Root!);
+            Click(menuRouter, scene.AddMenuPrefab.GetComponent<HavenButton>("Agents"));
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.Equal(HavenVisibility.Visible, scene.CatalogPanel.GetValue(HavenProperties.Visibility));
+            Assert.Equal(HavenVisibility.Collapsed, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
+                .GetValue(HavenProperties.Visibility));
+            Click(menuRouter, scene.AddMenuPrefab.GetComponent<HavenButton>("CatalogBack"));
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.Equal(HavenVisibility.Visible, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
+                .GetValue(HavenProperties.Visibility));
+
+            // The new Assistants category displays only canonical configured Assistant snapshots,
+            // and selecting one forwards the exact identity for the shell's guarded open route.
+            var assistant = new AssistantDefinitionSnapshot(
+                new AssistantIdentity("fixture-den", "personal", "configured-helper"), 7,
+                ConfiguredIdentityKind.Assistant,
+                new AssistantConfiguration { Name = "Configured Helper", Description = "A real configured row." }, []);
+            var specialist = new AssistantDefinitionSnapshot(
+                new AssistantIdentity("fixture-den", "personal", "configured-specialist"), 3,
+                ConfiguredIdentityKind.Specialist,
+                new AssistantConfiguration { Name = "Not an Assistant row" }, []);
+            scene.SetAssistantCatalogue([assistant, specialist]);
+            var selectedAssistants = new List<AddMenuSelection>();
+            scene.CatalogItemSelected += (_, selection) => selectedAssistants.Add(selection);
+            scene.ShowAddMenu();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Click(new HavenInputRouter(popupHost.Root!), scene.AddMenuPrefab.GetComponent<HavenButton>("Assistants"));
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            var assistantRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
+            Assert.Equal("Configured Helper", assistantRow.Content);
+            Assert.Contains("Open this Assistant", assistantRow.Accessibility.Description);
+            Click(new HavenInputRouter(popupHost.Root!), assistantRow);
+            window.UpdateLayout();
+            var selectedAssistant = Assert.Single(selectedAssistants);
+            Assert.Equal(AddMenu.AddMenuAction.Assistant, selectedAssistant.Kind);
+            Assert.Same(assistant, selectedAssistant.Item);
+            Assert.True(SpacesBrowseAppContentSession.TryGetAssistantMenuSelection(selectedAssistant, out var selectedIdentity));
+            Assert.Equal(assistant.Identity, selectedIdentity);
+            var assistantRoute = SpacesBrowseAppContentSession.CreateAssistantRouteAddress(selectedIdentity);
+            Assert.True(SpacesBrowseAppContentSession.TryReadAssistantRoute(assistantRoute, out var restoredIdentity));
+            Assert.Equal(assistant.Identity, restoredIdentity);
+            Assert.Throws<FormatException>(() => SpacesBrowseAppContentSession.TryReadAssistantRoute(
+                Haven.Core.AppContentAddress.Parse("9to1://spaces/assistant/incomplete"), out _));
+
+            scene.SetAssistantCatalogue(null);
+            scene.ShowAddMenu();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Click(new HavenInputRouter(popupHost.Root!), scene.AddMenuPrefab.GetComponent<HavenButton>("Assistants"));
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.Contains("Open Assistants to load", scene.CatalogRows.Children.OfType<HavenText>().Single().Content);
+            var openAssistantsRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
+            Click(new HavenInputRouter(popupHost.Root!), openAssistantsRow);
+            window.UpdateLayout();
+            var openAssistantsSelection = Assert.Single(selectedAssistants.Skip(1));
+            Assert.Equal(AddMenu.AddMenuAction.Assistant, openAssistantsSelection.Kind);
+            Assert.Equal("OpenAssistantsRequest", openAssistantsSelection.Item.GetType().Name);
+            Assert.True(SpacesBrowseAppContentSession.TryGetAssistantMenuSelection(openAssistantsSelection, out var openAssistantIdentity));
+            Assert.Null(openAssistantIdentity);
+            Assert.True(SpacesBrowseAppContentSession.TryReadAssistantRoute(
+                SpacesBrowseAppContentSession.CreateAssistantRouteAddress(openAssistantIdentity), out var restoredOpenIdentity));
+            Assert.Null(restoredOpenIdentity);
+            Assert.False(SpacesBrowseAppContentSession.TryGetAssistantMenuSelection(
+                new AddMenuSelection(AddMenu.AddMenuAction.Assistant, specialist), out _));
+
+            // Mention-search/catalogue rows still come from the same ChatAddMenuSurface, and
+            // selecting its real Files row closes the native host before forwarding the action.
+            var selected = new List<Haven.Desktop.Views.Shell.TopRail.AddMenu.AddMenuAction>();
+            scene.AddActionSelected += (_, action) => selected.Add(action);
+            scene.ShowMentionSearch("files");
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.True(popup.IsOpen);
+            Assert.Equal(HavenVisibility.Visible, scene.CatalogPanel.GetValue(HavenProperties.Visibility));
+            var fileRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
+            Click(new HavenInputRouter(popupHost.Root!), fileRow);
+            window.UpdateLayout();
+
+            Assert.Equal([Haven.Desktop.Views.Shell.TopRail.AddMenu.AddMenuAction.File], selected);
+            Assert.False(popup.IsOpen);
+            Assert.Null(popup.Parent);
+            Assert.Equal(HavenVisibility.Collapsed, scene.AddOverlay.GetValue(HavenProperties.Visibility));
+            Assert.True(message.IsFocused);
+
+            // Mention search opens for each edit while the native composer owns its query. The
+            // actual CUI TextBox must retain focus/caret so the user can continue typing.
+            message.Focus();
+            scene.Input.Text = "@f";
+            scene.Input.PlaceCaretAtEnd();
+            scene.ShowMentionSearch("f");
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.True(popup.IsOpen);
+            Assert.True(message.IsFocused);
+            Assert.Equal(2, message.CaretIndex);
+            message.Text += "iles";
+            message.CaretIndex = message.Text.Length;
+            scene.ShowMentionSearch("files");
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.True(message.IsFocused);
+            Assert.Equal("@files", scene.Input.Text);
+            Assert.Equal(scene.Input.Text.Length, message.CaretIndex);
+
+            // Escape closes the mention popup without moving caret focus away from the composer.
+            message.RaiseEvent(new KeyEventArgs
+            {
+                RoutedEvent = InputElement.KeyDownEvent,
+                Key = Key.Escape
+            });
+            Assert.False(popup.IsOpen);
+            Assert.Null(popup.Parent);
+            Assert.Equal(HavenVisibility.Collapsed, scene.AddOverlay.GetValue(HavenProperties.Visibility));
+
+            // An explicit Add open takes keyboard focus for row navigation, then owner detachment
+            // retires the native host so it cannot leave an invisible layer intercepting input.
+            scene.ShowAddMenu();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.True(popup.IsOpen);
+            Assert.Same(popupHost, TopLevel.GetTopLevel(popupHost)?.FocusManager?.GetFocusedElement());
+            addButton.Focus();
+            scene.HideAddMenu();
+            window.UpdateLayout();
+            Assert.True(addButton.IsFocused);
+
+            scene.ShowAddMenu();
+            await SettlePopupHostAsync(window, popupHost, requireNativePopup);
+            Assert.True(popup.IsOpen);
+            window.Content = new Border();
+            window.UpdateLayout();
+            Assert.False(popup.IsOpen);
+            Assert.Null(popup.Parent);
+            Assert.Equal(HavenVisibility.Collapsed, scene.AddOverlay.GetValue(HavenProperties.Visibility));
+        }
+        finally
+        {
+            window.Content = null;
+            window.Close();
+        }
+    }
+
+    private static void Click(HavenInputRouter router, HavenElement element)
+    {
+        var point = new HavenPoint(element.Bounds.X + element.Bounds.Width / 2,
+            element.Bounds.Y + element.Bounds.Height / 2);
+        router.PointerPressed(point);
+        Assert.True(router.PointerReleased(point));
+    }
+
+    private static async Task SettlePopupHostAsync(Window window, Control popupHost, bool requireNativePopup)
+    {
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            window.UpdateLayout();
+            popupHost.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            if (!requireNativePopup) AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+            if (popupHost.IsAttachedToVisualTree() && popupHost.Bounds.Width > 0 && popupHost.Bounds.Height > 0)
+                return;
+            await Task.Delay(10);
+        }
+
+        var overlays = window.GetVisualDescendants().OfType<Avalonia.Controls.Primitives.OverlayPopupHost>()
+            .Select(overlay => $"{overlay.GetType().Name}: attached={overlay.IsAttachedToVisualTree()}, bounds={overlay.Bounds}, content={overlay.Content?.GetType().Name}, template={overlay.Template?.GetType().Name}, visible={overlay.IsEffectivelyVisible}, measureValid={overlay.IsMeasureValid}, parent={overlay.GetVisualParent()?.GetType().Name}:{overlay.GetVisualParent()?.Bounds}, children={string.Join(';', overlay.GetVisualDescendants().Select(child => $"{child.GetType().Name}[{child.Bounds}; templatedParent={(child as Avalonia.Controls.Primitives.TemplatedControl)?.TemplatedParent?.GetType().Name}; content={(child as Avalonia.Controls.Presenters.ContentPresenter)?.Content?.GetType().Name}]"))}");
+        Assert.True(popupHost.IsAttachedToVisualTree(), "The popup host did not attach to its rendering tree after bounded dispatcher settlement. " + string.Join("; ", overlays));
+        Assert.True(popupHost.Bounds.Width > 0 && popupHost.Bounds.Height > 0,
+            "The popup host did not receive non-empty layout after bounded dispatcher settlement.");
+    }
+
+    private static void CaptureVisual(Visual visual, Size size, double scaling, string path)
+    {
+        var pixelSize = new PixelSize(Math.Max(1, (int)Math.Ceiling(size.Width * scaling)),
+            Math.Max(1, (int)Math.Ceiling(size.Height * scaling)));
+        using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96 * scaling, 96 * scaling));
+        bitmap.Render(visual);
+        bitmap.Save(path);
+    }
+}

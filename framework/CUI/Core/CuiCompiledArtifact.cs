@@ -407,12 +407,13 @@ public static class CuiCompiledArtifactCodec
                         throw new CuiV2AdmissionException("CUIR072",
                             $"Action '{name}' in '{source}' has a null/unnamed Set target.");
                     if (!variableTypes.TryGetValue(set.Target, out var setType)
-                        || (!string.Equals(setType, "bool", StringComparison.OrdinalIgnoreCase)
-                            && !string.Equals(setType, "boolean", StringComparison.OrdinalIgnoreCase)
-                            && !string.Equals(setType, "string", StringComparison.OrdinalIgnoreCase)))
+                        || !CuiLocalStateRules.IsSettable(setType))
                         throw new CuiV2AdmissionException("CUIR073",
-                            $"Action '{name}' in '{source}' Set target '{set.Target}' is not a declared settable bool/string variable.");
-                    if (set.Value is not null) ValidateValue(set.Value, source);
+                            $"Action '{name}' in '{source}' Set target '{set.Target}' is not a declared settable bool/integer/string variable.");
+                    if (set.Value is null || set.Value.Kind != CuiV2ValueKind.Literal ||
+                        set.Value.LiteralValue is null || !CuiLocalStateRules.AcceptsLiteral(setType, set.Value.LiteralValue))
+                        throw new CuiV2AdmissionException("CUIR073", $"Action '{name}' Set literal does not match '{setType}'.");
+                    ValidateValue(set.Value, source);
                     if (set.When is { } when) ValidateValue(when.Test, source);
                 }
             }
@@ -430,6 +431,10 @@ public static class CuiCompiledArtifactCodec
             if (variable.Span is null)
                 throw new CuiV2AdmissionException("CUIR072", $"Variable '{name}' in '{source}' is missing its source span.");
             variableTypes[name] = variable.Type ?? string.Empty;
+            if (CuiLocalStateRules.IsInteger(variable.Type ?? string.Empty) &&
+                (!string.IsNullOrEmpty(variable.Source) || !string.IsNullOrEmpty(variable.Selection) ||
+                 !CuiLocalStateRules.AcceptsLiteral(variable.Type!, variable.Value)))
+                throw new CuiV2AdmissionException("CUIR073", $"Integer variable '{name}' requires an Int32 literal initializer.");
         }
 
         var resourceKeys = new HashSet<string>(StringComparer.Ordinal);
@@ -486,11 +491,9 @@ public static class CuiCompiledArtifactCodec
                     if (effect.Condition.Test.Kind == CuiV2ValueKind.Binding
                         && effect.Condition.Test.BindingPath is { } conditionPath)
                     {
-                        var root = conditionPath.Split('.')[0];
-                        if (!variableTypes.TryGetValue(root, out var conditionRootType)
-                            || !string.Equals(conditionRootType, "commandstate", StringComparison.OrdinalIgnoreCase))
+                        if (!CuiLocalStateRules.AcceptsConditionPath(variableTypes, conditionPath))
                             throw new CuiV2AdmissionException("CUIR073",
-                                $"Effect '{effect.Name}' in '{source}' condition path '{conditionPath}' does not reference a declared commandstate result variable.");
+                                $"Effect '{effect.Name}' in '{source}' condition path '{conditionPath}' does not reference a boolean local, commandstate member, or external boolean binding.");
                     }
                 }
             }

@@ -3,10 +3,12 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -57,7 +59,58 @@ public sealed class HomeLibraryDestinationTests
     }
 
     [AvaloniaFact]
-    public async Task Folder_selection_returns_only_the_same_current_Home_link_and_disables_pin_mutation()
+    public async Task Native_dialog_background_tracks_the_loaded_Home_theme_scope()
+    {
+        var source = new ThemeSource();
+        using var theme = new CuiThemePreferenceContext(source);
+        var primitiveBackground = new SolidColorBrush(Color.FromRgb(1, 2, 3));
+        var application = global::Avalonia.Application.Current!;
+        var hadPrimitiveBackground = application.Resources.TryGetValue("CuiBackgroundBrush", out var originalPrimitiveBackground);
+        application.Resources["CuiBackgroundBrush"] = primitiveBackground;
+        var page = Page(new Index(0), new(), (_, _) => true, theme: theme);
+        var window = new Window { Width = 800, Height = 620, Content = page };
+        IDisposable? backgroundBinding = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            backgroundBinding = page.BindWindowBackground(window);
+
+            var root = Assert.IsAssignableFrom<Control>(page.Content);
+            AssertHomeThemeBackground(root, window, primitiveBackground, CuiAppearance.Bright);
+
+            source.SetAppearance(CuiAppearance.SuperDark);
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            AssertHomeThemeBackground(root, window, primitiveBackground, CuiAppearance.SuperDark);
+        }
+        finally
+        {
+            backgroundBinding?.Dispose();
+            try { await page.CloseAndDrainAsync(); }
+            finally
+            {
+                window.Close();
+                if (hadPrimitiveBackground) application.Resources["CuiBackgroundBrush"] = originalPrimitiveBackground;
+                else application.Resources.Remove("CuiBackgroundBrush");
+            }
+        }
+    }
+
+    private static void AssertHomeThemeBackground(Control root, Window window, IBrush primitiveBackground,
+        CuiAppearance appearance)
+    {
+        Assert.True(root.Resources.TryGetResource("CuiBackgroundBrush", null, out var rootResource));
+        var homeBackground = Assert.IsAssignableFrom<ISolidColorBrush>(rootResource);
+        var expected = CuiSurfacePaletteCatalog.For("Home", appearance, CuiTheme.Glow).TideBase;
+        Assert.Equal(expected, homeBackground.Color);
+        var dialogBackground = Assert.IsAssignableFrom<ISolidColorBrush>(window.Background);
+        Assert.Equal(expected, dialogBackground.Color);
+        Assert.Equal(byte.MaxValue, dialogBackground.Color.A);
+        Assert.NotEqual(Assert.IsAssignableFrom<ISolidColorBrush>(primitiveBackground).Color, dialogBackground.Color);
+    }
+
+    [AvaloniaFact]
+    public async Task Folder_selection_requires_explicit_confirmation_and_revalidates_the_same_current_Home_link()
     {
         var store = Guid.NewGuid(); var folder = Guid.NewGuid();
         var link = new HomeDeepLink(HomeRoute.Library, "files", store.ToString("D") + "/" + folder.ToString("D"),
@@ -66,7 +119,8 @@ public sealed class HomeLibraryDestinationTests
             "Boards", "Files folder", "Files", "fixture-profile", null, DateTimeOffset.UtcNow,
             false, false, false, false, [], link);
         var index = new Index([row]); var page = Page(index, new(), (_, _) => true);
-        page.SetFolderSelectionMode((selected, _) => Task.FromResult<HomeDeepLink?>(selected));
+        var checks = 0;
+        page.SetFolderSelectionMode((selected, _) => { checks++; return Task.FromResult<HomeDeepLink?>(selected); });
         Window? window = null;
         try
         {
@@ -78,6 +132,13 @@ public sealed class HomeLibraryDestinationTests
             name.Text = "  Q4 planning  ";
             await page.DispatchAsync("OpenHomeLibraryArtifact", row.OpenLink);
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(page.FolderSelection.IsCompleted);
+            Assert.Null(page.SelectedBoardCreateDisplayName);
+            Assert.Equal(1, checks);
+            Assert.True(FindAuthoredButton(page, "library-confirm-board-folder").IsEnabled);
+            Assert.True(FindAuthoredButton(page, "library-cancel-board-folder").IsEnabled);
+            await page.DispatchAsync("ConfirmBoardFolder", null);
+            Assert.Equal(2, checks);
             Assert.Same(link, await page.FolderSelection);
             Assert.Equal("Q4 planning", page.SelectedBoardCreateDisplayName);
             name.Text = "changed after selection";
@@ -259,9 +320,28 @@ public sealed class HomeLibraryDestinationTests
         }
         finally { try { await session.CloseAndDrainAsync(); } finally { window?.Close(); } }
     }
+    [AvaloniaFact]
+    public async Task Folder_picker_cancel_completes_without_a_folder_or_name()
+    {
+        var page = Page(new Index([]), new(), (_, _) => true);
+        var checks = 0;
+        page.SetFolderSelectionMode((link, _) => { checks++; return Task.FromResult<HomeDeepLink?>(link); });
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            await page.DispatchAsync("CancelBoardFolder", null);
+            Assert.Null(await page.FolderSelection);
+            Assert.Null(page.SelectedBoardCreateDisplayName);
+            Assert.Equal(0, checks);
+            Assert.False(page.IsActionAvailable("ConfirmBoardFolder"));
+        }
+        finally { await page.CloseAndDrainAsync(); }
+    }
+
     private static HomeLibraryDestinationPage Page(Index index, Authorization authorization, Func<HomeDeepLink, Task, bool> queue,
-        IHomeLibraryPreferences? preferences = null) =>
-        new(router => new(index, authorization, router, preferences ?? new Preferences()), _ => Task.CompletedTask, queue);
+        IHomeLibraryPreferences? preferences = null, CuiThemePreferenceContext? theme = null) =>
+        new(router => new(index, authorization, router, preferences ?? new Preferences()), _ => Task.CompletedTask, queue,
+            theme: theme);
     private static Button FindAuthoredButton(HomeLibraryDestinationPage page, string authoredId) =>
         Assert.Single(page.GetVisualDescendants().OfType<Button>(), item =>
             CuiRuntimeIdentity.GetStableId(item) == "id:" + authoredId);
@@ -447,5 +527,16 @@ public sealed class HomeLibraryDestinationTests
         public Task<bool> IsPinnedAsync(string app, string id, CancellationToken token) => Task.FromResult(IsPinned(app, id));
         public Task SetPinnedAsync(string app, string id, bool pinned, CancellationToken token)
         { var key = app + "/" + id; if (pinned) _pinned.Add(key); else _pinned.Remove(key); return Task.CompletedTask; }
+    }
+    private sealed class ThemeSource : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; private set; } =
+            new("Glow", 0, "home-library-theme-test", false, CuiAccessibilitySettings.Default, CuiAppearance.Bright);
+        public event EventHandler? Changed;
+        internal void SetAppearance(CuiAppearance appearance)
+        {
+            Current = Current with { Revision = Current.Revision + 1, Appearance = appearance };
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

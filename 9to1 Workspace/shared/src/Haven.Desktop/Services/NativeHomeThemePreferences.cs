@@ -11,6 +11,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
     private readonly HomeThemePreferenceService _service;
     private readonly FileBackend _backend;
     private readonly Action<Action> _dispatch;
+    private readonly Action<CuiThemeResolution>? _publishThemePresentation;
     private readonly SemaphoreSlim _refresh = new(1, 1);
     private readonly CancellationTokenSource _stop = new();
     private sealed class Operation(CancellationToken token)
@@ -36,16 +37,41 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
 
     internal NativeHomeThemePreferences(string preferencePath, HomeThemeScope scope,
         Func<JsonObject, HomeThemeScope, HomeThemePreference> projectLegacy,
-        Func<CancellationToken, ValueTask<bool>> authorise, Action<Action> dispatch)
+        Func<CancellationToken, ValueTask<bool>> authorise, Action<Action> dispatch,
+        Action<CuiThemeResolution>? publishThemePresentation = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(preferencePath);
         _scope = scope.Validate();
         if (scope.Scope != HomeDataScope.DeviceLocal) throw new NotSupportedException("Native account theme synchronization is not configured.");
         _dispatch = dispatch;
+        _publishThemePresentation = publishThemePresentation;
         _backend = new(preferencePath, scope, projectLegacy, authorise);
         _service = new(_backend, _backend, new ThemeCatalog());
         Context = new(this);
+        if (_publishThemePresentation is not null) Context.Changed += ContextChanged;
         _service.Changed += Invalidated;
+    }
+
+    private void ContextChanged(object? sender, EventArgs args)
+    {
+        try
+        {
+            _dispatch(() =>
+            {
+                if (_closing || Context.Current.ScopeId == "presentation-only") return;
+                try { _publishThemePresentation?.Invoke(Context.Current); }
+                catch (Exception error)
+                {
+                    lock (_operationsGate) _observerFailures.Add(error);
+                    Diagnostic = "Home theme presentation could not be updated; the last valid palette is retained.";
+                }
+            });
+        }
+        catch (Exception error)
+        {
+            lock (_operationsGate) _observerFailures.Add(error);
+            Diagnostic = "Home theme presentation update could not be scheduled; the last valid palette is retained.";
+        }
     }
 
     private Task<T> Track<T>(CancellationToken caller, Func<CancellationToken, Task<T>> source)
@@ -322,6 +348,8 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         var failures = new List<Exception>();
         lock (_operationsGate) failures.AddRange(_observerFailures);
         try { _service.Changed -= Invalidated; } catch (Exception error) { failures.Add(error); }
+        if (_publishThemePresentation is not null)
+            try { Context.Changed -= ContextChanged; } catch (Exception error) { failures.Add(error); }
         try { _backend.Dispose(); } catch (Exception error) { failures.Add(error); }
         try { _stop.Cancel(); } catch (Exception error) { failures.Add(error); }
         foreach (var operation in operations)

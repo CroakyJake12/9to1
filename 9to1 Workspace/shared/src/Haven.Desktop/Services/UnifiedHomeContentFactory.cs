@@ -71,8 +71,11 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         return new Session(this, request);
     }
 
-    private sealed class Session : IBrowseNativeAppContentSession
+    private sealed class Session : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner
     {
+        private OriginalTabTransientPresentation? _transientPresentation;
+        public OriginalTabTransientPresentation TransientPresentation => _transientPresentation
+            ?? throw new InvalidOperationException("The original tab presentation has not initialized.");
         private readonly UnifiedHomeContentFactory _owner;
         private readonly BrowseAppContentRequest _request;
         private readonly DesktopOriginalWorkLifetime _work;
@@ -103,7 +106,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
             {
                 Dispatcher.UIThread.VerifyAccess();
                 if (!IsPublicationCurrent) throw new InvalidOperationException("The original Home view is not admitted.");
-                return _page!;
+                return TransientPresentation;
             }
         }
         public Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -132,6 +135,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                         DemandCurrent();
                         var page = _page ?? throw new InvalidOperationException("The original Home page was not acquired.");
                         await original.AwaitAsync(page.InitializeAsync(linked.Token));
+                        _transientPresentation = new OriginalTabTransientPresentation();
+                        _transientPresentation.BindOriginal(page);
                         await original.AwaitAsync(CloudflareOriginalExecutionGuard.InvokeOriginal(this,
                             () => _owner._admit(_request, linked.Token)));
                         DemandCurrent(); linked.Token.ThrowIfCancellationRequested();
@@ -145,17 +150,22 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
         {
             DemandExternalJoin();
+            cancellationToken.ThrowIfCancellationRequested();
             lock (_gate)
             {
                 if (_preparation is not null && !_preparation.IsCompletedSuccessfully) return _preparation;
                 if (!IsPublicationCurrent) return Task.FromResult(false);
+                var reservation = TransientPresentation.TryReserveClose();
+                if (reservation is null) return Task.FromResult(false);
                 var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                _preparation = _work.RunAsync(original => PrepareAsync(original, start.Task, cancellationToken));
+                try { _preparation = _work.RunAsync(original => PrepareAsync(original, start.Task, cancellationToken, reservation)); }
+                catch { reservation.Dispose(); throw; }
                 start.SetResult(); return _preparation;
             }
         }
-        private async Task<bool> PrepareAsync(DesktopOriginalWorkLifetime.Original original, Task start, CancellationToken caller)
+        private async Task<bool> PrepareAsync(DesktopOriginalWorkLifetime.Original original, Task start, CancellationToken caller, IDisposable reservation)
         {
+            using var closeReservation = reservation;
             await start.ConfigureAwait(false);
                 using var sourcePhase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
                 using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, caller, _owner._hostLifetime);
@@ -170,7 +180,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                 return allowed && IsPublicationCurrent;
         }
         public Task CloseAndDrainAsync()
-        { DemandExternalJoin(); _published = false; return _work.CloseAndDrainAsync(); }
+        { DemandExternalJoin(); _transientPresentation?.CancelPending(); _published = false; return _work.CloseAndDrainAsync(); }
         private Task StopAsync() => OnUiAsync(async () =>
         {
             using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);

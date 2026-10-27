@@ -263,6 +263,7 @@ public sealed partial class FilesNativeBrowserSurface
     private CuiSceneHost CreateOriginalCanonicalSceneHost()
     {
         var registry = new CuiControlRegistry();
+        registry.RegisterImageSourceResolver(ResolveFilesImage);
         registry.BindAuthoredControl("files-canonical-list", _ => _items);
         registry.BindAuthoredControl("files-search-input", _ => _search);
         registry.BindAuthoredControl("files-displayed-sort", _ => _sort);

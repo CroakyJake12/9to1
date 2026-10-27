@@ -1294,7 +1294,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var type = typeof(Haven.Desktop.Tests.FilesDeveloperOriginalSourcePublicationTests)
             .GetNestedType("Rig", BindingFlags.NonPublic)!;
         var method = type.GetMethod("CreateAsync", BindingFlags.Static | BindingFlags.NonPublic)!;
-        var actual = (Task)method.Invoke(null, [null, canonicalSavedProject, true, true, null])!;
+        var actual = (Task)method.Invoke(null, [null, canonicalSavedProject, true, true, null, false])!;
         await actual;
         var rig = actual.GetType().GetProperty("Result")!.GetValue(actual)!;
         try

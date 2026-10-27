@@ -44,7 +44,7 @@ public sealed partial class BrowseNativeUiTests
             await Click(window, workspace, remove);
             Assert.Equal(2, chrome.State.History.Count);
             Assert.DoesNotContain(chrome.State.History, visit => visit.Id == removedId);
-            Assert.Single(chrome.State.History.Where(visit => visit.Address == "https://research.example/same"));
+            Assert.Single(chrome.State.History, visit => visit.Address == "https://research.example/same");
             Assert.Single(chrome.State.Bookmarks);
             Assert.Equal(tabId, chrome.State.SelectedTabId); Assert.Equal(page, chrome.State.SelectedTab.Address);
             Assert.True(workspace.TryGetValue("Address", out var draft)); Assert.Equal("https://unsent.example/draft", draft);
@@ -67,7 +67,7 @@ public sealed partial class BrowseNativeUiTests
             {
                 Assert.Equal(2, persisted.History.Count);
                 Assert.DoesNotContain(persisted.History, visit => visit.Id == removedId);
-                Assert.Single(persisted.History.Where(visit => visit.Address == "https://research.example/same"));
+                Assert.Single(persisted.History, visit => visit.Address == "https://research.example/same");
                 Assert.Single(persisted.Bookmarks);
             }
             await Retire(window);

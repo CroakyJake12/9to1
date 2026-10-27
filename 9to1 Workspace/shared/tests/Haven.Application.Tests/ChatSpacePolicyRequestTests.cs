@@ -31,6 +31,50 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     }
 
     [Fact]
+    public async Task Ordinary_space_send_reaches_delayed_policy_capture_and_settles_its_original_sources()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Ordinary owned policy", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new ControlledSpacePolicySource(files.Registry)
+        {
+            CaptureEntered = new(TaskCreationOptions.RunContinuationsAsynchronously),
+            ReleaseCapture = new(TaskCreationOptions.RunContinuationsAsynchronously)
+        };
+        var rig = new SpacePolicyRig(source, space.Id);
+
+        var send = rig.SendFromOriginalAsync(callback => callback());
+        await source.CaptureEntered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.False(send.IsCompleted, "The ordinary send must retain and await the actual delayed policy capture.");
+        source.ReleaseCapture.TrySetResult();
+        await send.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, source.Captures);
+        Assert.True(source.Validations > 0);
+        Assert.True(rig.Transport.Requests.Any(request => request.Options?.OriginalSpacePolicy is not null),
+            "The ordinary send must reach real policy capture and bind the captured guard to dispatch.");
+        files.Passed = true;
+    }
+
+    [Fact]
+    public async Task Ordinary_space_send_preserves_business_token_with_distinct_page_enumeration_token()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Distinct token policy", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new ControlledSpacePolicySource(files.Registry);
+        var rig = new SpacePolicyRig(source, space.Id);
+        using var page = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        using var business = CancellationTokenSource.CreateLinkedTokenSource(page.Token);
+        Assert.NotEqual(page.Token, business.Token);
+
+        await rig.SendFromOriginalAsync(callback => callback(), business.Token, page.Token);
+
+        Assert.Equal(1, source.Captures);
+        Assert.True(source.Validations > 0);
+        Assert.Contains(rig.Transport.Requests, request => request.Options?.OriginalSpacePolicy is not null);
+        files.Passed = true;
+    }
+
+    [Fact]
     public async Task Parent_revision_changed_at_physical_dispatch_prevents_transport_body()
     {
         using var files = new SpacePolicyFiles();
@@ -202,6 +246,15 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             catch (Exception cause) { failures.Add(cause); }
             if (failures.Count != 0) throw new AggregateException("Actual original Space consumer and settlement failed.", failures);
         }
+        internal async Task SendFromOriginalAsync(Action<Action> originalScope,
+            CancellationToken? businessToken = null, CancellationToken? observationToken = null)
+        {
+            var stream = _chat.SendWithCommittedInputFromOriginalAsync(originalScope, _conversation, "Hello", _model,
+                EffortLevel.Medium, [], "Fixture", "", DuoMode.Solo, null, null, null, null,
+                businessToken ?? TestContext.Current.CancellationToken,
+                generationOptions: new GenerationOptions { RequestedRoutingConstraints = new(AllowCloud: true) });
+            await foreach (var _ in stream.WithCancellation(observationToken ?? TestContext.Current.CancellationToken)) { }
+        }
     }
 
     private sealed class SpacePolicyProvider(string id) : IModelProvider
@@ -243,8 +296,17 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     {
         private sealed record Input(ControlledSpacePolicySource Owner, Guid ConversationId, OriginalSpacePolicySnapshot Snapshot) : IOriginalSpaceRequestPolicyInput;
         internal int Validations;
-        public async Task<IOriginalSpaceRequestPolicyInput> CaptureAsync(Conversation conversation, Action<Action> acquire, CancellationToken token) =>
-            new Input(this, conversation.Id, await new SpacePolicyResolver(registry).ResolveExistingAsync(conversation.SpaceId!.Value, acquire, _ => { }, token));
+        internal int Captures;
+        internal TaskCompletionSource? CaptureEntered;
+        internal TaskCompletionSource? ReleaseCapture;
+        public async Task<IOriginalSpaceRequestPolicyInput> CaptureAsync(Conversation conversation, Action<Action> acquire, CancellationToken token)
+        {
+            Interlocked.Increment(ref Captures);
+            CaptureEntered?.TrySetResult();
+            if (ReleaseCapture is { } release) await release.Task.WaitAsync(token);
+            return new Input(this, conversation.Id,
+                await new SpacePolicyResolver(registry).ResolveExistingAsync(conversation.SpaceId!.Value, acquire, _ => { }, token));
+        }
         public async Task<OriginalSpacePolicySnapshot> ReadAsync(IOriginalSpaceRequestPolicyInput input, Conversation conversation, Action<Action> acquire, CancellationToken token)
         { await ValidateAsync(input, conversation, acquire, token); return ((Input)input).Snapshot; }
         public async Task ValidateAsync(IOriginalSpaceRequestPolicyInput input, Conversation conversation, Action<Action> acquire, CancellationToken token)

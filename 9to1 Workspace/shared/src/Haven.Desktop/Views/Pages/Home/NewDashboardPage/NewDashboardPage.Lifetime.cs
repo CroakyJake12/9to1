@@ -110,6 +110,9 @@ public sealed partial class NewDashboardPage
         {
             _widgetRefreshCancellation?.Dispose();
             _dashboardAssistantCancellation?.Dispose();
+            _modelRefreshCancellation?.Dispose();
+            _modelBrowser?.Dispose();
+            _widgetCanvas.Dispose();
             Content = null;
         });
     }

@@ -68,6 +68,7 @@ public sealed partial class NewDashboardPage : UserControl, IActivatablePage, ID
         DiscoverModelsButton.Click += (_, _) => { if (!_homeWork.IsRetiring) DiscoverRequested?.Invoke(this, EventArgs.Empty); };
         AddPageButton.Click += (_, _) => ShowPageEditor(null);
         ConfigurePageButton.Click += (_, _) => ShowPageEditor(SelectedPage);
+        _widgetArrangeButton!.Click += (_, _) => SetCustomizing(!_widgetCustomizing);
         Register("Dashboard.Pinned.Edit", EditPinnedButton);
         Register("Dashboard.EditWithHaven", EditWithHavenButton);
         Register("Dashboard.Pages.Add", AddPageButton);
@@ -94,10 +95,10 @@ public sealed partial class NewDashboardPage : UserControl, IActivatablePage, ID
         if (_disposed || !_dashboardActive || generation != _activationGeneration) return;
         if (_widgetDashboard is not null)
         {
-            await RefreshWidgetSurfaceAsync(cancellationToken);
+            await Task.WhenAll(RefreshWidgetSurfaceAsync(cancellationToken), RefreshDeviceModelsAsync(cancellationToken));
             return;
         }
-        await RefreshAsync(generation, cancellationToken);
+        await Task.WhenAll(RefreshAsync(generation, cancellationToken), RefreshDeviceModelsAsync(cancellationToken));
     }
 
     public void Deactivate()
@@ -107,6 +108,9 @@ public sealed partial class NewDashboardPage : UserControl, IActivatablePage, ID
         _clock.Stop();
         _widgetRefreshCancellation?.Cancel();
         _dashboardAssistantCancellation?.Cancel();
+        _modelRefreshCancellation?.Cancel();
+        _modelBrowser?.Deactivate();
+        _dashboardBindings.Set("IsReviewingModel", false);
     }
 
     private async Task RefreshAsync(long generation, CancellationToken cancellationToken)
@@ -289,6 +293,7 @@ public sealed partial class NewDashboardPage : UserControl, IActivatablePage, ID
             PageTabsPanel.Children.Add(button);
         }
         SetDashboardValue(ConfigurePageButton, "IsEnabled", _pages.Count > 0);
+        _dashboardBindings.Set("ShowPageTabs", _pages.Count > 1 || _widgetCustomizing);
     }
 
     private void ShowPageEditor(DashboardPageProfile? existing)

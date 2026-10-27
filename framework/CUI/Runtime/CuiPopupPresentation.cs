@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Avalonia.Controls;
+using Avalonia.VisualTree;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 
@@ -102,7 +103,22 @@ public static class CuiPopupPresentation
         ArgumentNullException.ThrowIfNull(popup);
         if (Requested.TryGetValue(popup, out _)) return;
         popup.BeforeShow += OnBeforeShow;
+        popup.Opened += OnPopupOpened;
         Requested.Add(popup, new object());
+    }
+
+    private static void OnPopupOpened(object? sender, EventArgs args)
+    {
+        if (sender is not Popup { IsUsingOverlayLayer: true, Child: { } child, PlacementTarget: { } target }
+            || TopLevel.GetTopLevel(target) is not { } owner) return;
+        // Use the public visual tree and exact child identity to admit only this
+        // popup's overlay destination. The native destination is admitted before
+        // Show; the overlay is available immediately after Show, before rendering.
+        var overlay = owner.GetVisualDescendants().OfType<OverlayPopupHost>()
+            .FirstOrDefault(host => ReferenceEquals(host.Content, child));
+        if (overlay is null) return;
+        CuiPropertyPresentation.Attach(overlay);
+        overlay.UpdateLayout();
     }
 
     private static void OnBeforeShow(object? sender, Popup.PopupBeforeShowEventArgs args)

@@ -90,12 +90,59 @@ public sealed class HavenUiFoundationTests
     {
         var button = new Button { Variant = ButtonVariant.Tertiary };
         Assert.Equal("AccentMuted", button.GetValue(HavenProperties.Background));
+        button.SetValue(HavenProperties.Background, "Danger", HavenValueSource.UserClass);
+        var foreground = button.GetValue(HavenProperties.Foreground);
         button.SetState(HavenElementState.Hover, true);
-        Assert.Equal("AccentTertiaryHover", button.GetValue(HavenProperties.Background));
+        Assert.Equal("Danger", button.GetValue(HavenProperties.Background));
+        Assert.Equal(foreground, button.GetValue(HavenProperties.Foreground));
+        Assert.Equal(1d, button.GetValue(HavenProperties.HoverProgress));
+        Assert.Equal("AccentTertiaryGlow", button.GetValue(HavenProperties.Glow));
+        Assert.Equal(1.018d, button.GetValue(HavenProperties.Scale));
         Assert.Equal(ButtonDefaults.HoverTransition, button.GetValue(HavenProperties.Transition));
         button.SetState(HavenElementState.Pressed, true);
         Assert.Equal(.94, button.GetValue(HavenProperties.Scale));
         Assert.Equal(ButtonDefaults.PressedTransition, button.GetValue(HavenProperties.Transition));
+        Assert.Equal("Danger", button.GetValue(HavenProperties.Background));
+        Assert.Equal(0d, button.GetValue(HavenProperties.HoverProgress));
+    }
+
+    [Fact]
+    public void Button_hover_tint_uses_its_effective_background_and_skips_transparent_buttons()
+    {
+        var root = new Container();
+        var custom = new Button { Variant = ButtonVariant.Tertiary };
+        custom.SetValue(HavenProperties.Background, "Danger", HavenValueSource.UserClass);
+        custom.SetState(HavenElementState.Hover, true);
+        root.Add(custom);
+        var transparent = new Button { Variant = ButtonVariant.Text };
+        transparent.SetState(HavenElementState.Hover, true);
+        root.Add(transparent);
+
+        var commands = new HavenSceneRenderer().Render(root);
+        var customFill = Assert.Single(commands.OfType<HavenFillRoundedRectCommand>(), command =>
+            command.Bounds == custom.Bounds && command.Brush is HavenContrastHoverBrush);
+        var tint = Assert.IsType<HavenContrastHoverBrush>(customFill.Brush);
+        Assert.Equal(new HavenTokenBrush("Danger"), tint.Background);
+        Assert.DoesNotContain(commands.OfType<HavenFillRoundedRectCommand>(), command =>
+            command.Bounds == transparent.Bounds && command.Brush is HavenContrastHoverBrush);
+    }
+
+    [Fact]
+    public void Pressed_and_disabled_buttons_suppress_derived_hover_tint()
+    {
+        var root = new Container();
+        var pressed = new Button();
+        pressed.SetState(HavenElementState.Hover, true);
+        pressed.SetState(HavenElementState.Pressed, true);
+        root.Add(pressed);
+        var disabled = new Button();
+        disabled.SetState(HavenElementState.Hover, true);
+        disabled.SetState(HavenElementState.Disabled, true);
+        root.Add(disabled);
+
+        var commands = new HavenSceneRenderer().Render(root);
+        Assert.DoesNotContain(commands.OfType<HavenFillRoundedRectCommand>(), command =>
+            command.Brush is HavenContrastHoverBrush);
     }
 
     [Fact]

@@ -61,6 +61,7 @@
     <Compile Include="NativeHomeFilesBoardCreationIntegrationTests.cs" />
     <Compile Include="TaskObservationAuthorizationTests.cs" />
     <Compile Include="UserPreferencesServiceTaskScopeTests.cs" />
+    <Compile Include="HavenUiAppearanceTests.cs" />
     <Compile Include="StrataLoopbackProviderSettingsTests.cs" />
     <Compile Include="HomeLibraryDestinationTests.cs;DeveloperManualDraftRecoveryTests.cs" />
     <Compile Include="DeveloperSavedProjectsNavigationTests.cs;TaskRunEndPassTests.cs" />
@@ -72,9 +73,10 @@
     <Compile Include="NotificationServiceOriginalLifetimeTests.cs" />
     <Compile Include="NotificationServiceStorageStartupTests.cs" />
     <Compile Include="ApplicationLifecycleStartupTests.cs" />
+    <Compile Include="BrowserTabHoverContractTests.cs" />
     <Compile Include="LinuxWorkspaceBoundaryAbiTests.cs" />
     <Compile Include="UnifiedHomeContentTests.cs;DesktopOriginalShutdownSequenceTests.cs" />
-    <Compile Include="FilesWorkspaceSetupTests.cs" />
+    <Compile Include="FilesWorkspaceSetupTests.cs;OriginalTabTransientPresentationTests.cs" />
     <Compile Include="DesktopBorrowerOriginalLifetimeTests.cs" />
     <Compile Include="OverlayControllerOriginalLifetimeTests.cs" />
     <Compile Include="WritePageOriginalLifetimeTests.cs;PresentPageOriginalLifetimeTests.cs;NativeSpacesPageLifecycleTests.cs;SpaceGeneratedSurfaceRendererTests.cs;OriginalInitialDocumentProductTests.cs;OriginalDocumentClosePreflightTests.cs" />
@@ -90,9 +92,12 @@
     <Compile Include="BoardsOriginalStoreSetupTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
+    <Compile Include="ChatAddMenuNativePopupTests.cs;ChatThemeAdaptationTests.cs;GoPageResponsiveTests.cs" />
+    <Compile Include="HuggingFace/*.cs" />
     <!-- Actual Spaces native composer + initial task observation tests share the existing
          canonical permission-caller fixture and its real nested Rig; keep the complete partial. -->
     <Compile Include="ChatCloudPermissionCallerTests.cs;ChatInitialTaskObservationTests.cs;NewChatInitialTaskObservationTests.cs" />
+    <Compile Include="SpaceTaskWidgetPermissionReviewTests.cs" />
     <Compile Include="CanonicalHostedResumeObservationTests.cs" />
     <!-- Canonical workspace-session projection and persistence coverage (same production types). -->
     <Compile Include="UnifiedWorkspaceSessionTests.cs;UnifiedWorkspaceSessionProjectionTests.cs" />
@@ -118,6 +123,7 @@
     <Compile Include="FilesDeveloperOriginalCurrentProjectNativeTests.cs;FilesDeveloperOriginalExecutionPinTests.cs;FilesDeveloperOriginalWorkspaceMetadataSetupProducerTests.cs;FilesDeveloperOriginalProjectRegistrationProducerTests.cs" />
     <!-- Genuine separate manual Home WRITE + protected SQLite create-only composition, including its original rig. -->
     <Compile Include="CanonicalCompatibleTaskContextCompositionTests.Rig.cs;CanonicalCompatibleTaskContextCompositionTests.Tests.cs" />
+    <Compile Include="DeveloperTemplateProjectEntryAdapterTests.cs" />
     <Compile Include="OriginalAutomationLibraryDesktopTests.cs" />
     <Compile Include="OriginalAutomationLibraryChangesTests.cs" />
     <Compile Include="OriginalAutomationLibraryChangesTests.Decline.cs" />
@@ -174,6 +180,8 @@
     <Compile Include="AppOriginalPreviewBootstrapBackgroundLifetimeTests.cs" />
     <Compile Include="AppStartupTransitionCloseReplannerTests.cs" />
     <Compile Include="SpacesBrowseAppContentSessionRetirementTests.cs" />
+    <Compile Include="StudyWorkspaceProjectionTests.cs" />
+    <Compile Include="FilesNativeBrowserSurfaceTests.cs" />
     <Compile Include="SpacesRailSvgIconsTests.cs" />
     <!-- Lane4 shared header/Assistants rail read projections (source-only, NOT RUN). -->
     <Compile Include="AssistantRailIconProjectionTests.cs" />

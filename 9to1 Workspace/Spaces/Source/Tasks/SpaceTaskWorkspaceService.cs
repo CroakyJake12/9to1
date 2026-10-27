@@ -120,6 +120,19 @@ public sealed class SpaceTaskWorkspaceService(
                 context.ExecutionId == current.ExecutionId && context.ContextId == current.ContextId &&
                 context.PersistenceRevision == current.PersistenceRevision) permission = observed;
         }
+        if (permission is not null)
+        {
+            // Permission metadata can be delayed independently of the Task read.
+            // Recheck the same owner after that await so a revision changed in-flight
+            // cannot inherit current identity or leave its old request actionable.
+            var afterReview = await Join(() => canonical.ReadAuthorizedTaskObservationAsync(current.TaskId, token), scope).ConfigureAwait(false);
+            var afterTask = afterReview.Snapshot;
+            commandIdentity = afterReview.Disposition == TaskObservationDisposition.Authorized && afterReview.HasCurrentCommandIdentity &&
+                afterTask is not null && afterTask.TaskId == current.TaskId && afterTask.ExecutionId == current.ExecutionId &&
+                afterTask.ContextId == current.ContextId && afterTask.OwnerBinding == current.OwnerBinding &&
+                afterTask.PersistenceRevision == current.PersistenceRevision;
+            if (!commandIdentity) permission = null;
+        }
         var issued = selected ?? new TaskContextSelection(this, current.TaskId, current.ExecutionId, current.ContextId,
             origin, currentConversation is not null, current.OwnerBinding!);
         if (selected is null) _selections.Add(issued, new object());
@@ -221,11 +234,38 @@ public sealed class SpaceTaskWorkspaceService(
         if (currentSpace!.Revision != space!.Revision)
             throw new SpaceRevisionConflictException(spaceId, space.Revision, currentSpace.Revision);
         cancellationToken.ThrowIfCancellationRequested();
-        var permission = snapshot?.OwnerBinding is not null && canonical.HasCommandAuthority
+        // A saved owner binding is provenance, not current-principal authority. The
+        // conversation-keyed path must ask the canonical observation owner afresh
+        // before exposing an actionable permission request.
+        var currentIdentity = false;
+        if (snapshot is { } observedTask)
+        {
+            var authorized = await Join(() => canonical.ReadAuthorizedTaskObservationAsync(observedTask.TaskId,
+                cancellationToken), originalSourceCallbackScope).ConfigureAwait(false);
+            currentIdentity = authorized.Disposition == TaskObservationDisposition.Authorized &&
+                authorized.HasCurrentCommandIdentity && authorized.Snapshot is { } currentTask &&
+                currentTask.TaskId == observedTask.TaskId && currentTask.ExecutionId == observedTask.ExecutionId &&
+                currentTask.ContextId == observedTask.ContextId && currentTask.OwnerBinding == observedTask.OwnerBinding &&
+                currentTask.PersistenceRevision == observedTask.PersistenceRevision;
+        }
+        var permission = snapshot?.OwnerBinding is not null && currentIdentity && canonical.HasCommandAuthority
             ? await Join(() => canonical.ReadOriginalTaskPermissionReviewAsync(snapshot.TaskId, snapshot.ExecutionId, cancellationToken), originalSourceCallbackScope).ConfigureAwait(false)
             : null;
+        if (permission is not null && snapshot is { } reviewedTask)
+        {
+            // The owner review read is a separate await from the current-principal
+            // observation. Revalidate exact revision after it before exposing details.
+            var afterReview = await Join(() => canonical.ReadAuthorizedTaskObservationAsync(reviewedTask.TaskId,
+                cancellationToken), originalSourceCallbackScope).ConfigureAwait(false);
+            var afterTask = afterReview.Snapshot;
+            currentIdentity = afterReview.Disposition == TaskObservationDisposition.Authorized && afterReview.HasCurrentCommandIdentity &&
+                afterTask is not null && afterTask.TaskId == reviewedTask.TaskId && afterTask.ExecutionId == reviewedTask.ExecutionId &&
+                afterTask.ContextId == reviewedTask.ContextId && afterTask.OwnerBinding == reviewedTask.OwnerBinding &&
+                afterTask.PersistenceRevision == reviewedTask.PersistenceRevision;
+            if (!currentIdentity) permission = null;
+        }
         return new(spaceId, currentSpace.Revision, currentConversation!, snapshot,
-            snapshot is null ? null : TaskExecutionProjection.From(snapshot), originalRetained) { Activity = activity,
+            snapshot is null ? null : TaskExecutionProjection.From(snapshot), originalRetained) { HasCurrentCommandIdentity = currentIdentity, Activity = activity,
                 PermissionReview = permission?.CanonicalTaskContext.PersistenceRevision == snapshot?.PersistenceRevision ? permission : null };
     }
 
@@ -246,7 +286,9 @@ public sealed class SpaceTaskWorkspaceService(
             _ => throw new UnauthorizedAccessException("An actual original task-context observation is required.")
         };
         if (current.ContextId != selected.ContextId || current.Snapshot?.TaskId != selected.Snapshot?.TaskId ||
-            current.Snapshot?.ExecutionId != selected.Snapshot?.ExecutionId || current.OriginSpaceId != selected.OriginSpaceId)
+            current.Snapshot?.ExecutionId != selected.Snapshot?.ExecutionId ||
+            current.Snapshot?.PersistenceRevision != selected.Snapshot?.PersistenceRevision ||
+            current.OriginSpaceId != selected.OriginSpaceId)
             throw new InvalidOperationException("The selected original Task/Run/context changed; refresh first.");
         return current;
     }
@@ -373,7 +415,10 @@ public sealed record SpaceTaskObservation(
     Guid SpaceId, long SpaceRevision, Conversation Conversation, TaskExecutionSnapshot? Snapshot,
     TaskExecutionProjection? Projection, bool OriginalAttemptRetained) : ITaskContextObservation
 {
-    public bool HasCurrentCommandIdentity => Snapshot?.OwnerBinding is not null;
+    // This observation is positive only when the canonical observation owner freshly
+    // authorized the current principal for this exact Task/Run/context/revision. A
+    // saved owner binding is provenance, not current identity or command authority.
+    public bool HasCurrentCommandIdentity { get; init; }
     public Guid ContextId => Conversation.Id;
     public Guid? OriginSpaceId => SpaceId;
     public long? OriginSpaceRevision => SpaceRevision;

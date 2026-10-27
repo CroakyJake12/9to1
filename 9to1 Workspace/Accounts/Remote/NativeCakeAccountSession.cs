@@ -23,13 +23,16 @@ public sealed class NativeCakeAccountSession:INativeCakeAccountSession
  private readonly object sync=new();private readonly CancellationTokenSource stop=new();
  private readonly List<Work> issued=[];private readonly List<Exception> cleanupErrors=[];
  private readonly TimeProvider clock;private readonly NativeCakeBrowserFlow? flow;private readonly WorkerAccountApiClient? api;
- private readonly BoundedIssuerKeysSource? keys;private readonly HttpClient? http;
+  private readonly BoundedIssuerKeysSource? keys;private readonly HttpClient? http;
+  private readonly INativeCakeAccessCredentialSource? access;
+  private readonly Uri? accessOrigin;
  private NativeCakeCredential? credential;private long generation;private bool signing,closing;
  private Task? close;private readonly InvalidOperationException capacityRefusal=new("Native account operation fault custody is full; close this owner");private bool capacitySealed;
  public bool IsAvailable=>flow is not null;
  public NativeCakeAccountSession(NativeCakeClientOptions? supplied,INativeCakeAccessCredentialSource? originalAccess=null)
  {
-  clock=TimeProvider.System;if(supplied is null||originalAccess is null)return;var o=supplied.Capture();
+   clock=TimeProvider.System;if(supplied is null||originalAccess is null)return;var o=supplied.Capture();
+   access=originalAccess;accessOrigin=o.AccountApiOrigin;
   keys=new(new(new Uri(o.Issuer),o.DiscoveryUri,o.JwksUri,65536,TimeSpan.FromMinutes(1),TimeSpan.FromSeconds(15)),clock,new NativeCakeAccessHandler(o.AccountApiOrigin,originalAccess));
   var reader=new Ed25519IssuerReader(keys,clock);
   // Genuine current server has sid/live-session checks and no auth_revision producer.
@@ -49,7 +52,18 @@ public sealed class NativeCakeAccountSession:INativeCakeAccountSession
    signing=true;credential=null;var original=++generation;
    try{return Issue(async token=>
    {
-    try{var obtained=await originalFlow.RunAsync(original,()=>CurrentGeneration(original),token).ConfigureAwait(false);lock(sync){token.ThrowIfCancellationRequested();if(!CurrentGeneration(original))throw new OperationCanceledException("Account context retired",token);credential=obtained;}return new NativeCakeAccountSnapshot(obtained.AccountId,obtained.SessionId,obtained.DisplayName,obtained.ExpiresAt);}
+     try
+     {
+      // Interactive Access login precedes the short HTTP transport timeouts. It is
+      // still owned by this original session operation and cancelled on retirement.
+      using var interactive=CancellationTokenSource.CreateLinkedTokenSource(token);
+      interactive.CancelAfter(TimeSpan.FromMinutes(5));
+      if(access is not null&&accessOrigin is not null)
+       await access.AcquireForRequestAsync(accessOrigin,interactive.Token).ConfigureAwait(false);
+      var obtained=await originalFlow.RunAsync(original,()=>CurrentGeneration(original),interactive.Token).ConfigureAwait(false);
+      lock(sync){interactive.Token.ThrowIfCancellationRequested();if(!CurrentGeneration(original))throw new OperationCanceledException("Account context retired",token);credential=obtained;}
+      return new NativeCakeAccountSnapshot(obtained.AccountId,obtained.SessionId,obtained.DisplayName,obtained.ExpiresAt);
+     }
     finally{lock(sync)signing=false;}
    },ct);}catch{signing=false;throw;}
   }

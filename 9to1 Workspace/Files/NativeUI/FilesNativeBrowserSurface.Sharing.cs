@@ -59,6 +59,13 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         if (TryGetFolderTabItemValue(item, path, out value)) return true;
+        if (item is HostedItemMetadata folder && _page is { IsTrash: false } sidebarPage && folder.Kind == HostedItemKind.Folder &&
+            sidebarPage.Items.Any(row => ReferenceEquals(row, folder)))
+        {
+            value = path switch { "id" => folder.Id.Value.ToString("D"), "name" => folder.Name,
+                "openName" => "Open " + folder.Name, _ => null };
+            return value is not null;
+        }
         value = null;
         if (!SharingVisible || item is not FilesEmailShare grant
             || !_sharingPage!.Grants.Any(row => ReferenceEquals(row, grant))) return false;

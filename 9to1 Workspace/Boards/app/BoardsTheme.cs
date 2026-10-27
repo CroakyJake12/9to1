@@ -40,7 +40,7 @@ public static class BoardsTheme
         get
         {
             var appearance = Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright;
-            return CuiSurfacePaletteCatalog.For("Boards", appearance, CuiSurfacePaletteCatalog.ActiveTheme);
+            return CuiSurfacePaletteCatalog.For("Boards", appearance, ResolvedPreference);
         }
     }
 
@@ -48,9 +48,18 @@ public static class BoardsTheme
 
     public static event Action? Changed;
 
-    /// <summary>Load the shared Haven theme choice before the Boards CUI tree is built.</summary>
+    /// <summary>Boards resolves its own effective preference without mutating the shared
+    /// host catalog: the owner-corrected theme contract requires child apps to read the
+    /// user's preference and keep unrelated surfaces unchanged (owner UX03 report).</summary>
+    private static CuiTheme? _resolvedPreference;
+
+    public static CuiTheme ResolvedPreference => _resolvedPreference ?? CuiTheme.Professional;
+
+    /// <summary>Read the shared Haven theme choice into Boards' local resolver before the
+    /// Boards CUI tree is built. This deliberately does NOT write the shared
+    /// CuiSurfacePaletteCatalog: unrelated surfaces keep their host-owned theme.</summary>
     public static void LoadGlobalThemePreference(string? dataDirectory = null) =>
-        CuiSurfacePaletteCatalog.ActiveTheme = CuiThemePreferenceReader.Read(dataDirectory);
+        _resolvedPreference = CuiThemePreferenceReader.Read(dataDirectory);
 
     public static void SetMode(BoardsThemeMode mode)
     {

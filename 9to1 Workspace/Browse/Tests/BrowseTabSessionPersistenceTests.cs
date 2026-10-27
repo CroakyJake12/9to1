@@ -85,10 +85,12 @@ public sealed partial class BrowseNativeOwnershipTests
             new(currentSecond, "Current profile again", "https://three.example/", BrowserTabPrivacy.Standard,
                 string.Empty, DateTimeOffset.UtcNow) { ProfileId = currentProfile }
         ], currentFirst);
-        var currentDirectory = Path.Combine(paths.BrowserProfileDirectory, "engines", "chromium");
         Directory.CreateDirectory(paths.BrowserProfileDirectory);
         var legacyData = Path.Combine(paths.BrowserProfileDirectory, "legacy-profile-data.fixture");
         await File.WriteAllTextAsync(legacyData, "keep existing default-profile data");
+        var currentProfileRoot = BrowserProfileStorage.ResolveProfileDirectory(paths, currentProfile);
+        Assert.NotEqual(paths.BrowserProfileDirectory, currentProfileRoot);
+        var currentDirectory = Path.Combine(currentProfileRoot, "engines", "chromium");
         string otherDirectory;
 
         await using (var firstRun = await BrowseChrome.CreateAsync(paths, factory,
@@ -98,9 +100,10 @@ public sealed partial class BrowseNativeOwnershipTests
             otherDirectory = factory.Requests[1].ProfileDirectory;
             Assert.Equal(currentDirectory, factory.Requests[2].ProfileDirectory);
             Assert.NotEqual(currentDirectory, otherDirectory);
-            Assert.True(otherDirectory.StartsWith(
+            Assert.StartsWith(
                 Path.Combine(paths.BrowserProfileDirectory, "profiles") + Path.DirectorySeparatorChar,
-                StringComparison.Ordinal));
+                otherDirectory,
+                StringComparison.Ordinal);
             Assert.Equal("keep existing default-profile data", await File.ReadAllTextAsync(legacyData));
         }
 
@@ -171,6 +174,8 @@ public sealed partial class BrowseNativeOwnershipTests
     {
         var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
         const string profileA = "legacy-owner-a"; const string profileB = "new-home-profile-b";
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
         var origin = new Uri("https://shared-origin.example/"); var tabA = Guid.NewGuid(); var tabB = Guid.NewGuid();
         var onlyA = new BrowseTabSessionProjection([
             new(tabA, "A", origin.AbsoluteUri, BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow)
@@ -219,12 +224,12 @@ public sealed partial class BrowseNativeOwnershipTests
     }
 
     [Fact]
-    public void Unattributed_legacy_data_is_reported_and_never_autoassigned_to_a_profile()
+    public async Task Unattributed_legacy_data_is_reported_and_never_autoassigned_to_a_profile()
     {
         var paths = new PreservedPaths();
         using (var legacy = new BrowserSitePermissionStore(paths))
-            legacy.SetDecisionAsync(new Uri("https://legacy.example/"), BrowserSitePermissionKind.Camera,
-                BrowserSitePermissionDecision.Allow, default).GetAwaiter().GetResult();
+            await legacy.SetDecisionAsync(new Uri("https://legacy.example/"), BrowserSitePermissionKind.Camera,
+                BrowserSitePermissionDecision.Allow, default);
         var original = File.ReadAllBytes(Path.Combine(paths.DataDirectory, "browser-site-permissions.json"));
         Assert.True(BrowserProfileStorage.HasUnassignedLegacyData(paths));
         var profileDirectory = BrowserProfileStorage.ResolveProfileDirectory(paths, "unverified-profile");
@@ -240,7 +245,7 @@ public sealed partial class BrowseNativeOwnershipTests
         var first = Task.Run(() => BrowserProfileStorage.ResolveProfileDirectory(paths, "concurrent-a"));
         var second = Task.Run(() => BrowserProfileStorage.ResolveProfileDirectory(paths, "concurrent-b"));
         var roots = await Task.WhenAll(first, second);
-        Assert.Single(roots.Where(path => StringComparer.Ordinal.Equals(path, paths.BrowserProfileDirectory)));
+        Assert.Single(roots, path => StringComparer.Ordinal.Equals(path, paths.BrowserProfileDirectory));
         Assert.NotEqual(roots[0], roots[1]);
     }
 

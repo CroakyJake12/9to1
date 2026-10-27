@@ -3,7 +3,7 @@
 Transition ButtonHover {
     Duration = 180ms;
     Easing = EaseOut;
-    Properties = Background, Foreground, Glow, Shadow, BorderColor, BorderWidth, Radius, Scale, Opacity;
+    Properties = Background, Foreground, Glow, Shadow, BorderColor, BorderWidth, Radius, Scale, HoverProgress, Opacity;
 }
 Transition ButtonPressed {
     Duration = 120ms;

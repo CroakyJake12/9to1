@@ -204,6 +204,8 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient("Haven.ModelProvider.gemini");
         services.AddSingleton<IProviderConfigurationStore, ProviderConfigurationStore>();
         services.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
+        services.AddSingleton<IHuggingFaceModelService>(provider => HuggingFaceModelService.Create(
+            provider.GetRequiredService<IProviderSecretStore>(), provider.GetRequiredService<IAppPaths>()));
         services.AddSingleton<IModelFallbackOrderStore, VersionedModelFallbackOrderStore>();
         services.AddSingleton<IModelPersonalisationStore, VersionedModelPersonalisationStore>();
         services.AddSingleton<IModelPermissionStore, VersionedModelPermissionStore>();

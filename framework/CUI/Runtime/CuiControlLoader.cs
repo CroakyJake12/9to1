@@ -106,15 +106,23 @@ public sealed partial class CuiControlLoader : IDisposable
     private int _currentLayer;
     private string? _currentRepeatIdentity;
     private PropertyChangedEventHandler? _bindingChangedHandler;
+    private bool _listeningForGlobalPalette;
 
     public void SetThemePreferenceContext(CuiThemePreferenceContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (ReferenceEquals(context, _themePreference)) return;
         if (_themePreference is not null) _themePreference.Changed -= ThemePreferenceChanged;
+        if (_listeningForGlobalPalette)
+        {
+            CuiThemeResourceApplier.PaletteChanged -= GlobalPaletteChanged;
+            _listeningForGlobalPalette = false;
+        }
         _themePreference = context; context.Changed += ThemePreferenceChanged;
         ThemePreferenceChanged(this, EventArgs.Empty);
     }
+
+    private void GlobalPaletteChanged(object? sender, EventArgs args) => ThemePreferenceChanged(sender, args);
 
     private CuiThemeResolution ResolveTheme(string name)
     {
@@ -435,6 +443,11 @@ public sealed partial class CuiControlLoader : IDisposable
             Attempt(_lifetime.Cancel);
             ActionFailed = null;
             if (_themePreference is not null) Attempt(() => _themePreference.Changed -= ThemePreferenceChanged);
+            if (_listeningForGlobalPalette)
+            {
+                Attempt(() => CuiThemeResourceApplier.PaletteChanged -= GlobalPaletteChanged);
+                _listeningForGlobalPalette = false;
+            }
             if (_bindingContext is INotifyPropertyChanged observable && _bindingChangedHandler is not null)
                 Attempt(() => observable.PropertyChanged -= _bindingChangedHandler);
             _bindingChangedHandler = null;
@@ -532,9 +545,27 @@ public sealed partial class CuiControlLoader : IDisposable
     public void SetSurface(string surface, string? appId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(surface);
-        if (appId is not null) _ = CuiAccentPreference.Default.WithAppColour(appId, null);
+        if (appId is not null)
+        {
+            // Callers use registered surface names (present, write, data) or canonical
+            // app.* identities interchangeably; resolve bare names through the owner
+            // catalog and validate the RESOLVED identity, never rejecting a bare
+            // registered surface name. Per-app accent colour assignment itself flows
+            // through the typed settings owner, not this presentation registration.
+            var resolved = CuiAppAccentCatalog.Find(appId)?.AppId
+                ?? (appId.StartsWith("app.", StringComparison.Ordinal) ? appId : null);
+            if (resolved is null)
+            {
+                // Unknown non-catalog IDs without the app. prefix remain presentation
+                // names until a typed owner registers them; canonicalizing to null
+                // keeps accent resolution governed by the owner-catalog contract.
+                resolved = appId.StartsWith("app.", StringComparison.Ordinal) ? appId : null;
+            }
+            if (resolved is not null) _ = CuiAccentPreference.Default.WithAppColour(resolved, null);
+            _accentAppId = resolved;
+        }
+        else _accentAppId = null;
         _currentSurface = surface;
-        _accentAppId = appId;
     }
     public void SetAppearance(CuiAppearance appearance)
     {
@@ -3010,6 +3041,7 @@ public sealed partial class CuiControlLoader : IDisposable
     {
         void RefreshAffectedBindings()
         {
+            var frame = _committedActionFrame;
             // Preserve conditional retirement before Repeat reconciliation: a hidden branch must not
             // read a newly supplied source or construct controls while its old owner is being retired.
             RefreshLiveConditionals(propertyName);
@@ -3031,6 +3063,9 @@ public sealed partial class CuiControlLoader : IDisposable
 
                 ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
             }
+            // External observed state participates in the same rising-edge effect contract
+            // as local mutations. Never dispatch an old notification into a replacement frame.
+            if (IsActionFrameCurrent(frame)) EvaluateEffects();
         }
 
         if (Dispatcher.UIThread.CheckAccess())
@@ -4397,6 +4432,11 @@ public sealed partial class CuiControlLoader : IDisposable
         var name = _themeNames.Count > 0 ? _themeNames.Peek() : "user_preference";
         _controlThemeNames[control] = name;
         ApplyResolvedTheme(control, ResolveTheme(name));
+        if (_themePreference is null && !_listeningForGlobalPalette)
+        {
+            CuiThemeResourceApplier.PaletteChanged += GlobalPaletteChanged;
+            _listeningForGlobalPalette = true;
+        }
     }
 
     /// <summary>

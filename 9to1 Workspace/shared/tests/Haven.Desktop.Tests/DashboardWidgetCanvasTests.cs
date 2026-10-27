@@ -1,11 +1,52 @@
 using Avalonia.Headless.XUnit;
 using Haven.Core;
 using Haven.Desktop.Dashboard;
+using Avalonia.Controls;
+using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
 
 namespace Haven.Desktop.Tests;
 
 public sealed class DashboardWidgetCanvasTests
 {
+    [AvaloniaTheory]
+    [InlineData(340)]
+    [InlineData(760)]
+    [InlineData(1160)]
+    public void Authored_cards_have_visible_surfaces_reachable_actions_and_keep_undo_after_data_refresh(int width)
+    {
+        using var canvas = new DashboardWidgetCanvas();
+        var views = new[] { View("a", 0, "12"), View("b", 1, "7") };
+        canvas.SetWidgets(views, null, false, "home");
+        var window = new Window { Width = width, Height = 900, Content = new ScrollViewer { Content = canvas } };
+        try
+        {
+            window.Show(); window.UpdateLayout();
+            Assert.All(canvas.Children, frame =>
+            {
+                Assert.InRange(frame.Bounds.Width, 1, width);
+                var card = frame.GetSelfAndVisualDescendants().OfType<CuiContainerControl>()
+                    .Single(control => control.Name == "dashboard-widget-card");
+                Assert.NotNull(card.Background);
+                Assert.Contains(frame.GetVisualDescendants().OfType<Button>(), button => Equals(button.Content, "Open") && button.IsEffectivelyVisible);
+                Assert.DoesNotContain(frame.GetVisualDescendants().OfType<Button>(), button => Equals(button.Content, "Hide") && button.IsEffectivelyVisible);
+            });
+            canvas.HideWidget("b");
+            var persisted = canvas.Placements.ToArray();
+            canvas.SetWidgets([View("a", 0, "13"), View("b", 1, "8")], persisted, true, "home");
+            Assert.True(canvas.CanUndo);
+            Assert.True(canvas.Undo());
+            Assert.True(canvas.Placements.Single(item => item.Key == "b").IsVisible);
+            canvas.SetWidgets(views, persisted, false, "other-page");
+            Assert.False(canvas.CanUndo);
+            canvas.HideWidget("a");
+            window.UpdateLayout();
+            Assert.Empty(canvas.Children);
+            Assert.Equal(0, canvas.Height);
+        }
+        finally { window.Close(); }
+    }
+
     [Fact]
     public void Move_snaps_to_six_column_grid_and_reflows_collisions_deterministically()
     {

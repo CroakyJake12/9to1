@@ -76,6 +76,9 @@ internal sealed partial class SpacesBrowseAppContentSession
                 await spaces.Controller.SelectSpaceAsync(spaceId, token);
             token.ThrowIfCancellationRequested();
             DemandAlive();
+#if !ANDROID
+            await RetireAssistantPresentationOnUiAsync();
+#endif
             lock (_gate)
             {
                 token.ThrowIfCancellationRequested();
@@ -88,6 +91,9 @@ internal sealed partial class SpacesBrowseAppContentSession
         }
         catch (Exception restoreFailure)
         {
+#if !ANDROID
+            UnwireChatAssistants(chat);
+#endif
             UnobserveConversationRoute(chat);
             try { await chat.DisposeAsync(); _ownedChats.Remove(chat); }
             catch (Exception cleanupFailure)

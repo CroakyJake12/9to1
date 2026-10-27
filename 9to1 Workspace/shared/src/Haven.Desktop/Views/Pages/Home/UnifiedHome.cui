@@ -31,40 +31,48 @@
         <Container id="home-sidebar" MinWidth="56" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
           <Container id="home-rail-nav" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8">
             <Button id="home-apps" action="home.apps" accessible-name="Apps" Tooltip="Apps" Selected="{Binding rail.appsSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-              <Image id="home-apps-icon" Source="icon:apps" Width="22" Height="22" />
+              <Image id="home-apps-icon" Source="icon:apps" Width="26" Height="26" />
             </Button>
             <Button id="home-dashboard" action="home.dashboard" accessible-name="Dashboard" Tooltip="Dashboard" Selected="{Binding rail.dashboardSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-              <Image id="home-dashboard-icon" Source="icon:dashboard" Width="22" Height="22" />
+              <Image id="home-dashboard-icon" Source="icon:dashboard" Width="26" Height="26" />
             </Button>
             <Button id="home-models" action="home.models" accessible-name="Models / Discover" Tooltip="Models / Discover" Selected="{Binding rail.modelsSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-              <Image id="home-models-icon" Source="icon:sparkles" Width="22" Height="22" />
+              <Image id="home-models-icon" Source="icon:sparkles" Width="26" Height="26" />
             </Button>
             <Button id="home-newtab" action="home.newtab" accessible-name="New Tab" Tooltip="New Tab" Selected="{Binding rail.newtabSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-              <Image id="home-newtab-icon" Source="icon:plus" Width="22" Height="22" />
+              <Image id="home-newtab-icon" Source="icon:plus" Width="26" Height="26" />
             </Button>
             <Container id="home-rail-primary-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
             <Button id="home-library" action="home.library" accessible-name="Library" Tooltip="Library" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-              <Image id="home-library-icon" Source="icon:folder" Width="22" Height="22" />
+              <Image id="home-library-icon" Source="icon:folder" Width="26" Height="26" />
             </Button>
             <Button id="home-events" action="home.events" accessible-name="Events" Tooltip="Events" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-              <Image id="home-events-icon" Source="icon:calendar" Width="22" Height="22" />
+              <Image id="home-events-icon" Source="icon:calendar" Width="26" Height="26" />
             </Button>
             <Button id="home-mesh" action="home.mesh" accessible-name="Mesh" Tooltip="Mesh" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-              <Image id="home-mesh-icon" Source="icon:mesh" Width="22" Height="22" />
+              <Image id="home-mesh-icon" Source="icon:mesh" Width="26" Height="26" />
             </Button>
           </Container>
           <Container id="home-rail-footer" Row="1" Type="Vertical Stack" CellGap="8" Padding="0">
             <Button id="home-settings" action="home.settings" accessible-name="Settings" Tooltip="Settings" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-              <Image id="home-settings-icon" Source="icon:settings" Width="22" Height="22" />
+              <Image id="home-settings-icon" Source="icon:settings" Width="26" Height="26" />
             </Button>
           </Container>
         </Container>
         <Container id="home-main" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="8" Padding="16">
           <Text id="home-heading" Text="Apps" FontSize="24" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
-          <Container id="home-search-row" Row="1" Type="Wrap" CellGap="8" IsVisible="False">
-            <Input id="home-search" Type="Text" PlaceholderText="Search or enter an address" AccessibleName="New Tab search or prompt" MinWidth="180" />
-            <Input id="home-search-mode" Type="Select" AccessibleName="Search or AI" Width="132" />
-            <Button id="home-submit" action="home.submit" Content="Go" AccessibleName="Submit New Tab search or prompt" />
+          <Container id="home-search-row" Row="2" Type="Vertical Stack" CellGap="20" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="760" Padding="24">
+            <Text Text="Where would you like to go?" FontSize="32" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
+            <Container Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="8">
+              <Input id="home-search" Type="Text" PlaceholderText="Search or enter an address" AccessibleName="New Tab search or prompt" MinWidth="180" Height="48" />
+              <Input id="home-search-mode" Column="1" Type="Select" AccessibleName="Search or AI" Width="132" />
+              <Button id="home-submit" Column="2" action="home.submit" Content="Go" AccessibleName="Submit New Tab search or prompt" />
+            </Container>
+            <Container Type="Wrap" CellGap="10">
+              <Button action="home.apps" Content="Apps" />
+              <Button action="home.library" Content="Library" />
+              <Button action="home.dashboard" Content="Dashboard" />
+            </Container>
           </Container>
           <Container id="home-content" Row="2" Type="Overlay" />
           <Text id="home-status" Row="3" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />

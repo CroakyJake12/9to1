@@ -10,7 +10,11 @@
   <!-- Build infrastructure is a build-only dependency, never application code-behind.
        The task project itself does not import these targets, avoiding recursion. -->
   <ItemGroup Condition="Exists('$(_CuiSourceTaskProject)') and '$(CuiUsePrebuiltCompiler)' != 'true'">
-    <ProjectReference Include="$(_CuiSourceTaskProject)" ReferenceOutputAssembly="false" Private="false" PrivateAssets="all" />
+    <!-- Compile the task for the SDK host, independently of the application's RID,
+         architecture and deployment mode. The loader path above is host-neutral. -->
+    <ProjectReference Include="$(_CuiSourceTaskProject)" ReferenceOutputAssembly="false" Private="false" PrivateAssets="all"
+                      GlobalPropertiesToRemove="RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained;PublishSingleFile;PublishReadyToRun;PublishTrimmed;PublishAot;UseAppHost;Platform;PlatformTarget"
+                      AdditionalProperties="Platform=AnyCPU;PlatformTarget=AnyCPU" />
   </ItemGroup>
   <UsingTask TaskName="CakeOS.Cui.Build.CompileCuiSourcesTask" AssemblyFile="$(CuiCompilerTaskAssembly)" />
 

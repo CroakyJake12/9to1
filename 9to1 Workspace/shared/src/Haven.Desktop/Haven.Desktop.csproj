@@ -100,6 +100,7 @@
     <EmbeddedResource Include="Views/Pages/Automations/UI/OriginalAutomationLibrary.cui" LogicalName="Haven.Desktop.OriginalAutomationLibrary.cui" />
     <EmbeddedResource Include="Views/Pages/Home/Dashboard.cui" LogicalName="Haven.Desktop.Home.Dashboard.cui" />
     <EmbeddedResource Include="Views/Pages/Home/Discover.cui" LogicalName="Haven.Desktop.Home.Discover.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HuggingFace/HomeHuggingFace.cui" LogicalName="Haven.Desktop.Home.HuggingFace.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHome.cui" LogicalName="Haven.Desktop.Home.Unified.cui" />
     <EmbeddedResource Include="Views/Pages/Home/PreferenceRecovery.cui" LogicalName="Haven.Desktop.PreferenceRecovery.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
@@ -112,6 +113,7 @@
     <EmbeddedResource Include="Views/Pages/Data/UI/DataSharedInk.cui" LogicalName="Haven.Desktop.Data.SharedInk.cui" />
     <EmbeddedResource Include="Views/Pages/Present/UI/PresentFreehandTools.cui" LogicalName="Haven.Desktop.Present.PresentFreehandTools.cui" />
     <EmbeddedResource Include="Views/Pages/Present/UI/PresentFreehandInput.cui" LogicalName="Haven.Desktop.Present.PresentFreehandInput.cui" />
+    <EmbeddedResource Include="Views/Pages/Study/StudyWorkspace.cui" LogicalName="Haven.Desktop.Study.Workspace.cui" />
     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
     <EmbeddedResource Include="Views/Pages/Chat/ChatRecovery.cui" LogicalName="Haven.Desktop.Chat.Recovery.cui" />
     <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />
@@ -170,5 +172,10 @@
   <ItemGroup>
     <AvaloniaResource Remove="App.axaml" />
     <AvaloniaXaml Remove="App.axaml" />
+    <!-- MainWindow is OS-only window chrome. Its canonical CUI workspace is mounted
+         through Window.Content; keep the legacy markup out of Avalonia's resource
+         and compiled-XAML generation. -->
+    <AvaloniaResource Remove="MainWindow.axaml" />
+    <AvaloniaXaml Remove="MainWindow.axaml" />
   </ItemGroup>
 </Project>

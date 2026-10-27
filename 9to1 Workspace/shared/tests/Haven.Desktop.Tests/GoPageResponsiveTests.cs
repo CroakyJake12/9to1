@@ -7,6 +7,7 @@ using Haven.Desktop.Views.Pages.Go;
 using Haven.Application;
 using Haven.Core;
 using Haven.UI;
+using HavenOS.Apps.Assistants.Contracts;
 using Haven.UI.Components;
 
 namespace Haven.Desktop.Tests;
@@ -132,17 +133,19 @@ public sealed class GoPageResponsiveTests
             window.UpdateLayout();
             Assert.Equal(HavenVisibility.Visible, page.Route.AddOverlay.GetValue(HavenProperties.Visibility));
             Assert.Equal(HavenLayoutParticipation.Overlay, page.Route.AddOverlay.GetValue(HavenProperties.LayoutParticipation));
+            Assert.True(page.Route.AddMenuPrefab.Bounds.Width < page.SceneHost.SurfaceMetrics.Viewport.Width);
             Assert.Equal(desiredBeforeOpen, page.SceneRoot.DesiredSize);
             Assert.Equal(composerBeforeOpen, page.Route.Composer.Bounds);
             Assert.True(page.Route.AddOverlay.Bounds.Bottom <= page.SceneHost.SurfaceMetrics.Viewport.Height + 0.5);
             Assert.True(page.Route.MainMenu.IsIncluded);
-            Assert.InRange(Math.Abs(page.Route.MainMenu.Bounds.X - page.Route.Composer.Bounds.X), 0, 1.0);
+            Assert.InRange(Math.Abs(page.Route.AddMenuPrefab.Bounds.X - page.Route.Composer.Bounds.X), 0, 1.0);
             Assert.True(page.Route.MainMenu.Bounds.Bottom <= page.Route.Composer.Bounds.Y - 4);
             var addCommands = new HavenSceneRenderer().Render(page.SceneRoot);
             Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "agents" });
-            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "prompt" });
-            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "bolt" });
-            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "rocket" });
+            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "skills" });
+            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "plugin" });
+            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "apps" });
+            Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "chat" });
             Assert.Contains(addCommands, command => command is HavenIconCommand { Key: "file" });
 
             ClickAt(router, new HavenPoint(
@@ -179,7 +182,7 @@ public sealed class GoPageResponsiveTests
             Assert.DoesNotContain(page.Route.Root.DescendantsAndSelf(), element => element is Video or Web);
             Assert.True(page.Route.Instruction.Accessibility.Focusable);
             Assert.Equal(HavenAccessibleRole.Input, page.Route.Instruction.Accessibility.Role);
-            Assert.Equal("Ask Haven anything", page.Route.Instruction.Accessibility.AccessibleName);
+            Assert.Equal("Ask 9to1 anything", page.Route.Instruction.Accessibility.AccessibleName);
             Assert.Equal(InputDefaults.FocusTransition, page.Route.Instruction.GetValue(HavenProperties.Transition));
 
             page.Route.Instruction.Text = "hello";
@@ -279,7 +282,7 @@ public sealed class GoPageResponsiveTests
     }
 
     [AvaloniaFact]
-    public void Add_catalogues_render_rows_for_agents_capabilities_instructions_and_apps()
+    public void Add_catalogues_render_rows_for_specialists_assistants_plugins_skills_and_apps()
     {
         using var page = new GoPage(new HavenEventBus());
         var window = new Window { Width = 1000, Height = 760, Content = page };
@@ -287,17 +290,27 @@ public sealed class GoPageResponsiveTests
         var agent = new AgentDefinition(Guid.NewGuid(), "Agent One", "Agent description", "Use agent", "agents", string.Empty, null, "[]", "{}", true, true, now);
         var capability = new CapabilityDefinition(Guid.NewGuid(), "cap.one", "Capability One", "Capability description", "go", "bolt", "Use capability", "test", "[]", CapabilityPlatform.Windows, CapabilityRiskClass.ReadOnly, CapabilityAvailability.Available, "[]", "test", true, true, true, true, now);
         var instruction = new PromptDefinition(Guid.NewGuid(), "Instruction One", "Instruction description", "prompt", "Use instruction", false, true, true, now);
+        var assistant = new AssistantDefinitionSnapshot(new("fixture-den", "personal", "configured-helper"), 4,
+            ConfiguredIdentityKind.Assistant, new() { Name = "Configured Helper", Description = "Assistant detail." }, []);
         try
         {
             window.Show();
             window.UpdateLayout();
             page.SetAddCatalogue([agent], [capability], [instruction], BuiltInModeSeed.Modes);
+            page.SetAssistantCatalogue([assistant]);
             var router = new HavenInputRouter(page.SceneRoot);
+
+            Assert.Equal("Specialists", page.Route.AgentsButton.Content);
+            Assert.Equal("Plugin", page.Route.CapabilitiesButton.Content);
+            Assert.Equal("Skills", page.Route.InstructionsButton.Content);
+            Assert.Equal("Apps", page.Route.AppsButton.Content);
+            Assert.Equal("Assistants", page.Route.AssistantsButton.Content);
 
             AssertCatalogueContains(page, window, router, page.Route.AgentsButton, "Agent One");
             AssertCatalogueContains(page, window, router, page.Route.CapabilitiesButton, "Capability One");
             AssertCatalogueContains(page, window, router, page.Route.InstructionsButton, "Instruction One");
-            AssertCatalogueContains(page, window, router, page.Route.AppsButton, "Chat", "Study", "Studio");
+            AssertCatalogueContains(page, window, router, page.Route.AppsButton, "Chat", "Study", "AI Studio");
+            AssertCatalogueContains(page, window, router, page.Route.AssistantsButton, "Configured Helper");
         }
         finally
         {

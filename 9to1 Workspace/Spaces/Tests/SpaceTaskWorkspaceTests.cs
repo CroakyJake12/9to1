@@ -20,6 +20,7 @@ public sealed class SpaceTaskWorkspaceTests
         Assert.Equal(rig.Snapshot.ExecutionId, view.Snapshot.ExecutionId);
         Assert.Equal(rig.Snapshot.PersistenceRevision, view.Snapshot.PersistenceRevision);
         Assert.Equal(rig.Snapshot.Plan[0].ActionId, Assert.Single(view.Projection!.AcceptedActions).ActionId);
+        Assert.False(view.HasCurrentCommandIdentity); // Saved OwnerBinding is not current-principal authorization.
         Assert.False(view.OriginalAttemptRetained);
         Assert.Empty(view.Snapshot.Attempts);
         Assert.Equal(0, rig.Tasks.Writes);

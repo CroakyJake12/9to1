@@ -1,6 +1,14 @@
 using System.Reflection;
 using System.Text.Json;
 using Haven.Desktop.Accounts;
+using HavenOS.Home;
+using HavenOS.Home.Core;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using NineToOne.Accounts.Native;
 using NineToOne.Accounts.Remote;
 using NineToOne.Web.Accounts;
@@ -11,6 +19,144 @@ namespace Haven.Desktop.Tests;
 // Presentation counterexamples only. Scripted wire records do not prove live CAKE auth.
 public sealed class NativeAccountObservationFenceTests
 {
+    [Fact]
+    public async Task Onboarding_awaits_the_shared_session_and_records_only_its_current_authenticated_result()
+    {
+        var pending = new TaskCompletionSource<NativeCakeAccountSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var session = new ScriptedSession { IsAvailable = true, OnSignIn = ct => pending.Task.WaitAsync(ct) };
+        var adapter = new NativeCakeOnboardingAdapter(session);
+        var root = Path.Combine(Path.GetTempPath(), "onboarding-account-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var service = new HomeOnboardingService(new FileHomeCoreStateStore(Path.Combine(root, "home.json")), browserLauncher: adapter);
+            var controller = new HomeOnboardingCuiController(service, "synthetic-profile");
+            var original = controller.DispatchWithOutcomeAsync("onboarding.signin", null, TestContext.Current.CancellationToken).AsTask();
+            Assert.False(original.IsCompleted);
+            Assert.False(adapter.IsSignedIn);
+            Assert.Equal(1, session.SignInCalls);
+            var authenticated = Snapshot();
+            session.Current = authenticated;
+            pending.SetResult(authenticated);
+            Assert.True((await original).Succeeded);
+            Assert.True((await controller.DispatchWithOutcomeAsync("onboarding.complete", null, TestContext.Current.CancellationToken)).Succeeded);
+            var saved = await service.ReadCompletionAsync("synthetic-profile", TestContext.Current.CancellationToken);
+            Assert.True(saved.Completion!.SignedIn);
+            Assert.Same(authenticated, session.Current);
+            Assert.True(await adapter.LaunchAuthAsync(TestContext.Current.CancellationToken));
+            Assert.Equal(1, session.SignInCalls); // Existing shared session, no second OAuth flow.
+        }
+        finally { pending.TrySetCanceled(TestContext.Current.CancellationToken); Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Onboarding_does_not_confuse_browser_return_with_a_current_session()
+    {
+        var session = new ScriptedSession { IsAvailable = false, OnSignIn = _ => Task.FromResult(Snapshot()) };
+        var adapter = new NativeCakeOnboardingAdapter(session);
+        Assert.False(await adapter.LaunchAuthAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(0, session.SignInCalls);
+        session.IsAvailable = true;
+        Assert.False(await adapter.LaunchAuthAsync(TestContext.Current.CancellationToken));
+        Assert.False(adapter.IsSignedIn); // A returned value without current session custody is insufficient.
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => adapter.LaunchAuthAsync(cancelled.Token));
+        Assert.Equal(1, session.SignInCalls);
+    }
+
+    [AvaloniaFact]
+    public async Task Onboarding_status_is_below_the_actual_step_in_the_mounted_CUI()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "onboarding-layout-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var service = new HomeOnboardingService(new FileHomeCoreStateStore(Path.Combine(root, "home.json")));
+        var mounted = FirstRunOnboardingFlow.Mount(service, "synthetic-profile");
+        var window = new Window { Width = 900, Height = 650, Content = mounted.Root };
+        try
+        {
+            window.Show(); window.UpdateLayout();
+            Control Find(string name) => mounted.Root.GetVisualDescendants().OfType<Control>().Single(c => c.Name == name);
+            var welcome = Find("onboarding-welcome"); var status = mounted.Root.GetVisualDescendants().OfType<Control>().Single(c => c.Name != null && c.Name.StartsWith("onboarding-status"));
+            var stepPosition = welcome.TranslatePoint(default, mounted.Root)!.Value;
+            var statusPosition = status.TranslatePoint(default, mounted.Root)!.Value;
+            Assert.True(welcome.Bounds.Height > 100);
+            Assert.True(statusPosition.Y >= stepPosition.Y + welcome.Bounds.Height,
+                "Status text must follow the current step, not overlap its heading or supporting copy.");
+        }
+        finally { window.Close(); await mounted.RetireAsync(); Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Failed_onboarding_signin_cannot_persist_completion_before_the_local_only_decision()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "onboarding-failed-auth-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var session = new ScriptedSession { IsAvailable = true,
+                OnSignIn = _ => Task.FromException<NativeCakeAccountSnapshot>(new IOException("synthetic offline")) };
+            var service = new HomeOnboardingService(new FileHomeCoreStateStore(Path.Combine(root, "home.json")),
+                browserLauncher: new NativeCakeOnboardingAdapter(session));
+            var controller = new HomeOnboardingCuiController(service, "synthetic-profile");
+            var failure = await controller.DispatchWithOutcomeAsync("onboarding.signin", null, TestContext.Current.CancellationToken);
+            Assert.False(failure.Succeeded);
+            Assert.Equal("SignInFailed", failure.Code);
+            Assert.False((await controller.DispatchWithOutcomeAsync("onboarding.complete", null, TestContext.Current.CancellationToken)).Succeeded);
+            Assert.Equal(HomeOnboardingReadState.NotCompleted,
+                (await service.ReadCompletionAsync("synthetic-profile", TestContext.Current.CancellationToken)).State);
+            Assert.True((await controller.DispatchWithOutcomeAsync("onboarding.notnow", null, TestContext.Current.CancellationToken)).Succeeded);
+            Assert.True((await controller.DispatchWithOutcomeAsync("onboarding.complete", null, TestContext.Current.CancellationToken)).Succeeded);
+            Assert.False((await service.ReadCompletionAsync("synthetic-profile", TestContext.Current.CancellationToken)).Completion!.SignedIn);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [AvaloniaFact]
+    public async Task Onboarding_successful_retry_clears_the_rendered_failure_before_model_download_choice()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "onboarding-retry-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var session = new ScriptedSession { IsAvailable = true,
+            OnSignIn = _ => Task.FromException<NativeCakeAccountSnapshot>(new IOException("synthetic offline")) };
+        var service = new HomeOnboardingService(new FileHomeCoreStateStore(Path.Combine(root, "home.json")),
+            browserLauncher: new NativeCakeOnboardingAdapter(session));
+        var mounted = FirstRunOnboardingFlow.Mount(service, "synthetic-profile");
+        var window = new Window { Width = 900, Height = 650, Content = mounted.Root };
+        T Find<T>(string name) where T : Control => mounted.Root.GetVisualDescendants().OfType<T>()
+            .Single(c => c.Name == name && c.IsEffectivelyVisible);
+        async Task Click(string name)
+        {
+            var button = Find<Button>(name);
+            Assert.True(button.IsEnabled);
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await mounted.WhenActionsIdleAsync();
+            Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+        }
+        try
+        {
+            window.Show(); window.UpdateLayout();
+            await Click("onboarding-start");
+            await Click("onboarding-signin-primary");
+            Assert.Contains("Sign-in did not complete", mounted.Root.GetVisualDescendants().OfType<TextBlock>().Single(c => c.Name != null && c.Name.StartsWith("onboarding-status")).Text);
+            Assert.NotNull(Find<Control>("onboarding-signin"));
+            session.OnSignIn = _ =>
+            {
+                var current = Snapshot(); session.Current = current;
+                return Task.FromResult(current);
+            };
+            await Click("onboarding-signin-primary");
+            Assert.Equal(2, session.SignInCalls);
+            Assert.NotNull(Find<Control>("onboarding-download"));
+            Assert.True(string.IsNullOrEmpty(mounted.Root.GetVisualDescendants().OfType<TextBlock>().Single(c => c.Name != null && c.Name.StartsWith("onboarding-status")).Text));
+            Assert.False(mounted.CompletionTask.IsCompleted);
+            await Click("onboarding-continue");
+            Assert.True(mounted.CompletionTask.IsCompletedSuccessfully);
+            Assert.True((await service.ReadCompletionAsync("synthetic-profile", TestContext.Current.CancellationToken)).Completion!.SignedIn);
+        }
+        finally { window.Close(); await mounted.RetireAsync(); Directory.Delete(root, true); }
+    }
+
     [Fact]
     public async Task Cleared_generation_rejects_original_delayed_read_and_creates_no_followup()
     {
@@ -146,9 +292,10 @@ public sealed class NativeAccountObservationFenceTests
         public bool IsAvailable { get; set; }
         public NativeCakeAccountSnapshot? Current { get; set; }
         public int SignInCalls;
+        public Func<CancellationToken, Task<NativeCakeAccountSnapshot>>? OnSignIn { get; set; }
         public bool TryGetCurrentSnapshot(out NativeCakeAccountSnapshot? snapshot) { snapshot = Current; return Current is not null; }
         public Task<NativeCakeAccountSnapshot> SignInAsync(CancellationToken ct)
-        { ct.ThrowIfCancellationRequested(); SignInCalls++; return Task.FromResult(Current ?? throw new InvalidOperationException("no scripted current")); }
+        { ct.ThrowIfCancellationRequested(); SignInCalls++; return OnSignIn?.Invoke(ct) ?? Task.FromResult(Current ?? throw new InvalidOperationException("no scripted current")); }
         public Task<ApiResult<RemoteCurrent>> CurrentAsync(CancellationToken ct) => throw new NotImplementedException();
         public Task<ApiResult<RemoteProfile>> ProfileAsync(CancellationToken ct) => throw new NotImplementedException();
         public Task<ApiResult<RemoteSession[]>> SessionsAsync(CancellationToken ct) => throw new NotImplementedException();

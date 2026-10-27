@@ -34,6 +34,7 @@
     <Compile Include="ChatComposerActionShelfTests.cs" />
     <Compile Include="FloatingFormatToolbarTests.cs" />
     <Compile Include="ChatComposerEmojiPickerViewportTests.cs" />
+    <Compile Include="ChatComposerNativeEmojiFontTests.cs" />
     <Compile Include="NativeComposerFloatingPortalTests.cs" />
     <Compile Include="HavenPackagedSvgResolverStrictTests.cs" />
     <Compile Include="NativeSharedPanelIntegrationTests.cs" />

@@ -1,13 +1,18 @@
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Browser;
+using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
 using Xunit;
 
@@ -55,10 +60,153 @@ public sealed partial class BrowseNativeUiTests
     }
 
     [AvaloniaFact]
-    public async Task Dragging_a_current_tab_row_reorders_its_stable_id_without_selecting_or_recreating_it()
+    public async Task Eleven_tabs_use_real_overflow_arrows_without_a_scrollbar_and_keep_selection_close_and_drag_targets()
     {
-        var factory = new FixtureFactory();
-        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var ids = Enumerable.Range(0, 11).Select(_ => Guid.NewGuid()).ToArray();
+        var stamp = DateTimeOffset.UtcNow;
+        var session = new NativeDragSession(new BrowseTabSessionProjection(ids.Select((id, index) =>
+            new BrowserTabState(id, "Tab " + (index + 1), "https://tabs.example/" + index,
+                BrowserTabPrivacy.Standard, string.Empty, stamp) { ProfileId = "profile" }).ToArray(), ids[0]));
+        var paths = new Paths(); var factory = new FixtureFactory();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: "profile", tabSessionPersistence: session);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        window.Width = 2048; window.Height = 800;
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var viewport = Assert.IsType<CuiContainerControl>(Authored(window, "BrowseTabViewport"));
+            var scroll = Assert.Single(viewport.GetVisualDescendants().OfType<ScrollViewer>());
+            var left = viewport.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "CuiOverflowLeft");
+            var right = viewport.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "CuiOverflowRight");
+            Assert.Equal(ScrollBarVisibility.Hidden, scroll.HorizontalScrollBarVisibility);
+            Assert.True(scroll.Extent.Width > scroll.Viewport.Width);
+            Assert.False(left.IsEffectivelyVisible); Assert.True(right.IsEffectivelyVisible);
+            Assert.DoesNotContain(viewport.GetVisualDescendants().OfType<ScrollBar>(),
+                bar => bar.Orientation == Avalonia.Layout.Orientation.Horizontal && bar.IsEffectivelyVisible);
+
+            var source = TabButton(window, workspace, ids[0].ToString("D"));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var rightPoint = right.TranslatePoint(new Point(right.Bounds.Width / 2, right.Bounds.Height / 2), window)!.Value;
+            var beforeCommand = workspace.OriginalCommand;
+            StartTabDrag(window, source, sourcePoint);
+            window.MouseMove(rightPoint, RawInputModifiers.LeftMouseButton); Layout();
+            Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            Assert.All(Rows(workspace), row => Assert.Equal(BrowseNativeWorkspace.TabDropZone.None, row.DropZone));
+            CaptureTabDragIfRequested(window, "overflow-arrows");
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
+            window.MouseUp(rightPoint, MouseButton.Left); Layout();
+            Assert.Same(beforeCommand, workspace.OriginalCommand);
+            Assert.Equal(ids, chrome.State.Tabs.Select(tab => tab.Id));
+
+            window.MouseMove(rightPoint); window.MouseDown(rightPoint, MouseButton.Left); window.MouseUp(rightPoint, MouseButton.Left); Layout();
+            Assert.True(scroll.Offset.X > 0); Assert.True(left.IsEffectivelyVisible);
+            var offset = scroll.Offset.X;
+            var wheelPoint = viewport.TranslatePoint(new Point(viewport.Bounds.Width / 2, viewport.Bounds.Height / 2), window)!.Value;
+            window.MouseWheel(wheelPoint, new Vector(0, 1)); Layout();
+            Assert.True(scroll.Offset.X < offset);
+            right.Focus();
+            window.KeyPress(Key.End, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.End, RawInputModifiers.None, PhysicalKey.None, null); Layout();
+            Assert.False(right.IsEffectivelyVisible); Assert.True(left.IsEffectivelyVisible);
+            Assert.Same(scroll, Assert.Single(viewport.GetVisualDescendants().OfType<ScrollViewer>()));
+            var last = TabButton(window, workspace, ids[^1].ToString("D"));
+            var originalOwner = chrome.ObserveOriginalEngine(ids[^1]);
+            await ClickTabWithPointerAsync(window, workspace, last);
+            await JoinTabNotificationsAsync(workspace, window); Layout();
+            Assert.Equal(ids[^1], chrome.State.SelectedTabId);
+            Assert.Same(originalOwner, chrome.ObserveOriginalEngine(ids[^1]));
+            var lastRow = last.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            var close = lastRow.AuthoredChildren.OfType<Button>().Single(button => button.Name == "BrowseCloseTabRowButton");
+            var closePoint = close.TranslatePoint(new Point(close.Bounds.Width / 2, close.Bounds.Height / 2), window)!.Value;
+            window.MouseMove(closePoint); window.MouseDown(closePoint, MouseButton.Left); window.MouseUp(closePoint, MouseButton.Left);
+            await Observe(Loader(window).WhenActionsIdleAsync(), window);
+            Assert.NotNull(workspace.OriginalCommand); await Observe(workspace.OriginalCommand!, window);
+            await JoinTabNotificationsAsync(workspace, window); Layout();
+            Assert.DoesNotContain(chrome.State.Tabs, tab => tab.Id == ids[^1]);
+            Assert.Equal(ids.Take(10), chrome.State.Tabs.Select(tab => tab.Id));
+            await Retire(window);
+
+            void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(720)]
+    [InlineData(1440)]
+    [InlineData(2048)]
+    public async Task Creating_eleven_tabs_reveals_the_selected_full_row_without_focus_theft_or_manual_scroll_snapback(int width)
+    {
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), new FixtureFactory());
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        window.Width = width;
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var viewport = Assert.IsType<CuiContainerControl>(Authored(window, "BrowseTabViewport"));
+            var scroll = Assert.Single(viewport.GetVisualDescendants().OfType<ScrollViewer>());
+            var presenter = Assert.Single(scroll.GetVisualDescendants().OfType<ScrollContentPresenter>());
+            var firstId = chrome.State.SelectedTabId;
+            var add = Find(window, "BrowseNewTabButton");
+            Assert.True(add.Focus(), "The new-tab action must genuinely hold focus before testing its retention.");
+            for (var index = 0; index < 10; index++)
+            {
+                await Click(window, workspace, add);
+                await JoinTabNotificationsAsync(workspace, window); Layout();
+                AssertSelectedRowVisible();
+                Assert.True(add.IsFocused, "Revealing a selected tab must not move keyboard focus.");
+            }
+            Assert.Equal(11, chrome.State.Tabs.Count);
+            Assert.True(scroll.Offset.X > 0);
+            Assert.Equal(ScrollBarVisibility.Hidden, scroll.HorizontalScrollBarVisibility);
+            var lastId = chrome.State.SelectedTabId;
+            var lastButton = TabButton(window, workspace, lastId.ToString("D"));
+            var originalLastOwner = chrome.ObserveOriginalEngine(lastId);
+            // Manual arrow browsing must remain usable while the same selection stays active.
+            var left = viewport.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "CuiOverflowLeft");
+            left.Focus();
+            window.KeyPress(Key.Home, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.Home, RawInputModifiers.None, PhysicalKey.None, null); Layout();
+            Assert.Equal(0, scroll.Offset.X);
+            Layout(); Assert.Equal(0, scroll.Offset.X);
+            await chrome.SelectTabAsync(firstId); await JoinTabNotificationsAsync(workspace, window); Layout();
+            AssertSelectedRowVisible();
+            await chrome.SelectTabAsync(lastId); await JoinTabNotificationsAsync(workspace, window); Layout();
+            AssertSelectedRowVisible();
+            Assert.Same(lastButton, TabButton(window, workspace, lastId.ToString("D")));
+            Assert.Same(originalLastOwner, chrome.ObserveOriginalEngine(lastId));
+            Assert.Same(scroll, Assert.Single(viewport.GetVisualDescendants().OfType<ScrollViewer>()));
+            await Retire(window);
+
+            void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+            void AssertSelectedRowVisible()
+            {
+                var button = TabButton(window, workspace, chrome.State.SelectedTabId.ToString("D"));
+                var row = button.GetVisualAncestors().OfType<CuiContainerControl>().First();
+                var origin = row.TranslatePoint(default, presenter)!.Value;
+                Assert.True(origin.X >= -.5 && origin.X + row.Bounds.Width <= presenter.Bounds.Width + .5,
+                    $"Selected row {origin.X}..{origin.X + row.Bounds.Width} lies outside viewport 0..{presenter.Bounds.Width}.");
+            }
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(.07, true)]
+    [InlineData(.93, false)]
+    public async Task Dragging_to_either_outer_edge_swaps_the_exact_rows_with_a_narrow_marker(double relativeX, bool before)
+    {
+        var factory = new FixtureFactory(); var paths = new Paths();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var chrome = await BrowseChrome.CreateAsync(paths, factory);
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
         RegisterProductionImageResolver(window);
@@ -66,25 +214,353 @@ public sealed partial class BrowseNativeUiTests
         {
             window.Show(); await Observe(window.InitializeAsync(), window); Layout();
             var home = chrome.State.SelectedTabId;
-            var second = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
-            var third = (await chrome.NewTabAsync(false)).SelectedTabId; Layout();
+            var second = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var third = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
             var source = TabButton(window, workspace, second.ToString("D"));
             var target = TabButton(window, workspace, third.ToString("D"));
+            var originalSourceOwner = chrome.ObserveOriginalEngine(second);
+            var originalTargetOwner = chrome.ObserveOriginalEngine(third);
+            Assert.IsType<FixtureTab>(originalSourceOwner); Assert.IsType<FixtureTab>(originalTargetOwner);
+            var targetRowVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(second.ToString("D"), out var sourceRow));
+            Assert.True(workspace.TryGetCurrentTabRow(third.ToString("D"), out var targetRow));
+            Control InTargetRow(string name) => AuthoredTabDescendants(targetRowVisual).Single(control => control.Name == name);
+            var originalPaneGrid = Assert.IsType<Grid>(Assert.IsType<FixtureTab>(originalSourceOwner).OriginalNativeView.Parent);
+            var originalColumns = originalPaneGrid.ColumnDefinitions;
+            var workspacePublications = 0;
+            System.ComponentModel.PropertyChangedEventHandler countPublication = (_, _) => workspacePublications++;
+            workspace.PropertyChanged += countPublication;
+            workspace.SetTabDropIndicator(targetRow, BrowseNativeWorkspace.TabDropZone.SplitBefore); Layout();
+            Assert.True(InTargetRow("BrowseTabDropSplitBeforeIndicator").IsVisible);
+            Assert.InRange(Math.Abs(InTargetRow("BrowseTabDropSplitBeforeHalf").Bounds.Width * 2 - targetRowVisual.Bounds.Width), 0, 1);
+            Assert.False(InTargetRow("BrowseTabDropSplitAfterIndicator").IsVisible);
+            workspace.SetTabDropIndicator(targetRow, BrowseNativeWorkspace.TabDropZone.Group); Layout();
+            var groupGlow = Assert.IsAssignableFrom<CuiContainerControl>(InTargetRow("BrowseTabDropGroupIndicator"));
+            Assert.True(groupGlow.IsVisible);
+            Assert.InRange(Math.Abs(groupGlow.Bounds.Width - targetRowVisual.Bounds.Width), 0, 1);
+            Assert.IsAssignableFrom<IGradientBrush>(groupGlow.Background);
+            workspace.SetTabDropIndicator(null, BrowseNativeWorkspace.TabDropZone.None); Layout();
             var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
-            var targetOrigin = target.TranslatePoint(default, window)!.Value;
-            var dropPoint = targetOrigin + new Vector(target.Bounds.Width * .75, target.Bounds.Height / 2);
-            window.MouseMove(sourcePoint); window.MouseDown(sourcePoint, MouseButton.Left);
-            window.MouseMove(dropPoint); window.MouseUp(dropPoint, MouseButton.Left);
+            var targetOrigin = targetRowVisual.TranslatePoint(default, window)!.Value;
+            var dropPoint = targetOrigin + new Vector(targetRowVisual.Bounds.Width * relativeX, targetRowVisual.Bounds.Height / 2);
+            StartTabDrag(window, source, sourcePoint);
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
+            var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            Assert.Equal(PlacementMode.Bottom, preview.Placement);
+            Assert.False(preview.IsHitTestVisible);
+            Assert.IsType<Border>(preview.Child);
+            var anchor = window.GetVisualDescendants().OfType<Control>().Single(control => control.Name == "BrowseTabDragAnchor");
+            var anchorPoint = anchor.TranslatePoint(default, window)!.Value;
+            Assert.InRange(Math.Abs(anchorPoint.X - dropPoint.X), 0, .5);
+            Assert.InRange(Math.Abs(anchorPoint.Y - dropPoint.Y), 0, .5);
+            Assert.True(before ? targetRow!.DropSwapBefore : targetRow!.DropSwapAfter);
+            Assert.False(targetRow!.DropGroup);
+            var marker = InTargetRow(before ? "BrowseTabDropSwapBeforeIndicator" : "BrowseTabDropSwapAfterIndicator");
+            Assert.True(marker.IsVisible);
+            Assert.InRange(marker.Bounds.Width, 3, 5);
+            var markerOrigin = marker.TranslatePoint(default, targetRowVisual)!.Value;
+            Assert.InRange(Math.Abs(markerOrigin.X - (before ? 0 : targetRowVisual.Bounds.Width - marker.Bounds.Width)), 0, 1);
+            Assert.Same(sourceRow, Assert.Single(Rows(workspace), row => row.Key == second.ToString("D")));
+            Assert.Equal(new[] { home, second, third }, chrome.State.Tabs.Select(tab => tab.Id));
+            Assert.Equal(0, workspacePublications);
+            Assert.Same(originalColumns, originalPaneGrid.ColumnDefinitions);
+            workspace.PropertyChanged -= countPublication;
+            window.MouseUp(dropPoint, MouseButton.Left);
             if (workspace.OriginalCommand is { } original) await original;
             Layout();
             Assert.Equal(new[] { home, third, second }, chrome.State.Tabs.Select(tab => tab.Id));
             Assert.Equal(third, chrome.State.SelectedTabId);
-            Assert.Equal(2, factory.Hosts.Count);
+            Assert.Equal(3, factory.Hosts.Count);
+            Assert.Same(originalSourceOwner, chrome.ObserveOriginalEngine(second));
+            Assert.Same(originalTargetOwner, chrome.ObserveOriginalEngine(third));
+            Assert.False(targetRow.DropSwapBefore || targetRow.DropSwapAfter, "Retiring the drag must clear its edge marker.");
+            Assert.False(source.IsPressed);
+            await ClickTabWithPointerAsync(window, workspace, TabButton(window, workspace, second.ToString("D"))); Layout();
+            Assert.Equal(second, chrome.State.SelectedTabId);
             await Retire(window);
 
             void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
         }
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(.25, true)]
+    [InlineData(.75, false)]
+    public async Task Dragging_to_an_inner_edge_splits_the_exact_pair_on_the_receiving_half(double relativeX, bool sourceReceivesFirst)
+    {
+        var factory = new FixtureFactory(); var paths = new Paths();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var chrome = await BrowseChrome.CreateAsync(paths, factory);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var source = TabButton(window, workspace, sourceId.ToString("D"));
+            var target = TabButton(window, workspace, targetId.ToString("D"));
+            var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(targetId.ToString("D"), out var targetRow));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var targetOrigin = targetVisual.TranslatePoint(default, window)!.Value;
+            var dropPoint = targetOrigin + new Vector(targetVisual.Bounds.Width * relativeX, targetVisual.Bounds.Height / 2);
+            var originalSourceOwner = chrome.ObserveOriginalEngine(sourceId);
+            var originalTargetOwner = chrome.ObserveOriginalEngine(targetId);
+            Assert.IsType<FixtureTab>(originalSourceOwner); Assert.IsType<FixtureTab>(originalTargetOwner);
+            var firstPreviewPoint = targetOrigin + new Vector(targetVisual.Bounds.Width * (sourceReceivesFirst ? .22 : .78), targetVisual.Bounds.Height / 2);
+
+            StartTabDrag(window, source, sourcePoint);
+            window.MouseMove(firstPreviewPoint, RawInputModifiers.LeftMouseButton); Layout();
+            var preview = Assert.Single(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            var anchor = window.GetVisualDescendants().OfType<Control>().Single(control => control.Name == "BrowseTabDragAnchor");
+            var anchorPoint = anchor.TranslatePoint(default, window)!.Value;
+            Assert.InRange(Math.Abs(anchorPoint.X - firstPreviewPoint.X), 0, .5);
+            Assert.InRange(Math.Abs(anchorPoint.Y - firstPreviewPoint.Y), 0, .5);
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
+            anchorPoint = anchor.TranslatePoint(default, window)!.Value;
+            Assert.InRange(Math.Abs(anchorPoint.X - dropPoint.X), 0, .5);
+            Assert.InRange(Math.Abs(anchorPoint.Y - dropPoint.Y), 0, .5);
+            Assert.True(sourceReceivesFirst ? targetRow!.DropSplitBefore : targetRow!.DropSplitAfter);
+            var targetControls = targetVisual.GetVisualDescendants().OfType<Control>();
+            var half = targetControls.Single(control => control.Name == (sourceReceivesFirst ? "BrowseTabDropSplitBeforeHalf" : "BrowseTabDropSplitAfterHalf"));
+            Assert.InRange(Math.Abs(half.Bounds.Width * 2 - targetVisual.Bounds.Width), 0, 1);
+            CaptureTabDragIfRequested(window, sourceReceivesFirst ? "split-left" : "split-right");
+            Assert.NotNull(preview.Child);
+            window.MouseUp(dropPoint, MouseButton.Left);
+            if (workspace.OriginalCommand is { } original) await Observe(original, window);
+            Layout();
+            Assert.Equal(sourceReceivesFirst ? new[] { sourceId, targetId } : new[] { targetId, sourceId }, chrome.State.PaneTabIds);
+            Assert.Equal(Haven.Core.SplitOrientation.Vertical, chrome.State.SplitOrientation);
+            Assert.Equal(targetId, chrome.State.SelectedTabId);
+            Assert.Equal(3, factory.Hosts.Count);
+            Assert.Same(originalSourceOwner, chrome.ObserveOriginalEngine(sourceId));
+            Assert.Same(originalTargetOwner, chrome.ObserveOriginalEngine(targetId));
+            await chrome.CloseSplitViewAsync();
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Dragging_to_the_center_groups_the_exact_rows_and_lights_the_whole_row()
+    {
+        var firstId = Guid.NewGuid(); var secondId = Guid.NewGuid();
+        var state = new BrowseTabSessionProjection([
+            new(firstId, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(secondId, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" }
+        ], secondId);
+        var session = new NativeDragSession(state);
+        var factory = new FixtureFactory(); var paths = new Paths();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: "profile-a", tabSessionPersistence: session);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var source = TabButton(window, workspace, firstId.ToString("D"));
+            var target = TabButton(window, workspace, secondId.ToString("D"));
+            var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(secondId.ToString("D"), out var targetRow));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var targetOrigin = targetVisual.TranslatePoint(default, window)!.Value;
+            var dropPoint = targetOrigin + new Vector(targetVisual.Bounds.Width * .5, targetVisual.Bounds.Height / 2);
+
+            StartTabDrag(window, source, sourcePoint);
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
+            Assert.True(targetRow!.DropGroup);
+            var groupGlow = Assert.IsAssignableFrom<CuiContainerControl>(targetVisual.GetVisualDescendants()
+                .OfType<Control>().Single(control => control.Name == "BrowseTabDropGroupIndicator"));
+            Assert.True(groupGlow.IsVisible);
+            Assert.InRange(Math.Abs(groupGlow.Bounds.Width - targetVisual.Bounds.Width), 0, 1);
+            Assert.IsAssignableFrom<IGradientBrush>(groupGlow.Background);
+            CaptureTabDragIfRequested(window, "group");
+            Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            window.MouseUp(dropPoint, MouseButton.Left);
+            if (workspace.OriginalCommand is { } original) await Observe(original, window);
+            Layout();
+            var group = Assert.Single(chrome.State.Groups);
+            Assert.Equal(new[] { firstId, secondId }, group.OrderedTabIds);
+            Assert.Equal(secondId, chrome.State.SelectedTabId);
+            Assert.Equal(new[] { firstId, secondId }, session.Saves[^1].Groups!.Single().OrderedTabIds);
+            Assert.Equal(2, factory.Hosts.Count);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Escape_cancels_an_active_split_drag_and_retires_its_native_preview()
+    {
+        var factory = new FixtureFactory(); var paths = new Paths();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var chrome = await BrowseChrome.CreateAsync(paths, factory);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var source = TabButton(window, workspace, sourceId.ToString("D"));
+            var target = TabButton(window, workspace, targetId.ToString("D"));
+            var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(targetId.ToString("D"), out var targetRow));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var dropPoint = targetVisual.TranslatePoint(default, window)!.Value + new Vector(targetVisual.Bounds.Width * .25, targetVisual.Bounds.Height / 2);
+            var before = chrome.State.Tabs.Select(tab => tab.Id).ToArray();
+
+            IPointer? pointer = null;
+            source.AddHandler(InputElement.PointerPressedEvent, (_, args) => pointer = args.Pointer,
+                Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+            source.Focus(); StartTabDrag(window, source, sourcePoint);
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
+            Assert.True(source.IsPressed);
+            Assert.NotNull(pointer!.Captured);
+            Assert.True(targetRow!.DropSplitBefore);
+            Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
+            Layout();
+            Assert.False(targetRow!.DropSplitBefore);
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            Assert.Equal(before, chrome.State.Tabs.Select(tab => tab.Id));
+            Assert.Null(workspace.OriginalCommand);
+            Assert.False(source.IsPressed);
+            Assert.Null(pointer!.Captured);
+            window.MouseUp(dropPoint, MouseButton.Left); Layout();
+            await ClickTabWithPointerAsync(window, workspace, TabButton(window, workspace, sourceId.ToString("D"))); Layout();
+            Assert.Equal(sourceId, chrome.State.SelectedTabId);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("close-source")]
+    [InlineData("close-target")]
+    [InlineData("navigate-source")]
+    [InlineData("navigate-target")]
+    [InlineData("dispose")]
+    public async Task Changing_either_drag_owner_retires_the_preview_and_indicator(string change)
+    {
+        var paths = new Paths();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var chrome = await BrowseChrome.CreateAsync(paths, new FixtureFactory());
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            var sourceId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            var targetId = (await chrome.NewTabAsync(false)).SelectedTabId; await JoinTabNotificationsAsync(workspace, window); Layout();
+            // Select the navigating owner before starting so navigation itself is
+            // what invalidates the gesture, rather than a selected-tab change.
+            if (change == "navigate-source") { await chrome.SelectTabAsync(sourceId); await JoinTabNotificationsAsync(workspace, window); Layout(); }
+            var source = TabButton(window, workspace, sourceId.ToString("D"));
+            var target = TabButton(window, workspace, targetId.ToString("D"));
+            var targetVisual = target.GetVisualAncestors().OfType<CuiContainerControl>().First();
+            Assert.True(workspace.TryGetCurrentTabRow(targetId.ToString("D"), out var targetRow));
+            var sourcePoint = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+            var dropPoint = targetVisual.TranslatePoint(default, window)!.Value + new Vector(targetVisual.Bounds.Width * .25, targetVisual.Bounds.Height / 2);
+            StartTabDrag(window, source, sourcePoint);
+            window.MouseMove(dropPoint, RawInputModifiers.LeftMouseButton); Layout();
+            Assert.True(targetRow!.DropSplitBefore);
+            Assert.Contains(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+
+            if (change == "dispose") await Observe(workspace.DisposeAsync().AsTask(), window);
+            else if (change.StartsWith("close-", StringComparison.Ordinal))
+                await chrome.CloseTabAsync(change == "close-source" ? sourceId : targetId);
+            else await chrome.NavigateAsync("https://changed.example/next");
+            await JoinTabNotificationsAsync(workspace, window); Layout();
+            Assert.False(targetRow.DropSplitBefore);
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Popup>(), popup => popup.IsOpen);
+            window.MouseUp(dropPoint, MouseButton.Left); Layout();
+            Assert.Empty(workspace.State.PaneTabIds);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
+    private static Task JoinTabNotificationsAsync(BrowseNativeWorkspace workspace, BrowseNativeWindow window) =>
+        Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
+
+    private static void CaptureTabDragIfRequested(BrowseNativeWindow window, string state)
+    {
+        var directory = Environment.GetEnvironmentVariable("NINETOONE_TAB_DRAG_CAPTURE_DIR");
+        if (string.IsNullOrWhiteSpace(directory)) return;
+        Directory.CreateDirectory(directory);
+        var scaling = window.RenderScaling;
+        var size = new PixelSize((int)Math.Ceiling(window.Bounds.Width * scaling), (int)Math.Ceiling(window.Bounds.Height * scaling));
+        using var frame = new RenderTargetBitmap(size, new Vector(96 * scaling, 96 * scaling));
+        frame.Render(window);
+        frame.Save(Path.Combine(directory, "browse-tab-drag-" + state + ".png"));
+    }
+
+    private static IEnumerable<Control> AuthoredTabDescendants(CuiContainerControl root)
+    {
+        foreach (var child in root.AuthoredChildren)
+        {
+            yield return child;
+            if (child is CuiContainerControl container)
+                foreach (var descendant in AuthoredTabDescendants(container)) yield return descendant;
+        }
+    }
+
+    private static async Task ClickTabWithPointerAsync(BrowseNativeWindow window, BrowseNativeWorkspace workspace, Button source)
+    {
+        var point = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+        point = StartTabDrag(window, source, point);
+        window.MouseUp(point, MouseButton.Left);
+        await Observe(Loader(window).WhenActionsIdleAsync(), window);
+        Assert.NotNull(workspace.OriginalCommand);
+        await Observe(workspace.OriginalCommand!, window);
+        Assert.False(source.IsPressed);
+    }
+
+    private static Point StartTabDrag(BrowseNativeWindow window, Button source, Point point)
+    {
+        // Layout alone does not commit the compositor's hit-test snapshot.
+        // Use the same jobs/render stabilization as the headless input adapter
+        // before checking or delivering the real pointer press.
+        using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+        point = source.TranslatePoint(new Point(source.Bounds.Width / 2, source.Bounds.Height / 2), window)!.Value;
+        var hit = window.InputHitTest(point) as Visual;
+        var hitPath = hit?.GetSelfAndVisualAncestors().OfType<Control>().ToArray() ?? [];
+        Assert.Contains(source, hitPath);
+        Assert.Contains("|key:", CuiRuntimeIdentity.GetStableId(source) ?? string.Empty);
+        window.MouseMove(point); window.MouseDown(point, MouseButton.Left);
+        Assert.True(source.IsPressed, "The real tab Button must receive the pointer press.");
+        var viewport = window.GetVisualDescendants().OfType<Control>().Single(control => control.GetType().Name == "BrowseEngineViewport");
+        Assert.NotNull(viewport.GetType().GetField("_tabDragSource", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(viewport));
+        return point;
+    }
+
+    private sealed class NativeDragSession(BrowseTabSessionProjection projection) : IBrowseTabSessionPersistence
+    {
+        public List<BrowseTabSessionProjection> Saves { get; } = [];
+        public Task<BrowseTabSessionProjection?> LoadAsync(CancellationToken cancellationToken)
+        { cancellationToken.ThrowIfCancellationRequested(); return Task.FromResult<BrowseTabSessionProjection?>(projection); }
+        public Task SaveAsync(BrowseTabSessionProjection updated, CancellationToken cancellationToken)
+        { cancellationToken.ThrowIfCancellationRequested(); Saves.Add(updated); return Task.CompletedTask; }
     }
 
     [AvaloniaFact]
@@ -102,7 +578,7 @@ public sealed partial class BrowseNativeUiTests
             window.Show(); await Observe(window.InitializeAsync(), window); Layout();
             await Click(window, workspace, Find(window, "BrowseNewTabButton")); Layout();
             var tabs = chrome.State.Tabs.ToArray(); Assert.Equal(2, tabs.Length);
-            await Click(window, workspace, Find(window, "BrowseMoreButton")); Layout();
+            await Click(window, workspace, Find(window, "HavenProfileButton")); Layout();
             var split = Find(window, "BrowseToggleSplitViewButton");
             Assert.True(split.IsEnabled);
             await Click(window, workspace, split); Layout();

@@ -10,9 +10,12 @@ namespace Haven.Desktop.Services;
 
 /// <summary>An editable rich Boards surface whose only persistence action is the selected
 /// Home Files revision callback. The exact file lease remains alive through tab retirement.</summary>
-internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrowseNativeAppContentSession,
+internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner,
     IBrowseAppContentClosePreparationParticipant
 {
+    private OriginalTabTransientPresentation? _transientPresentation;
+    public OriginalTabTransientPresentation TransientPresentation => _transientPresentation
+        ?? throw new InvalidOperationException("The original tab presentation has not initialized.");
     private readonly BrowseAppContentRequest _request;
     private readonly CancellationTokenSource _lifetime;
     private readonly IBoardsEmbeddedArtifactHost? _embeddedHost;
@@ -24,6 +27,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     private Task? _initialization, _close;
     private Task<IBrowseAppContentClosePreparation?>? _preparationTask;
     private ClosePreparation? _prepared;
+    private IDisposable? _transientCloseReservation;
     private Task? _titleRefresh;
     private int _titleVersion;
     private string _title = "Boards — Files document";
@@ -64,7 +68,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         {
             Dispatcher.UIThread.VerifyAccess();
             if (!IsPublicationCurrent) throw new InvalidOperationException("The writable rich Boards document has not completed Home admission.");
-            return _presentation?.Content ?? throw new InvalidOperationException("The writable Boards presentation is unavailable.");
+            return TransientPresentation;
         }
     }
 
@@ -108,6 +112,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
                 var current = await presentation.GetCurrentDocumentAsync(linked.Token).ConfigureAwait(true);
                 _title = FormatTitle(current.RichNotes?.Title);
                 presentation.ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+                _transientPresentation = new OriginalTabTransientPresentation();
+                _transientPresentation.BindOriginal(presentation.Content);
                 _presentation = presentation;
                 _published = true;
                 CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
@@ -169,6 +175,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     public Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        cancellationToken.ThrowIfCancellationRequested();
         lock (_gate)
         {
             if (_close is not null || _closing) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
@@ -183,6 +190,15 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
 
     private async Task<IBrowseAppContentClosePreparation?> PrepareDriverAsync(Task start, CancellationToken token)
     {
+        try { return await PrepareCoreAsync(start, token).ConfigureAwait(false); }
+        finally
+        {
+            lock (_gate)
+                if (_prepared is null) { _transientCloseReservation?.Dispose(); _transientCloseReservation = null; }
+        }
+    }
+    private async Task<IBrowseAppContentClosePreparation?> PrepareCoreAsync(Task start, CancellationToken token)
+    {
         await start.ConfigureAwait(false);
         var initialization = OriginalInitialization;
         if (initialization is null) return null;
@@ -192,7 +208,13 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         var presentation = _presentation;
         if (presentation is null) return CreateFailedInitializationPreparation();
         var dispatch = Dispatcher.UIThread.InvokeAsync<Task<IBoardsPresentationClosePreparation?>>(
-            () => presentation.PrepareToCloseAsync(token)).GetTask();
+            () =>
+            {
+                _transientCloseReservation = TransientPresentation.TryReserveClose();
+                return _transientCloseReservation is null
+                    ? Task.FromResult<IBoardsPresentationClosePreparation?>(null)
+                    : presentation.PrepareToCloseAsync(token);
+            }).GetTask();
         var actual = await dispatch.ConfigureAwait(false);
         var nested = await actual.ConfigureAwait(false);
         if (nested is null) return null;
@@ -244,6 +266,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             if (!preparation.IsCurrent) throw new InvalidOperationException("The original Boards close preparation is no longer current.");
             preparation.MarkAccepted();
             _closing = true;
+            _transientCloseReservation?.Dispose(); _transientCloseReservation = null;
             _published = false;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _close = CloseCoreAsync(start.Task);
@@ -284,7 +307,11 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             {
                 if (!IsCurrent && !ReferenceEquals(owner._prepared, this))
                     throw new InvalidOperationException("The original Boards preparation is no longer current.");
-                if (ReferenceEquals(owner._prepared, this)) owner._prepared = null;
+                if (ReferenceEquals(owner._prepared, this))
+                {
+                    owner._prepared = null;
+                    owner._transientCloseReservation?.Dispose(); owner._transientCloseReservation = null;
+                }
                 _aborted = true;
             }
         }

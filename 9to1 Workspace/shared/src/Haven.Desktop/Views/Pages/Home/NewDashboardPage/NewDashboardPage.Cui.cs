@@ -24,19 +24,21 @@ public sealed partial class NewDashboardPage
     private CuiContainerControl? _widgetControls;
     private CuiControlLoader? _dashboardLoader;
     private CuiContainerControl? _dashboardRoot;
+    private readonly CuiViewModel _dashboardBindings = new();
 
     private void LoadDashboardCui()
     {
-        using var stream = typeof(NewDashboardPage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Dashboard.cui")
-            ?? throw new InvalidDataException("The Home dashboard CUI document is missing.");
-        using var reader = new StreamReader(stream);
-        var parser = new CuiRichParser();
-        var document = parser.Parse(reader.ReadToEnd(), "Dashboard.cui");
-        if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The Home dashboard CUI document is invalid.");
+        var document = DashboardCuiDocument.Fragment("home-dashboard");
         var loader = _dashboardLoader = new CuiControlLoader();
+        _dashboardBindings.Set("IsCustomizing", false);
+        _dashboardBindings.Set("CustomiseLabel", "Customise");
+        _dashboardBindings.Set("ShowPageTabs", false);
+        ConfigureModelBindings();
+        loader.SetBindingContext(_dashboardBindings);
+        loader.SetActionDispatcher(new DashboardActions(this));
         loader.BindAuthoredControl("dashboard-root", _ => _dashboardRoot = new CuiContainerControl("Grid"));
-        loader.BindAuthoredControl("dashboard-widget-controls", _ => _widgetControls = new CuiContainerControl("Vertical Stack"));
+        loader.BindAuthoredControl("dashboard-widget-controls", _ => _widgetControls = new CuiContainerControl("Wrap"));
+        loader.BindAuthoredControl("dashboard-model-browser", _ => _modelBrowserHost = new CuiContainerControl("Vertical Stack"));
         // Reuse the same live widget canvas, page state and typed callbacks. CUI owns their
         // layout; these retained host controls preserve the existing editing behavior.
         loader.BindAuthoredControl("dashboard-page-tabs", _ => PageTabsPanel);
@@ -61,6 +63,7 @@ public sealed partial class NewDashboardPage
             throw new InvalidDataException("The Home dashboard CUI surface could not be rendered: " +
                 string.Join("; ", loaded.Diagnostics.Select(item => item.Message)));
         Content = loaded.Root;
+        loader.WireBindings(loaded.Root);
     }
 
     private static void SetDashboardValue(Control control, string property, object? value) =>

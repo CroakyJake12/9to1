@@ -3,9 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
+using CakeOS.Cui.Themes;
 using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Core;
+using Haven.Desktop.Controls;
 using Haven.Desktop.Views.Pages.Settings;
 
 namespace Haven.Desktop.Tests;
@@ -64,6 +66,65 @@ public sealed class HavenUiAppearanceTests
         var reloaded = new UserPreferencesService(paths);
         Assert.Equal(HavenUiAppearance.SuperDark, reloaded.Appearance);
         Assert.Equal("haven-ui", reloaded.ThemeId);
+    }
+
+    [AvaloniaFact]
+    public void Preference_changes_republish_live_CUI_palette_without_losing_selected_theme()
+    {
+        using var paths = new TemporaryPaths();
+        var preferences = new UserPreferencesService(paths);
+        preferences.ApplyAccentOverride(true, "Blue", save: false);
+        var steps = new[]
+        {
+            (HavenUiAppearance.Bright, "Glow", CuiTheme.Glow),
+            (HavenUiAppearance.Dark, "Professional", CuiTheme.Professional),
+            (HavenUiAppearance.Bright, "Glow", CuiTheme.Glow)
+        };
+
+        foreach (var (appearance, themeName, theme) in steps)
+        {
+            preferences.ApplyThemeChoice(themeName, save: false);
+            preferences.ApplyAppearance(appearance, save: false);
+
+            var cuiAppearance = (CuiAppearance)appearance;
+            Assert.Equal(cuiAppearance.ToString(), Avalonia.Application.Current!.Resources["CuiAppearance"]);
+            var expectedBackground = CuiSurfacePaletteCatalog.For("Home", cuiAppearance, theme).TideBase;
+            Assert.Equal(expectedBackground,
+                Assert.IsAssignableFrom<ISolidColorBrush>(Avalonia.Application.Current.Resources["CuiBackgroundBrush"]).Color);
+            Assert.Equal(expectedBackground,
+                Assert.IsAssignableFrom<ISolidColorBrush>(Avalonia.Application.Current.Resources["HavenBackgroundPrimaryBrush"]).Color);
+            Assert.Equal(theme, CuiSurfacePaletteCatalog.ActiveTheme);
+            Assert.True(CuiSurfacePaletteCatalog.OverrideAccent);
+            Assert.Equal(CuiAccentColour.Blue, CuiSurfacePaletteCatalog.AccentOverride);
+        }
+    }
+
+    [AvaloniaFact]
+    public void CUI_owned_window_surface_navigation_does_not_republish_legacy_Haven_palette_globally()
+    {
+        using var paths = new TemporaryPaths();
+        var preferences = new UserPreferencesService(paths);
+        preferences.ApplyThemeChoice("Glow", save: false);
+        preferences.ApplyAppearance(HavenUiAppearance.Bright, save: false);
+
+        var app = Avalonia.Application.Current!;
+        var homeBackground = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow).TideBase;
+        var browseBackground = SurfacePaletteCatalog.For(HavenSurface.Browse, HavenUiAppearance.Dark).TideBase;
+        Assert.NotEqual(homeBackground, browseBackground);
+        var cUIBrush = Assert.IsAssignableFrom<ISolidColorBrush>(app.Resources["CuiBackgroundBrush"]);
+        Assert.Equal(homeBackground, cUIBrush.Color);
+        Assert.Same(cUIBrush, app.Resources["HavenBackgroundPrimaryBrush"]);
+
+        var window = new Window();
+        using var tidal = new TidalBackground(window, HavenUiAppearance.Dark, publishHavenPalette: false);
+        tidal.SetSurface(HavenSurface.Browse);
+
+        // Browse has its own legacy HUI palette. The CUI-owned MainWindow uses
+        // TidalBackground only for its animated gradient, so navigation cannot
+        // recolor the globally aliased CUI Home background through a shared brush.
+        Assert.Equal(homeBackground, cUIBrush.Color);
+        Assert.Equal(homeBackground,
+            Assert.IsAssignableFrom<ISolidColorBrush>(app.Resources["CuiBackgroundBrush"]).Color);
     }
 
     [AvaloniaFact]

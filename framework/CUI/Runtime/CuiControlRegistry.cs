@@ -379,18 +379,18 @@ public sealed class CuiControlRegistry
             "Type", "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "Margin", "Opacity", "Active",
             "Hidden", "Interactive", "IsVisible", "IsEnabled", "Focusable", "TabIndex", "AccessibleName", "AccessibleDescription",
             "Role", "AutomationId", "Tooltip", "HorizontalAlignment", "VerticalAlignment", "IsHitTestVisible", "Effect", "Shadow", "Layer", "Modal",
-            "Clip", "Cursor", "Rotate", "Scale", "ScaleX", "ScaleY", "Skew", "SkewX", "SkewY", "Translate",
+            "Clip", "ClipToBounds", "Cursor", "Rotate", "Scale", "ScaleX", "ScaleY", "Skew", "SkewX", "SkewY", "Translate",
             "TranslateX", "TranslateY", "Column", "Row", "ColumnSpan", "RowSpan", "X", "Y", "XPixel", "YPixel", "XPercent", "YPercent", "ActiveIndependently"
         };
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "HorizontalOverflowArrows", "ScrollBarThickness", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
+            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "HorizontalOverflowArrows", "ScrollBarThickness", "FollowAtEnd", "BringIntoView", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
             "Text", "Foreground", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextDecoration",
-            "TextWrapping", "TextAlignment", "VerticalTextAlignment"
+            "TextWrapping", "TextTrimming", "MaxLines", "TextAlignment", "VerticalTextAlignment"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var input = common.Concat(new[]
         {
@@ -483,6 +483,8 @@ public sealed class CuiControlRegistry
             ("FontStyle", "font-style", typeof(Avalonia.Media.FontStyle), true),
             ("TextDecoration", "text-decoration", typeof(Avalonia.Media.TextDecorationCollection), true),
             ("TextWrapping", "symbol", typeof(Avalonia.Media.TextWrapping), true),
+            ("TextTrimming", "symbol", typeof(Avalonia.Media.TextTrimming), true),
+            ("MaxLines", "integer", typeof(int), true),
             ("AcceptsReturn", "boolean", typeof(bool), true), ("PlaceholderText", "text", typeof(string), true),
             ("Watermark", "text", typeof(string), true), ("PasswordChar", "text", typeof(string), true),
             ("Minimum", "number", typeof(double), true), ("Maximum", "number", typeof(double), true), ("Increment", "number", typeof(double), true),
@@ -510,9 +512,10 @@ public sealed class CuiControlRegistry
             ("Shadow", "shadow", typeof(Avalonia.Media.IEffect), true), ("Clip", "geometry", typeof(Avalonia.Media.Geometry), true),
             ("Cursor", "cursor", typeof(string), true), ("TextAlignment", "symbol", typeof(Avalonia.Media.TextAlignment), true),
             ("VerticalTextAlignment", "symbol", typeof(Avalonia.Media.AlignmentY), true),
-            ("IsHitTestVisible", "boolean", typeof(bool), true),
+            ("IsHitTestVisible", "boolean", typeof(bool), true), ("ClipToBounds", "boolean", typeof(bool), true),
             ("HorizontalScrolling", "boolean", typeof(bool), true), ("VerticalScrolling", "boolean", typeof(bool), true),
             ("HorizontalOverflowArrows", "boolean", typeof(bool), true),
+            ("BringIntoView", "boolean", typeof(bool), true),
             ("ScrollBarThickness", "length", typeof(double), true),
             ("FollowAtEnd", "boolean", typeof(bool), true),
             ("CompoundFocus", "boolean", typeof(bool), false),
@@ -549,6 +552,7 @@ public sealed class CuiControlRegistry
             "VerticalTextAlignment" => new[] { "Top", "Center", "Bottom" },
             "TextAlignment" => new[] { "Left", "Center", "Right", "Justify" },
             "TextWrapping" => new[] { "NoWrap", "Wrap", "WrapWithOverflow" },
+            "TextTrimming" => new[] { "None", "CharacterEllipsis", "WordEllipsis", "PrefixCharacterEllipsis", "PathSegmentEllipsis" },
             "FontStyle" => new[] { "Normal", "Italic", "Oblique" },
             "FontRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiFontRole>(),
             "AccentRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiAccentRole>(),
@@ -581,7 +585,7 @@ public sealed class CuiControlRegistry
             ("multiline", "AcceptsReturn"),
             ("rotation", "Rotate"), ("rotate", "Rotate"), ("scale-x", "ScaleX"), ("scale-y", "ScaleY"),
             ("skew-x", "SkewX"), ("skew-y", "SkewY"), ("translate-x", "TranslateX"), ("translate-y", "TranslateY"),
-            ("horizontal-scrolling", "HorizontalScrolling"), ("vertical-scrolling", "VerticalScrolling"), ("horizontal-overflow-arrows", "HorizontalOverflowArrows"), ("scrollbar-thickness", "ScrollBarThickness"), ("follow-at-end", "FollowAtEnd"),
+            ("horizontal-scrolling", "HorizontalScrolling"), ("vertical-scrolling", "VerticalScrolling"), ("horizontal-overflow-arrows", "HorizontalOverflowArrows"), ("scrollbar-thickness", "ScrollBarThickness"), ("follow-at-end", "FollowAtEnd"), ("bring-into-view", "BringIntoView"),
             ("text-alignment", "TextAlignment"), ("vertical-text-alignment", "VerticalTextAlignment"),
             ("is-hit-test-visible", "IsHitTestVisible"),
             ("accessibility-name", "AccessibleName")
@@ -598,7 +602,6 @@ public sealed class CuiControlRegistry
             or "Rotate" or "Scale" or "ScaleX" or "ScaleY" or "Skew" or "SkewX" or "SkewY"
             or "Translate" or "TranslateX" or "TranslateY";
 }
-
 
 
 

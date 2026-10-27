@@ -10,9 +10,37 @@ namespace CakeOS.Cui.Runtime.Tests;
 public sealed class CuiBundledFallbackFontTests
 {
     [Fact]
+    public void Native_emoji_fallback_precedes_bundled_font_and_browser_keeps_bundled_order()
+    {
+        var native = CuiNativeHost.CreateFontFallbacks("Noto Color Emoji", browser: false);
+        Assert.Equal("Noto Color Emoji", native[0].FontFamily.Name);
+        Assert.Equal(new FontFamily(CuiNativeHost.BundledEmojiFontFamily), native[1].FontFamily);
+        Assert.Equal(new FontFamily(CuiNativeHost.BundledSymbolFontFamily), native[2].FontFamily);
+
+        var browser = CuiNativeHost.CreateFontFallbacks("Noto Color Emoji", browser: true);
+        Assert.Equal(new FontFamily(CuiNativeHost.BundledEmojiFontFamily), browser[0].FontFamily);
+        Assert.Equal(new FontFamily(CuiNativeHost.BundledSymbolFontFamily), browser[1].FontFamily);
+    }
+
+    [Fact]
+    public async Task Missing_preferred_emoji_font_falls_through_to_bundled_emoji_glyphs()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiMissingPreferredEmojiFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var authored = new Typeface(new FontFamily(CuiNativeHost.BundledInterfaceFontFamily),
+                FontStyle.Normal, FontWeight.Normal);
+            Assert.True(FontManager.Current.TryMatchCharacter(0x1f600, FontStyle.Normal, FontWeight.Normal,
+                FontStretch.Normal, authored.FontFamily, null, out var fallback));
+            Assert.Equal(new FontFamily(CuiNativeHost.BundledEmojiFontFamily), fallback.FontFamily);
+            Assert.NotEqual((ushort)0, fallback.GlyphTypeface.CharacterToGlyphMap[0x1f600]);
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Missing_chrome_symbols_and_joined_emoji_use_bundled_glyphs_without_changing_the_authored_font()
     {
-        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledOnlyEmojiFontTestApplication));
         await session.Dispatch(() =>
         {
             var authored = new Typeface(new FontFamily(CuiNativeHost.BundledInterfaceFontFamily), FontStyle.Normal, FontWeight.Medium);
@@ -71,4 +99,30 @@ public sealed class CuiBundledFallbackFontTests
             }
         }, CancellationToken.None);
     }
+}
+
+public sealed class CuiMissingPreferredEmojiFontTestApplication : Application
+{
+    public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this);
+
+    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<CuiMissingPreferredEmojiFontTestApplication>()
+        .With(new FontManagerOptions
+        {
+            DefaultFamilyName = CuiNativeHost.BundledInterfaceFontFamily,
+            FontFallbacks = CuiNativeHost.CreateFontFallbacks("Codex Missing Emoji Font", browser: false)
+        })
+        .UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+}
+
+public sealed class CuiBundledOnlyEmojiFontTestApplication : Application
+{
+    public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this);
+
+    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<CuiBundledOnlyEmojiFontTestApplication>()
+        .With(new FontManagerOptions
+        {
+            DefaultFamilyName = CuiNativeHost.BundledInterfaceFontFamily,
+            FontFallbacks = CuiNativeHost.CreateFontFallbacks(null, browser: true)
+        })
+        .UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
 }

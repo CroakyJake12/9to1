@@ -40,6 +40,9 @@ public sealed class HomeDulchePackagedModelEvidenceSource : IHomeDulcheModelEvid
 
     private static string DefaultModelRoot()
     {
+        // Same explicit store as the canonical modelctl importer and local bootstrap.
+        var overrideRoot = Environment.GetEnvironmentVariable("HAVEN_MODEL_ROOT");
+        if (!string.IsNullOrWhiteSpace(overrideRoot)) return Path.GetFullPath(overrideRoot);
         var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
         var baseDir = string.IsNullOrWhiteSpace(dataHome)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share")

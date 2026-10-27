@@ -33,20 +33,31 @@ public static class CuiNativeHost
         return builder.With(new FontManagerOptions
         {
             DefaultFamilyName = BundledInterfaceFontFamily,
-            // Browser renderers have no OS font collection. Resolve missing
-            // glyphs through bundled, licensed faces without changing the
-            // authored font family or replacing the interface's Montserrat.
-            FontFallbacks =
-            [
-                new FontFallback { FontFamily = new(BundledEmojiFontFamily) },
-                new FontFallback { FontFamily = new(BundledSymbolFontFamily) }
-            ],
+            // Native desktop uses the OS emoji face first for its color glyphs. A
+            // missing family or glyph is skipped by FontManager and falls through
+            // to our bundled, licensed coverage. Browser has no system font collection.
+            FontFallbacks = CreateFontFallbacks(PlatformEmojiFontFamily(), OperatingSystem.IsBrowser()),
             FontFamilyMappings = new Dictionary<string, FontFamily>(StringComparer.OrdinalIgnoreCase)
             {
                 ["Montserrat"] = new(BundledInterfaceFontFamily)
             }
         });
     }
+
+    internal static IReadOnlyList<FontFallback> CreateFontFallbacks(string? preferredEmojiFamily, bool browser)
+    {
+        var fallbacks = new List<FontFallback>(3);
+        if (!browser && !string.IsNullOrWhiteSpace(preferredEmojiFamily))
+            fallbacks.Add(new FontFallback { FontFamily = new(preferredEmojiFamily) });
+        fallbacks.Add(new FontFallback { FontFamily = new(BundledEmojiFontFamily) });
+        fallbacks.Add(new FontFallback { FontFamily = new(BundledSymbolFontFamily) });
+        return fallbacks;
+    }
+
+    private static string? PlatformEmojiFontFamily() => OperatingSystem.IsWindows() ? "Segoe UI Emoji"
+        : OperatingSystem.IsMacOS() ? "Apple Color Emoji"
+        : OperatingSystem.IsLinux() ? "Noto Color Emoji"
+        : null;
 
     public static void InitialisePrimitiveTheme(Application application, string surface = "Home", CuiAppearance? appearance = null)
     {

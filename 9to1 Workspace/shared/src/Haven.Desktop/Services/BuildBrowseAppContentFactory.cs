@@ -127,6 +127,9 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
             var catalog = new SpaceDevelopmentReferenceCatalog(spaces, taskViews, workspace, actors);
             var workspaces = _services.GetRequiredService<IDeveloperWorkspaceStore>();
             var workbenchFactory = _services.GetRequiredService<DeveloperProjectWorkbenchPageFactory>();
+            var templateProviders = ResolveTemplateProviders(_services);
+            var templateCatalog = new DeveloperProjectCatalog(templateProviders);
+            var templateMaterializer = new DeveloperProjectTemplateMaterializer(templateProviders);
 
             // 2) Construct the session FIRST with a non-throwing route-free ctor. No native route has
             //    been acquired yet, so construction cannot leak an acquired resource.
@@ -164,8 +167,33 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
                     throw new InvalidOperationException("The configured Files root has no canonical write destination folder for a new manual project.");
                 return await manualAdapter.RegisterExistingFolderAsync(configuration.StoreId, writeFolder.Value, root, ct);
             });
+            var templateEntry = new DeveloperTemplateProjectEntryAdapter(manualAdapter, templateMaterializer);
+            session.AttachTemplateProjectAgents(templateCatalog, templateMaterializer,
+                async (root, materialization, ct) =>
+                {
+                    var configuration = await files.GetConfigurationAsync(ct)
+                        ?? throw new UnauthorizedAccessException("The original configured Files workspace is unavailable.");
+                    if (!configuration.AppFolders.TryGetValue("write", out var writeFolder) || writeFolder.Value == Guid.Empty)
+                        throw new InvalidOperationException("The configured Files root has no canonical write destination folder for a template project.");
+                    return await templateEntry.RegisterExistingFolderAsync(configuration.StoreId, writeFolder.Value,
+                        root, materialization, ct);
+                },
+                session.OpenExistingManualTemplateProjectAsync);
             return session;
         }
         catch { lifetime.Dispose(); throw; }
+    }
+
+    internal static IReadOnlyList<IDeveloperProjectTemplateContentProvider> ResolveTemplateProviders(IServiceProvider services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        var providers = services.GetServices<IDeveloperProjectTemplateContentProvider>().ToList();
+        var builtInInstances = providers.OfType<DeveloperCuiProjectTemplateProvider>().ToArray();
+        if (builtInInstances.Length > 1)
+            throw new InvalidOperationException("The built-in CUI template provider is registered more than once.");
+        var builtIn = services.GetService<DeveloperCuiProjectTemplateProvider>() ?? builtInInstances.SingleOrDefault() ??
+            new DeveloperCuiProjectTemplateProvider();
+        if (!providers.Any(provider => ReferenceEquals(provider, builtIn))) providers.Add(builtIn);
+        return providers.AsReadOnly();
     }
 }

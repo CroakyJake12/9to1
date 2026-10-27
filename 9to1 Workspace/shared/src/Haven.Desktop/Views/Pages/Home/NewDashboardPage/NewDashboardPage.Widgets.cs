@@ -79,14 +79,6 @@ public sealed partial class NewDashboardPage
         RefreshWidgetsButton.Click += async (_, _) => await RunHomeEventAsync(RefreshWidgetSurfaceAsync);
         _widgetUndoButton!.Click += (_, _) => _widgetCanvas.Undo();
         _widgetRedoButton!.Click += (_, _) => _widgetCanvas.Redo();
-        _widgetArrangeButton!.Click += (_, _) =>
-        {
-            _widgetCustomizing = !_widgetCustomizing;
-            _widgetCanvas.SetCustomizing(_widgetCustomizing);
-            SetDashboardValue(_widgetArrangeButton, "Content", _widgetCustomizing ? "Done arranging" : "Arrange");
-            RebuildHiddenWidgetPalette();
-            RefreshWidgetToolbar();
-        };
         _widgetHiddenPanel = new WrapPanel { Orientation = Orientation.Horizontal };
         _widgetHiddenEmpty = new TextBlock { Text = "No hidden widgets.", Classes = { "muted2" }, FontSize = 11 };
         _widgetHiddenHost = new StackPanel { Spacing = 7, IsVisible = false };
@@ -119,7 +111,7 @@ public sealed partial class NewDashboardPage
             : _widgetProviders.Select(provider => new DashboardWidgetViewState(
                 provider.Definition, null, DashboardWidgetDataState.Loading)));
         _widgetViews = views;
-        _widgetCanvas.SetWidgets(views, placements, _widgetCustomizing);
+        _widgetCanvas.SetWidgets(views, placements, _widgetCustomizing, _selectedPageId);
         if (_widgetStatus is not null && _widgetRefreshInProgress) SetDashboardValue(_widgetStatus, "Text", "Refreshing live widget data…");
         RebuildHiddenWidgetPalette();
         RefreshWidgetToolbar();
@@ -473,6 +465,18 @@ public sealed partial class NewDashboardPage
     {
         if (_widgetUndoButton is not null) SetDashboardValue(_widgetUndoButton, "IsEnabled", _widgetCanvas.CanUndo);
         if (_widgetRedoButton is not null) SetDashboardValue(_widgetRedoButton, "IsEnabled", _widgetCanvas.CanRedo);
+    }
+
+    private void SetCustomizing(bool value)
+    {
+        if (_disposed || _homeWork.IsRetiring) return;
+        _widgetCustomizing = value;
+        _dashboardBindings.Set("IsCustomizing", value);
+        _dashboardBindings.Set("CustomiseLabel", value ? "Done" : "Customise");
+        _dashboardBindings.Set("ShowPageTabs", value || _pages.Count > 1);
+        _widgetCanvas.SetCustomizing(value);
+        RebuildHiddenWidgetPalette();
+        RefreshWidgetToolbar();
     }
 
     private sealed record WidgetCacheEntry(DashboardTileData Data, DateTimeOffset CapturedAt);

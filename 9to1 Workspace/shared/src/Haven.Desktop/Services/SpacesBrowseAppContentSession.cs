@@ -1,5 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using System.Text;
+#if !ANDROID
+using Haven.Desktop.Views.Pages.Assistants;
+using HavenOS.Apps.Assistants.Contracts;
+#endif
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -7,6 +12,8 @@ using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Overlay;
+using Haven.Desktop.Prefabs;
+using Haven.Desktop.Views.Shell.TopRail;
 using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Pages.Spaces;
 using HavenOS.Apps.Browse;
@@ -42,12 +49,25 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private readonly Func<BrowseNavigationIntent, Task, bool>? _hostQueueNavigation;
     private readonly CancellationTokenSource _lifetime;
     private readonly CancellationToken _token;
+    private readonly CancellationToken _appLifetime;
+    private readonly CancellationToken _windowLifetime;
+#if !ANDROID
+    private readonly App? _actualApp;
+    private readonly Window? _actualWindow;
+#endif
     private readonly object _gate = new();
     private readonly List<Task> _commands = [];
     private readonly SemaphoreSlim _commandSerial = new(1, 1);
     private AuthenticatedResourceActor? _historyOriginalActor;
     private readonly Dictionary<Guid, NewChatPage> _chatsBySpace = [];
     private readonly List<NewChatPage> _ownedChats = [];
+#if !ANDROID
+    private readonly Dictionary<NewChatPage, (EventHandler Catalogue, EventHandler<AddMenuSelection> Selection)> _chatAssistantHandlers = [];
+    private NativeAssistantsDesktopPage? _assistantPage;
+    private sealed record PublishedAssistantRoute(NativeAssistantsDesktopPage Page, AppContentAddress Address,
+        NewChatPage? PriorChat, AssistantIdentity? Identity);
+    private PublishedAssistantRoute? _publishedAssistantRoute;
+#endif
     private sealed class CommandExecution(SpacesBrowseAppContentSession owner)
     {
         internal readonly SpacesBrowseAppContentSession Owner = owner;
@@ -76,12 +96,20 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     internal SpacesBrowseAppContentSession(BrowseAppContentRequest request, IServiceProvider services,
         CancellationToken hostLifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null,
         Func<Haven.Desktop.Views.Pages.Tasks.SpaceTaskWidgetPage, NativeCanonicalTaskSceneReadiness>? bindTaskFrame = null,
-        CancellationToken appLifetime = default)
+        CancellationToken appLifetime = default, App? actualApp = null, Window? actualWindow = null)
     {
         _request = request;
         _services = services;
         _hostQueueNavigation = queueNavigation;
         _bindTaskFrame = bindTaskFrame;
+        _appLifetime = appLifetime;
+        _windowLifetime = hostLifetime;
+#if !ANDROID
+        if ((actualApp is null) != (actualWindow is null))
+            throw new ArgumentException("Retain the actual App and native Window together.");
+        _actualApp = actualApp;
+        _actualWindow = actualWindow;
+#endif
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(hostLifetime, appLifetime);
         _token = _lifetime.Token;
         _address = request.Address;
@@ -175,11 +203,15 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 // Saved Chat routes carry a canonical ConversationId, including the
                 // existing legacy workspace migration. Restore it before publishing
                 // a generic Spaces location over the saved target.
-                if (!await TryRestoreRequestedBuilderAsync(token) && !await TryRestoreRequestedDetailsAsync(token) && !await TryRestoreRequestedTaskAsync(token) && !await TryRestoreRequestedConversationAsync(token))
+                if (!await TryRestoreRequestedAssistantAsync(token) && !await TryRestoreRequestedBuilderAsync(token) &&
+                    !await TryRestoreRequestedDetailsAsync(token) && !await TryRestoreRequestedTaskAsync(token) &&
+                    !await TryRestoreRequestedConversationAsync(token))
                 {
                     UpdateAddress(page.Controller.State.Selection?.Id);
                     SetRootContent(page);
                     _routeEpoch++;
+                    if (page.Controller.State.Selection?.Id == SpaceRegistry.StudySpaceId)
+                        await OpenStudyWorkspaceAsync(Haven.Desktop.Views.Pages.Study.StudyWorkspaceRoute.Overview, null, token);
                 }
                 _page = _root;
                 _published = true;
@@ -192,8 +224,21 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 // reads the current controller selection, which after restore is the restored Space.
                 await RefreshSpacesConversationsAsync(token);
             }
-            catch
+            catch (Exception initializationFailure)
             {
+#if !ANDROID
+                if (_assistantPage is not null)
+                {
+                    try { await RetireAssistantPresentationOnUiAsync(restorePriorChat: false); }
+                    catch (Exception assistantCleanupFailure)
+                    {
+                        if (page is IAsyncDisposable failedSpaces) await failedSpaces.DisposeAsync();
+                        _spacesPage = null;
+                        throw new AggregateException("The Spaces or Assistant route failed to initialize and the partial Assistant page did not retire cleanly.",
+                            initializationFailure, assistantCleanupFailure);
+                    }
+                }
+#endif
                 if (page is IAsyncDisposable disposable)
                     await disposable.DisposeAsync();
                 _spacesPage = null;
@@ -279,8 +324,15 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         await JoinTaskViewRetirementAsync(failures).ConfigureAwait(false);
         await OnUiAsync(async () =>
         {
+#if !ANDROID
+            try { await RetireAssistantPresentationOnUiAsync(restorePriorChat: false); }
+            catch (Exception error) { failures.Add(error); }
+#endif
             foreach (var chat in _ownedChats.ToArray())
             {
+                #if !ANDROID
+                UnwireChatAssistants(chat);
+                #endif
                 UnobserveConversationRoute(chat);
                 try { await chat.DisposeAsync(); _ownedChats.Remove(chat); }
                 catch (Exception error) { failures.Add(error); }
@@ -291,6 +343,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 try { await builder.DisposeAsync(); if (failures.Count == 0) lock (_gate) { _ownedBuilders.Remove(builder); _builderCloses.Remove(builder); } }
                 catch (Exception error) { failures.Add(error); }
             if (failures.Count == 0) lock (_gate) { _buildersBySpace.Clear(); }
+            if (_studyPage is not null)
+                try { await _studyPage.CloseAsync(); }
+                catch (Exception error) { failures.Add(error); }
             if (_spacesPage is IAsyncDisposable spacesDisposable)
                 try { await spacesDisposable.DisposeAsync(); }
                 catch (Exception error) { failures.Add(error); }
@@ -403,7 +458,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     {
         lock (_gate)
         {
-            if (_publishedDetailsRoute is { } details)
+            if (_publishedAssistantRoute is { } assistant)
+                _address = assistant.Address;
+            else if (_publishedDetailsRoute is { } details)
                 _address = details.Address;
             // A published editor owns the tab address. Without this the address fell back to the
             // selected-Space form whenever a later state change re-projected it, so the address bar
@@ -441,6 +498,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             SetRootContent(chat);
         }
         _publishedDetailsRoute = null;
+        _publishedAssistantRoute = null;
         _publishedTaskRoute = null;
         _routeEpoch++;
         _chatPage = chat;
@@ -538,7 +596,14 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             {
                 var previous = ExecutingCommand.Value;
                 ExecutingCommand.Value = execution; Volatile.Write(ref execution.Active, true);
-                try { await ExecuteActionOnUiAsync(action, linked.Token); }
+                try
+                {
+#if !ANDROID
+                    await RetireAssistantPresentationOnUiAsync();
+#endif
+                    if (_studyPage?.HasDraft == true) { ReportWorkspaceActionRefusal("Create the subject or clear its name before leaving Study."); return; }
+                    await ExecuteActionOnUiAsync(action, linked.Token);
+                }
                 finally { ExecutingCommand.Value = previous; }
             }).ConfigureAwait(false);
         }
@@ -563,6 +628,14 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         var actualSpace = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(registeredSpaceId, token)
             ?? throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
         if (actualSpace.IsArchived) throw new SpacesWorkspaceActionRefusal("The selected Space is archived.");
+        if (registeredSpaceId == SpaceRegistry.StudySpaceId)
+        {
+            var currentChat = _chatPage;
+            if (currentChat is not null) await currentChat.PrepareWorkspaceNavigationAsync();
+            if (!ReferenceEquals(currentChat, _chatPage)) throw new SpacesWorkspaceActionRefusal("The current chat changed while saving its draft.");
+            await OpenStudyWorkspaceAsync(Haven.Desktop.Views.Pages.Study.StudyWorkspaceRoute.Overview, null, token);
+            return;
+        }
         var factory = NewChatSessionFactory();
         var page = await factory.CreateNewAsync(token);
         _ownedChats.Add(page);
@@ -573,6 +646,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             DemandAlive();
             if (actualSpace.Kind == SpaceKind.Tasks) page.ConfigureTaskMode();
             await page.AssignSpaceAsync(spaceId);
+#if !ANDROID
+            await RetireAssistantPresentationOnUiAsync();
+#endif
             lock (_gate)
             {
                 token.ThrowIfCancellationRequested();
@@ -590,6 +666,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         {
             if (!published)
             {
+#if !ANDROID
+                UnwireChatAssistants(page);
+#endif
                 await page.DisposeAsync();
                 _ownedChats.Remove(page);
             }
@@ -765,6 +844,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private async Task<IReadOnlyList<SpacesHomeSidebarRow>> ReadSpaceSidebarItemsAsync(SpacesHomeSelection selection,
         CancellationToken token)
     {
+        var rows = selection.Id == SpaceRegistry.StudySpaceId
+            ? new List<SpacesHomeSidebarRow>(await ReadStudySidebarAsync(selection, token).ConfigureAwait(false))
+            : new List<SpacesHomeSidebarRow>();
         var attached = selection.Capabilities
             .Where(capability => string.Equals(capability.Kind, nameof(SpaceCapabilityKind.Plugin), StringComparison.Ordinal)
                                  && !capability.IsDisabled
@@ -772,10 +854,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             .Select(capability => capability.Id)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
-        if (attached.Length == 0) return [];
+        if (attached.Length == 0) return rows;
         var extensions = _services.GetRequiredService<ExtensionManager>();
         var canOpen = _hostQueueNavigation is not null;
-        var rows = new List<SpacesHomeSidebarRow>();
         foreach (var packageId in attached)
         {
             var package = await extensions.GetPackageAsync(packageId, token).ConfigureAwait(false);
@@ -850,34 +931,403 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     /// navigation driver without awaiting its included action.</summary>
     private void WireChatRecovery(OverlayChatSessionFactory factory)
     {
-        factory.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
+        factory.WireHost = page =>
         {
-            if (_hostQueueNavigation is null)
-                throw new SpacesWorkspaceActionRefusal("No host navigation seam is available; local-model recovery cannot route.");
-            // Retained history pages keep their drafts and close ownership, but only the exact
-            // currently published Chat page may request host navigation. Session-wide readiness
-            // alone would let an old page route recovery after a fresh chat or editor is shown.
-            lock (_gate)
-                if (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, page))
-                    throw new SpacesWorkspaceActionRefusal("The Spaces session no longer publishes this Chat page; local-model recovery is unrouted.");
-
-            var address = AppContentAddress.Parse("browse://home/models");
-            Task settlement;
-            try
+            page.ManageLocalModelsRequested += (_, _) =>
             {
-                settlement = page.RecoveryActionSettlement;
-            }
-            catch (Exception failure) when (failure is not OperationCanceledException)
-            {
-                throw new SpacesWorkspaceActionRefusal("The recovery action settlement could not be captured: " + failure.Message);
-            }
+                if (_hostQueueNavigation is null)
+                    throw new SpacesWorkspaceActionRefusal("No host navigation seam is available; local-model recovery cannot route.");
+                // Retained history pages keep their drafts and close ownership, but only the exact
+                // currently published Chat page may request host navigation. Session-wide readiness
+                // alone would let an old page route recovery after a fresh chat or editor is shown.
+                lock (_gate)
+                    if (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, page))
+                        throw new SpacesWorkspaceActionRefusal("The Spaces session no longer publishes this Chat page; local-model recovery is unrouted.");
 
-            var admitted = _hostQueueNavigation(
-                new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true), settlement);
-            if (!admitted)
-                throw new SpacesWorkspaceActionRefusal("The host navigation queue refused the local-model recovery route.");
+                var address = AppContentAddress.Parse("browse://home/models");
+                Task settlement;
+                try
+                {
+                    settlement = page.RecoveryActionSettlement;
+                }
+                catch (Exception failure) when (failure is not OperationCanceledException)
+                {
+                    throw new SpacesWorkspaceActionRefusal("The recovery action settlement could not be captured: " + failure.Message);
+                }
+
+                var admitted = _hostQueueNavigation(
+                    new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true), settlement);
+                if (!admitted)
+                    throw new SpacesWorkspaceActionRefusal("The host navigation queue refused the local-model recovery route.");
+            };
+#if !ANDROID
+            WireChatAssistants(page);
+#endif
         };
     }
+
+#if !ANDROID
+    private void WireChatAssistants(NewChatPage page)
+    {
+        EventHandler catalogue = (_, _) => QueueAssistantMenuCommand(page,
+            (token, epoch) => ReadAssistantCatalogueForChatAsync(page, epoch, token));
+        EventHandler<AddMenuSelection> selection = (_, selected) =>
+        {
+            if (!TryGetAssistantMenuSelection(selected, out var identity)) return;
+            QueueAssistantMenuCommand(page, (token, epoch) => OpenAssistantOnUiAsync(page, identity, epoch, token));
+        };
+        page.AssistantCatalogueRequested += catalogue;
+        page.AddCatalogItemSelected += selection;
+        _chatAssistantHandlers.Add(page, (catalogue, selection));
+    }
+
+    private void QueueAssistantMenuCommand(NewChatPage page, Func<CancellationToken, long, Task> command)
+    {
+        lock (_gate)
+        {
+            DemandAlive();
+            if (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, page))
+                throw new SpacesWorkspaceActionRefusal("The Spaces session no longer publishes this Chat page; Assistants is unrouted.");
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var execution = new CommandExecution(this);
+            var actual = ExecuteAssistantMenuCommandAsync(start.Task, execution, page, command, _routeEpoch);
+            execution.Original = actual;
+            _commands.RemoveAll(task => task.IsCompletedSuccessfully);
+            _commands.Add(actual);
+            start.SetResult();
+        }
+    }
+
+    private async Task ExecuteAssistantMenuCommandAsync(Task start, CommandExecution execution, NewChatPage page,
+        Func<CancellationToken, long, Task> command, long routeEpoch)
+    {
+        await start.ConfigureAwait(false);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(_token, _appLifetime, _windowLifetime);
+        await _commandSerial.WaitAsync(linked.Token).ConfigureAwait(false);
+        try
+        {
+            await OnUiAsync(async () =>
+            {
+                var previous = ExecutingCommand.Value;
+                ExecutingCommand.Value = execution;
+                Volatile.Write(ref execution.Active, true);
+                try
+                {
+                    linked.Token.ThrowIfCancellationRequested();
+                    DemandAlive();
+                    if (!ReferenceEquals(_publishedChatRoute?.Page, page) || _routeEpoch != routeEpoch)
+                        throw new OperationCanceledException("The source Chat route changed before the Assistant action ran.", linked.Token);
+                    try { await command(linked.Token, routeEpoch); }
+                    catch (OperationCanceledException) when (linked.IsCancellationRequested) { throw; }
+                    catch (Exception failure)
+                    {
+                        ReportWorkspaceActionRefusal("Could not open configured Assistants: " + failure.Message);
+                        throw;
+                    }
+                }
+                finally { ExecutingCommand.Value = previous; }
+            }).ConfigureAwait(false);
+        }
+        finally { Volatile.Write(ref execution.Active, false); _commandSerial.Release(); }
+    }
+
+    private bool CanPublishAssistantCatalogue(NewChatPage page, long routeEpoch, long generation, Guid conversationId) =>
+        IsPublicationCurrent && ReferenceEquals(_publishedChatRoute?.Page, page) && _routeEpoch == routeEpoch &&
+        page.ConversationId == conversationId && page.IsAssistantCatalogueOpen &&
+        page.AssistantCatalogueRequestGeneration == generation;
+
+    private async Task ReadAssistantCatalogueForChatAsync(NewChatPage page, long routeEpoch, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var actualApp = _actualApp;
+        if (actualApp is null || _actualWindow is null) return;
+        var generation = page.AssistantCatalogueRequestGeneration;
+        var conversationId = page.ConversationId;
+        if (!CanPublishAssistantCatalogue(page, routeEpoch, generation, conversationId)) return;
+        var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+        try
+        {
+            var expectedActor = _historyOriginalActor
+                ?? throw new SpacesHistoryAuthorityRefusal("The original Home profile actor is unavailable.");
+            if (await home.Profiles.GetCurrentAsync(token) != expectedActor)
+                throw new SpacesHistoryAuthorityRefusal("The authenticated Home profile changed before Assistants could be read.");
+            var acquisition = await actualApp.CreateOriginalAssistantsControllerAsync(_services, home, token);
+            token.ThrowIfCancellationRequested();
+            if (!CanPublishAssistantCatalogue(page, routeEpoch, generation, conversationId)) return;
+            if (acquisition is null)
+            {
+                page.SetAssistantCatalogue(null, "Assistants is not ready in this Home profile. Retry after setup is complete.");
+                return;
+            }
+            var snapshot = await acquisition.OriginalController.InitializeAsync(token);
+            token.ThrowIfCancellationRequested();
+            var currentActor = await home.Profiles.GetCurrentAsync(token);
+            if (currentActor != expectedActor)
+                throw new SpacesHistoryAuthorityRefusal("The authenticated Home profile changed while Assistants were loading.");
+            if (CanPublishAssistantCatalogue(page, routeEpoch, generation, conversationId))
+                page.SetAssistantCatalogue(snapshot.Assistants, snapshot.Assistants is null
+                    ? "Assistants is not ready in this Home profile."
+                    : null);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch (Exception failure)
+        {
+            if (CanPublishAssistantCatalogue(page, routeEpoch, generation, conversationId))
+                page.SetAssistantCatalogue(null, "Could not load the configured Assistants: " + failure.Message);
+        }
+    }
+
+    private async Task OpenAssistantOnUiAsync(NewChatPage? chat, AssistantIdentity? identity,
+        long routeEpoch, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var priorChat = chat ?? _chatPage;
+        NativeAssistantsDesktopPage? page = _assistantPage;
+        var pageWasAlreadyPublished = page is not null && ReferenceEquals(_publishedAssistantRoute?.Page, page);
+        var publishedThisOperation = false;
+        try
+        {
+            var actualApp = _actualApp;
+            var actualWindow = _actualWindow;
+            if (actualApp is null || actualWindow is null)
+            {
+                chat?.SetAssistantCatalogue(null, "Assistants is unavailable in this host.");
+                ReportWorkspaceActionRefusal("Assistants is unavailable in this host.");
+                if (chat is null) RestoreSpacesAfterAssistantRefusal();
+                return;
+            }
+            if (chat is not null && (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, chat) || _routeEpoch != routeEpoch))
+                throw new OperationCanceledException("The originating Chat route changed before Assistants could open.", token);
+            var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+            var expectedActor = _historyOriginalActor
+                ?? throw new SpacesHistoryAuthorityRefusal("The original Home profile actor is unavailable.");
+            if (await home.Profiles.GetCurrentAsync(token) != expectedActor)
+                throw new SpacesHistoryAuthorityRefusal("The authenticated Home profile changed before Assistants could open.");
+            var acquisition = await actualApp.CreateOriginalAssistantsControllerAsync(_services, home, token);
+            token.ThrowIfCancellationRequested();
+            if (acquisition is null)
+            {
+                chat?.SetAssistantCatalogue(null, "Assistants is not ready in this Home profile. Complete setup and retry.");
+                ReportWorkspaceActionRefusal("Assistants is not ready in this Home profile. Complete setup and retry.");
+                if (chat is null) RestoreSpacesAfterAssistantRefusal();
+                return;
+            }
+            var newPage = page is null || page.OriginalClose is not null;
+            if (newPage)
+            {
+                NativeAssistantsDesktopPage? captured = null;
+                void Capture(NativeAssistantsDesktopPage actual)
+                {
+                    if (captured is not null && !ReferenceEquals(captured, actual))
+                        throw new InvalidOperationException("The actual Assistant page factory supplied multiple pages.");
+                    captured = actual;
+                    page = actual;
+                    _assistantPage = actual;
+                    actualApp.RetainOriginalAssistantsPresentation(acquisition.OriginalController, actual);
+                }
+                page = NativeAssistantsDesktopPage.BindOriginal(_services, home, acquisition.OriginalDenHost,
+                    acquisition.OriginalOpenedDen, acquisition.OriginalController, _appLifetime, _windowLifetime,
+                    actualWindow, Capture, migration: acquisition.OriginalMigration,
+                    migrationUnavailableReason: acquisition.OriginalMigration is null ? "The original saved Agent migration source is not configured." : null,
+                    memoryManagement: acquisition.OriginalMemoryManagement,
+                    memoryUnavailableReason: acquisition.OriginalMemoryManagement is null ? "The original local Assistant memory source is not configured." : null,
+                    miniComputerManagement: acquisition.OriginalMiniComputerManagement,
+                    miniComputerUnavailableReason: acquisition.OriginalMiniComputerManagement is null ? "The original protected Mini Computer catalogue and operation source is not configured." : null,
+                    generatedUiHost: acquisition.OriginalGeneratedUiHost);
+                if (!ReferenceEquals(page, captured)) throw new InvalidOperationException("The actual Assistant page was not captured before native publication.");
+                _assistantPage = page;
+                await page.InitializeAsync(token);
+            }
+            else if (!ReferenceEquals(page!.OriginalController, acquisition.OriginalController) ||
+                     !page.IsOriginalComposition(_services, home) || !page.IsOriginalWindow(actualWindow, _appLifetime, _windowLifetime))
+            {
+                throw new UnauthorizedAccessException("Retain the SAME actual Assistants page, acquisition, Home and native Window.");
+            }
+            if (identity is { } selected)
+                await acquisition.OriginalController.OpenAssistantAsync(selected, token);
+            token.ThrowIfCancellationRequested();
+            if (await home.Profiles.GetCurrentAsync(token) != expectedActor)
+                throw new SpacesHistoryAuthorityRefusal("The authenticated Home profile changed before the Assistant page could publish.");
+            if (chat is not null && (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, chat) || _routeEpoch != routeEpoch))
+                throw new OperationCanceledException("The originating Chat route changed before the Assistant page could publish.", token);
+            var address = CreateAssistantRouteAddress(identity);
+            var actualPage = page ?? throw new InvalidOperationException("The actual Assistant page was not acquired.");
+            actualPage.PublishOriginalTab(() =>
+            {
+                if (_spacesPage is null || !_spacesPage.TryMountSpaceWorkspace(actualPage))
+                    throw new InvalidOperationException("The retained Spaces workspace region is unavailable for Assistants.");
+                SetRootContent(_spacesPage);
+                lock (_gate)
+                {
+                    _publishedAssistantRoute = new(actualPage, address, chat ?? _chatPage, identity);
+                    _publishedChatRoute = null;
+                    _chatPage = null;
+                    _address = address;
+                    _routeEpoch++;
+                }
+            });
+            publishedThisOperation = true;
+            PublishStateChanged();
+        }
+        catch (Exception openingFailure)
+        {
+            // A newly captured native page has acquired real App ownership, even if initialization,
+            // cancellation, actor revalidation, selection, or publication later fails. Retire that
+            // exact partial page before permitting a later menu action to construct a replacement.
+            // A page that was already successfully published remains mounted and owned if changing
+            // its selected Assistant fails.
+            var partial = page ?? _assistantPage;
+            if (partial is not null && !pageWasAlreadyPublished && !publishedThisOperation &&
+                ReferenceEquals(_assistantPage, partial))
+            {
+                try { await RetireFailedAssistantOpenOnUiAsync(partial, priorChat); }
+                catch (Exception cleanupFailure)
+                {
+                    throw new AggregateException("Opening the Assistant failed and its partial native page did not retire cleanly.",
+                        openingFailure, cleanupFailure);
+                }
+            }
+            throw;
+        }
+    }
+
+    private async Task RetireFailedAssistantOpenOnUiAsync(NativeAssistantsDesktopPage page, NewChatPage? priorChat)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        await page.CloseAndDrainAsync();
+        if (ReferenceEquals(_spacesPage?.SpaceWorkspaceContent, page))
+            _spacesPage.ClearSpaceWorkspace(page);
+        if (ReferenceEquals(_assistantPage, page)) _assistantPage = null;
+        lock (_gate)
+        {
+            if (_publishedAssistantRoute is { } route && ReferenceEquals(route.Page, page))
+                _publishedAssistantRoute = null;
+            _publishedChatRoute = null;
+            _chatPage = null;
+        }
+        if (!_closing && priorChat is not null && _ownedChats.Contains(priorChat) &&
+            _spacesPage is { } home && home.TryMountSpaceWorkspace(priorChat))
+        {
+            SetRootContent(home);
+            lock (_gate) PublishChatPage(priorChat);
+            return;
+        }
+        if (_spacesPage is { } spaces)
+        {
+            SetRootContent(spaces);
+            lock (_gate) UpdateAddress(spaces.Controller.State.Selection?.Id);
+        }
+    }
+
+    private void RestoreSpacesAfterAssistantRefusal()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (_spacesPage is null) return;
+        SetRootContent(_spacesPage);
+        lock (_gate)
+        {
+            _publishedAssistantRoute = null;
+            UpdateAddress(_spacesPage.Controller.State.Selection?.Id);
+        }
+    }
+
+    private async Task<bool> TryRestoreRequestedAssistantAsync(CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (!TryReadAssistantRoute(_request.Address, out var identity)) return false;
+        await OpenAssistantOnUiAsync(null, identity, _routeEpoch, token);
+        return true;
+    }
+
+    internal static bool TryGetAssistantMenuSelection(AddMenuSelection selection, out AssistantIdentity? identity)
+    {
+        ArgumentNullException.ThrowIfNull(selection);
+        identity = null;
+        if (selection.Kind != AddMenu.AddMenuAction.Assistant) return false;
+        if (selection.Item is AssistantDefinitionSnapshot assistant && assistant.Kind == ConfiguredIdentityKind.Assistant)
+        {
+            identity = assistant.Identity;
+            return true;
+        }
+        return selection.Item is ChatAddMenuSurface.OpenAssistantsRequest;
+    }
+
+    internal static AppContentAddress CreateAssistantRouteAddress(AssistantIdentity? identity) => identity is { } assistant
+        ? AppContentAddress.Parse($"9to1://spaces/assistant/{EncodeAssistantRoutePart(assistant.DenId)}/{EncodeAssistantRoutePart(assistant.NamespaceId)}/{EncodeAssistantRoutePart(assistant.DefinitionId)}")
+        : AppContentAddress.Parse("9to1://spaces/assistant");
+
+    internal static bool TryReadAssistantRoute(AppContentAddress address, out AssistantIdentity? identity)
+    {
+        identity = null;
+        var segments = address.ResourceSegments;
+        if (segments.Count == 1 && string.Equals(segments[0], "assistant", StringComparison.Ordinal)) return true;
+        if (segments.Count == 0 || !string.Equals(segments[0], "assistant", StringComparison.Ordinal)) return false;
+        if (segments.Count != 4)
+            throw new FormatException("The saved Assistant route identity is incomplete.");
+        var den = DecodeAssistantRoutePart(segments[1]);
+        var ns = DecodeAssistantRoutePart(segments[2]);
+        var definition = DecodeAssistantRoutePart(segments[3]);
+        if (string.IsNullOrWhiteSpace(den) || string.IsNullOrWhiteSpace(ns) || string.IsNullOrWhiteSpace(definition))
+            throw new FormatException("The saved Assistant route identity is incomplete.");
+        identity = new AssistantIdentity(den, ns, definition);
+        return true;
+    }
+
+    private static string EncodeAssistantRoutePart(string value) =>
+        Convert.ToBase64String(Encoding.UTF8.GetBytes(value)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+    private static string DecodeAssistantRoutePart(string value)
+    {
+        if (value.Length == 0 || value.Any(character => !(char.IsAsciiLetterOrDigit(character) || character is '-' or '_')))
+            throw new FormatException("The saved Assistant route identity is invalid.");
+        var base64 = value.Replace('-', '+').Replace('_', '/');
+        base64 += new string('=', (4 - base64.Length % 4) % 4);
+        try { return Encoding.UTF8.GetString(Convert.FromBase64String(base64)); }
+        catch (FormatException error) { throw new FormatException("The saved Assistant route identity is invalid.", error); }
+    }
+
+    private void UnwireChatAssistants(NewChatPage page)
+    {
+        if (!_chatAssistantHandlers.Remove(page, out var handlers)) return;
+        page.AssistantCatalogueRequested -= handlers.Catalogue;
+        page.AddCatalogItemSelected -= handlers.Selection;
+    }
+
+    private async Task RetireAssistantPresentationOnUiAsync(bool restorePriorChat = true)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var page = _assistantPage;
+        if (page is null) return;
+        var priorChat = _publishedAssistantRoute is { } route && ReferenceEquals(route.Page, page)
+            ? route.PriorChat : null;
+        _spacesPage?.ClearSpaceWorkspace(page);
+        lock (_gate)
+        {
+            if (_publishedAssistantRoute is { } current && ReferenceEquals(current.Page, page))
+                _publishedAssistantRoute = null;
+        }
+        await page.CloseAndDrainAsync();
+        if (ReferenceEquals(_assistantPage, page)) _assistantPage = null;
+        if (restorePriorChat && priorChat is not null && _ownedChats.Contains(priorChat))
+        {
+            lock (_gate)
+            {
+                if (!_closing && _spacesPage is { } home && home.TryMountSpaceWorkspace(priorChat))
+                {
+                    SetRootContent(home);
+                    PublishChatPage(priorChat);
+                    return;
+                }
+            }
+        }
+        lock (_gate)
+        {
+            _publishedChatRoute = null;
+            _chatPage = null;
+            UpdateAddress(_spacesPage?.Controller.State.Selection?.Id);
+        }
+    }
+#endif
 
     /// <summary>Starts a new conversation inside the selected Space from the contextual sidebar.
     /// It never creates another Space and never reuses an existing conversation.</summary>
@@ -889,6 +1339,11 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         var space = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(spaceId, token)
             ?? throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
         if (space.IsArchived) throw new SpacesWorkspaceActionRefusal("The selected Space is archived.");
+        if (spaceId == SpaceRegistry.StudySpaceId)
+        {
+            await WithStudyNavigationPreparationAsync(() => StartStudySessionAsync(null, null, token), token);
+            return;
+        }
         var page = await NewChatSessionFactory().CreateNewAsync(token);
         _ownedChats.Add(page);
         var published = false;
@@ -898,6 +1353,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             DemandAlive();
             if (space.Kind == SpaceKind.Tasks) page.ConfigureTaskMode();
             await page.AssignSpaceAsync(spaceId);
+#if !ANDROID
+            await RetireAssistantPresentationOnUiAsync();
+#endif
             lock (_gate)
             {
                 token.ThrowIfCancellationRequested();
@@ -913,7 +1371,13 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         }
         finally
         {
-            if (!published) { await page.DisposeAsync(); _ownedChats.Remove(page); }
+            if (!published)
+            {
+#if !ANDROID
+                UnwireChatAssistants(page);
+#endif
+                await page.DisposeAsync(); _ownedChats.Remove(page);
+            }
         }
     }
 
@@ -984,6 +1448,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 finalSpace.Revision != originalSpace.Revision || chat.CurrentConversation.Id != conversationId ||
                 chat.CurrentConversation.SpaceId != spaceId)
                 throw new SpacesWorkspaceActionRefusal("The selected conversation or its Home authority changed before opening.");
+#if !ANDROID
+            await RetireAssistantPresentationOnUiAsync();
+#endif
             lock (_gate)
             {
                 token.ThrowIfCancellationRequested(); DemandAlive(); DemandCurrentHistoryOpen(ticket);
@@ -1001,7 +1468,13 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         }
         finally
         {
-            if (!published) { await chat.DisposeAsync(); _ownedChats.Remove(chat); }
+            if (!published)
+            {
+#if !ANDROID
+                UnwireChatAssistants(chat);
+#endif
+                await chat.DisposeAsync(); _ownedChats.Remove(chat);
+            }
         }
     }
 
@@ -1114,6 +1587,13 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         Dispatcher.UIThread.VerifyAccess();
         token.ThrowIfCancellationRequested();
         DemandAlive();
+        if (sidebarItemId.StartsWith("study:", StringComparison.Ordinal) &&
+            _spacesPage?.Controller.State.Selection?.Id == SpaceRegistry.StudySpaceId)
+        {
+            await OpenStudySidebarAsync(sidebarItemId, token);
+            return;
+        }
+        if (_studyPage?.HasDraft == true) throw new SpacesWorkspaceActionRefusal("Create the subject or clear its name before leaving Study.");
         var initialActor = await ReadSidebarHomeActorAsync(token);
         if (_spacesPage?.Controller.State.Selection is not { } selection)
             throw new SpacesWorkspaceActionRefusal("Select a Space before opening one of its sidebar items.");
@@ -1249,6 +1729,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                     DemandAlive();
                     try
                     {
+                        if (_studyPage?.HasDraft == true)
+                            throw new SpacesWorkspaceActionRefusal("Create the subject or clear its name before leaving Study.");
                         if (command == "spaces.new-chat") await NewConversationOnUiAsync((Guid)target, linked.Token);
                         else if (command == "spaces.tasks.open") await OpenSidebarTaskOnUiAsync((TaskOpenTicket)target, linked.Token);
                         else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync((HistoryOpenTicket)target, linked.Token);

@@ -204,6 +204,9 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             case "Composer.Placeholder":
                 value = _source.Placeholder;
                 return true;
+            case "Composer.IsExpanded":
+                value = _focused || _source.HasPendingMessage || _source.Chips.Count > 0 || _source.IsSending || _settingsOpen || _emojiOpen;
+                return true;
             case "Composer.HasChips":
                 value = _source.Chips.Count > 0;
                 return true;
@@ -263,6 +266,9 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 // Read-only catalogue eligibility: the random-trigger pool. CUI owns the
                 // choose-once selection; this is only a bounded non-I/O typed query.
                 value = ComposerEmojiIconPool.Candidates;
+                return true;
+            case "Composer.EmojiFontFamily":
+                value = ComposerEmojiFontFamily.Resolve();
                 return true;
             default:
                 return false;
@@ -570,6 +576,36 @@ public static class ComposerEmojiIconPool
         }
         return pool.Count == 0 ? pool.ToArray() : ComposerEmojiCatalogue.Entries
             .Select(entry => entry.Text).Where(pool.Contains).Distinct(StringComparer.Ordinal).ToArray();
+    }
+}
+
+/// <summary>Prefer the installed platform emoji face in the composer, while leaving the global
+/// bundled fallback available on devices without that face.</summary>
+internal static class ComposerEmojiFontFamily
+{
+    private static readonly string Cached = ResolveCore();
+
+    public static string Resolve() => Cached;
+
+    private static string ResolveCore()
+    {
+        var family = OperatingSystem.IsWindows() ? "Segoe UI Emoji"
+            : OperatingSystem.IsMacOS() ? "Apple Color Emoji"
+            : OperatingSystem.IsLinux() ? "Noto Color Emoji"
+            : null;
+
+        if (family is null) return "Montserrat";
+        try
+        {
+            return Avalonia.Media.FontManager.Current.SystemFonts.Any(font =>
+                font.Name.Equals(family, StringComparison.OrdinalIgnoreCase))
+                ? family
+                : "Montserrat";
+        }
+        catch (InvalidOperationException)
+        {
+            return "Montserrat";
+        }
     }
 }
 

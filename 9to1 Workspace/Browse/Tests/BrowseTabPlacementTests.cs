@@ -70,6 +70,32 @@ public sealed partial class BrowseNativeOwnershipTests
     }
 
     [Fact]
+    public async Task Native_drop_swaps_exact_rows_and_groups_only_compatible_current_tabs()
+    {
+        var first = Guid.NewGuid(); var second = Guid.NewGuid(); var otherProfile = Guid.NewGuid();
+        var session = new TabSessionFixture(new BrowseTabSessionProjection([
+            new(first, "First", "https://first.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(second, "Second", "https://second.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(otherProfile, "Other profile", "https://other.example/", BrowserTabPrivacy.Standard, string.Empty, DateTimeOffset.UtcNow) { ProfileId = "profile-b" }
+        ], first));
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile-a", tabSessionPersistence: session);
+
+        Assert.True(chrome.CanSwapTabs(first, second));
+        await chrome.SwapTabsAsync(first, second);
+        Assert.Equal(new[] { second, first, otherProfile }, chrome.State.Tabs.Select(tab => tab.Id));
+        Assert.Equal(first, chrome.State.SelectedTabId);
+        Assert.False(chrome.CanSwapTabs(first, otherProfile));
+        Assert.False(chrome.CanGroupTabs(first, otherProfile));
+
+        Assert.True(chrome.CanGroupTabs(first, second));
+        await chrome.GroupTabsAsync(first, second);
+        var group = Assert.Single(chrome.State.Groups);
+        Assert.Equal(new[] { second, first }, group.OrderedTabIds);
+        Assert.Equal(first, chrome.State.SelectedTabId);
+        Assert.Equal(new[] { second, first }, session.Saves[^1].Groups!.Single().OrderedTabIds);
+    }
+
+    [Fact]
     public async Task Pin_and_move_preserve_live_views_selection_then_survive_reopen_and_restart()
     {
         var paths = new PreservedPaths();

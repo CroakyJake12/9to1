@@ -14,6 +14,8 @@ internal sealed class CuiSceneThemeBinding : IDisposable
     private readonly Func<bool>? _canPublish;
     private readonly Action<ResourceDictionary>? _updated;
     private CuiThemeResolution? _appliedPreference;
+    private long _globalPaletteVersion;
+    private long _appliedGlobalPaletteVersion;
     private bool _disposed;
     public ResourceDictionary Resources { get; } = new();
 
@@ -26,6 +28,7 @@ internal sealed class CuiSceneThemeBinding : IDisposable
         _appliedPreference = scene.ThemePreference?.Current;
         Resources.MergedDictionaries.Add(CreateSnapshot(_appliedPreference));
         if (scene.ThemePreference is { } context) context.Changed += PreferenceChanged;
+        else CuiThemeResourceApplier.PaletteChanged += GlobalPaletteChanged;
     }
 
     private ResourceDictionary CreateSnapshot(CuiThemeResolution? resolution)
@@ -42,7 +45,10 @@ internal sealed class CuiSceneThemeBinding : IDisposable
         {
             if (_disposed || _canPublish?.Invoke() == false) return;
             var resolution = _scene.ThemePreference?.Current;
-            if (ReferenceEquals(resolution, _appliedPreference)) return;
+            var globalVersion = _scene.ThemePreference is null ? Interlocked.Read(ref _globalPaletteVersion) : 0;
+            var globalPaletteChanged = _scene.ThemePreference is null &&
+                globalVersion != Interlocked.Read(ref _appliedGlobalPaletteVersion);
+            if (!globalPaletteChanged && ReferenceEquals(resolution, _appliedPreference)) return;
             // Build off-tree and replace one provider: observers never see a
             // partially populated palette. Failed callbacks remain owned by the
             // canonical context's retry/error tracking, not a detached UI task.
@@ -53,7 +59,10 @@ internal sealed class CuiSceneThemeBinding : IDisposable
             try
             {
                 Resources.MergedDictionaries[0] = snapshot;
-                if (!_disposed && _canPublish?.Invoke() != false) _updated?.Invoke(Resources);
+                var admitted = !_disposed && _canPublish?.Invoke() != false;
+                if (admitted) _updated?.Invoke(Resources);
+                if (admitted && !_disposed && _canPublish?.Invoke() != false && _scene.ThemePreference is null)
+                    MarkGlobalPaletteApplied(globalVersion);
             }
             catch
             {
@@ -67,10 +76,27 @@ internal sealed class CuiSceneThemeBinding : IDisposable
 
     private void PreferenceChanged(object? sender, EventArgs args) => SynchronizeCurrent();
 
+    private void GlobalPaletteChanged(object? sender, EventArgs args)
+    {
+        Interlocked.Increment(ref _globalPaletteVersion);
+        SynchronizeCurrent();
+    }
+
+    private void MarkGlobalPaletteApplied(long version)
+    {
+        while (true)
+        {
+            var applied = Interlocked.Read(ref _appliedGlobalPaletteVersion);
+            if (applied >= version || Interlocked.CompareExchange(ref _appliedGlobalPaletteVersion, version, applied) == applied)
+                return;
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
         if (_scene.ThemePreference is { } context) context.Changed -= PreferenceChanged;
+        else CuiThemeResourceApplier.PaletteChanged -= GlobalPaletteChanged;
     }
 }

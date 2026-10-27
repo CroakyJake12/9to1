@@ -27,7 +27,11 @@ public static class CuiPropertyPresentation
         }
         return false;
     }
-    public static void Attach(Control control,bool ownsTemplate=true) => _ = Get(control,ownsTemplate);
+    public static void Attach(Control control,bool ownsTemplate=true)
+    {
+        var projection = Get(control,ownsTemplate);
+        projection.AttachOptInHoverSurface();
+    }
     internal static void ConfigurePart(Control control, TemplatePart part) => Get(control).ConfigurePart(part);
     public static void Detach(Control control)
     { if (Projections.TryGetValue(control, out var projection)) { projection.Dispose(); Projections.Remove(control); } }
@@ -69,6 +73,7 @@ public static class CuiPropertyPresentation
         else if (type == typeof(FontWeight)) parsed = Enum.Parse<FontWeight>(value,true);
         else if (type == typeof(double)) parsed = value.Equals("Auto", StringComparison.OrdinalIgnoreCase) ? double.NaN : double.Parse(value, CultureInfo.InvariantCulture);
         else if (type == typeof(bool)) parsed = bool.Parse(value);
+        else if (type == typeof(TextTrimming)) parsed = TextTrimming.Parse(value);
         else if (type == typeof(int)) parsed = int.Parse(value, CultureInfo.InvariantCulture);
         else if (type == typeof(decimal)) parsed = decimal.Parse(value, CultureInfo.InvariantCulture);
         else if (type == typeof(char)) parsed = value.Length == 1 ? value[0] : throw new FormatException("A CUI character requires exactly one character.");
@@ -90,6 +95,7 @@ public static class CuiPropertyPresentation
         private CuiInputFocusRequest? _focusRequest;
         private bool _selectOnFocusRequest;
         private readonly Control _control;
+        private CuiHoverFeedback? _optInHoverSurface;
         private readonly Dictionary<string, AvaloniaProperty> _mapped = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Action<object?>> _custom = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<AvaloniaProperty, IDisposable> _nativeFences = [];
@@ -195,11 +201,10 @@ public static class CuiPropertyPresentation
                 Watch("CuiPopupHorizontalOffset", "HorizontalOffset");
                 Watch("CuiPopupVerticalOffset", "VerticalOffset");
             }
-            // The generic Selected state (a single authored surface such as a tab pill) applies themed
-            // selection fill/border to any CUI control, including non-interactive composition
-            // containers. The selection brushes are therefore observed for every control; hover and
-            // pressed brushes remain interactive-control-only so a quiet container never paints an
-            // unwanted hover island.
+            // Generic selected surfaces and list rows use the theme selection fill/border. MenuItem
+            // keeps its authored background and uses the shared derived wash plus focus/selection
+            // border cue. Observe selection resources on every control; hover/pressed brushes remain
+            // interactive-control-only so quiet containers do not paint unwanted hover islands.
             Watch("CuiSelectionBrush", null); Watch("CuiMenuSelectionBrush", null); Watch("CuiSelectionIndicatorBrush", null);
             if (!interactive) return;
             Set("FocusAdorner", new FuncTemplate<Control>(() =>
@@ -338,6 +343,12 @@ public static class CuiPropertyPresentation
             UpdateState();
         }
 
+        public void AttachOptInHoverSurface()
+        {
+            if (_control is CuiContainerControl container)
+                _optInHoverSurface ??= new CuiHoverFeedback(container, container, Store, "cui-hover-surface");
+        }
+
         private void Watch(string key, string? property, string source = "CUI inherited theme", long order = 0)
         {
             object? previous = null;
@@ -458,13 +469,18 @@ public static class CuiPropertyPresentation
             var rail = _control is Menu || _part is TemplatePart.RailButton or TemplatePart.ScrollBar or TemplatePart.EmbeddedInput;
             if (_part == TemplatePart.ScrollThumb)
             {
-                if (_control.IsPointerOver) State("Background","CuiScrollThumbHoverBrush");
                 if (_dragging) State("Background","CuiScrollThumbPressedBrush");
             }
-            else if (!rail && !_compoundFocus && !_chromeless && _control.IsPointerOver)
-            { State("Background", _control is TextBox or NumericUpDown or ComboBox ? "CuiInputSurfaceBrush" : _accentRole == CuiAccentRole.None ? "CuiButtonHoverBrush" : AccentStateBackground("Hover")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonHoverForegroundBrush" : AccentStateForeground("Hover")); }
             if (_selected || _control is ToggleButton { IsChecked: true } or ListBoxItem { IsSelected: true } or MenuItem { IsSelected: true })
-            { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); if (!_compoundFocus) State("BorderColor", "CuiSelectionIndicatorBrush"); }
+            {
+                // MenuItem selection is an interaction cue, not ownership of its authored fill.
+                // Its border indicator and derived hover wash remain visible without replacing an
+                // authored/app background or foreground. Other selected controls keep their
+                // existing selection surface contract.
+                if (_control is not MenuItem)
+                    State("Background", _control is ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush");
+                if (!_compoundFocus) State("BorderColor", "CuiSelectionIndicatorBrush");
+            }
             if (!rail && !_compoundFocus && !_chromeless && _control is Button { IsPressed: true })
             { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonPressedBrush" : AccentStateBackground("Pressed")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonPressedForegroundBrush" : AccentStateForeground("Pressed")); }
             if (!_compoundFocus && _control.IsKeyboardFocusWithin)
@@ -524,6 +540,7 @@ public static class CuiPropertyPresentation
             _control is SelectingItemsControl && property.Name is "SelectedIndex" or "SelectedItem";
         public void Dispose()
         {
+            _optInHoverSurface?.Dispose();
             _focusRequest?.Dispose();
             _control.PropertyChanged-=NativeChanged;foreach(var subscription in _subscriptions)subscription.Dispose();_subscriptions.Clear();
             foreach(var fence in _nativeFences.Values)fence.Dispose();_nativeFences.Clear();

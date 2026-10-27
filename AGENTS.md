@@ -1,3 +1,36 @@
+## Local OpenCode PC takeover — 26 October 2026, latest owner direction
+
+The owner selects **OpenCode on pc** to move development/builds locally and support
+one-bug-at-a-time native reloads. Read [the current takeover](docs/development/opencode-pc-live-takeover-2026-10-26.md) and [the local launcher procedure](docs/development/live-preview.md).
+Cloud authoring/new SDK launches stop after the source handoff is pushed. Local work
+may continue under the existing coordinator after exact source/exclusive ownership
+is observed; no replacement coordinator or extra approval loop is required. Preserve
+parallel implementation, all WIP/failed checks, the installed package and user data.
+The new Build template flow is WIP with a documented nonempty-target preflight gap;
+finish that boundary before presenting it as complete. Full acceptance stays paused.
+
+## Live desktop development and parallel implementation — 26 October 2026
+
+The owner now requests a **live native development copy on the x64 PC**: report one bug, implement the fix, then rebuild/reload the SAME development instance for immediate retesting, rather than batching fixes into installers. An annotation dashboard is not the requested solution. Prepare/reuse supported local launch and coordination interfaces; verify actual running source/assembly identity and preserve the explicit profile and normal save/close lifecycle. Do not claim cloud source edits updated the PC without a local launch/reload receipt.
+
+The owner also explicitly requests two parallel workers continue real specification implementation while bugs are repaired. This permits the scoped Build template/project-creation and Spaces task-permission-widget work recorded in the existing ledger; it is not authority to revive old teams or Thunder. Avoid a programme-wide hold. Keep source scopes exclusive and the SDK allocation serial. Full independent acceptance remains paused; actual affected compilation and smoke checks continue.
+
+The first delivered test package (`59d66496`) has owner-reported lag, tab overflow and app navigation issues. Preserve its passing narrow startup/package checks and the new failures separately. The owner's package query confirms installation of that version, but did not identify the running executable; `/opt/9to1` in the recording versus `/usr/lib/haven` in the package remains an unresolved launch-identity observation, not proof of a stale app.
+
+## Scoped desktop recovery — 26 October 2026
+
+The owner also requests a current **Linux x86-64 / amd64 `.deb` test build**, delivered through the existing private OneDrive project folder. This supersedes the older ARM test-copy target for this delivery only. Use the original application composition, retain package/source hashes and basic startup evidence, and include known limitations. Test delivery does not resume full acceptance or establish release readiness; do not relax the separate ARM runtime guards.
+
+The owner has authorized fixes for the supplied desktop recordings plus Dulche
+model discovery, Hugging Face browsing/install with encrypted profile credentials,
+a compact attachment menu and device-colour emoji. Read the [current requirements](docs/specification/owner-references/2026-10-26-desktop-recovery/requirements.md)
+and [recovery evidence and remaining failures](docs/development/desktop-recordings-2026-10-26.md).
+This permission covers the existing isolated recovery branch; the broader local
+handoff/HOLD and Thunder custody below remain in effect. Basic affected checks
+continue; full acceptance stays paused. The inspected desktop checkouts were clean
+and already published. Do not ask for another push from those same checkouts or
+claim the installed desktop was updated without a real package/install receipt.
+
 ## Current local transition — 25 October 2026
 
 The owner requests local development takeover because cloud usage is low.

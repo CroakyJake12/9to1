@@ -355,6 +355,36 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
         internal Task[] UnjoinedStages { get { lock (_gate) return _stages.Where(task => !_joinedStages.Contains(task)).ToArray(); } }
         internal void BindPublicationGuard(Func<bool> originalGuard) => _publicationGuard = originalGuard;
 
+        /// <summary>Acquire a source of this SAME admitted operation, including its cleanup
+        /// during retirement. This does not admit work or authorize presentation publication.
+        /// The source retains its own explicit business token and policy checks.</summary>
+        internal void RunAcceptedSourceCallback(Action callback)
+        {
+            ArgumentNullException.ThrowIfNull(callback);
+            var preceding = owner._executing.Value;
+            owner._executing.Value = this;
+            try
+            {
+                owner.RunPhysicalCloseCallback(() =>
+                {
+                    bool live;
+                    lock (owner._gate)
+                        live = owner._originals.Any(actual => ReferenceEquals(actual, this)) && HasLiveWork;
+                    if (!live)
+                    {
+                        var refusal = new InvalidOperationException("A terminal or foreign original cannot acquire an accepted source.");
+                        Retain(refusal);
+                        lock (owner._gate) Add(owner._admissionFailures, refusal);
+                        owner.RequestRetirement();
+                        throw refusal;
+                    }
+                    try { callback(); }
+                    catch (Exception cause) { Retain(cause); throw; }
+                });
+            }
+            finally { owner._executing.Value = preceding; }
+        }
+
         /// <summary>Run a queued publication under this SAME live admitted original, without admitting new work.</summary>
         internal void RunAcceptedPublicationCallback(Action callback)
         {

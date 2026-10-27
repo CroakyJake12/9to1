@@ -122,15 +122,27 @@
                 <If Condition="{Binding IsLibrary}">
                   <Container id="library-page" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="12">
                     <If Condition="{Binding IsLibraryBrowseMode}">
-                      <Text Text="Library" FontSize="28" FontWeight="Bold" />
-                      <Text Text="Authorised references to your artifacts. Items open in their owning app." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                      <Container Type="Vertical Stack" CellGap="4">
+                        <Text Text="Library" FontSize="28" FontWeight="Bold" />
+                        <Text Text="Authorised references to your artifacts. Items open in their owning app." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                      </Container>
                     </If>
                     <If Condition="{Binding IsBoardFolderSelection}">
-                      <Text Text="Choose Boards folder" FontSize="28" FontWeight="Bold" />
-                      <Text Text="Select the configured Boards folder, then create the board with the name above." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-                      <Container Type="Vertical Stack" CellGap="4">
-                        <Text Text="New Board file name (.9to1board)" FontWeight="SemiBold" />
-                        <Input id="library-board-create-name" Type="Text" Value="New board" AccessibleName="New Board file name" Width="320" />
+                      <Container Type="Vertical Stack" CellGap="8">
+                        <Text Text="Choose Boards folder" FontSize="28" FontWeight="Bold" />
+                        <Text Text="Select the configured Boards folder and enter a file name, then choose Create." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                        <Container Type="Vertical Stack" CellGap="4">
+                          <Text Text="New Board file name (.9to1board)" FontWeight="SemiBold" />
+                          <Input id="library-board-create-name" Type="Text" Value="New board" AccessibleName="New Board file name" Width="320" />
+                        </Container>
+                        <Container Type="Horizontal Stack" CellGap="8">
+                          <Button id="library-confirm-board-folder" Action="ConfirmBoardFolder" Content="Create" AccessibleName="Create Board in selected folder" IsEnabled="{Binding CanConfirmBoardFolder, fallback=false}" />
+                          <Button id="library-cancel-board-folder" Action="CancelBoardFolder" Content="Cancel" AccessibleName="Cancel Board creation" IsEnabled="{Binding CanCancelBoardFolder, fallback=false}" />
+                          <If Condition="{Binding CanOpenBoardFilesSetup, fallback=false}">
+                            <Button id="library-setup-board-files" Action="OpenBoardFilesSetup" Content="Set up Files" AccessibleName="Open canonical Files workspace setup, then return to this Board choice" />
+                          </If>
+                          <Button id="library-refresh-board-folders" Action="RefreshLibrary" Content="Refresh folders" IsEnabled="{Binding CanSearchLibrary, fallback=false}" />
+                        </Container>
                       </Container>
                     </If>
                     <If Condition="{Binding IsLibraryBrowseMode}">

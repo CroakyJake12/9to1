@@ -13,10 +13,12 @@ public interface IHomeOnboardingRecommendationSource
         CancellationToken cancellationToken);
 }
 
-/// <summary>Launches the system browser for the 9to1.uk/auth sign-in flow. When no launcher is
+/// <summary>Uses the shared secure public-client sign-in flow. When no launcher is
 /// available the flow must surface an honest scoped unavailable state rather than minting auth.</summary>
 public interface IHomeOnboardingBrowserLauncher
 {
+    bool IsAvailable => true;
+    bool IsSignedIn => false;
     Task<bool> LaunchAuthAsync(CancellationToken cancellationToken);
 }
 
@@ -44,7 +46,8 @@ public sealed class HomeOnboardingService(
     /// <summary>Opens the first-run flow for a fresh profile. Returns the initial snapshot.</summary>
     public HomeOnboardingSnapshot Open() => HomeOnboardingSnapshot.WelcomeInitial(SignInAvailable);
 
-    public bool SignInAvailable => browserLauncher is not null;
+    public bool SignInAvailable => browserLauncher?.IsAvailable == true;
+    public bool IsSignedIn => browserLauncher?.IsSignedIn == true;
 
     /// <summary>Reads the profile-specific completion record with structured classification. The
     /// record id is scoped to the real profile stable ID, never a shared device record. Identity
@@ -145,7 +148,7 @@ public sealed class HomeOnboardingService(
         CancellationToken cancellationToken = default)
     {
         if (recommendationSource is null)
-            return new(false, "ManifestUnavailable", "The recommendation manifest source is not configured for this build.");
+            return new(false, "ManifestUnavailable", "Recommended models are not available yet. You can browse and install local models in Home’s model settings.");
         return await recommendationSource.GetRecommendationsAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -153,8 +156,8 @@ public sealed class HomeOnboardingService(
     /// auth) when no verified launcher is available.</summary>
     public async Task<bool> BeginSignInAsync(CancellationToken cancellationToken = default)
     {
-        if (browserLauncher is null) return false;
-        return await browserLauncher.LaunchAuthAsync(cancellationToken).ConfigureAwait(false);
+        if (!SignInAvailable) return false;
+        return await browserLauncher!.LaunchAuthAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Persists completion atomically/versioned under the profile-scoped record id. A

@@ -38,7 +38,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
     }
     private bool TryGetNewFileValue(string path, out object? value)
     {
-        if (path is not ("NewFileName" or "NewFileCuiTemplate" or "NewFileStatus" or "NewFileReview" or "NewFileSource" or "CanReviewNewFile" or "CanCreateNewFile" or "CanConfigureNewFile"))
+        if (path is not ("NewFileName" or "NewFileCuiTemplate" or "NewFileStatus" or "NewFileReview" or "NewFileSource" or "CanReviewNewFile" or "CanCreateNewFile" or "CanConfigureNewFile" or "TemplateImportStatus"))
         { value = null; return false; }
         var prepared = DeveloperNewSourceFile.Prepare(_newFileName, _newFileCuiTemplate);
         value = path switch
@@ -54,6 +54,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                 : !CurrentNewFileReview() ? "This new-file review is no longer current. Review the current project and file request again."
                 : $"{review.File.RelativePath}; {review.RootLocation}; {review.File.TemplateId}; {Encoding.UTF8.GetByteCount(review.File.Text)} UTF-8 bytes; AFTER SHA-256 {review.AfterSha256}. Target must remain absent; CREATE never overwrites an existing or empty file.",
             "NewFileSource" => _newFileReview?.File.Text ?? "",
+            "TemplateImportStatus" => _templateImportStatus,
             "CanReviewNewFile" => IsActionAvailable("dev.review-new-source-file"),
             "CanCreateNewFile" => IsActionAvailable("dev.create-new-source-file"),
             "CanConfigureNewFile" => _manual && _manualEditor is not null && _project.Root.EnvironmentId == "local" && !_pending,

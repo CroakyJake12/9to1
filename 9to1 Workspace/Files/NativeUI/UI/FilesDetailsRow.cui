@@ -1,0 +1,13 @@
+<Cui id="9to1.Files.DetailsRow" version="1">
+  <Page>
+    <Container id="files-details-row" Type="Grid" ColumnSizes="{Binding Columns}" MinHeight="40" Padding="12 8" CellGap="10" AccessibleName="{Binding Name}">
+      <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="10">
+        <Image Source="files:folder" IsVisible="{Binding IsFolder}" Width="20" Height="20" VerticalAlignment="Center" />
+        <Text Column="1" Text="{Binding Name}" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="Wrap" />
+      </Container>
+      <Text IsVisible="{Binding ShowMetadata}" Column="1" Text="{Binding Modified}" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+      <Text IsVisible="{Binding ShowMetadata}" Column="2" Text="{Binding Kind}" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+      <Text IsVisible="{Binding ShowMetadata}" Column="3" Text="{Binding Size}" Foreground="{Resource CuiTextSoftBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+    </Container>
+  </Page>
+</Cui>

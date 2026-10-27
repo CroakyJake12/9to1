@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using System.Threading;
 using Xunit;
@@ -16,7 +17,7 @@ namespace CakeOS.Cui.Runtime.Tests;
 /// <summary>
 /// Focused regression for the generic CUI chromeless/icon appearance: a chromeless button retains
 /// its transparent closed rest background across hover and press (no interaction paint) while a
-/// normal button still paints its hover/pressed state. The real Selected background and keyboard
+/// normal button keeps that authored background and gets a derived background-only hover wash. The real Selected background and keyboard
 /// focus are unaffected (covered by the host-level picker test).
 /// </summary>
 public sealed class CuiChromelessAppearanceTests
@@ -52,13 +53,11 @@ public sealed class CuiChromelessAppearanceTests
                 var chromeless = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "chromeless");
                 var normal = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "normal");
 
-                // Provide concrete hover/pressed brushes so this focused test is independent of the
-                // surrounding theme dictionary; the presentation subscribes to these resources.
+                // Provide concrete pressed brushes so this focused test is independent of the
+                // surrounding theme dictionary. Hover is derived from the current effective fill.
                 foreach (var button in new[] { chromeless, normal })
                 {
-                    button.Resources["CuiButtonHoverBrush"] = Brushes.Red;
                     button.Resources["CuiButtonPressedBrush"] = Brushes.Blue;
-                    button.Resources["CuiButtonHoverForegroundBrush"] = Brushes.Black;
                     button.Resources["CuiButtonPressedForegroundBrush"] = Brushes.Black;
                 }
                 Pump();
@@ -66,14 +65,19 @@ public sealed class CuiChromelessAppearanceTests
                 // Rest: both are authored transparent.
                 Assert.True(IsEffectivelyTransparent(chromeless.Background));
 
-                // Hover: the chromeless button stays transparent; the normal button paints hover.
+                // Hover: the chromeless button has no interaction wash. The normal button keeps its
+                // authored transparency and paints a separate low-alpha wash over its CUI surface.
                 Hover(window, chromeless);
                 Assert.True(chromeless.IsPointerOver);
                 Assert.True(IsEffectivelyTransparent(chromeless.Background));
+                var chromelessFrame = Assert.Single(chromeless.GetVisualDescendants().OfType<CuiMaterialBorder>());
+                Assert.Null(chromelessFrame.HoverTint);
 
                 Hover(window, normal);
                 Assert.True(normal.IsPointerOver);
-                Assert.False(IsEffectivelyTransparent(normal.Background));
+                Assert.True(IsEffectivelyTransparent(normal.Background));
+                var normalFrame = Assert.Single(normal.GetVisualDescendants().OfType<CuiMaterialBorder>());
+                Assert.NotNull(normalFrame.HoverTint);
 
                 // Press: chromeless stays transparent while pressed. The paint is asserted INSIDE
                 // the held-press window (before release) via try/finally so the release always
@@ -121,11 +125,13 @@ public sealed class CuiChromelessAppearanceTests
                 Assert.True(chromeless.IsPointerOver);
                 Assert.True(IsEffectivelyTransparent(chromeless.Background));
 
-                // Flip Chromeless=false while the pointer is ALREADY hovering: the hover paint must
-                // appear immediately, without any new native pointer notification.
+                var frame = Assert.Single(chromeless.GetVisualDescendants().OfType<CuiMaterialBorder>());
+                // Flip Chromeless=false while the pointer is ALREADY hovering: the derived wash must
+                // appear immediately, without changing the authored transparent Background.
                 CuiPropertyPresentation.Set(chromeless, "Chromeless", false, CuiPropertyLevel.Instance, "test");
                 Pump();
-                Assert.False(IsEffectivelyTransparent(chromeless.Background));
+                Assert.True(IsEffectivelyTransparent(chromeless.Background));
+                Assert.NotNull(frame.HoverTint);
 
                 // Press and hold (pointer stays over the button). Non-chromeless: pressed paint is
                 // visible while IsPressed is genuinely true.
@@ -142,6 +148,7 @@ public sealed class CuiChromelessAppearanceTests
                     CuiPropertyPresentation.Set(chromeless, "Chromeless", true, CuiPropertyLevel.Instance, "test");
                     Pump();
                     Assert.True(IsEffectivelyTransparent(chromeless.Background));
+                    Assert.Null(frame.HoverTint);
                 }
                 finally
                 {

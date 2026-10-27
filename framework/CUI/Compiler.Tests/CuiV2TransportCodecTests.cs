@@ -39,6 +39,45 @@ public sealed class CuiV2TransportCodecTests
     private static CuiV2Span SpanAt() => new("sample.cui", 1, 1, 1, 2);
 
     [Fact]
+    public void Integer_sets_and_external_boolean_effects_roundtrip_through_compiled_admission()
+    {
+        const string source = """
+            <Cui><Variable Type="integer" ID="Count">0</Variable>
+            <Actions><Action name="next"><Set Target="Count" Value="2" /></Action></Actions>
+            <Effects><Effect name="expand" Condition="{Binding Composer.IsExpanded}" Action="next" /></Effects>
+            <Page><Text Text="{Binding Count}" /></Page></Cui>
+            """;
+        var (output, dto) = Compile(source);
+        var document = CuiV2Projection.ToDocument(output, "sample.cui", Hash(source));
+        var decoded = CuiCompiledArtifactCodec.ReadArtifact(CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(document)));
+        Assert.Single(decoded.Documents);
+        var variables = dto.Variables.ToDictionary(pair => pair.Key, pair => pair.Value);
+        variables["Count"] = variables["Count"] with { Value = "2147483648" };
+        var corrupted = document with { Semantics = dto with { Variables = variables } };
+        Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(
+            CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(corrupted))));
+    }
+
+    [Fact]
+    public void Effect_local_nonboolean_and_unknown_action_remain_rejected()
+    {
+        const string local = "<Cui><Variable Type=\"int\" ID=\"Count\">0</Variable><Actions><Action name=\"set\"><Set Target=\"Count\" Value=\"2\"/></Action></Actions><Effects><Effect name=\"bad\" Condition=\"{Binding Count}\" Action=\"set\"/></Effects><Page/></Cui>";
+        Assert.Contains(new CuiCompiler().Compile(local, "local.cui", Options()).Diagnostics, d => d.Code == "CUIC046");
+        const string action = "<Cui><Effects><Effect name=\"bad\" Condition=\"{Binding Composer.IsExpanded}\" Action=\"missing\"/></Effects><Page/></Cui>";
+        Assert.Contains(new CuiCompiler().Compile(action, "action.cui", Options()).Diagnostics, d => d.Code == "CUIC045");
+    }
+
+    [Theory]
+    [InlineData("<Variable Type=\"int\" ID=\"Count\">overflow</Variable>", "Count", "2")]
+    [InlineData("<Variable Type=\"int\" ID=\"Count\">0</Variable>", "Count", "2147483648")]
+    [InlineData("<Variable Type=\"int\" ID=\"Count\">0</Variable>", "Missing", "2")]
+    public void Invalid_integer_literals_and_unknown_set_targets_remain_rejected(string variable, string target, string value)
+    {
+        var source = $"<Cui>{variable}<Actions><Action name=\"set\"><Set Target=\"{target}\" Value=\"{value}\"/></Action></Actions><Page/></Cui>";
+        Assert.False(new CuiCompiler().Compile(source, "invalid.cui", Options()).Succeeded);
+    }
+
+    [Fact]
     public void Typed_v2_round_trip_preserves_every_semantic_distinction()
     {
         const string source = """

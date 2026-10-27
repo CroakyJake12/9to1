@@ -31,12 +31,13 @@ public sealed partial class App
             NativeCakeClientOptions.RequiredRedirect, origin, new Uri(origin + "/"),
             new Uri(issuer + "/.well-known/openid-configuration"), new Uri(issuer + "/oauth2/authorize"),
             new Uri(issuer + "/oauth2/token"), new Uri(issuer + "/jwks"));
-        // The reviewed package stages the exact pinned official Windows helper here.
+        // The reviewed runtime stages the exact pinned official platform helper here.
         // No PATH/env discovery, browser-cookie borrowing or Access-policy change occurs.
         // Missing helper leaves sign-in explicitly unavailable; a wrong pin is refused by
         // the existing original helper before any authenticated process is launched.
-        var helper = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "auth", "cloudflared.exe"));
-        if (OperatingSystem.IsWindows() && File.Exists(helper))
+        var helper = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "auth",
+            OperatingSystem.IsWindows() ? "cloudflared.exe" : "cloudflared"));
+        if (CloudflaredNativeCakeAccessCredentialSource.IsPlatformSupported && File.Exists(helper))
             services.AddSingleton<INativeCakeAccessCredentialSource>(_ =>
                 _actualNativeCakeAccountAccess = new CloudflaredNativeCakeAccessCredentialSource(helper));
         services.AddSingleton<INativeCakeAccountSession>(provider =>

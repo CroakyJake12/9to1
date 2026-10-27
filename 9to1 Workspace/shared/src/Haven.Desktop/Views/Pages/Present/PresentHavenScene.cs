@@ -26,21 +26,38 @@ internal sealed partial class PresentHavenScene : IDisposable
         Root.SetValue(HavenProperties.Responsive, true);
         Root.SetValue(HavenProperties.Overflow, HavenOverflow.Clip);
 
-        Header = new Container { Name = "Present.Header", Layout = HavenLayout.Grid, Columns = "1fr Auto", Rows = "Auto" };
+        Header = new Container { Name = "Present.Header", Layout = HavenLayout.Grid, Columns = "Auto 1fr Auto", Rows = "Auto" };
         Header.SetValue(HavenProperties.Row, 0);
         Header.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         Header.SetValue(HavenProperties.Height, HavenLength.Px(58));
         Header.SetValue(HavenProperties.Responsive, true);
         Header.SetValue(HavenProperties.Gap, HavenLength.Px(12));
+        DeckBadge = new Container { Name = "Present.Deck.Badge", Layout = HavenLayout.Grid, Columns = "Auto", Rows = "Auto" };
+        DeckBadge.SetValue(HavenProperties.Column, 0);
+        DeckBadge.SetValue(HavenProperties.Width, HavenLength.Px(56));
+        DeckBadge.SetValue(HavenProperties.Height, HavenLength.Px(56));
+        DeckBadge.SetValue(HavenProperties.Background, "Accent");
+        DeckBadge.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(28)));
+        DeckBadge.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Center);
+        DeckBadge.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
+        var badgeLabel = new HavenText("P") { Level = TextLevel.H3 };
+        badgeLabel.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Center);
+        badgeLabel.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
+        badgeLabel.Accessibility.AccessibleName = "Presentation deck badge";
+        badgeLabel.SetValue(HavenProperties.FontWeight, 700);
+        badgeLabel.SetValue(HavenProperties.Foreground, "AccentForeground");
+
+        DeckBadge.Add(badgeLabel);
+        Header.Add(DeckBadge);
         DeckTitleInput = new Input { Name = "Present.Deck.Title", Placeholder = "Untitled presentation" };
         DeckTitleInput.Accessibility.AccessibleName = "Presentation title";
-        DeckTitleInput.SetValue(HavenProperties.Column, 0);
-        DeckTitleInput.SetValue(HavenProperties.FontSize, 24d);
+        DeckTitleInput.SetValue(HavenProperties.Column, 1);
+        DeckTitleInput.SetValue(HavenProperties.FontSize, 26d);
         DeckTitleInput.SetValue(HavenProperties.FontWeight, 700);
         DeckTitleInput.SetValue(HavenProperties.MinHeight, HavenLength.Px(52));
         Header.Add(DeckTitleInput);
         PositionText = new HavenText { Name = "Present.Position", Level = TextLevel.Caption };
-        PositionText.SetValue(HavenProperties.Column, 1);
+        PositionText.SetValue(HavenProperties.Column, 2);
         PositionText.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         PositionText.SetValue(HavenProperties.Foreground, "TextSecondary");
         Header.Add(PositionText); Root.Add(Header);
@@ -182,7 +199,7 @@ internal sealed partial class PresentHavenScene : IDisposable
     public event EventHandler? PreviousSlideRequested; public event EventHandler? NextSlideRequested; public event EventHandler? AddSlideRequested; public event EventHandler? DeleteSlideRequested;
     public event Action<string>? DeckTitleChanged; public event Action<string>? SlideTitleChanged; public event Action<string>? BodyChanged; public event Action<string>? NotesChanged;
 
-    public Page Root { get; } public Container Header { get; } public Input DeckTitleInput { get; } public HavenText PositionText { get; }
+    public Page Root { get; } public Container Header { get; } public Container DeckBadge { get; private set; } = null!; public Input DeckTitleInput { get; } public HavenText PositionText { get; }
     public Container DeckToolbar { get; } public Container SlideToolbar { get; } public Container Workspace { get; } public Container SlidePane { get; } public Container EditorHost { get; } public Container NotesHost { get; } public Container InspectorPane { get; }
     internal PresentSlideCanvas SlideCanvas { get; }
     internal NativeHost SharedInkPreviewHost { get; }

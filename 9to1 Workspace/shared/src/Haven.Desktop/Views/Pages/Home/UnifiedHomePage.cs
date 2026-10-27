@@ -91,7 +91,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             throw new InvalidDataException("The shared Home document is invalid.");
         _loader.SetActionDispatcher(this);
         _loader.SetBindingContext(_railBindings);
-        _loader.BindAuthoredControl("home-search-row", _ => _searchRow = new("Wrap"));
+        _loader.BindAuthoredControl("home-search-row", _ => _searchRow = new("Vertical Stack"));
         _loader.BindAuthoredControl("home-content", _ => _viewport);
         _loader.BindAuthoredControl("home-heading", _ => _heading);
         _loader.BindAuthoredControl("home-status", _ => _status);
@@ -236,6 +236,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _section = section;
         _railBindings.Refresh();
         Set(_searchRow!, "IsVisible", section == "newtab");
+        _viewport.IsVisible = section != "newtab";
         Set(_heading, "Text", HeadingFor(section));
         Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. AI requires an available Spaces destination." : string.Empty);
         if (section == "apps")
@@ -258,6 +259,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         else if (section is "events" or "settings" or "library")
         {
             _viewport.Child = prepared!;
+        }
+        else if (section == "newtab")
+        {
+            // New Tab owns its search surface and never creates or activates Dashboard.
+            _viewport.Child = null;
         }
         else if (section == "models")
         {

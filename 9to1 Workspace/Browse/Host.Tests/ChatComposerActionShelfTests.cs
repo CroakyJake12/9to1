@@ -44,7 +44,8 @@ public sealed class ChatComposerActionShelfTests
         var source = new Source { IsSending = true, Draft = "ordinary follow up" };
         var bindings = new ChatComposerBindings(source);
         Assert.False(bindings.IsActionAvailable(command));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync(command, null).AsTask());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync(command, null,
+            TestContext.Current.CancellationToken).AsTask());
         Assert.Equal(0, source.Sends);
         Assert.Equal(0, source.Stops);
         Assert.Equal("ordinary follow up", source.Draft);
@@ -55,10 +56,13 @@ public sealed class ChatComposerActionShelfTests
     {
         var source = new Source { Draft = "retain me" };
         var bindings = new ChatComposerBindings(source);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.stop", null).AsTask());
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.queue", null).AsTask());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.stop", null,
+            TestContext.Current.CancellationToken).AsTask());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.queue", null,
+            TestContext.Current.CancellationToken).AsTask());
         source.IsSending = true;
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.send", null).AsTask());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.send", null,
+            TestContext.Current.CancellationToken).AsTask());
         Assert.Equal(0, source.Sends);
         Assert.Equal(0, source.Stops);
         Assert.Equal("retain me", source.Draft);
@@ -82,7 +86,7 @@ public sealed class ChatComposerActionShelfTests
         var original = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var source = new Source { IsSending = true, Draft = "follow up", Operation = original.Task };
         var bindings = new ChatComposerBindings(source);
-        var admitted = bindings.DispatchAsync("composer.queue", null).AsTask();
+        var admitted = bindings.DispatchAsync("composer.queue", null, TestContext.Current.CancellationToken).AsTask();
         Assert.Equal(1, source.Sends);
         Assert.False(admitted.IsCompleted);
         original.SetException(new IOException("canonical admission failed"));
@@ -413,8 +417,9 @@ public sealed class CanonicalTaskComposerTests
             try
             {
                 await rig.Page.ActivateAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
-                var composer = await rig.Page.OriginalComposer.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
-                Assert.Equal(CuiSceneAvailabilityState.Ready, composer.State);
+                await rig.Page.OriginalComposer.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+                var composerHost = Assert.IsType<CuiSceneHost>(rig.Page.OriginalComposer.Content);
+                Assert.Equal(CuiSceneAvailabilityState.Ready, composerHost.Availability?.State);
                 return rig;
             }
             catch

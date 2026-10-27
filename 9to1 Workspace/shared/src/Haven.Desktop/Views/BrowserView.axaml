@@ -17,18 +17,24 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <hui:HavenAdaptiveSurface Background="{DynamicResource HavenPanelBrush}"
+                <hui:HavenAdaptiveSurface Classes="browserTabGroup"
+                        Background="{DynamicResource HavenPanelBrush}"
                         BorderBrush="{DynamicResource HavenLineBrush}"
                         BorderThickness="1"
                         CornerRadius="9"
                         Margin="0,0,5,0"
                         Padding="3">
                   <Grid ColumnDefinitions="3,*,Auto" MinWidth="155" MaxWidth="240">
+                    <Border Grid.ColumnSpan="3"
+                            Classes="browserTabHoverTint"
+                            Background="{DynamicResource HavenAccentTertiaryBrush}"
+                            IsHitTestVisible="False" />
                     <hui:HavenAdaptiveSurface Background="{DynamicResource HavenAccentBrush}"
                             CornerRadius="3"
                             IsVisible="{Binding IsSelected}" />
                     <hui:HavenButton Grid.Column="1"
-                            Classes="chrome"
+                            Classes="chrome browserTabPart"
+                            Background="Transparent"
                             HorizontalContentAlignment="Left">
                       <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="Private" Foreground="{DynamicResource HavenAccentBrush}" FontSize="9" IsVisible="{Binding IsPrivate}" />
@@ -37,7 +43,8 @@
                     </hui:HavenButton>
                     <hui:HavenButton Grid.Column="2"
                             Content="&#x00D7;"
-                            Classes="chrome"
+                            Classes="chrome browserTabPart browserTabClose"
+                            Background="Transparent"
                             HorizontalAlignment="Right"
                             ToolTip.Tip="Close tab" />
                   </Grid>
@@ -137,17 +144,23 @@
             <ItemsControl x:Name="VerticalTabsList" Margin="7,0">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <hui:HavenAdaptiveSurface Background="{DynamicResource HavenPanelBrush}"
+                  <hui:HavenAdaptiveSurface Classes="browserTabGroup"
+                          Background="{DynamicResource HavenPanelBrush}"
                           BorderBrush="{DynamicResource HavenLineBrush}"
                           BorderThickness="1"
                           CornerRadius="8"
                           Margin="0,0,0,6">
                     <Grid ColumnDefinitions="3,*,Auto" MinHeight="47">
+                      <Border Grid.ColumnSpan="3"
+                              Classes="browserTabHoverTint"
+                              Background="{DynamicResource HavenAccentTertiaryBrush}"
+                              IsHitTestVisible="False" />
                       <hui:HavenAdaptiveSurface Background="{DynamicResource HavenAccentBrush}"
                               CornerRadius="3"
                               IsVisible="{Binding IsSelected}" />
                       <hui:HavenButton Grid.Column="1"
-                              Classes="chrome"
+                              Classes="chrome browserTabPart"
+                              Background="Transparent"
                               HorizontalContentAlignment="Stretch"
                               Padding="9,6">
                         <Grid RowDefinitions="Auto,Auto">
@@ -157,7 +170,8 @@
                       </hui:HavenButton>
                       <hui:HavenButton Grid.Column="2"
                               Content="&#x00D7;"
-                              Classes="chrome"
+                              Classes="chrome browserTabPart browserTabClose"
+                              Background="Transparent"
                               ToolTip.Tip="Close tab" />
                     </Grid>
                   </hui:HavenAdaptiveSurface>

@@ -13,6 +13,80 @@ namespace Haven.Desktop.Tests;
 // owning inputs. This managed UI-child journey does not instantiate a native page.
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [AvaloniaFact]
+    public async Task Ordinary_shared_composer_send_survives_delayed_safety_check_and_commits_before_cleanup()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var offered = rig.Provider.Model.Model with
+        {
+            Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text }
+        };
+        rig.Client.AvailableModels = [offered];
+        var ordinaryRequests = new List<OllamaChatRequest>();
+        rig.Client.OrdinaryProviderBody = (request, actualToken) =>
+        {
+            actualToken.ThrowIfCancellationRequested();
+            Assert.Null(request.ExecutionContext);
+            ordinaryRequests.Add(request);
+            return Task.FromResult(false);
+        };
+        var safety = new HeldSendSafety();
+        var directory = Path.Combine(Path.GetTempPath(), "ordinary-composer-send-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var drafts = new NativeComposerDraftStore();
+        NewChatPage? page = null;
+        Task? sending = null;
+        try
+        {
+            page = CreateNativeComposerPage(rig, directory, drafts, safety);
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10), token);
+            await page.RefreshModelsAsync();
+            page.SelectModel(offered);
+            const string prompt = "Ordinary shared composer delayed-send regression";
+            page.SetDraft(prompt);
+
+            // This is the production page entry into ChatHavenScene's shared composer
+            // send operation, not the Tasks-only action or a direct submission helper.
+            page.RequestComposerSend();
+            sending = Assert.IsAssignableFrom<Task>(typeof(NewChatPage)
+                .GetField("_originalSend", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            await safety.SendCheckEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.False(sending.IsCompleted);
+            Assert.Equal(prompt, typeof(NewChatPage).GetField("_originalComposerText", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            Assert.DoesNotContain(rig.Conversations.Messages, message => message.Role == MessageRole.User);
+            Assert.Equal(0, rig.Client.Dispatches);
+
+            // Resume the actual awaited safety dependency from a worker thread. The
+            // accepted send must marshal UI-owned composer/timer work and still follow
+            // the ordinary model-gated, committed-input session path exactly once.
+            await Task.Run(() => safety.ReleaseSendCheck.TrySetResult());
+            await sending.WaitAsync(TimeSpan.FromSeconds(20), token);
+
+            var committed = Assert.Single(rig.Conversations.Messages, message => message.Role == MessageRole.User);
+            Assert.Equal(prompt, committed.Content);
+            Assert.Single(ordinaryRequests);
+            Assert.Equal(1, rig.Client.Dispatches);
+            Assert.Equal(0, rig.Capture.ChatCaptures);
+            Assert.Null(rig.Service.CurrentCanonicalTask);
+            Assert.Equal(1, rig.Client.StreamDisposals);
+            Assert.False(page.IsSending);
+            Assert.Null(drafts.Last);
+        }
+        finally
+        {
+            safety.ReleaseSendCheck.TrySetResult();
+            if (page is not null)
+            {
+                if (sending is not null) await sending;
+                page.RequestRetirement();
+                await page.CloseAndDrainAsync();
+            }
+            Directory.Delete(directory, true);
+        }
+    }
+
     [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
@@ -165,16 +239,24 @@ public sealed partial class ChatCloudPermissionCallerTests
             await rig.TaskRows.CompletionWriteEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
             // The real original completion CAS is already invoked and held. A later
             // genuine withdrawal must join it, never rewrite that success as suspension.
-            var withdrawal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            using var registration = rig.Client.OriginalStreamToken.Register(() => withdrawal.TrySetResult());
+            var completionWrite = Assert.IsAssignableFrom<Task>(rig.TaskRows.OriginalCompletionWrite);
+            Assert.False(completionWrite.IsCompleted);
+            var producer = ActualHostedProducer(lease);
             var actualPause = rig.Tasks.PauseOriginalRunAsync(initial.TaskId, initial.ExecutionId, token);
             pausing = actualPause;
-            await withdrawal.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            // The provider stream has already finished before completion CAS. Its
+            // disposed linked token is not the original producer's withdrawal receipt.
+            // Pause must instead join the SAME admitted durable completion and producer.
+            Assert.Same(completionWrite, rig.TaskRows.OriginalCompletionWrite);
+            Assert.False(completionWrite.IsCompleted);
+            Assert.False(producer.IsCompleted);
             Assert.False(actualPause.IsCompleted);
             rig.TaskRows.HeldCompletionWrite.SetResult();
             var ack = await actualPause.WaitAsync(TimeSpan.FromSeconds(10), token);
             Assert.Equal(TaskRunOriginalRunControlDisposition.AlreadyCompletedByOriginal, ack.Disposition);
             Assert.Equal(TaskExecutionLifecycle.Completed, ack.State);
+            Assert.True(completionWrite.IsCompletedSuccessfully);
+            Assert.Same(completionWrite, rig.TaskRows.OriginalCompletionWrite);
             var completed = (await rig.Tasks.GetAsync(initial.TaskId, token))!;
             Assert.Equal(initial.ExecutionId, completed.ExecutionId);
             Assert.Equal(TaskExecutionLifecycle.Completed, completed.State);
@@ -637,11 +719,12 @@ public sealed partial class ChatCloudPermissionCallerTests
         var owner = (NewChatOriginalInitialTaskObservation)presentation.GetType().GetProperty("Owner")!.GetValue(presentation)!;
         return InitialUiCapturedLease(owner) ?? throw new InvalidOperationException("No actual source-issued lease was captured.");
     }
-    private static NewChatPage CreateNativeComposerPage(Rig rig, string directory, NativeComposerDraftStore drafts)
+    private static NewChatPage CreateNativeComposerPage(Rig rig, string directory, NativeComposerDraftStore drafts,
+        IConversationSafetyService? safety = null)
     {
         var paths = NativeComposerProxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? directory : Path.Combine(directory, name));
         var local = new GenUiLocalActionRegistry(); var instances = new GenUiInstanceStore();
-        return new(new HavenEventBus(), rig.Conversations, rig.Client, rig.Service, new Safety(),
+        return new(new HavenEventBus(), rig.Conversations, rig.Client, rig.Service, safety ?? new Safety(),
             NativeComposerProxy<IConversationVersioningService>((name, _) => throw new InvalidOperationException("Unexpected versioning: " + name)),
             new UserPreferencesService(paths),
             new GenerativeUiEventRouter([], new NativeComposerAudit(), instances), instances,
@@ -677,6 +760,21 @@ public sealed partial class ChatCloudPermissionCallerTests
     {
         public ValueTask RecordAsync(GenUiEvent value, GenUiActionResult result, CancellationToken token) =>
             ValueTask.FromException(new InvalidOperationException("No generated UI event was requested."));
+    }
+    private sealed class HeldSendSafety : IConversationSafetyService
+    {
+        internal readonly TaskCompletionSource SendCheckEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly TaskCompletionSource ReleaseSendCheck = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<ConversationSafetySnapshot> GetSnapshotAsync(Guid id, CancellationToken token) =>
+            Task.FromResult(new ConversationSafetySnapshot(id, 0, ConversationSafetyState.Active, null, 0));
+        public Task<ConversationSafetyFlagResult> RecordConfirmedFlagAsync(Guid id, ConfirmedSafetyFlag flag, CancellationToken token) =>
+            throw new NotSupportedException();
+        public async Task EnsureMayActAsync(Guid id, string operation, CancellationToken token)
+        {
+            if (operation != "chat.send") return;
+            SendCheckEntered.TrySetResult();
+            await ReleaseSendCheck.Task.WaitAsync(token);
+        }
     }
     private static T NativeComposerProxy<T>(Func<string, object?[]?, object?> call) where T : class
     {
