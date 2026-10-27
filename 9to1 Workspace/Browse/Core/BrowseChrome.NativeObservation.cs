@@ -118,6 +118,16 @@ public sealed partial class BrowseChrome
     private string EngineUnavailableReason(BrowseEngineKind engine) =>
         _engineFactory is IBrowseEngineAvailability availability ? availability.UnsupportedReasonFor(engine) : EngineUnsupportedReason;
 
+    /// <summary>The first message line of a retained failure, for tab status. Restore close-outs
+    /// promised "retain the exact cause"; without this the owner could only see that something
+    /// failed, never why, and the loop could not diagnose the real admission fault.</summary>
+    internal static string FirstLine(Exception failure)
+    {
+        if (failure is AggregateException aggregate && aggregate.InnerException is { } inner) failure = inner;
+        var line = failure?.Message ?? "an unknown failure";
+        return line.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)[0];
+    }
+
     /// <summary>Read-only per-engine capability probe: true only when the
     /// installed factory exposes typed <see cref="IBrowseEngineAvailability"/> and
     /// reports that EXACT engine supported. Fail-closed — a factory without a
