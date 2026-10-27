@@ -1698,6 +1698,43 @@ public static class BlockRenderer
             });
         }
 
+        // Deliberate-visibility freeform: an ordinary text page must NOT carry an
+        // unexplained empty drawing region (owner UX13 report). The canvas mounts only
+        // when freeform objects exist; the collapsed affordance engages the mode and
+        // the renderer re-renders the canvas with the created object.
+        var collapsedEngage = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(0, 4, 0, 0) };
+        var engageAdd = new Button
+        {
+            Content = "+ Box",
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            FontSize = 13,
+            Padding = new Thickness(8, 4),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            IsVisible = vm.IsEditMode && !vm.IsCanvasLocked,
+        };
+        ToolTip.SetTip(engageAdd, "Add a freeform box to start arranging ideas");
+        Avalonia.Automation.AutomationProperties.SetName(engageAdd, "Add freeform box");
+        engageAdd.Click += async (_, _) => await vm.AddCanvasBoxAsync();
+        collapsedEngage.Children.Add(engageAdd);
+
+        if (boxes.Count == 0)
+        {
+            shell.Children.Add(new TextBlock
+            {
+                Text = vm.IsCanvasLocked
+                    ? "No freeform objects yet — unlock the layout to add a box."
+                    : "No freeform objects yet — add a box to arrange ideas freely.",
+                FontSize = 13,
+                Foreground = BoardsTheme.SecondaryTextBrush,
+                Margin = new Thickness(0, 0, 8, 4),
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            shell.Children.Add(collapsedEngage);
+            return shell;
+        }
+
         string? selectedId = null;
         Border? selectedBorder = null;
         // The contract canvas starts at 1200×900 and expands as objects move.

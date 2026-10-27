@@ -86,6 +86,24 @@ public sealed partial class BrowseNativeUiTests
         }
     }
     [AvaloniaFact]
+    public async Task Grouped_tab_pill_shows_one_clean_title_and_moves_membership_to_tooltip()
+    {
+        await using var chrome = await BrowseChrome.CreateAsync(new Paths());
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var firstId = chrome.State.SelectedTabId;
+        var secondId = (await chrome.NewTabAsync(false)).SelectedTabId;
+        await chrome.GroupTabsAsync(firstId, secondId, "Release notes");
+        var firstRow = Rows(workspace).Single(row => row.Key == firstId.ToString("D"));
+        Assert.Equal("New tab", firstRow.Label);
+        var secondRow = Rows(workspace).Single(row => row.Key == secondId.ToString("D"));
+        Assert.Equal("New tab", secondRow.Label);
+        Assert.True(workspace.TryGetItemValue(firstRow, "Description", out var firstDetail));
+        var detail = Assert.IsType<string>(firstDetail);
+        Assert.StartsWith("New tab · Release notes", detail);
+        Assert.True(workspace.TryGetItemValue(secondRow, "Description", out var secondDetail));
+        Assert.Contains("Release notes", Assert.IsType<string>(secondDetail));
+    }
+    [AvaloniaFact]
     public async Task Actual_tab_rows_resolve_labels_and_select_current_source_issued_identity()
     {
         using var trace = new FixtureTraceScope(nameof(Actual_tab_rows_resolve_labels_and_select_current_source_issued_identity));

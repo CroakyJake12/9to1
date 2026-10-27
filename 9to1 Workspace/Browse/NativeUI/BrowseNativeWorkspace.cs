@@ -811,9 +811,14 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             {
                 var selected = tab.Id == _snapshot.SelectedTabId;
                 var appearance = TabAppearance(selected);
+                // Group/pin membership belongs to the tooltip and the group manager, not the
+                // pill label: owner-corrected tabs show one clean "New group · Home"-free title.
+                var membership = new List<string>(2);
+                if (tab.GroupName.Length > 0) membership.Add(tab.GroupName);
+                if (tab.IsPinned) membership.Add("Pinned");
                 return (Id: tab.Id, Key: tab.Id.ToString("D"),
-                    Label: (tab.IsPinned ? "Pinned · " : string.Empty) + (tab.GroupName.Length > 0 ? tab.GroupName + " · " : string.Empty) + tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
-                    Description: tab.Title + " · " + (tab.Address.IsWeb
+                    Label: tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
+                    Description: tab.Title + (membership.Count > 0 ? " · " + string.Join(" · ", membership) : string.Empty) + " · " + (tab.Address.IsWeb
                         ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
                         : tab.IsHome ? "Home" : tab.Address.Authority) + (selected ? " · Selected tab" : string.Empty),
                     Address: tab.Address.ToString(), Selected: selected, CanClose: tab.IsCloseable && !tab.IsPinned, Pinned: tab.IsPinned,
