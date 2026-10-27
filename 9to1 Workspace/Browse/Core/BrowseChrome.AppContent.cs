@@ -116,6 +116,21 @@ public sealed partial class BrowseChrome
         ApplyAppContent(tab, address, owner);
     }
 
+    /// <summary>Re-runs the selected native/tab-app content session through the exact same
+    /// ownership chain. Web tabs still use the engine path; this is specifically for
+    /// NativeApp content, where a host restart or a failed prepare made the view stale.</summary>
+    public Task<BrowseChromeSnapshot> ReloadSelectedAppContentAsync(CancellationToken cancellationToken = default) =>
+        RetainContentTransition(async () =>
+        {
+            var tab = SelectedRuntime();
+            if (tab.Address.IsWeb) throw new InvalidOperationException("Web tabs still reload through the selected engine.");
+            await ReleaseContentAsync(tab, preservePendingHosts: true).ConfigureAwait(false);
+            tab.AppOwner = null;
+            await AttachAppContentAsync(tab, tab.Address, CancellationToken.None).ConfigureAwait(false);
+            _status = tab.Status = tab.Title + " reloaded.";
+            return Publish();
+        }, cancellationToken);
+
     private static void ApplyAppContent(TabRuntime tab, AppContentAddress address, AppContentOwner? owner)
     {
         tab.AppOwner = owner; tab.Address = owner?.Session.Address ?? address;
