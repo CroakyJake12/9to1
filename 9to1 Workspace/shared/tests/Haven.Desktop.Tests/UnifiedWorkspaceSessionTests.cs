@@ -156,6 +156,42 @@ public sealed class UnifiedWorkspaceSessionTests
     }
 
     [AvaloniaFact]
+    public async Task Browse_group_operations_update_the_existing_canonical_group_identity_and_membership()
+    {
+        var groupId = Guid.NewGuid();
+        var first = UnifiedWorkspaceTabState.Merge(null, Browser("First") with { Group = groupId.ToString("D") }) with { GroupId = groupId };
+        var second = UnifiedWorkspaceTabState.Merge(null, Browser("Second") with
+            { Group = groupId.ToString("D"), ProfileId = "other-profile" }) with { GroupId = groupId };
+        var group = new TabGroupSnapshot(groupId, "Research", false, [first.Id, second.Id]);
+        var window = Window(WorkspaceWindowKind.Main, [first.Id, second.Id]);
+        var repository = new Repository { Restored = new(WorkspaceSessionSnapshot.CurrentSchemaVersion,
+            [first, second], [group], [window], DateTimeOffset.UnixEpoch) };
+        var coordinator = new WorkspaceSessionCoordinator(repository);
+        var session = new UnifiedWorkspaceSession(coordinator, await coordinator.LoadAsync(CancellationToken.None));
+        var port = session.OpenWindow(window.Id, "profile");
+
+        var loaded = await port.LoadAsync(CancellationToken.None) ?? throw new InvalidOperationException("Group projection was unavailable.");
+        var restoredGroup = Assert.Single(loaded.Groups!);
+        Assert.Equal(groupId, restoredGroup.Id); Assert.Equal(new[] { first.Id, second.Id }, restoredGroup.OrderedTabIds);
+        var changed = loaded with { Groups = [restoredGroup with
+            { Name = "Project notes", IsCollapsed = true, OrderedTabIds = [second.Id, first.Id] }] };
+        await port.SaveAsync(changed with { Tabs = [loaded.Tabs[1] with { Group = groupId.ToString("D") },
+            loaded.Tabs[0] with { Group = groupId.ToString("D") }] }, CancellationToken.None);
+        await session.SealAndDrainAsync();
+        await coordinator.SaveFinalSnapshotAndSealAsync(CancellationToken.None);
+
+        var final = repository.Writes[^1];
+        var savedGroup = Assert.Single(final.Groups);
+        Assert.Equal(groupId, savedGroup.Id); Assert.Equal("Project notes", savedGroup.Name); Assert.True(savedGroup.IsCollapsed);
+        Assert.Equal(new[] { second.Id, first.Id }, savedGroup.OrderedTabIds);
+        Assert.All(final.Tabs, tab => Assert.Equal(groupId, tab.GroupId));
+        Assert.Equal("profile", UnifiedWorkspaceTabState.TryProject(final.Tabs.Single(tab => tab.Id == first.Id), "profile", out var projectedFirst)
+            ? projectedFirst!.ProfileId : null);
+        Assert.Equal("other-profile", UnifiedWorkspaceTabState.TryProject(final.Tabs.Single(tab => tab.Id == second.Id), "profile", out var projectedSecond)
+            ? projectedSecond!.ProfileId : null);
+    }
+
+    [AvaloniaFact]
     public async Task Browse_split_panes_restore_and_round_trip_through_the_existing_window_layout()
     {
         var first = UnifiedWorkspaceTabState.Merge(null, Browser("First"));
