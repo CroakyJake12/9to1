@@ -558,15 +558,11 @@ internal static class MergeDeltas
     /// sees them. Returns null when the previous row belongs to a different block.</summary>
     private static string? PreviousListItemId(IReadOnlyList<RichBoardBlock> blocks, int position, string parentId)
     {
-        for (var i = position - 1; i >= 0; i--)
-        {
-            if (!TrySplitItemId(blocks[i].Id, out var candidateParent, out var candidateItem))
-                return null;
-            if (!string.Equals(candidateParent, parentId, StringComparison.Ordinal))
-                return null;
-            return candidateItem;
-        }
-        return null;
+        if (position <= 0 || position >= blocks.Count)
+            return null;
+        if (!TrySplitItemId(blocks[position - 1].Id, out var candidateParent, out var candidateItem))
+            return null;
+        return string.Equals(candidateParent, parentId, StringComparison.Ordinal) ? candidateItem : null;
     }
 
     private static void MergeItem(
