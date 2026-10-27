@@ -300,9 +300,10 @@ public static class BlockRenderer
         bool absolutePositioned = false)
     {
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
-        // The first slot stays a compact, fixed target even when the content in
-        // the row (especially a table) is much taller than an ordinary block.
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,Auto,*") };
+        // The 64px gutter occupies the page-card margin before the text column;
+        // the two 32px targets remain outside document flow and the block text
+        // aligns with the page title/content start.
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,32,*") };
         Button? insert = null;
         Control? gripControl = null;
         if (vm.IsEditMode)
@@ -310,28 +311,29 @@ public static class BlockRenderer
             insert = ToolbarBuilder.CreateInsertButton(
                 vm, "Insert a block after this note", insertAfterBlockId) as Button
                 ?? throw new InvalidOperationException("The insert affordance must remain a button.");
-            ConfigureBlockGutterButton(insert);
-            insert.Margin = new Thickness(0, 0, 2, 0);
-            insert.Opacity = selected ? 1 : QuietBlockGutterOpacity;
-            Grid.SetColumn(insert, 0);
-            row.Children.Add(insert);
+            ConfigureBlockGutterButton(insert, insertAction: true);
+            insert.Margin = new Thickness(0);
+            insert.Opacity = 0;
 
             var grip = BlockGripCui.Build(vm, selectId);
             gripControl = grip;
             grip.MinWidth = BlockGutterTargetSize;
             grip.MinHeight = BlockGutterTargetSize;
             grip.HorizontalAlignment = HorizontalAlignment.Left;
-            grip.VerticalAlignment = VerticalAlignment.Top;
-            grip.Opacity = selected ? 1 : QuietBlockGutterOpacity;
+            grip.VerticalAlignment = VerticalAlignment.Center;
+            grip.Opacity = 0;
             if (grip.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.Name == "BlockGripToggle") is { } toggle)
-                ConfigureBlockGutterButton(toggle);
-            grip.Margin = new Thickness(0, 0, 4, 0);
-            Grid.SetColumn(grip, 1);
+                ConfigureBlockGutterButton(toggle, insertAction: false);
+            grip.Margin = new Thickness(0);
+            Grid.SetColumn(grip, 0);
             row.Children.Add(grip);
+
+            Grid.SetColumn(insert, 1);
+            row.Children.Add(insert);
         }
         else
         {
-            // Keep the document column aligned between modes without leaving
+            // Keep the content start aligned between modes without leaving
             // an edit command in the read-only surface.
             row.Children.Add(new Border
             {
@@ -342,7 +344,7 @@ public static class BlockRenderer
             });
             var gripSlot = new Border
             {
-                Width = BlockGutterTargetSize + 4,
+                Width = BlockGutterTargetSize,
                 Height = BlockGutterTargetSize,
                 IsHitTestVisible = false,
                 Focusable = false,
@@ -450,6 +452,8 @@ public static class BlockRenderer
         // The drag grip keeps its glyph and a fixed top target, the same
         // invariant the quiet-gutter tests assert.
         var glyph = BoardsIcons.Glyph(BoardsIcons.Grip, 14, "Drag block handle");
+        CuiPropertyPresentation.Set(button, "Chromeless", true,
+            CuiPropertyLevel.Instance, "Boards block drag grip interaction");
         CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
             CuiPropertyLevel.Instance, "Boards block drag grip surface");
         CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
