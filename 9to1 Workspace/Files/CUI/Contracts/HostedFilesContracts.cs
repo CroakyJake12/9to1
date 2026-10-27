@@ -199,7 +199,8 @@ public sealed record FilesPrincipalGrant(
 	FilesGrantOrigin Origin,
 	HostedItemId GrantedOnItemId,
 	DateTimeOffset GrantedAt,
-	string GrantedByPrincipalId);
+	string GrantedByPrincipalId,
+	string? RecipientAddress = null);
 
 public sealed record FilesPermissionChangePreview(
 	HostedItemId ItemId,
@@ -209,7 +210,13 @@ public sealed record FilesPermissionChangePreview(
 	IReadOnlyList<FilesPrincipalGrant> CurrentEffectiveGrants,
 	IReadOnlyList<FilesPrincipalGrant> ResultingEffectiveGrants,
 	IReadOnlyList<string> ChangedPrincipalIds,
-	bool RequiresApproval);
+	bool RequiresApproval,
+	IReadOnlyList<FilesItemPermissionChange>? AffectedItems = null);
+
+public sealed record FilesItemPermissionChange(
+	HostedItemId ItemId,
+	IReadOnlyList<FilesPrincipalGrant> CurrentEffectiveGrants,
+	IReadOnlyList<FilesPrincipalGrant> ResultingEffectiveGrants);
 
 public sealed record FilesShare(
 	FilesShareId Id,
