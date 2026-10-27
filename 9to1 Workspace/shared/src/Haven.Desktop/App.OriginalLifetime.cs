@@ -345,7 +345,28 @@ public sealed partial class App
     {
         if (_actualWindowClosure is not null) return; // Privately issued native-close original AFTER resource owners joined, never a clean-authority boolean.
         args.Cancel = true;
+        // The window silently refusing to close is the owner-reported symptom; without a
+        // durable record of every preflight stage nobody can tell whether a hosted owner
+        // (Unified preflight, shell preflight, or model routing) stalled. This writer is
+        // append-only, bounded, and never replaces the cancelled close itself.
+        WriteOriginalCloseDiagnostic("window-close requested; preflight starts");
         RequestOriginalDocumentClosePreflight();
+    }
+    private static void WriteOriginalCloseDiagnostic(string message)
+    {
+        try
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var directory = Path.Combine(appData, "Haven", "Logs");
+            Directory.CreateDirectory(directory);
+            var line = $"[{DateTimeOffset.Now:O}] close-preflight: {message}{Environment.NewLine}";
+            var path = Path.Combine(directory, "close-preflight-diagnostic.log");
+            var value = new StringBuilder(line).ToString();
+            // Bounded tail: keep the file useful instead of unbounded across restarts.
+            if (File.Exists(path) && new FileInfo(path).Length > 256 * 1024) File.Delete(path);
+            File.AppendAllText(path, value, new UTF8Encoding(false));
+        }
+        catch { /* A diagnostic writer must never block or throw into the close path. */ }
     }
     private void OnOriginalDesktopShutdownRequested(object? sender, ShutdownRequestedEventArgs args)
     {
@@ -383,15 +404,25 @@ public sealed partial class App
                 attempt.Shells = CaptureOriginalDocumentCloseShells(desktop);
                 attempt.Candidates = attempt.Shells.Select(shell => AcquireOriginalAppSynchronous(original,
                     shell.CaptureOriginalDocumentClosePreflight)).ToArray();
+                WriteOriginalCloseDiagnostic($"captured {attempt.Shells.Length} close shells and {attempt.Candidates.Length} preflight candidates");
                 foreach (var candidate in attempt.Candidates)
+                {
+                    WriteOriginalCloseDiagnostic($"shell preflight {candidate.GetType().Name} joining");
                     if (!await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
-                        () => candidate.PrepareAsync(CancellationToken.None)))) return;
+                        () => candidate.PrepareAsync(CancellationToken.None))))
+                    {
+                        WriteOriginalCloseDiagnostic($"shell preflight {candidate.GetType().Name} refused; close stays cancelled");
+                        return;
+                    }
+                    WriteOriginalCloseDiagnostic($"shell preflight {candidate.GetType().Name} joined");
+                }
 #if !ANDROID
                 attempt.Unified = _actualUnifiedWorkspace;
                 if (attempt.Unified is { } unified)
                 {
                     attempt.UnifiedPreparation = AcquireOriginalAppSynchronous(original,
                         () => unified.PrepareCloseAsync(CancellationToken.None));
+                    WriteOriginalCloseDiagnostic("unified workspace close preparation acquired");
                     try { await original.AwaitAsync(attempt.UnifiedPreparation); }
                     finally
                     {
@@ -400,8 +431,16 @@ public sealed partial class App
                         if (attempt.UnifiedPreparation.IsCompletedSuccessfully)
                             attempt.UnifiedLease = attempt.UnifiedPreparation.GetAwaiter().GetResult();
                     }
-                    if (attempt.UnifiedLease is null) return;
+                    WriteOriginalCloseDiagnostic(attempt.UnifiedLease is null
+                        ? "unified workspace close preparation returned no lease"
+                        : $"unified workspace close lease accepted={attempt.UnifiedLease.IsAcceptedOriginal}");
+                    if (attempt.UnifiedLease is null)
+                    {
+                        WriteOriginalCloseDiagnostic("unified workspace close lease missing; close stays cancelled");
+                        return;
+                    }
                 }
+                WriteOriginalCloseDiagnostic("all close preflight candidates and the unified lease joined");
 #endif
                 original.DemandPublication();
                 attempt.Prepared = true; // Candidate only; delivery still joins this SAME actual Task.
