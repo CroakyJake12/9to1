@@ -352,6 +352,8 @@ public sealed partial class BrowseChrome
                 group.Name.Trim().Length > 64 || group.Name.Any(char.IsControl) || group.OrderedTabIds is null ||
                 group.OrderedTabIds.Distinct().Count() != group.OrderedTabIds.Count)
                 continue;
+            if (!string.IsNullOrEmpty(group.Color) && (group.Color.Length != 7 || group.Color[0] != '#' || !group.Color.Skip(1).All(Uri.IsHexDigit)))
+                throw new InvalidDataException("Saved tab group colour metadata must be an sRGB #RRGGBB value.");
             var members = group.OrderedTabIds.Select(id => _tabs.FirstOrDefault(tab => tab.Id == id)).ToArray();
             if (members.Any(tab => tab is null || !IsGroupable(tab) || tab.Group != group.Id.ToString("D")) ||
                 members.Skip(1).Any(tab => !IsGroupCompatible(members[0]!, tab!))) continue;

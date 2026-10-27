@@ -7,6 +7,133 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeOwnershipTests
 {
     [Fact]
+    public async Task Split_member_close_veto_preserves_the_exact_saved_split_and_original_app_session()
+    {
+        var apps = new PreparedFactory(); var session = new TabSessionFixture(null);
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), appContentFactory: apps, tabSessionPersistence: session);
+        await chrome.NavigateAsync("9to1://write/pending-document");
+        var document = chrome.State.SelectedTabId; var owner = Assert.Single(apps.Sessions);
+        var companion = (await chrome.NewTabAsync(false)).SelectedTabId;
+        await chrome.OpenSplitViewForTabsAsync(document, companion);
+        var originalSplit = Assert.Single(chrome.State.SplitViews); var savedCount = session.Saves.Count;
+        owner.Preparing = () => false;
+        try
+        {
+            await chrome.CloseTabAsync(document);
+            Assert.Equal(originalSplit.Id, Assert.Single(chrome.State.SplitViews).Id);
+            Assert.Equal(originalSplit.PaneTabIds, chrome.State.PaneTabIds);
+            Assert.Same(owner, chrome.ObserveOriginalAppContent(document)); Assert.Null(owner.OriginalClose);
+            Assert.Equal(savedCount, session.Saves.Count); Assert.True(owner.Edit());
+        }
+        finally { owner.Preparing = null; }
+    }
+
+    [Fact]
+    public async Task Failed_split_save_keeps_the_live_object_for_explicit_retry_and_retains_the_original_fault()
+    {
+        var session = new TabSessionFixture(null);
+        var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), tabSessionPersistence: session);
+        RetainedFailedOwners.Add(chrome);
+        var first = chrome.State.SelectedTabId; var second = (await chrome.NewTabAsync(false)).SelectedTabId;
+        await chrome.OpenSplitViewForTabsAsync(first, second);
+        var splitId = Assert.Single(chrome.State.SplitViews).Id;
+        var failure = new IOException("Actual saved-split owner write failed");
+        var original = Task.FromException(failure); session.NextSave = original;
+        Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => chrome.AdjustPrimaryPaneAsync(1)));
+        Assert.True(original.IsFaulted); Assert.True(chrome.HasUnsavedSplitViewLayout);
+        Assert.Equal(splitId, Assert.Single(chrome.State.SplitViews).Id);
+        Assert.Equal(.55, chrome.State.PrimaryPaneRatio, precision: 2);
+        await chrome.SaveSplitViewLayoutAsync();
+        Assert.False(chrome.HasUnsavedSplitViewLayout);
+        Assert.Equal(splitId, Assert.Single(session.Saves[^1].SplitViews!).Id);
+        Assert.Equal(.55, session.Saves[^1].SplitViews![0].PrimaryPaneRatio, precision: 2);
+        var closeFailure = await Assert.ThrowsAnyAsync<Exception>(() => chrome.DisposeAsync().AsTask());
+        Assert.True(HasExact(closeFailure, failure)); // Successful retry never erases the failed original task.
+    }
+
+    [Fact]
+    public async Task Saved_split_object_survives_switching_and_cold_projection_restore_without_recreating_live_tabs()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory(includeGecko: true);
+        var first = Guid.NewGuid(); var second = Guid.NewGuid(); var outside = Guid.NewGuid();
+        var session = new TabSessionFixture(new([
+            new(first, "Research", "https://research.example/", BrowserTabPrivacy.Standard, "", DateTimeOffset.UtcNow) { ProfileId = "profile-a" },
+            new(second, "Notes", "https://notes.example/", BrowserTabPrivacy.Standard, "", DateTimeOffset.UtcNow) { ProfileId = "profile-b" },
+            new(outside, "Outside", "browse://newtab", BrowserTabPrivacy.Standard, "", DateTimeOffset.UtcNow) { ProfileId = "profile-a" }
+        ], first));
+        Guid splitId;
+        await using (var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: "profile-a", tabSessionPersistence: session))
+        {
+            var firstOwner = chrome.ObserveOriginalEngine(first); var secondOwner = chrome.ObserveOriginalEngine(second);
+            var admissions = factory.Requests.Count;
+            await chrome.OpenSplitViewForTabsAsync(first, second);
+            splitId = Assert.Single(chrome.State.SplitViews).Id;
+            await chrome.FocusSplitPaneAsync(second); await chrome.SwapSplitPanesAsync();
+            await chrome.ToggleSplitOrientationAsync(); await chrome.AdjustPrimaryPaneAsync(1);
+            await chrome.SelectTabAsync(outside);
+            Assert.Empty(chrome.State.PaneTabIds); Assert.Null(chrome.State.ActiveSplitViewId);
+            var inactive = Assert.Single(session.Saves[^1].SplitViews!);
+            Assert.Equal(splitId, inactive.Id); Assert.Equal(new[] { second, first }, inactive.PaneTabIds);
+            Assert.Equal(second, inactive.FocusedTabId); Assert.Equal(SplitOrientation.Horizontal, inactive.Orientation);
+            Assert.Equal(.55, inactive.PrimaryPaneRatio, precision: 2);
+            await chrome.SelectSplitViewAsync(splitId);
+            Assert.Equal(second, chrome.State.SelectedTabId); Assert.Equal(splitId, chrome.State.ActiveSplitViewId);
+            Assert.Equal(new[] { second, first }, chrome.State.PaneTabIds);
+            Assert.Same(firstOwner, chrome.ObserveOriginalEngine(first)); Assert.Same(secondOwner, chrome.ObserveOriginalEngine(second));
+            Assert.Equal(admissions, factory.Requests.Count);
+            // Persist while another tab is active, not merely while the split layout is visible.
+            await chrome.SelectTabAsync(outside);
+        }
+        await using var restarted = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: "profile-a", tabSessionPersistence: session);
+        Assert.Equal(outside, restarted.State.SelectedTabId); Assert.Empty(restarted.State.PaneTabIds);
+        Assert.Equal(splitId, Assert.Single(restarted.State.SplitViews).Id);
+        await restarted.SelectSplitViewAsync(splitId);
+        Assert.Equal(new[] { second, first }, restarted.State.PaneTabIds);
+        Assert.Equal(second, restarted.State.SelectedTabId); Assert.Equal(SplitOrientation.Horizontal, restarted.State.SplitOrientation);
+        Assert.Equal(.55, restarted.State.PrimaryPaneRatio, precision: 2);
+        Assert.Equal("profile-a", restarted.State.Tabs.Single(tab => tab.Id == first).ProfileId);
+        Assert.Equal("profile-b", restarted.State.Tabs.Single(tab => tab.Id == second).ProfileId);
+        await restarted.CloseSplitViewAsync();
+        Assert.Empty(restarted.State.SplitViews); Assert.Equal(3, restarted.State.Tabs.Count);
+        await restarted.SelectTabAsync(outside); await restarted.SelectTabAsync(first);
+        Assert.Empty(restarted.State.PaneTabIds); // An explicit unsplit must not reappear.
+    }
+
+    [Fact]
+    public async Task Independent_saved_splits_coexist_with_groups_and_member_close_only_dissolves_its_own_presentation()
+    {
+        var ids = Enumerable.Range(0, 5).Select(_ => Guid.NewGuid()).ToArray();
+        var session = new TabSessionFixture(new(ids.Select((id, index) => new BrowserTabState(id, "Tab " + index,
+            "https://tab" + index + ".example/", BrowserTabPrivacy.Standard, "", DateTimeOffset.UtcNow)
+            { ProfileId = "profile" }).ToArray(), ids[0]));
+        await using var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), homeProfileId: "profile", tabSessionPersistence: session);
+        await chrome.GroupTabsAsync(ids[0], ids[1], "Research");
+        var groupId = Assert.Single(chrome.State.Groups).Id;
+        await chrome.OpenSplitViewForTabsAsync(ids[0], ids[1]);
+        var firstSplit = Assert.Single(chrome.State.SplitViews).Id;
+        await chrome.SelectTabAsync(ids[2]);
+        await chrome.OpenSplitViewForTabsAsync(ids[2], ids[3]);
+        var secondSplit = chrome.State.ActiveSplitViewId;
+        Assert.NotEqual(firstSplit, secondSplit); Assert.Equal(2, chrome.State.SplitViews.Count);
+        await chrome.SelectTabAsync(ids[4]);
+        Assert.False(chrome.CanOpenSplitViewForTabs(ids[0], ids[4])); // One tab cannot occupy two split objects.
+        await chrome.SetTabGroupCollapsedAsync(groupId, true);
+        await chrome.SelectSplitViewAsync(firstSplit);
+        Assert.Equal(new[] { ids[0], ids[1] }, chrome.State.PaneTabIds);
+        Assert.True(Assert.Single(chrome.State.Groups).IsCollapsed);
+        await chrome.CloseTabAsync(ids[0]);
+        Assert.DoesNotContain(chrome.State.SplitViews, split => split.Id == firstSplit);
+        Assert.Equal(secondSplit, Assert.Single(chrome.State.SplitViews).Id);
+        Assert.Contains(chrome.State.Tabs, tab => tab.Id == ids[1]);
+        Assert.Equal(groupId, chrome.State.Tabs.Single(tab => tab.Id == ids[1]).GroupId);
+        await chrome.SelectSplitViewAsync(secondSplit!.Value);
+        Assert.Equal(new[] { ids[2], ids[3] }, chrome.State.PaneTabIds);
+        await chrome.ReopenClosedTabAsync();
+        Assert.Equal(ids[0], chrome.State.SelectedTabId); Assert.Empty(chrome.State.PaneTabIds);
+        Assert.Single(chrome.State.SplitViews); // Reopen does not resurrect an explicitly dismantled split.
+    }
+
+    [Fact]
     public async Task Split_view_keeps_existing_cross_profile_tab_owners_and_persists_focus_and_close()
     {
         var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();

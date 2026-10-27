@@ -101,6 +101,8 @@ internal static class UnifiedWorkspaceSessionProjection
             throw new InvalidDataException("A new tab identity cannot replace another window's tab.");
         var closedIds = previouslyManagedTabIds.Where(id => !currentIds.Contains(id)).ToHashSet();
         var deletedIds = closedIds.Where(id => !otherReferences.Contains(id)).ToHashSet();
+        var splitViews = MergeSplitViews(original.Windows, owningWindow, current, currentIds, deletedIds,
+            paneTabIds, splitOrientation, primaryPaneRatio);
         var groups = original.Groups.ToList();
         if (current.Groups is { } projectedGroups)
             MergeGroupMetadata(groups, projectedGroups, current, owningWindow, original.Windows, windowId,
@@ -133,10 +135,12 @@ internal static class UnifiedWorkspaceSessionProjection
         var layout = owningWindow.Layout;
         if (paneTabIds.Count == 2)
         {
+            var activeSplit = splitViews.SingleOrDefault(split => split.Panes.OrderBy(pane => pane.Order)
+                .Select(pane => pane.TabId).SequenceEqual(paneTabIds));
             var existingPaneIds = owningWindow.Layout.Panes.OrderBy(pane => pane.Order).Select(pane => pane.Id).ToArray();
-            var panes = paneTabIds.Select((tabId, order) => new WorkspacePaneSnapshot(
+            var panes = activeSplit?.Panes.ToArray() ?? paneTabIds.Select((tabId, order) => new WorkspacePaneSnapshot(
                 order < existingPaneIds.Length ? existingPaneIds[order] : StableId(windowId, "pane-" + order), tabId, order)).ToArray();
-            layout = layout with { Kind = WorkspaceLayoutKind.Split, Orientation = splitOrientation,
+            layout = layout with { Id = activeSplit?.Id ?? layout.Id, Kind = WorkspaceLayoutKind.Split, Orientation = splitOrientation,
                 PrimaryRatio = primaryPaneRatio,
                 Panes = ReadOnly(panes) };
         }
@@ -160,6 +164,7 @@ internal static class UnifiedWorkspaceSessionProjection
         {
             OrderedTabIds = ReadOnly(orderedIds), SelectedTabId = current.SelectedTabId,
             Layout = layout,
+            SplitViews = ReadOnly(splitViews.ToArray()),
             RecentlyClosedTabs = ReadOnly(current.ClosedTabs.Select(item => new WorkspaceClosedTabSnapshot(
                 item.Tab.Id, item.Tab.Title, item.Tab.Address, item.Tab.ProfileId!,
                 Guid.TryParse(item.Tab.Group, out var group) ? group : null, item.Index,
@@ -243,9 +248,13 @@ internal static class UnifiedWorkspaceSessionProjection
             if (externalGroupIds.Contains(group.Id) || groups.Any(existing => existing.Id == group.Id && !touchedGroupIds.Contains(group.Id)))
                 throw new InvalidDataException("A tab group owned by another window cannot be changed here.");
             var index = groups.FindIndex(existing => existing.Id == group.Id);
+            if (!IsValidGroupColor(group.Color)) throw new InvalidDataException("A group colour must be an sRGB #RRGGBB value.");
+            var color = group.Color is null ? (index >= 0 ? groups[index].Color : null)
+                : group.Color.Length == 0 ? null : group.Color.ToUpperInvariant();
+            if (!IsValidGroupColor(color)) throw new InvalidDataException("Retained group colour metadata must be migrated before it can be saved.");
             var updated = index >= 0
-                ? groups[index] with { Name = name, IsCollapsed = group.IsCollapsed }
-                : new TabGroupSnapshot(group.Id, name, group.IsCollapsed, Array.Empty<Guid>());
+                ? groups[index] with { Name = name, IsCollapsed = group.IsCollapsed, Color = color }
+                : new TabGroupSnapshot(group.Id, name, group.IsCollapsed, Array.Empty<Guid>()) { Color = color };
             if (index >= 0) groups[index] = updated; else groups.Add(updated);
             touchedGroupIds.Add(group.Id);
         }
@@ -289,16 +298,122 @@ internal static class UnifiedWorkspaceSessionProjection
 
     private static IEnumerable<Guid> WindowReferences(WorkspaceWindowSnapshot window) =>
         window.OrderedTabIds.Concat(window.Layout.Panes.Select(pane => pane.TabId))
+            .Concat(window.SplitViews.SelectMany(split => split.Panes.Select(pane => pane.TabId)))
             .Concat(window.SelectedTabId is { } id ? [id] : Array.Empty<Guid>());
 
     private static WorkspaceWindowSnapshot Detach(WorkspaceWindowSnapshot window) => window with
     {
         OrderedTabIds = ReadOnly(window.OrderedTabIds.ToArray()),
         Layout = window.Layout with { Panes = ReadOnly(window.Layout.Panes.ToArray()) },
+        SplitViews = ReadOnly(window.SplitViews.Select(split => split with { Panes = ReadOnly(split.Panes.ToArray()) }).ToArray()),
         RecentlyClosedTabs = ReadOnly(window.RecentlyClosedTabs.ToArray())
     };
 
     private static IReadOnlyList<T> ReadOnly<T>(T[] values) => Array.AsReadOnly(values);
+
+    private static bool IsValidGroupColor(string? value) => string.IsNullOrEmpty(value) ||
+        value.Length == 7 && value[0] == '#' && value.Skip(1).All(Uri.IsHexDigit);
+
+    /// <summary>Load only splits whose members this port actually projects. Unsupported tab
+    /// rows and their split objects remain in the same canonical window, not implicitly deleted.</summary>
+    internal static IReadOnlyList<BrowseSplitViewProjection> ProjectSplitViews(WorkspaceWindowSnapshot window,
+        IReadOnlyList<BrowserTabState> tabs)
+    {
+        var ids = tabs.Where(tab => tab.Privacy == BrowserTabPrivacy.Standard).Select(tab => tab.Id).ToHashSet();
+        return ReadOnly(CanonicalSplitViews(window).Where(split => split.Panes.All(pane => ids.Contains(pane.TabId)))
+            .Select(split => new BrowseSplitViewProjection(split.Id,
+                ReadOnly(split.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId).ToArray()),
+                split.FocusedTabId, split.Orientation, split.PrimaryRatio)).ToArray());
+    }
+
+    private static IReadOnlyList<WorkspaceSplitViewSnapshot> CanonicalSplitViews(WorkspaceWindowSnapshot window)
+    {
+        if (window.SplitViews is null) throw new InvalidDataException("Saved split objects cannot be null.");
+        var values = window.SplitViews;
+        if (values.Any(split => split is null || split.Panes is null || split.Panes.Any(pane => pane is null)))
+            throw new InvalidDataException("Saved splits must contain typed pane objects.");
+        // The pre-extension v1 format stored just the visible split. Keep its exact
+        // layout and pane identities for one-time additive migration, not a new tab.
+        if (values.Count == 0 && window.Layout.Kind == WorkspaceLayoutKind.Split &&
+            window.Layout.Panes.Count == 2 && window.SelectedTabId is { } selected &&
+            window.Layout.Panes.Any(pane => pane.TabId == selected) && Enum.IsDefined(window.Layout.Orientation) &&
+            double.IsFinite(window.Layout.PrimaryRatio) && window.Layout.PrimaryRatio >= WorkspaceLayoutSnapshot.MinimumPaneRatio &&
+            window.Layout.PrimaryRatio <= WorkspaceLayoutSnapshot.MaximumPaneRatio)
+            values = [new(window.Layout.Id, window.Layout.Panes, selected, window.Layout.Orientation, window.Layout.PrimaryRatio)];
+        DemandUnique(values.Select(split => split.Id), "saved split objects");
+        var members = new HashSet<Guid>(); var paneIds = new HashSet<Guid>();
+        foreach (var split in values)
+        {
+            if (split.Panes is not { Count: 2 } || split.Panes.Select(pane => pane.Order).Order().SequenceEqual(new[] { 0, 1 }) is false ||
+                !split.Panes.Any(pane => pane.TabId == split.FocusedTabId) || !Enum.IsDefined(split.Orientation) ||
+                !double.IsFinite(split.PrimaryRatio) || split.PrimaryRatio < WorkspaceLayoutSnapshot.MinimumPaneRatio ||
+                split.PrimaryRatio > WorkspaceLayoutSnapshot.MaximumPaneRatio)
+                throw new InvalidDataException("A saved split contains invalid panes, focus, orientation, or ratio.");
+            foreach (var pane in split.Panes)
+                if (pane.Id == Guid.Empty || !paneIds.Add(pane.Id) || pane.TabId == Guid.Empty ||
+                    !members.Add(pane.TabId) || !window.OrderedTabIds.Contains(pane.TabId))
+                    throw new InvalidDataException("A saved split must exclusively reference existing tabs in its own window.");
+        }
+        return values;
+    }
+
+    private static IReadOnlyList<WorkspaceSplitViewSnapshot> MergeSplitViews(IReadOnlyList<WorkspaceWindowSnapshot> windows,
+        WorkspaceWindowSnapshot window, BrowseTabSessionProjection current, IReadOnlySet<Guid> currentIds,
+        IReadOnlySet<Guid> deletedIds, IReadOnlyList<Guid> activePanes, SplitOrientation orientation, double ratio)
+    {
+        var prior = CanonicalSplitViews(window);
+        var foreignSplits = windows.Where(item => item.Id != window.Id).SelectMany(CanonicalSplitViews).ToArray();
+        var foreignIds = foreignSplits.Select(split => split.Id).ToHashSet();
+        var foreignMembers = windows.Where(item => item.Id != window.Id).SelectMany(WindowReferences).ToHashSet();
+        var projected = current.SplitViews;
+        if (projected is null)
+        {
+            // An older producer cannot erase inactive presentation objects it never loaded.
+            projected = prior.Where(split => split.Panes.All(pane => currentIds.Contains(pane.TabId)))
+                .Select(split => new BrowseSplitViewProjection(split.Id,
+                    split.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId).ToArray(), split.FocusedTabId,
+                    split.Orientation, split.PrimaryRatio)).ToArray();
+            if (activePanes.Count == 2)
+            {
+                var matching = projected.SingleOrDefault(split => split.PaneTabIds.ToHashSet().SetEquals(activePanes));
+                var updated = new BrowseSplitViewProjection(matching?.Id ?? StableId(window.Id,
+                    "split/" + string.Join("/", activePanes.Order().Select(id => id.ToString("D")))),
+                    activePanes, current.SelectedTabId!.Value, orientation, ratio);
+                projected = projected.Where(split => split.Id != updated.Id && !split.PaneTabIds.Intersect(activePanes).Any())
+                    .Append(updated).ToArray();
+            }
+        }
+        if (projected.Any(split => split is null)) throw new InvalidDataException("A split object cannot be null.");
+        DemandUnique(projected.Select(split => split.Id), "projected split objects");
+        var retained = prior.Where(split => !split.Panes.Any(pane => deletedIds.Contains(pane.TabId)) &&
+            split.Panes.Any(pane => !currentIds.Contains(pane.TabId))).ToList();
+        var result = new List<WorkspaceSplitViewSnapshot>(retained);
+        var members = retained.SelectMany(split => split.Panes.Select(pane => pane.TabId)).ToHashSet();
+        foreach (var split in projected)
+        {
+            if (foreignIds.Contains(split.Id) || retained.Any(item => item.Id == split.Id) ||
+                split.PaneTabIds is not { Count: 2 } panes || panes[0] == panes[1] ||
+                !panes.Contains(split.FocusedTabId) || !Enum.IsDefined(split.Orientation) || !double.IsFinite(split.PrimaryPaneRatio) ||
+                split.PrimaryPaneRatio < WorkspaceLayoutSnapshot.MinimumPaneRatio || split.PrimaryPaneRatio > WorkspaceLayoutSnapshot.MaximumPaneRatio ||
+                panes.Any(id => !currentIds.Contains(id) || members.Contains(id) || foreignMembers.Contains(id)))
+                throw new InvalidDataException("A split projection must exclusively reference two open standard tabs and a valid owned split identity.");
+            members.UnionWith(panes);
+            var existing = prior.SingleOrDefault(item => item.Id == split.Id);
+            var nextPanes = panes.Select((tabId, order) => new WorkspacePaneSnapshot(
+                existing?.Panes.SingleOrDefault(pane => pane.TabId == tabId)?.Id ?? StableId(split.Id, "split-pane/" + tabId.ToString("D")),
+                tabId, order)).ToArray();
+            result.Add(new(split.Id, ReadOnly(nextPanes), split.FocusedTabId, split.Orientation, split.PrimaryPaneRatio));
+        }
+        if (current.SplitViews is not null)
+        {
+            var active = result.SingleOrDefault(split => split.Panes.Any(pane => pane.TabId == current.SelectedTabId));
+            if (activePanes.Count == 2 && (active is null || !active.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId).SequenceEqual(activePanes) ||
+                active.FocusedTabId != current.SelectedTabId || active.Orientation != orientation || active.PrimaryRatio != ratio) ||
+                activePanes.Count == 0 && active is not null && active.Panes.All(pane => currentIds.Contains(pane.TabId)))
+                throw new InvalidDataException("The visible layout must agree with its saved split object and focused tab.");
+        }
+        return result;
+    }
 
     private static void DemandUnique(IEnumerable<Guid> ids, string description)
     {

@@ -18,7 +18,7 @@ public sealed partial class BrowseChrome
         var existing = _tabs.FirstOrDefault(tab => tab.NativePage == page && tab.Privacy == privacy);
         var tab = existing ?? await AddRuntimeAsync(Guid.NewGuid(), BrowserNativePages.Title(page), address,
             privacy, string.Empty, token).ConfigureAwait(false);
-        _selectedTabId = tab.Id;
+        SelectTabPresentation(tab.Id);
         await SaveTabsAsync(token).ConfigureAwait(false);
         _status = tab.Status;
         return Publish();
