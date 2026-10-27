@@ -1,4 +1,5 @@
 using System.Runtime.ExceptionServices;
+using System.Text;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Haven.Application;
@@ -361,10 +362,9 @@ public sealed partial class App
             Directory.CreateDirectory(directory);
             var line = $"[{DateTimeOffset.Now:O}] close-preflight: {message}{Environment.NewLine}";
             var path = Path.Combine(directory, "close-preflight-diagnostic.log");
-            var value = new StringBuilder(line).ToString();
             // Bounded tail: keep the file useful instead of unbounded across restarts.
             if (File.Exists(path) && new FileInfo(path).Length > 256 * 1024) File.Delete(path);
-            File.AppendAllText(path, value, new UTF8Encoding(false));
+            File.AppendAllText(path, line, new UTF8Encoding(false));
         }
         catch { /* A diagnostic writer must never block or throw into the close path. */ }
     }
