@@ -77,15 +77,22 @@ public sealed class BoardInkInteractionController : IDisposable
                 _overlay.Background = canDraw ? Brushes.Transparent : null;
                 ToolTip.SetTip(_overlay, canDraw ? "Draw directly over this page" : "Use Draw to annotate this page");
                 AutomationProperties.SetName(_overlay, "Page drawing layer");
-                var requiredHeight = 0d;
+
+                // The ink layer places children from its own centre, so its size is part of every
+                // stroke's coordinates. Sizing it after the strokes were added moved the layer
+                // under the pen: the owner saw ink land away from the pointer. Decide the extent
+                // first, then draw into that fixed space.
+                var requiredHeight = strokes
+                    .Where(stroke => stroke.Points.Count > 0)
+                    .Select(stroke => stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48)
+                    .DefaultIfEmpty(0d)
+                    .Max();
+                BoardInkOverlayRenderer.ApplyOverlayExtent(_overlay, requiredHeight);
                 foreach (var stroke in strokes)
                 {
                     if (stroke.Points.Count == 0) continue;
-                    requiredHeight = Math.Max(requiredHeight,
-                        stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48);
                     BoardInkOverlayRenderer.AddRenderedStroke(_overlay, stroke, panX, panY, zoom);
                 }
-                BoardInkOverlayRenderer.ApplyOverlayExtent(_overlay, requiredHeight);
                 return;
             }
         }
@@ -188,6 +195,11 @@ public sealed class BoardInkInteractionController : IDisposable
     {
         foreach (var line in _overlay.Children.OfType<Polyline>().Where(line => Equals(line.Tag, "live-ink")).ToArray())
             _overlay.Children.Remove(line);
+        if (_points.Count == 0) return;
+        // Grow the layer before placing the live stroke in it. The layer positions children from
+        // its centre, so growing afterwards would slide the stroke away from the pen mid-draw.
+        var lowest = _points.Max(point => point.Y * _drawingZoom + _drawingPanY) + _drawingWidth + 48;
+        BoardInkOverlayRenderer.ApplyOverlayExtent(_overlay, lowest);
         if (_points.Count == 1)
         {
             var point = ToOverlayCoordinates(_points[0].X, _points[0].Y, _drawingPanX, _drawingPanY, _drawingZoom);
@@ -359,6 +371,14 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
                 if (!_disposed) viewModel.EditText("PageTitleBox", _pageTitleBox.Text ?? string.Empty);
             };
             _pageTitleBox.TextChanged += _pageTitleChanged;
+            // UX27-BOARD-016: Enter in the title starts the page body. Before this the title was
+            // the only text input on an empty page, so Enter appeared to do nothing.
+            _pageTitleBox.KeyDown += (_, e) =>
+            {
+                if (_disposed || e.Key != Key.Enter) return;
+                e.Handled = true;
+                viewModel.StartFirstBlockFromTitle();
+            };
         }
         if (_searchBox is not null)
         {

@@ -1570,6 +1570,35 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         return false;
     }
 
+    /// <summary>
+    /// UX27-BOARD-016/017: Enter in the page-title box leaves the title and starts the page's
+    /// first block. An empty Native page had no block editor at all, only a hint, so the owner
+    /// could not "start typing" and Enter appeared to do nothing. The first block is created
+    /// through the same view-model document and MarkDirty route the rest of the page uses, and
+    /// the renderer focuses it and puts the caret at the end.
+    /// </summary>
+    public void StartFirstBlockFromTitle()
+    {
+        if (!RequireEditMode()) return;
+        var page = CurrentPage();
+        if (page.Blocks.Count == 0)
+        {
+            var created = new RichBoardBlock { Kind = "paragraph", Text = string.Empty };
+            page.Blocks.Add(created);
+            _session.MarkDirty();
+            _selectedBlockId = created.Id;
+            _pendingTextFocus = (page.Id, created.Id, 0);
+        }
+        else
+        {
+            var first = page.Blocks[0];
+            _selectedBlockId = first.Id;
+            _pendingTextFocus = (page.Id, first.Id, first.Text?.Length ?? 0);
+        }
+        PushDocumentToBindings();
+        RequestRebuild();
+    }
+
     public void EditText(string controlName, string text)
     {
         if (_disposed || SessionIsDisposed) return;
