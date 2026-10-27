@@ -122,7 +122,10 @@ if browser_stage:
     shutil.copytree(browser_stage,runtime/'browser',symlinks=True)
 for d in [stage/'DEBIAN',stage/'usr/bin',stage/'usr/share/applications',stage/'usr/share/doc/9to1-preview']:d.mkdir(parents=True,exist_ok=True)
 doc=stage/'usr/share/doc/9to1-preview';shutil.copy2(args.readme,doc/'PREVIEW-README.md');shutil.copy2(args.source_licence,doc/'LICENSE');shutil.copy2(args.build_provenance,doc/'source-and-build.json');shutil.copytree(args.notices,doc/'third-party-notices')
-if rnote_receipt:shutil.copyfile(args.rnote_native_receipt,doc/'rnote-native-stage.json')
+if rnote_receipt:
+ shutil.copyfile(args.rnote_native_receipt,doc/'rnote-native-stage.json')
+ shutil.copyfile(rnote_receipt['licence']['path'],doc/'rnote-LICENSE-GPL-3.0-or-later.txt')
+ shutil.copyfile(rnote_receipt['provenance']['path'],doc/'rnote-PROVENANCE.md')
 # Ship the (already existence-checked) read-only browser readiness preflight as
 # dependency guidance. It never installs/launches anything and reports
 # presence/classification only (runtime NOTRUN). It runs under the python3

@@ -20,7 +20,7 @@ does not claim a v0.15 upgrade, and ABI version 3 does not attest a donor revisi
 Persisted Canvas producer labels and existing files require explicit compatibility
 and provenance review; they must not be silently relabelled or stripped.
 
-The added native operations reuse public Rnote APIs:
+The recovered read/import operations reuse public Rnote APIs:
 
 * Live stroke keys come from `Engine::take_snapshot` and retained slotmap keys.
 * Selection export filters a detached snapshot and uses the donor loader/saver;
@@ -40,12 +40,38 @@ The added native operations reuse public Rnote APIs:
   This is a partial implementation; broader Xournal++ parity and surfaced typed
   compatibility reporting remain required, without a permanent feature waiver.
 
-Selection API v1 and Quick targeting API v1 cover those operation families only.
-Keyed delete/translate and detached split-erase materialisation are still absent.
-Both inspected donor revisions keep the required store mutation methods private
-to their crate; a maintained, individually reviewed upstream extension is needed.
-Loading a replacement snapshot into the live engine would reset history and is
-not a supported mutation workaround.
+The recovered selection/Quick/import bridge is retained from immutable019a9278.
+The subsequent source implementation adds keyed mutation API v1 and detached
+split-erase API v1 through a controlled derivative of the SAME pinned donor:
+
+* `patches/0001-keyed-stroke-operations.patch` is the exact retained keyed edit
+  candidate, SHA256`63dff378fdb46492058da9a8fc099b8066d2edb623f68abb7d39631bb452aa9f`.
+  It reuses native soft-trash, geometry/rTree update, post-change history and
+  rendering, with finite/representable transform and active/busy-state guards.
+* `patches/0002-headless-tasks-and-split-lineage.patch` adds bounded consumption of
+  the Engine's actual task receiver and emits parent/source-segment lineage at
+  the real SplitColliding retained slices and insertions. The original algorithm
+  remains the split operation; this is instrumentation, not a replacement eraser.
+* `patches/source-patches.json` binds exact upstream, intermediate and final file
+  hashes. The ARM producer vendors the locked graph, applies both patches only to
+  the exact rnote-engine source, and updates the actual Cargo file checksums before
+  its frozen build. It retains full vendored derivative source, patch inputs,
+  GPL licence text and receipts. An unpatched/default Cargo graph cannot compile
+  the added method calls; there is no fake capability fallback or changed pin.
+* Keyed edits use the live donor's history. Split erasing instead uses a detached
+  COW engine, composes captured lineage across gesture samples, verifies each
+  returned path/style/layer against its exact original source slice and emits the
+  current managed schema1 materialization receipt. The original native engine,
+  keys and history are unchanged. Generated entities/work/path/receipt bytes are
+  bounded; unsupported data refuses without publishing a candidate.
+
+All five formerly missing ABI exports now have source implementations. This is
+SOURCE ONLY: Rust compilation, authored Rust test execution, dynamic symbols,
+render/task lifecycle, managed interoperability and ARM/GNOME use remain NOT RUN.
+Version functions identify the implemented families; they grant no native or
+product acceptance. The v0.14/v0.15 producer conflict above remains unresolved.
+Loading a replacement snapshot into the LIVE engine remains unsupported; the
+split/export engines are detached data proposals under the existing Home owner.
 
 `include/cakeos_canvas.h` records the actual signatures, key packing and ownership
 contract. Callers must supply valid live handles/pointers and serialize access.

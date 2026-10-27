@@ -5,7 +5,7 @@
 
 pub mod ffi;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, File};
 use std::path::Path;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -722,6 +722,123 @@ impl HeadlessCanvasEngine {
         Self::from_snapshot(snapshot).save_rnote().await
     }
 
+    /// Mutate the SAME donor store/history; never replace the live snapshot.
+    pub fn delete_stroke(&mut self, key: u64) -> Result<()> {
+        if self.stroke_active || key == 0 { anyhow::bail!("Finish the gesture and retain a live native key"); }
+        self.engine.settle_headless_render_tasks()?;
+        let key = StrokeKey::from(slotmap::KeyData::from_ffi(key));
+        let _ = self.engine.trash_stroke_key(key, Instant::now())?;
+        Ok(())
+    }
+
+    /// A genuine zero delta preserves donor redo and records no new history.
+    pub fn translate_stroke(&mut self, key: u64, x: f64, y: f64) -> Result<bool> {
+        if self.stroke_active || key == 0 || !x.is_finite() || !y.is_finite() {
+            anyhow::bail!("Invalid or unfinished native stroke translation");
+        }
+        self.engine.settle_headless_render_tasks()?;
+        let key = StrokeKey::from(slotmap::KeyData::from_ffi(key));
+        Ok(self.engine.translate_stroke_key(key, Vector2::new(x, y), Instant::now())?.is_some())
+    }
+
+    /// Materialize genuine SplitColliding on a detached COW donor. Lineage is
+    /// captured inside the donor's split/insertion, then composed across samples.
+    /// The original engine, native keys and undo/redo history remain untouched.
+    pub async fn split_erase_candidate(&self, samples: &[CanvasPointerSample], width: f64) -> Result<(Vec<u8>, Vec<u8>)> {
+        const MAX_ENTITIES: usize = 16_384;
+        const MAX_CHANGES: usize = 1_024;
+        const MAX_PATH_SEGMENTS: usize = 8_192;
+        const MAX_RECEIPT: usize = 64 * 1024 * 1024;
+        if self.stroke_active || samples.len() < 2 || samples.len() > Self::MAXIMUM_STROKE_KEYS
+            || !width.is_finite() || !(1.0..=500.0).contains(&width)
+            || samples.iter().any(|sample| !sample.x.is_finite() || !sample.y.is_finite()
+                || !sample.pressure.is_finite() || !(0.0..=1.0).contains(&sample.pressure)
+                || !sample.tilt_x.is_finite() || !sample.tilt_y.is_finite()) {
+            anyhow::bail!("Invalid or unfinished bounded split gesture");
+        }
+        let before = self.engine.take_snapshot();
+        let before_order = Self::rendered_keys(&before)?;
+        if before_order.len() > MAX_ENTITIES || samples.len().checked_mul(before_order.len().max(1))
+            .is_none_or(|work| work > 2_000_000) {
+            anyhow::bail!("Split proposal exceeds the native entity/work budget");
+        }
+        let mut detached = Self::from_snapshot(before.clone());
+        let mut origins: HashMap<StrokeKey, (StrokeKey, usize)> = before_order.iter()
+            .map(|key| (*key, (*key, 0))).collect();
+        for sample in samples {
+            let trace = detached.engine.split_strokes_traced_at(sample.rnote_element(), width, Instant::now())?;
+            for row in trace {
+                let (source, offset) = *origins.get(&row.source_key)
+                    .ok_or_else(|| anyhow::anyhow!("Donor split returned an untraced parent"))?;
+                let offset = offset.checked_add(row.source_segment_offset)
+                    .ok_or_else(|| anyhow::anyhow!("Donor split lineage offset overflow"))?;
+                origins.insert(row.native_key, (source, offset));
+            }
+            if origins.len() > MAX_ENTITIES * 2 {
+                anyhow::bail!("Split intermediate lineage budget exceeded");
+            }
+        }
+        // Join the detached donor's genuine pending results before capturing its
+        // final bytes; no renderer-ready/native-acceptance claim is inferred.
+        detached.engine.settle_headless_render_tasks()?;
+        let after = detached.engine.take_snapshot();
+        let after_order = Self::rendered_keys(&after)?;
+        if after_order.len() > MAX_ENTITIES { anyhow::bail!("Split result entity budget exceeded"); }
+        let removed: Vec<u64> = before_order.iter().filter(|key| !after.stroke_components.contains_key(**key))
+            .map(|key| key.data().as_ffi()).collect();
+        let mut changes = Vec::new();
+        let mut segment_budget = 131_072usize;
+        for key in &after_order {
+            let stroke = &after.stroke_components[*key];
+            if let Some(previous) = before.stroke_components.get(*key) {
+                if serde_json::to_value(previous.as_ref())? == serde_json::to_value(stroke.as_ref())? { continue; }
+            }
+            let (source_key, offset) = *origins.get(key)
+                .ok_or_else(|| anyhow::anyhow!("Donor split changed an entity without lineage"))?;
+            let source = before.stroke_components.get(source_key)
+                .ok_or_else(|| anyhow::anyhow!("Donor split source is not an original entity"))?;
+            let (Stroke::BrushStroke(brush), Stroke::BrushStroke(original)) = (stroke.as_ref(), source.as_ref()) else {
+                anyhow::bail!("Changed split entities must retain genuine donor penpaths");
+            };
+            let count = brush.path.segments.len();
+            let end = offset.checked_add(count).ok_or_else(|| anyhow::anyhow!("Split path offset overflow"))?;
+            if count == 0 || count > MAX_PATH_SEGMENTS || end > original.path.segments.len() || count > segment_budget {
+                anyhow::bail!("Split retained path budget or source witness is invalid");
+            }
+            segment_budget -= count;
+            let start = if offset == 0 { original.path.start } else { original.path.segments[offset - 1].end() };
+            let expected = rnote_compose::PenPath::new_w_segments(start, original.path.segments[offset..end].to_vec());
+            let layer = after.chrono_components.get(*key).ok_or_else(|| anyhow::anyhow!("Split result layer missing"))?.layer;
+            let source_layer = before.chrono_components.get(source_key).ok_or_else(|| anyhow::anyhow!("Split original layer missing"))?.layer;
+            if serde_json::to_value(&expected)? != serde_json::to_value(&brush.path)?
+                || serde_json::to_value(&original.style)? != serde_json::to_value(&brush.style)? || layer != source_layer {
+                anyhow::bail!("Split path/style/layer does not match its exact retained donor source slice");
+            }
+            changes.push(serde_json::json!({
+                "nativeKey": key.data().as_ffi(), "sourceNativeKey": source_key.data().as_ffi(),
+                "isNew": !before.stroke_components.contains_key(*key),
+                "matchingSourceSegmentOffsets": [offset], "path": &brush.path, "style": &brush.style, "layer": layer
+            }));
+        }
+        if changes.len() + removed.len() > MAX_CHANGES { anyhow::bail!("Split affected entity budget exceeded"); }
+        let before_layers: Result<Vec<_>> = before_order.iter().map(|key| {
+            let layer = before.chrono_components.get(*key).ok_or_else(|| anyhow::anyhow!("Original native layer missing"))?.layer;
+            Ok(serde_json::json!({"nativeKey": key.data().as_ffi(), "layer": layer}))
+        }).collect();
+        let receipt = serde_json::to_vec(&serde_json::json!({
+            "schemaVersion": 1, "geometry": "exact-retained-donor-penpath",
+            "samplesRole": "original-input-provenance-not-fragment-polyline",
+            "beforeRenderKeys": before_order.iter().map(|key| key.data().as_ffi()).collect::<Vec<_>>(),
+            "beforeLayers": before_layers?,
+            "afterRenderKeys": after_order.iter().map(|key| key.data().as_ffi()).collect::<Vec<_>>(),
+            "removedKeys": removed, "changes": changes
+        }))?;
+        if receipt.len() > MAX_RECEIPT { anyhow::bail!("Split receipt byte budget exceeded"); }
+        let native = detached.save_rnote().await?;
+        if native.len() > Self::MAXIMUM_IMPORT_PAYLOAD_BYTES { anyhow::bail!("Split native payload byte budget exceeded"); }
+        Ok((native, receipt))
+    }
+
     /// Preserve Rnote's real Xournal++ importer rather than interpreting its XML here.
     pub async fn from_xopp(bytes: Vec<u8>, dpi: f64) -> Result<Self> {
         if !dpi.is_finite() || !(1.0..=2400.0).contains(&dpi) {
@@ -1197,5 +1314,80 @@ mod tests {
             assert_eq!(restored.viewport(), viewport);
             let _ = fs::remove_dir_all(root);
         });
+    }
+}
+
+#[cfg(test)]
+mod keyed_and_traced_split_tests {
+    use super::*;
+    use futures::executor::block_on;
+
+    fn long_stroke() -> Vec<CanvasPointerSample> {
+        (0..36).map(|index| CanvasPointerSample::new(20.0 + index as f64 * 18.0, 100.0, 0.2 + index as f64 * 0.01)).collect()
+    }
+
+    #[test]
+    fn real_keyed_edit_preserves_identity_neighbour_undo_and_zero_delta_redo() {
+        let mut canvas = HeadlessCanvasEngine::new();
+        canvas.draw_stroke(&long_stroke()).unwrap();
+        let first = canvas.stroke_keys().unwrap()[0];
+        let neighbour: Vec<_> = long_stroke().into_iter().map(|sample| CanvasPointerSample { y: sample.y + 200.0, ..sample }).collect();
+        canvas.draw_stroke(&neighbour).unwrap();
+        let before = serde_json::to_value(canvas.engine.take_snapshot().stroke_components).unwrap();
+        assert!(canvas.translate_stroke(first, 20.0, 30.0).unwrap());
+        assert_eq!(canvas.stroke_keys().unwrap().len(), 2);
+        assert!(canvas.undo().unwrap());
+        assert_eq!(serde_json::to_value(canvas.engine.take_snapshot().stroke_components).unwrap(), before);
+        assert!(canvas.can_redo());
+        assert!(!canvas.translate_stroke(first, 0.0, 0.0).unwrap());
+        assert!(canvas.can_redo());
+        assert!(canvas.redo().unwrap());
+        canvas.delete_stroke(first).unwrap();
+        assert_eq!(canvas.stroke_keys().unwrap().len(), 1);
+        assert!(canvas.undo().unwrap());
+        assert_eq!(canvas.stroke_keys().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn genuine_split_retains_exact_lineage_and_does_not_mutate_original_history() {
+        block_on(async {
+            let mut canvas = HeadlessCanvasEngine::new();
+            canvas.draw_stroke(&long_stroke()).unwrap();
+            let before = canvas.engine.take_snapshot();
+            let before_json = serde_json::to_value(&before).unwrap();
+            let undo = canvas.can_undo(); let redo = canvas.can_redo();
+            let key = before.stroke_components.keys().next().unwrap();
+            let Stroke::BrushStroke(brush) = before.stroke_components[key].as_ref() else { panic!("Actual brush fixture required"); };
+            assert!(brush.path.segments.len() > 8);
+            let middle = (brush.path.start.pos.x + brush.path.segments.last().unwrap().end().pos.x) * 0.5;
+            let endpoint = brush.path.segments.iter().map(|segment| segment.end())
+                .min_by(|left, right| (left.pos.x - middle).abs().total_cmp(&(right.pos.x - middle).abs())).unwrap();
+            let sample = CanvasPointerSample::new(endpoint.pos.x, endpoint.pos.y, 0.5);
+            let (native, receipt) = canvas.split_erase_candidate(&[sample, sample], 1.0).await.unwrap();
+            let receipt: serde_json::Value = serde_json::from_slice(&receipt).unwrap();
+            assert_eq!(receipt["geometry"], "exact-retained-donor-penpath");
+            assert!(receipt["changes"].as_array().unwrap().iter().any(|change| change["isNew"] == true));
+            assert!(receipt["changes"].as_array().unwrap().iter().all(|change|
+                change["sourceNativeKey"].as_u64() == Some(key.data().as_ffi()) &&
+                !change["matchingSourceSegmentOffsets"].as_array().unwrap().is_empty()));
+            let reopened = HeadlessCanvasEngine::from_rnote(native).await.unwrap();
+            assert_eq!(receipt["afterRenderKeys"], serde_json::to_value(reopened.rendered_stroke_keys().unwrap()).unwrap());
+            assert_eq!(serde_json::to_value(canvas.engine.take_snapshot()).unwrap(), before_json);
+            assert_eq!((canvas.can_undo(), canvas.can_redo()), (undo, redo));
+        });
+    }
+
+    #[test]
+    fn actual_task_receiver_is_drained_and_invalid_edits_preserve_geometry() {
+        let mut canvas = HeadlessCanvasEngine::new();
+        canvas.draw_stroke(&long_stroke()).unwrap();
+        canvas.engine.engine_tasks_tx().send(rnote_engine::engine::EngineTask::Zoom(1.25));
+        canvas.engine.settle_headless_render_tasks().unwrap();
+        assert!((canvas.viewport().zoom - 1.25).abs() < 1e-8);
+        let before = serde_json::to_value(canvas.engine.take_snapshot()).unwrap();
+        assert!(canvas.delete_stroke(0).is_err());
+        assert!(canvas.translate_stroke(u64::MAX, 1.0, 2.0).is_err());
+        assert!(canvas.translate_stroke(canvas.stroke_keys().unwrap()[0], f64::NAN, 1.0).is_err());
+        assert_eq!(serde_json::to_value(canvas.engine.take_snapshot()).unwrap(), before);
     }
 }

@@ -1,0 +1,55 @@
+{
+  "schema": "9to1.rnote-reviewed-source-patches/v1",
+  "upstream_revision": "8cac558fa73ee63d958cec05124ea2fdbd7d608d",
+  "package": "rnote-engine",
+  "package_version": "0.14.2",
+  "patches": [
+    {
+      "file": "0001-keyed-stroke-operations.patch",
+      "bytes": 11739,
+      "sha256": "63dff378fdb46492058da9a8fc099b8066d2edb623f68abb7d39631bb452aa9f",
+      "files": [
+        {
+          "path": "src/engine/mod.rs",
+          "before": {
+            "bytes": 33714,
+            "sha256": "1692a167820267fd9f57fe9a7ad6318215763a14e8de88227629112035e70988"
+          },
+          "after": {
+            "bytes": 44435,
+            "sha256": "c9297ad6065369adc3e29996a02b431be2aa6020a5bf4608c4ef9037bd0d0fc8"
+          }
+        }
+      ]
+    },
+    {
+      "file": "0002-headless-tasks-and-split-lineage.patch",
+      "bytes": 8688,
+      "sha256": "ca4620dd11364c88a9e3a2232cee06fe21fe39f3eb678c3c756df9a892563fa7",
+      "files": [
+        {
+          "path": "src/engine/mod.rs",
+          "before": {
+            "bytes": 44435,
+            "sha256": "c9297ad6065369adc3e29996a02b431be2aa6020a5bf4608c4ef9037bd0d0fc8"
+          },
+          "after": {
+            "bytes": 48233,
+            "sha256": "46c0e665915fa8f02d765f09a7fef5887dedf7ed96abb11057fde9505b617d44"
+          }
+        },
+        {
+          "path": "src/store/trash_comp.rs",
+          "before": {
+            "bytes": 9836,
+            "sha256": "0ec507df7fef67834dbd01fca665a6fe0b017b8ea1f0c6d4fafc12ca3f44efca"
+          },
+          "after": {
+            "bytes": 11251,
+            "sha256": "7e6711b59acd2c87f01e8aa81031d8f17e129feb13519959ee27b040cd334f81"
+          }
+        }
+      ]
+    }
+  ]
+}
