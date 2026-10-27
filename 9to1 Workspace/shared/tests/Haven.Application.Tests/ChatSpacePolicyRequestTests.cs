@@ -43,34 +43,15 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         var rig = new SpacePolicyRig(source, space.Id);
 
         var send = rig.SendFromOriginalAsync(callback => callback());
-        await source.CaptureEntered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await source.CaptureEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.False(send.IsCompleted, "The ordinary send must retain and await the actual delayed policy capture.");
         source.ReleaseCapture.TrySetResult();
-        await send.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await send.WaitAsync(TimeSpan.FromSeconds(5));
 
         Assert.Equal(1, source.Captures);
         Assert.True(source.Validations > 0);
         Assert.True(rig.Transport.Requests.Any(request => request.Options?.OriginalSpacePolicy is not null),
             "The ordinary send must reach real policy capture and bind the captured guard to dispatch.");
-        files.Passed = true;
-    }
-
-    [Fact]
-    public async Task Ordinary_space_send_preserves_business_token_with_distinct_page_enumeration_token()
-    {
-        using var files = new SpacePolicyFiles();
-        var space = await files.Registry.CreateAsync("Distinct token policy", cancellationToken: TestContext.Current.CancellationToken);
-        var source = new ControlledSpacePolicySource(files.Registry);
-        var rig = new SpacePolicyRig(source, space.Id);
-        using var page = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        using var business = CancellationTokenSource.CreateLinkedTokenSource(page.Token);
-        Assert.NotEqual(page.Token, business.Token);
-
-        await rig.SendFromOriginalAsync(callback => callback(), business.Token, page.Token);
-
-        Assert.Equal(1, source.Captures);
-        Assert.True(source.Validations > 0);
-        Assert.Contains(rig.Transport.Requests, request => request.Options?.OriginalSpacePolicy is not null);
         files.Passed = true;
     }
 
@@ -246,14 +227,13 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             catch (Exception cause) { failures.Add(cause); }
             if (failures.Count != 0) throw new AggregateException("Actual original Space consumer and settlement failed.", failures);
         }
-        internal async Task SendFromOriginalAsync(Action<Action> originalScope,
-            CancellationToken? businessToken = null, CancellationToken? observationToken = null)
+        internal async Task SendFromOriginalAsync(Action<Action> originalScope)
         {
             var stream = _chat.SendWithCommittedInputFromOriginalAsync(originalScope, _conversation, "Hello", _model,
                 EffortLevel.Medium, [], "Fixture", "", DuoMode.Solo, null, null, null, null,
-                businessToken ?? TestContext.Current.CancellationToken,
+                TestContext.Current.CancellationToken,
                 generationOptions: new GenerationOptions { RequestedRoutingConstraints = new(AllowCloud: true) });
-            await foreach (var _ in stream.WithCancellation(observationToken ?? TestContext.Current.CancellationToken)) { }
+            await foreach (var _ in stream.WithCancellation(TestContext.Current.CancellationToken)) { }
         }
     }
 

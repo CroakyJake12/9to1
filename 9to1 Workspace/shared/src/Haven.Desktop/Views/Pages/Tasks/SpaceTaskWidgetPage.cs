@@ -482,8 +482,6 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
                 acknowledged.TaskId == current.TaskId && acknowledged.ExecutionId == current.ExecutionId &&
                 acknowledged.ContextId == current.ContextId)
                 _permissionStatus = PermissionDecisionStatus(acknowledged.Decision);
-            else
-                _permissionStatus = "The permission request changed or could not be authorized. Refresh and review it again.";
             return;
         }
         if (oldId is null || observation.PermissionReview is not { } refreshed || refreshed.Request.Id != oldId)

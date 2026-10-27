@@ -374,27 +374,19 @@ public sealed partial class ChatSessionService(
         return ConsumeAndJoinOrdinaryOriginalAsync(original, cancellationToken);
     }
 
-    private static IAsyncEnumerable<ChatStreamEvent> ConsumeAndJoinOrdinaryOriginalAsync(
+    private static async IAsyncEnumerable<ChatStreamEvent> ConsumeAndJoinOrdinaryOriginalAsync(
         ChatOrdinaryOriginalInvocation original,
-        CancellationToken businessToken)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        // The producer owns this explicit business token. The page enumerates with its
-        // distinct observation token; do not let async-iterator token combination replace
-        // the token required by the SAME ordinary source and its cancellation receipts.
-        return ConsumeAsync();
-
-        async IAsyncEnumerable<ChatStreamEvent> ConsumeAsync()
+        var iterator = original.ConsumeOriginal().GetAsyncEnumerator(cancellationToken);
+        try
         {
-            var iterator = original.ConsumeOriginal().GetAsyncEnumerator(businessToken);
-            try
-            {
-                while (await iterator.MoveNextAsync().ConfigureAwait(false))
-                    yield return iterator.Current;
-            }
-            finally
-            {
-                await DisposeAndJoinOrdinaryOriginalAsync(iterator, original).ConfigureAwait(false);
-            }
+            while (await iterator.MoveNextAsync().ConfigureAwait(false))
+                yield return iterator.Current;
+        }
+        finally
+        {
+            await DisposeAndJoinOrdinaryOriginalAsync(iterator, original).ConfigureAwait(false);
         }
     }
 

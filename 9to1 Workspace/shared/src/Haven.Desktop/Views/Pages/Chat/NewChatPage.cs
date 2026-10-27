@@ -1413,8 +1413,6 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             RefreshVisualState();
         }));
 
-        var originalSendToken = (originalSendCancellation
-            ?? throw new InvalidOperationException("The original send cancellation source was not admitted.")).Token;
         var now = DateTimeOffset.UtcNow;
         if (_messages.Count == 0)
         {
@@ -1492,7 +1490,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 var actualCommandPermission = _preferences.CommandPermission;
                 var actualBrowserPermission = _preferences.BrowserPermission;
                 var actualCapabilities = ActiveCapabilitiesForCurrentChat();
-                var actualObservationToken = originalSendToken;
+                var actualObservationToken = originalSendCancellation.Token;
                 initialTaskObservation = CaptureOriginalInitialTaskObservation(originalConversation,
                     () => _sessions.StartObservedOriginalTaskSendAsync(originalConversation, instruction,
                         actualModel, actualEffort, [], actualAgentName, actualAgentInstructions, DuoMode.Solo,
@@ -1512,9 +1510,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             }
             else
             {
-                var ordinarySendOwner = RequireChatOriginal();
-                await ordinarySendOwner.ReadStreamAsync(_sessions.SendWithCommittedInputFromOriginalAsync(
-                               ordinarySendOwner.RunAcceptedSourceCallback,
+                await RequireChatOriginal().ReadStreamAsync(_sessions.SendWithCommittedInputFromOriginalAsync(
+                               callback => RequireChatOriginal().RunAcceptedPublicationCallback(callback),
                                originalConversation,
                                instruction,
                                admittedModel,
@@ -1527,7 +1524,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                null,
                                null,
                                _attachedImages.Count == 0 ? null : _attachedImages.ToArray(),
-                               originalSendToken,
+                               originalSendCancellation.Token,
                                prompts: _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray(),
                                registeredContext: BuildRegisteredContext(),
                                generationOptions: _preferences.GenerationOptions,
