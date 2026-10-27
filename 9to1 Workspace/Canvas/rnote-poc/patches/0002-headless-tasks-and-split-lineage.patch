@@ -1,0 +1,193 @@
+--- a/crates/rnote-engine/src/engine/mod.rs
++++ b/crates/rnote-engine/src/engine/mod.rs
+@@ -793,6 +793,79 @@
+     }
+ 
+ 
++    /// Drain real queued headless render results before a keyed mutation.
++    /// A deadline/budget failure refuses the next edit; no fake render completion.
++    /// The receiver remains owned by this Engine on every return path.
++    pub fn settle_headless_render_tasks(&mut self) -> anyhow::Result<()> {
++        let mut receiver = self.tasks_rx.take()
++            .ok_or_else(|| anyhow::anyhow!("The original engine task receiver is not owned here"))?;
++        let result = (|| {
++            let deadline = Instant::now() + std::time::Duration::from_secs(5);
++            let mut consumed = 0usize;
++            loop {
++                loop {
++                    #[allow(deprecated)]
++                    match receiver.0.try_next() {
++                        Ok(Some(task)) => {
++                            consumed += 1;
++                            if consumed > 65536 {
++                                anyhow::bail!("Headless render task budget exceeded");
++                            }
++                            if self.handle_engine_task(task).1 {
++                                anyhow::bail!("Original engine requested shutdown");
++                            }
++                        }
++                        Ok(None) => anyhow::bail!("Original engine task channel closed"),
++                        Err(_) => break,
++                    }
++                }
++                let busy = self.store.stroke_keys_unordered().into_iter().any(|key|
++                    matches!(self.store.render_comp_state(key), Some(RenderCompState::BusyRenderingInTask)));
++                if !busy { return Ok(()); }
++                if Instant::now() >= deadline {
++                    anyhow::bail!("Original native render tasks did not settle before the deadline");
++                }
++                std::thread::sleep(std::time::Duration::from_millis(1));
++            }
++        })();
++        self.tasks_rx = Some(receiver);
++        result
++    }
++
++    /// A bounded headless invocation of the genuine donor SplitColliding path.
++    /// Caller uses a detached Engine; the original document/history never change.
++    pub fn split_strokes_traced_at(
++        &mut self,
++        element: rnote_compose::penpath::Element,
++        width: f64,
++        now: Instant,
++    ) -> anyhow::Result<Vec<crate::store::trash_comp::SplitStrokeLineage>> {
++        if !width.is_finite() || !(1.0..=500.0).contains(&width)
++            || !element.pos.iter().all(|value| value.is_finite())
++            || !element.pressure.is_finite() || !(0.0..=1.0).contains(&element.pressure)
++            || matches!(self.penholder.current_pen_progress(), rnote_compose::penevent::PenProgress::InProgress) {
++            anyhow::bail!("Invalid or unfinished native split gesture");
++        }
++        self.settle_headless_render_tasks()?;
++        let config = crate::pens::pensconfig::eraserconfig::EraserConfig {
++            width,
++            style: crate::pens::pensconfig::eraserconfig::EraserStyle::SplitCollidingStrokes,
++        };
++        let bounds = config.eraser_bounds(element);
++        if !bounds.mins.iter().chain(bounds.maxs.iter()).all(|value| value.is_finite()) {
++            anyhow::bail!("Split eraser bounds overflow");
++        }
++        // The immutable proposal covers all document ink under the exact eraser
++        // bounds, independently of an offscreen/default headless camera viewport.
++        let (modified, flags, lineage) = self.store.split_colliding_strokes_traced(bounds, bounds);
++        if flags.store_modified {
++            self.store.update_geometry_for_strokes(&modified);
++            self.store.regenerate_rendering_for_strokes(&modified, bounds, self.camera.image_scale());
++            let _ = self.current_pen_update_state() | self.doc_resize_autoexpand() | self.record(now);
++        }
++        Ok(lineage)
++    }
++
+     /// Trash exactly one live native key using the normal donor history.
+     /// The caller owns exclusive engine/task access; this is not a Home grant.
+     /// Busy rendering and active pen gestures refuse before any store mutation.
+--- a/crates/rnote-engine/src/store/trash_comp.rs
++++ b/crates/rnote-engine/src/store/trash_comp.rs
+@@ -20,6 +20,15 @@
+     fn default() -> Self {
+         Self { trashed: false }
+     }
++}
++
++/// Exact lineage captured while the donor splits its own path segments.
++/// This records one immediate parent and the first retained parent segment.
++#[derive(Debug, Clone)]
++pub struct SplitStrokeLineage {
++    pub native_key: StrokeKey,
++    pub source_key: StrokeKey,
++    pub source_segment_offset: usize,
+ }
+ 
+ /// Systems that are related to trashing.
+@@ -131,8 +140,20 @@
+         eraser_bounds: Aabb,
+         viewport: Aabb,
+     ) -> (Vec<StrokeKey>, WidgetFlags) {
++        let (keys, flags, _) = self.split_colliding_strokes_traced(eraser_bounds, viewport);
++        (keys, flags)
++    }
++
++    /// The same SplitColliding algorithm, with lineage emitted at each actual
++    /// retained slice and insertion. No before/after geometry matching guesses.
++    pub(crate) fn split_colliding_strokes_traced(
++        &mut self,
++        eraser_bounds: Aabb,
++        viewport: Aabb,
++    ) -> (Vec<StrokeKey>, WidgetFlags, Vec<SplitStrokeLineage>) {
+         let mut widget_flags = WidgetFlags::default();
+         let mut modified_keys = vec![];
++        let mut lineage = vec![];
+ 
+         let new_strokes = self
+             .stroke_keys_as_rendered_intersecting_bounds(viewport)
+@@ -170,7 +191,7 @@
+ 
+                                     // skip splits that don't have at least two segments (one's end as path start, one additional)
+                                     if split_slice.len() > 1 {
+-                                        split.push(split_slice.to_vec());
++                                        split.push((split_slice.to_vec(), prev));
+                                     }
+ 
+                                     prev = hit;
+@@ -179,10 +200,10 @@
+                                 // Catch the last
+                                 let last_split = &brushstroke.path.segments[prev..];
+                                 if last_split.len() > 1 {
+-                                    split.push(last_split.to_vec());
+-                                }
+-
+-                                for next_split in split {
++                                    split.push((last_split.to_vec(), prev));
++                                }
++
++                                for (next_split, source_offset) in split {
+                                     let mut next_split_iter = next_split.into_iter();
+                                     let next_start = next_split_iter.next().unwrap().end();
+ 
+@@ -192,6 +213,8 @@
+                                             brushstroke.style.clone(),
+                                         )),
+                                         chrono_comp.layer,
++                                        key,
++                                        source_offset + 1,
+                                     ));
+                                 }
+ 
+@@ -203,6 +226,9 @@
+                                         brushstroke.path.start,
+                                         first_split.to_vec(),
+                                     ));
++                                    lineage.push(SplitStrokeLineage {
++                                        native_key: key, source_key: key, source_segment_offset: 0,
++                                    });
+                                 } else {
+                                     trash_current_stroke = true;
+                                 }
+@@ -233,12 +259,16 @@
+ 
+                 new_strokes
+             })
+-            .collect::<Vec<(Stroke, StrokeLayer)>>();
++            .collect::<Vec<(Stroke, StrokeLayer, StrokeKey, usize)>>();
+ 
+         modified_keys.append(
+             &mut new_strokes
+                 .into_iter()
+-                .map(|(new_stroke, layer)| self.insert_stroke(new_stroke, Some(layer)))
++                .map(|(new_stroke, layer, source_key, source_segment_offset)| {
++                    let native_key = self.insert_stroke(new_stroke, Some(layer));
++                    lineage.push(SplitStrokeLineage { native_key, source_key, source_segment_offset });
++                    native_key
++                })
+                 .collect(),
+         );
+ 
+@@ -247,6 +277,6 @@
+             widget_flags.resize = true;
+         }
+ 
+-        (modified_keys, widget_flags)
+-    }
+-}
++        (modified_keys, widget_flags, lineage)
++    }
++}

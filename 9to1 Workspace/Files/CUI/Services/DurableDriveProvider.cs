@@ -212,20 +212,46 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
                     cursor = state.Items.FirstOrDefault(item => item.Metadata.Id == cursor.Metadata.ParentId);
                 }
             }
+            FilesEmailShare[] inheritedSharesToPreserve = [];
+            if (operation.Operation == "Move")
+            {
+                if (operation.PermissionInheritancePolicy is { } selectedPolicy && !Enum.IsDefined(selectedPolicy))
+                { result = Fail<FilesOperation>(FilesErrorCode.InvalidState, "Choose a supported permission inheritance policy.", operation.Operation, operation.ItemId); return state; }
+                bool permissionChanges = MoveChangesEffectivePermissions(state, operation.ItemId, parent, DateTimeOffset.UtcNow);
+                if (permissionChanges && (operation.PermissionInheritancePolicy is null or FilesPermissionInheritancePolicy.RequireApprovalOnChange))
+                {
+                    result = Fail<FilesOperation>(FilesErrorCode.PermissionRequired,
+                        "Review the affected direct and inherited grants, then choose Preserve current access or Use destination access.",
+                        operation.Operation, operation.ItemId);
+                    return state;
+                }
+                if (permissionChanges && operation.PermissionInheritancePolicy is FilesPermissionInheritancePolicy.PreserveExplicitGrants)
+                    inheritedSharesToPreserve = InheritedSharesToPreserve(state, operation.ItemId, parent, DateTimeOffset.UtcNow);
+            }
             if (operation.Operation is not ("CreateFolder" or "Rename" or "Move" or "Delete" or "Restore"))
             { result = FilesProviderCapabilityExtensions.Unsupported<FilesOperation>(Location, operation.Operation); return state; }
             if (operation.Operation != "Delete" && state.Items.Any(item => !item.Deleted && item.Metadata.Id != operation.ItemId && item.Metadata.ParentId == parent && item.Metadata.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             { result = Fail<FilesOperation>(FilesErrorCode.NameConflict, "Destination already contains this name.", operation.Operation, operation.ItemId); return state; }
             var now = DateTimeOffset.UtcNow;
             var revision = new FilesRevisionId(Guid.NewGuid());
+            IReadOnlyList<FilesEmailShare> shares = state.Shares;
+            if (inheritedSharesToPreserve.Length != 0)
+            {
+                shares = [.. state.Shares, .. inheritedSharesToPreserve.Select(grant => new FilesEmailShare(
+                    grant.Share with { Id = new FilesShareId(Guid.NewGuid()), ItemId = operation.ItemId,
+                        CreatedAt = now, IsRevoked = false }, grant.RecipientEmail, _owner))];
+            }
             var metadata = create ? new HostedItemMetadata(operation.ItemId, Location.Id, parent, name!, HostedItemKind.Folder, null, _owner, "personal", null, now, now, revision, SyncAvailability.Synced, false, null) :
-                existing!.Metadata with { Name = name!, ParentId = parent, CurrentRevisionId = revision, ModifiedAt = now };
+                existing!.Metadata with { Name = name!, ParentId = parent, CurrentRevisionId = revision, ModifiedAt = now, IsShared = false };
+            if (operation.Operation == "Move")
+                metadata = ProjectSharingMetadata(state with { Shares = shares }, metadata);
             var entry = new Entry(metadata, operation.Operation == "Delete", operation.Operation == "Delete" ? now : null);
             var committed = operation with { State = FilesOperationState.Committed, ResultRevisionId = revision, UpdatedAt = now,
                 Payload = (operation.Payload ?? new FilesOperationPayload()) with { NewName = newName }, Sequence = state.Events.Count + 1 };
             var change = new FilesChangeEvent(Guid.NewGuid().ToString("N"), new(state.Events.Count + 1), operation.Id, operation.ItemId, operation.ActorId, operation.Operation, operation.BaseRevisionId, revision, now, metadata);
             result = FilesResult<FilesOperation>.Success(committed);
-            return state with { Items = [.. state.Items.Where(item => item.Metadata.Id != operation.ItemId), entry], Operations = [.. state.Operations, committed], Events = [.. state.Events, change] };
+            return state with { Items = [.. state.Items.Where(item => item.Metadata.Id != operation.ItemId), entry],
+                Shares = shares, Operations = [.. state.Operations, committed], Events = [.. state.Events, change] };
         }, originalAuthority is null ? null : ValidateAuthorityAsync, cancellationToken); }
         catch (OperationCanceledException original) when (originalAuthority is not null)
         { throw new AggregateException("The original folder commit source returned no canceled original Task; outcome may be unknown.", original); }
@@ -289,5 +315,6 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
 
     private static int ParseOffset(string? token) => token is null ? 0 : int.TryParse(token, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var offset) && offset >= 0 ? offset : throw new ArgumentException("Invalid page token.", nameof(token));
     private static FilesResult<T> Fail<T>(FilesErrorCode code, string message, string action, HostedItemId id) =>
-        FilesResult<T>.Failure(new(code, message, "9to1.Files." + action, id.ToString(), code is FilesErrorCode.RevisionConflict or FilesErrorCode.NameConflict, false));
+        FilesResult<T>.Failure(new(code, message, "9to1.Files." + action, id.ToString(),
+            code is FilesErrorCode.RevisionConflict or FilesErrorCode.NameConflict or FilesErrorCode.PermissionRequired, false));
 }

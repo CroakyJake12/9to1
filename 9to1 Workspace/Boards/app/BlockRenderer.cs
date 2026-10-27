@@ -38,6 +38,10 @@ public static class BlockRenderer
     // checklist supplies no CheckBox.Content. Reserve that space explicitly
     // so the outer label column begins after the 24px target + 6px visual gap.
     private const double ChecklistCheckboxColumnWidth = ChecklistCheckboxTargetSize + ChecklistCheckboxTextGap;
+    // Quiet-but-visible block gutter: the six-dot grip and insert buttons stay
+    // discoverable at rest, which is what makes them reachable at all; full
+    // opacity returns when the block is selected or hovered.
+    private const double QuietBlockGutterOpacity = 0.56;
 
     public static async Task RebuildAsync(StackPanel host, BoardsViewModel vm)
     {
@@ -371,13 +375,14 @@ public static class BlockRenderer
         var focused = false;
         void UpdateGutterEmphasis()
         {
-            var opacity = hovering || focused ? 1d : 0d;
+            // Quiet-but-visible at rest; full opacity on selection or hover.
+            var opacity = selected || hovering || focused ? 1 : QuietBlockGutterOpacity;
             if (insert is not null) insert.Opacity = opacity;
             if (gripControl is not null)
             {
                 // CUI theme projection can outrank a native Avalonia opacity
                 // assignment on the authored container. Publish the state at
-                // instance priority so the entire nested grip disappears too.
+                // instance priority so the whole nested grip follows too.
                 CuiPropertyPresentation.Set(gripControl, "Opacity", opacity,
                     CuiPropertyLevel.Instance, "Boards quiet block gutter visibility");
                 gripControl.Opacity = opacity;
@@ -441,34 +446,34 @@ public static class BlockRenderer
             CuiPropertyLevel.Instance, geometrySource);
         CuiPropertyPresentation.Set(button, "BorderWidth", new Thickness(0),
             CuiPropertyLevel.Instance, geometrySource);
-        if (!insertAction)
+        if (insertAction)
         {
-            var glyph = BoardsIcons.Glyph(BoardsIcons.Grip, 14, "Drag block handle");
-            CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
-                CuiPropertyLevel.Instance, "Boards block drag grip surface");
-            CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
-                CuiPropertyLevel.Instance, "Boards block drag grip shape");
-            CuiPropertyPresentation.Set(button, "Content", glyph,
-                CuiPropertyLevel.Instance, "Boards block drag grip glyph");
-            button.Background = Brushes.Transparent;
-            button.Content = glyph;
+            button.VerticalAlignment = VerticalAlignment.Center;
+            if (button.Content is Image addGlyph)
+            {
+                addGlyph.Width = 18;
+                addGlyph.Height = 18;
+            }
+            return;
         }
-
-        button.Width = BlockGutterTargetSize;
-        button.Height = BlockGutterTargetSize;
-        button.MinWidth = BlockGutterTargetSize;
-        button.MinHeight = BlockGutterTargetSize;
-        button.MaxWidth = BlockGutterTargetSize;
-        button.MaxHeight = BlockGutterTargetSize;
-        button.Padding = new Thickness(0);
-        button.HorizontalAlignment = HorizontalAlignment.Center;
-        button.VerticalAlignment = VerticalAlignment.Center;
-        if (insertAction && button.Content is Image addGlyph)
-        {
-            addGlyph.Width = 18;
-            addGlyph.Height = 18;
-        }
+        // The drag grip keeps its glyph and a fixed top target, the same
+        // invariant the quiet-gutter tests assert.
+        var glyph = BoardsIcons.Glyph(BoardsIcons.Grip, 14, "Drag block handle");
+        CuiPropertyPresentation.Set(button, "Chromeless", true,
+            CuiPropertyLevel.Instance, "Boards block drag grip interaction");
+        CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
+            CuiPropertyLevel.Instance, "Boards block drag grip surface");
+        CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
+            CuiPropertyLevel.Instance, "Boards block drag grip shape");
+        CuiPropertyPresentation.Set(button, "Content", glyph,
+            CuiPropertyLevel.Instance, "Boards block drag grip glyph");
+        button.Background = Brushes.Transparent;
+        button.Content = glyph;
+        button.VerticalAlignment = VerticalAlignment.Top;
     }
+
+    private static void ConfigureBlockGutterButton(Button button) =>
+        ConfigureBlockGutterButton(button, insertAction: false);
 
     // ----- Block dispatch -----
 

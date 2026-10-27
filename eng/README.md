@@ -41,3 +41,11 @@ than replacing the PC coordinator. Run its focused infrastructure invariants wit
 ```sh
 python3 -B -m unittest discover -s eng/development -p test_workflow.py -v
 ```
+
+## Windows compatibility preparation
+`./eng/9to1.ps1 verify -Component compatibility` runs the dependency-free Python
+checks for the EXE chooser, ARM64 managed runtimes and stable Ubuntu image
+selection. `./eng/9to1.ps1 package-linux -Component compatibility` builds
+`artifacts/packages/9to1-windows-compat_0.1.0_all.deb`. GTK, Wine/WinBoat runtime
+and real Book4 Edge hardware acceptance are separate checks; see
+[`../9to1 OS/tooling/book4edge/README.md`](../9to1%20OS/tooling/book4edge/README.md).

@@ -17,6 +17,7 @@ on:
         type: choice
         options:
           - validate
+          - cui-guarded
           - thunder-cuda-compile
           - thunder-artifact-audit
         default: validate
@@ -38,6 +39,24 @@ on:
         type: string
       audit_expected_head_sha:
         description: Expected 40-hex build head SHA for the original build run
+        required: false
+        type: string
+
+
+      cui_product_revision:
+        description: Exact Root-reviewed product source commit (40 lowercase hex)
+        required: false
+        type: string
+      cui_expected_ci_commit:
+        description: Exact Root-reviewed CI development commit
+        required: false
+        type: string
+      cui_delegation_sha256:
+        description: SHA256 of the actual immutable native Root SDK delegation
+        required: false
+        type: string
+      cui_native_reservation:
+        description: Actual existing native coordinator SDK1 reservation ID
         required: false
         type: string
 
@@ -238,3 +257,124 @@ jobs:
           path: work/pc-worker/thunder-artifact-audit-report/
           if-no-files-found: error
           retention-days: 3
+
+
+  cui-guarded:
+    name: Exact CUI candidate owning build and regressions
+    if: github.event_name == 'workflow_dispatch' && inputs.pipeline == 'cui-guarded'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    concurrency:
+      group: 9to1-sdk-owning-global
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    env:
+      EXPECTED_PRODUCT_COMMIT: ${{ inputs.cui_product_revision }}
+      EXPECTED_CI_COMMIT: ${{ inputs.cui_expected_ci_commit }}
+      EXPECTED_DELEGATION_SHA256: ${{ inputs.cui_delegation_sha256 }}
+      EXPECTED_RESERVATION_ID: ${{ inputs.cui_native_reservation }}
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
+    steps:
+      - name: Check out exact reviewed CI development commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify actual dispatch and exact product native gitlinks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYCODE'
+          import os,re,subprocess
+          actual=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          if not re.fullmatch('[0-9a-f]{40}',os.environ['EXPECTED_CI_COMMIT']) or actual!=os.environ['EXPECTED_CI_COMMIT']:
+              raise SystemExit('Actual CI commit differs from Root-reviewed dispatch')
+          source=os.environ['EXPECTED_PRODUCT_COMMIT']
+          if not re.fullmatch('[0-9a-f]{40}',source):raise SystemExit('Product source must be exact lowercase40hex')
+          pins={'framework/CUI/vendor/Avalonia/external/XamlX':'009d4815470cf4bf71d1adbb633a5d81dcb2bb52',
+                'framework/CUI/vendor/Avalonia/external/Avalonia.DBus':'864a05282841bf04006890f04d11d60d1a046aa9'}
+          for path,commit in pins.items():
+              value=subprocess.check_output(['git','ls-tree',source,'--',path],text=True).strip()
+              if value!=f'160000 commit {commit}\t{path}':raise SystemExit('Required actual product gitlink differs')
+          PYCODE
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+      - name: Install exact official isolated SDK archive
+        shell: bash
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/9to1-cui-dotnet
+        run: |
+          set -euo pipefail
+          python3 - <<'PYCODE'
+          import hashlib,json,os,tarfile,time,urllib.parse,urllib.request
+          from pathlib import Path,PurePosixPath
+          url='https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.301/dotnet-sdk-10.0.301-linux-x64.tar.gz'
+          expected_bytes=235086718
+          expected_sha512='cfbeec3a3a1d3ad3e168e37a77c4cc26c23125acd84a86d014047da3ecffce4c368a9acac4d7c950a047fa3d98989ce8aea69f8e5842cb6d330e8911e1c335a7'
+          temporary=Path(os.environ['RUNNER_TEMP']).resolve()
+          target=temporary/'9to1-cui-dotnet'
+          if Path(os.environ['DOTNET_INSTALL_DIR'])!=target:raise SystemExit('Unexpected isolated SDK directory')
+          target.mkdir(mode=0o700)
+          archive=temporary/'9to1-sdk-10.0.301.tar.gz'
+          class HTTPSOnlyRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,request,fp,code,message,headers,newurl):
+                  if urllib.parse.urlsplit(newurl).scheme!='https':raise SystemExit('SDK download redirect must remain HTTPS')
+                  return super().redirect_request(request,fp,code,message,headers,newurl)
+          digest=hashlib.sha512();size=0;deadline=time.monotonic()+180
+          with urllib.request.build_opener(HTTPSOnlyRedirect()).open(url,timeout=20) as response,archive.open('xb') as output:
+              os.fchmod(output.fileno(),0o600)
+              if response.status!=200:raise SystemExit('Unexpected SDK archive response')
+              while chunk:=response.read(1024*1024):
+                  size+=len(chunk)
+                  if size>expected_bytes or time.monotonic()>deadline:raise SystemExit('Bounded SDK download exceeded size or time limit')
+                  output.write(chunk);digest.update(chunk)
+          if size!=expected_bytes or digest.hexdigest()!=expected_sha512:raise SystemExit('Exact official SDK archive identity differs')
+          with tarfile.open(archive,'r:gz') as stream:
+              members=stream.getmembers()
+              for item in members:
+                  relative=PurePosixPath(item.name)
+                  if relative.is_absolute() or '..' in relative.parts or '\\' in item.name or not(item.isfile() or item.isdir()):
+                      raise SystemExit('Unsafe path/link/special entry in SDK archive')
+              stream.extractall(target,members=members,filter='data')
+          evidence=temporary/'9to1-cui-evidence';evidence.mkdir(mode=0o700,exist_ok=True)
+          receipt={'schema':'9to1.exact-sdk-ci-install/v1','official_url':url,'version':'10.0.301','rid':'linux-x64',
+              'archive_bytes':size,'archive_sha512':digest.hexdigest(),'expected_sha512':expected_sha512,
+              'archive_members':len(members),'SDK_directory':str(target),'nonregular_archive_members':0,'SDK_commands':0}
+          (evidence/'sdk-install.json').write_text(json.dumps(receipt,sort_keys=True)+'\n')
+          print(json.dumps(receipt,sort_keys=True))
+          PYCODE
+      # Optional Notes checks are selected only by the hash-pinned Root delegation.
+      # The same SDK1 owner, source export, bounds and CUI regression stages apply.
+      - name: Observe actual CI host then adopt only delegated SDK1 and run owning checks
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/9to1-cui-dotnet
+        run: python3 -B eng/development/ci_cui_owned.py
+      - name: Retain actual source pins, host observations, logs, TRX and failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cui-owning-${{ inputs.cui_product_revision }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/9to1-cui-evidence/
+            ${{ runner.temp }}/9to1-cui-context/source-manifest.json
+            ${{ runner.temp }}/9to1-cui-context/sdk-execution-projection.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Retain exact Linux Desktop package when selected and successfully published
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: haven-linux-x64-${{ inputs.cui_product_revision }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/9to1-linux-desktop/Haven-linux-x64.tar.gz
+            ${{ runner.temp }}/9to1-linux-desktop/Haven-linux-x64.manifest.json
+          if-no-files-found: ignore
+          retention-days: 7

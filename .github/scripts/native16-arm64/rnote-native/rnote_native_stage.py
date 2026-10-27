@@ -157,6 +157,11 @@ def validate_stage(root, publish, receipt_path, execute=command):
     require(value.get("contract") == contract, "Rnote source/ABI changed after build")
     require(value.get("inspection") == inspect_library(Path(publish) / LIBRARY, contract["required_symbols"], execute),
             "Native library/dependency graph differs from staging receipt")
+    for label, name in (("licence", CRATE / "patches/LICENSE-GPL-3.0-or-later.txt"), ("provenance", CRATE / "PROVENANCE.md")):
+        item = value.get(label, {})
+        require(Path(item.get("path", "")).resolve() == (Path(root) / name).resolve()
+                and item.get("identity") == contract["source_inputs"][name.as_posix()]
+                and item.get("identity") == identity(item.get("path", "")), "Missing or changed Rnote " + label)
     source = value.get("corresponding_source", {})
     require(source.get("identity") == identity(source.get("path", "")), "Missing or changed native corresponding source")
     return value
@@ -165,7 +170,9 @@ def validate_stage(root, publish, receipt_path, execute=command):
 def verify_package(package, receipt, receipt_path, execute=command):
     """Stream the genuine DEB payload; never extract/execute or trust a stage listing."""
     expected = {"opt/9to1-preview/" + LIBRARY: receipt["inspection"]["library"],
-                "usr/share/doc/9to1-preview/rnote-native-stage.json": identity(receipt_path)}
+                "usr/share/doc/9to1-preview/rnote-native-stage.json": identity(receipt_path),
+                "usr/share/doc/9to1-preview/rnote-LICENSE-GPL-3.0-or-later.txt": receipt["licence"]["identity"],
+                "usr/share/doc/9to1-preview/rnote-PROVENANCE.md": receipt["provenance"]["identity"]}
     found = {}
     process = subprocess.Popen(["dpkg-deb", "--fsys-tarfile", str(package)], stdout=subprocess.PIPE,
                                stderr=subprocess.DEVNULL)
@@ -212,6 +219,8 @@ def build(root, publish, target, receipt_path, source_archive):
         vendor_command = ["cargo", "vendor", "--locked", "--versioned-dirs", "--manifest-path", str(Path(root) / CRATE / "Cargo.toml"), str(vendor)]
         vendor_result = subprocess.run(vendor_command, stdout=subprocess.PIPE, text=True, check=True, timeout=1800)
         config = vendor_result.stdout.strip()
+        from rnote_source_patches import apply_vendor_patches
+        derivative = apply_vendor_patches(root, vendor)
         require(config, "Cargo vendor returned no locked source configuration")
         config_path = scratch / "vendor-config.toml"
         config_path.write_text(config)
@@ -236,8 +245,13 @@ def build(root, publish, target, receipt_path, source_archive):
     value = {"schema": SCHEMA, "status": "STAGED_STATICALLY_VERIFIED_NOT_RUNTIME_ACCEPTED",
              "source_head": command(["git", "-C", str(root), "rev-parse", "HEAD"]), "contract": contract,
              "toolchain": toolchain, "commands": [vendor_command, build_command], "inspection": inspection,
+             "donor_source_patches": derivative,
              "corresponding_source": {"path": str(Path(source_archive).resolve()), "identity": identity(source_archive),
                                       "content": "Exact crate/managed inputs and Cargo-vendored locked dependencies including licences"},
+             "licence": {"path": str(Path(root) / CRATE / "patches/LICENSE-GPL-3.0-or-later.txt"),
+                         "identity": identity(Path(root) / CRATE / "patches/LICENSE-GPL-3.0-or-later.txt")},
+             "provenance": {"path": str(Path(root) / CRATE / "PROVENANCE.md"), "identity": identity(Path(root) / CRATE / "PROVENANCE.md")},
+             "donor_licence_review": "GPL-3.0-or-later text/source retained; independent full dependency licence review NOT RUN",
              "ARM_drawing": "NOT RUN", "release_ready": False}
     with Path(receipt_path).open("x") as stream:
         json.dump(value, stream, indent=2)

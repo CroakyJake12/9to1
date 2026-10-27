@@ -29,11 +29,15 @@ class TestBuildManifest(unittest.TestCase):
             "status": "STAGED_STATICALLY_VERIFIED_NOT_RUNTIME_ACCEPTED", "release_ready": False,
             "inspection": {"library": self.native_id, "dependencies": ["libfixture (>= 1.2)"]},
             "corresponding_source": {"path": str(self.native_source), "identity": m.identity(self.native_source)}}
+        self.native["licence"] = {"path": str(self.native_source), "identity": m.identity(self.native_source)}
+        self.native["provenance"] = {"path": str(self.source_file), "identity": m.identity(self.source_file)}
         self.native_path = self.write("native.json", self.native)
         self.package_receipt = {"source_head": self.revision, "source_patch_sha256": self.patch,
             "package_status": "ASSEMBLED_NOT_NATIVE_ACCEPTED", "architecture": "arm64", "package": str(self.package),
             **m.identity(self.package), "rnote_native": {"status": "PACKAGE_NATIVE_BYTES_AND_DEPENDENCIES_VERIFIED_NOT_EXECUTED",
                 "dependencies": self.native["inspection"]["dependencies"], "members": {"opt/9to1-preview/libcakeos_canvas_rnote_poc.so": self.native_id}}}
+        self.package_receipt["rnote_native"]["members"]["usr/share/doc/9to1-preview/rnote-LICENSE-GPL-3.0-or-later.txt"] = self.native["licence"]["identity"]
+        self.package_receipt["rnote_native"]["members"]["usr/share/doc/9to1-preview/rnote-PROVENANCE.md"] = self.native["provenance"]["identity"]
         self.build = {"source_head": self.revision, "source_patch_sha256": self.patch,
             "status": "PASS_BUILD_AND_PACKAGE_ONLY_NOT_NATIVE_APP_ACCEPTED", "package": self.package_receipt,
             "stages": [{"name": "fixture-only", "exit_code": 0}],

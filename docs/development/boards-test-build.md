@@ -84,24 +84,24 @@ system development providers remain necessary.
 The existing package assembler takes `--rnote-native-receipt`, rechecks actual
 source/library/provider bytes, includes its proof in the existing product build
 receipt, installs the native receipt in `/usr/share/doc/9to1-preview`, and declares
-the derived runtime dependency floors. It streams the actual resulting DEB to
+the derived runtime dependency floors. It also installs/verifies the actual
+Rnote GPL licence text and current provenance. It streams the actual resulting DEB to
 verify native library and receipt bytes plus declared dependencies. Its existing
 `ASSEMBLED_NOT_NATIVE_ACCEPTED` status is unchanged. No second package rebuild or
 new packaging framework is used.
 
-At the25October preparation source, the managed engine names12exports absent from
-the retained native source: importXopp; stroke selection/export; stroke
-mutation/delete/translate; quick-erase and split-erase entry points. Some callers
-probe optional version APIs, but mandatory import must not be reclassified as
-optional. The source preflight refuses this mismatch. Repair/reconcile the actual
-native source before attempting the expensive producer; a compiled managed DLL
-cannot prove those native operations work. Bounded history inspection found
-retained commit019a9278ac847c7d3ab248440ef0806ba5fb3afa implementing seven of the
-missing exports, including Xournal import, selection and quick-erase. Its retained
-handoff is explicitly source-only/partial ABI. Stroke mutation/delete/translate
-and split-erase exports remain unresolved in that donor. Recover and review
-existing work before reimplementing it. Do not substitute the old emergency
-HUI/AppFlowy package.
+The initial25October source audit found twelve missing managed exports. The
+retained019a9278 six-file bridge has been recovered for seven; a subsequent
+source-only implementation adds the remaining five through exact controlled
+patches to the same locked8cac558 donor. The producer applies those patches to
+Cargo-vendored source, verifies exact pre/postimage and Cargo file checksums,
+retains modified source/licences, and compiles using that configuration. The
+unchanged upstream pin is provenance for a declared derivative, not a claim that
+the patched engine is byte-identical to upstream. Native method/task handling,
+Rust compilation/tests and installed behavior remain NOT RUN here. The existing
+v0.14 actual Cargo/v0.15 selected producer identity conflict remains explicit.
+Recover useful historical source first; do not substitute obsolete HUI/AppFlowy
+or bypass an actual ABI/source failure.
 
 ## Immutable development-test manifest
 

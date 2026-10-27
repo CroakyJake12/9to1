@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=9to1 Windows App Chooser
+Comment=Choose the Wine or WinBoat layer for a Windows application
+Exec=9to1-open-exe -- %f
+TryExec=9to1-open-exe
+Icon=application-x-executable
+Terminal=false
+NoDisplay=true
+Categories=Utility;
+MimeType=application/vnd.microsoft.portable-executable;application/x-ms-dos-executable;application/x-msdownload;
+StartupNotify=true

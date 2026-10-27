@@ -2,6 +2,11 @@
 
 This file defines packaging requirements only. Nothing in this branch installs packages, writes system unit directories, or changes the approved CakeOS VM.
 
+The standalone [EXE chooser package](EXE-CHOOSER.md) now has a functional
+`build-deb.sh` recipe. It packages the chooser and CLI without enabling a daemon,
+changing MIME defaults or bundling Wine. The daemon requirements below remain
+separate, unfulfilled integration gates.
+
 ## `haven-compatd` user service
 
 `systemd/haven-compatd.service.in` is a packaging template, not an installed unit.

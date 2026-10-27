@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+case "${1:-}" in prereqs) exit 0 ;; esac
+. /usr/share/initramfs-tools/hook-functions
+for module in ufs_qcom ufshcd_pltfrm qnoc_sc8280xp i2c_qcom_geni i2c_hid_of hid_generic qcom_spmi_pmic; do
+    manual_add_modules "$module"
+done
+mkdir -p "$DESTDIR/usr/lib/firmware/updates"
+cp -a /usr/lib/firmware/updates/. "$DESTDIR/usr/lib/firmware/updates/"

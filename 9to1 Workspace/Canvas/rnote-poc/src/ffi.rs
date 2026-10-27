@@ -255,7 +255,7 @@ pub extern "C" fn cake_canvas_engine_from_rnote(
 }
 
 /// This is the genuine selected-native-entity export family only. It does not
-/// advertise keyed mutation or split-erase support, whose exports remain absent.
+/// imply that other operation families or native runtime acceptance have passed.
 #[unsafe(no_mangle)]
 pub extern "C" fn cake_canvas_selection_api_version() -> u32 { 1 }
 
@@ -373,6 +373,71 @@ pub extern "C" fn cake_canvas_engine_from_xopp(
                 CakeCanvasStatus::Ok
             }
             Err(_) => CakeCanvasStatus::EngineError,
+        }
+    })
+}
+
+/// These methods compile only against the exact patched, source-retained donor.
+/// Version declarations identify the implementation family, not native acceptance.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_stroke_mutation_api_version() -> u32 { 1 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_split_erase_api_version() -> u32 { 1 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_delete_stroke(handle: *mut c_void, key: u64) -> CakeCanvasStatus {
+    guard_status(|| {
+        if key == 0 { return CakeCanvasStatus::InvalidArgument; }
+        let Some(result) = with_engine_mut(handle, |engine| {
+            if engine.stroke_active() { return Err(CakeCanvasStatus::InvalidState); }
+            engine.delete_stroke(key).map_err(|_| CakeCanvasStatus::EngineError)
+        }) else { return CakeCanvasStatus::InvalidHandle; };
+        match result { Ok(()) => CakeCanvasStatus::Ok, Err(status) => status }
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_translate_stroke(handle: *mut c_void, key: u64, x: f64, y: f64) -> CakeCanvasStatus {
+    guard_status(|| {
+        if key == 0 || !x.is_finite() || !y.is_finite() { return CakeCanvasStatus::InvalidArgument; }
+        let Some(result) = with_engine_mut(handle, |engine| {
+            if engine.stroke_active() { return Err(CakeCanvasStatus::InvalidState); }
+            engine.translate_stroke(key, x, y).map_err(|_| CakeCanvasStatus::EngineError)
+        }) else { return CakeCanvasStatus::InvalidHandle; };
+        match result { Ok(true) => CakeCanvasStatus::Ok, Ok(false) => CakeCanvasStatus::NoChange, Err(status) => status }
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_split_erase_candidate(
+    handle: *const c_void, samples: *const CakeCanvasPointerSample, count: usize, width: f64,
+    out_native: *mut CakeCanvasBuffer, out_receipt: *mut CakeCanvasBuffer,
+) -> CakeCanvasStatus {
+    guard_status(|| {
+        if out_native.is_null() || out_receipt.is_null() { return CakeCanvasStatus::InvalidArgument; }
+        unsafe { *out_native = CakeCanvasBuffer::default(); *out_receipt = CakeCanvasBuffer::default(); }
+        if out_native == out_receipt || samples.is_null() || count < 2
+            || count > HeadlessCanvasEngine::MAXIMUM_STROKE_KEYS || !width.is_finite() || !(1.0..=500.0).contains(&width) {
+            return CakeCanvasStatus::InvalidArgument;
+        }
+        let mut captured = Vec::with_capacity(count);
+        for sample in unsafe { slice::from_raw_parts(samples, count) } {
+            if !(0.0..=1.0).contains(&sample.pressure) { return CakeCanvasStatus::InvalidArgument; }
+            let Some(sample) = sample.into_internal() else { return CakeCanvasStatus::InvalidArgument; };
+            captured.push(sample);
+        }
+        let Some(result) = with_engine(handle, |engine| {
+            if engine.stroke_active() { return Err(CakeCanvasStatus::InvalidState); }
+            block_on(engine.split_erase_candidate(&captured, width)).map_err(|_| CakeCanvasStatus::EngineError)
+        }) else { return CakeCanvasStatus::InvalidHandle; };
+        match result {
+            Ok((native, receipt)) => {
+                let native = owned_buffer(native); let receipt = owned_buffer(receipt);
+                unsafe { *out_native = native; *out_receipt = receipt; }
+                CakeCanvasStatus::Ok
+            }
+            Err(status) => status,
         }
     })
 }
@@ -1225,5 +1290,24 @@ mod tests {
         cake_canvas_render_frame_release(&mut frame);
 
         cake_canvas_engine_free(handle);
+    }
+}
+
+#[cfg(test)]
+mod keyed_split_boundary_tests {
+    use super::*;
+
+    #[test]
+    fn missing_handle_bad_keys_nonfinite_and_alias_outputs_refuse_without_payload() {
+        assert_eq!(cake_canvas_delete_stroke(ptr::null_mut(), 1), CakeCanvasStatus::InvalidHandle);
+        assert_eq!(cake_canvas_delete_stroke(ptr::null_mut(), 0), CakeCanvasStatus::InvalidArgument);
+        assert_eq!(cake_canvas_translate_stroke(ptr::null_mut(), 1, f64::NAN, 0.0), CakeCanvasStatus::InvalidArgument);
+        let samples = [CakeCanvasPointerSample { x: 10.0, y: 20.0, pressure: 0.5, tilt_x: 0.0, tilt_y: 0.0 }; 2];
+        let mut native = CakeCanvasBuffer::default(); let mut receipt = CakeCanvasBuffer::default();
+        assert_eq!(cake_canvas_split_erase_candidate(ptr::null(), samples.as_ptr(), 2, 1.0, &mut native, &mut receipt), CakeCanvasStatus::InvalidHandle);
+        assert!(native.data.is_null() && native.len == 0 && receipt.data.is_null() && receipt.len == 0);
+        let alias = &mut native as *mut CakeCanvasBuffer;
+        assert_eq!(cake_canvas_split_erase_candidate(ptr::null(), samples.as_ptr(), 2, 1.0, alias, alias), CakeCanvasStatus::InvalidArgument);
+        assert!(native.data.is_null() && native.len == 0);
     }
 }
