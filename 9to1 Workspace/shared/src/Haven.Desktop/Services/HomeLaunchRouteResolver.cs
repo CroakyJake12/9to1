@@ -18,8 +18,13 @@ internal static class HomeLaunchRouteResolver
     {
         ArgumentNullException.ThrowIfNull(key);
         var normalized = key.Trim().ToLowerInvariant();
+        // Boards opens its own native app surface (the Loop-style board landing with
+        // recent boards and create), not the Home Files Library filter view: the old
+        // library route is what produced the confusing Library splash the owner
+        // reported. Opening a saved board from an actual Library list still resolves
+        // through the Library's own prepared board links.
         if (normalized == "boards")
-            return AppContentAddress.Parse("browse://home/library/boards");
+            return AppContentAddress.Parse("9to1://boards");
         if (normalized == "chat")
             return AppContentAddress.Parse($"9to1://spaces/selected/{SpaceRegistry.ChatSpaceId:D}");
         return AppContentAddress.Parse($"9to1://{normalized}");

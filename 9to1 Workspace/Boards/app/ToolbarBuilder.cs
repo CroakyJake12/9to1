@@ -495,21 +495,30 @@ public static class ToolbarBuilder
     {
         bar.Children.Add(Group(DrawButton(vm), Separator()));
         var tools = Group();
-        foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
+        // UX27 icon requirement: Pen, Highlighter, Eraser and Select must read as
+        // filled rounded icons, not text labels; a squeezed text row is what made
+        // the pen control render as an arrow-like sliver for the owner.
+        foreach (var (tool, iconKey, tip) in new[]
+        {
+            (Value: "Pen", Icon: BoardsIcons.Ink, Tip: "Pen — draw freehand ink"),
+            (Value: "Highlighter", Icon: BoardsIcons.Highlighter, Tip: "Highlighter — translucent wide ink"),
+            (Value: "Eraser", Icon: BoardsIcons.Eraser, Tip: "Eraser — remove ink it touches"),
+            (Value: "Select", Icon: BoardsIcons.SelectTool, Tip: "Select — pick a stroke to move or restyle it"),
+        })
         {
             var button = new ToggleButton
             {
-                Content = tool,
-                IsChecked = string.Equals(vm.InkTool, tool, StringComparison.OrdinalIgnoreCase),
+                Content = BoardsIcons.Glyph(iconKey, 15, tool),
+                IsChecked = string.Equals(vm.InkTool, tool.Value, StringComparison.OrdinalIgnoreCase),
                 Padding = new Thickness(8, 6),
                 Margin = new Thickness(1, 0),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
             };
             SetQuietToolbarControl(button, button.IsChecked == true, "Boards drawing tool selection");
-            ToolTip.SetTip(button, tool + " drawing tool");
-            Avalonia.Automation.AutomationProperties.SetName(button, tool + " drawing tool");
-            button.Click += (_, _) => vm.SetInkTool(tool);
+            ToolTip.SetTip(button, tip.Tip);
+            Avalonia.Automation.AutomationProperties.SetName(button, tip.Tip);
+            button.Click += (_, _) => vm.SetInkTool(tool.Value);
             tools.Children.Add(button);
         }
         tools.Children.Add(Separator());

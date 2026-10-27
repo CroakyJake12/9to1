@@ -859,6 +859,10 @@ internal sealed class BoardsApp : Application
     private void ApplySavedTheme()
     {
         BoardsTheme.LoadGlobalThemePreference();
+        // The Home appearance is the truth for a fresh profile: without this, a
+        // board that has never been saved keeps the compiled "Light" default and
+        // every open force-enabled light theme over the owner's dark Home.
+        BoardsTheme.LoadGlobalAppearancePreference();
         try
         {
             var path = SettingsPath();

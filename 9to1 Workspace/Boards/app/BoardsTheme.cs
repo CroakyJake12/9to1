@@ -61,6 +61,32 @@ public static class BoardsTheme
     public static void LoadGlobalThemePreference(string? dataDirectory = null) =>
         _resolvedPreference = CuiThemePreferenceReader.Read(dataDirectory);
 
+    /// <summary>Seed Boards' Light/Dark mode from the Home appearance preference. A fresh
+    /// development profile has no board-local settings file at all, and the previous default
+    /// ("Light") force-enabled light appearance on open even when Home runs dark, which the
+    /// owner reported. Appearance 2 (Dark) and 3 (SuperDark) mean dark; 0/1 stay light. A
+    /// saved board-local dark setting is applied afterwards and still wins.</summary>
+    public static void LoadGlobalAppearancePreference(string? dataDirectory = null)
+    {
+        var directory = dataDirectory ?? Environment.GetEnvironmentVariable("HAVEN_DATA_DIR");
+        if (string.IsNullOrWhiteSpace(directory))
+            directory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Haven");
+        try
+        {
+            using var stream = File.OpenRead(Path.Combine(directory, "preferences.json"));
+            using var document = System.Text.Json.JsonDocument.Parse(stream);
+            if (document.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                document.RootElement.TryGetProperty("havenUiAppearance", out var value) &&
+                value.ValueKind == System.Text.Json.JsonValueKind.Number &&
+                value.TryGetInt32(out var appearance))
+                SetMode(appearance is >= 2 and <= 3 ? BoardsThemeMode.Dark : BoardsThemeMode.Light);
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        catch (System.Text.Json.JsonException) { }
+    }
+
     public static void SetMode(BoardsThemeMode mode)
     {
         if (Mode == mode)

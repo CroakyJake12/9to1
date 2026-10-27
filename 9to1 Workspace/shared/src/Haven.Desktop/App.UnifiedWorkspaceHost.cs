@@ -658,8 +658,12 @@ public sealed partial class App
         /// Selection is not authority; the existing Browse registration and owning app admit it.</summary>
         internal Task? TryAcquireInitialUnifiedProductRoute(OriginalUnifiedProduct product, CancellationToken token)
         {
-            var route = product == OriginalUnifiedProduct.Boards
-                ? "browse://home/library/boards" : OriginalUnifiedProductRoute(product);
+            // Boards routes to its own native app surface, like Canvas and Present. The old
+            // "browse://home/library/boards" override landed every Boards open on the Home
+            // Files Library filter view — the confusing Library splash the owner reported —
+            // so the compiled product route wins now. Home's genuine Library list still
+            // opens saved boards through its own prepared board links.
+            var route = OriginalUnifiedProductRoute(product);
             Dispatcher.UIThread.VerifyAccess(); DemandExternalOriginalRetirementJoin();
             lock (_gate)
             {

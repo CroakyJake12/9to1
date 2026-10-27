@@ -37,6 +37,9 @@ public static class BoardsIcons
     public const string Table = "table";
     public const string Chart = "chart";
     public const string Ink = "pen";
+    public const string Highlighter = "highlighter";
+    public const string Eraser = "eraser";
+    public const string SelectTool = "select";
     public const string AlignLeft = "align-left";
     public const string AlignCenter = "align-center";
     public const string AlignRight = "align-right";
