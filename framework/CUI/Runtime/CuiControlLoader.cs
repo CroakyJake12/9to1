@@ -545,9 +545,27 @@ public sealed partial class CuiControlLoader : IDisposable
     public void SetSurface(string surface, string? appId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(surface);
-        if (appId is not null) _ = CuiAccentPreference.Default.WithAppColour(appId, null);
+        if (appId is not null)
+        {
+            // Callers use registered surface names (present, write, data) or canonical
+            // app.* identities interchangeably; resolve bare names through the owner
+            // catalog and validate the RESOLVED identity, never rejecting a bare
+            // registered surface name. Per-app accent colour assignment itself flows
+            // through the typed settings owner, not this presentation registration.
+            var resolved = CuiAppAccentCatalog.Find(appId)?.AppId
+                ?? (appId.StartsWith("app.", StringComparison.Ordinal) ? appId : null);
+            if (resolved is null)
+            {
+                // Unknown non-catalog IDs without the app. prefix remain presentation
+                // names until a typed owner registers them; canonicalizing to null
+                // keeps accent resolution governed by the owner-catalog contract.
+                resolved = appId.StartsWith("app.", StringComparison.Ordinal) ? appId : null;
+            }
+            if (resolved is not null) _ = CuiAccentPreference.Default.WithAppColour(resolved, null);
+            _accentAppId = resolved;
+        }
+        else _accentAppId = null;
         _currentSurface = surface;
-        _accentAppId = appId;
     }
     public void SetAppearance(CuiAppearance appearance)
     {
