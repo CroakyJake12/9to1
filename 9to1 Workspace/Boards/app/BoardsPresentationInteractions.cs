@@ -241,8 +241,7 @@ public sealed class BoardInkInteractionController : IDisposable
             {
                 _pendingErase = null;
                 await EraseOnceAsync(pageId, x, y).ConfigureAwait(true);
-                var next = _pendingErase;
-                if (next is null) break;
+                if (_pendingErase is not { } next) break;
                 (pageId, x, y) = next;
             }
             while (true);

@@ -127,7 +127,7 @@ public static class BlockRenderer
         }
 
         if (absoluteBlocksHost is not null)
-            RenderAbsoluteBlocksHostExtent(absoluteHost, blocks);
+            RenderAbsoluteBlocksHostExtent(absoluteBlocksHost, blocks);
         // UX27-TEST-032: a Native page is one seamless editing surface. The old automatically
         // appended "Freeform canvas" section, its empty-state text and its "+ Box" region made
         // every page look like a second editor was bolted underneath it. Absolute content is
