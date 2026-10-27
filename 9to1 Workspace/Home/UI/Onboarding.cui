@@ -131,11 +131,11 @@
               <!-- Set remains literal-only. Render the genuine command message directly;
                    successful sign-in/local continuation selects an empty status control. -->
               <If Condition="{Binding ShowSignInStatus}">
-                <Text id="onboarding-status" text="{Binding Result.Message}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-status-signin" text="{Binding Result.Message}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
               </If>
               <Else>
                 <If Condition="{Binding ShowStoredStatus}">
-                  <Text id="onboarding-status" text="{Binding StatusText}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
+                  <Text id="onboarding-status-stored" text="{Binding StatusText}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
                 </If>
                 <Else>
                   <Text id="onboarding-status" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />

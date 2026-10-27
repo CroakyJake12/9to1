@@ -77,7 +77,7 @@ public sealed class NativeAccountObservationFenceTests
         {
             window.Show(); window.UpdateLayout();
             Control Find(string name) => mounted.Root.GetVisualDescendants().OfType<Control>().Single(c => c.Name == name);
-            var welcome = Find("onboarding-welcome"); var status = Find("onboarding-status");
+            var welcome = Find("onboarding-welcome"); var status = mounted.Root.GetVisualDescendants().OfType<Control>().Single(c => c.Name != null && c.Name.StartsWith("onboarding-status"));
             var stepPosition = welcome.TranslatePoint(default, mounted.Root)!.Value;
             var statusPosition = status.TranslatePoint(default, mounted.Root)!.Value;
             Assert.True(welcome.Bounds.Height > 100);
@@ -138,7 +138,7 @@ public sealed class NativeAccountObservationFenceTests
             window.Show(); window.UpdateLayout();
             await Click("onboarding-start");
             await Click("onboarding-signin-primary");
-            Assert.Contains("Sign-in did not complete", Find<TextBlock>("onboarding-status").Text);
+            Assert.Contains("Sign-in did not complete", mounted.Root.GetVisualDescendants().OfType<TextBlock>().Single(c => c.Name != null && c.Name.StartsWith("onboarding-status")).Text);
             Assert.NotNull(Find<Control>("onboarding-signin"));
             session.OnSignIn = _ =>
             {
@@ -148,7 +148,7 @@ public sealed class NativeAccountObservationFenceTests
             await Click("onboarding-signin-primary");
             Assert.Equal(2, session.SignInCalls);
             Assert.NotNull(Find<Control>("onboarding-download"));
-            Assert.True(string.IsNullOrEmpty(Find<TextBlock>("onboarding-status").Text));
+            Assert.True(string.IsNullOrEmpty(mounted.Root.GetVisualDescendants().OfType<TextBlock>().Single(c => c.Name != null && c.Name.StartsWith("onboarding-status")).Text));
             Assert.False(mounted.CompletionTask.IsCompleted);
             await Click("onboarding-continue");
             Assert.True(mounted.CompletionTask.IsCompletedSuccessfully);
