@@ -19,6 +19,13 @@ window `0x420001b` (client) inside frame `0x8000aa`, PID 1586024.
 
 No signal was sent and no process was killed. The failed close attempts are retained as evidence.
 
+**Postscript, same day:** the launcher ultimately recorded run `59810898` as `EXIT_FAILED` with
+exit code **-15 (SIGTERM)**. So the application was terminated by signal rather than closed: the
+cooperative close never completed. This receipt is retained because no other exit record exists
+for that run; the review that named it as the superseded candidate is
+`/home/jacob/.local/state/9to1-live-preview/boards10-failure-review.json`. It is evidence that the
+normal close lifecycle was unavailable, not evidence about the close code's behaviour.
+
 ## Observed behaviour
 
 The application **accepts the close protocol and then does not close**, with no visible prompt,
