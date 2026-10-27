@@ -498,7 +498,7 @@ public static class ToolbarBuilder
         // UX27 icon requirement: Pen, Highlighter, Eraser and Select must read as
         // filled rounded icons, not text labels; a squeezed text row is what made
         // the pen control render as an arrow-like sliver for the owner.
-        foreach (var (tool, iconKey, tip) in new[]
+        foreach (var tool in new[]
         {
             (Value: "Pen", Icon: BoardsIcons.Ink, Tip: "Pen — draw freehand ink"),
             (Value: "Highlighter", Icon: BoardsIcons.Highlighter, Tip: "Highlighter — translucent wide ink"),
@@ -508,7 +508,7 @@ public static class ToolbarBuilder
         {
             var button = new ToggleButton
             {
-                Content = BoardsIcons.Glyph(iconKey, 15, tool),
+                Content = BoardsIcons.Glyph(tool.Icon, 15, tool.Value),
                 IsChecked = string.Equals(vm.InkTool, tool.Value, StringComparison.OrdinalIgnoreCase),
                 Padding = new Thickness(8, 6),
                 Margin = new Thickness(1, 0),
@@ -516,8 +516,8 @@ public static class ToolbarBuilder
                 BorderThickness = new Thickness(0),
             };
             SetQuietToolbarControl(button, button.IsChecked == true, "Boards drawing tool selection");
-            ToolTip.SetTip(button, tip.Tip);
-            Avalonia.Automation.AutomationProperties.SetName(button, tip.Tip);
+            ToolTip.SetTip(button, tool.Tip);
+            Avalonia.Automation.AutomationProperties.SetName(button, tool.Tip);
             button.Click += (_, _) => vm.SetInkTool(tool.Value);
             tools.Children.Add(button);
         }
