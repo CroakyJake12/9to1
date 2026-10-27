@@ -180,9 +180,9 @@ public sealed class HomeDashboardCuiRenderTests
                 item.Name == "dashboard-welcome" && item.Text?.StartsWith("Good ", StringComparison.Ordinal) == true);
             // Customise intentionally removes its tools from the visible tree. Inspect
             // the SAME retained authored control before exposing it through the real action.
-            var edit = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
+            var edit = Assert.Single(AuthoredDashboardControls(page).OfType<Button>(),
                 item => item.Name == "dashboard-edit-with-ai");
-            Assert.False(edit.IsEffectivelyVisible);
+            Assert.False(edit.IsVisible);
             var arrange = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "dashboard-arrange-widgets");
             Assert.Equal("Customise", arrange.Content);
             arrange.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -210,7 +210,7 @@ public sealed class HomeDashboardCuiRenderTests
             arrange.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             SettleDashboardLayout(window);
             Assert.Equal("Customise", arrange.Content);
-            Assert.False(edit.IsEffectivelyVisible);
+            Assert.False(edit.IsVisible);
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item =>
                 item.Name == "dashboard-widget-status" && item.Text?.Contains("live widgets", StringComparison.Ordinal) == true);
         }
