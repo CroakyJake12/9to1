@@ -182,12 +182,14 @@ public sealed class HomeDashboardCuiRenderTests
             // the SAME retained authored control before exposing it through the real action.
             var edit = Assert.Single(AuthoredDashboardControls(page).OfType<Button>(),
                 item => item.Name == "dashboard-edit-with-ai");
-            Assert.False(edit.IsVisible);
+            var customise = AuthoredDashboardControls(page).OfType<CuiContainerControl>()
+                .Single(item => item.Name == "dashboard-customise");
+            Assert.False(customise.IsVisible);
             var arrange = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "dashboard-arrange-widgets");
             Assert.Equal("Customise", arrange.Content);
             arrange.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             SettleDashboardLayout(window);
-            Assert.True(edit.IsEffectivelyVisible);
+            Assert.True(customise.IsVisible);
             Assert.Equal("Done", arrange.Content);
             var requested = 0;
             page.EditWithHavenRequested += (_, _) => requested++;
