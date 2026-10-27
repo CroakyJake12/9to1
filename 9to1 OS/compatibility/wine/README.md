@@ -2,6 +2,11 @@
 
 This directory contains the first implementation slice of the optional Windows compatibility layer for the current 9to1OS repository. Historical HavenOS interface names are retained for API compatibility.
 
+The [EXE chooser](EXE-CHOOSER.md) adds a desktop popup, managed ARM64
+Hangover/FEX preparation, and an external FreeRDP connection to a configured
+WinBoat guest. It preserves the broker's existing sandbox policy. The external
+RDP connection is separate from the still-disabled sandboxed WinBoat provider.
+
 ## Implemented
 
 ### Wine isolation
@@ -148,7 +153,7 @@ The framing is a four-byte unsigned big-endian payload length followed by exactl
 
 ## CLI / development boundary
 
-From the repository root:
+From the `9to1 OS/` directory:
 
 ```sh
 python3 -m compatibility.wine.haven_compat.cli audit
@@ -172,7 +177,8 @@ Manifest-path `plan`, `launch`, `status`, `stop`, `logs`, and `reset` commands r
 
 `audit` checks, without installing or enabling anything:
 
-- Linux/x86-64 target
+- Linux x86-64 or ARM64 target; ARM64 requires an architecture-matched managed
+  Hangover/FEX runtime for x86/x64 applications
 - Bubblewrap
 - managed Wine runtimes, including whether each `bin/wine` is executable and
   the reported `wine --version`
@@ -193,7 +199,7 @@ the broker builds a launch plan.
 The tests are dependency-free:
 
 ```sh
-python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s compatibility/wine/tests -v
 ```
 
 They cover manifest policy, sandbox-plan construction, lifecycle command construction, registry persistence/integrity, capability/preflight evaluation and same-user daemon protocol behavior. Passing tests do not prove that Wine applications run on the approved HavenOS/CakeOS VM.

@@ -1,0 +1,230 @@
+name: Book4 Edge compatibility preparation
+on:
+  workflow_dispatch:
+    inputs:
+      media_candidate:
+        description: Build the separate camera and quiet speaker candidate
+        type: boolean
+        default: false
+      next_dtb:
+        description: 'Compile the separate 7.2.7 NP960XMA USB wiring test'
+        type: boolean
+        default: false
+      display_dtb:
+        description: 'Prepare the separate GPU-enabled 16-inch display test DTB'
+        type: boolean
+        default: false
+      controller_hpd:
+        description: 'Use controller HPD to avoid the verified panel GPIO119 conflict'
+        type: boolean
+        default: false
+      touchscreen:
+        description: 'Test GPIO34 touchscreen input without the old GPIO48 reset output'
+        type: boolean
+        default: false
+      battery_test:
+        description: 'Build the opt-in NP960XMA battery reporting module'
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - '9to1 OS/compatibility/wine/**'
+      - '9to1 OS/tooling/book4edge/**'
+      - 'eng/9to1.ps1'
+      - '.github/workflows/book4edge-compatibility.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package:
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Validate compatibility and media selection
+        shell: pwsh
+        run: ./eng/9to1.ps1 verify -Component compatibility
+      - name: Build architecture-independent desktop package
+        shell: pwsh
+        run: ./eng/9to1.ps1 package-linux -Component compatibility
+      - name: Install desktop dependencies and check package
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ./artifacts/packages/9to1-windows-compat_0.1.0_all.deb xvfb xdotool grub-common shellcheck device-tree-compiler zenity
+          9to1-compat capabilities
+          python3 - <<'PY'
+          import struct
+          data = bytearray(88)
+          data[:2] = b'MZ'
+          struct.pack_into('<I', data, 60, 64)
+          data[64:68] = b'PE\0\0'
+          struct.pack_into('<H', data, 68, 0x8664)
+          open('/tmp/chooser-fixture.exe', 'wb').write(data)
+          PY
+          9to1-open-exe --plan -- /tmp/chooser-fixture.exe
+          xvfb-run -a bash -euc '
+            9to1-open-exe -- /tmp/chooser-fixture.exe &
+            chooser_pid=$!
+            trap "kill $chooser_pid 2>/dev/null || true" EXIT
+            timeout 15 xdotool search --sync --onlyvisible --name "Open Windows application"
+          '
+      - name: Validate live USB menu with GRUB's parser
+        run: |
+          python3 - <<'PY'
+          import runpy
+          from pathlib import Path
+          recipe = runpy.run_path('9to1 OS/tooling/book4edge/assemble-live.py')
+          suite = runpy.run_path('9to1 OS/tooling/book4edge/assemble-suite.py')
+          for logging, display, battery in ((False, False, False), (True, False, False), (True, True, False), (True, True, True)):
+              Path(f'artifacts/book4edge-grub-{logging}-{display}-{battery}.cfg').write_text(recipe['grub_config'](logging, display, battery), encoding='utf-8')
+          Path('artifacts/book4edge-grub-suite.cfg').write_text(suite['suite_grub_config'](recipe['grub_config'](True, True, True)), encoding='utf-8')
+          Path('artifacts/book4edge-grub-retest.cfg').write_text(suite['retest_grub_config'](suite['suite_grub_config'](recipe['grub_config'](True, True, True))), encoding='utf-8')
+          menu = runpy.run_path('9to1 OS/tooling/book4edge/simple-menu.py')
+          for updated in (False, True):
+              Path(f'artifacts/book4edge-grub-simple-{updated}.cfg').write_text(menu['render']('1234-5678', updated), encoding='utf-8')
+          PY
+          for menu in artifacts/book4edge-grub-*.cfg; do grub-script-check "$menu"; done
+          sh -n '9to1 OS/tooling/book4edge/boot-log.sh'
+          shellcheck -S warning '9to1 OS/tooling/book4edge/boot-log.sh'
+          shellcheck -S warning '9to1 OS/tooling/book4edge/battery-test/start-battery-test.sh'
+          shellcheck -S warning '9to1 OS/tooling/book4edge/runtime/bluetooth-address.sh'
+          python3 -m py_compile '9to1 OS/tooling/book4edge/assemble-suite.py' '9to1 OS/tooling/book4edge/runtime/hardware-check.py' '9to1 OS/tooling/book4edge/runtime/keyboard-backlight.py'
+          python3 '9to1 OS/tooling/book4edge/test-bluetooth-address.py'
+          python3 '9to1 OS/tooling/book4edge/test-battery-storage-guard.py'
+          python3 '9to1 OS/tooling/book4edge/installer/test_guards.py'
+          python3 '9to1 OS/tooling/book4edge/test-ucm-syntax.py'
+          shellcheck -S warning '9to1 OS/tooling/book4edge/installer/initramfs-hook' '9to1 OS/tooling/book4edge/installer/post-update-hook'
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,'9to1 OS/tooling/book4edge/installer')
+          from finish import installed_menu
+          Path('artifacts/book4edge-installed.cfg').write_text(installed_menu('00000000-0000-0000-0000-000000000001','1234-5678'))
+          import runpy
+          menu=runpy.run_path('9to1 OS/tooling/book4edge/simple-menu.py')
+          Path('artifacts/book4edge-media.cfg').write_text(menu['render']('1234-5678',True,True))
+          PY
+          grub-script-check artifacts/book4edge-installed.cfg
+          grub-script-check artifacts/book4edge-media.cfg
+          xvfb-run -a bash -euc '
+            export XDG_RUNTIME_DIR=$(mktemp -d)
+            python3 "9to1 OS/tooling/book4edge/runtime/hardware-check.py" &
+            check_pid=$!
+            trap "kill $check_pid 2>/dev/null || true" EXIT
+            timeout 15 xdotool search --sync --onlyvisible --name "Book4 Edge hardware check"
+          '
+      - name: Compile the separate NP960XMA USB wiring test
+        if: inputs.next_dtb && matrix.runner == 'ubuntu-24.04-arm'
+        run: bash '9to1 OS/tooling/book4edge/build-next-dtb.sh' "$RUNNER_TEMP/next-dtb-source" "$PWD/artifacts/next-dtb"
+      - uses: actions/upload-artifact@v4
+        if: inputs.next_dtb && matrix.runner == 'ubuntu-24.04-arm'
+        with:
+          name: book4edge16-next-dtb-${{ github.sha }}
+          path: artifacts/next-dtb/
+          if-no-files-found: error
+      - name: Retrieve the verified matching kernel DTB
+        if: (inputs.display_dtb || inputs.battery_test) && matrix.runner == 'ubuntu-24.04-arm'
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38726175861
+          name: book4edge16-kernel-ed869653cd33078dfa92ed7e3057e1573504464a
+          path: kernel-input
+      - name: Prepare an isolated native display test
+        if: inputs.display_dtb && matrix.runner == 'ubuntu-24.04-arm'
+        env:
+          CONTROLLER_HPD: ${{ inputs.controller_hpd }}
+          TOUCHSCREEN: ${{ inputs.touchscreen }}
+        run: |
+          mkdir -p artifacts/display-test
+          display_args=()
+          if [ "$CONTROLLER_HPD" = true ]; then display_args+=(--controller-hpd); fi
+          if [ "$TOUCHSCREEN" = true ]; then display_args+=(--touchscreen); fi
+          python3 '9to1 OS/tooling/book4edge/make-display-test.py' kernel-input/x1e80100-samsung-galaxy-book4-edge-16.dtb artifacts/display-test/book4edge16-gpu.dtb "${display_args[@]}"
+          test "$(fdtget artifacts/display-test/book4edge16-gpu.dtb /sound status)" = disabled
+          test "$(fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/gpu@3d00000 status)" = okay
+          if [ "$CONTROLLER_HPD" = true ]; then
+            ! fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/display-subsystem@ae00000/displayport-controller@aea0000/aux-bus/panel hpd-gpios
+            fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/display-subsystem@ae00000/displayport-controller@aea0000/aux-bus/panel no-hpd
+            test "$(fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/pinctrl@f100000/edp0-hpd-default-state function)" = edp0_hot
+          fi
+          if [ "$TOUCHSCREEN" = true ]; then
+            test "$(fdtget -t i artifacts/display-test/book4edge16-gpu.dtb /soc@0/pinctrl@f100000 gpio-reserved-ranges)" = '35 1 44 4'
+            ! fdtget -l artifacts/display-test/book4edge16-gpu.dtb /soc@0/pinctrl@f100000/ts0-default-state | grep -q reset-n-pins
+          fi
+      - uses: actions/upload-artifact@v4
+        if: inputs.display_dtb && matrix.runner == 'ubuntu-24.04-arm'
+        with:
+          name: book4edge-display-test
+          path: artifacts/display-test/
+          if-no-files-found: error
+      - name: Build opt-in battery reporting against the matching kernel
+        if: inputs.battery_test && matrix.runner == 'ubuntu-24.04-arm'
+        run: |
+          sudo apt-get install -y build-essential libelf-dev kmod
+          echo '7a9bc29fe05f44bb90f994d022e354f1048ed8a5b5673353ce9935ab22b113e5  kernel-input/linux-headers-6.19.0-9to1-book4edge16_6.19.0-1_arm64.deb' | sha256sum -c -
+          dpkg-deb -x kernel-input/linux-headers-6.19.0-9to1-book4edge16_6.19.0-1_arm64.deb "$RUNNER_TEMP/battery-headers"
+          cp -a '9to1 OS/tooling/book4edge/battery-test' "$RUNNER_TEMP/book4-battery"
+          headers="$RUNNER_TEMP/battery-headers/usr/src/linux-headers-6.19.0-9to1-book4edge16"
+          test -s "$headers/Module.symvers"
+          make -C "$headers" M="$RUNNER_TEMP/book4-battery" modules
+          modinfo "$RUNNER_TEMP/book4-battery/book4_ec.ko"
+          test "$(modinfo -F vermagic "$RUNNER_TEMP/book4-battery/book4_ec.ko" | cut -d ' ' -f1)" = '6.19.0-9to1-book4edge16'
+          readelf -h "$RUNNER_TEMP/book4-battery/book4_ec.ko" | grep -q 'Machine:.*AArch64'
+          mkdir -p artifacts/battery-test
+          cp "$RUNNER_TEMP/book4-battery/book4_ec.ko" artifacts/battery-test/
+          python3 - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          module = Path('artifacts/battery-test/book4_ec.ko')
+          report = {'kernelRelease': '6.19.0-9to1-book4edge16',
+                    'moduleSHA256': hashlib.sha256(module.read_bytes()).hexdigest(),
+                    'sourceSHA256': hashlib.sha256(Path('9to1 OS/tooling/book4edge/battery-test/book4_ec.c').read_bytes()).hexdigest(),
+                    'sourceCommit': os.environ['GITHUB_SHA'],
+                    'vermagic': subprocess.check_output(['modinfo', '-F', 'vermagic', str(module)], text=True).strip(),
+                    'physicalBatteryVerified': False}
+          module.with_name('battery-test.json').write_text(json.dumps(report, indent=2) + '\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: inputs.battery_test && matrix.runner == 'ubuntu-24.04-arm'
+        with:
+          name: book4edge-battery-test
+          path: artifacts/battery-test/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-compat-${{ matrix.runner }}
+          path: artifacts/packages/*.deb
+          if-no-files-found: error
+
+  media:
+    if: inputs.media_candidate
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38780090393
+          name: book4edge16-next-f16e32b85403e6f54647a54586b74ddbca4cb8ec
+          path: kernel-input
+      - name: Validate matching headers and build media modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libelf-dev kmod device-tree-compiler
+          (cd kernel-input && sha256sum -c SHA256SUMS)
+          dpkg-deb -x kernel-input/linux-headers-7.2.7-9to1-book4edge16-next_7.2.7-1_arm64.deb "$RUNNER_TEMP/headers"
+          bash '9to1 OS/tooling/book4edge/build-media-candidate.sh' "$RUNNER_TEMP/source" "$RUNNER_TEMP/headers/usr/src/linux-headers-7.2.7-9to1-book4edge16-next" "$PWD/artifacts/media-candidate" "$PWD/kernel-input/linux-image-7.2.7-9to1-book4edge16-next_7.2.7-1_arm64.deb"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book4edge16-media-${{ github.sha }}
+          path: artifacts/media-candidate/
+          if-no-files-found: error

@@ -7,6 +7,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from .runtime import RuntimeError as WineRuntimeError, runtime_metadata
+
 
 def audit_environment(runtime_root: Path | None = None) -> dict[str, Any]:
     data_home = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
@@ -85,14 +87,19 @@ def evaluate_preflight(facts: dict[str, Any]) -> dict[str, Any]:
     wine_missing: list[str] = []
     if system != "linux":
         wine_missing.append("linux-host")
-    if machine not in {"x86_64", "amd64"}:
-        wine_missing.append("x86_64-host")
+    if machine not in {"x86_64", "amd64", "aarch64", "arm64"}:
+        wine_missing.append("supported-host-architecture")
     if not commands.get("bwrap"):
         wine_missing.append("bubblewrap")
     if not session.get("waylandSocketExists"):
         wine_missing.append("wayland-socket")
-    if not any(runtime.get("executable") for runtime in runtimes):
+    if not any(runtime.get("executable") and runtime.get("architectureCompatible", True) for runtime in runtimes):
         wine_missing.append("managed-wine-runtime")
+    if machine in {"aarch64", "arm64"} and not any(
+        runtime.get("executable") and runtime.get("architectureCompatible")
+        and runtime.get("translation") == "hangover-fex" for runtime in runtimes
+    ):
+        wine_missing.append("managed-arm64-hangover-fex-runtime")
     if not all(commands.get(name) for name in ("systemd-run", "systemctl", "journalctl", "env")):
         wine_missing.append("systemd-user-supervisor-tools")
     elif not session.get("systemdUserReachable"):
@@ -176,12 +183,21 @@ def _managed_runtimes(runtime_root: Path) -> list[dict[str, Any]]:
         wine = child / "bin" / "wine"
         if child.is_dir() and wine.is_file():
             executable = os.access(wine, os.X_OK)
-            result.append({
+            entry = {
                 "id": child.name,
                 "winePath": str(wine),
                 "executable": executable,
-                "version": _command_version(str(wine), "--version") if executable else None,
-            })
+                "version": None,
+            }
+            if executable:
+                try:
+                    info = runtime_metadata(child)
+                    entry.update(architectureCompatible=True, translation=info["translation"],
+                                 windowsArchitectures=info["windowsArchitectures"])
+                    entry["version"] = _command_version(str(wine), "--version")
+                except (WineRuntimeError, OSError) as exc:
+                    entry.update(architectureCompatible=False, reason=str(exc))
+            result.append(entry)
     return result
 
 

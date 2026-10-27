@@ -1,0 +1,39 @@
+name: Book4 Edge experimental kernel
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kernel:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: 9to1 OS/tooling/book4edge
+          submodules: false
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential flex bison bc libssl-dev libelf-dev libdw-dev dwarves dpkg-dev debhelper fakeroot rsync cpio device-tree-compiler
+      - name: Build pinned Samsung kernel, modules and 16-inch DTB
+        run: bash '9to1 OS/tooling/book4edge/build-hardware.sh' "$RUNNER_TEMP/book4edge-kernel" --kernel
+      - name: Validate artifact identity and first-boot configuration
+        run: |
+          cd "$RUNNER_TEMP/book4edge-kernel/output"
+          sha256sum -c SHA256SUMS
+          test "$(cat kernel.release)" = '6.19.0-9to1-book4edge16'
+          test "$(fdtget x1e80100-samsung-galaxy-book4-edge-16.dtb / model)" = 'Samsung Galaxy Book4 Edge (16 inch)'
+          test "$(fdtget x1e80100-samsung-galaxy-book4-edge-16.dtb /sound status)" = disabled
+          grep -q '^CONFIG_SECURITY_APPARMOR=y$' kernel.config
+          grep -q '^CONFIG_SQUASHFS_ZSTD=y$' kernel.config
+          test -s linux-image-6.19.0-9to1-book4edge16_6.19.0-1_arm64.deb
+          dpkg-deb --info linux-image-*.deb
+          echo 'Built artifacts only: physical Samsung boot and installer integration remain unverified.'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book4edge16-kernel-${{ github.sha }}
+          path: ${{ runner.temp }}/book4edge-kernel/output/
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error

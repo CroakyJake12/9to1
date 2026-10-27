@@ -11,6 +11,7 @@ from .audit import audit_environment
 from .lifecycle import LifecycleError, UnitStatus, UserSystemdSupervisor, unit_name
 from .manifest import AppManifest
 from .registry import AppRegistry, RegistryError
+from .runtime import RuntimeError as WineRuntimeError, runtime_environment, runtime_metadata
 
 
 class CompatibilityError(RuntimeError):
@@ -136,6 +137,10 @@ class CompatibilityBroker:
             raise CompatibilityError(f"Wine runtime is unavailable: {wine_bin}")
         if not os.access(wine_bin, os.X_OK):
             raise CompatibilityError(f"Wine runtime is not executable: {wine_bin}")
+        try:
+            runtime_info = runtime_metadata(runtime_dir)
+        except (WineRuntimeError, OSError) as exc:
+            raise CompatibilityError(str(exc)) from exc
 
         xdg_runtime_dir, wayland_display, wayland_socket = _wayland_socket()
 
@@ -160,6 +165,7 @@ class CompatibilityBroker:
             "--dir", "/mnt",
             "--dir", "/mnt/haven-share",
             "--ro-bind", str(runtime_dir), "/opt/haven-wine",
+            "--ro-bind", str(Path(__file__).with_name("wine_launch.py").resolve()), "/opt/9to1-wine-launch.py",
             "--bind", str(prefix), "/var/lib/haven-wine/prefix",
             "--bind", str(data), "/var/lib/haven-wine/data",
             "--ro-bind", wayland_socket, wayland_socket,
@@ -181,12 +187,14 @@ class CompatibilityBroker:
             for render_node in render_nodes:
                 argv.extend(["--dev-bind", render_node, render_node])
 
+        for key, value in runtime_environment(runtime_info).items():
+            argv.extend(["--setenv", key, value])
         argv.extend([
             "--setenv", "WINEPREFIX", "/var/lib/haven-wine/prefix",
             "--setenv", "HOME", "/var/lib/haven-wine/data",
             "--setenv", "XDG_RUNTIME_DIR", xdg_runtime_dir,
             "--setenv", "WAYLAND_DISPLAY", wayland_display,
-            "/opt/haven-wine/bin/wine",
+            "/usr/bin/python3", "/opt/9to1-wine-launch.py",
             manifest.entrypoint,
         ])
 
