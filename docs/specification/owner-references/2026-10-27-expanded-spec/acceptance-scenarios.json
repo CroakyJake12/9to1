@@ -1,0 +1,2717 @@
+{
+  "edition": "2026-10-27",
+  "purpose": "Authored acceptance scenarios; no product execution performed by creating this file",
+  "default_status": "NOT_RUN",
+  "count": 102,
+  "parameter_matrix": {
+    "platform": "Each required native/web platform, actual availability recorded",
+    "display_scale": [
+      1,
+      1.25,
+      1.5,
+      2
+    ],
+    "theme": [
+      "representative light",
+      "representative dark",
+      "applicable selected themes"
+    ],
+    "input": [
+      "mouse/keyboard",
+      "supported stylus",
+      "supported touch/coarse pointer"
+    ],
+    "artifact": [
+      "empty",
+      "typical mixed",
+      "large/virtualised",
+      "failure fixture"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "UX27-TEST-001",
+      "area": "Boards",
+      "title": "Create without Files, account or cloud",
+      "requirements": [
+        "UX27-BOARD-003",
+        "UX27-DATAFLOW-001"
+      ],
+      "status": "NOT_RUN",
+      "given": "Disposable profile; no Files connection, accounts, AI provider or designated Boards folder.",
+      "steps": [
+        "Launch Boards through normal Apps entry.",
+        "Activate New Board, type a title and a sentence.",
+        "Close and reopen using the normal application route."
+      ],
+      "expected": [
+        "Create is visible and usable before any connection.",
+        "A stable local board/page is created, edits are durable, and reopening restores them.",
+        "No mandatory folder, cloud or Files-connection dialog appears."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-002",
+      "area": "Boards",
+      "title": "Cancel Save As retains the draft",
+      "requirements": [
+        "UX27-BOARD-004",
+        "UX27-BOARD-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Unnamed local board containing text, ink and a second page.",
+      "steps": [
+        "Invoke Save As.",
+        "Browse to a different folder, then cancel.",
+        "Continue editing; close and reopen the draft."
+      ],
+      "expected": [
+        "No chosen destination is falsely recorded as saved.",
+        "All content remains available with truthful local-draft status.",
+        "Cancelling the chooser neither deletes the draft nor sends the user through Files setup."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-003",
+      "area": "Boards",
+      "title": "Save an editable file outside a Boards folder",
+      "requirements": [
+        "UX27-BOARD-005",
+        "UX27-BOARD-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "A mixed board; a permitted arbitrary test folder unrelated to the app library.",
+      "steps": [
+        "Save As to that folder with extension .9to1board.",
+        "Inspect the actual written artifact.",
+        "Close the board and open that file through File Open and the OS association."
+      ],
+      "expected": [
+        "The file exists at the selected location and is an editable document, not an image or account-dependent pointer.",
+        "Page hierarchy, rich blocks, tables, graphs, ink and owned assets round-trip.",
+        "No silent relocation into a special folder occurs."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-004",
+      "area": "Boards",
+      "title": "Moved-file identity and fresh access",
+      "requirements": [
+        "UX27-BOARD-007",
+        "UX27-BOARD-009"
+      ],
+      "status": "NOT_RUN",
+      "given": "A saved board with captured BoardID/PageIDs and no connected Files account.",
+      "steps": [
+        "Close its handles.",
+        "Move/rename the file using authorised OS operations.",
+        "Open the new path and restart the app again."
+      ],
+      "expected": [
+        "Logical board/page identities remain consistent.",
+        "A new permitted handle is acquired instead of replaying a prior one-shot lease.",
+        "Recent-location repair does not duplicate pages or create a dead tab."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-005",
+      "area": "Boards",
+      "title": "Save a Copy is an independent document",
+      "requirements": [
+        "UX27-BOARD-007"
+      ],
+      "status": "NOT_RUN",
+      "given": "A saved board with owned objects and one explicitly external reference.",
+      "steps": [
+        "Use the deliberate Save a Copy/Duplicate action.",
+        "Edit the copy and reopen both documents."
+      ],
+      "expected": [
+        "Copy ownership/IDs follow the duplication contract without accidentally merging the documents.",
+        "Original content remains unchanged.",
+        "External references remain explicit and access-controlled rather than being secretly copied."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-006",
+      "area": "Boards",
+      "title": "Crash during save preserves a complete revision",
+      "requirements": [
+        "UX27-BOARD-008",
+        "UX27-DATAFLOW-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Disposable board with a known valid file and a second modified revision; controllable storage fault injection.",
+      "steps": [
+        "Interrupt before final file replacement, then reopen.",
+        "Repeat around the final commit boundary.",
+        "Inspect recovery and file integrity."
+      ],
+      "expected": [
+        "The old complete or new complete revision opens, not a partial mixture.",
+        "Unsaved recoverable edits remain available and failure is truthful.",
+        "Saved is never announced merely because serialization began."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-007",
+      "area": "Boards",
+      "title": "Disk-full, read-only and disconnected destination",
+      "requirements": [
+        "UX27-BOARD-008",
+        "UX27-SHARED-015"
+      ],
+      "status": "NOT_RUN",
+      "given": "Parameterised authorised failing destination; a board with new unsaved edits.",
+      "steps": [
+        "Attempt Save to disk-full/read-only/disconnected storage.",
+        "Choose a different permitted destination via Save As.",
+        "Reopen and compare content."
+      ],
+      "expected": [
+        "Failure identifies the actual destination and cause; edits remain intact.",
+        "Recovery copy is not labelled as successful sync to the failed destination.",
+        "New destination contains the complete editable revision."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-008",
+      "area": "Boards",
+      "title": "External edit conflict",
+      "requirements": [
+        "UX27-BOARD-008",
+        "UX27-BOARD-046"
+      ],
+      "status": "NOT_RUN",
+      "given": "Two authorised editors of one disposable board at the same base revision.",
+      "steps": [
+        "Edit different and then overlapping content in separate runs.",
+        "Attempt conflicting saves and inspect reconciliation."
+      ],
+      "expected": [
+        "Revision conflict is detected rather than silently choosing the latest timestamp.",
+        "Both revisions are recoverable; chosen resolution is explicit.",
+        "Undo and references remain coherent after resolution."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-009",
+      "area": "Boards",
+      "title": "Portable content versus external references",
+      "requirements": [
+        "UX27-BOARD-006",
+        "UX27-DATAFLOW-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "Board with owned image/ink/embedded content and a private external referenced artifact.",
+      "steps": [
+        "Save and open the file in a clean authorised profile.",
+        "Inspect owned content and unavailable external target.",
+        "Inspect package contents for secrets."
+      ],
+      "expected": [
+        "Owned supported content opens portably.",
+        "External access is requested or marked unavailable without copying private material or deleting the reference.",
+        "No credentials, bearer tokens or absolute-path-only identity are packaged."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-010",
+      "area": "Boards",
+      "title": "Landing, recents and real transitions",
+      "requirements": [
+        "UX27-BOARD-010",
+        "UX27-SHARED-017"
+      ],
+      "status": "NOT_RUN",
+      "given": "A fresh profile and another profile with an existing board plus an unavailable recent file.",
+      "steps": [
+        "Open the landing page in both profiles.",
+        "Search and open a real recent item.",
+        "Activate Locate/Remove from Recent for the unavailable item."
+      ],
+      "expected": [
+        "Landing and editing are distinct routed experiences.",
+        "No seeded fake boards or duplicated Library heading.",
+        "Removing a Recent item does not delete the actual document."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-011",
+      "area": "Boards",
+      "title": "Exact agreed shell topology",
+      "requirements": [
+        "UX27-BOARD-001",
+        "UX27-BOARD-002",
+        "UX27-SHARED-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Board with enough nested pages to overflow the sidebar.",
+      "steps": [
+        "Open the board at wide and narrow widths.",
+        "Scroll the tree.",
+        "Change theme while retaining the same selected page."
+      ],
+      "expected": [
+        "Top toolbar stays; Boards identity is top-left; no top-right AppFlowy product badge.",
+        "Add page/section and user controls remain in the fixed bottom area.",
+        "Theme changes do not rearrange this topology or lose page state."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-012",
+      "area": "Boards",
+      "title": "Add page/section chooses the correct destination",
+      "requirements": [
+        "UX27-BOARD-014"
+      ],
+      "status": "NOT_RUN",
+      "given": "A board with a section and a nested page.",
+      "steps": [
+        "Open bottom Add; choose New section.",
+        "Open Add again, choose New Native page and an explicit nested destination.",
+        "Cancel a third creation attempt."
+      ],
+      "expected": [
+        "Exactly one entity is created per confirmed operation at the shown destination.",
+        "Tree reveals it and focus reaches title/editor.",
+        "Cancel creates no hidden node; template browsing is not compulsory."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-013",
+      "area": "Boards",
+      "title": "Tree focus, expansion and rename",
+      "requirements": [
+        "UX27-BOARD-012",
+        "UX27-BOARD-013"
+      ],
+      "status": "NOT_RUN",
+      "given": "Three-level tree with stable IDs and an active nested page.",
+      "steps": [
+        "Navigate with arrows/Home/End.",
+        "Collapse the active page ancestor without activating another page.",
+        "Rename a row; test Enter, Escape and invalid input."
+      ],
+      "expected": [
+        "Expansion/focus and activation are distinct.",
+        "Collapse retains the open descendant and its data.",
+        "Committed rename updates all title/breadcrumb views without changing identity; Escape restores it."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-014",
+      "area": "Boards",
+      "title": "Move pages without cycles or orphaning",
+      "requirements": [
+        "UX27-BOARD-015"
+      ],
+      "status": "NOT_RUN",
+      "given": "Nested sections/pages with references and descendants.",
+      "steps": [
+        "Drag a page above/below a sibling and into a valid parent.",
+        "Attempt to drop a parent into its own descendant.",
+        "Undo the valid move and cancel another drag."
+      ],
+      "expected": [
+        "Drop preview predicts the stored destination.",
+        "IDs/content/descendants survive; cycles are rejected visibly.",
+        "Undo/cancel restores structure without extra nodes."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-015",
+      "area": "Boards",
+      "title": "Trash and restore descendants",
+      "requirements": [
+        "UX27-BOARD-015",
+        "UX27-DATAFLOW-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "Section containing edited pages and an external reference.",
+      "steps": [
+        "Trash the section after reviewing impact.",
+        "Restore it; repeat after its original parent is unavailable."
+      ],
+      "expected": [
+        "Deletion scope is clear and recoverable.",
+        "Descendants retain content and IDs.",
+        "Restore returns to the original or explicitly recovered location; external original artifacts are not deleted by removing a reference."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-016",
+      "area": "Boards",
+      "title": "Board switching is atomic",
+      "requirements": [
+        "UX27-BOARD-011"
+      ],
+      "status": "NOT_RUN",
+      "given": "Two boards with different pages, drafts and model context.",
+      "steps": [
+        "Switch through the searchable board selector.",
+        "Switch back.",
+        "Attempt to open an unavailable target."
+      ],
+      "expected": [
+        "Title, tree, content and context always belong to the same board.",
+        "Each board retains its selected page/draft/scroll state.",
+        "Failed target opening leaves the current usable board intact."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-017",
+      "area": "Boards",
+      "title": "Enter splits in the middle of a paragraph",
+      "requirements": [
+        "UX27-BOARD-016",
+        "UX27-BOARD-017"
+      ],
+      "status": "NOT_RUN",
+      "given": "One paragraph ABCDEF with caret between C and D; capture its BlockID.",
+      "steps": [
+        "Press Enter once.",
+        "Inspect the two block entities and place the caret in each.",
+        "Undo and Redo.",
+        "Save/reopen."
+      ],
+      "expected": [
+        "Original ID holds ABC; one new sibling holds DEF; caret starts at the new sibling.",
+        "Both blocks have functioning independent grips.",
+        "Undo/Redo and reopen preserve exactly the expected structure, not a tall multiline input."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-018",
+      "area": "Boards",
+      "title": "Enter at start, end and with selected text",
+      "requirements": [
+        "UX27-BOARD-017"
+      ],
+      "status": "NOT_RUN",
+      "given": "Parameterised paragraph with caret at start/end or a selected inline range.",
+      "steps": [
+        "Press Enter in each case.",
+        "Inspect text, inline marks, IDs and caret.",
+        "Undo once."
+      ],
+      "expected": [
+        "Start/end follow the declared split policy; selection is deleted and split atomically.",
+        "Rich text survives without duplicate or missing characters.",
+        "One Undo restores the original content/tree/caret."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-019",
+      "area": "Boards",
+      "title": "Shift Enter and wrapping do not create blocks",
+      "requirements": [
+        "UX27-BOARD-018"
+      ],
+      "status": "NOT_RUN",
+      "given": "One paragraph near the flow-column width with a captured BlockID.",
+      "steps": [
+        "Insert Shift+Enter, then type enough text to wrap.",
+        "Resize the window.",
+        "Save/reopen."
+      ],
+      "expected": [
+        "Soft break and wrapping remain in the same BlockID.",
+        "Resizing changes layout only, not model content/block count.",
+        "No giant permanent blank region is inserted."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-020",
+      "area": "Boards",
+      "title": "IME and grapheme-safe splitting",
+      "requirements": [
+        "UX27-BOARD-018"
+      ],
+      "status": "NOT_RUN",
+      "given": "Text containing emoji, combining characters and a supported IME composition.",
+      "steps": [
+        "Commit an IME candidate with Enter.",
+        "Perform an intentional structural split afterwards.",
+        "Undo/Redo and inspect text."
+      ],
+      "expected": [
+        "Composition commit is not also a block split.",
+        "Intended split respects grapheme boundaries and creates the specified structure.",
+        "No corrupted surrogate pairs, duplicate input or accidental loss."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-021",
+      "area": "Boards",
+      "title": "Heading, list and checklist continuation",
+      "requirements": [
+        "UX27-BOARD-019",
+        "UX27-BOARD-021"
+      ],
+      "status": "NOT_RUN",
+      "given": "Heading, bullet, numbered list, nested list and checked checklist fixtures.",
+      "steps": [
+        "Press Enter mid/end and on empty items.",
+        "Test Shift+Enter and nested empty-item exit."
+      ],
+      "expected": [
+        "Headings continue into paragraphs under the stated default.",
+        "Lists retain appropriate depth/numbering; new checklist item is unchecked.",
+        "Empty root items exit and nested empty items outdent without deleting children."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-022",
+      "area": "Boards",
+      "title": "Code, title and cell Enter stay contextual",
+      "requirements": [
+        "UX27-BOARD-019",
+        "UX27-BOARD-038"
+      ],
+      "status": "NOT_RUN",
+      "given": "One code block, page-title field and editable table.",
+      "steps": [
+        "Use Enter/Shift+Enter in each focused context.",
+        "Use the explicit exit-to-page command."
+      ],
+      "expected": [
+        "Code Enter creates a code line rather than an outside block.",
+        "Title Enter commits/focuses deliberately.",
+        "Cell editing follows its contract; no accidental outer block or hidden navigation."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-023",
+      "area": "Boards",
+      "title": "Backspace/Delete across structural boundaries",
+      "requirements": [
+        "UX27-BOARD-020"
+      ],
+      "status": "NOT_RUN",
+      "given": "Adjacent compatible paragraphs, nested content and a selected non-text block.",
+      "steps": [
+        "Backspace at the second paragraph start.",
+        "Undo; Delete at the first paragraph end.",
+        "Attempt boundaries around structured/non-text content."
+      ],
+      "expected": [
+        "Compatible text merges preserve marks and intended caret placement.",
+        "Structured content is selected/handled explicitly, not silently flattened or destroyed.",
+        "Undo restores exact IDs/relationships according to the defined operation."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-024",
+      "area": "Boards",
+      "title": "Slash menu inserts only on confirmation",
+      "requirements": [
+        "UX27-BOARD-022"
+      ],
+      "status": "NOT_RUN",
+      "given": "An empty paragraph and a paragraph with existing text.",
+      "steps": [
+        "Open slash insertion, filter results, navigate by keyboard.",
+        "Confirm a valid block, then repeat and cancel.",
+        "Click outside while the menu is open."
+      ],
+      "expected": [
+        "Menu has relevant icon-led choices and current block targeting.",
+        "Confirmation inserts one actual block.",
+        "Cancelling/outside dismissal preserves pre-menu content and does not leave a stuck overlay."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-025",
+      "area": "Boards",
+      "title": "Six-dot click versus actual drag",
+      "requirements": [
+        "UX27-BOARD-023",
+        "UX27-BOARD-024"
+      ],
+      "status": "NOT_RUN",
+      "given": "Three flow blocks with recorded IDs/order.",
+      "steps": [
+        "Click a grip without crossing its drag threshold.",
+        "Close the menu; drag the grip beyond threshold and drop below another block."
+      ],
+      "expected": [
+        "Click opens that block menu; drag shows a real preview and insertion target.",
+        "Drop changes stored order once and preserves the moved ID/content.",
+        "A decorative six-dot icon or text selection instead of movement fails."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-026",
+      "area": "Boards",
+      "title": "Cancel drag and preserve undo",
+      "requirements": [
+        "UX27-BOARD-024",
+        "UX27-SHARED-013"
+      ],
+      "status": "NOT_RUN",
+      "given": "Multi-line block in a page with history.",
+      "steps": [
+        "Drag across several targets, then press Escape.",
+        "Repeat with a valid drop and Undo once."
+      ],
+      "expected": [
+        "Cancelled preview causes no persistent reorder.",
+        "Valid movement commits once, with one logical undo step.",
+        "No duplicate blocks or delayed mutation after cancellation."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-027",
+      "area": "Boards",
+      "title": "Nesting and columns have explicit targets",
+      "requirements": [
+        "UX27-BOARD-025"
+      ],
+      "status": "NOT_RUN",
+      "given": "Several compatible flow blocks and a container with children.",
+      "steps": [
+        "Drag to a sibling insertion target.",
+        "Drag into the explicit nesting zone.",
+        "Create an allowed side-by-side column target, then resize its divider."
+      ],
+      "expected": [
+        "Insertion, nesting and column targets are visibly distinct.",
+        "Parent/order/column state match the preview and preserve content.",
+        "No accidental nesting from merely crossing a label."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-028",
+      "area": "Boards",
+      "title": "Drag auto-scroll through virtualised content",
+      "requirements": [
+        "UX27-BOARD-025",
+        "UX27-SHARED-020"
+      ],
+      "status": "NOT_RUN",
+      "given": "Large board whose destination is off screen and partially unmaterialised.",
+      "steps": [
+        "Start a grip drag; hover near the page edge.",
+        "Navigate to the distant target and drop.",
+        "Reopen and search for moved content."
+      ],
+      "expected": [
+        "Controlled auto-scroll exposes targets without freezing or losing capture.",
+        "Unrendered blocks are not omitted.",
+        "Correct distant order persists with the same moved BlockID."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-029",
+      "area": "Boards",
+      "title": "Keyboard and multi-block movement",
+      "requirements": [
+        "UX27-BOARD-026"
+      ],
+      "status": "NOT_RUN",
+      "given": "Several adjacent and nested blocks, plus a text selection.",
+      "steps": [
+        "Select multiple blocks through the documented block-selection mode.",
+        "Move through a keyboard/context alternative.",
+        "Repeat in text-edit mode."
+      ],
+      "expected": [
+        "Block movement retains relative order and descendants.",
+        "Keyboard users can perform equivalent movement without a mouse.",
+        "Text-edit arrows/shortcuts do not unexpectedly move blocks."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-030",
+      "area": "Boards",
+      "title": "Block menu targets clicked identity",
+      "requirements": [
+        "UX27-BOARD-027"
+      ],
+      "status": "NOT_RUN",
+      "given": "Different block types; focus initially in another block.",
+      "steps": [
+        "Open a block context menu after scrolling.",
+        "Duplicate or convert where supported; Undo.",
+        "Invoke a disabled action and inspect its reason."
+      ],
+      "expected": [
+        "Commands target the clicked/focused BlockID, not stale selection.",
+        "Conversion is content-preserving or explicitly explains incompatibility.",
+        "Disabled commands do not mutate; menu keyboard/outside dismissal works."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-031",
+      "area": "Boards",
+      "title": "Floating formatting preserves text selection",
+      "requirements": [
+        "UX27-BOARD-028",
+        "UX27-SHARED-011"
+      ],
+      "status": "NOT_RUN",
+      "given": "A paragraph with a partial formatted selection.",
+      "steps": [
+        "Open colour/font/heading controls and apply a change.",
+        "Undo; move selection to another block and repeat."
+      ],
+      "expected": [
+        "Toolbar focus does not discard or redirect the intended selection.",
+        "Mixed/disabled state reflects real content.",
+        "Exactly selected content changes, stays editable and survives save/reopen."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-032",
+      "area": "Boards",
+      "title": "No accidental embedded freeform app",
+      "requirements": [
+        "UX27-BOARD-029",
+        "UX27-BOARD-045"
+      ],
+      "status": "NOT_RUN",
+      "given": "Fresh Native page with text; no intentional Canvas PageType.",
+      "steps": [
+        "Type, create blocks, revisit the page and restart.",
+        "Inspect model entities and visual layout."
+      ],
+      "expected": [
+        "One seamless page surface remains.",
+        "No unexplained white Freeform canvas widget, +Box app, repeated empty-state message or duplicate render-created object appears.",
+        "Intentional Canvas pages remain available separately."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-033",
+      "area": "Boards",
+      "title": "Edit View and Locked Unlocked are orthogonal",
+      "requirements": [
+        "UX27-BOARD-030"
+      ],
+      "status": "NOT_RUN",
+      "given": "Page containing flow text, an absolute object and ink.",
+      "steps": [
+        "Cycle Edit/View and Locked/Unlocked combinations.",
+        "Attempt text edit, block movement and pen drawing."
+      ],
+      "expected": [
+        "View is read-only.",
+        "Edit plus Locked permits text and ink but prevents unintended layout movement.",
+        "Controls remain visible with meaningful state; locked layout does not silently disable drawing."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-034",
+      "area": "Boards",
+      "title": "Absolute coordinates and snapping",
+      "requirements": [
+        "UX27-BOARD-031"
+      ],
+      "status": "NOT_RUN",
+      "given": "Explicit absolute object plus flow text at non-100% zoom.",
+      "steps": [
+        "Move/resize with snap on then off.",
+        "Lock layout; reopen.",
+        "Explicitly convert between Flow and Absolute where allowed."
+      ],
+      "expected": [
+        "Snapping uses document coordinates and current grid settings.",
+        "Locking preserves geometry and does not flatten absolute content.",
+        "Conversion is deliberate, undoable and distinct from a drag-reorder gesture."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-035",
+      "area": "Boards",
+      "title": "Pen draws on the actual Native page",
+      "requirements": [
+        "UX27-BOARD-032",
+        "UX27-BOARD-036"
+      ],
+      "status": "NOT_RUN",
+      "given": "Edit plus Locked; Native page with text; permitted mouse and stylus parameter runs.",
+      "steps": [
+        "Select Pen.",
+        "Draw a curved stroke over the actual page, not a separate widget.",
+        "Switch to text and type.",
+        "Save/reopen."
+      ],
+      "expected": [
+        "Continuous visible ink follows input and persists as editable strokes.",
+        "Selecting Pen really changes event routing.",
+        "Text remains editable and both content layers reopen correctly."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-036",
+      "area": "Boards",
+      "title": "Ink remains aligned through transforms",
+      "requirements": [
+        "UX27-BOARD-033"
+      ],
+      "status": "NOT_RUN",
+      "given": "A stroke drawn beside a distinctive text block at 125% display scaling.",
+      "steps": [
+        "Scroll, zoom and resize the window.",
+        "Draw another stroke.",
+        "Move the window between supported monitor scales; reopen."
+      ],
+      "expected": [
+        "Stroke coordinates map consistently through page/viewport/display transforms.",
+        "No screen-position drift, jump at start or unexplained offset.",
+        "Existing strokes retain document geometry."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-037",
+      "area": "Boards",
+      "title": "Stroke capture and cancellation",
+      "requirements": [
+        "UX27-BOARD-033",
+        "UX27-BOARD-035"
+      ],
+      "status": "NOT_RUN",
+      "given": "Active Pen with a disposable page.",
+      "steps": [
+        "Draw rapidly across viewport edges; release outside the canvas through supported capture.",
+        "Simulate cancellation/focus loss.",
+        "Undo a completed stroke."
+      ],
+      "expected": [
+        "Pointer capture ends cleanly and never leaves drawing stuck.",
+        "Interrupted stroke follows the documented commit/cancel policy.",
+        "One completed stroke is one undo operation, not hundreds of sample-level undos."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-038",
+      "area": "Boards",
+      "title": "Pressure and non-pressure fallback",
+      "requirements": [
+        "UX27-BOARD-034"
+      ],
+      "status": "NOT_RUN",
+      "given": "Supported pressure stylus and a mouse test path, with device capabilities recorded.",
+      "steps": [
+        "Draw varying-pressure strokes.",
+        "Repeat with mouse.",
+        "Place a palm/touch contact during stylus input where supported."
+      ],
+      "expected": [
+        "Pressure affects the configured stroke property when supported.",
+        "Mouse uses a stable fallback and still draws.",
+        "Supported palm filtering prevents unintended content; unsupported hardware is recorded, not falsely passed."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-039",
+      "area": "Boards",
+      "title": "Eraser, colour and brush width",
+      "requirements": [
+        "UX27-BOARD-035"
+      ],
+      "status": "NOT_RUN",
+      "given": "Several strokes of different settings near text blocks.",
+      "steps": [
+        "Change colour/width and draw new strokes.",
+        "Erase a selected portion/whole stroke per supported mode.",
+        "Undo/Redo, save and reopen."
+      ],
+      "expected": [
+        "New settings affect the intended new stroke without unexpectedly recolouring old content.",
+        "Eraser follows its visible mode and does not delete nearby text.",
+        "Restored strokes and settings match the persisted model."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-040",
+      "area": "Boards",
+      "title": "Pen versus selection and panning",
+      "requirements": [
+        "UX27-BOARD-036",
+        "UX27-SHARED-012"
+      ],
+      "status": "NOT_RUN",
+      "given": "Native page with selectable text, ink and a scrollable viewport.",
+      "steps": [
+        "Select text in text mode.",
+        "Draw in pen mode.",
+        "Pan/scroll through the documented separate gesture."
+      ],
+      "expected": [
+        "Text selection, ink and panning have deterministic ownership.",
+        "No gesture simultaneously selects text and draws or drags the whole page.",
+        "Mode change releases stale capture and updates cursor/tool state."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-041",
+      "area": "Boards",
+      "title": "Table controls stay compact",
+      "requirements": [
+        "UX27-BOARD-037",
+        "UX27-SHARED-018"
+      ],
+      "status": "NOT_RUN",
+      "given": "A 20 by 10 simple table at narrow and wide widths.",
+      "steps": [
+        "Select no cell, then one cell, then a range.",
+        "Hover headers/edges and open table overflow."
+      ],
+      "expected": [
+        "Only relevant contextual controls appear.",
+        "No repeated permanent toolbar for every cell or fifty-button command dump.",
+        "All required actions remain reachable with readable labels/shortcuts."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-042",
+      "area": "Boards",
+      "title": "Table edit versus cell selection",
+      "requirements": [
+        "UX27-BOARD-038"
+      ],
+      "status": "NOT_RUN",
+      "given": "Table with mixed text and a selected cell range.",
+      "steps": [
+        "Use single/double click or documented edit command.",
+        "Type, Tab/Shift+Tab and arrows in both navigation and text modes."
+      ],
+      "expected": [
+        "Cell navigation and text caret movement are distinct.",
+        "Typing replaces/edits the intended range according to the visible mode.",
+        "Moving out of the last cell follows a declared policy without destroying the page structure."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-043",
+      "area": "Boards",
+      "title": "Merge split and undo without data loss",
+      "requirements": [
+        "UX27-BOARD-039"
+      ],
+      "status": "NOT_RUN",
+      "given": "A table range whose cells all contain distinct content.",
+      "steps": [
+        "Merge selected cells, reviewing any required content decision.",
+        "Split the merged region.",
+        "Undo/Redo and save/reopen."
+      ],
+      "expected": [
+        "No non-anchor content is silently discarded.",
+        "Structure/formatting and text follow the explicit merge policy.",
+        "Undo restores the original cells and their content."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-044",
+      "area": "Boards",
+      "title": "Image resize crop and missing media",
+      "requirements": [
+        "UX27-BOARD-040"
+      ],
+      "status": "NOT_RUN",
+      "given": "Owned image and external referenced media in a Native page.",
+      "steps": [
+        "Resize with aspect constraints; crop where supported.",
+        "Undo and reopen.",
+        "Make the external media unavailable."
+      ],
+      "expected": [
+        "Actual media geometry changes, with appropriate handles and no arbitrary page blank area.",
+        "Owned media remains portable.",
+        "Missing reference is labelled without blocking unrelated text or deleting its locator."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-045",
+      "area": "Boards",
+      "title": "Graph input and view-only sliders",
+      "requirements": [
+        "UX27-BOARD-041"
+      ],
+      "status": "NOT_RUN",
+      "given": "Graph with two expressions and a parameter slider.",
+      "steps": [
+        "Edit one expression and inspect the plot.",
+        "Enter invalid syntax.",
+        "Switch View mode and change an allowed exploratory slider, then reopen."
+      ],
+      "expected": [
+        "Plots correspond to valid canonical expressions; errors are local and precise.",
+        "Multiple expressions remain distinct.",
+        "View-only exploration does not silently overwrite the saved authoring parameters."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-046",
+      "area": "Boards",
+      "title": "Intentional Write and Canvas pages",
+      "requirements": [
+        "UX27-BOARD-042"
+      ],
+      "status": "NOT_RUN",
+      "given": "Board with Native, Write and Canvas PageTypes.",
+      "steps": [
+        "Switch among page types; edit and save their real content.",
+        "Return to Native, close and reopen."
+      ],
+      "expected": [
+        "Each PageType activates its actual registered engine, not a static placeholder.",
+        "Embedded ownership and saved content remain coherent.",
+        "Native page is not replaced by the Canvas editor."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-047",
+      "area": "Boards",
+      "title": "Scoped Chat uses current authorised sources",
+      "requirements": [
+        "UX27-BOARD-043"
+      ],
+      "status": "NOT_RUN",
+      "given": "Scoped Chat page with an authorised board source and a revoked source reference.",
+      "steps": [
+        "Inspect current scope, send through a supported provider, then revoke access and retry."
+      ],
+      "expected": [
+        "The actual admitted request uses current permitted source scope.",
+        "Revoked material is not injected.",
+        "Chat failure preserves page/draft and does not require unrelated cloud setup for local editing."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-048",
+      "area": "Boards",
+      "title": "Search across collapsed and unloaded content",
+      "requirements": [
+        "UX27-BOARD-044",
+        "UX27-SHARED-020"
+      ],
+      "status": "NOT_RUN",
+      "given": "Large board with a unique term in a collapsed distant page.",
+      "steps": [
+        "Search the term.",
+        "Activate its result and return to the previous page."
+      ],
+      "expected": [
+        "Search includes canonical unloaded content.",
+        "Correct ancestors expand and the target is revealed.",
+        "Previous page context is retained; hidden data is not treated as nonexistent."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-049",
+      "area": "Boards",
+      "title": "Re-render never mutates the document",
+      "requirements": [
+        "UX27-BOARD-045"
+      ],
+      "status": "NOT_RUN",
+      "given": "Board whose model IDs and counts are recorded.",
+      "steps": [
+        "Repeatedly open tabs, change theme/scale, scroll through virtualisation and restart."
+      ],
+      "expected": [
+        "No extra placeholder, canvas, empty block or event subscription is persisted by rendering.",
+        "Counts/IDs remain stable apart from explicit user edits.",
+        "One click still invokes one domain action."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-050",
+      "area": "Shared UI",
+      "title": "Consistent icons and control states",
+      "requirements": [
+        "UX27-SHARED-001",
+        "UX27-SHARED-002",
+        "UX27-SHARED-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Representative toolbar, tree, dialog and disabled/busy commands.",
+      "steps": [
+        "Inspect normal, hover, press, focus, selected, mixed, disabled and busy states at actual display sizes.",
+        "Activate with pointer and keyboard."
+      ],
+      "expected": [
+        "Icons render with correct bounds/weight and semantic names.",
+        "States are distinguishable; one valid activation commits once.",
+        "Unavailable actions expose reasons without impersonating working controls."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-051",
+      "area": "Shared UI",
+      "title": "Dark/light contrast without topology change",
+      "requirements": [
+        "UX27-SHARED-005",
+        "UX27-SHARED-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "Boards, Library and editor with selected content and open navigation.",
+      "steps": [
+        "Switch all supported theme/brightness combinations.",
+        "Inspect ordinary text, icons, selection and focus against computed surfaces."
+      ],
+      "expected": [
+        "Readable labels/title do not become dark-on-dark.",
+        "Layout, selection and content remain stable.",
+        "Record measured contrast where applicable; no blanket conformance claim from one screenshot."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-052",
+      "area": "Shared UI",
+      "title": "Reduced motion preserves the result",
+      "requirements": [
+        "UX27-SHARED-007",
+        "UX27-SHARED-008"
+      ],
+      "status": "NOT_RUN",
+      "given": "Menus, sidebars, tree expansion and drag reflow under ordinary motion.",
+      "steps": [
+        "Measure displayed transitions.",
+        "Enable reduced motion and repeat.",
+        "Trigger an operation that completes immediately."
+      ],
+      "expected": [
+        "Declared timing defaults apply where no owner-specific token overrides them.",
+        "Nonessential movement is removed/reduced without missing final state or focus.",
+        "No artificial minimum spinner delay or fake progress is introduced."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-053",
+      "area": "Shared UI",
+      "title": "Outside click Escape and navigation dismiss popups",
+      "requirements": [
+        "UX27-SHARED-009",
+        "UX27-HOST-007"
+      ],
+      "status": "NOT_RUN",
+      "given": "Open account, block, colour and nested menu variants.",
+      "steps": [
+        "Click outside; press Escape; switch tab/route; close the target.",
+        "Repeat with a child menu."
+      ],
+      "expected": [
+        "Correct overlay closes and focus returns sensibly.",
+        "Child handling does not prematurely close the parent when interacting inside it.",
+        "No account popup remains orphaned across unrelated routes."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-054",
+      "area": "Shared UI",
+      "title": "Popup near viewport edges",
+      "requirements": [
+        "UX27-SHARED-010"
+      ],
+      "status": "NOT_RUN",
+      "given": "Long menu near bottom/right of a small scaled window.",
+      "steps": [
+        "Open, keyboard-navigate and scroll the menu.",
+        "Resize while it is open."
+      ],
+      "expected": [
+        "Popup flips/constrains within the viewport, with controlled internal scrolling.",
+        "Focused items remain reachable and visible.",
+        "Page content does not unexpectedly consume menu scroll."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-055",
+      "area": "Shared UI",
+      "title": "Scaling touch targets and overflow",
+      "requirements": [
+        "UX27-SHARED-003",
+        "UX27-SHARED-018",
+        "UX27-SHARED-019"
+      ],
+      "status": "NOT_RUN",
+      "given": "Dense toolbar and nested tree at multiple scales and coarse-pointer mode.",
+      "steps": [
+        "Resize from wide to narrow and inspect icon hit areas.",
+        "Invoke overflow actions with keyboard/touch."
+      ],
+      "expected": [
+        "Commands move to planned overflow rather than wrapping uncontrolled rows or clipping.",
+        "Effective touch targets are usable.",
+        "Accessible labels and focus order remain coherent."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-056",
+      "area": "Shared UI",
+      "title": "Scoped error and truthful retry",
+      "requirements": [
+        "UX27-SHARED-014",
+        "UX27-SHARED-017"
+      ],
+      "status": "NOT_RUN",
+      "given": "A local editor with an optional unavailable provider.",
+      "steps": [
+        "Trigger the provider action, then continue local editing.",
+        "Retry with changed state."
+      ],
+      "expected": [
+        "Error identifies affected action/cause instead of repeating a global generic banner.",
+        "Unrelated local editing remains usable.",
+        "Retry revalidates state and cannot duplicate an uncertain external effect."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-057",
+      "area": "Shared UI",
+      "title": "Undo through menus and gesture previews",
+      "requirements": [
+        "UX27-SHARED-011",
+        "UX27-SHARED-013"
+      ],
+      "status": "NOT_RUN",
+      "given": "Document with selected text and selected object in separate runs.",
+      "steps": [
+        "Apply a menu formatting action; Undo.",
+        "Perform a long move with many previews; Undo."
+      ],
+      "expected": [
+        "Tool interaction retains intended target.",
+        "One conceptual change yields one logical undo, independent of preview/sample count.",
+        "Undo updates all views of canonical state."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-058",
+      "area": "Host",
+      "title": "Every advertised app has a real activation path",
+      "requirements": [
+        "UX27-HOST-001",
+        "UX27-SHARED-016"
+      ],
+      "status": "NOT_RUN",
+      "given": "Inventory of visible app entries with expected routed surface/build.",
+      "steps": [
+        "Launch each advertised in-scope app from Apps, direct route and standalone executable where specified.",
+        "Record source/build and instantiated owning surface."
+      ],
+      "expected": [
+        "No fake success or launch-only placeholder.",
+        "Actual activated source matches the built candidate.",
+        "A failing optional app is isolated and its missing dependency is actionable."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-059",
+      "area": "Host",
+      "title": "Home and New Tab retain distinct identity",
+      "requirements": [
+        "UX27-HOST-002",
+        "UX27-HOST-003"
+      ],
+      "status": "NOT_RUN",
+      "given": "Mixed native/web tab session with Home and New Tab.",
+      "steps": [
+        "Switch Apps/Dashboard/Models and New Tab views.",
+        "Create/select/close tabs and overflow a long tab row."
+      ],
+      "expected": [
+        "Correct view/selection is visible with readable selected-tab contrast.",
+        "Home/New Tab do not become duplicate nested shells.",
+        "Closing follows dirty-state protection and moves focus predictably."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-060",
+      "area": "Host",
+      "title": "Chromium viewport and scrolling",
+      "requirements": [
+        "UX27-HOST-004",
+        "UX27-HOST-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "A supported real browser engine and test page with known geometry/scroll markers.",
+      "steps": [
+        "Resize and change display scale.",
+        "Use mouse wheel and trackpad in both axes; zoom and navigate."
+      ],
+      "expected": [
+        "Page is sharp and proportioned with accurate hit targets.",
+        "Scroll direction and magnitude follow settings, with no double scaling.",
+        "No security/CAPTCHA bypass is used as an alleged rendering fix."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-061",
+      "area": "Host",
+      "title": "Missing engine does not disable native apps",
+      "requirements": [
+        "UX27-HOST-006",
+        "UX27-HOST-009"
+      ],
+      "status": "NOT_RUN",
+      "given": "Browser engine deliberately unavailable in a disposable installation.",
+      "steps": [
+        "Open a web page, then a local Board and Present document."
+      ],
+      "expected": [
+        "Web failure names the unavailable engine and supported repair route.",
+        "Native editors remain usable.",
+        "No fabricated web screenshot or mandatory account connection hides the missing engine."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-062",
+      "area": "Host",
+      "title": "Mixed session restore and failing target isolation",
+      "requirements": [
+        "UX27-HOST-008",
+        "UX27-DATAFLOW-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Saved session with a board, deck, website and one missing local file.",
+      "steps": [
+        "Restart the host.",
+        "Reopen valid tabs and inspect the failed target.",
+        "Verify pending action logs."
+      ],
+      "expected": [
+        "Valid tabs restore stable identity and state.",
+        "Missing file gets Locate/recovery rather than blocking the whole shell.",
+        "Prior AI/Automation actions are not replayed just because tabs restore."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-063",
+      "area": "Spaces",
+      "title": "Direct Space entry and retained draft",
+      "requirements": [
+        "UX27-SPACES-001",
+        "UX27-SPACES-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Two Spaces each with a draft and stored conversation.",
+      "steps": [
+        "Open one from the chosen rail/dropdown.",
+        "Switch Space, create a chat, then return and restart."
+      ],
+      "expected": [
+        "No unwanted management interstitial.",
+        "Both retained navigation structures and the correct scoped history remain.",
+        "Drafts and attachments belong to their original conversations."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-064",
+      "area": "Spaces",
+      "title": "Composer shelf state and browse versus activate",
+      "requirements": [
+        "UX27-SPACES-002",
+        "UX27-SPACES-003"
+      ],
+      "status": "NOT_RUN",
+      "given": "Idle, working-with-draft and stopped states.",
+      "steps": [
+        "Scroll/swipe the action shelf without pressing its action.",
+        "Activate one action; change runtime state during another press."
+      ],
+      "expected": [
+        "At most five contextual actions with peek/dots follow the state table.",
+        "Browsing sends nothing.",
+        "State drift cancels/revalidates instead of invoking the wrong consequential action."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-065",
+      "area": "Spaces",
+      "title": "Queue Stop and Resume are durable distinctions",
+      "requirements": [
+        "UX27-SPACES-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Active eligible run with a queued draft and permission-controlled action.",
+      "steps": [
+        "Queue once with a retried transport receipt.",
+        "Stop and inspect settlement.",
+        "Resume where supported."
+      ],
+      "expected": [
+        "One durable queued item, not duplicate work.",
+        "Stopping is distinct from settled Stop; previous effects are not falsely reversed.",
+        "Resume retains identity and cannot answer a permission hold."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-066",
+      "area": "Spaces",
+      "title": "Rich message rendering and read position",
+      "requirements": [
+        "UX27-SPACES-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "Streaming reply with Markdown, code, table and citations.",
+      "steps": [
+        "Scroll up while generation continues.",
+        "Copy code and invoke an applicable message action."
+      ],
+      "expected": [
+        "Streaming updates one message without hijacking deliberate scroll position.",
+        "Copy preserves code whitespace.",
+        "Actions target the selected message/revision and disabled states are truthful."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-067",
+      "area": "Spaces",
+      "title": "Summary and task filters use real state",
+      "requirements": [
+        "UX27-SPACES-007"
+      ],
+      "status": "NOT_RUN",
+      "given": "Task Space with current and other-Space tasks in several statuses.",
+      "steps": [
+        "Inspect Summary/Action Graph, default task filter and All Tasks.",
+        "Open a checkpoint then change filter."
+      ],
+      "expected": [
+        "The agreed surfaces and meaningful badges reflect actual canonical records.",
+        "Filter changes do not duplicate or complete tasks.",
+        "Checkpoint viewed state follows its actual contract."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-068",
+      "area": "Spaces",
+      "title": "Sidebar activation rechecks permissions",
+      "requirements": [
+        "UX27-SPACES-008"
+      ],
+      "status": "NOT_RUN",
+      "given": "Extension entries for URL, app, authored CUI and declared action.",
+      "steps": [
+        "Activate permitted targets.",
+        "Revoke/detach the extension while an entry is displayed, then activate it."
+      ],
+      "expected": [
+        "Typed owning routes/actions execute when authorised.",
+        "Stale/revoked contribution cannot execute through cached visibility.",
+        "Unrelated conversations remain intact and no string-execution fallback occurs."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-069",
+      "area": "Spaces",
+      "title": "Model group selection loads only on Send",
+      "requirements": [
+        "UX27-SPACES-009"
+      ],
+      "status": "NOT_RUN",
+      "given": "Group containing two compatible local members and a permission-restricted remote route.",
+      "steps": [
+        "Switch members repeatedly without sending.",
+        "Send with the selected member; inspect actual routing.",
+        "Change selection during the run."
+      ],
+      "expected": [
+        "Picker changes do not repeatedly load/unload models.",
+        "Send resolves current capability/permission and records actual member/backend.",
+        "Running request remains correctly pinned; no silent paid fallback."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-070",
+      "area": "Spaces",
+      "title": "Effort and allowance are not conflated",
+      "requirements": [
+        "UX27-SPACES-010",
+        "UX27-SPACES-011"
+      ],
+      "status": "NOT_RUN",
+      "given": "Three-/four-/five-tier model fixtures, a local model and a metered provider with unknown usage.",
+      "steps": [
+        "Change effort and compare displayed tiers.",
+        "Switch models; inspect usage source/timestamp and custom pin."
+      ],
+      "expected": [
+        "Mappings match the explicit effort table.",
+        "Local allowance meter is absent where inapplicable; unknown usage is not invented.",
+        "Units and custom/provider-reported limits remain distinct."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-071",
+      "area": "Spaces",
+      "title": "Specialised Spaces retain their own workflows",
+      "requirements": [
+        "UX27-SPACES-012",
+        "UX27-SPACES-013",
+        "UX27-SPACES-014"
+      ],
+      "status": "NOT_RUN",
+      "given": "Research, Shopping, Study, Assistants and Voice fixtures with authorised providers.",
+      "steps": [
+        "Exercise one real plan/report, constrained result group, practice response, Assistant Main chat and Voice permission transition."
+      ],
+      "expected": [
+        "Specialised canonical state exists beyond a changed system prompt.",
+        "Outputs, progress and team visibility follow their domain rules.",
+        "Recording/vision availability and consent are truthful."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-072",
+      "area": "Automations",
+      "title": "Draft versus active graph and UI views",
+      "requirements": [
+        "UX27-AUTO-001",
+        "UX27-AUTO-002"
+      ],
+      "status": "NOT_RUN",
+      "given": "One active workflow and a modified draft.",
+      "steps": [
+        "Edit via simple and graph modes.",
+        "Change a node/edge, undo and validate.",
+        "Inspect which revision a trigger uses."
+      ],
+      "expected": [
+        "Both editors share one graph definition.",
+        "Invalid connections have useful feedback.",
+        "Draft edits do not silently replace the active executable revision."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-073",
+      "area": "Automations",
+      "title": "Durable Wait across process restart",
+      "requirements": [
+        "UX27-AUTO-003",
+        "UX27-AUTO-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Real SQLite store and a workflow with a committed side effect followed by Wait.",
+      "steps": [
+        "Run to Wait; stop owned test process.",
+        "Reopen, resume and complete the same RunID.",
+        "Retry a terminal receipt."
+      ],
+      "expected": [
+        "Continuation resumes at the saved boundary without rerunning the committed effect.",
+        "Suspend/complete does not collide on identity.",
+        "Actual node outputs and Run history persist."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-074",
+      "area": "Automations",
+      "title": "Approval is not inferred from due time",
+      "requirements": [
+        "UX27-AUTO-004",
+        "UX27-AUTO-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "Due run waiting for a required permission/approval.",
+      "steps": [
+        "Execute scheduler sweep and retry the run without approval.",
+        "Then provide approval through the authorised test path."
+      ],
+      "expected": [
+        "No unapproved side effect occurs.",
+        "Held state remains visible until real approval.",
+        "One eligible continuation proceeds; retries remain idempotent/reconciled."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-075",
+      "area": "Automations",
+      "title": "Timezone recurrence and missed admission",
+      "requirements": [
+        "UX27-AUTO-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Scheduled workflow spanning a clock-change boundary with declared catch-up policy.",
+      "steps": [
+        "Inspect next occurrences.",
+        "Disable future admission, restart scheduler and later re-enable."
+      ],
+      "expected": [
+        "Timezone/ambiguity is visible and admission follows the configured policy.",
+        "No duplicate timer/trigger on reopening UI.",
+        "Disabling future work does not falsely undo completed or running effects."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-076",
+      "area": "Build",
+      "title": "One canonical project across editing surfaces",
+      "requirements": [
+        "UX27-BUILD-001",
+        "UX27-BUILD-002",
+        "UX27-BUILD-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Existing code/CUI/site project with language diagnostics.",
+      "steps": [
+        "Edit source, visual properties and hierarchy.",
+        "Navigate diagnostics and undo a refactor."
+      ],
+      "expected": [
+        "Visual/code views update one source model.",
+        "Diagnostics point to the correct revision/range.",
+        "Generated ordinary UI remains canonical CUI, with no shadow project."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-077",
+      "area": "Build",
+      "title": "Failed build cannot present a stale success",
+      "requirements": [
+        "UX27-BUILD-003"
+      ],
+      "status": "NOT_RUN",
+      "given": "Known runnable project followed by an intentional compile failure.",
+      "steps": [
+        "Run, then introduce the failure and Run again.",
+        "Inspect preview, exit code, diagnostics and Stop."
+      ],
+      "expected": [
+        "Failed build is reported.",
+        "Any retained old preview is explicitly stale, not the new successful candidate.",
+        "Stop affects the owned process only; debug/test adapters remain genuine."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-078",
+      "area": "Build",
+      "title": "Conflicts and publishing have distinct boundaries",
+      "requirements": [
+        "UX27-BUILD-005",
+        "UX27-BUILD-006",
+        "UX27-BUILD-007"
+      ],
+      "status": "NOT_RUN",
+      "given": "Disposable branch conflict and site staging deployment.",
+      "steps": [
+        "Inspect base/local/incoming changes.",
+        "Exercise the authorised review choice; preview site and then publish explicitly."
+      ],
+      "expected": [
+        "Review/merge/push/deployment statuses are distinct.",
+        "No destructive default or publish-on-preview.",
+        "Agent-authored repairs receive appropriate separate review."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-079",
+      "area": "Write",
+      "title": "Real document caret and multi-page editing",
+      "requirements": [
+        "UX27-WRITE-001",
+        "UX27-WRITE-003"
+      ],
+      "status": "NOT_RUN",
+      "given": "Real multi-page mixed-format Writer-backed document.",
+      "steps": [
+        "Click/select/type across page boundaries.",
+        "Apply a style and undo.",
+        "Save and reopen."
+      ],
+      "expected": [
+        "Caret/selection belong to the rendered document engine, not an unrelated text field.",
+        "Pagination/styles reflect the actual model.",
+        "Reopened document retains content and formatting."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-080",
+      "area": "Write",
+      "title": "Contextual commands and inspector remain synchronised",
+      "requirements": [
+        "UX27-WRITE-002",
+        "UX27-WRITE-004",
+        "UX27-WRITE-005",
+        "UX27-WRITE-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "Document with headings, image, table and tracked/review content where supported.",
+      "steps": [
+        "Navigate outline; format text/table/image from toolbar and inspector.",
+        "Inspect undo and document theme isolation."
+      ],
+      "expected": [
+        "Daily commands are usable without a permanent ribbon or inspector command dump.",
+        "Outline selects actual content.",
+        "All controls reflect one engine state and app theme does not rewrite authored styling."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-081",
+      "area": "Write",
+      "title": "Import export and recovery are real",
+      "requirements": [
+        "UX27-WRITE-007",
+        "UX27-DATAFLOW-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Supported external format with tables/media and a simulated interrupted save.",
+      "steps": [
+        "Import, edit and export through supported format.",
+        "Open exported artifact independently.",
+        "Recover interrupted editing."
+      ],
+      "expected": [
+        "Round-trip checks actual output, with disclosed unsupported features instead of fake parity.",
+        "Recovery preserves edits.",
+        "Export is not labelled complete before artifact validation."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-082",
+      "area": "Present",
+      "title": "Host route renders the intended editor",
+      "requirements": [
+        "UX27-PRESENT-001",
+        "UX27-PRESENT-002"
+      ],
+      "status": "NOT_RUN",
+      "given": "Normal integrated host and standalone candidate from the same source.",
+      "steps": [
+        "Open 9to1://present through actual host navigation.",
+        "Inspect runtime surface identity and header/menu/toolbar composition."
+      ],
+      "expected": [
+        "The routed editor—not an unused standalone scene—shows the intended CUI chrome.",
+        "Menus are above exactly one persistent main editing toolbar.",
+        "A direct component-constructor badge assertion alone cannot pass."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-083",
+      "area": "Present",
+      "title": "Slide list and notes retain content",
+      "requirements": [
+        "UX27-PRESENT-003"
+      ],
+      "status": "NOT_RUN",
+      "given": "Deck with several slides and distinct notes, including one empty note.",
+      "steps": [
+        "Select/reorder/duplicate slides and edit notes.",
+        "Resize navigator/notes panels; save/reopen."
+      ],
+      "expected": [
+        "Slide/Notes IDs and text remain correctly paired.",
+        "Empty placeholder appears only for empty notes.",
+        "Canvas remains aspect-correct and dominant with accurate thumbnails."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-084",
+      "area": "Present",
+      "title": "Text editing versus object transforms",
+      "requirements": [
+        "UX27-PRESENT-004",
+        "UX27-PRESENT-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Slide with overlapping text boxes, a shape and image.",
+      "steps": [
+        "Select object, enter text editing and drag to select text.",
+        "Exit editing; move/resize/rotate object at varied zoom.",
+        "Escape a gesture and undo a completed one."
+      ],
+      "expected": [
+        "Text selection never drags the parent inadvertently.",
+        "Handles/cursors remain aligned and previews update during gestures.",
+        "Cancel/undo restore correct geometry and content."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-085",
+      "area": "Present",
+      "title": "Real insertion gallery and shared formatting",
+      "requirements": [
+        "UX27-PRESENT-006",
+        "UX27-PRESENT-007"
+      ],
+      "status": "NOT_RUN",
+      "given": "Editable slide with a selected object.",
+      "steps": [
+        "Open Shapes without choosing one; then select/draw a shape.",
+        "Cancel another insertion.",
+        "Format from toolbar/inspector/context menu."
+      ],
+      "expected": [
+        "Opening the gallery inserts nothing.",
+        "Confirmed action creates the chosen real object once.",
+        "All formatting surfaces share state and preserve selection."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-086",
+      "area": "Present",
+      "title": "Playback and save/reopen",
+      "requirements": [
+        "UX27-PRESENT-008"
+      ],
+      "status": "NOT_RUN",
+      "given": "Deck with notes/media and a second display where available.",
+      "steps": [
+        "Start presentation/presenter mode.",
+        "Exit, edit, save and reopen.",
+        "Test unavailable display/media conditions."
+      ],
+      "expected": [
+        "Playback is the actual deck and does not overwrite authoring state.",
+        "Notes privacy follows the canonical presenter/export rules.",
+        "Unsupported platform/display coverage is recorded, not fabricated."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-087",
+      "area": "Canvas",
+      "title": "Purposeful spatial input and exported content",
+      "requirements": [
+        "UX27-CANVAS-001",
+        "UX27-CANVAS-002",
+        "UX27-CANVAS-003",
+        "UX27-CANVAS-004",
+        "UX27-CANVAS-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Intentional Canvas artifact with layers, shapes and brush content.",
+      "steps": [
+        "Pan/zoom; select/move/reorder layers; draw/erase and undo.",
+        "Save/reopen and inspect export."
+      ],
+      "expected": [
+        "Spatial coordinates and input remain stable.",
+        "Real layers/brush data persist rather than a screenshot only.",
+        "Export contains the full intended region, not only materialised viewport content."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-088",
+      "area": "Data",
+      "title": "Cell modes formulas and canonical views",
+      "requirements": [
+        "UX27-DATA-001",
+        "UX27-DATA-002",
+        "UX27-DATA-003",
+        "UX27-DATA-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Data artifact with formulas, filtered views and many rows; linked view in Boards.",
+      "steps": [
+        "Edit a cell in navigation/text modes; recalculate.",
+        "Change sort/filter and inspect linked view.",
+        "Export/import including off-screen rows."
+      ],
+      "expected": [
+        "Caret/navigation semantics are distinct; formulas refer to intended identities.",
+        "Views share one canonical dataset and do not silently mutate source order where inappropriate.",
+        "Full data survives virtualisation and round-trip."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-089",
+      "area": "Files",
+      "title": "Ordinary file handling without domain takeover",
+      "requirements": [
+        "UX27-FILES-001",
+        "UX27-FILES-002",
+        "UX27-FILES-003",
+        "UX27-FILES-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Mixed files including .9to1board, with one remote-only unavailable item.",
+      "steps": [
+        "Navigate/select, copy/move through a collision, Open with Boards and inspect sync state."
+      ],
+      "expected": [
+        "File operations have explicit conflict/undo/progress semantics.",
+        "Boards handles its document; Files does not become a mandatory connected account.",
+        "Local save and remote availability/sync are separately truthful."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-090",
+      "area": "Other apps",
+      "title": "Planner moves actual events and tasks",
+      "requirements": [
+        "UX27-OTHER-001",
+        "UX27-OTHER-002"
+      ],
+      "status": "NOT_RUN",
+      "given": "Calendar/tasks with timezones, recurrences and reminders.",
+      "steps": [
+        "Drag an event, resize its duration and inspect edit scope for recurrence.",
+        "Complete a task and test reminder scheduling."
+      ],
+      "expected": [
+        "Visible changes target the correct canonical event/task.",
+        "Recurrence and timezone decisions are explicit; reminder timing is real.",
+        "Undo and restart preserve state without duplicate alarms."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-091",
+      "area": "Other apps",
+      "title": "Mail reply send and attachment state",
+      "requirements": [
+        "UX27-OTHER-003",
+        "UX27-OTHER-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Authorised disposable mail account/test recipient and draft with attachment.",
+      "steps": [
+        "Open a thread, reply, edit recipient, attach a file and send through explicit action.",
+        "Inspect ambiguous/failing transport in a test run."
+      ],
+      "expected": [
+        "Thread/recipient identity is correct; draft survives navigation.",
+        "Attachment readiness and send receipt are truthful.",
+        "Uncertain submission reconciles rather than sending a duplicate message."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-092",
+      "area": "Other apps",
+      "title": "Forms published revision and responses",
+      "requirements": [
+        "UX27-OTHER-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Draft and published form with validation/branching.",
+      "steps": [
+        "Change draft field; preview and submit valid/invalid test responses.",
+        "Publish explicitly and export response data."
+      ],
+      "expected": [
+        "Preview and published form use identified revisions.",
+        "Branching/validation work and responses retain schema identity.",
+        "Editing a draft does not silently change a live form or discard previous answers."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-093",
+      "area": "Other apps",
+      "title": "Cards state and learning evidence",
+      "requirements": [
+        "UX27-OTHER-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "Card deck with authored content and recorded practice history.",
+      "steps": [
+        "Edit cards, practice recall and choose an actual result.",
+        "Filter/sort and reopen."
+      ],
+      "expected": [
+        "Authored card data and review scheduling/state are distinct.",
+        "Merely displaying a card is not recorded as mastery.",
+        "Undo/recovery preserve actual history and canonical identity."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-094",
+      "area": "Other apps",
+      "title": "Picture layers and pixel geometry",
+      "requirements": [
+        "UX27-OTHER-007"
+      ],
+      "status": "NOT_RUN",
+      "given": "Layered image with masks and nontrivial zoom.",
+      "steps": [
+        "Select/transform a layer, brush a mask, undo and export."
+      ],
+      "expected": [
+        "Pointer/image coordinates and layer targeting are correct.",
+        "Original/edited state remains recoverable.",
+        "Export is actual composed image data, not a UI screenshot."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-095",
+      "area": "Other apps",
+      "title": "Wave and Motion timeline editing",
+      "requirements": [
+        "UX27-OTHER-008",
+        "UX27-OTHER-009"
+      ],
+      "status": "NOT_RUN",
+      "given": "Audio/video projects with multiple tracks and source assets.",
+      "steps": [
+        "Scrub/play, trim/move clips, adjust supported automation and undo.",
+        "Reopen and render/export a range."
+      ],
+      "expected": [
+        "Transport, timeline, waveform/frame and audio remain aligned.",
+        "Nondestructive edits preserve source assets.",
+        "Export processes the actual selected range and reports missing media honestly."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-096",
+      "area": "Other apps",
+      "title": "Maps and Shelf use real objects",
+      "requirements": [
+        "UX27-OTHER-010",
+        "UX27-OTHER-011"
+      ],
+      "status": "NOT_RUN",
+      "given": "Map context with a selected location and Shelf with saved artifacts.",
+      "steps": [
+        "Pan/zoom/search/select; inspect route/source freshness.",
+        "Save, organise and open a Shelf item."
+      ],
+      "expected": [
+        "Selection stays attached to the intended real object.",
+        "Data/source limitations are visible; a decorative map is not a route result.",
+        "Shelf items open canonical artifacts rather than copies with diverging identity."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-097",
+      "area": "Other apps",
+      "title": "Terminal and remote input ownership",
+      "requirements": [
+        "UX27-OTHER-012",
+        "UX27-OTHER-017"
+      ],
+      "status": "NOT_RUN",
+      "given": "Authorised disposable terminal and remote/session surface.",
+      "steps": [
+        "Inspect target identity; execute a harmless bounded command.",
+        "Disconnect/reconnect and inspect pending input/results."
+      ],
+      "expected": [
+        "Input goes to the shown session under its permission boundary.",
+        "Reconnect does not silently create another machine or replay consequential commands.",
+        "Viewer close and remote shutdown remain distinct."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-098",
+      "area": "Other apps",
+      "title": "AI Studio and Connect permission boundaries",
+      "requirements": [
+        "UX27-OTHER-013",
+        "UX27-OTHER-014"
+      ],
+      "status": "NOT_RUN",
+      "given": "Draft agent/tool definition and a connector with limited granted scopes.",
+      "steps": [
+        "Edit graph/form views; test the definition.",
+        "Inspect connection health; deny or revoke a requested scope."
+      ],
+      "expected": [
+        "Views share a typed versioned definition and real test identity.",
+        "Testing does not equal publishing.",
+        "No permission bypass, invented healthy status or leaked secret in exports/logs."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-099",
+      "area": "Other apps",
+      "title": "Games Play and organisation artifacts",
+      "requirements": [
+        "UX27-OTHER-015",
+        "UX27-OTHER-016",
+        "UX27-OTHER-018"
+      ],
+      "status": "NOT_RUN",
+      "given": "Safe creation project, turn-based test match and referenced Binder/Link/Files Sheet.",
+      "steps": [
+        "Edit a scene then run test mode.",
+        "Perform a legal match action and replay.",
+        "Move an organisation card and open its source."
+      ],
+      "expected": [
+        "Runtime scene state does not silently overwrite authoring.",
+        "Match rules/visibility and recorded actions remain real.",
+        "Organisation move does not duplicate or relocate a referenced source artifact unintentionally."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-100",
+      "area": "Integration",
+      "title": "Large board keeps every block and stroke",
+      "requirements": [
+        "UX27-SHARED-020",
+        "UX27-ACCEPT-005"
+      ],
+      "status": "NOT_RUN",
+      "given": "Declared large board fixture with known counts, IDs and content hashes.",
+      "steps": [
+        "Edit early/late blocks, drag to a distant target and draw near the viewport.",
+        "Search unloaded content, save/reopen and export all."
+      ],
+      "expected": [
+        "Input remains responsive within measured hardware-specific budgets.",
+        "All blocks/strokes are retained regardless of virtualisation.",
+        "Full output hash/count comparison catches silent omissions; no arbitrary limit is invented."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-101",
+      "area": "Integration",
+      "title": "Independent review of actual main build",
+      "requirements": [
+        "UX27-MAIN-001",
+        "UX27-MAIN-002",
+        "UX27-MAIN-003",
+        "UX27-ACCEPT-001",
+        "UX27-ACCEPT-002",
+        "UX27-ACCEPT-004"
+      ],
+      "status": "NOT_RUN",
+      "given": "Reconciled candidate with all original branch work accounted for and a separate reviewer available.",
+      "steps": [
+        "Inspect integration inventory and source/artifact identities.",
+        "Launch using Jacob's documented normal entry point.",
+        "Independently run representative repaired journeys and record all seven gates."
+      ],
+      "expected": [
+        "No unmerged/dirty work was deleted to achieve one branch.",
+        "Launched build corresponds to the recorded main candidate.",
+        "Consolidation alone is not acceptance; missing runtime/platform/independence gates stay unpassed."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    },
+    {
+      "id": "UX27-TEST-102",
+      "area": "Integration",
+      "title": "Full manifest and honest unavailable coverage",
+      "requirements": [
+        "UX27-AUTH-003",
+        "UX27-AUTH-006",
+        "UX27-COVERAGE-001",
+        "UX27-COVERAGE-002",
+        "UX27-COVERAGE-004",
+        "UX27-ACCEPT-003",
+        "UX27-ACCEPT-006"
+      ],
+      "status": "NOT_RUN",
+      "given": "Baseline, expansion and selected donor/reference versions available to a reviewer.",
+      "steps": [
+        "Map every applicable requirement to app/entry point/engine/storage/evidence.",
+        "Compare the scenario catalogue to that manifest.",
+        "Record absent devices, images, platforms and tests explicitly."
+      ],
+      "expected": [
+        "Catalogue is a floor, not a scope reduction.",
+        "Draft defaults are not represented as measured historic screenshot details.",
+        "Every claim has source/runtime provenance, and NOT RUN is not relabelled PASS."
+      ],
+      "evidence_required": [
+        "Exact source/build/artifact and platform identities",
+        "Real routed input/interaction trace or recording where applicable",
+        "Canonical state and saved artifact assertions where applicable",
+        "Actual result and complete relevant failure output; author/reviewer separation"
+      ]
+    }
+  ]
+}

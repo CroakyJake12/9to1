@@ -1,0 +1,167 @@
+{
+  "file": "9to1_Development_Specification_v2_Expanded_2026-10-27.md",
+  "sha256": "8dfe5908b6a92cfbe6ee42e01c4b4902fb7c657aaa33d9662219568994b1cb9e",
+  "description": "UTF-8 byte offsets and 1-based line hints for generated insertion regions. Original baseline line mapping is in section-insertion-map.json. Read relevant ranges rather than repeatedly ingesting the entire baseline.",
+  "regions": [
+    {
+      "region": "EDITION-HEADER",
+      "start_byte": 3,
+      "end_byte_exclusive": 741,
+      "start_line": 1,
+      "end_line": 9,
+      "sha256": "2a9fa3daee1c36811ae2ce2b362e3e6aab0face0e99f6db36cb038257fd01e28"
+    },
+    {
+      "region": "SECTION-00",
+      "start_byte": 741,
+      "end_byte_exclusive": 7058,
+      "start_line": 9,
+      "end_line": 47,
+      "sha256": "e8bea9c42c43a556532b54cd84f40d2ebc6450b41f5e65babfb8bfbdc77bffb9"
+    },
+    {
+      "region": "SECTION-01",
+      "start_byte": 143185,
+      "end_byte_exclusive": 160702,
+      "start_line": 1166,
+      "end_line": 1290,
+      "sha256": "3149c4c2e5da3d6a8b4d013dd278e9ccb74a8236c6800f64fca204cb29f8a283"
+    },
+    {
+      "region": "SECTION-04",
+      "start_byte": 267013,
+      "end_byte_exclusive": 274222,
+      "start_line": 2086,
+      "end_line": 2144,
+      "sha256": "c6ea7e12d7f08a53874ba6ce77569388108b04579eae88b12a32ded78fbbff4c"
+    },
+    {
+      "region": "SECTION-12",
+      "start_byte": 350579,
+      "end_byte_exclusive": 353434,
+      "start_line": 2756,
+      "end_line": 2784,
+      "sha256": "e69463019202288c2e1c6959622db8deac914e8fb6f3a73e1fbc3784391bd0f8"
+    },
+    {
+      "region": "SECTION-05",
+      "start_byte": 456665,
+      "end_byte_exclusive": 469214,
+      "start_line": 3687,
+      "end_line": 3785,
+      "sha256": "030354071071580cddb929763050f52f0e6a537fd3914df5cd7460606cc794ac"
+    },
+    {
+      "region": "SECTION-03",
+      "start_byte": 577203,
+      "end_byte_exclusive": 581992,
+      "start_line": 5254,
+      "end_line": 5294,
+      "sha256": "e2ccd05b07214b650e4c8ebb2e8f20594dae138dfc2a14fd491b3d53c65b5ecf"
+    },
+    {
+      "region": "SECTION-08",
+      "start_byte": 582011,
+      "end_byte_exclusive": 587351,
+      "start_line": 5295,
+      "end_line": 5341,
+      "sha256": "df13ad9bbed3017c02ea6b8cebd35335f0d2d38c6f7eb419fb2e99cde13c2284"
+    },
+    {
+      "region": "SECTION-09",
+      "start_byte": 640107,
+      "end_byte_exclusive": 646152,
+      "start_line": 5755,
+      "end_line": 5807,
+      "sha256": "a3467657420ac0e660659ed2fee2e251ec9e66bd1b4c82d287005fad5f4b8ab6"
+    },
+    {
+      "region": "SECTION-10",
+      "start_byte": 679677,
+      "end_byte_exclusive": 683283,
+      "start_line": 6156,
+      "end_line": 6190,
+      "sha256": "dcb4a5bf40d8dac6b1abc6043aff073a3fe21757c8102e17f805cde9882e8e30"
+    },
+    {
+      "region": "SECTION-02",
+      "start_byte": 721854,
+      "end_byte_exclusive": 763764,
+      "start_line": 6553,
+      "end_line": 6851,
+      "sha256": "ee52ce99563b807eb93d27b6bee641656605e09189864ed645780d3e81b8f843"
+    },
+    {
+      "region": "SECTION-06",
+      "start_byte": 828137,
+      "end_byte_exclusive": 832593,
+      "start_line": 7426,
+      "end_line": 7466,
+      "sha256": "3b118dc58942c8fcfe8b502d3fb952d4b5792152caf3670e350def84add702ec"
+    },
+    {
+      "region": "SECTION-11",
+      "start_byte": 941560,
+      "end_byte_exclusive": 944519,
+      "start_line": 8210,
+      "end_line": 8238,
+      "sha256": "4465ad8a712971f8a9aec200da65416f09054d75addd85d43e80ed54a0151c86"
+    },
+    {
+      "region": "SECTION-07",
+      "start_byte": 1027615,
+      "end_byte_exclusive": 1032965,
+      "start_line": 8726,
+      "end_line": 8772,
+      "sha256": "33c334dea3f524a08f6959e09ea66a499d38effa0027c4b1514ede1def530c47"
+    },
+    {
+      "region": "SECTION-13",
+      "start_byte": 1676541,
+      "end_byte_exclusive": 1690535,
+      "start_line": 13397,
+      "end_line": 13511,
+      "sha256": "67b2da331d4c284adb26373ea26ad9aba19865f5b76816ff8f6119a49c2da61d"
+    },
+    {
+      "region": "SECTION-14",
+      "start_byte": 1690535,
+      "end_byte_exclusive": 1696000,
+      "start_line": 13511,
+      "end_line": 13551,
+      "sha256": "e0f0f7874909e17230163d345aee298694143e0d2b6a516e5cb74af13c33e0a1"
+    },
+    {
+      "region": "SECTION-15",
+      "start_byte": 1696000,
+      "end_byte_exclusive": 1699807,
+      "start_line": 13551,
+      "end_line": 13581,
+      "sha256": "92a68ddfee75ca33e7e9e543016f1d81e5a3efdfe92b49b5898a4eef872861a0"
+    },
+    {
+      "region": "SECTION-16",
+      "start_byte": 1699807,
+      "end_byte_exclusive": 1703979,
+      "start_line": 13581,
+      "end_line": 13608,
+      "sha256": "c1b528ca95d961fb954128e3d1f742a0871deb948d7e1d1e288bc6d8ad5acd3b"
+    },
+    {
+      "region": "SECTION-17",
+      "start_byte": 1703979,
+      "end_byte_exclusive": 1706602,
+      "start_line": 13608,
+      "end_line": 13630,
+      "sha256": "d5f7c88f6b521b1154be48fa7282456e4a5170f4e552e748f432756fe7198c4b"
+    },
+    {
+      "region": "ACCEPTANCE-CATALOGUE",
+      "start_byte": 1706602,
+      "end_byte_exclusive": 1763457,
+      "start_line": 13630,
+      "end_line": 15236,
+      "sha256": "5a66f44fa3e71feba4e4e9a6c40edcf6815bb89e8404f799bdc0cd96ccea08e5"
+    }
+  ]
+}

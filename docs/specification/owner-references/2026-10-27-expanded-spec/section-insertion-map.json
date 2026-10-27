@@ -1,0 +1,110 @@
+[
+  {
+    "section": 0,
+    "title": "Authority, provenance and how to use this edition",
+    "original_line_before": 1,
+    "original_heading": "9to1 V2 — CUI, THEMING AND REAL-PRODUCT CONFORMANCE CORRECTION"
+  },
+  {
+    "section": 1,
+    "title": "Shared visual, input and state contracts",
+    "original_line_before": 1120,
+    "original_heading": "CakeUI (CUI)"
+  },
+  {
+    "section": 2,
+    "title": "Boards — exact shell, navigation and local-first file behaviour",
+    "original_line_before": 6027,
+    "original_heading": "Boards"
+  },
+  {
+    "section": 3,
+    "title": "Shared persistence, interoperability and local service boundaries",
+    "original_line_before": 4900,
+    "original_heading": "Productivity Apps"
+  },
+  {
+    "section": 4,
+    "title": "Haven/9to1 host, browser engines and application launching",
+    "original_line_before": 1916,
+    "original_heading": "Home"
+  },
+  {
+    "section": 5,
+    "title": "Spaces, composer, models and agent visibility",
+    "original_line_before": 3431,
+    "original_heading": "Spaces"
+  },
+  {
+    "section": 6,
+    "title": "Automations and shared node editing",
+    "original_line_before": 6602,
+    "original_heading": "Automations"
+  },
+  {
+    "section": 7,
+    "title": "Build/Dev, Sites and Stacks — explicit developer workflows",
+    "original_line_before": 7834,
+    "original_heading": "Developer Apps"
+  },
+  {
+    "section": 8,
+    "title": "Write — mature document editing through the actual engine",
+    "original_line_before": 4901,
+    "original_heading": "Write"
+  },
+  {
+    "section": 9,
+    "title": "Present — routed editor, direct manipulation and playback",
+    "original_line_before": 5315,
+    "original_heading": "Present"
+  },
+  {
+    "section": 10,
+    "title": "Canvas — deliberate spatial editing, not an accidental embedded panel",
+    "original_line_before": 5664,
+    "original_heading": "Canvas"
+  },
+  {
+    "section": 11,
+    "title": "Data — tables, formulas, views and real state",
+    "original_line_before": 7346,
+    "original_heading": "Data"
+  },
+  {
+    "section": 12,
+    "title": "Files — optional integration, mature file-manager behaviour",
+    "original_line_before": 2528,
+    "original_heading": "Files"
+  },
+  {
+    "section": 13,
+    "title": "Remaining V2 products — concrete interaction expansion without scope deletion",
+    "original_line_before": null,
+    "position": "After complete preserved baseline"
+  },
+  {
+    "section": 14,
+    "title": "Acceptance protocol and executable scenario catalogue",
+    "original_line_before": null,
+    "position": "After complete preserved baseline"
+  },
+  {
+    "section": 15,
+    "title": "Coverage, migration and explicit remaining source gaps",
+    "original_line_before": null,
+    "position": "After complete preserved baseline"
+  },
+  {
+    "section": 16,
+    "title": "Sources and provenance register",
+    "original_line_before": null,
+    "position": "After complete preserved baseline"
+  },
+  {
+    "section": 17,
+    "title": "Development-source convergence and real-build identity",
+    "original_line_before": null,
+    "position": "After complete preserved baseline"
+  }
+]

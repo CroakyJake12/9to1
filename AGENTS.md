@@ -1,3 +1,28 @@
+## Expanded behaviour specification — 27 October 2026, latest owner direction
+
+The owner supplied the expanded v2 package in `docs/specification/owner-references/2026-10-27-expanded-spec/`
+(176 `UX27-` requirement IDs, 102 NOT RUN scenarios, evidence frames and a read-only Google Doc baseline).
+Read [PROVENANCE.json](docs/specification/owner-references/2026-10-27-expanded-spec/PROVENANCE.json),
+[adoption-notes.md](docs/specification/owner-references/2026-10-27-expanded-spec/adoption-notes.md) and the
+applicable `UX27-` sections before changing a surface. The canonical v2 attachment and its `e1779d22…` pin
+remain the product authority; this package elaborates owner intent and is the current correction queue.
+Headline correction: Boards must create/save without connecting Files, an account or a dedicated Boards
+folder, keep local drafts recoverable, and offer an optional editable `.9to1board` Save As. Requirement IDs
+stay NOT RUN until observed in the running development copy; text-only evidence is not visual review. Full
+independent acceptance remains paused.
+
+## Guarded native memory bounds — owner override, 27 October 2026
+
+The owner directs "just bypass the memory guard" because this OpenCode session **is** the local Strata
+model server (observed ~45 GiB resident, `--resident-budget-gib 41`) and must never be stopped. The retained
+`guarded_root_live_sdk03.py`/`prepare_root_live_plan03.py` stay byte-unchanged with their refusal evidence.
+The labelled successor pair `guarded_root_live_sdk04.py`/`prepare_root_live_plan04.py` lowers only
+`RSS_LIMIT` 8→4 GiB and `MEMORY_HEADROOM` 4→1 GiB, records the override in the allocation and ledger, and
+keeps every other guard: exact command/stage map, serial SDK and source-writer locks, concurrent-SDK
+refusal, disk reserve plus copy budget, per-stage timeouts, GC child environment, exact source/export
+custody, CAS re-check before each spawn and a continuous admission floor. Never promote a relaxed-memory
+result into accepted or reusable evidence.
+
 ## Local OpenCode PC takeover — 26 October 2026, latest owner direction
 
 The owner selects **OpenCode on pc** to move development/builds locally and support

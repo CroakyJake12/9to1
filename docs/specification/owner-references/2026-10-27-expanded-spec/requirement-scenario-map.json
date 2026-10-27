@@ -1,0 +1,539 @@
+{
+  "description": "Traceability only, not canonical programme status. Empty lists include source/governance clauses and require manual or additional review.",
+  "mapping": {
+    "UX27-AUTH-001": [],
+    "UX27-AUTH-002": [],
+    "UX27-AUTH-003": [
+      "UX27-TEST-102"
+    ],
+    "UX27-AUTH-004": [],
+    "UX27-AUTH-005": [],
+    "UX27-AUTH-006": [
+      "UX27-TEST-102"
+    ],
+    "UX27-SHARED-001": [
+      "UX27-TEST-050"
+    ],
+    "UX27-SHARED-002": [
+      "UX27-TEST-050"
+    ],
+    "UX27-SHARED-003": [
+      "UX27-TEST-055"
+    ],
+    "UX27-SHARED-004": [
+      "UX27-TEST-050"
+    ],
+    "UX27-SHARED-005": [
+      "UX27-TEST-011",
+      "UX27-TEST-051"
+    ],
+    "UX27-SHARED-006": [
+      "UX27-TEST-051"
+    ],
+    "UX27-SHARED-007": [
+      "UX27-TEST-052"
+    ],
+    "UX27-SHARED-008": [
+      "UX27-TEST-052"
+    ],
+    "UX27-SHARED-009": [
+      "UX27-TEST-053"
+    ],
+    "UX27-SHARED-010": [
+      "UX27-TEST-054"
+    ],
+    "UX27-SHARED-011": [
+      "UX27-TEST-031",
+      "UX27-TEST-057"
+    ],
+    "UX27-SHARED-012": [
+      "UX27-TEST-040"
+    ],
+    "UX27-SHARED-013": [
+      "UX27-TEST-026",
+      "UX27-TEST-057"
+    ],
+    "UX27-SHARED-014": [
+      "UX27-TEST-056"
+    ],
+    "UX27-SHARED-015": [
+      "UX27-TEST-007"
+    ],
+    "UX27-SHARED-016": [
+      "UX27-TEST-058"
+    ],
+    "UX27-SHARED-017": [
+      "UX27-TEST-010",
+      "UX27-TEST-056"
+    ],
+    "UX27-SHARED-018": [
+      "UX27-TEST-041",
+      "UX27-TEST-055"
+    ],
+    "UX27-SHARED-019": [
+      "UX27-TEST-055"
+    ],
+    "UX27-SHARED-020": [
+      "UX27-TEST-028",
+      "UX27-TEST-048",
+      "UX27-TEST-100"
+    ],
+    "UX27-BOARD-001": [
+      "UX27-TEST-011"
+    ],
+    "UX27-BOARD-002": [
+      "UX27-TEST-011"
+    ],
+    "UX27-BOARD-003": [
+      "UX27-TEST-001"
+    ],
+    "UX27-BOARD-004": [
+      "UX27-TEST-002"
+    ],
+    "UX27-BOARD-005": [
+      "UX27-TEST-002",
+      "UX27-TEST-003"
+    ],
+    "UX27-BOARD-006": [
+      "UX27-TEST-003",
+      "UX27-TEST-009"
+    ],
+    "UX27-BOARD-007": [
+      "UX27-TEST-004",
+      "UX27-TEST-005"
+    ],
+    "UX27-BOARD-008": [
+      "UX27-TEST-006",
+      "UX27-TEST-007",
+      "UX27-TEST-008"
+    ],
+    "UX27-BOARD-009": [
+      "UX27-TEST-004"
+    ],
+    "UX27-BOARD-010": [
+      "UX27-TEST-010"
+    ],
+    "UX27-BOARD-011": [
+      "UX27-TEST-016"
+    ],
+    "UX27-BOARD-012": [
+      "UX27-TEST-013"
+    ],
+    "UX27-BOARD-013": [
+      "UX27-TEST-013"
+    ],
+    "UX27-BOARD-014": [
+      "UX27-TEST-012"
+    ],
+    "UX27-BOARD-015": [
+      "UX27-TEST-014",
+      "UX27-TEST-015"
+    ],
+    "UX27-BOARD-016": [
+      "UX27-TEST-017"
+    ],
+    "UX27-BOARD-017": [
+      "UX27-TEST-017",
+      "UX27-TEST-018"
+    ],
+    "UX27-BOARD-018": [
+      "UX27-TEST-019",
+      "UX27-TEST-020"
+    ],
+    "UX27-BOARD-019": [
+      "UX27-TEST-021",
+      "UX27-TEST-022"
+    ],
+    "UX27-BOARD-020": [
+      "UX27-TEST-023"
+    ],
+    "UX27-BOARD-021": [
+      "UX27-TEST-021"
+    ],
+    "UX27-BOARD-022": [
+      "UX27-TEST-024"
+    ],
+    "UX27-BOARD-023": [
+      "UX27-TEST-025"
+    ],
+    "UX27-BOARD-024": [
+      "UX27-TEST-025",
+      "UX27-TEST-026"
+    ],
+    "UX27-BOARD-025": [
+      "UX27-TEST-027",
+      "UX27-TEST-028"
+    ],
+    "UX27-BOARD-026": [
+      "UX27-TEST-029"
+    ],
+    "UX27-BOARD-027": [
+      "UX27-TEST-030"
+    ],
+    "UX27-BOARD-028": [
+      "UX27-TEST-031"
+    ],
+    "UX27-BOARD-029": [
+      "UX27-TEST-032"
+    ],
+    "UX27-BOARD-030": [
+      "UX27-TEST-033"
+    ],
+    "UX27-BOARD-031": [
+      "UX27-TEST-034"
+    ],
+    "UX27-BOARD-032": [
+      "UX27-TEST-035"
+    ],
+    "UX27-BOARD-033": [
+      "UX27-TEST-036",
+      "UX27-TEST-037"
+    ],
+    "UX27-BOARD-034": [
+      "UX27-TEST-038"
+    ],
+    "UX27-BOARD-035": [
+      "UX27-TEST-037",
+      "UX27-TEST-039"
+    ],
+    "UX27-BOARD-036": [
+      "UX27-TEST-035",
+      "UX27-TEST-040"
+    ],
+    "UX27-BOARD-037": [
+      "UX27-TEST-041"
+    ],
+    "UX27-BOARD-038": [
+      "UX27-TEST-022",
+      "UX27-TEST-042"
+    ],
+    "UX27-BOARD-039": [
+      "UX27-TEST-043"
+    ],
+    "UX27-BOARD-040": [
+      "UX27-TEST-044"
+    ],
+    "UX27-BOARD-041": [
+      "UX27-TEST-045"
+    ],
+    "UX27-BOARD-042": [
+      "UX27-TEST-046"
+    ],
+    "UX27-BOARD-043": [
+      "UX27-TEST-047"
+    ],
+    "UX27-BOARD-044": [
+      "UX27-TEST-048"
+    ],
+    "UX27-BOARD-045": [
+      "UX27-TEST-032",
+      "UX27-TEST-049"
+    ],
+    "UX27-BOARD-046": [
+      "UX27-TEST-008"
+    ],
+    "UX27-BOARD-047": [],
+    "UX27-DATAFLOW-001": [
+      "UX27-TEST-001"
+    ],
+    "UX27-DATAFLOW-002": [],
+    "UX27-DATAFLOW-003": [],
+    "UX27-DATAFLOW-004": [
+      "UX27-TEST-006",
+      "UX27-TEST-062"
+    ],
+    "UX27-DATAFLOW-005": [
+      "UX27-TEST-081"
+    ],
+    "UX27-DATAFLOW-006": [
+      "UX27-TEST-009",
+      "UX27-TEST-015"
+    ],
+    "UX27-HOST-001": [
+      "UX27-TEST-058"
+    ],
+    "UX27-HOST-002": [
+      "UX27-TEST-059"
+    ],
+    "UX27-HOST-003": [
+      "UX27-TEST-059"
+    ],
+    "UX27-HOST-004": [
+      "UX27-TEST-060"
+    ],
+    "UX27-HOST-005": [
+      "UX27-TEST-060"
+    ],
+    "UX27-HOST-006": [
+      "UX27-TEST-061"
+    ],
+    "UX27-HOST-007": [
+      "UX27-TEST-053"
+    ],
+    "UX27-HOST-008": [
+      "UX27-TEST-062"
+    ],
+    "UX27-HOST-009": [
+      "UX27-TEST-061"
+    ],
+    "UX27-SPACES-001": [
+      "UX27-TEST-063"
+    ],
+    "UX27-SPACES-002": [
+      "UX27-TEST-064"
+    ],
+    "UX27-SPACES-003": [
+      "UX27-TEST-064"
+    ],
+    "UX27-SPACES-004": [
+      "UX27-TEST-065"
+    ],
+    "UX27-SPACES-005": [
+      "UX27-TEST-063"
+    ],
+    "UX27-SPACES-006": [
+      "UX27-TEST-066"
+    ],
+    "UX27-SPACES-007": [
+      "UX27-TEST-067"
+    ],
+    "UX27-SPACES-008": [
+      "UX27-TEST-068"
+    ],
+    "UX27-SPACES-009": [
+      "UX27-TEST-069"
+    ],
+    "UX27-SPACES-010": [
+      "UX27-TEST-070"
+    ],
+    "UX27-SPACES-011": [
+      "UX27-TEST-070"
+    ],
+    "UX27-SPACES-012": [
+      "UX27-TEST-071"
+    ],
+    "UX27-SPACES-013": [
+      "UX27-TEST-071"
+    ],
+    "UX27-SPACES-014": [
+      "UX27-TEST-071"
+    ],
+    "UX27-AUTO-001": [
+      "UX27-TEST-072"
+    ],
+    "UX27-AUTO-002": [
+      "UX27-TEST-072"
+    ],
+    "UX27-AUTO-003": [
+      "UX27-TEST-073"
+    ],
+    "UX27-AUTO-004": [
+      "UX27-TEST-073",
+      "UX27-TEST-074"
+    ],
+    "UX27-AUTO-005": [
+      "UX27-TEST-075"
+    ],
+    "UX27-AUTO-006": [
+      "UX27-TEST-074"
+    ],
+    "UX27-BUILD-001": [
+      "UX27-TEST-076"
+    ],
+    "UX27-BUILD-002": [
+      "UX27-TEST-076"
+    ],
+    "UX27-BUILD-003": [
+      "UX27-TEST-077"
+    ],
+    "UX27-BUILD-004": [
+      "UX27-TEST-076"
+    ],
+    "UX27-BUILD-005": [
+      "UX27-TEST-078"
+    ],
+    "UX27-BUILD-006": [
+      "UX27-TEST-078"
+    ],
+    "UX27-BUILD-007": [
+      "UX27-TEST-078"
+    ],
+    "UX27-WRITE-001": [
+      "UX27-TEST-079"
+    ],
+    "UX27-WRITE-002": [
+      "UX27-TEST-080"
+    ],
+    "UX27-WRITE-003": [
+      "UX27-TEST-079"
+    ],
+    "UX27-WRITE-004": [
+      "UX27-TEST-080"
+    ],
+    "UX27-WRITE-005": [
+      "UX27-TEST-080"
+    ],
+    "UX27-WRITE-006": [
+      "UX27-TEST-080"
+    ],
+    "UX27-WRITE-007": [
+      "UX27-TEST-081"
+    ],
+    "UX27-PRESENT-001": [
+      "UX27-TEST-082"
+    ],
+    "UX27-PRESENT-002": [
+      "UX27-TEST-082"
+    ],
+    "UX27-PRESENT-003": [
+      "UX27-TEST-083"
+    ],
+    "UX27-PRESENT-004": [
+      "UX27-TEST-084"
+    ],
+    "UX27-PRESENT-005": [
+      "UX27-TEST-084"
+    ],
+    "UX27-PRESENT-006": [
+      "UX27-TEST-085"
+    ],
+    "UX27-PRESENT-007": [
+      "UX27-TEST-085"
+    ],
+    "UX27-PRESENT-008": [
+      "UX27-TEST-086"
+    ],
+    "UX27-CANVAS-001": [
+      "UX27-TEST-087"
+    ],
+    "UX27-CANVAS-002": [
+      "UX27-TEST-087"
+    ],
+    "UX27-CANVAS-003": [
+      "UX27-TEST-087"
+    ],
+    "UX27-CANVAS-004": [
+      "UX27-TEST-087"
+    ],
+    "UX27-CANVAS-005": [
+      "UX27-TEST-087"
+    ],
+    "UX27-DATA-001": [
+      "UX27-TEST-088"
+    ],
+    "UX27-DATA-002": [
+      "UX27-TEST-088"
+    ],
+    "UX27-DATA-003": [
+      "UX27-TEST-088"
+    ],
+    "UX27-DATA-004": [
+      "UX27-TEST-088"
+    ],
+    "UX27-FILES-001": [
+      "UX27-TEST-089"
+    ],
+    "UX27-FILES-002": [
+      "UX27-TEST-089"
+    ],
+    "UX27-FILES-003": [
+      "UX27-TEST-089"
+    ],
+    "UX27-FILES-004": [
+      "UX27-TEST-089"
+    ],
+    "UX27-OTHER-001": [
+      "UX27-TEST-090"
+    ],
+    "UX27-OTHER-002": [
+      "UX27-TEST-090"
+    ],
+    "UX27-OTHER-003": [
+      "UX27-TEST-091"
+    ],
+    "UX27-OTHER-004": [
+      "UX27-TEST-091"
+    ],
+    "UX27-OTHER-005": [
+      "UX27-TEST-092"
+    ],
+    "UX27-OTHER-006": [
+      "UX27-TEST-093"
+    ],
+    "UX27-OTHER-007": [
+      "UX27-TEST-094"
+    ],
+    "UX27-OTHER-008": [
+      "UX27-TEST-095"
+    ],
+    "UX27-OTHER-009": [
+      "UX27-TEST-095"
+    ],
+    "UX27-OTHER-010": [
+      "UX27-TEST-096"
+    ],
+    "UX27-OTHER-011": [
+      "UX27-TEST-096"
+    ],
+    "UX27-OTHER-012": [
+      "UX27-TEST-097"
+    ],
+    "UX27-OTHER-013": [
+      "UX27-TEST-098"
+    ],
+    "UX27-OTHER-014": [
+      "UX27-TEST-098"
+    ],
+    "UX27-OTHER-015": [
+      "UX27-TEST-099"
+    ],
+    "UX27-OTHER-016": [
+      "UX27-TEST-099"
+    ],
+    "UX27-OTHER-017": [
+      "UX27-TEST-097"
+    ],
+    "UX27-OTHER-018": [
+      "UX27-TEST-099"
+    ],
+    "UX27-ACCEPT-001": [
+      "UX27-TEST-101"
+    ],
+    "UX27-ACCEPT-002": [
+      "UX27-TEST-101"
+    ],
+    "UX27-ACCEPT-003": [
+      "UX27-TEST-102"
+    ],
+    "UX27-ACCEPT-004": [
+      "UX27-TEST-101"
+    ],
+    "UX27-ACCEPT-005": [
+      "UX27-TEST-100"
+    ],
+    "UX27-ACCEPT-006": [
+      "UX27-TEST-102"
+    ],
+    "UX27-COVERAGE-001": [
+      "UX27-TEST-102"
+    ],
+    "UX27-COVERAGE-002": [
+      "UX27-TEST-102"
+    ],
+    "UX27-COVERAGE-003": [],
+    "UX27-COVERAGE-004": [
+      "UX27-TEST-102"
+    ],
+    "UX27-SOURCES-001": [],
+    "UX27-SOURCES-002": [],
+    "UX27-MAIN-001": [
+      "UX27-TEST-101"
+    ],
+    "UX27-MAIN-002": [
+      "UX27-TEST-101"
+    ],
+    "UX27-MAIN-003": [
+      "UX27-TEST-101"
+    ]
+  }
+}

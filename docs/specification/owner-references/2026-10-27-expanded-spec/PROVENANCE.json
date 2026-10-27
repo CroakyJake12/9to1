@@ -1,0 +1,62 @@
+{
+  "schema": "9to1.owner-reference-provenance/v1",
+  "record": "2026-10-27-expanded-spec",
+  "observed_at": "2026-10-27",
+  "authority": {
+    "kind": "owner-supplied expanded behaviour specification",
+    "role": "amendment and behavioural elaboration of the canonical v2 specification",
+    "canonical_specification": "docs/specification/9to1-development-specification-v2.md",
+    "canonical_sha256": "e1779d226848da492e926ab70e8d4722ad444476cfc91312bf5c2c067654fe81",
+    "canonical_pin_status": "retained unchanged; this package does not replace the canonical attachment",
+    "precedence": "the canonical specification plus explicit later owner decisions remain the product authority; this package's requirement text is adopted as owner intent where it elaborates rather than contradicts the canonical text"
+  },
+  "delivery": {
+    "channel": "owner-supplied archive on the pc, unzipped by the local Root worker",
+    "original_local_path": "/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/spec-2026-10-27/9to1-v2-expanded-2026-10-27/",
+    "repository_copy": "docs/specification/owner-references/2026-10-27-expanded-spec/",
+    "native_google_doc": "read only, not edited by this package",
+    "web_versions_used": false
+  },
+  "contents": {
+    "master_markdown": {
+      "path": "9to1_Development_Specification_v2_Expanded_2026-10-27.md",
+      "sha256": "8dfe5908b6a92cfbe6ee42e01c4b4902fb7c657aaa33d9662219568994b1cb9e",
+      "bytes": 1763457
+    },
+    "behavioural_expansion": {
+      "path": "behavioural-expansion.md",
+      "sha256": "2c8dc77d62e104097519c96bd8d4ea90de7a3f3cd06859ae1132fdd18cc4ab01",
+      "bytes": 151036
+    },
+    "acceptance_scenarios_markdown": {
+      "path": "acceptance-scenarios.md",
+      "sha256": "579528c69904d4b99a1991161715354ca76b5e5acfc32dd88722e34ee2e04822",
+      "bytes": 56774
+    },
+    "requirements_json": {
+      "path": "requirements.json",
+      "sha256": "a66716e348deb627e8fd28b97b2e4e4c70cd36b86ce38b5be5dbe4ffa5f0d1bd",
+      "requirement_ids": 176,
+      "id_prefix": "UX27-"
+    },
+    "baseline_export": {
+      "path": "baseline/9to1-v2-google-doc-export-2026-10-27.txt",
+      "sha256": "4d17ab8801ce12367f002df2f93a5d05dc5334ea45e33d421cbdcdcaa0fac277"
+    }
+  },
+  "evidence": {
+    "recording": "Screencast from 2026-10-27 12-48-26.webm",
+    "recording_sha256": "68e1dc2139e23ff358079b6754b461e1270633bda48bd8622bd6bf35fe401956",
+    "still_frames": [
+      "evidence/boards-block-and-canvas-00m55s.jpg",
+      "evidence/boards-dark-theme-03m17s.jpg",
+      "evidence/browser-unavailable-02m58s.jpg"
+    ],
+    "frame_reading_status": "frames are owner-captured observations of the installed desktop; they are evidence of reported behaviour, not visual review by this worker"
+  },
+  "status": {
+    "implementation_status": "adopted as the current correction queue; individual UX27 requirement IDs are NOT RUN until observed in the running development copy",
+    "acceptance_status": "PAUSED per the owner's implementation-first instruction",
+    "code_changed_by_this_record": false
+  }
+}
