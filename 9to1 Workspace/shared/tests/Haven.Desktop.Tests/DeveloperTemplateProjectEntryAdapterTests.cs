@@ -33,7 +33,6 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
         var provider = new DeveloperCuiProjectTemplateProvider();
         var catalog = new DeveloperProjectCatalog([provider]);
         var materializer = new DeveloperProjectTemplateMaterializer([provider]);
-        Exception? bodyFailure = null;
 
         try
         {
@@ -106,24 +105,12 @@ public sealed class DeveloperTemplateProjectEntryAdapterTests
             Assert.Equal(acceptedReference.ProjectId, recoveredReference.ProjectId);
             Assert.Equal(setupRecordsAfterFirst, await SetupRecordCount(graph));
         }
-        catch (Exception failure)
-        {
-            bodyFailure = failure;
-            throw;
-        }
         finally
         {
-            try
-            {
-                var close = rig.GetType().GetMethod("DisposeAsync", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
-                    .Invoke(rig, null)!;
-                if (close is ValueTask valueTask) await valueTask;
-                else await (Task)close;
-            }
-            catch (Exception cleanup) when (bodyFailure is not null)
-            {
-                throw new AggregateException("Template-entry body and independent original cleanup both failed.", bodyFailure, cleanup);
-            }
+            var close = rig.GetType().GetMethod("DisposeAsync", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
+                .Invoke(rig, null)!;
+            if (close is ValueTask valueTask) await valueTask;
+            else await (Task)close;
         }
     }
 

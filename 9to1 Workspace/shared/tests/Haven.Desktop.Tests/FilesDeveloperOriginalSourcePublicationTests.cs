@@ -1062,8 +1062,6 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
         internal DeveloperManualProjectProcessOwner ProcessOwner = null!;
         internal FilesDeveloperOriginalSourceSelection Selections = null!;
         internal IDeveloperProjectOriginalPhysicalCaptureSource Kernel = null!;
-        private HomeDeveloperProjectSetupPermissionSource? _setupPermissions;
-        private FilesDeveloperOriginalFolderSetupProducer? _setupSteps;
         private NativeFilesWorkspace _workspace = null!;
         private string _root = null!;
         private FileDeveloperWorkspaceStore? _savedStore;
@@ -1167,11 +1165,9 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                     if (enableActualProjectSetup)
                         return workspaceTool.CreateOriginalDeveloperCaptureSource(
                             provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(), selections,
-                            () => rig._setupPermissions
-                                ?? throw new InvalidOperationException("The SAME retained Home setup permission owner is unavailable."),
-                            () => rig.SavedStore,
-                            () => rig._setupSteps
-                                ?? throw new InvalidOperationException("The SAME retained Files setup step owner is unavailable."),
+                            () => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
+                            () => provider.GetRequiredService<FileDeveloperWorkspaceStore>(),
+                            () => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(),
                             provider.GetRequiredService<IDeveloperProjectOriginalEditAdmissionSource>());
                     return workspaceTool.CreateOriginalDeveloperCaptureSource(
                         provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(), selections,
@@ -1206,13 +1202,6 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 rig.ProcessOwner = rig._graph.GetRequiredService<DeveloperManualProjectProcessOwner>();
                 rig.Kernel = rig._graph.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>();
                 rig.Selections = rig._graph.GetRequiredService<FilesDeveloperOriginalSourceSelection>();
-                if (enableActualProjectSetup)
-                {
-                    // Match production: join guards must retain the admitted cycle owners
-                    // after DI closes admission; disposal must not resolve new services.
-                    rig._setupPermissions = rig._graph.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>();
-                    rig._setupSteps = rig._graph.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>();
-                }
                 Assert.Same(rig.Edits, rig._graph.GetRequiredService<IWorkspaceManualEditFinalFenceValidator>());
                 Assert.Same(rig.Reads, rig._graph.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>());
                 var filesRoot = Directory.CreateDirectory(Path.Combine(rig._root, "chosen-files")).FullName;
