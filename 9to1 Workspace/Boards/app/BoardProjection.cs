@@ -80,11 +80,19 @@ internal static class Projector
                 case HavenRichBlockKind.Checklist:
                 case HavenRichBlockKind.BulletList:
                 case HavenRichBlockKind.NumberedList:
+                    // Each item becomes its own view block so the editor can treat a row as a
+                    // block. The kind is preserved: a bulleted row must render as a bullet and a
+                    // numbered row as a number, not as a checkbox.
                     foreach (var item in block.Items)
                         blocks.Add(new RichBoardBlock
                         {
                             Id = $"{block.Id}:{item.Id}",
-                            Kind = "checklist",
+                            Kind = block.Kind switch
+                            {
+                                HavenRichBlockKind.BulletList => "bulleted",
+                                HavenRichBlockKind.NumberedList => "numbered",
+                                _ => "checklist",
+                            },
                             Text = item.Text,
                             StyleId = block.StyleId,
                             IsChecked = item.Checked,
@@ -395,15 +403,17 @@ internal static class MergeDeltas
         Dictionary<string, RichBoardBlock> baselineBlocks)
     {
         var contractBlocks = page.Blocks.ToDictionary(b => b.Id, StringComparer.Ordinal);
-        foreach (var viewBlock in viewPage.Blocks)
+        for (var position = 0; position < viewPage.Blocks.Count; position++)
         {
+            var viewBlock = viewPage.Blocks[position];
             baselineBlocks.TryGetValue(viewBlock.Id, out var baselineBlock);
             if (viewBlock.Kind == "ink")
                 continue;
             if (TrySplitItemId(viewBlock.Id, out var parentId, out var itemId))
             {
                 MergeBlockLayout(rich, page.Id, parentId, viewBlock, baselineBlock);
-                MergeItem(rich, page, parentId, itemId, viewBlock, baselineBlock);
+                MergeItem(rich, page, parentId, itemId, viewBlock, baselineBlock,
+                    PreviousListItemId(viewPage.Blocks, position, parentId));
                 continue;
             }
             if (!contractBlocks.TryGetValue(viewBlock.Id, out var contractBlock))
@@ -543,9 +553,25 @@ internal static class MergeDeltas
         current.SpaceBefore != baseline.SpaceBefore || current.SpaceAfter != baseline.SpaceAfter ||
         current.IndentLevel != baseline.IndentLevel;
 
+    /// <summary>The item id of the nearest preceding view row in the same list block. A newly
+    /// created row is inserted after this anchor so splitting keeps rows in the order the owner
+    /// sees them. Returns null when the previous row belongs to a different block.</summary>
+    private static string? PreviousListItemId(IReadOnlyList<RichBoardBlock> blocks, int position, string parentId)
+    {
+        for (var i = position - 1; i >= 0; i--)
+        {
+            if (!TrySplitItemId(blocks[i].Id, out var candidateParent, out var candidateItem))
+                return null;
+            if (!string.Equals(candidateParent, parentId, StringComparison.Ordinal))
+                return null;
+            return candidateItem;
+        }
+        return null;
+    }
+
     private static void MergeItem(
         HavenRichNotes rich, HavenRichPage page, string parentId, string itemId,
-        RichBoardBlock viewBlock, RichBoardBlock? baselineBlock)
+        RichBoardBlock viewBlock, RichBoardBlock? baselineBlock, string? afterItemId = null)
     {
         var parent = page.Blocks.FirstOrDefault(b => b.Id == parentId);
         var existing = parent?.Items.FirstOrDefault(i => i.Id == itemId);
@@ -566,7 +592,7 @@ internal static class MergeDeltas
                     foreground: viewBlock.Foreground);
             return;
         }
-        MergeNewItem(rich, page, NewViewBlock(itemId, viewBlock), null);
+        MergeNewItem(rich, page, NewViewBlock(itemId, viewBlock), parent?.Kind, afterItemId, parentId);
     }
 
     private static bool ItemFormatChanged(RichBoardBlock current, RichBoardBlock baseline) =>
@@ -575,16 +601,31 @@ internal static class MergeDeltas
         current.Baseline != baseline.Baseline || current.Foreground != baseline.Foreground;
 
     private static void MergeNewItem(
-        HavenRichNotes rich, HavenRichPage page, RichBoardBlock viewBlock, HavenRichBlockKind? preferredKind)
+        HavenRichNotes rich, HavenRichPage page, RichBoardBlock viewBlock, HavenRichBlockKind? preferredKind,
+        string? afterItemId = null, string? preferredParentId = null)
     {
-        var target = page.Blocks.FirstOrDefault(b =>
-            b.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList);
+        var target = (preferredParentId is null
+                ? null
+                : page.Blocks.FirstOrDefault(b => b.Id == preferredParentId &&
+                    b.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList))
+            ?? page.Blocks.FirstOrDefault(b =>
+                b.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList);
         target ??= HavenRichNotesOps.ImportBlock(
             page, preferredKind ?? HavenRichBlockKind.Checklist, NewBlockId(page));
         var itemId = TrySplitItemId(viewBlock.Id, out _, out var item) ? item : NewItemId(target);
         if (target.Items.Any(i => i.Id == itemId))
             return;
-        var added = HavenRichNotesOps.ImportListItem(target, itemId, viewBlock.Text, viewBlock.IsChecked);
+        // A row created by splitting an existing row keeps its position: the anchor item is the
+        // row it was split from. Without an anchor the row is appended at the end.
+        HavenRichListItem added;
+        if (afterItemId is not null && target.Items.Any(i => i.Id == afterItemId))
+        {
+            added = HavenRichNotesOps.InsertListItemAfter(rich, page.Id, target.Id, afterItemId, itemId, viewBlock.Text);
+            if (viewBlock.IsChecked)
+                added.Checked = true;
+        }
+        else
+            added = HavenRichNotesOps.ImportListItem(target, itemId, viewBlock.Text, viewBlock.IsChecked);
         added.Level = Math.Clamp(viewBlock.Level, 0, 8);
         added.Bold = viewBlock.Bold;
         added.Italic = viewBlock.Italic;

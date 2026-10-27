@@ -1401,6 +1401,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var text = block.Text ?? string.Empty;
         var index = page.Blocks.IndexOf(block);
         var caret = Math.Clamp(caretIndex, 0, text.Length);
+        // A projected list row carries a "{list block}:{item}" id. Reusing the block part and
+        // allocating a fresh item id tells the merge which list the new row belongs to, and the
+        // position below keeps it directly after the row it was split from.
+        var separator = block.Id.IndexOf(':');
+        var newId = separator > 0 && separator < block.Id.Length - 1
+            ? block.Id[..separator] + ":item-" + Guid.NewGuid().ToString("N")[..12]
+            : string.Empty;
+
         if (caret <= 0 || caret >= text.Length)
         {
             // Enter at the end (or start of an empty row) adds the next row after this one.
@@ -1412,6 +1420,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 StyleId = block.StyleId,
                 Layout = block.Layout,
             };
+            if (newId.Length > 0)
+                next.Id = newId;
             page.Blocks.Insert(index + 1, next);
             _selectedBlockId = next.Id;
             PushDocumentToBindings();
@@ -1429,6 +1439,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             StyleId = block.StyleId,
             Layout = block.Layout,
         };
+        if (newId.Length > 0)
+            sibling.Id = newId;
         page.Blocks.Insert(index + 1, sibling);
         _selectedBlockId = sibling.Id;
         PushDocumentToBindings();
@@ -2650,7 +2662,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         block.Kind = kind switch
         {
             "heading" => "heading",
-            "checklist" or "bulleted" or "numbered" => "checklist",
+            "checklist" or "bulleted" or "numbered" => kind,
             _ => "paragraph",
         };
         PushDocumentToBindings();
@@ -3566,9 +3578,26 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Turns the current note page into its contextual drawing state.</summary>
     public Task ActivateDrawingAsync()
     {
-        if (!RequireEditMode()) return Task.CompletedTask;
+        if (_disposed || SessionIsDisposed) return Task.CompletedTask;
+        if (!CanEdit)
+        {
+            // Say why the tool refused instead of leaving the toggle looking selected.
+            Set("StatusText", "This board source is open read-only; Draw is unavailable.");
+            Set("IsDrawMode", false);
+            RequestRebuild();
+            return Task.CompletedTask;
+        }
+        if (!_isEditMode)
+        {
+            // Drawing annotates the board the owner is looking at. Requiring a separate
+            // Edit click first made the Draw control look dead, so entering Draw takes
+            // the board into edit mode in the same action.
+            SetEditMode(true);
+        }
         IsDrawMode = true;
+        Set("IsDrawMode", true);
         InkTool = "Pen";
+        Set("InkTool", "Pen");
         Set("StatusText", "Draw mode — choose a pen tool and draw on the page");
         RequestRebuild();
         return Task.CompletedTask;
@@ -3579,6 +3608,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (!IsDrawMode)
             return;
         IsDrawMode = false;
+        Set("IsDrawMode", false);
         Set("StatusText", "Editing notes");
         RequestRebuild();
     }

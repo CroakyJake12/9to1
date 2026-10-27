@@ -104,7 +104,8 @@ public static class BlockRenderer
                 if (vm.IsFreeLayout && absoluteBlocksHost is not null)
                 {
                     var list = new StackPanel { Orientation = Orientation.Vertical };
-                    foreach (var item in run) list.Children.Add(BuildChecklistRow(vm, item));
+                    for (var offset = 0; offset < run.Count; offset++)
+                        list.Children.Add(BuildChecklistRow(vm, run[offset], offset + 1));
                     list.Children.Add(BuildChecklistAddButton(vm, run[0].Id));
                     var parentId = ParentKey(run[0].Id);
                     host.Children.Add(WithSelection(vm, run[0].Id, list, parentId, runStart, host,
@@ -113,7 +114,7 @@ public static class BlockRenderer
                 else
                 {
                     for (var offset = 0; offset < run.Count; offset++)
-                        host.Children.Add(WithSelection(vm, run[offset].Id, BuildChecklistRow(vm, run[offset]),
+                        host.Children.Add(WithSelection(vm, run[offset].Id, BuildChecklistRow(vm, run[offset], offset + 1),
                             run[offset].Id, runStart + offset, host, absoluteBlocksHost,
                             placementBlockId: ParentKey(run[offset].Id), placementBlock: run[offset]));
                     host.Children.Add(BuildChecklistAddButton(vm, run[0].Id));
@@ -164,7 +165,8 @@ public static class BlockRenderer
     {
         if (items.Count == 0) return;
         var list = new StackPanel { Orientation = Orientation.Vertical, Width = items[0].Width };
-        foreach (var item in items) list.Children.Add(BuildChecklistRow(vm, item));
+        for (var offset = 0; offset < items.Count; offset++)
+            list.Children.Add(BuildChecklistRow(vm, items[offset], offset + 1));
         var parentId = ParentKey(items[0].Id);
         list.Children.Add(BuildChecklistAddButton(vm, parentId));
         var control = WithSelection(vm, items[0].Id, list, parentId, blockIndex,
@@ -693,7 +695,7 @@ public static class BlockRenderer
         return add;
     }
 
-    private static Control BuildChecklistRow(BoardsViewModel vm, RichBoardBlock item)
+    private static Control BuildChecklistRow(BoardsViewModel vm, RichBoardBlock item, int number = 0)
     {
         var row = new Grid
         {
@@ -702,29 +704,7 @@ public static class BlockRenderer
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         var suffix = NameSuffix(item.Id);
-        var check = new CheckBox
-        {
-            Name = "done_" + suffix,
-            IsChecked = item.IsChecked,
-            Width = ChecklistCheckboxTargetSize,
-            Height = ChecklistCheckboxTargetSize,
-            MinWidth = ChecklistCheckboxTargetSize,
-            MinHeight = ChecklistCheckboxTargetSize,
-            MaxWidth = ChecklistCheckboxTargetSize,
-            MaxHeight = ChecklistCheckboxTargetSize,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, ChecklistCheckboxFirstLineOffset, ChecklistCheckboxTextGap, 0),
-        };
-        const string checklistGeometrySource = "Boards checklist checkbox geometry";
-        CuiPropertyPresentation.Set(check, "Width", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "Height", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "MinWidth", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "MinHeight", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "MaxWidth", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "MaxHeight", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
-        CuiPropertyPresentation.Set(check, "Margin", new Thickness(0, ChecklistCheckboxFirstLineOffset, ChecklistCheckboxTextGap, 0),
-            CuiPropertyLevel.Instance, checklistGeometrySource);
-        AutomationProperties.SetName(check, "Checklist item done");
+        var check = BuildListMarker(vm, item, number, suffix);
         var text = new TextBox
         {
             Name = "chk_" + suffix,
@@ -762,7 +742,8 @@ public static class BlockRenderer
         erase.VerticalAlignment = VerticalAlignment.Top;
         erase.Margin = new Thickness(0, 2, 0, 0);
         var viewId = item.Id;
-        check.IsCheckedChanged += (_, _) => vm.EditCheck("done_" + suffix, check.IsChecked == true);
+        if (check is CheckBox checkbox)
+            checkbox.IsCheckedChanged += (_, _) => vm.EditCheck("done_" + suffix, checkbox.IsChecked == true);
         text.TextChanged += (_, _) => vm.EditText("chk_" + suffix, text.Text ?? string.Empty);
         text.GotFocus += (_, _) =>
         {
@@ -813,6 +794,56 @@ public static class BlockRenderer
         row.Children.Add(text);
         row.Children.Add(erase);
         return row;
+    }
+
+    /// <summary>The leading marker for a list row. A checklist keeps its interactive checkbox;
+    /// bulleted and numbered rows show a bullet or the row position, so the three list kinds stay
+    /// visually distinct instead of all rendering as checkboxes.</summary>
+    private static Control BuildListMarker(BoardsViewModel vm, RichBoardBlock item, int number, string suffix)
+    {
+        const string checklistGeometrySource = "Boards checklist checkbox geometry";
+        var markerMargin = new Thickness(0, ChecklistCheckboxFirstLineOffset, ChecklistCheckboxTextGap, 0);
+        if (item.Kind is "bulleted" or "numbered")
+        {
+            var glyph = new TextBlock
+            {
+                Name = "marker_" + suffix,
+                Text = item.Kind == "numbered" ? $"{Math.Max(1, number)}." : "•",
+                FontSize = 14,
+                FontWeight = item.Bold ? FontWeight.Bold : FontWeight.Normal,
+                Foreground = BoardsTheme.SecondaryTextBrush,
+                Width = ChecklistCheckboxTargetSize,
+                MinWidth = ChecklistCheckboxTargetSize,
+                TextAlignment = TextAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = markerMargin,
+            };
+            AutomationProperties.SetName(glyph, item.Kind == "numbered" ? "Numbered list item" : "Bulleted list item");
+            return glyph;
+        }
+        var check = new CheckBox
+        {
+            Name = "done_" + suffix,
+            IsChecked = item.IsChecked,
+            Width = ChecklistCheckboxTargetSize,
+            Height = ChecklistCheckboxTargetSize,
+            MinWidth = ChecklistCheckboxTargetSize,
+            MinHeight = ChecklistCheckboxTargetSize,
+            MaxWidth = ChecklistCheckboxTargetSize,
+            MaxHeight = ChecklistCheckboxTargetSize,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = markerMargin,
+        };
+        CuiPropertyPresentation.Set(check, "Width", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "Height", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MinWidth", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MinHeight", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MaxWidth", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "MaxHeight", ChecklistCheckboxTargetSize, CuiPropertyLevel.Instance, checklistGeometrySource);
+        CuiPropertyPresentation.Set(check, "Margin", markerMargin,
+            CuiPropertyLevel.Instance, checklistGeometrySource);
+        AutomationProperties.SetName(check, "Checklist item done");
+        return check;
     }
 
     // ----- Table -----

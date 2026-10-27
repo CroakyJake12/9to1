@@ -32,8 +32,39 @@ public static class BoardInkOverlayRenderer
                 stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48);
             AddRenderedStroke(overlay, stroke, panX, panY, zoom);
         }
-        if (requiredHeight > overlay.Bounds.Height + 1) overlay.Height = requiredHeight;
-        else if (overlay.Height > 0 && requiredHeight < overlay.Bounds.Height - 24) overlay.Height = double.NaN;
+        ApplyOverlayExtent(overlay, requiredHeight);
+    }
+
+    /// <summary>Sizes the absolute ink layer to the page it covers. The authored layer has no
+    /// intrinsic size, so it measures as an empty strip: strokes are clipped and the layer cannot
+    /// receive pointer input, which made Draw look like it never activated. The page content is
+    /// the floor and any stroke can extend past it.</summary>
+    public static void ApplyOverlayExtent(Panel overlay, double strokeExtentHeight)
+    {
+        ArgumentNullException.ThrowIfNull(overlay);
+        var contentHeight = 0d;
+        var contentWidth = 0d;
+        if (overlay.Parent is Panel siblings)
+        {
+            foreach (var sibling in siblings.Children)
+            {
+                if (ReferenceEquals(sibling, overlay) || sibling is not Control control)
+                    continue;
+                contentHeight = Math.Max(contentHeight, control.Bounds.Height);
+                contentWidth = Math.Max(contentWidth, control.Bounds.Width);
+            }
+        }
+        var required = Math.Max(Math.Max(contentHeight, strokeExtentHeight), 0d);
+        if (required > overlay.Bounds.Height + 1)
+        {
+            overlay.Height = required;
+            overlay.MinWidth = contentWidth > 0 ? contentWidth : double.NaN;
+        }
+        else if (overlay.Height > 0 && required < overlay.Bounds.Height - 24)
+        {
+            overlay.Height = double.NaN;
+            overlay.MinWidth = double.NaN;
+        }
     }
 
     public static void AddRenderedStroke(Panel overlay, InkStrokeView stroke, double panX, double panY, double zoom)

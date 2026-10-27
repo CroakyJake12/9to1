@@ -1174,6 +1174,29 @@ public static partial class HavenRichNotesOps
         return item;
     }
 
+    /// <summary>Adds a list item at a chosen position with a caller-supplied stable ID, so a
+    /// block split keeps the new row directly after the row it came from instead of appending
+    /// it to the end of the list.</summary>
+    public static HavenRichListItem InsertListItemAfter(
+        HavenRichNotes notes, string pageId, string blockId, string? afterItemId, string itemId, string text)
+    {
+        var block = RequireBlock(notes, pageId, blockId);
+        if (block.Kind is not (HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList))
+            throw new InvalidOperationException("List items require a list block.");
+        RequireImportId(itemId, "List item");
+        if (block.Items.Any(i => i.Id == itemId))
+            throw new InvalidOperationException($"List item '{itemId}' already exists.");
+        var index = string.IsNullOrWhiteSpace(afterItemId)
+            ? -1
+            : block.Items.FindIndex(i => i.Id == afterItemId);
+        if (index < 0 && !string.IsNullOrWhiteSpace(afterItemId))
+            throw new InvalidOperationException($"List item '{afterItemId}' is not in block '{blockId}'.");
+        var item = new HavenRichListItem { Id = itemId, Text = text ?? string.Empty };
+        block.Items.Insert(index + 1, item);
+        Touch(notes);
+        return item;
+    }
+
     public static bool UpdateListItem(
         HavenRichNotes notes, string pageId, string blockId, string itemId, string? text = null, bool? isChecked = null)
     {

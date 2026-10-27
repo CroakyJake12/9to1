@@ -76,8 +76,7 @@ public sealed class BoardInkInteractionController : IDisposable
                         stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48);
                     BoardInkOverlayRenderer.AddRenderedStroke(_overlay, stroke, panX, panY, zoom);
                 }
-                if (requiredHeight > _overlay.Bounds.Height + 1) _overlay.Height = requiredHeight;
-                else if (_overlay.Height > 0 && requiredHeight < _overlay.Bounds.Height - 24) _overlay.Height = double.NaN;
+                ApplyOverlayExtent(_overlay, requiredHeight);
                 return;
             }
         }
