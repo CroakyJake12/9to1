@@ -30,7 +30,7 @@ public sealed class BoardsEnterBehaviourTests
             using (var store = new JsonFileHavenBoardStore(root))
             {
                 await SeedAsync(store, path);
-                using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+                await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
                 {
                     var vm = new BoardsViewModel(adapter);
                     await EnsureEditModeAsync(vm);
@@ -47,7 +47,7 @@ public sealed class BoardsEnterBehaviourTests
 
                     await vm.DispatchAsync("SaveBoard", null);
                 }
-                using (var fresh = await ContractSessionAdapter.OpenAsync(store, path))
+                await using (var fresh = await ContractSessionAdapter.OpenAsync(store, path))
                 {
                     var reopened = Blocks(fresh);
                     Assert.Equal(4, reopened.Count);
@@ -70,7 +70,7 @@ public sealed class BoardsEnterBehaviourTests
             var path = Path.Combine(root, "maths.9to1board");
             using var store = new JsonFileHavenBoardStore(root);
             await SeedAsync(store, path);
-            using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
             var vm = new BoardsViewModel(adapter);
             await EnsureEditModeAsync(vm);
 
@@ -101,7 +101,7 @@ public sealed class BoardsEnterBehaviourTests
             var path = Path.Combine(root, "maths.9to1board");
             using var store = new JsonFileHavenBoardStore(root);
             await SeedAsync(store, path);
-            using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
             var vm = new BoardsViewModel(adapter);
             await EnsureEditModeAsync(vm);
 
@@ -128,14 +128,14 @@ public sealed class BoardsEnterBehaviourTests
             var path = Path.Combine(root, "maths.9to1board");
             using var store = new JsonFileHavenBoardStore(root);
             await SeedAsync(store, path);
-            using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
             {
                 var vm = new BoardsViewModel(adapter);
                 await EnsureEditModeAsync(vm);
                 Assert.True(await vm.SplitTextBlockAtAsync("list-1:i-1", "left ".Length));
                 await vm.DispatchAsync("SaveBoard", null);
             }
-            using (var fresh = await ContractSessionAdapter.OpenAsync(store, path))
+            await using (var fresh = await ContractSessionAdapter.OpenAsync(store, path))
             {
                 var reopened = Blocks(fresh);
                 Assert.Equal(4, reopened.Count);
@@ -159,7 +159,7 @@ public sealed class BoardsEnterBehaviourTests
             var path = Path.Combine(root, "maths.9to1board");
             using var store = new JsonFileHavenBoardStore(root);
             await SeedAsync(store, path);
-            using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
             var vm = new BoardsViewModel(adapter);
             await EnsureEditModeAsync(vm);
 
