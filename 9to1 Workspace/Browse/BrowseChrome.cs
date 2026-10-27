@@ -813,15 +813,20 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 catch (Exception failure) when (restoring && !cancellationToken.IsCancellationRequested)
                 {
                     // Swallowed at restore-time by design, but never silently: retain the exact
-                    // cause for diagnostics and schedule bounded retries so a startup-transient
-                    // host admission cannot permanently kill every saved app tab. The owner can
-                    // only report what is on screen, so the cause goes into the tab status with
-                    // the retained-route sentence instead of a bare failure line.
+                    // cause for diagnostics. The failed attach this run just observed leaves a
+                    // wedged owner behind whose initialization faulted, which is exactly the
+                    // owner-visible unclosable-tab bug, so release it immediately; the bounded
+                    // retry below re-attaches with fresh owners instead of reusing that one.
                     tab.RestoreAttachFailed = true;
                     tab.EngineState = BrowseEngineState.Unsupported;
                     _lastRestoreAttachCause = FirstLine(failure);
                     tab.Status = "The saved native app could not start: " + FirstLine(failure)
-                        + ". Its route and original owner are retained.";
+                        + ". Its route and original owner are retained; retrying.";
+                    // The failed attach leaves a wedged owner whose initialization faulted, so
+                    // release it right away rather than parking it until the next retry tick;
+                    // that wedge is what made the owner's restored tabs unclosable.
+                    try { await ReleaseContentAsync(tab, preservePendingHosts: true).ConfigureAwait(false); }
+                    catch (Exception) { /* release causes are already retained close state */ }
                     RetainAppSource(SaveTabsAsync(CancellationToken.None));
                     ScheduleSavedAppAttachRetry(tab, cancellationToken);
                 }

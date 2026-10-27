@@ -1509,6 +1509,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         _selectedBlockId = createdId;
         _pendingTextFocus = (page.Id, createdId, 0);
+        // Every body-Enter split states itself, so a swallowed key event is
+        // distinguishable from a refused edit even when the view is blank.
+        Set("StatusText", "Enter: started the next block and moved the caret into it.");
         PushDocumentToBindings();
         RequestRebuild();
         return true;
@@ -1588,12 +1591,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             _session.MarkDirty();
             _selectedBlockId = created.Id;
             _pendingTextFocus = (page.Id, created.Id, 0);
+            // Owner-disabled Enter is indistinguishable from a swallowed key event without
+            // honest feedback, so every title-Enter outcome names itself.
+            Set("StatusText", "Enter in title: created the page's first block and moved the caret into it.");
         }
         else
         {
             var first = page.Blocks[0];
             _selectedBlockId = first.Id;
             _pendingTextFocus = (page.Id, first.Id, first.Text?.Length ?? 0);
+            Set("StatusText", "Enter in title: moved the caret into the page's first block.");
         }
         PushDocumentToBindings();
         RequestRebuild();
@@ -3037,6 +3044,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             return Task.CompletedTask;
         }
         SplitListItemAt(CurrentPage(), block, caretIndex);
+        Set("StatusText", "Enter: added the next list row right after this one.");
         return Task.CompletedTask;
     }
 
