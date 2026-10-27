@@ -282,14 +282,6 @@ public interface IBoardSessionCapabilities
     bool CanSaveAs => CanEdit;
 }
 
-/// <summary>Optional session capability contract for immutable embedded document views.</summary>
-public interface IBoardSessionCapabilities
-{
-    bool CanEdit { get; }
-    bool CanSwitchBoard => CanEdit;
-    bool CanSaveAs => CanEdit;
-}
-
 
 public enum BoardTextMark { Unavailable, Off, On, Mixed }
 public enum BoardTextFormat { Bold, Italic, Underline, StrikeThrough }
