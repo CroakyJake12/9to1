@@ -38,6 +38,10 @@ public static class BlockRenderer
     // checklist supplies no CheckBox.Content. Reserve that space explicitly
     // so the outer label column begins after the 24px target + 6px visual gap.
     private const double ChecklistCheckboxColumnWidth = ChecklistCheckboxTargetSize + ChecklistCheckboxTextGap;
+    // Quiet-but-visible block gutter: the six-dot grip and insert buttons stay
+    // discoverable at rest, which is what makes them reachable at all; full
+    // opacity returns when the block is selected or hovered.
+    private const double QuietBlockGutterOpacity = 0.56;
 
     public static async Task RebuildAsync(StackPanel host, BoardsViewModel vm)
     {
@@ -296,10 +300,9 @@ public static class BlockRenderer
         bool absolutePositioned = false)
     {
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
-        // The 64px gutter occupies the page-card margin before the text column;
-        // the two 32px targets remain outside document flow and the block text
-        // aligns with the page title/content start.
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,32,*") };
+        // The first slot stays a compact, fixed target even when the content in
+        // the row (especially a table) is much taller than an ordinary block.
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,Auto,*") };
         Button? insert = null;
         Control? gripControl = null;
         if (vm.IsEditMode)
@@ -307,29 +310,28 @@ public static class BlockRenderer
             insert = ToolbarBuilder.CreateInsertButton(
                 vm, "Insert a block after this note", insertAfterBlockId) as Button
                 ?? throw new InvalidOperationException("The insert affordance must remain a button.");
-            ConfigureBlockGutterButton(insert, insertAction: true);
-            insert.Margin = new Thickness(0);
-            insert.Opacity = 0;
+            ConfigureBlockGutterButton(insert);
+            insert.Margin = new Thickness(0, 0, 2, 0);
+            insert.Opacity = selected ? 1 : QuietBlockGutterOpacity;
+            Grid.SetColumn(insert, 0);
+            row.Children.Add(insert);
 
             var grip = BlockGripCui.Build(vm, selectId);
             gripControl = grip;
             grip.MinWidth = BlockGutterTargetSize;
             grip.MinHeight = BlockGutterTargetSize;
             grip.HorizontalAlignment = HorizontalAlignment.Left;
-            grip.VerticalAlignment = VerticalAlignment.Center;
-            grip.Opacity = 0;
+            grip.VerticalAlignment = VerticalAlignment.Top;
+            grip.Opacity = selected ? 1 : QuietBlockGutterOpacity;
             if (grip.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.Name == "BlockGripToggle") is { } toggle)
-                ConfigureBlockGutterButton(toggle, insertAction: false);
-            grip.Margin = new Thickness(0);
-            Grid.SetColumn(grip, 0);
+                ConfigureBlockGutterButton(toggle);
+            grip.Margin = new Thickness(0, 0, 4, 0);
+            Grid.SetColumn(grip, 1);
             row.Children.Add(grip);
-
-            Grid.SetColumn(insert, 1);
-            row.Children.Add(insert);
         }
         else
         {
-            // Keep the content start aligned between modes without leaving
+            // Keep the document column aligned between modes without leaving
             // an edit command in the read-only surface.
             row.Children.Add(new Border
             {
@@ -340,7 +342,7 @@ public static class BlockRenderer
             });
             var gripSlot = new Border
             {
-                Width = BlockGutterTargetSize,
+                Width = BlockGutterTargetSize + 4,
                 Height = BlockGutterTargetSize,
                 IsHitTestVisible = false,
                 Focusable = false,
@@ -364,13 +366,14 @@ public static class BlockRenderer
         var focused = false;
         void UpdateGutterEmphasis()
         {
-            var opacity = hovering || focused ? 1d : 0d;
+            // Quiet-but-visible at rest; full opacity on selection or hover.
+            var opacity = selected || hovering || focused ? 1 : QuietBlockGutterOpacity;
             if (insert is not null) insert.Opacity = opacity;
             if (gripControl is not null)
             {
                 // CUI theme projection can outrank a native Avalonia opacity
                 // assignment on the authored container. Publish the state at
-                // instance priority so the entire nested grip disappears too.
+                // instance priority so the whole nested grip follows too.
                 CuiPropertyPresentation.Set(gripControl, "Opacity", opacity,
                     CuiPropertyLevel.Instance, "Boards quiet block gutter visibility");
                 gripControl.Opacity = opacity;
@@ -434,34 +437,32 @@ public static class BlockRenderer
             CuiPropertyLevel.Instance, geometrySource);
         CuiPropertyPresentation.Set(button, "BorderWidth", new Thickness(0),
             CuiPropertyLevel.Instance, geometrySource);
-        if (!insertAction)
+        if (insertAction)
         {
-            var glyph = BoardsIcons.Glyph(BoardsIcons.Grip, 14, "Drag block handle");
-            CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
-                CuiPropertyLevel.Instance, "Boards block drag grip surface");
-            CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
-                CuiPropertyLevel.Instance, "Boards block drag grip shape");
-            CuiPropertyPresentation.Set(button, "Content", glyph,
-                CuiPropertyLevel.Instance, "Boards block drag grip glyph");
-            button.Background = Brushes.Transparent;
-            button.Content = glyph;
+            button.VerticalAlignment = VerticalAlignment.Center;
+            if (button.Content is Image addGlyph)
+            {
+                addGlyph.Width = 18;
+                addGlyph.Height = 18;
+            }
+            return;
         }
-
-        button.Width = BlockGutterTargetSize;
-        button.Height = BlockGutterTargetSize;
-        button.MinWidth = BlockGutterTargetSize;
-        button.MinHeight = BlockGutterTargetSize;
-        button.MaxWidth = BlockGutterTargetSize;
-        button.MaxHeight = BlockGutterTargetSize;
-        button.Padding = new Thickness(0);
-        button.HorizontalAlignment = HorizontalAlignment.Center;
-        button.VerticalAlignment = VerticalAlignment.Center;
-        if (insertAction && button.Content is Image addGlyph)
-        {
-            addGlyph.Width = 18;
-            addGlyph.Height = 18;
-        }
+        // The drag grip keeps its glyph and a fixed top target, the same
+        // invariant the quiet-gutter tests assert.
+        var glyph = BoardsIcons.Glyph(BoardsIcons.Grip, 14, "Drag block handle");
+        CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
+            CuiPropertyLevel.Instance, "Boards block drag grip surface");
+        CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
+            CuiPropertyLevel.Instance, "Boards block drag grip shape");
+        CuiPropertyPresentation.Set(button, "Content", glyph,
+            CuiPropertyLevel.Instance, "Boards block drag grip glyph");
+        button.Background = Brushes.Transparent;
+        button.Content = glyph;
+        button.VerticalAlignment = VerticalAlignment.Top;
     }
+
+    private static void ConfigureBlockGutterButton(Button button) =>
+        ConfigureBlockGutterButton(button, insertAction: false);
 
     // ----- Block dispatch -----
 

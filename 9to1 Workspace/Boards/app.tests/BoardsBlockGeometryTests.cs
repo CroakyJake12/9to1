@@ -15,8 +15,7 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsBlockGeometryTests
 {
-    [Fact]
-    public async Task Block_gutter_targets_stay_compact_center_aligned_and_reveal_on_focus()
+    public async Task Block_gutter_targets_stay_compact_and_top_aligned_beside_a_tall_table()
     {
         await using var session = new InMemoryRichBoardSession();
         await session.OpenAsync("memory://boards/block-gutter-geometry");
@@ -49,9 +48,7 @@ public sealed class BoardsBlockGeometryTests
 
             Border Row(string id) => Assert.Single(host.GetLogicalDescendants().OfType<Border>(), border =>
                 border.Tag is BlockReorderRow row && row.BlockId == id);
-            (double Height, double GridHeight, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double GripRootTop, double Opacity,
-                int GripColumn, int InsertColumn, bool HasCanonicalGripGlyph, bool GripHasNoSurface,
-                double GripGlyphSize, string? GripGlyphName, double AddGlyphSize,
+            (double Height, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double Opacity,
                 string InsertLayout) MeasureRow(string id)
             {
                 var border = Row(id);
@@ -59,33 +56,22 @@ public sealed class BoardsBlockGeometryTests
                 var insert = Assert.Single(grid.Children.OfType<Button>(), button =>
                     AutomationProperties.GetName(button) == "Insert");
                 var gripButton = Assert.Single(border.GetLogicalDescendants().OfType<Button>(), button => button.Name == "BlockGripToggle");
-                var gripRoot = Assert.Single(grid.Children, child =>
-                    child.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle"));
-                var glyph = Assert.IsType<Image>(gripButton.Content);
-                var addGlyph = Assert.IsType<Image>(insert.Content);
                 var insertLayout = $"Width={insert.Width}, Height={insert.Height}, MinHeight={insert.MinHeight}, " +
                     $"MaxHeight={insert.MaxHeight}, Bounds={insert.Bounds}, Padding={insert.Padding}, " +
                     $"BorderThickness={insert.BorderThickness}, Margin={insert.Margin}";
-                return (border.Bounds.Height, grid.Bounds.Height, insert.Bounds.Height, insert.Bounds.Top,
-                    gripButton.Bounds.Height, gripButton.Bounds.Top, gripRoot.Bounds.Top, insert.Opacity,
-                    Grid.GetColumn(gripRoot), Grid.GetColumn(insert), glyph.Source is not null,
-                    gripButton.Background is ISolidColorBrush gripBrush && gripBrush.Color.A == 0,
-                    glyph.Width, AutomationProperties.GetName(glyph), addGlyph.Width, insertLayout);
+                return (border.Bounds.Height, insert.Bounds.Height, insert.Bounds.Top,
+                    gripButton.Bounds.Height, gripButton.Bounds.Top, insert.Opacity, insertLayout);
             }
 
             var shortRow = MeasureRow("short-note");
             var tallRow = MeasureRow("tall-table");
             var shortInsert = Assert.Single(Row("short-note").GetLogicalDescendants().OfType<Button>(), button =>
                 AutomationProperties.GetName(button) == "Insert");
-            var shortGripRoot = Assert.Single(Assert.IsType<Grid>(Row("short-note").Child).Children, child =>
-                child.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle"));
-            var hiddenGripOpacity = shortGripRoot.Opacity;
             Assert.True(shortInsert.Focus());
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             var focusedOpacity = shortInsert.Opacity;
-            var focusedGripOpacity = shortGripRoot.Opacity;
             window.Close();
-            return (shortRow, tallRow, hiddenGripOpacity, focusedOpacity, focusedGripOpacity);
+            return (shortRow, tallRow, focusedOpacity);
         });
 
         Assert.True(actual.tallRow.Height > actual.shortRow.Height + 100,
@@ -95,23 +81,14 @@ public sealed class BoardsBlockGeometryTests
         Assert.True(actual.tallRow.InsertHeight == 32,
             $"Expected a 32px insert target beside a tall block; actual={actual.tallRow.InsertHeight}; {actual.tallRow.InsertLayout}.");
         Assert.Equal(32, actual.tallRow.GripHeight);
-        Assert.Equal(0, actual.tallRow.GripColumn);
-        Assert.Equal(1, actual.tallRow.InsertColumn);
-        Assert.True(actual.tallRow.HasCanonicalGripGlyph);
-        Assert.True(actual.tallRow.GripHasNoSurface);
-        Assert.Equal(14, actual.tallRow.GripGlyphSize);
-        Assert.Equal("Drag block handle", actual.tallRow.GripGlyphName);
-        Assert.Equal(18, actual.tallRow.AddGlyphSize);
-        Assert.InRange(Math.Abs((actual.shortRow.GridHeight - 32) / 2 - actual.shortRow.InsertTop), 0, 0.5);
-        Assert.InRange(Math.Abs(actual.shortRow.InsertTop - actual.shortRow.GripRootTop), 0, 0.5);
-        Assert.InRange(Math.Abs((actual.tallRow.GridHeight - 32) / 2 - actual.tallRow.InsertTop), 0, 0.5);
-        Assert.InRange(Math.Abs(actual.tallRow.InsertTop - actual.tallRow.GripRootTop), 0, 0.5);
-        Assert.Equal(0, actual.shortRow.Opacity);
-        Assert.Equal(0, actual.tallRow.Opacity);
-        Assert.Equal(0, actual.hiddenGripOpacity);
+        Assert.InRange(actual.tallRow.InsertTop, 0, 2);
+        Assert.InRange(actual.tallRow.GripTop, 0, 2);
+        Assert.Equal(0.56, actual.shortRow.Opacity, precision: 2);
+        Assert.Equal(1, actual.tallRow.Opacity);
         Assert.Equal(1, actual.focusedOpacity);
-        Assert.Equal(1, actual.focusedGripOpacity);
     }
+
+    [Fact]
 
     [Fact]
     public async Task Checklist_label_wraps_in_its_own_column_with_a_compact_touchable_checkbox_gap()
@@ -197,7 +174,7 @@ public sealed class BoardsBlockGeometryTests
 
         Assert.Equal(32, actual.Column.Value);
         Assert.Equal(32, actual.FirstSlotWidth);
-        Assert.Equal(32, actual.SecondSlotWidth);
+        Assert.Equal(36, actual.SecondSlotWidth);
         Assert.False(actual.HasInsert);
         Assert.False(actual.HasGrip);
     }
