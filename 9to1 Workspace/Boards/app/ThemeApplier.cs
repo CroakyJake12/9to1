@@ -20,7 +20,12 @@ public static class ThemeApplier
         var palette = BoardsTheme.SharedPalette;
         // Only this surface owns these resources. A borrowed Home-aware loader
         // already applies its exact theme/custom/accessibility resources locally.
-        if (applyResources) CuiThemeResourceApplier.ApplyToResources(root.Resources, palette);
+        if (applyResources)
+        {
+            var scoped = new ResourceDictionary();
+            CuiThemeResourceApplier.ApplyToResources(scoped, palette);
+            foreach (var entry in scoped) root.Resources[entry.Key] = entry.Value;
+        }
 
         Paint<Border>(root, "FooterBar", b =>
         {
