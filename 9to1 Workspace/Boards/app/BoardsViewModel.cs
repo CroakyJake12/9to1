@@ -96,6 +96,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (databaseSource is not null) _databaseBlocks = new BoardsDatabaseBlocks(this, databaseSource);
         Set(nameof(IsStandalonePresentation), true);
         Set(nameof(IsEmbeddedPresentation), false);
+        Set("ShowEditor", true);
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
         Set("CanToggleEditMode", CanToggleEditMode);
@@ -187,6 +188,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public void SetLanding(bool show)
     {
         Set("IsLanding", show);
+        Set("ShowEditor", !show);
         if (show) Set("LandingSearchQuery", _landingSearchQuery);
     }
 

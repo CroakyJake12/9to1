@@ -86,7 +86,7 @@
         </Container>
       </Container>
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
-        <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
+        <Container Type="Grid" ID="EditorHost" Row="1" Column="1" RowSizes="Auto Auto 1fr" Active="{Binding ShowEditor}">
         <Container Type="Grid" Row="0" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiFloatingSurfaceMaterial}" BorderWidth="0" Padding="8 4" Margin="16 4 14 4" CornerRadius="14">
           <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="0" VerticalAlignment="Center" AccessibleName="Text formatting">
             <Button ID="RangeBold" Content="B" Selected="{Binding RangeBoldSelected}" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold" />
