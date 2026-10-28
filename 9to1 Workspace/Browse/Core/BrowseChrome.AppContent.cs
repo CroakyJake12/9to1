@@ -2,6 +2,10 @@ using Haven.Core;
 
 namespace HavenOS.Apps.Browse;
 
+/// <summary>A failed start whose exact returned owner subsequently released its resources.
+/// The original fault remains inspectable and never becomes a successful launch.</summary>
+public sealed record BrowseDrainedStartupFailure(BrowseAppContentRequest Request, Task OriginalInitialization);
+
 public sealed partial class BrowseChrome
 {
     private static readonly AppContentAddress HomeAddress = AppContentAddress.Parse("browse://home");
@@ -10,15 +14,72 @@ public sealed partial class BrowseChrome
     private readonly IBrowseInternalContentFactory? _internalContentFactory;
     private readonly string _homeProfileId;
 
-    private sealed class AppContentOwner(IBrowseAppContentSession session)
+    private sealed class AppContentOwner(IBrowseAppContentSession session, BrowseAppContentRequest request,
+        ContentTransition? admission)
     {
         public IBrowseAppContentSession Session { get; } = session;
+        public BrowseAppContentRequest Request { get; } = request;
+        public ContentTransition? Admission { get; } = admission;
         public Task? Initialization, Close;
         public Task? ReportedInitialization, ReportedClose;
         public Exception? CloseContractFailure;
         public EventHandler? Changed;
         public bool Published;
         public ContentCloseAttempt? Preparation;
+    }
+
+    private readonly List<(BrowseDrainedStartupFailure Record, ContentTransition? Admission)> _drainedStartupFailures = [];
+    public IReadOnlyList<BrowseDrainedStartupFailure> DrainedStartupFailures
+    { get { lock (_nativeSourceGate) return _drainedStartupFailures.Select(item => item.Record).ToArray(); } }
+
+    private void ArchiveDrainedStartupFailure(AppContentOwner owner)
+    {
+        if (owner.Initialization is not { IsFaulted: true } original ||
+            !ReferenceEquals(original, owner.ReportedInitialization) ||
+            owner.Close is not { IsCompletedSuccessfully: true } ||
+            !ReferenceEquals(owner.Close, owner.ReportedClose) || owner.CloseContractFailure is not null ||
+            !owner.Session.CanRetireOriginalView) return;
+        lock (_nativeSourceGate)
+        {
+            if (_contractSources.Contains(original) ||
+                _drainedStartupFailures.Any(item => ReferenceEquals(item.Record.OriginalInitialization, original))) return;
+            _drainedStartupFailures.Add((new(owner.Request, original), owner.Admission));
+        }
+    }
+
+    // Only the completed failure of this exact admission, after proven cleanup, may
+    // leave a retirement set. Replayed exceptions, cleanup siblings and contract
+    // faults still block. The failed original remains in DrainedStartupFailures.
+    private bool IsDrainedStartupSourceLocked(Task source)
+    {
+        if (source is not { IsFaulted: true } || source.Exception is not { } graph || _contractSources.Contains(source)) return false;
+        foreach (var (record, admission) in _drainedStartupFailures)
+        {
+            if (!ReferenceEquals(source, record.OriginalInitialization) && !IsOwnedByAdmissionChain(admission, source)) continue;
+            var originalLeaves = StartupFailureLeaves(record.OriginalInitialization.Exception!);
+            var sourceLeaves = StartupFailureLeaves(graph);
+            if (sourceLeaves.Count != 0 && sourceLeaves.All(originalLeaves.Contains)) return true;
+        }
+        return false;
+    }
+
+    private static HashSet<Exception> StartupFailureLeaves(Exception graph)
+    {
+        var leaves = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
+        var seen = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
+        var pending = new Stack<Exception>(); pending.Push(graph);
+        while (pending.TryPop(out var current))
+        {
+            if (!seen.Add(current)) continue;
+            if (current is AggregateException aggregate)
+            {
+                // An empty aggregate is still a distinct fault, never an empty proof.
+                if (aggregate.InnerExceptions.Count == 0) leaves.Add(current);
+                else foreach (var inner in aggregate.InnerExceptions) pending.Push(inner);
+            }
+            else leaves.Add(current);
+        }
+        return leaves;
     }
 
     private static bool IsHomeAddress(AppContentAddress address) => address.Namespace == AppContentNamespace.Browse
@@ -88,7 +149,7 @@ public sealed partial class BrowseChrome
         if (session is null) return null;
         if (_tabs.SelectMany(item => item.AppOwners).Any(owner => ReferenceEquals(owner.Session, session)))
             throw new InvalidOperationException("The app factory reused an existing tab's content owner.");
-        var owner = new AppContentOwner(session);
+        var owner = new AppContentOwner(session, request, _executingContentTransition.Value);
         tab.AppOwners.Add(owner); // retain before inspecting or starting the acquired owner
         if (session.Address != address) throw new UnauthorizedAccessException("The app changed the admitted content address.");
         session.StateChanged += owner.Changed = (_, _) => ObserveAppContentState(tab, owner);
@@ -235,7 +296,7 @@ public sealed partial class BrowseChrome
             if (owner.Close is { IsCompletedSuccessfully: true } && owner.CloseContractFailure is null)
             {
                 if (!owner.Session.CanRetireOriginalView) failures.Add(new InvalidOperationException("The original app still owns its native view after close."));
-                else tab.AppOwners.Remove(owner);
+                else { ArchiveDrainedStartupFailure(owner); tab.AppOwners.Remove(owner); }
             }
         if (!preservePendingHosts)
             foreach (var pending in tab.PendingHostCloses.Where(pair => pair.Value.IsCompletedSuccessfully).Select(pair => pair.Key).ToArray())

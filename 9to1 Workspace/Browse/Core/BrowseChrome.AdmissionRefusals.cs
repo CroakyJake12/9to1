@@ -93,7 +93,8 @@ public sealed partial class BrowseChrome
     }
 
     /// <summary>
-    /// Withdraws the retirement obligation of one retained source, and only when that
+    /// Withdraws the retirement obligation of one retained source when its exact startup
+    /// owner has verifiably drained (see DrainedStartupFailures), or when that
     /// source belongs to the propagation chain of a specific admission this chrome
     /// witnessed: the source must either be a task the chrome retained for that exact live
     /// content admission (or an enclosing one), or an outer action whose declared await
@@ -112,7 +113,7 @@ public sealed partial class BrowseChrome
 
     private bool TryRetireAdmissionSourceLocked(Task source)
     {
-        if (!IsRetirableAdmissionSourceLocked(source)) return false;
+        if (!IsRetirableAdmissionSourceLocked(source) && !IsDrainedStartupSourceLocked(source)) return false;
         _originalNativeSources.Remove(source);
         _originalContentTransitions.Remove(source);
         return true;
@@ -212,6 +213,6 @@ public sealed partial class BrowseChrome
     private void PruneAdmissionRefusalsLocked(List<Task> sources)
     {
         for (var index = sources.Count - 1; index >= 0; index--)
-            if (IsRetirableAdmissionSourceLocked(sources[index])) sources.RemoveAt(index);
+            if (IsRetirableAdmissionSourceLocked(sources[index]) || IsDrainedStartupSourceLocked(sources[index])) sources.RemoveAt(index);
     }
 }

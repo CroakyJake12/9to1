@@ -103,6 +103,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
         private Task? _initialization, _close;
         private Task<bool>? _preparation;
         private Task? _actualInitialization, _actualClose;
+        private bool _diagnosedStartupFailure;
         private readonly HashSet<Task> _actualTasks = [];
         private IBrowseAppContentSession? _closeStartedFor;
         private volatile bool _retiring;
@@ -164,6 +165,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             await OnUiAsync(async () =>
             {
                 using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+                var awaitingOriginalInitialization = false;
                 try
                 {
                 var app = await WithinOriginal(() => _registry.ResolveAsync(_binding, token));
@@ -183,7 +185,9 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 if (reported is not null) _ = Retain(reported);
                 if (!ReferenceEquals(_actualInitialization, reported))
                     throw new InvalidOperationException("Retain the original native initialization task.");
+                awaitingOriginalInitialization = true;
                 await _actualInitialization;
+                awaitingOriginalInitialization = false;
                 await WithinOriginal(() => _registry.ResolveAsync(_binding, token));
                 if (_retiring || !native.IsPublicationCurrent || !IsOwnedAddress(native.Address))
                     throw new UnauthorizedAccessException("The original app admission changed before publication.");
@@ -193,8 +197,28 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 catch (Exception failure)
                 {
                     _published = false;
-                    try { if (_inner?.OriginalInitialization is { } reported) _ = Retain(reported); }
-                    catch (Exception observation) { throw new AggregateException("Native initialization and original task observation failed.", failure, observation); }
+                    // Keep the failed original task as diagnosis, separate from resource cleanup.
+                    // Only a failure before a returned owner, or the exact acknowledged native
+                    // initialization task, qualifies. Contract/publication failures stay blocking.
+                    _diagnosedStartupFailure = failure is not OperationCanceledException &&
+                        (_createdOwner is null || awaitingOriginalInitialization && _actualInitialization is { IsFaulted: true });
+                    try
+                    {
+                        if (_inner is { } inner)
+                        {
+                            var reported = inner.OriginalInitialization;
+                            if (reported is not null) _ = Retain(reported);
+                            if (_actualInitialization is not null && !ReferenceEquals(reported, _actualInitialization))
+                                throw new InvalidOperationException("The native initialization receipt changed during failure observation.");
+                        }
+                    }
+                    catch (Exception observation)
+                    {
+                        // A broken task getter/receipt is an independent ownership failure.
+                        // It must never inherit the diagnosed startup's cleanup exemption.
+                        _diagnosedStartupFailure = false;
+                        throw new AggregateException("Native initialization and original task observation failed.", failure, observation);
+                    }
                     throw;
                 }
             }).ConfigureAwait(false);
@@ -459,7 +483,12 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 {
                     if (task is null) return;
                     try { await task; }
-                    catch (Exception error) { AddOriginalCauses(failures, task, error); }
+                    catch (Exception error)
+                    {
+                        if (!_diagnosedStartupFailure ||
+                            !ReferenceEquals(task, _initialization) && !ReferenceEquals(task, _actualInitialization))
+                            AddOriginalCauses(failures, task, error);
+                    }
                 }
                 try { WithinOriginal(() => { _lifetime.Cancel(); return true; }); }
                 catch (Exception error) { failures.Add(error); }

@@ -123,10 +123,6 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private string _status = "Browse is starting.";
     private bool _disposed;
 
-    /// <summary>First line of the most recent restore-attach failure, so the exhausted-retry
-    /// close-out can tell the owner why the saved app never came up.</summary>
-    private string? _lastRestoreAttachCause;
-
     private BrowseChrome(
         IAppPaths paths,
         IBrowseEngineHostFactory? engineFactory,
@@ -812,23 +808,18 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 try { await AttachAppContentAsync(tab, address, cancellationToken).ConfigureAwait(false); }
                 catch (Exception failure) when (restoring && !cancellationToken.IsCancellationRequested)
                 {
-                    // Swallowed at restore-time by design, but never silently: retain the exact
-                    // cause for diagnostics. The failed attach this run just observed leaves a
-                    // wedged owner behind whose initialization faulted, which is exactly the
-                    // owner-visible unclosable-tab bug, so release it immediately; the bounded
-                    // retry below re-attaches with fresh owners instead of reusing that one.
-                    tab.RestoreAttachFailed = true;
+                    // A saved route remains recoverable, but a completed failed start is
+                    // not a reason to keep an empty tab's resources alive. Release only
+                    // through the actual owner; any cleanup failure stays retained.
                     tab.EngineState = BrowseEngineState.Unsupported;
-                    _lastRestoreAttachCause = FirstLine(failure);
                     tab.Status = "The saved native app could not start: " + FirstLine(failure)
-                        + ". Its route and original owner are retained; retrying.";
-                    // The failed attach leaves a wedged owner whose initialization faulted, so
-                    // release it right away rather than parking it until the next retry tick;
-                    // that wedge is what made the owner's restored tabs unclosable.
+                        + ". Its route is retained; reopen it from Home.";
                     try { await ReleaseContentAsync(tab, preservePendingHosts: true).ConfigureAwait(false); }
-                    catch (Exception) { /* release causes are already retained close state */ }
+                    catch (Exception cleanup)
+                    {
+                        tab.Status += " Resource cleanup also failed: " + FirstLine(cleanup);
+                    }
                     RetainAppSource(SaveTabsAsync(CancellationToken.None));
-                    ScheduleSavedAppAttachRetry(tab, cancellationToken);
                 }
             }
             else if (IsEngineAvailable(tab.Engine))
@@ -851,66 +842,6 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 tab.Status = tab.Address.IsWeb ? "The tab engine could not finish starting." : "The original native app could not finish starting. Its owner is retained.";
             }
             throw;
-        }
-    }
-
-    /// <summary>Bounded startup-transient retry for restored native app content. Host
-    /// admission during app restore may legitimately be unavailable (retiring window,
-    /// resolver sequencing); a saved tab must regain its app rather than stay dead until
-    /// the next restart. Owners whose initialization already failed are released
-    /// best-effort before re-attaching; failures stay bounded and diagnosable.</summary>
-    private void ScheduleSavedAppAttachRetry(TabRuntime tab, CancellationToken cancellationToken)
-    {
-        _ = RetryAsync();
-        async Task RetryAsync()
-        {
-            const int MaxAttempts = 8;
-            for (var attempt = 1; attempt <= MaxAttempts; attempt++)
-            {
-                try { await Task.Delay(TimeSpan.FromSeconds(attempt), cancellationToken).ConfigureAwait(false); }
-                catch (TaskCanceledException) { return; }
-                lock (_nativeSourceGate) { if (_nativeRetiring || _disposed) return; }
-                if (!_tabs.Contains(tab) || !tab.RestoreAttachFailed) return;
-                if (tab.AppOwner is not null && tab.EngineState == BrowseEngineState.NativeApp) return;
-                try
-                {
-                    using var transition = AdmitContentTransition();
-                    tab.RestoreAttachFailed = attempt == MaxAttempts;
-                    try { await ReleaseContentAsync(tab, preservePendingHosts: true).ConfigureAwait(false); }
-                    catch (Exception) { /* Release causes are already retained close state; re-attach may still succeed */ }
-                    try { await AttachAppContentAsync(tab, tab.Address, cancellationToken).ConfigureAwait(false); }
-                    catch (Exception failure) when (!cancellationToken.IsCancellationRequested)
-                    {
-                        _lastRestoreAttachCause = FirstLine(failure);
-                        tab.AppOwner = null;
-                        tab.EngineState = BrowseEngineState.Unsupported;
-                        tab.Status = $"The saved native app could not start (retry {attempt}/{MaxAttempts}): "
-                            + FirstLine(failure) + ". Its route and original owner are retained.";
-                        continue;
-                    }
-                    Publish();
-                    return;
-                }
-                catch (ObjectDisposedException) { return; }
-                catch (InvalidOperationException) { return; }
-            }
-
-            // Every bounded attempt failed. Keep the retained route, but stop holding a wedged
-            // owner whose initialization faulted: after eight failed starts the tab offers no app
-            // content, so retaining that owner made the tab itself uncloseable and the window
-            // uncloseable, which the owner reported live. The route stays in the saved session, so
-            // the app regains real owners the next time it is opened from it.
-            if (cancellationToken.IsCancellationRequested || !_tabs.Contains(tab)) return;
-            tab.RestoreAttachFailed = false;
-            tab.EngineState = BrowseEngineState.Unsupported;
-            try { await ReleaseContentAsync(tab).ConfigureAwait(false); }
-            catch (Exception) { /* the release cause is already retained close state */ }
-            tab.AppOwner = null;
-            tab.Status = "The saved native app could not start after 8 retries"
-                + (_lastRestoreAttachCause is { } latest ? ": " + latest : "")
-                + ". Its route is retained; retry it from Home or replace this tab.";
-            RetainAppSource(SaveTabsAsync(CancellationToken.None));
-            Publish();
         }
     }
 
@@ -1320,7 +1251,6 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         public bool IsLoading { get; set; }
         public bool HasOriginalCommittedPage { get; set; }
         public string Status { get; set; } = "Idle";
-        public bool RestoreAttachFailed { get; set; }
         public string FindQuery { get; set; } = string.Empty;
         public int ZoomPercent { get; set; } = 100;
         public Dictionary<(string Origin, BrowserSitePermissionKind Kind), BrowserSitePermissionDecision> PrivatePermissions { get; } = [];

@@ -38,12 +38,176 @@ public sealed class NativeAppContentRegistryTests
         source.App = canvas with { IsEnabled = false };
         var disabled = registry.CreateSession(Request("9to1://canvas"));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => disabled.InitializeAsync());
-        await Assert.ThrowsAsync<AggregateException>(() => disabled.CloseAndDrainAsync());
+        await disabled.CloseAndDrainAsync();
+        Assert.True(disabled.OriginalInitialization!.IsFaulted);
+        Assert.True(disabled.CanRetireOriginalView);
         Assert.Equal(1, factory.Calls);
         var unbound = new NativeAppContentRegistry(source,
             NativeAppContentRegistry.NativeAppContentRegistrations.Build(other, other, other), () => true);
         Assert.Throws<NativeAppContentRegistry.NativeAppContentAdmissionRefusal>(() => unbound.CreateSession(Request("9to1://canvas")));
         Assert.Equal(0, other.Calls);
+    }
+
+    [AvaloniaFact]
+    public async Task Refused_start_before_owner_acquisition_can_drain_without_erasing_original_failure()
+    {
+        var source = new RegistrySource { App = Files with { IsEnabled = false } };
+        var factory = new Factory(_ => throw new InvalidOperationException("No owner should be acquired"));
+        var session = Registry(source, factory).CreateSession(Request());
+        var startup = session.InitializeAsync();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => startup);
+        await session.CloseAndDrainAsync();
+        Assert.Equal(0, factory.Calls);
+        Assert.True(startup.IsFaulted);
+        Assert.Same(startup, session.OriginalInitialization);
+        Assert.True(session.CanRetireOriginalView);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Failed_start_drains_only_when_the_actual_native_owner_cleanup_succeeds(bool cleanupFails)
+    {
+        var request = Request();
+        var startupFailure = new IOException("Original failed initialization");
+        var cleanupFailure = new IOException("Original cleanup failure");
+        var owner = new NativeOwner(request.Address)
+        {
+            InitializeBody = _ => Task.FromException(startupFailure),
+            CloseBody = () => cleanupFails ? Task.FromException(cleanupFailure) : Task.CompletedTask
+        };
+        var session = Registry(new(), new(_ => owner)).CreateSession(request);
+        var startup = session.InitializeAsync();
+        Assert.Same(startupFailure, await Assert.ThrowsAsync<IOException>(() => startup));
+        if (cleanupFails)
+        {
+            var close = await Assert.ThrowsAsync<AggregateException>(() => session.CloseAndDrainAsync());
+            Assert.Contains(cleanupFailure, close.Flatten().InnerExceptions);
+            Assert.False(session.CanRetireOriginalView);
+        }
+        else
+        {
+            await session.CloseAndDrainAsync();
+            Assert.True(session.CanRetireOriginalView);
+        }
+        Assert.True(startup.IsFaulted);
+        Assert.Same(startup, session.OriginalInitialization);
+        Assert.Equal(1, owner.CloseCalls);
+    }
+
+    [AvaloniaFact]
+    public async Task Failed_start_and_failed_original_task_observation_both_block_clean_retirement()
+    {
+        var startupFailure = new IOException("Exact startup failure");
+        var observationFailure = new IOException("Original initialization getter failed");
+        var reads = 0;
+        var owner = new NativeOwner(Request().Address)
+        {
+            InitializeBody = _ => Task.FromException(startupFailure),
+            InitializationObservation = original => ++reads == 2 ? throw observationFailure : original
+        };
+        var session = Registry(new(), new(_ => owner)).CreateSession(Request());
+        var startup = await Assert.ThrowsAsync<AggregateException>(() => session.InitializeAsync());
+        Assert.Contains(startupFailure, startup.Flatten().InnerExceptions);
+        Assert.Contains(observationFailure, startup.Flatten().InnerExceptions);
+        var close = await Assert.ThrowsAsync<AggregateException>(() => session.CloseAndDrainAsync());
+        Assert.Contains(startupFailure, close.Flatten().InnerExceptions);
+        Assert.Contains(observationFailure, close.Flatten().InnerExceptions);
+        Assert.False(session.CanRetireOriginalView);
+        Assert.Equal(1, owner.CloseCalls);
+    }
+
+    [AvaloniaFact]
+    public async Task Three_restored_failed_Boards_starts_close_individually_then_the_window_drains()
+    {
+        var boards = BuiltInModeSeed.Modes.Single(app => app.Key == "boards");
+        var failures = new List<Exception>();
+        var factory = new Factory(_ =>
+        {
+            var failure = new UnauthorizedAccessException("The one-use board selection is no longer available.");
+            failures.Add(failure);
+            throw failure;
+        });
+        var bindings = new[] { new NativeAppContentRegistration(boards.Id, boards.Key, HavenAppRouteKind.ModeWorkspace, factory) };
+        var registry = new NativeAppContentRegistry(new RegistrySource { App = boards }, bindings, () => true);
+        var ids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        var rows = ids.Select(id => new BrowserTabState(id, "Saved board", "9to1://boards/notebooks/" + id.ToString("D"),
+            BrowserTabPrivacy.Standard, "", DateTimeOffset.UtcNow) { ProfileId = "original-profile" }).ToArray();
+        var paths = new StrongPaths();
+        var chrome = await BrowseChrome.CreateAsync(paths, appContentFactory: registry, homeProfileId: "original-profile",
+            tabSessionPersistence: new StartupProjection(new(rows, ids[0])));
+        try
+        {
+            Assert.Equal(3, factory.Calls);
+            Assert.Equal(3, chrome.DrainedStartupFailures.Count);
+            foreach (var id in new[] { ids[1], ids[0], ids[2] })
+            {
+                Assert.Equal(BrowseEngineState.Unsupported, chrome.State.Tabs.Single(tab => tab.Id == id).EngineState);
+                await chrome.CloseTabAsync(id);
+                Assert.DoesNotContain(chrome.State.Tabs, tab => tab.Id == id);
+            }
+            Assert.Equal(3, factory.Calls); // No detached retry may resurrect a failed tab.
+            Assert.All(chrome.DrainedStartupFailures, record =>
+                Assert.Contains(record.OriginalInitialization.Exception!.InnerException!, failures));
+            await chrome.DisposeAsync();
+        }
+        finally
+        {
+            await chrome.DisposeAsync();
+            Directory.Delete(paths.DataDirectory, true);
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Registry_and_Chrome_retire_startup_lineage_only_after_actual_cleanup(bool cleanupFails)
+    {
+        var startupFailure = new IOException("Exact native initialization failure");
+        var cleanupFailure = new IOException("Exact native resource cleanup failure");
+        NativeOwner? native = null;
+        var factory = new Factory(request => native = new NativeOwner(request.Address)
+        {
+            InitializeBody = _ => Task.FromException(startupFailure),
+            CloseBody = () => cleanupFails ? Task.FromException(cleanupFailure) : Task.CompletedTask
+        });
+        var paths = new StrongPaths();
+        var chrome = await BrowseChrome.CreateAsync(paths, appContentFactory: Registry(new(), factory), homeProfileId: "original-profile");
+        var operation = chrome.NavigateAsync("9to1://files/failing");
+        var outer = Forward(operation);
+        chrome.LinkAdmissionPropagation(outer, operation);
+        var observed = await Record.ExceptionAsync(() => outer);
+        Assert.NotNull(native);
+        Assert.Same(startupFailure, native.OriginalInitialization!.Exception!.InnerException);
+        Assert.True(native.OriginalInitialization.IsFaulted);
+        Assert.Equal(1, native.CloseCalls);
+        if (cleanupFails)
+        {
+            var failure = Assert.IsType<AggregateException>(observed);
+            Assert.Contains(cleanupFailure, failure.Flatten().InnerExceptions);
+            Assert.Empty(chrome.DrainedStartupFailures);
+            Assert.False(chrome.TryRetireAdmissionSource(outer));
+            var close = await Assert.ThrowsAsync<AggregateException>(() => chrome.DisposeAsync().AsTask());
+            Assert.Contains(cleanupFailure, close.Flatten().InnerExceptions);
+            // Failed resource retirement deliberately preserves its owner and store.
+        }
+        else
+        {
+            Assert.Same(startupFailure, observed);
+            Assert.True(chrome.TryRetireAdmissionSource(outer));
+            var diagnosis = Assert.Single(chrome.DrainedStartupFailures);
+            Assert.Same(startupFailure, diagnosis.OriginalInitialization.Exception!.InnerException);
+            Assert.False(chrome.TryRetireAdmissionSource(Task.FromException(startupFailure)));
+            await chrome.DisposeAsync();
+            Directory.Delete(paths.DataDirectory, true);
+        }
+        static async Task Forward(Task original) => await original;
+    }
+
+    private sealed class StartupProjection(BrowseTabSessionProjection projection) : IBrowseTabSessionPersistence
+    {
+        public Task<BrowseTabSessionProjection?> LoadAsync(CancellationToken token) => Task.FromResult<BrowseTabSessionProjection?>(projection);
+        public Task SaveAsync(BrowseTabSessionProjection snapshot, CancellationToken token) => Task.CompletedTask;
     }
 
     [AvaloniaFact]
@@ -689,7 +853,13 @@ public sealed class NativeAppContentRegistryTests
         }
         public bool IsPublicationCurrent => OriginalInitialization?.IsCompletedSuccessfully == true && OriginalClose is null;
         public bool CanRetireOriginalView => OriginalClose?.IsCompletedSuccessfully == true;
-        public Task? OriginalInitialization { get; private set; }
+        private Task? _originalInitialization;
+        public Func<Task?, Task?>? InitializationObservation;
+        public Task? OriginalInitialization
+        {
+            get => InitializationObservation is { } observe ? observe(_originalInitialization) : _originalInitialization;
+            private set => _originalInitialization = value;
+        }
         public Task? OriginalClose { get; private set; }
         public Control OriginalNativeView => View;
         public bool CanClose = true;

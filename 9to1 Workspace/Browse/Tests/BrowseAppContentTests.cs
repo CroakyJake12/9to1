@@ -27,7 +27,7 @@ public sealed partial class BrowseNativeOwnershipTests
     }
 
     [Fact]
-    public async Task Failed_app_initialization_retains_actual_owner_task_and_does_not_replace_live_web_tab()
+    public async Task Failed_app_initialization_preserves_diagnosis_and_live_web_tab_but_clean_resources_can_retire()
     {
         var engines = new ChromiumFixtureFactory(includeGecko: true);
         var failure = new IOException("Original app startup failed"); var apps = new AppFixtureFactory { InitializationFailure = failure };
@@ -38,8 +38,50 @@ public sealed partial class BrowseNativeOwnershipTests
         var owner = Assert.Single(apps.Sessions);
         Assert.Equal(before, chrome.State.SelectedTab); Assert.Equal(0, renderer.CloseCalls);
         Assert.Contains(owner.OriginalInitialization!, chrome.OriginalNativeSources);
-        var close = await Assert.ThrowsAsync<AggregateException>(() => chrome.DisposeAsync().AsTask());
-        Assert.Contains(failure, close.Flatten().InnerExceptions); Assert.Equal(1, owner.CloseCalls);
+        var diagnosis = Assert.Single(chrome.DrainedStartupFailures);
+        Assert.Same(owner.OriginalInitialization, diagnosis.OriginalInitialization);
+        Assert.Same(failure, diagnosis.OriginalInitialization.Exception!.InnerException);
+        await chrome.DisposeAsync();
+        Assert.Equal(1, owner.CloseCalls);
+        RetainedFailedOwners.Remove(chrome);
+    }
+
+    [Fact]
+    public async Task Drained_startup_failure_retires_only_its_exact_outer_action_lineage()
+    {
+        var failure = new IOException("Owned startup failure");
+        var apps = new AppFixtureFactory { InitializationFailure = failure };
+        var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), appContentFactory: apps, homeProfileId: "profile");
+        RetainedFailedOwners.Add(chrome);
+        var operation = chrome.NavigateAsync("9to1://write/failing");
+        var outer = Forward(operation);
+        chrome.LinkAdmissionPropagation(outer, operation);
+        Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => outer));
+        Assert.True(chrome.TryRetireAdmissionSource(outer));
+        Assert.False(chrome.TryRetireAdmissionSource(Task.FromException(failure)));
+        var sharedGraph = RepeatedAggregate(outer);
+        chrome.LinkAdmissionPropagation(sharedGraph, outer);
+        Assert.NotNull(await Record.ExceptionAsync(() => sharedGraph));
+        Assert.True(chrome.TryRetireAdmissionSource(sharedGraph));
+        var siblingFailure = new IOException("Unrelated resource cleanup");
+        var sibling = Task.WhenAll(outer, Task.FromException(siblingFailure));
+        chrome.LinkAdmissionPropagation(sibling, outer);
+        await Assert.ThrowsAnyAsync<Exception>(() => sibling);
+        Assert.False(chrome.TryRetireAdmissionSource(sibling));
+        Assert.Single(chrome.DrainedStartupFailures);
+        await chrome.DisposeAsync();
+        RetainedFailedOwners.Remove(chrome);
+        static async Task Forward(Task original) => await original;
+        static async Task RepeatedAggregate(Task original)
+        {
+            try { await original; }
+            catch (Exception failure)
+            {
+                Exception graph = failure;
+                for (var index = 0; index < 48; index++) graph = new AggregateException(graph, graph);
+                throw graph;
+            }
+        }
     }
 
     [Fact]

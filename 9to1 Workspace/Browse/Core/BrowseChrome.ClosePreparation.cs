@@ -560,6 +560,7 @@ public sealed partial class BrowseChrome
                 try
                 {
                     if (owner.Changed is not null) owner.Session.StateChanged -= owner.Changed;
+                    ArchiveDrainedStartupFailure(owner);
                     tab.AppOwners.Remove(owner);
                 }
                 catch (Exception cleanup) { failures.Add(cleanup); RecordCloseFailure(owner, cleanup); }
