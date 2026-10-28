@@ -221,7 +221,7 @@ internal sealed class CuiHoverFeedback : IDisposable
 
     private void ObserveBackgroundBrush()
     {
-        var brush = _store.Resolve("Background").Value as IBrush;
+        var brush = _store.Contains("Background") ? _store.Resolve("Background").Value as IBrush : null;
         if (ReferenceEquals(brush, _observedBackground)) return;
         _backgroundBrushSubscription?.Dispose(); _observedBackground = brush;
         _backgroundBrushSubscription = WatchMutableBrush(brush, Refresh);
@@ -280,7 +280,7 @@ internal sealed class CuiHoverFeedback : IDisposable
             && !_dragging
             && !CuiPropertyPresentation.IsEmbeddedInput(_owner)
             && !chromeless;
-        var background = _store.Resolve("Background").Value as IBrush;
+        var background = _store.Contains("Background") ? _store.Resolve("Background").Value as IBrush : null;
         var tint = DeriveTint(background, highContrast);
         if (active && tint is null)
             tint = DeriveTint(Resource("CuiPanelBrush") as IBrush, highContrast);
