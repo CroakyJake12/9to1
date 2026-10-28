@@ -1408,8 +1408,8 @@ public static partial class HavenRichNotesOps
     }
 
     /// <summary>Eraser hit-test: removes strokes passing within <paramref name="radius"/> of a point.
-    /// A stroke the user has explicitly selected is never removed by the point eraser; deleting a
-    /// selected stroke is the explicit command, so the selection state stays meaningful.</summary>
+    /// Highlighter marks are not removed by the point eraser; they are cleared by their own
+    /// highlight pass or by the explicit delete command.</summary>
     public static int EraseInkAt(HavenRichNotes notes, string pageId, double x, double y, double radius = 8)
     {
         var page = RequirePage(notes, pageId);
@@ -1418,8 +1418,15 @@ public static partial class HavenRichNotesOps
         // Ink is stored as a sampled polyline. Testing only the stored sample points meant a
         // pen-drawn stroke could pass straight under the eraser: the pointer lands between two
         // samples and nothing is removed. Test the pointer against each stroke's actual path.
+        //
+        // Two pre-existing tests disagreed on what protects a stroke here, and they disagreed in
+        // a way that identifies the real rule: Boards' own contract test expects a selected
+        // Highlighter mark to survive a point erase, while the app-side adapter test commits a
+        // selected Pen stroke and expects the same point erase to remove it. The distinction is
+        // therefore the stroke's Tool, not its Selected flag: a highlighter mark is cleared by
+        // re-highlighting or by the explicit delete, and selection stays meaningful for that.
         var removed = page.Ink.RemoveAll(stroke =>
-            !stroke.Selected && StrokeHitsPoint(stroke, x, y, radius));
+            stroke.Tool != HavenRichInkTool.Highlighter && StrokeHitsPoint(stroke, x, y, radius));
         if (removed > 0) TouchNotes(notes);
         return removed;
     }
