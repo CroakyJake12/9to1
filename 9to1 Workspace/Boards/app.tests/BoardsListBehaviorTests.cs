@@ -106,6 +106,79 @@ public sealed class BoardsListBehaviorTests
         finally { Directory.Delete(root, true); }
     }
 
+    /// <summary>
+    /// Owner bug: moving/duplicating a list row was refused. A projected row ticket used to be
+    /// fenced on the whole page view, so any edit anywhere - and the deferred merge that MarkDirty
+    /// starts without awaiting for an ordinary typing edit, which refreshes the view a moment
+    /// later - invalidated a freshly captured ticket and the answer was StaleOrReadOnly.
+    ///
+    /// The rule being pinned here: the ticket must survive edits it has nothing to do with, and must
+    /// still be refused when the row itself or the shape of its list changed. Asserting the refusal
+    /// code as well as the boolean, so a regression identifies the owning gate.
+    /// </summary>
+    [Fact]
+    public async Task Row_tickets_survive_unrelated_edits_and_still_refuse_row_or_list_changes()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-list-tickets-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root); var path = Path.Combine(root, "list.9to1board");
+            await Seed(store, path, HavenRichBlockKind.Checklist, 1, empty: false);
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var vm = new BoardsViewModel(adapter); if (!vm.IsEditMode) await vm.DispatchAsync("ToggleEditView", null);
+
+                // 1. Typing in another row of the same list, and the deferred merge that such an
+                //    edit starts on its own, must not veto a row action asked for afterwards.
+                var moveUp = adapter.CaptureBlockAction(vm.SelectedPageId, "list:c"); Assert.NotNull(moveUp);
+                vm.EditText("chk_list_a", "Edited while another row is moved");
+                await Task.Delay(120);
+                var afterUnrelated = await adapter.ApplyBlockActionAsync(moveUp!, BoardBlockAction.MoveUp, () => true);
+                Assert.True(afterUnrelated.Applied, "Unrelated row edit vetoed a fresh row move: " + afterUnrelated.Code);
+                Assert.Equal("list:c", afterUnrelated.SelectedBlockId);
+
+                // 2. The same edit pattern must still refuse a ticket for the row that was edited.
+                var staleDelete = adapter.CaptureBlockAction(vm.SelectedPageId, "list:b"); Assert.NotNull(staleDelete);
+                vm.EditText("chk_list_b", "Edited into the ticket's own row");
+                var refused = await adapter.ApplyBlockActionAsync(staleDelete!, BoardBlockAction.Delete, () => true);
+                Assert.False(refused.Applied);
+                Assert.Equal("StaleOrReadOnly", refused.Code);
+
+                // 3. A change to the list's shape still invalidates an older row ticket, even when
+                //    that row's own text is untouched: duplicating another row renumbers siblings.
+                var fresh = adapter.CaptureBlockAction(vm.SelectedPageId, "list:c"); Assert.NotNull(fresh);
+                var older = adapter.CaptureBlockAction(vm.SelectedPageId, "list:b"); Assert.NotNull(older);
+                var duplicated = await adapter.ApplyBlockActionAsync(fresh!, BoardBlockAction.Duplicate, () => true);
+                Assert.True(duplicated.Applied, "Duplicate refused: " + duplicated.Code);
+                var shapeStale = await adapter.ApplyBlockActionAsync(older!, BoardBlockAction.Delete, () => true);
+                Assert.False(shapeStale.Applied);
+                Assert.Equal("StaleOrReadOnly", shapeStale.Code);
+
+                // 4. What was allowed has to be real and what was refused must not have happened:
+                //    row c moved up and was duplicated, row b is still there with its own edit,
+                //    and the unrelated edit to row a survived all of it.
+                await adapter.SaveAsync();
+                var items = (await adapter.GetDetachedContractDocumentAsync()).RichNotes!
+                    .Sections.Single().Pages.Single().Blocks.Single(block => block.Id == "list").Items;
+                Assert.Equal(4, items.Count);
+                Assert.Equal("a", items[0].Id);
+                Assert.Equal("b", items[^1].Id);
+                Assert.Equal(2, items.Count(row => row.Text == "Last")); // the row plus its duplicate
+                Assert.Equal("Edited while another row is moved", items[0].Text);
+                Assert.Equal("Edited into the ticket's own row", items[^1].Text);
+            }
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            // The reopened view projects each list row as its own block (the same projection the
+            // surface renders), so the saved work is read back row by row.
+            var saved = reopened.Document.Sections.Single().Pages.Single().Blocks;
+            Assert.Equal(4, saved.Count);
+            Assert.Contains(saved, block => block.Text == "Edited into the ticket's own row");
+            Assert.Contains(saved, block => block.Text == "Edited while another row is moved");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     private static async Task Seed(JsonFileHavenBoardStore store, string path, HavenRichBlockKind kind, int level, bool empty)
     {
         await using var session = await RichBoardSession.CreateNewAsync(store, "Lists");

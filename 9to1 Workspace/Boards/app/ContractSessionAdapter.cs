@@ -370,6 +370,40 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     private string BlockActionStamp() => Convert.ToHexString(
         System.Security.Cryptography.SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(_view, Json)));
 
+    /// <summary>Content fence for one projected list row: the row's own content, its position
+    /// inside its parent list and that list's row count.</summary>
+    private static string ListRowStamp(RichBoardBlock row, int index, int count) =>
+        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            JsonSerializer.SerializeToUtf8Bytes(new object[] { index, count, row }, Json)));
+
+    /// <summary>True while an issued row ticket still describes the row it was captured for.</summary>
+    /// <remarks>
+    /// Whole-block tickets are fenced on the whole page view (BlockActionStamp), which is the right
+    /// rule for a block being reordered among its siblings. Projected list rows are different: they
+    /// are children of one list block, not siblings of every block on the page. Under the whole-view
+    /// rule ANY edit anywhere in the board invalidated a freshly captured row ticket - including the
+    /// deferred merge that MarkDirty starts without awaiting for an ordinary typing edit, which
+    /// refreshes the view a moment later and made the refusal timing-dependent. The result was the
+    /// owner's list-row complaint: the grip's move/duplicate/delete and pointer drags answered
+    /// StaleOrReadOnly. The row's own content and its position inside the list are what the grip and
+    /// the pointer were actually measured against, so those are what must still hold. The real
+    /// document is still re-checked after pending merges are joined (Applicable), and the mutation
+    /// still runs under the merge gate against the version taken there; an edit to the row itself,
+    /// or any change to the list's shape, continues to invalidate the ticket.
+    /// </remarks>
+    private bool CurrentListRowTicket(BoardBlockActionTarget target)
+    {
+        var split = target.BlockId.IndexOf(':');
+        if (split < 1) return false;
+        var parent = target.BlockId[..split] + ":";
+        var page = _view.Sections.SelectMany(section => section.Pages)
+            .FirstOrDefault(value => value.Id == target.PageId);
+        var rows = page?.Blocks.Where(row => row.Id.StartsWith(parent, StringComparison.Ordinal)).ToArray();
+        if (rows is null || rows.Length != target.ViewCount) return false;
+        var at = Array.FindIndex(rows, row => row.Id == target.BlockId);
+        return at == target.ViewIndex && ListRowStamp(rows[at], at, rows.Length) == target.ViewStamp;
+    }
+
     /// <summary>A transient current-owner ticket, never another document/history.
     /// Projection child ids and ink identities are not whole contract blocks.</summary>
     public BoardBlockActionTarget? CaptureBlockAction(string pageId, string blockId)
@@ -382,12 +416,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
                 "checklist" or "bulleted" or "numbered" or "database" or "tabber"))
         { return null; }
         var count = page.Blocks.Count;
+        string? rowStamp = null;
         if (blockId.Contains(':'))
         {
             var parent = blockId[..blockId.IndexOf(':')];
             var rows = page.Blocks.Where(row => row.Id.StartsWith(parent + ":", StringComparison.Ordinal)).ToArray();
             index = Array.FindIndex(rows, row => row.Id == blockId); count = rows.Length;
             if (index < 0 || page.Blocks.First(row => row.Id == blockId).Kind is not ("checklist" or "bulleted" or "numbered")) return null;
+            rowStamp = ListRowStamp(rows[index], index, count);
         }
         var viewStamp = BlockActionStamp();
         lock (_blockActionTicketGate)
@@ -398,7 +434,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
                 _issuedBlockActionViewStamp = viewStamp;
             }
             var candidate = new BoardBlockActionTarget(_textOwner, DocumentVersion, pageId, blockId,
-                viewStamp, index, count);
+                rowStamp ?? viewStamp, index, count);
             var issued = _issuedBlockActions.FirstOrDefault(value => value == candidate);
             if (issued is not null) return issued;
             _issuedBlockActions.Add(candidate);
@@ -506,8 +542,8 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         try
         {
             bool Current() => !_disposed && IsIssuedBlockAction(target) && target.OwnerId == _textOwner &&
-                originStillEditable() && target.ViewStamp == BlockActionStamp();
-            if (!Current() || target.Revision != DocumentVersion) return new(false, "StaleOrReadOnly", null);
+                originStillEditable() && CurrentListRowTicket(target);
+            if (!Current()) return new(false, "StaleOrReadOnly", null);
             var split = target.BlockId.IndexOf(':'); var parentId = target.BlockId[..split]; var itemId = target.BlockId[(split + 1)..];
             var to = destination ?? (action == BoardBlockAction.MoveUp ? target.ViewIndex - 1 : target.ViewIndex + 1);
             if ((destination is not null || action is BoardBlockAction.MoveUp or BoardBlockAction.MoveDown) &&
@@ -1023,13 +1059,23 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     {
         // Undo/redo can restore equal revision/content; never revive an issued range.
         _issuedTextSelection = null;
-        lock (_blockActionTicketGate)
-        {
-            _issuedBlockActions.Clear();
-            _issuedBlockActionViewStamp = null;
-        }
         Projector.Project(_real.Rich, _view);
         _baselineJson = JsonSerializer.Serialize(_view, Json);
+        lock (_blockActionTicketGate)
+        {
+            // A whole-block ticket is fenced on the whole view that this refresh has just replaced,
+            // so it is dropped. A projected list-row ticket is fenced on its own row (see
+            // CurrentListRowTicket), so it survives a refresh while the row it names is still the
+            // same row in the same position of the same list. Dropping those too is what made the
+            // owner's list-row moves, duplicates and deletes refuse with StaleOrReadOnly: an
+            // ordinary typing edit calls MarkDirty, whose deferred merge lands here a moment after
+            // the user grabbed a row grip, and the ticket vanished even though its row had nothing
+            // to do with the edit. Pruning before the projection would have evaluated the fence
+            // against the view it is replacing, hence the reordered statements.
+            _issuedBlockActions.RemoveAll(issued =>
+                !issued.BlockId.Contains(':') || !CurrentListRowTicket(issued));
+            _issuedBlockActionViewStamp = null;
+        }
     }
 
     private void SetError(string message)
