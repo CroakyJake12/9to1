@@ -34,6 +34,7 @@ public sealed class RichBoardSection
 /// <summary>A page holding an ordered block list.</summary>
 public sealed class RichBoardPage
 {
+    public string? TabberOwnerBlockId { get; set; }
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Untitled page";
@@ -90,6 +91,7 @@ public sealed class RichBoardBlock
     public RichDividerView? Divider { get; set; }
     public RichGraphView? Graph { get; set; }
     public HavenBoardDatabaseReference? Database { get; set; }
+    public HavenTabber? Tabber { get; set; }
     public string? AttachmentId { get; set; }
     public string? AttachmentName { get; set; }
     public long AttachmentSize { get; set; }

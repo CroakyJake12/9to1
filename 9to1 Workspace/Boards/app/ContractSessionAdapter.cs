@@ -366,7 +366,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         var index = page?.Blocks.FindIndex(block => block.Id == blockId) ?? -1;
         if (page is null || index < 0 ||
             page.Blocks[index].Kind is not ("paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
-                "checklist" or "bulleted" or "numbered" or "database"))
+                "checklist" or "bulleted" or "numbered" or "database" or "tabber"))
         { return null; }
         var count = page.Blocks.Count;
         if (blockId.Contains(':'))
@@ -1773,6 +1773,34 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
                 cancellationToken).ConfigureAwait(false);
             RefreshView();
             return removed;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async Task<string> AddTabberAsync(string pageID, string? after, CancellationToken token = default)
+    {
+        ThrowIfDisposed(); EnsureEditable();
+        await _mergeGate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(token).ConfigureAwait(false);
+            string id = "";
+            await _real.MutateAsync(notes => id = HavenTabberOps.Add(notes, pageID, after).Id, token).ConfigureAwait(false);
+            RefreshView(); return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async Task ChangeTabberAsync(string pageID, string blockID, string action, string? paneID = null,
+        string? title = null, CancellationToken token = default)
+    {
+        ThrowIfDisposed(); EnsureEditable();
+        await _mergeGate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(token).ConfigureAwait(false);
+            await _real.MutateAsync(notes => HavenTabberOps.Change(notes, pageID, blockID, action, paneID, title), token).ConfigureAwait(false);
+            RefreshView();
         }
         finally { _mergeGate.Release(); }
     }

@@ -63,6 +63,7 @@ public static class HavenBoardDocumentCodec
 
         HavenBoardDocument? document = version switch
         {
+            5 => root.Deserialize<HavenBoardDocument>(Json),
             4 => root.Deserialize<HavenBoardDocument>(Json),
             3 => root.Deserialize<HavenBoardDocument>(Json),
             2 => root.Deserialize<HavenBoardDocument>(Json),

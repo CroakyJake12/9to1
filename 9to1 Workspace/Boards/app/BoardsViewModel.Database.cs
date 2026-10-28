@@ -13,24 +13,33 @@ public sealed partial class BoardsViewModel
     public bool HasPendingDatabaseLink => _pendingDatabase is not null;
     private bool AllowDatabaseStructureChange()
     {
-        if (_databaseBlocks?.HasUnsavedDrafts != true) return true;
+        if (_databaseBlocks?.HasUnsavedDrafts != true && _tabbers?.HasUnsavedDrafts != true) return true;
         Set("StatusText", "Save or discard the edited database fields before deleting content or changing Board history.");
         return false;
     }
 
-    internal Task<IBoardsPresentationClosePreparation?> PrepareDatabaseCloseAsync(CancellationToken token)
+    internal async Task<IBoardsPresentationClosePreparation?> PrepareDatabaseCloseAsync(CancellationToken token)
     {
         if (_creatingDatabase || HasPendingDatabaseLink)
         {
             Set("StatusText", _creatingDatabase
                 ? "Wait for the current database creation or link to finish before closing."
                 : "The database exists in Data, but its Board link is not saved. Return to its original page and choose Link created database before closing.");
-            return Task.FromResult<IBoardsPresentationClosePreparation?>(null);
+            return null;
         }
-        return _databaseBlocks is null ? Task.FromResult<IBoardsPresentationClosePreparation?>(CompletedBoardsPresentationClosePreparation.Instance)
-            : _databaseBlocks.PrepareCloseAsync(token);
+        var own = _databaseBlocks is null ? CompletedBoardsPresentationClosePreparation.Instance
+            : await _databaseBlocks.PrepareCloseAsync(token);
+        if (own is null) return null;
+        if (_tabbers is null) return own;
+        var panes = await _tabbers.PrepareAsync(token);
+        if (panes is null) { await own.AbortAsync(); return null; }
+        return new CombinedBoardsClosePreparation(own, panes);
     }
-    internal ValueTask DisposeDatabasesAsync() => _databaseBlocks?.DisposeAsync() ?? ValueTask.CompletedTask;
+    internal async ValueTask DisposeDatabasesAsync()
+    {
+        if (_tabbers is not null) await _tabbers.DisposeAsync();
+        if (_databaseBlocks is not null) await _databaseBlocks.DisposeAsync();
+    }
 
     internal async Task InsertDatabaseAsync(string command, string? after)
     {

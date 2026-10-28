@@ -30,6 +30,7 @@ internal static class Projector
     {
         Id = page.Id,
         ParentPageId = page.ParentPageId,
+        TabberOwnerBlockId = page.TabberOwnerBlockId,
         Title = page.Title,
         PageType = page.PageType,
         EmbeddedArtifact = page.EmbeddedArtifact,
@@ -104,6 +105,10 @@ internal static class Projector
                             Baseline = item.Baseline.ToString().ToLowerInvariant(),
                             Foreground = item.Foreground
                         });
+                    break;
+                case HavenRichBlockKind.Tabber when block.Tabber is not null:
+                    blocks.Add(new RichBoardBlock { Id = block.Id, Kind = "tabber", Tabber =
+                        new HavenTabber { SelectedPaneId = block.Tabber.SelectedPaneId, Panes = block.Tabber.Panes.ToList() } });
                     break;
                 case HavenRichBlockKind.Database when block.Database is not null:
                     blocks.Add(new RichBoardBlock { Id = block.Id, Kind = "database", Database = block.Database });
@@ -429,6 +434,10 @@ internal static class MergeDeltas
                 HavenRichNotesOps.ApplyStyleToBlock(rich, page.Id, contractBlock.Id, viewBlock.StyleId);
             switch (viewBlock.Kind)
             {
+                case "tabber":
+                    if (viewBlock.Tabber is null) throw new InvalidDataException("Tabber metadata missing.");
+                    contractBlock.Tabber = new HavenTabber { SelectedPaneId = viewBlock.Tabber.SelectedPaneId, Panes = viewBlock.Tabber.Panes.ToList() };
+                    break;
                 case "database":
                     viewBlock.Database?.Validate();
                     if (viewBlock.Database is null) throw new InvalidDataException("Database reference missing.");
@@ -772,6 +781,7 @@ internal static class MergeDeltas
     {
         var page = HavenRichNotesOps.ImportPage(section, viewPage.Id, viewPage.Title);
         page.ParentPageId = viewPage.ParentPageId;
+        page.TabberOwnerBlockId = viewPage.TabberOwnerBlockId;
         page.IsCanvasLocked = viewPage.IsCanvasLocked;
         page.LayoutMode = viewPage.LayoutMode;
         page.PageType = viewPage.PageType;
@@ -831,6 +841,13 @@ internal static class MergeDeltas
     {
         switch (viewBlock.Kind)
         {
+            case "tabber":
+            {
+                var tabber = viewBlock.Tabber ?? throw new InvalidDataException("Tabber metadata missing.");
+                var block = HavenRichNotesOps.ImportBlock(page, HavenRichBlockKind.Tabber, viewBlock.Id);
+                block.Tabber = new HavenTabber { SelectedPaneId = tabber.SelectedPaneId, Panes = tabber.Panes.ToList() };
+                break;
+            }
             case "database":
             {
                 var reference = viewBlock.Database ?? throw new InvalidDataException("The database reference is missing.");

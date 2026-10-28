@@ -18,7 +18,7 @@ public sealed record HavenBoardDocument(
     HavenRichNotes? RichNotes = null)
 {
     public const string FormatIdentity = "9to1.board";
-    public const int CurrentSchemaVersion = 4;
+    public const int CurrentSchemaVersion = 5;
 }
 
 public enum HavenBoardLoadDisposition

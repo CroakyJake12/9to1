@@ -120,7 +120,7 @@ public sealed partial class BoardsViewModel
         var index = blocks.FindIndex(block => block.Id == SelectedBlockId);
         var eligible = index >= 0 && !SelectedBlockId.Contains(':') &&
             blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
-                "checklist" or "bulleted" or "numbered" or "database";
+                "checklist" or "bulleted" or "numbered" or "database" or "tabber";
         var available = _isEditMode && eligible && _session is ContractSessionAdapter && !_blockActionBusy && BlockActionEditingAllowed();
         Set("CanManageSelectedBlock", available);
         Set("CanMoveBlockUp", available && index > 0);

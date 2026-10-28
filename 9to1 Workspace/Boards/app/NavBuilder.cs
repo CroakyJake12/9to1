@@ -42,7 +42,14 @@ public static class NavBuilder
         host.Children.Clear();
 
         var filter = vm.SearchText?.Trim() ?? string.Empty;
-        var sections = vm.Session.Document.Sections;
+        var sections = vm.Session.Document.Sections.Select(section => new RichBoardSection
+        {
+            Id = section.Id, Title = section.Title, IconKey = section.IconKey, IconColor = section.IconColor,
+            GeneratedIcon = section.GeneratedIcon,
+            Pages = section.Pages.Where(page => page.TabberOwnerBlockId is null ||
+                !section.Pages.Any(parent => parent.Blocks.Any(block => block.Id == page.TabberOwnerBlockId &&
+                    block.Tabber?.Panes.Any(pane => pane.PageId == page.Id) == true))).ToList()
+        }).ToList();
         if (sections.Count == 0)
         {
             host.Children.Add(Hint("No sections yet — add one below."));

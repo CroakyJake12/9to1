@@ -43,6 +43,12 @@ public sealed class CuiMenuFocusTests
             fixture.Menu.IsVisible = false; Pump(fixture.Window);
             Assert.False(fixture.Top.IsSubMenuOpen);
             Assert.Equal("document", fixture.Input.Text); Assert.Equal(0, fixture.ActionCount);
+            fixture.Menu.IsVisible = true; Pump(fixture.Window);
+            Click(fixture.Top); Assert.True(fixture.Top.IsSubMenuOpen);
+            var page = Assert.IsAssignableFrom<Control>(fixture.Window.Content);
+            page.IsVisible = false; Pump(fixture.Window);
+            Assert.False(fixture.Top.IsSubMenuOpen);
+            Assert.Equal("document", fixture.Input.Text); Assert.Equal(0, fixture.ActionCount);
         }, CancellationToken.None);
     }
 

@@ -163,7 +163,7 @@ public sealed class BoardsLocalDraftTests
                 catch (IOException) { return false; }
             }
             var results = await Task.WhenAll(Save(first), Save(second));
-            Assert.Single(results.Where(result => result));
+            Assert.Single(results, result => result);
             var winner = results[0] ? "A" : "B";
             var loser = results[0] ? second : first;
             Assert.Equal(winner, (await firstOwner.Store.LoadDocumentAtPathAsync(firstOwner.PathFor(id)))!.RichNotes!.Title);
@@ -298,7 +298,7 @@ public sealed class BoardsLocalDraftTests
                 catch (IOException) { return false; }
             }
             var results = await Task.WhenAll(Create(first, firstDoc), Create(second, secondDoc));
-            Assert.Single(results.Where(result => result));
+            Assert.Single(results, result => result);
             Assert.Equal(results[0] ? "First" : "Second",
                 (await first.Store.LoadDocumentAtPathAsync(first.PathFor(original.DocumentId)))!.RichNotes!.Title);
         }

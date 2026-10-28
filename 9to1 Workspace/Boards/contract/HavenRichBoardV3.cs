@@ -1114,6 +1114,9 @@ public static partial class HavenRichNotesOps
     public static bool RemoveBlock(HavenRichNotes notes, string pageId, string blockId)
     {
         var page = RequirePage(notes, pageId);
+        var block = page.Blocks.FirstOrDefault(item => item.Id == blockId);
+        if (block?.Tabber is not null)
+            HavenTabberOps.RemoveOwnedPanes(notes.Sections.Single(section => section.Pages.Contains(page)), block);
         var removed = page.Blocks.RemoveAll(b => b.Id == blockId) > 0;
         if (removed)
         {

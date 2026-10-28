@@ -448,6 +448,7 @@ public static class ToolbarBuilder
                 if (vm.HasPendingDatabaseLink)
                     AddGroup(list, "Recovery", [("Link created database", "database-retry")], vm, popup, filter, insertAfterBlockId);
             }
+            if (vm.CanAddTabber) AddGroup(list, "Containers", [("Tabber", "tabber")], vm, popup, filter, insertAfterBlockId);
             AddGroup(list, "Other", [("Freeform box", "freeform"), ("Divider", "divider")], vm, popup, filter, insertAfterBlockId);
         }
         search.TextChanged += (_, _) => Fill(search.Text ?? string.Empty);

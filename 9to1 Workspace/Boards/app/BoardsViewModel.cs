@@ -92,6 +92,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _embeddedArtifactHost = embeddedArtifactHost;
         _homeBoardCreationHost = homeBoardCreationHost;
         _sectionIconGenerationHost = sectionIconGenerationHost;
+        _explicitDatabaseSource = databaseSource;
         if (databaseSource is not null) _databaseBlocks = new BoardsDatabaseBlocks(this, databaseSource);
         Set(nameof(IsStandalonePresentation), true);
         Set(nameof(IsEmbeddedPresentation), false);
@@ -2710,7 +2711,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = SelectedBlockOrNull();
         if (block is null)
             return;
-        if (block.Database is not null)
+        if (block.Database is not null || block.Tabber is not null)
         { Set("StatusText", "Database views keep their Data reference. Use Delete to remove this reference, or choose another database view."); return; }
         var contractKind = kind switch
         {
@@ -2874,6 +2875,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         string? initialText = null, bool focusEditor = false)
     {
         if (!RequireEditMode()) return;
+        if (kindTag == "tabber") { await AddTabberAsync(insertAfterBlockId); return; }
         if (kindTag is "database" or "database-tabs" or "database-timeline" or "database-retry")
         { await InsertDatabaseAsync(kindTag, insertAfterBlockId); return; }
         // Drawing is a page capability, not a hidden placeholder block. The

@@ -12,6 +12,7 @@ namespace CakeOS.Cui.Runtime;
 public sealed class CuiMenu : Menu
 {
     private TopLevel? _root;
+    private readonly List<Visual> _visibilityOwners = [];
     private WeakReference<Control>? _outsideFocus;
     private long _generation;
     private long _spaceOpenGeneration;
@@ -22,6 +23,11 @@ public sealed class CuiMenu : Menu
     {
         base.OnAttachedToVisualTree(e);
         _generation++; _root = TopLevel.GetTopLevel(this);
+        foreach (var owner in this.GetVisualAncestors().Prepend(this))
+        {
+            _visibilityOwners.Add(owner);
+            owner.PropertyChanged += OnOwnerVisibilityChanged;
+        }
         if (_root is Window window) window.PropertyChanged += OnOwnerWindowChanged;
         _root?.AddHandler(GotFocusEvent, RootFocused, RoutingStrategies.Bubble, handledEventsToo: true);
         RememberOutsideFocus();
@@ -30,6 +36,8 @@ public sealed class CuiMenu : Menu
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _generation++; _root?.RemoveHandler(GotFocusEvent, RootFocused);
+        foreach (var owner in _visibilityOwners) owner.PropertyChanged -= OnOwnerVisibilityChanged;
+        _visibilityOwners.Clear();
         if (_root is Window window) window.PropertyChanged -= OnOwnerWindowChanged;
         _spaceOpenGeneration++;
         _root = null; _outsideFocus = null;
@@ -39,10 +47,12 @@ public sealed class CuiMenu : Menu
         base.OnDetachedFromVisualTree(e);
     }
 
-    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    private void OnOwnerVisibilityChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
     {
-        base.OnPropertyChanged(change);
-        if (change.Property.Name == "IsEffectivelyVisible" && !IsEffectivelyVisible) Close();
+        // IsEffectivelyVisible is a CLR projection with an internal event, not an
+        // Avalonia property. Observe the public IsVisible property of this menu and
+        // its exact visual ancestors so hiding a page also retires native popups.
+        if (change.Property == Visual.IsVisibleProperty && sender is Visual { IsVisible: false }) Close();
     }
 
     private void OnOwnerWindowChanged(object? sender, AvaloniaPropertyChangedEventArgs change)

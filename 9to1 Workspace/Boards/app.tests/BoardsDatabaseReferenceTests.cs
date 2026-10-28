@@ -59,7 +59,7 @@ public sealed class BoardsDatabaseReferenceTests
             Assert.Null(Assert.Single(board.Document.Sections[0].Pages[0].Blocks).Database);
             await board.SaveAsync();
             var saved = (await store.LoadDocumentAtPathAsync(path))!;
-            Assert.Equal(4, saved.SchemaVersion);
+            Assert.Equal(HavenBoardDocument.CurrentSchemaVersion, saved.SchemaVersion);
             Assert.Equal(document.DocumentId, saved.DocumentId);
         }
         finally { Directory.Delete(root, true); }

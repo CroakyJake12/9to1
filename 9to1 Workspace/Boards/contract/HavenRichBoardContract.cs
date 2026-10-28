@@ -68,6 +68,7 @@ public static class HavenRichSectionIcons
 
 public sealed class HavenRichPage
 {
+    public string? TabberOwnerBlockId { get; set; }
     public string Id { get; set; } = "page-" + Guid.NewGuid().ToString("N")[..12];
     public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Page 1";
@@ -132,7 +133,8 @@ public enum HavenRichBlockKind
     Image = 6,
     Divider = 7,
     Graph = 8,
-    Database = 9
+    Database = 9,
+    Tabber = 10
 }
 
 /// <summary>A live Data reference. Record rows, field values and permissions remain owned by Data.</summary>
@@ -143,6 +145,13 @@ public sealed record HavenBoardDatabaseReference(Guid StoreID, Guid WorkbookID, 
         if (StoreID == Guid.Empty || WorkbookID == Guid.Empty || TableID == Guid.Empty || ViewID == Guid.Empty)
             throw new InvalidDataException("A database block requires stable Data store, workbook, table and view identities.");
     }
+}
+
+public sealed record HavenTabberPane(string Id, string Title, string PageId);
+public sealed class HavenTabber
+{
+    public string SelectedPaneId { get; set; } = "";
+    public List<HavenTabberPane> Panes { get; set; } = [];
 }
 
 public sealed class HavenRichBlock
@@ -167,6 +176,7 @@ public sealed class HavenRichBlock
     public HavenRichGraph? Graph { get; set; }
     public HavenRichDivider? Divider { get; set; }
     public HavenBoardDatabaseReference? Database { get; set; }
+    public HavenTabber? Tabber { get; set; }
     /// <summary>Paragraph alignment override; <see cref="HavenRichAlignment.Inherit"/> resolves from the block style.</summary>
     public HavenRichAlignment Alignment { get; set; } = HavenRichAlignment.Inherit;
     /// <summary>Line spacing multiplier override; 0 inherits from the block style.</summary>
@@ -327,6 +337,7 @@ public static class HavenRichNotesValidator
     public static void Validate(HavenRichNotes notes)
     {
         ArgumentNullException.ThrowIfNull(notes);
+        HavenTabberOps.Validate(notes);
         if (string.IsNullOrWhiteSpace(notes.Title))
             throw new InvalidOperationException("Rich board title must be non-empty.");
         if (notes.Sections.Count == 0)
@@ -811,6 +822,8 @@ public static partial class HavenRichNotesOps
     public static HavenRichSection DuplicateSection(HavenRichNotes notes, string sectionId)
     {
         var source = RequireSection(notes, sectionId);
+        if (source.Pages.Any(page => page.Blocks.Any(block => block.Tabber is not null)))
+            throw new InvalidOperationException("Duplicate individual Tabber blocks before copying their containing section.");
         var copy = CloneWithFreshIds(source);
         copy.Title = source.Title + " copy";
         notes.Sections.Insert(notes.Sections.IndexOf(source) + 1, copy);
@@ -828,6 +841,10 @@ public static partial class HavenRichNotesOps
         if (section.Pages.Count <= 1)
             return false;
         var removedPage = section.Pages.Single(page => page.Id == pageId);
+        if (removedPage.TabberOwnerBlockId is null && section.Pages.Count(page => page.TabberOwnerBlockId is null) <= 1)
+            return false;
+        foreach (var block in removedPage.Blocks.Where(block => block.Tabber is not null).ToArray())
+            HavenTabberOps.RemoveOwnedPanes(section, block);
         foreach (var child in section.Pages.Where(page => page.ParentPageId == pageId))
             child.ParentPageId = removedPage.ParentPageId;
         var removed = section.Pages.RemoveAll(p => p.Id == pageId) > 0;
@@ -845,6 +862,8 @@ public static partial class HavenRichNotesOps
         var section = notes.Sections.FirstOrDefault(s => s.Pages.Any(p => p.Id == pageId))
             ?? throw new KeyNotFoundException("Rich board page was not found.");
         var source = section.Pages.Single(p => p.Id == pageId);
+        if (source.TabberOwnerBlockId is not null || source.Blocks.Any(block => block.Tabber is not null))
+            throw new InvalidOperationException("Duplicate the Tabber block to copy its owned panes.");
         var copy = CloneWithFreshIds(source);
         copy.Title = source.Title + " copy";
         copy.Order = section.Pages.Count;
@@ -886,7 +905,7 @@ public static partial class HavenRichNotesOps
         }
     }
 
-    private static void FreshPageIds(HavenRichPage page)
+    internal static void FreshPageIds(HavenRichPage page)
     {
         page.Id = "page-" + Guid.NewGuid().ToString("N")[..12];
         foreach (var block in page.Blocks)
@@ -990,6 +1009,7 @@ public static partial class HavenRichNotesOps
         var page = RequirePage(notes, pageId);
         var source = RequireBlock(notes, pageId, blockId);
         var copy = CloneWithFreshIds(source);
+        if (source.Tabber is not null) HavenTabberOps.CopyOwnedPanes(notes, page, source, copy);
         page.Blocks.Insert(page.Blocks.IndexOf(source) + 1, copy);
         for (var order = 0; order < page.Blocks.Count; order++) page.Blocks[order].Order = order;
         Touch(notes);
