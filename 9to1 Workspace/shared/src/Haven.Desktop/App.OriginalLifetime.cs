@@ -353,7 +353,7 @@ public sealed partial class App
         WriteOriginalCloseDiagnostic("window-close requested; preflight starts");
         RequestOriginalDocumentClosePreflight();
     }
-    private static void WriteOriginalCloseDiagnostic(string message)
+    internal static void WriteOriginalCloseDiagnostic(string message)
     {
         try
         {
@@ -367,6 +367,48 @@ public sealed partial class App
             File.AppendAllText(path, line, new UTF8Encoding(false));
         }
         catch { /* A diagnostic writer must never block or throw into the close path. */ }
+    }
+
+    /// <summary>Records which close-preflight stage is being waited on and how long it took, so a
+    /// stalled close names its owner instead of leaving the window silently open. The owner report
+    /// "9to1 doesn't close normally" (retained in work/pc-worker/BOARDS-CLOSE-REFUSES-2026-10-27.md,
+    /// reproduced again on 28 October at 21:41 and 21:43) shows exactly this shape: the retained
+    /// diagnostic stops between "unified workspace close preparation acquired" and the lease
+    /// decision, so the waiting stage is never named. Logging only - no close decision changes.</summary>
+    internal static async Task<T> TimeOriginalCloseStageAsync<T>(string stage, Task<T> work)
+    {
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
+        WriteOriginalCloseDiagnostic($"{stage}: start");
+        try
+        {
+            var result = await work.ConfigureAwait(false);
+            WriteOriginalCloseDiagnostic($"{stage}: joined after {(System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000 / System.Diagnostics.Stopwatch.Frequency}ms");
+            return result;
+        }
+        catch (Exception failure)
+        {
+            WriteOriginalCloseDiagnostic($"{stage}: failed after {(System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000 / System.Diagnostics.Stopwatch.Frequency}ms: {failure.GetType().Name}: {failure.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>Same bounded stage record for a stage that yields no value. The awaited task is the
+    /// one the caller would have awaited anyway - this wrapper joins nothing extra and changes no
+    /// close decision.</summary>
+    internal static async Task TimeOriginalCloseStageAsync(string stage, Task work)
+    {
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
+        WriteOriginalCloseDiagnostic($"{stage}: start");
+        try
+        {
+            await work.ConfigureAwait(false);
+            WriteOriginalCloseDiagnostic($"{stage}: joined after {(System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000 / System.Diagnostics.Stopwatch.Frequency}ms");
+        }
+        catch (Exception failure)
+        {
+            WriteOriginalCloseDiagnostic($"{stage}: failed after {(System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000 / System.Diagnostics.Stopwatch.Frequency}ms: {failure.GetType().Name}: {failure.Message}");
+            throw;
+        }
     }
     private void OnOriginalDesktopShutdownRequested(object? sender, ShutdownRequestedEventArgs args)
     {

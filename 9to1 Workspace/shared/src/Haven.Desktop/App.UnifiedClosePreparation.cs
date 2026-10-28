@@ -60,6 +60,13 @@ public sealed partial class App
         private static bool HasStrongOwner(BrowseChrome? chrome) => chrome is not null && chrome.State.Tabs.Any(tab =>
             chrome.ObserveOriginalAppContent(tab.Id) is IBrowseAppContentClosePreparationParticipant { SupportsReversibleClosePreparation: true });
 
+        // Names the tab owners a close is waiting behind, by their actual content type. Diagnostic
+        // only; it reads the same observations the close decision already reads.
+        private static string DescribeCloseParticipants(BrowseChrome? chrome) => chrome is null ? "no chrome" :
+            string.Join(",", chrome.State.Tabs.Select(tab =>
+                (chrome.ObserveOriginalAppContent(tab.Id) is { } content ? content.GetType().Name : "none") +
+                (tab.Address.ToString() is { Length: > 0 } address ? "@" + (address.Length <= 42 ? address : address[..42]) + "…" : string.Empty)));
+
         internal Task<ClosePreparation?> PrepareCloseAsync(CancellationToken token)
         {
             Dispatcher.UIThread.VerifyAccess(); DemandExternalOriginalRetirementJoin();
@@ -90,19 +97,26 @@ public sealed partial class App
                 if (!attempt.IsCurrent) throw new CloseVetoException();
                 if (attempt.Startup) return attempt;
                 if (_workspace is not null && !_workspace.CanAdmitClose())
-                { await AbortPreparation(attempt); return null; }
+                { WriteOriginalCloseDiagnostic("unified driver: workspace refuses close admission; preparation aborts"); await AbortPreparation(attempt); return null; }
+                // Named participants and elapsed time, so a close that never finishes says which
+                // owner it is waiting for. This is the stage the retained 28 October evidence stops
+                // inside: after "unified workspace close preparation acquired" nothing further was
+                // recorded, and the window stayed open with no report to the user.
+                WriteOriginalCloseDiagnostic($"unified driver: strong close owner={HasStrongOwner(_chrome)} participants=[{DescribeCloseParticipants(_chrome)}]");
                 if (HasStrongOwner(_chrome))
                 {
                     var actual = Track(_chrome!.PrepareCloseAsync(token));
-                    await JoinOriginalAppTaskAsync(actual, failures); ThrowAppCauses(failures);
+                    await TimeOriginalCloseStageAsync("unified driver: reversible chrome close preparation", JoinOriginalAppTaskAsync(actual, failures));
+                    ThrowAppCauses(failures);
                     attempt.Chrome = actual.GetAwaiter().GetResult(); // SAME completed actual source, before later getters.
-                    if (attempt.Chrome is null) { await AbortPreparation(attempt); return null; }
+                    if (attempt.Chrome is null) { WriteOriginalCloseDiagnostic("unified driver: chrome returned no close preparation; aborts"); await AbortPreparation(attempt); return null; }
                 }
                 else if (_chrome is not null)
                 {
                     var actual = Track(_chrome.TryPrepareToCloseAsync(token));
-                    await JoinOriginalAppTaskAsync(actual, failures); ThrowAppCauses(failures);
-                    if (!actual.GetAwaiter().GetResult()) { await AbortPreparation(attempt); return null; }
+                    await TimeOriginalCloseStageAsync("unified driver: one-shot chrome close attempt", JoinOriginalAppTaskAsync(actual, failures));
+                    ThrowAppCauses(failures);
+                    if (!actual.GetAwaiter().GetResult()) { WriteOriginalCloseDiagnostic("unified driver: chrome vetoed the one-shot close attempt; aborts"); await AbortPreparation(attempt); return null; }
                 }
                 token.ThrowIfCancellationRequested();
                 if (!attempt.IsCurrent || _workspace is not null && !_workspace.CanAdmitClose())

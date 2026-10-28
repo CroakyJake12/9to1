@@ -302,15 +302,19 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     private async Task<IBrowseAppContentClosePreparation?> PrepareCoreAsync(Task start, CancellationToken token)
     {
         await start.ConfigureAwait(false);
+        // Stage-by-stage record for the Boards close owner. The app-wide close waits behind this
+        // participant (it advertises reversible close preparation), so when a close stalls the
+        // retained log now says which Boards stage it stalled in rather than nothing at all.
+        App.WriteOriginalCloseDiagnostic("boards close: preparation begins");
         var initialization = OriginalInitialization;
-        if (initialization is null) return null;
-        try { await initialization.ConfigureAwait(false); }
-        catch { return CreateFailedInitializationPreparation(); }
+        if (initialization is null) { App.WriteOriginalCloseDiagnostic("boards close: no original initialization; nothing to prepare"); return null; }
+        try { await App.TimeOriginalCloseStageAsync("boards close: original initialization", initialization); }
+        catch { App.WriteOriginalCloseDiagnostic("boards close: original initialization failed; failed-initialization preparation"); return CreateFailedInitializationPreparation(); }
         token.ThrowIfCancellationRequested();
         var presentation = _presentation;
-        if (presentation is null) return CreateFailedInitializationPreparation();
+        if (presentation is null) { App.WriteOriginalCloseDiagnostic("boards close: no presentation; failed-initialization preparation"); return CreateFailedInitializationPreparation(); }
         if (_localDocuments is not null)
-            await presentation.SaveAsync(token).ConfigureAwait(false);
+            await App.TimeOriginalCloseStageAsync("boards close: document save", presentation.SaveAsync(token).AsTask()).ConfigureAwait(false);
         var dispatch = Dispatcher.UIThread.InvokeAsync<Task<IBoardsPresentationClosePreparation?>>(
             () =>
             {
@@ -319,9 +323,9 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
                     ? Task.FromResult<IBoardsPresentationClosePreparation?>(null)
                     : presentation.PrepareToCloseAsync(token);
             }).GetTask();
-        var actual = await dispatch.ConfigureAwait(false);
-        var nested = await actual.ConfigureAwait(false);
-        if (nested is null) return null;
+        var actual = await App.TimeOriginalCloseStageAsync("boards close: dispatcher hand-off to the surface thread", dispatch).ConfigureAwait(false);
+        var nested = await App.TimeOriginalCloseStageAsync("boards close: presentation close preparation", actual).ConfigureAwait(false);
+        if (nested is null) { App.WriteOriginalCloseDiagnostic("boards close: the surface returned no close preparation (close reservation refused or already closing)"); return null; }
         if (token.IsCancellationRequested)
         {
             await AwaitOnUiAsync(nested.AbortAsync).ConfigureAwait(false);
