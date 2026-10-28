@@ -401,15 +401,22 @@ public static class ToolbarBuilder
         var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", tooltip ?? "Insert a block (grouped menu with search)");
         SetQuietToolbarControl(button, selected: false, "Boards toolbar insert action");
         var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
-        var panel = new StackPanel { Orientation = Orientation.Vertical, MinWidth = 260 };
-        var search = new TextBox { PlaceholderText = "Search blocks and styles…", Margin = new Thickness(0, 0, 0, 8) };
+        var panel = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), MinWidth = 300, MaxWidth = 420,
+            Height = 384, MaxHeight = 384 };
+        var search = new TextBox { PlaceholderText = "Search blocks and styles…", Height = 36, MinHeight = 36,
+            Margin = new Thickness(0, 0, 0, 8) };
+        CuiPropertyPresentation.Set(search, "Height", 36d, CuiPropertyLevel.Instance, "Boards insert search geometry");
+        CuiPropertyPresentation.Set(search, "MinHeight", 36d, CuiPropertyLevel.Instance, "Boards insert search geometry");
+        CuiPropertyPresentation.Set(search, "MaxHeight", 36d, CuiPropertyLevel.Instance, "Boards insert search geometry");
         button.Tag = new InsertMenuContext(popup, search);
         Avalonia.Automation.AutomationProperties.SetName(search, "Search insert menu");
         var list = new StackPanel { Orientation = Orientation.Vertical };
         panel.Children.Add(search);
-        panel.Children.Add(new ScrollViewer { Content = list, MaxHeight = 340,
+        var scroll = new ScrollViewer { Content = list,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible };
+        Grid.SetRow(scroll, 1);
+        panel.Children.Add(scroll);
         panel.AddHandler(InputElement.KeyDownEvent, (_, args) =>
         {
             if (args.Key == Key.Escape) { popup.Close(); args.Handled = true; return; }
@@ -430,6 +437,14 @@ public static class ToolbarBuilder
         void Fill(string filter)
         {
             list.Children.Clear();
+            if (vm.DatabaseBlocks.IsAvailable)
+            {
+                AddGroup(list, "Database", [("New database", "database"), ("Tab View", "database-tabs"),
+                    ("Timeline View", "database-timeline")], vm, popup, filter, insertAfterBlockId);
+                if (vm.HasPendingDatabaseLink)
+                    AddGroup(list, "Recovery", [("Link created database", "database-retry")], vm, popup, filter, insertAfterBlockId);
+            }
+            if (vm.CanAddTabber) AddGroup(list, "Containers", [("Tabber", "tabber")], vm, popup, filter, insertAfterBlockId);
             AddGroup(list, "Text", [
                 ("Paragraph", "paragraph"), ("Title", "style:title"), ("Header", "style:heading-1"),
                 ("Quote", "style:quote"), ("Code", "style:code"),
@@ -441,14 +456,6 @@ public static class ToolbarBuilder
                 ("Checklist", "checklist"), ("Bulleted list", "bulleted"), ("Numbered list", "numbered"),
                 ("Table", "table"), ("Graph", "graph"), ("Image…", "image"), ("Attachment…", "attachment"),
             ], vm, popup, filter, insertAfterBlockId);
-            if (vm.DatabaseBlocks.IsAvailable)
-            {
-                AddGroup(list, "Database", [("New database", "database"), ("Tab View", "database-tabs"),
-                    ("Timeline View", "database-timeline")], vm, popup, filter, insertAfterBlockId);
-                if (vm.HasPendingDatabaseLink)
-                    AddGroup(list, "Recovery", [("Link created database", "database-retry")], vm, popup, filter, insertAfterBlockId);
-            }
-            if (vm.CanAddTabber) AddGroup(list, "Containers", [("Tabber", "tabber")], vm, popup, filter, insertAfterBlockId);
             AddGroup(list, "Other", [("Freeform box", "freeform"), ("Divider", "divider")], vm, popup, filter, insertAfterBlockId);
         }
         search.TextChanged += (_, _) => Fill(search.Text ?? string.Empty);
