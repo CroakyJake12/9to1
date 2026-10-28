@@ -26,6 +26,65 @@ for that run; the review that named it as the superseded candidate is
 `/home/jacob/.local/state/9to1-live-preview/boards10-failure-review.json`. It is evidence that the
 normal close lifecycle was unavailable, not evidence about the close code's behaviour.
 
+## Re-observed 28 October 2026 — the stall is now a named stage
+
+The owned development copy (run `4653e38a-2350-4a71-b1af-4ffc75de558a`, source `70f3e900e55c`,
+runtime `70f3e900e55c-boards-m1-c-28`, PID 572980, window `0x340001b`, profile
+`~/.local/share/9to1-development/profile`) was asked to close twice, with no signal sent:
+
+1. 21:41 — the EWMH request `wmctrl -c` makes. My message was **malformed** (a `_NET_CLOSE_WINDOW`
+   client message is addressed to the window manager with `data.l[0]` = window, and I sent it to the
+   client with `data.l[0]` = timestamp), so this attempt proves nothing about the application.
+   Recorded rather than hidden. `wmctrl` itself is absent on this host and cannot be installed
+   unattended (`sudo -n apt-get install wmctrl` → "a password is required").
+2. 21:43 — an ICCCM `WM_DELETE_WINDOW` protocol request sent to the client, which is what a titlebar
+   close button delivers. The window advertised `WM_PROTOCOLS: WM_DELETE_WINDOW,
+   _NET_WM_SYNC_REQUEST`, exactly as in the 27 October measurement.
+
+Both left the window open, the process alive, no dialog in the X window tree and no launcher state
+change; `live_preview.py reload` correctly refused to replace anything ("Normal close was vetoed,
+timed out or failed; no force/replacement was attempted").
+
+**New measurement, from the application's own retained diagnostic** `~/.config/Haven/Logs/
+close-preflight-diagnostic.log` (written by `App.WriteOriginalCloseDiagnostic`, added by earlier
+work). The 21:43 attempt recorded:
+
+```
+[2026-10-28T21:43:22] close-preflight: window-close requested; preflight starts
+[2026-10-28T21:43:22] close-preflight: captured 0 close shells and 0 preflight candidates
+[2026-10-28T21:43:22] close-preflight: unified workspace close preparation acquired
+```
+
+…and nothing further, while the 09:51 and 10:03 runs continued with
+`unified workspace close lease accepted=False` and `all close preflight candidates and the unified
+lease joined` before also stopping there (the window still did not close in those runs either). The
+11:20, 13:45 and 21:43 runs all stop immediately after `… preparation acquired`.
+
+So the stall is **inside the unified close preparation** — between
+`App.OriginalLifetime.RequestOriginalDocumentClosePreflight` awaiting
+`UnifiedWorkspaceHost.PrepareCloseAsync(CancellationToken.None)` and the lease decision — not in the
+shell preflight (zero shells were captured), and there is **no bound** on that await (`CancellationToken.None`).
+This is now the closest thing to a reproduced diagnosis the file asked for, but the specific
+participant inside the chrome preparation is still not named by the retained log.
+
+**What was changed on 28 October as a consequence** (commit `b24ab70e`, logging only — no close
+decision, cancellation, veto or join altered): the diagnostic is now `internal` and times each stage
+(`<stage>: start` / `joined after Nms` / `failed after Nms`), the unified driver names the tab
+participants by their actual content type and address and reports admission refusals and chrome
+vetoes, and the Boards close participant (`BoardsWritableRichDocumentBrowseAppContentSession`, which
+advertises reversible close preparation and is therefore a strong owner that the app close waits
+behind) records its own stages: preparation begins → original initialization → document save →
+dispatcher hand-off to the surface thread → presentation close preparation → no-preparation cases.
+The next close attempt on a build containing it should name the stalled stage and owner instead of
+going silent. Measurement of the owning close checks (`bugs-desktop`, `bugs-nativeapps`, plus
+`UnifiedWorkspaceHostLifetimeTests` added to the `bugs-desktop` filter by the labelled successor
+plan generator r15, because that owning test was in no stage filter at all) is cycle 13.
+
+The live reload loop is still blocked: with this build the normal close does not happen, so the only
+alternatives are the owner closing it themselves at the keyboard, or a Root-reviewed failed-exit
+restart. Manufacturing a failed exit was not done — it is not the normal lifecycle and this worker is
+not the reviewer of its own failure.
+
 ## Observed behaviour
 
 The application **accepts the close protocol and then does not close**, with no visible prompt,
