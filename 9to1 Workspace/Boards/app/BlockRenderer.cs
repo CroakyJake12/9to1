@@ -709,6 +709,12 @@ public static class BlockRenderer
                         var current = box.Text ?? string.Empty;
                         box.Text = current.Remove(caret, length).Insert(caret, box.NewLine);
                         box.CaretIndex = Math.Min(caret + box.NewLine.Length, box.Text.Length);
+                        // Measured on 28 October: the donor TextBox does NOT raise TextChanged
+                        // when Text is assigned programmatically (the block's own trace showed the
+                        // assignment succeed while the TextChanged handler never ran), so the
+                        // ordinary commit path cannot be relied on here. Commit the same value
+                        // through the same view-model command the TextChanged path uses.
+                        vm.EditText("t_" + captured, box.Text ?? string.Empty);
                     }
                     return;
                 }
