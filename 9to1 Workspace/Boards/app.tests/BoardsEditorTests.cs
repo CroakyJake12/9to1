@@ -215,8 +215,14 @@ public sealed class BoardsEditorTests
         });
         var font = controls["Font family"];
         var size = controls["Font size"];
-        Assert.True(font.IsEditable);
-        Assert.True(size.IsEditable);
+        // Avalonia owns these controls on the UI thread, so their state must be read there;
+        // reading it from the test thread is a harness mistake, not product behaviour. The
+        // typed-value, dropdown-choice and undo requirements below are unchanged.
+        TestUiThread.Run(() =>
+        {
+            Assert.True(font.IsEditable);
+            Assert.True(size.IsEditable);
+        });
 
         TestUiThread.Run(() => font.SelectedItem = "Georgia");
         Assert.Equal("Georgia", session.Document.Sections[0].Pages[0].Blocks[0].FontFamily);
@@ -515,8 +521,10 @@ public sealed class BoardsEditorTests
 
         Assert.Equal(1, errorCount);
         Assert.True(mentionsBad);
-        // One plot canvas plus the always-present freeform canvas.
-        Assert.Equal(2, canvasCount);
+        // V3-BOARDS-LAY-03 and the owner's repeated C05 report: a flow-layout native page
+        // must not acquire an accidental second Freeform canvas. This surface is rebuilt with
+        // no absolute host, so the only canvas allowed is the graph's own plot canvas.
+        Assert.Equal(1, canvasCount);
         Assert.True(plotClips, "Graph curves must be clipped to their plot canvas.");
     }
 
@@ -541,7 +549,7 @@ public sealed class BoardsEditorTests
         var expected = new[]
         {
             "TopBarLeft", "TopBarRight", "BoardsAppIcon", "UndoButton", "RedoButton", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors", "SuggestSectionIconButton", "GeneratedSectionIconOptions", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton",
+            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors", "SuggestSectionIconButton", "GeneratedSectionIconOptions", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton", "AddNewButton",
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())

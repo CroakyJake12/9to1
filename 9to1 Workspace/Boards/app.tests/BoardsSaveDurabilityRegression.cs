@@ -176,7 +176,7 @@ public sealed class BoardsSaveDurabilityRegression
             await session.SaveAsAsync(destination);
             Assert.True(File.Exists(destination));
             var written = File.ReadAllText(destination);
-            Assert.Contains("Chosen title", written, StringComparison.Ordinal);
+            Assert.Contains("Chosen title", written);
 
             await using var reopened = await RichBoardSession.OpenAtPathAsync(store, destination);
             var restoredPage = reopened.Rich.Sections[0].Pages[0];

@@ -17,7 +17,13 @@ public sealed class BoardsDatabaseReferenceTests
             using var store = new JsonFileHavenBoardStore(root);
             var path = Path.Combine(root, "reference.9to1board");
             await using (var initial = await RichBoardSession.CreateNewAsync(store, "References"))
+            {
+                // A freshly created page carries the contract's starter paragraph. This test
+                // is about the database reference only, so the fixture states its starting
+                // blocks explicitly instead of leaving an unrelated content block in the page.
+                await initial.MutateAsync(rich => rich.Sections[0].Pages[0].Blocks.Clear());
                 await initial.SaveAsAsync(path);
+            }
             var reference = new HavenBoardDatabaseReference(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
             await using (var board = await ContractSessionAdapter.OpenAsync(store, path))
             {
@@ -50,7 +56,11 @@ public sealed class BoardsDatabaseReferenceTests
         {
             var path = Path.Combine(root, "older.9to1board");
             var document = HavenBoardDocumentCodec.CreateNew() with { SchemaVersion = 3 };
-            document.RichNotes!.Sections[0].Pages[0].Blocks.Add(HavenRichBlock.Paragraph("Existing text"));
+            // State the migrated page's content explicitly: this check is about migration not
+            // creating a database block or changing IDs, so the starter paragraph is removed
+            // rather than left as an unrelated extra block.
+            document.RichNotes!.Sections[0].Pages[0].Blocks.Clear();
+            document.RichNotes.Sections[0].Pages[0].Blocks.Add(HavenRichBlock.Paragraph("Existing text"));
             var id = document.RichNotes.Sections[0].Pages[0].Blocks[0].Id;
             await File.WriteAllTextAsync(path, JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
             using var store = new JsonFileHavenBoardStore(root);

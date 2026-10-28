@@ -709,7 +709,6 @@ public static class BlockRenderer
                         var current = box.Text ?? string.Empty;
                         box.Text = current.Remove(caret, length).Insert(caret, box.NewLine);
                         box.CaretIndex = Math.Min(caret + box.NewLine.Length, box.Text.Length);
-                        box.Select(box.CaretIndex);
                     }
                     return;
                 }
