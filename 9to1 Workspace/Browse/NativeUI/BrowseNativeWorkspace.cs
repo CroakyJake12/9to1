@@ -343,7 +343,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.ToggleTools" => true,
             "9to1.Browse.CloseTools" => _toolsOpen,
             "9to1.Browse.ToggleProfileMenu" => true,
-            "9to1.Browse.CloseProfileMenu" => _profileMenuOpen,
+            "9to1.Browse.CloseProfileMenu" => HasOpenTransientMenu,
             "9to1.Browse.OpenManageUsers" => true,
             "9to1.Browse.CloseManageUsers" => _manageUsersOpen,
             "9to1.Browse.OpenWebAutomations" => (_hostContext as IHavenProfileDataContext)?.Automations is not null,
@@ -357,6 +357,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
         if (IsHavenSharedCommand(command))
         {
+            DismissTransientMenus();
             // Shared rail opens are genuine retained operations: reserve admission before
             // invoking the gateway and return the real settlement so the workspace's close
             // joins actual show/init/account faults and refusals. The open runs inside the
@@ -574,10 +575,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.DiscardAddress": _addressDraft = false; break;
                 case "9to1.Browse.ToggleTools": _toolsOpen = !_toolsOpen; break;
                 case "9to1.Browse.CloseTools": _toolsOpen = false; break;
-                case "9to1.Browse.ToggleProfileMenu": _profileMenuOpen = !_profileMenuOpen; if (!_profileMenuOpen) _manageUsersOpen = false; break;
-                case "9to1.Browse.CloseProfileMenu": _profileMenuOpen = false; _manageUsersOpen = false; break;
-                case "9to1.Browse.OpenManageUsers": _manageUsersOpen = true; break;
-                case "9to1.Browse.CloseManageUsers": _manageUsersOpen = false; break;
+                case "9to1.Browse.ToggleProfileMenu":
+                    var wasOpen = HasOpenTransientMenu;
+                    _manageUsersOpen = false; _profileMenuOpen = !wasOpen; break;
+                case "9to1.Browse.CloseProfileMenu": DismissTransientMenus(); break;
+                case "9to1.Browse.OpenManageUsers": _manageUsersOpen = true; _profileMenuOpen = false; break;
+                case "9to1.Browse.CloseManageUsers": DismissTransientMenus(returnFromSubmenu: true); break;
                 case "9to1.Browse.SignOut":
                     _status = "Sign out is managed from Account & user settings.";
                     break;
@@ -646,6 +649,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         Dispatcher.UIThread.VerifyAccess();
         if (_retiring || _disposed) return;
         if (_snapshot.SelectedTabId != snapshot.SelectedTabId || _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage) _find = snapshot.FindQuery;
+        if (_snapshot.SelectedTabId != snapshot.SelectedTabId ||
+            _snapshot.SelectedTab.Address != snapshot.SelectedTab.Address ||
+            _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage)
+        { _profileMenuOpen = false; _manageUsersOpen = false; }
         _snapshot = snapshot; IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
         if (!_addressDraft) _address = snapshot.SelectedTab.Address.ToString();
         _status = snapshot.Status; Changed();
@@ -685,6 +692,19 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         var original = Dispatcher.UIThread.InvokeAsync(() => { if (IsReady) focus(); }).GetTask();
         lock (_sourceGate) Retain(_originalUiOperations, original);
         return original;
+    }
+
+    internal bool HasOpenTransientMenu => _profileMenuOpen || _manageUsersOpen;
+
+    // Presentation-only dismissal is also available while an original command is busy.
+    // It neither cancels that command nor acquires/discards document or account authority.
+    internal void DismissTransientMenus(bool returnFromSubmenu = false)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (!HasOpenTransientMenu) return;
+        var backToProfile = returnFromSubmenu && _manageUsersOpen;
+        _manageUsersOpen = false; _profileMenuOpen = backToProfile;
+        Changed();
     }
 
     private void Changed() => PropertyChanged?.Invoke(this, new(string.Empty));

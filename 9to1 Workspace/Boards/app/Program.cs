@@ -67,6 +67,7 @@ internal static class Program
 internal sealed class BoardsApp : Application
 {
     private JsonFileHavenBoardStore? _store;
+    private BoardsLocalDocuments? _localDocuments;
     private RecentBoardCatalog? _recentBoardCatalog;
     private string? _lastRecentPageKey;
     private IRichBoardSession? _session;
@@ -95,20 +96,28 @@ internal sealed class BoardsApp : Application
         CuiNativeHost.InitialisePrimitiveTheme(this, "Boards",
             BoardsTheme.Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright);
         // Real durable session: edits persist to a physical .9to1board file.
-        // Optional CLI arg opens/creates that board; otherwise the default board opens.
-        var storeRoot = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "9to1", "Boards");
-        var defaultBoardExisted = File.Exists(ContractSessionAdapter.DefaultBoardPath()) ||
-                                  File.Exists(ContractSessionAdapter.DefaultBoardPath() + ".bak");
-        _store = new JsonFileHavenBoardStore(storeRoot);
-        _recentBoardCatalog = new RecentBoardCatalog(Path.Combine(storeRoot, "recent-board-paths.json"));
-        _session = ContractSessionAdapter.OpenAsync(_store, Program.OpenPath).GetAwaiter().GetResult();
-        if (!string.IsNullOrWhiteSpace(Program.OpenPath) || defaultBoardExisted)
-            _recentBoardCatalog.Record(_session.FilePath);
+        // An explicit file opens through the local catalogue; otherwise resume a recoverable draft.
+        var configuredRoot = Environment.GetEnvironmentVariable("HAVEN_DATA_DIR");
+        var appRoot = string.IsNullOrWhiteSpace(configuredRoot)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Haven")
+            : Path.GetFullPath(configuredRoot);
+        _localDocuments = new BoardsLocalDocuments("standalone-local", Path.Combine(appRoot, "Boards"));
+        _store = _localDocuments.Store;
+        _recentBoardCatalog = _localDocuments.Recent;
+        var legacyFailures = string.IsNullOrWhiteSpace(configuredRoot)
+            ? _localDocuments.AdoptLegacyRecentsAsync(
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "9to1", "Boards", "recent-board-paths.json"),
+                ContractSessionAdapter.DefaultBoardPath()).GetAwaiter().GetResult()
+            : Array.Empty<string>();
+        var id = Program.OpenPath is null
+            ? _localDocuments.LatestOrCreateAsync().GetAwaiter().GetResult()
+            : _localDocuments.ImportAsync(Program.OpenPath).GetAwaiter().GetResult();
+        _session = _localDocuments.OpenAsync(id).GetAwaiter().GetResult();
         _viewModel = new BoardsViewModel(_session);
-        if (!string.IsNullOrWhiteSpace(Program.OpenPath) || defaultBoardExisted)
-            RecordCurrentPage();
+        RecordCurrentPage();
         _viewModel.SetLanding(Program.OpenPath is null);
+        if (legacyFailures.Count > 0)
+            _viewModel.Set("StatusText", "Some existing boards need Open to locate or recover them: " + string.Join("; ", legacyFailures));
         WireViewModel(_viewModel);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -122,6 +131,14 @@ internal sealed class BoardsApp : Application
     private void WireViewModel(BoardsViewModel viewModel)
     {
         viewModel.PickFileAsync = PickFileAsync;
+        viewModel.CreateBoardAsync = _ => CreateNewBoardAsync();
+        viewModel.SaveAsBoardAsync = async token =>
+        {
+            if (_window is null || _session is null) return;
+            var path = await BoardsWritablePresentation.PickSavePathAsync(_window, viewModel.Get("BoardTitle")?.ToString());
+            if (path is null) return;
+            await _session.SaveAsAsync(path, token);
+        };
         viewModel.OpenBoardAsync = SwitchBoardAsync;
         viewModel.OpenBoardPathAsync = OpenBoardPathAsync;
         viewModel.RebuildRequested += PostRebuild;
@@ -425,7 +442,7 @@ internal sealed class BoardsApp : Application
         var pageId = _viewModel.SelectedPageId;
         var key = boardPath + "\0" + sectionId + "\0" + pageId;
         if (key == _lastRecentPageKey) return;
-        _recentBoardCatalog.RecordPage(boardPath, sectionId, pageId);
+        _recentBoardCatalog.RecordPage(_localDocuments?.CatalogPathFor(boardPath) ?? boardPath, sectionId, pageId);
         _lastRecentPageKey = key;
     }
 
@@ -547,24 +564,11 @@ internal sealed class BoardsApp : Application
             return;
         try
         {
-            var file = await _window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = "Create a new 9to1 board",
-                SuggestedFileName = "Untitled board",
-                DefaultExtension = "9to1board",
-                FileTypeChoices = [new FilePickerFileType("9to1 Boards") { Patterns = ["*.9to1board"] }],
-                ShowOverwritePrompt = false,
-            });
-            var path = file?.TryGetLocalPath();
-            if (string.IsNullOrWhiteSpace(path))
-                return;
-
-            // Build and save the new document before changing the live session.
-            // Existing targets are rejected by the adapter, leaving the current
-            // board and its recovery data untouched.
-            var adapter = await ContractSessionAdapter.CreateNewAtPathAsync(_store, path);
+            var documents = _localDocuments ?? throw new InvalidOperationException("Local Boards storage is unavailable.");
+            var id = await documents.CreateAsync();
+            var adapter = await documents.OpenAsync(id);
             await ActivateBoardAsync(adapter);
-            _recentBoardCatalog?.Record(adapter.FilePath);
+            _recentBoardCatalog?.Record(_localDocuments is null ? adapter.FilePath : _localDocuments.PathFor((await adapter.GetDetachedContractDocumentAsync()).DocumentId));
             await RefreshLandingDataAsync();
         }
         catch (Exception error)
@@ -781,9 +785,12 @@ internal sealed class BoardsApp : Application
         {
             if (!File.Exists(path) && !File.Exists(path + ".bak"))
                 throw new FileNotFoundException("The recent board and its recovery backup are both unavailable. Use Open to locate another file.");
-            var adapter = await ContractSessionAdapter.OpenAsync(_store, path);
+            var documents = _localDocuments ?? throw new InvalidOperationException("Local Boards storage is unavailable.");
+            var id = documents.OwnsPath(path)
+                ? documents.IdFor(path) : await documents.ImportAsync(path);
+            var adapter = await documents.OpenAsync(id);
             await ActivateBoardAsync(adapter, oldVm, oldSession);
-            _recentBoardCatalog?.Record(adapter.FilePath);
+            _recentBoardCatalog?.Record(_localDocuments is null ? adapter.FilePath : _localDocuments.PathFor((await adapter.GetDetachedContractDocumentAsync()).DocumentId));
             await RefreshLandingDataAsync();
         }
         catch (Exception error)
@@ -800,9 +807,12 @@ internal sealed class BoardsApp : Application
         var oldSession = _session;
         try
         {
-            var adapter = await ContractSessionAdapter.OpenAsync(_store, path);
+            var documents = _localDocuments ?? throw new InvalidOperationException("Local Boards storage is unavailable.");
+            var id = documents.OwnsPath(path)
+                ? documents.IdFor(path) : await documents.ImportAsync(path);
+            var adapter = await documents.OpenAsync(id);
             await ActivateBoardAsync(adapter, oldVm, oldSession, pageId);
-            _recentBoardCatalog?.Record(adapter.FilePath);
+            _recentBoardCatalog?.Record(_localDocuments is null ? adapter.FilePath : _localDocuments.PathFor((await adapter.GetDetachedContractDocumentAsync()).DocumentId));
             await RefreshLandingDataAsync();
         }
         catch (Exception error)

@@ -15,9 +15,52 @@ public sealed partial class WritePage
     private bool _readAloudStopUnacknowledged;
     internal Func<Task> StatsDelaySource { get; set; } = () => Task.Delay(TimeSpan.FromMilliseconds(300));
     internal Task? OriginalClose => _work.OriginalClose;
+    internal bool CanRetireFailedBrowseInitialization(Task? originalInitialization, Task actualClose) =>
+        _work.CanRetireAfterFailedInitialization(originalInitialization, actualClose);
+    private Action<Action>? _originalPresentationParent;
+    private Func<bool>? _originalPresentationCanAdmit;
+    internal void BindOriginalBrowsePresentation(Action<Action> originalParent, Func<bool> canAdmit)
+    {
+        ArgumentNullException.ThrowIfNull(originalParent); ArgumentNullException.ThrowIfNull(canAdmit);
+        if (_constructionSettled.Task.IsCompleted || _originalPresentationParent is not null)
+            throw new InvalidOperationException("Bind the Browse parent once inside the original Write constructor capture.");
+        _originalPresentationParent = originalParent; _originalPresentationCanAdmit = canAdmit;
+    }
+    private bool CanAdmitOriginalPresentation => _originalPresentationCanAdmit?.Invoke() != false;
+    private void DemandOriginalPresentationAdmission()
+    {
+        if (!CanAdmitOriginalPresentation) throw new ObjectDisposedException(nameof(WritePage));
+    }
+    private sealed record OriginalBrowseCloseFence(WritePage Owner, Haven.Core.NotesDocument? Document,
+        long Generation, string Fingerprint);
+    private string OriginalBrowseCloseFingerprint() => Document is null ? string.Empty :
+        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(Document, DocumentJson)));
+    internal object? CaptureOriginalBrowseCloseFence()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        return IsOriginalDocumentClosePrepared ? new OriginalBrowseCloseFence(this, Document, _editGeneration,
+            OriginalBrowseCloseFingerprint()) : null;
+    }
+    internal bool IsOriginalBrowseCloseFenceCurrent(object fence)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        return fence is OriginalBrowseCloseFence original && ReferenceEquals(original.Owner, this) &&
+            ReferenceEquals(original.Document, Document) && original.Generation == _editGeneration &&
+            IsOriginalDocumentClosePrepared && original.Fingerprint == OriginalBrowseCloseFingerprint();
+    }
+    internal Task BeginOriginalPreparedBrowseClose(object fence)
+    {
+        Dispatcher.UIThread.VerifyAccess(); DemandExternalOriginalRetirementJoin();
+        if (!IsOriginalBrowseCloseFenceCurrent(fence))
+            throw new InvalidOperationException("Write changed after close preparation; save the current draft before closing.");
+        _work.RequestRetirement();
+        return _work.OriginalClose ?? throw new InvalidOperationException("The original Write close was not retained.");
+    }
+
 
     internal bool IsOriginalDocumentClosePrepared => Dispatcher.UIThread.CheckAccess()
-        && !_work.IsRetiring && !_disposed && _initialized && _originalInitializationFailure is null
+        && !_work.IsRetiring && !_disposed && CanAdmitOriginalPresentation && _initialized && _originalInitializationFailure is null
         && (_initialDocumentId is null || Document is not null) && !_busy && !_closePreparing
         && Volatile.Read(ref _saveRunning) == 0 && Volatile.Read(ref _pendingAsyncBodies) == 0
         && !_dirty && Document?.Recovery.HasUnsavedRecovery != true && !_readAloudStopUnacknowledged
@@ -33,6 +76,7 @@ public sealed partial class WritePage
             _latestOriginalAction = actual;
             return actual;
         }
+        DemandOriginalPresentationAdmission();
         return _work.RunAsync(original =>
         {
             original.BindPublicationGuard(() => !_disposed);
@@ -43,6 +87,7 @@ public sealed partial class WritePage
     private Task<T> RunOriginalAsync<T>(Func<Task<T>> body)
     {
         if (_work.Executing is { } admitted) return RunCountedBodyAsync(admitted, body);
+        DemandOriginalPresentationAdmission();
         return _work.RunAsync(original =>
         {
             original.BindPublicationGuard(() => !_disposed);
@@ -66,7 +111,7 @@ public sealed partial class WritePage
 
     private void RunOriginalEvent(Func<Task> body)
     {
-        if (_work.IsRetiring) return;
+        if (_work.IsRetiring || !CanAdmitOriginalPresentation) return;
         try
         {
             _ = RunOriginalAsync(async () =>
@@ -110,7 +155,7 @@ public sealed partial class WritePage
         catch { _readAloudStopUnacknowledged = true; throw; }
     }
 
-    private bool CanPublishOriginal => !_work.IsRetiring && !_disposed
+    private bool CanPublishOriginal => !_work.IsRetiring && !_disposed && CanAdmitOriginalPresentation
         && (_work.Executing?.IsPublicationCurrent ?? true);
 
     private void Publish(Action callback)
@@ -166,6 +211,7 @@ public sealed partial class WritePage
 
     internal void DemandOriginalInitializedDocument()
     {
+        DemandOriginalPresentationAdmission();
         _work.DemandAdmission();
         OwnOriginalSceneCallback(() =>
         {
@@ -178,7 +224,7 @@ public sealed partial class WritePage
 
     internal void DemandOriginalPreparedClose()
     {
-        Dispatcher.UIThread.VerifyAccess();
+        Dispatcher.UIThread.VerifyAccess(); DemandOriginalPresentationAdmission();
         _work.DemandAdmission();
         // This is a pure preflight observation. A normal refusal admits no work
         // and must leave the same page usable for completing its save and retrying.
@@ -191,7 +237,13 @@ public sealed partial class WritePage
     {
         var stack = _physicalSources ??= [];
         stack.Add(this);
-        try { return source(); }
+        try
+        {
+            T result = default!;
+            if (_originalPresentationParent is { } parent) parent(() => result = source());
+            else result = source();
+            return result;
+        }
         finally { stack.RemoveAt(stack.Count - 1); }
     }
 

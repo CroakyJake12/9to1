@@ -13,10 +13,12 @@ internal sealed partial class MeshHavenScene : IDisposable
     private readonly MeshPageViewModel _viewModel;
     private bool _showWorkMode;
     private bool _disposed;
+    private readonly Func<Func<CancellationToken, Task>, Task>? _runOriginal;
 
-    public MeshHavenScene(MeshPageViewModel viewModel)
+    public MeshHavenScene(MeshPageViewModel viewModel, Func<Func<CancellationToken, Task>, Task>? runOriginal = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        _runOriginal = runOriginal;
         Root = new Page { Name = "Mesh.Root", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "auto auto auto 1fr" };
         Set(Root, HavenProperties.Padding, HavenThickness.Parse("24px 28px"));
         Set(Root, HavenProperties.Gap, HavenLength.Px(14));
@@ -85,9 +87,22 @@ internal sealed partial class MeshHavenScene : IDisposable
 
     private async Task RunAndRenderAsync(Func<CancellationToken, Task> operation)
     {
-        try { await operation(CancellationToken.None); }
-        catch (Exception ex) { StatusText.Content = "Mesh action failed: " + ex.Message; return; }
-        Render();
+        if (_disposed) return;
+        async Task Run(CancellationToken token)
+        {
+            try { await operation(token); if (!_disposed) Render(); }
+            catch (Exception ex)
+            {
+                if (!_disposed) StatusText.Content = "Mesh action failed: " + ex.Message;
+                throw;
+            }
+        }
+        try
+        {
+            if (_runOriginal is { } run) await run(Run);
+            else await Run(CancellationToken.None); // Direct scene fixtures have no native owner.
+        }
+        catch { /* Native page owner retains the original operation and its failure. */ }
     }
 
     internal static Container Card(string name)

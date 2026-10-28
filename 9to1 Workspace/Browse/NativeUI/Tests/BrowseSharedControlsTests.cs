@@ -496,6 +496,10 @@ public sealed partial class BrowseNativeUiTests
             var account = Assert.Single(overlay.GetVisualDescendants().OfType<Button>(), b => b.Name == "BrowseManageUsersAccountButton");
             await ClickSharedOpen(window, workspace, account);
             Assert.Equal(1, gateway.ProfileOpens);
+            Assert.False(IsTrue(workspace, "ManageUsersOpen"));
+            Assert.False(IsTrue(workspace, "ProfileMenuOpen"));
+            await Click(window, workspace, Find(window, "HavenProfileButton"));
+            await Click(window, workspace, Find(window, "BrowseSwitchUsersButton"));
             var closeUsers = Assert.Single(overlay.GetVisualDescendants().OfType<Button>(), b => b.Name == "BrowseCloseManageUsersButton");
             await ClickCore(window, workspace, closeUsers);
             Assert.False(IsTrue(workspace, "ManageUsersOpen"));

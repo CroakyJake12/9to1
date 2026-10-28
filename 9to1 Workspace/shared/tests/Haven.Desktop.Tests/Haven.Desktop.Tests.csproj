@@ -68,6 +68,7 @@
     <Compile Include="DeveloperManualRecoveryConflictTests.cs" />
     <Compile Include="OriginalAutomationLibraryGraphEditingTests.cs" />
     <Compile Include="DataSharedInkTests.cs" />
+    <Compile Include="DataRecordViewControlTests.cs" />
     <Compile Include="PresentFreehandTests.cs" />
     <Compile Include="DeveloperManualSaveAllTests.cs" />
     <Compile Include="NotificationServiceOriginalLifetimeTests.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="FilesWorkspaceSetupTests.cs;OriginalTabTransientPresentationTests.cs" />
     <Compile Include="DesktopBorrowerOriginalLifetimeTests.cs" />
     <Compile Include="OverlayControllerOriginalLifetimeTests.cs" />
+    <Compile Include="MeshHavenSceneTests.cs;ProfileBoundNotesRepositoryTests.cs" />
     <Compile Include="WritePageOriginalLifetimeTests.cs;PresentPageOriginalLifetimeTests.cs;NativeSpacesPageLifecycleTests.cs;SpaceGeneratedSurfaceRendererTests.cs;OriginalInitialDocumentProductTests.cs;OriginalDocumentClosePreflightTests.cs" />
     <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
     <!-- Build native binding and same genuine Linux Home/Files rig; no alternative test host. -->

@@ -50,7 +50,7 @@ public static class DataSqlSafety
 
 public sealed class DataWorkbook
 {
-    public const int CurrentSchemaVersion = 7;
+    public const int CurrentSchemaVersion = 8;
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = "Untitled workbook";
@@ -63,6 +63,7 @@ public sealed class DataWorkbook
     public List<DataQuery> Queries { get; set; } = [];
     public List<DataNamedRange> NamedRanges { get; set; } = [];
     public List<DataTableDefinition> Tables { get; set; } = [];
+    public List<DataRecordViewDefinition> RecordViews { get; set; } = [];
     public List<DataRelationshipDefinition> Relationships { get; set; } = [];
     public List<DataValidationRule> Validations { get; set; } = [];
     public List<DataChartDefinition> Charts { get; set; } = [];
@@ -92,6 +93,8 @@ public sealed class DataWorkbook
         Schema.Normalize();
         DataTableIdentity.ValidateWorkbook(this);
         DataRelationalSchema.Validate(this);
+        RecordViews ??= [];
+        DataRecordViews.Validate(this);
     }
 }
 

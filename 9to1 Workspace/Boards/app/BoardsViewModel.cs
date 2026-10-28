@@ -158,6 +158,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         return "Unsaved changes";
     }
 
+    public Func<CancellationToken, Task>? SaveAsBoardAsync { get; set; }
+    public Func<CancellationToken, Task>? CreateBoardAsync { get; set; }
     public IRichBoardSession Session => _session;
 
     /// <summary>Raised after structural changes so the host can rebuild BlocksHost (never per keystroke).</summary>
@@ -453,7 +455,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                     await SetSectionIconColorAsync(themeSection, null, cancellationToken);
                 break;
             case "NewBoard":
-                if (_homeBoardCreationHost is null) NewBoardRequested?.Invoke();
+                if (CreateBoardAsync is not null) await CreateBoardAsync(cancellationToken);
+                else if (_homeBoardCreationHost is null) NewBoardRequested?.Invoke();
                 else await CreateAndOpenHomeBoardAsync(cancellationToken);
                 break;
             case "RetryOpenCreatedBoard":
@@ -490,6 +493,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 RefreshAfterEdit();
                 break;
             case "SaveAsBoard":
+                if (SaveAsBoardAsync is not null)
+                {
+                    await SaveAsBoardAsync(cancellationToken);
+                    Set("StatusText", _session.Status);
+                    Set("SaveStateText", MapSaveState(_session.Status));
+                    break;
+                }
                 var basePath = _session.FilePath ?? "memory://boards/default";
                 var copyPath = basePath.EndsWith(".9to1board", StringComparison.OrdinalIgnoreCase)
                     ? basePath[..^".9to1board".Length] + " (copy).9to1board"
@@ -2838,7 +2848,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     // ----- Block operations used by BlockRenderer -----
 
-    public async Task InsertKindAsync(string kindTag, string? insertAfterBlockId = null)
+    public async Task InsertKindAsync(string kindTag, string? insertAfterBlockId = null,
+        string? initialText = null, bool focusEditor = false)
     {
         if (!RequireEditMode()) return;
         // Drawing is a page capability, not a hidden placeholder block. The
@@ -2904,7 +2915,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             block = kindTag switch
             {
-                "paragraph" => new RichBoardBlock { Kind = "paragraph", Text = "New paragraph" },
+                "paragraph" => new RichBoardBlock { Kind = "paragraph", Text = initialText ?? "New paragraph" },
                 "heading" => new RichBoardBlock { Kind = "heading", Text = "New heading" },
                 "checklist" => new RichBoardBlock { Kind = "checklist", Text = "New item" },
                 "bulleted" => new RichBoardBlock { Kind = "bulleted", Text = "New item" },
@@ -2952,6 +2963,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         else
             page.Blocks.Add(block);
         _selectedBlockId = block.Id;
+        if (focusEditor && block.Kind is ("paragraph" or "heading"))
+            _pendingTextFocus = (page.Id, block.Id, 0);
         PushDocumentToBindings();
         _session.MarkDirty();
         if (kindTag == "image")

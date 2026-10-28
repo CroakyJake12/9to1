@@ -1,0 +1,26 @@
+<Cui Version="1">
+  <Actions>
+    <Action name="SelectView" command="SelectView" parameter="{Binding view.ID}" />
+    <Action name="SelectField" command="SelectField" parameter="{Binding field.ID}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" Background="{Resource CuiBackgroundBrush}" Padding="12" CellGap="8" AccessibleName="Data record views">
+      <Container Type="Horizontal Stack" Row="0" CellGap="6" HorizontalScrolling="True" VerticalScrolling="False">
+        <Repeat Source="{Binding Views}" As="view" Key="{Binding view.ID}">
+          <Button id="DataRecordViewTab" AccessibleName="{Binding view.Name}" Content="{Binding view.Name}" Selected="{Binding view.Selected}" Action="SelectView" Padding="12 7" CornerRadius="8" />
+        </Repeat>
+      </Container>
+      <Container Type="Wrap" Row="1" CellGap="6" Interactive="{Binding Idle}">
+        <Container Type="Menu"><Button Type="Menu Item" Content="{Binding FieldName}">
+          <Repeat Source="{Binding Fields}" As="field" Key="{Binding field.ID}"><Button Type="Menu Item" Content="{Binding field.Name}" Action="SelectField" /></Repeat>
+        </Button></Container>
+        <Input Type="Text" Value="{Binding FilterText}" PlaceholderText="Contains…" Width="150" AccessibleName="Filter value" />
+        <Button Content="Filter" Action="Filter" Tooltip="Save this view's filter; records are retained" />
+        <Button Content="Sort ↑" Action="SortAscending" /><Button Content="Sort ↓" Action="SortDescending" />
+        <Button Content="Add record" Action="AddRecord" /><Button Content="Undo" Action="Undo" Interactive="{Binding CanUndo}" /><Button Content="Redo" Action="Redo" Interactive="{Binding CanRedo}" />
+      </Container>
+      <Object Type="data.record-body" Row="2" AccessibleName="Canonical Data records" />
+      <Text Text="{Binding Status}" Row="3" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+    </Container>
+  </Theme>
+</Cui>

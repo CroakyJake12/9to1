@@ -27,6 +27,26 @@ public sealed class CuiMenuFocusTests
     }
 
     [Fact]
+    public async Task Minimized_or_hidden_owner_closes_menu_without_running_an_action_or_changing_text()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var fixture = new Fixture();
+            fixture.Input.Focus(); fixture.Input.CaretIndex = 3;
+            Click(fixture.Top); Assert.True(fixture.Top.IsSubMenuOpen);
+            fixture.Window.WindowState = WindowState.Minimized; Pump(fixture.Window);
+            Assert.False(fixture.Top.IsSubMenuOpen);
+            Assert.Equal("document", fixture.Input.Text); Assert.Equal(0, fixture.ActionCount);
+            fixture.Window.WindowState = WindowState.Normal; Pump(fixture.Window);
+            Click(fixture.Top); Assert.True(fixture.Top.IsSubMenuOpen);
+            fixture.Menu.IsVisible = false; Pump(fixture.Window);
+            Assert.False(fixture.Top.IsSubMenuOpen);
+            Assert.Equal("document", fixture.Input.Text); Assert.Equal(0, fixture.ActionCount);
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Nested_menu_command_keeps_its_explicit_new_canvas_focus()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));

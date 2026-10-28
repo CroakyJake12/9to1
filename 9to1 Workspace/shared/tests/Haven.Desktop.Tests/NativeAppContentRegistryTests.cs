@@ -18,6 +18,26 @@ public sealed class NativeAppContentRegistryTests
         new(source, [new(Files.Id, Files.Key, HavenAppRouteKind.Files, factory)], current ?? (() => true));
 
     [AvaloniaFact]
+    public async Task Production_Write_and_Mesh_registrations_keep_their_actual_page_factory_identity()
+    {
+        foreach (var key in new[] { "write", "mesh" })
+        {
+            var app = BuiltInModeSeed.Modes.Single(mode => mode.Key == key);
+            var actual = new NativeOwner(AppContentAddress.Parse("9to1://" + key));
+            var factory = new Factory(_ => actual);
+            var unused = new Factory(_ => throw new InvalidOperationException("Wrong native factory"));
+            var bindings = NativeAppContentRegistry.NativeAppContentRegistrations.Build(unused, unused, unused,
+                null, null, null, key == "write" ? factory : null, key == "mesh" ? factory : null);
+            var registry = new NativeAppContentRegistry(new RegistrySource { App = app }, bindings, () => true);
+            var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(registry.CreateSession(Request("9to1://" + key)));
+            await session.InitializeAsync(); Assert.Same(actual.View, session.OriginalNativeView);
+            Assert.Equal(1, factory.Calls); Assert.Equal(0, unused.Calls);
+            Assert.True(await session.TryPrepareToCloseAsync()); await session.CloseAndDrainAsync();
+            Assert.True(actual.CanRetireOriginalView);
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Production_Canvas_binding_uses_the_canonical_app_registration_and_never_an_unregistered_fallback()
     {
         var canvas = BuiltInModeSeed.Modes.Single(app => app.Key == "canvas");

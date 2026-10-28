@@ -2,6 +2,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Avalonia.Platform.Storage;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
 
@@ -55,6 +56,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     private readonly string? _snapshotBoardId;
     private string _sourceRevision;
     private bool _disposed;
+    private bool _localDocument;
 
     private BoardsWritablePresentation(
         HavenBoardDocument document,
@@ -177,6 +179,17 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             return true;
         }).ConfigureAwait(false);
 
+        host = await CreatePresentationAsync(parsed, sourceId, expectedRevision, session, ct,
+            embeddedArtifactHost, standaloneChrome, homeBoardCreationHost, sectionIconGenerationHost).ConfigureAwait(false);
+        return host;
+    }
+
+    private static async Task<BoardsWritablePresentation> CreatePresentationAsync(HavenBoardDocument parsed,
+        string sourceId, string expectedRevision, ContractSessionAdapter session, CancellationToken ct,
+        IBoardsEmbeddedArtifactHost? embeddedArtifactHost, bool standaloneChrome,
+        IBoardsHomeBoardCreationHost? homeBoardCreationHost, IBoardsSectionIconGenerationHost? sectionIconGenerationHost)
+    {
+        BoardsWritablePresentation? host = null;
         CuiControlLoader? loader = null;
         try
         {
@@ -216,6 +229,67 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         }
     }
 
+    public static async Task<BoardsWritablePresentation> OpenLocalDocumentAsync(BoardsLocalDocuments documents,
+        Guid documentId, Func<Guid, CancellationToken, Task> open, bool landing = false,
+        CancellationToken token = default, IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null,
+        CancellationToken lifetimeToken = default)
+    {
+        var session = await documents.OpenAsync(documentId, token).ConfigureAwait(false);
+        var parsed = await session.GetDetachedContractDocumentAsync(token).ConfigureAwait(false);
+        var host = await CreatePresentationAsync(parsed, "local:" + documentId.ToString("D"),
+            parsed.RichNotes!.Version.ToString(), session, token, embeddedArtifactHost, false, null, null).ConfigureAwait(false);
+        host._localDocument = true;
+        var runtimeToken = lifetimeToken.CanBeCanceled ? lifetimeToken : token;
+        try
+        {
+        await Dispatcher.UIThread.InvokeAsync<Task>(async () =>
+        {
+            var vm = host.ViewModel;
+            vm.SetLanding(landing);
+            vm.Set("StatusText", session.Status);
+            vm.Set("SaveStateText", BoardsViewModel.MapSaveState(session.Status));
+            vm.CreateBoardAsync = async ct =>
+            {
+                using var action = CancellationTokenSource.CreateLinkedTokenSource(ct, runtimeToken);
+                await open(await documents.CreateAsync(token: action.Token), action.Token);
+            };
+            vm.OpenBoardPathAsync = async (path, _) => await open(documents.IdFor(path), runtimeToken);
+            vm.OpenBoardAsync = async () =>
+            {
+                var top = TopLevel.GetTopLevel(host.Content) ?? throw new InvalidOperationException("The board window is unavailable.");
+                var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                { Title = "Open board", AllowMultiple = false,
+                  FileTypeFilter = [new FilePickerFileType("9to1 Boards") { Patterns = ["*.9to1board"] }] });
+                if (files.Count == 0) return;
+                var path = files[0].TryGetLocalPath() ?? throw new NotSupportedException("This location does not provide a readable local file.");
+                await open(await documents.ImportAsync(path, runtimeToken), runtimeToken);
+            };
+            vm.SaveAsBoardAsync = async ct =>
+            {
+                var path = await PickSavePathAsync(host.Content, vm.Get("BoardTitle")?.ToString());
+                if (path is null) return; // Keep the same draft, caret and history.
+                using var action = CancellationTokenSource.CreateLinkedTokenSource(ct, runtimeToken);
+                await session.SaveAsAsync(path, action.Token);
+            };
+            vm.SetLandingData(await documents.Recent.LoadCardsAsync(documents.Store, token),
+                await documents.Recent.LoadRecentPagesAsync(documents.Store, token));
+        }).GetTask().Unwrap().ConfigureAwait(false);
+        return host;
+        }
+        catch { await host.DisposeAsync().ConfigureAwait(false); throw; }
+    }
+
+    public static async Task<string?> PickSavePathAsync(Control owner, string? title)
+    {
+        var top = TopLevel.GetTopLevel(owner) ?? throw new InvalidOperationException("The board window is unavailable.");
+        var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        { Title = "Save board as", SuggestedFileName = string.IsNullOrWhiteSpace(title) ? "Untitled board" : title,
+          DefaultExtension = "9to1board", ShowOverwritePrompt = true,
+          FileTypeChoices = [new FilePickerFileType("9to1 Boards") { Patterns = ["*.9to1board"] }] });
+        if (file is null) return null;
+        return file.TryGetLocalPath() ?? throw new NotSupportedException("This location does not provide a writable local file.");
+    }
+
     /// <summary>Runs the normal Boards save command. Success is reported only after the
     /// external callback returns a committed receipt containing its new revision.</summary>
     public async ValueTask SaveAsync(CancellationToken cancellationToken = default)
@@ -227,7 +301,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         try
         {
             await _session.SaveAsync(cancellationToken).ConfigureAwait(false);
-            if (LastSaveReceipt is null && !_session.HasUnsavedChanges) return;
+            if (_localDocument || LastSaveReceipt is null && !_session.HasUnsavedChanges) return;
             var receipt = LastSaveReceipt;
             if (receipt is null || !receipt.Committed || string.IsNullOrWhiteSpace(receipt.NewRevision))
                 throw new InvalidOperationException("The external source did not confirm this board revision.");

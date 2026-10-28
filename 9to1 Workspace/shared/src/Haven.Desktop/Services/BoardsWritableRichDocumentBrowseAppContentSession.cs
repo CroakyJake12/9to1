@@ -34,6 +34,20 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     private int _titleVersion;
     private string _title = "Boards — Files document";
     private volatile bool _published, _closing;
+    private readonly BoardsLocalDocuments? _localDocuments;
+    private readonly Func<Guid, CancellationToken, Task>? _openLocalDocument;
+    private Guid _localDocumentId;
+
+    internal BoardsWritableRichDocumentBrowseAppContentSession(BrowseAppContentRequest request,
+        BoardsBrowseAppContentAddress address, BoardsLocalDocuments documents,
+        Func<Guid, CancellationToken, Task> open, CancellationTokenSource lifetime, IBoardsEmbeddedArtifactHost? embeddedHost = null)
+    {
+        _request = request; _address = address; _localDocuments = documents;
+        _openLocalDocument = open; _lifetime = lifetime; _embeddedHost = embeddedHost;
+        if (address.IsFilesDocument || address.DocumentId is not null && !address.IsLocalDocument)
+            throw new ArgumentException("A local Boards route is required.");
+    }
+
 
     internal BoardsWritableRichDocumentBrowseAppContentSession(BrowseAppContentRequest request,
         BoardsBrowseAppContentAddress address, NativeHomeFilesBoardWriteLease lease,
@@ -68,7 +82,9 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             throw new UnauthorizedAccessException("A restored write requires a durable Files identity without a prepared capability.");
     }
 
-    public AppContentAddress Address => _published && _lease is { } lease
+    public AppContentAddress Address => _published && _localDocumentId != Guid.Empty
+        ? BoardsBrowseAppContentAddress.ForLocalDocument(_localDocumentId)
+        : _published && _lease is { } lease
         ? _address.ForRestoration(lease.DocumentId, lease.RevisionId) : _request.Address;
     public string Title => _title;
     public string IconKey => "boards";
@@ -76,7 +92,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     public Task? OriginalInitialization { get { lock (_gate) return _initialization; } }
     public Task? OriginalClose { get { lock (_gate) return _close; } }
     public bool IsPublicationCurrent => _published && !_closing && !_lifetime.IsCancellationRequested &&
-        _lease?.IsOpen == true && OriginalInitialization is { IsCompletedSuccessfully: true };
+        (_localDocuments is not null || _lease?.IsOpen == true) && OriginalInitialization is { IsCompletedSuccessfully: true };
     public bool CanRetireOriginalView => OriginalClose is { IsCompletedSuccessfully: true };
 
     public Control OriginalNativeView
@@ -108,6 +124,11 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _lifetime.Token);
         linked.Token.ThrowIfCancellationRequested();
+        if (_localDocuments is not null)
+        {
+            await InitializeLocalAsync(linked.Token).ConfigureAwait(false);
+            return;
+        }
         if (_lease is null)
             _lease = await (_restoreLease ?? throw new InvalidOperationException("The original Home Files write source is missing."))(linked.Token).ConfigureAwait(false);
         var lease = _lease ?? throw new InvalidOperationException("The fresh Home Files write returned no lease.");
@@ -148,6 +169,30 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         }).GetTask();
         var actual = await dispatch.ConfigureAwait(false);
         await actual.ConfigureAwait(false);
+    }
+
+    private async Task InitializeLocalAsync(CancellationToken token)
+    {
+        var documents = _localDocuments!;
+        _localDocumentId = _address.DocumentId ?? await documents.LatestOrCreateAsync(token).ConfigureAwait(false);
+        var presentation = await BoardsWritablePresentation.OpenLocalDocumentAsync(documents, _localDocumentId,
+            _openLocalDocument!, landing: !_address.IsLocalDocument, token: token, embeddedArtifactHost: _embeddedHost, lifetimeToken: _lifetime.Token).ConfigureAwait(false);
+        try
+        {
+            var dispatch = Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                token.ThrowIfCancellationRequested();
+                _title = FormatTitle(presentation.ViewModel.Get("BoardTitle")?.ToString());
+                presentation.ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+                _transientPresentation = new OriginalTabTransientPresentation();
+                _transientPresentation.BindOriginal(presentation.Content);
+                _presentation = presentation;
+                _published = true;
+                CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
+            }).GetTask();
+            await dispatch.ConfigureAwait(false);
+        }
+        catch { await presentation.DisposeAsync().ConfigureAwait(false); throw; }
     }
 
     private async ValueTask<BoardsExternalSaveReceipt> SaveAndPublishRevisionAsync(string sourceId,
@@ -250,6 +295,8 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         token.ThrowIfCancellationRequested();
         var presentation = _presentation;
         if (presentation is null) return CreateFailedInitializationPreparation();
+        if (_localDocuments is not null)
+            await presentation.SaveAsync(token).ConfigureAwait(false);
         var dispatch = Dispatcher.UIThread.InvokeAsync<Task<IBoardsPresentationClosePreparation?>>(
             () =>
             {
@@ -426,6 +473,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             await lease.DisposeAsync().ConfigureAwait(false);
             _lease = null;
         }
+        _localDocuments?.Dispose();
         _published = false;
         var lifetimeFailures = new List<Exception>();
         try { _lifetime.Cancel(); } catch (Exception error) { lifetimeFailures.Add(error); }

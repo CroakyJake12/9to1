@@ -243,7 +243,7 @@ public sealed partial class DataPage : UserControl, IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return; DemandQueryResultsSettledBeforeDispose(); DemandSharedInkSettledBeforeDispose(); DisposeSharedInkMount(); _disposed = true; _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
+        if (_disposed) return; CloseRecordViewSynchronously(); DemandQueryResultsSettledBeforeDispose(); DemandSharedInkSettledBeforeDispose(); DisposeSharedInkMount(); _disposed = true; _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
         _route.PreviousWorkbookRequested -= OnPreviousWorkbookRequested; _route.NextWorkbookRequested -= OnNextWorkbookRequested; _route.NewWorkbookRequested -= OnNewWorkbookRequested; _route.SaveRequested -= OnSaveRequested; _route.ImportRequested -= OnImportRequested; _route.ExportRequested -= OnExportRequested;
         _route.AddSheetRequested -= OnAddSheetRequested; _route.DeleteSheetRequested -= OnDeleteSheetRequested; _route.AddQueryRequested -= OnAddQueryRequested; _route.DeleteQueryRequested -= OnDeleteQueryRequested; _route.BuildSqlRequested -= OnBuildSqlRequested; _route.RunQueryRequested -= OnRunQueryRequested;
         _route.AddShapeRequested -= OnAddShapeRequested; _route.PreviousDrawingRequested -= OnPreviousDrawingRequested; _route.NextDrawingRequested -= OnNextDrawingRequested; _route.RotateDrawingRequested -= OnRotateDrawingRequested; _route.DeleteDrawingRequested -= OnDeleteDrawingRequested;

@@ -564,6 +564,47 @@ public sealed partial class BrowseNativeUiTests
     }
 
     [AvaloniaFact]
+    public async Task Profile_menu_dismisses_outside_and_on_minimize_but_preserves_inside_submenu_clicks()
+    {
+        var paths = new Paths(); var factory = new FixtureFactory();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Chromium,
+            new Dictionary<string, BrowseEngineKind>()));
+        var chrome = await BrowseChrome.CreateAsync(paths, factory, homeProfileId: "current-profile");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout();
+            await Click(window, workspace, Find(window, "HavenProfileButton")); Layout();
+            AssertFlag("ProfileMenuOpen", true);
+            await Click(window, workspace, Find(window, "BrowseSwitchUsersButton")); Layout();
+            AssertFlag("ManageUsersOpen", true); AssertFlag("ProfileMenuOpen", false);
+            var submenu = Authored(window, "BrowseManageUsersOverlay");
+            var inside = submenu.TranslatePoint(new Point(8, 8), window)!.Value;
+            window.MouseDown(inside, MouseButton.Left); window.MouseUp(inside, MouseButton.Left); Layout();
+            AssertFlag("ManageUsersOpen", true);
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null); Layout();
+            AssertFlag("ManageUsersOpen", false); AssertFlag("ProfileMenuOpen", true);
+            var address = Authored(window, "BrowseAddressBox");
+            var outside = address.TranslatePoint(new Point(8, 8), window)!.Value;
+            window.MouseDown(outside, MouseButton.Left); window.MouseUp(outside, MouseButton.Left); Layout();
+            AssertFlag("ProfileMenuOpen", false); Assert.True(address.IsFocused);
+            await Click(window, workspace, Find(window, "HavenProfileButton")); Layout();
+            window.WindowState = WindowState.Minimized; Layout(); AssertFlag("ProfileMenuOpen", false);
+            window.WindowState = WindowState.Normal; Layout();
+            await Click(window, workspace, Find(window, "HavenProfileButton")); Layout();
+            await Click(window, workspace, Find(window, "BrowseNewTabButton")); Layout();
+            AssertFlag("ProfileMenuOpen", false); AssertFlag("ManageUsersOpen", false);
+            await Retire(window);
+            void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
+            void AssertFlag(string name, bool expected)
+            { Assert.True(workspace.TryGetValue(name, out var value)); Assert.Equal(expected, value); }
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
     public async Task Split_view_buttons_render_both_original_engine_views_and_focus_without_recreation()
     {
         var factory = new FixtureFactory(); var paths = new Paths();

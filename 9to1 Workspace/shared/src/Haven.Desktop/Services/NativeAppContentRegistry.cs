@@ -620,6 +620,8 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
         private static readonly ModeDefinition Dev = BuiltInModeSeed.Modes.Single(mode => mode.Key == "dev");
         private static readonly ModeDefinition Boards = BuiltInModeSeed.Modes.Single(mode => mode.Key == "boards");
         private static readonly ModeDefinition Canvas = BuiltInModeSeed.Modes.Single(mode => mode.Key == "canvas");
+        private static readonly ModeDefinition Write = BuiltInModeSeed.Modes.Single(mode => mode.Key == "write");
+        private static readonly ModeDefinition Mesh = BuiltInModeSeed.Modes.Single(mode => mode.Key == "mesh");
         private static readonly ModeDefinition Present = BuiltInModeSeed.Modes.Single(mode => mode.Key == "present");
 
         public static IEnumerable<NativeAppContentRegistration> Build(
@@ -633,6 +635,12 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
         public static IEnumerable<NativeAppContentRegistration> Build(
             IBrowseAppContentFactory files, IBrowseAppContentFactory spaces, IBrowseAppContentFactory build,
             IBrowseAppContentFactory? boards, IBrowseAppContentFactory? canvas, IBrowseAppContentFactory? present)
+            => Build(files, spaces, build, boards, canvas, present, null, null);
+
+        public static IEnumerable<NativeAppContentRegistration> Build(
+            IBrowseAppContentFactory files, IBrowseAppContentFactory spaces, IBrowseAppContentFactory build,
+            IBrowseAppContentFactory? boards, IBrowseAppContentFactory? canvas, IBrowseAppContentFactory? present,
+            IBrowseAppContentFactory? write, IBrowseAppContentFactory? mesh)
         {
             ArgumentNullException.ThrowIfNull(files);
             ArgumentNullException.ThrowIfNull(spaces);
@@ -647,6 +655,8 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             if (boards is not null) result.Add(new(Boards.Id, Boards.Key, HavenAppRouteKind.ModeWorkspace, boards));
             if (canvas is not null) result.Add(new(Canvas.Id, Canvas.Key, HavenAppRouteKind.ModeWorkspace, canvas));
             if (present is not null) result.Add(new(Present.Id, Present.Key, HavenAppRouteKind.ModeWorkspace, present));
+            if (write is not null) result.Add(new(Write.Id, Write.Key, HavenAppRouteKind.Write, write));
+            if (mesh is not null) result.Add(new(Mesh.Id, Mesh.Key, HavenAppRouteKind.Mesh, mesh));
             return result;
         }
     }

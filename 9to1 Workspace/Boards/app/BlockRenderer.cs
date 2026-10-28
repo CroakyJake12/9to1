@@ -241,7 +241,7 @@ public static class BlockRenderer
             .Select(block => block.Y + block.Height + 24)
             .DefaultIfEmpty(0)
             .Max();
-        var renderedExtent = AbsolutePlacements.TryGetValue(absoluteHost, out var state)
+        var renderedExtent = AbsolutePlacements.TryGetValue(absoluteHost, out var state) && state.BottomExtent > 0
             ? state.BottomExtent + 24
             : 0;
         var extent = Math.Max(persistedExtent, renderedExtent);
@@ -418,7 +418,9 @@ public static class BlockRenderer
             grip.MinWidth = BlockGutterTargetSize;
             grip.MinHeight = BlockGutterTargetSize;
             grip.HorizontalAlignment = HorizontalAlignment.Left;
-            grip.VerticalAlignment = VerticalAlignment.Center;
+            grip.VerticalAlignment = VerticalAlignment.Top;
+            CuiPropertyPresentation.Set(grip, "VerticalAlignment", VerticalAlignment.Top,
+                CuiPropertyLevel.Instance, "Boards block gutter alignment");
             grip.Opacity = 0;
             if (grip.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.Name == "BlockGripToggle") is { } toggle)
                 ConfigureBlockGutterButton(toggle, insertAction: false);
@@ -537,9 +539,11 @@ public static class BlockRenderer
             CuiPropertyLevel.Instance, geometrySource);
         CuiPropertyPresentation.Set(button, "BorderWidth", new Thickness(0),
             CuiPropertyLevel.Instance, geometrySource);
+        CuiPropertyPresentation.Set(button, "VerticalAlignment", VerticalAlignment.Top,
+            CuiPropertyLevel.Instance, geometrySource);
+        button.VerticalAlignment = VerticalAlignment.Top;
         if (insertAction)
         {
-            button.VerticalAlignment = VerticalAlignment.Center;
             if (button.Content is Image addGlyph)
             {
                 addGlyph.Width = 18;
@@ -616,6 +620,7 @@ public static class BlockRenderer
     private static Control BuildTextBlock(BoardsViewModel vm, RichBoardBlock block)
     {
         var isHeading = block.Kind == "heading";
+        var isCode = string.Equals(block.StyleId, "code", StringComparison.Ordinal);
         var style = vm.StyleList.FirstOrDefault(s => s.Id == block.StyleId);
         var shell = BlockShell(vm, block);
         var box = new TextBox
@@ -679,6 +684,18 @@ public static class BlockRenderer
             if (!vm.IsEditMode) return;
             if (args.Key == Key.Enter)
             {
+                // Code retains the text editor's newline/IME behavior. Exiting it
+                // is an explicit command and leaves the original code intact.
+                if (isCode)
+                {
+                    if (args.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+                        !args.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                    {
+                        args.Handled = true;
+                        await vm.InsertKindAsync("paragraph", captured, initialText: string.Empty, focusEditor: true);
+                    }
+                    return;
+                }
                 // Owner decision 27 October: Enter ends the current block and starts the
                 // next one; Shift+Enter adds a line break inside the same BlockID.
                 if (args.KeyModifiers.HasFlag(KeyModifiers.Shift))

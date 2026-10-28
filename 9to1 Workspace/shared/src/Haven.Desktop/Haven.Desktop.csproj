@@ -33,6 +33,7 @@
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Condition="'$(Configuration)' == 'Debug'" />
     <ProjectReference Include="..\Haven.Core\Haven.Core.csproj" />
     <ProjectReference Include="..\Haven.Application\Haven.Application.csproj" />
+    <ProjectReference Include="../../../Data/RecordsUI/HavenOS.Data.RecordsUI.csproj" />
     <ProjectReference Include="../../../Spaces/HavenOS.Spaces.csproj" />
     <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />

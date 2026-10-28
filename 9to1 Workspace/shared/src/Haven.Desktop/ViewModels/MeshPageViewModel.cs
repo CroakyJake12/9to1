@@ -205,15 +205,22 @@ public sealed class MeshPageViewModel : ObservableObject, IDisposable
         await RefreshAsync(cancellationToken);
     }
 
-private void OnMeshStateChanged()
+    private Func<Func<CancellationToken, Task>, Task>? _runOriginal;
+    private Func<bool>? _canAdmitOriginal;
+    internal void BindOriginalPresentation(Func<Func<CancellationToken, Task>, Task> runOriginal, Func<bool> canAdmit)
     {
-        if (_disposed) return;
-        Dispatcher.UIThread.Post(async () => await RefreshSafelyAsync());
+        ArgumentNullException.ThrowIfNull(runOriginal);
+        if (_runOriginal is not null || _disposed) throw new InvalidOperationException("The Mesh view already has an original owner.");
+        _runOriginal = runOriginal; _canAdmitOriginal = canAdmit;
     }
-
-    private async Task RefreshSafelyAsync()
+    private void OnMeshStateChanged()
     {
-        try { await RefreshAsync(CancellationToken.None); } catch { }
+        if (_disposed || _runOriginal is null || _canAdmitOriginal?.Invoke() == false) return;
+        // Admission and the dispatcher source belong to the real page before refresh starts.
+        try { Observe(_runOriginal(RefreshAsync)); }
+        catch (ObjectDisposedException) when (_disposed || _canAdmitOriginal?.Invoke() == false) { }
+        static async void Observe(Task actual)
+        { try { await actual; } catch { /* The page retains the original task. */ } }
     }
 
     private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> source)

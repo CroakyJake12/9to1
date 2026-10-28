@@ -37,7 +37,7 @@ public sealed partial class BrowseNativeOwnershipTests
         Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => chrome.NavigateAsync("9to1://write/id")));
         var owner = Assert.Single(apps.Sessions);
         Assert.Equal(before, chrome.State.SelectedTab); Assert.Equal(0, renderer.CloseCalls);
-        Assert.Contains(owner.OriginalInitialization!, chrome.OriginalNativeSources);
+        Assert.DoesNotContain(owner.OriginalInitialization!, chrome.OriginalNativeSources);
         var diagnosis = Assert.Single(chrome.DrainedStartupFailures);
         Assert.Same(owner.OriginalInitialization, diagnosis.OriginalInitialization);
         Assert.Same(failure, diagnosis.OriginalInitialization.Exception!.InnerException);

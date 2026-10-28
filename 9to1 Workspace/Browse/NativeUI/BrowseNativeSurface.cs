@@ -185,6 +185,7 @@ internal sealed class BrowseEngineViewport : ContentControl
 {
     private readonly BrowseNativeWorkspace _workspace;
     private CuiSceneHost? _findKeyScope;
+    private Window? _menuWindow;
     private readonly Grid _root = new();
     private readonly Grid _surfaces = new();
     private readonly Canvas _dragAnchorLayer = new() { ClipToBounds = false, IsHitTestVisible = false };
@@ -219,6 +220,10 @@ internal sealed class BrowseEngineViewport : ContentControl
         // keyboard adapter here, rather than only to the standalone window.
         _findKeyScope = this.GetVisualAncestors().OfType<CuiSceneHost>().FirstOrDefault();
         _findKeyScope?.AddHandler(KeyDownEvent, OnFindKeyDown, RoutingStrategies.Tunnel);
+        _findKeyScope?.AddHandler(InputElement.PointerPressedEvent, OnTransientMenuPointerPressed,
+            RoutingStrategies.Tunnel, handledEventsToo: true);
+        _menuWindow = TopLevel.GetTopLevel(this) as Window;
+        if (_menuWindow is not null) _menuWindow.PropertyChanged += OnMenuWindowChanged;
         _findKeyScope?.AddHandler(InputElement.PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         _findKeyScope?.AddHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -226,6 +231,10 @@ internal sealed class BrowseEngineViewport : ContentControl
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
     {
         _workspace.PropertyChanged -= OnChanged;
+        _workspace.DismissTransientMenus();
+        if (_menuWindow is not null) _menuWindow.PropertyChanged -= OnMenuWindowChanged;
+        _menuWindow = null;
+        _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTransientMenuPointerPressed);
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnFindKeyDown);
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTabPointerPressed);
         _findKeyScope?.RemoveHandler(InputElement.PointerMovedEvent, OnTabPointerMoved);
@@ -233,6 +242,25 @@ internal sealed class BrowseEngineViewport : ContentControl
         ClearTabDrag();
         _findKeyScope = null;
     }
+    private void OnTransientMenuPointerPressed(object? sender, PointerPressedEventArgs args)
+    {
+        if (!_workspace.HasOpenTransientMenu) return;
+        var source = args.Source as Control;
+        // Native submenu content may return through the logical owner rather than
+        // the visual tree. Check both; never treat an inside submenu press as outside.
+        var controls = source is null ? Enumerable.Empty<Control>() :
+            source.GetVisualAncestors().OfType<Control>().Concat(source.GetLogicalAncestors().OfType<Control>()).Prepend(source);
+        if (controls.Any(control => control.Name is "BrowseProfileOverlay" or "BrowseManageUsersOverlay" or "HavenProfileButton")) return;
+        _workspace.DismissTransientMenus();
+        // Preserve the original pointer target/default action and its focus/caret.
+    }
+
+    private void OnMenuWindowChanged(object? sender, AvaloniaPropertyChangedEventArgs args)
+    {
+        if (args.Property == Window.WindowStateProperty && _menuWindow?.WindowState == WindowState.Minimized)
+            _workspace.DismissTransientMenus();
+    }
+
     private void OnTabPointerPressed(object? sender, PointerPressedEventArgs args)
     {
         if (!_workspace.IsReady || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
@@ -393,6 +421,12 @@ internal sealed class BrowseEngineViewport : ContentControl
         if (_tabDragActive && args.Key == Key.Escape)
         { ClearTabDrag(); args.Handled = true; return; }
         if (args.Handled || !_workspace.IsReady || _findKeyScope is not { } scope) return;
+        if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None && _workspace.HasOpenTransientMenu)
+        {
+            _workspace.DismissTransientMenus(returnFromSubmenu: true);
+            args.Handled = true;
+            return;
+        }
         var findBox = scope.GetLogicalDescendants().OfType<TextBox>()
             .SingleOrDefault(control => control.Name == "BrowseFindBox");
         var inFindBox = findBox?.IsFocused == true;

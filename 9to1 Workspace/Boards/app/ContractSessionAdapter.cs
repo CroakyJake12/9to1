@@ -148,6 +148,24 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         return Path.Combine(documents, "9to1 Boards", "Board.9to1board");
     }
 
+    private string? _localRecoveryPath;
+    internal void SetLocalRecoveryNotice(string message) => SetError(message);
+    public bool IsLocalDraft => _localRecoveryPath is not null && string.Equals(_localRecoveryPath, _real.FilePath,
+        OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+    public static async Task<ContractSessionAdapter> OpenLocalDraftAsync(JsonFileHavenBoardStore store,
+        string recoveryPath, string? destination, string? expectedHash, Action<string, string> saved,
+        CancellationToken token = default, LocalBoardWriteLease? heldLease = null)
+    {
+        var real = heldLease is null
+            ? await RichBoardSession.OpenRecoverableAsync(store, recoveryPath, destination, expectedHash, token).ConfigureAwait(false)
+            : await RichBoardSession.OpenRecoverableUnderLeaseAsync(store, recoveryPath, destination, expectedHash, heldLease, token).ConfigureAwait(false);
+        real.LocalFileSaved += saved;
+        var adapter = new ContractSessionAdapter(store, real) { _localRecoveryPath = Path.GetFullPath(recoveryPath) };
+        adapter.RefreshView();
+        return adapter;
+    }
+
     public RichBoardDocument Document => _view;
     /// <summary>Returns a full detached contract document snapshot for host metadata.</summary>
     public async Task<HavenBoardDocument> GetDetachedContractDocumentAsync(CancellationToken cancellationToken = default)
@@ -171,8 +189,9 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     {
         if (!CanEdit) throw new InvalidOperationException("This board source is open read-only.");
     }
-    public string Status => _lastError ?? _real.Status;
+    public string Status => _lastError ?? (IsLocalDraft && !_real.HasUnsavedChanges ? "Saved locally — draft" : _real.Status);
     public string? FilePath => _real.FilePath;
+    public string? ConflictRecoveryPath => _real.LastConflictRecoveryPath;
     public event EventHandler<string>? StatusChanged;
 
     /// <summary>Monotonic contract revision for cache invalidation.</summary>
@@ -610,7 +629,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
             _baselineJson = ProjectedViewJson();
             await _real.SaveAsync(cancellationToken).ConfigureAwait(false);
-            await RefreshAfterSaveAsync(submittedView, cancellationToken).ConfigureAwait(false);
+            await RefreshAfterSaveAsync(submittedView, CancellationToken.None).ConfigureAwait(false);
             _lastError = null;
         }
         catch (Exception error)
@@ -636,7 +655,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
             _baselineJson = ProjectedViewJson();
             await _real.SaveAsAsync(path, cancellationToken).ConfigureAwait(false);
-            await RefreshAfterSaveAsync(submittedView, cancellationToken).ConfigureAwait(false);
+            await RefreshAfterSaveAsync(submittedView, CancellationToken.None).ConfigureAwait(false);
             _lastError = null;
         }
         catch (Exception error)

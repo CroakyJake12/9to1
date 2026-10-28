@@ -14,6 +14,29 @@ namespace Haven.Desktop.Tests;
 public sealed class WritePageOriginalLifetimeTests
 {
     [AvaloniaFact]
+    public async Task Browse_close_fence_tracks_the_real_Write_draft_and_parent_admission()
+    {
+        var document = NotesDocument.Create("Original Write");
+        var repository = new Repository(document);
+        var admit = true; var parentCalls = 0;
+        var page = new WritePage(new HavenEventBus(), repository, new Formats(), initialDocumentId: document.Id,
+            captureOriginalOwner: owner => owner.BindOriginalBrowsePresentation(body => { parentCalls++; body(); }, () => admit));
+        await page.InitializeAsync();
+        page.DemandOriginalInitializedDocument();
+        var initial = page.CaptureOriginalBrowseCloseFence(); Assert.NotNull(initial);
+        page.Route.TitleInput.Text = "New actual Write title";
+        Assert.False(page.IsOriginalBrowseCloseFenceCurrent(initial!));
+        Assert.True(await page.PrepareToCloseAsync());
+        var saved = page.CaptureOriginalBrowseCloseFence(); Assert.NotNull(saved);
+        Assert.True(parentCalls > 0);
+        admit = false;
+        Assert.Throws<ObjectDisposedException>(() => { _ = page.SaveAsync(); });
+        admit = true;
+        await page.BeginOriginalPreparedBrowseClose(saved!);
+        Assert.Null(page.Content);
+    }
+
+    [AvaloniaFact]
     public async Task Constructor_capture_precedes_native_publication_and_partial_owner_can_retire()
     {
         WritePage? captured = null;

@@ -5,7 +5,7 @@ namespace Haven.Desktop.Services;
 /// <summary>Canonical notebook identity only; URI text supplies no storage or Home authority.</summary>
 internal sealed record BoardsBrowseAppContentAddress(Guid? DocumentId, Guid? StoreId = null,
     Guid? ParentFolderId = null, Guid? FileId = null, Guid? RevisionId = null, Guid? ReadToken = null,
-    bool Writable = false)
+    bool Writable = false, bool IsLocalDocument = false)
 {
     internal const string Authority = "boards";
     internal static BoardsBrowseAppContentAddress Parse(AppContentAddress address)
@@ -15,6 +15,8 @@ internal sealed record BoardsBrowseAppContentAddress(Guid? DocumentId, Guid? Sto
             throw new UnauthorizedAccessException("Select the registered native Boards application.");
         var parts = address.ResourceSegments;
         if (parts.Count == 0) return new((Guid?)null);
+        if (parts.Count == 2 && parts[0] == "local" && TryId(parts[1], out var localId))
+            return new(localId, Writable: true, IsLocalDocument: true);
         if (parts.Count == 2 && parts[0] == "notebooks" &&
             Guid.TryParseExact(parts[1], "D", out var id) && id != Guid.Empty && parts[1] == id.ToString("D"))
             return new(id);
@@ -35,6 +37,9 @@ internal sealed record BoardsBrowseAppContentAddress(Guid? DocumentId, Guid? Sto
     }
 
     internal bool IsFilesDocument => FileId is not null;
+    internal static AppContentAddress ForLocalDocument(Guid id) => id != Guid.Empty
+        ? AppContentAddress.Parse($"9to1://boards/local/{id:D}")
+        : throw new ArgumentException("A stable local BoardID is required.");
 
     internal bool IdentifiesSameFileRevision(BoardsBrowseAppContentAddress other) =>
         IsFilesDocument && other.IsFilesDocument && StoreId == other.StoreId && ParentFolderId == other.ParentFolderId &&

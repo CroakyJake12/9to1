@@ -28,6 +28,23 @@ public interface IChromiumEngineView
     void PresentFrame(byte[] jpeg);
 }
 
+/// <summary>UI-thread state: input uses only the viewport of the displayed, decoded frame.</summary>
+internal sealed class ChromiumViewportFrameState
+{
+    internal ChromiumViewport Requested { get; private set; } = ChromiumViewport.Default;
+    internal ChromiumViewport Acknowledged { get; private set; } = ChromiumViewport.Default;
+    internal ChromiumViewport Displayed { get; private set; } = ChromiumViewport.Default;
+    internal bool CanAcceptInput { get; private set; }
+    internal void Request(ChromiumViewport value) { Requested = value; CanAcceptInput = false; }
+    internal void Acknowledge(ChromiumViewport value) { Acknowledged = value; CanAcceptInput = false; }
+    internal void Publish(ChromiumViewport? value)
+    {
+        CanAcceptInput = value is not null && value == Requested && value == Acknowledged;
+        if (CanAcceptInput) Displayed = value!;
+    }
+}
+
+
 /// <summary>
 /// The low-level interactive Chromium engine surface: an approved-Avalonia control
 /// that displays Page.startScreencast JPEG frames and routes genuine pointer/key/
@@ -46,10 +63,39 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     internal const int RenderWidth = 1280;
     internal const int RenderHeight = 800;
 
+    private ChromiumViewport _requestedViewport = ChromiumViewport.Default;
+    private readonly ChromiumViewportFrameState _frameViewport = new();
+    private readonly HashSet<string> _pressedMouseButtons = new(StringComparer.Ordinal);
+    private TopLevel? _topLevel;
+    internal ChromiumViewport RequestedViewport => Volatile.Read(ref _requestedViewport);
+    internal event EventHandler<ChromiumViewport>? ViewportChanged;
+    internal void ApplyViewport(ChromiumViewport value)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        _frameViewport.Acknowledge(value);
+        InvalidateVisual();
+    }
+    private void UpdateViewport()
+    {
+        if (!_attached || Bounds.Width <= 0 || Bounds.Height <= 0) return;
+        var next = ChromiumViewport.From(Bounds.Size, _topLevel?.RenderScaling ?? 1);
+        if (next == _requestedViewport) return;
+        Volatile.Write(ref _requestedViewport, next);
+        _frameViewport.Request(next);
+        ViewportChanged?.Invoke(this, next);
+    }
+    private void OnScalingChanged(object? sender, EventArgs args) => UpdateViewport();
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == BoundsProperty) UpdateViewport();
+    }
+
     private readonly object _gate = new();
     private readonly HashSet<Key> _pressedKeys = new();
     private IImage? _current;
-    private volatile byte[]? _latestJpeg;
+    private sealed record PendingFrame(byte[] Jpeg, ChromiumViewport? Viewport);
+    private volatile PendingFrame? _latestFrame;
     private volatile int _frameQueued;
     private int _framesReceived, _framesDecoded;
     private bool _attached;
@@ -87,7 +133,9 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     /// <summary>Feeds the next screencast JPEG frame to the surface. Only the
     /// latest frame is ever published; a single bounded UI drain coalesces the
     /// queue so notifications never accumulate unboundedly.</summary>
-    public void PresentFrame(byte[] jpeg)
+    public void PresentFrame(byte[] jpeg) => PresentFrame(jpeg, null);
+
+    internal void PresentFrame(byte[] jpeg, ChromiumViewport? viewport)
     {
         if (jpeg is null || jpeg.Length == 0) return;
         FramePresented?.Invoke(jpeg);
@@ -97,7 +145,7 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
             _reportedReceived = true;
             EmitDiagnostic($"surface received bytes={jpeg.Length} frames={received} attached={_attached}");
         }
-        _latestJpeg = jpeg;
+        _latestFrame = new(jpeg, viewport);
         if (Interlocked.CompareExchange(ref _frameQueued, 1, 0) == 0)
             PostDrain();
     }
@@ -110,11 +158,11 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
 
     private void DrainFrames()
     {
-        byte[]? jpeg;
+        PendingFrame? frame;
         try
         {
-            while ((jpeg = Interlocked.Exchange(ref _latestJpeg, null)) is not null)
-                PublishFrame(jpeg);
+            while ((frame = Interlocked.Exchange(ref _latestFrame, null)) is not null)
+                PublishFrame(frame);
         }
         finally
         {
@@ -122,17 +170,17 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
             // A frame that arrived between the loop exit and clearing the busy flag
             // would otherwise be stranded until the next frame. Repost so it is
             // always drained (closes the lost-wakeup window).
-            if (_latestJpeg is not null && Interlocked.CompareExchange(ref _frameQueued, 1, 0) == 0)
+            if (_latestFrame is not null && Interlocked.CompareExchange(ref _frameQueued, 1, 0) == 0)
                 PostDrain();
         }
     }
 
-    private void PublishFrame(byte[] jpeg)
+    private void PublishFrame(PendingFrame frame)
     {
         IImage? image;
         try
         {
-            using var stream = new MemoryStream(jpeg, writable: false);
+            using var stream = new MemoryStream(frame.Jpeg, writable: false);
             image = new Bitmap(stream);
         }
         catch (Exception)
@@ -150,6 +198,7 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
 
         IImage? previous;
         lock (_gate) { previous = _current; _current = image; }
+        _frameViewport.Publish(frame.Viewport);
         (previous as IDisposable)?.Dispose();
         InvalidateVisual();
     }
@@ -173,24 +222,23 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
             _reportedImageRender = true;
             EmitDiagnostic($"surface render image width={image.Size.Width} height={image.Size.Height} boundsW={Bounds.Width} boundsH={Bounds.Height} attached={_attached}");
         }
-        context.DrawImage(image, new Rect(image.Size), new Rect(Bounds.Size));
+        context.DrawImage(image, new Rect(image.Size), ChromiumViewport.Fit(image.Size, Bounds.Size));
     }
 
     private (double X, double Y) Scale(Point p)
     {
-        var w = Bounds.Width;
-        var h = Bounds.Height;
-        var sx = w > 0 ? RenderWidth / w : 1d;
-        var sy = h > 0 ? RenderHeight / h : 1d;
-        return (p.X * sx, p.Y * sy);
+        var mapped = _frameViewport.Displayed.MapPoint(p, Bounds.Size);
+        return (mapped.X, mapped.Y);
     }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+        if (!_frameViewport.CanAcceptInput) { e.Handled = true; return; }
         Focus();
         var (button, buttons) = ResolveButton(e);
         var (x, y) = Scale(e.GetPosition(this));
+        if (button is not null) _pressedMouseButtons.Add(button);
         MouseGesture?.Invoke(this, new ChromiumMouseArgs("mousePressed", x, y, button, buttons, 1));
         e.Handled = true;
     }
@@ -199,7 +247,11 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     {
         base.OnPointerReleased(e);
         var (button, buttons) = ResolveButton(e);
-        var (x, y) = Scale(e.GetPosition(this));
+        if (button is null || !_pressedMouseButtons.Remove(button)) { e.Handled = true; return; }
+        // Finish an admitted press even while resizing, outside page content so the
+        // stale image cannot turn its release into a click on a different element.
+        var (x, y) = _frameViewport.CanAcceptInput ? Scale(e.GetPosition(this)) : (-1d, -1d);
+        buttons = _pressedMouseButtons.Sum(value => value == "right" ? 2 : value == "middle" ? 4 : 1);
         MouseGesture?.Invoke(this, new ChromiumMouseArgs("mouseReleased", x, y, button, buttons, 1));
         e.Handled = true;
     }
@@ -207,6 +259,7 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
+        if (!_frameViewport.CanAcceptInput) { e.Handled = true; return; }
         var buttons = e.GetCurrentPoint(this).Properties.PointerUpdateKind == PointerUpdateKind.LeftButtonPressed ? 1 : 0;
         var (x, y) = Scale(e.GetPosition(this));
         MouseGesture?.Invoke(this, new ChromiumMouseArgs("mouseMoved", x, y, null, buttons, 0));
@@ -216,18 +269,17 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
+        if (!_frameViewport.CanAcceptInput) { e.Handled = true; return; }
         var (x, y) = Scale(e.GetPosition(this));
-        var w = Bounds.Width;
-        var h = Bounds.Height;
-        var sx = w > 0 ? RenderWidth / w : 1d;
-        var sy = h > 0 ? RenderHeight / h : 1d;
-        MouseGesture?.Invoke(this, new ChromiumMouseArgs("mouseWheel", x, y, null, 0, 0, e.Delta.X * sx, e.Delta.Y * sy));
+        var delta = ChromiumViewport.WheelPixels(e.Delta, e.KeyModifiers.HasFlag(KeyModifiers.Shift));
+        MouseGesture?.Invoke(this, new ChromiumMouseArgs("mouseWheel", x, y, null, 0, 0, delta.X, delta.Y));
         e.Handled = true;
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+        if (!_frameViewport.CanAcceptInput) { e.Handled = true; return; }
         // The approved fork has no IsRepeat property; derive auto-repeat from the
         // set of still-pressed keys so key repeats are still reported genuinely.
         var autoRepeat = !_pressedKeys.Add(e.Key);
@@ -246,7 +298,7 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     protected override void OnKeyUp(KeyEventArgs e)
     {
         base.OnKeyUp(e);
-        _pressedKeys.Remove(e.Key);
+        if (!_pressedKeys.Remove(e.Key)) { e.Handled = true; return; }
         var domKey = ChromiumKeyMap.ToDomKey(e.Key);
         var domCode = ChromiumKeyMap.ToDomCode(e.PhysicalKey);
         var vk = ChromiumKeyMap.ToWindowsVirtualKeyCode(e.Key);
@@ -258,6 +310,7 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     protected override void OnTextInput(TextInputEventArgs e)
     {
         base.OnTextInput(e);
+        if (!_frameViewport.CanAcceptInput) { e.Handled = true; return; }
         if (!string.IsNullOrEmpty(e.Text))
         {
             TextGesture?.Invoke(this, new ChromiumTextArgs(e.Text));
@@ -269,6 +322,9 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     {
         base.OnAttachedToVisualTree(e);
         _attached = true;
+        _topLevel = TopLevel.GetTopLevel(this);
+        if (_topLevel is not null) _topLevel.ScalingChanged += OnScalingChanged;
+        UpdateViewport();
         if (!_reportedAttached) { _reportedAttached = true; EmitDiagnostic("surface attached"); }
     }
 
@@ -276,6 +332,8 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     {
         base.OnDetachedFromVisualTree(e);
         _attached = false;
+        if (_topLevel is not null) _topLevel.ScalingChanged -= OnScalingChanged;
+        _topLevel = null;
         if (!_reportedDetached) { _reportedDetached = true; EmitDiagnostic("surface detached"); }
         IImage? current;
         lock (_gate) { current = _current; _current = null; }

@@ -416,15 +416,17 @@ public sealed partial class App
                     return (_boardWriteSource ?? throw new UnauthorizedAccessException("The Home Files writer retired."))
                         .TakePrepared(prepared.ReadToken!.Value, prepared.StoreId!.Value, prepared.ParentFolderId!.Value,
                             prepared.FileId!.Value, prepared.RevisionId!.Value);
-                });
+                }, openLocalBoard: OpenLocalBoardAsync);
             var canvas = CanvasBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime, actualTheme.Context);
             var present = PresentBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
+            var write = WriteBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
+            var mesh = MeshBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
             var modes = _services.GetRequiredService<IModeRegistry>();
             // The SAME production registration helper builds the genuine native-app set (files, spaces,
             // dev, boards, canvas, present); legacy callers retain their existing registration set.
             // Chat is canonicalized to the Spaces Chat resource by HomeLaunchRouteResolver before admission.
             var apps = new NativeAppContentRegistry(modes,
-                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build, boards, canvas, present), () => IsCurrent);
+                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build, boards, canvas, present, write, mesh), () => IsCurrent);
             var catalogue = _app.RetainOriginalModelCatalogueRegistry(_services.GetRequiredService<IServiceProvider>());
             var privacy = _services.GetRequiredService<IPrivacyPreferenceStore>();
             var home = new UnifiedHomeContentFactory(modes, CreateDashboard,
@@ -730,6 +732,54 @@ public sealed partial class App
             if (ready.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(ready.Message);
         }
 
+        private async Task<BoardsHomeBoardCreationResult> CreateAndOpenLocalBoardAsync(BrowseAppContentRequest origin,
+            ReadOnlyMemory<byte> bytes, CancellationToken token)
+        {
+            if (_localCreatedBoards.TryGetValue(origin.TabId, out var retained))
+                return await OpenRetainedLocalBoardAsync(origin, retained, token);
+            using var documents = new BoardsLocalDocuments(origin.ProfileId, Path.Combine(_services.GetRequiredService<IAppPaths>().DataDirectory, "Boards"));
+            var id = await documents.CreateAsync(bytes, token);
+            _localCreatedBoards[origin.TabId] = id;
+            return await OpenRetainedLocalBoardAsync(origin, id, token);
+        }
+
+        private readonly Dictionary<Guid, Guid> _localCreatedBoards = [];
+        private async Task<BoardsHomeBoardCreationResult> OpenRetainedLocalBoardAsync(BrowseAppContentRequest origin,
+            Guid id, CancellationToken token)
+        {
+            try
+            {
+                await OpenLocalBoardAsync(origin, id, token);
+                _localCreatedBoards.Remove(origin.TabId);
+                return new(BoardsHomeBoardCreationOutcome.Opened, "LocalDraftOpened", "Saved locally — draft");
+            }
+            catch (Exception error)
+            {
+                return new(BoardsHomeBoardCreationOutcome.CreatedOpenFailed, "LocalDraftRetained",
+                    "The draft is saved locally. Retry opening it. " + error.Message.Split('\n')[0]);
+            }
+        }
+
+        private async Task OpenLocalBoardAsync(BrowseAppContentRequest origin, Guid documentId, CancellationToken token)
+        {
+            Dispatcher.UIThread.VerifyAccess(); DemandCurrent(); token.ThrowIfCancellationRequested();
+            var current = _chrome?.ObserveOriginalAppContent(origin.TabId);
+            if (origin.Privacy != BrowserTabPrivacy.Standard || origin.ProfileId != _actor?.ProfileId ||
+                current is not IBrowseNativeAppContentSession { IsPublicationCurrent: true })
+                throw new UnauthorizedAccessException("Open the local board from its current profile-owned tab.");
+            using var documents = new BoardsLocalDocuments(origin.ProfileId, Path.Combine(_services.GetRequiredService<IAppPaths>().DataDirectory, "Boards"));
+            var localRead = documents.Store.LoadDocumentAtPathAsync(documents.PathFor(documentId), token);
+            _ = Track(localRead);
+            var document = await localRead;
+            if (document?.DocumentId != documentId) throw new InvalidDataException("This local board is unavailable in the current profile.");
+            var address = BoardsBrowseAppContentAddress.ForLocalDocument(documentId);
+            if (_workspace is null || !_workspace.TryQueueNavigationOriginal(
+                new(origin.TabId, address, OpenInNewTab: true), localRead, out var navigation) || navigation is null)
+                throw new InvalidOperationException("The local board is saved; opening its tab was not admitted.");
+            _ = Track(navigation);
+            await navigation;
+        }
+
         private readonly Dictionary<Guid, BoardCreationState> _boardCreations = [];
         private readonly List<BoardCreationState> _retainedBoardCreations = [];
         private sealed class BoardCreationState
@@ -755,6 +805,11 @@ public sealed partial class App
             if ((!isBoards && !isBoardsLibrary) || origin.Privacy != BrowserTabPrivacy.Standard || origin.ProfileId != _actor?.ProfileId ||
                 current is not IBrowseNativeAppContentSession { IsPublicationCurrent: true } || current.Address != origin.Address)
                 throw new UnauthorizedAccessException("Create a board only from its actual current standard Home tab.");
+            if (request.Operation == BoardsHomeBoardCreationOperation.Create)
+                return CreateAndOpenLocalBoardAsync(origin, request.ValidatedDraft, token);
+            if (request.Operation == BoardsHomeBoardCreationOperation.RetryOpenExisting &&
+                _localCreatedBoards.TryGetValue(origin.TabId, out var retainedLocal))
+                return OpenRetainedLocalBoardAsync(origin, retainedLocal, token);
             lock (_gate)
             {
                 _boardCreations.TryGetValue(origin.TabId, out var state);

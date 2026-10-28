@@ -4,7 +4,7 @@ using Haven.Core;
 
 namespace Haven.Infrastructure;
 
-public sealed class DataWorkbookRepository : IDataWorkbookRepository
+public sealed partial class DataWorkbookRepository : IDataGuardedWorkbookRepository
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
     private readonly string _root;
@@ -22,21 +22,21 @@ public sealed class DataWorkbookRepository : IDataWorkbookRepository
         cancellationToken.ThrowIfCancellationRequested(); var (current, backup) = Paths(workbookId); var workbook = await TryLoadAsync(current, workbookId, cancellationToken).ConfigureAwait(false); if (workbook is not null) return workbook; workbook = await TryLoadAsync(backup, workbookId, cancellationToken).ConfigureAwait(false); if (workbook is null) return null; workbook.Recovery.RecoveredFromBackup = true; workbook.Recovery.RecoveredAt = DateTimeOffset.UtcNow; workbook.Recovery.Message = "Recovered the previous valid workbook after the current file could not be read."; return workbook;
     }
 
-    public async Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(workbook); cancellationToken.ThrowIfCancellationRequested(); ValidateForSave(workbook); workbook.Normalize(); workbook.UpdatedAt = DateTimeOffset.UtcNow; workbook.Version = checked(workbook.Version + 1); workbook.Metadata["lastSaveReason"] = reason ?? string.Empty;
-        var directory = WorkbookDirectory(workbook.Id); Directory.CreateDirectory(directory); var (current, backup) = Paths(workbook.Id); var temporary = Path.Combine(directory, $"current-{Guid.NewGuid():N}.tmp");
-        try
-        {
-            if (File.Exists(current)) { if (workbook.Recovery.RecoveredFromBackup) File.Move(current, Path.Combine(directory, $"unreadable-current-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}.json"), overwrite: false); else File.Copy(current, backup, overwrite: true); }
-            workbook.Recovery.RecoveredFromBackup = false; workbook.Recovery.RecoveredAt = null; workbook.Recovery.Message = string.Empty;
-            await using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 64 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough)) { await JsonSerializer.SerializeAsync(stream, workbook, JsonOptions, cancellationToken).ConfigureAwait(false); await stream.FlushAsync(cancellationToken).ConfigureAwait(false); }
-            _ = await TryLoadAsync(temporary, workbook.Id, cancellationToken).ConfigureAwait(false) ?? throw new InvalidDataException("The workbook did not pass its persistence verification read."); File.Move(temporary, current, overwrite: true); return new(workbook.Id, workbook.Version, workbook.UpdatedAt, current, backup);
-        }
-        finally { TryDelete(temporary); }
-    }
+    public Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, CancellationToken cancellationToken) =>
+        SaveGuardedCoreAsync(workbook, reason, null, cancellationToken);
 
-    public Task DeleteAsync(Guid workbookId, CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); var directory = WorkbookDirectory(workbookId); if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); return Task.CompletedTask; }
+    public async Task DeleteAsync(Guid workbookId, CancellationToken cancellationToken)
+    {
+        await WithRootLeaseAsync(async () =>
+        {
+            var current = await LoadAsync(workbookId, cancellationToken).ConfigureAwait(false);
+            if (current?.RecordViews.Count > 0 || current?.Metadata.ContainsKey("data.recordSession.v1") == true)
+                throw new UnauthorizedAccessException("Record databases require an explicit Data-owned delete review.");
+            var directory = WorkbookDirectory(workbookId); DemandOrdinaryDirectory(directory);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+            return true;
+        }, cancellationToken).ConfigureAwait(false);
+    }
 
     private async Task<DataWorkbook?> TryLoadAsync(string path, Guid expectedId, CancellationToken cancellationToken)
     {

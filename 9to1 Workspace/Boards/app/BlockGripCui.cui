@@ -7,10 +7,10 @@
     <Action name="Delete" command="ApplyBlockAction" parameter="{Binding DeleteRequest}" />
   </Actions>
   <Page>
-    <Container Type="Horizontal Stack" CellGap="4" VerticalAlignment="Center">
-      <Button ID="BlockGripToggle" Content="⋮" Action="ToggleActions" Padding="4 2"
+    <Container Type="Horizontal Stack" CellGap="4" VerticalAlignment="Top">
+      <Button ID="BlockGripToggle" Content="⋮" Action="ToggleActions" Padding="4 2" VerticalAlignment="Top"
               AccessibleName="{Binding GripAccessibleName}" AccessibleDescription="Open block actions" />
-      <Container Type="Wrap" CellGap="4" Active="{Binding IsExpanded}" AccessibleName="Block actions">
+      <Container Type="Wrap" CellGap="4" VerticalAlignment="Top" Active="{Binding IsExpanded}" AccessibleName="Block actions">
         <Button ID="BlockMoveUp" Content="Move up" Action="MoveUp" Interactive="{Binding CanMoveUp}" AccessibleName="Move block up" />
         <Button ID="BlockMoveDown" Content="Move down" Action="MoveDown" Interactive="{Binding CanMoveDown}" AccessibleName="Move block down" />
         <Button ID="BlockDuplicate" Content="Duplicate" Action="Duplicate" Interactive="{Binding CanManage}" AccessibleName="Duplicate block" />

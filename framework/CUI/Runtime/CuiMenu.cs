@@ -22,6 +22,7 @@ public sealed class CuiMenu : Menu
     {
         base.OnAttachedToVisualTree(e);
         _generation++; _root = TopLevel.GetTopLevel(this);
+        if (_root is Window window) window.PropertyChanged += OnOwnerWindowChanged;
         _root?.AddHandler(GotFocusEvent, RootFocused, RoutingStrategies.Bubble, handledEventsToo: true);
         RememberOutsideFocus();
     }
@@ -29,9 +30,25 @@ public sealed class CuiMenu : Menu
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _generation++; _root?.RemoveHandler(GotFocusEvent, RootFocused);
+        if (_root is Window window) window.PropertyChanged -= OnOwnerWindowChanged;
         _spaceOpenGeneration++;
         _root = null; _outsideFocus = null;
+        // Native popup windows outlive visual detachment unless the menu closes.
+        // The old editor no longer owns focus, so bypass focus-return scheduling.
+        base.Close();
         base.OnDetachedFromVisualTree(e);
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property.Name == "IsEffectivelyVisible" && !IsEffectivelyVisible) Close();
+    }
+
+    private void OnOwnerWindowChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
+    {
+        if (change.Property == Window.WindowStateProperty && sender is Window { WindowState: WindowState.Minimized })
+            Close();
     }
 
     private void ActivateWithSpace(object? sender, KeyEventArgs args)

@@ -1,3 +1,4 @@
+using Avalonia.Headless.XUnit;
 using System.Reflection;
 using Haven.Application;
 using Haven.Core;
@@ -10,6 +11,27 @@ namespace Haven.Desktop.Tests;
 
 public sealed class MeshHavenSceneTests
 {
+    [AvaloniaFact]
+    public async Task Actual_Mesh_page_starts_explicitly_and_closes_its_view_without_stopping_the_shared_coordinator()
+    {
+        var store = new EmptyStateStore(); var transport = new EmptyTransport();
+        var coordinator = new MeshCoordinator(store, new EmptySecrets(), transport, new EmptyCapabilities(), new EmptyMerge());
+        var viewModel = new MeshPageViewModel(coordinator);
+        var page = new MeshPage(viewModel);
+        Assert.Equal(0, store.ReadCalls);
+        await page.InitializeAsync();
+        page.DemandOriginalInitializedDocument();
+        Assert.Equal(1, store.ReadCalls);
+        Assert.NotNull(page.Content);
+        Assert.True(await page.PrepareToCloseAsync("Finish Mesh"));
+        var fence = page.CaptureOriginalBrowseCloseFence(); Assert.NotNull(fence);
+        await page.BeginOriginalPreparedBrowseClose(fence!);
+        Assert.Null(page.Content);
+        Assert.Equal(0, transport.StopCalls);
+        await coordinator.DisposeAsync();
+        Assert.Equal(1, transport.StopCalls);
+    }
+
     [Fact]
     public void Scene_exposes_pairing_and_switches_to_work_mode_team_surface()
     {
@@ -82,7 +104,8 @@ public sealed class MeshHavenSceneTests
 
     private sealed class EmptyStateStore : IMeshStateStore
     {
-        public Task<MeshPersistentState> LoadAsync(CancellationToken cancellationToken) => Task.FromResult(MeshPersistentState.Empty);
+        public int ReadCalls;
+        public Task<MeshPersistentState> LoadAsync(CancellationToken cancellationToken) { ReadCalls++; return Task.FromResult(MeshPersistentState.Empty); }
         public Task SaveAsync(MeshPersistentState state, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
@@ -99,10 +122,11 @@ public sealed class MeshHavenSceneTests
         public event Action<MeshTransportPeer>? PairingCompleted { add { } remove { } }
         public event Action<Guid, MeshConnectionState>? ConnectionChanged { add { } remove { } }
         public event Action<MeshTransportMessage>? MessageReceived { add { } remove { } }
-        public bool IsRunning => false;
+        public bool IsRunning { get; private set; }
         public string? LocalEndpoint => null;
-        public Task StartAsync(MeshLocalIdentity localIdentity, string privateKey, CancellationToken cancellationToken) => Task.CompletedTask;
-        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task StartAsync(MeshLocalIdentity localIdentity, string privateKey, CancellationToken cancellationToken) { IsRunning = true; return Task.CompletedTask; }
+        public int StopCalls;
+        public Task StopAsync(CancellationToken cancellationToken) { StopCalls++; IsRunning = false; return Task.CompletedTask; }
         public Task SetPairingChallengeAsync(MeshPairingChallenge? challenge, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task SetTrustedPeersAsync(IReadOnlyList<MeshPeerRecord> peers, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<MeshTransportPeer> PairAsync(string endpoint, Guid challengeId, string verificationCode, string expectedRemoteFingerprint, CancellationToken cancellationToken) => throw new NotSupportedException();

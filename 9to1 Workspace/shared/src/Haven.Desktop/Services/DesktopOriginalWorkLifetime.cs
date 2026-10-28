@@ -16,6 +16,9 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
     private readonly Func<Task> _cleanup;
     private bool _retiring;
     private Task? _close;
+    private sealed record RetirementObservation(Task Close, bool ResourceCleanupSucceeded,
+        IReadOnlyList<Task> FailedOriginals);
+    private RetirementObservation? _retirementObservation;
     private readonly AsyncLocal<Original?> _executing = new();
     private readonly AsyncLocal<Task?> _executingClose = new();
     [ThreadStatic] private static List<DesktopOriginalWorkLifetime>? _synchronousCloseOwners;
@@ -40,6 +43,20 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
         return null;
     }
     internal Task? OriginalClose { get { lock (_gate) return _close; } }
+
+    /// <summary>Opt-in evidence for an unpublished page's failed initialization. The original
+    /// close still reports all historical failures; this never changes existing callers' results.</summary>
+    internal bool CanRetireAfterFailedInitialization(Task? initialization, Task actualClose)
+    {
+        lock (_gate)
+        {
+            var observation = _retirementObservation;
+            return ReferenceEquals(_close, actualClose) && actualClose.IsCompleted &&
+                observation is not null && ReferenceEquals(observation.Close, actualClose) &&
+                observation.ResourceCleanupSucceeded && observation.FailedOriginals.All(task =>
+                    initialization is not null && ReferenceEquals(task, initialization));
+        }
+    }
 
     internal Task RunAsync(Func<Original, Task> actualBody, Action<Task>? publishOriginal = null)
     {
@@ -264,7 +281,9 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
         try
         {
         var failures = new List<Exception>();
+        var resourceCleanupSucceeded = true;
         try { RunPhysicalCloseCallback(_lifetime.Cancel); } catch (Exception error) { Add(failures, error); }
+        if (failures.Count != 0) resourceCleanupSucceeded = false;
         Task? stop = null;
         try { RunPhysicalCloseCallback(() => stop = _stop()); } catch (Exception error) { Add(failures, error); }
         var terminalObservations = new List<(Original Original, Exception Cause)>();
@@ -278,6 +297,7 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
                 try { await stage; } catch (Exception error) { stageObservations.Add((original, stage, error)); }
         }
         if (stop is not null) await Join(stop, failures);
+        if (stop is null || !stop.IsCompletedSuccessfully) resourceCleanupSucceeded = false;
         // Expected local playback interruption is known only after the controller's
         // SAME stop original and raw native acknowledgement are both terminal.
         foreach (var observation in terminalObservations)
@@ -286,13 +306,31 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
             observation.Original.CollectStageTerminal(failures, observation.Stage, observation.Cause);
         foreach (var original in originals)
             original.CollectRetained(failures); // A handled/success-returning body is not no-fault proof.
-        lock (_gate) foreach (var error in _admissionFailures) Add(failures, error);
+        lock (_gate)
+        {
+            foreach (var error in _admissionFailures) Add(failures, error);
+            if (_admissionFailures.Count != 0) resourceCleanupSucceeded = false;
+        }
         // Every original is terminal before any owned-control destruction. A missing
         // generated-manager close must refuse in cleanup rather than destroy unknown work.
         Task? cleanup = null;
         try { RunPhysicalCloseCallback(() => cleanup = _cleanup()); } catch (Exception error) { Add(failures, error); }
         if (cleanup is not null) await Join(cleanup, failures);
-        try { _lifetime.Dispose(); } catch (Exception error) { Add(failures, error); }
+        if (cleanup is null || !cleanup.IsCompletedSuccessfully) resourceCleanupSucceeded = false;
+        try { _lifetime.Dispose(); } catch (Exception error) { Add(failures, error); resourceCleanupSucceeded = false; }
+        var failedOriginals = new List<Task>();
+        foreach (var original in originals)
+        {
+            var diagnostics = new List<Exception>();
+            foreach (var observation in terminalObservations.Where(item => ReferenceEquals(item.Original, original)))
+                original.CollectTerminal(diagnostics, observation.Cause);
+            foreach (var observation in stageObservations.Where(item => ReferenceEquals(item.Original, original)))
+                original.CollectStageTerminal(diagnostics, observation.Stage, observation.Cause);
+            original.CollectRetained(diagnostics);
+            if (diagnostics.Count != 0) failedOriginals.Add(original.Task);
+            if (!original.Task.IsCompleted || original.UnjoinedStages.Any(task => !task.IsCompleted)) resourceCleanupSucceeded = false;
+        }
+        lock (_gate) _retirementObservation = new(_close!, resourceCleanupSucceeded, failedOriginals.ToArray());
         Throw(failures, "Original chat tasks or independent stop/cleanup failed.");
         }
         finally { _executingClose.Value = previousClose; }

@@ -165,15 +165,17 @@ public sealed class BoardsBlockGeometryTests
             var grid = Assert.IsType<Grid>(row.Child);
             var slots = grid.Children.OfType<Border>().ToArray();
             Assert.Equal(2, slots.Length);
-            return (Column: grid.ColumnDefinitions[0].Width, FirstSlotWidth: slots[0].Width,
+            return (Column: grid.ColumnDefinitions[0].Width, SecondColumn: grid.ColumnDefinitions[1].Width, FirstSlotWidth: slots[0].Width,
                 SecondSlotWidth: slots[1].Width,
                 HasInsert: grid.GetLogicalDescendants().OfType<Button>().Any(button => AutomationProperties.GetName(button) == "Insert"),
                 HasGrip: grid.GetLogicalDescendants().OfType<Button>().Any(button => button.Name == "BlockGripToggle"));
         });
 
         Assert.Equal(32, actual.Column.Value);
+        Assert.Equal(32, actual.SecondColumn.Value);
         Assert.Equal(32, actual.FirstSlotWidth);
-        Assert.Equal(36, actual.SecondSlotWidth);
+        // View reserves the same two 32-unit targets as Edit, without active controls.
+        Assert.Equal(32, actual.SecondSlotWidth);
         Assert.False(actual.HasInsert);
         Assert.False(actual.HasGrip);
     }

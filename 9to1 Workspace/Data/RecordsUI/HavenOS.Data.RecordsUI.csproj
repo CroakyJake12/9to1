@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>HavenOS.Data.RecordsUI</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Data.RecordsUI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="DataRecordViews.cui" LogicalName="HavenOS.Data.RecordViews.cui" />
+  </ItemGroup>
+</Project>

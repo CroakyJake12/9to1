@@ -44,7 +44,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPresentExportService, PresentPptxExportService>();
         services.AddSingleton<IPresentImportService, PresentPptxImportService>();
         services.AddSingleton<IDocumentShapeGallery, DocumentShapeGalleryRepository>();
-        services.AddSingleton<IDataWorkbookRepository, DataWorkbookRepository>();
+        services.AddSingleton<DataWorkbookRepository>();
+        services.AddSingleton<IDataWorkbookRepository>(provider => provider.GetRequiredService<DataWorkbookRepository>());
+        services.AddSingleton<IDataGuardedWorkbookRepository>(provider => provider.GetRequiredService<DataWorkbookRepository>());
+        services.AddTransient<DataLocalRecordSessionFactory>();
         services.AddSingleton<IDataWorkbookFormatService, DataXlsxFormatService>();
         services.AddSingleton<IDataWorkbookQueryService, DataWorkbookQueryService>();
         services.AddSingleton<NotesAttachmentStore>();

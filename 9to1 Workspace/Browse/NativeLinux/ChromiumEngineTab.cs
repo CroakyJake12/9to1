@@ -43,6 +43,11 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
     private bool _firstFrameReported;
     private int _publishDiagCount;
     private string? _lastKeyText;
+    private ChromiumViewport _viewport = ChromiumViewport.Default;
+    private ChromiumViewport _frameViewport = ChromiumViewport.Default;
+    private ChromiumViewport? _pendingViewport;
+    private Task? _viewportUpdate;
+    private bool _viewportReady;
 
     // Bounded set of known lifecycle events we care about for stall diagnosis. Only
     // these are recorded/emitted, so the diagnostic dictionary never grows with
@@ -83,6 +88,7 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
         if (_view is ChromiumEngineSurface surface)
         {
             surface.MouseGesture += OnMouse;
+            surface.ViewportChanged += OnViewportChanged;
             surface.KeyGesture += OnKey;
             surface.TextGesture += OnText;
         }
@@ -150,19 +156,10 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
             // command). Genuine new pages are attributed by opener id in HandleTargetCreated.
             await SendBrowserAsync("Target.setDiscoverTargets", new Dictionary<string, object?> { ["discover"] = true }, cancellationToken).ConfigureAwait(false);
 
-            // Establish the actual CSS viewport so the page layout, the screencast
-            // capture, and the engine surface's input scaling all agree on one
-            // logical size. Without this the headless target lays out at an
-            // arbitrary default viewport (e.g. 765×493) that disagrees with the
-            // surface bitmap and pointer coordinate mapping.
+            // The emulated CSS viewport follows the actual control and monitor DPI.
             _stage = "viewport";
-            await SendVoidAsync("Emulation.setDeviceMetricsOverride", new Dictionary<string, object?>
-            {
-                ["width"] = ChromiumEngineSurface.RenderWidth,
-                ["height"] = ChromiumEngineSurface.RenderHeight,
-                ["deviceScaleFactor"] = 1,
-                ["mobile"] = false
-            }, cancellationToken).ConfigureAwait(false);
+            _viewport = (_view as ChromiumEngineSurface)?.RequestedViewport ?? ChromiumViewport.Default;
+            await SetViewportMetricsAsync(_viewport, cancellationToken).ConfigureAwait(false);
 
             // Activate the stable blank target: it is unambiguously active here,
             // before any navigation. Page.bringToFront then succeeds.
@@ -178,14 +175,9 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
             // and delivers frames for the committed document. Kept as a real
             // awaited step so a capture failure still surfaces truthfully.
             _stage = "capture";
-            await SendVoidAsync("Page.startScreencast", new Dictionary<string, object?>
-            {
-                ["format"] = "jpeg",
-                ["quality"] = 80,
-                ["maxWidth"] = ChromiumEngineSurface.RenderWidth,
-                ["maxHeight"] = ChromiumEngineSurface.RenderHeight,
-                ["everyNthFrame"] = 1
-            }, cancellationToken).ConfigureAwait(false);
+            await StartCaptureAsync(_viewport, cancellationToken).ConfigureAwait(false);
+            lock (_gate) _viewportReady = true;
+            if (_view is ChromiumEngineSurface actualSurface) OnViewportChanged(actualSurface, actualSurface.RequestedViewport);
 
             Publish(_state with { Status = "Chromium page is ready." });
             _stage = "navigate";
@@ -202,6 +194,64 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
         {
             _instrumentInit = false;
         }
+    }
+
+    private async Task SetViewportMetricsAsync(ChromiumViewport viewport, CancellationToken token)
+    {
+        await SendVoidAsync("Emulation.setDeviceMetricsOverride", new Dictionary<string, object?>
+        {
+            ["width"] = viewport.Width, ["height"] = viewport.Height,
+            ["deviceScaleFactor"] = viewport.Scale, ["mobile"] = false
+        }, token).ConfigureAwait(false);
+        lock (_gate) _frameViewport = viewport;
+        if (_view is ChromiumEngineSurface surface)
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => surface.ApplyViewport(viewport)).GetTask().ConfigureAwait(false);
+    }
+
+    private Task StartCaptureAsync(ChromiumViewport viewport, CancellationToken token) =>
+        SendVoidAsync("Page.startScreencast", new Dictionary<string, object?>
+        {
+            ["format"] = "jpeg", ["quality"] = 95, ["maxWidth"] = viewport.CaptureWidth,
+            ["maxHeight"] = viewport.CaptureHeight, ["everyNthFrame"] = 1
+        }, token);
+
+    private void OnViewportChanged(object? sender, ChromiumViewport viewport)
+    {
+        lock (_gate)
+        {
+            if (_retiring || _disposed || viewport == _viewport && _pendingViewport is null) return;
+            _pendingViewport = viewport;
+            _lastKeyText = null;
+            if (!_viewportReady || _viewportUpdate is { IsCompleted: false }) return;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            try { _viewportUpdate = QueueInputAsync(() => DrainViewportsAsync(start.Task)); }
+            catch { start.TrySetCanceled(); throw; }
+            start.SetResult();
+        }
+    }
+
+    private async Task DrainViewportsAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        try
+        {
+            while (true)
+            {
+                ChromiumViewport next;
+                lock (_gate)
+                {
+                    if (_retiring || _disposed || _pendingViewport is not { } pending)
+                    { _viewportUpdate = null; return; }
+                    next = pending; _pendingViewport = null;
+                }
+                if (next == _viewport) continue;
+                await SendVoidAsync("Page.stopScreencast", null, CancellationToken.None).ConfigureAwait(false);
+                await SetViewportMetricsAsync(next, CancellationToken.None).ConfigureAwait(false);
+                await StartCaptureAsync(next, CancellationToken.None).ConfigureAwait(false);
+                lock (_gate) _viewport = next;
+            }
+        }
+        catch { lock (_gate) _viewportUpdate = null; throw; }
     }
 
     // ---- IEmbeddedBrowserHost ----
@@ -461,9 +511,31 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
             _firstFrameReported = true;
             EmitDiagnostic($"first frame accepted bytes={data.GetString()!.Length} frames={frames}");
         }
-        try { _view.PresentFrame(Convert.FromBase64String(data.GetString()!)); }
+        try
+        {
+            var jpeg = Convert.FromBase64String(data.GetString()!);
+            if (_view is ChromiumEngineSurface surface)
+            {
+                ChromiumViewport expected; lock (_gate) expected = _frameViewport;
+                surface.PresentFrame(jpeg, MatchScreencastViewport(parameters, expected));
+            }
+            else _view.PresentFrame(jpeg);
+        }
         catch (FormatException) { return; }
         _ = QueueInputAsync(() => SendVoidAsync("Page.screencastFrameAck", new Dictionary<string, object?> { ["sessionId"] = session.GetInt32() }, CancellationToken.None));
+    }
+
+    // CDP supplies device dimensions in DIP with each frame. Matching those dimensions
+    // prevents an in-flight old JPEG from enabling input against newly emulated metrics.
+    internal static ChromiumViewport? MatchScreencastViewport(JsonElement frame, ChromiumViewport expected)
+    {
+        if (!frame.TryGetProperty("metadata", out var metadata) || metadata.ValueKind != JsonValueKind.Object ||
+            !metadata.TryGetProperty("deviceWidth", out var width) || width.ValueKind != JsonValueKind.Number ||
+            !metadata.TryGetProperty("deviceHeight", out var height) || height.ValueKind != JsonValueKind.Number ||
+            !width.TryGetDouble(out var w) || !height.TryGetDouble(out var h) ||
+            !double.IsFinite(w) || !double.IsFinite(h) ||
+            Math.Abs(w - expected.Width) > .5 || Math.Abs(h - expected.Height) > .5) return null;
+        return expected;
     }
 
     // ---- Input routing ----
@@ -706,6 +778,7 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
         if (_view is ChromiumEngineSurface surface)
         {
             surface.MouseGesture -= OnMouse;
+            surface.ViewportChanged -= OnViewportChanged;
             surface.KeyGesture -= OnKey;
             surface.TextGesture -= OnText;
         }

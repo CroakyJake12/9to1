@@ -22,6 +22,76 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsEnterBehaviourTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Rendered_code_enter_stays_inside_its_block(bool shift)
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/code-enter");
+        var vm = new BoardsViewModel(session);
+        var page = session.Document.Sections[0].Pages[0];
+        page.Blocks = [new RichBoardBlock { Id = "code-block", StyleId = "code", Text = "alphabeta" }];
+        TestUiThread.Run(() =>
+        {
+            var host = new StackPanel();
+            BlockRenderer.Rebuild(host, vm, []);
+            var window = new Window { Content = host, Width = 800, Height = 600 };
+            window.Show();
+            try
+            {
+                var input = Assert.Single(host.GetLogicalDescendants().OfType<TextBox>());
+                input.Focus();
+                input.CaretIndex = 5;
+                input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter,
+                    KeyModifiers = shift ? KeyModifiers.Shift : KeyModifiers.None });
+                Assert.Single(page.Blocks);
+                Assert.Equal("alpha" + input.NewLine + "beta", page.Blocks[0].Text);
+                Assert.Equal("code", page.Blocks[0].StyleId);
+                Assert.Equal("code-block", page.Blocks[0].Id);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public async Task Rendered_code_control_enter_exits_to_an_empty_paragraph_without_changing_code()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/code-exit");
+        var vm = new BoardsViewModel(session);
+        var page = session.Document.Sections[0].Pages[0];
+        page.Blocks = [new RichBoardBlock { Id = "code-block", StyleId = "code", Text = "original code" }];
+        TestUiThread.Run(() =>
+        {
+            var host = new StackPanel();
+            BlockRenderer.Rebuild(host, vm, []);
+            var window = new Window { Content = host, Width = 800, Height = 600 };
+            window.Show();
+            try
+            {
+                var input = Assert.Single(host.GetLogicalDescendants().OfType<TextBox>());
+                input.Focus();
+                input.SelectionStart = 0;
+                input.SelectionEnd = input.Text!.Length;
+                input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter,
+                    KeyModifiers = KeyModifiers.Control });
+                Assert.Equal(2, page.Blocks.Count);
+                Assert.Equal("original code", page.Blocks[0].Text);
+                Assert.Equal("code", page.Blocks[0].StyleId);
+                Assert.Equal(string.Empty, page.Blocks[1].Text);
+                Assert.Equal("paragraph", page.Blocks[1].Kind);
+                Assert.Equal("normal", page.Blocks[1].StyleId);
+                BlockRenderer.Rebuild(host, vm, []);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                var next = Assert.Single(host.GetLogicalDescendants().OfType<TextBox>(), box => box.Name == "t_" + page.Blocks[1].Id);
+                Assert.True(next.IsFocused);
+                Assert.Equal(0, next.CaretIndex);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
     public async Task Rendered_editor_enter_replaces_selection_and_focuses_the_new_paragraph()
     {

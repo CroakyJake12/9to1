@@ -16,6 +16,7 @@ namespace Haven.Desktop.Services;
 /// this same factory and shared Boards core/CUI; global services outlive each tab.</summary>
 internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
 {
+    private readonly Func<BrowseAppContentRequest, Guid, CancellationToken, Task>? _openLocalBoard;
     private readonly IServiceProvider _provider;
     private readonly HomeNativeWindowsComposition _home;
     private readonly CancellationToken _appLifetime, _hostLifetime;
@@ -33,11 +34,12 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite,
         Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? createAndOpenBoard,
         Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardReadLease>>? restoreBoardRead,
-        Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardWriteLease>>? restoreBoardWrite)
+        Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardWriteLease>>? restoreBoardWrite,
+        Func<BrowseAppContentRequest, Guid, CancellationToken, Task>? openLocalBoard)
     { _provider = provider; _home = home; _appLifetime = appLifetime; _hostLifetime = hostLifetime;
         _reduceMotion = reduceMotion; _theme = theme; _takePreparedBoardRead = takePreparedBoardRead;
         _takePreparedBoardWrite = takePreparedBoardWrite; _createAndOpenBoard = createAndOpenBoard;
-        _restoreBoardRead = restoreBoardRead; _restoreBoardWrite = restoreBoardWrite; }
+        _restoreBoardRead = restoreBoardRead; _restoreBoardWrite = restoreBoardWrite; _openLocalBoard = openLocalBoard; }
 
     internal static BoardsBrowseAppContentFactory BindOriginalSameProcess(IServiceProvider originalProvider,
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
@@ -47,7 +49,8 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite = null,
         Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? createAndOpenBoard = null,
         Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardReadLease>>? restoreBoardRead = null,
-        Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardWriteLease>>? restoreBoardWrite = null)
+        Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardWriteLease>>? restoreBoardWrite = null,
+        Func<BrowseAppContentRequest, Guid, CancellationToken, Task>? openLocalBoard = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(actualReduceMotion);
@@ -56,7 +59,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         originalAppLifetime.ThrowIfCancellationRequested(); originalHostLifetime.ThrowIfCancellationRequested();
         return new(originalProvider, sameHome, originalAppLifetime, originalHostLifetime,
             actualReduceMotion, actualThemePreference, takePreparedBoardRead, takePreparedBoardWrite, createAndOpenBoard,
-            restoreBoardRead, restoreBoardWrite);
+            restoreBoardRead, restoreBoardWrite, openLocalBoard);
     }
 
     /// <summary>
@@ -91,6 +94,26 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         if (request.Privacy != BrowserTabPrivacy.Standard)
             throw new NotSupportedException("An owned device Boards library is not a private browser session.");
         var address = BoardsBrowseAppContentAddress.Parse(request.Address);
+        if (address.IsLocalDocument || !address.IsFilesDocument && address.DocumentId is null)
+        {
+            var localLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
+            BoardsLocalDocuments? documents = null;
+            NativeCanvasBoardEmbeddedArtifactHost? embedded = null;
+            try
+            {
+                documents = new BoardsLocalDocuments(request.ProfileId, Path.Combine(_provider.GetRequiredService<IAppPaths>().DataDirectory, "Boards"));
+                embedded = CreateEmbeddedArtifactHost(request, localLifetime.Token);
+                return new BoardsWritableRichDocumentBrowseAppContentSession(request, address, documents,
+                    (id, token) => _openLocalBoard is { } open ? open(request, id, token)
+                        : Task.FromException(new InvalidOperationException("The Boards navigation owner is unavailable.")),
+                    localLifetime, embedded);
+            }
+            catch
+            {
+                if (embedded is not null) embedded.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                documents?.Dispose(); localLifetime.Dispose(); throw;
+            }
+        }
         if (address.IsFilesDocument)
         {
             if (address.ReadToken is null)

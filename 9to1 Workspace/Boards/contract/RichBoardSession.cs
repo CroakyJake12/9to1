@@ -28,6 +28,37 @@ public sealed class RichBoardSession : IAsyncDisposable
     private readonly Stack<string> _redo = new();
     private long _lastSavedRichVersion = -1;
     private bool _disposed;
+    private string? _recoveryPath;
+    private string? _expectedFileHash;
+    private string? _expectedRecoveryHash;
+    private string? _conflictContentHash;
+    public string? LastConflictRecoveryPath { get; private set; }
+    public event Action<string, string>? LocalFileSaved;
+
+    public static async Task<RichBoardSession> OpenRecoverableAsync(JsonFileHavenBoardStore store,
+        string recoveryPath, string? destination, string? expectedFileHash, CancellationToken token = default)
+    {
+        using var lease = await LocalBoardWriteLease.AcquireAsync(recoveryPath, token).ConfigureAwait(false);
+        return await OpenRecoverableUnderLeaseAsync(store, recoveryPath, destination, expectedFileHash, lease, token).ConfigureAwait(false);
+    }
+
+    public static async Task<RichBoardSession> OpenRecoverableUnderLeaseAsync(JsonFileHavenBoardStore store,
+        string recoveryPath, string? destination, string? expectedFileHash, LocalBoardWriteLease lease,
+        CancellationToken token = default)
+    {
+        if (!lease.IsHeldFor(recoveryPath)) throw new InvalidOperationException("The local board opening lease is not current.");
+        var session = await OpenAtPathAsync(store, recoveryPath, token).ConfigureAwait(false);
+        // The canonical loader supports a missing primary with a validated backup.
+        // Restore that complete revision under this lease before hashing its head.
+        if (!File.Exists(recoveryPath))
+            await store.SaveDocumentAtPathAsync(session.Document, recoveryPath, token).ConfigureAwait(false);
+        session._recoveryPath = Path.GetFullPath(recoveryPath);
+        session.FilePath = destination is null ? session._recoveryPath : Path.GetFullPath(destination);
+        session._expectedRecoveryHash = await HashFileAsync(recoveryPath, token).ConfigureAwait(false);
+        session._expectedFileHash = expectedFileHash ?? (destination is null ? session._expectedRecoveryHash : null);
+        return session;
+    }
+
 
     private RichBoardSession(JsonFileHavenBoardStore? store, HavenBoardDocument document, string? filePath,
         bool readOnly = false,
@@ -502,6 +533,13 @@ public sealed class RichBoardSession : IAsyncDisposable
 
     private async Task SaveCoreAsync(CancellationToken cancellationToken, string? destination = null)
     {
+        using var lease = _recoveryPath is null ? null :
+            await LocalBoardWriteLease.AcquireAsync(_recoveryPath, cancellationToken).ConfigureAwait(false);
+        await SaveCoreLockedAsync(cancellationToken, destination).ConfigureAwait(false);
+    }
+
+    private async Task SaveCoreLockedAsync(CancellationToken cancellationToken, string? destination)
+    {
         var targetPath = destination ?? FilePath;
         if (targetPath is null && _externalSave is null)
             throw new InvalidOperationException("This board has no file path yet; use Save As first.");
@@ -524,16 +562,103 @@ public sealed class RichBoardSession : IAsyncDisposable
         }
         else
         {
-            await (_store ?? throw new InvalidOperationException("This board session has no writable store."))
-                .SaveDocumentAtPathAsync(toSave, targetPath!, cancellationToken).ConfigureAwait(false);
-            FilePath = targetPath; // Publish the destination only after the actual store acknowledgement.
+            var store = _store ?? throw new InvalidOperationException("This board session has no writable store.");
+            if (_recoveryPath is not null)
+            {
+                // Both expected heads are checked while holding the same board lease,
+                // before either canonical file is touched. A stale editor retains its
+                // own version separately; it cannot replace the current private head.
+                var recoveryCurrent = File.Exists(_recoveryPath)
+                    ? await HashFileAsync(_recoveryPath, cancellationToken).ConfigureAwait(false) : null;
+                var externalCurrent = FilePath is not null && !SamePath(FilePath, _recoveryPath) && File.Exists(FilePath)
+                    ? await HashFileAsync(FilePath, cancellationToken).ConfigureAwait(false) : null;
+                if (_expectedRecoveryHash != recoveryCurrent ||
+                    FilePath is not null && !SamePath(FilePath, _recoveryPath) && _expectedFileHash != externalCurrent)
+                {
+                    await PreserveConflictCopyAsync(store, toSave).ConfigureAwait(false);
+                    throw new IOException("This board changed in another editor. Your version was retained separately at " + LastConflictRecoveryPath);
+                }
+                if (!SamePath(_recoveryPath, targetPath!))
+                {
+                    await CopyOwnedSidecarsAsync(FilePath ?? _recoveryPath, _recoveryPath, cancellationToken).ConfigureAwait(false);
+                    await store.SaveDocumentAtPathAsync(toSave, _recoveryPath, cancellationToken).ConfigureAwait(false);
+                    // The private commit is already acknowledged; cancellation must not
+                    // leave its expected head behind even if the destination write fails.
+                    _expectedRecoveryHash = await HashFileAsync(_recoveryPath, CancellationToken.None).ConfigureAwait(false);
+                    await CopyOwnedSidecarsAsync(FilePath ?? _recoveryPath, targetPath!, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            await store.SaveDocumentAtPathAsync(toSave, targetPath!, cancellationToken).ConfigureAwait(false);
+            FilePath = targetPath;
+            if (_recoveryPath is not null)
+            {
+                // Complete receipt/bookkeeping without caller cancellation after commit.
+                _expectedFileHash = await HashFileAsync(targetPath!, CancellationToken.None).ConfigureAwait(false);
+                if (SamePath(_recoveryPath, targetPath!)) _expectedRecoveryHash = _expectedFileHash;
+            }
+
         }
 
         Document = toSave;
         _lastSavedRichVersion = capturedVersion;
         LastSavedUtc = now;
         HasUnsavedChanges = false;
+        if (_recoveryPath is not null)
+        {
+            try { LocalFileSaved?.Invoke(FilePath!, _expectedFileHash!); }
+            catch (Exception error)
+            {
+                throw new IOException("The board contents were saved, but its destination metadata could not be updated. Retry Save.", error);
+            }
+        }
         UpdateStatus("Saved " + now.ToLocalTime().ToString("HH:mm:ss"), hasUnsavedChanges: false);
+    }
+
+    private async Task PreserveConflictCopyAsync(JsonFileHavenBoardStore store, HavenBoardDocument document)
+    {
+        var contentHash = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(Document, HistoryJson)));
+        if (_conflictContentHash == contentHash && LastConflictRecoveryPath is { } existing && File.Exists(existing)) return;
+        var directory = Path.Combine(Path.GetDirectoryName(_recoveryPath!)!, "conflicts");
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, document.DocumentId.ToString("D") + "-" + Guid.NewGuid().ToString("N") + ".9to1board");
+        await CopyOwnedSidecarsAsync(FilePath ?? _recoveryPath!, path, CancellationToken.None).ConfigureAwait(false);
+        await store.SaveDocumentAtPathAsync(document, path, CancellationToken.None).ConfigureAwait(false);
+        _conflictContentHash = contentHash;
+        LastConflictRecoveryPath = path;
+    }
+
+    private static bool SamePath(string a, string b) => string.Equals(Path.GetFullPath(a), Path.GetFullPath(b),
+        OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+    public static async Task CopyOwnedSidecarsAsync(string source, string destination, CancellationToken token)
+    {
+        var sourceDirectory = SidecarDirectoryFor(source);
+        var destinationDirectory = SidecarDirectoryFor(destination);
+        if (!Directory.Exists(sourceDirectory) || SamePath(sourceDirectory, destinationDirectory)) return;
+        Directory.CreateDirectory(destinationDirectory);
+        foreach (var sourceFile in Directory.EnumerateFiles(sourceDirectory, "*.blob"))
+        {
+            token.ThrowIfCancellationRequested();
+            var target = Path.Combine(destinationDirectory, Path.GetFileName(sourceFile));
+            if (File.Exists(target))
+            {
+                if (await HashFileAsync(sourceFile, token).ConfigureAwait(false) != await HashFileAsync(target, token).ConfigureAwait(false))
+                    throw new IOException("A media file at the selected destination conflicts with this board.");
+                continue;
+            }
+            var temporary = target + ".tmp-" + Guid.NewGuid().ToString("N");
+            try
+            {
+                await using (var input = File.OpenRead(sourceFile))
+                await using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    await input.CopyToAsync(output, token).ConfigureAwait(false);
+                    await output.FlushAsync(token).ConfigureAwait(false);
+                }
+                File.Move(temporary, target);
+            }
+            finally { TryDelete(temporary); }
+        }
     }
 
     private void UpdateStatus(string status, bool hasUnsavedChanges)
