@@ -224,10 +224,18 @@ public sealed class BoardsTreeMoveUndoRegression
 
     /// <summary>The stored tree the user sees: section order, then each section's page list
     /// with every page's parent reference.</summary>
-    private static string Shape(ContractSessionAdapter adapter) =>
-        string.Join("|", adapter.Document.Sections.Select(section =>
-            section.Id + ":" + string.Join(",", section.Pages.Select(page =>
-                page.Id + (page.ParentPageId is null ? "" : "@" + page.ParentPageId))))));
+    private static string Shape(ContractSessionAdapter adapter)
+    {
+        var sections = new List<string>();
+        foreach (var section in adapter.Document.Sections)
+        {
+            var pages = new List<string>();
+            foreach (var page in section.Pages)
+                pages.Add(page.ParentPageId is null ? page.Id : page.Id + "@" + page.ParentPageId);
+            sections.Add(section.Id + ":" + string.Join(",", pages));
+        }
+        return string.Join("|", sections);
+    }
 
     private static void AssertTreeInvariants(ContractSessionAdapter adapter)
     {

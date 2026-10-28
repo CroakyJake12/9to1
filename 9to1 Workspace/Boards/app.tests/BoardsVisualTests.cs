@@ -272,7 +272,12 @@ public sealed class BoardsVisualTests
                     candidate.Name == "BoardTableFrame_" + block.Id);
                 var editor = Assert.Single(Flatten(frame).OfType<TextBox>());
                 Assert.Contains(Flatten(host).OfType<TextBox>(), box => box.Text == "Merged title");
-                Assert.Contains(Flatten(host).OfType<Button>(), button => Equals(button.Content, "+ Box"));
+                // UX27-BOARD-029/045 and UX27-TEST-032 (owner report C05): a Native flow page is
+                // one seamless surface. The removed auto-appended "Freeform canvas" empty state
+                // and its "+ Box" affordance must not come back as a side effect of a table.
+                Assert.DoesNotContain(Flatten(host).OfType<Button>(), button => Equals(button.Content, "+ Box"));
+                Assert.DoesNotContain(Flatten(host).OfType<TextBlock>(), text =>
+                    (text.Text ?? string.Empty).Contains("Freeform canvas", StringComparison.Ordinal));
                 return (Host: host, TableFrame: tableFrame, RowSpan: Grid.GetRowSpan(frame), ColumnSpan: Grid.GetColumnSpan(frame),
                     TableWidth: tableFrame.Width, TableAlignment: tableFrame.HorizontalAlignment,
                     Text: editor.Text, Weight: editor.FontWeight);

@@ -13,7 +13,9 @@ internal sealed record BlockReorderRow(string BlockId, int Index);
 /// <summary>Pointer drag owner for the authored block grip; commits through the typed session move.</summary>
 internal sealed class BlockReorderPointer
 {
-    private const double DragThreshold = 6;
+    // UX27-BOARD-023: where no platform drag threshold is supplied, use a 4-unit logical
+    // default. A larger value makes grip dragging feel dead, which the owner reported (C03).
+    private const double DragThreshold = 4;
     private readonly Control _grip;
     private Button? _handle;
     private readonly StackPanel _host;

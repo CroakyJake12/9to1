@@ -93,7 +93,10 @@ public sealed class BoardsListBehaviorTests
                     window.Close(); return result;
                 });
                 Assert.Equal(2, destination);
-                Assert.True((await adapter.ApplyBlockMoveAsync(target!, destination!.Value, () => true)).Applied);
+                var move = await adapter.ApplyBlockMoveAsync(target!, destination!.Value, () => true);
+                // The refusal code is reported so a failure identifies the owning gate rather
+                // than only showing a bare false.
+                Assert.True(move.Applied, "List-row move refused with code " + move.Code + " for " + target!.BlockId);
                 await adapter.SaveAsync();
             }
             await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
