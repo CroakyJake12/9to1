@@ -124,7 +124,25 @@
         "Give Files three first-class scopes (9to1 Data / this device / cloud) and treat the manual picker as an action inside 'this device' only."
       ],
       "affected_change": "Files workspace setup and its consent tests, Home's native-workspace record and how apps consume AppFolders, Boards' default destination and filename rule, and every app that saves artefacts (Write/Present/Canvas/Sites/Media/Picture/Games).",
-      "evidence": "9to1/.handoff/boards-first-v3/work/STATUS.md (28 October storage section); 9to1 Workspace/Files/NativeHost/NativeFilesWorkspaceService.cs (the record Boards ignores); 9to1 Workspace/Boards/app/BoardsLocalDocuments.cs; 9to1 Workspace/shared/src/Haven.Desktop/Services/BoardsBrowseAppContentFactory.cs:104"
+      "evidence": "9to1/.handoff/boards-first-v3/work/STATUS.md (28 October storage section); 9to1 Workspace/Files/NativeHost/NativeFilesWorkspaceService.cs (the record Boards ignores); 9to1 Workspace/Boards/app/BoardsLocalDocuments.cs; 9to1 Workspace/shared/src/Haven.Desktop/Services/BoardsBrowseAppContentFactory.cs:104",
+      "owner_response": {
+        "at": "2026-10-28T22:45:00+01:00",
+        "answer_verbatim": "Remove the setup gate",
+        "selected_option": "Implement the pinned headline correction now: Boards creates and saves without any library/Files/account setup gate; local drafts stay recoverable; the pinned setup/consent tests are to be updated to enforce the new rule rather than the old gate.",
+        "scope_explicitly_authorised": [
+          "Stop mounting the setup-gated Boards library surface for restored/legacy Boards addresses.",
+          "Route legacy Notes-document addresses to the current Boards implementation (local draft or an honest landing/recovery state that is closable), preserving the existing Notes library data untouched.",
+          "Retire the older embedded Boards path once the current implementation covers it, keeping history and evidence rather than deleting it.",
+          "Update obsolete test expectations only to enforce the new rule, while preserving regression coverage."
+        ],
+        "scope_NOT_yet_authorised": [
+          "Auto-creating a user-visible 9to1Data root as the default device scope.",
+          "The Files 9to1 Data / this device / cloud scope chooser.",
+          "Moving existing saved artefacts between locations."
+        ],
+        "measured_context_added": "Production composition measured at 22:44: BoardsBrowseAppContentFactory.CreateSession sends the generic 9to1://boards entry (no DocumentId, not a Files document) to the CURRENT Boards implementation with BoardsLocalDocuments, with no setup gate. The setup-gated BoardsBrowseAppContentSession is reached only for addresses carrying a legacy non-Files Notes DocumentId, and it throws UnauthorizedAccessException unless the original Notes/admission/approvals/setup composition is bound; when it does mount, the scene can be left mounted-but-unusable while _route.IsAlive goes false, which is how a stuck Boards tab ends up in the app-wide close preflight. This links reported A04/A05/A06/B05 to one code path.",
+        "state": "answered \u2014 implementation in progress"
+      }
     }
   ]
 }
