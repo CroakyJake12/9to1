@@ -29,7 +29,7 @@ public sealed record BoardsSectionIconColorChoiceView(string Name, string Hex, I
 public sealed record BoardsGeneratedSectionIconPreviewView(string Index, IImage Preview, string ModelLabel);
 
 public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiActionDispatcher,
-    ICuiRepeatItemBindingContext, INotifyPropertyChanged
+    ICuiRepeatItemBindingContext, INotifyPropertyChanged, IDisposable
 {
     private readonly IRichBoardSession _session;
     private readonly IBoardsEmbeddedArtifactHost? _embeddedArtifactHost;

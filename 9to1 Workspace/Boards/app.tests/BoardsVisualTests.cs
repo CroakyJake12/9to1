@@ -478,8 +478,8 @@ public sealed class BoardsVisualTests
                 ToolbarBuilder.Rebuild(host, vm);
                 foreach (var name in new[] { "Text colour", "Highlight colour", "Draw" })
                 {
-                    var button = Assert.Single(Flatten(host).OfType<Button>().Where(candidate =>
-                        Avalonia.Automation.AutomationProperties.GetName(candidate) == name));
+                    var button = Assert.Single(Flatten(host).OfType<Button>(), candidate =>
+                        Avalonia.Automation.AutomationProperties.GetName(candidate) == name);
                     var image = Assert.Single(Flatten(button).OfType<Image>());
                     Assert.IsType<DrawingImage>(image.Source);
                     Assert.Equal(18d, image.Width);
@@ -493,8 +493,8 @@ public sealed class BoardsVisualTests
                 ToolbarBuilder.Rebuild(host, vm);
                 foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
                 {
-                    var button = Assert.Single(Flatten(host).OfType<Avalonia.Controls.Primitives.ToggleButton>()
-                        .Where(candidate => Avalonia.Automation.AutomationProperties.GetName(candidate) == tool + " drawing tool"));
+                    var button = Assert.Single(Flatten(host).OfType<Avalonia.Controls.Primitives.ToggleButton>(),
+                        candidate => Avalonia.Automation.AutomationProperties.GetName(candidate) == tool + " drawing tool");
                     var image = Assert.IsType<Image>(button.Content);
                     var drawing = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(image.Source).Drawing);
                     Assert.NotNull(drawing.Brush);

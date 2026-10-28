@@ -38,11 +38,20 @@ public sealed class NavBuilderTests
             {
                 window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 using (var capture = window.CaptureRenderedFrame()) { }
+                var hoverFrame = label.GetVisualDescendants().OfType<CuiMaterialBorder>().First();
+                // The shared CUI hover wash is painted as a visible, non-interactive layer inside the
+                // owning frame. Observe that painted result through public visual state; the runtime's
+                // internal tint field is not visible to this assembly and is not the product contract.
+                static Border? PaintedHoverWash(CuiMaterialBorder frame) => frame.GetVisualChildren()
+                    .OfType<Border>().FirstOrDefault(child => child.IsVisible && !child.IsHitTestVisible
+                        && !child.Focusable && child.Background is ISolidColorBrush wash && wash.Color.A > 0);
+                Assert.Null(PaintedHoverWash(hoverFrame));
                 var point = label.TranslatePoint(new Point(label.Bounds.Width / 2, label.Bounds.Height / 2), window)!.Value;
                 window.MouseMove(point); Dispatcher.UIThread.RunJobs();
-                var hoverFrame = label.GetVisualDescendants().OfType<CuiMaterialBorder>().First();
                 Assert.True(label.IsPointerOver);
-                Assert.NotNull(hoverFrame.HoverTint);
+                var wash = PaintedHoverWash(hoverFrame);
+                Assert.NotNull(wash);
+                Assert.Equal(hoverFrame.CornerRadius, wash!.CornerRadius);
                 Assert.Equal(new CornerRadius(selected ? 8 : 4), row.CornerRadius);
                 Assert.Equal(row.CornerRadius, label.CornerRadius);
                 Assert.Equal(row.CornerRadius, hoverFrame.CornerRadius);
