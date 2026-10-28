@@ -596,7 +596,7 @@ public sealed class NativeAppContentRegistryTests
         var participant = Strong(session);
         var stale = (await participant.PrepareCloseAsync())!;
         owner.Revision++;
-        Assert.Throws<InvalidOperationException>(() => stale.BeginClose());
+        Assert.Throws<InvalidOperationException>(() => { _ = stale.BeginClose(); });
         Assert.Null(session.OriginalClose); Assert.Null(owner.OriginalClose);
         await stale.AbortAsync(); Assert.True(session.IsPublicationCurrent);
         var current = (await participant.PrepareCloseAsync())!;

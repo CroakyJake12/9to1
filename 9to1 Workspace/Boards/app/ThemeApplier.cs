@@ -17,7 +17,7 @@ public static class ThemeApplier
     public static void ApplyChrome(Control root, bool applyResources = true)
     {
         ArgumentNullException.ThrowIfNull(root);
-        var palette = BoardsTheme.SharedPalette;
+        var palette = applyResources ? BoardsTheme.StandalonePalette : BoardsTheme.SharedPalette;
         // Only this surface owns these resources. A borrowed Home-aware loader
         // already applies its exact theme/custom/accessibility resources locally.
         if (applyResources)
@@ -26,6 +26,9 @@ public static class ThemeApplier
             CuiThemeResourceApplier.ApplyToResources(scoped, palette);
             foreach (var entry in scoped) root.Resources[entry.Key] = entry.Value;
         }
+        using var themeScope = BoardsTheme.UseSurface(root);
+        var interfaceFont = root.TryFindResource("CuiInterfaceFontFamily", out var font) && font is FontFamily family
+            ? family : ProductFont;
 
         Paint<Border>(root, "FooterBar", b =>
         {
@@ -38,15 +41,15 @@ public static class ThemeApplier
         {
             SetDocumentTextSurface(box, Brushes.Transparent);
             box.Foreground = BoardsTheme.TextBrush;
-            box.FontFamily = ProductFont;
+            box.FontFamily = interfaceFont;
         });
         Paint<TextBox>(root, "PageTitleBox", box =>
         {
             SetDocumentTextSurface(box, Brushes.Transparent);
             box.Foreground = BoardsTheme.TextBrush;
-            box.FontFamily = ProductFont;
+            box.FontFamily = interfaceFont;
         });
-        Paint<TextBox>(root, "NavSearchBox", box => box.FontFamily = ProductFont);
+        Paint<TextBox>(root, "NavSearchBox", box => box.FontFamily = interfaceFont);
     }
 
     public static void SetDocumentTextSurface(TextBox input, IBrush background)

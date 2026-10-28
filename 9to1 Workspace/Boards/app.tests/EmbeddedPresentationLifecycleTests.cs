@@ -51,22 +51,21 @@ public sealed class EmbeddedPresentationLifecycleTests
             }
             TestUiThread.Run(() =>
             {
+                using var themeScope = BoardsTheme.UseSurface(content, context);
                 Assert.Equal(BoardsThemeMode.Dark, BoardsTheme.Mode);
-                Assert.Equal(CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Dark, CuiTheme.Professional,
-                    "#F97316", "app.boards").Accent, BoardsTheme.SharedPalette.Accent);
-                Assert.Equal(BoardsTheme.SharedPalette.Panel, Assert.IsAssignableFrom<ISolidColorBrush>(content.Resources["CuiPanelBrush"]).Color);
+                Assert.Same(ThemeResource(content, "CuiAccentBrush"), BoardsTheme.AccentBrush);
+                Assert.Equal(BoardsTheme.SharedPalette.Panel, Assert.IsAssignableFrom<ISolidColorBrush>(ThemeResource(content, "CuiPanelBrush")).Color);
                 Assert.Same(sentinel, Application.Current!.Resources["CuiPanelBrush"]);
                 source.Publish(CuiAppearance.Bright, "#318CE7");
                 Assert.Equal(BoardsThemeMode.Light, BoardsTheme.Mode);
-                Assert.Equal(CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, CuiTheme.Professional,
-                    "#318CE7", "app.boards").Accent, BoardsTheme.SharedPalette.Accent);
-                Assert.Equal(BoardsTheme.SharedPalette.Panel, Assert.IsAssignableFrom<ISolidColorBrush>(content.Resources["CuiPanelBrush"]).Color);
+                Assert.Same(ThemeResource(content, "CuiAccentBrush"), BoardsTheme.AccentBrush);
+                Assert.Equal(BoardsTheme.SharedPalette.Panel, Assert.IsAssignableFrom<ISolidColorBrush>(ThemeResource(content, "CuiPanelBrush")).Color);
                 Assert.Same(sentinel, Application.Current.Resources["CuiPanelBrush"]);
             });
             await DrainAndDisposeAsync(presentation.DisposeAsync().AsTask());
             presentation = null;
             TestUiThread.Run(() => source.Publish(CuiAppearance.Dark, "#F97316"));
-            Assert.Equal(BoardsThemeMode.Light, BoardsTheme.Mode); // Disposed Boards no longer observes Home.
+            Assert.Equal(priorMode, BoardsTheme.Mode); // Native observations never alter standalone settings.
         }
         finally
         {
@@ -75,9 +74,99 @@ public sealed class EmbeddedPresentationLifecycleTests
         }
     }
 
-    private sealed class ThemeSource : ICuiThemePreferenceSource
+    [Fact]
+    public async Task Two_live_boards_keep_custom_and_high_contrast_resources_isolated_across_repaint_and_await()
     {
-        public CuiThemePreferenceSnapshot Current { get; private set; } = new("Professional", 0, "boards-theme-test", false,
+        TestUiThread.Run(() => { });
+        var custom = CuiCustomThemeContract.CreateDefault("Board A custom") with
+        {
+            PrimaryAccent = new(CuiCustomFillKind.SolidColour, new("#B02090")),
+            Fonts = CuiCustomThemeContract.CreateDefault().Fonts with { Main = new("DejaVu Sans", 400, 15) },
+        };
+        var sourceA = new ThemeSource(new(custom.Name, 0, "board-A", false,
+            CuiAccessibilitySettings.Default, CuiAppearance.Dark, CuiAccentPreference.Default,
+            CuiCustomThemeContract.SerializeLibrary([custom])));
+        var sourceB = new ThemeSource(new("Professional", 0, "board-B", false,
+            CuiAccessibilitySettings.Default with { HighContrast = true }, CuiAppearance.Bright));
+        using var contextA = new CuiThemePreferenceContext(sourceA);
+        using var contextB = new CuiThemePreferenceContext(sourceB);
+        var standalone = BoardsTheme.SharedPalette;
+        var broadcasts = 0;
+        void Broadcast() => broadcasts++;
+        BoardsTheme.Changed += Broadcast;
+        BoardsWritablePresentation? a = null, b = null;
+        Window? windowA = null, windowB = null;
+        try
+        {
+            a = PumpUi(BoardsWritablePresentation.OpenWritableDocumentAsync(MakeBoardBytes(), "files:theme-a", "revision-1",
+                (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")), embeddedArtifactHost: new ThemeHost(contextA)));
+            b = PumpUi(BoardsWritablePresentation.OpenWritableDocumentAsync(MakeBoardBytes(), "files:theme-b", "revision-1",
+                (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")), embeddedArtifactHost: new ThemeHost(contextB)));
+            windowA = TestUiThread.Run(() => MountAndAssert(a.Content, "Embedded lifecycle content"));
+            windowB = TestUiThread.Run(() => MountAndAssert(b.Content, "Embedded lifecycle content"));
+            PumpUi(a.WaitUntilReadyAsync()); PumpUi(b.WaitUntilReadyAsync());
+            PumpUi(a.DrainRenderingAsync()); PumpUi(b.DrainRenderingAsync());
+            TestUiThread.Run(() =>
+            {
+                Assert.True((bool)ThemeResource(b.Content, "CuiHighContrast")!);
+                Assert.Equal("Board A custom", ThemeResource(a.Content, "CuiEffectiveThemeName"));
+                AssertDocumentPaint(a.Content); AssertDocumentPaint(b.Content);
+                using (BoardsTheme.UseSurface(a.Content, contextA))
+                {
+                    Assert.Same(ThemeResource(a.Content, "CuiAccentBrush"), BoardsTheme.AccentBrush);
+                    Assert.Equal(Color.Parse("#B02090"), Assert.IsAssignableFrom<ISolidColorBrush>(BoardsTheme.AccentBrush).Color);
+                }
+                sourceB.Publish(CuiAppearance.Dark, "#318CE7");
+                a.ViewModel.RefreshAfterEdit(); // Repaint A after B's observation changed.
+            });
+            PumpUi(a.DrainRenderingAsync()); PumpUi(b.DrainRenderingAsync());
+            TestUiThread.Run(() => { AssertDocumentPaint(a.Content); AssertDocumentPaint(b.Content); });
+            PumpUi(AssertScopeFlowAsync(a.Content, b.Content, contextA, contextB, standalone));
+            Assert.Equal(standalone, BoardsTheme.SharedPalette);
+            Assert.Equal(0, broadcasts);
+        }
+        finally
+        {
+            BoardsTheme.Changed -= Broadcast;
+            TestUiThread.Run(() => { windowA?.Close(); windowB?.Close(); });
+            if (a is not null) await DrainAndDisposeAsync(a.DisposeAsync().AsTask());
+            if (b is not null) await DrainAndDisposeAsync(b.DisposeAsync().AsTask());
+        }
+    }
+    private static object? ThemeResource(Control root, string key)
+    {
+        Assert.True(root.TryFindResource(key, out var value), "Missing scoped resource " + key);
+        return value;
+    }
+
+    private static void AssertDocumentPaint(Control root)
+    {
+        var expected = Assert.IsAssignableFrom<ISolidColorBrush>(ThemeResource(root, "CuiTextBrush")).Color;
+        var editor = Assert.Single(root.GetVisualDescendants().OfType<TextBox>(), input => input.Text == "Embedded lifecycle content");
+        Assert.Equal(expected, Assert.IsAssignableFrom<ISolidColorBrush>(editor.Foreground).Color);
+        var title = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "PageTitleBox")!;
+        Assert.Equal(expected, Assert.IsAssignableFrom<ISolidColorBrush>(title.Foreground).Color);
+        Assert.Equal(ThemeResource(root, "CuiInterfaceFontFamily"), title.FontFamily);
+    }
+    private static async Task AssertScopeFlowAsync(Control a, Control b, CuiThemePreferenceContext contextA,
+        CuiThemePreferenceContext contextB, CuiPalette standalone)
+    {
+        using (BoardsTheme.UseSurface(a, contextA))
+        {
+            await Task.Delay(1).ConfigureAwait(false);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Assert.Same(ThemeResource(a, "CuiTextBrush"), BoardsTheme.TextBrush);
+                using (BoardsTheme.UseSurface(b, contextB)) Assert.Same(ThemeResource(b, "CuiTextBrush"), BoardsTheme.TextBrush);
+                Assert.Same(ThemeResource(a, "CuiTextBrush"), BoardsTheme.TextBrush);
+            });
+        }
+        Assert.Equal(standalone, BoardsTheme.SharedPalette);
+    }
+
+    private sealed class ThemeSource(CuiThemePreferenceSnapshot? initial = null) : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; private set; } = initial ?? new("Professional", 0, "boards-theme-test", false,
             CuiAccessibilitySettings.Default, CuiAppearance.Dark, new(CuiAccentOverrideMode.AllApps, "#F97316"));
         public event EventHandler? Changed;
         public void Publish(CuiAppearance appearance, string accent)

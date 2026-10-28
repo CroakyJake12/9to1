@@ -66,14 +66,12 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
             {
                 ct.ThrowIfCancellationRequested();
                 var themeContext = embeddedArtifactHost?.ThemeContext;
-                if (themeContext is not null) BoardsTheme.ApplyOwnerPreference(themeContext.Current);
                 var viewModel = new BoardsViewModel(session, embeddedArtifactHost);
                 viewModel.SetLanding(false);
                 viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Read-only source");
                 viewModel.Set("SaveStateText", "Read-only source");
-                loader = BoardsCuiDocuments.CreateLoader();
-                if (themeContext is not null) loader.SetThemePreferenceContext(themeContext);
+                loader = BoardsCuiDocuments.CreateLoader(themeContext);
                 loader.SetBindingContext(viewModel);
                 loader.SetActionDispatcher(viewModel);
                 var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
@@ -81,6 +79,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
                     throw new InvalidOperationException("The compiled Boards CUI could not be loaded: " +
                         string.Join("; ", diagnostics.Select(item => item.ToString())));
 
+                using var themeScope = BoardsTheme.UseSurface(root, themeContext);
                 loader.WireBindings(root);
                 viewModel.Attach(root);
                 ThemeApplier.ApplyChrome(root, applyResources: themeContext is null);
@@ -118,7 +117,8 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         void Refresh()
         {
             if (_disposed || _themeContext is null) return;
-            BoardsTheme.ApplyOwnerPreference(_themeContext.Current);
+            using var themeScope = BoardsTheme.UseSurface(Content, _themeContext);
+            ViewModel.RefreshOwnerThemeBindings();
             ThemeApplier.ApplyChrome(Content, applyResources: false);
             QueueRender();
         }
@@ -134,6 +134,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
     private async Task RenderAsync()
     {
         if (_disposed || _surfaceLifecycle?.IsReady != true) return;
+        using var themeScope = BoardsTheme.UseSurface(Content, _themeContext);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "BlocksHost") is { } blocks)
             await BlockRenderer.RebuildAsync(blocks, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "NavHost") is { } nav)

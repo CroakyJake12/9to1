@@ -90,8 +90,8 @@ public sealed class DataRecordViewControlTests
                     .Single(label => label.Text == "Name" && label.FontWeight == Avalonia.Media.FontWeight.Bold);
                 var input = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(view).OfType<Avalonia.Controls.TextBox>()
                     .Single(box => box.Text == "Theme record");
-                var expected = Avalonia.Media.Color.Parse(CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.For("data", appearance,
-                    CakeOS.Cui.Themes.CuiTheme.Professional).Text);
+                var expected = CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.For("data", appearance,
+                    CakeOS.Cui.Themes.CuiTheme.Professional).Text;
                 Assert.Equal(expected, Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(header.Foreground).Color);
                 Assert.Equal(expected, Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(input.Foreground).Color);
             }

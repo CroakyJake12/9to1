@@ -159,7 +159,7 @@ public sealed class BoardsBrowseAppContentSessionTests
         var session = new BoardsWritableRichDocumentBrowseAppContentSession(request, BoardsBrowseAppContentAddress.Parse(durable),
             token => { calls++; return Task.FromException<NativeHomeFilesBoardWriteLease>(new UnauthorizedAccessException("Current Home permission denied.")); }, lifetime);
         Assert.Equal(0, calls);
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => session.InitializeAsync());
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => session.InitializeAsync(Xunit.TestContext.Current.CancellationToken));
         Assert.Equal(1, calls);
         Assert.False(session.IsPublicationCurrent);
         await session.CloseAndDrainAsync();
@@ -184,7 +184,7 @@ public sealed class BoardsBrowseAppContentSessionTests
         using var lifetime = new CancellationTokenSource();
         var request = new BrowseAppContentRequest(Guid.NewGuid(), durable, actor.ProfileId, BrowserTabPrivacy.Standard);
         var session = new BoardsWritableRichDocumentBrowseAppContentSession(request, saved, _ => Task.FromResult(lease), lifetime);
-        var refusal = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => session.InitializeAsync());
+        var refusal = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => session.InitializeAsync(Xunit.TestContext.Current.CancellationToken));
         Assert.Contains("revision changed", refusal.Message, StringComparison.Ordinal);
         Assert.False(session.IsPublicationCurrent);
         Assert.Equal(0, saves);

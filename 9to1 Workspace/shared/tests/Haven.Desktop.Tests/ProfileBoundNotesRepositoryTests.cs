@@ -10,56 +10,60 @@ public sealed class ProfileBoundNotesRepositoryTests
     [Fact]
     public async Task Actual_profile_change_refuses_before_any_original_library_read()
     {
+        var token = Xunit.TestContext.Current.CancellationToken;
         using var rig = new Rig();
-        var actor = await rig.Profiles.GetCurrentAsync(default);
+        var actor = await rig.Profiles.GetCurrentAsync(token);
         var original = new Repository();
         var repository = rig.Bind(original, actor!);
         Assert.Same(original, repository.OriginalRepository);
         rig.Principal.Value = "different-principal";
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => repository.ListAsync(default));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => repository.ListAsync(token));
         Assert.Equal(0, original.Calls);
     }
 
     [Fact]
     public async Task Changed_actual_profile_withholds_an_already_completed_document_read()
     {
+        var token = Xunit.TestContext.Current.CancellationToken;
         using var rig = new Rig();
-        var actor = await rig.Profiles.GetCurrentAsync(default);
+        var actor = await rig.Profiles.GetCurrentAsync(token);
         var original = new Repository { AfterOperation = () => rig.Principal.Value = "different-principal" };
         var repository = rig.Bind(original, actor!);
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => repository.LoadAsync(original.Document.Id, default));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => repository.LoadAsync(original.Document.Id, token));
         Assert.Equal(1, original.Calls);
     }
 
     [Fact]
     public async Task Admitted_save_returns_the_same_real_receipt_even_if_profile_changes_at_commit()
     {
+        var token = Xunit.TestContext.Current.CancellationToken;
         using var rig = new Rig();
-        var actor = await rig.Profiles.GetCurrentAsync(default);
+        var actor = await rig.Profiles.GetCurrentAsync(token);
         var original = new Repository { AfterOperation = () => rig.Principal.Value = "different-principal" };
         var repository = rig.Bind(original, actor!);
-        var receipt = await repository.SaveAsync(original.Document, "Original save", default);
+        var receipt = await repository.SaveAsync(original.Document, "Original save", token);
         Assert.Same(original.Receipt, receipt);
         Assert.Equal(1, original.Calls);
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => repository.SaveAsync(original.Document, "Retry", default));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => repository.SaveAsync(original.Document, "Retry", token));
         Assert.Equal(1, original.Calls);
     }
 
     [Fact]
     public async Task Full_interface_preserves_the_original_objects_and_features()
     {
+        var token = Xunit.TestContext.Current.CancellationToken;
         using var rig = new Rig();
-        var actor = await rig.Profiles.GetCurrentAsync(default);
+        var actor = await rig.Profiles.GetCurrentAsync(token);
         var original = new Repository();
         var repository = rig.Bind(original, actor!);
-        Assert.Same(original.Summaries, await repository.ListAsync(default));
-        Assert.Same(original.Document, await repository.LoadAsync(original.Document.Id, default));
-        Assert.Same(original.Versions, await repository.GetVersionsAsync(original.Document.Id, default));
-        Assert.Same(original.Document, await repository.LoadVersionAsync(original.Document.Id, "1", default));
-        Assert.Same(original.Document, await repository.RecoverLatestAsync(original.Document.Id, default));
-        Assert.Same(original.Hits, await repository.SearchAsync("term", default));
-        Assert.Same(original.Receipt, await repository.SaveAsync(original.Document, "save", default));
-        await repository.DeleteAsync(original.Document.Id, default);
+        Assert.Same(original.Summaries, await repository.ListAsync(token));
+        Assert.Same(original.Document, await repository.LoadAsync(original.Document.Id, token));
+        Assert.Same(original.Versions, await repository.GetVersionsAsync(original.Document.Id, token));
+        Assert.Same(original.Document, await repository.LoadVersionAsync(original.Document.Id, "1", token));
+        Assert.Same(original.Document, await repository.RecoverLatestAsync(original.Document.Id, token));
+        Assert.Same(original.Hits, await repository.SearchAsync("term", token));
+        Assert.Same(original.Receipt, await repository.SaveAsync(original.Document, "save", token));
+        await repository.DeleteAsync(original.Document.Id, token);
         Assert.Equal(8, original.Calls);
     }
 

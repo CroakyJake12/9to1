@@ -375,6 +375,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         RequestRebuild();
     }
 
+    private Control? _themeSurface;
+    internal void BindThemeSurface(Control root) => _themeSurface = root;
+
+    internal void RefreshOwnerThemeBindings()
+    {
+        if (_sectionIconPickerSectionId is not null) RefreshSectionIconPickerChoices();
+        RefreshCuiContext();
+    }
+
     public void RefreshAfterEdit()
     {
         PushDocumentToBindings();
@@ -383,6 +392,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        using var themeScope = BoardsTheme.UseSurface(_attachedRoot ?? _themeSurface, _embeddedArtifactHost?.ThemeContext);
         if (_disposed || SessionIsDisposed) return;
         if (!CanEdit && command is ("ToggleEditView" or "ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or
             "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or "FileMenu" or
@@ -1310,6 +1320,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         if (_disposed) return;
         _disposed = true;
+        _themeSurface = null;
         CancelSectionIconSuggestion();
         Detach();
     }

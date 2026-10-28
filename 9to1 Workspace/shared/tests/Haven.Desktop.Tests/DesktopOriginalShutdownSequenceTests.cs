@@ -41,7 +41,7 @@ public sealed class DesktopOriginalShutdownSequenceTests
     public void Shutdown_presentation_bounds_diagnostic_text_and_retains_original_failure()
     {
         var cause = new IOException(new string('x', 10000));
-        var failure = new AggregateException(Enumerable.Range(0, 40).Select(i => new InvalidOperationException("Cause " + i)).Append(cause));
+        var failure = new AggregateException(Enumerable.Range(0, 40).Select(i => new InvalidOperationException("Cause " + i)).Cast<Exception>().Append(cause));
         var presentation = ShutdownFailurePresentation.From(failure);
         Assert.True(presentation.Details.Length < 2200);
         Assert.Contains("application log", presentation.Details);

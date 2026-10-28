@@ -5,6 +5,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Controls;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Themes;
 
 namespace CakeOS.Apps.Boards.App;
@@ -32,51 +33,90 @@ public sealed record BoardsPalette(
 
 public static class BoardsTheme
 {
-    public static BoardsThemeMode Mode { get; private set; } = BoardsThemeMode.Light;
+    private static BoardsThemeMode _standaloneMode = BoardsThemeMode.Light;
+    private static CuiTheme? _resolvedPreference;
+    private sealed record SurfaceState(Control Root, CuiThemePreferenceContext? Context);
+    private static readonly AsyncLocal<SurfaceState?> Surface = new();
 
-    /// <summary>Boards uses its owner-resolved semantic palette for surfaces, actions and icons.</summary>
+    public static BoardsThemeMode Mode => Surface.Value is { } scope
+        ? (IsDarkBackground(Hex(ResourceColor(scope.Root, "CuiPanelBrush", StandalonePalette.Panel)))
+            ? BoardsThemeMode.Dark : BoardsThemeMode.Light)
+        : _standaloneMode;
+    public static CuiTheme ResolvedPreference => _resolvedPreference ?? CuiTheme.Professional;
+    internal static CuiThemePreferenceContext? SurfaceThemeContext => Surface.Value?.Context;
+    internal static CuiPalette StandalonePalette => CuiSurfacePaletteCatalog.For("Boards",
+        _standaloneMode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright, ResolvedPreference);
+
+    /// <summary>Borrow only this control's already resolved CUI resources for one paint/action.
+    /// The scope flows through owned async rendering and restores its previous owner on exit.</summary>
+    public static IDisposable UseSurface(Control? root, CuiThemePreferenceContext? context = null)
+    {
+        var previous = Surface.Value;
+        if (root is not null)
+        {
+            var inherited = previous is not null && (ReferenceEquals(root, previous.Root) ||
+                root.GetVisualAncestors().Any(parent => ReferenceEquals(parent, previous.Root))) ? previous.Context : null;
+            Surface.Value = new(root, context ?? inherited);
+        }
+        return new SurfaceLease(previous);
+    }
+    private sealed class SurfaceLease(SurfaceState? previous) : IDisposable
+    {
+        private bool _disposed;
+        public void Dispose() { if (_disposed) return; _disposed = true; Surface.Value = previous; }
+    }
+
+    /// <summary>Compatibility colors projected from the SAME custom/accessibility resources
+    /// that the owning CUI loader resolved. Native paints do not reconstruct Home's theme.</summary>
     public static CuiPalette SharedPalette
     {
         get
         {
-            var appearance = _ownerPreference?.Appearance ?? (Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright);
-            return _ownerPreference is { } owner
-                ? CuiSurfacePaletteCatalog.For("Boards", appearance, owner.Theme.BaseTheme,
-                    owner.EffectiveAccent.ResolveColour("app.boards"), "app.boards")
-                : CuiSurfacePaletteCatalog.For("Boards", appearance, ResolvedPreference);
+            var fallback = StandalonePalette;
+            if (Surface.Value is not { } scope) return fallback;
+            var root = scope.Root;
+            Color Read(string key, Color value) => ResourceColor(root, key, value);
+            return fallback with
+            {
+                TideBase = Read("CuiBackgroundBrush", fallback.TideBase),
+                Accent = Read("CuiAccentBrush", fallback.Accent),
+                AccentSecondary = Read("CuiAccentSecondaryBrush", fallback.AccentSecondary),
+                AccentStrong = Read("CuiAccentTertiaryBrush", fallback.AccentStrong),
+                AccentSoft = Read("CuiAccentSoftBrush", fallback.AccentSoft),
+                AccentInk = Read("CuiAccentForegroundBrush", fallback.AccentInk),
+                Text = Read("CuiTextBrush", fallback.Text), TextSoft = Read("CuiTextSoftBrush", fallback.TextSoft),
+                Muted = Read("CuiMutedBrush", fallback.Muted), Muted2 = Read("CuiMuted2Brush", fallback.Muted2),
+                Panel = Read("CuiPanelBrush", fallback.Panel), Panel2 = Read("CuiPanel2Brush", fallback.Panel2),
+                Panel3 = Read("CuiPanel3Brush", fallback.Panel3), PanelHover = Read("CuiPanelHoverBrush", fallback.PanelHover),
+                Line = Read("CuiLineBrush", fallback.Line), LineStrong = Read("CuiLineStrongBrush", fallback.LineStrong),
+                Button = Read("CuiButtonBrush", fallback.Button), ButtonHover = Read("CuiButtonHoverBrush", fallback.ButtonHover),
+                ButtonPressed = Read("CuiButtonPressedBrush", fallback.ButtonPressed), Focus = Read("CuiFocusBrush", fallback.Focus),
+                Attention = Read("CuiAttentionBrush", fallback.Attention), AttentionBorder = Read("CuiAttentionBorderBrush", fallback.AttentionBorder),
+                Theme = root.TryFindResource("CuiTheme", out var theme) && theme is CuiTheme resolved ? resolved : fallback.Theme,
+            };
         }
     }
+    private static Color ResourceColor(Control root, string key, Color fallback)
+    {
+        if (!root.TryFindResource(key, out var value)) return fallback;
+        if (value is ISolidColorBrush solid) return solid.Color;
+        if (value is IGradientBrush gradient && gradient.GradientStops.Count > 0)
+            return gradient.GradientStops.OrderBy(stop => Math.Abs(stop.Offset - .5)).First().Color;
+        return value is Color color ? color : fallback;
+    }
+    private static IBrush ScopedBrush(string key, string fallback) =>
+        Surface.Value is { } scope && scope.Root.TryFindResource(key, out var value) && value is IBrush brush
+            ? brush : Brush(fallback);
 
     public static BoardsPalette Current => FromSharedPalette(SharedPalette);
-
+    // Only standalone settings publish this process-wide legacy event.
     public static event Action? Changed;
-
-    /// <summary>Boards resolves its own effective preference without mutating the shared
-    /// host catalog: the owner-corrected theme contract requires child apps to read the
-    /// user's preference and keep unrelated surfaces unchanged (owner UX03 report).</summary>
-    private static CuiTheme? _resolvedPreference;
-    private static CuiThemeResolution? _ownerPreference;
-
-    /// <summary>Borrow the actual Home observation; Boards never persists or changes it.</summary>
-    public static void ApplyOwnerPreference(CuiThemeResolution preference)
-    {
-        ArgumentNullException.ThrowIfNull(preference);
-        if (_ownerPreference == preference) return;
-        _ownerPreference = preference;
-        _resolvedPreference = preference.Theme.BaseTheme;
-        if (preference.Appearance is { } appearance)
-            Mode = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark ? BoardsThemeMode.Dark : BoardsThemeMode.Light;
-        Changed?.Invoke();
-    }
-
-    public static CuiTheme ResolvedPreference => _resolvedPreference ?? CuiTheme.Professional;
 
     /// <summary>Read the shared Haven theme choice into Boards' local resolver before the
     /// Boards CUI tree is built. This deliberately does NOT write the shared
     /// CuiSurfacePaletteCatalog: unrelated surfaces keep their host-owned theme.</summary>
     public static void LoadGlobalThemePreference(string? dataDirectory = null)
     {
-        _ownerPreference = null;
         _resolvedPreference = CuiThemePreferenceReader.Read(dataDirectory);
     }
 
@@ -108,10 +148,8 @@ public static class BoardsTheme
 
     public static void SetMode(BoardsThemeMode mode)
     {
-        if (Mode == mode && _ownerPreference is null)
-            return;
-        _ownerPreference = null;
-        Mode = mode;
+        if (_standaloneMode == mode) return;
+        _standaloneMode = mode;
         Changed?.Invoke();
     }
 
@@ -121,17 +159,17 @@ public static class BoardsTheme
     public static SolidColorBrush Brush(string hex) =>
         new(Color.Parse(hex));
 
-    public static IBrush AppBackgroundBrush => Brush(Current.AppBackground);
-    public static IBrush SurfaceBrush => Brush(Current.Surface);
-    public static IBrush CardBrush => Brush(Current.Card);
-    public static IBrush PageBackgroundBrush => Brush(Current.PageBackground);
-    public static IBrush TextBrush => Brush(Current.Text);
-    public static IBrush SecondaryTextBrush => Brush(Current.SecondaryText);
-    public static IBrush BorderBrush => Brush(Current.Border);
-    public static IBrush AccentBrush => Brush(Current.Accent);
-    public static IBrush AccentContrastBrush => Brush(Current.AccentContrast);
-    public static IBrush ErrorBrush => Brush(Current.Error);
-    public static IBrush SuccessBrush => Brush(Current.Success);
+    public static IBrush AppBackgroundBrush => ScopedBrush("CuiBackgroundBrush", Current.AppBackground);
+    public static IBrush SurfaceBrush => ScopedBrush("CuiPanelBrush", Current.Surface);
+    public static IBrush CardBrush => ScopedBrush("CuiPanel2Brush", Current.Card);
+    public static IBrush PageBackgroundBrush => ScopedBrush("CuiBackgroundBrush", Current.PageBackground);
+    public static IBrush TextBrush => ScopedBrush("CuiTextBrush", Current.Text);
+    public static IBrush SecondaryTextBrush => ScopedBrush("CuiMutedBrush", Current.SecondaryText);
+    public static IBrush BorderBrush => ScopedBrush("CuiLineBrush", Current.Border);
+    public static IBrush AccentBrush => ScopedBrush("CuiAccentBrush", Current.Accent);
+    public static IBrush AccentContrastBrush => ScopedBrush("CuiAccentForegroundBrush", Current.AccentContrast);
+    public static IBrush ErrorBrush => ScopedBrush("CuiAccentNegativeBrush", Current.Error);
+    public static IBrush SuccessBrush => ScopedBrush("CuiSuccessBrush", Current.Success);
 
     private static BoardsPalette FromSharedPalette(CuiPalette palette) => new(
         AppBackground: Hex(palette.TideBase),

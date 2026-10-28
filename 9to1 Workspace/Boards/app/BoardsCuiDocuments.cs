@@ -1,6 +1,7 @@
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -27,10 +28,13 @@ public static class BoardsCuiDocuments
     }
 
     /// <summary>Creates a loader with the Boards-owned palette and accent identity.</summary>
-    public static CuiControlLoader CreateLoader()
+    public static CuiControlLoader CreateLoader() => CreateLoader(BoardsTheme.SurfaceThemeContext);
+
+    public static CuiControlLoader CreateLoader(CuiThemePreferenceContext? context)
     {
         var loader = new CuiControlLoader(CreateControlRegistry());
         loader.SetSurface("Boards", "app.boards");
+        if (context is not null) loader.SetThemePreferenceContext(context);
         return loader;
     }
 

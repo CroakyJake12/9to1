@@ -104,6 +104,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
         public PaneEditor(BoardsViewModel model)
         {
             Model = model;
+            Model.BindThemeSurface(Root);
             var viewport = new Grid();
             viewport.Children.Add(_blocks); viewport.Children.Add(_absolute); viewport.Children.Add(_ink);
             Root.Children.Add(_toolbar); Root.Children.Add(viewport);
@@ -111,7 +112,12 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
             Model.RebuildRequested += Queue;
             Model.SelectionChanged += RefreshToolbar;
         }
-        private void RefreshToolbar() { if (!_disposed) ToolbarBuilder.Rebuild(_toolbar, Model); }
+        private void RefreshToolbar()
+        {
+            if (_disposed) return;
+            using var themeScope = BoardsTheme.UseSurface(Root);
+            ToolbarBuilder.Rebuild(_toolbar, Model);
+        }
         public void Queue()
         {
             if (_disposed) return;
@@ -129,6 +135,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     if (_disposed) return;
+                    using var themeScope = BoardsTheme.UseSurface(Root);
                     BlockRenderer.Rebuild(_blocks, Model, boxes, _absolute);
                     RefreshToolbar();
                 });

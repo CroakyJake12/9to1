@@ -216,15 +216,13 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             {
                 ct.ThrowIfCancellationRequested();
                 var themeContext = embeddedArtifactHost?.ThemeContext;
-                if (themeContext is not null) BoardsTheme.ApplyOwnerPreference(themeContext.Current);
                 var viewModel = new BoardsViewModel(session, embeddedArtifactHost, homeBoardCreationHost,
                     sectionIconGenerationHost);
                 viewModel.SetLanding(false);
                 if (!standaloneChrome) viewModel.SetEmbeddedPresentation();
                 viewModel.Set("StatusText", "Ready to edit");
                 viewModel.Set("SaveStateText", "Saved source revision");
-                loader = BoardsCuiDocuments.CreateLoader();
-                if (themeContext is not null) loader.SetThemePreferenceContext(themeContext);
+                loader = BoardsCuiDocuments.CreateLoader(themeContext);
                 loader.SetBindingContext(viewModel);
                 loader.SetActionDispatcher(viewModel);
                 var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
@@ -232,6 +230,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
                     throw new InvalidOperationException("The compiled Boards CUI could not be loaded: " +
                         string.Join("; ", diagnostics.Select(item => item.ToString())));
 
+                using var themeScope = BoardsTheme.UseSurface(root, themeContext);
                 loader.WireBindings(root);
                 viewModel.Attach(root);
                 ThemeApplier.ApplyChrome(root, applyResources: themeContext is null);
@@ -355,7 +354,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         void Refresh()
         {
             if (_disposed || _themeContext is null) return;
-            BoardsTheme.ApplyOwnerPreference(_themeContext.Current);
+            using var themeScope = BoardsTheme.UseSurface(Content, _themeContext);
+            ViewModel.RefreshOwnerThemeBindings();
             ThemeApplier.ApplyChrome(Content, applyResources: false);
             QueueRender();
         }
@@ -371,6 +371,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     private async Task RenderAsync()
     {
         if (_disposed || _surfaceLifecycle?.IsReady != true) return;
+        using var themeScope = BoardsTheme.UseSurface(Content, _themeContext);
         // The authored page has mutually exclusive native and embedded content
         // hosts. BlocksHost is absent while Write/Canvas is selected, so it
         // cannot guard rendering of the embedded owner surface.
