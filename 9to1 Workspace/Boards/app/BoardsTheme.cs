@@ -42,7 +42,14 @@ public static class BoardsTheme
         ? (IsDarkBackground(Hex(ResourceColor(scope.Root, "CuiPanelBrush", StandalonePalette.Panel)))
             ? BoardsThemeMode.Dark : BoardsThemeMode.Light)
         : _standaloneMode;
-    public static CuiTheme ResolvedPreference => _resolvedPreference ?? CuiTheme.Professional;
+    // When nobody has handed Boards the shared Haven theme choice, follow the theme the
+    // application is actually running (CuiSurfacePaletteCatalog.ActiveTheme is set by the CUI
+    // theme scope, framework/CUI/Themes/CuiThemeScope.cs:174) instead of inventing a hardcoded
+    // Professional default. Measured on 28 October: nine visual-capture checks set the surface to
+    // Glow and still got Professional back, i.e. Boards presented a theme the rest of the app was
+    // not using. The catalog's own default is Professional, so behaviour is unchanged until a
+    // theme is genuinely active; an explicitly loaded preference still takes precedence.
+    public static CuiTheme ResolvedPreference => _resolvedPreference ?? CuiSurfacePaletteCatalog.ActiveTheme;
     internal static CuiThemePreferenceContext? SurfaceThemeContext => Surface.Value?.Context;
     internal static CuiPalette StandalonePalette => CuiSurfacePaletteCatalog.For("Boards",
         _standaloneMode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright, ResolvedPreference);

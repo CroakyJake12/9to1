@@ -205,6 +205,15 @@ public sealed class BoardsEditorTests
         await using var session = new InMemoryRichBoardSession();
         await session.OpenAsync(null);
         var vm = new BoardsViewModel(session);
+        // Measured 28 October: the toolbar binds a font command to the block that is selected
+        // when the toolbar is built, and the default fixture document already carries a selected
+        // text block ("block-para"), which is NOT document Blocks[0] ("block-heading"). The
+        // dropdown was therefore writing a real font to the selected block while this assertion
+        // looked at a different one. The requirement is unchanged: a dropdown choice sets the
+        // font of the block the user is working on, and it must undo. The precondition (which
+        // block that is) is now stated explicitly instead of being assumed.
+        var target = session.Document.Sections[0].Pages[0].Blocks[0];
+        TestUiThread.Run(() => vm.FocusBlock(target.Id));
         var controls = TestUiThread.Run(() =>
         {
             var host = new StackPanel();
@@ -408,14 +417,17 @@ public sealed class BoardsEditorTests
         var viewModel = new BoardsViewModel(session);
         var para = session.Document.Sections[0].Pages[0].Blocks.First(b => b.Kind == "paragraph");
 
-        // NOTE: InMemory snapshots on MarkDirty (after the mutation), so the
-        // visible revert of edit N lands after N+1 undos — the two-edit dance
-        // below exercises the real stack discipline without touching the file.
+        // One undo reverts exactly one recorded edit. The previous version of this test had to
+        // undo twice to see any change, because the in-memory double pushed the ALREADY-mutated
+        // document as its history entry; that off-by-one was a defect in the double (its own note
+        // recorded it) and not the product rule - the contract session has always pushed the
+        // before-image (RichBoardSession.MutateIfAsync captures `before` then PushHistory).
+        // InMemoryRichBoardSession now matches it, so the single-edit dance below is the real
+        // requirement: edit, edit, undo back to the prior value, redo forward again.
         viewModel.EditText("t_" + para.Id, "first");
         viewModel.EditText("t_" + para.Id, "second");
         Assert.Equal("second", para.Text);
 
-        await viewModel.DispatchAsync("Undo", null);
         await viewModel.DispatchAsync("Undo", null);
         var afterUndo = session.Document.Sections[0].Pages[0].Blocks.First(b => b.Kind == "paragraph");
         Assert.Equal("first", afterUndo.Text);

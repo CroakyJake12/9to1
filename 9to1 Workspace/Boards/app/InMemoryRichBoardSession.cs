@@ -17,6 +17,13 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
     private readonly object _gate = new();
     private readonly Stack<string> _undo = new();
     private readonly Stack<string> _redo = new();
+    // History must record the image from BEFORE an edit, which is what the contract session does
+    // (RichBoardSession.MutateIfAsync captures `before` then PushHistory(before)). This double
+    // used to push the already-mutated document, so one undo restored the edit instead of
+    // removing it - measured on 28 October through the toolbar font-size check, which asked for
+    // size 20, then 18.5, then undo, and got 18.5 back. The checkpoint below holds the last
+    // recorded state and is what an undo step restores to.
+    private string _checkpoint = "";
     private bool _dirty;
     private volatile bool _disposed;
     private string _status = "Ready";
@@ -24,6 +31,7 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
     public InMemoryRichBoardSession()
     {
         _autosaveTimer = new Timer(_ => _ = AutosaveTickAsync(), null, Timeout.Infinite, Timeout.Infinite);
+        _checkpoint = Snapshot;
     }
 
     public RichBoardDocument Document { get; private set; } = CreateDefault();
@@ -64,6 +72,7 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         {
             _undo.Clear();
             _redo.Clear();
+            _checkpoint = Snapshot;
         }
         SetStatus("Ready");
         return ValueTask.CompletedTask;
@@ -98,14 +107,21 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         ThrowIfDisposed();
         lock (_gate)
         {
-            _undo.Push(JsonSerializer.Serialize(Document, JsonOptions));
-            while (_undo.Count > 60)
+            // Record the state from before this edit (the checkpoint), not the state that already
+            // contains it; an edit that changed nothing records nothing.
+            var current = Snapshot;
+            if (!string.Equals(current, _checkpoint, StringComparison.Ordinal))
             {
-                var kept = _undo.Take(60).Reverse().ToArray();
-                _undo.Clear();
-                foreach (var entry in kept) _undo.Push(entry);
+                _undo.Push(_checkpoint);
+                while (_undo.Count > 60)
+                {
+                    var kept = _undo.Take(60).Reverse().ToArray();
+                    _undo.Clear();
+                    foreach (var entry in kept) _undo.Push(entry);
+                }
+                _redo.Clear();
+                _checkpoint = current;
             }
-            _redo.Clear();
             _dirty = true;
         }
         SetStatus("Unsaved changes");
@@ -138,6 +154,7 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         {
             if (!_undo.TryPop(out previous)) return ValueTask.FromResult(false);
             _redo.Push(JsonSerializer.Serialize(Document, JsonOptions));
+            _checkpoint = previous;
         }
         Document = JsonSerializer.Deserialize<RichBoardDocument>(previous, JsonOptions) ?? CreateDefault();
         lock (_gate) _dirty = true;
@@ -154,6 +171,7 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         {
             if (!_redo.TryPop(out next)) return ValueTask.FromResult(false);
             _undo.Push(JsonSerializer.Serialize(Document, JsonOptions));
+            _checkpoint = next;
         }
         Document = JsonSerializer.Deserialize<RichBoardDocument>(next, JsonOptions) ?? CreateDefault();
         lock (_gate) _dirty = true;
