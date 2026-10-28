@@ -15,6 +15,40 @@ namespace Haven.Desktop.Tests;
 
 public sealed class DesktopOriginalShutdownSequenceTests
 {
+    [Fact]
+    public void Shutdown_presentation_does_not_expand_repeated_aggregate_messages()
+    {
+        Exception failure = new IOException("Could not close the document.");
+        for (var i = 0; i < 100; i++) failure = new AggregateException("Retained owner", failure, failure);
+        var presentation = ShutdownFailurePresentation.From(failure);
+        Assert.Equal("• Could not close the document.", presentation.Details);
+        Assert.DoesNotContain("Retained owner", presentation.Summary);
+    }
+
+    [Fact]
+    public void Shutdown_log_writes_shared_causal_nodes_once_without_recursive_expansion()
+    {
+        Exception failure = new IOException("The original leaf.");
+        for (var i = 0; i < 100; i++) failure = new AggregateException("Owner", failure, failure);
+        using var log = new StringWriter();
+        ShutdownFailurePresentation.WriteDiagnostic(log, failure);
+        Assert.Equal(1, log.ToString().Split("The original leaf.").Length - 1);
+        Assert.Equal(101, log.ToString().Split("[9to1 shutdown cause ").Length - 1);
+        Assert.True(log.ToString().Length < 30000);
+    }
+
+    [Fact]
+    public void Shutdown_presentation_bounds_diagnostic_text_and_retains_original_failure()
+    {
+        var cause = new IOException(new string('x', 10000));
+        var failure = new AggregateException(Enumerable.Range(0, 40).Select(i => new InvalidOperationException("Cause " + i)).Append(cause));
+        var presentation = ShutdownFailurePresentation.From(failure);
+        Assert.True(presentation.Details.Length < 2200);
+        Assert.Contains("application log", presentation.Details);
+        Assert.Same(cause, failure.InnerExceptions[^1]);
+        Assert.Contains("window has been kept open", presentation.Summary);
+    }
+
     private static readonly TimeSpan Bound = TimeSpan.FromSeconds(5);
 
     [Fact]

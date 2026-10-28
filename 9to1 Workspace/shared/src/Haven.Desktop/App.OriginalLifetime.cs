@@ -1147,8 +1147,8 @@ public sealed partial class App
     // stream. This adds no recovery authority, retries nothing and never relabels the failure.
     private void ReportOriginalShutdownFailure(Exception failure)
     {
-        System.Diagnostics.Debug.WriteLine("[9to1 original shutdown] " + failure);
-        try { Console.Error.WriteLine("[9to1 original shutdown] " + failure); }
+        System.Diagnostics.Debug.WriteLine("[9to1 original shutdown] " + ShutdownFailurePresentation.From(failure).Details);
+        try { ShutdownFailurePresentation.WriteDiagnostic(Console.Error, failure); }
         catch (Exception diagnosticFailure) { System.Diagnostics.Debug.WriteLine("[9to1 original shutdown diagnostic] " + diagnosticFailure); }
     }
 
@@ -1166,14 +1166,29 @@ public sealed partial class App
             if (window is null) return;
             var loader = new CakeOS.Cui.Runtime.CuiControlLoader();
             var status = new CakeOS.Cui.Runtime.CuiViewModel();
-            status.Set("RecoveryMessage", "9to1 could not finish closing: " + failure.Message);
+            var presentation = ShutdownFailurePresentation.From(failure);
+            status.Set("RecoveryMessage", presentation.Summary);
+            status.Set("RecoveryDetails", presentation.Details);
             loader.SetBindingContext(status);
-            var document = new CakeOS.Cui.Language.CuiRichParser().Parse(
-                "<Cui><Container Type=\"Vertical Stack\" Padding=\"24\" CellGap=\"12\">" +
-                "<Text Text=\"Shutdown did not complete\" FontWeight=\"Bold\" FontSize=\"18\" />" +
-                "<Text Text=\"{Binding RecoveryMessage}\" TextWrapping=\"Wrap\" />" +
-                "<Text Text=\"The window remains open so your work and data are preserved. Review the reported failure, then close again or restart 9to1.\" TextWrapping=\"Wrap\" />" +
-                "</Container></Cui>");
+            var document = new CakeOS.Cui.Language.CuiRichParser().Parse("""
+                <Cui>
+                  <Variable Type="bool" ID="ShowDetails">false</Variable>
+                  <Actions><Action name="show-details"><Set Target="ShowDetails" Value="true" /></Action></Actions>
+                  <Theme Name="user_preference">
+                    <Container Type="Vertical Stack" MaxWidth="720" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="32" CellGap="16">
+                      <Text Text="Shutdown did not complete" FontWeight="Bold" FontSize="24" />
+                      <Text Text="{Binding RecoveryMessage}" TextWrapping="Wrap" />
+                      <Button action="show-details" Content="Show details" HorizontalAlignment="Left" />
+                      <If condition="{Binding ShowDetails}">
+                        <Container Type="Vertical Stack" MaxHeight="300" VerticalScrolling="True" HorizontalScrolling="False" Padding="16" Background="{Resource CuiPanelBrush}" CornerRadius="12">
+                          <Text Text="{Binding RecoveryDetails}" TextWrapping="Wrap" />
+                        </Container>
+                      </If>
+                      <Text Text="Diagnostic details are retained in the application log." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                    </Container>
+                  </Theme>
+                </Cui>
+                """);
             var loaded = loader.TryLoad(document);
             if (loaded.Root is null) { loader.Dispose(); return; }
             loader.WireBindings(loaded.Root);
